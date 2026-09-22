@@ -47,6 +47,39 @@ pub fn group_disjoint_columns(
 mod disjoint_tests {
     use super::*;
     #[test]
+    fn cached_colored_solves_recheck_changed_nonlinear_equations() {
+        let blocks = BlockDiagonalColoring::new(&[2, 2]).unwrap();
+        let mut cache = None;
+        let mut x = [1.0, 2.0, 1.0, 2.0];
+        for target in [1.2_f64, 1.3, 3.0, 0.8] {
+            let residual = |x: &[f64], r: &mut [f64]| {
+                for start in [0, 2] {
+                    r[start] = x[start] * x[start] - target * target;
+                    r[start + 1] = x[start + 1] - 2.0 * x[start];
+                }
+            };
+            let solved = solve_newton_numeric_colored_scaled_cached_audited(
+                &mut x, NewtonConfig::default(), residual, &blocks,
+                &|_, v| 1.0 + v.abs(), &mut cache, None,
+            );
+            // A changed nonlinear problem may reject a stale proposal. The
+            // caller must retain the cold retry, not relax convergence bounds.
+            if solved.is_err() {
+                x = [1.0, 2.0, 1.0, 2.0];
+                cache = None;
+                solve_newton_numeric_colored_scaled_cached_audited(
+                    &mut x, NewtonConfig::default(), residual, &blocks,
+                    &|_, v| 1.0 + v.abs(), &mut cache, None,
+                ).unwrap();
+            }
+            assert!(cache.is_some());
+            for start in [0, 2] {
+                assert!((x[start] - target).abs() < 1e-8);
+                assert!((x[start + 1] - 2.0 * target).abs() < 1e-8);
+            }
+        }
+    }
+    #[test]
     fn nonlinear_grouped_probes_match_individual_columns() {
         let groups = group_disjoint_columns(&[vec![0], vec![0], vec![1], vec![1]], 2).unwrap();
         assert_eq!(groups, vec![vec![0, 2], vec![1, 3]]);
@@ -248,6 +281,24 @@ pub fn solve_newton_numeric_colored_scaled_audited<F>(
 where
     F: Fn(&[f64], &mut [f64]),
 {
+    solve_newton_numeric_colored_scaled_cached_audited(x, config, residual, coloring, step_scale, &mut None, audit)
+}
+
+/// The colored derivative path with the ordinary guarded modified-Newton cache.
+/// A cache is a numerical proposal; fresh residuals and refresh/failure checks
+/// are identical to the uncolored cached solver.
+pub fn solve_newton_numeric_colored_scaled_cached_audited<F>(
+    x: &mut [f64],
+    config: NewtonConfig,
+    residual: F,
+    coloring: &BlockDiagonalColoring,
+    step_scale: &dyn Fn(usize, f64) -> f64,
+    cache: &mut Option<crate::JacobianCache>,
+    audit: Option<&mut NewtonAudit>,
+) -> Result<SolveDiagnostics, SolveError>
+where
+    F: Fn(&[f64], &mut [f64]),
+{
     if x.len() != coloring.dimension {
         return Err(SolveError::Dimension {
             expected: coloring.dimension,
@@ -264,7 +315,7 @@ where
             }
         },
         step_scale,
-        &mut None,
+        cache,
         audit,
     )
 }

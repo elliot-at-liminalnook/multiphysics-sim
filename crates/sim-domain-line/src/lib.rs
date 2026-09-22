@@ -4,7 +4,7 @@
 //! attached mid-line.
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -123,7 +123,7 @@ fn taut_string(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::Translational as T;
+    use sim_core::connectors::Translational as T;
     registry.register(BehaviorDescriptor::new(STRING, "Taut string with taps", vec![acausal("left", T), acausal("right", T), acausal("tap.*", T)], taut_string).with_parameters(vec![
         P::required("length", "m").positive(), P::required("tension", "N").positive(),
         P::required("mass_per_length", "kg/m").positive(), P::optional("damping_per_length", "N·s/m²", 0.0).nonnegative(),

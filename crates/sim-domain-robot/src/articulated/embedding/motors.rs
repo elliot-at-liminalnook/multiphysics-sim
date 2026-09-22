@@ -2,7 +2,7 @@
 //! gearbox, loss and heat equations remain in `MotorUnit::residual`.
 use super::{CoupledForces, Generalized};
 use crate::{Articulated, MOTOR_UNIT, articulated::DofKind};
-use sim_core::{Behavior, BehaviorRegistry, Context, View};
+use sim_core::{Behavior, BehaviorRegistry, Context, View, LocalJacobian, Input, Output};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -46,16 +46,21 @@ struct BoundMotor {
 
 /// Voltage/temperature boundary adapter for a set of registered motor units.
 /// Drivers, batteries, firmware, thermal networks and event schedules are not
-/// silently supplied. Their states can later use the same coupling interface.
+/// silently supplied. Explicit power/thermal controls can contribute continuous
+/// states through SampledMotorControl and share the same coupled solve.
 pub struct EmbeddedMotorBank {
     motors: Vec<BoundMotor>,
     joint_count: usize,
     base_columns: usize,
     state_count: usize,
     pub(super) audit_contact_steps: bool,
+    pub(super) differential_states: Vec<bool>,
 }
 
 impl EmbeddedMotorBank {
+    pub(super) fn state_count(&self) -> usize {
+        self.state_count
+    }
     pub fn new(art: &Articulated, configs: &[EmbeddedMotorConfig]) -> Result<Self, String> {
         Self::build(art, configs, false)
     }
@@ -83,6 +88,7 @@ impl EmbeddedMotorBank {
         let mut motors: Vec<BoundMotor> = Vec::new();
         let mut state_count = 0;
         let mut guard_count = 0;
+        let mut differential_states = Vec::new();
         for config in configs {
             descriptor
                 .validate_parameters(&config.parameters)
@@ -126,6 +132,20 @@ impl EmbeddedMotorBank {
             if n != 3 && !(allow_events && n == 4) {
                 return Err("unsupported motor state layout".into());
             }
+            // Use the same component rate-read tracking as the compiler. For
+            // this registered motor, differential/algebraic choices depend on
+            // immutable parameters (including quasistatic winding/rotor), not
+            // the trial state. Held backlash mode has a zero-rate equation.
+            let initial: Vec<_> = equations.states().iter().map(|s| s.initial).collect();
+            let reads = std::cell::RefCell::new(vec![false; n + 5]);
+            let mut residuals = vec![0.0; n];
+            equations.residual(&mut Context::new(
+                0.0, &initial, &vec![0.0; n], &[0, 1, 2, 4, 5],
+                &[None, None, Some(3), None, None],
+                &[0.0, 0.0, 0.0, 0.0, 293.15], &[0.0; 5], &[],
+                &mut residuals, &mut [0.0; 5], &mut [0.0; 3],
+            ).with_rate_tracking(&reads));
+            differential_states.extend_from_slice(&reads.borrow()[..n]);
             motors.push(BoundMotor {
                 name: config.dof.clone(),
                 dof,
@@ -142,6 +162,7 @@ impl EmbeddedMotorBank {
         Ok(Self {
             motors,
             audit_contact_steps: false,
+            differential_states,
             joint_count: dofs.len(),
             state_count,
             base_columns: 6 * art.bases.iter().filter(|b| !b.grounded).count(),
@@ -342,6 +363,85 @@ impl EmbeddedMotorBank {
         rates: &[f64],
         boundaries: &[MotorBoundary],
     ) -> Result<(CoupledForces, Vec<EmbeddedMotorReading>), String> {
+        let mut readings = Vec::with_capacity(self.motors.len());
+        let forces = self.evaluate_into_readings(
+            end_time_s, mechanics, trial, rates, boundaries, Some(&mut readings),
+        )?;
+        Ok((forces, readings))
+    }
+
+    /// Original registered equations without allocating a diagnostic reading
+    /// vector. All component outputs are still evaluated and checked for finite
+    /// values; omitting telemetry never changes equation acceptance.
+    pub fn evaluate_forces_with_rates(
+        &self,
+        end_time_s: f64,
+        mechanics: &Generalized,
+        trial: &[f64],
+        rates: &[f64],
+        boundaries: &[MotorBoundary],
+    ) -> Result<CoupledForces, String> {
+        self.evaluate_into_readings(end_time_s, mechanics, trial, rates, boundaries, None)
+    }
+
+    /// Chain registered state/rate partials with caller-supplied boundary
+    /// partials `(motor index, global state column, dV/dx, dT/dx)` at fixed
+    /// mechanical state. Coefficients map Newton unknowns to physical states
+    /// and rates. None means at least one component declines derivatives.
+    #[allow(clippy::too_many_arguments)]
+    pub fn supplied_auxiliary_derivative(
+        &self, time: f64, mechanics: &Generalized, trial: &[f64], rates: &[f64],
+        boundaries: &[MotorBoundary], boundary_partials: &[(usize,usize,f64,f64)],
+        state_coefficient: f64, rate_coefficient: f64,
+    ) -> Result<Option<sim_solve::SparseJacobian>, String> {
+        self.validate_evaluation(time, mechanics, trial, rates, boundaries)?;
+        if !state_coefficient.is_finite() || !rate_coefficient.is_finite()
+            || boundary_partials.iter().any(|(m,c,v,t)| *m>=self.motors.len()
+                || *c>=self.state_count || !v.is_finite() || !t.is_finite()) {
+            return Err("invalid motor boundary derivatives".into());
+        }
+        let mut result = sim_solve::SparseJacobian::new(self.state_count);
+        for (i,motor) in self.motors.iter().enumerate() {
+            let s=motor.state_start;
+            let n=motor.state_count;
+            let boundary=boundaries[i];
+            let across=[boundary.voltage_v,0.0,mechanics.q[motor.dof],mechanics.qd[motor.dof],boundary.winding_temperature_k];
+            let across_rates=[0.0,0.0,mechanics.qd[motor.dof],0.0,0.0];
+            let view=View {time, states:&trial[s..s+n], offsets:&[0,1,2,4,5],
+                rate_map:&[None,None,Some(3),None,None], across:&across,
+                across_rates:&across_rates, signals_in:&[]};
+            let mut local=LocalJacobian::default();
+            if !motor.equations.jacobian(&view,&mut local) { return Ok(None); }
+            for (output,input,value) in local.entries {
+                if !value.is_finite() { return Err("nonfinite registered motor derivative".into()); }
+                let Output::State(row)=output else { continue; };
+                if row>=n { return Err("registered motor derivative row out of bounds".into()); }
+                let scale=if row<3 {motor.scales[row]} else {1.0};
+                match input {
+                    Input::State(col) | Input::StateRate(col) => {
+                        if col>=n { return Err("registered motor derivative column out of bounds".into()); }
+                        let coefficient=if matches!(input,Input::State(_)) {state_coefficient} else {rate_coefficient};
+                        result.add(s+row,s+col,value*coefficient/scale);
+                    }
+                    Input::Across(port,0) if port==0 || port==3 => {
+                        for &(m,col,dv,dt) in boundary_partials.iter().filter(|(m,_,_,_)| *m==i) {
+                            debug_assert_eq!(m,i);
+                            let d=if port==0 {dv} else {dt};
+                            result.add(s+row,col,value*d*state_coefficient/scale);
+                        }
+                    }
+                    // All remaining ports/rates are fixed mechanical or imposed
+                    // ground inputs in this adapter, not motor-state unknowns.
+                    Input::Across(_,_) | Input::AcrossRate(_,_) | Input::AcrossDerivative(_,_) => (),
+                    Input::Signal(_) => return Err("unexpected motor signal derivative".into()),
+                }
+            }
+        }
+        Ok(Some(result))
+    }
+
+    fn validate_evaluation(&self, end_time_s: f64, mechanics: &Generalized,
+        trial: &[f64], rates: &[f64], boundaries: &[MotorBoundary]) -> Result<(),String> {
         if !end_time_s.is_finite()
             || end_time_s < 0.0
             || trial.len() != self.state_count
@@ -363,11 +463,23 @@ impl EmbeddedMotorBank {
         {
             return Err("invalid embedded motor evaluation".into());
         }
+        Ok(())
+    }
+
+    fn evaluate_into_readings(
+        &self,
+        end_time_s: f64,
+        mechanics: &Generalized,
+        trial: &[f64],
+        rates: &[f64],
+        boundaries: &[MotorBoundary],
+        mut readings: Option<&mut Vec<EmbeddedMotorReading>>,
+    ) -> Result<CoupledForces, String> {
+        self.validate_evaluation(end_time_s, mechanics, trial, rates, boundaries)?;
         let mut result = CoupledForces {
             generalized_loads: vec![0.0; self.base_columns + self.joint_count],
             auxiliary_residuals: vec![0.0; trial.len()],
         };
-        let mut readings = Vec::with_capacity(self.motors.len());
         for (i, motor) in self.motors.iter().enumerate() {
             let s = motor.state_start;
             let n = motor.state_count;
@@ -382,7 +494,7 @@ impl EmbeddedMotorBank {
                 boundary.winding_temperature_k,
             ];
             let across_rates = [0.0, 0.0, mechanics.qd[motor.dof], 0.0, 0.0];
-            let mut residuals = vec![0.0; n];
+            let residuals = &mut result.auxiliary_residuals[s..s + n];
             let mut through = [0.0; 5];
             let mut signals = [0.0; 3];
             motor.equations.residual(&mut Context::new(
@@ -394,7 +506,7 @@ impl EmbeddedMotorBank {
                 &across,
                 &across_rates,
                 &[],
-                &mut residuals,
+                residuals,
                 &mut through,
                 &mut signals,
             ));
@@ -409,22 +521,20 @@ impl EmbeddedMotorBank {
             result.generalized_loads[self.base_columns + motor.dof] -= through[2];
             for k in 0..n {
                 // Held mode equation has the declared one-per-second scale.
-                result.auxiliary_residuals[s + k] =
-                    residuals[k] / if k < 3 { motor.scales[k] } else { 1.0 };
+                residuals[k] /= if k < 3 { motor.scales[k] } else { 1.0 };
             }
-            if result.auxiliary_residuals[s..s + n]
-                .iter()
-                .any(|v| !v.is_finite())
-            {
+            if residuals.iter().any(|v| !v.is_finite()) {
                 return Err("nonfinite scaled motor residual".into());
             }
-            readings.push(EmbeddedMotorReading {
-                current_a: signals[0],
-                shaft_torque_nm: signals[1],
-                gear_speed_rad_s: signals[2],
-                heating_w: -through[4],
-            });
+            if let Some(readings) = readings.as_mut() {
+                readings.push(EmbeddedMotorReading {
+                    current_a: signals[0],
+                    shaft_torque_nm: signals[1],
+                    gear_speed_rad_s: signals[2],
+                    heating_w: -through[4],
+                });
+            }
         }
-        Ok((result, readings))
+        Ok(result)
     }
 }

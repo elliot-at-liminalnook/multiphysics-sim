@@ -1,6 +1,8 @@
 //! Small, deterministic nonlinear solver used by the first coupling island.
 
 mod coloring;
+#[cfg(all(feature = "evolution", feature = "bayesian", not(target_arch = "wasm32")))]
+pub mod evolution;
 #[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
 pub mod bayesian;
 #[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
@@ -23,7 +25,7 @@ pub mod inequality_barrier;
 pub mod derivative_audit;
 #[cfg(all(feature = "native-ipopt", not(target_arch = "wasm32")))]
 pub mod ipopt;
-pub use coloring::{BlockDiagonalColoring, group_disjoint_columns, solve_newton_numeric_colored, solve_newton_numeric_colored_scaled_audited};
+pub use coloring::{BlockDiagonalColoring, group_disjoint_columns, solve_newton_numeric_colored, solve_newton_numeric_colored_scaled_audited, solve_newton_numeric_colored_scaled_cached_audited};
 
 use nalgebra::DMatrix;
 use serde::{Deserialize, Serialize};
@@ -58,7 +60,7 @@ pub struct NewtonConfig {
     pub refresh_before_iteration_limit: bool,
     /// Experimental bounded, scaled good-Broyden updates for dense islands of
     /// at most 64 unknowns. Only decreasing full steps supply secants; after
-    /// eight updates or an unsafe update the next iteration rebuilds the
+    /// the update cap or an unsafe update the next iteration rebuilds the
     /// Jacobian. Raw residual and correction acceptance checks are unchanged.
     #[serde(default, skip_serializing_if = "is_false")]
     pub broyden_updates: bool,
@@ -68,6 +70,11 @@ pub struct NewtonConfig {
     /// apply; neither raw residual nor correction acceptance is relaxed.
     #[serde(default, skip_serializing_if = "is_false")]
     pub broyden_negligible_updates: bool,
+    /// Maximum accepted rank-one updates per factorization. None retains eight;
+    /// zero makes every update request refresh derivatives. This controls only
+    /// numerical proposals, never residual/correction acceptance or safeguards.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub broyden_max_updates: Option<usize>,
 }
 
 impl Default for NewtonConfig {
@@ -82,6 +89,7 @@ impl Default for NewtonConfig {
             refresh_before_iteration_limit: false,
             broyden_updates: false,
             broyden_negligible_updates: false,
+            broyden_max_updates: None,
         }
     }
 }
@@ -394,10 +402,14 @@ impl JacobianCache {
     /// while satisfying J_new * (x_new-x_old) = r_new-r_old. This only proposes
     /// a correction matrix; the solver still evaluates and checks real residuals.
     fn broyden_update(&self, old: &[f64], new: &[f64], r: &[f64], next_r: &[f64],
-        step_scale: &dyn Fn(usize, f64) -> f64) -> Option<Self> {
+        step_scale: &dyn Fn(usize, f64) -> f64, max_updates: usize) -> Option<Self> {
         let raw = self.raw.as_ref()?;
         let n = old.len();
-        if self.broyden_steps >= 8 || n == 0 { return None; }
+        if self.broyden_steps >= max_updates {
+            profile::BROYDEN_CAP.count(1);
+            return None;
+        }
+        if n == 0 { return None; }
         let scales: Vec<_> = (0..n).map(|j| step_scale(j, old[j])).collect();
         if scales.iter().any(|s| !s.is_finite() || *s <= 0.0) { return None; }
         let s: Vec<_> = (0..n).map(|j| new[j] - old[j]).collect();
@@ -780,7 +792,7 @@ where
             if let Some((old, old_r)) = secant {
                 let updated = if scaled_norm(&r, &row_scale) < norm {
                     profile::BROYDEN_UPDATE.time(|| cache.as_ref().unwrap()
-                        .broyden_update(&old, unknowns, &old_r, &r, step_scale))
+                        .broyden_update(&old, unknowns, &old_r, &r, step_scale, config.broyden_max_updates.unwrap_or(8)))
                 } else { None };
                 if updated.is_some() {
                     decision!("broyden_negligible_update");
@@ -839,7 +851,7 @@ where
                 failed_searches = 0;
                 if config.broyden_updates && cache.as_ref().is_some_and(|c| c.raw.is_some()) {
                     let updated = profile::BROYDEN_UPDATE.time(|| cache.as_ref().unwrap()
-                        .broyden_update(&old, unknowns, &r, &candidate_r, step_scale));
+                        .broyden_update(&old, unknowns, &r, &candidate_r, step_scale, config.broyden_max_updates.unwrap_or(8)));
                     if updated.is_some() {
                         decision!("broyden_update");
                     } else {
@@ -959,7 +971,7 @@ mod tests {
         let new = [0.2, -0.3];
         let y = [0.3, -0.8];
         let updated = cache.broyden_update(&old, &new, &[0.0, 0.0], &y,
-            &|j, _| if j == 0 { 0.01 } else { 100.0 }).unwrap();
+            &|j, _| if j == 0 { 0.01 } else { 100.0 }, 8).unwrap();
         for i in 0..2 {
             let actual: f64 = (0..2).map(|j| updated.raw.as_ref().unwrap()[(i,j)] * new[j]).sum();
             assert!((actual-y[i]).abs() < 1e-12);
@@ -986,15 +998,58 @@ mod tests {
         let mut cache = JacobianCache::factorise_tracked(&SparseJacobian::from_dense(&DMatrix::identity(1,1)), true).unwrap();
         let scale = |_: usize, _: f64| 1.0;
         for (x, y) in [(0.0, 1.0), (1e-14, 1.0), (1.0, 10.0), (1.0, f64::NAN), (1.0, 0.0)] {
-            assert!(cache.broyden_update(&[0.0], &[x], &[0.0], &[y], &scale).is_none());
+            assert!(cache.broyden_update(&[0.0], &[x], &[0.0], &[y], &scale, 8).is_none());
         }
-        assert!(cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &|_,_|0.0).is_none());
+        assert!(cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &|_,_|0.0, 8).is_none());
         for _ in 0..8 {
-            cache = cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &scale).unwrap();
+            cache = cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &scale, 8).unwrap();
         }
-        assert!(cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &scale).is_none());
+        assert!(cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &scale, 8).is_none());
         let large = JacobianCache::factorise_tracked(&SparseJacobian::from_dense(&DMatrix::identity(65,65)), true).unwrap();
         assert!(large.raw.is_none());
+    }
+
+    #[test]
+    fn configurable_secant_caps_are_exact_and_preserve_unsafe_update_guards() {
+        for cap in [0,1,8,32] {
+            let mut cache=JacobianCache::factorise_tracked(
+                &SparseJacobian::from_dense(&DMatrix::identity(1,1)),true).unwrap();
+            let original=cache.clone();
+            let scale=|_:usize,_:f64|1.0;
+            for (x,y) in [(0.0,1.0),(1e-14,1.0),(1.0,10.0),(1.0,f64::NAN),(1.0,0.0)] {
+                assert!(cache.broyden_update(&[0.0],&[x],&[0.0],&[y],&scale,cap).is_none());
+            }
+            for count in 1..=cap {
+                cache=cache.broyden_update(&[0.0],&[1.0],&[0.0],&[1.0],&scale,cap).unwrap();
+                assert_eq!(cache.broyden_steps,count);
+                assert_eq!(cache.raw.as_ref().unwrap().as_ref(),&DMatrix::identity(1,1));
+            }
+            assert!(cache.broyden_update(&[0.0],&[1.0],&[0.0],&[1.0],&scale,cap).is_none());
+            assert_eq!(original.broyden_steps,0);
+            assert_eq!(original.raw.as_ref().unwrap().as_ref(),&DMatrix::identity(1,1));
+        }
+    }
+
+    #[test]
+    fn secant_lifetimes_preserve_nonlinear_roots_and_default_serialization() {
+        let legacy=serde_json::to_value(NewtonConfig::default()).unwrap();
+        assert!(legacy.get("broyden_max_updates").is_none());
+        assert_eq!(serde_json::from_value::<NewtonConfig>(legacy).unwrap().broyden_max_updates,None);
+        let mut defaults=Vec::new();
+        for cap in [None,Some(8),Some(0),Some(1),Some(32)] {
+            let config=NewtonConfig {broyden_updates:true,broyden_max_updates:cap,
+                max_iterations:80,absolute_tolerance:1e-12,relative_tolerance:1e-10,
+                ..Default::default()};
+            let decoded:NewtonConfig=serde_json::from_value(serde_json::to_value(config).unwrap()).unwrap();
+            assert_eq!(decoded.broyden_max_updates,cap);
+            let mut x=[1.0,1.0];
+            let result=solve_newton(&mut x,config,|x,r|{r[0]=x[0]*x[0]-2.0;r[1]=x[1]*x[1]*x[1]-27.0;}).unwrap();
+            assert!((x[0]-2.0_f64.sqrt()).abs()<1e-10);
+            assert!((x[1]-3.0).abs()<1e-10);
+            assert!(result.residual_norm<1e-10);
+            if cap==None || cap==Some(8) {defaults.push((x,result.iterations,result.residual_norm));}
+        }
+        assert_eq!(defaults[0],defaults[1]);
     }
 
     #[test]

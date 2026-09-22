@@ -117,13 +117,13 @@ impl Chain {
 
     pub fn states(&self, prefix: &str, kind: QuantityKind) -> Vec<StateDeclaration> {
         let name = |n: String| if prefix.is_empty() { n } else { format!("{prefix}.{n}") };
-        let mut out = vec![StateDeclaration::new(name("raw".into()), kind, 0.0)];
+        let mut out = vec![StateDeclaration::new(name("raw".into()), kind.clone(), 0.0)];
         if self.bandwidth > 0.0 {
-            out.push(StateDeclaration::new(name("filtered".into()), kind, 0.0));
+            out.push(StateDeclaration::new(name("filtered".into()), kind.clone(), 0.0));
         }
-        out.extend((0..self.stages_present()).map(|k| StateDeclaration::new(name(format!("stage{k}")), kind, 0.0)));
+        out.extend((0..self.stages_present()).map(|k| StateDeclaration::new(name(format!("stage{k}")), kind.clone(), 0.0)));
         if self.sampled() {
-            out.push(StateDeclaration::new(name("held".into()), kind, 0.0));
+            out.push(StateDeclaration::new(name("held".into()), kind.clone(), 0.0));
             out.push(StateDeclaration::new(name("next_sample".into()), QuantityKind::Time, 0.0));
             out.push(StateDeclaration::new(name("fault_mode".into()), QuantityKind::Dimensionless, ARMED));
         }

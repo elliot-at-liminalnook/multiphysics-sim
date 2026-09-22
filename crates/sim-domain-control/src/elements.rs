@@ -135,6 +135,7 @@ fn lag_chain(p: &Params) -> Made {
 }
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
+    crate::motion_primitives::register(registry).map_err(RegistryError::Primitive)?;
     crate::motion_parameters::register(registry)?;
     crate::displacement::register(registry)?;
     crate::support_preload::register(registry)?;
@@ -145,7 +146,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     crate::command_lease::register(registry)?;
     crate::heading::register(registry)?;
     use sim_core::ParameterDeclaration as P;
-    use QuantityKind::Dimensionless as D;
+    use sim_core::quantities::Dimensionless as D;
     for descriptor in [
         BehaviorDescriptor::new(CONSTANT, "Constant signal", vec![signal_out("value", D)], constant).with_parameters(vec![P::required("value", "1")]),
         BehaviorDescriptor::new(SINE, "Sinusoidal signal", vec![signal_out("value", D)], sine).with_parameters(vec![P::required("amplitude", "1"), P::required("frequency", "Hz"), P::optional("phase", "rad", 0.0)]),
@@ -156,5 +157,8 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
         registry.register(descriptor)?;
     }
     crate::motion_clock::register(registry)?;
+    crate::pwm_feedback::register(registry)?;
+    crate::sampled_fixed_pd::register(registry)?;
+    crate::reference_governor::register(registry)?;
     crate::external::register(registry)
 }

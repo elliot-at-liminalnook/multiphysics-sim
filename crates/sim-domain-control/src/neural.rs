@@ -100,9 +100,9 @@ impl Network {
             let found: Vec<_> = channels.iter().enumerate().filter(|(_,c)| c.name == name && c.kind == kind).map(|(i,_)| i).collect();
             if found.len() == 1 { Ok(found[0]) } else { Err(format!("neural binding requires unique named channel with matching units: {name}")) }
         };
-        let features = self.features.iter().map(|f| Ok((index(sensors,&f.source,f.kind)?,
-            f.subtract.as_ref().map(|s| index(sensors,s,f.kind)).transpose()?))).collect::<Result<_,String>>()?;
-        let outputs = self.outputs.iter().map(|o| index(actuators,&o.target,o.kind)).collect::<Result<_,_>>()?;
+        let features = self.features.iter().map(|f| Ok((index(sensors,&f.source,f.kind.clone())?,
+            f.subtract.as_ref().map(|s| index(sensors,s,f.kind.clone())).transpose()?))).collect::<Result<_,String>>()?;
+        let outputs = self.outputs.iter().map(|o| index(actuators,&o.target,o.kind.clone())).collect::<Result<_,_>>()?;
         Ok(BoundNetwork {network:self,features,outputs,sensor_count:sensors.len(),actuator_count:actuators.len()})
     }
 }

@@ -183,7 +183,7 @@ fn escape(s: &str) -> String {
 // values, IEEE-754 bits for other finite numbers. Normalize signed zero and
 // integral floats within the exact JSON/JavaScript integer range. The framing
 // avoids ambiguous concatenations; no locale, map iteration or host hash seed.
-pub(crate) fn fingerprint(value: &Value) -> String {
+pub fn fingerprint(value: &Value) -> String {
     fn bytes(h: &mut blake3::Hasher, tag: &[u8], b: &[u8]) {
         h.update(tag);
         h.update(&(b.len() as u64).to_le_bytes());

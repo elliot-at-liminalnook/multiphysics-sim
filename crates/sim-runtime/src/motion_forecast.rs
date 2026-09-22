@@ -15,8 +15,9 @@ pub enum MotionAxis {
 impl MotionAxis {
     fn name(&self)->&str{match self {Self::Joint{name,..}|Self::Link{name,..}=>name}}
     fn kinds(&self)->Result<[Q;3],String>{match self {
-        Self::Joint{position_kind:Q::Angle,..}=>Ok([Q::Angle,Q::AngularVelocity,Q::AngularAcceleration]),
-        Self::Joint{position_kind:Q::Length,..}|Self::Link{..}=>Ok([Q::Length,Q::LinearVelocity,Q::LinearAcceleration]),
+        Self::Joint{position_kind,..} if *position_kind == Q::Angle =>Ok([Q::Angle,Q::AngularVelocity,Q::AngularAcceleration]),
+        Self::Joint{position_kind,..} if *position_kind == Q::Length =>Ok([Q::Length,Q::LinearVelocity,Q::LinearAcceleration]),
+        Self::Link{..}=>Ok([Q::Length,Q::LinearVelocity,Q::LinearAcceleration]),
         _=>Err("forecast joint kind must be angle or length".into()),
     }}
 }
@@ -100,7 +101,7 @@ impl ForecastRecipe {
     pub fn action_count(&self)->usize{self.actuator_targets.len()+self.controller_inputs.len()}
     pub fn action_channels(&self)->Vec<(&str,Q)>{
         if self.controller_inputs.is_empty(){self.actuator_targets.iter().map(|n|(n.as_str(),Q::Angle)).collect()}
-        else {self.controller_inputs.iter().map(|c|(c.name.as_str(),c.kind)).collect()}
+        else {self.controller_inputs.iter().map(|c|(c.name.as_str(),c.kind.clone())).collect()}
     }
     /// Resolve named state and sensor channels against the actual compiled CAD
     /// robot. This does not establish calibration or identify world overrides.
@@ -318,9 +319,9 @@ impl TrajectoryForecaster {
         let features=input_channels.iter().enumerate().map(|(i,(name,kind))|{
             let center=training.iter().map(|s|s.inputs[i]).sum::<f64>()/training.len() as f64;
             let scale=(training.iter().map(|s|(s.inputs[i]-center).powi(2)).sum::<f64>()/training.len() as f64).sqrt().max(1e-8);
-            Feature{source:name.clone(),subtract:None,kind:*kind,center,scale,clip:f64::MAX}
+            Feature{source:name.clone(),subtract:None,kind:kind.clone(),center,scale,clip:f64::MAX}
         }).collect::<Vec<_>>();
-        let outputs=output_channels.iter().enumerate().map(|(i,(name,kind))|Output{target:name.clone(),kind:*kind,
+        let outputs=output_channels.iter().enumerate().map(|(i,(name,kind))|Output{target:name.clone(),kind:kind.clone(),
             scale:(training.iter().map(|s|(s.targets[i]-s.prior[i]).powi(2)).sum::<f64>()/training.len() as f64).sqrt().max(1e-8)}).collect::<Vec<_>>();
         let mut layers=vec![];let mut incoming=features.len();
         for layer in 0..2{let mut rng=GaussianSampler::new(GaussianExploration{standard_deviation:vec![1./(incoming as f64).sqrt();incoming]},incoming,seed+layer)?;

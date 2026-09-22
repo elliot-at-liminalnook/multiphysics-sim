@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|c| Feature {
             source: c.name.clone(),
             subtract: None,
-            kind: c.kind,
+            kind: c.kind.clone(),
             center: c.initial,
             scale: (c.upper - c.lower).abs().max(1.),
             clip: 8.,
@@ -142,7 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             Ok(Output {
                 target: c.name.clone(),
-                kind: c.kind,
+                kind: c.kind.clone(),
                 scale: b[1] - b[0],
             })
         })

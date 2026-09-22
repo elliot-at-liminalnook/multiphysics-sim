@@ -7,7 +7,7 @@
 //! several surface elements sharing one thermal node.
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -129,7 +129,7 @@ fn sky(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::{Radiative as Rd, Thermal as H};
+    use sim_core::connectors::{Radiative as Rd, Thermal as H};
     for descriptor in [
         BehaviorDescriptor::new(SURFACE, "Band-limited opaque surface", vec![acausal("face", Rd), acausal("heat", H)], surface).with_parameters(vec![P::required("area", "m²").positive(), P::required("emissivity", "1").nonnegative().at_most(1.0), P::optional("band_lo", "µm", 0.0).nonnegative(), P::optional("band_hi", "µm", 1.0e9).positive()]),
         BehaviorDescriptor::new(VIEW, "View factor between two surfaces", vec![acausal("a", Rd), acausal("b", Rd)], view).with_parameters(vec![P::required("area", "m²").positive(), P::optional("factor", "1", 1.0).nonnegative().at_most(1.0)]),

@@ -2,7 +2,7 @@
 //! any volume source) couples in, plus King's-law heat release.
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or, signal_in, signal_out,
 };
 use std::collections::BTreeMap;
@@ -110,8 +110,8 @@ fn heat_release(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::NormalizedAcoustic as A;
-    use QuantityKind::Dimensionless as D;
+    use sim_core::connectors::NormalizedAcoustic as A;
+    use sim_core::quantities::Dimensionless as D;
     for descriptor in [
         BehaviorDescriptor::new(DUCT_MODES, "Normalized open duct Galerkin modes", vec![acausal("tap", A), signal_out("velocity", D)], duct_modes).with_parameters(vec![P::optional("modes", "1", 3.0).integer(1.0, 4096.0), P::required("tap", "1").nonnegative().at_most(1.0), P::optional("c1", "1", 0.1), P::optional("c2", "1", 0.06), P::optional("initial.amplitude", "1", 1.0e-3)]),
         BehaviorDescriptor::new(HEAT_RELEASE, "Normalized King's-law heat release", vec![acausal("tap", A), signal_in("velocity", D), signal_out("heat", D)], heat_release).with_parameters(vec![P::required("power", "1"), P::optional("mean_velocity", "1", 1.0/3.0).nonnegative()]),

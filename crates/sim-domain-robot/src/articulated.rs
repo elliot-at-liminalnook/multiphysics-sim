@@ -1106,7 +1106,7 @@ impl Articulated {
         (out[0], out[1], out[2], out[3], out[4], out[5])
     }
 
-    fn kinematics(&self, g: &Generalized) -> (Vec<LinkKin>, Vec<V>, Vec<Vec<V>>) {
+    fn kinematics(&self, g: &Generalized) -> prepared::Kinematics {
         let n = self.links.len();
         let mut kin: Vec<Option<LinkKin>> = vec![None; n];
         for b in 0..self.bases.len() {
@@ -1114,7 +1114,10 @@ impl Articulated {
             kin[self.bases[b].link] = Some(LinkKin { r: q0.to_rotation_matrix().into_inner(), p: p0, w: w0, vel: v0, alpha: al0, acc: a0 });
         }
         let mut joint_points = vec![V::zeros(); self.joints.len()];
-        let mut joint_axes: Vec<Vec<V>> = vec![Vec::new(); self.joints.len()];
+        let mut joint_axes = prepared::JointAxes {
+            values: Vec::with_capacity(g.q.len()),
+            ranges: Vec::with_capacity(self.joints.len()),
+        };
         let mut dof_index = 0usize;
         for (ji, j) in self.joints.iter().enumerate() {
             let pk = kin[j.parent].clone().expect("parents are evaluated first");
@@ -1133,12 +1136,12 @@ impl Articulated {
             let v_flex = pk.r * ud;
             let mut vel = pk.vel + pk.w.cross(&r_off) + v_flex;
             let mut acc = pk.acc + pk.alpha.cross(&r_off) + pk.w.cross(&pk.w.cross(&r_off)) + pk.r * udd + 2.0 * pk.w.cross(&v_flex);
-            let mut axes = Vec::with_capacity(j.dofs.len());
+            let axis_start = dof_index;
             for d in &j.dofs {
                 let e = rot.column(d.axis).into_owned();
                 let (q, qd, qdd) = (g.q[dof_index], g.qd[dof_index], g.qdd[dof_index]);
                 dof_index += 1;
-                axes.push(e);
+                joint_axes.values.push(e);
                 match d.kind {
                     DofKind::Revolute => {
                         rot = rot_axis(e, q) * rot;
@@ -1154,7 +1157,7 @@ impl Articulated {
                 }
             }
             joint_points[ji] = o;
-            joint_axes[ji] = axes;
+            joint_axes.ranges.push(axis_start..dof_index);
             let d = rot * j.r_jc;
             let r_c = rot * j.r_jc_rot;
             let p_c = o + d;
@@ -1183,6 +1186,14 @@ impl Articulated {
         cached_contacts: Option<&prepared::ContactForces>,
         cached_geometry: Option<&prepared::ContactGeometry>,
         cached_kinematics: Option<&prepared::Kinematics>) -> Evaluation {
+        self.evaluate_force_kernel(g, contact, inertia_only, cached_contacts,
+            cached_geometry, cached_kinematics).into_evaluation()
+    }
+
+    fn evaluate_force_kernel<'k>(&self, g: &Generalized, contact: bool, inertia_only: bool,
+        cached_contacts: Option<&prepared::ContactForces>,
+        cached_geometry: Option<&prepared::ContactGeometry>,
+        cached_kinematics: Option<&'k prepared::Kinematics>) -> prepared::ForceKernelResult<'k> {
         let gravity = if inertia_only { V::zeros() } else { self.gravity };
         let n = self.links.len();
         // Borrow cached joint axes rather than cloning one allocation per joint.
@@ -1245,7 +1256,7 @@ impl Articulated {
             f_link[i] = l.mass * k.acc - f_ext[i];
             n_link[i] = i_w * k.alpha + k.w.cross(&(i_w * k.w)) - t_ext[i];
         }
-        let mut joints: Vec<JointReaction> = vec![JointReaction::default(); self.joints.len()];
+        let mut joints = vec![prepared::JointWrench::default(); self.joints.len()];
         let mut sum_f = vec![V::zeros(); n]; // force the link must transmit to children
         let mut sum_n = vec![V::zeros(); n]; // their moments about the link's COM
         for (ji, j) in self.joints.iter().enumerate().rev() {
@@ -1270,10 +1281,10 @@ impl Articulated {
             .collect();
         // Joint torques: needed vs passive.
         let mut dof_index = 0usize;
+        let mut needed = Vec::with_capacity(g.q.len());
+        let mut passive = Vec::with_capacity(g.q.len());
         for (ji, j) in self.joints.iter().enumerate() {
             let axes = &joint_axes[ji];
-            let mut needed = Vec::with_capacity(j.dofs.len());
-            let mut passive = Vec::with_capacity(j.dofs.len());
             for (k, d) in j.dofs.iter().enumerate() {
                 let e = axes[k];
                 let tau = match d.kind {
@@ -1300,8 +1311,6 @@ impl Articulated {
                 needed.push(tau);
                 passive.push(pas);
             }
-            joints[ji].tau_needed = needed;
-            joints[ji].tau_passive = passive;
         }
         // Modal forces.
         let mut modal_force = vec![Vec::new(); n];
@@ -1326,19 +1335,8 @@ impl Articulated {
             }
             modal_force[li] = out;
         }
-        // Evaluation owns its axes. Fresh kinematics can transfer them after
-        // the force calculations; only borrowed prepared axes require copies.
-        let (links, joint_points) = match kinematics {
-            std::borrow::Cow::Borrowed(cached) => {
-                for (joint, axes) in joints.iter_mut().zip(&cached.2) { joint.axes = axes.clone(); }
-                (cached.0.clone(), cached.1.clone())
-            }
-            std::borrow::Cow::Owned((links, points, axes)) => {
-                for (joint, axes) in joints.iter_mut().zip(axes) { joint.axes = axes; }
-                (links, points)
-            }
-        };
-        Evaluation { links, joints, contacts, base_wrench, modal_force, loop_rows, bristle_rates, contact_normal, joint_points }
+        prepared::ForceKernelResult { kinematics, joints, needed, passive, contacts,
+            base_wrench, modal_force, loop_rows, bristle_rates, contact_normal }
     }
 
     fn contact_forces(&self, g: &Generalized, links: &[LinkKin], contact: bool, gravity: V,
@@ -1741,7 +1739,7 @@ fn compile_flex(f: &Flex, li: usize, joints: &[JointC], links: &[LinkC], state: 
 impl Behavior for Articulated {
     fn owned_frame(&self) -> Option<usize> { Some(0) }
     fn states(&self) -> Vec<StateDeclaration> {
-        use QuantityKind::*;
+        use sim_core::quantities::*;
         let (p, q) = &self.base0;
         let mut out = vec![
             StateDeclaration::new("base.x", Length, p.x),
@@ -1784,10 +1782,10 @@ impl Behavior for Articulated {
             if let Some(f) = &l.flex {
                 let (coordinate, velocity) = f.normalization.quantities();
                 for m in 0..f.modes {
-                    out.push(StateDeclaration::new(format!("{}.eta{m}", l.name), coordinate, 0.0));
+                    out.push(StateDeclaration::new(format!("{}.eta{m}", l.name), coordinate.clone(), 0.0));
                 }
                 for m in 0..f.modes {
-                    out.push(StateDeclaration::new(format!("{}.etad{m}", l.name), velocity, 0.0));
+                    out.push(StateDeclaration::new(format!("{}.etad{m}", l.name), velocity.clone(), 0.0));
                 }
             }
         }
@@ -1978,7 +1976,7 @@ impl Articulated {
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
     let mut parameters = vec![
-        P::required("model", "handle").integer(0., 9007199254740991.), P::optional("gravity", "1", 1.),
+        P::required("model", "handle").integer(0., 9007199254740991.).implementation_reference(), P::optional("gravity", "1", 1.),
         P::optional("planar", "1", 0.).integer(0., 1.), P::optional("flex", "1", 1.).integer(0., 1.), P::optional("contact", "1", 1.).integer(0., 1.),
         P::optional("collision.omit_inter_link", "1", 0.).integer(0., 1.),
         P::optional("jacobian.hybrid", "1", 0.).integer(0., 1.),

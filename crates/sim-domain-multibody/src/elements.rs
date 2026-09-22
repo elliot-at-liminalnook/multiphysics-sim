@@ -7,7 +7,7 @@
 
 use nalgebra::{Matrix3, UnitQuaternion, Vector3};
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, Provision, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, Provision, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or, signal_in,
 };
 use std::collections::BTreeMap;
@@ -375,7 +375,7 @@ fn pitch_plunge_section(p: &Params) -> Made {
 }
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
-    use ConnectorKind::{Frame as F, Rotational as R, Translational as T};
+    use sim_core::connectors::{Frame as F, Rotational as R, Translational as T};
     use sim_core::ParameterDeclaration as P;
     let mut body = vec![P::required("mass", "kg").positive(), P::required("ixx", "kg·m²").positive(),
         P::required("iyy", "kg·m²").positive(), P::required("izz", "kg·m²").positive(), P::optional("gravity", "m/s²", 0.)];

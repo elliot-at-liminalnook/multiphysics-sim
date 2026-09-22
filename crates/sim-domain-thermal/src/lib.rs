@@ -2,7 +2,7 @@
 //! first port; a node's heat flows sum to zero.
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -98,7 +98,7 @@ fn heat_source(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::Thermal as H;
+    use sim_core::connectors::Thermal as H;
     for descriptor in [
         BehaviorDescriptor::new(CAPACITANCE, "Thermal capacitance", vec![acausal("node", H)], capacitance).with_parameters(vec![P::required("heat_capacity", "J/K").positive()]),
         BehaviorDescriptor::new(CONDUCTANCE, "Thermal conductance", vec![acausal("a", H), acausal("b", H)], conductance).with_parameters(vec![P::alternative("conductance", "W/K"), P::alternative("resistance", "K/W")]),

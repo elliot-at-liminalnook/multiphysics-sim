@@ -35,7 +35,7 @@ pub struct EmbeddedDriverReading {
 pub struct EmbeddedDriverBank {
     equations: Vec<Box<dyn Behavior>>,
     layout: Vec<(usize, usize, usize)>,
-    names: Vec<String>,
+    pub(super) names: Vec<String>,
     state_count: usize,
 }
 impl EmbeddedDriverBank {

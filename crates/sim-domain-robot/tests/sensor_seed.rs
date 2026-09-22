@@ -51,7 +51,7 @@ fn multiple_cad_imus_keep_axis_units_and_port_values_in_compiler_order() {
             let expected = offset + k as f64 + 1. + if k == 2 { gravity } else { 0. };
             let kind = if k < 3 { QuantityKind::LinearAcceleration } else { QuantityKind::AngularVelocity };
             let (port, declaration) = rig.runtime.model.ports.iter().find(|(_, p)| p.name == format!("imu.{name}.{axis}")).unwrap();
-            assert_eq!(declaration.schema, PortSchema::SignalOut(kind));
+            assert_eq!(declaration.schema, PortSchema::SignalOut(kind.clone()));
             let value = rig.runtime.get(rig.runtime.signal_id(port));
             assert!((value - expected).abs() < 1e-8, "{name}.{axis}: {value} vs {expected}");
             let state = rig.runtime.state_id(rig.behavior, &format!("{name}.{axis}"));

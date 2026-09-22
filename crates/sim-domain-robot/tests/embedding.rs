@@ -181,6 +181,7 @@ fn temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages() {
     use sim_dynamics::hybrid::HybridConfig;
     for floating in [false,true] {
     for linearized_jacobian_probes in [false,true] {
+    for mechanical_predictor in [false,true] {
         let (art,mut seed)=slider_crank(floating);
         let dofs=art.audit_slider_cranks()[0].candidate.as_ref().unwrap().dof_indices;
         let map=RigidEmbedding::new(&art,&["joint.motor".into()],EmbeddingConfig {direct_closure_jacobian:true,..Default::default()}).unwrap();
@@ -192,13 +193,15 @@ fn temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages() {
         }
         let mut exact=map.solve(&seed,&[0.3],&velocity).unwrap().generalized;
         let mut predicted=exact.clone();let mut workspace=ImplicitSolverWorkspace::default();let mut used=0;
-        let config=ImplicitStepConfig {reuse_step_jacobian:true,extrapolate_velocity_seed:true,linearized_jacobian_probes,linearized_probe_relative_step:1e-5,..Default::default()};
+        let config=ImplicitStepConfig {reuse_step_jacobian:true,extrapolate_velocity_seed:true,mechanical_predictor,linearized_jacobian_probes,linearized_probe_relative_step:1e-5,..Default::default()};
+        let mut mechanical_predictions=0;
         let nb=usize::from(floating)*6;
         let load=|_:f64,g:&Generalized| {let mut f=vec![0.0;nb+g.q.len()];f[nb+dofs[0]]=0.003-0.02*g.qd[dofs[0]];Ok(f)};
         for i in 0..30 {
             let a=map.step_implicit(&exact,i as f64*0.01,0.01,&ImplicitStepConfig::default(),load).unwrap();
             let b=map.advance_implicit_mechanics_cached(&predicted,i as f64*0.01,0.01,&config,&HybridConfig::default(),&mut workspace,load).unwrap();
             assert_eq!(b.segments.len(),1);used+=usize::from(b.segments[0].diagnostics.predicted_velocity_seed==Some(true));
+            mechanical_predictions+=usize::from(b.segments[0].diagnostics.mechanical_prediction_used==Some(true));
             exact=a.endpoint.generalized;predicted=b.endpoint.generalized;
             let position=expected(predicted.q[dofs[0]]);
             assert!((predicted.q[dofs[1]]-position.0).abs()<1e-9&&(predicted.q[dofs[2]]-position.1).abs()<1e-9);
@@ -207,7 +210,9 @@ fn temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages() {
                 assert!((a-b).abs()<1e-8,"floating={floating} interval={i} difference={}",(a-b).abs());
             }
         }
-        assert!(used>0,"prediction must execute: floating={floating} tangent={linearized_jacobian_probes}");
+        if !mechanical_predictor {assert!(used>0,"temporal prediction must execute: floating={floating} tangent={linearized_jacobian_probes}");}
+        if mechanical_predictor {assert!(mechanical_predictions>0,"mechanical predictor must execute");}
+    }
     }
     }
 }
@@ -548,11 +553,20 @@ fn nonlinear_slider_crank_matches_geometry_tangent_and_curvature() {
 
 #[test]
 fn analytic_positions_preserve_branches_floating_dynamics_and_rank_checks() {
+    for analytic_mechanism_motion in [false, true] {
+    for dependent_solve in [DependentSolve::Svd, DependentSolve::PivotedQr] {
+    for block_dependent_factorization in [false, true] {
     for floating in [false, true] {
-        let (art, original) = slider_crank(floating);
+        let (art, mut original) = slider_crank(floating);
+        if floating {
+            let s = art.bases[0].state;
+            original.states[s..s+3].copy_from_slice(&[0.2,-0.1,0.3]);
+            original.states[s+3..s+7].copy_from_slice(&[0.7_f64.cos(),0.0,0.7_f64.sin(),0.0]);
+        }
         let config = EmbeddingConfig {
             direct_closure_jacobian: true,
-            dependent_solve: DependentSolve::PivotedQr,
+            dependent_solve,
+            block_dependent_factorization,
             ..Default::default()
         };
         let numeric = RigidEmbedding::new(&art, &["joint.motor".into()], config.clone()).unwrap();
@@ -561,6 +575,7 @@ fn analytic_positions_preserve_branches_floating_dynamics_and_rank_checks() {
             &["joint.motor".into()],
             EmbeddingConfig {
                 analytic_mechanism_positions: true,
+                analytic_mechanism_motion,
                 ..config.clone()
             },
         )
@@ -601,6 +616,7 @@ fn analytic_positions_preserve_branches_floating_dynamics_and_rank_checks() {
             &["joint.motor".into()],
             EmbeddingConfig {
                 analytic_mechanism_positions: true,
+                analytic_mechanism_motion,
                 absolute_rank_tolerance: 100.0,
                 ..config
             },
@@ -617,6 +633,7 @@ fn analytic_positions_preserve_branches_floating_dynamics_and_rank_checks() {
                 &["joint.link".into()],
                 EmbeddingConfig {
                     analytic_mechanism_positions: true,
+                    analytic_mechanism_motion,
                     ..Default::default()
                 }
             )
@@ -629,6 +646,7 @@ fn analytic_positions_preserve_branches_floating_dynamics_and_rank_checks() {
         &["joint.motor".into()],
         EmbeddingConfig {
             analytic_mechanism_positions: true,
+            analytic_mechanism_motion,
             ..Default::default()
         },
     )
@@ -637,6 +655,13 @@ fn analytic_positions_preserve_branches_floating_dynamics_and_rank_checks() {
         map.solve(&seed, &[std::f64::consts::FRAC_PI_2], &[0.0])
             .is_err()
     );
+    }
+    }
+    }
+    let (art, _) = slider_crank(false);
+    assert!(RigidEmbedding::new(&art, &["joint.motor".into()], EmbeddingConfig {
+        analytic_mechanism_motion:true, ..Default::default()
+    }).is_err());
 }
 
 #[test]
@@ -686,6 +711,48 @@ fn analytic_slider_crank_matches_independent_formula_and_iterative_chart() {
         assert!((other.slider_m - 0.4).abs() < 1e-12);
         assert!(chart.coordinates(f64::NAN, -1, 0.0).is_err());
         assert!(chart.coordinates(0.0, 0, 0.0).is_err());
+    }
+}
+
+#[test]
+fn analytic_transmission_motion_preserves_signed_ratio_and_independent_order() {
+    for ratio in [-2.0, 0.125, 7.0] {
+        let mut model = empty_model();
+        model.gravity = [0.0; 3];
+        model.links.push(box_link("base", [0.1; 3], 1.0, [0.0; 3], true));
+        for name in ["driver", "driven", "free"] {
+            model.links.push(box_link(name, [0.1; 3], 1.0, [0.0; 3], false));
+            model.joints.push(joint(name, "revolute", Some("base"), name, [0.0; 3], [0.0,0.0,1.0]));
+        }
+        model.transmissions.push(sim_domain_robot::model::Transmission {
+            name:"signed gear".into(), driver_joint:"driver".into(), driven_joint:"driven".into(), ratio,
+        });
+        let art = Articulated::new(Arc::new(model), &Options {flex:false, contact:false, ..Default::default()}).unwrap();
+        let seed = art.generalized(art.states().iter().map(|s|s.initial).collect(),
+            vec![0.0;art.state_count], &vec![0.0;art.port_names.len()+1], vec![]);
+        let independent = ["joint.free".into(), "joint.driver".into()];
+        let analytic = RigidEmbedding::new(&art, &independent, EmbeddingConfig {
+            analytic_mechanism_positions:true, analytic_mechanism_motion:true,
+            block_dependent_factorization:true, direct_closure_jacobian:true, ..Default::default()
+        }).unwrap();
+        let numeric = RigidEmbedding::new(&art, &independent, Default::default()).unwrap();
+        let driven = art.dofs().position(|(_,d)|d.name=="joint.driven").unwrap();
+        for angle in [-0.7,0.0,0.8] {
+            let a = analytic.solve(&seed, &[0.2,angle], &[-0.4,0.7]).unwrap();
+            let b = numeric.solve(&seed, &[0.2,angle], &[-0.4,0.7]).unwrap();
+            assert!((a.generalized.q[driven]-angle/ratio).abs()<1e-12);
+            assert!((a.generalized.qd[driven]-0.7/ratio).abs()<1e-12);
+            assert!((a.tangent[(driven,1)]-1.0/ratio).abs()<1e-12);
+            assert!(a.acceleration_bias.amax()<1e-12);
+            assert!((&a.tangent-&b.tangent).amax()<1e-12);
+            for row in art.original_closure_values(&a.generalized) {
+                assert!(row.position.abs()<1e-12 && row.velocity.abs()<1e-12 && row.acceleration.abs()<1e-12);
+            }
+            let force = vec![0.3;analytic.full_dimension()];
+            let aa=analytic.accelerations(&a,&force).unwrap();
+            let bb=numeric.accelerations(&b,&force).unwrap();
+            assert!((&aa.full_accelerations-&bb.full_accelerations).amax()<1e-9);
+        }
     }
 }
 
@@ -907,6 +974,19 @@ fn reduced_dynamics_matches_full_constrained_solve_under_external_load() {
             let motion = map.solve(&seed, &[theta], &[0.6]).unwrap();
             let applied = vec![0.2, -0.1, 0.4];
             let answer = map.accelerations(&motion, &applied).unwrap();
+            let projected_map = RigidEmbedding::new(
+                &art,
+                &["joint.motor".into()],
+                EmbeddingConfig {
+                    dependent_solve,
+                    direct_closure_jacobian,
+                    direct_projected_inertia: true,
+                    ..Default::default()
+                },
+            ).unwrap();
+            let projected = projected_map.accelerations(&motion, &applied).unwrap();
+            assert!((&answer.full_accelerations - &projected.full_accelerations).amax() < 1e-10);
+            assert_eq!(answer.bristle_rates, projected.bristle_rates);
             // Independent original-row acceleration KKT system; SVD permits its
             // redundant rows, while inertia makes the acceleration unique.
             let audit = art

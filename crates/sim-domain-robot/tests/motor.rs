@@ -16,6 +16,7 @@ fn actuator_discovery_declares_units_defaults_and_rejects_invalid_values() {
     for (kind, parameter, unit) in [
         (MOTOR_UNIT, "torque_constant", "N·m/A"),
         (MOTOR_UNIT, "reference", "K"),
+        (MOTOR_UNIT, "loss_speed_scale", "rad/s"),
         (MOTOR_UNIT, "gear_damping", "N·m·s/rad"),
         (H_BRIDGE, "on_resistance", "Ω"),
         (BATTERY, "capacity_ah", "A·h"),
@@ -27,6 +28,7 @@ fn actuator_discovery_declares_units_defaults_and_rejects_invalid_values() {
         assert_eq!(declaration.unit, unit);
     }
     for (kind, key, value) in [
+        (MOTOR_UNIT, "loss_speed_scale", 0.), (MOTOR_UNIT, "loss_speed_scale", -1.),
         (MOTOR_UNIT, "efficiency", 1.01), (MOTOR_UNIT, "gear_stifness", 1.),
         (H_BRIDGE, "current_limit", -1.), (BATTERY, "cells", 1.5),
         (BATTERY, "initial_soc", 1.1), (BATTERY, "cutoff_voltage", 6.),

@@ -56,11 +56,30 @@ impl<'a> RigidEmbedding<'a> {
             .chain(g.qd.iter().copied())
             .collect();
         self.set_motion(&mut g, &velocity, motion.acceleration_bias.as_slice());
-        let mass = sim_solve::profile::EMBEDDED_INERTIA.time(|| self.art.rigid_mass_matrix(&g))?;
-        let reduced = sim_solve::profile::EMBEDDED_PROJECT_INERTIA
-            .time(|| motion.tangent.transpose() * mass * &motion.tangent);
-        let evaluation =
-            sim_solve::profile::EMBEDDED_FORCE_EVALUATION.time(|| self.art.evaluate(&g));
+        self.art.validate_rigid_motion(&g)?;
+        let kinematics = self.art.kinematics(&g);
+        let reduced = if self.config.direct_projected_inertia {
+            sim_solve::profile::EMBEDDED_INERTIA.time(|| {
+                self.art
+                    .rigid_projected_mass_with_kinematics(&motion.tangent, &kinematics)
+            })?
+        } else {
+            let mass =
+                sim_solve::profile::EMBEDDED_INERTIA
+                    .time(|| self.art.rigid_mass_with_kinematics(&kinematics))?;
+            sim_solve::profile::EMBEDDED_PROJECT_INERTIA
+                .time(|| motion.tangent.transpose() * mass * &motion.tangent)
+        };
+        let evaluation = sim_solve::profile::EMBEDDED_FORCE_EVALUATION.time(|| {
+            self.art.evaluate_force_kernel(
+                &g,
+                self.art.contact_on,
+                false,
+                None,
+                None,
+                Some(&kinematics),
+            )
+        });
         let required = DVector::from_iterator(
             self.full_dimension(),
             self.art
@@ -71,9 +90,9 @@ impl<'a> RigidEmbedding<'a> {
                 .flat_map(|(i, _)| evaluation.base_wrench[i])
                 .chain(
                     evaluation
-                        .joints
+                        .needed
                         .iter()
-                        .flat_map(|j| j.tau_needed.iter().zip(&j.tau_passive).map(|(a, b)| a - b)),
+                        .zip(&evaluation.passive).map(|(a, b)| a - b),
                 ),
         );
         if reduced
@@ -129,7 +148,14 @@ impl PreparedEmbeddedDynamics<'_, '_> {
         sim_solve::profile::EMBEDDED_DYNAMICS_APPLY.time(|| self.accelerations_impl(applied))
     }
 
-    fn accelerations_impl(&self, applied: &[f64]) -> Result<EmbeddedAcceleration, String> {
+    /// Reduced response at this exact prepared state, without copying a full
+    /// mechanical endpoint or telemetry. Changed mechanics requires preparation
+    /// again; numerical predictors may use this only to propose an initial guess.
+    pub fn reduced_accelerations(&self, applied: &[f64]) -> Result<DVector<f64>, String> {
+        self.solve_applied(applied).map(|(acceleration, _)| acceleration)
+    }
+
+    fn solve_applied(&self, applied: &[f64]) -> Result<(DVector<f64>, DVector<f64>), String> {
         if applied.len() != self.map.full_dimension() || applied.iter().any(|v| !v.is_finite()) {
             return Err("invalid embedded dynamics input".into());
         }
@@ -139,10 +165,17 @@ impl PreparedEmbeddedDynamics<'_, '_> {
         }
         let reduced_accelerations = self.factor.solve(&rhs);
         let projected_balance_residual = &self.reduced * &reduced_accelerations - &rhs;
+        if reduced_accelerations.iter().any(|v| !v.is_finite())
+            || projected_balance_residual.amax() > 1e-8 * (1.0 + rhs.amax()) {
+            return Err("reduced dynamics linear solve failed its residual check".into());
+        }
+        Ok((reduced_accelerations, projected_balance_residual))
+    }
+
+    fn accelerations_impl(&self, applied: &[f64]) -> Result<EmbeddedAcceleration, String> {
+        let (reduced_accelerations, projected_balance_residual) = self.solve_applied(applied)?;
         let full_accelerations = &self.tangent * &reduced_accelerations + &self.acceleration_bias;
-        if full_accelerations.iter().any(|v| !v.is_finite())
-            || projected_balance_residual.amax() > 1e-8 * (1.0 + rhs.amax())
-        {
+        if full_accelerations.iter().any(|v| !v.is_finite()) {
             return Err("reduced dynamics linear solve failed its residual check".into());
         }
         let mut g = self.generalized.clone();

@@ -21,7 +21,7 @@
 //! come first in its connection (it owns that frame).
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, Provision, QuantityKind, RegistryError, StateDeclaration, View,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, Provision, RegistryError, StateDeclaration, View,
     acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -140,7 +140,7 @@ impl Chain {
 impl Behavior for Chain {
     fn owned_frame(&self) -> Option<usize> { Some(1) }
     fn states(&self) -> Vec<StateDeclaration> {
-        use QuantityKind::*;
+        use sim_core::quantities::*;
         // The first six alias the owned tip frame; then the tip load the
         // attachments apply; then the joint rates.
         let (x, y, phi) = {

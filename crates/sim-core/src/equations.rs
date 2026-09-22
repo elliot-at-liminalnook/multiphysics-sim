@@ -13,11 +13,12 @@
 //! across bundle, attachments read them and push wrenches back, and no node
 //! unknowns exist for the frame at all.
 
-use crate::{ConnectorKind, QuantityKind};
+use crate::QuantityKind;
+use crate::connector::LegacyConnectorKind;
 use std::collections::BTreeMap;
 
 /// One across/through pair of a connector bundle.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Lane {
     pub across: &'static str,
     pub through: &'static str,
@@ -87,7 +88,7 @@ static FRAME: [Lane; 13] = [
     lane("wz", "-", QuantityKind::AngularVelocity, QuantityKind::Dimensionless),
 ];
 
-impl ConnectorKind {
+impl LegacyConnectorKind {
     /// The lanes of this connector. Scalar connectors have one; planar
     /// frames two; rigid-body frames carry the full pose and twist across
     /// and a wrench through.
@@ -107,45 +108,10 @@ impl ConnectorKind {
             Self::Planar => &PLANAR,
             Self::PlanarFrame => &PLANAR_FRAME,
             Self::Frame => &FRAME,
-            Self::Composite(members) => {
-                // Member after member, derivative links shifted with them.
-                let mut lanes = Vec::new();
-                for member in members {
-                    let offset = lanes.len();
-                    lanes.extend(member.lanes().into_iter().map(|lane| Lane { derivative_of: lane.derivative_of.map(|b| b + offset), ..lane }));
-                }
-                return lanes;
-            }
         };
         plain.to_vec()
     }
 
-    /// Flat lane offset of member `member` inside this connector's bundle;
-    /// a behavior addresses `(port, member, lane)` as `member_offset + lane`.
-    pub fn member_offset(self, member: usize) -> usize {
-        self.members().iter().take(member).map(|m| m.across_width()).sum()
-    }
-
-    /// Owned connectors have exactly one owner port per node, whose states
-    /// *are* the across bundle; the node carries no unknowns.
-    pub const fn is_owned(self) -> bool {
-        matches!(self, Self::Frame | Self::PlanarFrame)
-    }
-
-    /// For owned connectors: the owner's state offset at which attachments'
-    /// through contributions land (its twist rows), `across − through` lanes.
-    pub fn owned_wrench_offset(self) -> usize {
-        self.across_width() - self.through_width()
-    }
-
-    /// Number of through variables that get a balance row.
-    pub fn through_width(self) -> usize {
-        self.lanes().iter().filter(|l| l.through != "-").count()
-    }
-
-    pub fn across_width(self) -> usize {
-        self.lanes().len()
-    }
 }
 
 #[derive(Debug, Clone)]

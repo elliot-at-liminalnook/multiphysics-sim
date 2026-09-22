@@ -1,0 +1,25 @@
+[package]
+name = "sim-viewer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sim-render = { path = "../sim-render" }
+sim-api = { path = "../sim-api" }
+serde.workspace = true
+eframe = { version = "=0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+sim-core = { path = "../sim-core" }
+sim-runtime = { path = "../sim-runtime" }
+sim-inspect = { path = "../sim-inspect" }
+sim-diagram = { path = "../sim-diagram" }
+serde_json.workspace = true
+blake3 = "=1.8.7"
+image = { version = "=0.25.10", default-features = false, features = ["png"] }
+
+[features]
+native-probe = []
+
+[[example]]
+name = "host_probe"
+required-features = ["native-probe"]

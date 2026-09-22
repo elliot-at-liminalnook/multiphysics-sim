@@ -1,6 +1,9 @@
 //! Acquisition records retain device-clock windows and transport evidence.
 //! They are irregular measurements, never implicitly resampled simulator states.
 pub mod servo_bus;
+pub mod calibration;
+#[cfg(unix)]
+pub mod calibration_serial;
 pub mod servo_safety;
 pub mod actuator_sweep;
 
@@ -228,3 +231,5 @@ mod tests {
         assert!(BusTransaction::from_frame(&f).is_err());
     }
 }
+
+pub mod calibration_sweep;

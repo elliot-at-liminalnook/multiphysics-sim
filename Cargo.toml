@@ -1,6 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/sim-api",
+    "crates/sim-render",
     "crates/sim-core",
     "crates/sim-script",
     "crates/sim-compile",
@@ -29,6 +31,11 @@ members = [
     "crates/sim-app",
     "crates/sim-runtime",
     "crates/sim-web",
+    "crates/sim-viewer",
+    "crates/sim-spatial",
+    "crates/sim-inspect",
+    "crates/sim-diagram",
+    "crates/sim-example-diffusion",
 ]
 
 [workspace.package]

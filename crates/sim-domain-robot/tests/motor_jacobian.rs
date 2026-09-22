@@ -6,9 +6,28 @@ fn motor(analytic: bool, inductance: f64) -> Box<dyn Behavior> {
     motor_with_backlash(analytic, inductance, 0.01)
 }
 fn motor_with_backlash(analytic: bool, inductance: f64, backlash: f64) -> Box<dyn Behavior> {
-    motor_with_dynamics(analytic, inductance, backlash, sim_domain_robot::motor::MotorDynamics::Detailed)
+    motor_with_dynamics(
+        analytic,
+        inductance,
+        backlash,
+        sim_domain_robot::motor::MotorDynamics::Detailed,
+    )
 }
-fn motor_with_dynamics(analytic: bool, inductance: f64, backlash: f64, dynamics: sim_domain_robot::motor::MotorDynamics) -> Box<dyn Behavior> {
+fn motor_with_dynamics(
+    analytic: bool,
+    inductance: f64,
+    backlash: f64,
+    dynamics: sim_domain_robot::motor::MotorDynamics,
+) -> Box<dyn Behavior> {
+    motor_with_loss_scale(analytic, inductance, backlash, dynamics, None)
+}
+fn motor_with_loss_scale(
+    analytic: bool,
+    inductance: f64,
+    backlash: f64,
+    dynamics: sim_domain_robot::motor::MotorDynamics,
+    loss_scale: Option<f64>,
+) -> Box<dyn Behavior> {
     let mut registry = BehaviorRegistry::default();
     sim_domain_robot::register(&mut registry).unwrap();
     let mut params: BTreeMap<_, _> = [
@@ -30,7 +49,15 @@ fn motor_with_dynamics(analytic: bool, inductance: f64, backlash: f64, dynamics:
     .into_iter()
     .map(|(k, v)| (k.into(), v))
     .collect();
-    params.extend(dynamics.parameter_flags().into_iter().map(|(k,v)|(k.into(),v)));
+    if let Some(scale) = loss_scale {
+        params.insert("loss_speed_scale".into(), scale);
+    }
+    params.extend(
+        dynamics
+            .parameter_flags()
+            .into_iter()
+            .map(|(k, v)| (k.into(), v)),
+    );
     (registry
         .get(&sim_domain_robot::MOTOR_UNIT.into())
         .unwrap()
@@ -42,21 +69,40 @@ fn motor_with_dynamics(analytic: bool, inductance: f64, backlash: f64, dynamics:
 #[test]
 fn quasistatic_motor_partials_match_each_reduced_equation() {
     use sim_domain_robot::motor::MotorDynamics::*;
-    for mode in [Detailed,QuasistaticWinding,QuasistaticRotor,Quasistatic] {
-        let motor=motor_with_dynamics(true,0.003,0.01,mode);
-        for gap in [-0.02,0.0,0.02] {
-            let x=[0.3,0.7,gap,5.0,1.0,0.0,0.1,310.0,0.4,-0.7,0.9,0.1,0.2,-0.06,0.4,0.5];
-            let j=jacobian(&*motor,&x);
+    for mode in [Detailed, QuasistaticWinding, QuasistaticRotor, Quasistatic] {
+        let motor = motor_with_dynamics(true, 0.003, 0.01, mode);
+        for gap in [-0.02, 0.0, 0.02] {
+            let x = [
+                0.3, 0.7, gap, 5.0, 1.0, 0.0, 0.1, 310.0, 0.4, -0.7, 0.9, 0.1, 0.2, -0.06, 0.4, 0.5,
+            ];
+            let j = jacobian(&*motor, &x);
             for col in 0..16 {
-                let h=1e-6*(1.0+x[col].abs());
-                let mut p=x;let mut n=x;p[col]+=h;n[col]-=h;
-                for (row,(p,n)) in residual(&*motor,&p).iter().zip(residual(&*motor,&n)).enumerate() {
-                    let fd=(p-n)/(2.0*h);
-                    assert!((fd-j[row][col]).abs()<2e-6+2e-5*fd.abs(),"{mode:?} row {row} col {col}: {fd} != {}",j[row][col]);
+                let h = 1e-6 * (1.0 + x[col].abs());
+                let mut p = x;
+                let mut n = x;
+                p[col] += h;
+                n[col] -= h;
+                for (row, (p, n)) in residual(&*motor, &p)
+                    .iter()
+                    .zip(residual(&*motor, &n))
+                    .enumerate()
+                {
+                    let fd = (p - n) / (2.0 * h);
+                    assert!(
+                        (fd - j[row][col]).abs() < 2e-6 + 2e-5 * fd.abs(),
+                        "{mode:?} row {row} col {col}: {fd} != {}",
+                        j[row][col]
+                    );
                 }
             }
-            assert_eq!(j[0][8]==0.0,matches!(mode,QuasistaticWinding|Quasistatic));
-            assert_eq!(j[1][9]==0.0,matches!(mode,QuasistaticRotor|Quasistatic));
+            assert_eq!(
+                j[0][8] == 0.0,
+                matches!(mode, QuasistaticWinding | Quasistatic)
+            );
+            assert_eq!(
+                j[1][9] == 0.0,
+                matches!(mode, QuasistaticRotor | Quasistatic)
+            );
         }
     }
 }
@@ -278,28 +324,105 @@ fn reciprocal_motor_accounts_for_heat_and_stored_energy_in_both_power_directions
     let mut registry = BehaviorRegistry::default();
     sim_domain_robot::register(&mut registry).unwrap();
     let parameters: BTreeMap<String, f64> = [
-        ("resistance", 2.), ("inductance", 0.003), ("torque_constant", 0.8),
-        ("back_emf_constant", 0.8), ("derating", 0.), ("temp_coeff", 0.),
-        ("ratio", 3.), ("efficiency", 0.73), ("no_load_current", 0.1),
-        ("rotor_inertia", 0.02), ("gear_inertia", 0.01),
-        ("gear_stiffness", 50.), ("gear_damping", 0.1), ("gear_friction", 0.03),
-    ].into_iter().map(|(k,v)|(k.into(),v)).collect();
-    let motor = registry.get(&sim_domain_robot::MOTOR_UNIT.into()).unwrap().equations.unwrap()(&parameters).unwrap();
+        ("resistance", 2.),
+        ("inductance", 0.003),
+        ("torque_constant", 0.8),
+        ("back_emf_constant", 0.8),
+        ("derating", 0.),
+        ("temp_coeff", 0.),
+        ("ratio", 3.),
+        ("efficiency", 0.73),
+        ("no_load_current", 0.1),
+        ("rotor_inertia", 0.02),
+        ("gear_inertia", 0.01),
+        ("gear_stiffness", 50.),
+        ("gear_damping", 0.1),
+        ("gear_friction", 0.03),
+    ]
+    .into_iter()
+    .map(|(k, v)| (k.into(), v))
+    .collect();
+    let motor = registry
+        .get(&sim_domain_robot::MOTOR_UNIT.into())
+        .unwrap()
+        .equations
+        .unwrap()(&parameters)
+    .unwrap();
     for current in [-2., 2.] {
-        let mut x = [current, 7., 0.2, 12., 0., 0.1, 0., 293.15, 0., 0., 0., 0., 0., 0.5, 0., 0.];
+        let mut x = [
+            current, 7., 0.2, 12., 0., 0.1, 0., 293.15, 0., 0., 0., 0., 0., 0.5, 0., 0.,
+        ];
         let r = residual(&*motor, &x);
-        x[8] = -r[0]/0.003;
-        x[9] = -r[1]/((0.02*9.+0.01)/3.);
+        x[8] = -r[0] / 0.003;
+        x[9] = -r[1] / ((0.02 * 9. + 0.01) / 3.);
         x[10] = -r[2];
-        let r = residual(&*motor,&x);
-        assert!(r[..3].iter().all(|v|v.abs()<1e-10));
-        let input_power = 12.*current + r[5]*x[13] + r[7];
+        let r = residual(&*motor, &x);
+        assert!(r[..3].iter().all(|v| v.abs() < 1e-10));
+        let input_power = 12. * current + r[5] * x[13] + r[7];
         let h = 1e-7;
-        let mut before=x; let mut after=x;
-        for k in 0..3 { before[k]-=h*x[8+k];after[k]+=h*x[8+k]; }
-        before[5]-=h*x[13];after[5]+=h*x[13];
-        let storage_rate=(motor.energy(&view(&after))-motor.energy(&view(&before)))/(2.*h);
-        assert!((input_power-storage_rate).abs()<1e-6,"current={current}: net input {input_power}, storage {storage_rate}");
-        assert!(r[7]<0.,"motor must emit dissipated heat");
+        let mut before = x;
+        let mut after = x;
+        for k in 0..3 {
+            before[k] -= h * x[8 + k];
+            after[k] += h * x[8 + k];
+        }
+        before[5] -= h * x[13];
+        after[5] += h * x[13];
+        let storage_rate = (motor.energy(&view(&after)) - motor.energy(&view(&before))) / (2. * h);
+        assert!(
+            (input_power - storage_rate).abs() < 1e-6,
+            "current={current}: net input {input_power}, storage {storage_rate}"
+        );
+        assert!(r[7] < 0., "motor must emit dissipated heat");
+    }
+}
+
+#[test]
+fn narrow_loss_transition_preserves_default_equations_and_has_consistent_partials() {
+    use sim_domain_robot::motor::MotorDynamics::Detailed;
+    let default = motor_with_loss_scale(true, 0.003, 0., Detailed, None);
+    for scale in [0.02, 0.05, 5.] {
+        let m = motor_with_loss_scale(true, 0.003, 0., Detailed, Some(scale));
+        for speed in [-5., -scale, -0.01, 0., 0.01, scale, 5.] {
+            let x = [
+                0.07, speed, 0.02, 1., 0., 0.01, 0., 310., 0.03, -0.1, 0.2, 0., 0., 0., 0., 0.,
+            ];
+            if scale == 5. {
+                assert_eq!(residual(&*m, &x), residual(&*default, &x));
+            }
+            let j = jacobian(&*m, &x);
+            for col in 0..16 {
+                let h = 1e-7 * (1. + x[col].abs());
+                let mut p = x;
+                let mut n = x;
+                p[col] += h;
+                n[col] -= h;
+                for (row, (p, n)) in residual(&*m, &p).iter().zip(residual(&*m, &n)).enumerate() {
+                    let fd = (p - n) / (2. * h);
+                    if speed == 0. && row == 7 && col == 1 {
+                        // Efficiency heat contains |torque * speed|. At zero
+                        // power its tangent is not unique; check the chosen
+                        // generalized derivative against both one-sided slopes.
+                        let center = residual(&*m, &x)[row];
+                        let left = (center - n) / h;
+                        let right = (p - center) / h;
+                        assert!(
+                            j[row][col] >= left.min(right) - 3e-6
+                                && j[row][col] <= left.max(right) + 3e-6
+                        );
+                        continue;
+                    }
+                    assert!(
+                        (fd - j[row][col]).abs() < 3e-6 + 3e-5 * fd.abs(),
+                        "scale {scale} speed {speed} row {row} col {col}: {fd} != {}",
+                        j[row][col]
+                    );
+                }
+            }
+            assert!(
+                residual(&*m, &x)[7] <= 0.,
+                "mechanical/electrical losses emit heat"
+            );
+        }
     }
 }

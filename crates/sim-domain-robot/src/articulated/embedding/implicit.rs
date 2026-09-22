@@ -5,7 +5,7 @@ use super::{EmbeddedAcceleration, EmbeddedMotion, Generalized, RigidEmbedding};
 use crate::math::{V, quat, quat_parts};
 use nalgebra::UnitQuaternion;
 use sim_solve::{
-    BlockDiagonalColoring, solve_newton_numeric_colored_scaled_audited,
+    BlockDiagonalColoring, solve_newton_numeric_colored_scaled_cached_audited,
     solve_newton_numeric_scaled_cached_audited,
 };
 use sim_solve::{
@@ -15,15 +15,26 @@ use sim_solve::{
 };
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
+#[path = "predictor.rs"]
+mod predictor;
+
+pub(super) type CoupledAuxiliaryDerivative<'a> = dyn Fn(
+    f64, f64, &Generalized, &[f64], &[f64], bool,
+) -> Result<Option<sim_solve::SparseJacobian>, String> + 'a;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct ImplicitStepConfig {
-    /// Experimental two-stage stiff mechanical integration. Only the pure
-    /// mechanical advancement adapter supports this; coupled motor auxiliary
-    /// states must use their existing integration path. Default is backward Euler.
+    /// Experimental two-stage stiff integration through the mechanical or
+    /// motor event adapter. Coupled continuous power/thermal controls and BE
+    /// contact impulse tracing are not yet supported. Default is backward Euler.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub sdirk2: bool,
+    /// Guarded correction-matrix proposals between coupled motor SDIRK2
+    /// stages and accepted macrosteps. Requires sdirk2 and reuse_step_jacobian.
+    /// Physical endpoints and affine-anchor state histories are never cached.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub reuse_sdirk_jacobian: bool,
     /// Newton residuals are velocity increments divided by the embedding's
     /// declared length/angular scales (and a one-second velocity scale).
     pub newton: NewtonConfig,
@@ -39,6 +50,12 @@ pub struct ImplicitStepConfig {
     /// through a cached motor or mechanical advancement API; ordinary APIs start
     /// a fresh workspace.
     pub reuse_step_jacobian: bool,
+    /// Optional lifetime of a numerical matrix proposal in Newton iteration
+    /// visits, including convergence checks. None preserves the default 64.
+    /// Checked between stages/steps, never in the middle of a solve. Requires
+    /// cross-step reuse; exact acceptance and stale-matrix refresh still apply.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub step_jacobian_max_uses: Option<usize>,
     /// Opt-in guarded matrix reuse across controller events whose adapter
     /// explicitly declares an unchanged continuous equation structure.
     /// Motor-mode events still invalidate. Requires reuse_step_jacobian.
@@ -75,11 +92,26 @@ pub struct ImplicitStepConfig {
     /// ordinary probes. Requires condense_auxiliary; no physical law changes.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub color_auxiliary_jacobian: bool,
+    /// Use registered component derivatives when a coupled adapter supplies
+    /// their complete boundary chain rule. Unsupported adapters use numerical
+    /// derivatives; failed supplied attempts retry cold with numerical ones.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub supplied_auxiliary_jacobian: bool,
+    /// Warm-start condensed component solves across mechanical trials within
+    /// one fixed-time integration stage. Original residual/correction checks
+    /// remain mandatory; failed warm attempts retry the original cold solve.
+    /// No guess or matrix crosses a timestep, event, or accepted-state boundary.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub reuse_auxiliary_solve: bool,
     /// Express inner rate-coordinate corrections in endpoint-state units:
     /// x_new=x_old+h*rate, so a state scale s becomes s/h for rate corrections.
     /// Original residual bounds are unchanged. Requires condensed rate unknowns.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub auxiliary_endpoint_correction_scale: bool,
+    /// Optional inner-solve derivative policy. None preserves inheritance from
+    /// the outer Newton solver. This never changes auxiliary residual bounds.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auxiliary_broyden_updates: Option<bool>,
     /// Experimental correction matrix: reuse one exact closure tangent and
     /// curvature only inside tiny numerical Jacobian probes. Ordinary residuals
     /// and accepted endpoints always solve full closure. Failed solves restart
@@ -96,6 +128,11 @@ pub struct ImplicitStepConfig {
     /// by 10%; failure retries original velocities with fresh exact derivatives.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub extrapolate_velocity_seed: bool,
+    /// Private frozen-mechanics coupled predictor for the next velocity guess.
+    /// Every accepted state still comes from the unchanged exact solver. Failed
+    /// prediction or failed exact correction retries the original initial guess.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub mechanical_predictor: bool,
     /// Reuse a bitwise-matching exact endpoint as a tangent Jacobian's base.
     /// Requires exact endpoint reuse and linearized Jacobian probes. Probe
     /// geometry is still cleared before ordinary residuals resume.
@@ -109,6 +146,7 @@ impl Default for ImplicitStepConfig {
     fn default() -> Self {
         Self {
             sdirk2: false,
+            reuse_sdirk_jacobian: false,
             newton: NewtonConfig {
                 max_iterations: 40,
                 min_line_search: 1.0 / 4096.0,
@@ -119,6 +157,7 @@ impl Default for ImplicitStepConfig {
             reuse_mechanical_endpoint: false,
             reuse_mechanical_dynamics: false,
             reuse_step_jacobian: false,
+            step_jacobian_max_uses: None,
             reuse_controller_sample_jacobian: false,
             restart_failed_reused_mechanics: false,
             cached_mechanical_iteration_limit: None,
@@ -126,10 +165,14 @@ impl Default for ImplicitStepConfig {
             auxiliary_rate_unknowns: false,
             condense_auxiliary: false,
             color_auxiliary_jacobian: false,
+            supplied_auxiliary_jacobian: false,
+            reuse_auxiliary_solve: false,
             auxiliary_endpoint_correction_scale: false,
+            auxiliary_broyden_updates: None,
             linearized_jacobian_probes: false,
             linearized_probe_relative_step: 1e-6,
             extrapolate_velocity_seed: false,
+            mechanical_predictor: false,
             reuse_exact_probe_base: false,
         }
     }
@@ -143,16 +186,21 @@ impl Default for ImplicitStepConfig {
 #[derive(Clone, Default)]
 pub struct ImplicitSolverWorkspace {
     cache: Option<JacobianCache>,
+    predictor_cache: Option<JacobianCache>,
     step_s: Option<f64>,
     end_time_s: Option<f64>,
+    step_jacobian_max_uses: Option<usize>,
     contacts: Vec<(usize, Option<usize>)>,
     auxiliary_rate_unknowns: Option<bool>,
     condense_auxiliary: Option<bool>,
     color_auxiliary_jacobian: Option<bool>,
+    supplied_auxiliary_jacobian: Option<bool>,
     auxiliary_endpoint_correction_scale: Option<bool>,
+    auxiliary_broyden_updates: Option<Option<bool>>,
     linearized_jacobian_probes: Option<bool>,
     linearized_probe_relative_step: Option<f64>,
     extrapolate_velocity_seed: Option<bool>,
+    mechanical_predictor: Option<bool>,
     reuse_exact_probe_base: Option<bool>,
     // Accepted endpoint velocity and its increment, solely for the next guess.
     velocity_seed_history: Option<(Vec<f64>, Vec<f64>)>,
@@ -163,6 +211,18 @@ impl ImplicitSolverWorkspace {
     }
     pub fn clear(&mut self) {
         *self = Self::default();
+    }
+    /// Internal staged-integrator handoff of a numerical matrix proposal only.
+    /// The stage's affine equation time differs from physical trajectory time.
+    /// Rebase that metadata while discarding all velocity prediction history;
+    /// step/layout/contact invalidation, residual checks and matrix-use caps
+    /// still apply inside the ordinary solver. The adapter owns fresh retry.
+    pub(super) fn rebase_stage_proposal(&mut self, equation_time_s: f64) {
+        self.discard_stage_prediction();
+        self.end_time_s = Some(equation_time_s);
+    }
+    pub(super) fn discard_stage_prediction(&mut self) {
+        self.velocity_seed_history = None;
     }
 }
 
@@ -206,6 +266,7 @@ pub struct ImplicitStepDiagnostics {
     pub auxiliary_evaluations: usize,
     pub auxiliary_newton_iterations: usize,
     pub colored_auxiliary_solves: usize,
+    pub supplied_auxiliary_jacobians: usize,
     pub maximum_scaled_velocity_residual: f64,
     pub maximum_contact_history_residual: f64,
     pub maximum_auxiliary_residual: f64,
@@ -216,6 +277,10 @@ pub struct ImplicitStepDiagnostics {
     pub exact_jacobian_fallback: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub predicted_velocity_seed: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mechanical_prediction_used: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mechanical_prediction_fallback: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reused_exact_probe_bases: Option<usize>,
 }
@@ -293,9 +358,9 @@ impl RigidEmbedding<'_> {
     {
         self.step_implicit_coupled_cached_with_guess(seed, &[], time_s, step_s,
             config, &mut ImplicitSolverWorkspace::default(), Some(velocity_guess), None, false,
-            |t, _, g, _, _| Ok(CoupledForces {
+            &|t, _, g, _, _| Ok(CoupledForces {
                 generalized_loads: loads(t, g)?, auxiliary_residuals: vec![],
-            }))
+            }), None)
     }
 
     /// Solve mechanics and additional component equations simultaneously.
@@ -377,29 +442,89 @@ impl RigidEmbedding<'_> {
         F: Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
     {
         self.step_implicit_coupled_cached_with_guess(seed, auxiliary_seed, time_s, step_s,
-            config, workspace, None, auxiliary_coloring, scheduled_sensors, coupling)
+            config, workspace, None, auxiliary_coloring, scheduled_sensors, &coupling, None)
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn step_implicit_coupled_cached_with_guess<F>(
-        &self,
-        seed: &Generalized,
-        auxiliary_seed: &[f64],
-        time_s: f64,
-        step_s: f64,
-        config: &ImplicitStepConfig,
-        workspace: &mut ImplicitSolverWorkspace,
-        mechanical_guess: Option<&[f64]>,
-        auxiliary_coloring: Option<&BlockDiagonalColoring>,
+    pub(super) fn step_implicit_coupled_cached_with_guess(
+        &self, seed: &Generalized, auxiliary_seed: &[f64], time_s: f64, step_s: f64,
+        config: &ImplicitStepConfig, workspace: &mut ImplicitSolverWorkspace,
+        mechanical_guess: Option<&[f64]>, auxiliary_coloring: Option<&BlockDiagonalColoring>,
         scheduled_sensors: bool,
-        coupling: F,
-    ) -> Result<EmbeddedImplicitStep, String>
-    where
-        F: Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
-    {
+        coupling: &dyn Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
+        supplied_derivative: Option<&CoupledAuxiliaryDerivative<'_>>,
+    ) -> Result<EmbeddedImplicitStep, String> {
+        if !config.mechanical_predictor {
+            return self.step_implicit_coupled_exact(seed, auxiliary_seed, time_s, step_s,
+                config, workspace, mechanical_guess, auxiliary_coloring, scheduled_sensors, coupling, supplied_derivative);
+        }
+        self.validate_implicit_inputs(seed, auxiliary_seed, time_s, step_s, config, scheduled_sensors)?;
+        if mechanical_guess.is_some_and(|u| u.len()!=self.reduced_dimension() || u.iter().any(|v|!v.is_finite())) {
+            return Err("invalid initial mechanical velocity guess".into());
+        }
+        let mut next = workspace.clone();
+        let mut proposal = if config.reuse_step_jacobian
+            && workspace.auxiliary_rate_unknowns == Some(config.auxiliary_rate_unknowns)
+            && workspace.step_s.is_some_and(|h|(h-step_s).abs()<=1e-10*step_s)
+            && workspace.end_time_s.is_some_and(|t|(t-time_s).abs()<=128.0*f64::EPSILON*time_s.abs().max(1.0))
+            && workspace.predictor_cache.as_ref().is_some_and(|c|c.uses<64) {
+                workspace.predictor_cache.clone()
+            } else { None };
+        let predicted=sim_solve::profile::EMBEDDED_VELOCITY_PREDICTOR.time(||
+            self.implicit_velocity_prediction(seed,auxiliary_seed,time_s,step_s,config,
+                mechanical_guess,&mut proposal,coupling));
+        let (guess, mut fallback) = match predicted {
+            Ok(guess) => (Some(guess),None),
+            Err(error) => {proposal=None;(None,Some(error))},
+        };
+        let mut result=self.step_implicit_coupled_exact(seed,auxiliary_seed,time_s,step_s,
+            config,&mut next,guess.as_deref().or(mechanical_guess),auxiliary_coloring,scheduled_sensors,coupling,supplied_derivative);
+        if result.is_err() && guess.is_some() {
+            fallback=Some(format!("exact correction from predictor failed: {}",result.as_ref().unwrap_err()));
+            proposal=None;
+            next=workspace.clone();
+            next.clear();
+            result=self.step_implicit_coupled_exact(seed,auxiliary_seed,time_s,step_s,
+                config,&mut next,mechanical_guess,auxiliary_coloring,scheduled_sensors,coupling,supplied_derivative);
+        }
+        let mut step=result?;
+        let used=guess.is_some() && fallback.is_none();
+        step.diagnostics.mechanical_prediction_used=Some(used);
+        step.diagnostics.mechanical_prediction_fallback=fallback;
+        if used {sim_solve::profile::EMBEDDED_PREDICTOR_USED.count(1);}
+        else {sim_solve::profile::EMBEDDED_PREDICTOR_FALLBACK.count(1);}
+        // Numerical matrices only. Contact changes invalidate the next proposal.
+        next.predictor_cache=if config.reuse_step_jacobian && next.contacts==workspace.contacts {proposal}else{None};
+        *workspace=next;
+        Ok(step)
+    }
+
+    fn implicit_trial_pose(&self, seed:&Generalized, step_s:f64, u:&[f64]) -> (Generalized,Vec<f64>) {
+            let mut trial = seed.clone();
+            for b in self.art.bases.iter().filter(|b| !b.grounded) {
+                let s = b.state;
+                for k in 0..3 {
+                    trial.states[s + k] += step_s * u[k];
+                }
+                let p = &seed.states[s + 3..s + 7];
+                let orientation = quat(p[0], p[1], p[2], p[3]);
+                let rotation = UnitQuaternion::from_scaled_axis(V::new(u[3], u[4], u[5]) * step_s);
+                trial.states[s + 3..s + 7].copy_from_slice(&quat_parts(&(rotation * orientation)));
+            }
+            let q: Vec<_> = self
+                .independent
+                .iter()
+                .enumerate()
+                .map(|(j, i)| seed.q[*i] + step_s * u[self.base_columns + j])
+                .collect();
+        (trial,q)
+    }
+
+    fn validate_implicit_inputs(&self, seed:&Generalized, auxiliary_seed:&[f64],
+        time_s:f64, step_s:f64, config:&ImplicitStepConfig, scheduled_sensors:bool) -> Result<(),String> {
         self.validate_seed(seed)?;
-        if config.sdirk2 {
-            return Err("SDIRK2 requires the pure mechanical advancement adapter".into());
+        if config.sdirk2 || config.reuse_sdirk_jacobian {
+            return Err("SDIRK2 requires a staged mechanical or motor advancement adapter".into());
         }
         if config.auxiliary_endpoint_correction_scale
             && !(config.condense_auxiliary && config.auxiliary_rate_unknowns)
@@ -411,6 +536,12 @@ impl RigidEmbedding<'_> {
         if config.color_auxiliary_jacobian && !config.condense_auxiliary {
             return Err("auxiliary coloring requires auxiliary condensation".into());
         }
+        if config.supplied_auxiliary_jacobian && !config.condense_auxiliary {
+            return Err("supplied auxiliary derivatives require condensation".into());
+        }
+        if config.reuse_auxiliary_solve && !config.condense_auxiliary {
+            return Err("auxiliary solve reuse requires auxiliary condensation".into());
+        }
         if config.newton_audit_window_s.is_some_and(|[from, until]| {
             !from.is_finite() || !until.is_finite() || from < 0.0 || until < from
         }) {
@@ -418,6 +549,9 @@ impl RigidEmbedding<'_> {
         }
         if config.reuse_controller_sample_jacobian && !config.reuse_step_jacobian {
             return Err("controller-sample reuse requires cross-step Jacobian reuse".into());
+        }
+        if config.step_jacobian_max_uses.is_some_and(|limit| limit == 0 || !config.reuse_step_jacobian) {
+            return Err("positive matrix-use limit requires cross-step Jacobian reuse".into());
         }
         if config.extrapolate_velocity_seed && !config.reuse_step_jacobian {
             return Err("velocity seed extrapolation requires cross-step Jacobian reuse".into());
@@ -458,6 +592,29 @@ impl RigidEmbedding<'_> {
                 "authored IMUs require scheduled motor or mechanical advancement".into(),
             );
         }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn step_implicit_coupled_exact(
+        &self,
+        seed: &Generalized,
+        auxiliary_seed: &[f64],
+        time_s: f64,
+        step_s: f64,
+        config: &ImplicitStepConfig,
+        workspace: &mut ImplicitSolverWorkspace,
+        mechanical_guess: Option<&[f64]>,
+        auxiliary_coloring: Option<&BlockDiagonalColoring>,
+        scheduled_sensors: bool,
+        coupling: &dyn Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
+        supplied_derivative: Option<&CoupledAuxiliaryDerivative<'_>>,
+    ) -> Result<EmbeddedImplicitStep, String> {
+        // One compiled nested solve for all motor/controller/stage adapters.
+        // Only component evaluation is dispatched; no equations or acceptance
+        // decisions change with the callback's concrete Rust type.
+        self.validate_implicit_inputs(seed, auxiliary_seed, time_s, step_s, config, scheduled_sensors)?;
+        let nc = config.newton;
         let old_u = self.reduced_velocity(seed);
         let n = old_u.len();
         if mechanical_guess.is_some_and(|u| u.len() != n || u.iter().any(|v| !v.is_finite())) {
@@ -475,6 +632,7 @@ impl RigidEmbedding<'_> {
         let auxiliary_evaluations = Cell::new(0);
         let auxiliary_iterations = Cell::new(0);
         let colored_auxiliary_solves = Cell::new(0);
+        let supplied_auxiliary_jacobians = Cell::new(0);
         // Seed, step, time, map and configuration are immutable for this call.
         // Auxiliary values cannot affect mapping or the mechanical contact law.
         // Only mechanical state is cached here. The optional prepared dynamics
@@ -483,6 +641,8 @@ impl RigidEmbedding<'_> {
         // continuous solve, event jump, step change, or mutable history update.
         let cache: RefCell<Option<(Vec<u64>, Rc<EmbeddedMotion>)>> = RefCell::new(None);
         let dynamics_cache = RefCell::new(None);
+        let auxiliary_guess: RefCell<Option<Vec<f64>>> = RefCell::new(None);
+        let auxiliary_matrix: RefCell<Option<JacobianCache>> = RefCell::new(None);
         // Present only while a fresh Jacobian is assembled. Both endpoint
         // caches are cleared before/after probing, so probe geometry cannot escape.
         let probe_context: RefCell<Option<(Vec<f64>, Rc<EmbeddedMotion>)>> = RefCell::new(None);
@@ -498,23 +658,7 @@ impl RigidEmbedding<'_> {
                 }
             }
             preparations.set(preparations.get() + 1);
-            let mut trial = seed.clone();
-            for b in self.art.bases.iter().filter(|b| !b.grounded) {
-                let s = b.state;
-                for k in 0..3 {
-                    trial.states[s + k] += step_s * u[k];
-                }
-                let p = &seed.states[s + 3..s + 7];
-                let orientation = quat(p[0], p[1], p[2], p[3]);
-                let rotation = UnitQuaternion::from_scaled_axis(V::new(u[3], u[4], u[5]) * step_s);
-                trial.states[s + 3..s + 7].copy_from_slice(&quat_parts(&(rotation * orientation)));
-            }
-            let q: Vec<_> = self
-                .independent
-                .iter()
-                .enumerate()
-                .map(|(j, i)| seed.q[*i] + step_s * u[self.base_columns + j])
-                .collect();
+            let (trial,q)=self.implicit_trial_pose(seed,step_s,u);
             let mut motion = if let Some((base_u, base)) = probe_context.borrow().as_ref() {
                 let mut probe = (**base).clone();
                 // Only the configured FD radius is allowed, with roundoff
@@ -632,12 +776,23 @@ impl RigidEmbedding<'_> {
                 } else {
                     unknowns[n..].to_vec()
                 };
+                let mut pending_auxiliary_matrix = None;
                 if config.condense_auxiliary && !local.is_empty() {
+                    let cold = local.clone();
+                    let mut matrix = None;
+                    if config.reuse_auxiliary_solve {
+                        if let Some(guess) = auxiliary_guess.borrow().as_ref() {
+                            local.clone_from(guess);
+                        }
+                        matrix = auxiliary_matrix.borrow().clone();
+                    }
                     auxiliary_solves.set(auxiliary_solves.get() + 1);
                     let local_error = RefCell::new(None);
                     let inner = NewtonConfig {
                         absolute_tolerance: nc.absolute_tolerance * 0.01,
                         relative_tolerance: nc.relative_tolerance * 0.01,
+                        broyden_updates: config.auxiliary_broyden_updates.unwrap_or(nc.broyden_updates),
+                        broyden_negligible_updates: nc.broyden_negligible_updates && config.auxiliary_broyden_updates.unwrap_or(nc.broyden_updates),
                         ..nc
                     };
                     let correction_scale = |i: usize, value: f64| {
@@ -671,14 +826,51 @@ impl RigidEmbedding<'_> {
                         .newton_audit_window_s
                         .filter(|[from, until]| time_s >= *from && time_s <= *until)
                         .map(|_| NewtonAudit::default());
-                    let solved = if let Some(coloring) =
-                        auxiliary_coloring.filter(|_| config.color_auxiliary_jacobian)
-                    {
-                        colored_auxiliary_solves.set(colored_auxiliary_solves.get() + 1);
-                        solve_newton_numeric_colored_scaled_audited(&mut local, inner, inner_residual, coloring, &correction_scale, inner_audit.as_mut())
-                    } else {
-                        solve_newton_numeric_scaled_cached_audited(&mut local, inner, inner_residual, &correction_scale, &mut None, inner_audit.as_mut())
+                    let solve = |local: &mut [f64], matrix: &mut Option<JacobianCache>, audit: Option<&mut NewtonAudit>, supplied: bool| {
+                        if let Some(derivative) = supplied_derivative.filter(|_| supplied && config.supplied_auxiliary_jacobian) {
+                            solve_newton_cached_audited_with_reference(local, inner, inner_residual,
+                                |x, base, out| {
+                                    let states = auxiliary_state(x);
+                                    let rates: Vec<_> = if config.auxiliary_rate_unknowns { x.to_vec() }
+                                        else { states.iter().zip(auxiliary_seed).map(|(a,b)|(a-b)/step_s).collect() };
+                                    match sim_solve::profile::EMBEDDED_COMPONENT_DERIVATIVES.time(|| derivative(time_s+step_s, step_s, &motion.generalized, &states, &rates, config.auxiliary_rate_unknowns)) {
+                                        Ok(Some(jac)) if jac.n == x.len() && jac.triplets.iter().all(|(r,c,v)| *r<x.len() && *c<x.len() && v.is_finite()) => {
+                                            supplied_auxiliary_jacobians.set(supplied_auxiliary_jacobians.get()+1);
+                                            sim_solve::profile::EMBEDDED_SUPPLIED_AUXILIARY.count(1);
+                                            *out = jac;
+                                        }
+                                        Ok(None) => {
+                                            let dense;
+                                            let coloring = match auxiliary_coloring.filter(|_| config.color_auxiliary_jacobian) {
+                                                Some(coloring) => coloring,
+                                                None => {
+                                                    dense=BlockDiagonalColoring::new(&[x.len()]).expect("nonempty auxiliary solve");
+                                                    &dense
+                                                }
+                                            };
+                                            if coloring.assemble(x, base, &inner_residual, out).is_err() { out.add(0,0,f64::NAN); }
+                                        }
+                                        result => {
+                                            *local_error.borrow_mut() = Some(format!("invalid supplied auxiliary derivative: {result:?}"));
+                                            out.add(0,0,f64::NAN);
+                                        }
+                                    }
+                                }, &correction_scale, matrix, audit, None)
+                        } else if let Some(coloring) = auxiliary_coloring.filter(|_| config.color_auxiliary_jacobian) {
+                            colored_auxiliary_solves.set(colored_auxiliary_solves.get() + 1);
+                            solve_newton_numeric_colored_scaled_cached_audited(local, inner, inner_residual, coloring, &correction_scale, matrix, audit)
+                        } else {
+                            solve_newton_numeric_scaled_cached_audited(local, inner, inner_residual, &correction_scale, matrix, audit)
+                        }
+                    };
+                    let mut solved = solve(&mut local, &mut matrix, inner_audit.as_mut(), true);
+                    if solved.is_err() && (config.reuse_auxiliary_solve || config.supplied_auxiliary_jacobian) {
+                        local.clone_from(&cold);
+                        matrix = None;
+                        *local_error.borrow_mut() = None;
+                        solved = solve(&mut local, &mut matrix, inner_audit.as_mut(), false);
                     }
+                    let solved = solved
                     .map_err(|e| {
                         let mut message=format!(
                             "local auxiliary solve: {e}; component error: {:?}",
@@ -695,6 +887,9 @@ impl RigidEmbedding<'_> {
                         message
                     })?;
                     auxiliary_iterations.set(auxiliary_iterations.get() + solved.iterations);
+                    if config.reuse_auxiliary_solve {
+                        pending_auxiliary_matrix = Some(matrix);
+                    }
                 }
                 let components = components_at(&local)?;
                 if config.condense_auxiliary {
@@ -709,6 +904,10 @@ impl RigidEmbedding<'_> {
                             "local auxiliary original residual {error:e} exceeds {:e}",
                             nc.absolute_tolerance
                         ));
+                    }
+                    if let Some(matrix) = pending_auxiliary_matrix {
+                        *auxiliary_guess.borrow_mut() = Some(local.clone());
+                        *auxiliary_matrix.borrow_mut() = matrix;
                     }
                 }
                 let a = if config.reuse_mechanical_dynamics {
@@ -785,15 +984,20 @@ impl RigidEmbedding<'_> {
             u.extend_from_slice(auxiliary_seed);
         }
         let mut next_workspace = workspace.clone();
+        let matrix_use_limit = config.step_jacobian_max_uses.unwrap_or(64);
         if !config.reuse_step_jacobian
+            || next_workspace.step_jacobian_max_uses != Some(matrix_use_limit)
             || next_workspace.auxiliary_rate_unknowns != Some(config.auxiliary_rate_unknowns)
             || next_workspace.condense_auxiliary != Some(config.condense_auxiliary)
+            || next_workspace.auxiliary_broyden_updates != Some(config.auxiliary_broyden_updates)
             || next_workspace.color_auxiliary_jacobian != Some(config.color_auxiliary_jacobian)
+            || next_workspace.supplied_auxiliary_jacobian != Some(config.supplied_auxiliary_jacobian)
             || next_workspace.auxiliary_endpoint_correction_scale
                 != Some(config.auxiliary_endpoint_correction_scale)
             || next_workspace.linearized_jacobian_probes != Some(config.linearized_jacobian_probes)
             || next_workspace.linearized_probe_relative_step != Some(config.linearized_probe_relative_step)
             || next_workspace.extrapolate_velocity_seed != Some(config.extrapolate_velocity_seed)
+            || next_workspace.mechanical_predictor != Some(config.mechanical_predictor)
             || next_workspace.reuse_exact_probe_base != Some(config.reuse_exact_probe_base)
             || next_workspace.velocity_seed_history.as_ref().is_some_and(|(velocity, increment)| {
                 config.extrapolate_velocity_seed && (increment.len() != n || velocity.len() != n
@@ -805,7 +1009,7 @@ impl RigidEmbedding<'_> {
             || !next_workspace
                 .end_time_s
                 .is_some_and(|t| (t - time_s).abs() <= 128.0 * f64::EPSILON * time_s.abs().max(1.0))
-            || next_workspace.cache.as_ref().is_some_and(|c| c.uses >= 64)
+            || next_workspace.cache.as_ref().is_some_and(|c| c.uses >= matrix_use_limit)
         {
             next_workspace.clear();
         }
@@ -944,14 +1148,18 @@ impl RigidEmbedding<'_> {
         next_workspace.contacts = contacts;
         next_workspace.step_s = Some(step_s);
         next_workspace.end_time_s = Some(time_s + step_s);
+        next_workspace.step_jacobian_max_uses = Some(matrix_use_limit);
         next_workspace.auxiliary_rate_unknowns = Some(config.auxiliary_rate_unknowns);
         next_workspace.condense_auxiliary = Some(config.condense_auxiliary);
+        next_workspace.auxiliary_broyden_updates = Some(config.auxiliary_broyden_updates);
         next_workspace.color_auxiliary_jacobian = Some(config.color_auxiliary_jacobian);
+        next_workspace.supplied_auxiliary_jacobian = Some(config.supplied_auxiliary_jacobian);
         next_workspace.auxiliary_endpoint_correction_scale =
             Some(config.auxiliary_endpoint_correction_scale);
         next_workspace.linearized_jacobian_probes = Some(config.linearized_jacobian_probes);
         next_workspace.linearized_probe_relative_step = Some(config.linearized_probe_relative_step);
         next_workspace.extrapolate_velocity_seed = Some(config.extrapolate_velocity_seed);
+        next_workspace.mechanical_predictor = Some(config.mechanical_predictor);
         next_workspace.reuse_exact_probe_base = Some(config.reuse_exact_probe_base);
         if !config.reuse_step_jacobian {
             next_workspace.clear();
@@ -988,15 +1196,47 @@ impl RigidEmbedding<'_> {
                 auxiliary_evaluations: auxiliary_evaluations.get(),
                 auxiliary_newton_iterations: auxiliary_iterations.get(),
                 colored_auxiliary_solves: colored_auxiliary_solves.get(),
+                supplied_auxiliary_jacobians: supplied_auxiliary_jacobians.get(),
                 maximum_scaled_velocity_residual: velocity_error,
                 maximum_contact_history_residual: history_error,
                 maximum_auxiliary_residual: auxiliary.iter().map(|v| v.abs()).fold(0.0, f64::max),
                 linearized_probe_evaluations: config.linearized_jacobian_probes.then_some(linearized_probes.get()),
                 predicted_velocity_seed: config.extrapolate_velocity_seed.then_some(predicted_velocity_seed),
+                mechanical_prediction_used: None,
+                mechanical_prediction_fallback: None,
                 reused_exact_probe_bases: config.reuse_exact_probe_base.then_some(reused_exact_probe_bases.get()),
                 exact_jacobian_fallback,
             },
             auxiliary: auxiliary_endpoint,
         })
+    }
+}
+
+#[cfg(test)]
+mod supplied_derivative_tests {
+    use super::*;
+    use sim_core::Behavior;
+    #[test]
+    fn invalid_or_singular_supplied_matrix_retries_original_numeric_equations() {
+        let model=serde_json::from_str::<crate::model::PhysicalModel>(r#"{"version":3,"links":[{"name":"fixed","ground":true,"mass":1.0,"inertia":[[1,0,0],[0,1,0],[0,0,1]]}]}"#).unwrap();
+        let art=crate::Articulated::new(std::sync::Arc::new(model),&crate::Options {contact:false,flex:false,..Default::default()}).unwrap();
+        let g=art.generalized(art.states().iter().map(|s|s.initial).collect(),vec![0.0;art.state_count],&vec![0.0;art.port_names.len()+1],vec![]);
+        let map=RigidEmbedding::new(&art,&[],Default::default()).unwrap();
+        let config=ImplicitStepConfig {condense_auxiliary:true,supplied_auxiliary_jacobian:true,..Default::default()};
+        let coupling=|_:f64,_:f64,_:&Generalized,x:&[f64],_:&[f64]|Ok(super::CoupledForces {generalized_loads:vec![],auxiliary_residuals:vec![x[0]*x[0]-4.0]});
+        for invalid in [false,true] {
+            let calls=Cell::new(0);
+            let derivative=|_:f64,_:f64,_:&Generalized,_:&[f64],_:&[f64],_:bool| {
+                calls.set(calls.get()+1);
+                let mut jac=sim_solve::SparseJacobian::new(1);
+                if invalid {jac.add(0,0,f64::NAN);}
+                Ok(Some(jac))
+            };
+            let solved=map.step_implicit_coupled_cached_with_guess(&g,&[1.0],0.0,0.01,&config,
+                &mut ImplicitSolverWorkspace::default(),None,None,false,&coupling,Some(&derivative)).unwrap();
+            assert!(calls.get()>0);
+            assert!((solved.auxiliary[0]-2.0).abs()<1e-9);
+            assert!(solved.diagnostics.maximum_auxiliary_residual<1e-9);
+        }
     }
 }

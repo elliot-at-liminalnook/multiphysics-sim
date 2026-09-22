@@ -21,7 +21,7 @@ fn main()->Result<(),Box<dyn std::error::Error>>{
     let mut derivative=vec![0.;e.model.network.outputs.len()];let mut kind=None;
     for (name,weight)in &e.output_weights{
         let i=e.model.network.outputs.iter().position(|o|&o.target==name).ok_or("unknown forecast objective output")?;
-        let k=e.model.network.outputs[i].kind;if kind.is_some_and(|old|old!=k)||!weight.is_finite(){return Err("objective outputs need matching physical units and finite weights".into());}kind=Some(k);derivative[i]=*weight;
+        let k=&e.model.network.outputs[i].kind;if kind.is_some_and(|old|old!=k)||!weight.is_finite(){return Err("objective outputs need matching physical units and finite weights".into());}kind=Some(k);derivative[i]=*weight;
     }
     if derivative.iter().all(|w|*w==0.){return Err("empty weighted objective".into());}
     let mut indices=vec![];let mut bounds=vec![];

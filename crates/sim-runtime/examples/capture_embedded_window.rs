@@ -18,9 +18,9 @@ fn ticks(value: f64, step: f64, label: &str) -> Result<usize, String> {
 }
 fn run() -> Result<bool, String> {
     let args: Vec<_> = std::env::args().skip(1).collect();
-    if args.len() != 5 {
+    if args.len() != 5 && !(args.len() == 7 && args[5] == "--seed") {
         return Err(
-            "usage: capture_embedded_window scene.json config.json start-s end-s sample-period-s, or capture_embedded_window --replay recording.json start-s end-s sample-period-s"
+            "usage: capture_embedded_window scene.json config.json start-s end-s sample-period-s [--seed N], or capture_embedded_window --replay recording.json start-s end-s sample-period-s [--seed N]"
                 .into(),
         );
     }
@@ -62,7 +62,11 @@ fn run() -> Result<bool, String> {
     {
         return Err("window requires ordered in-horizon endpoints, positive dividing period and at most 10001 frames".into());
     }
-    let seed = recording.as_ref().map_or(0, |r| r.seed);
+    let requested_seed = args.get(6).map(|s|s.parse::<u64>().map_err(|e|e.to_string())).transpose()?;
+    if recording.as_ref().is_some_and(|r|requested_seed.is_some_and(|s|s!=r.seed)) {
+        return Err("Replay seed must match its recording".into());
+    }
+    let seed = recording.as_ref().map_or(requested_seed.unwrap_or(0), |r| r.seed);
     let mut session = if let Some(recording) = recording {
         EmbeddedSession::prepare_replay(recording, CaptureMode::Latest)?.0
     } else {

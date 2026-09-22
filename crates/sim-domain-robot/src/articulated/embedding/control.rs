@@ -1,9 +1,38 @@
 //! Held-state motor boundary controls. Continuous electrical/mechanical states
-//! stay in the coupled solve; this interface schedules discrete updates only.
+//! stay in the coupled solve, including explicitly supplied power/thermal states.
 use super::{Generalized, MotorBoundary};
 
 pub trait SampledMotorControl {
     type State: Clone;
+    /// Check the admissible model envelope at candidate segment endpoints and
+    /// jumps. Failure rejects the candidate interval; this is not a BMS model.
+    fn validate_endpoint(&self, _held: &Self::State) -> Result<(), String> { Ok(()) }
+    /// Continuous states carried alongside held controls in checkpoints. The
+    /// scheduler includes these unknowns in the same solve as motor/mechanics
+    /// states; it never advances them using a previous accepted current.
+    fn continuous_states(&self, _held: &Self::State) -> Vec<f64> {
+        vec![]
+    }
+    fn set_continuous_states(&self, _held: &mut Self::State, states: &[f64]) -> Result<(), String> {
+        if states.is_empty() { Ok(()) } else { Err("unexpected continuous control states".into()) }
+    }
+    /// Restore algebraic consistency at startup and after discrete control
+    /// changes. Differential states (charge, energy, temperature) must remain
+    /// unchanged. Mutation is confined to the scheduler's candidate state.
+    fn reconcile_continuous_states(&self, _time: f64, _mechanics: &Generalized,
+        _motors: &[f64], _held: &mut Self::State) -> Result<(), String> { Ok(()) }
+    /// Residuals in continuous_states order, at the current trial point. The
+    /// caller has installed trial continuous states into held before this call.
+    fn continuous_residuals(
+        &self,
+        _time: f64,
+        _mechanics: &Generalized,
+        _motors: &[f64],
+        _held: &Self::State,
+        rates: &[f64],
+    ) -> Result<Vec<f64>, String> {
+        if rates.is_empty() { Ok(vec![]) } else { Err("missing continuous control equations".into()) }
+    }
     /// Pure boundary evaluation. No sampling, random draws, or accepted-state
     /// mutation in a Newton or event-location trial.
     fn boundaries(
@@ -13,6 +42,22 @@ pub trait SampledMotorControl {
         motors: &[f64],
         held: &Self::State,
     ) -> Result<Vec<MotorBoundary>, String>;
+    /// Evaluate a trial's motor boundaries and additional continuous equations
+    /// together. Coupled supply/thermal adapters can reuse the same component
+    /// evaluation; the default preserves existing adapters' separate callbacks.
+    fn boundaries_and_residuals(
+        &self,
+        time: f64,
+        mechanics: &Generalized,
+        motors: &[f64],
+        held: &Self::State,
+        rates: &[f64],
+    ) -> Result<(Vec<MotorBoundary>, Vec<f64>), String> {
+        Ok((
+            self.boundaries(time, mechanics, motors, held)?,
+            self.continuous_residuals(time, mechanics, motors, held, rates)?,
+        ))
+    }
     /// At fixed mechanics/time/held control, boundary i depends only on motor
     /// i's internal states, in the bank's exact named order. This must hold for
     /// all trial states and modes. Shared current-dependent supplies or thermal

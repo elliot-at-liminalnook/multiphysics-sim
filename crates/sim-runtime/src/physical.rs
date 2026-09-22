@@ -145,6 +145,7 @@ struct LinkStats {
 }
 
 pub struct PhysicalRobot {
+    pub composition: crate::system_inspection::CompositionMap,
     pub runtime: Runtime,
     pub model: Arc<PhysicalModel>,
     pub art: Articulated,
@@ -158,7 +159,9 @@ pub struct PhysicalRobot {
     port_angles: Vec<StateId>,
     temperature_ids: Vec<StateId>,
     motors: Vec<MotorIds>,
-    battery: Option<(StateId, StateId, StateId)>,
+    battery: Option<(StateId, StateId, StateId, StateId)>,
+    power_limits: Option<sim_domain_robot::articulated::embedding::PowerOperatingLimits>,
+    trace_battery: Vec<crate::electrical::SupplySample>,
     motor_stats: Vec<MotorStats>,
     joint_stats: Vec<JointStats>,
     link_stats: Vec<LinkStats>,
@@ -191,6 +194,11 @@ impl PhysicalRobot {
     pub fn build_with<F>(model: PhysicalModel, registry: &BehaviorRegistry, opts: &BuildOptions, compose: F) -> Result<Self, String>
     where F: FnOnce(&mut ModelWorld, &Instance) -> Result<(), String> {
         let mut model = model;
+        model.resolve_actuator_profiles(registry)?;
+        let power_profile = model.resolve_power_profile(registry, [1.0; 4])?;
+        if model.motors.iter().any(|m|m.resolved_actuator.is_some()) && !opts.driver_control {
+            return Err("CAD actuator profiles require explicit PWM control; catalog servo firmware cannot substitute for the declared fixed-PD controller".into());
+        }
         model.apply_identification();
         let model = Arc::new(model);
         let mut warnings = Vec::new();
@@ -207,8 +215,13 @@ impl PhysicalRobot {
         for (k, val) in art.port_parameters() {
             params.push((leak(k), val));
         }
+        let mut composition = crate::system_inspection::CompositionMap::from_cad_source(&model.source);
+        for (id, label) in [("assembly", "Mechanical assembly"), ("actuators", "Actuators"), ("mounts", "Mount thermal paths"), ("measurements", "Joint measurements"), ("environment", "Environment"), ("power", "Power supply"), ("policy", "Controller boundary")] {
+            composition.group(id, label, None);
+        }
         let mut m = ModelWorld::default();
         let robot = m.part(registry, "robot", ARTICULATED, params).unwrap();
+        composition.component(&robot, "composition/assembly", "assembly", None);
         m.connect([robot.port("frame.base")]);
         for name in &art.signal_out_names {
             if !name.starts_with("imu.") {
@@ -217,17 +230,52 @@ impl PhysicalRobot {
         }
         let ambient_k = model.world.ambient_c + 273.15;
         let ambient = m.part(registry, "ambient", sim_domain_thermal::AMBIENT, [("temperature", ambient_k)]).unwrap();
+        composition.component(&ambient, "composition/ambient", "environment", None);
         let mut ambient_ports = vec![ambient.port("node")];
         let gnd = m.part(registry, "gnd", sim_domain_electrical::elements::GROUND, []).unwrap();
+        composition.component(&gnd, "composition/ground", "power", None);
         let mut gnd_ports = vec![gnd.port("pin")];
         // Battery (one pack for every motor) or nothing: motors without a
         // pack get their own ideal supply at the spec voltage.
-        let battery = model.battery.as_ref().map(|b| m.part(registry, "battery", BATTERY, [("cells", b.cells), ("nominal_voltage", b.nominal_voltage), ("internal_resistance", b.internal_resistance), ("capacity_ah", b.capacity_ah), ("initial_soc", b.initial_soc)]).unwrap());
+        let battery_parameters: Option<BTreeMap<String, f64>> = power_profile.as_ref().map(|p| p.config.battery.clone()).or_else(|| model.battery.as_ref().map(|b| [
+            ("cells".into(), b.cells), ("nominal_voltage".into(), b.nominal_voltage),
+            ("internal_resistance".into(), b.internal_resistance), ("capacity_ah".into(), b.capacity_ah),
+            ("initial_soc".into(), b.initial_soc),
+        ].into()));
+        let battery = battery_parameters.as_ref().map(|p| m.part(registry, "battery", BATTERY, p.iter().map(|(k,v)|(k.as_str(),*v))).unwrap());
         let mut supply_ports: Vec<PortId> = Vec::new();
         if let Some(b) = &battery {
+            composition.component(b, "composition/battery", "power", None);
             supply_ports.push(b.port("p"));
             gnd_ports.push(b.port("n"));
             m.connect([b.port("soc")]);
+        }
+        // Compile the same validated radial tree used by the incremental bank.
+        // Explicit zero-resistance segments alias their ancestor's electrical net.
+        let mut branch_ports: BTreeMap<String, Vec<PortId>> = BTreeMap::new();
+        let mut motor_power_nodes: BTreeMap<String, Option<String>> = BTreeMap::new();
+        if let Some(power) = &power_profile {
+            let branches: BTreeMap<_,_> = power.config.branches.iter().map(|b|(b.id.as_str(),b)).collect();
+            let node = |id: &str| -> Option<String> {
+                let mut at = id;
+                loop {
+                    let b = branches[at];
+                    if b.resistance_ohm > 0.0 { return Some(b.id.clone()); }
+                    match b.parent.as_deref() { Some(parent) => at=parent, None => return None }
+                }
+            };
+            for b in &power.config.branches {
+                if b.resistance_ohm > 0.0 { branch_ports.insert(b.id.clone(),vec![]); }
+                for motor in &b.motors { motor_power_nodes.insert(motor.clone(),node(&b.id)); }
+            }
+            for (i,b) in power.config.branches.iter().enumerate().filter(|(_,b)|b.resistance_ohm>0.0) {
+                let wire=m.part(registry,&format!("power.branch.{i}"),sim_domain_electrical::elements::RESISTOR,[("resistance",b.resistance_ohm)]).map_err(|e|e.to_string())?;
+                composition.component(&wire,format!("composition/power/{}",b.id),"power",None);
+                branch_ports.get_mut(&b.id).unwrap().push(wire.port("n"));
+                if let Some(parent)=b.parent.as_deref().and_then(node) {
+                    branch_ports.get_mut(&parent).unwrap().push(wire.port("p"));
+                } else { supply_ports.push(wire.port("p")); }
+            }
         }
         // Mount thermal nodes per link (created on demand).
         let mut mounts: BTreeMap<usize, Instance> = BTreeMap::new();
@@ -249,6 +297,13 @@ impl PhysicalRobot {
             };
             let enc = m.part(registry, &format!("{name}.encoder"), encoder_type, []).unwrap();
             let tacho = m.part(registry, &format!("{name}.tacho"), velocity_type, []).unwrap();
+            let short_joint = name.trim_start_matches("joint.").trim_start_matches("slide.");
+            let cad_joint = model.joint(short_joint);
+            let key = cad_joint.filter(|j| !j.id.is_empty()).map(|j| format!("cad/joint/{}", j.id))
+                .unwrap_or_else(|| format!("capture/joint/{name}"));
+            composition.group(&key, short_joint, Some("measurements"));
+            composition.component(&enc, format!("{key}/encoder"), &key, None);
+            composition.component(&tacho, format!("{key}/velocity"), &key, None);
             joint_conn.get_mut(name).unwrap().extend([enc.port(axis), tacho.port(axis)]);
             let short = name.trim_start_matches("joint.").trim_start_matches("slide.").to_owned();
             seam_params.push((leak(format!("sense.{short}.{position}")), 0.0));
@@ -273,12 +328,16 @@ impl PhysicalRobot {
             let joint_backlash = joint.map(|j| j.physics.drive_backlash_rad(model.version >= 4))
                 .transpose().map_err(|e| format!("{jname}: {e}"))?.unwrap_or(0.0);
             let link = motor.mounted_on.as_deref().and_then(|l| model.link_index(l)).or_else(|| joint.and_then(|j| j.parent.as_deref()).and_then(|p| model.link_index(p)));
+            let motor_group = if motor.id.is_empty() { format!("capture/motor/{}", motor.name) } else { format!("cad/motor/{}", motor.id) };
+            composition.group(&motor_group, &motor.name, Some("actuators"));
+            let cad_body = link.map(|li| model.links[li].id.as_str());
             let e = &motor.electrical;
             let th = &motor.thermal;
             let unit = m.part(registry, &format!("{}.unit", motor.name), MOTOR_UNIT,
                 sim_domain_robot::motor::cad_motor_unit_parameters(
                     motor, joint_backlash, ambient_k, opts.analytic_motor_jacobian, opts.backlash_events,
                 ).into_iter().chain(opts.motor_dynamics.parameter_flags())).unwrap();
+            composition.component(&unit, format!("{motor_group}/unit"), &motor_group, cad_body);
             joint_conn.get_mut(&port_name).unwrap().push(unit.port("shaft"));
             for s in ["current", "torque", "speed"] {
                 if opts.driver_control {
@@ -294,6 +353,9 @@ impl PhysicalRobot {
             let ccap = m.part(registry, &format!("{}.case", motor.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", th.case_heat_capacity.max(0.1)), ("initial.temperature", ambient_k)]).unwrap();
             let g_wc = m.part(registry, &format!("{}.g_wc", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_winding_case.max(1e-3))]).unwrap();
             let g_ca = m.part(registry, &format!("{}.g_ca", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_case_ambient.max(1e-3))]).unwrap();
+            for (role, instance) in [("winding", &wcap), ("case", &ccap), ("winding_case", &g_wc), ("case_ambient", &g_ca)] {
+                composition.component(instance, format!("{motor_group}/{role}"), &motor_group, cad_body);
+            }
             m.connect([unit.port("winding"), wcap.port("node"), g_wc.port("a")]);
             let mut case_ports = vec![g_wc.port("b"), ccap.port("node"), g_ca.port("a")];
             ambient_ports.push(g_ca.port("b"));
@@ -310,6 +372,11 @@ impl PhysicalRobot {
                     let mcap = m.part(registry, &format!("{}.mount", l.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", (l.mass * mat.specific_heat).max(0.5)), ("initial.temperature", ambient_k)]).unwrap();
                     let g_ma = m.part(registry, &format!("{}.g_ma", l.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 10.0 * area)]).unwrap();
                     let probe = m.part(registry, &format!("{}.probe", l.name), THERMAL_PROBE, []).unwrap();
+                    let link_group = if l.id.is_empty() { format!("capture/link/{}", l.name) } else { format!("cad/link/{}", l.id) };
+                    composition.group(&link_group, &l.name, Some("mounts"));
+                    for (role, instance) in [("storage", &mcap), ("ambient_path", &g_ma), ("temperature_probe", &probe)] {
+                        composition.component(instance, format!("{link_group}/{role}"), &link_group, Some(&l.id));
+                    }
                     ambient_ports.push(g_ma.port("b"));
                     mount_ports.insert(li, vec![mcap.port("node"), g_ma.port("a"), probe.port("node")]);
                     let tname = format!("temperature.{}", l.name);
@@ -322,6 +389,7 @@ impl PhysicalRobot {
                     mounts.insert(li, mcap);
                 }
                 let g_cm = m.part(registry, &format!("{}.g_cm", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_case_mount.max(1e-3))]).unwrap();
+                composition.component(&g_cm, format!("{motor_group}/case_mount"), &motor_group, cad_body);
                 case_ports.push(g_cm.port("a"));
                 mount_ports.get_mut(&li).unwrap().push(g_cm.port("b"));
             }
@@ -335,10 +403,18 @@ impl PhysicalRobot {
             } else {
                 let bridge_parameters = sim_domain_robot::motor::cad_h_bridge_parameters(motor);
                 let bridge = m.part(registry, &format!("{}.bridge", motor.name), H_BRIDGE, bridge_parameters.iter().map(|(k,v)|(k.as_str(),*v))).unwrap();
-                if battery.is_some() {
+                composition.component(&bridge, format!("{motor_group}/bridge"), &motor_group, cad_body);
+                if power_profile.is_some() {
+                    let key = format!("joint.{}", motor.joint.as_ref().ok_or("Powered motor requires joint")?);
+                    match motor_power_nodes.get(&key).ok_or("Missing CAD power feed")? {
+                        Some(node) => branch_ports.get_mut(node).unwrap().push(bridge.port("supply_p")),
+                        None => supply_ports.push(bridge.port("supply_p")),
+                    }
+                } else if battery.is_some() {
                     supply_ports.push(bridge.port("supply_p"));
                 } else {
                     let src = m.part(registry, &format!("{}.supply", motor.name), sim_domain_electrical::elements::VOLTAGE_SOURCE, [("voltage", e.supply_voltage.max(0.1))]).unwrap();
+                    composition.component(&src, format!("{motor_group}/supply"), &motor_group, cad_body);
                     m.connect([src.port("p"), bridge.port("supply_p")]);
                     gnd_ports.push(src.port("n"));
                 }
@@ -354,6 +430,7 @@ impl PhysicalRobot {
                 } else {
                 let firmware_parameters = sim_domain_robot::motor::cad_servo_firmware_parameters(motor);
                 let firmware = m.part(registry, &format!("{}.firmware", motor.name), SERVO_FIRMWARE, firmware_parameters.iter().map(|(k,v)|(k.as_str(),*v))).unwrap();
+                composition.component(&firmware, format!("{motor_group}/firmware"), &motor_group, cad_body);
                 m.connect([firmware.port("command"), bridge.port("command")]);
                 // Measured angle from the joint's encoder; target from the seam.
                 angle_groups.get_mut(&port_name).unwrap().1.push(firmware.port("measured"));
@@ -379,6 +456,11 @@ impl PhysicalRobot {
             let link = name.trim_start_matches("temperature.");
             if !temperature_driven.contains_key(link) {
                 let c = m.part(registry, &format!("{link}.ambient_probe"), sim_domain_control::elements::CONSTANT, [("value", ambient_k)]).unwrap();
+                if let Some(li) = model.link_index(link) {
+                    let body = &model.links[li];
+                    let key = if body.id.is_empty() { format!("capture/link/{}", body.name) } else { format!("cad/link/{}", body.id) };
+                    composition.component(&c, format!("{key}/ambient_input"), "environment", Some(&body.id));
+                }
                 m.connect([c.port("value"), robot.port(leak(name.clone()))]);
             }
         }
@@ -388,6 +470,7 @@ impl PhysicalRobot {
         for (_, ports) in joint_conn.iter() {
             m.connect(ports.clone());
         }
+        for ports in branch_ports.into_values() { m.connect(ports); }
         if !supply_ports.is_empty() {
             m.connect(supply_ports);
         }
@@ -395,6 +478,7 @@ impl PhysicalRobot {
         m.connect(ambient_ports);
         let seam = if seam_links.is_empty() { None } else { Some(m.part(registry, "controller", EXTERNAL, seam_params).unwrap()) };
         if let Some(seam) = &seam {
+            composition.component(seam, "composition/controller", "policy", None);
             for (name, other) in &seam_links {
                 m.connect([seam.port(leak(name.clone())), *other]);
             }
@@ -442,7 +526,7 @@ impl PhysicalRobot {
                 rotor_speed: runtime.state_id(unit.behavior, "rotor_speed"),
             });
         }
-        let battery_ids = battery.as_ref().map(|b| (runtime.state_id(b.behavior, "soc"), runtime.across_id(b.port("p")), runtime.across_id(b.port("n"))));
+        let battery_ids = battery.as_ref().map(|b| (runtime.state_id(b.behavior, "soc"), runtime.across_id(b.port("p")), runtime.across_id(b.port("n")), runtime.state_id(b.behavior, "current")));
         // Targets: the control block's hold values (rad) in `targets_order`.
         let initial: Vec<f64> = targets_order.iter().map(|p| model.control.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(0.0)).collect();
         let targets = Arc::new(Mutex::new(initial));
@@ -481,7 +565,8 @@ impl PhysicalRobot {
         let link_stats = (0..art.links.len()).map(|li| LinkStats { hotspot: vec![0.0; art.links[li].flex.as_ref().map(|f| f.stress_cells.len()).unwrap_or(0)], ..Default::default() }).collect();
         let joint_names: Vec<String> = targets_order.clone();
         let joint_names = if joint_names.is_empty() { art.port_names.clone() } else { joint_names };
-        Ok(Self {
+        let mut result = Self {
+            composition,
             runtime,
             model: model.clone(),
             art,
@@ -495,6 +580,8 @@ impl PhysicalRobot {
             temperature_ids,
             motors,
             battery: battery_ids,
+            power_limits: power_profile.as_ref().map(|p|p.limits.clone()),
+            trace_battery: vec![],
             motor_stats: vec![MotorStats::default(); motors_built.len()],
             joint_stats: vec![JointStats { lo: f64::INFINITY, hi: f64::NEG_INFINITY, ..Default::default() }; nj],
             link_stats,
@@ -513,9 +600,34 @@ impl PhysicalRobot {
             samples: 0,
             fell: false,
             trajectory,
-        })
+        };
+        result.sample_battery()?;
+        Ok(result)
     }
 
+    /// Exact simulated source terminals. Controllers must declare a sampled sensor
+    /// adapter before using this truth channel as physical feedback.
+    pub fn battery_reading(&self) -> Option<crate::electrical::SupplySample> {
+        self.battery.map(|(soc,p,n,i)| {
+            let voltage=self.runtime.get(p)-self.runtime.get(n);
+            let current=-self.runtime.get(i);
+            crate::electrical::SupplySample {time_s:self.runtime.time,voltage_v:voltage,current_a:current,power_w:voltage*current,state_of_charge:Some(self.runtime.get(soc))}
+        })
+    }
+    fn sample_battery(&mut self)->Result<(),String>{
+        if let Some(sample)=self.battery_reading(){
+            sample.validate()?;
+            if let Some(limits)=&self.power_limits {
+                limits.validate_sample(sample.voltage_v,sample.state_of_charge.ok_or("Power profile has no SOC")?)?;
+            }
+            if self.trace_battery.last().is_some_and(|s|s.time_s>sample.time_s){return Err("Battery reporting history cannot follow a rewound runtime; start a fresh robot report".into());}
+            if self.trace_battery.last().is_none_or(|s|s.time_s<sample.time_s){self.trace_battery.push(sample.clone());}
+            if sample.state_of_charge.is_some_and(|v|!(0. ..=1.).contains(&v)){
+                return Err("Battery state of charge outside [0,1]; robot prediction cannot continue beyond depletion/overcharge".into());
+            }
+        }
+        Ok(())
+    }
     pub fn time(&self) -> f64 {
         self.runtime.time
     }
@@ -553,6 +665,7 @@ impl PhysicalRobot {
                     }
                 }
             }
+            self.sample_battery()?;
             left -= slice;
             if self.runtime.time - self.last_sample >= self.sample_interval - 1e-9 {
                 self.wall += start.elapsed().as_secs_f64();
@@ -838,7 +951,23 @@ impl PhysicalRobot {
                 }),
             );
         }
-        let battery = self.battery.map(|(soc, p, n)| json!({"final_soc": self.runtime.get(soc), "min_voltage": self.runtime.get(p) - self.runtime.get(n), "energy_j": self.motor_stats.iter().map(|s| s.energy).sum::<f64>()}));
+        let battery = self.battery_reading().map(|reading| {
+            // Include direct-runtime advancement in the report without pretending
+            // its intervening electrical samples were captured by this host.
+            let mut samples=self.trace_battery.clone();
+            if samples.last().is_some_and(|s|s.time_s>reading.time_s){return json!({"failure":"Runtime was rewound without its reporting history; battery metrics are unavailable","accounting_version":2});}
+            if samples.last().is_none_or(|s|s.time_s<reading.time_s){samples.push(reading.clone());}
+            match crate::electrical::summarize_supply(&samples) {
+                Ok(summary)=>json!({"final_soc":reading.state_of_charge,"min_voltage":summary.minimum_voltage_v,
+                    "final_voltage_v":reading.voltage_v,"current_a":reading.current_a,"power_w":reading.power_w,
+                    "energy_j":summary.drawn_energy_j-summary.returned_energy_j,"drawn_energy_j":summary.drawn_energy_j,"returned_energy_j":summary.returned_energy_j,
+                    "summary":summary,"samples":samples,
+                    "cutoff_voltage_v":self.model.battery.as_ref().map(|b|b.cutoff_voltage),"below_declared_cutoff":self.model.battery.as_ref().map(|b|summary.minimum_voltage_v<b.cutoff_voltage),
+                    "accounting_version":2,"energy_location":"battery_terminals","energy_j_meaning":"net electrical energy drawn from the source; drawn minus returned",
+                    "interpretation":"Sampled shared-circuit battery terminals, not summed winding energy. Positive current/power discharges the source. Peaks and integrals are limited by the stated sample interval. These are simulation truth channels, not calibrated sensor measurements. Generic discharge curve and pack parameters require physical validation."}),
+                Err(error)=>json!({"failure":error,"samples":samples,"accounting_version":2}),
+            }
+        });
         let base = &self.art.bases[0];
         let g = self.generalized();
         let pairs: Vec<Value> = self.contact_pairs.iter().map(|((a, b), f)| json!([self.art.links[*a].name, b.map(|b| self.art.links[b].name.clone()).unwrap_or("world".into()), f])).collect();
@@ -1030,7 +1159,7 @@ pub fn summary(r: &Value) -> String {
         }
     }
     if let Some(b) = r["battery"].as_object() {
-        lines.push(format!("  battery: soc {:.3}, min {:.2} V, {:.2} J", b["final_soc"].as_f64().unwrap_or(0.0), b["min_voltage"].as_f64().unwrap_or(0.0), b["energy_j"].as_f64().unwrap_or(0.0)));
+        lines.push(format!("  battery: soc {:.3}, min {:.2} V, {:.2} J net drawn at battery terminals", b["final_soc"].as_f64().unwrap_or(0.0), b["min_voltage"].as_f64().unwrap_or(0.0), b["energy_j"].as_f64().unwrap_or(0.0)));
     }
     lines.push(format!("  contacts: peak {:.2} N; base {}", r["contacts"]["peak_force_n"].as_f64().unwrap_or(0.0), if r["base"]["fell"].as_bool().unwrap_or(false) { "FELL" } else { "upright" }));
     if let Some(mc) = r["monte_carlo"].as_object() {

@@ -7,12 +7,16 @@ use sim_runtime::{
 };
 
 fn fixture(step: f64) -> EnvironmentCapture {
+    fixture_with_report_stride(step, 1)
+}
+fn fixture_with_report_stride(step: f64, report_every: usize) -> EnvironmentCapture {
     let mut config: Config = serde_json::from_str(include_str!(
         "../../../examples/wheeled-robot/imu-policy.config.json"
     ))
     .unwrap();
     config.step_s = step;
     config.steps = (0.03 / step).round() as usize;
+    config.report_every = report_every;
     let task: Task = serde_json::from_str(include_str!(
         "../../../examples/wheeled-robot/imu-policy.task.json"
     ))
@@ -290,4 +294,144 @@ fn solver_failure_can_commit_physics_beyond_the_last_observed_task_endpoint() {
     assert_eq!(r.matched_input_duration_s, 0.);
     assert_eq!(r.candidate.unobserved_committed_steps, 1);
     assert!(r.candidate.eligible_score.is_none());
+}
+
+#[test]
+fn directional_search_gates_use_signed_progress_and_all_motor_errors() {
+    use sim_runtime::motion_evaluation::{self, Gates};
+    // Synthetic analytic monitor values on a valid production-runtime capture.
+    // These test score arithmetic, not a claim about locomotion performance.
+    let mut capture = fixture(0.001);
+    let indices: Vec<usize> =
+        serde_json::from_value(capture.metadata["joint_indices"].clone()).unwrap();
+    for (i, (t, f)) in capture
+        .transitions
+        .iter_mut()
+        .zip(&mut capture.frames)
+        .enumerate()
+    {
+        t.speed = Some(sim_runtime::speed_task::SpeedObservation {
+            displacement_xy_m: [i as f64 * 0.001, 0.],
+            net_distance_m: i as f64 * 0.001,
+            net_speed_m_s: i as f64 * 0.001 / 0.03,
+            progress_reward_m: 0.001,
+            body_up_z: 1.,
+            hull_floor_clearance_m: 1.,
+            body_floor_contact: false,
+            fallen: false,
+        });
+        f["servo_targets_rad"] = json!(
+            indices
+                .iter()
+                .map(|j| f["joint_positions"][*j].as_f64().unwrap())
+                .collect::<Vec<_>>()
+        );
+    }
+    let gates = Gates {
+        direction_world: [1., 0., 0.],
+        minimum_body_up_z: 0.9,
+        maximum_tracking_rms_rad: 0.05,
+        maximum_tracking_peak_rad: 0.1,
+    };
+    let report = motion_evaluation::evaluate(&capture, &gates).unwrap();
+    assert!((report.eligible_speed_m_s.unwrap() - 1. / 3.).abs() < 1e-12);
+    let mut reverse = gates.clone();
+    reverse.direction_world = [-1., 0., 0.];
+    assert!(
+        motion_evaluation::evaluate(&capture, &reverse)
+            .unwrap()
+            .eligible_speed_m_s
+            .unwrap()
+            < 0.
+    );
+    capture.frames[1]["servo_targets_rad"][0] = json!(10.);
+    assert!(
+        motion_evaluation::evaluate(&capture, &gates)
+            .unwrap()
+            .eligible_speed_m_s
+            .is_none()
+    );
+    capture.transitions[1]
+        .speed
+        .as_mut()
+        .unwrap()
+        .body_floor_contact = true;
+    assert!(
+        motion_evaluation::evaluate(&capture, &gates)
+            .unwrap()
+            .rejection_reasons
+            .contains(&"body-floor contact".into())
+    );
+}
+
+fn numerical_gates(a: &EnvironmentCapture) -> sim_runtime::numerical_validation::Gates {
+    sim_runtime::numerical_validation::Gates {
+        step_divisor: 2,
+        body_link: a.frames[0]["poses"][0]["name"].as_str().unwrap().into(),
+        maximum_net_distance_difference_m: 1.,
+        maximum_endpoint_body_position_difference_m: 1.,
+        maximum_endpoint_body_up_z_difference: 1.,
+        maximum_actuated_position_difference: [("rad".into(), 1.)].into(),
+    }
+}
+#[test]
+fn numerical_endpoints_measure_real_timestep_changes_and_enforce_each_budget() {
+    use sim_runtime::numerical_validation::compare as compare_endpoints;
+    let a = fixture_with_report_stride(0.003, 1);
+    let b = fixture_with_report_stride(0.0015, 2);
+    let g = numerical_gates(&a);
+    let report = compare_endpoints(&a, &b, &g).unwrap();
+    assert!(report.passed);
+    assert_eq!(report.observed_s, 0.03);
+    assert_eq!(report.context_changes.len(), 3);
+    assert!(report.actuated_positions.iter().any(|c| c.difference > 0.));
+    let mut tight = g.clone();
+    tight
+        .maximum_actuated_position_difference
+        .insert("rad".into(), 0.);
+    assert!(!compare_endpoints(&a, &b, &tight).unwrap().passed);
+    let mut displaced = b.clone();
+    let last = displaced.frames.last_mut().unwrap();
+    last["poses"][0]["position_m"][0] =
+        json!(last["poses"][0]["position_m"][0].as_f64().unwrap() + 3.);
+    let report = compare_endpoints(&a, &displaced, &g).unwrap();
+    assert!(!report.passed);
+    assert!(
+        report
+            .rejection_reasons
+            .iter()
+            .any(|r| r.contains("body position"))
+    );
+    let mut failed = b.clone();
+    failed.completed = false;
+    failed.error = Some("test host capture failure".into());
+    assert!(!compare_endpoints(&a, &failed, &g).unwrap().passed);
+}
+#[test]
+fn numerical_comparison_rejects_changed_model_inputs_start_or_runtime() {
+    use sim_runtime::numerical_validation::compare as compare_endpoints;
+    let a = fixture_with_report_stride(0.003, 1);
+    let b = fixture_with_report_stride(0.0015, 2);
+    let g = numerical_gates(&a);
+    let mut changed = b.clone();
+    changed.recording.scene.robot.gravity[2] = -8.;
+    assert!(compare_endpoints(&a, &changed, &g).is_err());
+    let mut changed = b.clone();
+    changed.recording.runtime_identity = None;
+    assert!(compare_endpoints(&a, &changed, &g).is_err());
+    let mut changed = b.clone();
+    changed.frames[0]["joint_positions"][0] = json!(0.01);
+    assert!(compare_endpoints(&a, &changed, &g).is_err());
+    let mut changed = b.clone();
+    changed.recording.input_events[0].values[0] += 0.01;
+    for frame in changed.frames.iter_mut().skip(1) {
+        frame.as_object_mut().unwrap().remove("policy_inputs");
+    }
+    assert!(compare_endpoints(&a, &changed, &g).is_err());
+    let mut changed = b.clone();
+    changed.recording.config.report_every = 1;
+    assert!(compare_endpoints(&a, &changed, &g).is_err());
+    let mut missing = g.clone();
+    missing.maximum_actuated_position_difference = [("m".into(), 1.)].into();
+    assert!(compare_endpoints(&a, &b, &missing).is_err());
 }

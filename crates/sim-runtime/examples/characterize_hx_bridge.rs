@@ -2,7 +2,7 @@
 //! Host-monotonic transaction windows, NOT FPGA timestamps or sensor sample times.
 use serde_json::json;
 use sim_runtime::acquisition::servo_bus::{
-    Telemetry, packet, pwm_write_parameters, reply, signed_pwm_write_parameters,
+    PacketBuffer, Telemetry, packet, pwm_write_parameters, reply, signed_pwm_write_parameters,
 };
 use std::{
     fs::{self, File, OpenOptions},
@@ -14,10 +14,15 @@ use std::{
 type E = Box<dyn std::error::Error>;
 include!("hx_sweep_support.rs.inc");
 include!("hx_safety_probe.rs.inc");
+include!("hx_controller.rs.inc");
+include!("hx_fpga.rs.inc");
+include!("hx_device.rs.inc");
 trait SerialIo: Read + Write {}
 impl<T: Read + Write> SerialIo for T {}
 struct Bus {
     serial: Box<dyn SerialIo>,
+    pending: PacketBuffer,
+    raw_log: Option<File>,
     log: File,
     start: Instant,
     seq: u64,
@@ -27,21 +32,7 @@ impl Bus {
         let p = packet(id, instruction, params)?;
         let t0 = self.start.elapsed().as_nanos();
         self.serial.write_all(&p)?;
-        let deadline = Instant::now() + Duration::from_millis(150);
-        let mut rx = Vec::new();
-        let mut b = [0; 64];
-        while Instant::now() < deadline {
-            match self.serial.read(&mut b) {
-                Ok(n) if n > 0 => rx.extend_from_slice(&b[..n]),
-                Ok(_) => {}
-                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-                Err(e) => return Err(e.into()),
-            }
-            if rx.len() >= 4 && rx.len() >= rx[3] as usize + 4 {
-                break;
-            }
-            std::thread::sleep(Duration::from_micros(200));
-        }
+        let rx = self.read_packet(Instant::now() + Duration::from_millis(150))?;
         let result = reply(&rx, id, width);
         let error = result.as_ref().err().copied();
         writeln!(
@@ -56,6 +47,68 @@ impl Bus {
             return Err(format!("servo {id} device error {}", r.error).into());
         }
         Ok(r.parameters)
+    }
+    /// Preserve USB chunks before parsing; keep coalesced frames for the next read.
+    fn poll_packet(&mut self) -> Result<Option<Vec<u8>>, E> {
+        if let Some(p) = self.pending.next_packet()? {
+            return Ok(Some(p));
+        }
+        let mut bytes = [0; 512];
+        match self.serial.read(&mut bytes) {
+            Ok(n) if n > 0 => {
+                if let Some(log) = &mut self.raw_log {
+                    writeln!(
+                        log,
+                        "{}",
+                        json!({"host_ns":self.start.elapsed().as_nanos(),"rx":&bytes[..n]})
+                    )?;
+                    log.flush()?;
+                }
+                self.pending.push(&bytes[..n])?;
+            }
+            Ok(_) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+            Err(e) => return Err(e.into()),
+        }
+        Ok(self.pending.next_packet()?)
+    }
+    fn read_packet(&mut self, deadline: Instant) -> Result<Vec<u8>, E> {
+        while Instant::now() < deadline {
+            if let Some(p) = self.poll_packet()? {
+                return Ok(p);
+            }
+            std::thread::sleep(Duration::from_micros(100));
+        }
+        Err(format!(
+            "Bridge reply timeout; retained {} partial bytes",
+            self.pending.pending().len()
+        )
+        .into())
+    }
+    /// At most two read-only packets per USB write, matching the installed
+    /// bridge's two-slot host queue. Drain both replies before sending more.
+    /// Timestamps bound host request/reply windows, not simultaneous sampling.
+    fn read_pairs(&mut self, ids: &[u8], addr: u8, width: u8) -> Result<Vec<(u8, f64, f64, Vec<u8>)>, E> {
+        let mut results = Vec::new();
+        for pair in ids.chunks(2) {
+            let packets = pair.iter().map(|id| packet(*id, 2, &[addr, width])).collect::<Result<Vec<_>, _>>()?;
+            let tx: Vec<u8> = packets.iter().flatten().copied().collect();
+            let request = self.start.elapsed();
+            self.serial.write_all(&tx)?;
+            let deadline = Instant::now() + Duration::from_millis(150);
+            for (&id, tx) in pair.iter().zip(packets) {
+                let rx = self.read_packet(deadline)?;
+                let completion = self.start.elapsed();
+                let decoded = reply(&rx, id, width as usize);
+                writeln!(self.log, "{}", json!({"sequence":self.seq,"id":id,"instruction":2,"request_host_ns":request.as_nanos(),"completion_host_ns":completion.as_nanos(),"tx":tx,"rx":rx,"decode_error":decoded.as_ref().err().copied(),"paired_read":true}))?;
+                self.log.flush()?;
+                self.seq += 1;
+                let decoded = decoded?;
+                if decoded.error != 0 { return Err(format!("servo {id} device error {}", decoded.error).into()); }
+                results.push((id, request.as_secs_f64(), completion.as_secs_f64(), decoded.parameters));
+            }
+        }
+        Ok(results)
     }
     fn read(&mut self, id: u8, addr: u8, width: u8) -> Result<Vec<u8>, E> {
         self.txn(id, 2, &[addr, width], width as usize)
@@ -98,9 +151,18 @@ fn main() -> Result<(), E> {
     if ids.is_empty() || ids.iter().any(|x| *x > 253) {
         return Err("invalid IDs".into());
     }
+    let baud: u32 = std::env::var("HX_BAUD")
+        .unwrap_or_else(|_| "115200".into())
+        .parse()?;
+    if ![115200, 1_000_000].contains(&baud) {
+        return Err("Unsupported bridge baud".into());
+    }
+    // Darwin termios/stty does not accept arbitrary rates. Establish raw mode
+    // at a standard rate, then set the actual speed on our open file descriptor.
+    let baud_text = if cfg!(target_os = "macos") { 115200 } else { baud }.to_string();
     let out = PathBuf::from(&args[4]);
     fs::create_dir(&out)?;
-    let mut manifest = json!({"completed":false,"mode":"read_only","ids":ids,"port":args[1],"baud":115200,"seconds":secs,"started_unix_s":SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs_f64(),"timing":"Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.","source_blake3":blake3::hash(include_bytes!("characterize_hx_bridge.rs")).to_hex().to_string(),"voltage":"0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f","current":"0.001 A/count uncalibrated internal current; not measured total supply current"});
+    let mut manifest = json!({"completed":false,"mode":"read_only","ids":ids,"port":args[1],"baud":baud,"seconds":secs,"started_unix_s":SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs_f64(),"timing":"Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.","source_blake3":blake3::hash(include_bytes!("characterize_hx_bridge.rs")).to_hex().to_string(),"voltage":"0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f","current":"0.001 A/count uncalibrated internal current; not measured total supply current"});
     fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
     let nonblock = if cfg!(target_os = "macos") { 4 } else { 2048 };
     let serial = OpenOptions::new()
@@ -115,31 +177,166 @@ fn main() -> Result<(), E> {
     };
     if !std::process::Command::new("stty")
         .args([
-            flag, &args[1], "115200", "raw", "-echo", "clocal", "-hupcl", "min", "0", "time", "0",
+            flag, &args[1], &baud_text, "raw", "-echo", "clocal", "-hupcl", "min", "0", "time", "0",
         ])
         .status()?
         .success()
     {
         return Err("stty failed".into());
     }
+    #[cfg(target_os = "macos")]
+    if baud != 115200 {
+        use std::os::fd::AsRawFd;
+        unsafe extern "C" {
+            fn ioctl(fd: std::ffi::c_int, request: std::ffi::c_ulong, ...) -> std::ffi::c_int;
+        }
+        // IOKit/serial/ioss.h: IOSSIOSPEED_32 = _IOW('T', 2, uint32_t).
+        let speed: u32 = baud;
+        // SAFETY: serial owns a valid open descriptor; speed is the live,
+        // correctly sized input buffer required by this synchronous ioctl.
+        if unsafe { ioctl(serial.as_raw_fd(), 0x80045402, &speed as *const u32) } != 0 {
+            return Err(std::io::Error::last_os_error().into());
+        }
+    }
     let mut bus = Bus {
         serial: Box::new(serial),
+        pending: PacketBuffer::default(),
+        raw_log: Some(File::create(out.join("uart-chunks.jsonl"))?),
         log: File::create(out.join("transactions.jsonl"))?,
         start: Instant::now(),
         seq: 0,
     };
     if let Some(plan_path) = args.get(5) {
         let value: serde_json::Value = serde_json::from_slice(&fs::read(plan_path)?)?;
+        if value["control"] == "fpga_live_reference" || value["control"] == "fpga_live_device_reference" {
+            let plan:sim_runtime::controller_refinement::fpga::Plan=serde_json::from_value(value["plan"].clone())?;
+            let request=serde_json::from_value(value["request"].clone())?;
+            // This finite interactive control process must not inherit a
+            // background scheduling class from the launcher. This is a QoS
+            // request, not real-time scheduling; all deadlines remain enforced.
+            #[cfg(target_os="macos")]
+            {
+                unsafe extern "C" { fn pthread_set_qos_class_self_np(class:u32, relative_priority:i32)->i32; }
+                // SAFETY: documented Darwin pthread API, current thread only,
+                // QOS_CLASS_USER_INTERACTIVE from sys/qos.h; no pointers.
+                let error=unsafe{pthread_set_qos_class_self_np(0x21,0)};
+                if error!=0{return Err(std::io::Error::from_raw_os_error(error).into());}
+                manifest["host_scheduling"]=json!("Darwin user-interactive QoS; deadlines still enforced; not hard realtime");
+            }
+            manifest["mode"]=value["control"].clone();
+            manifest["seconds"]=json!(plan.period_s*plan.targets.len() as f64);
+            fs::write(out.join("live-request.json"),serde_json::to_vec_pretty(&value)?)?;
+            match if value["control"]=="fpga_live_device_reference" {run_device_bench_input(&mut bus,&out,&ids,&plan,Some(&request))} else {run_fpga_bench_input(&mut bus,&out,&ids,&plan,Some(&request))} {
+                Ok(result)=>{manifest["completed"]=result["completed"].clone();manifest["result"]=result;},
+                Err(e)=>manifest["error"]=json!(e.to_string()),
+            }
+            fs::write(out.join("run.json"),serde_json::to_vec_pretty(&manifest)?)?;
+            return if manifest["completed"]==true {Ok(())}else{Err("Live hardware session ended; inspect stop verification".into())};
+        }
+        if value["control"] == "fpga_device_pd" {
+            if baud != 1_000_000 {
+                return Err("Device experiment requires HX_BAUD=1000000".into());
+            }
+            let plan = serde_json::from_value(value)?;
+            manifest["mode"] = json!("fpga_device_clock_pd");
+            match run_device_bench(&mut bus, &out, &ids, &plan) {
+                Ok(r) => {
+                    manifest["completed"] = r["completed"].clone();
+                    manifest["result"] = r;
+                }
+                Err(e) => manifest["error"] = json!(e.to_string()),
+            }
+            fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+            return if manifest["completed"] == true {
+                Ok(())
+            } else {
+                Err("Device controller trial incomplete; inspect retained evidence".into())
+            };
+        }
+        if value["control"] == "fpga_pd" {
+            let plan: sim_runtime::controller_refinement::fpga::Plan =
+                serde_json::from_value(value)?;
+            manifest["mode"] = json!("fpga_computed_pd_host_scheduled");
+            let result = run_fpga_bench(&mut bus, &out, &ids, &plan);
+            match result {
+                Ok(r) => {
+                    manifest["completed"] = r["completed"].clone();
+                    manifest["result"] = r;
+                }
+                Err(e) => manifest["error"] = json!(e.to_string()),
+            }
+            fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+            return if manifest["completed"] == true {
+                Ok(())
+            } else {
+                Err("FPGA controller trial incomplete; inspect retained evidence".into())
+            };
+        }
+        if value["control"] == "closed_loop_pwm" {
+            let plan: ControllerBenchPlan = serde_json::from_value(value)?;
+            plan.validate(&ids)?;
+            manifest["mode"] = json!("fpga_supervised_closed_loop_pwm");
+            manifest["plan"] = serde_json::to_value(&plan)?;
+            fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+            match run_controller_bench(&mut bus, &out, &ids, &plan) {
+                Ok(result) => {
+                    manifest["completed"] = result["completed"].clone();
+                    manifest["result"] = result;
+                }
+                Err(e) => manifest["error"] = json!(e.to_string()),
+            }
+            fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+            return if manifest["completed"] == true {
+                Ok(())
+            } else {
+                Err(
+                    "Controller trial incomplete; inspect retained recording and stop verification"
+                        .into(),
+                )
+            };
+        }
+        if value["control"] == "inspect" {
+            manifest["mode"] = json!("read_only_supervised_bench_inspection");
+            let result = (|| -> Result<serde_json::Value, E> {
+                let status = supervisor(&mut bus, servo_safety::Command::Status)?;
+                let mut devices = serde_json::Map::new();
+                for &id in &ids {
+                    devices.insert(
+                        id.to_string(),
+                        json!({
+                            "telemetry": feedback(&mut bus, id)?,
+                            "mode": bus.read(id, 0x21, 1)?,
+                            "torque_enable": bus.read(id, 0x28, 1)?,
+                            "pwm": bus.read(id, 0x2c, 2)?,
+                            "configuration": bus.read(id, 0, 40)?
+                        }),
+                    );
+                }
+                Ok(json!({"supervisor": status, "devices": devices}))
+            })();
+            manifest["completed"] = json!(result.is_ok());
+            match result {
+                Ok(result) => manifest["result"] = result,
+                Err(error) => manifest["error"] = json!(error.to_string()),
+            }
+            fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+            println!("{}", serde_json::to_string_pretty(&manifest)?);
+            return if manifest["completed"] == true {
+                Ok(())
+            } else {
+                Err("read-only inspection failed; inspect run.json".into())
+            };
+        }
         if value["control"] == "safety_probe" {
             manifest["mode"] = json!("low_drive_hardware_watchdog_commissioning");
-            manifest["plan"] = value;
+            manifest["plan"] = value.clone();
             manifest["probe_source_blake3"] = json!(
                 blake3::hash(include_bytes!("hx_safety_probe.rs.inc"))
                     .to_hex()
                     .to_string()
             );
             fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
-            match run_safety_probe(&mut bus, &out, &ids) {
+            match run_safety_probe(&mut bus, &out, &ids, value["physical_s2"] == true) {
                 Ok(result) => {
                     manifest["completed"] = result["completed"].clone();
                     manifest["result"] = result;
@@ -1043,6 +1240,46 @@ mod motion_tests {
             let mut b = p;
             b[index] = value;
             assert!(check_feedback(&Telemetry::decode(&b).unwrap(), 2048, 57, 60).is_err());
+        }
+    }
+}
+
+#[cfg(test)]
+mod paired_read_tests {
+    use super::*;
+    use std::collections::VecDeque;
+    struct PairedMock { rx: VecDeque<u8>, wrong_id: bool }
+    impl Write for PairedMock {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            assert!(self.rx.is_empty(), "drain replies before next pair");
+            assert!(bytes.len() <= 16, "at most two eight-byte read packets");
+            for p in bytes.chunks_exact(8) {
+                assert_eq!(p[4], 2, "read only");
+                let id = if self.wrong_id { 99 } else { p[2] };
+                self.rx.extend(packet(id, 0, &vec![p[2]; p[6] as usize]).unwrap());
+            }
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+    }
+    impl Read for PairedMock {
+        fn read(&mut self, bytes: &mut [u8]) -> std::io::Result<usize> {
+            let n = bytes.len().min(3).min(self.rx.len());
+            for b in &mut bytes[..n] { *b=self.rx.pop_front().unwrap(); }
+            Ok(n)
+        }
+    }
+    #[test]
+    fn paired_reads_preserve_order_fragmented_replies_and_queue_bound() {
+        for wrong_id in [false,true] {
+            let path=std::env::temp_dir().join(format!("paired-reads-{}-{wrong_id}.jsonl",std::process::id()));
+            let mut bus=Bus{serial:Box::new(PairedMock{rx:VecDeque::new(),wrong_id}), pending:PacketBuffer::default(),raw_log:None,log:File::create(&path).unwrap(),start:Instant::now(),seq:0};
+            let result=bus.read_pairs(&[10,11,12],0x28,6);
+            if wrong_id { assert!(result.is_err()); } else {
+                let reads=result.unwrap();assert_eq!(reads.len(),3);
+                for (i,(id,begin,end,bytes)) in reads.iter().enumerate(){assert_eq!(*id,10+i as u8);assert_eq!(bytes,&vec![*id;6]);assert!(end>=begin);}
+            }
+            drop(bus);fs::remove_file(path).unwrap();
         }
     }
 }

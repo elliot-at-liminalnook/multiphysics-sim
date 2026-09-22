@@ -25,22 +25,27 @@ pub fn elimination_enabled() -> bool {
     ELIMINATION.load(std::sync::atomic::Ordering::Relaxed)
 }
 pub mod runtime;
+pub mod observation;
+
 pub use island::Island;
 pub use runtime::{Runtime, RuntimeError, RuntimeSnapshot};
 
 use petgraph::graph::{NodeIndex, UnGraph};
 use petgraph::visit::Dfs;
 use sim_core::{
-    BehaviorId, BehaviorRegistry, ConnectorKind, ModelWorld, PortId, PortSchema, QuantityKind,
+    BehaviorId, BehaviorRegistry, ModelWorld, PortId, PortSchema, QuantityKind,
     StateId,
 };
 use std::collections::{HashMap, HashSet};
 use thiserror::Error;
+#[cfg(test)]
+use sim_core::ConnectorKind;
+use sim_core::definitions::{ConnectorHandle, QuantityHandle, FrozenDefinitions, DefinitionError, builtins};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CompiledConnectionKind {
-    Acausal(ConnectorKind),
-    Signal(QuantityKind),
+    Acausal(ConnectorHandle),
+    Signal(QuantityHandle),
 }
 
 #[derive(Debug, Clone)]
@@ -62,6 +67,8 @@ pub struct CouplingIsland {
 
 #[derive(Debug, Clone)]
 pub struct CompiledModel {
+    /// Frozen once for this compilation; handles cannot cross catalogs.
+    pub definitions: FrozenDefinitions,
     pub state_layout: StateLayout,
     pub connections: Vec<CompiledConnection>,
     pub islands: Vec<CouplingIsland>,
@@ -69,6 +76,8 @@ pub struct CompiledModel {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum CompileError {
+    #[error(transparent)]
+    Definition(#[from] DefinitionError),
     #[error("behavior {behavior:?} references missing object")]
     MissingObject { behavior: BehaviorId },
     #[error("behavior {behavior:?} has unregistered type `{kind}`")]
@@ -105,7 +114,7 @@ pub enum CompileError {
 /// registering every unknown as a stable state in `model.state`.
 pub fn compile_islands(model: &mut ModelWorld, registry: &BehaviorRegistry) -> Result<Vec<Island>, CompileError> {
     let compiled = compile(model, registry)?;
-    island::build_islands(model, registry, &compiled.connections)
+    island::build_islands(model, registry, &compiled.connections, &compiled.definitions)
 }
 
 pub fn compile(
@@ -113,7 +122,36 @@ pub fn compile(
     registry: &BehaviorRegistry,
 ) -> Result<CompiledModel, CompileError> {
     validate_behaviors_and_ports(model, registry)?;
+    let definitions = registry.definitions().map_err(|e| CompileError::State(e.to_string()))?;
 
+    for (pid, port) in &model.ports {
+        if let Some((parent, index)) = port.member_of {
+            if !model.ports.get(parent).is_some_and(|p| p.owner == port.owner && p.members.get(index) == Some(&pid)) {
+                return Err(CompileError::State(format!("orphan composite member {}", port.name)));
+            }
+        }
+        match &port.schema {
+            PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind) => kind.validate(&definitions)?,
+            PortSchema::Acausal(kind) => {
+                match &definitions.connector_by_id(&kind.definition_id())?.rule {
+                    sim_core::definitions::ConnectionRule::Composite { members } => {
+                        if members.len() != port.members.len() { return Err(CompileError::State(format!("composite {} has incorrect member count", port.name))); }
+                        for (index, (member, child)) in members.iter().zip(&port.members).enumerate() {
+                            let valid = model.ports.get(*child).is_some_and(|p| p.owner == port.owner
+                                && p.member_of == Some((pid, index)) && p.name == format!("{}.{}", port.name, member.name)
+                                && matches!(&p.schema, PortSchema::Acausal(c) if c.definition_id() == member.connector));
+                            if !valid { return Err(CompileError::State(format!("composite {} has invalid member {}", port.name, member.name))); }
+                        }
+                    }
+                    _ if !port.members.is_empty() => return Err(CompileError::State(format!("noncomposite {} has members", port.name))),
+                    _ => {}
+                }
+            }
+        }
+    }
+    for (_, entry) in model.state.iter() {
+        entry.quantity.validate(&definitions)?;
+    }
     let mut compiled_connections = Vec::with_capacity(model.connections.len());
     let mut connected = HashSet::new();
     for (connection_index, connection) in model.connections.iter().enumerate() {
@@ -145,25 +183,31 @@ pub fn compile(
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        let kind = match ports[0].schema {
+        let kind = match &ports[0].schema {
             PortSchema::Acausal(expected) => {
                 if ports
                     .iter()
-                    .any(|port| port.schema != PortSchema::Acausal(expected))
+                    .any(|port| !matches!(&port.schema, PortSchema::Acausal(actual) if actual == expected))
                 {
                     return Err(CompileError::IncompatibleConnection {
                         connection: connection_index,
                     });
                 }
-                CompiledConnectionKind::Acausal(expected)
+                CompiledConnectionKind::Acausal(definitions.connector_handle(&expected.definition_id())?)
             }
             PortSchema::SignalIn(expected) | PortSchema::SignalOut(expected) => {
-                // Dimensionless signal ports are untyped: a generic controller
-                // or filter accepts any quantity.
-                let compatible = |kind: QuantityKind| {
-                    kind == expected || kind == QuantityKind::Dimensionless || expected == QuantityKind::Dimensionless
+                // Legacy Dimensionless ports are wildcard-typed until the explicit
+                // SignalType migration. Resolve all concrete terminals, independent
+                // of connection order; a wildcard must not hide conflicting types.
+                let expected = ports.iter().find_map(|port| match &port.schema {
+                    PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind)
+                        if *kind != QuantityKind::Dimensionless => Some(kind),
+                    _ => None,
+                }).unwrap_or(expected);
+                let compatible = |kind: &QuantityKind| {
+                    kind == expected || *kind == QuantityKind::Dimensionless
                 };
-                if ports.iter().any(|port| match port.schema {
+                if ports.iter().any(|port| match &port.schema {
                     PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind) => !compatible(kind),
                     PortSchema::Acausal(_) => true,
                 }) {
@@ -180,7 +224,7 @@ pub fn compile(
                         connection: connection_index,
                     });
                 }
-                CompiledConnectionKind::Signal(expected)
+                CompiledConnectionKind::Signal(definitions.quantity_handle(&builtins::quantity_id(expected))?)
             }
         };
 
@@ -198,8 +242,8 @@ pub fn compile(
             }
             // An unused signal output still gets an unknown, so it stays
             // observable through the store; anything else must be wired.
-            if let PortSchema::SignalOut(kind) = declaration.schema {
-                compiled_connections.push(CompiledConnection { ports: vec![port], kind: CompiledConnectionKind::Signal(kind) });
+            if let PortSchema::SignalOut(kind) = &declaration.schema {
+                compiled_connections.push(CompiledConnection { ports: vec![port], kind: CompiledConnectionKind::Signal(definitions.quantity_handle(&builtins::quantity_id(kind))?) });
             } else {
                 return Err(CompileError::DanglingPort { port });
             }
@@ -214,6 +258,7 @@ pub fn compile(
         .collect();
 
     Ok(CompiledModel {
+        definitions,
         state_layout: StateLayout {
             dense_to_stable,
             stable_to_dense,

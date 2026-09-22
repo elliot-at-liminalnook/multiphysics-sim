@@ -66,6 +66,10 @@ pub fn reply(bytes: &[u8], expected_id: u8, expected_width: usize) -> Result<Rep
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Telemetry {
     pub position_raw: u16,
+    /// Stream-tracked turns, when supplied by a host with continuous observations.
+    /// Single raw replies cannot recover turns lost across disconnection.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position_continuous: Option<i32>,
     pub position_rad: f64,
     pub speed_raw: u16,
     pub speed_rad_s: f64,
@@ -92,6 +96,7 @@ impl Telemetry {
         let signed_speed = (speed & 0x7fff) as f64 * if speed & 0x8000 != 0 { -1. } else { 1. };
         Ok(Self {
             position_raw: pos,
+            position_continuous: None,
             position_rad: pos as f64 * std::f64::consts::TAU / 4096.,
             speed_raw: speed,
             speed_rad_s: signed_speed * std::f64::consts::TAU / 4096.,
@@ -155,5 +160,83 @@ mod tests {
         assert_eq!(t.temperature_c, 49);
         assert!(t.speed_rad_s < 0.);
         assert!((t.position_rad - std::f64::consts::PI).abs() < 1e-10);
+    }
+}
+/// Bounded framing for fragmented or coalesced bridge replies and device events.
+/// Invalid bytes remain in `pending()` for durable failure evidence; no silent
+/// resynchronization or dropping of extra frames occurs.
+#[derive(Default)]
+pub struct PacketBuffer {
+    bytes: Vec<u8>,
+}
+impl PacketBuffer {
+    pub fn push(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
+        if self.bytes.len() + bytes.len() > 4096 {
+            return Err("Bridge receive buffer exceeded 4096 bytes");
+        }
+        self.bytes.extend_from_slice(bytes);
+        Ok(())
+    }
+    pub fn pending(&self) -> &[u8] {
+        &self.bytes
+    }
+    pub fn next_packet(&mut self) -> Result<Option<Vec<u8>>, &'static str> {
+        if self.bytes.len() < 4 {
+            return Ok(None);
+        }
+        let length = self.bytes[3] as usize + 4;
+        if self.bytes[..2] != [255, 255] || !(6..=64).contains(&length) {
+            return Err("Invalid bridge stream frame header or length");
+        }
+        if self.bytes.len() < length {
+            return Ok(None);
+        }
+        if self.bytes[2..length]
+            .iter()
+            .fold(0u8, |sum, b| sum.wrapping_add(*b))
+            != 255
+        {
+            return Err("Invalid bridge stream frame checksum");
+        }
+        Ok(Some(self.bytes.drain(..length).collect()))
+    }
+}
+
+#[cfg(test)]
+mod stream_tests {
+    use super::*;
+    #[test]
+    fn arbitrary_usb_boundaries_preserve_all_frames() {
+        let frames = [
+            packet(254, 0, &[0; 25]).unwrap(),
+            packet(4, 0, &[0; 15]).unwrap(),
+            packet(253, 0, &[0; 58]).unwrap(),
+        ];
+        let input = frames.concat();
+        for chunk_size in 1..=input.len() {
+            let mut buffer = PacketBuffer::default();
+            let mut actual = Vec::new();
+            for chunk in input.chunks(chunk_size) {
+                buffer.push(chunk).unwrap();
+                while let Some(p) = buffer.next_packet().unwrap() {
+                    actual.push(p);
+                }
+            }
+            assert_eq!(actual, frames);
+            assert!(buffer.pending().is_empty());
+        }
+    }
+    #[test]
+    fn corruption_is_retained_and_never_silently_skipped() {
+        let mut bad = packet(4, 0, &[0; 15]).unwrap();
+        bad[8] ^= 1;
+        let good = packet(5, 0, &[0; 15]).unwrap();
+        let bytes = [bad, good].concat();
+        let mut buffer = PacketBuffer::default();
+        buffer.push(&bytes).unwrap();
+        assert!(buffer.next_packet().is_err());
+        assert_eq!(buffer.pending(), bytes);
+        assert!(buffer.push(&[0; 4096]).is_err());
+        assert_eq!(buffer.pending(), bytes);
     }
 }

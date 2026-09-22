@@ -8,7 +8,7 @@ mod native {
     };
     use std::{
         fs::{self, File, OpenOptions},
-        io::Write,
+        io::{BufReader, BufWriter, Write},
         path::{Path, PathBuf},
     };
     type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -73,8 +73,13 @@ mod native {
             .write(true)
             .create_new(true)
             .open(&temporary)?;
-        serde_json::to_writer(&mut file, state)?;
-        file.flush()?;
+        // CAD-backed recipes are large. Buffer serde's small writes while
+        // retaining the same flush, fsync, rename, and directory-sync boundary.
+        {
+            let mut writer = BufWriter::with_capacity(1024 * 1024, &mut file);
+            serde_json::to_writer(&mut writer, state)?;
+            writer.flush()?;
+        }
         file.sync_all()?;
         fs::rename(&temporary, &destination)?;
         File::open(root)?.sync_all()?;
@@ -92,7 +97,8 @@ mod native {
             })
             .max()
             .ok_or("no committed journal revision")?;
-        let state: Stored = serde_json::from_reader(File::open(path(root, revision))?)?;
+        let state: Stored =
+            serde_json::from_reader(BufReader::new(File::open(path(root, revision))?))?;
         if state.version != 1 || state.revision != revision || state.checksum != state.checksum()? {
             return Err("journal checksum or revision mismatch".into());
         }
@@ -101,7 +107,8 @@ mod native {
                 return Err("initial journal has a parent".into());
             }
         } else {
-            let previous: Stored = serde_json::from_reader(File::open(path(root, revision - 1))?)?;
+            let previous: Stored =
+                serde_json::from_reader(BufReader::new(File::open(path(root, revision - 1))?))?;
             if state.parent.as_ref() != Some(&previous.checksum)
                 || previous.checksum != previous.checksum()?
             {
@@ -113,16 +120,31 @@ mod native {
     }
     pub fn main() -> Result<()> {
         let args: Vec<_> = std::env::args().skip(1).collect();
-        if args.first().map(String::as_str) == Some("init") && args.len() == 4 {
-            let spec: ExperimentSpec = serde_json::from_reader(File::open(&args[1])?)?;
-            let settings: Settings = serde_json::from_reader(File::open(&args[2])?)?;
-            let experiment = Experiment::bind(spec)?;
+        if matches!(args.first().map(String::as_str), Some("init" | "init-reduced")) && args.len() == 4 {
+            let settings: Settings =
+                serde_json::from_reader(BufReader::new(File::open(&args[2])?))?;
+            let journal = if args[0] == "init-reduced" {
+                let root = Path::new(&args[1]);
+                let read = |name: &str| -> Result<serde_json::Value> {
+                    Ok(serde_json::from_reader(BufReader::new(File::open(root.join(name))?))?)
+                };
+                let receipt: sim_runtime::exploration::Qualification = serde_json::from_value(read("qualification.json")?)?;
+                sim_runtime::exploration::qualified_journal(
+                    &serde_json::from_value(read("recipe.json")?)?,
+                    &serde_json::from_value(read("detailed.capture.json")?)?,
+                    &serde_json::from_value(read("reduced.capture.json")?)?,
+                    receipt.report.plan.reference, receipt.report.plan.candidate,
+                )?
+            } else {
+                let spec: ExperimentSpec = serde_json::from_reader(BufReader::new(File::open(&args[1])?))?;
+                Journal::new(Experiment::bind(spec)?)
+            };
             let mut state = Stored {
                 version: 1,
                 revision: 0,
                 parent: None,
                 checksum: String::new(),
-                journal: Journal::new(experiment),
+                journal,
                 settings,
             };
             // Validate selector settings before creating the output directory.
@@ -138,7 +160,7 @@ mod native {
             return Ok(());
         }
         if args.first().map(String::as_str) != Some("advance") || !(4..=5).contains(&args.len()) {
-            return Err("usage: search_motion init spec.json settings.json fresh-directory; or advance directory new-action-budget total-trial-budget [cancel-file]".into());
+            return Err("usage: search_motion init spec.json settings.json fresh-directory; init-reduced qualified-directory settings.json fresh-directory; or advance directory new-action-budget total-trial-budget [cancel-file]".into());
         }
         let root = Path::new(&args[1]);
         let _lock = lock(root)?;

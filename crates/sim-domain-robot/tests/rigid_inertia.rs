@@ -1,6 +1,6 @@
 mod common;
 use common::*;
-use nalgebra::{DVector, Matrix3};
+use nalgebra::{DMatrix, DVector, Matrix3};
 use sim_core::Behavior;
 use sim_domain_robot::{Articulated, Generalized, Options};
 use std::sync::Arc;
@@ -135,6 +135,23 @@ fn branched_mixed_joints_and_multiple_bases_match_inverse_dynamics_and_energy() 
             *q += phase;
         }
         let mass = art.rigid_mass_matrix(&g).unwrap();
+        // Independent full-coordinate inertia is already checked below by
+        // inverse-dynamics probes and kinetic energy. Exercise dense maps,
+        // dependent columns, zero columns and the full identity separately.
+        for mut tangent in [
+            DMatrix::identity(mass.nrows(), mass.nrows()),
+            DMatrix::from_fn(mass.nrows(), 5, |i, j| (0.3 * (i * 5 + j) as f64).sin()),
+            DMatrix::zeros(mass.nrows(), 0),
+        ] {
+            if tangent.ncols() == 5 {
+                tangent.column_mut(2).fill(0.0);
+                let column = tangent.column(0).into_owned();
+                tangent.set_column(4, &column);
+            }
+            let expected = tangent.transpose() * &mass * &tangent;
+            let actual = art.rigid_projected_mass_matrix(&g, &tangent).unwrap();
+            assert!((&expected - actual).amax() < 2e-12);
+        }
         let nb = art.bases.iter().filter(|b| !b.grounded).count() * 6;
         assert_eq!(nb, 12);
         assert_eq!(mass.nrows(), nb + 11);
@@ -208,6 +225,14 @@ fn rejects_invalid_inputs_and_modal_flexibility() {
     assert!(art.rigid_mass_matrix(&g).is_err());
     assert!(art.rigid_closure_velocity_jacobian(&g).is_err());
     g = point(&art);
+    assert!(
+        art.rigid_projected_mass_matrix(&g, &DMatrix::identity(5, 5))
+            .is_err()
+    );
+    assert!(
+        art.rigid_projected_mass_matrix(&g, &DMatrix::repeat(6, 1, f64::NAN))
+            .is_err()
+    );
     g.states[0] = f64::NAN;
     assert!(art.rigid_mass_matrix(&g).is_err());
     assert!(art.rigid_closure_velocity_jacobian(&g).is_err());
@@ -231,6 +256,12 @@ fn rejects_invalid_inputs_and_modal_flexibility() {
     assert!(
         flexible
             .rigid_mass_matrix(&point(&flexible))
+            .unwrap_err()
+            .contains("modal")
+    );
+    assert!(
+        flexible
+            .rigid_projected_mass_matrix(&point(&flexible), &DMatrix::identity(6, 6))
             .unwrap_err()
             .contains("modal")
     );

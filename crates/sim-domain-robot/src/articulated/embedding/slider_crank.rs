@@ -65,6 +65,44 @@ impl AnalyticPositions {
         seed: &super::Generalized,
         g: &mut super::Generalized,
     ) -> Result<(), String> {
+        self.apply_with_coordinates(art, seed, g, |_, _| {})
+    }
+
+    /// Exact chain rule in the certified mechanism's independent coordinate.
+    /// The carrier's rigid motion is supplied by the free-base/independent rows;
+    /// local dependent coordinates do not acquire extra carrier derivatives.
+    pub(super) fn apply_motion(
+        &self, art: &Articulated, seed: &super::Generalized,
+        g: &mut super::Generalized, base_columns: usize, independent: &[usize],
+        velocities: &[f64],
+    ) -> Result<(nalgebra::DMatrix<f64>, nalgebra::DVector<f64>), String> {
+        let mut tangent = nalgebra::DMatrix::zeros(base_columns + g.q.len(), velocities.len());
+        let mut bias = nalgebra::DVector::zeros(tangent.nrows());
+        for i in 0..base_columns { tangent[(i, i)] = 1.0; }
+        for (j, &i) in independent.iter().enumerate() {
+            tangent[(base_columns + i, base_columns + j)] = 1.0;
+        }
+        for t in &art.transmissions {
+            let column = base_columns + independent.iter().position(|&i| i == t.driver)
+                .ok_or("analytic motion: transmission driver is not independent")?;
+            tangent[(base_columns + t.driven, column)] = 1.0 / t.ratio;
+        }
+        self.apply_with_coordinates(art, seed, g, |c, x| {
+            // Independent crank coverage was certified when compiling this map.
+            let column = base_columns + independent.iter().position(|&i| i == c.dof_indices[0]).unwrap();
+            for (j, &i) in c.dof_indices[1..].iter().enumerate() {
+                tangent[(base_columns + i, column)] = x.first_derivative[j];
+                bias[base_columns + i] = x.second_derivative[j] * velocities[column].powi(2);
+            }
+        })?;
+        Ok((tangent, bias))
+    }
+
+    fn apply_with_coordinates(
+        &self, art: &Articulated, seed: &super::Generalized,
+        g: &mut super::Generalized,
+        mut visit: impl FnMut(&AnalyticSliderCrank, &SliderCrankCoordinates),
+    ) -> Result<(), String> {
         for t in &art.transmissions {
             g.q[t.driven] = g.q[t.driver] / t.ratio;
         }
@@ -91,6 +129,7 @@ impl AnalyticPositions {
             )?;
             g.q[coupler] = x.coupler_rad;
             g.q[slider] = x.slider_m;
+            visit(c, &x);
         }
         Ok(())
     }

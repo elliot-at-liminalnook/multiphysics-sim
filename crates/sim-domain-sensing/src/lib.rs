@@ -11,7 +11,7 @@ mod chain;
 
 use chain::Chain;
 use sim_core::{
-    Behavior, Input, LocalJacobian, Output, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, Input, LocalJacobian, Output, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or, signal_in, signal_out,
 };
 use std::collections::BTreeMap;
@@ -124,8 +124,8 @@ pub struct ThroughSensor {
 }
 impl Behavior for ThroughSensor {
     fn states(&self) -> Vec<StateDeclaration> {
-        let mut states = vec![StateDeclaration::new("flow", self.kind, 0.0)];
-        states.extend(self.chain.states("", self.kind));
+        let mut states = vec![StateDeclaration::new("flow", self.kind.clone(), 0.0)];
+        states.extend(self.chain.states("", self.kind.clone()));
         states
     }
     fn residual(&self, ctx: &mut Context) {
@@ -298,7 +298,7 @@ fn quantiser(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::{Electrical as E, PlanarFrame as F, Rotational as R, Translational as T};
+    use sim_core::connectors::{Electrical as E, PlanarFrame as F, Rotational as R, Translational as T};
     use QuantityKind as Q;
     let mut encoder_parameters = chain::parameters(Some("rad"));
     encoder_parameters.push(P::optional("counts", "1", 0.).integer(0., 9_007_199_254_740_991.));

@@ -13,7 +13,7 @@ use sim_domain_robot::articulated::embedding::{
     MotorBoundary, RigidEmbedding,
 };
 use sim_domain_robot::articulated::embedding::{
-    EmbeddedServoBank, EmbeddedServoConfig, ServoBoundary,
+    EmbeddedServoBank, EmbeddedServoConfig, ServoBoundary, EmbeddedPowerBank, PoweredServoState,
 };
 use web_time::Instant;
 
@@ -91,6 +91,12 @@ pub struct Config {
 #[derive(Clone, Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MotorExperiment {
+    /// Explicitly select the CAD power tree. Physical battery/wiring parameters
+    /// stay in CAD; only numerical equation scales belong in this recipe.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub power: Option<CadPower>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub controller: Option<SampledController>,
     /// Explicit browser/training reduction. Bypasses electronics, internal
     /// inertia, gearbox compliance/backlash, firmware, latency and thermal
     /// behavior. All parameters and their assumption reference are required.
@@ -116,6 +122,19 @@ pub struct MotorExperiment {
     pub residual_scales: [f64; 3],
     #[serde(default)]
     pub events: Option<sim_dynamics::hybrid::HybridConfig>,
+}
+
+#[derive(Clone, Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CadPower {
+    /// Voltage V, branch current A, SOC rate 1/s, terminal energy rate W.
+    pub residual_scales: [f64; 4],
+}
+
+#[derive(Clone, Copy, Deserialize, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SampledController {
+    CadFixedPd,
 }
 
 #[derive(Clone, Deserialize, serde::Serialize)]
@@ -191,6 +210,9 @@ pub struct EmbeddedSession {
     bank: Option<EmbeddedMotorBank>,
     driver_bank: Option<EmbeddedDriverBank>,
     servo_bank: Option<EmbeddedServoBank>,
+    power_profile: Option<sim_domain_robot::power_profile::ResolvedPower>,
+    power_bank: Option<EmbeddedPowerBank>,
+    power_states: Vec<f64>,
     motor_states: Vec<f64>,
     servo_states: Vec<f64>,
     completed_steps: usize,
@@ -212,6 +234,17 @@ impl EmbeddedSession {
         seed: u64,
         capture: CaptureMode,
     ) -> Result<Self, String> {
+        let declared_power = scene.robot.actuator_profiles.as_ref().and_then(|p| p.power.as_ref()).is_some();
+        let selected_power = config.motors.as_ref().and_then(|m|m.power.as_ref()).is_some();
+        if declared_power != selected_power {
+            return Err("CAD power distribution requires explicit motors.power selection; imposed supplies cannot bypass it".into());
+        }
+        if selected_power && config.motors.as_ref().is_none_or(|m|m.effective.is_some() || m.controller.is_none() || m.servos.is_none() || m.events.is_none()) {
+            return Err("CAD power requires detailed motors, CAD fixed-PD control, servo targets and event scheduling".into());
+        }
+        if scene.robot.actuator_profiles.is_some() && config.motors.as_ref().is_none_or(|m|m.effective.is_some() || (m.servos.is_some() && m.controller.is_none())) {
+            return Err("CAD actuator profiles cannot be bypassed by effective servos or catalog firmware; select cad_fixed_pd or explicit PWM motor/driver dynamics".into());
+        }
         if !config.step_s.is_finite()
             || config.step_s <= 0.0
             || config.steps == 0
@@ -230,6 +263,9 @@ impl EmbeddedSession {
             return Err("trace_trials is available only for the unscheduled diagnostic; event runs report hybrid diagnostics".into());
         }
         if let Some(m) = &config.motors {
+            if m.controller.is_some() && (m.effective.is_some() || m.servos.is_none() || scene.robot.actuator_profiles.is_none()) {
+                return Err("cad_fixed_pd requires CAD profiles, servo target boundaries and detailed motor dynamics".into());
+            }
             if usize::from(m.boundaries.is_some())
                 + usize::from(m.drivers.is_some())
                 + usize::from(m.servos.is_some())
@@ -443,7 +479,7 @@ impl EmbeddedSession {
                                 motor,
                                 backlash,
                                 session.robot.model.world.ambient_c + 273.15,
-                                false,
+                                session.scene.options.analytic_motor_jacobian,
                                 experiment.events.is_some(),
                             )
                             .into_iter()
@@ -522,6 +558,14 @@ impl EmbeddedSession {
                 .iter()
                 .zip(&motor_names)
                 .map(|(m, dof)| {
+                    if config.motors.as_ref().unwrap().controller.is_some() {
+                        let profile = m.resolved_actuator.as_ref().ok_or("Every motor needs an explicit CAD fixed-PD profile binding")?;
+                        let actual = blake3::hash(include_bytes!("../../sim-domain-control/src/fixed_pd.rs")).to_hex().to_string();
+                        if profile.controller.implementation_blake3 != actual {
+                            return Err("CAD fixed-PD implementation identity differs from the shared FPGA controller".into());
+                        }
+                        return Ok(EmbeddedServoConfig { dof: dof.clone(), parameters: profile.controller_parameters(m.gear_ratio)? });
+                    }
                     if m.firmware.kind == "none" {
                         return Err(format!("CAD motor {} declares no firmware", m.name));
                     }
@@ -537,9 +581,13 @@ impl EmbeddedSession {
         let servo_bank = if servo_configs.is_empty() {
             None
         } else {
-            Some(EmbeddedServoBank::new(
+            let kind = if config.motors.as_ref().unwrap().controller.is_some() {
+                sim_domain_control::sampled_fixed_pd::KIND
+            } else { sim_domain_robot::SERVO_FIRMWARE };
+            Some(EmbeddedServoBank::new_with_kinds(
                 bank.as_ref().unwrap(),
                 &servo_configs,
+                &vec![kind; servo_configs.len()],
             )?)
         };
         let servo_states = servo_bank
@@ -550,6 +598,12 @@ impl EmbeddedSession {
             .as_ref()
             .map(|b| b.initial_states())
             .unwrap_or_default();
+        let power_profile = config.motors.as_ref().and_then(|m|m.power.as_ref())
+            .map(|p|session.robot.model.resolve_power_profile(&crate::registry(),p.residual_scales))
+            .transpose()?.flatten();
+        let power_bank = power_profile.as_ref().map(|p|EmbeddedPowerBank::new(bank.as_ref().unwrap(),&p.config)?.with_limits(p.limits.clone())).transpose()?;
+        let power_states = power_bank.as_ref().map(|p|p.initial_states()).unwrap_or_default();
+        if let Some(p)=&power_bank { p.validate_endpoint(&power_states)?; }
 
         if config.mechanical_subdivision.is_some()
             && (config.implicit.is_none() || bank.is_some() || servo_bank.is_some())
@@ -632,6 +686,9 @@ impl EmbeddedSession {
             bank,
             driver_bank,
             servo_bank,
+            power_profile,
+            power_bank,
+            power_states,
             motor_states,
             servo_states,
             completed_steps: 0,
@@ -677,6 +734,14 @@ impl EmbeddedSession {
     /// outer intervals are reported by the session error, not this history.
     pub fn interval_diagnostics(&self) -> &[sim_dynamics::hybrid::HybridDiagnostics] {
         &self.hybrid_steps
+    }
+    /// Existing motor-solver work for each successful outer interval. Includes
+    /// successful event-location trials later discarded by the scheduler;
+    /// internal work of failed continuous trials is not available here.
+    pub fn motor_solve_statistics(
+        &self,
+    ) -> &[sim_domain_robot::articulated::embedding::MotorSolveStatistics] {
+        &self.hybrid_solves
     }
     pub fn remaining_steps(&self) -> usize {
         self.config.steps - self.completed_steps
@@ -725,6 +790,18 @@ impl EmbeddedSession {
             "motor_experiment":self.config.motors});
         if self.config.independent_coordinates.is_some() {
             metadata["motor_joint_indices"] = json!(self.motor_joint_indices);
+        }
+        if self.config.motors.as_ref().is_some_and(|m| m.controller.is_some()) {
+            metadata["sampled_controller"] = json!({"component":sim_domain_control::sampled_fixed_pd::KIND,
+                "configuration_source":"CAD actuator profiles and feedback bindings", "calibrated":false,
+                "latency":"exact scheduled delivery, not rounded to a sample period",
+                "electrical":if self.power_bank.is_some() {"CAD battery and wiring share the motor solve; temperatures remain imposed; electrical parameters are provisional."} else {"Supply voltage and temperature are imposed; shared battery and branch coupling are not active."}});
+        }
+        if let Some(p)=&self.power_profile {
+            metadata["power_distribution"]=json!({"resolved":p,"source":"CAD actuator_profiles.power","calibrated":false,
+                "voltage_source":"CAD power tree; legacy per-servo imposed voltage slots are inactive",
+                "energy_location":"battery terminals","positive_current":"discharge",
+                "operating_limits":"Stop on an out-of-envelope segment endpoint or command jump; not a BMS or continuous crossing detector"});
         }
         if !self.session.robot.art.imus.is_empty() {
             metadata["imu_schedule"] = json!({"frame":"sensor",
@@ -896,6 +973,8 @@ impl EmbeddedSession {
             bank,
             driver_bank,
             servo_bank,
+            power_bank,
+            power_states,
             motor_states,
             servo_states,
             completed_steps,
@@ -1014,35 +1093,30 @@ impl EmbeddedSession {
                     inputs,
                 )?
             };
-            bank.as_mut()
-                .unwrap()
-                .advance_with_control_cached(
-                    &map,
-                    &g,
-                    &motor_states,
-                    &*servo_states,
-                    i as f64 * config.step_s,
-                    config.step_s,
-                    config.implicit.as_ref().unwrap(),
-                    config.motors.as_ref().unwrap().events.as_ref().unwrap(),
-                    &mut control,
-                    workspace,
-                    |_, _| Ok(applied_loads.clone()),
-                )
-                .map(|result| {
-                    *servo_states = result.control_state;
-                    let step = result.motor;
-                    if let Some(all) = contact_steps.as_mut() {
-                        all.extend(
-                            step.contact_steps
-                                .expect("enabled contact audit must be returned"),
-                        );
-                    }
-                    hybrid_steps.push(step.hybrid);
-                    hybrid_solves.push(step.solves);
-                    *motor_states = step.motor_states;
-                    step.endpoint
-                })
+            let result = if let Some(power) = power_bank.as_ref() {
+                let state = PoweredServoState { servo: servo_states.clone(), power: power_states.clone() };
+                let mut powered = control.with_power(power)?;
+                bank.as_mut().unwrap().advance_with_control_cached(
+                    &map, &g, motor_states, &state, i as f64 * config.step_s, config.step_s,
+                    config.implicit.as_ref().unwrap(), config.motors.as_ref().unwrap().events.as_ref().unwrap(),
+                    &mut powered, workspace, |_, _| Ok(applied_loads.clone()),
+                ).map(|result| { *servo_states=result.control_state.servo; *power_states=result.control_state.power; result.motor })
+            } else {
+                bank.as_mut().unwrap().advance_with_control_cached(
+                    &map, &g, motor_states, &*servo_states, i as f64 * config.step_s, config.step_s,
+                    config.implicit.as_ref().unwrap(), config.motors.as_ref().unwrap().events.as_ref().unwrap(),
+                    &mut control, workspace, |_, _| Ok(applied_loads.clone()),
+                ).map(|result| { *servo_states=result.control_state; result.motor })
+            };
+            result.map(|step| {
+                if let Some(all) = contact_steps.as_mut() {
+                    all.extend(step.contact_steps.expect("enabled contact audit must be returned"));
+                }
+                hybrid_steps.push(step.hybrid);
+                hybrid_solves.push(step.solves);
+                *motor_states = step.motor_states;
+                step.endpoint
+            })
         } else if let Some(events) = config.motors.as_ref().and_then(|m| m.events.as_ref()) {
             bank.as_mut()
                 .unwrap()
@@ -1180,6 +1254,8 @@ impl EmbeddedSession {
             bank,
             driver_bank,
             servo_bank,
+            power_bank,
+            power_states,
             servo_states,
             trajectory,
             motion_clock,
@@ -1243,12 +1319,16 @@ impl EmbeddedSession {
         } else {
             config.motors.as_ref().and_then(|m| m.drivers.clone())
         };
+        let mut power_reading = None;
         let (boundaries, driver_readings) = if let Some(inputs) = driver_inputs {
-            let (b, r) = driver_bank
-                .as_ref()
-                .unwrap()
-                .evaluate(time_s, motor_states, &inputs)?;
-            (b, Some(r))
+            if let Some(power) = power_bank {
+                let (b,r,_,reading)=power.evaluate(time_s,driver_bank.as_ref().unwrap(),motor_states,&inputs,power_states,&vec![0.0;power_states.len()])?;
+                power_reading=Some(reading);
+                (b,Some(r))
+            } else {
+                let (b,r)=driver_bank.as_ref().unwrap().evaluate(time_s,motor_states,&inputs)?;
+                (b,Some(r))
+            }
         } else if !effective_servos.is_empty() {
             (vec![],None)
         } else {
@@ -1276,6 +1356,10 @@ impl EmbeddedSession {
             "poses":eval.links.iter().zip(&art.model.links).map(|(k,l)|json!({"name":l.name,"position_m":k.p.as_slice(),
                 "velocity_m_s":k.vel.as_slice(),"angular_velocity_rad_s":k.w.as_slice(),
                 "rotation":(0..3).map(|i|(0..3).map(|j|k.r[(i,j)]).collect::<Vec<_>>()).collect::<Vec<_>>()})).collect::<Vec<_>>()});
+        if let Some(reading)=power_reading {
+            frame["power"]=json!(reading);
+            frame["power_states"]=json!(power_states);
+        }
         if !art.imus.is_empty() {
             frame["imu_samples"] = json!(art.imu_readings(g));
         }
@@ -1487,7 +1571,9 @@ impl EmbeddedSession {
         "applied_generalized_loads":config.applied_generalized_loads,"frames":frames,
         "terminal_frame":self.frame()?,
         "notes":["Motor components are integrated only when motor_experiment is present. Then they use the shared registered winding/rotor/gearbox equations with the recorded voltage and temperature boundaries.",
-            if servo_bank.is_some() {"Registered servo firmware is ticked at declared deadlines with held outputs, internal quantization, saturation and sample-rounded latency. Supply and winding temperature remain imposed; no battery, thermal network or deployed external sensor model is added."} else if driver_bank.is_some() {"Driver inputs use the registered averaged H-bridge at each trial motor current. Supply voltage and winding temperature are imposed. No battery, thermal network, firmware or sampled sensors are integrated."} else {"No driver, battery, thermal-network, firmware or sampled sensor states are integrated. Zero motor voltage is a short-circuit boundary, not an open-circuit or servo-hold model."},
+            if self.power_bank.is_some() {"The shared FPGA controller, motor states, battery SOC, branch voltages and terminal energy share the event-capable Rust solve. CAD owns power parameters and operating limits. Winding temperatures are imposed; electrical calibration remains provisional."}
+            else if config.motors.as_ref().is_some_and(|m|m.controller.is_some()) {"The shared FPGA integer controller consumes CAD-mapped, quantized joint feedback at declared sample times. Commands are delivered after the exact authored latency and held between events. Supply and winding temperature remain imposed; electrical behavior is uncalibrated."}
+            else if servo_bank.is_some() {"Registered servo firmware is ticked at declared deadlines with held outputs, internal quantization, saturation and sample-rounded latency. Supply and winding temperature remain imposed; no battery, thermal network or deployed external sensor model is added."} else if driver_bank.is_some() {"Driver inputs use the registered averaged H-bridge at each trial motor current. Supply voltage and winding temperature are imposed. No battery, thermal network, firmware or sampled sensors are integrated."} else {"No driver, battery, thermal-network, firmware or sampled sensor states are integrated. Zero motor voltage is a short-circuit boundary, not an open-circuit or servo-hold model."},
             "Declared external loads are additional to any motor outputs. This reduced diagnostic is not the detailed runtime's powered-hold comparison or a validated walking controller.",
             "The recorded implicit config selects backward Euler; null selects explicit midpoint. Both integrate shared rigid mechanics and contact memory; neither provides adaptive error or impact timing control. Explicit motor event configuration adds backlash guard/deadline processing and records retries.",
             "Stepping wall time includes closure and endpoint evaluation but excludes build, snapshot serialization and rendering."]});

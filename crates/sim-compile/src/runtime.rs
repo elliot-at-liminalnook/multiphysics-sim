@@ -10,6 +10,10 @@ use sim_solve::NewtonConfig;
 
 pub struct Runtime {
     pub model: ModelWorld,
+    /// Frozen physical metadata used to compile this runtime; no residual lookups.
+    pub definitions: sim_core::definitions::FrozenDefinitions,
+    pub(crate) observation_identity: std::sync::Arc<()>,
+    pub(crate) observation_committed_times: Vec<f64>,
     pub islands: Vec<Simulation<Island>>,
     pub time: f64,
     /// Per island, per behavior: the store id carrying its entropy production.
@@ -65,7 +69,8 @@ impl Runtime {
             }
             entropy_ids.push(ids);
         }
-        let mut runtime = Self { model, islands, time: 0.0, entropy_ids, second_law_tolerance: 1.0e-9, island_steps: Vec::new() };
+        let definitions = registry.definitions().map_err(|e| RuntimeError::State(e.to_string()))?;
+        let mut runtime = Self { model, definitions, observation_identity: std::sync::Arc::new(()), observation_committed_times: Vec::new(), islands, time: 0.0, entropy_ids, second_law_tolerance: 1.0e-9, island_steps: Vec::new() };
         runtime.commit()?;
         Ok(runtime)
     }
@@ -110,6 +115,12 @@ impl Runtime {
             }
             self.island_steps[k] = h;
         }
+    }
+
+    /// Effective fixed step sizes for a call to `advance`, including explicit
+    /// multirate overrides. Inspection/recording can retain the actual settings.
+    pub fn effective_step_sizes(&self, default: f64) -> Vec<f64> {
+        (0..self.islands.len()).map(|k| self.island_steps.get(k).copied().flatten().unwrap_or(default)).collect()
     }
 
     /// Advance every island by `duration` with step-size control (see
@@ -214,7 +225,7 @@ impl Runtime {
         let period = model.parameters_of(behavior).get("period").copied().unwrap_or(0.0);
         let mut sensors = Vec::new();
         let mut actuators = Vec::new();
-        let mut owned: Vec<(&String, PortId, PortSchema)> = model.ports.iter().filter(|(_, p)| p.owner == behavior).map(|(id, p)| (&p.name, id, p.schema)).collect();
+        let mut owned: Vec<(&String, PortId, PortSchema)> = model.ports.iter().filter(|(_, p)| p.owner == behavior).map(|(id, p)| (&p.name, id, p.schema.clone())).collect();
         owned.sort_by(|a, b| a.0.cmp(b.0));
         for (name, id, schema) in owned {
             let peer_kind = model
@@ -222,8 +233,8 @@ impl Runtime {
                 .iter()
                 .find(|c| c.ports.contains(&id))
                 .and_then(|c| c.ports.iter().find(|p| **p != id))
-                .and_then(|p| match model.ports[*p].schema {
-                    PortSchema::SignalIn(k) | PortSchema::SignalOut(k) => Some(k),
+                .and_then(|p| match &model.ports[*p].schema {
+                    PortSchema::SignalIn(k) | PortSchema::SignalOut(k) => Some(k.clone()),
                     PortSchema::Acausal(_) => None,
                 });
             let channel = |prefix: &str, own: QuantityKind| Channel { name: name.strip_prefix(prefix).unwrap_or(name).to_owned(), kind: peer_kind.unwrap_or(own) };
@@ -260,7 +271,9 @@ impl Runtime {
                 trial.set(*id, rate).map_err(|e| RuntimeError::State(format!("entropy production of {behavior:?}: {e}")))?;
             }
         }
-        self.model.state.commit(trial).map_err(|e| RuntimeError::State(e.to_string()))
+        self.model.state.commit(trial).map_err(|e| RuntimeError::State(e.to_string()))?;
+        self.observation_committed_times = self.islands.iter().map(|island| island.time).collect();
+        Ok(())
     }
 
     /// Stable id of a behavior's entropy production (W/K).

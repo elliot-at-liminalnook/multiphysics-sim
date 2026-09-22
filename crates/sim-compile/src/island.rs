@@ -7,7 +7,10 @@
 //! producer's value minus the unknown). Owned frame nodes alias their
 //! owner's states and add no unknowns or rows.
 
+mod observation;
+
 use crate::{CompileError, CompiledConnection, CompiledConnectionKind};
+use sim_core::definitions::{ConnectionRule, DefinitionId, FrozenDefinitions, PortEnergy};
 use sim_core::{
     Input, LocalJacobian, Output,
     Behavior, BehaviorId, BehaviorRegistry, Context, ModelWorld, PortId, PortSchema, QuantityKind,
@@ -25,18 +28,32 @@ enum PortBinding {
     /// unknown's row — a fresh node unknown, or the providing element's
     /// state row, which that element leaves to the balance (its storage is
     /// expressed as through: an inertia's `J·ω̇`, a volume's `V·ρ̇`).
-    Node { lanes: Vec<usize>, rows: Vec<usize>, through_width: usize },
+    Node { lanes: Vec<usize>, rows: Vec<(usize, usize)> },
     /// Owned frame: across aliases the owner's states starting at `states`;
     /// contributions are summed into `wrench` (an accumulator, not a row)
     /// and land on the owner's rows from `states + row_offset`.
-    Owned { states: usize, wrench: usize, width: usize, through_width: usize, row_offset: usize },
+    Owned { states: usize, wrench: usize, width: usize, flow_lanes: Vec<usize>, contribution_rows: Vec<usize> },
     /// A single open port: through must vanish, rows exist, across is free.
-    Open { lanes: Vec<usize>, rows: Vec<usize>, through_width: usize },
+    Open { lanes: Vec<usize>, rows: Vec<(usize, usize)> },
     /// A composite port: its members' bindings, laid out one after another.
     Composite(Vec<PortBinding>),
 }
 
 impl PortBinding {
+    fn contribution_row(&self, lane: usize, wrench_rows: &[usize]) -> Option<usize> {
+        match self {
+            Self::Node { rows, .. } | Self::Open { rows, .. } => rows.iter().find_map(|(l, row)| (*l == lane).then_some(*row)),
+            Self::Owned { wrench, flow_lanes, .. } => flow_lanes.iter().position(|l| *l == lane).and_then(|i| wrench_rows.get(wrench + i).copied()),
+            Self::Composite(members) => {
+                let mut offset = 0;
+                for member in members {
+                    if lane < offset + member.width() { return member.contribution_row(lane - offset, wrench_rows); }
+                    offset += member.width();
+                }
+                None
+            }
+        }
+    }
     fn lane_indices(&self) -> Vec<usize> {
         match self {
             PortBinding::Node { lanes, .. } | PortBinding::Open { lanes, .. } => lanes.clone(),
@@ -48,14 +65,14 @@ impl PortBinding {
     /// owner's wrench accumulator).
     fn scatter(&self, through: &[f64], out: &mut [f64], wrenches: &mut [f64]) {
         match self {
-            PortBinding::Node { rows, through_width, .. } | PortBinding::Open { rows, through_width, .. } => {
-                for lane in 0..*through_width {
-                    out[rows[lane]] += through[lane];
+            PortBinding::Node { rows, .. } | PortBinding::Open { rows, .. } => {
+                for &(lane, row) in rows {
+                    out[row] += through[lane];
                 }
             }
-            PortBinding::Owned { wrench, through_width, .. } => {
-                for lane in 0..*through_width {
-                    wrenches[wrench + lane] += through[lane];
+            PortBinding::Owned { wrench, flow_lanes, .. } => {
+                for (index, &lane) in flow_lanes.iter().enumerate() {
+                    wrenches[wrench + index] += through[lane];
                 }
             }
             PortBinding::Composite(members) => {
@@ -71,12 +88,11 @@ impl PortBinding {
     /// Rows this port's contributions land on.
     fn written_rows(&self, written: &mut Vec<usize>) {
         match self {
-            PortBinding::Node { rows, through_width, .. } | PortBinding::Open { rows, through_width, .. } => {
-                written.extend(rows.iter().take(*through_width).copied());
+            PortBinding::Node { rows, .. } | PortBinding::Open { rows, .. } => {
+                written.extend(rows.iter().map(|(_, row)| *row));
             }
-            PortBinding::Owned { states, width, row_offset, .. } => {
-                // Attachments write the owner's twist rows.
-                written.extend(*states + *row_offset..*states + *width);
+            PortBinding::Owned { states, contribution_rows, .. } => {
+                written.extend(contribution_rows.iter().map(|row| states + row));
             }
             PortBinding::Composite(members) => members.iter().for_each(|m| m.written_rows(written)),
         }
@@ -88,6 +104,12 @@ impl PortBinding {
             PortBinding::Owned { width, .. } => *width,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+struct OwnerRows {
+    wrench: usize,
+    rows: Vec<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -112,15 +134,15 @@ struct Slot {
     signals_in: Vec<usize>,
     /// Signal outputs: unknown indices (rows share the index space).
     signals_out: Vec<usize>,
-    /// Owned frame ports this behavior *owns*: (port index, wrench accumulator start, through width, row offset).
-    owned: Vec<(usize, usize, usize, usize)>,
+    /// Registered owner residual rows, indexed by accumulated contribution.
+    owned: Vec<OwnerRows>,
     /// Flat lane offsets per port, with an end marker.
     offsets: Vec<usize>,
     /// Flat lane → flat index of its exact rate lane.
     rate_map: Vec<Option<usize>>,
     /// Thermal lanes for entropy accounting: (port index, lane offset within
     /// the port — nonzero for a thermal member of a composite).
-    thermal_ports: Vec<(usize, usize)>,
+    thermal_ports: Vec<(usize, usize, usize)>,
     guard_offset: usize,
     guard_count: usize,
 }
@@ -236,6 +258,8 @@ pub struct Island {
     noise: std::sync::Mutex<Noise>,
     algebraic: Vec<bool>,
     scratch: std::sync::Mutex<Scratch>,
+    observations: observation::Capture,
+    port_flows: HashMap<PortId, (usize, usize, usize)>,
 }
 
 impl Island {
@@ -297,9 +321,9 @@ impl Island {
                     storage = ctx.entropy_storage();
                 }
                 // Heat into the behavior at each thermal port carries Q/T in.
-                let carried_in: f64 = slot.thermal_ports.iter().map(|(p, lane)| {
-                    let temperature = b.across[slot.offsets[*p] + lane];
-                    b.through[slot.offsets[*p] + lane] / temperature
+                let carried_in: f64 = slot.thermal_ports.iter().map(|(p, temperature_lane, through_lane)| {
+                    let temperature = b.across[slot.offsets[*p] + temperature_lane];
+                    b.through[slot.offsets[*p] + through_lane] / temperature
                 }).sum();
                 storage - carried_in
             })
@@ -310,6 +334,7 @@ impl Island {
 impl Island {
     /// The residual over the full unknown vector (every signal and lane present).
     pub fn residual_full(&self, t: f64, x: &[f64], rate: &[f64], out: &mut [f64]) {
+        let mut captured = self.observations.enabled().then(Vec::new);
         out.iter_mut().for_each(|v| *v = 0.0);
         let mut wrenches = vec![0.0; self.wrench_count];
         let mut b = Buffers::default();
@@ -333,6 +358,23 @@ impl Island {
                 ).with_noise(draws, noise.step);
                 behavior.residual(&mut ctx);
             }
+            if let Some(values) = &mut captured {
+                let mut through = b.through.clone();
+                // An owned frame's constitutive contribution is written into
+                // its declared state rows rather than a separate node row.
+                // Include it in the owner's observed flow so the same balance
+                // assembled below is represented at the physical boundary.
+                for (port, binding) in slot.ports.iter().enumerate() {
+                    if let PortBinding::Owned { wrench, flow_lanes, .. } = binding {
+                        if let Some(owner) = slot.owned.iter().find(|owner| owner.wrench == *wrench) {
+                            for (lane, row) in flow_lanes.iter().zip(&owner.rows) {
+                                through[slot.offsets[port] + lane] += b.state_residuals[row - slot.state_start];
+                            }
+                        }
+                    }
+                }
+                values.push(through);
+            }
             out[slot.state_start..slot.state_start + slot.state_count].copy_from_slice(&b.state_residuals);
             for (port, binding) in slot.ports.iter().enumerate() {
                 binding.scatter(&b.through[slot.offsets[port]..slot.offsets[port + 1]], out, &mut wrenches);
@@ -349,13 +391,13 @@ impl Island {
         // on its own port — both sum the same way), attachments add the
         // through *into* themselves, and the total must vanish.
         for slot in &self.slots {
-            for (_, wrench, through_width, row_offset) in &slot.owned {
-                let base = slot.state_start + row_offset;
-                for lane in 0..*through_width {
-                    out[base + lane] += wrenches[wrench + lane];
+            for owner in &slot.owned {
+                for (lane, row) in owner.rows.iter().enumerate() {
+                    out[*row] += wrenches[owner.wrench + lane];
                 }
             }
         }
+        if let Some(through) = captured { self.observations.record(t, x, rate, through, out); }
     }
 
     /// `residual_full` in producer-before-consumer order, writing each
@@ -469,10 +511,9 @@ impl Island {
         // on its own port — both sum the same way), attachments add the
         // through *into* themselves, and the total must vanish.
         for slot in &self.slots {
-            for (_, wrench, through_width, row_offset) in &slot.owned {
-                let base = slot.state_start + row_offset;
-                for lane in 0..*through_width {
-                    out[base + lane] += wrenches[wrench + lane];
+            for owner in &slot.owned {
+                for (lane, row) in owner.rows.iter().enumerate() {
+                    out[*row] += wrenches[owner.wrench + lane];
                 }
             }
         }
@@ -490,9 +531,9 @@ impl Island {
         // Where each wrench accumulator lands: the owner's twist rows.
         let mut wrench_rows = vec![0usize; self.wrench_count];
         for slot in &self.slots {
-            for (_, wrench, through_width, row_offset) in &slot.owned {
-                for lane in 0..*through_width {
-                    wrench_rows[wrench + lane] = slot.state_start + row_offset + lane;
+            for owner in &slot.owned {
+                for (lane, row) in owner.rows.iter().enumerate() {
+                    wrench_rows[owner.wrench + lane] = *row;
                 }
             }
         }
@@ -537,20 +578,9 @@ impl Island {
                     for (output, input, value) in &local.entries {
                         let row = match *output {
                             Output::State(i) => slot.state_start + i,
-                            Output::Through(port, lane) => match &slot.ports[port] {
-                                PortBinding::Node { rows, .. } | PortBinding::Open { rows, .. } => rows[lane],
-                                PortBinding::Owned { wrench, .. } => wrench_rows[wrench + lane],
-                                PortBinding::Composite(_) => {
-                                    let mut scratch = vec![0.0; n];
-                                    let mut w = vec![0.0; self.wrench_count];
-                                    let mut through = vec![0.0; slot.offsets[port + 1] - slot.offsets[port]];
-                                    through[lane] = 1.0;
-                                    slot.ports[port].scatter(&through, &mut scratch, &mut w);
-                                    match scratch.iter().position(|v| *v != 0.0) {
-                                        Some(r) => r,
-                                        None => wrench_rows[w.iter().position(|v| *v != 0.0).unwrap_or(0)],
-                                    }
-                                }
+                            Output::Through(port, lane) => match slot.ports[port].contribution_row(lane, &wrench_rows) {
+                                Some(row) => row,
+                                None => continue,
                             },
                             Output::Signal(j) => slot.signals_out[j],
                         };
@@ -1059,6 +1089,13 @@ impl Island {
 }
 
 impl System for Island {
+    fn observation_capture_enabled(&self) -> bool { self.observations.enabled() }
+    fn invalidate_observation(&self) { self.observations.clear(); }
+    fn solved_implicit_observation(&self, start: f64, end: f64, time: f64, x: &[f64], rate: &[f64], endpoint: &[f64]) {
+        self.observations.solved(start, end, time, x, rate, endpoint, &self.full_of);
+    }
+    fn commit_observation(&self, time: f64, x: &[f64]) { self.observations.commit(time, x); }
+
     fn dimension(&self) -> usize {
         self.full_of.len()
     }
@@ -1196,6 +1233,7 @@ impl System for Island {
     }
 
     fn begin_step(&self, h: f64) {
+        self.observations.begin_attempt();
         self.begin_step_full(h)
     }
 
@@ -1209,6 +1247,7 @@ impl System for Island {
     }
 
     fn seed_noise(&mut self, seed: u64) {
+        self.observations.clear();
         self.seed_noise_full(seed)
     }
 
@@ -1219,6 +1258,7 @@ impl System for Island {
     }
 
     fn jump(&mut self, index: usize, t: f64, x: &mut [f64]) {
+        self.observations.clear();
         let zero = vec![0.0; x.len()];
         let (mut xf, _) = self.expand_at(t, x, &zero);
         self.jump_full(index, t, &mut xf);
@@ -1245,7 +1285,7 @@ fn acausal_ports_in_order(model: &ModelWorld, descriptor: &sim_core::BehaviorDes
             continue;
         }
         if declared.name.contains('*') {
-            let mut members: Vec<(String, PortId)> = model.ports.iter().filter(|(_, p)| p.owner == id && declared.matches(&p.name)).map(|(pid, p)| (p.name.clone(), pid)).collect();
+            let mut members: Vec<(String, PortId)> = model.ports.iter().filter(|(_, p)| p.owner == id && p.member_of.is_none() && declared.matches(&p.name)).map(|(pid, p)| (p.name.clone(), pid)).collect();
             members.sort();
             out.extend(members.into_iter().map(|(_, p)| p));
         } else if let Some((pid, _)) = model.ports.iter().find(|(_, p)| p.owner == id && p.name == declared.name) {
@@ -1261,6 +1301,7 @@ pub fn build_islands(
     model: &mut ModelWorld,
     registry: &BehaviorRegistry,
     connections: &[CompiledConnection],
+    definitions: &FrozenDefinitions,
 ) -> Result<Vec<Island>, CompileError> {
     // Union–find over behaviors through every connection.
     let behavior_ids: Vec<BehaviorId> = model.behaviors.keys().collect();
@@ -1286,7 +1327,7 @@ pub fn build_islands(
     for (i, id) in behavior_ids.iter().enumerate() {
         groups.entry(find(&mut parent, i)).or_default().push(*id);
     }
-    groups.into_values().map(|members| build_island(model, registry, connections, &members)).collect()
+    groups.into_values().map(|members| build_island(model, registry, connections, &members, definitions)).collect()
 }
 
 fn build_island(
@@ -1294,6 +1335,7 @@ fn build_island(
     registry: &BehaviorRegistry,
     connections: &[CompiledConnection],
     members: &[BehaviorId],
+    definitions: &FrozenDefinitions,
 ) -> Result<Island, CompileError> {
     let member_set: std::collections::HashSet<BehaviorId> = members.iter().copied().collect();
     // Instantiate equations.
@@ -1317,9 +1359,10 @@ fn build_island(
     for ((id, _), decls) in behaviors.iter().zip(&declarations) {
         let start = dimension;
         for (k, d) in decls.iter().enumerate() {
+            d.kind.validate(definitions)?;
             behavior_states.insert((*id, d.name.clone()), start + k);
             initial.push(d.initial);
-            names.push((format!("{}.{}", model.objects[model.behaviors[*id].object].name, d.name), d.kind));
+            names.push((format!("{}.{}", model.objects[model.behaviors[*id].object].name, d.name), d.kind.clone()));
         }
         dimension += decls.len();
         slots.push(Slot { behavior: *id, fd_written: Vec::new(), fd_columns: Vec::new(), state_start: start, state_count: decls.len(), ports: Vec::new(), across_indices: Vec::new(), signals_in: Vec::new(), signals_out: Vec::new(), owned: Vec::new(), offsets: vec![0], rate_map: Vec::new(), thermal_ports: Vec::new(), guard_offset: 0, guard_count: 0 });
@@ -1340,8 +1383,8 @@ fn build_island(
         if let Some(index) = behavior.owned_frame() {
             let port = acausal.get(index).copied().ok_or_else(|| CompileError::Equations {
                 behavior: *id, message: "owned frame index is not an acausal port".into() })?;
-            if !matches!(model.ports[port].schema, PortSchema::Acausal(kind) if kind.is_owned()) {
-                return Err(CompileError::Equations { behavior: *id, message: "owned frame must use a Frame or PlanarFrame connector".into() });
+            if !matches!(&model.ports[port].schema, PortSchema::Acausal(kind) if matches!(definitions.connector_by_id(&kind.definition_id())?.rule, ConnectionRule::Owned { .. })) {
+                return Err(CompileError::Equations { behavior: *id, message: "owned port must use a connector with an owned connection rule".into() });
             }
             frame_owners.insert(port);
         }
@@ -1352,20 +1395,14 @@ fn build_island(
         for (port, lane, value) in behavior.pinned() {
             let pid = port_of(port);
             // A composite port's pin lands on the member that holds the lane.
-            let target = if let PortSchema::Acausal(sim_core::ConnectorKind::Composite(members)) = model.ports[pid].schema {
-                let mut offset = 0;
-                let mut found = (pid, lane);
-                for (k, member) in members.iter().enumerate() {
-                    if lane < offset + member.across_width() {
-                        found = (model.ports[pid].members[k], lane - offset);
-                        break;
-                    }
-                    offset += member.across_width();
-                }
-                found
-            } else {
-                (pid, lane)
-            };
+            let mut target = (pid, lane);
+            while !model.ports[target.0].members.is_empty() {
+                let PortSchema::Acausal(kind) = &model.ports[target.0].schema else { unreachable!() };
+                let layout = kind.resolve(definitions)?;
+                let member = layout.member_offsets.iter().rposition(|offset| target.1 >= *offset)
+                    .ok_or_else(|| CompileError::State("pin outside composite layout".into()))?;
+                target = (model.ports[target.0].members[member], target.1 - layout.member_offsets[member]);
+            }
             pinned.insert(target, value);
         }
     }
@@ -1375,15 +1412,18 @@ fn build_island(
     let mut derivative_rows: Vec<(usize, usize)> = Vec::new();
     let mut node_rows = 0;
     let mut wrench_count = 0;
-    let mut owned_ports: Vec<(PortId, usize, usize, usize)> = Vec::new();
+    let mut owned_ports: HashMap<PortId, OwnerRows> = HashMap::new();
     for connection in connections {
-        let CompiledConnectionKind::Acausal(kind) = connection.kind else { continue };
+        let CompiledConnectionKind::Acausal(handle) = connection.kind else { continue };
         if !connection.ports.iter().any(|p| member_set.contains(&model.ports[*p].owner)) {
             continue;
         }
-        let width = kind.across_width();
-        let through_width = kind.through_width();
-        if kind.is_owned() {
+        let descriptor = definitions.connector(handle).ok_or_else(|| CompileError::State("stale connector handle".into()))?;
+        let lanes_meta = &definitions.layout(handle).ok_or_else(|| CompileError::State("stale connector layout".into()))?.lanes;
+        let width = lanes_meta.len();
+        let flow_lanes: Vec<usize> = lanes_meta.iter().enumerate().filter_map(|(i, lane)| lane.through.as_ref().map(|_| i)).collect();
+        let through_width = flow_lanes.len();
+        if let ConnectionRule::Owned { contribution_rows, unit_quaternions } = &descriptor.rule {
             let owners: Vec<_> = connection.ports.iter().filter(|p| frame_owners.contains(p)).copied().collect();
             if owners.len() != 1 {
                 let ports = connection.ports.iter().map(|p| {
@@ -1401,13 +1441,13 @@ fn build_island(
             if slots[slot].state_count < width {
                 return Err(CompileError::Equations { behavior: owner, message: format!("frame owner must declare at least {width} states") });
             }
-            for (lane_index, lane) in kind.lanes().iter().enumerate() {
-                if let Some(value) = node_initial(model, connection, lane_index, lane.across, lane.across_kind, &pinned, &acausal_counts)? {
+            for (lane_index, lane) in lanes_meta.iter().enumerate() {
+                if let Some(value) = node_initial(model, connection, lane_index, &lane.across.name, quantity_unit(definitions, &lane.across.quantity)?, &pinned, &acausal_counts)? {
                     initial[states + lane_index] = value;
                 }
             }
-            if kind == sim_core::ConnectorKind::Frame {
-                let q = &initial[states + 3..states + 7];
+            for indices in unit_quaternions {
+                let q = indices.map(|index| initial[states + index]);
                 let norm_squared = q.iter().map(|value| value * value).sum::<f64>();
                 if !norm_squared.is_finite() || (norm_squared - 1.).abs() > 1e-9 {
                     let ports = connection.ports.iter().map(|id| {
@@ -1415,25 +1455,23 @@ fn build_island(
                         format!("{}.{}", model.objects[model.behaviors[port.owner].object].name, port.name)
                     }).collect::<Vec<_>>().join(", ");
                     return Err(CompileError::Equations { behavior: owner,
-                        message: format!("frame connection [{ports}] has invalid initial quaternion {q:?}; qw/qx/qy/qz must have unit length after resolving connected initial values") });
+                        message: format!("frame connection [{ports}] has invalid initial quaternion {q:?}; registered quaternion coordinates must have unit length after resolving connected initial values") });
                 }
             }
             let wrench = wrench_count;
             wrench_count += through_width;
-            let row_offset = kind.owned_wrench_offset();
-            owned_ports.push((owner_port, wrench, through_width, row_offset));
+            owned_ports.insert(owner_port, OwnerRows { wrench, rows: contribution_rows.iter().map(|row| states + row).collect() });
             for port in &connection.ports {
-                port_binding.insert(*port, PortBinding::Owned { states, wrench, width, through_width, row_offset });
+                port_binding.insert(*port, PortBinding::Owned { states, wrench, width, flow_lanes: flow_lanes.clone(), contribution_rows: contribution_rows.clone() });
                 port_lanes.insert(*port, (states..states + width).collect());
             }
         } else {
-            let lanes_meta = kind.lanes();
             let mut lane_index = vec![0usize; width];
             for (l, lane) in lanes_meta.iter().enumerate().take(width) {
-                let specified = node_initial(model, connection, l, lane.across, lane.across_kind, &pinned, &acausal_counts)?;
+                let specified = node_initial(model, connection, l, &lane.across.name, quantity_unit(definitions, &lane.across.quantity)?, &pinned, &acausal_counts)?;
                 let providers: Vec<usize> = connection.ports.iter().filter_map(|p| provided.get(&(*p, l)).copied()).collect();
                 if providers.len() > 1 {
-                    return Err(CompileError::Equations { behavior: model.ports[connection.ports[0]].owner, message: format!("lane `{}` has more than one provider on one node", lane.across) });
+                    return Err(CompileError::Equations { behavior: model.ports[connection.ports[0]].owner, message: format!("lane `{}` has more than one provider on one node", lane.across.name) });
                 }
                 if let Some(state) = providers.first() {
                     lane_index[l] = *state;
@@ -1443,12 +1481,11 @@ fn build_island(
                 lane_index[l] = dimension;
                 dimension += 1;
                 initial.push(specified.unwrap_or(0.));
-                names.push((format!("node.{}", lane.across), lane.across_kind));
+                names.push((format!("node.{}", lane.across.name), state_quantity(definitions, &lane.across.quantity)?));
             }
             node_rows += through_width;
-            debug_assert!(lanes_meta.iter().take(through_width).all(|l| l.through != "-"));
             // Each through lane balances on its own across unknown's row.
-            let rows: Vec<usize> = lane_index[..through_width].to_vec();
+            let rows: Vec<(usize, usize)> = flow_lanes.iter().map(|lane| (*lane, lane_index[*lane])).collect();
             for (l, lane) in lanes_meta.iter().enumerate().take(width) {
                 if let Some(base) = lane.derivative_of {
                     if !connection.ports.iter().any(|p| provided.contains_key(&(*p, l))) {
@@ -1457,9 +1494,9 @@ fn build_island(
                 }
             }
             let binding = if connection.ports.len() == 1 {
-                PortBinding::Open { lanes: lane_index.clone(), rows: rows.clone(), through_width }
+                PortBinding::Open { lanes: lane_index.clone(), rows: rows.clone() }
             } else {
-                PortBinding::Node { lanes: lane_index.clone(), rows: rows.clone(), through_width }
+                PortBinding::Node { lanes: lane_index.clone(), rows: rows.clone() }
             };
             for port in &connection.ports {
                 port_binding.insert(*port, binding.clone());
@@ -1480,7 +1517,7 @@ fn build_island(
         dimension += 1;
         signal_rows += 1;
         initial.push(0.0);
-        names.push((format!("signal.{}", model.ports[producer].name), kind));
+        names.push((format!("signal.{}", model.ports[producer].name), state_quantity(definitions, &definitions.quantity(kind).ok_or_else(|| CompileError::State("stale quantity handle".into()))?.id)?));
         for port in &connection.ports {
             signal_index.insert(*port, index);
         }
@@ -1492,7 +1529,7 @@ fn build_island(
         let descriptor = registry.get(&model.behaviors[*id].kind).unwrap();
         let mut ports_by_name: HashMap<&str, PortId> = HashMap::new();
         for (pid, port) in &model.ports {
-            if port.owner == *id {
+            if port.owner == *id && port.member_of.is_none() {
                 ports_by_name.insert(port.name.as_str(), pid);
             }
         }
@@ -1502,39 +1539,39 @@ fn build_island(
             if declared.name.contains('*') {
                 let mut members: Vec<(&str, PortId)> = ports_by_name.iter().filter(|(n, _)| declared.matches(n)).map(|(n, p)| (*n, *p)).collect();
                 members.sort_by(|a, b| a.0.cmp(b.0));
-                bound_ports.extend(members.into_iter().map(|(_, p)| (p, declared.schema)));
+                bound_ports.extend(members.into_iter().map(|(_, p)| (p, declared.schema.clone())));
             } else {
-                bound_ports.push((ports_by_name[declared.name], declared.schema));
+                bound_ports.push((ports_by_name[declared.name], declared.schema.clone()));
             }
         }
         let mut slot_kinds: Vec<sim_core::ConnectorKind> = Vec::new();
         for (pid, schema) in bound_ports {
-            let declared_name = model.ports[pid].name.clone();
             match schema {
                 PortSchema::Acausal(kind) => {
-                    slot_kinds.push(kind);
-                    let binding = if let sim_core::ConnectorKind::Composite(members) = kind {
-                        let mut bound = Vec::new();
-                        for (k, (member, member_pid)) in members.iter().zip(&model.ports[pid].members).enumerate() {
-                            if member.is_owned() {
-                                return Err(CompileError::Equations { behavior: *id, message: format!("composite member {k} of `{declared_name}` is an owned frame") });
-                            }
-                            if *member == sim_core::ConnectorKind::Thermal {
-                                slot.thermal_ports.push((slot.ports.len(), kind.member_offset(k)));
-                            }
-                            bound.push(port_binding.get(member_pid).cloned().ok_or(CompileError::DanglingPort { port: *member_pid })?);
+                    slot_kinds.push(kind.clone());
+                    let connector_id = kind.definition_id();
+                    collect_heat_lanes(definitions, &connector_id, slot.ports.len(), 0, &mut slot.thermal_ports)?;
+                    fn binding(pid: PortId, model: &ModelWorld, definitions: &FrozenDefinitions,
+                        bindings: &HashMap<PortId, PortBinding>, nested: bool) -> Result<PortBinding, CompileError> {
+                        let PortSchema::Acausal(kind) = &model.ports[pid].schema else { unreachable!() };
+                        match &definitions.connector_by_id(&kind.definition_id())?.rule {
+                            ConnectionRule::Composite { .. } => Ok(PortBinding::Composite(model.ports[pid].members.iter()
+                                .map(|p| binding(*p, model, definitions, bindings, true)).collect::<Result<_, _>>()?)),
+                            ConnectionRule::Owned { .. } if nested => Err(CompileError::State("owned frame inside composite is unsupported".into())),
+                            _ => bindings.get(&pid).cloned().ok_or(CompileError::DanglingPort { port: pid }),
                         }
-                        let binding = PortBinding::Composite(bound);
-                        port_lanes.insert(pid, binding.lane_indices());
-                        binding
-                    } else {
-                        if kind == sim_core::ConnectorKind::Thermal {
-                            slot.thermal_ports.push((slot.ports.len(), 0));
+                    }
+                    let binding = binding(pid, model, definitions, &port_binding, false)?;
+                    // Retain mappings for every composite level, including nested members.
+                    fn map_lanes(pid: PortId, binding: &PortBinding, model: &ModelWorld, lanes: &mut HashMap<PortId, Vec<usize>>) {
+                        lanes.insert(pid, binding.lane_indices());
+                        if let PortBinding::Composite(members) = binding {
+                            for (id, binding) in model.ports[pid].members.iter().zip(members) { map_lanes(*id, binding, model, lanes); }
                         }
-                        port_binding.get(&pid).cloned().ok_or(CompileError::DanglingPort { port: pid })?
-                    };
-                    if let Some((_, wrench, through_width, row_offset)) = owned_ports.iter().find(|(p, _, _, _)| *p == pid) {
-                        slot.owned.push((slot.ports.len(), *wrench, *through_width, *row_offset));
+                    }
+                    map_lanes(pid, &binding, model, &mut port_lanes);
+                    if let Some(owner) = owned_ports.get(&pid) {
+                        slot.owned.push(owner.clone());
                     }
                     slot.ports.push(binding);
                 }
@@ -1551,7 +1588,7 @@ fn build_island(
         // Exact rate lanes: flat lane → flat index of the lane that is its derivative.
         let mut rate_map = vec![None; *slot.offsets.last().unwrap()];
         for (port, kind) in slot_kinds.iter().enumerate() {
-            for (l, lane) in kind.lanes().iter().enumerate() {
+            for (l, lane) in definitions.layout_by_id(&kind.definition_id())?.lanes.iter().enumerate() {
                 if let Some(base) = lane.derivative_of {
                     rate_map[slot.offsets[port] + base] = Some(slot.offsets[port] + l);
                 }
@@ -1568,10 +1605,30 @@ fn build_island(
         slot.guard_count = guards.len();
         guard_offset += guards.len();
     }
+    let mut port_flows = HashMap::new();
+    fn map_flows(model: &ModelWorld, definitions: &FrozenDefinitions, pid: PortId, slot: usize, offset: usize,
+        out: &mut HashMap<PortId, (usize, usize, usize)>) -> Result<(), CompileError> {
+        let PortSchema::Acausal(kind) = &model.ports[pid].schema else { unreachable!() };
+        let layout = kind.resolve(definitions)?;
+        out.insert(pid, (slot, offset, layout.lanes.len()));
+        for (child, child_offset) in model.ports[pid].members.iter().zip(&layout.member_offsets) {
+            map_flows(model, definitions, *child, slot, offset + child_offset, out)?;
+        }
+        Ok(())
+    }
+    for (index, slot) in slots.iter().enumerate() {
+        let descriptor = registry.get(&model.behaviors[slot.behavior].kind).unwrap();
+        for (port, pid) in acausal_ports_in_order(model, descriptor, slot.behavior).into_iter().enumerate() {
+            map_flows(model, definitions, pid, index, slot.offsets[port], &mut port_flows)?;
+        }
+    }
     // Register stable state ids for every unknown.
-    let state_ids = names.iter().zip(&initial).map(|((name, kind), value)| model.state.register(name.clone(), *kind, *value).map_err(|e| CompileError::State(format!("`{name}`: {e}")))).collect::<Result<Vec<_>, _>>()?;
-    for slot in &slots {
+    let state_ids = names.iter().zip(&initial).map(|((name, kind), value)| model.state.register(name.clone(), kind.clone(), *value).map_err(|e| CompileError::State(format!("`{name}`: {e}")))).collect::<Result<Vec<_>, _>>()?;
+    for (slot, declarations) in slots.iter().zip(&declarations) {
         model.behaviors[slot.behavior].state = state_ids[slot.state_start..slot.state_start + slot.state_count].to_vec();
+        for (state, declaration) in model.behaviors[slot.behavior].state.iter().zip(declarations) {
+            model.state.set_declaration_name(*state, &declaration.name).map_err(|e| CompileError::State(e.to_string()))?;
+        }
     }
     // Sparsity: each unknown a behavior touches can affect every row it writes.
     let mut rows: Vec<Vec<usize>> = vec![Vec::new(); dimension];
@@ -1637,7 +1694,7 @@ fn build_island(
         lane_of_rate: Vec::new(),
         reduced_sparsity: Sparsity::new(Vec::new()),
         reduced_algebraic: Vec::new(),
-        scratch: std::sync::Mutex::new(Scratch::default()),
+        scratch: std::sync::Mutex::new(Scratch::default()), observations: observation::Capture::default(), port_flows,
     };
     // An unknown is differential exactly when some behavior reads its rate:
     // its own state rate, or the across rate of a port lane on its node.
@@ -1688,11 +1745,33 @@ fn build_island(
     Ok(island)
 }
 
+fn state_quantity(definitions: &FrozenDefinitions, id: &DefinitionId) -> Result<QuantityKind, CompileError> {
+    Ok(QuantityKind::from_descriptor(definitions.quantity(definitions.quantity_handle(id)?).expect("quantity handle belongs to this registry")))
+}
+
+fn quantity_unit<'a>(definitions: &'a FrozenDefinitions, id: &DefinitionId) -> Result<&'a str, CompileError> {
+    Ok(&definitions.quantity(definitions.quantity_handle(id)?).ok_or_else(|| CompileError::State("stale quantity handle".into()))?.canonical_unit)
+}
+
+fn collect_heat_lanes(definitions: &FrozenDefinitions, id: &DefinitionId, port: usize, offset: usize, out: &mut Vec<(usize, usize, usize)>) -> Result<(), CompileError> {
+    let connector = definitions.connector_by_id(id)?;
+    if let PortEnergy::Heat { temperature_lane, through_lane } = connector.energy {
+        out.push((port, offset + temperature_lane, offset + through_lane));
+    }
+    if let ConnectionRule::Composite { members } = &connector.rule {
+        let layout = definitions.layout_by_id(id)?;
+        for (member, member_offset) in members.iter().zip(&layout.member_offsets) {
+            collect_heat_lanes(definitions, &member.connector, port, offset + member_offset, out)?;
+        }
+    }
+    Ok(())
+}
+
 /// Resolve explicit qualified/short initial values and fixed constraints.
 /// A missing value preserves an owner's/provider's native initial state.
 /// Multiple explicit assignments must agree; connection order is irrelevant.
 fn node_initial(model: &ModelWorld, connection: &CompiledConnection, lane_index: usize,
-    lane: &str, kind: QuantityKind, pinned: &HashMap<(PortId, usize), f64>,
+    lane: &str, unit: &str, pinned: &HashMap<(PortId, usize), f64>,
     acausal_counts: &HashMap<BehaviorId, usize>) -> Result<Option<f64>, CompileError> {
     let mut selected: Option<(String, f64)> = None;
     for pid in &connection.ports {
@@ -1708,12 +1787,12 @@ fn node_initial(model: &ModelWorld, connection: &CompiledConnection, lane_index:
         }
         for (label, value) in assignments {
             if !value.is_finite() {
-                return Err(CompileError::Equations { behavior: port.owner, message: format!("{label} must be finite [{}]", kind.unit()) });
+                return Err(CompileError::Equations { behavior: port.owner, message: format!("{label} must be finite [{}]", unit) });
             }
             if let Some((previous, before)) = &selected {
                 if value != *before {
                     return Err(CompileError::Equations { behavior: port.owner,
-                        message: format!("conflicting initial values: {previous} = {before} and {label} = {value} [{}]", kind.unit()) });
+                        message: format!("conflicting initial values: {previous} = {before} and {label} = {value} [{}]", unit) });
                 }
             } else { selected = Some((label, value)); }
         }
@@ -1727,6 +1806,28 @@ mod local_fd_tests {
     use sim_domain_multibody::contact as body;
     use sim_domain_rotational::elements as rot;
     use sim_domain_sensing as sense;
+
+    #[test]
+    fn sparse_flow_lanes_and_owner_rows_share_residual_and_jacobian_mapping() {
+        let node = PortBinding::Node { lanes: vec![0, 1, 2], rows: vec![(0, 4), (2, 7)] };
+        let owner = PortBinding::Owned { states: 10, wrench: 1, width: 4, flow_lanes: vec![0, 2], contribution_rows: vec![3, 1] };
+        let mut rows = vec![0.; 20];
+        let mut wrenches = vec![0.; 3];
+        node.scatter(&[2., 999., 5.], &mut rows, &mut wrenches);
+        owner.scatter(&[3., 999., 7., 999.], &mut rows, &mut wrenches);
+        assert_eq!((rows[4], rows[7]), (2., 5.));
+        assert_eq!(wrenches, [0., 3., 7.]);
+        assert_eq!(node.contribution_row(2, &[]), Some(7));
+        assert_eq!(node.contribution_row(1, &[]), None);
+        assert_eq!(owner.contribution_row(0, &[0, 13, 11]), Some(13));
+        assert_eq!(owner.contribution_row(2, &[0, 13, 11]), Some(11));
+        assert_eq!(owner.contribution_row(1, &[0, 13, 11]), None);
+        let mut written = Vec::new();
+        owner.written_rows(&mut written);
+        assert_eq!(written, [13, 11]);
+        let composite = PortBinding::Composite(vec![node, owner]);
+        assert_eq!(composite.contribution_row(5, &[0, 13, 11]), Some(11));
+    }
 
     #[test]
     fn signal_balance_derivatives_preserve_rounding_and_feedback() {

@@ -29,6 +29,9 @@ pub struct External {
     pub offset: f64,
     pub input_delay: usize,
     pub output_delay: usize,
+    /// Optional explicit event times for recorded acquisition/command schedules.
+    /// Hosts validate strictly increasing finite times before constructing this seam.
+    pub schedule: Option<Vec<f64>>,
     coupler: Mutex<Option<Box<dyn Coupler>>>,
     failure: Option<String>,
     samples: u64,
@@ -36,7 +39,7 @@ pub struct External {
 
 impl External {
     pub fn new(sensors: Vec<String>, actuators: Vec<String>, period: f64) -> Self {
-        Self { sensors, actuators, period, offset: 0.0, input_delay: 0, output_delay: 0, coupler: Mutex::new(None), failure: None, samples: 0 }
+        Self { sensors, actuators, period, offset: 0.0, input_delay: 0, output_delay: 0, schedule: None, coupler: Mutex::new(None), failure: None, samples: 0 }
     }
     pub fn samples(&self) -> u64 {
         self.samples
@@ -102,12 +105,12 @@ impl External {
 impl Behavior for External {
     fn states(&self) -> Vec<StateDeclaration> {
         let d = QuantityKind::Dimensionless;
-        let mut out: Vec<StateDeclaration> = self.actuators.iter().map(|n| StateDeclaration::new(format!("act.{n}"), d, 0.0)).collect();
+        let mut out: Vec<StateDeclaration> = self.actuators.iter().map(|n| StateDeclaration::new(format!("act.{n}"), d.clone(), 0.0)).collect();
         for k in 0..self.output_delay {
-            out.extend(self.actuators.iter().map(|n| StateDeclaration::new(format!("queue{k}.{n}"), d, 0.0)));
+            out.extend(self.actuators.iter().map(|n| StateDeclaration::new(format!("queue{k}.{n}"), d.clone(), 0.0)));
         }
         for k in 0..self.input_delay {
-            out.extend(self.sensors.iter().map(|n| StateDeclaration::new(format!("seen{k}.{n}"), d, 0.0)));
+            out.extend(self.sensors.iter().map(|n| StateDeclaration::new(format!("seen{k}.{n}"), d.clone(), 0.0)));
         }
         out.push(StateDeclaration::new("next_sample", QuantityKind::Time, self.offset));
         out
@@ -142,7 +145,11 @@ impl Behavior for External {
             }
         }
         let clock = self.clock();
-        states[clock] += self.period;
+        if let Some(schedule) = &self.schedule {
+            states[clock] = schedule.get(self.samples as usize).copied().unwrap_or(view.time + 1e9);
+        } else {
+            states[clock] += self.period;
+        }
     }
     fn couple(&mut self, mut coupler: Box<dyn Coupler>, contract: Contract) -> Result<(), Box<dyn Coupler>> {
         match coupler.open(&contract) {
@@ -181,7 +188,7 @@ fn external(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError> {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use QuantityKind::Dimensionless as D;
+    use sim_core::quantities::Dimensionless as D;
     registry.register(BehaviorDescriptor::new(EXTERNAL, "External controller (seam)", vec![signal_in("sense.*", D), signal_out("act.*", D)], external).with_parameters(vec![
         P::required("period", "s").positive(), P::optional("offset", "s", 0.0),
         P::optional("input_delay", "samples", 0.0).integer(0.0, 4096.0),

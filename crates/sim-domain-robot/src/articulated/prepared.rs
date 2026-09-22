@@ -7,6 +7,52 @@
 //! No mutable cache is shared across workers or steps.
 use super::*;
 
+#[derive(Clone, Default)]
+pub(super) struct JointWrench {
+    pub f: V,
+    pub n: V,
+    pub point: V,
+}
+
+/// Complete shared force result before public diagnostic packaging. Keeping
+/// torques contiguous avoids per-joint allocations in the dynamics hot path;
+/// every force, constraint and modal calculation still runs in the same kernel.
+pub(super) struct ForceKernelResult<'k> {
+    pub kinematics: std::borrow::Cow<'k, Kinematics>,
+    pub joints: Vec<JointWrench>,
+    pub needed: Vec<f64>,
+    pub passive: Vec<f64>,
+    pub contacts: Vec<ContactPoint>,
+    pub base_wrench: Vec<[f64; 6]>,
+    pub modal_force: Vec<Vec<f64>>,
+    pub loop_rows: Vec<f64>,
+    pub bristle_rates: Vec<f64>,
+    pub contact_normal: Vec<f64>,
+}
+
+impl ForceKernelResult<'_> {
+    pub fn into_evaluation(self) -> Evaluation {
+        let Self { kinematics, joints, needed, passive, contacts, base_wrench,
+            modal_force, loop_rows, bristle_rates, contact_normal } = self;
+        let axes = &kinematics.2;
+        let joints = joints.into_iter().enumerate().map(|(i, joint)| {
+            let range = axes.ranges[i].clone();
+            JointReaction {
+                f: joint.f, n: joint.n, point: joint.point,
+                axes: axes[i].to_vec(),
+                tau_needed: needed[range.clone()].to_vec(),
+                tau_passive: passive[range].to_vec(),
+            }
+        }).collect();
+        let (links, joint_points) = match kinematics {
+            std::borrow::Cow::Borrowed(cached) => (cached.0.clone(), cached.1.clone()),
+            std::borrow::Cow::Owned((links, points, _)) => (links, points),
+        };
+        Evaluation { links, joints, contacts, base_wrench, modal_force, loop_rows,
+            bristle_rates, contact_normal, joint_points }
+    }
+}
+
 #[derive(Clone)]
 pub(super) struct ContactHit {
     pub sample: usize,
@@ -188,7 +234,21 @@ pub(super) struct ContactForces {
     pub contact_normal: Vec<f64>,
 }
 
-pub(super) type Kinematics = (Vec<LinkKin>, Vec<V>, Vec<Vec<V>>);
+/// Contiguous pose-local axes. Public force diagnostics still own their usual
+/// per-joint vectors; geometry-only consumers need no allocation per joint.
+#[derive(Clone)]
+pub(super) struct JointAxes {
+    pub(super) values: Vec<V>,
+    pub(super) ranges: Vec<std::ops::Range<usize>>,
+}
+impl std::ops::Index<usize> for JointAxes {
+    type Output = [V];
+    fn index(&self, joint: usize) -> &Self::Output {
+        &self.values[self.ranges[joint].clone()]
+    }
+}
+
+pub(super) type Kinematics = (Vec<LinkKin>, Vec<V>, JointAxes);
 
 // Contact uses pose and velocity, not acceleration. Keep signed zeros distinct
 // and cover all base/modal motion inputs before borrowing prepared link motion.

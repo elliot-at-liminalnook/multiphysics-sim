@@ -14,32 +14,60 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         None
     };
-    let motion = if args.len() == 4 && args[0] == "--motion" {
+    let experiment: Option<sim_runtime::experiment::ExperimentSpec> =
+        if args.len() == 2 && args[0] == "--experiment" {
+            Some(serde_json::from_slice(&std::fs::read(&args[1])?)?)
+        } else {
+            None
+        };
+    let motion = if let Some(spec) = &experiment {
+        Some(spec.parameterization.materialize(
+            &spec.scene,
+            &spec.source_actions,
+            &spec.baseline,
+        )?)
+    } else if args.len() == 4 && args[0] == "--motion" {
         let document: serde_json::Value = serde_json::from_slice(&std::fs::read(&args[1])?)?;
-        let variant: sim_runtime::motion_parameters::MotionVariant = serde_json::from_value(document["variant"].clone())?;
+        let variant: sim_runtime::motion_parameters::MotionVariant =
+            serde_json::from_value(document["variant"].clone())?;
         variant.validate()?;
         Some(variant)
-    } else { None };
+    } else {
+        None
+    };
     let replay = args.len() == 2 && args[0] == "--replay";
-    if !replay && !(3..=4).contains(&args.len()) {
+    if !replay && experiment.is_none() && !(3..=4).contains(&args.len()) {
         return Err(
-            "usage: run_environment scene.json config.json task.json [actions.json] [--profile report.json], or --replay episode.recording.json, or --motion materialized-motion.json config.json task.json".into(),
+            "usage: run_environment scene.json config.json task.json [actions.json] [--profile report.json], or --replay episode.recording.json, or --motion materialized-motion.json config.json task.json, or --experiment spec.json".into(),
         );
     }
     let (mut env, actions, steps, episode_steps) = if replay {
         let record: EnvironmentRecording = serde_json::from_slice(&std::fs::read(&args[1])?)?;
         let steps = record.runtime.completed_steps;
         let episode_steps = record.runtime.config.steps;
-        let loaded = EmbeddedEnvironment::new(record.runtime.scene.clone(),
-            record.runtime.config.clone(), record.task.clone(), record.runtime.seed)?;
+        let loaded = EmbeddedEnvironment::new(
+            record.runtime.scene.clone(),
+            record.runtime.config.clone(),
+            record.task.clone(),
+            record.runtime.seed,
+        )?;
         // Reuse the browser's validation, seed handling and held-action reconstruction.
         let (env, actions) = loaded.prepare_replay(record)?;
         (env, Some(actions), steps, episode_steps)
     } else if let Some(variant) = &motion {
-        let config: Config = serde_json::from_slice(&std::fs::read(&args[2])?)?;
-        let task: Task = serde_json::from_slice(&std::fs::read(&args[3])?)?;
+        let (config, task, seed) = if let Some(spec) = &experiment {
+            // Keep the same validation, complete command schedule, and seed as search_motion.
+            sim_runtime::experiment::Experiment::bind(spec.clone())?;
+            (spec.config.clone(), spec.task.clone(), spec.seed)
+        } else {
+            (
+                serde_json::from_slice::<Config>(&std::fs::read(&args[2])?)?,
+                serde_json::from_slice::<Task>(&std::fs::read(&args[3])?)?,
+                0,
+            )
+        };
         let steps = config.steps;
-        let env = EmbeddedEnvironment::new(variant.scene.clone(), config, task, 0)?;
+        let env = EmbeddedEnvironment::new(variant.scene.clone(), config, task, seed)?;
         (env, Some(variant.actions.clone()), steps, steps)
     } else {
         let scene: Scene = serde_json::from_slice(&std::fs::read(&args[0])?)?;
@@ -47,10 +75,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let task: Task = serde_json::from_slice(&std::fs::read(&args[2])?)?;
         let steps = config.steps;
         let env = EmbeddedEnvironment::new(scene, config, task, 0)?;
-        let actions: Option<Vec<Vec<f64>>> = args.get(3)
+        let actions: Option<Vec<Vec<f64>>> = args
+            .get(3)
             .map(|p| -> Result<_, Box<dyn std::error::Error>> {
                 Ok(serde_json::from_slice(&std::fs::read(p)?)?)
-            }).transpose()?;
+            })
+            .transpose()?;
         (env, actions, steps, steps)
     };
     let initial_action = env.inputs().iter().map(|c| c.initial).collect::<Vec<_>>();
@@ -66,7 +96,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut error = None;
     let mut transition_wall_s = Vec::new();
     while env.transition().completed_steps < steps
-        && !env.transition().terminated && !env.transition().truncated {
+        && !env.transition().terminated
+        && !env.transition().truncated
+    {
         let action = match &actions {
             Some(a) => a
                 .get(transitions.len() - 1)
@@ -99,7 +131,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "completed":completed,"wall_s":wall_s,"buckets":buckets,
                 "accepted_implicit_steps":env.implicit_step_diagnostics(),
                 "accepted_intervals":env.interval_diagnostics(),
-                "scope":"Standalone native environment diagnostic after construction; excludes final capture serialization. Buckets can nest and are not additive. Accepted implicit-step diagnostics exclude rejected solves and the separate hybrid motor/event path. Profiling overhead is included; use unprofiled runs for performance acceptance."
+                "motor_trial_statistics":env.motor_solve_statistics(),
+                "scope":"Standalone native environment diagnostic after construction; excludes final capture serialization. Buckets can nest and are not additive. Accepted implicit-step diagnostics exclude rejected solves and the separate hybrid motor/event path. Motor-trial statistics cover successful outer intervals and include successful discarded event-location trials; failed continuous-trial internal work is excluded. Profiling overhead is included; use unprofiled runs for performance acceptance."
             }))?,
         )?;
     }

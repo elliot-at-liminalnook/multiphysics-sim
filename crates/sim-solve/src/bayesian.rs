@@ -198,7 +198,8 @@ impl Problem {
         Ok(())
     }
 
-    pub(crate) fn normalized(&self, values: &[f64]) -> Result<Vec<f64>, String> {
+    /// Validate physical coordinates and map them into the declared unit box.
+    pub fn normalized(&self, values: &[f64]) -> Result<Vec<f64>, String> {
         if values.len() != self.parameters.len() {
             return Err("Bayesian observation parameter dimension mismatch".into());
         }

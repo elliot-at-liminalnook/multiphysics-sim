@@ -88,6 +88,15 @@ pub trait System {
     /// Seed the system's noise generator.
     fn seed_noise(&mut self, _seed: u64) {}
 
+    /// Optional retention hooks. These must not evaluate equations or change
+    /// physics, RNGs, controllers, or solver caches. A solve is still a trial;
+    /// only `commit_observation` identifies the accepted continuous state.
+    fn observation_capture_enabled(&self) -> bool { false }
+    fn solved_implicit_observation(&self, _start: f64, _end: f64, _stage_time: f64,
+        _stage: &[f64], _rate: &[f64], _endpoint: &[f64]) {}
+    fn commit_observation(&self, _time: f64, _state: &[f64]) {}
+    fn invalidate_observation(&self) {}
+
     /// Unknowns whose rates never enter the residual (reactions, multipliers,
     /// node potentials). The implicit midpoint rule evaluates these at the
     /// end of the step rather than the midpoint, which removes the ±
@@ -558,6 +567,7 @@ impl<S: System> Simulation<S> {
                 attempt.committed = Some(false);
             }
         }
+        self.system.invalidate_observation();
         self.time = snapshot.time;
         self.state.copy_from_slice(&snapshot.state);
         self.previous_rate.copy_from_slice(&snapshot.previous_rate);
@@ -566,6 +576,7 @@ impl<S: System> Simulation<S> {
     }
 
     pub fn make_consistent(&mut self, config: NewtonConfig) -> Result<(), DynamicsError> {
+        self.system.invalidate_observation();
         let Some(algebraic) = self.system.algebraic() else { return Ok(()) };
         let n = self.state.len();
         let algebraic_columns: Vec<usize> = (0..n).filter(|i| algebraic[*i]).collect();
@@ -930,6 +941,7 @@ impl<S: System> Simulation<S> {
                 *rate = (new - old) / dt;
             }
         }
+        self.system.commit_observation(time, &state);
         self.state = state;
         self.time = time;
         self.stats.steps += 1;
@@ -1201,6 +1213,12 @@ fn implicit_step<S: System>(
     let diagnostics = diagnostics.map_err(|source| DynamicsError::Solve { time: t, source })?;
     for i in 0..n {
         x[i] = old[i] + u[i];
+    }
+    if system.observation_capture_enabled() {
+        let mut stage_state = vec![0.; n];
+        let mut stage_rate = vec![0.; n];
+        stage(&u, &mut stage_state, &mut stage_rate);
+        system.solved_implicit_observation(t, t + h, t + theta * h, &stage_state, &stage_rate, x);
     }
     Ok((diagnostics.iterations,rebuilt))
 }

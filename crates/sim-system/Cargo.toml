@@ -1,0 +1,22 @@
+[package]
+name = "sim-system"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Hierarchical, versioned system documents: definitions, instances, boundary ports, shared edit commands with undo, and flattening to the shared ModelWorld."
+
+[dependencies]
+blake3 = "=1.8.7"
+serde.workspace = true
+serde_json.workspace = true
+sim-core = { path = "../sim-core" }
+sim-inspect = { path = "../sim-inspect" }
+thiserror.workspace = true
+
+[dev-dependencies]
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-bridges = { path = "../sim-domain-bridges" }
+sim-compile = { path = "../sim-compile" }
+sim-dynamics = { path = "../sim-dynamics" }

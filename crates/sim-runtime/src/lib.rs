@@ -17,6 +17,7 @@ pub mod contact_implicit;
 pub mod configuration_inspection;
 pub mod system_inspection;
 pub mod system_session;
+pub mod system_builder;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod system_worker;
 pub mod robot_contract;
@@ -51,6 +52,7 @@ pub fn registry() -> BehaviorRegistry {
     sim_domain_fluid::twophase::register(&mut registry).unwrap();
     sim_domain_control::elements::register(&mut registry).unwrap();
     sim_domain_control::pulse::register(&mut registry).unwrap();
+    sim_domain_control::pwm::register(&mut registry).unwrap();
     sim_domain_bridges::elements::register(&mut registry).unwrap();
     sim_domain_multibody::elements::register(&mut registry).unwrap();
     sim_domain_multibody::planar::register(&mut registry).unwrap();

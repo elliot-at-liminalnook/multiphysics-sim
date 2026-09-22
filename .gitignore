@@ -6,3 +6,7 @@
 __pycache__/
 .pytest_cache/
 /web/node_modules/
+# System builder: per-machine undo journal, lock and compiled viewer bundles.
+.*.system.json.history.json
+.*.system.json.lock
+.*.build/

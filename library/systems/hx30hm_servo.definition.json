@@ -1,0 +1,270 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "hx30hm_servo",
+  "definitions": {
+    "hx30hm_servo": {
+      "label": "HX-30HM servo",
+      "description": "HX-30HM motor (provisional endpoint fit: R 3.7 Ω, internal ratio 200, Kt = Ke 0.009734, efficiency 0.504) with winding (2.40 J/K) → case (41.2 J/K) → air thermal path (12 K/W, 45 K/W). Not identified from hardware.",
+      "interface": "servo.hx30hm",
+      "ports": {
+        "n": {},
+        "p": {},
+        "shaft": {}
+      },
+      "instances": {
+        "ambient": {
+          "label": "Ambient",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.018,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "case": {
+          "label": "Case heat capacity",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 41.184
+            },
+            "initial.temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.006,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "case_air": {
+          "label": "Case → air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 45.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.012,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "HX-30HM motor + gearbox",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.motor_unit"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.00973408
+            },
+            "efficiency": {
+              "value": 0.5037
+            },
+            "gear_stiffness": {
+              "value": 50.0
+            },
+            "inductance": {
+              "value": 0.00148
+            },
+            "initial.winding.temperature": {
+              "value": 298.15
+            },
+            "no_load_current": {
+              "value": 0.1
+            },
+            "ratio": {
+              "value": 200.0
+            },
+            "reference": {
+              "value": 298.15
+            },
+            "resistance": {
+              "value": 3.7
+            },
+            "rotor_inertia": {
+              "value": 2.2324546e-8
+            },
+            "temp_coeff": {
+              "value": 0.0039
+            },
+            "torque_constant": {
+              "value": 0.00973408
+            }
+          }
+        },
+        "winding": {
+          "label": "Winding heat capacity",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 2.4024
+            }
+          },
+          "placement": {
+            "position": [
+              -0.006,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "winding_case": {
+          "label": "Winding → case",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 12.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "shaft"
+            },
+            {
+              "instance": "motor",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "winding"
+            },
+            {
+              "instance": "winding",
+              "port": "node"
+            },
+            {
+              "instance": "winding_case",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "winding_case",
+              "port": "b"
+            },
+            {
+              "instance": "case",
+              "port": "node"
+            },
+            {
+              "instance": "case_air",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "case_air",
+              "port": "b"
+            },
+            {
+              "instance": "ambient",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

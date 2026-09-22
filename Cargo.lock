@@ -4134,6 +4134,8 @@ dependencies = [
  "num-traits",
  "png",
  "tiff",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]
@@ -7043,6 +7045,7 @@ dependencies = [
  "sim-inspect",
  "sim-script",
  "sim-solve",
+ "sim-system",
  "web-time 1.1.0",
 ]
 
@@ -7104,8 +7107,30 @@ dependencies = [
  "serde",
  "serde_json",
  "sim-api",
+ "sim-compile",
+ "sim-core",
  "sim-inspect",
  "sim-render",
+ "sim-runtime",
+ "sim-system",
+]
+
+[[package]]
+name = "sim-system"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "serde",
+ "serde_json",
+ "sim-compile",
+ "sim-core",
+ "sim-domain-bridges",
+ "sim-domain-electrical",
+ "sim-domain-rotational",
+ "sim-domain-thermal",
+ "sim-dynamics",
+ "sim-inspect",
+ "thiserror 2.0.20",
 ]
 
 [[package]]
@@ -7118,11 +7143,13 @@ dependencies = [
  "serde",
  "serde_json",
  "sim-api",
+ "sim-compile",
  "sim-core",
  "sim-diagram",
  "sim-inspect",
  "sim-render",
  "sim-runtime",
+ "sim-system",
 ]
 
 [[package]]

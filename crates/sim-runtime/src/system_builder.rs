@@ -1,0 +1,258 @@
+//! Hierarchical system files on the shared runtime: compile a `sim.system/1`
+//! document into the description, physical presentation, animation bindings
+//! and live capture that both viewers already use, check that it compiles,
+//! and run it headlessly. Nothing here duplicates physics; the document is
+//! flattened and handed to the one compiler.
+use crate::system_session::{ModelSource, SessionConfig, SystemSession};
+use crate::system_worker::{Launch, SourceBinding};
+use serde::Serialize;
+use sim_core::BehaviorRegistry;
+use sim_inspect::animation::{AnimationDescription, ColorBinding, Readout, RotationBinding};
+use sim_inspect::spatial::{SpatialDescription, SpatialShape};
+use sim_inspect::{ObservationLocation, SystemDescription};
+use sim_system::{Finding, Flattened, SystemDocument};
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+
+pub struct Compiled {
+    pub flat: Flattened,
+    pub description: SystemDescription,
+    /// Absent when the system has no parts yet.
+    pub spatial: Option<SpatialDescription>,
+    pub animation: Option<AnimationDescription>,
+    pub launch: Launch,
+}
+
+/// Builder default: implicit midpoint with tolerances suited to volt/amp/kelvin
+/// scale circuits (absolute 1e-8 in each equation's units, relative 1e-7).
+pub fn default_config() -> SessionConfig {
+    let newton = sim_solve::NewtonConfig { absolute_tolerance: 1e-8, relative_tolerance: 1e-7, max_iterations: 80, ..Default::default() };
+    SessionConfig { interval: 1e-4, integrator: sim_dynamics::Integrator::ImplicitMidpoint(newton), seed: 1 }
+}
+
+/// The settings a document records, else the builder default.
+pub fn config_for(document: &SystemDocument) -> SessionConfig {
+    let mut config = default_config();
+    let Some(run) = &document.run else { return config };
+    config.interval = run.interval;
+    let sim_dynamics::Integrator::ImplicitMidpoint(mut newton) = config.integrator else { return config };
+    if let Some(v) = run.absolute_tolerance {
+        newton.absolute_tolerance = v;
+    }
+    if let Some(v) = run.relative_tolerance {
+        newton.relative_tolerance = v;
+    }
+    if let Some(v) = run.max_iterations {
+        newton.max_iterations = v;
+    }
+    config.integrator = match run.integrator {
+        sim_system::IntegratorChoice::ImplicitMidpoint => sim_dynamics::Integrator::ImplicitMidpoint(newton),
+        sim_system::IntegratorChoice::BackwardEuler => sim_dynamics::Integrator::BackwardEuler(newton),
+    };
+    config
+}
+
+/// Flatten and describe. Does not construct the numerical runtime.
+pub fn compile(document: &SystemDocument, registry: &BehaviorRegistry, config: SessionConfig) -> Result<Compiled, String> {
+    let flat = sim_system::flatten(document, registry).map_err(|e| e.to_string())?;
+    let description = sim_inspect::model::describe(&flat.model, registry, &flat.source_hash, document.revision.max(1), &flat.identities)
+        .map_err(|e| e.to_string())?
+        .description;
+    let spatial = (!flat.parts.is_empty()).then(|| flat.spatial(&description.id, &document.title));
+    if let Some(s) = &spatial {
+        s.validate(&description).map_err(|e| e.to_string())?;
+    }
+    let animation = spatial.as_ref().and_then(|s| animation(&description, s));
+    let mut launch = Launch {
+        version: 1,
+        run_id: format!("system-{}-r{}", &flat.source_hash[..12], document.revision),
+        model: flat.model.clone(),
+        source_hash: flat.source_hash.clone(),
+        revision: document.revision.max(1),
+        config,
+        binding: None,
+    };
+    launch.binding = Some(SourceBinding { model_hash: launch.model_hash()?, description_id: description.id.clone(), identities: flat.identities.clone() });
+    Ok(Compiled { flat, description, spatial, animation, launch })
+}
+
+/// Temperature colors, shaft rotations and readouts from the compiled
+/// observables. Display bindings only.
+pub fn animation(description: &SystemDescription, spatial: &SpatialDescription) -> Option<AnimationDescription> {
+    let mut colors = Vec::new();
+    let mut rotations = Vec::new();
+    let mut readouts = Vec::new();
+    let mut colored = BTreeSet::new();
+    let mut rotated = BTreeSet::new();
+    for (id, o) in &description.observables {
+        if o.availability != sim_inspect::Availability::Available {
+            continue;
+        }
+        let ObservationLocation::Across { port, .. } = &o.location else { continue };
+        let Some(component) = description.ports.get(port).map(|p| p.component.clone()) else { continue };
+        let Some(part) = spatial.parts.iter().find(|p| p.component == component) else { continue };
+        let quantity = o.quantity.name.as_str();
+        if quantity == "sim.quantity.Temperature" && colored.insert(part.id.clone()) {
+            colors.push(ColorBinding { part: part.id.clone(), observable: id.clone(), range_kelvin: [293.15, 353.15], cold_srgb: [0.16, 0.60, 0.60], hot_srgb: [0.95, 0.22, 0.08] });
+            readouts.push(Readout { label: format!("{} temperature", part.label), observable: id.clone() });
+        } else if quantity == "sim.quantity.Angle" && rotated.insert(part.id.clone()) && sim_inspect::plot::unit(description, o) == "rad" {
+            let axis = sim_system::flatten::rotate(part.rotation_xyzw, [0., 1., 0.]);
+            let marker = match part.shape {
+                SpatialShape::Cylinder { radius, .. } => Some(radius),
+                _ => None,
+            };
+            rotations.push(RotationBinding { part: part.id.clone(), observable: id.clone(), axis, pivot: part.position, marker_radius: marker });
+            readouts.push(Readout { label: format!("{} angle", part.label), observable: id.clone() });
+        }
+    }
+    readouts.truncate(16);
+    let animation = AnimationDescription {
+        version: 1,
+        description_id: description.id.clone(),
+        provenance: "Generated by the system builder: uniform lumped temperatures as colors (293–353 K, illustrative, not a limit) and shaft angles about each part's display axis.".into(),
+        rotations,
+        colors,
+        readouts,
+    };
+    animation.validate(description, spatial).ok().map(|_| animation)
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Check {
+    pub revision: u64,
+    pub content_hash: String,
+    pub components: usize,
+    pub nets: usize,
+    pub subsystems: usize,
+    pub observables: usize,
+    pub findings: Vec<Finding>,
+    /// `None` when the numerical runtime constructs successfully.
+    pub compile_error: Option<String>,
+}
+
+/// Validate, flatten, describe and construct the numerical runtime.
+pub fn check(document: &SystemDocument, registry: &BehaviorRegistry) -> Result<Check, String> {
+    let compiled = compile(document, registry, default_config())?;
+    let compile_error = sim_compile::Runtime::new(compiled.flat.model.clone(), registry, default_config().integrator).err().map(|e| locate(&compiled.flat, e.to_string()));
+    Ok(Check {
+        revision: document.revision,
+        content_hash: document.content_hash(),
+        components: compiled.description.components.len(),
+        nets: compiled.description.nets.len(),
+        subsystems: compiled.description.groups.len(),
+        observables: compiled.description.observables.len(),
+        findings: compiled.flat.findings,
+        compile_error,
+    })
+}
+
+/// Replace internal behavior keys in compiler messages with instance paths.
+pub fn locate(flat: &Flattened, mut message: String) -> String {
+    for (path, id) in &flat.components {
+        message = message.replace(&format!("behavior {id:?}"), &format!("`{path}`")).replace(&format!("{id:?}"), &format!("`{path}`"));
+    }
+    message
+}
+
+/// Files the viewers open: description, spatial, animation and live capture.
+pub struct Bundle {
+    pub description: PathBuf,
+    pub spatial: Option<PathBuf>,
+    pub animation: Option<PathBuf>,
+    pub live: PathBuf,
+}
+
+pub fn write_bundle(compiled: &Compiled, directory: &Path, stem: &str) -> Result<Bundle, String> {
+    std::fs::create_dir_all(directory).map_err(|e| e.to_string())?;
+    fn write<T: Serialize>(directory: &Path, name: String, value: &T) -> Result<PathBuf, String> {
+        let path = directory.join(name);
+        let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
+        sim_system::store::write_atomic(&path, &bytes).map_err(|e| e.to_string())?;
+        Ok(path)
+    }
+    Ok(Bundle {
+        description: write(directory, format!("{stem}.description.json"), &compiled.description)?,
+        spatial: compiled.spatial.as_ref().map(|s| write(directory, format!("{stem}.spatial.json"), s)).transpose()?,
+        animation: compiled.animation.as_ref().map(|a| write(directory, format!("{stem}.animation.json"), a)).transpose()?,
+        live: write(directory, format!("{stem}.live.json"), &compiled.launch)?,
+    })
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Series {
+    pub observable: String,
+    pub label: String,
+    pub unit: String,
+    pub times: Vec<f64>,
+    pub values: Vec<f64>,
+}
+
+/// Readable observable key: `path.port.lane`, `path.port` or `path.state`.
+pub fn observable_key(description: &SystemDescription, id: &str) -> String {
+    let Some(o) = description.observables.get(id) else { return id.to_string() };
+    let port = |p: &str| description.ports.get(p).map(|p| format!("{}.{}", p.component, p.name)).unwrap_or_else(|| p.to_string());
+    match &o.location {
+        ObservationLocation::Across { port: p, lane } | ObservationLocation::Through { port: p, lane } => format!("{}.{lane}", port(p)),
+        ObservationLocation::Signal { port: p } => port(p),
+        ObservationLocation::State { component, state } => format!("{component}.{state}"),
+        ObservationLocation::Diagnostic { component, name } => format!("{}.{name}", component.clone().unwrap_or_default()),
+    }
+}
+
+/// Run headlessly through the same session the live viewers use and return
+/// the selected observables. `select` matches observable IDs or labels by
+/// substring; empty selects everything available.
+pub fn simulate(document: &SystemDocument, registry: &BehaviorRegistry, duration: f64, config: SessionConfig, select: &[String]) -> Result<Vec<Series>, String> {
+    let compiled = compile(document, registry, config.clone())?;
+    let source = ModelSource {
+        model: compiled.flat.model.clone(),
+        registry: registry.clone(),
+        identities: compiled.flat.identities.clone(),
+        source_hash: compiled.flat.source_hash.clone(),
+        revision: document.revision.max(1),
+    };
+    let flat_for_errors = sim_system::flatten(document, registry).map_err(|e| e.to_string())?;
+    let mut session = SystemSession::new(compiled.launch.run_id.clone(), config.clone(), move |c| source.build(c)).map_err(|e| locate(&flat_for_errors, e))?;
+    let description = session.description().clone();
+    let chosen: Vec<String> = description
+        .observables
+        .iter()
+        .filter(|(_, o)| o.availability == sim_inspect::Availability::Available)
+        .filter(|(id, o)| {
+            let key = observable_key(&description, id);
+            select.is_empty() || select.iter().any(|s| key.contains(s.as_str()) || id.contains(s.as_str()) || o.label.contains(s.as_str()))
+        })
+        .map(|(id, _)| id.clone())
+        .collect();
+    if chosen.is_empty() {
+        return Err("no available observable matches the selection".into());
+    }
+    let steps = (duration / config.interval).round() as usize;
+    session.begin_recording(chosen.clone(), steps + 2)?;
+    session.execute(crate::system_session::Command::Start)?;
+    while session.status().time + 0.5 * config.interval < duration {
+        session.tick().map_err(|e| locate(&flat_for_errors, e))?;
+        if session.status().phase == sim_inspect::live::Phase::Failed {
+            return Err(session.status().message.clone().unwrap_or_else(|| "run failed".into()));
+        }
+    }
+    let recording = session.take_recording().ok_or("no recording")?;
+    Ok(chosen
+        .iter()
+        .map(|id| {
+            let o = &description.observables[id];
+            let mut times = Vec::new();
+            let mut values = Vec::new();
+            for frame in &recording.frames {
+                match frame.values.get(id) {
+                    Some(sim_inspect::SampleValue::Committed { value, sample_time }) | Some(sim_inspect::SampleValue::AcceptedStage { value, sample_time, .. }) => {
+                        times.push(*sample_time);
+                        values.push(*value);
+                    }
+                    _ => {}
+                }
+            }
+            Series { observable: id.clone(), label: observable_key(&description, id), unit: sim_inspect::plot::unit(&description, o).to_string(), times, values }
+        })
+        .collect())
+}

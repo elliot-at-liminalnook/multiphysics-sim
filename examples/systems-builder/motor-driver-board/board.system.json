@@ -1,0 +1,1388 @@
+{
+  "schema": "sim.system/1",
+  "title": "Motor driver board",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "buck_5v": {
+      "label": "5 V buck regulator",
+      "description": "Voltage-mode buck: 50 kHz PWM, PI on the sensed output (reading 1.0 = 5 V), MOSFET high side, catch diode, 47 µH / 100 µF.",
+      "interface": "regulator.5v",
+      "ports": {
+        "gnd": {},
+        "vin": {},
+        "vout": {}
+      },
+      "instances": {
+        "air": {
+          "label": "Copper to air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.05
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.012,
+              -0.012
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "ambient": {
+          "label": "Ambient",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.016,
+              -0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "c": {
+          "label": "100 µF",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.capacitor"
+          },
+          "parameters": {
+            "capacitance": {
+              "value": 0.0001
+            }
+          },
+          "placement": {
+            "position": [
+              0.024,
+              0.0,
+              -0.002
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "d": {
+          "label": "Catch diode (Schottky)",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.diode"
+          },
+          "parameters": {
+            "forward_voltage": {
+              "value": 0.45
+            }
+          },
+          "placement": {
+            "position": [
+              -0.003,
+              0.0,
+              0.008
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "l": {
+          "label": "47 µH",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.inductor"
+          },
+          "parameters": {
+            "inductance": {
+              "value": 0.000047
+            }
+          },
+          "placement": {
+            "position": [
+              0.008,
+              0.0,
+              -0.002
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pi": {
+          "label": "Voltage loop",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pi"
+          },
+          "parameters": {
+            "ki": {
+              "value": 200.0
+            },
+            "kp": {
+              "value": 0.1
+            },
+            "setpoint": {
+              "value": 1.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.006,
+              0.0,
+              0.012
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pwm": {
+          "label": "50 kHz PWM",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pwm"
+          },
+          "parameters": {
+            "frequency": {
+              "value": 50000.0
+            }
+          },
+          "placement": {
+            "position": [
+              -0.012,
+              0.0,
+              0.012
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q": {
+          "label": "High-side switch",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.03
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.0,
+              -0.004
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "sense": {
+          "label": "Output sense",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_sense"
+          },
+          "parameters": {
+            "scale": {
+              "value": 5.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.024,
+              0.0,
+              0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "sink": {
+          "label": "Switch copper",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 0.5
+            },
+            "initial.temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.008,
+              -0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "VIN",
+          "terminals": [
+            {
+              "boundary": "vin"
+            },
+            {
+              "instance": "q",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "label": "SW",
+          "terminals": [
+            {
+              "instance": "q",
+              "port": "source"
+            },
+            {
+              "instance": "d",
+              "port": "n"
+            },
+            {
+              "instance": "l",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "VOUT",
+          "terminals": [
+            {
+              "instance": "l",
+              "port": "n"
+            },
+            {
+              "instance": "c",
+              "port": "p"
+            },
+            {
+              "instance": "sense",
+              "port": "p"
+            },
+            {
+              "boundary": "vout"
+            }
+          ]
+        },
+        {
+          "label": "GND",
+          "terminals": [
+            {
+              "boundary": "gnd"
+            },
+            {
+              "instance": "d",
+              "port": "p"
+            },
+            {
+              "instance": "c",
+              "port": "n"
+            },
+            {
+              "instance": "sense",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "sense",
+              "port": "reading"
+            },
+            {
+              "instance": "pi",
+              "port": "measured"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "pi",
+              "port": "command"
+            },
+            {
+              "instance": "pwm",
+              "port": "duty"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "pwm",
+              "port": "gate"
+            },
+            {
+              "instance": "q",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "q",
+              "port": "heat"
+            },
+            {
+              "instance": "sink",
+              "port": "node"
+            },
+            {
+              "instance": "air",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "air",
+              "port": "b"
+            },
+            {
+              "instance": "ambient",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    },
+    "h_bridge_mosfet": {
+      "label": "MOSFET H-bridge",
+      "description": "Four 20 mΩ MOSFETs with body diodes, 20 kHz sign-magnitude synchronous drive, shared heatsink (2 J/K, 0.5 W/K to air). Same ports as robot.h_bridge.",
+      "interface": "robot.h_bridge",
+      "ports": {
+        "command": {},
+        "n": {},
+        "p": {},
+        "supply_n": {},
+        "supply_p": {}
+      },
+      "instances": {
+        "air": {
+          "label": "Heatsink to air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.5
+            }
+          },
+          "placement": {
+            "position": [
+              0.019,
+              0.012,
+              -0.016
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "ambient": {
+          "label": "Ambient",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.024,
+              0.016,
+              -0.016
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "driver": {
+          "label": "Gate driver 20 kHz",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.h_bridge_pwm"
+          },
+          "parameters": {
+            "frequency": {
+              "value": 20000.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "heatsink": {
+          "label": "Heatsink",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 2.0
+            },
+            "initial.temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              -0.016
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.03,
+                0.015,
+                0.02
+              ]
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.79
+            ],
+            "model": "heatsink"
+          }
+        },
+        "q_hi_a": {
+          "label": "High A",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              -0.018,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q_hi_b": {
+          "label": "High B",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              0.006,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q_lo_a": {
+          "label": "Low A",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              -0.006,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q_lo_b": {
+          "label": "Low B",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              0.018,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "boundary": "supply_p"
+            },
+            {
+              "instance": "q_hi_a",
+              "port": "drain"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "label": "V−",
+          "terminals": [
+            {
+              "boundary": "supply_n"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "source"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "source"
+            }
+          ]
+        },
+        {
+          "label": "OUT A",
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "q_hi_a",
+              "port": "source"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "label": "OUT B",
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "source"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "command"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_hi_a"
+            },
+            {
+              "instance": "q_hi_a",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_lo_a"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_hi_b"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_lo_b"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "q_hi_a",
+              "port": "heat"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "heat"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "heat"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "heat"
+            },
+            {
+              "instance": "heatsink",
+              "port": "node"
+            },
+            {
+              "instance": "air",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "air",
+              "port": "b"
+            },
+            {
+              "instance": "ambient",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    },
+    "hx30hm_servo": {
+      "label": "HX-30HM servo",
+      "description": "HX-30HM motor (provisional endpoint fit: R 3.7 Ω, internal ratio 200, Kt = Ke 0.009734, efficiency 0.504) with winding (2.40 J/K) → case (41.2 J/K) → air thermal path (12 K/W, 45 K/W). Not identified from hardware.",
+      "interface": "servo.hx30hm",
+      "ports": {
+        "n": {},
+        "p": {},
+        "shaft": {}
+      },
+      "instances": {
+        "ambient": {
+          "label": "Ambient",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.018,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "case": {
+          "label": "Case heat capacity",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 41.184
+            },
+            "initial.temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.006,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "case_air": {
+          "label": "Case → air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 45.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.012,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "HX-30HM motor + gearbox",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.motor_unit"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.00973408
+            },
+            "efficiency": {
+              "value": 0.5037
+            },
+            "gear_stiffness": {
+              "value": 50.0
+            },
+            "inductance": {
+              "value": 0.00148
+            },
+            "initial.winding.temperature": {
+              "value": 298.15
+            },
+            "no_load_current": {
+              "value": 0.1
+            },
+            "ratio": {
+              "value": 200.0
+            },
+            "reference": {
+              "value": 298.15
+            },
+            "resistance": {
+              "value": 3.7
+            },
+            "rotor_inertia": {
+              "value": 2.2324546e-8
+            },
+            "temp_coeff": {
+              "value": 0.0039
+            },
+            "torque_constant": {
+              "value": 0.00973408
+            }
+          }
+        },
+        "winding": {
+          "label": "Winding heat capacity",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 2.4024
+            }
+          },
+          "placement": {
+            "position": [
+              -0.006,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "winding_case": {
+          "label": "Winding → case",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 12.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "shaft"
+            },
+            {
+              "instance": "motor",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "winding"
+            },
+            {
+              "instance": "winding",
+              "port": "node"
+            },
+            {
+              "instance": "winding_case",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "winding_case",
+              "port": "b"
+            },
+            {
+              "instance": "case",
+              "port": "node"
+            },
+            {
+              "instance": "case_air",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "case_air",
+              "port": "b"
+            },
+            {
+              "instance": "ambient",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    },
+    "root": {
+      "label": "Motor driver board",
+      "instances": {
+        "battery": {
+          "label": "3S battery",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.battery"
+          },
+          "parameters": {
+            "capacity_ah": {
+              "value": 2.2
+            },
+            "cells": {
+              "value": 3.0
+            },
+            "internal_resistance": {
+              "value": 0.05
+            }
+          },
+          "placement": {
+            "position": [
+              -0.09,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "bridge": {
+          "label": "MOSFET H-bridge",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "h_bridge_mosfet"
+          },
+          "placement": {
+            "position": [
+              0.018,
+              0.0,
+              -0.008
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "command": {
+          "label": "Drive command",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pulse"
+          },
+          "parameters": {
+            "amplitude": {
+              "value": 0.8
+            },
+            "duration": {
+              "value": 1000000.0
+            },
+            "start": {
+              "value": 0.005
+            }
+          },
+          "placement": {
+            "position": [
+              0.018,
+              0.0,
+              0.034
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "label": "Ground",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.0,
+              0.034
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "load": {
+          "label": "Output inertia + viscous load",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.2
+            },
+            "inertia": {
+              "value": 0.00002
+            }
+          },
+          "placement": {
+            "position": [
+              0.085,
+              0.0435,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "logic": {
+          "label": "5 V logic load (MCU + sensors)",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 10.0
+            }
+          },
+          "placement": {
+            "position": [
+              -0.012,
+              0.0,
+              0.042
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "regulator": {
+          "label": "5 V buck regulator",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "buck_5v"
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.0,
+              0.018
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "servo": {
+          "label": "HX-30HM servo",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "hx30hm_servo"
+          },
+          "placement": {
+            "position": [
+              0.075,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "VBAT",
+          "terminals": [
+            {
+              "instance": "battery",
+              "port": "p"
+            },
+            {
+              "instance": "regulator",
+              "port": "vin"
+            },
+            {
+              "instance": "bridge",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "label": "GND",
+          "terminals": [
+            {
+              "instance": "battery",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "regulator",
+              "port": "gnd"
+            },
+            {
+              "instance": "bridge",
+              "port": "supply_n"
+            },
+            {
+              "instance": "logic",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "label": "5V",
+          "terminals": [
+            {
+              "instance": "regulator",
+              "port": "vout"
+            },
+            {
+              "instance": "logic",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "MOTOR A",
+          "terminals": [
+            {
+              "instance": "bridge",
+              "port": "p"
+            },
+            {
+              "instance": "servo",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "MOTOR B",
+          "terminals": [
+            {
+              "instance": "bridge",
+              "port": "n"
+            },
+            {
+              "instance": "servo",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "command",
+              "port": "value"
+            },
+            {
+              "instance": "bridge",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "servo",
+              "port": "shaft"
+            },
+            {
+              "instance": "load",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.00001,
+    "rationale": "Switching edges: backward Euler enforces algebraic constraints at step ends; the implicit midpoint rule leaves endpoint values (e.g. battery terminal voltage) alternating after each edge. 10 µs resolves 20/50 kHz PWM edges exactly as scheduled events."
+  }
+}

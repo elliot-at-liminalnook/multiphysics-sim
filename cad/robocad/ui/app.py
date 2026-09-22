@@ -12,8 +12,14 @@ import sys
 import time
 from typing import Callable, Optional
 
-from PySide6.QtCore import QPoint, QRect, QSettings, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QColor, QKeySequence, QPainter, QPen
+from ..diagnostics import event as diagnostic_event, log as diagnostic_log, start as start_diagnostics
+
+if __name__ == '__main__':
+    _model_path = next((a for a in sys.argv[1:] if a.endswith('.rcad')), None)
+    start_diagnostics('launcher' if _model_path else 'editor', model_path=_model_path)
+
+from PySide6.QtCore import QPoint, QRect, QSettings, Qt, QTimer, Signal, QUrl
+from PySide6.QtGui import QAction, QColor, QDesktopServices, QKeySequence, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QInputDialog, QLabel, QMainWindow, QMenu, QMessageBox, QRubberBand, QToolBar, QVBoxLayout, QWidget, QScrollArea, QFrame
 
 from ..analysis import face_distance, measure_angle_edges, measure_angle_faces, measure_points, measure_radius
@@ -60,15 +66,17 @@ WINDOWS: list["MainWindow"] = []
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, doc: Optional[Document] = None, path: Optional[str] = None):
+    def __init__(self, doc: Optional[Document] = None, path: Optional[str] = None, *, prepared=None):
         super().__init__()
         self.doc = doc or (Document.load(path) if path else Document())
+        diagnostic_event('document_opened', path=self.doc.path, document_id=self.doc.document_id,
+                         revision=self.doc.revision, nodes=len(self.doc.nodes))
         self.ops = Ops(self.doc)
         self.experiments = Experiments(self.doc)
         self.candidates = Candidates(self.doc, self.ops, self.experiments.root/'candidates')
         self.settings = QSettings("robocad", "robocad")
         self.export_settings: dict[str, dict] = json.loads(self.settings.value("export_settings", "{}") or "{}")
-        self.viewport = Viewport(self.doc, self)
+        self.viewport = Viewport(self.doc, self, prepared=prepared)
         self.setCentralWidget(self.viewport)
         self.setWindowTitle(self._title())
         self.resize(1400, 900)
@@ -112,6 +120,7 @@ class MainWindow(QMainWindow):
         self.status(tr("status.ready"))
         WINDOWS.append(self)
         self.start_api()
+        if self.doc.component_definitions: self.components_dock.raise_()
 
     # ---- building ----------------------------------------------------------
     def _title(self):
@@ -218,6 +227,12 @@ class MainWindow(QMainWindow):
         self.tabifyDockWidget(d1, self.references_dock)
         d1.raise_()
         d2.raise_()
+        from .components import ComponentsPanel
+        self.components_panel = ComponentsPanel(self)
+        self.components_dock = QDockWidget('Components', self)
+        self.components_dock.setWidget(self.components_panel)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.components_dock)
+        self.tabifyDockWidget(d2, self.components_dock)
         self.resizeDocks([d1, d2], [220, 460], Qt.Horizontal)
         self.comments.refresh()
         self.outliner.refresh()
@@ -236,6 +251,7 @@ class MainWindow(QMainWindow):
         self.commands[cid] = {"label": label, "run": lambda: self._safe(run, label), "category": category, "keys": keys or [], "action": act}
 
     def _safe(self, fn, label=None):
+        diagnostic_event('ui_action', label=label, callback=getattr(fn, '__qualname__', type(fn).__name__))
         if label:
             self.status(f"{label}…")
             self.statusBar().repaint()
@@ -243,8 +259,10 @@ class MainWindow(QMainWindow):
         try:
             return fn()
         except KernelError as e:
+            diagnostic_log.exception('Geometry command failed')
             self.error(str(e))
         except Exception as e:  # keep the app alive; report
+            diagnostic_log.exception('UI command failed')
             self.error(f"{type(e).__name__}: {e}")
         finally:
             QApplication.restoreOverrideCursor()
@@ -341,6 +359,8 @@ class MainWindow(QMainWindow):
         c("tool.clearance", "Clearance offset…", self.clearance, "Print")
         c("tool.mirror", "Mirror (about active plane)", lambda: self.mirror(False), "Modify")
         c("tool.mirror_live", "Mirror as live instance", lambda: self.mirror(True), "Modify")
+        c('components.show', 'Components library', lambda: (self.components_panel.refresh(), self.components_dock.show(), self.components_dock.raise_()), 'Window')
+        c('components.make', 'Make linked component…', self.components_panel.capture, 'Create')
         c("tool.instance", "Instance selected", self.instance_selection, "Modify")
         c("tool.array", "Array…", self.array, "Modify")
         c("tool.cut_plane", "Cut with active plane", self.cut_with_plane, "Modify")
@@ -400,6 +420,7 @@ class MainWindow(QMainWindow):
         c("group.group", "Group selection", lambda: self.ops.group(self.viewport.selection.nodes()), "Outliner")
         c("numeric.entry", "Numeric entry (Tab)", self.numeric.focus_first, "General")
         c("help.guide", "User guide", self.show_guide, "Help")
+        c('help.logs', 'Open diagnostics folder', self.show_logs, 'Help')
 
     def _build_menus(self):
         mb = self.menuBar()
@@ -556,6 +577,7 @@ class MainWindow(QMainWindow):
 
     # ---- selection / dimensions -------------------------------------------------
     def selection_changed(self, world, from_outliner=False):
+        if hasattr(self, 'components_panel'): self.components_panel.selection_changed()
         self.properties.refresh()
         self.comments.refresh()
         if not from_outliner:
@@ -1152,10 +1174,17 @@ class MainWindow(QMainWindow):
         self.viewport.update()
 
     # ---- file -----------------------------------------------------------------------
+    @classmethod
+    def open_path(cls, path, *, imports=()):
+        from .model_loading import ModelLoadDialog
+        dialog = ModelLoadDialog(path, lambda stats: None, imports=imports)
+        dialog.setStyleSheet(DARK_QSS)
+        return dialog
+
     def open_file(self):
         p, _ = QFileDialog.getOpenFileName(self, "Open", "", "robocad (*.rcad)")
         if p:
-            MainWindow(path=p).show()
+            self.open_path(p)
 
     def save(self):
         if not self.doc.path:
@@ -1586,12 +1615,14 @@ class MainWindow(QMainWindow):
             e.acceptProposedAction()
 
     def _on_stack(self):
+        diagnostic_event('document_edited', path=self.doc.path, revision=self.doc.revision, dirty=self.doc.dirty)
         self.setWindowTitle(self._title())
         # One refresh for a command batch, rather than expensive repeated mass
         # and robot validation queries on every node notification.
         self._refresh_timer.start(0)
 
     def _refresh_panels(self):
+        if hasattr(self, 'components_panel'): self.components_panel.refresh()
         if self._geometry_refresh:
             self.outliner.refresh()
             self.robot_panel.refresh()
@@ -1601,6 +1632,15 @@ class MainWindow(QMainWindow):
         self.comments.refresh()
 
     def _on_doc(self, event, payload):
+        if event == 'component_prepared':
+            viewport = self.viewport
+            viewport.items = dict(payload)
+            viewport._item_meshes = {nid: (self.doc.mesh_cache[(nid, self.doc.nodes[nid].tessellation_tolerance)],
+                (self.doc.nodes[nid].kind, False, 45.0), item) for nid,item in payload.items()
+                if nid in self.doc.nodes and (nid,self.doc.nodes[nid].tessellation_tolerance) in self.doc.mesh_cache}
+            viewport.dirty_nodes.clear()
+            viewport.update()
+            return
         if event == 'saved_views':
             self.saved_views_panel.refresh()
             self.setWindowTitle(self._title())
@@ -1620,18 +1660,26 @@ class MainWindow(QMainWindow):
             pass
 
     def status(self, text: str):
+        diagnostic_event('status', text=text)
         self.statusBar().showMessage(text)
 
     def readout(self, text: str):
         self.readout_label.setText(text)
 
     def error(self, text: str):
+        diagnostic_event('ui_error', text=text)
         self.statusBar().showMessage(f"⚠ {text}", 8000)
         QApplication.beep()
 
     def show_guide(self):
         p = os.path.join(os.path.dirname(__file__), "..", "..", "USER_GUIDE.md")
         QMessageBox.information(self, "User guide", f"See {os.path.abspath(p)}")
+
+    def show_logs(self):
+        from ..diagnostics import log_root
+        folder = log_root()
+        folder.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
     def _init_spacemouse(self):
         """3Dconnexion support through `pyspacemouse` when installed; buttons
@@ -1678,6 +1726,8 @@ class MainWindow(QMainWindow):
                 self.save()
         # Discard picks queued by the last frame before child widgets are
         # destroyed; their callbacks can otherwise access deleted panels.
+        self.components_panel.cancel_jobs()
+        self.components_panel.timer.stop()
         self.viewport.cancel_picks()
         self.properties.cancel_measurement()
         self.doc.stop_autosave()
@@ -1693,15 +1743,22 @@ class MainWindow(QMainWindow):
             self.sim_link.stop()
         if self in WINDOWS:
             WINDOWS.remove(self)
+        diagnostic_event('window_closed', path=self.doc.path, revision=self.doc.revision)
         e.accept()
 
 
 def main(argv=None):
     argv = argv if argv is not None else sys.argv
+    path = next((a for a in argv[1:] if a.endswith('.rcad')), None)
+    start_diagnostics('launcher' if path else 'editor', model_path=path)
     app = QApplication.instance() or QApplication(argv)
     app.setApplicationName("robocad")
     path = next((a for a in argv[1:] if a.endswith(".rcad")), None)
-    w = MainWindow(path=path)
+    if path:
+        imports = [a for a in argv[1:] if os.path.exists(a) and not a.endswith('.rcad')]
+        MainWindow.open_path(path, imports=imports)
+        return app.exec()
+    w = MainWindow()
     w.show()
     for a in argv[1:]:
         if os.path.exists(a) and not a.endswith(".rcad"):

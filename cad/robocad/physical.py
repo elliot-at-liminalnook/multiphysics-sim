@@ -219,7 +219,7 @@ def _decimate(verts: np.ndarray, tris: np.ndarray, target: int) -> tuple[np.ndar
     return new_verts, t[keep]
 
 
-def solid_collision_meshes(kernel, body, com_m):
+def _solid_collision_data(kernel, body, com_m, allow_kernel_membership=False):
     """Separate watertight CAD solids for union membership, in link metres.
 
     A compound's welded mesh can be nonmanifold even when its individual solids
@@ -227,17 +227,44 @@ def solid_collision_meshes(kernel, body, com_m):
     but cannot define an interior volume. Do not silently repair open solids.
     """
     import trimesh
-    result = []
+    result, exact = [], []
     for index, solid in enumerate(kernel.solid_components(body)):
         v, t = _weld_np(kernel.tessellate(solid, .15))
         if not trimesh.Trimesh(v, t, process=False).is_watertight:
-            raise KernelError(f'Collision solid {index} has a non-watertight tessellation; repair or explicitly derive its collision volume')
+            if not allow_kernel_membership:
+                raise KernelError(f'Collision solid {index} has a non-watertight tessellation; repair or explicitly derive its collision volume')
+            report = kernel.validate(solid)
+            props = kernel.mass_properties(solid)
+            if not report.valid or not report.watertight or not math.isfinite(props.volume) or props.volume <= 0:
+                raise KernelError(f'Collision solid {index} has neither a watertight mesh nor a valid closed CAD volume')
+            exact.append({'solid_index': index, 'volume_m3': props.volume * MM**3,
+                          'bbox_world_m': [(np.asarray(p) * MM).tolist() for p in (props.bbox_min, props.bbox_max)],
+                          'reason': 'non_watertight_tessellation_of_valid_closed_solid'})
+            continue
         result.append((v * MM - com_m, t))
-    return result
+    return result, exact
+
+
+def solid_collision_meshes(kernel, body, com_m):
+    """Strict mesh-only interface; callers must explicitly select CAD membership."""
+    return _solid_collision_data(kernel, body, com_m)[0]
+
+
+def _kernel_membership(kernel, solids, points_world_m):
+    """Classify valid B-reps at 1 nm tolerance; bound queries without deleting solids."""
+    inside = np.zeros(len(points_world_m), dtype=bool)
+    tolerance_mm = 1e-6
+    for solid, metadata in solids:
+        bounds = np.asarray(metadata['bbox_world_m'])
+        candidates = np.flatnonzero(~inside & np.all(points_world_m >= bounds[0] - tolerance_mm * MM, axis=1)
+                                   & np.all(points_world_m <= bounds[1] + tolerance_mm * MM, axis=1))
+        for index in candidates:
+            inside[index] = kernel.contains(solid, tuple(points_world_m[index] / MM), tolerance_mm)
+    return inside
 
 
 def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: float, pad: float = 2.0,
-                         *, solid_meshes=None, bounds_m=None, maximum_nodes=None) -> dict:
+                         *, solid_meshes=None, bounds_m=None, maximum_nodes=None, additional_membership=None) -> dict:
     """Distance to member surfaces, signed by membership in their solid union.
 
     Triangle AABB queries retain every possible nearest face. Triangle centroids
@@ -247,6 +274,9 @@ def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: floa
     the caller's member meshes define interiors (legacy mesh-only derivation).
     Explicit bounds_m supplies a local query box in the mesh frame, without
     automatic padding. It requires a node budget checked before allocation.
+    additional_membership supplies separately derived solid membership where
+    a valid CAD volume cannot be represented by a closed triangle mesh. Surface
+    distance magnitudes and grid resolution remain tessellation approximations.
     """
     import trimesh
 
@@ -290,6 +320,11 @@ def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: floa
                 check_direction=[0.4395064455, 0.617598629942, 0.652231566745])
         except Exception as exc:
             raise KernelError(f'Collision inside/outside classification failed: {exc}') from exc
+    if additional_membership is not None:
+        additional = np.asarray(additional_membership(pts))
+        if additional.shape != inside.shape or additional.dtype != np.bool_:
+            raise KernelError('Additional collision membership must return one boolean per grid point')
+        inside |= additional
     values = np.where(inside, -dist, dist)
     return {"origin": lo.tolist(), "cell": float(cell), "dims": [int(d) for d in dims], "values": [round(float(v), 6) for v in values]}
 
@@ -301,6 +336,7 @@ def collision_block(doc: Document, members: list[Node], com_m: np.ndarray, cache
 
     meshes = []
     solid_meshes = []
+    exact_solids, exact_derivations = [], []
     for n in members:
         def tessellate():
             m = doc.mesh_of(n.id, 0.15)
@@ -316,10 +352,19 @@ def collision_block(doc: Document, members: list[Node], com_m: np.ndarray, cache
             body = doc.resolved_body(n.id)
             if body is None:
                 raise KernelError(f'Explicit solid collision volume required for {n.name}')
-            return [[v.tolist(), t.tolist()] for v, t in solid_collision_meshes(doc.kernel, body, np.zeros(3))]
-        solids = cache.get('body_solid_meshes', {'geometry': geometry_keys[n.id], 'algorithm': 'solid_union_ray_v1',
+            try:
+                meshes, exact = _solid_collision_data(doc.kernel, body, np.zeros(3), allow_kernel_membership=True)
+                return {'meshes': [[v.tolist(), t.tolist()] for v, t in meshes], 'kernel_membership': exact}
+            except KernelError as error:
+                raise KernelError(f'{n.name} ({n.id}): {error}') from error
+        solids = cache.get('body_solid_meshes', {'geometry': geometry_keys[n.id], 'algorithm': 'solid_union_ray_or_cad_v2',
                            'tolerance_mm': .15}, tessellate_solids) if cache else tessellate_solids()
-        solid_meshes.extend((np.asarray(v) - com_m, np.asarray(t, dtype=int)) for v, t in solids)
+        solid_meshes.extend((np.asarray(v) - com_m, np.asarray(t, dtype=int)) for v, t in solids['meshes'])
+        if solids['kernel_membership']:
+            components = doc.kernel.solid_components(doc.resolved_body(n.id))
+            for metadata in solids['kernel_membership']:
+                exact_solids.append((components[metadata['solid_index']], metadata))
+                exact_derivations.append(dict(metadata, body_id=n.id, body_name=n.name))
     if not meshes:
         return {"vertices": [], "triangles": [], "hull": [], "sdf": None}, []
     verts = np.vstack([v for v, _ in meshes])
@@ -332,13 +377,16 @@ def collision_block(doc: Document, members: list[Node], com_m: np.ndarray, cache
     extent = verts.max(axis=0) - verts.min(axis=0)
     cell = max(1.0e-3, float(extent.max()) / (_MAX_SDF_DIM - 5))
     cell = min(cell, 2.0e-3) if float(extent.max()) / 2.0e-3 <= _MAX_SDF_DIM - 5 else cell
-    sdf = signed_distance_grid(meshes, cell, solid_meshes=solid_meshes)
+    membership = (lambda points: _kernel_membership(doc.kernel, exact_solids, points + com_m)) if exact_solids else None
+    sdf = signed_distance_grid(meshes, cell, solid_meshes=solid_meshes, additional_membership=membership)
     block = {
         "vertices": [[round(float(c), 6) for c in p] for p in dv],
         "triangles": [[int(i) for i in t] for t in dt],
         "hull": [[round(float(c), 6) for c in p] for p in hull],
         "sdf": sdf,
-        "sign_derivation": {"algorithm": "solid_union_ray_v1", "solid_count": len(solid_meshes),
+        "sign_derivation": {"algorithm": "solid_union_ray_or_cad_v2", "solid_count": len(solid_meshes) + len(exact_solids),
+                            "kernel_membership": exact_derivations, "kernel_tolerance_m": 1e-9,
+                            "distance_approximation": "tessellated_surface_distance; features below grid/mesh resolution may be unresolved",
                             "non_solid_surfaces": "unsigned_distance_only"},
     }
     return block, meshes
@@ -800,6 +848,10 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
     `planar` is a Plane hint the simulator may project onto; `flex=False`
     skips the modal reduction (fast exports for the live link)."""
     t_start = time.time()
+    profiles = doc.robot_settings.get('actuator_profiles')
+    if profiles is not None:
+        from .actuator_profiles import validate_profiles
+        profiles = validate_profiles(doc, profiles)
     import trimesh
     import importlib.metadata
     ray_backend = {'name': 'embreex' if trimesh.ray.has_embree else 'triangle',
@@ -826,7 +878,7 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
         collision_inputs = {'members': [geometry_keys.get(m.id) for m in members_of[lid]],
                             'com': l['com'], 'ray_backend': ray_backend,
                             'surface_distance_algorithm': 'triangle_aabb_exact_v1',
-                            'inside_algorithm': 'solid_union_ray_v1'}
+                            'inside_algorithm': 'solid_union_ray_or_cad_v2'}
         def build_collision():
             block, meshes = collision_block(doc, members_of[lid], np.array(l['com']), cache, geometry_keys)
             return {'block': block, 'meshes': [[v.tolist(), t.tolist()] for v, t in meshes]}
@@ -901,6 +953,8 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
         "control": control, "uncertainty": st["uncertainty"], "identification": st["identification"],
         "planar": {"normal": [float(c) for c in v_unit(planar.normal)], "origin": _to_m(planar.origin)} if planar is not None else None,
     }
+    if profiles is not None:
+        model['actuator_profiles'] = profiles
     if path:
         with open(path, "w") as f:
             json.dump(model, f)

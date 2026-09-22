@@ -21,6 +21,7 @@ from .document import Material, Document, Measurement, Node, Transform
 from .annotations import AnnotationOps, ChangeThreads, stamp
 from .references import ReferenceOps
 from .saved_views import SavedViewOps
+from .components import ComponentOps
 from .kernel import Body, BooleanOp, ChamferSpec, EdgeRef, FaceRef, KernelError, Plane, Sketch, SurfaceKind, SweepOptions, Vec3
 from .kernel.base import v_add, v_cross, v_dist, v_dot, v_scale, v_sub, v_unit
 
@@ -45,6 +46,8 @@ class EditBodies(Command):
     previous: dict[str, Body] = field(default_factory=dict)
 
     def do(self, doc: Document):
+        if any(doc.nodes[nid].component_member for nid in self.changes):
+            raise KernelError('Edit component parameters or detach the occurrence before changing its geometry')
         for nid, body in self.changes.items():
             n = doc.nodes[nid]
             if nid not in self.previous:
@@ -113,6 +116,11 @@ class SetAttributes(Command):
 
     def do(self, doc: Document):
         for nid, attrs in self.changes.items():
+            if doc.nodes[nid].component_member and set(attrs) - {'visible', 'color', 'name'}:
+                raise KernelError('Edit the component definition or detach this occurrence first')
+            if doc.nodes[nid].component_instance and 'transform' in attrs:
+                raise KernelError('Use component placement controls to move its geometry and joints together')
+        for nid, attrs in self.changes.items():
             n = doc.nodes[nid]
             if nid not in self.previous:
                 self.previous[nid] = {k: getattr(n, k) for k in attrs}
@@ -140,6 +148,8 @@ class MoveNode(Command):
 
     def do(self, doc: Document):
         n = doc.nodes[self.node_id]
+        if n.component_member or (self.new_parent in doc.nodes and (doc.nodes[self.new_parent].component_member or doc.nodes[self.new_parent].component_instance)):
+            raise KernelError('Edit the component definition or detach it before reorganizing children')
         self.old_parent, self.old_index = n.parent, doc.index_of(self.node_id)
         doc.move(self.node_id, self.new_parent, self.index)
         return self.node_id
@@ -174,6 +184,14 @@ class Composite(Command):
 
     def do(self, doc: Document):
         out = None
+        # Validate linked-member writes across the entire batch before mutation.
+        for command in self.commands:
+            if isinstance(command, EditBodies) and any(doc.nodes[n].component_member for n in command.changes):
+                raise KernelError('Detach or edit the component definition before changing linked geometry')
+            if isinstance(command, SetAttributes):
+                for nid, fields in command.changes.items():
+                    if nid in doc.nodes and doc.nodes[nid].component_member and set(fields) - {'visible','name','color'}:
+                        raise KernelError('Detach or edit the component definition before changing linked members')
         for c in self.commands:
             out = c.do(doc)
         return out
@@ -232,7 +250,7 @@ class CommandStack:
 # ----------------------------------------------------------------- ops
 
 
-class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
+class Ops(AnnotationOps, ReferenceOps, SavedViewOps, ComponentOps):
     """Every modeling action. Methods return node ids (or values) and push
     exactly one undoable command each."""
 
@@ -262,6 +280,8 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
 
     def _edit(self, label: str, node_id: str, fn: Callable[[Body], Body]) -> str:
         node = self.doc.nodes[node_id]
+        if node.component_member:
+            raise KernelError('Edit component parameters or detach the occurrence before changing its geometry')
         if node.locked:
             raise KernelError(f"{node.name} is locked")
         if node.kind == "instance":
@@ -284,7 +304,25 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
 
     # ---- nodes / outliner ---------------------------------------------
     def delete(self, ids: Sequence[str]):
-        self.stack.push(RemoveNodes("Delete", list(ids)))
+        selected = set()
+        def include(nid):
+            selected.add(nid)
+            for child in self.doc.nodes[nid].children: include(child)
+        for nid in ids: include(nid)
+        for nid in ids:
+            node = self.doc.nodes[nid]
+            if node.component_member and node.component_member['instance_id'] not in selected:
+                raise KernelError('Delete the whole component occurrence or detach it first')
+        for node in self.doc.nodes.values():
+            if node.component_instance and node.id not in selected and selected & set(node.component_instance.get('bindings', {}).values()):
+                raise KernelError('A component uses this external connection; detach or rebind it before deleting')
+        if any(self.doc.nodes[nid].component_instance for nid in selected):
+            from .components import ComponentChange, clone_node
+            nodes = {nid: clone_node(n) for nid,n in self.doc.nodes.items() if nid not in selected}
+            for node in nodes.values(): node.children = [i for i in node.children if i not in selected]
+            roots = [nid for nid in self.doc.roots if nid not in selected]
+            self.stack.push(ComponentChange(self.doc, 'Delete components', self.doc.component_definitions, nodes, roots))
+        else: self.stack.push(RemoveNodes("Delete", list(ids)))
 
     def rename(self, node_id: str, name: str):
         self.stack.push(SetAttributes("Rename", {node_id: {"name": name}}))
@@ -309,6 +347,8 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
 
     def group(self, ids: Sequence[str], name: str = "Group") -> str:
         ids = self._selection_roots(ids)
+        if any(self.doc.nodes[nid].component_member for nid in ids):
+            raise KernelError('Group whole component occurrences or detach them first')
         parent = self.doc.nodes[ids[0]].parent if ids else None
         g = Node(self.doc.new_id(), "group", self.doc.unique_name(name), parent=parent)
         cmds: list[Command] = [AddNodes("Group", [g])]
@@ -331,6 +371,8 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
     def move_nodes(self, ids: Sequence[str], new_parent: Optional[str], index: Optional[int] = None):
         """Reorganize a selection in one undo step, preserving nested groups."""
         ids = self._selection_roots(ids)
+        if any(self.doc.nodes[nid].component_member for nid in ids):
+            raise KernelError('Move whole component occurrences or detach them first')
         if new_parent is not None:
             if self.doc.nodes[new_parent].kind != 'group':
                 raise KernelError('Move target must be a group')
@@ -600,6 +642,12 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
 
     def transform(self, ids: Sequence[str], translation: Vec3 = (0.0, 0.0, 0.0), axis: Optional[Vec3] = None, angle_deg: float = 0.0, center: Optional[Vec3] = None, scale: float = 1.0):
         """Move/rotate/scale bodies (baked) and instances/meshes/images (their transform)."""
+        if any(self.doc.nodes[nid].component_member for nid in ids):
+            raise KernelError('Move the whole component occurrence or edit its parameters')
+        if any(self.doc.nodes[nid].component_instance for nid in ids):
+            if not all(self.doc.nodes[nid].component_instance for nid in ids):
+                raise KernelError('Transform components and standalone parts in separate operations')
+            return self.transform_components(ids, translation, axis or (0., 0., 1.), angle_deg, center, scale)
         edits: dict[str, Body] = {}
         attrs: dict[str, dict[str, Any]] = {}
         pins = {}
@@ -639,6 +687,7 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
             self.stack.push(Composite("Transform", cmds))
 
     def mirror(self, ids: Sequence[str], plane: Plane, live: bool = False, keep_original: bool = True) -> list[str]:
+        if any(self.doc.nodes[i].component_instance or self.doc.nodes[i].component_member for i in ids): raise KernelError('Mirror requires a detached component; rigid component placement preserves physical frames')
         out = []
         nodes = []
         for i in ids:
@@ -657,6 +706,7 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
 
     def instance(self, source: str, transform: Transform = Transform(), name: Optional[str] = None) -> str:
         n = self.doc.nodes[source]
+        if n.component_instance or n.component_member: raise KernelError('Use Place in the component library to create another linked assembly')
         inst = Node(self.doc.new_id(), "instance", self.doc.unique_name(name or f"{n.name} instance"), source=source, transform=transform, material=n.material)
         self.stack.push(AddNodes("Instance", [inst]))
         return inst.id
@@ -1053,6 +1103,13 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
 
         self.stack.push(SetSetting())
         return doc.robot_settings
+
+    def set_actuator_profiles(self, profiles):
+        """Validate through Rust and apply one undoable CAD profile edit."""
+        from copy import deepcopy
+        from .actuator_profiles import ChangeProfiles
+        self.stack.push(ChangeProfiles(self.doc, profiles))
+        return deepcopy(self.doc.robot_settings.get('actuator_profiles'))
 
     def set_battery(self, cells: int = 2, chemistry: str = "lipo", capacity_ah: float = 1.0, internal_resistance: Optional[float] = None, initial_soc: float = 1.0) -> dict:
         nominal = {"lipo": 3.7, "liion": 3.6, "nimh": 1.2, "alkaline": 1.5, "lifepo4": 3.2}.get(chemistry, 3.7)

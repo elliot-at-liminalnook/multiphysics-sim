@@ -259,7 +259,7 @@ class Viewport(QOpenGLWidget):
 
     MODES = ("shaded", "shaded_edges", "wireframe", "xray", "matcap", "render")
 
-    def __init__(self, doc: Document, parent=None):
+    def __init__(self, doc: Document, parent=None, prepared=None):
         fmt = QSurfaceFormat()
         fmt.setDepthBufferSize(24)
         fmt.setSamples(4)
@@ -270,8 +270,11 @@ class Viewport(QOpenGLWidget):
         self.setFormat(fmt)
         self.doc = doc
         self.camera = Camera()
-        self.items: dict[str, RenderItem] = {}
-        self._item_meshes = {}
+        self.items: dict[str, RenderItem] = dict(prepared or {})
+        self._item_meshes = {nid: (doc.mesh_cache[(nid, doc.nodes[nid].tessellation_tolerance)],
+                                  (doc.nodes[nid].kind, False, 45.0), item)
+                             for nid, item in self.items.items()
+                             if (nid, doc.nodes[nid].tessellation_tolerance) in doc.mesh_cache}
         self.selection = Selection()
         self.inspection_ids = None  # temporary part isolation; never edits document visibility
         self.selection_mode = "body"  # body | face | edge | vertex | point
@@ -295,7 +298,7 @@ class Viewport(QOpenGLWidget):
         self.plane_snapping = False
         self.snapping = True
         self.snap_pixels = 12
-        self.dirty_nodes: set[str] = set(doc.nodes)
+        self.dirty_nodes: set[str] = set(doc.nodes) if prepared is None else set()
         self._pick_request: Optional[tuple[int, int, Callable]] = None
         self._hover_request = None
         self._pick_generation = 0
@@ -401,15 +404,7 @@ class Viewport(QOpenGLWidget):
         settings = (node.kind, self.show_overhangs, self.overhang_threshold)
         if cached is not None and cached[0] is mesh and cached[1] == settings:
             return replace(cached[2], color=color)
-        verts = np.asarray(mesh.vertices, dtype=np.float32)
-        norms = np.asarray(mesh.normals, dtype=np.float32) if len(mesh.normals) == len(mesh.vertices) else _face_normals(verts, mesh.triangles)
-        idx = np.asarray(mesh.triangles, dtype=np.uint32)
-        tf = np.asarray(mesh.triangle_face, dtype=np.int32) if mesh.triangle_face else np.zeros(len(idx), dtype=np.int32)
-        edges, edge_ref, samples, vpts = _display_edges(self.doc, node, mesh, verts, idx, tf)
-        mat = self.doc.materials.get(node.material or "")
-        color = node.color or (mat.color if mat else (0.72, 0.72, 0.75))
-        lo, hi = mesh.bounds()
-        item = RenderItem(node.id, verts, norms, idx, tf, edges, edge_ref, vpts, color, node.kind, (lo, hi), mesh.face_count, samples)
+        item = prepare_render_item(self.doc, node, mesh)
         if self.show_overhangs:
             item.overhang = _overhang_mask(mesh, self.overhang_threshold)
         self._item_meshes[node.id] = (mesh, settings, item)
@@ -1609,6 +1604,23 @@ def _face_boundary_edges(verts, idx, tf):
     return np.ascontiguousarray(edges[order[starts[boundary]]], dtype=np.uint32)
 
 
+def prepare_render_item(doc: Document, node: Node, mesh: Mesh) -> RenderItem:
+    """CPU-only display preparation shared by interactive edits and file loading.
+
+    No widget or GL context is accessed, so a loader can own the document and
+    prepare its data in a worker before handing it to the UI.
+    """
+    verts = np.asarray(mesh.vertices, dtype=np.float32)
+    norms = np.asarray(mesh.normals, dtype=np.float32) if len(mesh.normals) == len(mesh.vertices) else _face_normals(verts, mesh.triangles)
+    idx = np.asarray(mesh.triangles, dtype=np.uint32)
+    tf = np.asarray(mesh.triangle_face, dtype=np.int32) if mesh.triangle_face else np.zeros(len(idx), dtype=np.int32)
+    edges, edge_ref, samples, vpts = _display_edges(doc, node, mesh, verts, idx, tf)
+    mat = doc.materials.get(node.material or '')
+    color = node.color or (mat.color if mat else (0.72, 0.72, 0.75))
+    return RenderItem(node.id, verts, norms, idx, tf, edges, edge_ref, vpts,
+                      color, node.kind, mesh.bounds(), mesh.face_count, samples)
+
+
 def _display_edges(doc: Document, node: Node, mesh: Mesh, verts: np.ndarray, idx: np.ndarray, tf: np.ndarray):
     """Edges between different B-rep faces (from the tessellation) plus the
     kernel's edges sampled for picking/snapping, and its vertices."""
@@ -1620,8 +1632,7 @@ def _display_edges(doc: Document, node: Node, mesh: Mesh, verts: np.ndarray, idx
     if body is not None:
         try:
             k = doc.kernel
-            for e in k.edges(body):
-                pts = k.sample_edge(e, body, 24 if e.kind.value != "line" else 2)
+            for e, pts in k.sample_edges(body):
                 samples.append(np.asarray(pts, dtype=np.float32))
                 if e.center is not None:
                     centers.append(e.center)
@@ -1642,8 +1653,8 @@ def _curve_item(doc: Document, node: Node) -> RenderItem:
     samples = []
     vpts = []
     if body is not None:
-        for e in k.edges(body):
-            samples.append(np.asarray(k.sample_edge(e, body, 32), dtype=np.float32))
+        for _, points in k.sample_edges(body, count=32, line_count=32):
+            samples.append(np.asarray(points, dtype=np.float32))
         vpts = [v.point for v in k.vertices(body)]
     pts = np.concatenate(samples) if samples else np.zeros((0, 3), dtype=np.float32)
     lo = tuple(map(float, pts.min(axis=0))) if len(pts) else (0, 0, 0)

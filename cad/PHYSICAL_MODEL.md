@@ -133,6 +133,7 @@ The [hip investigation](../examples/full-robot/hip-timestep-validation.md)
 explains why the old inference needs re-evaluation before controller training.
 
 ### Motor
+
 ```
 {"name", "id", "spec": library id, "joint": name | null, "mounted_on": link name, "mount_point": [3] world, "shaft_axis": [3],
  "gear_ratio": extra ratio declared on the joint,
@@ -143,6 +144,79 @@ explains why the old inference needs re-evaluation before controller training.
  "firmware": {"kind": "servo"|"position"|"velocity"|"torque"|"stepper"|"none", "loop_rate_hz", "latency_s", "deadband_rad", "sensor_resolution_rad", "kp", "ki", "kd", "output": "voltage"|"current"},
  "driver": {"kind": "h_bridge"|"servo_internal"|"stepper"|"esc", "pwm_hz", "on_resistance", "current_limit"}}
 ```
+
+#### Versioned actuator profiles
+
+The optional top-level `actuator_profiles` declaration contains `version: 1`,
+`families` keyed by profile identity, and `bindings` keyed by stable CAD motor ID.
+Each binding names an exact family version, optional physical-unit identity and
+additive `motor.NAME`/`driver.NAME` deviations. A physical unit can be assigned
+only once; deviations require that identity. Legacy identification overrides
+cannot also modify a profiled motor's joint.
+
+An optional binding `feedback` block explicitly declares `encoder_zero` (counts,
+unit `1`), `encoder_direction` (`+1` or `-1`, unit `1`), `sample_phase` (`s`) and
+`initial_target` (CAD joint radians). Each uses the same value/unit/provenance/
+uncertainty/evidence structure. The encoder reads the motor's internal gearbox
+output; the runtime divides its angular quantum by the extra CAD gearbox ratio
+to map the joint coordinate correctly. Missing feedback permits PWM replay but
+cannot select the sampled closed-loop controller.
+
+Families explicitly declare every physical `robot.motor_unit` and `robot.h_bridge`
+registry parameter. Each value carries its exact registry unit, provenance
+(`measured`, `derived`, `estimated`), uncertainty (`null` means unknown), and an
+evidence key. Evidence records retain paths, SHA-256 hashes and scope. Families
+also declare output-shaft coordinates, limitations, shared fixed-PD controller
+gains, period, latency, encoder quantum and controller implementation identity.
+Numerical integration flags remain execution settings, not physical parameters.
+
+Use `Ops.set_actuator_profiles(profiles)` or `POST /actuator-profiles` with
+`{"profiles": ...}`; both use the shared Rust resolver and one undoable command.
+`GET /actuator-profiles` reads the declaration. Explicit `{"profiles": null}`
+removes it; omitting the field is an error. Save/reload preserves the declaration,
+and physical export validates it again before geometry work. Build the native
+validator with `cargo build -p sim-runtime --bin sim-actuator-profiles`; its
+`catalog` command exposes the shared registry's parameter/port definitions.
+`ROBOCAD_ACTUATOR_PROFILE_TOOL` selects a specific executable.
+
+The Rust runtime resolves profiles once from their immutable family values;
+resolved caches are not serialized as new source parameters. Validation proves
+declaration consistency, **not calibration accuracy**. The explicit PWM path
+consumes these parameters. Set `motors.controller: "cad_fixed_pd"` with servo
+target boundaries and explicit event scheduling to use the registered FPGA
+integer controller in the shared incremental session and environment. Every
+motor needs a profile and feedback mapping; the controller implementation hash
+must match the shared FPGA source. Sample and command-delivery deadlines retain
+the exact declared latency. Effective-servo and catalog-firmware bypasses are
+rejected.
+
+Optional `actuator_profiles.power` owns the shared supply declaration: version,
+description, limitations, evidence, battery parameters, branches and operating
+limits. All five `robot.battery` parameters are explicit value/unit/provenance/
+uncertainty/evidence records. Each branch has a unique `id`, optional parent,
+resistance record in ohms and stable CAD motor IDs. Every motor must belong to
+exactly one branch; missing parents, cycles and duplicate assignments are errors.
+Zero resistance explicitly means an ideal connection. A legacy top-level battery
+cannot coexist with this declaration.
+
+Operating limits explicitly bound pack voltage and SOC. Select the CAD supply in
+the incremental recipe with `motors.power: {"residual_scales": [1,1,1,1]}`;
+the recipe supplies numerical scaling only. Authored power cannot be silently
+bypassed. Both the detailed reference circuit and incremental motor environment
+use the registered battery, resistor and bridge laws. The latter integrates SOC,
+branch voltages and signed terminal energy together with motor and mechanical
+states. Legacy imposed servo voltage slots are inactive under this explicit selection.
+
+Frames expose `power` readings and `power_states`; environment observations include
+battery voltage/current/power/SOC/energy and named branch voltage/current. Positive
+pack current and power mean discharge. Endpoint and command-jump envelope checks
+reject an interval atomically; these checks are not a physical BMS or continuous
+threshold-crossing detector. Temperature and unmeasured electrical properties
+remain explicit assumptions. See `cad/tests/test_actuator_profiles.py` for an
+authoring example with deliberately synthetic electrical values.
+
+See the [provisional HX-30HM family](../examples/full-robot/measured-actuator-integration/cad-profiles/hx30hm-provisional-family.json)
+for a complete declaration. It is intentionally not an accepted calibration.
 
 ### Battery, Sensor, Cable, Control, Uncertainty
 ```
@@ -167,12 +241,31 @@ Uncertainty: {"dimension_m": {"sigma"}, "mass": {"sigma_fraction"}, "friction": 
                    "screw_shear_margin" | null, "range_used_rad": [lo, hi], "limit_hits", "friction_loss_j", "backlash_crossings"}},
  "motors": {name: {"peak_current_a", "rms_current_a", "peak_torque_nm", "stall_margin", "peak_winding_c", "peak_mount_c",
                    "mount_tg_margin_c", "energy_j", "saturated_fraction"}},
- "battery": {"final_soc", "min_voltage", "energy_j"} | null,
+ "battery": {"accounting_version": 2, "final_soc", "min_voltage", "final_voltage_v", "current_a", "power_w",
+             "energy_j", "drawn_energy_j", "returned_energy_j", "summary", "samples",
+             "cutoff_voltage_v", "below_declared_cutoff", "energy_location": "battery_terminals"} | null,
  "base": {"fell": bool, "final_pose": {"position": [3], "quaternion": [4]}, "path": [[t, x, y, z]]},
  "contacts": {"peak_force_n", "pairs": [[a, b, peak_force]]},
  "monte_carlo": null | {"samples", "seed", "metrics": {name: {"mean", "std", "p5", "p50", "p95"}}, "success_rate"},
  "trace": {"t": [...], "joints": {name: [angle...]}, "motors": {name: {"current": [...], "winding_c": [...]}}}}
 ```
+Battery accounting version 2 measures the shared pack terminals. Positive current
+and power mean discharge. `energy_j` is **net source energy drawn** (drawn minus
+returned), not the sum of motor winding energies. `min_voltage` is the minimum
+of retained source samples; `final_voltage_v` is the final value. `summary`
+includes peak draw/return current and power, charge in coulombs, voltage range,
+maximum sample interval and whether state of charge stayed in [0,1]. `samples`
+retain time, V, A, W and charge state. These are simulated circuit values, not
+sensor feedback. Sampled peaks/energy have sampling limits, and pack parameters
+and discharge behavior still need measurement. Cutoff is reported against the
+CAD battery's declared value; it does not invent an unmodeled BMS disconnect.
+Depletion/overcharge stops the physical host with the out-of-range sample retained.
+A rewound runtime without matching reporting history produces an unscored failure.
+Older results without `accounting_version: 2` used final voltage for `min_voltage`
+and summed absolute winding energy for battery `energy_j`; they must not be
+interpreted as validated battery-terminal measurements. Per-motor `energy_j`
+retains its legacy sampled absolute winding-energy meaning.
+
 The CAD tool reads it (`ops.load_results`) to paint stress, list margins in
 the outliner/properties and the Robot panel, and serve it at `GET /results`.
 

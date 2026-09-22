@@ -1,0 +1,30 @@
+{
+  "dialog_seconds": 0.23441459399999998,
+  "read_seconds": 6.105259091000001,
+  "prepare_seconds": 9.027759803,
+  "cache_hits": 114,
+  "parts": 114,
+  "window_seconds": 2.7208037039999997,
+  "api_url": "http://127.0.0.1:8420",
+  "pid": 13102,
+  "source_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "cold": false,
+  "total_seconds": 14.223631818,
+  "ui_ticks": 853,
+  "max_ui_gap_ms": 183.4399499999999,
+  "long_gaps": [
+    {
+      "elapsed_seconds": 0.417859285,
+      "gap_ms": 183.4399499999999,
+      "stage": "Checking model"
+    },
+    {
+      "elapsed_seconds": 13.295038004,
+      "gap_ms": 168.6760160000009,
+      "stage": "Opening prepared model"
+    }
+  ],
+  "p99_ui_gap_ms": 17.555574999999823,
+  "source_unchanged": true,
+  "passed": false
+}

@@ -439,6 +439,47 @@ def test_annotation_recalls_trackball_view(win):
     assert np.allclose(camera.view(), original)
 
 
+def test_annotation_link_clicks_keep_live_rows_and_message_sender(win, qapp):
+    """A part click refreshes selection from inside the list's mouse handler.
+
+    Do not reset that model or destroy the rich-text label emitting a link.
+    Cocoa accessibility can still hold their native cells until the event ends.
+    """
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+    import shiboken6
+    body = win.ops.box((0, 0, 0), (10, 10, 10))
+    tid = win.ops.create_thread(body, (10, 5, 5), f'Inspect [link](part:{body})')
+    win.show()
+    panel = win.comments
+    panel.select(tid)
+    QTest.qWait(30)
+    thread = panel.threads.currentItem()
+    part = panel.parts.item(0)
+    message = panel.messages.item(0)
+    label = panel.messages.itemWidget(message)
+    resets = []
+    for view in (panel.threads, panel.parts, panel.messages):
+        view.model().modelReset.connect(lambda: resets.append(True))
+    for _ in range(3):
+        pos = panel.parts.visualItemRect(part).center()
+        QTest.mouseClick(panel.parts.viewport(), Qt.LeftButton, pos=pos)
+        QTest.mouseDClick(panel.parts.viewport(), Qt.LeftButton, pos=pos)
+        QTest.qWait(10)
+        assert body in win.viewport.selection.nodes()
+        assert body in win.viewport.inspection_ids
+        label.linkActivated.emit('part:' + body)
+        panel.end_inspection()
+        panel.select(tid)
+        QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
+        assert shiboken6.isValid(label)
+        assert panel.threads.currentItem() is thread
+        assert panel.parts.item(0) is part
+        assert panel.messages.item(0) is message
+        assert panel.messages.itemWidget(message) is label
+    assert resets == []
+
+
 def test_pose_preview_restores_cached_geometry_and_leaves_document_untouched(win):
     import numpy as np
     b = win.ops.box((10,0,0),(10,2,2))
@@ -743,3 +784,29 @@ def test_video_export_fixed_frames_restore_pose_and_cancel_preserves_file(win,tm
     original=path.read_bytes();panel.video.start(str(path),fps=4,width=64,height=64);panel.video.cancel();finish()
     assert panel.video.status=='cancelled' and path.read_bytes()==original
     assert not list(tmp_path.glob('.motion-*.mp4'))
+
+
+def test_components_background_controls_and_recipe(win, qapp):
+    import time
+    from PySide6.QtCore import QTimer
+    from robocad.ui.components import RecipeDialog
+    panel=win.components_panel
+    assert 'components.show' in win.commands
+    ticks=[]; timer=QTimer(); timer.setInterval(10); timer.timeout.connect(lambda:ticks.append(time.perf_counter())); timer.start()
+    started=panel.start('new_parametric_component',kwargs={'name':'UI link'})
+    deadline=time.monotonic()+30
+    while panel.jobs[started['id']].state not in ('applied','failed','cancelled') and time.monotonic()<deadline:
+        qapp.processEvents(); time.sleep(.002)
+    timer.stop()
+    job=panel.jobs[started['id']]
+    assert job.state=='applied', job.status()
+    assert len(ticks)>10
+    assert max(b-a for a,b in zip(ticks,ticks[1:]))<.15
+    definition=win.doc.component_definitions[job.result]
+    dialog=RecipeDialog(definition,win)
+    dialog.validate()
+    assert dialog.result()==1 and dialog.parameters['length']['unit']=='mm'
+    instance=win.ops.place_component(definition.id)
+    win.viewport.selection.items=[(instance,'body',0)]; panel.selection_changed()
+    assert panel.current_instance==instance and panel.overrides.rowCount()==3
+    assert all(not panel.overrides.cellWidget(r,2).isChecked() for r in range(3))

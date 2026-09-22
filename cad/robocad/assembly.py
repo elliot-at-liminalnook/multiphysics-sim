@@ -94,6 +94,20 @@ def configure_robot(ops, expected_revision, updates=None, joints=None, groups=No
         while cur is not None:
             if cur in seen:raise KernelError('Outliner move creates a cycle')
             seen.add(cur);cur=tree[cur]
+    # Preflight before a Composite can add anything to the live document.
+    for nid, fields in changes.items():
+        if doc.nodes[nid].component_member and set(fields) - {'name', 'color', 'visible'}:
+            # Existing motor bookkeeping may already be identical.
+            if any(getattr(doc.nodes[nid], key) != value for key, value in fields.items()):
+                raise KernelError('Edit component parameters or detach before changing linked physics')
+    changes = {nid: fields for nid, fields in changes.items() if not doc.nodes[nid].component_member}
+    for node in new:
+        if node.parent in doc.nodes and (doc.nodes[node.parent].component_member or doc.nodes[node.parent].component_instance):
+            raise KernelError('Cannot add nodes inside a linked component')
+    for nid, parent in moves.items():
+        parent = resolve(parent)
+        if doc.nodes.get(nid) and doc.nodes[nid].component_member or parent in doc.nodes and (doc.nodes[parent].component_member or doc.nodes[parent].component_instance):
+            raise KernelError('Cannot rearrange linked component members')
     commands=[]
     if new:commands.append(AddNodes('Configure assembly',new))
     if changes:commands.append(SetAttributes('Configure assembly',changes))

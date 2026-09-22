@@ -41,7 +41,7 @@ def capture(doc):
         blobs = {}
         body_cache = {}
         for n in doc.nodes.values():
-            if n.body is not None:
+            if n.body is not None and not n.component_member:
                 cached = doc._snapshot_body_cache.get(n.id)
                 data = cached[1] if cached and cached[0] is n.body else doc.kernel.serialize(n.body)
                 body_cache[n.id] = (n.body, data)
@@ -54,9 +54,11 @@ def capture(doc):
                     triangle_face=np.asarray(n.mesh.triangle_face,dtype=np.int32))
                 blobs[f'mesh/{n.id}.npz'] = buf.getvalue()
             if n.image and n.image.get('data'): blobs[f'image/{n.id}'] = n.image['data']
+        for key, definition in doc.component_definitions.items():
+            blobs.update(definition.archive_entries(doc.kernel, 'components/' + key))
         doc._snapshot_body_cache = body_cache
         physical = physical_manifest(manifest)
-        physical['geometry'] = {name:digest(data) for name,data in blobs.items() if name.startswith(('brep/','mesh/'))}
+        physical['geometry'] = {name:digest(data) for name,data in blobs.items() if name.startswith(('brep/','mesh/','components/'))}
         physical_hash = digest(canonical(physical))
         cad_derivation_hash = digest(canonical({k: v for k, v in physical.items() if k != 'component_graph'}))
         blobs['manifest.json'] = canonical(manifest)
@@ -78,4 +80,6 @@ def physical_manifest(manifest):
         nodes.append({k:v for k,v in n.items() if k not in ('results','color','locked','visible','children','parent')})
     materials = [{k:v for k,v in m.items() if k not in ('color','roughness','metallic')} for m in manifest['materials']]
     return {'nodes':sorted(nodes,key=lambda n:n['id']), 'materials':sorted(materials,key=lambda m:m['id']), 'robot_settings':manifest['robot_settings'],
-            'component_graph': manifest.get('component_graph', {'version': 1, 'components': {}, 'connections': {}})}
+            'component_graph': manifest.get('component_graph', {'version': 1, 'components': {}, 'connections': {}}),
+            'component_definitions':manifest.get('component_definitions', {}),
+            'component_occurrences':[{k:n[k] for k in ('id','component_instance') if k in n} for n in manifest['nodes'] if n.get('component_instance')]}

@@ -35,6 +35,7 @@ node ids from `/nodes`. Faces/edges are addressed by `{"node": id,
     POST /threads/{id}/comments     reply: {"body", "author"}
     GET/PATCH/DELETE /comments/{id}  read/edit/delete a message
     POST /save {"path"} | /open {"path"} | /export {"format", "path", "settings"} | /import {"path", "unit"}
+    GET/DELETE /loads/{load_id}    async open status / cancel (desktop)
     GET  /materials | POST /materials {"id","name","density","color"}
     GET  /robot                     joints, motors, DoF, ground, validation issues
     GET  /motors                    the actuator library (POST /ops/add_motor to place one)
@@ -95,7 +96,7 @@ def _json_default(o):
 
 
 def node_summary(doc: Document, n: Node) -> dict:
-    return {"id": n.id, "kind": n.kind, "name": n.name, "parent": n.parent, "children": list(n.children), "visible": n.visible, "locked": n.locked, "disabled": n.disabled, "material": n.material, "color": n.color, "pivot": n.pivot, "source": n.source, "transform": n.transform.to_json(), "effective_visible": doc.is_visible(n.id)}
+    return {"id": n.id, "kind": n.kind, "name": n.name, "parent": n.parent, "children": list(n.children), "visible": n.visible, "locked": n.locked, "disabled": n.disabled, "material": n.material, "color": n.color, "pivot": n.pivot, "source": n.source, "transform": n.transform.to_json(), "effective_visible": doc.is_visible(n.id), "component_instance": n.component_instance, "component_member": n.component_member}
 
 
 def node_detail(doc: Document, n: Node) -> dict:
@@ -119,6 +120,10 @@ def node_detail(doc: Document, n: Node) -> dict:
         d["joint"] = n.joint.to_json()
     if n.robot is not None:
         d["robot"] = n.robot
+    if n.component_instance is not None:
+        d['component_instance'] = n.component_instance
+    if n.component_member is not None:
+        d['component_member'] = n.component_member
     if n.mesh is not None:
         d["mesh"] = {"vertices": len(n.mesh.vertices), "triangles": len(n.mesh.triangles)}
     if n.image is not None:
@@ -508,6 +513,10 @@ class Service:
 
     def patch(self, nid: str, attrs: dict) -> dict:
         n = self.node(nid)
+        if n.component_member and set(attrs) - {'visible', 'color', 'name'}:
+            raise ApiError(409, 'Edit component parameters or detach the occurrence first')
+        if n.component_instance and 'transform' in attrs:
+            raise ApiError(409, 'Use set_component_overrides with placement for a component occurrence')
         simple = {}
         for k, v in attrs.items():
             if k == "name":
@@ -631,6 +640,9 @@ class Service:
         fn = getattr(self.ops, name)
         a, k = self.conv.convert(fn, args or [], kwargs or {})
         try:
+            from .component_jobs import OPERATIONS
+            if self.app is not None and name in OPERATIONS:
+                return {'job': self.app.components_panel.start(name, a, k)}
             result = fn(*a, **k)
         except RevisionConflict as e:
             raise ApiError(409, str(e))
@@ -638,6 +650,12 @@ class Service:
             raise ApiError(422, str(e))
         self._refresh()
         return {"result": result, "history": self.history()}
+
+    def component_job_status(self, job_id, cancel=False):
+        if self.app is None or job_id not in self.app.components_panel.jobs: raise ApiError(404, 'Component job not found')
+        job = self.app.components_panel.jobs[job_id]
+        if cancel: job.cancel()
+        return job.status()
 
     def undo(self):
         label = self.ops.undo()
@@ -858,10 +876,22 @@ class Service:
         if self.app is not None:
             from .ui.app import MainWindow
 
-            w = MainWindow(path=path)
-            w.show()
-            return {"opened": path, "window": True}
+            dialog = MainWindow.open_path(path)
+            return {"opened": path, "window": True, "loading": True, 'load_id': dialog.load_id}
         raise ApiError(409, "headless: start the server on the file instead")
+
+    def load_status(self, load_id, cancel=False):
+        if self.app is None:
+            raise ApiError(409, 'Model loading requires a desktop window')
+        from .ui.model_loading import LOADERS, LOAD_JOBS
+        if load_id not in LOAD_JOBS:
+            raise ApiError(404, 'Unknown model load')
+        if cancel:
+            for dialog in list(LOADERS):
+                if dialog.load_id == load_id:
+                    dialog.cancel()
+                    break
+        return dict(LOAD_JOBS[load_id])
 
     def export(self, fmt: str, path: str, settings: Optional[dict], ids: Optional[list]):
         from .io import exporters
@@ -1063,6 +1093,10 @@ def make_handler(service: Service):
                 if method == "GET":
                     return self._send(200, run(s.view))
                 return self._send(200, run(lambda: s.set_view(body)))
+            if head == 'components' and method == 'GET':
+                return self._send(200, run(s.ops.component_catalogue))
+            if head == 'component-jobs' and len(parts) == 2 and method in ('GET', 'DELETE'):
+                return self._send(200, run(lambda: s.component_job_status(parts[1], method == 'DELETE')))
             if head == 'motion':
                 return self._send(200, run(lambda: s.motion_request(method, parts, body)))
             if head == 'views':
@@ -1078,6 +1112,8 @@ def make_handler(service: Service):
                 return self._send(200, run(lambda: s.save(body.get("path"))))
             if head == "open":
                 return self._send(200, run(lambda: s.open(body["path"])))
+            if head == 'loads' and len(parts) == 2 and method in ('GET', 'DELETE'):
+                return self._send(200, run(lambda: s.load_status(parts[1], method == 'DELETE')))
             if head == "export":
                 return self._send(200, run(lambda: s.export(body["format"], body["path"], body.get("settings"), body.get("ids"))))
             if head == "import":
@@ -1095,6 +1131,11 @@ def make_handler(service: Service):
                 return self._send(200,run(performance))
             if head == "physical":
                 return self._send(200, run(lambda: s.ops.physical(q.get("path"), flex=q.get("flex", "1") not in ("0", "false"))))
+            if head == "actuator-profiles":
+                if method == "GET":
+                    return self._send(200, run(lambda: s.doc.robot_settings.get("actuator_profiles")))
+                if method == "POST":
+                    return self._send(200, run(lambda: s.ops.set_actuator_profiles(body["profiles"])))
             if head == "results":
                 if len(parts) > 1 and parts[1] == "load":
                     return self._send(200, run(lambda: s.ops.load_results(body["path"])))

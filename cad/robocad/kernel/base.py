@@ -434,6 +434,16 @@ class GeometryKernel(ABC):
     def rebuild_face(self, body: Body, face: FaceRef, spans_u: int, spans_v: int, degree: int = 3) -> Body: ...
     @abstractmethod
     def sample_edge(self, edge: EdgeRef, body: Body, count: int) -> list[Vec3]: ...
+
+    def sample_edges(self, body: Body, count: int = 24, line_count: int = 2) -> list[tuple[EdgeRef, list[Vec3]]]:
+        """Sample the current body's edges in topology order for display/picking.
+
+        Backends can traverse once instead of resolving each geometric reference
+        again. Individual sample_edge calls still support references after edits.
+        """
+        return [(edge, self.sample_edge(edge, body, line_count if edge.kind == CurveKind.LINE else count))
+                for edge in self.edges(body)]
+
     @abstractmethod
     def curvature_comb(self, wire: Body, samples: int = 64) -> list[tuple[Vec3, Vec3, float]]: ...
 

@@ -10,6 +10,58 @@ import os
 import numpy as np
 import pytest
 
+
+def test_valid_subresolution_solid_uses_declared_cad_membership_without_geometry_loss(tmp_path):
+    from pathlib import Path
+    from robocad.physical import _solid_collision_data, solid_collision_meshes, _kernel_membership
+    from robocad.derivation_cache import DerivationCache
+    from robocad.kernel import KernelError
+    import hashlib
+
+    fixture = Path(__file__).resolve().parents[2] / 'examples/full-robot/measured-actuator-integration/cad-profiles/collision-failure.brep'
+    captured = fixture.read_bytes()
+    doc = Document()
+    node = doc.add_body(doc.kernel.deserialize(captured, 'solid'), 'subresolution closed CAD solid')
+    before = doc.kernel.mass_properties(node.body)
+    with pytest.raises(KernelError, match='non-watertight'):
+        solid_collision_meshes(doc.kernel, node.body, np.zeros(3))
+    meshes, exact = _solid_collision_data(doc.kernel, node.body, np.zeros(3), allow_kernel_membership=True)
+    assert not meshes and len(exact) == 1
+    assert exact[0]['volume_m3'] == pytest.approx(before.volume * 1e-9)
+    component = doc.kernel.solid_components(node.body)[0]
+    center = np.asarray(before.centroid) * 1e-3
+    points = np.array([center, center + [1e-6, 0, 0], center - [1e-6, 0, 0]])
+    assert _kernel_membership(doc.kernel, [(component, exact[0])], points).tolist() == [True, False, False]
+    com = np.array([.174, -.0105, 0.])
+    cache = DerivationCache(tmp_path, {'test': 'subresolution-solid'})
+    keys = {node.id: hashlib.sha256(captured).hexdigest()}
+    block, _ = collision_block(doc, [node], com, cache, keys)
+    replay, _ = collision_block(doc, [node], com, cache, keys)
+    assert replay == block
+    assert cache.stats['body_solid_meshes']['hits'] == 1
+    derivation = block['sign_derivation']
+    assert derivation['solid_count'] == 1
+    assert derivation['kernel_membership'][0]['body_id'] == node.id
+    assert derivation['kernel_membership'][0]['volume_m3'] == exact[0]['volume_m3']
+    assert derivation['kernel_tolerance_m'] == 1e-9
+    assert doc.kernel.mass_properties(node.body) == before
+
+
+def test_additional_collision_membership_is_union_and_requires_boolean_results():
+    import trimesh
+    from robocad.physical import signed_distance_grid
+    from robocad.kernel import KernelError
+    box = trimesh.creation.box([.01, .01, .01])
+    bounds = [[-.001, -.001, -.001], [.001, .001, .001]]
+    meshes = [(box.vertices, box.faces)]
+    grid = signed_distance_grid(meshes, .001, solid_meshes=[], bounds_m=bounds, maximum_nodes=27,
+                                additional_membership=lambda p: p[:, 0] <= 0)
+    values = np.asarray(grid['values']).reshape(grid['dims'])
+    assert np.all(values[:2] < 0) and np.all(values[2] > 0)
+    with pytest.raises(KernelError, match='one boolean'):
+        signed_distance_grid(meshes, .001, solid_meshes=[], bounds_m=bounds, maximum_nodes=27,
+                             additional_membership=lambda p: np.ones(len(p)))
+
 from robocad.commands import Ops
 from robocad.document import Document
 from robocad.kernel import Plane

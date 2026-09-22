@@ -37,13 +37,15 @@ cad/run.sh examples/components/quadruped-parametric/model/robot.rcad
 
 ![Rust schematic viewer running the motor-thermal model live, with typed ports, nets and a time graph](docs/images/schematic-viewer.png)
 
-![Rust physical assembly viewer showing the same run with live shaft, current and temperature readouts](docs/images/physical-viewer.png)
+![Rust physical viewer running the motor-driver board live: CAD-built component models tinted by temperature, the outline of the top level, and live readouts in the inspector](docs/images/physical-viewer.png)
 
 Two linked Rust hosts present one compiled system. The schematic (egui) shows
 components, typed ports and nets, and plots live measurements. The physical
-view (Bevy) shows the assembly and animates it from the same run. Selecting a
-component in one view selects it in the other. Both are driven by a background
-simulation worker and expose REST control on ports 8422 and 8421.
+view (Bevy) shows the assembly with CAD-built component models and animates it
+from the same run: shaft angles turn parts and temperatures tint them. The
+image above is the physical view running the motor-driver board live on the
+shared runtime. Selecting a component in one view selects it in the other.
+Both expose REST control on ports 8422 and 8421.
 
 ```sh
 examples/systems-viewer/run-live.sh     # live motor + heat example, both windows

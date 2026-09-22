@@ -252,8 +252,14 @@ def export_obj(doc: Document, path: str, ids: Optional[Sequence[str]] = None, se
     for (n, b), m in zip(items, meshes):
         mat = doc.materials.get(n.material or "")
         c = n.color or (mat.color if mat else (0.7, 0.7, 0.72))
-        mname = (mat.name if mat else "default").replace(" ", "_")
-        if settings.mtl:
+        # One material per (material, color): bodies sharing a material may
+        # still carry different display colors.
+        mname = f"{(mat.name if mat else 'default').replace(' ', '_')}_{int(c[0]*255):02x}{int(c[1]*255):02x}{int(c[2]*255):02x}"
+        if settings.mtl and any(line.startswith(f"newmtl {mname}\n") for line in mtl):
+            mtl_needed = False
+        else:
+            mtl_needed = True
+        if settings.mtl and mtl_needed:
             mtl.append(f"newmtl {mname}\nKd {c[0]:.3f} {c[1]:.3f} {c[2]:.3f}\nKs 0.1 0.1 0.1\nNs {int(10 + 200*(1-(mat.roughness if mat else 0.5)))}\nd 1.0\n")
         lines.append(f"o {n.name.replace(' ', '_')}")
         if settings.mtl:

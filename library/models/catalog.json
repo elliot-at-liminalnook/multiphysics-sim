@@ -1,0 +1,73 @@
+{
+  "schema": "sim.models/1",
+  "units": "m",
+  "up": "+Y",
+  "source": "cad/scripts/component_models.py",
+  "models": {
+    "to220": {
+      "file": "to220.obj",
+      "description": "TO-220 power MOSFET (upright)"
+    },
+    "radial_capacitor": {
+      "file": "radial_capacitor.obj",
+      "description": "Radial electrolytic capacitor, 8 \u00d7 11 mm"
+    },
+    "axial_resistor": {
+      "file": "axial_resistor.obj",
+      "description": "Axial through-hole resistor"
+    },
+    "do41_diode": {
+      "file": "do41_diode.obj",
+      "description": "DO-41 axial diode"
+    },
+    "power_inductor": {
+      "file": "power_inductor.obj",
+      "description": "Shielded SMD power inductor, 12 \u00d7 12 \u00d7 8 mm"
+    },
+    "soic8": {
+      "file": "soic8.obj",
+      "description": "SOIC-8 IC (controllers, PWM and gate drivers)"
+    },
+    "sot23": {
+      "file": "sot23.obj",
+      "description": "SOT-23 small-signal IC (sense amplifiers)"
+    },
+    "battery_3s": {
+      "file": "battery_3s.obj",
+      "description": "3S 18650 battery pack"
+    },
+    "servo": {
+      "file": "servo.obj",
+      "description": "Standard-size servo body with horn"
+    },
+    "dc_motor": {
+      "file": "dc_motor.obj",
+      "description": "Can-type brushed DC motor"
+    },
+    "flywheel": {
+      "file": "flywheel.obj",
+      "description": "Aluminium flywheel / inertia load"
+    },
+    "heatsink": {
+      "file": "heatsink.obj",
+      "description": "Finned aluminium heatsink, 30 \u00d7 20 \u00d7 15 mm"
+    }
+  },
+  "defaults": {
+    "electrical.mosfet": "to220",
+    "electrical.capacitor": "radial_capacitor",
+    "electrical.resistor": "axial_resistor",
+    "bridge.thermistor": "axial_resistor",
+    "electrical.diode": "do41_diode",
+    "electrical.inductor": "power_inductor",
+    "control.pwm": "soic8",
+    "control.h_bridge_pwm": "soic8",
+    "control.pi": "soic8",
+    "electrical.voltage_sense": "sot23",
+    "robot.battery": "battery_3s",
+    "robot.motor_unit": "servo",
+    "bridge.brushed_motor": "dc_motor",
+    "bridge.motor": "dc_motor",
+    "rotational.inertia": "flywheel"
+  }
+}

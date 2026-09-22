@@ -13,9 +13,11 @@ sim-core = { path = "../sim-core" }
 sim-runtime = { path = "../sim-runtime" }
 sim-inspect = { path = "../sim-inspect" }
 sim-diagram = { path = "../sim-diagram" }
+sim-system = { path = "../sim-system" }
+sim-compile = { path = "../sim-compile" }
 serde_json.workspace = true
 blake3 = "=1.8.7"
-image = { version = "=0.25.10", default-features = false, features = ["png"] }
+image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg"] }
 
 [features]
 native-probe = []

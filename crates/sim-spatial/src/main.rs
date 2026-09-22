@@ -40,12 +40,63 @@ struct Args {
     selection_link: Option<PathBuf>,
     #[arg(long)]
     compact: bool,
+    /// Build mode: edit and run this `sim.system/1` file.
+    #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link"])]
+    system: Option<PathBuf>,
+    /// Saved subsystem definitions offered in the palette (build mode).
+    #[arg(long, default_value = "library/systems")]
+    library: PathBuf,
+    /// Display-model catalog (CAD-exported OBJ). Defaults to `models` next to
+    /// the library directory.
+    #[arg(long)]
+    models: Option<PathBuf>,
     /// Validate inputs without opening a window.
     #[arg(long)]
     validate_only: bool,
 }
+fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+    let registry = sim_runtime::registry();
+    let builder = sim_spatial::Builder::open(path.to_path_buf(), args.library.clone(), registry.clone())?;
+    let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
+    let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
+    let mut scene = sim_spatial::SpatialScene::for_builder(compiled.description.clone(), spatial)?;
+    if let Some(animation) = compiled.animation.clone() {
+        scene.set_animation(animation)?;
+    }
+    if args.validate_only {
+        println!("Validated {} with {} components.", path.display(), scene.description.components.len());
+        return Ok(());
+    }
+    scene.compact = args.compact;
+    let annotation_path = args.annotations.clone().unwrap_or_else(|| PathBuf::from(format!("{}.annotations.json", path.display())));
+    scene.connect_annotations(annotation_path);
+    if args.schematic {
+        let sibling = std::env::current_exe()?.with_file_name("sim-viewer");
+        let mut child = std::process::Command::new(sibling)
+            .arg("--system")
+            .arg(path)
+            .arg("--compact")
+            .spawn()
+            .map_err(|e| format!("Could not open the schematic: {e}. Build sim-viewer first."))?;
+        std::thread::spawn(move || {
+            let _ = child.wait();
+        });
+    }
+    let api = sim_spatial::rest::server_with(args.api_port, true)?;
+    eprintln!("Physical REST (build mode): http://{}", api.address);
+    let models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models")));
+    if let Some(e) = &models.error {
+        eprintln!("Display models unavailable ({e}); drawing bounding shapes.");
+    }
+    sim_spatial::run_builder(scene, builder, api, models);
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+    if let Some(path) = args.system.clone() {
+        return build_mode(&args, &path);
+    }
     if !args.validate_only
         && args.animation.is_some()
         && args.selection_link.is_none()
@@ -149,6 +200,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.headless {
         sim_spatial::rest::headless(scene, link, api);
     }
-    sim_spatial::run_with_api(scene, link, Some(api));
+    let models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| PathBuf::from("library/models")));
+    sim_spatial::run_with_api(scene, link, Some(api), models.error.is_none().then_some(models));
     Ok(())
 }

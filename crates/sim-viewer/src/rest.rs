@@ -96,10 +96,22 @@ enum Command {
         action: super::experiments_ui::rest::Command,
     },
 }
-pub(super) fn server(port: u16) -> std::io::Result<sim_api::Server> {
-    sim_api::Server::bind(
-        port,
-        "schematic-assembly",
+pub(super) fn server_with(port: u16, builder: bool) -> std::io::Result<sim_api::Server> {
+    let mut all = capabilities();
+    if builder {
+        all.extend([
+            c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
+                "Apply sim-system commands atomically (shared validation and undo history with the physical viewer and CLI)"),
+            c("system_state", json!({}), "System file, revision, level, selection, findings and compile status"),
+            c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path"),
+            c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
+            c("system_undo", json!({}), "Undo in the shared history"),
+            c("system_redo", json!({}), "Redo in the shared history"),
+        ]);
+    }
+    sim_api::Server::bind(port, "schematic-assembly", all)
+}
+fn capabilities() -> Vec<Value> {
         vec![
             c(
                 "annotations",
@@ -275,8 +287,7 @@ pub(super) fn server(port: u16) -> std::io::Result<sim_api::Server> {
                 json!({"action":{"operation":"state"}}),
                 "Experiment review, configuration, evaluation, refinement and immutable export; see /v1/experiment-capabilities",
             ),
-        ],
-    )
+        ]
 }
 impl Viewer {
     fn api_state(&self) -> Value {
@@ -318,6 +329,9 @@ impl Viewer {
         ctx: &egui::Context,
         cancelled: bool,
     ) -> Outcome {
+        if command.command.starts_with("system") {
+            return Outcome::Done(self.system_api(command));
+        }
         let parsed = match sim_api::decode::<Command>(command) {
             Ok(c) => c,
             Err(e) => return Outcome::Done(Err(e)),

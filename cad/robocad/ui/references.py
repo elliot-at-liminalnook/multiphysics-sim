@@ -1,4 +1,5 @@
-"""Reference-image workspace: import, align, calibrate and sketch."""
+"""Reference-image workspace: import, align, calibrate and sketch; linked system file."""
+import os
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPixmap
@@ -15,6 +16,16 @@ class ReferencesPanel(QWidget):
         self.loading = False
         self.setAcceptDrops(True)
         layout = QVBoxLayout(self)
+        # Linked system file (circuits and subsystems live there, not in CAD).
+        self.system_label = QLabel()
+        self.system_label.setWordWrap(True)
+        layout.addWidget(self.system_label)
+        system_row = QHBoxLayout()
+        for label, fn in [('Link system file…', self.link_system), ('Accept changes', self.refresh_system), ('Open in builder', self.open_builder), ('Unlink', self.unlink_system)]:
+            b = QPushButton(label)
+            b.clicked.connect(lambda checked=False, f=fn: app._safe(f))
+            system_row.addWidget(b)
+        layout.addLayout(system_row)
         intro = QLabel('Drop images here or in the viewport. Align a view, calibrate its scale, then sketch over it.')
         intro.setWordWrap(True)
         layout.addWidget(intro)
@@ -76,7 +87,50 @@ class ReferencesPanel(QWidget):
         item = self.list.currentItem()
         return item.data(Qt.UserRole) if item else None
 
+    def show_system(self):
+        st = self.app.ops.system_status()
+        state = st['state']
+        if state == 'unlinked':
+            text = 'System file: none linked. Link a .system.json to build circuits and subsystems for this model.'
+        elif state == 'missing':
+            text = f"System file missing: {st['path']}"
+        else:
+            link = st['link']
+            now = st['now']
+            text = f"System: {link.get('title') or os.path.basename(st['path'])} · revision {now['revision']} · {now['definitions']} definitions"
+            if state == 'changed':
+                text += f" · CHANGED since linked (was revision {link.get('revision')})"
+        self.system_label.setText(text)
+
+    def link_system(self):
+        path, _ = QFileDialog.getOpenFileName(self, 'Link system file', '', 'System files (*.system.json);;JSON (*.json)')
+        if path:
+            self.app.ops.link_system(path)
+            self.show_system()
+
+    def refresh_system(self):
+        self.app.ops.refresh_system_link()
+        self.show_system()
+
+    def unlink_system(self):
+        self.app.ops.unlink_system()
+        self.show_system()
+
+    def open_builder(self):
+        """Open the linked system in the Rust physical builder (and schematic)."""
+        import subprocess
+        from ..kernel import KernelError
+        st = self.app.ops.system_status()
+        if st['state'] in ('unlinked', 'missing'):
+            raise KernelError('Link an existing system file first')
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+        binary = next((os.path.join(root, 'target', p, 'sim-spatial') for p in ('release', 'debug') if os.path.exists(os.path.join(root, 'target', p, 'sim-spatial'))), None)
+        if binary is None:
+            raise KernelError('Build the builder first: cargo build --release -p sim-spatial -p sim-viewer')
+        subprocess.Popen([binary, '--system', st['path'], '--library', os.path.join(root, 'library', 'systems'), '--schematic', '--api-port', '0'], cwd=root)
+
     def refresh(self):
+        self.show_system()
         nid = self.current_id()
         self.loading = True
         self.list.blockSignals(True)

@@ -955,6 +955,9 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
     }
     if profiles is not None:
         model['actuator_profiles'] = profiles
+    if st.get('system'):
+        # Reference only: circuit/subsystem topology lives in the system file.
+        model['system'] = st['system']
     if path:
         with open(path, "w") as f:
             json.dump(model, f)

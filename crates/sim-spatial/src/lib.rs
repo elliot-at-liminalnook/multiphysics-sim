@@ -1,7 +1,11 @@
-//! Reusable Bevy presentation of shared inspection contracts. This crate does
-//! not depend on a runtime or solver and cannot advance physics.
+//! Reusable Bevy presentation of shared inspection contracts. Inspection mode
+//! never advances physics. Build mode (`--system`) edits a system file through
+//! the shared `sim-system` commands and runs it on the shared runtime in a
+//! background thread; it contains no physics of its own.
 mod animation;
+pub mod builder;
 mod linked;
+pub mod models;
 mod notes;
 pub mod rest;
 use bevy::{
@@ -12,6 +16,7 @@ use bevy::{
     render::camera::Viewport,
     winit::{UpdateMode, WinitSettings},
 };
+pub use builder::{Builder, BuilderPlugin};
 pub use linked::SelectionLink;
 use sim_inspect::selection::{SelectionDetails, SelectionTarget};
 use sim_inspect::{
@@ -45,14 +50,46 @@ pub struct SpatialScene {
     note_hover: SelectionTarget,
     note_pointer_hover: SelectionTarget,
     note_error: Option<String>,
+    /// Components drawn translucent (outside the level being built).
+    pub ghost: std::collections::BTreeSet<String>,
+    /// Build mode replaces the parts list with the builder panel.
+    pub builder_mode: bool,
 }
+
+/// The catalog colour of one piece of a display model.
+#[derive(Component)]
+pub struct ModelColor(pub Color);
+
+/// Parts, net hubs and reference images; respawned when the system changes.
+#[derive(Component)]
+pub struct SceneContent;
+/// Root nodes of the inspection panels; rebuilt when the description changes.
+#[derive(Component)]
+pub struct UiRoot;
+
 impl SpatialScene {
-    pub fn new(
-        description: SystemDescription,
-        spatial: SpatialDescription,
-    ) -> Result<Self, InspectionError> {
-        spatial.validate(&description)?;
-        Ok(Self {
+    /// Build mode: the system may be empty or incomplete, so an empty
+    /// presentation is allowed here; everything else is validated as usual.
+    pub fn for_builder(description: SystemDescription, spatial: SpatialDescription) -> Result<Self, InspectionError> {
+        if !spatial.parts.is_empty() {
+            spatial.validate(&description)?;
+        }
+        let mut scene = Self::unchecked(description, spatial);
+        scene.builder_mode = true;
+        Ok(scene)
+    }
+    /// Swap in a recompiled system, keeping display preferences.
+    pub fn replace(&mut self, description: SystemDescription, spatial: SpatialDescription, animation: Option<sim_inspect::animation::AnimationDescription>) {
+        self.description = description;
+        self.spatial = spatial;
+        self.animation = animation;
+        self.state.hidden.clear();
+        self.state.selected = None;
+        self.selection = SelectionTarget::None;
+        self.details = SelectionDetails::default();
+    }
+    fn unchecked(description: SystemDescription, spatial: SpatialDescription) -> Self {
+        Self {
             description,
             spatial,
             state: SpatialViewState::default(),
@@ -67,7 +104,16 @@ impl SpatialScene {
             note_hover: SelectionTarget::None,
             note_pointer_hover: SelectionTarget::None,
             note_error: None,
-        })
+            ghost: Default::default(),
+            builder_mode: false,
+        }
+    }
+    pub fn new(
+        description: SystemDescription,
+        spatial: SpatialDescription,
+    ) -> Result<Self, InspectionError> {
+        spatial.validate(&description)?;
+        Ok(Self::unchecked(description, spatial))
     }
     pub fn apply(&mut self, command: SpatialCommand) -> Result<(), InspectionError> {
         if matches!(command, SpatialCommand::HideSelected) {
@@ -113,6 +159,9 @@ impl SpatialScene {
         Ok(())
     }
     fn left(&self) -> f32 {
+        if self.builder_mode {
+            return builder::LEFT_WIDTH;
+        }
         if self.parts_visible {
             if self.compact { 180. } else { LEFT }
         } else {
@@ -120,7 +169,16 @@ impl SpatialScene {
         }
     }
     fn right(&self) -> f32 {
+        if self.builder_mode {
+            return builder::RIGHT_WIDTH;
+        }
         if self.compact { 260. } else { RIGHT }
+    }
+    fn top(&self) -> f32 {
+        if self.builder_mode { builder::TOPBAR } else { TOP }
+    }
+    fn bottom(&self) -> f32 {
+        if self.builder_mode { builder::STATUSBAR } else { BOTTOM }
     }
     fn select(&mut self, component: String) {
         if let Err(e) = self.apply(SpatialCommand::Select { component }) {
@@ -151,6 +209,9 @@ impl SpatialScene {
         result
     }
     fn bounds(&self) -> (Vec3, f32) {
+        if self.spatial.parts.is_empty() {
+            return (Vec3::ZERO, 0.1);
+        }
         let mut lo = Vec3::splat(f32::INFINITY);
         let mut hi = Vec3::splat(f32::NEG_INFINITY);
         for p in &self.spatial.parts {
@@ -206,13 +267,40 @@ impl Plugin for SpatialViewerPlugin {
     }
 }
 
+/// Build mode: the physical assembly plus the system builder panel.
+pub fn run_builder(scene: SpatialScene, builder: builder::Builder, api: sim_api::Server, models: models::ModelLibrary) {
+    let mut app = App::new();
+    app.insert_resource(models).insert_resource(rest::Rest(api, None))
+        .insert_resource(builder)
+        .insert_resource(scene)
+        .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
+        .insert_resource(AmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
+        .insert_resource(WinitSettings {
+            focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
+            unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
+        })
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Systems — Physical assembly (build)".into(),
+                resolution: (1500.0_f32, 940.0_f32).into(),
+                resize_constraints: bevy::window::WindowResizeConstraints { min_width: 980.0, min_height: 720.0, ..default() },
+                ..default()
+            }),
+            ..default()
+        }))
+        .add_plugins(SpatialViewerPlugin)
+        .add_plugins(builder::BuilderPlugin)
+        .run();
+}
+
 pub fn run(scene: SpatialScene, link: Option<SelectionLink>) {
-    run_with_api(scene, link, None);
+    run_with_api(scene, link, None, None);
 }
 pub fn run_with_api(
     mut scene: SpatialScene,
     link: Option<SelectionLink>,
     api: Option<sim_api::Server>,
+    models: Option<models::ModelLibrary>,
 ) {
     let compact = scene.compact;
     if compact {
@@ -221,6 +309,9 @@ pub fn run_with_api(
     let mut app = App::new();
     if let Some(api) = api {
         app.insert_resource(rest::Rest(api, None));
+    }
+    if let Some(models) = models {
+        app.insert_resource(models);
     }
     if let Some(link) = link {
         app.insert_resource(link);
@@ -299,6 +390,7 @@ fn setup_scene(
     scene: Res<SpatialScene>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut models: Option<ResMut<models::ModelLibrary>>,
 ) {
     let (focus, radius) = scene.bounds();
     commands.spawn((
@@ -344,28 +436,61 @@ fn setup_scene(
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.4, 2.4, 0.0)),
     ));
     linked::spawn_nets(&mut commands, &scene, &mut meshes, &mut materials);
+    spawn_parts(&mut commands, &scene, &mut meshes, &mut materials, models.as_deref_mut());
+}
+
+pub(crate) fn spawn_parts(
+    commands: &mut Commands,
+    scene: &SpatialScene,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
+    mut models: Option<&mut models::ModelLibrary>,
+) {
     for (index, part) in scene.spatial.parts.iter().enumerate() {
+        let transform = Transform::from_translation(Vec3::from_array(part.position)).with_rotation(Quat::from_array(part.rotation_xyzw));
+        let component_type = scene.description.components.get(&part.component).map(|c| c.component_type.as_str()).unwrap_or("");
+        let pieces = models.as_deref_mut().and_then(|library| {
+            let id = library.model_for(part.model.as_deref(), component_type)?;
+            library.pieces(&id, meshes)
+        });
+        if let Some(pieces) = pieces {
+            for piece in pieces {
+                let mut entity = commands.spawn((
+                    Mesh3d(piece.mesh.clone()),
+                    MeshMaterial3d(materials.add(StandardMaterial { base_color: piece.color, metallic: piece.metallic, perceptual_roughness: if piece.metallic > 0.5 { 0.32 } else { 0.55 }, ..default() })),
+                    transform,
+                    Part { index },
+                    ModelColor(piece.color),
+                    SceneContent,
+                ));
+                if !scene.ghost.contains(&part.component) {
+                    entity.insert(Pickable::default()).observe(pick_part);
+                }
+            }
+            continue;
+        }
         let mesh = match part.shape {
             SpatialShape::Box { size } => meshes.add(Cuboid::from_size(Vec3::from_array(size))),
             SpatialShape::Cylinder { radius, length } => meshes.add(Cylinder::new(radius, length)),
             SpatialShape::Sphere { radius } => meshes.add(Sphere::new(radius)),
         };
         let [r, g, b] = part.color_srgb;
-        commands
-            .spawn((
-                Mesh3d(mesh),
-                MeshMaterial3d(materials.add(StandardMaterial {
-                    base_color: Color::srgb(r, g, b),
-                    metallic: 0.25,
-                    perceptual_roughness: 0.42,
-                    ..default()
-                })),
-                Transform::from_translation(Vec3::from_array(part.position))
-                    .with_rotation(Quat::from_array(part.rotation_xyzw)),
-                Part { index },
-                Pickable::default(),
-            ))
-            .observe(pick_part);
+        let mut entity = commands.spawn((
+            Mesh3d(mesh),
+            MeshMaterial3d(materials.add(StandardMaterial {
+                base_color: Color::srgb(r, g, b),
+                metallic: 0.25,
+                perceptual_roughness: 0.42,
+                ..default()
+            })),
+            Transform::from_translation(Vec3::from_array(part.position))
+                .with_rotation(Quat::from_array(part.rotation_xyzw)),
+            Part { index },
+            SceneContent,
+        ));
+        if !scene.ghost.contains(&part.component) {
+            entity.insert(Pickable::default()).observe(pick_part);
+        }
     }
 }
 
@@ -374,12 +499,18 @@ fn pick_part(
     parts: Query<&Part>,
     mut scene: ResMut<SpatialScene>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
+    builder: Option<ResMut<builder::Builder>>,
 ) {
     if click.button != bevy::picking::pointer::PointerButton::Primary {
         return;
     }
     if let Ok(part) = parts.get(click.target()) {
         let id = scene.spatial.parts[part.index].component.clone();
+        if let Some(mut builder) = builder {
+            let shift = keys.as_ref().is_some_and(|k| k.pressed(KeyCode::ShiftLeft) || k.pressed(KeyCode::ShiftRight));
+            builder::click_part(&mut builder, &id, shift);
+            return;
+        }
         if keys
             .as_ref()
             .is_some_and(|k| k.pressed(KeyCode::ShiftLeft) || k.pressed(KeyCode::ShiftRight))
@@ -428,6 +559,12 @@ fn action_button(label: &str, action: Action) -> impl Bundle {
     )
 }
 fn setup_ui(mut commands: Commands, scene: Res<SpatialScene>) {
+    spawn_ui(&mut commands, &scene);
+}
+pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene) {
+    if scene.builder_mode {
+        return; // Build mode draws its own chrome.
+    }
     commands
         .spawn((
             Node {
@@ -442,6 +579,7 @@ fn setup_ui(mut commands: Commands, scene: Res<SpatialScene>) {
                 ..default()
             },
             BackgroundColor(PANEL),
+            UiRoot,
         ))
         .with_children(|root| {
             root.spawn((
@@ -478,7 +616,7 @@ fn setup_ui(mut commands: Commands, scene: Res<SpatialScene>) {
                 row.spawn(action_button("Show all", Action::ShowAll));
             });
         });
-    commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(0.0), top: Val::Px(TOP), bottom: Val::Px(BOTTOM), width: Val::Px(scene.left()), display: if scene.parts_visible { Display::Flex } else { Display::None }, padding: UiRect::all(Val::Px(18.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(9.0), ..default() }, BackgroundColor(PANEL), PartsPanel))
+    commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(0.0), top: Val::Px(TOP), bottom: Val::Px(BOTTOM), width: Val::Px(scene.left()), display: if scene.parts_visible && !scene.builder_mode { Display::Flex } else { Display::None }, padding: UiRect::all(Val::Px(18.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(9.0), ..default() }, BackgroundColor(PANEL), PartsPanel, UiRoot))
         .with_children(|column| {
             column.spawn(text("COMPONENTS", 12.0, MUTED));
             for (i, (id, label)) in scene.representatives().iter().enumerate() {
@@ -502,6 +640,7 @@ fn setup_ui(mut commands: Commands, scene: Res<SpatialScene>) {
             },
             BackgroundColor(PANEL),
             InspectorScroll,
+            UiRoot,
         ))
         .with_children(|column| {
             column.spawn((
@@ -564,6 +703,7 @@ fn setup_ui(mut commands: Commands, scene: Res<SpatialScene>) {
                 ..default()
             },
             BackgroundColor(PANEL),
+            UiRoot,
         ))
         .with_children(|column| {
             column.spawn(text(
@@ -650,7 +790,11 @@ fn keyboard(
     actions: Query<(&Interaction, &Action), (Changed<Interaction>, With<Button>)>,
     mut scene: ResMut<SpatialScene>,
     mut camera: Single<&mut Orbit>,
+    builder: Option<Res<builder::Builder>>,
 ) {
+    if builder.as_ref().is_some_and(|b| b.typing()) {
+        return;
+    }
     for (interaction, action) in &actions {
         if *interaction == Interaction::Pressed {
             dispatch(action, &mut scene, &mut camera);
@@ -694,7 +838,7 @@ fn update_layout(scene: Res<SpatialScene>, mut panels: Query<&mut Node, With<Par
         return;
     }
     for mut panel in &mut panels {
-        panel.display = if scene.parts_visible {
+        panel.display = if scene.parts_visible && !scene.builder_mode {
             Display::Flex
         } else {
             Display::None
@@ -709,9 +853,9 @@ fn camera_viewport(
 ) {
     let scale = window.scale_factor();
     let width = (window.width() - scene.left() - scene.right()).max(1.0);
-    let height = (window.height() - TOP - BOTTOM).max(1.0);
+    let height = (window.height() - scene.top() - scene.bottom()).max(1.0);
     let viewport = Viewport {
-        physical_position: UVec2::new((scene.left() * scale) as u32, (TOP * scale) as u32),
+        physical_position: UVec2::new((scene.left() * scale) as u32, (scene.top() * scale) as u32),
         physical_size: UVec2::new((width * scale) as u32, (height * scale) as u32),
         ..default()
     };
@@ -742,15 +886,15 @@ fn orbit(
     let in_scene = window.cursor_position().is_some_and(|p| {
         p.x > scene.left()
             && p.x < window.width() - scene.right()
-            && p.y > TOP
-            && p.y < window.height() - BOTTOM
+            && p.y > scene.top()
+            && p.y < window.height() - scene.bottom()
     });
     let (_, extent) = scene.bounds();
     if orbit.home {
         let (center, radius) = scene.bounds();
         orbit.focus = center;
         let aspect = ((window.width() - scene.left() - scene.right())
-            / (window.height() - TOP - BOTTOM))
+            / (window.height() - scene.top() - scene.bottom()))
             .max(0.1);
         orbit.radius = radius * 2.9 / aspect.min(1.0);
         orbit.yaw = 0.35;
@@ -789,13 +933,14 @@ fn update_parts(
         &mut Transform,
         &mut Visibility,
         &MeshMaterial3d<StandardMaterial>,
+        Option<&ModelColor>,
     )>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     if !scene.is_changed() {
         return;
     }
-    for (part, mut transform, mut visibility, handle) in &mut parts {
+    for (part, mut transform, mut visibility, handle, model) in &mut parts {
         let p = &scene.spatial.parts[part.index];
         *transform = animation::part_transform(&scene, part.index);
         *visibility = if scene.state.hidden.contains(&p.component) {
@@ -807,12 +952,25 @@ fn update_parts(
             let thermal = animation::part_color(&scene, part.index);
             let selected = scene.details.components.contains(&p.component);
             let [r, g, b] = thermal.unwrap_or(p.color_srgb);
-            material.base_color = if selected && thermal.is_none() {
-                Color::srgb(0.96, 0.70, 0.26)
+            if let Some(ModelColor(color)) = model {
+                // Models keep their colours; temperature tints them, selection glows.
+                material.base_color = if thermal.is_some() { Color::srgb(r, g, b).mix(color, 0.35) } else { *color };
             } else {
-                Color::srgb(r, g, b)
-            };
-            material.emissive = if selected && thermal.is_some() {
+                material.base_color = if selected && thermal.is_none() {
+                    Color::srgb(0.96, 0.70, 0.26)
+                } else {
+                    Color::srgb(r, g, b)
+                };
+            }
+            if scene.ghost.contains(&p.component) {
+                material.base_color = material.base_color.with_alpha(0.13);
+                material.alpha_mode = AlphaMode::Blend;
+            } else {
+                material.alpha_mode = AlphaMode::Opaque;
+            }
+            material.emissive = if selected && model.is_some() {
+                LinearRgba::new(0.30, 0.19, 0.03, 1.)
+            } else if selected && thermal.is_some() {
                 LinearRgba::new(0.12, 0.07, 0.01, 1.)
             } else {
                 LinearRgba::BLACK

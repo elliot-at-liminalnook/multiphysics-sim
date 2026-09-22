@@ -38,11 +38,30 @@ enum Command {
 #[derive(Resource)]
 pub struct Rest(pub sim_api::Server, pub Option<sim_api::ImageTask>);
 pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
+    server_with(port, false)
+}
+/// Build mode adds the shared system-editing commands.
+pub fn server_with(port: u16, builder: bool) -> std::io::Result<sim_api::Server> {
     use sim_api::capability as c;
-    sim_api::Server::bind(
-        port,
-        "physical-assembly",
-        vec![
+    let mut capabilities = capabilities();
+    if builder {
+        capabilities.extend([
+            c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
+                "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI)"),
+            c("system_state", json!({}), "System file, revision, build level, selection, findings and compile status"),
+            c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
+            c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
+            c("system_undo", json!({}), "Undo the last edit in the shared history"),
+            c("system_redo", json!({}), "Redo in the shared history"),
+            c("system_run", json!({"action":"start"}), "Start or pause the background run on the shared runtime"),
+            c("system_import_image", json!({"path":"/abs/board.png"}), "Import a PNG/JPEG as a reference image at the current level"),
+        ]);
+    }
+    sim_api::Server::bind(port, "physical-assembly", capabilities)
+}
+fn capabilities() -> Vec<Value> {
+    use sim_api::capability as c;
+    vec![
             c(
                 "annotations",
                 json!({"action":{"operation":"document"}}),
@@ -95,8 +114,62 @@ pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
                 json!({"parts":true,"compact":false}),
                 "Parts panel and compact inspector presentation",
             ),
-        ],
-    )
+        ]
+}
+#[derive(Deserialize)]
+#[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
+enum SystemRequest {
+    System {
+        #[serde(default)]
+        label: Option<String>,
+        commands: Vec<sim_system::Command>,
+    },
+    SystemState,
+    SystemLevel {
+        path: String,
+    },
+    SystemSelect {
+        names: Vec<String>,
+    },
+    SystemUndo,
+    SystemRedo,
+    SystemRun {
+        action: String,
+    },
+    SystemImportImage {
+        path: std::path::PathBuf,
+    },
+}
+fn system_execute(builder: &mut builder::Builder, scene: &SpatialScene, command: &sim_api::Command) -> sim_api::Result {
+    match sim_api::decode::<SystemRequest>(command)? {
+        SystemRequest::System { label, commands } => {
+            let label = label.unwrap_or_else(|| format!("{} command(s) via REST", commands.len()));
+            builder.apply(&label, commands).map(|a| json!(a))
+        }
+        SystemRequest::SystemState => Ok(builder.state_json()),
+        SystemRequest::SystemLevel { path } => builder.set_level(&path).map(|_| builder.state_json()),
+        SystemRequest::SystemSelect { names } => {
+            builder.select(names);
+            Ok(builder.state_json())
+        }
+        SystemRequest::SystemUndo => {
+            builder.undo();
+            Ok(builder.state_json())
+        }
+        SystemRequest::SystemRedo => {
+            builder.redo();
+            Ok(builder.state_json())
+        }
+        SystemRequest::SystemRun { action } => {
+            match action.as_str() {
+                "start" => builder.run_start(scene),
+                "pause" => builder.run_pause(),
+                other => return Err(format!("unknown run action `{other}` (start or pause)")),
+            }
+            Ok(builder.state_json())
+        }
+        SystemRequest::SystemImportImage { path } => builder.import_image(path).map(|_| builder.state_json()),
+    }
 }
 fn state(scene: &SpatialScene, camera: &Orbit) -> Value {
     json!({"description_id":scene.description.id,"selection":scene.selection,"display":scene.state,
@@ -160,8 +233,15 @@ fn tick(
     scene: &mut SpatialScene,
     camera: &mut Orbit,
     task: &mut Option<sim_api::ImageTask>,
+    mut builder: Option<&mut builder::Builder>,
 ) {
     server.poll(|command, continuation, cancelled| {
+        if command.command.starts_with("system") {
+            return match builder.as_deref_mut() {
+                Some(b) => system_execute(b, scene, command).into(),
+                None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to edit systems".into())),
+            };
+        }
         if command.command == "annotations" {
             return match sim_api::decode::<Command>(command) {
                 Ok(Command::Annotations { action }) => {
@@ -212,10 +292,11 @@ pub(super) fn poll(
     rest: Option<ResMut<Rest>>,
     mut scene: ResMut<SpatialScene>,
     mut camera: Single<&mut Orbit>,
+    mut builder: Option<ResMut<builder::Builder>>,
 ) {
     if let Some(mut rest) = rest {
         let Rest(server, task) = &mut *rest;
-        tick(server, &mut scene, &mut camera, task);
+        tick(server, &mut scene, &mut camera, task, builder.as_deref_mut());
     }
 }
 /// Runs the identical command adapter without creating a window or GPU context.
@@ -249,7 +330,7 @@ pub fn headless(
             camera.radius = radius * 2.9;
             camera.home = false;
         }
-        tick(&mut server, &mut scene, &mut camera, &mut image_task);
+        tick(&mut server, &mut scene, &mut camera, &mut image_task, None);
         std::thread::sleep(std::time::Duration::from_millis(16));
     }
 }

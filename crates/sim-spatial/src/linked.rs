@@ -70,6 +70,7 @@ pub(super) fn spawn_nets(
                 Transform::default(),
                 Visibility::Hidden,
                 Pickable::default(),
+                SceneContent,
             ))
             .observe(pick_net);
     }

@@ -6,6 +6,7 @@ mod live_ui;
 mod render;
 mod rest;
 mod selection_ui;
+mod system_ui;
 mod workspace_file;
 use eframe::egui;
 use sim_diagram::analysis::{AnalysisGroup, Annotation, Journal, SavedView, Target, Workspace};
@@ -110,6 +111,7 @@ struct Viewer {
     pending_analysis: Option<AnalysisAction>,
     confirm_close: bool,
     allow_close: bool,
+    system: Option<system_ui::SystemBuilder>,
 }
 
 fn describe_model(model: &sim_core::ModelWorld, hash: &str) -> Result<SystemDescription, String> {
@@ -180,6 +182,7 @@ impl Viewer {
             pending_analysis: None,
             confirm_close: false,
             allow_close: false,
+            system: None,
         })
     }
 
@@ -589,6 +592,7 @@ impl Viewer {
 impl eframe::App for Viewer {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.api_tick(ui.ctx());
+        self.system_tick(ui.ctx());
         self.sync_selection();
         if self.link.is_some() {
             ui.ctx()
@@ -762,6 +766,7 @@ impl eframe::App for Viewer {
                 });
             });
         });
+        self.system_panel(ui);
         if self.show_browser {
             egui::Panel::left("components")
                 .default_size(190.)
@@ -895,6 +900,7 @@ impl eframe::App for Viewer {
                 }
                 self.diagram.show(ui, &self.projection.view)
             });
+        self.system_sync_selection();
         if !ui.input(|i| i.pointer.primary_down()) && !self.diagram.is_layout_pending() {
             self.sync_view(true);
         }
@@ -968,7 +974,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     while i < args.len() {
         match args[i].as_str() {
             "--headless" | "--compact" => i += 1,
-            "--annotations" | "--description" | "--model" | "--experiments" | "--workspace"
+            "--system" | "--library" | "--annotations" | "--description" | "--model" | "--experiments" | "--workspace"
             | "--focus-group" | "--selection-link" | "--live" | "--animation" | "--spatial"
             | "--api-port" => {
                 if args.get(i + 1).is_none_or(|v| v.starts_with("--")) {
@@ -978,7 +984,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "--help" | "-h" => {
                 println!(
-                    "sim-viewer [--description FILE | --model FILE | --experiments DIRECTORY] [--workspace FILE] [--live FILE] [--animation FILE --spatial FILE] [--selection-link DIRECTORY] [--compact] [--focus-group ID] [--api-port PORT] [--headless]"
+                    "sim-viewer [--system FILE.system.json [--library DIR] | --description FILE | --model FILE | --experiments DIRECTORY] [--workspace FILE] [--live FILE] [--animation FILE --spatial FILE] [--selection-link DIRECTORY] [--compact] [--focus-group ID] [--api-port PORT] [--headless]"
                 );
                 return Ok(());
             }
@@ -993,7 +999,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         args.splice(0..0, source);
     }
 
-    let examples = if args.first().map(String::as_str) == Some("--description") {
+    let mut system = None;
+    if let Some(i) = args.iter().position(|a| a == "--system") {
+        let path = std::path::PathBuf::from(args.get(i + 1).ok_or("--system requires a file")?);
+        let library = args.iter().position(|a| a == "--library").and_then(|j| args.get(j + 1)).map(std::path::PathBuf::from).unwrap_or_else(|| "library/systems".into());
+        let mut builder = system_ui::SystemBuilder::open(path.clone(), library)?;
+        let description = builder.compile()?;
+        system = Some((builder, description, path));
+    }
+    let examples = if let Some((builder, description, _)) = &system {
+        vec![Example { label: builder.document.title.clone(), description: description.clone() }]
+    } else if args.first().map(String::as_str) == Some("--description") {
         let path = args
             .get(1)
             .ok_or("usage: sim-viewer --description description.json")?;
@@ -1041,6 +1057,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     };
     let mut viewer = Viewer::new(examples)?;
+    let system_path = system.as_ref().map(|(_, _, p)| p.clone());
+    viewer.system = system.map(|(b, _, _)| b);
     if let Some(i) = args.iter().position(|a| a == "--experiments") {
         let path = args
             .get(i + 1)
@@ -1053,6 +1071,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .clone()
     } else if args.first().map(String::as_str) == Some("--experiments") {
         "systems-viewer.workspace.json".into()
+    } else if let Some(path) = &system_path {
+        format!("{}.workspace.json", path.display())
     } else if matches!(
         args.first().map(String::as_str),
         Some("--description" | "--model")
@@ -1089,7 +1109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         viewer.apply(Action::Focus(NodeSource::Group(group.clone())));
     }
     viewer.compact = args.iter().any(|a| a == "--compact");
-    viewer.show_browser = !viewer.compact;
+    viewer.show_browser = !viewer.compact && viewer.system.is_none();
     if let Some(i) = args.iter().position(|a| a == "--selection-link") {
         viewer.connect_selection(
             args.get(i + 1)
@@ -1117,7 +1137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         8422
     };
-    let api = rest::server(port)?;
+    let api = rest::server_with(port, viewer.system.is_some())?;
     eprintln!("Schematic REST: http://{}", api.address);
     viewer.api = Some(api);
     if args.iter().any(|a| a == "--headless") {

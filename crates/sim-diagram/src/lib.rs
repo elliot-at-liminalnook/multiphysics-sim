@@ -42,7 +42,19 @@ pub struct CardDecoration {
 
 pub struct AnnotationRegion {pub label:String,pub color:[u8;3],pub components:BTreeSet<String>}
 
+/// A reference image drawn behind the schematic, in diagram coordinates.
+/// Presentation only; never part of the description or layout.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Backdrop {
+    pub texture: egui::TextureId,
+    /// Center, in diagram units.
+    pub center: Point,
+    pub size: [f32; 2],
+    pub opacity: f32,
+}
+
 pub struct Diagram {
+    pub backdrops: Vec<Backdrop>,
     pub annotation_groups:Vec<AnnotationRegion>,
     pub annotation_hover:BTreeSet<String>,
     /// Presentation bundles, with their number of distinct underlying nets.
@@ -81,7 +93,7 @@ impl Diagram {
             true,
         ));
         Self {
-            annotation_groups:vec![],annotation_hover:BTreeSet::new(),
+            backdrops: Vec::new(), annotation_groups:vec![],annotation_hover:BTreeSet::new(),
             bundles: BTreeMap::new(),
             marked_components: BTreeSet::new(),
             decorations: BTreeMap::new(),
@@ -178,6 +190,12 @@ impl Diagram {
         );
         let viewport = response.rect;
         painter.rect_filled(viewport, 0, Color32::from_rgb(241, 244, 249));
+        for b in &self.backdrops {
+            let (zoom, camera) = (self.state.zoom, self.state.camera);
+            let center = viewport.min + Vec2::new(camera.x + b.center.x * zoom, camera.y + b.center.y * zoom);
+            let rect = Rect::from_center_size(center, Vec2::new(b.size[0], b.size[1]) * zoom);
+            painter.image(b.texture, rect, Rect::from_min_max(egui::pos2(0., 0.), egui::pos2(1., 1.)), Color32::WHITE.gamma_multiply(b.opacity.clamp(0., 1.)));
+        }
         if self.layout.nodes.is_empty() {
             painter.text(
                 viewport.center(),

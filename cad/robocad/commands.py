@@ -1104,6 +1104,32 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps, ComponentOps):
         self.stack.push(SetSetting())
         return doc.robot_settings
 
+    def link_system(self, path: str) -> dict:
+        """Reference a sim.system/1 file (path + SHA-256), undoable. The CAD
+        file keeps a reference only; the system file stays the source of truth
+        for circuit and subsystem topology."""
+        from .system_link import make_link
+        link = make_link(self.doc.path, path)
+        self.set_robot_setting('system', link)
+        return link
+
+    def unlink_system(self):
+        if not self.doc.robot_settings.get('system'):
+            raise KernelError('No system file is linked')
+        self.set_robot_setting('system', None)
+
+    def refresh_system_link(self) -> dict:
+        """Accept the linked file's current contents (new hash and revision)."""
+        from .system_link import resolve
+        link = self.doc.robot_settings.get('system')
+        if not link:
+            raise KernelError('No system file is linked')
+        return self.link_system(resolve(self.doc.path, link['path']))
+
+    def system_status(self) -> dict:
+        from .system_link import status
+        return status(self.doc.path, self.doc.robot_settings.get('system'))
+
     def set_actuator_profiles(self, profiles):
         """Validate through Rust and apply one undoable CAD profile edit."""
         from copy import deepcopy

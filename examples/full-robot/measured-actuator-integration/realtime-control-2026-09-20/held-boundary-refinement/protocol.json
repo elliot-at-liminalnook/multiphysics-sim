@@ -1,0 +1,10 @@
+{
+  "scope": "Diagnostic unpowered settling window with explicit zero winding voltage and fixed temperature, no controller/policy. Same CAD mechanics and detailed motor equations. This intentionally removes controller quantization to inspect timestep sensitivity; not a gait candidate or realtime performance measurement. Runs may overlap compilation.",
+  "binary_sha256": "a066073934bb3550c37827ab42c4e65b0aa778dcd13f6a144795769d0f805925",
+  "window_s": [
+    0,
+    0.1
+  ],
+  "sample_period_s": 0.00125,
+  "sources": "BE6400 warm-probes recipe, with the above recorded boundary overrides; capture binary identity matches dense-refinement/binary.json."
+}

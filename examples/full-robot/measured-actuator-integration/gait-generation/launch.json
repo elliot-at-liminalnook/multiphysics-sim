@@ -1,0 +1,107 @@
+{
+  "pilot": {
+    "state": "complete",
+    "trials": 4,
+    "log": "search.log"
+  },
+  "baseline_10s": {
+    "state": "complete",
+    "log": "baseline-10s/search.log"
+  },
+  "baseline_half_step": {
+    "state": "complete",
+    "log": "baseline-half-step/search.log"
+  },
+  "selected_10s": {
+    "state": "complete",
+    "terminal_session_id": 72440,
+    "log": "selected-10s/search.log"
+  },
+  "full_authority_export": {
+    "state": "complete",
+    "terminal_session_id": 49424,
+    "log": "full-authority/export.log"
+  },
+  "model_status": "provisional; imposed supplies; no bench accuracy gate for gait search",
+  "full_authority_search": {
+    "state": "complete: six two-second trials",
+    "terminal_session_id": 57438,
+    "log": "full-authority/search.log"
+  },
+  "selected_replay": {
+    "state": "complete; exact endpoint, runtime recording and task checks pass",
+    "report": "selected-10s/replay-verification.json"
+  },
+  "selected_half_10s": {
+    "state": "complete; all declared endpoint checks pass",
+    "terminal_session_id": 13941,
+    "log": "selected-half-10s/search.log"
+  },
+  "full_authority_10s": {
+    "state": "complete",
+    "terminal_session_id": 53014,
+    "log": "full-authority-10s/search.log"
+  },
+  "release_build": {
+    "state": "complete",
+    "terminal_session_id": 11693,
+    "log": "/tmp/gait-release-build.log"
+  },
+  "geometry_audit_build": {
+    "state": "complete",
+    "log": "/tmp/gait-geometry-audit-build.log"
+  },
+  "geometry_audit": {
+    "state": "complete",
+    "report": "selected-10s/geometry-summary.json"
+  },
+  "release_replay_selected": {
+    "state": "complete; exact endpoint and all 501 frames/transitions match",
+    "terminal_session_id": 45371,
+    "log": "selected-10s/release-replay-timing.log"
+  },
+  "release_replay_full_authority": {
+    "state": "complete; exact endpoint and recording match",
+    "terminal_session_id": 67082,
+    "log": "full-authority-10s/release-replay-timing.log"
+  },
+  "full_authority_geometry": {
+    "state": "complete",
+    "report": "full-authority-10s/geometry-summary.json"
+  },
+  "full_authority_selected_10s": {
+    "state": "complete; 0.160519 m/s, slower than original gait; exact replay passes",
+    "terminal_session_id": 54499,
+    "log": "full-authority-selected-10s/search.log"
+  },
+  "full_authority_half_10s": {
+    "state": "complete; all predeclared numerical checks pass",
+    "terminal_session_id": 53964,
+    "log": "full-authority-half-10s/search.log"
+  },
+  "full_authority_30s": {
+    "state": "complete; 30 s, 12.653113 m, 0.421770 m/s, no fall",
+    "terminal_session_id": 69557,
+    "log": "full-authority-30s/search.log"
+  },
+  "delay_10ms_export": {
+    "state": "complete; physical export equality verified",
+    "terminal_session_id": 57192,
+    "log": "robustness/delay-10ms/export.log"
+  },
+  "backlash_05deg_export": {
+    "state": "complete; physical export equality verified",
+    "terminal_session_id": 21264,
+    "log": "robustness/backlash-05deg/export.log"
+  },
+  "delay_10ms_pilot": {
+    "state": "init/first two-second trial running",
+    "terminal_session_id": 97557,
+    "log": "robustness/delay-10ms/search.log"
+  },
+  "backlash_05deg_pilot": {
+    "state": "init/first two-second trial running",
+    "terminal_session_id": 53916,
+    "log": "robustness/backlash-05deg/search.log"
+  }
+}

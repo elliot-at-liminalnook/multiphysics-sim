@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "status": "frozen_before_search",
+  "algorithms": [
+    "bayesian",
+    "cma_es"
+  ],
+  "optimizer_seeds": [
+    2301,
+    2302
+  ],
+  "attempts_per_algorithm_seed": 33,
+  "episode_duration_s": 3.6,
+  "charged_simulation_budget_s_per_algorithm_seed": 118.8,
+  "failures_consume_attempt": true,
+  "baseline_is_attempt_zero": true,
+  "initial_design": 9,
+  "cma_population": 8,
+  "cma_sigma": 0.2,
+  "objective": "signed_forward_displacement_m / completed_duration_s, subject to all runtime gates",
+  "direction_world": [
+    0.7071067811865476,
+    0.7071067811865476,
+    0
+  ],
+  "gates": {
+    "complete": true,
+    "no_fall": true,
+    "no_body_floor_contact": true,
+    "minimum_body_up_z": 0.9,
+    "maximum_tracking_rms_rad": 0.08726646259971647,
+    "maximum_tracking_peak_rad": 0.2617993877991494
+  },
+  "comparison": "Identical preparation, physics profile, initial baseline, horizon, seed pairing, gates and reserved simulation budget. Report actual simulated seconds, rejected/failed attempts, proposal+preparation+simulation+storage wall cost, and incumbent improvement versus cumulative wall hours. Alternate algorithms; single host thread.",
+  "finalist_validation": {
+    "per_algorithm_seed": 1,
+    "detailed_duration_s": 15,
+    "long_duration_s": 30,
+    "scenarios": [
+      {
+        "name": "nominal"
+      },
+      {
+        "name": "lower_supply",
+        "voltage_v": 10.5
+      },
+      {
+        "name": "higher_supply",
+        "voltage_v": 12
+      },
+      {
+        "name": "motor_variation",
+        "resistance_scale": 1.1,
+        "motor_constant_scale": 0.95
+      },
+      {
+        "name": "lower_floor_friction",
+        "friction_scale": 0.75
+      },
+      {
+        "name": "combined",
+        "voltage_v": 10.5,
+        "resistance_scale": 1.1,
+        "motor_constant_scale": 0.95,
+        "friction_scale": 0.75
+      }
+    ],
+    "scope": "Explicit sensitivity assumptions, not measured confidence intervals or guaranteed hardware envelope. Save modifications separately from CAD."
+  },
+  "remaining": [
+    "Finish shared comparison host and outcome gates",
+    "Prepare/screen baseline and parameter coverage cases",
+    "Requalify reduced profile with current library source",
+    "Run both optimizers through full matched budgets",
+    "Validate finalists and summarize robustness/failures"
+  ],
+  "failure_handling": {
+    "bayesian": "After initial LHS, if fewer than dimension+1 successful observations exist, sample within 5% of each full parameter range around the best valid point until the objective GP can fit. Label these proposals as local feasibility bootstrap; never invent speed observations for failures.",
+    "cma_es": "Failures rank below every finite accepted speed. Restart deterministically from the original mean/spread if the backend terminates; preserve and replay all attempts."
+  },
+  "search_domain": "Full relative phase interval [0,0.999] for each of three feet; first foot fixes common phase. Stance fraction [0.60,0.90] permits both paired and staggered support schedules. Current pause-based controller still requires a feasible all-stance stopping window. Domain finalized before optimizer trials; baseline unchanged."
+}

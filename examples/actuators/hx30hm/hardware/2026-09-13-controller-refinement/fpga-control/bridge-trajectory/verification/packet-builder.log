@@ -1,0 +1,4 @@
+iverilog -g2005 -s experiment_packet_tb -o impl/experiment_packet_tb.vvp tb/experiment_packet_tb.v src/experiment_packet.v
+vvp impl/experiment_packet_tb.vvp
+PASS experiment packet: 4 groups, Rust A1 parity, nine telemetry/audit addresses, stalls/cancel/rejection
+tb/experiment_packet_tb.v:56: $finish called at 3790000 (1ps)

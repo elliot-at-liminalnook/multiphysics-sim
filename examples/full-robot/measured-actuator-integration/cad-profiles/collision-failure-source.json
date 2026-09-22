@@ -1,0 +1,46 @@
+{
+  "node": {
+    "id": "27d71d0313bc",
+    "kind": "body",
+    "name": "+X | Thigh cross-shaft",
+    "parent": "028932c744c3",
+    "children": [],
+    "visible": true,
+    "locked": false,
+    "disabled": false,
+    "material": "steel",
+    "color": null,
+    "pivot": null,
+    "transform": {
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "angle_deg": 0.0,
+      "scale": 1.0
+    },
+    "source": null,
+    "tessellation_tolerance": 0.05,
+    "body_kind": "solid",
+    "robot": {
+      "solid_materials": {
+        "0": "steel"
+      },
+      "material_status": "user-confirmed carbon tubes / mostly nylon structures; per-part nylon and hardware assignment provisional"
+    }
+  },
+  "brep_sha256": "e69afbe57e4f58a221474d3c5ada5357c82c6a458e3ea3cdb1774839d9c89bc5",
+  "units": "mm",
+  "kernel_volume_mm3": 1.1138807321828736e-06,
+  "kernel_valid": true,
+  "kernel_watertight": true,
+  "tessellation_watertight": false,
+  "tessellation_volume_mm3": 0.0,
+  "disposition": "Retained failure; no geometry repair or collision bypass applied."
+}

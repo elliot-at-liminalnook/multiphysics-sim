@@ -1,0 +1,161 @@
+{
+  "control": "fpga_pd",
+  "name": "FPGA zero: smooth multi-frequency displacement",
+  "role": "timing",
+  "ids": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "period_s": 0.15,
+  "gains": {
+    "kp_q8": 768,
+    "kd_q8": 85,
+    "kv_q8": 1024,
+    "limit": 0
+  },
+  "targets": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rms_limit_counts": 3.0,
+  "peak_limit_counts": 10.0,
+  "bitstream_path": "examples/actuators/hx30hm/hardware/2026-09-13-controller-refinement/fpga-control/firmware-batch/impl/bridge_control.fs",
+  "bitstream_blake3": "09fe11df1462ca5b16ac559d7b9b7574e4c032a7e3826252b6ad21526926b3e8"
+}

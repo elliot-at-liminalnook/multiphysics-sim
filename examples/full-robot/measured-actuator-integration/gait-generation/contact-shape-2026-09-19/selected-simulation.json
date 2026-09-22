@@ -1,0 +1,13 @@
+{
+  "status": "qualified_flat_ground_simulation_baseline",
+  "candidate": "upright-fast",
+  "qualification": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/qualification.json",
+    "sha256": "3ce0978dfe1c40e1d1251097259f45e965d1fc4918b1e9677eb00f2700550cc6"
+  },
+  "experiment": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/spec.json",
+  "long_experiment": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/spec.json",
+  "recipe": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/fine/recipe.json",
+  "compiled_reference": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/fine/compiled.json",
+  "limits": "Only the recorded provisional model, flat ground and tested forward/stop/reverse commands. No browser or hardware promotion."
+}

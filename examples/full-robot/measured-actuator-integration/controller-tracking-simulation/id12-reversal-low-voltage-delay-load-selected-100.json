@@ -1,0 +1,3670 @@
+{
+  "simulation_only": true,
+  "experiment": {
+    "name": "id12-reversal-low-voltage-delay-load-selected-100",
+    "model": {
+      "motor": {
+        "back_emf_constant": 0.009734075474443412,
+        "backlash": 0.0,
+        "backlash.events": 0.0,
+        "derating": 0.0,
+        "efficiency": 0.5037278591966505,
+        "gear_damping": 0.1,
+        "gear_friction": 0.025,
+        "gear_inertia": 0.00002,
+        "gear_stiffness": 50.0,
+        "inductance": 0.00148,
+        "jacobian.analytic": 1.0,
+        "loss_speed_scale": 7.468104523598046,
+        "no_load_current": 0.2134170334793071,
+        "ratio": 200.0,
+        "reference": 298.15,
+        "resistance": 3.6999999999999997,
+        "rotor_inertia": 3e-7,
+        "temp_coeff": 0.0039,
+        "torque_constant": 0.009734075474443412
+      },
+      "bridge": {
+        "current_limit": 3.0,
+        "on_resistance": 0.05
+      },
+      "conditions": {
+        "voltage_v": null,
+        "temperature_c": null,
+        "load_inertia": 0.0001,
+        "load_torque": 0.0,
+        "command_delay_s": 0.0
+      },
+      "step_s": 0.00025
+    },
+    "gains": {
+      "kp_q8": 1024,
+      "kd_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "targets_counts": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      11,
+      21,
+      31,
+      40,
+      48,
+      54,
+      59,
+      63,
+      64,
+      63,
+      61,
+      57,
+      52,
+      44,
+      36,
+      27,
+      16,
+      6,
+      -5,
+      -16,
+      -26,
+      -36,
+      -44,
+      -51,
+      -57,
+      -61,
+      -63,
+      -64,
+      -63,
+      -60,
+      -55,
+      -48,
+      -40,
+      -32,
+      -22,
+      -11,
+      0,
+      10,
+      21,
+      31,
+      40,
+      48,
+      54,
+      59,
+      62,
+      64,
+      64,
+      61,
+      57,
+      52,
+      45,
+      36,
+      27,
+      17,
+      6,
+      -5,
+      -16,
+      -26,
+      -35,
+      -44,
+      -51,
+      -57,
+      -61,
+      -63,
+      -64,
+      -63,
+      -60,
+      -55,
+      -49,
+      -41,
+      -32,
+      -22,
+      -12,
+      -1,
+      10,
+      21,
+      30,
+      40,
+      47,
+      54,
+      59,
+      62,
+      64,
+      64,
+      61,
+      58,
+      52,
+      45,
+      37,
+      27,
+      17,
+      6,
+      -4,
+      -15,
+      -25,
+      -35,
+      -44,
+      -51,
+      -57,
+      -61,
+      -63,
+      -64,
+      -63,
+      -60,
+      -55,
+      -49,
+      -41,
+      -32,
+      -22,
+      -12,
+      -1,
+      10,
+      20,
+      30,
+      39,
+      47,
+      54,
+      59,
+      62,
+      64,
+      64,
+      62,
+      58,
+      52,
+      45,
+      37,
+      28,
+      17,
+      7,
+      -4,
+      -15,
+      -25,
+      -35,
+      -43,
+      -51,
+      -56,
+      -61,
+      -63,
+      -64,
+      -63,
+      -60,
+      -55,
+      -49,
+      -41,
+      -33,
+      -23,
+      -12,
+      -2,
+      9,
+      20,
+      30,
+      39,
+      47,
+      54,
+      59,
+      62,
+      64,
+      64,
+      62,
+      58,
+      52,
+      46,
+      37,
+      28,
+      18,
+      7,
+      -4,
+      -14,
+      -25,
+      -34,
+      -43,
+      -50,
+      -56,
+      -61,
+      -63,
+      -64,
+      -63,
+      -60,
+      -55,
+      -49,
+      -42,
+      -33,
+      -23,
+      -13,
+      -2,
+      9,
+      19,
+      29,
+      39,
+      47,
+      53,
+      59,
+      62,
+      64,
+      64,
+      62,
+      58,
+      53,
+      46,
+      38,
+      28,
+      18,
+      8,
+      -3,
+      -14,
+      -24,
+      -34,
+      -43,
+      -50,
+      -56,
+      -60,
+      -63,
+      -64,
+      -63,
+      -60,
+      -56,
+      -50,
+      -42,
+      -33,
+      -24,
+      -13,
+      -2,
+      8,
+      19,
+      29,
+      38,
+      46,
+      53,
+      58,
+      62,
+      64,
+      64,
+      62,
+      58,
+      53,
+      46,
+      38,
+      29,
+      19,
+      8,
+      -3,
+      -14,
+      -24,
+      -34,
+      -42,
+      -50,
+      -56,
+      -60,
+      -63,
+      -64,
+      -63,
+      -60,
+      -56,
+      -50,
+      -42,
+      -34,
+      -24,
+      -14,
+      -3,
+      8,
+      19,
+      29,
+      38,
+      46,
+      53,
+      58,
+      62,
+      64,
+      64,
+      62,
+      58,
+      53,
+      46,
+      38,
+      29,
+      19,
+      8,
+      -2,
+      -13,
+      -24,
+      -33,
+      -42,
+      -50,
+      -56,
+      -60,
+      -63,
+      -64,
+      -63,
+      -60,
+      -56,
+      -50,
+      -43,
+      -34,
+      -24,
+      -14,
+      -3,
+      8,
+      18,
+      28,
+      38,
+      46,
+      53,
+      58,
+      62,
+      64,
+      64,
+      62,
+      59,
+      53,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "period_s": 0.01,
+    "latency_s": 0.008,
+    "voltage_v": 10.4,
+    "temperature_c": 55.0
+  },
+  "runtime": {
+    "version": 1,
+    "library_source_blake3": "7ec85fbc878322faa09b8f4503440f4c4b356450d52e8d580f92614b80a16047",
+    "features": []
+  },
+  "controller_ir_blake3": "bc7964115b34900144cc48eb26eddc8ae1c237bd500444d05c9cef69b0ea633e",
+  "samples": [
+    {
+      "time_s": 1e-7,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": 0.0,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.0100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6669031923670204e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.0200001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.603721889667171e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.0300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.603675288058337e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.040000100000000004,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.603677731900055e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.050000100000000006,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.603677719310726e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.0600001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.603677719231086e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.07000010000000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.603677719231913e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.0800001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.0900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.10000010000000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.1100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.1200001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.1300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.14000010000000002,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.1500001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.1600001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.17000010000000002,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.1800001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.1900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.20000010000000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.2100001,
+      "desired_counts": 11,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 0,
+      "angle_rad": -4.6036777192319104e-45,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 0.2200001,
+      "desired_counts": 21,
+      "previously_applied_target_counts": 11,
+      "encoder_counts": 0,
+      "angle_rad": 0.000013457658540608748,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.2300001,
+      "desired_counts": 31,
+      "previously_applied_target_counts": 21,
+      "encoder_counts": 0,
+      "angle_rad": 0.00045220872422255834,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.2400001,
+      "desired_counts": 40,
+      "previously_applied_target_counts": 31,
+      "encoder_counts": 1,
+      "angle_rad": 0.0010245630919603155,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.2500001,
+      "desired_counts": 48,
+      "previously_applied_target_counts": 40,
+      "encoder_counts": 1,
+      "angle_rad": 0.0016282411517335434,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.2600001,
+      "desired_counts": 54,
+      "previously_applied_target_counts": 48,
+      "encoder_counts": 1,
+      "angle_rad": 0.0022414771863741127,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.2700001,
+      "desired_counts": 59,
+      "previously_applied_target_counts": 54,
+      "encoder_counts": 2,
+      "angle_rad": 0.0028577591064462434,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.28000010000000003,
+      "desired_counts": 63,
+      "previously_applied_target_counts": 59,
+      "encoder_counts": 2,
+      "angle_rad": 0.0034750240706166655,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.2900001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 63,
+      "encoder_counts": 3,
+      "angle_rad": 0.004092607610625936,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.3000001,
+      "desired_counts": 63,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.00471029452857525,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.3100001,
+      "desired_counts": 61,
+      "previously_applied_target_counts": 63,
+      "encoder_counts": 3,
+      "angle_rad": 0.005328015007097973,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.3200001,
+      "desired_counts": 57,
+      "previously_applied_target_counts": 61,
+      "encoder_counts": 4,
+      "angle_rad": 0.0059457463822300965,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.3300001,
+      "desired_counts": 52,
+      "previously_applied_target_counts": 57,
+      "encoder_counts": 4,
+      "angle_rad": 0.006556496389609102,
+      "applied_pwm": 68
+    },
+    {
+      "time_s": 0.3400001,
+      "desired_counts": 44,
+      "previously_applied_target_counts": 52,
+      "encoder_counts": 5,
+      "angle_rad": 0.006909907138569891,
+      "applied_pwm": 32
+    },
+    {
+      "time_s": 0.35000010000000004,
+      "desired_counts": 36,
+      "previously_applied_target_counts": 44,
+      "encoder_counts": 5,
+      "angle_rad": 0.007029562421735121,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.3600001,
+      "desired_counts": 27,
+      "previously_applied_target_counts": 36,
+      "encoder_counts": 4,
+      "angle_rad": 0.0066064212440040924,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.3700001,
+      "desired_counts": 16,
+      "previously_applied_target_counts": 27,
+      "encoder_counts": 4,
+      "angle_rad": 0.006037258239672537,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.3800001,
+      "desired_counts": 6,
+      "previously_applied_target_counts": 16,
+      "encoder_counts": 4,
+      "angle_rad": 0.005434510413736273,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.3900001,
+      "desired_counts": -5,
+      "previously_applied_target_counts": 6,
+      "encoder_counts": 3,
+      "angle_rad": 0.004821567746916115,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4000001,
+      "desired_counts": -16,
+      "previously_applied_target_counts": -5,
+      "encoder_counts": 3,
+      "angle_rad": 0.004205380188641042,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.41000010000000003,
+      "desired_counts": -26,
+      "previously_applied_target_counts": -16,
+      "encoder_counts": 2,
+      "angle_rad": 0.003588145770848089,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4200001,
+      "desired_counts": -36,
+      "previously_applied_target_counts": -26,
+      "encoder_counts": 2,
+      "angle_rad": 0.002970572139625063,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4300001,
+      "desired_counts": -44,
+      "previously_applied_target_counts": -36,
+      "encoder_counts": 2,
+      "angle_rad": 0.0023528884380893886,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4400001,
+      "desired_counts": -51,
+      "previously_applied_target_counts": -44,
+      "encoder_counts": 1,
+      "angle_rad": 0.0017351690038483383,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4500001,
+      "desired_counts": -57,
+      "previously_applied_target_counts": -51,
+      "encoder_counts": 1,
+      "angle_rad": 0.0011174379677898589,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4600001,
+      "desired_counts": -61,
+      "previously_applied_target_counts": -57,
+      "encoder_counts": 0,
+      "angle_rad": 0.0004997031646320458,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.47000010000000003,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -61,
+      "encoder_counts": 0,
+      "angle_rad": -0.00011803286171854622,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4800001,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": 0,
+      "angle_rad": -0.0007357692852469213,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.4900001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.0013535058377414418,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.5000001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.001971242432112104,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.5100001,
+      "desired_counts": -55,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -2,
+      "angle_rad": -0.002588979040080228,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.5200001,
+      "desired_counts": -48,
+      "previously_applied_target_counts": -55,
+      "encoder_counts": -2,
+      "angle_rad": -0.003181824077569108,
+      "applied_pwm": -36
+    },
+    {
+      "time_s": 0.5300001,
+      "desired_counts": -40,
+      "previously_applied_target_counts": -48,
+      "encoder_counts": -2,
+      "angle_rad": -0.0033256054934561047,
+      "applied_pwm": 40
+    },
+    {
+      "time_s": 0.5400001,
+      "desired_counts": -32,
+      "previously_applied_target_counts": -40,
+      "encoder_counts": -2,
+      "angle_rad": -0.0031802067282567506,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.5500001,
+      "desired_counts": -22,
+      "previously_applied_target_counts": -32,
+      "encoder_counts": -2,
+      "angle_rad": -0.002715995561688492,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.5600001,
+      "desired_counts": -11,
+      "previously_applied_target_counts": -22,
+      "encoder_counts": -1,
+      "angle_rad": -0.002138334855499336,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.5700001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": -11,
+      "encoder_counts": -1,
+      "angle_rad": -0.0015330887621776135,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.5800000999999999,
+      "desired_counts": 10,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": -1,
+      "angle_rad": -0.0009193570125699124,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.5900000999999999,
+      "desired_counts": 21,
+      "previously_applied_target_counts": 10,
+      "encoder_counts": 0,
+      "angle_rad": -0.00030291551782106886,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6000000999999999,
+      "desired_counts": 31,
+      "previously_applied_target_counts": 21,
+      "encoder_counts": 0,
+      "angle_rad": 0.0003144011165029041,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6100000999999999,
+      "desired_counts": 40,
+      "previously_applied_target_counts": 31,
+      "encoder_counts": 1,
+      "angle_rad": 0.000932001418936566,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6200000999999999,
+      "desired_counts": 48,
+      "previously_applied_target_counts": 40,
+      "encoder_counts": 1,
+      "angle_rad": 0.001549693778153091,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6300001,
+      "desired_counts": 54,
+      "previously_applied_target_counts": 48,
+      "encoder_counts": 1,
+      "angle_rad": 0.0021674160233222384,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6400001,
+      "desired_counts": 59,
+      "previously_applied_target_counts": 54,
+      "encoder_counts": 2,
+      "angle_rad": 0.002785147972078293,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6500001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 59,
+      "encoder_counts": 2,
+      "angle_rad": 0.0034028830715919322,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6600001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 3,
+      "angle_rad": 0.00402061919417089,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6700001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.00463835564894522,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6800001,
+      "desired_counts": 61,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.005256092211585504,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.6900001,
+      "desired_counts": 57,
+      "previously_applied_target_counts": 61,
+      "encoder_counts": 4,
+      "angle_rad": 0.005873828809250565,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.7000001,
+      "desired_counts": 52,
+      "previously_applied_target_counts": 57,
+      "encoder_counts": 4,
+      "angle_rad": 0.00648458046792725,
+      "applied_pwm": 68
+    },
+    {
+      "time_s": 0.7100000999999999,
+      "desired_counts": 45,
+      "previously_applied_target_counts": 52,
+      "encoder_counts": 4,
+      "angle_rad": 0.006837991243278981,
+      "applied_pwm": 32
+    },
+    {
+      "time_s": 0.7200000999999999,
+      "desired_counts": 36,
+      "previously_applied_target_counts": 45,
+      "encoder_counts": 5,
+      "angle_rad": 0.00696305177742152,
+      "applied_pwm": -60
+    },
+    {
+      "time_s": 0.7300000999999999,
+      "desired_counts": 27,
+      "previously_applied_target_counts": 36,
+      "encoder_counts": 4,
+      "angle_rad": 0.006738471330400317,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.7400000999999999,
+      "desired_counts": 17,
+      "previously_applied_target_counts": 27,
+      "encoder_counts": 4,
+      "angle_rad": 0.006254400392683691,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.7500001,
+      "desired_counts": 6,
+      "previously_applied_target_counts": 17,
+      "encoder_counts": 4,
+      "angle_rad": 0.0056724424855987615,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.7600001,
+      "desired_counts": -5,
+      "previously_applied_target_counts": 6,
+      "encoder_counts": 3,
+      "angle_rad": 0.005065908922518627,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.7700001,
+      "desired_counts": -16,
+      "previously_applied_target_counts": -5,
+      "encoder_counts": 3,
+      "angle_rad": 0.004451769009131766,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.7800001,
+      "desired_counts": -26,
+      "previously_applied_target_counts": -16,
+      "encoder_counts": 3,
+      "angle_rad": 0.003835196002341129,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.7900001,
+      "desired_counts": -35,
+      "previously_applied_target_counts": -26,
+      "encoder_counts": 2,
+      "angle_rad": 0.0032178367719033723,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8000001,
+      "desired_counts": -44,
+      "previously_applied_target_counts": -35,
+      "encoder_counts": 2,
+      "angle_rad": 0.0026002226494482657,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8100001,
+      "desired_counts": -51,
+      "previously_applied_target_counts": -44,
+      "encoder_counts": 1,
+      "angle_rad": 0.001982525803961266,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8200001,
+      "desired_counts": -57,
+      "previously_applied_target_counts": -51,
+      "encoder_counts": 1,
+      "angle_rad": 0.0013648021021950697,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8300001,
+      "desired_counts": -61,
+      "previously_applied_target_counts": -57,
+      "encoder_counts": 0,
+      "angle_rad": 0.0007470696804854842,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8400000999999999,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -61,
+      "encoder_counts": 0,
+      "angle_rad": 0.00012933442740210618,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8500000999999999,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": 0,
+      "angle_rad": -0.0004884017450418125,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8600000999999999,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.0011061382160076065,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8700000999999999,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.0017238747839053627,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8800001,
+      "desired_counts": -55,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -2,
+      "angle_rad": -0.0023416113832775607,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 0.8900001,
+      "desired_counts": -49,
+      "previously_applied_target_counts": -55,
+      "encoder_counts": -2,
+      "angle_rad": -0.0029344564181139864,
+      "applied_pwm": -36
+    },
+    {
+      "time_s": 0.9000001,
+      "desired_counts": -41,
+      "previously_applied_target_counts": -49,
+      "encoder_counts": -2,
+      "angle_rad": -0.00308313358617296,
+      "applied_pwm": 4
+    },
+    {
+      "time_s": 0.9100001,
+      "desired_counts": -32,
+      "previously_applied_target_counts": -41,
+      "encoder_counts": -2,
+      "angle_rad": -0.0030637844060261276,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9200001,
+      "desired_counts": -22,
+      "previously_applied_target_counts": -32,
+      "encoder_counts": -2,
+      "angle_rad": -0.002623013375224732,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9300001,
+      "desired_counts": -12,
+      "previously_applied_target_counts": -22,
+      "encoder_counts": -1,
+      "angle_rad": -0.0020502472165221802,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9400001,
+      "desired_counts": -1,
+      "previously_applied_target_counts": -12,
+      "encoder_counts": -1,
+      "angle_rad": -0.0014464486625629324,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9500001,
+      "desired_counts": 10,
+      "previously_applied_target_counts": -1,
+      "encoder_counts": -1,
+      "angle_rad": -0.0008331745875793778,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9600000999999999,
+      "desired_counts": 21,
+      "previously_applied_target_counts": 10,
+      "encoder_counts": 0,
+      "angle_rad": -0.00021688042769892334,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9700000999999999,
+      "desired_counts": 30,
+      "previously_applied_target_counts": 21,
+      "encoder_counts": 0,
+      "angle_rad": 0.00040038849911723333,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9800000999999999,
+      "desired_counts": 40,
+      "previously_applied_target_counts": 30,
+      "encoder_counts": 1,
+      "angle_rad": 0.0010179733245944285,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 0.9900000999999999,
+      "desired_counts": 47,
+      "previously_applied_target_counts": 40,
+      "encoder_counts": 1,
+      "angle_rad": 0.0016356606598141898,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0000001,
+      "desired_counts": 54,
+      "previously_applied_target_counts": 47,
+      "encoder_counts": 1,
+      "angle_rad": 0.002253381273813738,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0100001,
+      "desired_counts": 59,
+      "previously_applied_target_counts": 54,
+      "encoder_counts": 2,
+      "angle_rad": 0.0028711126929346405,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0200001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 59,
+      "encoder_counts": 2,
+      "angle_rad": 0.003488847620473984,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0300001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 3,
+      "angle_rad": 0.0041065836872119345,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0400001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.0047243201238543414,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0500001,
+      "desired_counts": 61,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.005342056680607071,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0600001000000001,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 61,
+      "encoder_counts": 4,
+      "angle_rad": 0.00595979327636041,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0700001000000001,
+      "desired_counts": 52,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 4,
+      "angle_rad": 0.0065775298847774956,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.0800001000000001,
+      "desired_counts": 45,
+      "previously_applied_target_counts": 52,
+      "encoder_counts": 5,
+      "angle_rad": 0.0071557377026879865,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 1.0900001000000001,
+      "desired_counts": 37,
+      "previously_applied_target_counts": 45,
+      "encoder_counts": 5,
+      "angle_rad": 0.007147283301530953,
+      "applied_pwm": -80
+    },
+    {
+      "time_s": 1.1000001000000001,
+      "desired_counts": 27,
+      "previously_applied_target_counts": 37,
+      "encoder_counts": 4,
+      "angle_rad": 0.006821487438836143,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1100001000000002,
+      "desired_counts": 17,
+      "previously_applied_target_counts": 27,
+      "encoder_counts": 4,
+      "angle_rad": 0.006305287965045477,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1200001000000002,
+      "desired_counts": 6,
+      "previously_applied_target_counts": 17,
+      "encoder_counts": 4,
+      "angle_rad": 0.005715953037495718,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1300001000000002,
+      "desired_counts": -4,
+      "previously_applied_target_counts": 6,
+      "encoder_counts": 3,
+      "angle_rad": 0.005107177956241714,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1400001000000002,
+      "desired_counts": -15,
+      "previously_applied_target_counts": -4,
+      "encoder_counts": 3,
+      "angle_rad": 0.004492324911013397,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1500001000000002,
+      "desired_counts": -25,
+      "previously_applied_target_counts": -15,
+      "encoder_counts": 3,
+      "angle_rad": 0.003875521867895672,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1600001,
+      "desired_counts": -35,
+      "previously_applied_target_counts": -25,
+      "encoder_counts": 2,
+      "angle_rad": 0.003258088102382384,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1700001,
+      "desired_counts": -44,
+      "previously_applied_target_counts": -35,
+      "encoder_counts": 2,
+      "angle_rad": 0.0026404497946429287,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1800001,
+      "desired_counts": -51,
+      "previously_applied_target_counts": -44,
+      "encoder_counts": 1,
+      "angle_rad": 0.0020227450977988574,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.1900001,
+      "desired_counts": -57,
+      "previously_applied_target_counts": -51,
+      "encoder_counts": 1,
+      "angle_rad": 0.0014050188468312339,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.2000001,
+      "desired_counts": -61,
+      "previously_applied_target_counts": -57,
+      "encoder_counts": 1,
+      "angle_rad": 0.0007872855973987502,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.2100001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -61,
+      "encoder_counts": 0,
+      "angle_rad": 0.00016955007555035355,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.2200001,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": 0,
+      "angle_rad": -0.0004481861841631179,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.2300001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.0010659226834658884,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.2400001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.0016836592605648454,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.2500001,
+      "desired_counts": -55,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -2,
+      "angle_rad": -0.0023013958629247338,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.2600001,
+      "desired_counts": -49,
+      "previously_applied_target_counts": -55,
+      "encoder_counts": -2,
+      "angle_rad": -0.0028942408986825474,
+      "applied_pwm": -36
+    },
+    {
+      "time_s": 1.2700001,
+      "desired_counts": -41,
+      "previously_applied_target_counts": -49,
+      "encoder_counts": -2,
+      "angle_rad": -0.0030429180667055065,
+      "applied_pwm": 4
+    },
+    {
+      "time_s": 1.2800001,
+      "desired_counts": -32,
+      "previously_applied_target_counts": -41,
+      "encoder_counts": -2,
+      "angle_rad": -0.0030235688865589295,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.2900001,
+      "desired_counts": -22,
+      "previously_applied_target_counts": -32,
+      "encoder_counts": -2,
+      "angle_rad": -0.0025827978557578708,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3000001,
+      "desired_counts": -12,
+      "previously_applied_target_counts": -22,
+      "encoder_counts": -1,
+      "angle_rad": -0.002010031697055402,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3100001000000001,
+      "desired_counts": -1,
+      "previously_applied_target_counts": -12,
+      "encoder_counts": -1,
+      "angle_rad": -0.0014062331430961875,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3200001000000001,
+      "desired_counts": 10,
+      "previously_applied_target_counts": -1,
+      "encoder_counts": -1,
+      "angle_rad": -0.0007929590681126469,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3300001000000001,
+      "desired_counts": 20,
+      "previously_applied_target_counts": 10,
+      "encoder_counts": 0,
+      "angle_rad": -0.00017666490823219148,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3400001000000001,
+      "desired_counts": 30,
+      "previously_applied_target_counts": 20,
+      "encoder_counts": 0,
+      "angle_rad": 0.00044060401858396313,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3500001000000001,
+      "desired_counts": 39,
+      "previously_applied_target_counts": 30,
+      "encoder_counts": 1,
+      "angle_rad": 0.001058188844061158,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3600001000000002,
+      "desired_counts": 47,
+      "previously_applied_target_counts": 39,
+      "encoder_counts": 1,
+      "angle_rad": 0.0016758761792809195,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3700001000000002,
+      "desired_counts": 54,
+      "previously_applied_target_counts": 47,
+      "encoder_counts": 1,
+      "angle_rad": 0.0022935967932804606,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3800001000000002,
+      "desired_counts": 59,
+      "previously_applied_target_counts": 54,
+      "encoder_counts": 2,
+      "angle_rad": 0.0029113282124013633,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.3900001000000002,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 59,
+      "encoder_counts": 2,
+      "angle_rad": 0.0035290631399407064,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.4000001000000002,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 3,
+      "angle_rad": 0.004146799206678656,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.4100001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.004764535643321047,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.4200001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 4,
+      "angle_rad": 0.0053822722000737774,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.4300001,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 4,
+      "angle_rad": 0.006000008795827116,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.4400001,
+      "desired_counts": 52,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 4,
+      "angle_rad": 0.006615690648117795,
+      "applied_pwm": 88
+    },
+    {
+      "time_s": 1.4500001,
+      "desired_counts": 45,
+      "previously_applied_target_counts": 52,
+      "encoder_counts": 5,
+      "angle_rad": 0.007101759385958023,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 1.4600001,
+      "desired_counts": 37,
+      "previously_applied_target_counts": 45,
+      "encoder_counts": 5,
+      "angle_rad": 0.007097529748928923,
+      "applied_pwm": -80
+    },
+    {
+      "time_s": 1.4700001,
+      "desired_counts": 28,
+      "previously_applied_target_counts": 37,
+      "encoder_counts": 4,
+      "angle_rad": 0.006771653051149463,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.4800001,
+      "desired_counts": 17,
+      "previously_applied_target_counts": 28,
+      "encoder_counts": 4,
+      "angle_rad": 0.006255452649869667,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.4900001,
+      "desired_counts": 7,
+      "previously_applied_target_counts": 17,
+      "encoder_counts": 4,
+      "angle_rad": 0.005666117424502587,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5000001,
+      "desired_counts": -4,
+      "previously_applied_target_counts": 7,
+      "encoder_counts": 3,
+      "angle_rad": 0.005057342251161734,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5100001,
+      "desired_counts": -15,
+      "previously_applied_target_counts": -4,
+      "encoder_counts": 3,
+      "angle_rad": 0.004442489176578432,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5200001,
+      "desired_counts": -25,
+      "previously_applied_target_counts": -15,
+      "encoder_counts": 2,
+      "angle_rad": 0.003825686123984745,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5300001,
+      "desired_counts": -35,
+      "previously_applied_target_counts": -25,
+      "encoder_counts": 2,
+      "angle_rad": 0.0032082523554003784,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5400001,
+      "desired_counts": -43,
+      "previously_applied_target_counts": -35,
+      "encoder_counts": 2,
+      "angle_rad": 0.0025906140466643436,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5500001,
+      "desired_counts": -51,
+      "previously_applied_target_counts": -43,
+      "encoder_counts": 1,
+      "angle_rad": 0.0019729093494967394,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5600001000000001,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -51,
+      "encoder_counts": 1,
+      "angle_rad": 0.0013551830984240704,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5700001000000001,
+      "desired_counts": -61,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": 0,
+      "angle_rad": 0.0007374498489574774,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5800001000000001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -61,
+      "encoder_counts": 0,
+      "angle_rad": 0.00011971432709800505,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.5900001000000001,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": 0,
+      "angle_rad": -0.0004980219326190625,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.6000001000000001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.001115758431923,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.6100001000000002,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.0017334950090223365,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.6200001000000002,
+      "desired_counts": -55,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -2,
+      "angle_rad": -0.0023512316113823463,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.6300001000000002,
+      "desired_counts": -49,
+      "previously_applied_target_counts": -55,
+      "encoder_counts": -2,
+      "angle_rad": -0.0029440766471391143,
+      "applied_pwm": -36
+    },
+    {
+      "time_s": 1.6400001000000002,
+      "desired_counts": -41,
+      "previously_applied_target_counts": -49,
+      "encoder_counts": -2,
+      "angle_rad": -0.0030927538151623584,
+      "applied_pwm": 4
+    },
+    {
+      "time_s": 1.6500001000000002,
+      "desired_counts": -33,
+      "previously_applied_target_counts": -41,
+      "encoder_counts": -2,
+      "angle_rad": -0.0030734046350155823,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.6600001000000002,
+      "desired_counts": -23,
+      "previously_applied_target_counts": -33,
+      "encoder_counts": -2,
+      "angle_rad": -0.002632633604215027,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.6700001,
+      "desired_counts": -12,
+      "previously_applied_target_counts": -23,
+      "encoder_counts": -1,
+      "angle_rad": -0.002059867445512689,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.6800001,
+      "desired_counts": -2,
+      "previously_applied_target_counts": -12,
+      "encoder_counts": -1,
+      "angle_rad": -0.0014560688915535264,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.6900001,
+      "desired_counts": 9,
+      "previously_applied_target_counts": -2,
+      "encoder_counts": -1,
+      "angle_rad": -0.0008427948165700053,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7000001,
+      "desired_counts": 20,
+      "previously_applied_target_counts": 9,
+      "encoder_counts": 0,
+      "angle_rad": -0.0002265006566895569,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7100001,
+      "desired_counts": 30,
+      "previously_applied_target_counts": 20,
+      "encoder_counts": 0,
+      "angle_rad": 0.0003907682701265949,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7200001,
+      "desired_counts": 39,
+      "previously_applied_target_counts": 30,
+      "encoder_counts": 1,
+      "angle_rad": 0.0010083530956037886,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7300001,
+      "desired_counts": 47,
+      "previously_applied_target_counts": 39,
+      "encoder_counts": 1,
+      "angle_rad": 0.0016260404308235496,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7400001,
+      "desired_counts": 54,
+      "previously_applied_target_counts": 47,
+      "encoder_counts": 1,
+      "angle_rad": 0.00224376104482309,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7500001,
+      "desired_counts": 59,
+      "previously_applied_target_counts": 54,
+      "encoder_counts": 2,
+      "angle_rad": 0.002861492463943993,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7600001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 59,
+      "encoder_counts": 2,
+      "angle_rad": 0.0034792273914833354,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7700001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 3,
+      "angle_rad": 0.004096963458221286,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7800001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.004714699894863693,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.7900001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.0053324364516164225,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.8000001,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 4,
+      "angle_rad": 0.005950173047369761,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 1.8100001000000001,
+      "desired_counts": 52,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 4,
+      "angle_rad": 0.006562663491691552,
+      "applied_pwm": 72
+    },
+    {
+      "time_s": 1.8200001000000001,
+      "desired_counts": 46,
+      "previously_applied_target_counts": 52,
+      "encoder_counts": 5,
+      "angle_rad": 0.006940022913556528,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 1.8300001000000001,
+      "desired_counts": 37,
+      "previously_applied_target_counts": 46,
+      "encoder_counts": 5,
+      "angle_rad": 0.006946053646967906,
+      "applied_pwm": -44
+    },
+    {
+      "time_s": 1.8400001000000001,
+      "desired_counts": 28,
+      "previously_applied_target_counts": 37,
+      "encoder_counts": 4,
+      "angle_rad": 0.0067771669138442635,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.8500001000000001,
+      "desired_counts": 18,
+      "previously_applied_target_counts": 28,
+      "encoder_counts": 4,
+      "angle_rad": 0.006309340464644479,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.8600001000000002,
+      "desired_counts": 7,
+      "previously_applied_target_counts": 18,
+      "encoder_counts": 4,
+      "angle_rad": 0.005730899396697364,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.8700001000000002,
+      "desired_counts": -4,
+      "previously_applied_target_counts": 7,
+      "encoder_counts": 3,
+      "angle_rad": 0.005125420357371529,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.8800001000000002,
+      "desired_counts": -14,
+      "previously_applied_target_counts": -4,
+      "encoder_counts": 3,
+      "angle_rad": 0.004511614836222066,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.8900001000000002,
+      "desired_counts": -25,
+      "previously_applied_target_counts": -14,
+      "encoder_counts": 3,
+      "angle_rad": 0.003895149580068746,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9000001000000002,
+      "desired_counts": -34,
+      "previously_applied_target_counts": -25,
+      "encoder_counts": 2,
+      "angle_rad": 0.003277825250384823,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9100001000000002,
+      "desired_counts": -43,
+      "previously_applied_target_counts": -34,
+      "encoder_counts": 2,
+      "angle_rad": 0.002660222451332265,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9200001,
+      "desired_counts": -50,
+      "previously_applied_target_counts": -43,
+      "encoder_counts": 1,
+      "angle_rad": 0.002042529281669934,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9300001,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -50,
+      "encoder_counts": 1,
+      "angle_rad": 0.001424806773367172,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9400001,
+      "desired_counts": -61,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": 1,
+      "angle_rad": 0.0008070747391723734,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9500001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -61,
+      "encoder_counts": 0,
+      "angle_rad": 0.0001893396119164711,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9600001,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": 0,
+      "angle_rad": -0.0004283965196705535,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9700001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.0010461329773698575,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9800001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.0016638695409598994,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 1.9900001,
+      "desired_counts": -55,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -1,
+      "angle_rad": -0.0022816061389333534,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.0000001,
+      "desired_counts": -49,
+      "previously_applied_target_counts": -55,
+      "encoder_counts": -2,
+      "angle_rad": -0.0028850008279006725,
+      "applied_pwm": -56
+    },
+    {
+      "time_s": 2.0100001,
+      "desired_counts": -42,
+      "previously_applied_target_counts": -49,
+      "encoder_counts": -2,
+      "angle_rad": -0.0031403674405537977,
+      "applied_pwm": 20
+    },
+    {
+      "time_s": 2.0200001,
+      "desired_counts": -33,
+      "previously_applied_target_counts": -42,
+      "encoder_counts": -2,
+      "angle_rad": -0.003074940551638747,
+      "applied_pwm": 64
+    },
+    {
+      "time_s": 2.0300001,
+      "desired_counts": -23,
+      "previously_applied_target_counts": -33,
+      "encoder_counts": -2,
+      "angle_rad": -0.00281786985500195,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.0400001,
+      "desired_counts": -13,
+      "previously_applied_target_counts": -23,
+      "encoder_counts": -2,
+      "angle_rad": -0.0023279767307943997,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.0500000999999997,
+      "desired_counts": -2,
+      "previously_applied_target_counts": -13,
+      "encoder_counts": -1,
+      "angle_rad": -0.0017446926129427085,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.0600001,
+      "desired_counts": 9,
+      "previously_applied_target_counts": -2,
+      "encoder_counts": -1,
+      "angle_rad": -0.0011377586473656951,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.0700000999999997,
+      "desired_counts": 19,
+      "previously_applied_target_counts": 9,
+      "encoder_counts": 0,
+      "angle_rad": -0.00052349158504193,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.0800001,
+      "desired_counts": 29,
+      "previously_applied_target_counts": 19,
+      "encoder_counts": 0,
+      "angle_rad": 0.00009312241197423094,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.0900000999999997,
+      "desired_counts": 39,
+      "previously_applied_target_counts": 29,
+      "encoder_counts": 0,
+      "angle_rad": 0.0007104949212789464,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1000001,
+      "desired_counts": 47,
+      "previously_applied_target_counts": 39,
+      "encoder_counts": 1,
+      "angle_rad": 0.001328113352217736,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1100000999999997,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 47,
+      "encoder_counts": 1,
+      "angle_rad": 0.0019458115963552028,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1200001,
+      "desired_counts": 59,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 2,
+      "angle_rad": 0.0025635357522363327,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1300000999999997,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 59,
+      "encoder_counts": 2,
+      "angle_rad": 0.0031812683213962045,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1400001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 2,
+      "angle_rad": 0.0037990036223572877,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1500000999999997,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.0044167398103473485,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1600001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.0050344762863610915,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1700000999999998,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 4,
+      "angle_rad": 0.005652212855897932,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.1800001,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 4,
+      "angle_rad": 0.006264703291808343,
+      "applied_pwm": 72
+    },
+    {
+      "time_s": 2.1900001,
+      "desired_counts": 46,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 4,
+      "angle_rad": 0.0066517999264021814,
+      "applied_pwm": 36
+    },
+    {
+      "time_s": 2.2000001,
+      "desired_counts": 38,
+      "previously_applied_target_counts": 46,
+      "encoder_counts": 4,
+      "angle_rad": 0.006795631181523587,
+      "applied_pwm": -56
+    },
+    {
+      "time_s": 2.2100001,
+      "desired_counts": 28,
+      "previously_applied_target_counts": 38,
+      "encoder_counts": 4,
+      "angle_rad": 0.006588482498525433,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2200001,
+      "desired_counts": 18,
+      "previously_applied_target_counts": 28,
+      "encoder_counts": 4,
+      "angle_rad": 0.006109074109220314,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2300001,
+      "desired_counts": 8,
+      "previously_applied_target_counts": 18,
+      "encoder_counts": 4,
+      "angle_rad": 0.005528141102660338,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2400001,
+      "desired_counts": -3,
+      "previously_applied_target_counts": 8,
+      "encoder_counts": 3,
+      "angle_rad": 0.004921915912061764,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2500001,
+      "desired_counts": -14,
+      "previously_applied_target_counts": -3,
+      "encoder_counts": 3,
+      "angle_rad": 0.004307873856336441,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2600001,
+      "desired_counts": -24,
+      "previously_applied_target_counts": -14,
+      "encoder_counts": 2,
+      "angle_rad": 0.003691332389638679,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2700001,
+      "desired_counts": -34,
+      "previously_applied_target_counts": -24,
+      "encoder_counts": 2,
+      "angle_rad": 0.0030739833759238773,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2800001,
+      "desired_counts": -43,
+      "previously_applied_target_counts": -34,
+      "encoder_counts": 2,
+      "angle_rad": 0.0024563725683247315,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.2900001,
+      "desired_counts": -50,
+      "previously_applied_target_counts": -43,
+      "encoder_counts": 1,
+      "angle_rad": 0.0018386767989214186,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3000001,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -50,
+      "encoder_counts": 1,
+      "angle_rad": 0.0012209534465380096,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3100001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": 0,
+      "angle_rad": 0.0006032211382723129,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3200000999999997,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": 0,
+      "angle_rad": -0.000014514077975402196,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3300001,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": 0,
+      "angle_rad": -0.000632250238458588,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3400000999999997,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.001249986705540639,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3500001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.0018677232721773375,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3600000999999997,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -2,
+      "angle_rad": -0.0024854598711400435,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.3700001,
+      "desired_counts": -50,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": -2,
+      "angle_rad": -0.0030979503164916965,
+      "applied_pwm": -72
+    },
+    {
+      "time_s": 2.3800000999999997,
+      "desired_counts": -42,
+      "previously_applied_target_counts": -50,
+      "encoder_counts": -2,
+      "angle_rad": -0.0034753097384590944,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 2.3900001,
+      "desired_counts": -33,
+      "previously_applied_target_counts": -42,
+      "encoder_counts": -2,
+      "angle_rad": -0.0034743112511645916,
+      "applied_pwm": 96
+    },
+    {
+      "time_s": 2.4000000999999997,
+      "desired_counts": -24,
+      "previously_applied_target_counts": -33,
+      "encoder_counts": -2,
+      "angle_rad": -0.003060215733166826,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4100001,
+      "desired_counts": -13,
+      "previously_applied_target_counts": -24,
+      "encoder_counts": -2,
+      "angle_rad": -0.0025019913488905344,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4200000999999998,
+      "desired_counts": -2,
+      "previously_applied_target_counts": -13,
+      "encoder_counts": -1,
+      "angle_rad": -0.0019021163779645313,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4300001,
+      "desired_counts": 8,
+      "previously_applied_target_counts": -2,
+      "encoder_counts": -1,
+      "angle_rad": -0.0012900761248537155,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4400001,
+      "desired_counts": 19,
+      "previously_applied_target_counts": 8,
+      "encoder_counts": 0,
+      "angle_rad": -0.0006741784895334244,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4500001,
+      "desired_counts": 29,
+      "previously_applied_target_counts": 19,
+      "encoder_counts": 0,
+      "angle_rad": -0.00005703788754777385,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4600001,
+      "desired_counts": 38,
+      "previously_applied_target_counts": 29,
+      "encoder_counts": 0,
+      "angle_rad": 0.0005605053150872627,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4700001,
+      "desired_counts": 46,
+      "previously_applied_target_counts": 38,
+      "encoder_counts": 1,
+      "angle_rad": 0.0011781791398422683,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4800001,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 46,
+      "encoder_counts": 1,
+      "angle_rad": 0.0017958953674050762,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.4900001,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 2,
+      "angle_rad": 0.0024136253622738173,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.5000001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 2,
+      "angle_rad": 0.0030313598273546383,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.5100001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 2,
+      "angle_rad": 0.003649095743929864,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.5200001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.004266832131813487,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.5300001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.004884568672733942,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.5400001,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 4,
+      "angle_rad": 0.005502305263346414,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.5500001,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 4,
+      "angle_rad": 0.0061147957060190316,
+      "applied_pwm": 72
+    },
+    {
+      "time_s": 2.5600001,
+      "desired_counts": 46,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 4,
+      "angle_rad": 0.006501892341309435,
+      "applied_pwm": 36
+    },
+    {
+      "time_s": 2.5700000999999997,
+      "desired_counts": 38,
+      "previously_applied_target_counts": 46,
+      "encoder_counts": 4,
+      "angle_rad": 0.006645723596441701,
+      "applied_pwm": -56
+    },
+    {
+      "time_s": 2.5800001,
+      "desired_counts": 29,
+      "previously_applied_target_counts": 38,
+      "encoder_counts": 4,
+      "angle_rad": 0.0064385749134432445,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.5900000999999997,
+      "desired_counts": 19,
+      "previously_applied_target_counts": 29,
+      "encoder_counts": 4,
+      "angle_rad": 0.005959166524137768,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6000001,
+      "desired_counts": 8,
+      "previously_applied_target_counts": 19,
+      "encoder_counts": 4,
+      "angle_rad": 0.005378233517577641,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6100000999999997,
+      "desired_counts": -3,
+      "previously_applied_target_counts": 8,
+      "encoder_counts": 3,
+      "angle_rad": 0.004772008326979037,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6200001,
+      "desired_counts": -14,
+      "previously_applied_target_counts": -3,
+      "encoder_counts": 3,
+      "angle_rad": 0.004157966271253667,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6300000999999997,
+      "desired_counts": -24,
+      "previously_applied_target_counts": -14,
+      "encoder_counts": 2,
+      "angle_rad": 0.0035414248045559198,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6400001,
+      "desired_counts": -34,
+      "previously_applied_target_counts": -24,
+      "encoder_counts": 2,
+      "angle_rad": 0.0029240757908410874,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6500000999999997,
+      "desired_counts": -42,
+      "previously_applied_target_counts": -34,
+      "encoder_counts": 2,
+      "angle_rad": 0.00230646498324197,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6600001,
+      "desired_counts": -50,
+      "previously_applied_target_counts": -42,
+      "encoder_counts": 1,
+      "angle_rad": 0.0016887692138386299,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6700000999999998,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -50,
+      "encoder_counts": 1,
+      "angle_rad": 0.0010710458614552481,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6800001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": 0,
+      "angle_rad": 0.0004533135531895242,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.6900001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": 0,
+      "angle_rad": -0.00016442166305819102,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.7000001,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.0007821578235413768,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.7100001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.001399894290623428,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.7200001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.002017630857260126,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.7300001,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -2,
+      "angle_rad": -0.0026353674562228304,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.7400001,
+      "desired_counts": -50,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": -2,
+      "angle_rad": -0.0032478579015746754,
+      "applied_pwm": -72
+    },
+    {
+      "time_s": 2.7500001,
+      "desired_counts": -42,
+      "previously_applied_target_counts": -50,
+      "encoder_counts": -2,
+      "angle_rad": -0.003625217323541597,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 2.7600001,
+      "desired_counts": -34,
+      "previously_applied_target_counts": -42,
+      "encoder_counts": -2,
+      "angle_rad": -0.0036242188362467062,
+      "applied_pwm": 96
+    },
+    {
+      "time_s": 2.7700001,
+      "desired_counts": -24,
+      "previously_applied_target_counts": -34,
+      "encoder_counts": -2,
+      "angle_rad": -0.00321012331824817,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.7800001,
+      "desired_counts": -14,
+      "previously_applied_target_counts": -24,
+      "encoder_counts": -2,
+      "angle_rad": -0.0026518989339716953,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.7900001,
+      "desired_counts": -3,
+      "previously_applied_target_counts": -14,
+      "encoder_counts": -1,
+      "angle_rad": -0.002052023963045612,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8000001,
+      "desired_counts": 8,
+      "previously_applied_target_counts": -3,
+      "encoder_counts": -1,
+      "angle_rad": -0.001439983709934764,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8100001,
+      "desired_counts": 19,
+      "previously_applied_target_counts": 8,
+      "encoder_counts": -1,
+      "angle_rad": -0.0008240860746144601,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8200000999999997,
+      "desired_counts": 29,
+      "previously_applied_target_counts": 19,
+      "encoder_counts": 0,
+      "angle_rad": -0.00020694547262883198,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8300001,
+      "desired_counts": 38,
+      "previously_applied_target_counts": 29,
+      "encoder_counts": 0,
+      "angle_rad": 0.00041059773000623413,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8400000999999997,
+      "desired_counts": 46,
+      "previously_applied_target_counts": 38,
+      "encoder_counts": 1,
+      "angle_rad": 0.0010282715547612123,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8500001,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 46,
+      "encoder_counts": 1,
+      "angle_rad": 0.0016459877823240476,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8600000999999997,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 1,
+      "angle_rad": 0.002263717777192761,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8700001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 2,
+      "angle_rad": 0.002881452242273609,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8800000999999997,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 2,
+      "angle_rad": 0.0034991881588488072,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.8900001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.004116924546732459,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.9000000999999997,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.004734661087652885,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.9100001,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 3,
+      "angle_rad": 0.005352397678265386,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 2.9200000999999998,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 4,
+      "angle_rad": 0.005968763526315994,
+      "applied_pwm": 92
+    },
+    {
+      "time_s": 2.9300001,
+      "desired_counts": 46,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 4,
+      "angle_rad": 0.006491382315659043,
+      "applied_pwm": 20
+    },
+    {
+      "time_s": 2.9400001,
+      "desired_counts": 38,
+      "previously_applied_target_counts": 46,
+      "encoder_counts": 4,
+      "angle_rad": 0.006565702578446233,
+      "applied_pwm": -56
+    },
+    {
+      "time_s": 2.9500001,
+      "desired_counts": 29,
+      "previously_applied_target_counts": 38,
+      "encoder_counts": 4,
+      "angle_rad": 0.006354509979391424,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.9600001,
+      "desired_counts": 19,
+      "previously_applied_target_counts": 29,
+      "encoder_counts": 4,
+      "angle_rad": 0.00587494322917435,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.9700001,
+      "desired_counts": 8,
+      "previously_applied_target_counts": 19,
+      "encoder_counts": 3,
+      "angle_rad": 0.005293969136013556,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.9800001,
+      "desired_counts": -2,
+      "previously_applied_target_counts": 8,
+      "encoder_counts": 3,
+      "angle_rad": 0.0046877315069615505,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 2.9900001,
+      "desired_counts": -13,
+      "previously_applied_target_counts": -2,
+      "encoder_counts": 3,
+      "angle_rad": 0.00407368550604462,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0000001,
+      "desired_counts": -24,
+      "previously_applied_target_counts": -13,
+      "encoder_counts": 2,
+      "angle_rad": 0.0034571427679114036,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0100001,
+      "desired_counts": -33,
+      "previously_applied_target_counts": -24,
+      "encoder_counts": 2,
+      "angle_rad": 0.002839793342355518,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0200001,
+      "desired_counts": -42,
+      "previously_applied_target_counts": -33,
+      "encoder_counts": 1,
+      "angle_rad": 0.0022221824011342804,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0300001,
+      "desired_counts": -50,
+      "previously_applied_target_counts": -42,
+      "encoder_counts": 1,
+      "angle_rad": 0.0016044865883540576,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0400001,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -50,
+      "encoder_counts": 1,
+      "angle_rad": 0.0009867632218870858,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0500001,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": 0,
+      "angle_rad": 0.00036903090904845154,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0600001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": 0,
+      "angle_rad": -0.0002487043086841048,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0700001,
+      "desired_counts": -64,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.000866440469649427,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0800001,
+      "desired_counts": -63,
+      "previously_applied_target_counts": -64,
+      "encoder_counts": -1,
+      "angle_rad": -0.0014841769368880305,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.0900000999999997,
+      "desired_counts": -60,
+      "previously_applied_target_counts": -63,
+      "encoder_counts": -1,
+      "angle_rad": -0.002101913503575535,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.1000001,
+      "desired_counts": -56,
+      "previously_applied_target_counts": -60,
+      "encoder_counts": -2,
+      "angle_rad": -0.002719650102554777,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.1100000999999997,
+      "desired_counts": -50,
+      "previously_applied_target_counts": -56,
+      "encoder_counts": -2,
+      "angle_rad": -0.003332140547912084,
+      "applied_pwm": -72
+    },
+    {
+      "time_s": 3.1200001,
+      "desired_counts": -43,
+      "previously_applied_target_counts": -50,
+      "encoder_counts": -2,
+      "angle_rad": -0.0037094999698790774,
+      "applied_pwm": 0
+    },
+    {
+      "time_s": 3.1300000999999997,
+      "desired_counts": -34,
+      "previously_applied_target_counts": -43,
+      "encoder_counts": -2,
+      "angle_rad": -0.003713381246233522,
+      "applied_pwm": 60
+    },
+    {
+      "time_s": 3.1400001,
+      "desired_counts": -24,
+      "previously_applied_target_counts": -34,
+      "encoder_counts": -2,
+      "angle_rad": -0.003480086329612457,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.1500000999999997,
+      "desired_counts": -14,
+      "previously_applied_target_counts": -24,
+      "encoder_counts": -2,
+      "angle_rad": -0.0029956383323891515,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.1600001,
+      "desired_counts": -3,
+      "previously_applied_target_counts": -14,
+      "encoder_counts": -2,
+      "angle_rad": -0.0024135806739312322,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.1700000999999998,
+      "desired_counts": 8,
+      "previously_applied_target_counts": -3,
+      "encoder_counts": -1,
+      "angle_rad": -0.0018070168880677138,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.1800001,
+      "desired_counts": 18,
+      "previously_applied_target_counts": 8,
+      "encoder_counts": -1,
+      "angle_rad": -0.0011928673824541222,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.1900001,
+      "desired_counts": 28,
+      "previously_applied_target_counts": 18,
+      "encoder_counts": 0,
+      "angle_rad": -0.0005762912836961166,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2000001,
+      "desired_counts": 38,
+      "previously_applied_target_counts": 28,
+      "encoder_counts": 0,
+      "angle_rad": 0.00004106894835222023,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2100001,
+      "desired_counts": 46,
+      "previously_applied_target_counts": 38,
+      "encoder_counts": 0,
+      "angle_rad": 0.0006586833957875151,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2200001,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 46,
+      "encoder_counts": 1,
+      "angle_rad": 0.0012763803467714765,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2300001,
+      "desired_counts": 58,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 1,
+      "angle_rad": 0.0018941040827904433,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2400001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 58,
+      "encoder_counts": 2,
+      "angle_rad": 0.002511836515621856,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2500001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 2,
+      "angle_rad": 0.003129571772316521,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2600001,
+      "desired_counts": 64,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 2,
+      "angle_rad": 0.003747307945933061,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2700001,
+      "desired_counts": 62,
+      "previously_applied_target_counts": 64,
+      "encoder_counts": 3,
+      "angle_rad": 0.004365044417279594,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2800001,
+      "desired_counts": 59,
+      "previously_applied_target_counts": 62,
+      "encoder_counts": 3,
+      "angle_rad": 0.0049827809853010005,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.2900001,
+      "desired_counts": 53,
+      "previously_applied_target_counts": 59,
+      "encoder_counts": 4,
+      "angle_rad": 0.005600517584713328,
+      "applied_pwm": 100
+    },
+    {
+      "time_s": 3.3000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 53,
+      "encoder_counts": 4,
+      "angle_rad": 0.0061748866923240775,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.3100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 4,
+      "angle_rad": 0.006119940672058279,
+      "applied_pwm": -100
+    },
+    {
+      "time_s": 3.3200001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 4,
+      "angle_rad": 0.0057009526201811855,
+      "applied_pwm": -16
+    },
+    {
+      "time_s": 3.3300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 4,
+      "angle_rad": 0.005629127065683433,
+      "applied_pwm": -16
+    },
+    {
+      "time_s": 3.3400000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 4,
+      "angle_rad": 0.00556908592101415,
+      "applied_pwm": -16
+    },
+    {
+      "time_s": 3.3500001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 4,
+      "angle_rad": 0.0055091733839108675,
+      "applied_pwm": -16
+    },
+    {
+      "time_s": 3.3600000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 4,
+      "angle_rad": 0.005449259238893373,
+      "applied_pwm": -16
+    },
+    {
+      "time_s": 3.3700001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 4,
+      "angle_rad": 0.005389345091790051,
+      "applied_pwm": -16
+    },
+    {
+      "time_s": 3.3800000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.00532943094475136,
+      "applied_pwm": -16
+    },
+    {
+      "time_s": 3.3900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.005272193025814806,
+      "applied_pwm": 4
+    },
+    {
+      "time_s": 3.4000000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.005280923867836144,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.005239377951220281,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4200000999999998,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.005194604664226503,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.00514981960858751,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4400001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.005105034855411633,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4500001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.005060250102021017,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4600001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.005015465348620586,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4700001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004970680595220225,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4800001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004925895841819868,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.4900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.0048811110884195074,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004836326335019149,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.0047915415816187894,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5200001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004746756828218431,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004701972074818071,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5400001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004657187321417713,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5500001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004612402568017353,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5600001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004567617814616995,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5700001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004522833061216636,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5800001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004478048307816278,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.5900000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.00443326355441592,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.00438847880101556,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6100000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004343694047615201,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6200001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004298909294214842,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6300000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004254124540814484,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6400001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004209339787414124,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6500000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004164555034013766,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6600001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004119770280613406,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6700000999999998,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004074985527213047,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6800001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.004030200773812688,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.6900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.00398541602041233,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.7000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.00394063126701197,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.7100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.003895846513611612,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.7200001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 3,
+      "angle_rad": 0.0038510617602112527,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.7300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0038062770068108946,
+      "applied_pwm": -12
+    },
+    {
+      "time_s": 3.7400001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003764164735440055,
+      "applied_pwm": 8
+    },
+    {
+      "time_s": 3.7500001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003787806997458011,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.7600001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0037612108087420903,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.7700001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0037314369505116658,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.7800001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003701651286327938,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.7900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0036718659262510913,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8000001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0036420805659548253,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003612295205648572,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8200001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0035825098453423905,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0035527244850362106,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8400000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0035229391247300302,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8500001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003493153764423849,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8600000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003463368404117669,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8700001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0034335830438114875,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8800000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0034037976835053075,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.8900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003374012323199126,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9000000999999997,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003344226962892946,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9100001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0033144416025867648,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9200000999999998,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0032846562422805844,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9300001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0032548708819744032,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9400001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0032250855216682233,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9500001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0031953001613620417,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9600001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0031655148010558617,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9700001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.00313572944074968,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9800001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.0031059440804435,
+      "applied_pwm": -8
+    },
+    {
+      "time_s": 3.9900001,
+      "desired_counts": 0,
+      "previously_applied_target_counts": 0,
+      "encoder_counts": 2,
+      "angle_rad": 0.003076158720137319,
+      "applied_pwm": -8
+    }
+  ],
+  "metrics": {
+    "rms_degrees": 3.4233736910634165,
+    "peak_degrees": 5.625,
+    "previous_target_rms_degrees": 3.401784472041552,
+    "saturated_fraction": 0.6675,
+    "final_error_degrees": 0.17578125,
+    "tail_encoder_span_degrees": 0.087890625
+  },
+  "electrical": []
+}

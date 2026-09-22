@@ -1,0 +1,39 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 30.05s
+     Running tests/fpga_events.rs (target/debug/deps/fpga_events-cf52ebdcd8c252cc)
+
+running 6 tests
+test sparse_selection_keeps_canonical_unselected_pwm ... ok
+test malformed_frames_and_terminal_metadata_fail_without_panics ... ok
+test source_identity_sequence_timing_and_arithmetic_are_enforced ... ok
+test failed_audit_retains_raw_readback_and_cannot_be_promoted ... ok
+test rtl_bytes_cover_all_nine_axes_and_full_width_clocks ... ok
+test interrupted_prefixes_remain_unscored_and_missing_middle_is_rejected ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/fpga_upload.rs (target/debug/deps/fpga_upload-cd8654e1f212acce)
+
+running 7 tests
+test sparse_plan_zeroes_unused_axes_but_preserves_original_evidence ... ok
+test uploads_are_bounded_nonexecuting_and_agree_with_existing_controller_packets ... ok
+test source_or_packet_changes_invalidate_saved_upload ... ok
+test actual_rtl_uart_receipts_decode_and_confirm_each_upload_stage ... ok
+test upload_transfer_checks_capability_and_stops_on_rejection_or_cancellation ... ok
+test rejects_unrepresentable_timing_invalid_homes_and_firmware_identity ... ok
+test rtl_fixture_is_reproducible_from_its_frozen_rust_source ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

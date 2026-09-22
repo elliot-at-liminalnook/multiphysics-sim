@@ -1,0 +1,33 @@
+iverilog -g2005 -s fixed_pd_tb -o impl/fixed-pd/parity.vvp impl/fixed-pd/fixed_pd_tb.v impl/fixed-pd/fixed_pd.v
+vvp impl/fixed-pd/parity.vvp
+PASS 4096 Rust/RTL vectors, signed quantization and saturation
+impl/fixed-pd/fixed_pd_tb.v:4098: $finish called at 163842 (1s)
+iverilog -g2005 -s bridge_safety_tb -o impl/control_regression.vvp tb/bridge_safety_tb.v src/uart_tx.v src/uart_rx.v src/host_packet_queue.v src/trajectory_store.v src/trajectory_upload.v src/bridge_control.v src/hx_safety.v src/button.v impl/fixed-pd/fixed_pd.v
+vvp impl/control_regression.vvp
+PASS: UART safety: 7 zero/off pairs, 9 local responses, telemetry forwarding, motion gating, thermal/stale/physical stop and held-stop rearm rejection
+tb/bridge_safety_tb.v:152: $finish called at 9503670000 (1ps)
+iverilog -g2005 -s bridge_control_tb -o impl/control.vvp tb/bridge_control_tb.v src/uart_tx.v src/uart_rx.v src/host_packet_queue.v src/trajectory_store.v src/trajectory_upload.v src/bridge_control.v src/hx_safety.v src/button.v impl/fixed-pd/fixed_pd.v
+vvp impl/control.vvp
+PASS FPGA controller: actual UART feedback, previous-state arithmetic, signed PWM, nine-axis batch, reused-feedback and travel rejection
+tb/bridge_control_tb.v:212: $finish called at 21519750000 (1ps)
+iverilog -g2005 -s host_packet_queue_tb -o impl/host_packet_queue_tb.vvp tb/host_packet_queue_tb.v src/host_packet_queue.v
+vvp impl/host_packet_queue_tb.vvp
+PASS 1: complete packets only, stable under stalls, ordered consumption
+PASS 2: full queue cannot block STOP; older commands discarded
+PASS 3: bad checksum stops/discards rather than forwarding
+PASS 4: normal overflow faults and discards queue
+PASS 5: length and inter-byte bounds enforced
+PASS 6: pending STOP survives malformed later traffic
+PASS 7: 64-byte packets and simultaneous full dequeue/enqueue
+PASS 8: addressed DISARM takes priority and clears old work
+PASS host packet queue
+tb/host_packet_queue_tb.v:70: $finish called at 5020000 (1ps)
+iverilog -g2005 -DBUFFERED_CONTROL -s bridge_safety_tb -o impl/buffered_safety_tb.vvp tb/bridge_safety_tb.v src/uart_tx.v src/uart_rx.v src/host_packet_queue.v src/trajectory_store.v src/trajectory_upload.v src/bridge_control.v src/hx_safety.v src/button.v impl/fixed-pd/fixed_pd.v
+vvp impl/buffered_safety_tb.vvp
+PASS: UART safety: 7 zero/off pairs, 9 local responses, telemetry forwarding, motion gating, thermal/stale/physical stop and held-stop rearm rejection
+tb/bridge_safety_tb.v:152: $finish called at 9480860000 (1ps)
+iverilog -g2005 -s bridge_control_tb -P bridge_control_tb.BUFFERED=1 -o impl/buffered_control_tb.vvp tb/bridge_control_tb.v src/uart_tx.v src/uart_rx.v src/host_packet_queue.v src/trajectory_store.v src/trajectory_upload.v src/bridge_control.v src/hx_safety.v src/button.v impl/fixed-pd/fixed_pd.v
+vvp impl/buffered_control_tb.vvp
+PASS buffered UART: priority STOP during servo reply, intact telemetry and status, no bus contention
+PASS FPGA controller: actual UART feedback, previous-state arithmetic, signed PWM, nine-axis batch, reused-feedback and travel rejection
+tb/bridge_control_tb.v:212: $finish called at 22718960000 (1ps)

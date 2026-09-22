@@ -1,0 +1,83 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling gemm-common v0.18.2
+   Compiling kurbo v0.13.1
+   Compiling read-fonts v0.41.0
+   Compiling parking_lot_core v0.9.12
+   Compiling ahash v0.8.12
+   Compiling parking_lot v0.12.5
+   Compiling rhai v1.26.0
+   Compiling gemm-f64 v0.18.2
+   Compiling gemm-c32 v0.18.2
+   Compiling gemm-f32 v0.18.2
+   Compiling gemm-c64 v0.18.2
+   Compiling peniko v0.6.1
+   Compiling sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+   Compiling sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+   Compiling sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+   Compiling sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+   Compiling sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+   Compiling sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+   Compiling sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+   Compiling sim-domain-magnetic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-magnetic)
+   Compiling gemm v0.18.2
+   Compiling faer v0.22.6
+   Compiling sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+   Compiling sim-domain-line v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-line)
+   Compiling sim-domain-acoustic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-acoustic)
+   Compiling sim-domain-fluid v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-fluid)
+   Compiling sim-domain-granular v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-granular)
+   Compiling sim-domain-radiative v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-radiative)
+   Compiling sim-domain-hydraulic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-hydraulic)
+   Compiling sim-domain-chemical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-chemical)
+   Compiling vello_common v0.1.0
+error: failed to write query cache to `/Users/elliot/physics-simulator/target/debug/incremental/sim_couple-3v6067283uyjw/s-hm9dab5uak-1v0gly6-working/query-cache.bin`: No space left on device (os error 28)
+
+error: failed to write query cache to `/Users/elliot/physics-simulator/target/debug/incremental/sim_domain_multibody-1zuvwym0rjz1r/s-hm9dabfi6a-062ka5u-working/query-cache.bin`: No space left on device (os error 28)
+
+error: could not write output to /Users/elliot/physics-simulator/target/debug/deps/gemm_f32-f12e9414b6b83e52.gemm_f32.dbfbaab012d6f62b-cgu.5.rcgu.o: No space left on device
+
+error: could not write output to /Users/elliot/physics-simulator/target/debug/deps/gemm_f64-9fa60bcef0ded3b3.gemm_f64.43a9209ae0595f62-cgu.5.rcgu.o: No space left on device
+
+error: could not compile `gemm-f32` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `gemm-f64` (lib) due to 1 previous error
+error: couldn't create a temp dir: No space left on device (os error 28) at path "/Users/elliot/physics-simulator/target/debug/deps/rmeta8GDb4H"
+
+error: could not create incremental compilation crate directory `/Users/elliot/physics-simulator/target/debug/incremental/sim_domain_granular-3ta8b6t715bji`: No space left on device (os error 28)
+
+error: could not create incremental compilation crate directory `/Users/elliot/physics-simulator/target/debug/incremental/sim_domain_radiative-2h8uralevgpjl`: No space left on device (os error 28)
+
+error: could not compile `sim-domain-granular` (lib) due to 1 previous error
+error: could not compile `sim-domain-control` (lib) due to 1 previous error
+error: could not compile `sim-domain-radiative` (lib) due to 1 previous error
+error: could not compile `sim-domain-multibody` (lib) due to 1 previous error
+error: could not create incremental compilation crate directory `/Users/elliot/physics-simulator/target/debug/incremental/sim_domain_hydraulic-0ngxabxuzz2dr`: No space left on device (os error 28)
+
+error: could not compile `sim-domain-hydraulic` (lib) due to 1 previous error
+error: could not create incremental compilation crate directory `/Users/elliot/physics-simulator/target/debug/incremental/sim_domain_chemical-1daueuiegt8ee`: No space left on device (os error 28)
+
+error: could not compile `sim-domain-chemical` (lib) due to 1 previous error
+error: could not write output to /Users/elliot/physics-simulator/target/debug/deps/sim_core-d40ca60faf45267f.19ylnc9p4kizvvzgw13uw4vuy.1wsmu3r.rcgu.o: No space left on device
+
+error: could not compile `sim-couple` (lib) due to 1 previous error
+error: could not write output to /Users/elliot/physics-simulator/target/debug/deps/gemm_c64-2507ee6cc64dcee3.gemm_c64.a5896949579a1d5e-cgu.5.rcgu.o: No space left on device
+
+error: could not write output to /Users/elliot/physics-simulator/target/debug/deps/gemm_c32-3967c1eb69d7d00c.gemm_c32.70c9483c6a318ad6-cgu.5.rcgu.o: No space left on device
+
+error: error writing dependencies to `/Users/elliot/physics-simulator/target/debug/deps/vello_common-e452f688adbc784b.d`: No space left on device (os error 28)
+
+error: could not compile `vello_common` (lib) due to 1 previous error
+error: error writing dependencies to `/Users/elliot/physics-simulator/target/debug/deps/faer-ce0dda555d5d79f6.d`: No space left on device (os error 28)
+
+error: could not compile `sim-core` (lib) due to 1 previous error
+error: could not compile `faer` (lib) due to 1 previous error
+error: could not compile `gemm-c64` (lib) due to 1 previous error
+error: could not compile `gemm-c32` (lib) due to 1 previous error
+error: failed to write to `/Users/elliot/physics-simulator/target/debug/deps/rmetahtG3Br/full.rmeta`: No space left on device (os error 28)
+
+error: could not compile `read-fonts` (lib) due to 1 previous error
+error: failed to write to `/Users/elliot/physics-simulator/target/debug/deps/rmetagJUwiq/full.rmeta`: No space left on device (os error 28)
+
+error: could not compile `rhai` (lib) due to 1 previous error

@@ -1,0 +1,18 @@
+{
+  "electrical": "Servo voltage in 0.1 V counts; current remains uncalibrated raw counts. Measured amps, watts and battery validation unavailable.",
+  "motors": {
+    "4": {
+      "max_current_raw_uncalibrated": 0,
+      "max_temperature_c": 53,
+      "peak_counts": 14.0,
+      "peak_degrees": 1.23046875,
+      "rms_counts": 5.408041566061314,
+      "rms_degrees": 0.4753161532671077,
+      "saturated_fraction": 0.2839506172839506,
+      "tracking_pass": false,
+      "voltage_max_v": 12.100000000000001,
+      "voltage_min_v": 12.100000000000001
+    }
+  },
+  "target_comparison": "Encoder observation versus previous applied discrete setpoint; target changes are held between FPGA batches. Position is internal encoder feedback, not an independent output shaft measurement."
+}

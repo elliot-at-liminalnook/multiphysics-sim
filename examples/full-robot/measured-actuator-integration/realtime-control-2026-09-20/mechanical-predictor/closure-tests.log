@@ -1,0 +1,23 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `release` profile [optimized] target(s) in 28.78s
+     Running tests/embedding.rs (target/release/deps/embedding-b9118982f001a057)
+
+running 1 test
+test temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages ... FAILED
+
+failures:
+
+---- temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages stdout ----
+
+thread 'temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages' (3231748) panicked at crates/sim-domain-robot/tests/embedding.rs:213:9:
+prediction must execute: floating=true tangent=false
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.10s
+
+error: test failed, to rerun pass `-p sim-domain-robot --test embedding`

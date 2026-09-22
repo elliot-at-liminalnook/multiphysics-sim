@@ -1,0 +1,21 @@
+{
+  "scope": "Expose existing retained hybrid motor solve statistics through shared read-only session/environment getters and standalone profiling output. No new work or state enters stepping; serialization happens after the timed run. Successful trial counters include discarded event-location trials and exclude failed-solve internal work.",
+  "sources_before": {
+    "crates/sim-runtime/src/embedded.rs": "615409afcad45bd0c1368b25941cdcc3b71d30baab6aa48fee4fc569da61af38",
+    "crates/sim-runtime/src/environment.rs": "35d30b95817b9d97c01111ec0e536b317d0162747bd71e676c512659ea8cb130",
+    "crates/sim-runtime/examples/run_environment.rs": "430bc394a80a38d68647cc98b997d85959de5f0d793839f2508311f48ead3a95"
+  },
+  "binary_before_sha256": "c6dae0b1cd490713a961cc4e332c8c191b9517f7aaac8fce8e2fe8b2cfb10f4b",
+  "sources_candidate": {
+    "crates/sim-runtime/src/embedded.rs": "70795807938cc182e9e76d053cf59f3e0d6635f18342797573133e397f47964b",
+    "crates/sim-runtime/src/environment.rs": "18add3e001775828795e1aeba713b83300f3c3ac181aa22c50402349f6523e94",
+    "crates/sim-runtime/examples/run_environment.rs": "656b8927fe24284bb16bf5e0b15cca69a745ebb88a331d8e0930a6301438d85f"
+  },
+  "inputs": {
+    "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+    "config.json": "7e649c37845711afbf32a23d162163829f504d88df4c9219c71d7fb6a8108abb",
+    "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+    "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+  },
+  "binary_candidate_sha256": "48ed04acff918471b6d7267efbf9100247ae3af778a07af1ae74f0bc166ad396"
+}

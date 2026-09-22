@@ -1,0 +1,69 @@
+{
+  "cadence_evidence": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-13-controller-refinement/baseline-timing.json",
+  "cadence_evidence_blake3": "0e808ad28e3f1dd1f81df02a3ce0df005ba12be3379b287462400d44e12cc9a0",
+  "control": "closed_loop_pwm",
+  "experiment": {
+    "component_id": null,
+    "controller": {
+      "kind": "rust_pid",
+      "parameters": {
+        "duty_limit": 0.05,
+        "integral_limit": 0.2,
+        "kd": 0.03,
+        "ki": 0.0,
+        "kp": 0.8
+      }
+    },
+    "device": 4,
+    "duration_s": 3.0,
+    "fixture": "User-reported unloaded bench; no intentional external load. Attached output hardware not yet measured. Initial encoder, supply and temperature are captured at preflight.",
+    "initial_encoder_rad": 0.0,
+    "limits": {
+      "maximum_saturation_fraction": 0.25,
+      "peak_rad": 0.15,
+      "rms_rad": 0.05,
+      "settled_rad": 0.015
+    },
+    "name": "Zero-action controller cadence measurement",
+    "notes": "Provisional demonstration limits; set task tolerances before reserving validation measurements.",
+    "seed": 0,
+    "temperature_c": 25.0,
+    "timing": {
+      "command_delay_ticks": 0,
+      "encoder_quantum_rad": 0.0015339807878856412,
+      "evidence": "50 ms intended cadence; measured read-only transport baseline supports a conservative initial zero-action loop. Actual tick/feedback/command windows retained; sensor age unknown.",
+      "maximum_observation_age_s": 0.1,
+      "observation_delay_ticks": 0,
+      "period_s": 0.05,
+      "velocity_filter_s": 0.04
+    },
+    "trajectory": [
+      {
+        "position_rad": 0.0,
+        "time_s": 0.0
+      },
+      {
+        "position_rad": 0.0,
+        "time_s": 0.3
+      },
+      {
+        "position_rad": 0.0,
+        "time_s": 0.7
+      },
+      {
+        "position_rad": 0.0,
+        "time_s": 1.5
+      },
+      {
+        "position_rad": 0.0,
+        "time_s": 1.9
+      },
+      {
+        "position_rad": 0.0,
+        "time_s": 3.0
+      }
+    ],
+    "version": 1,
+    "voltage_v": 12.0
+  }
+}

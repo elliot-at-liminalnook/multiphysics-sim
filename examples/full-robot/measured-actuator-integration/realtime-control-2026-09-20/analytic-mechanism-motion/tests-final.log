@@ -1,0 +1,121 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `release` profile [optimized] target(s) in 25.12s
+     Running unittests src/lib.rs (target/release/deps/sim_domain_robot-4a38f93de8492464)
+
+running 31 tests
+test articulated::embedding::factor_blocks::tests::repartitions_every_matrix_and_never_discards_tiny_couplings ... ok
+test effective_servo::optimization_tests::extended_penalty_keeps_physical_feasibility_and_free_backdrive ... ok
+test effective_servo::optimization_tests::moving_reference_realizes_feedforward_and_feedback_without_bypassing_limits ... ok
+test math::rotation_motion_tests::angular_rates_match_matrix_derivatives_at_zero_and_finite_rotations ... ok
+test effective_servo::command::tests::feedforward_can_exceed_command_bounds_while_pose_and_torque_remain_admissible ... ok
+test articulated::broad_phase_tests::moving_sample_bounds_preserve_every_point_box_hit_and_order ... ok
+test motion_capability::tests::affine_force_load_map_matches_moments_joint_work_and_force_derivatives ... ok
+test articulated::prepared::exclusion_tests::exclusion_cache_preserves_pair_priority_and_refreshes_after_model_edits ... ok
+test articulated::prepared::exclusion_tests::joint_exclusion_follows_translation_rotation_and_preserves_outer_contacts ... ok
+test motion_capability::tests::constrained_pair_transfers_load_for_moment_and_rejects_tensile_support ... ok
+test motion_capability::tests::constrained_support_matches_analytic_friction_cone_projection ... ok
+test articulated::embedding::implicit::supplied_derivative_tests::invalid_or_singular_supplied_matrix_retries_original_numeric_equations ... ok
+test motion_capability::tests::constrained_support_retains_balance_regularization_and_disabled_points ... ok
+test motion_capability::tests::coupled_transmission_bound_satisfies_velocity_and_active_rate_constraint ... ok
+test motion_capability::tests::force_jacobian_and_cone_residuals_are_physical ... ok
+test motion_capability::tests::point_support_matches_static_balance_and_identifies_unsupported_moment ... ok
+test motion_capability::tests::rejects_unreachable_singular_and_redundant_cases ... ok
+test contract::tests::merged_members_resolve_but_ambiguous_joint_references_do_not ... ok
+test contract::tests::separates_authored_properties_defaults_and_unmodeled_evidence ... ok
+test contract::tests::keeps_loop_and_transmission_relations_and_rejects_dangling_references ... ok
+test motion_capability::tests::weighted_support_uses_availability_and_disables_zero_weight_points ... ok
+test sdf::refinement_tests::local_detail_preserves_parent_and_blends_value_and_gradient ... ok
+test contract::tests::stable_ids_preserve_topology_across_renaming_and_reordering ... ok
+test sdf::refinement_tests::invalid_or_overlapping_detail_cannot_disable_geometry_silently ... ok
+test sdf::tests::contact_budget_retains_thin_foot_and_all_support_extrema ... ok
+test sdf::tests::box_distance_and_gradient ... ok
+test sdf::band_tests::rotating_boundary_samples_remain_eligible_for_collision ... ok
+test actuator_audit::tests::stall_matches_independent_electrical_and_torque_balance ... ok
+test motion_capability::tests::joint_load_and_speed_search_reaches_analytic_limit_missed_by_equal_allocation ... ok
+test actuator_audit::tests::stall_includes_temperature_and_driver_foldback ... ok
+test articulated::embedding::factor_blocks::factor_tests::block_least_squares_matches_whole_matrix_and_keeps_global_rank_threshold ... ok
+
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/embedded_motor.rs (target/release/deps/embedded_motor-7120ee7259268ce4)
+
+running 20 tests
+test explicit_auxiliary_rates_resolve_small_changes_at_nonzero_angle ... ok
+test newton_failure_audit_is_time_scoped_and_does_not_change_the_failure ... ok
+test controller_sample_reuse_requires_cross_step_reuse_and_preserves_legacy_serialization ... ok
+test registered_event_modes_initialize_and_release_without_velocity_impulses ... ok
+test accepted_contact_trace_uses_original_endpoint_forces_without_changing_motion ... ok
+test cross_step_workspace_rolls_back_and_refreshes_for_timestep_changes ... ok
+test unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation ... ok
+test sdirk_stage_proposals_preserve_changed_steps_and_rollback_failed_intervals ... ok
+test driver_binding_and_boundary_validation_are_explicit ... ok
+test registered_servo_preserves_quantization_deadband_delay_and_saturation ... ok
+test motor_bindings_boundaries_and_combined_failure_fail_closed ... ok
+test scheduled_servo_drives_motor_and_failed_interval_does_not_advance_controller ... ok
+test registered_motor_derivative_chains_match_nonlinear_residual_differences ... ok
+test fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency ... ok
+test coupled_sdirk_current_has_second_order_accuracy_against_exact_rl_transient ... ok
+test eventful_motor_locates_engagement_and_matches_piecewise_linear_motion ... ok
+test servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run ... ok
+test coupled_sdirk_matches_independent_differential_and_algebraic_circuit_stages ... ok
+test driver_feedback_matches_independent_loaded_motor_with_series_drop_and_foldback ... ok
+test registered_motor_and_mechanics_match_independent_linear_circuit ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/embedded_step.rs (target/release/deps/embedded_step-6db7e7944220e306)
+
+running 20 tests
+test derivative_probe_radius_rejects_invalid_configuration_without_changing_state ... ok
+test prepared_dynamics_owns_contact_state_and_applies_fresh_forces ... ok
+test failed_cached_mechanics_restarts_fresh_before_subdivision ... ok
+test implicit_stiff_viscous_load_matches_backward_euler_without_reversal ... ok
+test implicit_contact_memory_and_atomic_failure ... ok
+test free_body_constant_force_and_world_rotation_match_exact_motion ... ok
+test temporal_velocity_guess_rejects_bad_geometry_and_retries_a_failed_newton_seed ... ok
+test world_load_pulse_matches_linear_and_angular_impulse ... ok
+test private_predictor_falls_back_on_stiff_load_and_preserves_failed_workspace ... ok
+test sdirk_mechanics_uses_two_stages_and_exact_force_clock ... ok
+test implicit_sliding_contact_matches_independent_scalar_force_balance ... ok
+test temporal_velocity_history_clears_after_contact_release ... ok
+test temporal_velocity_guess_preserves_constant_force_and_invalidates_history ... ok
+test contact_memory_decays_and_failure_leaves_input_unchanged ... ok
+test condensed_cross_coupled_states_match_independent_linear_system ... ok
+test oscillator_error_decreases_quadratically_with_step_refinement ... ok
+test cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials ... ok
+test sdirk_mechanical_oscillator_converges_and_dissipates ... ok
+test implicit_oscillator_refines_to_the_continuous_solution ... ok
+test mechanical_subdivision_preserves_direct_steps_and_recovers_nonlinear_drag ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/embedding.rs (target/release/deps/embedding-b9118982f001a057)
+
+running 24 tests
+test geometric_toggle_rejects_a_chart_that_loses_rank ... ok
+test invalid_charts_and_inconsistent_closure_are_rejected_without_mutating_seed ... ok
+test floating_base_motion_is_retained_and_original_rows_close ... ok
+test analytic_slider_crank_rejects_wrong_axes_topology_and_toggle ... ok
+test bounded_plane_placement_matches_analytic_slider_crank_and_rejects_unreachable_target ... ok
+test analytic_transmission_motion_preserves_signed_ratio_and_independent_order ... ok
+test analytic_slider_crank_handles_offset_guide_and_opposite_coupler_axis ... ok
+test full_point_placement_matches_rotated_analytic_slider_and_rejects_lateral_target ... ok
+test point_motion_placement_matches_analytic_slider_with_moving_rotated_base ... ok
+test qr_chart_matches_analytic_linkage_under_base_rotation_and_translation ... ok
+test rejected_probe_geometry_restarts_with_exact_derivatives ... ok
+test point_jacobians_match_closed_linkage_position_differences_with_rotated_base ... ok
+test blocked_factorization_preserves_closed_motion_across_poses_and_toggle_rejection ... ok
+test reduced_dynamics_matches_full_constrained_solve_under_external_load ... ok
+test nonlinear_slider_crank_matches_geometry_tangent_and_curvature ... ok
+test placement_preserves_base_pose_and_respects_dependent_joint_limits ... ok
+test analytic_slider_crank_matches_independent_formula_and_iterative_chart ... ok
+test analytic_positions_preserve_branches_floating_dynamics_and_rank_checks ... ok
+test exact_probe_base_reuse_preserves_every_fixed_and_rotating_linkage_state ... ok
+test sdirk_stages_preserve_fixed_and_rotating_closed_linkages ... ok
+test linearized_derivative_probes_preserve_exact_fixed_and_rotating_linkage_endpoints ... ok
+test implicit_qr_linkage_refines_toward_independent_explicit_reference ... ok
+test temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages ... ok
+test integrated_linkage_preserves_closure_and_refines_energy_error ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.91s
+

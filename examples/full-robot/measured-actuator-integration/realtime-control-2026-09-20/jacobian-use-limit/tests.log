@@ -1,0 +1,94 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `release` profile [optimized] target(s) in 9.97s
+     Running tests/effective_servo.rs (target/release/deps/effective_servo-115f1dd21943bed9)
+
+running 4 tests
+test registered_component_applies_equal_opposite_shaft_and_housing_torques ... ok
+test bounded_torque_speed_curve_and_braking_do_not_create_an_ideal_motion_source ... ok
+test positive_power_bound_and_backdrive_envelope_match_the_actuator_law ... ok
+test registry_and_runtime_share_parameters_and_reject_missing_or_unsupported_physics ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/embedded_motor.rs (target/release/deps/embedded_motor-7120ee7259268ce4)
+
+running 20 tests
+test explicit_auxiliary_rates_resolve_small_changes_at_nonzero_angle ... ok
+test newton_failure_audit_is_time_scoped_and_does_not_change_the_failure ... ok
+test registered_event_modes_initialize_and_release_without_velocity_impulses ... ok
+test controller_sample_reuse_requires_cross_step_reuse_and_preserves_legacy_serialization ... ok
+test accepted_contact_trace_uses_original_endpoint_forces_without_changing_motion ... ok
+test cross_step_workspace_rolls_back_and_refreshes_for_timestep_changes ... ok
+test unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation ... ok
+test driver_binding_and_boundary_validation_are_explicit ... ok
+test sdirk_stage_proposals_preserve_changed_steps_and_rollback_failed_intervals ... ok
+test registered_servo_preserves_quantization_deadband_delay_and_saturation ... ok
+test motor_bindings_boundaries_and_combined_failure_fail_closed ... ok
+test scheduled_servo_drives_motor_and_failed_interval_does_not_advance_controller ... ok
+test registered_motor_derivative_chains_match_nonlinear_residual_differences ... ok
+test fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency ... ok
+test coupled_sdirk_current_has_second_order_accuracy_against_exact_rl_transient ... ok
+test eventful_motor_locates_engagement_and_matches_piecewise_linear_motion ... ok
+test servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run ... ok
+test coupled_sdirk_matches_independent_differential_and_algebraic_circuit_stages ... ok
+test driver_feedback_matches_independent_loaded_motor_with_series_drop_and_foldback ... ok
+test registered_motor_and_mechanics_match_independent_linear_circuit ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/embedded_power.rs (target/release/deps/embedded_power-37bf0161d62fe519)
+
+running 6 tests
+test combined_power_evaluation_matches_separate_callbacks_at_trial_states ... ok
+test fpga_controller_preserves_subperiod_pwm_delay_with_shared_power ... ok
+test power_checkpoints_replay_and_failed_intervals_do_not_commit_charge_or_energy ... ok
+test simultaneous_motor_load_reduces_other_motor_speed_and_separate_feeds_reduce_sag ... ok
+test topology_requires_exact_coverage_acyclic_feeds_and_explicit_battery_parameters ... ok
+test shared_supply_matches_kcl_voltage_drops_charge_and_terminal_energy_through_reversal ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/embedded_step.rs (target/release/deps/embedded_step-6db7e7944220e306)
+
+running 22 tests
+test derivative_probe_radius_rejects_invalid_configuration_without_changing_state ... ok
+test prepared_dynamics_owns_contact_state_and_applies_fresh_forces ... ok
+test failed_cached_mechanics_restarts_fresh_before_subdivision ... ok
+test implicit_contact_memory_and_atomic_failure ... ok
+test matrix_lifetime_changes_invalidate_and_invalid_limits_preserve_workspace ... ok
+test implicit_stiff_viscous_load_matches_backward_euler_without_reversal ... ok
+test free_body_constant_force_and_world_rotation_match_exact_motion ... ok
+test world_load_pulse_matches_linear_and_angular_impulse ... ok
+test private_predictor_falls_back_on_stiff_load_and_preserves_failed_workspace ... ok
+test temporal_velocity_guess_rejects_bad_geometry_and_retries_a_failed_newton_seed ... ok
+test sdirk_mechanics_uses_two_stages_and_exact_force_clock ... ok
+test temporal_velocity_history_clears_after_contact_release ... ok
+test implicit_sliding_contact_matches_independent_scalar_force_balance ... ok
+test contact_memory_decays_and_failure_leaves_input_unchanged ... ok
+test temporal_velocity_guess_preserves_constant_force_and_invalidates_history ... ok
+test condensed_cross_coupled_states_match_independent_linear_system ... ok
+test oscillator_error_decreases_quadratically_with_step_refinement ... ok
+test cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials ... ok
+test sdirk_mechanical_oscillator_converges_and_dissipates ... ok
+test matrix_lifetime_preserves_the_linear_implicit_solution_and_default_policy ... ok
+test implicit_oscillator_refines_to_the_continuous_solution ... ok
+test mechanical_subdivision_preserves_direct_steps_and_recovers_nonlinear_drag ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/sensor_seed.rs (target/release/deps/sensor_seed-b9d4f7a21cef4bf7)
+
+running 3 tests
+test imported_robot_schema_validates_handles_options_and_exact_model_ports ... ok
+test multiple_cad_imus_keep_axis_units_and_port_values_in_compiler_order ... ok
+test cad_sensor_seed_repeats_and_selects_independent_noise_streams ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/servo_clock.rs (target/release/deps/servo_clock-15d16ec144a8c637)
+
+running 1 test
+test servo_deadlines_retain_phase_over_long_runs_and_state_restore ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+

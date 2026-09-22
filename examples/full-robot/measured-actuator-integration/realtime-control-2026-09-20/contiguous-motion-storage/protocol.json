@@ -1,0 +1,41 @@
+{
+  "scope": "Exact arithmetic-order-preserving contiguous storage of rigid motion columns. Same column sequence, geometry, closure, full inertia, force laws and gates. Shared kernel used by inertia and closure Jacobian.",
+  "sources_before": {
+    "crates/sim-domain-robot/src/articulated/inertia.rs": "8331338acb1e92a0b9030da154ca99a66ace441fba74c188927e03ccb8d61c35",
+    "crates/sim-domain-robot/tests/rigid_inertia.rs": "1329db374e77b5126bb33b59211c5faa369e83f6ea9be075547d746296956eb3",
+    "web/viewer/presets.json": "55fc51a1d13bfcdb45b49b2fca9621f4abefe09329eedf9d2a71826066f1769c"
+  },
+  "binary_before_sha256": "a4a6e173e770c47b0d18ffcd96da962034928c0097cba94f482f005e50ab64a2",
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "sources_candidate": {
+    "crates/sim-domain-robot/src/articulated/inertia.rs": "442fafca3ff56d6951c306af6fc21b3c0ccd642db17590bd689a623a49003dbb",
+    "crates/sim-domain-robot/tests/rigid_inertia.rs": "1329db374e77b5126bb33b59211c5faa369e83f6ea9be075547d746296956eb3",
+    "web/viewer/presets.json": "64fbcce562bc5ce8434186afe4ff606467a57aaa153f1a57d463d65dd0ad9f16"
+  },
+  "binary_candidate_sha256": "b7f042119a827fafeb5a4d2d32f7a933c818af740c2e8497e00672735f3d2860",
+  "browser_build_cache_reuse": "The new artifact directory target symlinks to the previous simd-lto target cache. Previous standalone WASM artifact and manifest remain unchanged; the new build records all current sources, compiler settings and artifact identity.",
+  "inputs": {
+    "./": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "config.json": "7e649c37845711afbf32a23d162163829f504d88df4c9219c71d7fb6a8108abb",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+    },
+    "analytic/": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "config.json": "ca4894c50a0d10bb4f4a17c81fa041acde1465905bab4b5096c3c1c10fbb9695",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+    }
+  },
+  "browser_scope": "Paired comparison to preserved prior SIMD-LTO bundle is cumulative across exact changes since that build. Identical physical recipe and action sequence. Analytic mode remains unselected."
+}

@@ -1,0 +1,116 @@
+{
+  "experiment": {
+    "version": 1,
+    "name": "Regulated source at recorded initial voltage; electrical comparison baseline",
+    "device": 4,
+    "component_id": null,
+    "fixture": "User-reported unloaded bench; no intentional external load. Attached output hardware not yet measured. Initial encoder, supply and temperature are captured at preflight.",
+    "controller": {
+      "kind": "rust_pid",
+      "parameters": {
+        "kp": 0.8,
+        "ki": 0.0,
+        "kd": 0.03,
+        "integral_limit": 0.2,
+        "duty_limit": 0.05
+      }
+    },
+    "timing": {
+      "period_s": 0.05,
+      "encoder_quantum_rad": 0.0015339807878856412,
+      "observation_delay_ticks": 0,
+      "command_delay_ticks": 0,
+      "velocity_filter_s": 0.04,
+      "maximum_observation_age_s": 0.1,
+      "evidence": "50 ms intended cadence; measured read-only transport baseline supports a conservative initial zero-action loop. Actual tick/feedback/command windows retained; sensor age unknown."
+    },
+    "trajectory": [
+      {
+        "time_s": 0.0,
+        "position_rad": 0.0
+      },
+      {
+        "time_s": 0.3,
+        "position_rad": 0.0
+      },
+      {
+        "time_s": 0.7,
+        "position_rad": 0.08
+      },
+      {
+        "time_s": 1.5,
+        "position_rad": 0.08
+      },
+      {
+        "time_s": 1.9,
+        "position_rad": 0.0
+      },
+      {
+        "time_s": 3.0,
+        "position_rad": 0.0
+      }
+    ],
+    "duration_s": 3.0,
+    "voltage_v": 12.100000000000001,
+    "temperature_c": 49.0,
+    "initial_encoder_rad": 1.8530487917658545,
+    "seed": 0,
+    "limits": {
+      "rms_rad": 0.05,
+      "peak_rad": 0.15,
+      "settled_rad": 0.015,
+      "maximum_saturation_fraction": 0.25
+    },
+    "notes": "Provisional demonstration limits; set task tolerances before reserving validation measurements."
+  },
+  "model": {
+    "motor": {
+      "back_emf_constant": 0.009734075474443412,
+      "backlash": 0.0,
+      "backlash.events": 0.0,
+      "derating": 0.0,
+      "efficiency": 0.5037278591966505,
+      "gear_damping": 0.1,
+      "gear_friction": 0.0,
+      "gear_inertia": 2e-05,
+      "gear_stiffness": 50.0,
+      "inductance": 0.00148,
+      "jacobian.analytic": 1.0,
+      "no_load_current": 0.1,
+      "ratio": 200.0,
+      "reference": 298.15,
+      "resistance": 3.6999999999999997,
+      "rotor_inertia": 2.2324546035565207e-08,
+      "temp_coeff": 0.0039,
+      "torque_constant": 0.009734075474443412
+    },
+    "bridge": {
+      "current_limit": 3.0,
+      "on_resistance": 0.05
+    },
+    "conditions": {
+      "voltage_v": null,
+      "temperature_c": null,
+      "load_inertia": 2e-05,
+      "load_torque": 0.0,
+      "command_delay_s": 0.0
+    },
+    "step_s": 0.00025,
+    "power": {
+      "source_component": "electrical.voltage_source",
+      "source_parameters": {
+        "voltage": 12.100000000000001
+      },
+      "auxiliary_current_a": 0.0,
+      "evidence": "Initial servo voltage held constant; no measured current or electronics consumption available. This baseline can reveal recorded voltage variation but is not a battery calibration.",
+      "limits": {
+        "minimum_voltage_v": null,
+        "maximum_discharge_current_a": null,
+        "maximum_charge_current_a": null,
+        "maximum_winding_current_a": null,
+        "maximum_draw_power_w": null,
+        "maximum_return_power_w": null
+      }
+    }
+  }
+}

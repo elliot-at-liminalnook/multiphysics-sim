@@ -1,0 +1,26 @@
+{
+  "stage": "general system session and bounded observation playback",
+  "tests_passed": 8,
+  "native_workspace_all_targets": "passed",
+  "wasm_compile": "passed",
+  "verified": [
+    "20 fixed intervals agree with the ordinary runtime",
+    "paused ticks do not advance; single-step remains paused",
+    "independent display and recording subscriptions",
+    "capacity stops before the next advance without dropping frames",
+    "reset recreates behaviors and rejects stale generations",
+    "failed rebuild preserves the old recording and cursor",
+    "failed solve and later reset retain the failure cause",
+    "100 hybrid intervals and at least 199 events match ordinary runtime states and event counts",
+    "archives retain actual multirate settings and reject false completion"
+  ],
+  "not_claimed": [
+    "native worker process transport or cancellation timing",
+    "recorded controller command ingress",
+    "CAD session and launch adapters",
+    "UI live transport, plots or replay",
+    "durable recording across worker termination",
+    "complete input re-execution",
+    "performance gates"
+  ]
+}

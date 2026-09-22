@@ -1,0 +1,10 @@
+file:///Users/elliot/physics-simulator/web/tests/motor-bench.mjs:12
+ const cards=await page.locator('#cards h3').allTextContents();if(!cards[0].includes('+X | Hip')||!cards[0].includes('12')||!cards[2].includes('10'))throw Error('Explicit joint mapping was not reflected in preview');
+                                                                                                                                                           ^
+
+Error: Explicit joint mapping was not reflected in preview
+    at file:///Users/elliot/physics-simulator/web/tests/motor-bench.mjs:12:156
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processImmediate (node:internal/timers:502:9)
+
+Node.js v24.19.0

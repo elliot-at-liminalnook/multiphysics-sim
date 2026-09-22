@@ -1,0 +1,2085 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Experiment comparison</title><style>body{font:15px system-ui;max-width:1100px;margin:40px auto;color:#223}table{border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid #ddd;text-align:left}pre{white-space:pre-wrap}svg{width:100%;background:#f5f7fa}section{break-inside:avoid;margin:30px 0}.muted{color:#567}</style><h1>Measured response / model refinement</h1><h2>release-id4</h2><p>Exploratory physical simulation, not matched controller validation. Reconstructed single PWM pulse at command midpoint; legacy pulses assume zero-duty electrical braking; trials with explicit release hypotheses retain their separate disabled-driver behavior. Starts at rest with zero current and relative angle zero. Servo firmware, sensor sample age and electronics consumption are not modeled. Supply and temperature use reported range midpoints unless overridden; temperature is clamped, not a thermal prediction. Load inertia is an explicit unmeasured fixture assumption, load torque a signed opposing-positive torque. Baseline parameters are endpoint-derived hypotheses from the retained characterization plan, not identified physical constants. No implicit time alignment. No physical properties are promoted into CAD.</p><p>{&quot;frozen_before_acquisition&quot;:false,&quot;limits_rad&quot;:{&quot;final_abs_error&quot;:0.007669903939428206,&quot;rmse&quot;:0.0046019423636569235},&quot;original_policy_sha256&quot;:&quot;29139c27ef2996a71bf0ab4b59de3fc829928965d857f66a92b195a02c0b5b0e&quot;,&quot;provenance&quot;:&quot;Normalized after acquisition from the original release-id4-split-policy.json and matching acquisition plan. Original 0/1 tuning, 2 reserved roles preserved. Conservative validation-influenced label; no new independent validation claim.&quot;,&quot;training_repetitions&quot;:[0,1],&quot;validation_repetitions&quot;:[2]}</p><p>Raw source hashes captured at import; no external manifest authentication claimed. Whole-trial roles and their declaration provenance are retained in the split policy. Command timings are host transaction midpoint assumptions.Explicit release comparison. Zero PWM is modeled as electrical braking; torque-off uses declared passive leakage/diode hypotheses. Device electronics and current calibration remain unverified. Modified or inspected split declarations require fresh confirmation.</p><p>Observation hash: e9ef253b4a1c64dde58e852009c7978ed43e1f56e5e4cf5a82d6bc9f5aa13dac<br>Empirical model hash: 9480df9f51eceaf0a00fdc25c99f26cace3ae8caf543f4b6d41a6e1ae997f6f2</p><h2>Controller design and refinement</h2><p>0 controller runs; 0 fits; 0 sensitivity reports; 0 robustness evaluations.</p><details><summary>Captured refinement settings and evidence</summary><pre>{
+  &quot;experiment&quot;: {
+    &quot;version&quot;: 1,
+    &quot;name&quot;: &quot;Unloaded PWM position tracking&quot;,
+    &quot;device&quot;: 4,
+    &quot;component_id&quot;: null,
+    &quot;fixture&quot;: &quot;Unloaded bench, attached output hardware not yet documented&quot;,
+    &quot;controller&quot;: {
+      &quot;kind&quot;: &quot;rust_pid&quot;,
+      &quot;parameters&quot;: {
+        &quot;kp&quot;: 0.8,
+        &quot;ki&quot;: 0.0,
+        &quot;kd&quot;: 0.03,
+        &quot;integral_limit&quot;: 0.2,
+        &quot;duty_limit&quot;: 0.2
+      }
+    },
+    &quot;timing&quot;: {
+      &quot;period_s&quot;: 0.02,
+      &quot;encoder_quantum_rad&quot;: 0.0015339807878856412,
+      &quot;observation_delay_ticks&quot;: 1,
+      &quot;command_delay_ticks&quot;: 1,
+      &quot;velocity_filter_s&quot;: 0.04,
+      &quot;maximum_observation_age_s&quot;: 0.08,
+      &quot;evidence&quot;: &quot;Provisional 50 Hz schedule and one-tick delays; bench timing must be measured before hardware validation&quot;
+    },
+    &quot;trajectory&quot;: [
+      {
+        &quot;time_s&quot;: 0.0,
+        &quot;position_rad&quot;: 0.0
+      },
+      {
+        &quot;time_s&quot;: 0.2,
+        &quot;position_rad&quot;: 0.0
+      },
+      {
+        &quot;time_s&quot;: 0.5,
+        &quot;position_rad&quot;: 0.15
+      },
+      {
+        &quot;time_s&quot;: 1.2,
+        &quot;position_rad&quot;: 0.15
+      },
+      {
+        &quot;time_s&quot;: 1.5,
+        &quot;position_rad&quot;: 0.0
+      }
+    ],
+    &quot;duration_s&quot;: 2.0,
+    &quot;voltage_v&quot;: 12.0,
+    &quot;temperature_c&quot;: 25.0,
+    &quot;initial_encoder_rad&quot;: 0.0,
+    &quot;seed&quot;: 0,
+    &quot;limits&quot;: {
+      &quot;rms_rad&quot;: 0.05,
+      &quot;peak_rad&quot;: 0.15,
+      &quot;settled_rad&quot;: 0.015,
+      &quot;maximum_saturation_fraction&quot;: 0.25
+    },
+    &quot;notes&quot;: &quot;Provisional demonstration limits; set task tolerances before reserving validation measurements.&quot;
+  },
+  &quot;controller_runs&quot;: [],
+  &quot;sensitivities&quot;: [],
+  &quot;fits&quot;: [],
+  &quot;robustness&quot;: [],
+  &quot;coordinates&quot;: [],
+  &quot;failures&quot;: [],
+  &quot;recordings&quot;: [],
+  &quot;predictions&quot;: [],
+  &quot;cad_proposals&quot;: [],
+  &quot;cad_acceptances&quot;: [],
+  &quot;scenarios&quot;: [],
+  &quot;fit_attempts&quot;: [],
+  &quot;capture_contexts&quot;: [],
+  &quot;recording_assignments&quot;: [],
+  &quot;recording_fits&quot;: []
+}</pre></details><p>No manual pulse-model evaluations recorded.</p><details><summary>Original retained reference metrics and plots (all trials)</summary><section><h3>release-id4/4/0</h3><p>train · RMSE 0.014028 rad · max |error| 0.015254 rad · final |error| 0.015254 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_zero_pwm_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;electrical_brake&quot;}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.200863611,
+    0.20675746699999997
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18891567099999995,
+    0.19470660099999998
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: 0.004601942363656922,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.0062035269999999865,
+      0.018013418999999975
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.03528</text><text x="5" y="190">0.00000</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="79.63,190.00 89.38,190.00 99.18,182.61 108.93,167.83 118.71,160.43 128.38,153.04 138.23,145.65 147.79,130.87 157.52,123.48 167.24,108.70 177.11,101.30 186.66,86.52 196.41,79.13 206.17,64.35 215.96,56.96 225.51,42.17 245.06,27.39 254.80,20.00 264.92,20.00 274.42,20.00 283.93,20.00 293.92,20.00 303.42,20.00 313.25,20.00 322.92,20.00 333.20,20.00 342.40,20.00 352.27,20.00 361.89,20.00 371.41,20.00 381.58,20.00 391.34,20.00 400.70,20.00 410.57,20.00 420.07,20.00 429.96,20.00 439.51,20.00 449.42,20.00 459.08,20.00 469.24,20.00 493.95,20.00 503.00,20.00 512.63,20.00 522.45,20.00 532.16,20.00 541.86,20.00 551.57,20.00 561.22,20.00 571.57,20.00 580.80,20.00 590.66,20.00 600.18,20.00 609.92,20.00 619.51,20.00 629.38,20.00 639.46,20.00 649.02,20.00 658.70,20.00 668.11,20.00 678.12,20.00 687.73,20.00 697.92,20.00 707.20,20.00 717.09,20.00 726.94,20.00 736.48,20.00 746.24,20.00 755.83,20.00 765.74,20.00 775.32,20.00 784.96,20.00 794.67,20.00 804.80,20.00 814.31,20.00 823.90,20.00 833.70,20.00 843.43,20.00 853.23,20.00 863.15,20.00 872.89,20.00 882.68,20.00 891.80,20.00 901.72,20.00 911.49,20.00 921.10,20.00 930.83,20.00 940.64,20.00 950.36,20.00 960.16,20.00 970.00,20.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.63,185.23 89.38,179.49 99.18,173.73 108.93,167.99 118.71,162.24 128.38,156.54 138.23,150.75 147.79,145.12 157.52,139.40 167.24,133.68 177.11,127.87 186.66,122.24 196.41,116.51 206.17,110.76 215.96,105.01 225.51,99.38 245.06,93.50 254.80,93.50 264.92,93.50 274.42,93.50 283.93,93.50 293.92,93.50 303.42,93.50 313.25,93.50 322.92,93.50 333.20,93.50 342.40,93.50 352.27,93.50 361.89,93.50 371.41,93.50 381.58,93.50 391.34,93.50 400.70,93.50 410.57,93.50 420.07,93.50 429.96,93.50 439.51,93.50 449.42,93.50 459.08,93.50 469.24,93.50 493.95,93.50 503.00,93.50 512.63,93.50 522.45,93.50 532.16,93.50 541.86,93.50 551.57,93.50 561.22,93.50 571.57,93.50 580.80,93.50 590.66,93.50 600.18,93.50 609.92,93.50 619.51,93.50 629.38,93.50 639.46,93.50 649.02,93.50 658.70,93.50 668.11,93.50 678.12,93.50 687.73,93.50 697.92,93.50 707.20,93.50 717.09,93.50 726.94,93.50 736.48,93.50 746.24,93.50 755.83,93.50 765.74,93.50 775.32,93.50 784.96,93.50 794.67,93.50 804.80,93.50 814.31,93.50 823.90,93.50 833.70,93.50 843.43,93.50 853.23,93.50 863.15,93.50 872.89,93.50 882.68,93.50 891.80,93.50 901.72,93.50 911.49,93.50 921.10,93.50 930.83,93.50 940.64,93.50 950.36,93.50 960.16,93.50 970.00,93.50" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/1</h3><p>train · RMSE 0.018252 rad · max |error| 0.019851 rad · final |error| 0.019851 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_torque_off_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;torque_off&quot;,&quot;off_conductance_s&quot;:1e-8,&quot;diode_drop_v&quot;:0.7,&quot;diode_resistance_ohm&quot;:0.1}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.20098479400000002,
+    0.20699346000000007
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.1897289550000001,
+    0.19496214700000003
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: 0.007669903939428208,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.012029134000000052,
+      0.02394932000000005
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.03988</text><text x="5" y="190">0.00000</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="79.57,190.00 89.74,183.46 99.10,176.92 108.93,170.38 118.40,157.31 128.40,150.77 138.32,137.69 147.69,131.15 157.72,118.08 167.23,111.54 177.45,98.46 186.85,91.92 196.40,78.85 206.15,72.31 216.27,59.23 226.03,52.69 250.06,26.54 259.65,26.54 269.56,20.00 278.99,20.00 289.12,20.00 298.50,20.00 308.32,20.00 318.45,20.00 327.84,20.00 337.67,20.00 347.21,20.00 356.84,20.00 366.36,20.00 376.20,20.00 385.80,20.00 395.65,20.00 405.45,20.00 415.14,20.00 424.78,20.00 434.73,20.00 444.34,20.00 454.04,20.00 463.60,20.00 473.55,20.00 483.18,20.00 492.92,20.00 502.68,20.00 512.39,20.00 522.22,20.00 531.87,20.00 541.72,20.00 551.42,20.00 561.13,20.00 570.91,20.00 580.54,20.00 590.31,20.00 599.90,20.00 609.68,20.00 619.38,20.00 629.26,20.00 638.95,20.00 648.81,20.00 658.54,20.00 668.07,20.00 678.07,20.00 687.70,20.00 697.38,20.00 707.02,20.00 716.80,20.00 726.60,20.00 736.20,20.00 745.98,20.00 755.64,20.00 765.54,20.00 775.16,20.00 784.89,20.00 794.56,20.00 804.37,20.00 814.15,20.00 823.84,20.00 833.53,20.00 843.33,20.00 853.04,20.00 862.73,20.00 872.53,20.00 882.25,20.00 892.03,20.00 901.79,20.00 911.47,20.00 921.14,20.00 930.91,20.00 940.74,20.00 950.31,20.00 960.12,20.00 970.00,20.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.57,185.82 89.74,180.53 99.10,175.65 108.93,170.54 118.40,165.61 128.40,160.41 138.32,155.25 147.69,150.37 157.72,145.15 167.23,140.21 177.45,134.88 186.85,130.00 196.40,125.03 206.15,119.95 216.27,114.69 226.03,109.61 250.06,104.61 259.65,104.61 269.56,104.61 278.99,104.61 289.12,104.61 298.50,104.61 308.32,104.61 318.45,104.61 327.84,104.61 337.67,104.61 347.21,104.61 356.84,104.61 366.36,104.61 376.20,104.61 385.80,104.61 395.65,104.61 405.45,104.61 415.14,104.61 424.78,104.61 434.73,104.61 444.34,104.61 454.04,104.61 463.60,104.61 473.55,104.61 483.18,104.61 492.92,104.61 502.68,104.61 512.39,104.61 522.22,104.61 531.87,104.61 541.72,104.61 551.42,104.61 561.13,104.61 570.91,104.61 580.54,104.61 590.31,104.61 599.90,104.61 609.68,104.61 619.38,104.61 629.26,104.61 638.95,104.61 648.81,104.61 658.54,104.61 668.07,104.61 678.07,104.61 687.70,104.61 697.38,104.61 707.02,104.61 716.80,104.61 726.60,104.61 736.20,104.61 745.98,104.61 755.64,104.61 765.54,104.61 775.16,104.61 784.89,104.61 794.56,104.61 804.37,104.61 814.15,104.61 823.84,104.61 833.53,104.61 843.33,104.61 853.04,104.61 862.73,104.61 872.53,104.61 882.25,104.61 892.03,104.61 901.79,104.61 911.47,104.61 921.14,104.61 930.91,104.61 940.74,104.61 950.31,104.61 960.12,104.61 970.00,104.61" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/2</h3><p>train · RMSE 0.011129 rad · max |error| 0.012149 rad · final |error| 0.012149 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_zero_pwm_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;electrical_brake&quot;}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.20129253700000005,
+    0.20707318399999997
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.1888824520000001,
+    0.1950598870000002
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: -0.004601942363656925,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.0062616790000000755,
+      0.017796374000000004
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.00000</text><text x="5" y="190">-0.03221</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="79.71,20.00 89.45,20.00 99.18,28.10 108.86,36.19 118.61,44.29 128.35,52.38 138.18,60.48 147.86,68.57 157.71,84.76 167.17,92.86 177.11,100.95 186.86,117.14 196.52,125.24 206.29,141.43 215.92,149.52 225.69,165.71 245.35,181.90 254.92,190.00 264.64,190.00 274.47,190.00 284.01,190.00 293.82,190.00 303.65,190.00 313.45,190.00 323.26,190.00 332.86,190.00 342.49,190.00 352.21,190.00 361.92,190.00 371.68,190.00 381.33,190.00 391.12,190.00 400.91,190.00 410.73,190.00 420.40,190.00 430.12,190.00 439.83,190.00 449.51,190.00 459.24,190.00 469.04,190.00 478.69,190.00 493.24,190.00 502.96,190.00 512.76,190.00 522.40,190.00 532.11,190.00 541.91,190.00 551.74,190.00 561.37,190.00 571.16,190.00 580.82,190.00 590.61,190.00 600.31,190.00 610.01,190.00 619.73,190.00 629.44,190.00 639.31,190.00 648.98,190.00 658.85,190.00 668.56,190.00 678.24,190.00 687.92,190.00 697.68,190.00 707.37,190.00 717.10,190.00 726.96,190.00 736.53,190.00 746.24,190.00 755.93,190.00 765.65,190.00 775.34,190.00 785.14,190.00 794.93,190.00 804.67,190.00 814.38,190.00 824.08,190.00 833.82,190.00 843.62,190.00 853.32,190.00 862.97,190.00 872.74,190.00 882.49,190.00 892.21,190.00 901.93,190.00 911.69,190.00 921.30,190.00 931.07,190.00 940.77,190.00 950.59,190.00 960.27,190.00 970.00,190.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.71,25.27 89.45,31.55 99.18,37.81 108.86,44.05 118.61,50.34 128.35,56.61 138.18,62.94 147.86,69.18 157.71,75.53 167.17,81.63 177.11,88.03 186.86,94.31 196.52,100.54 206.29,106.83 215.92,113.04 225.69,119.33 245.35,125.89 254.92,125.89 264.64,125.89 274.47,125.89 284.01,125.89 293.82,125.89 303.65,125.89 313.45,125.89 323.26,125.89 332.86,125.89 342.49,125.89 352.21,125.89 361.92,125.89 371.68,125.89 381.33,125.89 391.12,125.89 400.91,125.89 410.73,125.89 420.40,125.89 430.12,125.89 439.83,125.89 449.51,125.89 459.24,125.89 469.04,125.89 478.69,125.89 493.24,125.89 502.96,125.89 512.76,125.89 522.40,125.89 532.11,125.89 541.91,125.89 551.74,125.89 561.37,125.89 571.16,125.89 580.82,125.89 590.61,125.89 600.31,125.89 610.01,125.89 619.73,125.89 629.44,125.89 639.31,125.89 648.98,125.89 658.85,125.89 668.56,125.89 678.24,125.89 687.92,125.89 697.68,125.89 707.37,125.89 717.10,125.89 726.96,125.89 736.53,125.89 746.24,125.89 755.93,125.89 765.65,125.89 775.34,125.89 785.14,125.89 794.93,125.89 804.67,125.89 814.38,125.89 824.08,125.89 833.82,125.89 843.62,125.89 853.32,125.89 862.97,125.89 872.74,125.89 882.49,125.89 892.21,125.89 901.93,125.89 911.69,125.89 921.30,125.89 931.07,125.89 940.77,125.89 950.59,125.89 960.27,125.89 970.00,125.89" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/3</h3><p>train · RMSE 0.016822 rad · max |error| 0.018323 rad · final |error| 0.018323 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_torque_off_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;torque_off&quot;,&quot;off_conductance_s&quot;:1e-8,&quot;diode_drop_v&quot;:0.7,&quot;diode_resistance_ohm&quot;:0.1}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.2009066344999999,
+    0.20699433450000004
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.1888100035,
+    0.1948751715000001
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: -0.007669903939428208,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.011828582999999782,
+      0.023931525000000065
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.00000</text><text x="5" y="190">-0.03835</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="79.69,20.00 89.38,26.80 99.13,33.60 108.92,40.40 118.60,47.20 128.28,54.00 138.15,67.60 147.85,74.40 157.64,88.00 167.27,94.80 177.12,108.40 186.78,115.20 196.49,128.80 206.27,135.60 215.88,149.20 225.57,156.00 249.89,183.20 259.70,190.00 269.47,190.00 279.17,190.00 288.82,190.00 298.61,190.00 308.34,190.00 318.11,190.00 327.94,190.00 337.50,190.00 347.22,190.00 356.93,190.00 366.68,190.00 376.43,190.00 386.08,190.00 395.86,190.00 405.64,190.00 415.33,190.00 425.17,190.00 434.84,190.00 444.64,190.00 454.30,190.00 464.08,190.00 473.72,190.00 483.54,190.00 493.36,190.00 502.99,190.00 512.56,190.00 522.39,190.00 532.02,190.00 541.87,190.00 551.50,190.00 561.28,190.00 571.15,190.00 580.67,190.00 590.43,190.00 600.13,190.00 609.88,190.00 619.63,190.00 629.43,190.00 639.11,190.00 648.86,190.00 658.66,190.00 668.22,190.00 678.07,190.00 687.69,190.00 697.42,190.00 707.19,190.00 716.92,190.00 726.72,190.00 736.40,190.00 746.10,190.00 755.95,190.00 765.64,190.00 775.32,190.00 785.11,190.00 794.81,190.00 804.66,190.00 814.39,190.00 824.05,190.00 833.78,190.00 843.46,190.00 853.20,190.00 862.97,190.00 872.62,190.00 882.34,190.00 892.02,190.00 901.79,190.00 911.59,190.00 921.33,190.00 931.15,190.00 940.78,190.00 950.48,190.00 960.23,190.00 970.00,190.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.69,24.42 89.38,29.66 99.13,34.94 108.92,40.24 118.60,45.48 128.28,50.72 138.15,56.06 147.85,61.31 157.64,66.61 167.27,71.83 177.12,77.16 186.78,82.39 196.49,87.64 206.27,92.93 215.88,98.14 225.57,103.38 249.89,108.78 259.70,108.78 269.47,108.78 279.17,108.78 288.82,108.78 298.61,108.78 308.34,108.78 318.11,108.78 327.94,108.78 337.50,108.78 347.22,108.78 356.93,108.78 366.68,108.78 376.43,108.78 386.08,108.78 395.86,108.78 405.64,108.78 415.33,108.78 425.17,108.78 434.84,108.78 444.64,108.78 454.30,108.78 464.08,108.78 473.72,108.78 483.54,108.78 493.36,108.78 502.99,108.78 512.56,108.78 522.39,108.78 532.02,108.78 541.87,108.78 551.50,108.78 561.28,108.78 571.15,108.78 580.67,108.78 590.43,108.78 600.13,108.78 609.88,108.78 619.63,108.78 629.43,108.78 639.11,108.78 648.86,108.78 658.66,108.78 668.22,108.78 678.07,108.78 687.69,108.78 697.42,108.78 707.19,108.78 716.92,108.78 726.72,108.78 736.40,108.78 746.10,108.78 755.95,108.78 765.64,108.78 775.32,108.78 785.11,108.78 794.81,108.78 804.66,108.78 814.39,108.78 824.05,108.78 833.78,108.78 843.46,108.78 853.20,108.78 862.97,108.78 872.62,108.78 882.34,108.78 892.02,108.78 901.79,108.78 911.59,108.78 921.33,108.78 931.15,108.78 940.78,108.78 950.48,108.78 960.23,108.78 970.00,108.78" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/4</h3><p>train · RMSE 0.011252 rad · max |error| 0.012169 rad · final |error| 0.012169 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_zero_pwm_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;electrical_brake&quot;}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.20096965400000055,
+    0.20696751400000046
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18880983100000037,
+    0.19481442700000073
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: 0.004601942363656925,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.006020830999999838,
+      0.017976554999999728
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.03221</text><text x="5" y="190">0.00000</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="88.36,190.00 99.20,181.90 108.92,173.81 118.62,165.71 128.33,157.62 138.00,149.52 147.70,133.33 157.53,125.24 167.29,117.14 177.00,100.95 186.77,92.86 196.38,76.67 206.17,68.57 215.89,52.38 225.56,44.29 245.15,20.00 254.86,20.00 264.53,20.00 274.31,20.00 284.05,20.00 293.84,20.00 303.50,20.00 313.25,20.00 322.92,20.00 332.73,20.00 342.44,20.00 352.08,20.00 361.89,20.00 371.60,20.00 381.33,20.00 391.05,20.00 400.86,20.00 410.50,20.00 420.17,20.00 430.01,20.00 439.80,20.00 449.44,20.00 459.26,20.00 469.00,20.00 478.70,20.00 493.28,20.00 502.98,20.00 512.59,20.00 522.46,20.00 532.12,20.00 541.86,20.00 551.68,20.00 561.35,20.00 571.14,20.00 580.73,20.00 590.44,20.00 600.32,20.00 610.07,20.00 619.79,20.00 629.39,20.00 639.13,20.00 648.90,20.00 658.70,20.00 668.47,20.00 678.20,20.00 687.86,20.00 697.67,20.00 707.36,20.00 717.06,20.00 726.85,20.00 736.56,20.00 746.30,20.00 756.04,20.00 765.75,20.00 775.51,20.00 785.24,20.00 794.91,20.00 804.55,20.00 814.35,20.00 824.12,20.00 833.82,20.00 843.53,20.00 853.33,20.00 863.13,20.00 872.67,20.00 882.51,20.00 892.25,20.00 901.92,20.00 911.73,20.00 921.37,20.00 931.19,20.00 940.94,20.00 950.68,20.00 960.35,20.00 970.00,20.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="88.36,179.15 99.20,172.17 108.92,165.91 118.62,159.66 128.33,153.40 138.00,147.17 147.70,140.92 157.53,134.59 167.29,128.30 177.00,122.04 186.77,115.74 196.38,109.55 206.17,103.24 215.89,96.98 225.56,90.75 245.15,84.22 254.86,84.22 264.53,84.22 274.31,84.22 284.05,84.22 293.84,84.22 303.50,84.22 313.25,84.22 322.92,84.22 332.73,84.22 342.44,84.22 352.08,84.22 361.89,84.22 371.60,84.22 381.33,84.22 391.05,84.22 400.86,84.22 410.50,84.22 420.17,84.22 430.01,84.22 439.80,84.22 449.44,84.22 459.26,84.22 469.00,84.22 478.70,84.22 493.28,84.22 502.98,84.22 512.59,84.22 522.46,84.22 532.12,84.22 541.86,84.22 551.68,84.22 561.35,84.22 571.14,84.22 580.73,84.22 590.44,84.22 600.32,84.22 610.07,84.22 619.79,84.22 629.39,84.22 639.13,84.22 648.90,84.22 658.70,84.22 668.47,84.22 678.20,84.22 687.86,84.22 697.67,84.22 707.36,84.22 717.06,84.22 726.85,84.22 736.56,84.22 746.30,84.22 756.04,84.22 765.75,84.22 775.51,84.22 785.24,84.22 794.91,84.22 804.55,84.22 814.35,84.22 824.12,84.22 833.82,84.22 843.53,84.22 853.33,84.22 863.13,84.22 872.67,84.22 882.51,84.22 892.25,84.22 901.92,84.22 911.73,84.22 921.37,84.22 931.19,84.22 940.94,84.22 950.68,84.22 960.35,84.22 970.00,84.22" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/5</h3><p>train · RMSE 0.016736 rad · max |error| 0.018316 rad · final |error| 0.018316 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_torque_off_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;torque_off&quot;,&quot;off_conductance_s&quot;:1e-8,&quot;diode_drop_v&quot;:0.7,&quot;diode_resistance_ohm&quot;:0.1}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.20116558150000063,
+    0.20689597450000008
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18889400850000015,
+    0.19499062950000035
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: 0.007669903939428208,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.02411132000000027,
+      0.035791212999999544
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.03835</text><text x="5" y="190">0.00000</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="79.78,190.00 89.46,190.00 99.24,183.20 108.90,176.40 118.64,169.60 128.38,156.00 138.13,149.20 147.83,135.60 157.56,128.80 167.26,115.20 177.11,108.40 186.81,94.80 196.49,88.00 206.26,74.40 215.92,67.60 225.64,54.00 249.90,33.60 259.73,26.80 269.43,26.80 279.18,20.00 288.84,20.00 298.59,20.00 308.35,20.00 318.03,20.00 327.73,20.00 337.54,20.00 347.22,20.00 356.96,20.00 366.72,20.00 376.43,20.00 386.10,20.00 395.94,20.00 405.60,20.00 415.29,20.00 425.03,20.00 434.76,20.00 444.50,20.00 454.33,20.00 464.00,20.00 473.80,20.00 483.57,20.00 493.19,20.00 502.98,20.00 512.73,20.00 522.42,20.00 532.05,20.00 541.88,20.00 551.63,20.00 561.30,20.00 571.04,20.00 580.85,20.00 590.45,20.00 600.27,20.00 609.96,20.00 619.72,20.00 629.40,20.00 639.07,20.00 648.94,20.00 658.61,20.00 668.38,20.00 678.11,20.00 687.84,20.00 697.54,20.00 707.33,20.00 717.02,20.00 726.64,20.00 736.34,20.00 746.16,20.00 755.87,20.00 765.63,20.00 775.38,20.00 784.98,20.00 794.84,20.00 804.52,20.00 814.23,20.00 823.99,20.00 833.68,20.00 843.49,20.00 853.16,20.00 862.94,20.00 872.61,20.00 882.41,20.00 892.15,20.00 901.78,20.00 911.61,20.00 921.37,20.00 931.05,20.00 940.72,20.00 950.48,20.00 960.11,20.00 970.00,20.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.78,185.53 89.46,180.30 99.24,175.00 108.90,169.77 118.64,164.50 128.38,159.22 138.13,153.95 147.83,148.69 157.56,143.43 167.26,138.18 177.11,132.84 186.81,127.59 196.49,122.35 206.26,117.06 215.92,111.83 225.64,106.57 249.90,101.19 259.73,101.19 269.43,101.19 279.18,101.19 288.84,101.19 298.59,101.19 308.35,101.19 318.03,101.19 327.73,101.19 337.54,101.19 347.22,101.19 356.96,101.19 366.72,101.19 376.43,101.19 386.10,101.19 395.94,101.19 405.60,101.19 415.29,101.19 425.03,101.19 434.76,101.19 444.50,101.19 454.33,101.19 464.00,101.19 473.80,101.19 483.57,101.19 493.19,101.19 502.98,101.19 512.73,101.19 522.42,101.19 532.05,101.19 541.88,101.19 551.63,101.19 561.30,101.19 571.04,101.19 580.85,101.19 590.45,101.19 600.27,101.19 609.96,101.19 619.72,101.19 629.40,101.19 639.07,101.19 648.94,101.19 658.61,101.19 668.38,101.19 678.11,101.19 687.84,101.19 697.54,101.19 707.33,101.19 717.02,101.19 726.64,101.19 736.34,101.19 746.16,101.19 755.87,101.19 765.63,101.19 775.38,101.19 784.98,101.19 794.84,101.19 804.52,101.19 814.23,101.19 823.99,101.19 833.68,101.19 843.49,101.19 853.16,101.19 862.94,101.19 872.61,101.19 882.41,101.19 892.15,101.19 901.78,101.19 911.61,101.19 921.37,101.19 931.05,101.19 940.72,101.19 950.48,101.19 960.11,101.19 970.00,101.19" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/6</h3><p>train · RMSE 0.011189 rad · max |error| 0.012180 rad · final |error| 0.012180 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_zero_pwm_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;electrical_brake&quot;}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.2008140945000001,
+    0.20692749749999972
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.1887491455000001,
+    0.19490122150000033
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: -0.004601942363656925,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.0058891980000002064,
+      0.01807901799999989
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.00000</text><text x="5" y="190">-0.03221</text><text x="70" y="214">0 s</text><text x="900" y="214">1.104 s</text><polyline points="79.72,20.00 89.57,20.00 99.34,28.10 109.06,36.19 118.90,44.29 128.55,52.38 138.42,68.57 148.19,76.67 158.02,84.76 167.82,92.86 177.61,109.05 187.34,117.14 197.14,133.33 206.80,141.43 216.67,157.62 226.42,165.71 246.02,190.00 255.84,190.00 265.73,190.00 275.32,190.00 285.23,190.00 295.00,190.00 304.76,190.00 314.57,190.00 324.34,190.00 334.08,190.00 343.86,190.00 353.74,190.00 363.43,190.00 373.29,190.00 383.05,190.00 392.82,190.00 402.68,190.00 412.44,190.00 422.27,190.00 432.02,190.00 441.87,190.00 451.50,190.00 461.41,190.00 471.15,190.00 490.71,190.00 500.44,190.00 510.28,190.00 519.98,190.00 529.82,190.00 539.69,190.00 549.28,190.00 559.13,190.00 569.01,190.00 578.79,190.00 588.58,190.00 598.42,190.00 608.15,190.00 617.94,190.00 627.65,190.00 637.48,190.00 647.24,190.00 656.90,190.00 666.83,190.00 676.56,190.00 686.29,190.00 696.18,190.00 705.98,190.00 715.64,190.00 725.40,190.00 735.30,190.00 745.10,190.00 754.74,190.00 764.65,190.00 774.28,190.00 784.26,190.00 794.04,190.00 803.81,190.00 813.58,190.00 823.29,190.00 833.14,190.00 842.86,190.00 852.69,190.00 862.50,190.00 872.25,190.00 882.05,190.00 891.89,190.00 901.69,190.00 911.42,190.00 921.23,190.00 930.92,190.00 940.71,190.00 950.50,190.00 960.23,190.00 970.00,190.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.72,25.24 89.57,31.55 99.34,37.81 109.06,44.05 118.90,50.35 128.55,56.53 138.42,62.86 148.19,69.12 158.02,75.42 167.82,81.70 177.61,87.98 187.34,94.21 197.14,100.49 206.80,106.68 216.67,113.01 226.42,119.26 246.02,125.72 255.84,125.72 265.73,125.72 275.32,125.72 285.23,125.72 295.00,125.72 304.76,125.72 314.57,125.72 324.34,125.72 334.08,125.72 343.86,125.72 353.74,125.72 363.43,125.72 373.29,125.72 383.05,125.72 392.82,125.72 402.68,125.72 412.44,125.72 422.27,125.72 432.02,125.72 441.87,125.72 451.50,125.72 461.41,125.72 471.15,125.72 490.71,125.72 500.44,125.72 510.28,125.72 519.98,125.72 529.82,125.72 539.69,125.72 549.28,125.72 559.13,125.72 569.01,125.72 578.79,125.72 588.58,125.72 598.42,125.72 608.15,125.72 617.94,125.72 627.65,125.72 637.48,125.72 647.24,125.72 656.90,125.72 666.83,125.72 676.56,125.72 686.29,125.72 696.18,125.72 705.98,125.72 715.64,125.72 725.40,125.72 735.30,125.72 745.10,125.72 754.74,125.72 764.65,125.72 774.28,125.72 784.26,125.72 794.04,125.72 803.81,125.72 813.58,125.72 823.29,125.72 833.14,125.72 842.86,125.72 852.69,125.72 862.50,125.72 872.25,125.72 882.05,125.72 891.89,125.72 901.69,125.72 911.42,125.72 921.23,125.72 930.92,125.72 940.71,125.72 950.50,125.72 960.23,125.72 970.00,125.72" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/7</h3><p>train · RMSE 0.015427 rad · max |error| 0.016783 rad · final |error| 0.016783 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_torque_off_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;torque_off&quot;,&quot;off_conductance_s&quot;:1e-8,&quot;diode_drop_v&quot;:0.7,&quot;diode_resistance_ohm&quot;:0.1}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.2010216524999997,
+    0.20698630249999894
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18911233249999881,
+    0.19494548449999982
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: -0.006135923151542565,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.012044255000001058,
+      0.024085059000000797
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.00000</text><text x="5" y="190">-0.03682</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="79.60,20.00 89.47,27.08 99.20,34.17 108.84,41.25 118.53,48.33 128.26,55.42 138.05,69.58 147.81,76.67 157.47,83.75 167.15,97.92 177.03,112.08 186.70,119.17 196.49,133.33 206.19,140.42 215.96,147.50 225.73,161.67 250.10,182.92 259.69,190.00 269.44,190.00 279.30,190.00 288.93,190.00 298.54,190.00 308.34,190.00 318.09,190.00 327.86,190.00 337.43,190.00 347.22,190.00 356.90,190.00 366.69,190.00 376.46,190.00 386.14,190.00 395.81,190.00 405.62,190.00 415.45,190.00 425.16,190.00 434.74,190.00 444.54,190.00 454.27,190.00 464.02,190.00 473.77,190.00 483.42,190.00 493.27,190.00 502.92,190.00 512.72,190.00 522.33,190.00 532.19,190.00 541.86,190.00 551.68,190.00 561.30,190.00 571.06,190.00 580.80,190.00 590.56,190.00 600.25,190.00 609.97,190.00 619.72,190.00 629.35,190.00 639.15,190.00 648.87,190.00 658.60,190.00 668.40,190.00 678.09,190.00 687.81,190.00 697.54,190.00 707.30,190.00 717.04,190.00 726.74,190.00 736.44,190.00 746.15,190.00 755.87,190.00 765.63,190.00 775.40,190.00 785.09,190.00 794.83,190.00 804.55,190.00 814.23,190.00 824.16,190.00 833.79,190.00 843.51,190.00 853.22,190.00 863.00,190.00 872.62,190.00 882.50,190.00 892.11,190.00 901.87,190.00 911.65,190.00 921.44,190.00 931.06,190.00 940.78,190.00 950.57,190.00 960.24,190.00 970.00,190.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.60,24.55 89.47,30.12 99.20,35.60 108.84,41.04 118.53,46.50 128.26,51.98 138.05,57.50 147.81,63.01 157.47,68.45 167.15,73.91 177.03,79.48 186.70,84.94 196.49,90.45 206.19,95.92 215.96,101.43 225.73,106.94 250.10,112.50 259.69,112.50 269.44,112.50 279.30,112.50 288.93,112.50 298.54,112.50 308.34,112.50 318.09,112.50 327.86,112.50 337.43,112.50 347.22,112.50 356.90,112.50 366.69,112.50 376.46,112.50 386.14,112.50 395.81,112.50 405.62,112.50 415.45,112.50 425.16,112.50 434.74,112.50 444.54,112.50 454.27,112.50 464.02,112.50 473.77,112.50 483.42,112.50 493.27,112.50 502.92,112.50 512.72,112.50 522.33,112.50 532.19,112.50 541.86,112.50 551.68,112.50 561.30,112.50 571.06,112.50 580.80,112.50 590.56,112.50 600.25,112.50 609.97,112.50 619.72,112.50 629.35,112.50 639.15,112.50 648.87,112.50 658.60,112.50 668.40,112.50 678.09,112.50 687.81,112.50 697.54,112.50 707.30,112.50 717.04,112.50 726.74,112.50 736.44,112.50 746.15,112.50 755.87,112.50 765.63,112.50 775.40,112.50 785.09,112.50 794.83,112.50 804.55,112.50 814.23,112.50 824.16,112.50 833.79,112.50 843.51,112.50 853.22,112.50 863.00,112.50 872.62,112.50 882.50,112.50 892.11,112.50 901.87,112.50 911.65,112.50 921.44,112.50 931.06,112.50 940.78,112.50 950.57,112.50 960.24,112.50 970.00,112.50" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/8</h3><p>held_out_repetition · RMSE 0.009801 rad · max |error| 0.010713 rad · final |error| 0.010713 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_zero_pwm_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;electrical_brake&quot;}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.20097463699999984,
+    0.2069125500000002
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18890486000000095,
+    0.1950462789999996
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: 0.004601942363656922,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.006071174000000568,
+      0.018208207000000698
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.03068</text><text x="5" y="190">0.00000</text><text x="70" y="214">0 s</text><text x="900" y="214">1.104 s</text><polyline points="79.72,190.00 89.52,190.00 99.32,190.00 109.14,181.50 118.98,173.00 128.79,164.50 138.47,156.00 148.37,139.00 158.05,130.50 167.90,122.00 177.53,113.50 187.50,96.50 197.23,79.50 207.04,71.00 216.79,62.50 226.52,45.50 246.18,28.50 255.87,20.00 266.03,20.00 275.40,20.00 285.33,20.00 294.99,20.00 304.73,20.00 314.56,20.00 324.39,20.00 334.22,20.00 344.05,20.00 353.83,20.00 363.48,20.00 373.28,20.00 383.12,20.00 392.85,20.00 402.63,20.00 412.43,20.00 422.30,20.00 432.11,20.00 441.79,20.00 451.64,20.00 461.35,20.00 471.10,20.00 490.68,20.00 500.44,20.00 510.21,20.00 520.05,20.00 529.74,20.00 539.61,20.00 549.35,20.00 559.17,20.00 568.95,20.00 578.65,20.00 588.46,20.00 598.25,20.00 608.01,20.00 617.82,20.00 627.57,20.00 637.33,20.00 647.21,20.00 656.98,20.00 666.76,20.00 676.50,20.00 686.25,20.00 696.12,20.00 705.86,20.00 715.66,20.00 725.48,20.00 735.18,20.00 745.00,20.00 754.78,20.00 764.54,20.00 774.31,20.00 784.05,20.00 793.90,20.00 803.58,20.00 813.40,20.00 823.14,20.00 833.08,20.00 842.77,20.00 852.66,20.00 862.31,20.00 872.14,20.00 881.89,20.00 891.75,20.00 901.42,20.00 911.23,20.00 921.09,20.00 930.90,20.00 940.56,20.00 950.50,20.00 960.21,20.00 970.00,20.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.72,184.51 89.52,177.94 99.32,171.37 109.14,164.79 118.98,158.19 128.79,151.61 138.47,145.12 148.37,138.49 158.05,131.99 167.90,125.39 177.53,118.93 187.50,112.25 197.23,105.72 207.04,99.15 216.79,92.61 226.52,86.08 246.18,79.36 255.87,79.36 266.03,79.36 275.40,79.36 285.33,79.36 294.99,79.36 304.73,79.36 314.56,79.36 324.39,79.36 334.22,79.36 344.05,79.36 353.83,79.36 363.48,79.36 373.28,79.36 383.12,79.36 392.85,79.36 402.63,79.36 412.43,79.36 422.30,79.36 432.11,79.36 441.79,79.36 451.64,79.36 461.35,79.36 471.10,79.36 490.68,79.36 500.44,79.36 510.21,79.36 520.05,79.36 529.74,79.36 539.61,79.36 549.35,79.36 559.17,79.36 568.95,79.36 578.65,79.36 588.46,79.36 598.25,79.36 608.01,79.36 617.82,79.36 627.57,79.36 637.33,79.36 647.21,79.36 656.98,79.36 666.76,79.36 676.50,79.36 686.25,79.36 696.12,79.36 705.86,79.36 715.66,79.36 725.48,79.36 735.18,79.36 745.00,79.36 754.78,79.36 764.54,79.36 774.31,79.36 784.05,79.36 793.90,79.36 803.58,79.36 813.40,79.36 823.14,79.36 833.08,79.36 842.77,79.36 852.66,79.36 862.31,79.36 872.14,79.36 881.89,79.36 891.75,79.36 901.42,79.36 911.23,79.36 921.09,79.36 930.90,79.36 940.56,79.36 950.50,79.36 960.21,79.36 970.00,79.36" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/9</h3><p>held_out_repetition · RMSE 0.015472 rad · max |error| 0.016865 rad · final |error| 0.016865 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_torque_off_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;torque_off&quot;,&quot;off_conductance_s&quot;:1e-8,&quot;diode_drop_v&quot;:0.7,&quot;diode_resistance_ohm&quot;:0.1}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.20082157250000066,
+    0.20706652550000015
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18889550849999992,
+    0.1948674644999997
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: 0.006135923151542565,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.01193109899999989,
+      0.023965730000000462
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.03682</text><text x="5" y="190">0.00000</text><text x="70" y="214">0 s</text><text x="900" y="214">1.098 s</text><polyline points="79.82,190.00 89.70,190.00 99.44,182.92 109.32,175.83 119.18,168.75 128.95,154.58 138.77,147.50 148.57,133.33 158.50,126.25 168.37,112.08 178.20,105.00 187.90,90.83 197.77,83.75 207.70,69.58 217.56,62.50 227.29,48.33 251.90,27.08 261.67,20.00 271.47,20.00 281.33,20.00 291.23,20.00 301.04,20.00 310.94,20.00 320.73,20.00 330.54,20.00 340.34,20.00 350.25,20.00 360.14,20.00 369.89,20.00 379.76,20.00 389.55,20.00 399.47,20.00 409.30,20.00 419.04,20.00 428.99,20.00 438.82,20.00 448.66,20.00 458.35,20.00 468.29,20.00 478.06,20.00 487.96,20.00 497.77,20.00 507.61,20.00 517.50,20.00 527.41,20.00 537.21,20.00 547.06,20.00 556.86,20.00 566.55,20.00 576.49,20.00 586.32,20.00 596.24,20.00 605.99,20.00 615.92,20.00 625.66,20.00 635.58,20.00 645.32,20.00 655.14,20.00 664.98,20.00 674.83,20.00 684.65,20.00 694.55,20.00 704.35,20.00 714.35,20.00 724.05,20.00 733.83,20.00 743.74,20.00 753.56,20.00 763.35,20.00 773.20,20.00 783.04,20.00 792.80,20.00 802.68,20.00 812.54,20.00 822.33,20.00 832.23,20.00 842.16,20.00 852.04,20.00 861.90,20.00 871.67,20.00 881.51,20.00 891.38,20.00 901.12,20.00 910.90,20.00 920.83,20.00 930.56,20.00 940.52,20.00 950.30,20.00 960.09,20.00 970.00,20.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.82,185.40 89.70,179.91 99.44,174.50 109.32,169.01 119.18,163.53 128.95,158.10 138.77,152.64 148.57,147.19 158.50,141.68 168.37,136.19 178.20,130.73 187.90,125.34 197.77,119.85 207.70,114.33 217.56,108.86 227.29,103.45 251.90,97.88 261.67,97.88 271.47,97.88 281.33,97.88 291.23,97.88 301.04,97.88 310.94,97.88 320.73,97.88 330.54,97.88 340.34,97.88 350.25,97.88 360.14,97.88 369.89,97.88 379.76,97.88 389.55,97.88 399.47,97.88 409.30,97.88 419.04,97.88 428.99,97.88 438.82,97.88 448.66,97.88 458.35,97.88 468.29,97.88 478.06,97.88 487.96,97.88 497.77,97.88 507.61,97.88 517.50,97.88 527.41,97.88 537.21,97.88 547.06,97.88 556.86,97.88 566.55,97.88 576.49,97.88 586.32,97.88 596.24,97.88 605.99,97.88 615.92,97.88 625.66,97.88 635.58,97.88 645.32,97.88 655.14,97.88 664.98,97.88 674.83,97.88 684.65,97.88 694.55,97.88 704.35,97.88 714.35,97.88 724.05,97.88 733.83,97.88 743.74,97.88 753.56,97.88 763.35,97.88 773.20,97.88 783.04,97.88 792.80,97.88 802.68,97.88 812.54,97.88 822.33,97.88 832.23,97.88 842.16,97.88 852.04,97.88 861.90,97.88 871.67,97.88 881.51,97.88 891.38,97.88 901.12,97.88 910.90,97.88 920.83,97.88 930.56,97.88 940.52,97.88 950.30,97.88 960.09,97.88 970.00,97.88" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/10</h3><p>held_out_repetition · RMSE 0.012719 rad · max |error| 0.013842 rad · final |error| 0.013842 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_zero_pwm_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;electrical_brake&quot;}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.20112630500000073,
+    0.20702772500000144
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18910860000000085,
+    0.19510689300000017
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: -0.004601942363656922,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.00594024599999976,
+      0.01787573000000009
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.00000</text><text x="5" y="190">-0.03375</text><text x="70" y="214">0 s</text><text x="900" y="214">1.110 s</text><polyline points="79.74,20.00 89.48,20.00 99.23,35.45 109.05,43.18 118.72,50.91 128.35,58.64 138.16,66.36 147.95,74.09 157.57,89.55 167.34,97.27 177.16,112.73 186.87,120.45 196.65,128.18 206.25,143.64 215.97,151.36 225.76,166.82 245.12,182.27 254.93,190.00 264.58,190.00 274.32,190.00 284.01,190.00 293.92,190.00 303.62,190.00 313.22,190.00 323.00,190.00 332.64,190.00 342.52,190.00 352.15,190.00 361.98,190.00 371.60,190.00 381.28,190.00 391.06,190.00 400.82,190.00 410.45,190.00 420.18,190.00 430.04,190.00 439.70,190.00 449.47,190.00 459.11,190.00 468.90,190.00 478.63,190.00 493.28,190.00 503.00,190.00 512.60,190.00 522.34,190.00 532.11,190.00 541.98,190.00 551.59,190.00 561.36,190.00 571.05,190.00 580.82,190.00 590.57,190.00 600.20,190.00 610.00,190.00 619.73,190.00 629.41,190.00 639.20,190.00 648.94,190.00 658.62,190.00 668.50,190.00 678.16,190.00 687.83,190.00 697.56,190.00 707.31,190.00 717.08,190.00 726.83,190.00 736.61,190.00 746.23,190.00 756.01,190.00 765.67,190.00 775.36,190.00 785.12,190.00 794.86,190.00 804.56,190.00 814.27,190.00 824.02,190.00 833.81,190.00 843.40,190.00 853.34,190.00 863.13,190.00 872.76,190.00 882.39,190.00 892.15,190.00 901.92,190.00 911.65,190.00 921.41,190.00 931.04,190.00 940.67,190.00 950.49,190.00 960.29,190.00 970.00,190.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.74,25.01 89.48,30.96 99.23,36.91 109.05,42.91 118.72,48.82 128.35,54.70 138.16,60.69 147.95,66.67 157.57,72.55 167.34,78.51 177.16,84.50 186.87,90.43 196.65,96.41 206.25,102.27 215.97,108.21 225.76,114.19 245.12,120.27 254.93,120.27 264.58,120.27 274.32,120.27 284.01,120.27 293.92,120.27 303.62,120.27 313.22,120.27 323.00,120.27 332.64,120.27 342.52,120.27 352.15,120.27 361.98,120.27 371.60,120.27 381.28,120.27 391.06,120.27 400.82,120.27 410.45,120.27 420.18,120.27 430.04,120.27 439.70,120.27 449.47,120.27 459.11,120.27 468.90,120.27 478.63,120.27 493.28,120.27 503.00,120.27 512.60,120.27 522.34,120.27 532.11,120.27 541.98,120.27 551.59,120.27 561.36,120.27 571.05,120.27 580.82,120.27 590.57,120.27 600.20,120.27 610.00,120.27 619.73,120.27 629.41,120.27 639.20,120.27 648.94,120.27 658.62,120.27 668.50,120.27 678.16,120.27 687.83,120.27 697.56,120.27 707.31,120.27 717.08,120.27 726.83,120.27 736.61,120.27 746.23,120.27 756.01,120.27 765.67,120.27 775.36,120.27 785.12,120.27 794.86,120.27 804.56,120.27 814.27,120.27 824.02,120.27 833.81,120.27 843.40,120.27 853.34,120.27 863.13,120.27 872.76,120.27 882.39,120.27 892.15,120.27 901.92,120.27 911.65,120.27 921.41,120.27 931.04,120.27 940.67,120.27 950.49,120.27 960.29,120.27 970.00,120.27" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section><section><h3>release-id4/4/11</h3><p>held_out_repetition · RMSE 0.014099 rad · max |error| 0.015406 rad · final |error| 0.015406 rad · FAIL. Original limits 0.004602 / 0.007670 rad.</p><p>Captured condition: supervised_torque_off_release. Declared driver hypothesis: {&quot;kind&quot;:&quot;torque_off&quot;,&quot;off_conductance_s&quot;:1e-8,&quot;diode_drop_v&quot;:0.7,&quot;diode_resistance_ohm&quot;:0.1}.</p><details><summary>Release timing at encoder resolution</summary><pre>{
+  &quot;command_window_s&quot;: [
+    0.2008945680000025,
+    0.20697650600000195
+  ],
+  &quot;reference_sample_window_s&quot;: [
+    0.18876967300000125,
+    0.19502132600000088
+  ],
+  &quot;terminal_offset_from_reference_rad&quot;: -0.006135923151542565,
+  &quot;stationary_tail_start_delay&quot;: {
+    &quot;interval_s&quot;: [
+      0.011852655000000212,
+      0.02388779799999874
+    ],
+    &quot;unresolved&quot;: null
+  },
+  &quot;interpretation&quot;: &quot;First observed suffix within one encoder count of the terminal sample, with required dwell and bounded gaps. This is a sampled plateau, not proof of zero velocity between samples. Terminal offset starts at the last sample before the release transaction, not an interpolated command-time angle. Device sample age and calibrated angular accuracy remain unknown.&quot;
+}</pre></details><p>Displacement (rad), time (s): blue measured; brown retained reference.</p><svg viewBox="0 0 1000 220" role="img" aria-label="Response comparison"><text x="5" y="15">0.00000</text><text x="5" y="190">-0.03528</text><text x="70" y="214">0 s</text><text x="900" y="214">1.098 s</text><polyline points="79.73,20.00 89.70,27.39 99.45,27.39 109.28,34.78 119.10,42.17 129.04,49.57 138.74,56.96 148.59,71.74 158.45,79.13 168.31,93.91 178.18,101.30 187.91,116.09 197.80,123.48 207.54,138.26 217.49,145.65 227.31,160.43 251.83,182.61 261.63,190.00 271.45,190.00 281.39,190.00 291.13,190.00 301.18,190.00 310.86,190.00 320.67,190.00 330.50,190.00 340.34,190.00 350.20,190.00 360.02,190.00 369.95,190.00 379.81,190.00 389.45,190.00 399.45,190.00 409.24,190.00 419.13,190.00 428.88,190.00 438.87,190.00 448.54,190.00 458.47,190.00 468.36,190.00 478.15,190.00 487.96,190.00 497.83,190.00 507.57,190.00 517.50,190.00 527.26,190.00 537.08,190.00 546.97,190.00 556.76,190.00 566.68,190.00 576.51,190.00 586.22,190.00 596.07,190.00 606.00,190.00 615.83,190.00 625.60,190.00 635.45,190.00 645.36,190.00 655.15,190.00 665.02,190.00 674.81,190.00 684.75,190.00 694.38,190.00 704.29,190.00 714.16,190.00 723.96,190.00 733.77,190.00 743.65,190.00 753.58,190.00 763.34,190.00 773.17,190.00 783.14,190.00 792.83,190.00 802.79,190.00 812.51,190.00 822.35,190.00 832.20,190.00 842.00,190.00 852.00,190.00 861.65,190.00 871.50,190.00 881.39,190.00 891.24,190.00 901.04,190.00 910.87,190.00 920.78,190.00 930.66,190.00 940.44,190.00 950.25,190.00 960.04,190.00 970.00,190.00" fill="none" stroke="#167da5" stroke-width="2"/><polyline points="79.73,24.73 89.70,30.49 99.45,36.12 109.28,41.80 119.10,47.47 129.04,53.22 138.74,58.82 148.59,64.51 158.45,70.21 168.31,75.90 178.18,81.60 187.91,87.23 197.80,92.94 207.54,98.57 217.49,104.32 227.31,109.99 251.83,115.77 261.63,115.77 271.45,115.77 281.39,115.77 291.13,115.77 301.18,115.77 310.86,115.77 320.67,115.77 330.50,115.77 340.34,115.77 350.20,115.77 360.02,115.77 369.95,115.77 379.81,115.77 389.45,115.77 399.45,115.77 409.24,115.77 419.13,115.77 428.88,115.77 438.87,115.77 448.54,115.77 458.47,115.77 468.36,115.77 478.15,115.77 487.96,115.77 497.83,115.77 507.57,115.77 517.50,115.77 527.26,115.77 537.08,115.77 546.97,115.77 556.76,115.77 566.68,115.77 576.51,115.77 586.22,115.77 596.07,115.77 606.00,115.77 615.83,115.77 625.60,115.77 635.45,115.77 645.36,115.77 655.15,115.77 665.02,115.77 674.81,115.77 684.75,115.77 694.38,115.77 704.29,115.77 714.16,115.77 723.96,115.77 733.77,115.77 743.65,115.77 753.58,115.77 763.34,115.77 773.17,115.77 783.14,115.77 792.83,115.77 802.79,115.77 812.51,115.77 822.35,115.77 832.20,115.77 842.00,115.77 852.00,115.77 861.65,115.77 871.50,115.77 881.39,115.77 891.24,115.77 901.04,115.77 910.87,115.77 920.78,115.77 930.66,115.77 940.44,115.77 950.25,115.77 960.04,115.77 970.00,115.77" fill="none" stroke="#8a6b31" stroke-width="2"/></svg></section></details><details><summary>Baseline source and measurement interpretation</summary><pre>{
+  &quot;cases&quot;: [
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v9_load0&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 9
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0.5963503378378379,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v9_load0.25&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 9
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 1.1927006756756757,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v9_load0.5&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 9
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 1.7890510135135136,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v9_load0.75&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 9
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 2.1468612162162164,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v9_load0.9&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 9
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v11.1_load0&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0.73549875,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v11.1_load0.25&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 1.4709975,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v11.1_load0.5&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 2.20649625,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v11.1_load0.75&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 2.6477955,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v11.1_load0.9&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v12.6_load0&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 12.6
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0.8348904729729729,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v12.6_load0.25&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 12.6
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 1.6697809459459458,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v12.6_load0.5&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 12.6
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 2.5046714189189188,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v12.6_load0.75&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 12.6
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 3.0056057027027023,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;curve_v12.6_load0.9&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 12.6
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;stall_v9&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 9
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;stall_v11.1&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;stall_v12.6&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 12.6
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {},
+      &quot;name&quot;: &quot;cad_free&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {},
+      &quot;name&quot;: &quot;cad_stall&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.0001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;step_j0.0001&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;step_j0.001&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.01,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;step_j0.01&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0.5,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;hold_load0.5&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 1,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;hold_load1&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 2,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;hold_load2&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 8,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0.5,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;sine_f0.5&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 4,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 1,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;sine_f1&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 2,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;sine_f2&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 4,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;sine_f4&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 8,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;sine_f8&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {
+        &quot;latency&quot;: 0.001
+      },
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;latency_0.001&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {
+        &quot;latency&quot;: 0.005
+      },
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;latency_0.005&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {
+        &quot;latency&quot;: 0.02
+      },
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;latency_0.02&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 2,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;backlash&quot;: 0.003490658503988659,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;backlash_0.003490658503988659&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 2,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;backlash&quot;: 0.017453292519943295,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;backlash_0.017453292519943295&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_damping&quot;: 0.04,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;gear_stiffness&quot;: 20,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;stiffness_20&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_damping&quot;: 0.4,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;gear_stiffness&quot;: 200,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;stiffness_200&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 60,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 0,
+        &quot;period&quot;: 0,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;thermal_stall_r0.5&quot;,
+      &quot;sample_s&quot;: 0.05,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.005,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: true,
+      &quot;thermal_resistance_scale&quot;: 0.5,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 60,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 0,
+        &quot;period&quot;: 0,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;thermal_stall_r1&quot;,
+      &quot;sample_s&quot;: 0.05,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.005,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: true,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 60,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 0,
+        &quot;period&quot;: 0,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;thermal_stall_r2&quot;,
+      &quot;sample_s&quot;: 0.05,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.005,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: true,
+      &quot;thermal_resistance_scale&quot;: 2,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 60,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 0,
+        &quot;period&quot;: 0,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;thermal_free&quot;,
+      &quot;sample_s&quot;: 0.05,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.005,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: true,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 60,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 0,
+        &quot;period&quot;: 0,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 1.4709975,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;thermal_halfload&quot;,
+      &quot;sample_s&quot;: 0.05,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.005,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: true,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;step_dt0.0005&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.0005,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 4,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;sine_dt0.0005&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.0005,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;step_dt0.000125&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.000125,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 4,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;sine_dt0.000125&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.000125,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 60,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 0,
+        &quot;period&quot;: 0,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: true,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;thermal_stall_fine&quot;,
+      &quot;sample_s&quot;: 0.05,
+      &quot;servo&quot;: false,
+      &quot;step_s&quot;: 0.0025,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: true,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.005,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 2,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;encoder_period0.005&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 2,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.02,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 2,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;encoder_period0.02&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00025,
+      &quot;target_rad&quot;: 0.25,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;step_dt0.0000625&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.0000625,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 1,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;step_dt0.00003125&quot;,
+      &quot;sample_s&quot;: 0.001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00003125,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 0.02,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;startup_dt0.00001&quot;,
+      &quot;sample_s&quot;: 0.00001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 0.00001,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    },
+    {
+      &quot;ambient_c&quot;: 25,
+      &quot;duration_s&quot;: 0.02,
+      &quot;encoder_parameters&quot;: {
+        &quot;counts&quot;: 4096,
+        &quot;period&quot;: 0.001,
+        &quot;seed&quot;: 2301
+      },
+      &quot;firmware_overrides&quot;: {},
+      &quot;frequency_hz&quot;: 0,
+      &quot;load_inertia_kg_m2&quot;: 0.001,
+      &quot;load_torque_nm&quot;: 0,
+      &quot;locked&quot;: false,
+      &quot;motor_overrides&quot;: {
+        &quot;back_emf_constant&quot;: 0.009734075474443412,
+        &quot;derating&quot;: 0,
+        &quot;efficiency&quot;: 0.5037278591966505,
+        &quot;gear_friction&quot;: 0,
+        &quot;gear_inertia&quot;: 0.00002,
+        &quot;ratio&quot;: 200,
+        &quot;torque_constant&quot;: 0.009734075474443412
+      },
+      &quot;name&quot;: &quot;startup_dt0.000005&quot;,
+      &quot;sample_s&quot;: 0.00001,
+      &quot;servo&quot;: true,
+      &quot;step_s&quot;: 5e-6,
+      &quot;target_rad&quot;: 1.0471975511965976,
+      &quot;thermal&quot;: false,
+      &quot;thermal_resistance_scale&quot;: 1,
+      &quot;voltage_v&quot;: 11.1
+    }
+  ],
+  &quot;motor&quot;: {
+    &quot;driver&quot;: {
+      &quot;current_limit&quot;: 3,
+      &quot;kind&quot;: &quot;servo_internal&quot;,
+      &quot;on_resistance&quot;: 0.05,
+      &quot;pwm_hz&quot;: 50
+    },
+    &quot;electrical&quot;: {
+      &quot;back_emf_constant&quot;: 2.0139466498848435,
+      &quot;current_limit&quot;: 3,
+      &quot;inductance&quot;: 0.00148,
+      &quot;no_load_current&quot;: 0.1,
+      &quot;poles&quot;: 0,
+      &quot;resistance&quot;: 3.6999999999999997,
+      &quot;rotor_inertia&quot;: 2.2324546035565207e-8,
+      &quot;supply_voltage&quot;: 11.1,
+      &quot;torque_constant&quot;: 0.980665
+    },
+    &quot;firmware&quot;: {
+      &quot;deadband_rad&quot;: 0,
+      &quot;kd&quot;: 2.543932610380855,
+      &quot;ki&quot;: 0,
+      &quot;kind&quot;: &quot;servo&quot;,
+      &quot;kp&quot;: 127.19663051904276,
+      &quot;latency_s&quot;: 0.001,
+      &quot;loop_rate_hz&quot;: 1000,
+      &quot;output&quot;: &quot;voltage&quot;,
+      &quot;sensor_resolution_rad&quot;: 0.0015339807878856412
+    },
+    &quot;gear_ratio&quot;: 1,
+    &quot;gearbox&quot;: {
+      &quot;backlash_rad&quot;: 0,
+      &quot;efficiency&quot;: 1,
+      &quot;inertia&quot;: 2.2324546035565207e-8,
+      &quot;max_output_speed&quot;: 5.5115660589294615,
+      &quot;max_output_torque&quot;: 2.941995,
+      &quot;ratio&quot;: 1,
+      &quot;stiffness&quot;: 50
+    },
+    &quot;id&quot;: &quot;0702845b41d3&quot;,
+    &quot;joint&quot;: &quot;-Y | Hip servo output&quot;,
+    &quot;mount_point&quot;: [
+      0,
+      -0.0633937,
+      0.024
+    ],
+    &quot;mounted_on&quot;: &quot;Robot | Chassis and hip mounts&quot;,
+    &quot;name&quot;: &quot;-Y · Hip swing (belt) · HX-30HM&quot;,
+    &quot;shaft_axis&quot;: [
+      0,
+      0,
+      -1
+    ],
+    &quot;spec&quot;: &quot;hx30hm&quot;,
+    &quot;thermal&quot;: {
+      &quot;case_heat_capacity&quot;: 41.184000000000005,
+      &quot;max_winding_c&quot;: 110,
+      &quot;r_case_ambient&quot;: 45,
+      &quot;r_case_mount&quot;: 6,
+      &quot;r_winding_case&quot;: 12,
+      &quot;resistance_temp_coeff&quot;: 0.0039,
+      &quot;torque_derating_per_c&quot;: 0.0012,
+      &quot;winding_heat_capacity&quot;: 2.4024
+    }
+  },
+  &quot;provenance&quot;: {
+    &quot;cad_artifact&quot;: &quot;examples/full-robot/baseline/robot.rcad&quot;,
+    &quot;cad_sha256&quot;: &quot;2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589&quot;,
+    &quot;cad_source&quot;: &quot;examples/full-robot/trusted-baseline/fastest573.input.json :: runtime.scene.robot.motors[0]&quot;,
+    &quot;date&quot;: &quot;2026-09-11&quot;,
+    &quot;derivations&quot;: {
+      &quot;back_emf&quot;: &quot;(V-R*I0)/(N*omega0)&quot;,
+      &quot;derating&quot;: &quot;0 preserves Kt=Ke; temperature changes winding R, magnet temperature coefficient unknown&quot;,
+      &quot;efficiency&quot;: &quot;tau_stall/(N*Kt*Istall)&quot;,
+      &quot;gear_friction&quot;: &quot;zero additional Coulomb loss avoids double counting losses already fitted with I0/efficiency&quot;,
+      &quot;gear_inertia&quot;: &quot;2e-5 kg m2 illustrative output inertia, not measured&quot;,
+      &quot;ratio&quot;: &quot;200:1 hypothetical decomposition, not identified; many N/K/J combinations fit same endpoints&quot;,
+      &quot;resistance&quot;: &quot;V/Istall, a total equivalent resistance; copper/driver split unknown&quot;,
+      &quot;thermal&quot;: &quot;CAD estimated copper mass 12% of 52g, Cw=mass_copper*385; remainder*900 for case; mounting held at ambient&quot;,
+      &quot;torque_constant&quot;: &quot;Kt=Ke in SI for reciprocal energy conversion&quot;
+    },
+    &quot;limitations&quot;: [
+      &quot;Open-voltage curves use ideal terminal voltage with no firmware protection/current limit; stall at 12.6V is an extrapolated boundary test.&quot;,
+      &quot;Position/sine tests use shared sampled PD/quantization/latency and averaged H-bridge; proprietary trapezoidal command shaping, speed-loop modes, UART parsing and protection thresholds not identified.&quot;,
+      &quot;Thermal protection disabled to expose hypothetical plant heating; 110C is a CAD provisional marker, never a measured shutdown threshold.&quot;,
+      &quot;All mechanical/driver heat in motor thermal port is lumped; H-bridge loss is not coupled into case.&quot;,
+      &quot;Encoder quantization is modeled; accuracy, magnetic field geometry, noise, eccentricity, temperature drift and bus delay are not inferred from bit count.&quot;,
+      &quot;Cold curves hold winding at 25C. Unknowns are scenario sweeps, not confidence intervals.&quot;
+    ],
+    &quot;published&quot;: {
+      &quot;accuracy_deg&quot;: 0.3,
+      &quot;default_baud&quot;: 1000000,
+      &quot;encoder_bits&quot;: 12,
+      &quot;mass_kg&quot;: 0.052,
+      &quot;no_load_current_a&quot;: 0.1,
+      &quot;rated_voltage_v&quot;: 11.1,
+      &quot;speed_rad_s&quot;: 5.5115660589294615,
+      &quot;stall_current_a&quot;: 3,
+      &quot;stall_torque_nm&quot;: 2.941995,
+      &quot;voltage_range_v&quot;: [
+        9,
+        12.6
+      ]
+    },
+    &quot;reciprocal_parameters&quot;: {
+      &quot;back_emf_constant&quot;: 0.009734075474443412,
+      &quot;derating&quot;: 0,
+      &quot;efficiency&quot;: 0.5037278591966505,
+      &quot;gear_friction&quot;: 0,
+      &quot;gear_inertia&quot;: 0.00002,
+      &quot;ratio&quot;: 200,
+      &quot;torque_constant&quot;: 0.009734075474443412
+    },
+    &quot;sources&quot;: [
+      &quot;https://www.hiwonder.com/products/hx-30hm&quot;,
+      &quot;https://wiki.hiwonder.com/projects/NexArm/en/esp32-version/docs/2_ESP32_Development_Basics.html&quot;
+    ],
+    &quot;status&quot;: &quot;Uncalibrated simulation study, no hardware measurements&quot;
+  }
+}</pre><p>Retained reference is the uncalibrated shared physical baseline, not an empirical fit. All acquired samples retained. &quot;User-authorized unloaded bench, ID4 only. Four paired signed 5% release waveforms, three repetitions; repetition 0/1 training, repetition 2 held out, declared before acquisition. Zero PWM and torque-off are separate conditions; brake/coast electrical semantics remain hypotheses. Model limits RMS &lt;=3 encoder counts and final &lt;=5 counts, unchanged; host windows retained. Attached output hardware and actual inertia unknown. Live starting temperature about 51 C; no cold-start claim.&quot;</p></details></html>

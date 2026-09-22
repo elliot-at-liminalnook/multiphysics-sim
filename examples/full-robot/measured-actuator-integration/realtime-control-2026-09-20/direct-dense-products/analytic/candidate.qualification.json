@@ -1,0 +1,30 @@
+{
+  "name": "direct-dense-products/analytic/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": false,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.168306509,
+  "baseline_wall_s": 22.810525006,
+  "candidate_wall_s": 21.232349916,
+  "speedup": 1.0743287999794473,
+  "simulation_per_wall": 0.14129382813813268,
+  "max_error": {
+    "motor_angle_rad": 3.5083047578154947e-14,
+    "link_position_m": 1.003413963554775e-14,
+    "current_a": 2.760014439218139e-13,
+    "contact_force_n": 2.396642888173243e-10
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

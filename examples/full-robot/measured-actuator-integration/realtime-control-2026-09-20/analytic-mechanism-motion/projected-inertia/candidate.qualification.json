@@ -1,0 +1,30 @@
+{
+  "name": "analytic-mechanism-motion/projected-inertia/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": false,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.211539154,
+  "baseline_wall_s": 28.069789381,
+  "candidate_wall_s": 26.119022521,
+  "speedup": 1.0746875905647526,
+  "simulation_per_wall": 0.1148588159295764,
+  "max_error": {
+    "motor_angle_rad": 1.9095836023552692e-14,
+    "link_position_m": 4.152683075078487e-15,
+    "current_a": 1.5265566588595902e-13,
+    "contact_force_n": 6.940516270557872e-11
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

@@ -1,0 +1,489 @@
+{
+  "captures": [
+    {
+      "capture": "extended-fast-group-450-01",
+      "role": "timing",
+      "completed": false,
+      "stop_verified": true,
+      "frames": 116,
+      "commanded_plan_s": 10.0,
+      "pwm_cap_percent": 45.0,
+      "failure": "Unsolicited local status"
+    },
+    {
+      "capture": "extended-fast-small-group-350-01",
+      "role": "timing",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 250,
+      "commanded_plan_s": 10.0,
+      "pwm_cap_percent": 35.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 90.08863385622928,
+          "peak_secant_acceleration_deg_s2": 2032.6072573623853,
+          "tracking_rms_deg": 2.0264765124876383,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 92.31317329809656,
+          "peak_secant_acceleration_deg_s2": 2115.0719753285607,
+          "tracking_rms_deg": 2.8750204334362186,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 94.50822261977547,
+          "peak_secant_acceleration_deg_s2": 2114.9685357844673,
+          "tracking_rms_deg": 2.0279245239297885,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "extended-fast-small-group-350-02",
+      "role": "timing",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 250,
+      "commanded_plan_s": 10.0,
+      "pwm_cap_percent": 35.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 92.29639333588946,
+          "peak_secant_acceleration_deg_s2": 2087.54726510947,
+          "tracking_rms_deg": 2.9941950903192,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 94.4638125039354,
+          "peak_secant_acceleration_deg_s2": 2141.8599404081724,
+          "tracking_rms_deg": 2.1442430646530024,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 96.6819595260457,
+          "peak_secant_acceleration_deg_s2": 2142.041968974948,
+          "tracking_rms_deg": 2.107286563803629,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "extended-fast-small-group-350-03",
+      "role": "timing",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 250,
+      "commanded_plan_s": 10.0,
+      "pwm_cap_percent": 35.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 94.48237463381054,
+          "peak_secant_acceleration_deg_s2": 2114.9412926664845,
+          "tracking_rms_deg": 2.968606531792414,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 94.4705185896563,
+          "peak_secant_acceleration_deg_s2": 2142.254906172782,
+          "tracking_rms_deg": 3.0366738785435796,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 96.67118043611957,
+          "peak_secant_acceleration_deg_s2": 2142.563470556708,
+          "tracking_rms_deg": 2.004854319314699,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "extended-fast-small-group-450-01",
+      "role": "timing",
+      "completed": false,
+      "stop_verified": true,
+      "frames": 84,
+      "commanded_plan_s": 10.0,
+      "pwm_cap_percent": 45.0,
+      "failure": "Unsolicited local status"
+    },
+    {
+      "capture": "stage-250-01",
+      "role": "timing",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 5,
+      "commanded_plan_s": 0.2,
+      "pwm_cap_percent": 25.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 52.733531263499614,
+          "peak_secant_acceleration_deg_s2": 988.7109494537984,
+          "tracking_rms_deg": 1.2917231065458166,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 52.7312243093467,
+          "peak_secant_acceleration_deg_s2": 1016.1177381231984,
+          "tracking_rms_deg": 1.3124869209727803,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 50.53534063807794,
+          "peak_secant_acceleration_deg_s2": 988.6610955187508,
+          "tracking_rms_deg": 1.12692096737048,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "stage-500-01",
+      "role": "timing",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 5,
+      "commanded_plan_s": 0.2,
+      "pwm_cap_percent": 50.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 96.67424957346144,
+          "peak_secant_acceleration_deg_s2": 1867.5110935997768,
+          "tracking_rms_deg": 1.2025287686592472,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 98.86323585102589,
+          "peak_secant_acceleration_deg_s2": 1949.7604725844594,
+          "tracking_rms_deg": 1.323038571165261,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 96.6638104691304,
+          "peak_secant_acceleration_deg_s2": 1894.8312275025828,
+          "tracking_rms_deg": 1.089985499854277,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "stage-750-01",
+      "role": "timing",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 5,
+      "commanded_plan_s": 0.2,
+      "pwm_cap_percent": 75.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 131.8364978051155,
+          "peak_secant_acceleration_deg_s2": 2526.75915724766,
+          "tracking_rms_deg": 1.6414618401462309,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 134.03025445940193,
+          "peak_secant_acceleration_deg_s2": 2581.578502694773,
+          "tracking_rms_deg": 1.7285652800071203,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 131.83257576931777,
+          "peak_secant_acceleration_deg_s2": 2554.1707085255093,
+          "tracking_rms_deg": 1.497239433634734,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "training-fast-group-450-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 45.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 114.27132508419201,
+          "peak_secant_acceleration_deg_s2": 2527.0043961964316,
+          "tracking_rms_deg": 2.586464450771079,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 116.43411998340245,
+          "peak_secant_acceleration_deg_s2": 2609.679972671029,
+          "tracking_rms_deg": 2.6602272326708034,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 116.47881068267725,
+          "peak_secant_acceleration_deg_s2": 2582.2201230315686,
+          "tracking_rms_deg": 2.5052065991391044,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "training-fast-id10-450-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 45.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 116.45420471846543,
+          "peak_secant_acceleration_deg_s2": 2636.7706432487316,
+          "tracking_rms_deg": 2.4637609361379713,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 0.0,
+          "peak_secant_acceleration_deg_s2": 0.0,
+          "tracking_rms_deg": 0.0,
+          "tracking_pass": true
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 0.0,
+          "peak_secant_acceleration_deg_s2": 0.0,
+          "tracking_rms_deg": 0.0,
+          "tracking_pass": true
+        }
+      }
+    },
+    {
+      "capture": "training-fast-id11-450-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 45.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 0.0,
+          "peak_secant_acceleration_deg_s2": 0.0,
+          "tracking_rms_deg": 0.0,
+          "tracking_pass": true
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 116.48711208082226,
+          "peak_secant_acceleration_deg_s2": 2637.1751414436067,
+          "tracking_rms_deg": 2.6897116144162343,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 0.0,
+          "peak_secant_acceleration_deg_s2": 0.0,
+          "tracking_rms_deg": 0.0,
+          "tracking_pass": true
+        }
+      }
+    },
+    {
+      "capture": "training-fast-id12-450-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 45.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 0.0,
+          "peak_secant_acceleration_deg_s2": 0.0,
+          "tracking_rms_deg": 0.0,
+          "tracking_pass": true
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 0.0,
+          "peak_secant_acceleration_deg_s2": 0.0,
+          "tracking_rms_deg": 0.0,
+          "tracking_pass": true
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 118.68952324315495,
+          "peak_secant_acceleration_deg_s2": 2691.7546804660997,
+          "tracking_rms_deg": 2.5019668471520653,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "training-fast-small-group-350-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 35.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 90.0978464370323,
+          "peak_secant_acceleration_deg_s2": 2032.555371697402,
+          "tracking_rms_deg": 2.0109098419208116,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 92.3058558381709,
+          "peak_secant_acceleration_deg_s2": 2087.650052257019,
+          "tracking_rms_deg": 1.9878831026336352,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 90.10643002297695,
+          "peak_secant_acceleration_deg_s2": 2060.008258731968,
+          "tracking_rms_deg": 1.9095944941798897,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "training-fast-small-group-450-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 45.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 114.27355368202028,
+          "peak_secant_acceleration_deg_s2": 2554.4879348050063,
+          "tracking_rms_deg": 2.876401145176666,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 116.45260350717507,
+          "peak_secant_acceleration_deg_s2": 2582.0588011003238,
+          "tracking_rms_deg": 2.883428740347016,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 116.47854855253303,
+          "peak_secant_acceleration_deg_s2": 2609.4595756500407,
+          "tracking_rms_deg": 2.776203162748449,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "training-slow-group-450-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 45.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 109.8620727671996,
+          "peak_secant_acceleration_deg_s2": 2142.346970911683,
+          "tracking_rms_deg": 2.4445920620282324,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 112.05373961031893,
+          "peak_secant_acceleration_deg_s2": 2197.4944507454493,
+          "tracking_rms_deg": 2.4938335662836932,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 114.26398275506853,
+          "peak_secant_acceleration_deg_s2": 2142.477658439874,
+          "tracking_rms_deg": 2.539172173112141,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "training-sync-500-01",
+      "role": "training",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 25,
+      "commanded_plan_s": 1.0,
+      "pwm_cap_percent": 50.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 125.25832613043397,
+          "peak_secant_acceleration_deg_s2": 2746.7697345342585,
+          "tracking_rms_deg": 2.794700757762708,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 131.83399294860422,
+          "peak_secant_acceleration_deg_s2": 2884.213794310441,
+          "tracking_rms_deg": 2.84445349407081,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 129.64136193325984,
+          "peak_secant_acceleration_deg_s2": 2829.441139025574,
+          "tracking_rms_deg": 2.929541011962707,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "validation-hold-small-group-350-01",
+      "role": "validation",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "commanded_plan_s": 2.0,
+      "pwm_cap_percent": 35.0,
+      "failure": null,
+      "motors": {
+        "10": {
+          "peak_secant_speed_deg_s": 92.28100360483863,
+          "peak_secant_acceleration_deg_s2": 2087.29280828234,
+          "tracking_rms_deg": 2.248969795889279,
+          "tracking_pass": false
+        },
+        "11": {
+          "peak_secant_speed_deg_s": 92.28919390223399,
+          "peak_secant_acceleration_deg_s2": 2032.2861223226387,
+          "tracking_rms_deg": 2.3521869628711025,
+          "tracking_pass": false
+        },
+        "12": {
+          "peak_secant_speed_deg_s": 92.30283224237405,
+          "peak_secant_acceleration_deg_s2": 2032.4270295518568,
+          "tracking_rms_deg": 2.32453672654187,
+          "tracking_pass": false
+        }
+      }
+    },
+    {
+      "capture": "zero-01",
+      "role": "timing",
+      "completed": true,
+      "stop_verified": true,
+      "frames": 12,
+      "commanded_plan_s": 0.48,
+      "pwm_cap_percent": 0.0,
+      "failure": null
+    }
+  ],
+  "total_recorded_complete_frames": 1402,
+  "completed_captures": 16,
+  "interrupted_captures": 2,
+  "all_stop_verified": true,
+  "limits": "Peak speed and acceleration are interval estimates. Completed recording does not imply accurate tracking. Three extended 35 percent blocks total 30 s with stop/review gaps."
+}

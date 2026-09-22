@@ -1,0 +1,183 @@
+{
+  "scope": "Candidate screening and validation ledger. Short-run success is not promotion. Numerical, stop/reversal, replay, and long-run gates are separate.",
+  "protocol_sha256": "534cd4168b53b92687d47b4cbd130e0e6e858a9dd429e792689f8a49fb56e450",
+  "results": [
+    {
+      "directory": "trot-upright/episode",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/geometry-report.json",
+      "sha256": "311880f84465086d3bedc78b2847d4b0bf9f26e6b86925988774e499d5675d6b",
+      "horizon_s": 5,
+      "speed_m_s": 0.09437505200819307,
+      "worst_motor_rms_degrees": 1.8820307901494666,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": true,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": true,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": true,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    },
+    {
+      "directory": "staggered-forward/episode",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/geometry-report.json",
+      "sha256": "e1d291cf974cddf38d6298a2ed4ed33bee4431ceba95169bb9952abd2e0e3fc9",
+      "horizon_s": 5,
+      "speed_m_s": 0.08411213523969496,
+      "worst_motor_rms_degrees": 1.9002610333511503,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": true,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": false,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": false,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    },
+    {
+      "directory": "staggered/episode",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/geometry-report.json",
+      "sha256": "c682f3ee3861e1d9103ebc6a90c0ce3e028b0dcfb4cf3d0f7202c9217160aaf8",
+      "horizon_s": 5,
+      "speed_m_s": 0.0820149241530589,
+      "worst_motor_rms_degrees": 2.0415261551555215,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": false,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": false,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    },
+    {
+      "directory": "lean-forward/episode",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/geometry-report.json",
+      "sha256": "52916c3b981f0894de763d050b419795772a4e195b12845658256686cfac0d8e",
+      "horizon_s": 5,
+      "speed_m_s": 0.07854601538305919,
+      "worst_motor_rms_degrees": 2.276276417314927,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": true,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": false,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    },
+    {
+      "directory": "trot-low/episode",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/geometry-report.json",
+      "sha256": "0e1321d29091966ac1be45d71c0975e3a7d4fd123f6b9e814071ecda194f4501",
+      "horizon_s": 5,
+      "speed_m_s": 0.07480272806094512,
+      "worst_motor_rms_degrees": 2.2614350525786078,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": false,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": false,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    },
+    {
+      "directory": "pilot-5s",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/geometry-report.json",
+      "sha256": "db60bf5fcbdd271df6f5c412b369c3c37beac298cdd4119a49df76eed885f96e",
+      "horizon_s": 5,
+      "speed_m_s": 0.07393777021548847,
+      "worst_motor_rms_degrees": 2.2402758907751323,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": true,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": false,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    },
+    {
+      "directory": "crawl-high/episode",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/geometry-report.json",
+      "sha256": "0f1ebb0e664459c243d47d3ab44c61c9ea832f152cd3ee4fc4b5a514e4df80a5",
+      "horizon_s": 5,
+      "speed_m_s": 0.04878954043430615,
+      "worst_motor_rms_degrees": 2.203659017032901,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": true,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": false,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    },
+    {
+      "directory": "matched-baseline-5s",
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/geometry-report.json",
+      "sha256": "797f1599d715169a9a7c920226ecbdeaa73d80962d2066bb8be84efe72f70613",
+      "horizon_s": 5,
+      "speed_m_s": 0.032304291717761835,
+      "worst_motor_rms_degrees": 2.5580751399018165,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": false,
+        "travel": true,
+        "foot_lift": false,
+        "sampled_collision": true
+      },
+      "screen_walking_checks_pass": false,
+      "speed_goal_met": false,
+      "ten_second_gates_pass": false
+    }
+  ],
+  "promoted_candidate": null
+}

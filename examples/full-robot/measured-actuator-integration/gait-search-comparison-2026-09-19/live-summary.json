@@ -1,0 +1,29 @@
+{
+  "observed_at": "2026-09-19T22:30:41.971Z",
+  "groups": {
+    "2301-bayesian": {
+      "attempts": 33,
+      "failed": 21,
+      "best_speed_m_s": 0.10182556170316497,
+      "bayesian_acquisitions": 7
+    },
+    "2301-cma_es": {
+      "attempts": 33,
+      "failed": 16,
+      "best_speed_m_s": 0.1058649119471455,
+      "bayesian_acquisitions": 0
+    },
+    "2302-bayesian": {
+      "attempts": 19,
+      "failed": 14,
+      "best_speed_m_s": 0.10010800496383758,
+      "bayesian_acquisitions": 0
+    },
+    "2302-cma_es": {
+      "attempts": 19,
+      "failed": 14,
+      "best_speed_m_s": 0.10010800496383758,
+      "bayesian_acquisitions": 0
+    }
+  }
+}

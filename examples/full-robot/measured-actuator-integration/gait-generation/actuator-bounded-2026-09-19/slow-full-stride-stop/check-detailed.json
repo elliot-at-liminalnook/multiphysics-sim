@@ -1,0 +1,29 @@
+{
+  "mode": "stop",
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/slow-full-stride-10s/capture.json",
+      "sha256": "c05d7aa3c3c8f9b6c2f0143f2ddac886f3ea1f7eb7a7d55fef942ab919092726"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/slow-full-stride-stop/capture.json",
+      "sha256": "186b531a3c15f3038f5d64c4d8c97b2969f52561cd47e27d6a529b4ef3c60476"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/validation-protocol.json",
+      "sha256": "145229c751987a91be80bf8a02775db09833eddb4b2b82be4d019a467259f64e"
+    }
+  ],
+  "metrics": {
+    "maximum_final_second_drift_m": 0.0002635309812518211,
+    "maximum_displacement_after_stop_request_m": 0.005921135317502054
+  },
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "horizon": true,
+    "drift": true,
+    "stop_command": true
+  },
+  "pass": true
+}

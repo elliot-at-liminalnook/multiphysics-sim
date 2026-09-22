@@ -1,0 +1,24 @@
+   Compiling sim-api v0.1.0 (/Users/elliot/physics-simulator/crates/sim-api)
+    Finished `test` profile [optimized] target(s) in 6.67s
+     Running unittests src/lib.rs (target/debug/deps/sim_api-65022a8328f1a4d2)
+
+running 1 test
+test tests::real_http_transfers_large_json_and_binary_artifacts_without_truncation ... FAILED
+
+failures:
+
+---- tests::real_http_transfers_large_json_and_binary_artifacts_without_truncation stdout ----
+
+thread 'tests::real_http_transfers_large_json_and_binary_artifacts_without_truncation' (2692951) panicked at crates/sim-api/src/lib.rs:549:9:
+assertion `left == right` failed
+  left: [payload omitted; 327066 byte elements]
+ right: [payload omitted; 2097160 byte elements]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::real_http_transfers_large_json_and_binary_artifacts_without_truncation
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.16s
+
+error: test failed, to rerun pass `-p sim-api --lib`

@@ -1,0 +1,35 @@
+{
+  "scope": "Use registered motor partials for condensed auxiliary Newton matrices, with numerical chain derivatives through independent motor boundary adapters. Preserve exact residual/correction checks and cold numeric fallback; unknown/coupled adapters remain numeric. No physics model/timestep/tolerance changes.",
+  "sources": {
+    "crates/sim-domain-robot/src/articulated/embedding/motors.rs": "47737be737ae9849339f6ac93c153ddd441e3a8f006cd212df5c47d8ada14dc2",
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "f8312955b4aba889265b51e312ecf6d6f225a676331def1c112fba5c390c8a7e",
+    "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs": "78e640e0817a4e9c39dd37f116e08b5f93e430cb81322aac8c844d6984e27b47",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "a4083fa6af1ce721f52fe961a12881a7ea14f2e9ce73ad693ad57f610802cfa5",
+    "crates/sim-solve/src/profile.rs": "cb8153eb67b2c552466982829011a03a69f48c992c58963a03430f9fa368ce19",
+    "crates/sim-runtime/src/embedded.rs": "794af3ca3eebf5e9924333299df18765a4eebe1c1eb6a714186b8184b572ec92"
+  },
+  "before_binary_sha256": "d83c5000966b61d041320cc621774c9b805cbb2d9735418abbad89ed8bfcf0df",
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "source_candidate": {
+    "crates/sim-domain-robot/src/articulated/embedding/motors.rs": "bf3bbc5802a0ab8e28357a11d8e519278d90d3d4f8ff7706680969bb8dc61227",
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "0faa53508aab20d17a11c1491443e9e5a7216ac212b70880bf0bfd793e57b36d",
+    "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs": "cdc63af5f8d7c758576e41c159236ad7e63a2b98363dbdc5a9f827483540c93c",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "cbfc71a5808c49868330e019c425e549395b37fcd8dfc46c7fcaef1deb92331e",
+    "crates/sim-solve/src/profile.rs": "2d9af05f3a39291fd97d03422eaaac31c50f61c4c8d667a7072be1c0aa6affaa",
+    "crates/sim-runtime/src/embedded.rs": "615409afcad45bd0c1368b25941cdcc3b71d30baab6aa48fee4fc569da61af38"
+  },
+  "validation_notes": [
+    "Initial test compilation required explicit f64 annotation.",
+    "Derivative fixture was corrected to explicitly enable authored backlash events; fallback fixture now has one fixed inertial link.",
+    "Only the newly added floating-PD comparison permits 1e-12 roundoff; clock equality stays exact. Existing tests and experiment acceptance gates are unchanged."
+  ]
+}

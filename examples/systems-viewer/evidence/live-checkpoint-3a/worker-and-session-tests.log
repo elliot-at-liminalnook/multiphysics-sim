@@ -1,0 +1,36 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized] target(s) in 2m 17s
+     Running tests/system_session.rs (target/debug/deps/system_session-6a075652348a3d87)
+
+running 8 tests
+test invalid_intervals_are_rejected_before_building ... ok
+test failed_reset_and_invalid_commands_preserve_user_recording_and_values ... ok
+test recording_retains_effective_multirate_settings_and_rejects_false_completion ... ok
+test recording_is_independent_of_display_and_stops_before_overflow ... ok
+test reset_rebuilds_and_returns_recording_without_reusing_a_generation ... ok
+test headless_and_session_intervals_match_and_pause_is_a_noop ... ok
+test failed_solve_keeps_last_completed_values_and_reset_recreates_behavior_state ... ok
+test draining_event_history_preserves_hybrid_states_and_cumulative_counts ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/system_worker.rs (target/debug/deps/system_worker-e940650ef034b8d0)
+
+running 2 tests
+test process_builds_steps_rejects_stale_commands_and_can_be_terminated ... ok
+test authored_motor_connection_samples_match_headless_session_and_reset ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.85s
+

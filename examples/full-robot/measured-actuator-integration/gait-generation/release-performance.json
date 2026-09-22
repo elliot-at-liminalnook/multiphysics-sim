@@ -1,0 +1,39 @@
+{
+  "scope": "Exploratory native timing and parity. Runs were not isolated from other jobs; this is not browser realtime qualification.",
+  "platform": "darwin",
+  "architecture": "x64",
+  "runtime_identity": {
+    "features": [
+      "BAYESIAN"
+    ],
+    "library_source_blake3": "1e5f23a333ba938d94d09b49499973512adaa433b3556e8fb8b541559cddc42e",
+    "version": 1
+  },
+  "binaries": {
+    "debug": {
+      "path": "target/debug/examples/run_environment",
+      "sha256": "065cbb5888f138ea4679e4701eb2634b46ef46343e3f8cb4e688a43b368d242d"
+    },
+    "release": {
+      "path": "target/release/examples/run_environment",
+      "sha256": "9ee2908de3e9938c40c0727ef0513c6189bd40e42f1ea55a488b08860e3c1407"
+    }
+  },
+  "selected_35_percent": {
+    "simulated_s": 10,
+    "debug_step_and_capture_wall_s": 354.702110067,
+    "release_step_and_capture_wall_s": 214.216317501,
+    "speedup": 1.6558127513574878,
+    "release_simulated_seconds_per_wall_second": 0.04668178464020752,
+    "frames_checked": 501,
+    "frame_mismatches": 0,
+    "transition_mismatches": 0
+  },
+  "full_authority": {
+    "simulated_s": 10,
+    "release_step_and_capture_wall_s": 215.851670299,
+    "release_simulated_seconds_per_wall_second": 0.04632811034609042,
+    "exact_endpoint_verification": "full-authority-10s/release-verification.json"
+  },
+  "conclusion": "Optimized native execution is faster on the matched run and reproduces all 501 recorded frames/transitions, but the detailed model remains much slower than realtime."
+}

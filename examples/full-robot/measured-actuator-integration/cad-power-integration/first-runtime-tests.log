@@ -1,0 +1,45 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 2m 10s
+     Running tests/actuator_profiles.rs (target/debug/deps/actuator_profiles-3f96d66d5ebda8af)
+
+running 11 tests
+test cad_collision_derivation_survives_runtime_model_round_trip ... ok
+test profile_resolution_is_idempotent_and_uses_registry_units_bounds_and_identity ... ok
+test profiles_cannot_silently_run_catalog_position_firmware ... ok
+test cad_power_round_trip_validation_and_no_silent_supply_bypass ... ok
+test cad_power_operating_limit_failure_keeps_last_committed_session_frame ... ok
+test cad_fixed_pd_rejects_missing_mapping_wrong_controller_and_silent_fallback ... ok
+test resolved_profile_changes_the_shared_physical_motor_not_only_metadata ... ok
+test detailed_reference_uses_the_same_cad_power_branch_resistance ... FAILED
+test cad_fixed_pd_runs_in_shared_session_and_replays_across_host_chunks ... ok
+test cad_power_affects_actual_motor_motion_and_replays_terminal_history ... ok
+test controller_environment_and_headless_session_share_profiled_motor_dynamics ... ok
+
+failures:
+
+---- detailed_reference_uses_the_same_cad_power_branch_resistance stdout ----
+
+thread 'detailed_reference_uses_the_same_cad_power_branch_resistance' (531516) panicked at crates/sim-runtime/tests/actuator_profiles.rs:511:5:
+0.14718157342719304 versus 0.14729551602168894
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    detailed_reference_uses_the_same_cad_power_branch_resistance
+
+test result: FAILED. 10 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+error: test failed, to rerun pass `-p sim-runtime --test actuator_profiles`

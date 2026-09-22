@@ -1,0 +1,421 @@
+{
+  "space": {
+    "parameters": [
+      {
+        "name": "stride_m",
+        "kind": "Length",
+        "bounds": [
+          0.08,
+          0.22
+        ],
+        "integer": false
+      },
+      {
+        "name": "cadence_scale",
+        "kind": "Dimensionless",
+        "bounds": [
+          0.75,
+          1.3
+        ],
+        "integer": false
+      },
+      {
+        "name": "clearance_m",
+        "kind": "Length",
+        "bounds": [
+          0.012,
+          0.035
+        ],
+        "integer": false
+      },
+      {
+        "name": "stance_fraction",
+        "kind": "Dimensionless",
+        "bounds": [
+          0.6,
+          0.9
+        ],
+        "integer": false
+      },
+      {
+        "name": "body_height_offset_m",
+        "kind": "Length",
+        "bounds": [
+          -0.03,
+          0.025
+        ],
+        "integer": false
+      },
+      {
+        "name": "phase_1",
+        "kind": "Dimensionless",
+        "bounds": [
+          0,
+          0.999
+        ],
+        "integer": false
+      },
+      {
+        "name": "phase_2",
+        "kind": "Dimensionless",
+        "bounds": [
+          0,
+          0.999
+        ],
+        "integer": false
+      },
+      {
+        "name": "phase_3",
+        "kind": "Dimensionless",
+        "bounds": [
+          0,
+          0.999
+        ],
+        "integer": false
+      }
+    ]
+  },
+  "period_s": {
+    "source": "scaled",
+    "value": {
+      "source": "constant",
+      "value": 0.9
+    },
+    "factor": {
+      "source": "parameter",
+      "name": "cadence_scale"
+    },
+    "power": -1
+  },
+  "displacement_world_m": [
+    {
+      "source": "scaled",
+      "value": {
+        "source": "parameter",
+        "name": "stride_m"
+      },
+      "factor": {
+        "source": "constant",
+        "value": 0.7071067811865475
+      },
+      "power": 1
+    },
+    {
+      "source": "scaled",
+      "value": {
+        "source": "parameter",
+        "name": "stride_m"
+      },
+      "factor": {
+        "source": "constant",
+        "value": 0.7071067811865475
+      },
+      "power": 1
+    },
+    {
+      "source": "scaled",
+      "value": {
+        "source": "parameter",
+        "name": "stride_m"
+      },
+      "factor": {
+        "source": "constant",
+        "value": 0
+      },
+      "power": 1
+    }
+  ],
+  "body": {
+    "reference": {
+      "interpolation": "periodic_cubic_b_spline",
+      "keyframes": [
+        {
+          "time_s": 0,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 0.225,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 0.45,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 0.675,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 0.9,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "channels": [
+      {
+        "name": "x",
+        "kind": "Length"
+      },
+      {
+        "name": "y",
+        "kind": "Length"
+      },
+      {
+        "name": "z",
+        "kind": "Length"
+      },
+      {
+        "name": "rx",
+        "kind": "Angle"
+      },
+      {
+        "name": "ry",
+        "kind": "Angle"
+      },
+      {
+        "name": "rz",
+        "kind": "Angle"
+      }
+    ],
+    "transforms": [
+      {
+        "factor": {
+          "source": "scaled",
+          "value": {
+            "source": "constant",
+            "value": 1
+          },
+          "factor": {
+            "source": "parameter",
+            "name": "cadence_scale"
+          },
+          "power": -1
+        },
+        "operation": "time_scale"
+      },
+      {
+        "channels": [
+          "z"
+        ],
+        "scale": {
+          "source": "constant",
+          "value": 1
+        },
+        "center": {
+          "source": "constant",
+          "value": 0
+        },
+        "offset": {
+          "source": "parameter",
+          "name": "body_height_offset_m"
+        },
+        "operation": "affine"
+      }
+    ]
+  },
+  "feet": [
+    {
+      "center_world_m": [
+        {
+          "source": "constant",
+          "value": 0.006455036131525256
+        },
+        {
+          "source": "constant",
+          "value": -0.3027382452612204
+        },
+        {
+          "source": "constant",
+          "value": -0.4410181228863441
+        }
+      ],
+      "phase_offset": {
+        "source": "constant",
+        "value": 0
+      },
+      "stance_fraction": {
+        "source": "parameter",
+        "name": "stance_fraction"
+      },
+      "swing_offset_world_m": [
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "parameter",
+          "name": "clearance_m"
+        }
+      ],
+      "return_ramp_fraction": {
+        "source": "constant",
+        "value": 0.25
+      }
+    },
+    {
+      "center_world_m": [
+        {
+          "source": "constant",
+          "value": 0.3126310954980777
+        },
+        {
+          "source": "constant",
+          "value": -0.0012971366975163168
+        },
+        {
+          "source": "constant",
+          "value": -0.4410181228863441
+        }
+      ],
+      "phase_offset": {
+        "source": "parameter",
+        "name": "phase_1"
+      },
+      "stance_fraction": {
+        "source": "parameter",
+        "name": "stance_fraction"
+      },
+      "swing_offset_world_m": [
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "parameter",
+          "name": "clearance_m"
+        }
+      ],
+      "return_ramp_fraction": {
+        "source": "constant",
+        "value": 0.25
+      }
+    },
+    {
+      "center_world_m": [
+        {
+          "source": "constant",
+          "value": -0.010433712403279338
+        },
+        {
+          "source": "constant",
+          "value": 0.2946317717078269
+        },
+        {
+          "source": "constant",
+          "value": -0.4410181228863441
+        }
+      ],
+      "phase_offset": {
+        "source": "parameter",
+        "name": "phase_2"
+      },
+      "stance_fraction": {
+        "source": "parameter",
+        "name": "stance_fraction"
+      },
+      "swing_offset_world_m": [
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "parameter",
+          "name": "clearance_m"
+        }
+      ],
+      "return_ramp_fraction": {
+        "source": "constant",
+        "value": 0.25
+      }
+    },
+    {
+      "center_world_m": [
+        {
+          "source": "constant",
+          "value": -0.2832392203234501
+        },
+        {
+          "source": "constant",
+          "value": 0.005955422662750366
+        },
+        {
+          "source": "constant",
+          "value": -0.4410181228863441
+        }
+      ],
+      "phase_offset": {
+        "source": "parameter",
+        "name": "phase_3"
+      },
+      "stance_fraction": {
+        "source": "parameter",
+        "name": "stance_fraction"
+      },
+      "swing_offset_world_m": [
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "constant",
+          "value": 0
+        },
+        {
+          "source": "parameter",
+          "name": "clearance_m"
+        }
+      ],
+      "return_ramp_fraction": {
+        "source": "constant",
+        "value": 0.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "viewer_url": "http://127.0.0.1:4180/walking/",
+  "browser_verification": "Verified rendered Chrome viewer, live graphs, all three motors moved, and full 12-second session completed by user",
+  "live_connection": "10 Hz host-scheduled prototype; 100 Hz streaming pending",
+  "validation": "Rendered live Rust/WASM viewer using forward walking command, physical IDs 10/11/12; all frame audits and final stop passed; tracking criteria failed",
+  "session": "sessions/session-1789510466300153000",
+  "samples": 360,
+  "frames": 120,
+  "stop_verified": true,
+  "tracking_validated": false,
+  "limits": "9% reference scale; 10% PWM ceiling; host-scheduled 10 Hz; not full gait reproduction",
+  "manifest_caveat": "Duration metadata fixed to 12 seconds in this session",
+  "tracking_rms_degrees": {
+    "10": 0.8553358,
+    "11": 0.5176725,
+    "12": 0.4308733
+  },
+  "remaining": "FPGA-owned 100 Hz feedback with buffered live references, appropriate controller gains, and validated tracking under browser load. Host scheduling remains provisional.",
+  "latest_code_caveat": "Darwin interactive QoS request added after the successful 12-second capture; that scheduling change is not covered by the capture.",
+  "checks": {
+    "paired_read_protocol": "passed: bounded queue, reply order, fragmented replies, wrong ID rejection",
+    "early_stop_directory_race": "passed",
+    "legacy_autonomous_capture_regressions": "failed host heartbeat acknowledgement deadlines; retained evidence; does not use new paired-read path"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "declared_before_trials": true,
+  "scope": "Contact timing/path/stance co-design with unchanged CAD detailed motor model. Earlier criteria retained. Geometric planner is proposal preparation only; full motor dynamics determine performance.",
+  "search": {
+    "horizon_s": 5,
+    "seed": 2301,
+    "dimensions": [
+      "cycle period",
+      "stride displacement",
+      "independent foot phase",
+      "stance fraction",
+      "swing height and shape",
+      "body stance height and foothold centers"
+    ],
+    "selection": "Actual net travel with tracking, balance, foot lift, and reference bounds; no inverse-planner score is a walking score."
+  },
+  "finalist": {
+    "horizon_s": 10,
+    "minimum_net_distance_m": 0.1,
+    "minimum_body_up_z": 0.85,
+    "after_startup_s": 1,
+    "maximum_each_motor_rms_tracking_degrees": 2,
+    "maximum_each_motor_peak_tracking_degrees": 8,
+    "maximum_command_speed_degrees_s": 80,
+    "maximum_command_acceleration_degrees_s2": 400,
+    "minimum_each_foot_peak_clearance_m": 0.003,
+    "minimum_each_foot_clearance_excursions": 2,
+    "maximum_sampled_inter_link_penetration_m": 0.001,
+    "sample_period_s": 0.02
+  },
+  "numerical": {
+    "step_divisor": 2,
+    "maximum_absolute_net_distance_difference_m": 0.005,
+    "maximum_endpoint_body_position_difference_m": 0.01,
+    "maximum_endpoint_body_up_z_difference": 0.01,
+    "maximum_endpoint_actuated_joint_difference_rad": 0.017453292519943295
+  },
+  "stop": {
+    "moving_s": 7,
+    "stopped_s": 3,
+    "final_one_second_maximum_net_drift_m": 0.02,
+    "no_fall": true
+  },
+  "limitations": [
+    "Reference envelope is authored, not a measured limit.",
+    "Sampled clearance is not continuous collision proof.",
+    "No physical-unit mapping or calibrated battery/current model.",
+    "Every candidate executes the bounded controller inside full Rust simulation; no post hoc filtering of accepted results."
+  ],
+  "goal_speed_m_s": 0.1,
+  "minimum_relative_speed_improvement": 2
+}

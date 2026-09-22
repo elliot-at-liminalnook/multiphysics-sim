@@ -1,0 +1,12 @@
+{
+  "status": "Provisional simulation coordinate choices; not physical encoder calibration",
+  "encoder_zero_counts_at_cad_joint_zero": 2048,
+  "encoder_direction_relative_to_cad_positive_joint": 1,
+  "sample_phase_s": 0,
+  "initial_reference": "Exact initial target of the preserved gait for each named CAD motor joint",
+  "limitations": [
+    "Physical motor-to-joint assignments are unknown.",
+    "Encoder origins, polarity and clock phase need physical measurement before deployment.",
+    "Gait initial references are configuration data, not motor measurements."
+  ]
+}

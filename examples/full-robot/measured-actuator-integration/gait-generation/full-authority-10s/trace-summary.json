@@ -1,0 +1,193 @@
+{
+  "scope": "Descriptive aggregates of saved Rust task samples; provisional simulation, no acceptance threshold or hardware rating.",
+  "capture": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-10s/release-replay-capture.json",
+    "sha256": "a651f28023f889f3c5821b9426a23de7ad41fcd1fce0b4aa1613baf8b6fc101c"
+  },
+  "script_sha256": "6829af100914c92f1e027f82e568210f630bfa71753af11077bc1a1e898ec583",
+  "duration_s": 10,
+  "sample_period_s": 0.02,
+  "frame_count": 501,
+  "motion": {
+    "net_distance_m": 4.504124343202481,
+    "net_speed_m_s": 0.4504124343202481,
+    "sampled_path_length_m": 4.712553166418205,
+    "sampled_path_speed_m_s": 0.4712553166418205,
+    "net_to_sampled_path_ratio": 0.9557715709817356,
+    "windows": [
+      {
+        "start_s": 0,
+        "end_s": 2,
+        "net_speed_m_s": 0.3871437178196291,
+        "sampled_path_speed_m_s": 0.40394417200708127,
+        "radial_progress_speed_m_s": 0.3871437178196291
+      },
+      {
+        "start_s": 2,
+        "end_s": 4,
+        "net_speed_m_s": 0.47176514901401084,
+        "sampled_path_speed_m_s": 0.490142053418063,
+        "radial_progress_speed_m_s": 0.47176132296622963
+      },
+      {
+        "start_s": 4,
+        "end_s": 6,
+        "net_speed_m_s": 0.4643739945883123,
+        "sampled_path_speed_m_s": 0.4813126720351328,
+        "radial_progress_speed_m_s": 0.46218087339375025
+      },
+      {
+        "start_s": 6,
+        "end_s": 8,
+        "net_speed_m_s": 0.4773142880879415,
+        "sampled_path_speed_m_s": 0.4939651737071836,
+        "radial_progress_speed_m_s": 0.4731466064890568
+      },
+      {
+        "start_s": 8,
+        "end_s": 10,
+        "net_speed_m_s": 0.4688483032747368,
+        "sampled_path_speed_m_s": 0.4869125120416387,
+        "radial_progress_speed_m_s": 0.45782965093257455
+      }
+    ]
+  },
+  "motors": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "cad_motor_id": "0702845b41d3",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 10.429532258401542,
+      "sampled_tracking_peak_abs_deg": 24.398153389158008,
+      "sampled_at_duty_limit_fraction": 0.528,
+      "predicted_sampled_winding_current_peak_abs_a": 3.002840904606504
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "cad_motor_id": "2a3dcb848184",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 19.42281561341719,
+      "sampled_tracking_peak_abs_deg": 47.233999456664215,
+      "sampled_at_duty_limit_fraction": 0.542,
+      "predicted_sampled_winding_current_peak_abs_a": 1.1267871715959266
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "cad_motor_id": "074a9c071bf6",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 13.837042393923838,
+      "sampled_tracking_peak_abs_deg": 35.62364345538829,
+      "sampled_at_duty_limit_fraction": 0.692,
+      "predicted_sampled_winding_current_peak_abs_a": 2.8315351319796966
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "cad_motor_id": "bc7a7393c49f",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 14.491997564836597,
+      "sampled_tracking_peak_abs_deg": 28.962869958568653,
+      "sampled_at_duty_limit_fraction": 0.6,
+      "predicted_sampled_winding_current_peak_abs_a": 2.6791115073085834
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "cad_motor_id": "01defa41932a",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 15.483357165838566,
+      "sampled_tracking_peak_abs_deg": 41.782016516419816,
+      "sampled_at_duty_limit_fraction": 0.604,
+      "predicted_sampled_winding_current_peak_abs_a": 1.0335341086816356
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "cad_motor_id": "4368f0b5b421",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 12.244749792819503,
+      "sampled_tracking_peak_abs_deg": 35.33116691792483,
+      "sampled_at_duty_limit_fraction": 0.244,
+      "predicted_sampled_winding_current_peak_abs_a": 1.3882374558576787
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "cad_motor_id": "4f13ca1d8689",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 11.830430120630071,
+      "sampled_tracking_peak_abs_deg": 31.435716042866687,
+      "sampled_at_duty_limit_fraction": 0.434,
+      "predicted_sampled_winding_current_peak_abs_a": 3.002857049685376
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "cad_motor_id": "cef9d0e3d459",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 22.96964177961779,
+      "sampled_tracking_peak_abs_deg": 54.732120351757956,
+      "sampled_at_duty_limit_fraction": 0.666,
+      "predicted_sampled_winding_current_peak_abs_a": 1.1407940428719385
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "cad_motor_id": "4a1ae2c3e25f",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 11.846839278590942,
+      "sampled_tracking_peak_abs_deg": 36.71755969075514,
+      "sampled_at_duty_limit_fraction": 0.206,
+      "predicted_sampled_winding_current_peak_abs_a": 1.6421777174349501
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "cad_motor_id": "f5009ce295f6",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 12.473613071026,
+      "sampled_tracking_peak_abs_deg": 32.6194856474667,
+      "sampled_at_duty_limit_fraction": 0.442,
+      "predicted_sampled_winding_current_peak_abs_a": 2.8498663163138787
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "cad_motor_id": "e26858c1afc7",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 20.72741779174616,
+      "sampled_tracking_peak_abs_deg": 51.61767268514254,
+      "sampled_at_duty_limit_fraction": 0.48,
+      "predicted_sampled_winding_current_peak_abs_a": 0.906699830084191
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "cad_motor_id": "1bfb702ee9c9",
+      "duty_limit": 1,
+      "sampled_tracking_rms_deg": 7.611408293545723,
+      "sampled_tracking_peak_abs_deg": 20.212842292325487,
+      "sampled_at_duty_limit_fraction": 0.406,
+      "predicted_sampled_winding_current_peak_abs_a": 2.404089147849482
+    }
+  ],
+  "electrical": {
+    "boundary": "imposed supplies; no simulated sag or battery depletion in this capture",
+    "imposed_supply_voltage_v": [
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1,
+      11.1
+    ],
+    "predicted_sampled_total_terminal_current_peak_a": 9.928070311647893,
+    "predicted_sampled_total_terminal_power_peak_w": 110.2015804592916,
+    "predicted_terminal_energy_trapezoid_j": 558.618817276771,
+    "predicted_mean_terminal_power_w": 55.8618817276771
+  },
+  "limitations": [
+    "Path is the sum of XY chords between task samples, not continuous distance or commanded-direction accuracy.",
+    "Tracking and saturation statistics use equally spaced post-step samples, exclude the initial sample and can miss between-sample peaks.",
+    "Joint errors are target minus actual unwrapped coordinate position; no modulo-angle reduction.",
+    "Electrical estimates are uncalibrated; trapezoidal energy is a sampled diagnostic, not the native integrated battery-energy state.",
+    "Net progress can fall when a robot turns or backtracks; path speed alone can reward ineffective motion."
+  ]
+}

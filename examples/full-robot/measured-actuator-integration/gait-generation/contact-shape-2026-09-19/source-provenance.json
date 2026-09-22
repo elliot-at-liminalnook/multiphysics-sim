@@ -1,0 +1,32 @@
+{
+  "base_manifest": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/rust-source-manifest.json",
+    "sha256": "f26a9f17f60f6a2a712a7fcfabeb90aa4befc7e75eb07785aa815e9b895ac0c5"
+  },
+  "base_archive": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/rust-source.tar.gz",
+    "sha256": "1d100b0881a5e416fe70ad83e3caeb9cb7d3ccd4f4e085a71855056546cbbb4c"
+  },
+  "source_delta": [
+    {
+      "path": "crates/sim-runtime/examples/search_motion.rs",
+      "snapshot": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/source-delta/crates/sim-runtime/examples/search_motion.rs",
+      "sha256": "30519feece66eb2db8f04e1d28e465c1a2e3ff4202293dfb4288e19874f37ea4"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "d458c3138dd6f33e9674d7d46a3bff6361ed07c87a258f89a8986a49cc61f025"
+    },
+    {
+      "path": "target/release/examples/compile_contact_reference",
+      "sha256": "ff8016c079f75834034e423326ee48a85addad907c4e9c744247da3bc028acf7"
+    },
+    {
+      "path": "target/release/examples/audit_capture_geometry",
+      "sha256": "953747bc15b2dbbd1e04bd7e76658a93835d94072d95f5c31cb6b2e93ca296d5"
+    }
+  ],
+  "scope": "Base archive plus source delta preserves Rust source used by this campaign. Binaries are hashed for identification, not portable artifacts. CAD, controller recipes, captures and JS preparation/statistics are retained separately."
+}

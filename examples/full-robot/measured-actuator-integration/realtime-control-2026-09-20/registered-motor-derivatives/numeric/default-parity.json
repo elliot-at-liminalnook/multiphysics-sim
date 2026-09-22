@@ -1,0 +1,8 @@
+{
+  "exact_physical_frame_equality": true,
+  "frames": 151,
+  "excluded_fields": [
+    "stepping_wall_s"
+  ],
+  "scope": "Prior binary vs current binary with supplied derivatives disabled; verifies honoring the scene flag does not change residual trajectories."
+}

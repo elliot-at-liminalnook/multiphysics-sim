@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "checks": [
+    "run advances observed values",
+    "pause holds full status and frame during UI interaction",
+    "step advances one 0.01 s interval",
+    "reset clears old generation",
+    "cancel reports cancelled",
+    "restart changes run identity",
+    "animation channels survive Clear graphs"
+  ],
+  "paused_time": 34.5100000000017,
+  "step_time": 34.5200000000017,
+  "snapshots_sha256": {
+    "gui-cancelled.json": "79f5ff950b84e35021e68d7c0236925abcf03ad69932afa9d946feb1ffe3c5bf",
+    "gui-initial.json": "2f2714677a3f5abc328f298b0f4702fb99f5fd9bb1faeeed0200c98fc12d81cd",
+    "gui-linked-selection.json": "316df22987fbda8e1df80085e31c1cf78a1631a60169e492d2a900b84f9e961a",
+    "gui-paused-held.json": "0e71587f7c2c350b8814bc4e42daaf5c3592626affd1cab0cb7d7857475b10c8",
+    "gui-paused.json": "601c3307dfb830ccf7b3e3a794f460e27107e390ac40c376c77d1d4d9624c946",
+    "gui-reset.json": "0df29061ad02e3e6d875c3da2c257ad3872da74a7f8f20e5bf83c8d981764769",
+    "gui-restarted.json": "d590c601f7337d34d795064926e7460bca886094bc78ccc17994daff36a1fb57",
+    "gui-run-first.json": "8435e17c57eec1131871c3b7246d2660bdff3fd00e9e1598becb08240ea8376a",
+    "gui-run-later.json": "bfcec0e365c991d38077de8f3799fc56891cda874ee10a37d3e337735bc8b9e4",
+    "gui-stepped.json": "3c4efadb12e30d255c412ac3dcf663ab32784636b68dbb0ac28dc86f00d44d0e",
+    "gui-without-graphs.json": "45c12ec54b0c616ab106efd7cc99f4b076dda8882653630b2247462ba0328144"
+  }
+}

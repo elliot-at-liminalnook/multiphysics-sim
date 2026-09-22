@@ -1,0 +1,143 @@
+{
+  "counts": {
+    "joints/fastened/points:added": 66,
+    "joints/merged_into:added": 66,
+    "joints/physics/bearing/pressure:added": 98,
+    "joints/physics/bearing_clearance_angle_rad:added": 32,
+    "joints/physics/materials:added": 32,
+    "joints/physics/flex_patch_source:added": 32,
+    "joints/physics/flex_patch_radius:added": 32,
+    "joints/physics/outboard_mass:added": 32,
+    "joints/physics/drive_backlash:added": 20,
+    "joints/physics/lever:added": 32,
+    "joints/declared:added": 32,
+    "joints/physics/drive_backlash/width_rad:changed": 12,
+    "joints/physics/drive_backlash/reference:changed": 12,
+    "joints/physics/drive_backlash/provenance:changed": 12,
+    "motors/notes:added": 12,
+    "motors/mass:added": 12,
+    "motors/kind:added": 12,
+    "motors/thermal/ambient_c:added": 12,
+    "motors/stall_torque:added": 12,
+    "motors/electrical/stall_current:added": 12,
+    "motors/no_load_speed:added": 12
+  },
+  "representative_changes": {
+    "joints/fastened/points:added": {
+      "name": "-X | foot_motor_internal follows motor housing",
+      "before": null,
+      "after": []
+    },
+    "joints/merged_into:added": {
+      "name": "-X | foot_motor_internal follows motor housing",
+      "before": null,
+      "after": "-X | Thigh sector gear"
+    },
+    "joints/physics/bearing/pressure:added": {
+      "name": "-X | foot_motor_internal follows motor housing",
+      "before": null,
+      "after": 0.0
+    },
+    "joints/physics/bearing_clearance_angle_rad:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": 0.0030511962514371506
+    },
+    "joints/physics/materials:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": {
+        "hole": "steel",
+        "pin": "nylon"
+      }
+    },
+    "joints/physics/flex_patch_source:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": "inferred"
+    },
+    "joints/physics/flex_patch_radius:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": 0.00455
+    },
+    "joints/physics/outboard_mass:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": 0.007927444293358905
+    },
+    "joints/physics/drive_backlash:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      }
+    },
+    "joints/physics/lever:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": 0.0491610462386181
+    },
+    "joints/declared:added": {
+      "name": "+X | Crank to curved link",
+      "before": null,
+      "after": {
+        "damping": 0.0,
+        "friction": 0.0,
+        "stroke": 0.0
+      }
+    },
+    "joints/physics/drive_backlash/width_rad:changed": {
+      "name": "+X | Hip servo output",
+      "before": 0,
+      "after": null
+    },
+    "joints/physics/drive_backlash/reference:changed": {
+      "name": "+X | Hip servo output",
+      "before": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+      "after": "Radial bearing clearance does not determine drive-connection rotational lost motion"
+    },
+    "joints/physics/drive_backlash/provenance:changed": {
+      "name": "+X | Hip servo output",
+      "before": "estimated",
+      "after": "unmeasured"
+    },
+    "motors/notes:added": {
+      "name": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "before": null,
+      "after": "HX-30HM manufacturer mass, output stall torque/speed, current and encoder resolution. Output-equivalent actuator (internal gearing is already reflected). Electrical constants, servo gains/latency, rotor inertia, thermal parameters, friction and backlash are estimates pending identification. 0.3 degree specified accuracy is distinct from encoder resolution. https://www.hiwonder.com/products/hx-30hm"
+    },
+    "motors/mass:added": {
+      "name": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "before": null,
+      "after": 0.052000000000000005
+    },
+    "motors/kind:added": {
+      "name": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "before": null,
+      "after": "servo"
+    },
+    "motors/thermal/ambient_c:added": {
+      "name": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "before": null,
+      "after": 25.0
+    },
+    "motors/stall_torque:added": {
+      "name": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "before": null,
+      "after": 2.941995
+    },
+    "motors/electrical/stall_current:added": {
+      "name": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "before": null,
+      "after": 3.0
+    },
+    "motors/no_load_speed:added": {
+      "name": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "before": null,
+      "after": 5.5115660589294615
+    }
+  }
+}

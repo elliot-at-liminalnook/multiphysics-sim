@@ -1,0 +1,81 @@
+    Blocking waiting for file lock on build directory
+    Checking sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+    Checking polycool v0.4.0
+    Checking color v0.3.3
+    Checking linebender_resource_handle v0.1.1
+    Checking guillotiere v0.7.0
+    Checking accesskit v0.24.1
+    Checking fearless_simd v0.4.1
+    Checking emath v0.36.2
+    Checking unicode-general-category v1.1.0
+    Checking harfrust v0.12.0
+    Checking nohash-hasher v0.2.0
+    Checking epaint_default_fonts v0.36.2
+    Checking itertools v0.15.0
+    Checking objc2-foundation v0.3.2
+    Checking objc2-core-graphics v0.3.2
+    Checking hashbrown v0.16.1
+    Checking cgl v0.3.2
+    Checking kurbo v0.13.1
+    Checking glow v0.17.0
+    Checking sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+    Checking sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+    Checking sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+    Checking sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+    Checking sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+    Checking sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+    Checking sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+    Checking sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+    Checking sim-domain-line v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-line)
+    Checking sim-domain-fluid v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-fluid)
+    Checking sim-domain-chemical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-chemical)
+    Checking sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Checking sim-domain-magnetic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-magnetic)
+    Checking sim-domain-hydraulic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-hydraulic)
+    Checking sim-domain-radiative v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-radiative)
+    Checking sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+    Checking sim-domain-granular v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-granular)
+    Checking sim-domain-acoustic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-acoustic)
+    Checking sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+    Checking sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Checking sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+    Checking peniko v0.6.1
+    Checking ecolor v0.36.2
+    Checking accesskit_consumer v0.38.0
+    Checking objc2-app-kit v0.3.2
+    Checking sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+    Checking vello_common v0.1.0
+    Checking accesskit_macos v0.26.3
+    Checking accesskit_winit v0.32.2
+    Checking vello_cpu v0.1.0
+    Checking glutin v0.32.3
+    Checking arboard v3.6.1
+    Checking glutin-winit v0.5.0
+    Checking epaint v0.36.2
+    Checking egui v0.36.2
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Checking sim-phenomena v0.1.0 (/Users/elliot/physics-simulator/crates/sim-phenomena)
+    Checking sim-diagram v0.1.0 (/Users/elliot/physics-simulator/crates/sim-diagram)
+warning: `sim-runtime` (lib test) generated 1 warning (1 duplicate)
+    Checking egui_glow v0.36.2
+    Checking egui-winit v0.36.2
+    Checking eframe v0.36.2
+    Checking sim-app v0.1.0 (/Users/elliot/physics-simulator/crates/sim-app)
+    Checking sim-viewer v0.1.0 (/Users/elliot/physics-simulator/crates/sim-viewer)
+    Checking sim-web v0.1.0 (/Users/elliot/physics-simulator/crates/sim-web)
+    Checking sim-geometry v0.1.0 (/Users/elliot/physics-simulator/crates/sim-geometry)
+    Finished `dev` profile [optimized + debuginfo] target(s) in 2m 03s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

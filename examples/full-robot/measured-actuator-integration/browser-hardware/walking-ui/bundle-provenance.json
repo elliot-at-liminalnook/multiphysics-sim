@@ -1,0 +1,25 @@
+{
+  "source_bundle": "runs/interactive/prelift-control/viewer",
+  "preset": {
+    "id": "robot-prelift-control",
+    "label": "Quadruped \u00b7 Cancel before lift",
+    "mode": "embedded",
+    "scene": "examples/full-robot/student-distillation/scene.json",
+    "config": "examples/full-robot/prelift-control/browser.config.json",
+    "task": "examples/full-robot/heading-task/task.json",
+    "description": "A live WASD crawl that can cancel a foot lift before it starts. Release during the weight shift to request a return to standing; airborne steps and reversals finish the current transfer.",
+    "readiness": "Experimental command response \u00b7 same 1.25 mm/s crawl \u00b7 native stop/resume checks pass \u00b7 browser and timestep validation in progress.",
+    "evidence": "An optional shared Rust planner change preserves motor limits, physical components and student weights. It rechecks a stop or non-reversing command once support is qualified before lift-off. Canceled lifts earn no walking credit. An early reversal prototype exceeded a later motor command bound, so reversals retain the committed transfer. This does not establish physical stopping latency, useful walking speed, general terrain behavior or hardware accuracy.",
+    "path": "data/robot-prelift-control.json"
+  },
+  "sha256": {
+    "sim_web.js": "3d9c0b3963d58136e9d7d377aadf7bb70628b71af080dfb4c3b0e0457a561424",
+    "sim_web_bg.wasm": "281b6ec95aaa70412e0b549f3294db639788711ca437ce26d811ce8a14441708",
+    "data/robot-prelift-control.json": "0dec3100e4f0127427dc771cb138ded14d162ce0e7bbee77065cd7336f8a5dad",
+    "viewer.js": "c9366150f4bef29020e86ff9781b5b140c6ae7fe1d0fe9bf716f003c77cf4d9e",
+    "hardware-sync.mjs": "5eeb3caa3204e1641468e19381cdd46343eab86414bc9236fb58e450dfd7424e",
+    "worker.js": "40d420fe23a0f03b77c6a074ad902f1ee3c2e2b5907893f91555027a6ea55df5",
+    "viewer.css": "b64c47f3c1b91c3a93eb53f6234aef5c372af1dcd6be82558cb5e92a8e8e8269"
+  },
+  "live_hardware_status": "Provisional host-scheduled 10 Hz connection; not the requested 100 Hz streaming implementation."
+}

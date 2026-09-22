@@ -1,0 +1,28 @@
+{
+  "note": "Relative to measured home. Final 200 ms returns to home. Reference playback, not live quadruped simulation.",
+  "request": {
+    "amplitude": 0.09,
+    "bindings": [
+      {
+        "coordinate": "joint.-Y | Hip servo output",
+        "motor_id": 10,
+        "polarity": 1
+      },
+      {
+        "coordinate": "joint.-Y | Worm servo output",
+        "motor_id": 11,
+        "polarity": 1
+      },
+      {
+        "coordinate": "joint.-Y | Foot servo output",
+        "motor_id": 12,
+        "polarity": 1
+      }
+    ],
+    "speed": 1.0,
+    "start_s": 0.0
+  },
+  "source": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-10s/release-replay-capture.json",
+  "source_sha256": "a651f28023f889f3c5821b9426a23de7ad41fcd1fce0b4aa1613baf8b6fc101c",
+  "trace_blake3": "51a42d2016b4c6896fa808f5d466511962a90755ba75a789e09ea5a8706bdc9c"
+}

@@ -1,0 +1,49 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `release` profile [optimized] target(s) in 11.64s
+     Running tests/embedded_motor.rs (target/release/deps/embedded_motor-7120ee7259268ce4)
+
+running 20 tests
+test explicit_auxiliary_rates_resolve_small_changes_at_nonzero_angle ... ok
+test newton_failure_audit_is_time_scoped_and_does_not_change_the_failure ... ok
+test registered_event_modes_initialize_and_release_without_velocity_impulses ... ok
+test registered_motor_derivative_chains_match_nonlinear_residual_differences ... FAILED
+test controller_sample_reuse_requires_cross_step_reuse_and_preserves_legacy_serialization ... ok
+test accepted_contact_trace_uses_original_endpoint_forces_without_changing_motion ... ok
+test cross_step_workspace_rolls_back_and_refreshes_for_timestep_changes ... ok
+test unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation ... ok
+test registered_servo_preserves_quantization_deadband_delay_and_saturation ... ok
+test driver_binding_and_boundary_validation_are_explicit ... ok
+test sdirk_stage_proposals_preserve_changed_steps_and_rollback_failed_intervals ... ok
+test motor_bindings_boundaries_and_combined_failure_fail_closed ... ok
+test scheduled_servo_drives_motor_and_failed_interval_does_not_advance_controller ... ok
+test fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency ... ok
+test coupled_sdirk_matches_independent_differential_and_algebraic_circuit_stages ... ok
+test servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run ... FAILED
+test eventful_motor_locates_engagement_and_matches_piecewise_linear_motion ... ok
+test coupled_sdirk_current_has_second_order_accuracy_against_exact_rl_transient ... ok
+test driver_feedback_matches_independent_loaded_motor_with_series_drop_and_foldback ... ok
+test registered_motor_and_mechanics_match_independent_linear_circuit ... ok
+
+failures:
+
+---- registered_motor_derivative_chains_match_nonlinear_residual_differences stdout ----
+
+thread 'registered_motor_derivative_chains_match_nonlinear_residual_differences' (3202345) panicked at crates/sim-domain-robot/tests/embedded_motor.rs:1812:133:
+called `Result::unwrap()` on an `Err` value: "invalid embedded motor evaluation"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run stdout ----
+
+thread 'servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run' (3202349) panicked at crates/sim-domain-robot/tests/embedded_motor.rs:1575:9:
+assertion `left == right` failed
+  left: [0.29999565418264207, 0.0007999956691473961, 0.09999855139421403, -0.000281411900842284, 0.01, -0.5998388773787522, -0.0015998866603735844, -0.19994629245958406, 0.01309324399479073, 0.01]
+ right: [0.29999565418264207, 0.0007999956691473961, 0.09999855139421403, -0.000281411900842284, 0.01, -0.5998388773787522, -0.0015998866603735844, -0.19994629245958406, 0.013093243994790732, 0.01]
+
+
+failures:
+    registered_motor_derivative_chains_match_nonlinear_residual_differences
+    servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run
+
+test result: FAILED. 18 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `-p sim-domain-robot --test embedded_motor`

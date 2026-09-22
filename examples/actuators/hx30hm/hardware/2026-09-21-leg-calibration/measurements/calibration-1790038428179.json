@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+  "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees",
+  "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+  "axes": {
+    "1": {
+      "role": "knee",
+      "lower": 2721,
+      "upper": 3516,
+      "reference": null,
+      "reverse": false
+    },
+    "2": {
+      "role": "worm",
+      "lower": null,
+      "upper": null,
+      "reference": null,
+      "reverse": true
+    },
+    "3": {
+      "role": "belt/hip",
+      "lower": 888,
+      "upper": 2116,
+      "reference": null,
+      "reverse": false
+    }
+  }
+}

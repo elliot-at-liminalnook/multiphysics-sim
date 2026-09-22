@@ -1,0 +1,13 @@
+{
+  "time_utc": "2026-09-14T13:43:48.949217+00:00",
+  "user_motor_power_off_confirmation": "all set :) in response to power-off request",
+  "command": [
+    "openFPGALoader",
+    "-b",
+    "tangprimer25k",
+    "examples/actuators/hx30hm/hardware/2026-09-14-full-drive/build/bridge_experiment_100pct.fs"
+  ],
+  "bitstream_sha256": "37d60ae1899569fbe349124addf741e3ae8182eb51e16fef6e14c24b1aee9a55",
+  "exit_code": 0,
+  "persistent_flash": false
+}

@@ -1,0 +1,21 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 14.85s
+     Running unittests examples/characterize_hx_bridge.rs (target/debug/examples/characterize_hx_bridge-5073ea4fbfe20f64)
+
+running 1 test
+test paired_read_tests::paired_reads_preserve_order_fragmented_replies_and_queue_bound ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.01s
+

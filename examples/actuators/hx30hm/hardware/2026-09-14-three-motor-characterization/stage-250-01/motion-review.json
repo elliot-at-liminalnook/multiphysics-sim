@@ -1,0 +1,323 @@
+{
+  "axes": {
+    "10": {
+      "acceleration_rad_s2": [
+        {
+          "bounds": [
+            -0.01650875052958559,
+            3.9002994731634417
+          ],
+          "support_s": [
+            2.14e-6,
+            0.12034106
+          ],
+          "time_s": 0.060169935,
+          "value": 0.9587015617423581
+        },
+        {
+          "bounds": [
+            -37.05580899216836,
+            -10.743339830664082
+          ],
+          "support_s": [
+            0.04000036,
+            0.16034234
+          ],
+          "time_s": 0.10016968000000001,
+          "value": -17.256261418488013
+        }
+      ],
+      "interpretation": "Secant speed from encoder positions; acceleration compares separated secants. Both measured and simulated encoders use the same estimator and timing windows. Bounds cover declared encoder quantization and transaction/sample-age windows, not encoder calibration error or unobserved motion. Crossings and settling describe the sampled estimates; they are not guaranteed instantaneous mechanical times or maximum motor capability. No time shift or automatic model promotion.",
+      "maximum_estimator_window_s": 0.04034198,
+      "maximum_sample_gap_s": 0.040001780000000015,
+      "sample_age_bounded": false,
+      "speed_rad_s": [
+        {
+          "bounds": [
+            -0.03868046979672178,
+            0.03868046979672178
+          ],
+          "support_s": [
+            2.14e-6,
+            0.04033452
+          ],
+          "time_s": 0.020169905000000002,
+          "value": 0.0
+        },
+        {
+          "bounds": [
+            0.41831290084670647,
+            0.5027436767383091
+          ],
+          "support_s": [
+            0.04000036,
+            0.08033808
+          ],
+          "time_s": 0.060168330000000006,
+          "value": 0.46017375863343696
+        },
+        {
+          "bounds": [
+            0.038025636339615324,
+            0.11602818505786361
+          ],
+          "support_s": [
+            0.08000036,
+            0.12034106
+          ],
+          "time_s": 0.100169965,
+          "value": 0.07669618246148235
+        },
+        {
+          "bounds": [
+            -0.9669741951355898,
+            -0.8745618861882739
+          ],
+          "support_s": [
+            0.12000036,
+            0.16034234
+          ],
+          "time_s": 0.14017103,
+          "value": -0.9203737467514338
+        }
+      ]
+    },
+    "11": {
+      "acceleration_rad_s2": [
+        {
+          "bounds": [
+            -0.015892565904622194,
+            3.8978064458072947
+          ],
+          "support_s": [
+            0.00036364,
+            0.12068304
+          ],
+          "time_s": 0.060522352499999994,
+          "value": 0.9587269071565594
+        },
+        {
+          "bounds": [
+            -37.99959865747342,
+            -11.064290183312687
+          ],
+          "support_s": [
+            0.04035556,
+            0.16068654
+          ],
+          "time_s": 0.10052199249999999,
+          "value": -17.734600118167318
+        }
+      ],
+      "interpretation": "Secant speed from encoder positions; acceleration compares separated secants. Both measured and simulated encoders use the same estimator and timing windows. Bounds cover declared encoder quantization and transaction/sample-age windows, not encoder calibration error or unobserved motion. Crossings and settling describe the sampled estimates; they are not guaranteed instantaneous mechanical times or maximum motor capability. No time shift or automatic model promotion.",
+      "maximum_estimator_window_s": 0.04032948,
+      "maximum_sample_gap_s": 0.04000371999999999,
+      "sample_age_bounded": false,
+      "speed_rad_s": [
+        {
+          "bounds": [
+            -0.038672044548676995,
+            0.038672044548676995
+          ],
+          "support_s": [
+            0.00036364,
+            0.04068116
+          ],
+          "time_s": 0.02052238,
+          "value": 0.0
+        },
+        {
+          "bounds": [
+            0.45643458469159565,
+            0.5412508866483886
+          ],
+          "support_s": [
+            0.04035556,
+            0.08068504
+          ],
+          "time_s": 0.06052022,
+          "value": 0.4984973958050316
+        },
+        {
+          "bounds": [
+            0.03804145995441603,
+            0.11598496369580705
+          ],
+          "support_s": [
+            0.08035912,
+            0.12068304
+          ],
+          "time_s": 0.100522325,
+          "value": 0.07669809984254485
+        },
+        {
+          "bounds": [
+            -0.9664614692601038,
+            -0.8749422960707994
+          ],
+          "support_s": [
+            0.1203621,
+            0.16068654
+          ],
+          "time_s": 0.140523765,
+          "value": -0.9203334828057729
+        }
+      ]
+    },
+    "12": {
+      "acceleration_rad_s2": [
+        {
+          "bounds": [
+            -4.880323368382189,
+            -0.30914178220952454
+          ],
+          "support_s": [
+            0.00102416,
+            0.12103368
+          ],
+          "time_s": 0.060946982499999997,
+          "value": -1.440947441852185
+        },
+        {
+          "bounds": [
+            -37.035426008936184,
+            -10.747120624439702
+          ],
+          "support_s": [
+            0.0407022,
+            0.16103298
+          ],
+          "time_s": 0.10086838749999999,
+          "value": -17.255391303176356
+        }
+      ],
+      "interpretation": "Secant speed from encoder positions; acceleration compares separated secants. Both measured and simulated encoders use the same estimator and timing windows. Bounds cover declared encoder quantization and transaction/sample-age windows, not encoder calibration error or unobserved motion. Crossings and settling describe the sampled estimates; they are not guaranteed instantaneous mechanical times or maximum motor capability. No time shift or automatic model promotion.",
+      "maximum_estimator_window_s": 0.04033248,
+      "maximum_sample_gap_s": 0.04000636999999999,
+      "sample_age_bounded": false,
+      "speed_rad_s": [
+        {
+          "bounds": [
+            -0.03897602024658463,
+            0.03897602024658463
+          ],
+          "support_s": [
+            0.00102416,
+            0.04102582
+          ],
+          "time_s": 0.021024335,
+          "value": 0.0
+        },
+        {
+          "bounds": [
+            0.4564006342934422,
+            0.5412195139446883
+          ],
+          "support_s": [
+            0.0407022,
+            0.08103468
+          ],
+          "time_s": 0.060867195,
+          "value": 0.49846437561101437
+        },
+        {
+          "bounds": [
+            -0.1546764798948964,
+            -0.07607597714149421
+          ],
+          "support_s": [
+            0.08070608,
+            0.12103368
+          ],
+          "time_s": 0.10086963,
+          "value": -0.11505287357418306
+        },
+        {
+          "bounds": [
+            -0.9279536145742052,
+            -0.8368087731994741
+          ],
+          "support_s": [
+            0.12070408,
+            0.16103298
+          ],
+          "time_s": 0.14086958,
+          "value": -0.8820080827513521
+        }
+      ]
+    }
+  },
+  "controller_ids": [
+    10,
+    11,
+    12
+  ],
+  "estimator": {
+    "encoder_quantum_rad": 0.0015339807878856412,
+    "lag_samples": 1,
+    "maximum_sample_age_s": null,
+    "maximum_sample_gap_s": 0.08,
+    "maximum_sample_step_rad": 3.141592653589793
+  },
+  "interpretation": "Measured group response with serial per-axis windows. Peak secant speed is not a rated or continuous maximum. Group correlations alone do not identify a shared supply model; current remains uncalibrated raw telemetry.",
+  "planned_moving_ids": [
+    10,
+    11,
+    12
+  ],
+  "recording_blake3": "d998b264d59a4a6892f2af04f73b4fbc27cb98cf02353c210bdc6c5d00f7977c",
+  "scores": {
+    "electrical": "Servo voltage in 0.1 V counts; current remains uncalibrated raw counts. Measured amps, watts and battery validation unavailable.",
+    "motors": {
+      "10": {
+        "encoder_span_counts": 24,
+        "max_current_raw_uncalibrated": 86,
+        "max_temperature_c": 48,
+        "negative_observed_travel_counts": 24,
+        "peak_counts": 22.0,
+        "peak_degrees": 1.93359375,
+        "positive_observed_travel_counts": 14,
+        "rms_counts": 14.696938456699069,
+        "rms_degrees": 1.2917231065458166,
+        "saturated_fraction": 0.8,
+        "torque_enable_audited_every_frame": true,
+        "tracking_pass": false,
+        "voltage_max_v": 11.8,
+        "voltage_min_v": 11.5
+      },
+      "11": {
+        "encoder_span_counts": 24,
+        "max_current_raw_uncalibrated": 141,
+        "max_temperature_c": 46,
+        "negative_observed_travel_counts": 24,
+        "peak_counts": 23.0,
+        "peak_degrees": 2.021484375,
+        "positive_observed_travel_counts": 15,
+        "rms_counts": 14.933184523068078,
+        "rms_degrees": 1.3124869209727803,
+        "saturated_fraction": 0.8,
+        "torque_enable_audited_every_frame": true,
+        "tracking_pass": false,
+        "voltage_max_v": 12.0,
+        "voltage_min_v": 11.700000000000001
+      },
+      "12": {
+        "encoder_span_counts": 26,
+        "max_current_raw_uncalibrated": 59,
+        "max_temperature_c": 45,
+        "negative_observed_travel_counts": 26,
+        "peak_counts": 19.0,
+        "peak_degrees": 1.669921875,
+        "positive_observed_travel_counts": 13,
+        "rms_counts": 12.821856339859686,
+        "rms_degrees": 1.12692096737048,
+        "saturated_fraction": 0.8,
+        "torque_enable_audited_every_frame": true,
+        "tracking_pass": false,
+        "voltage_max_v": 11.8,
+        "voltage_min_v": 11.5
+      }
+    },
+    "target_comparison": "Encoder observation versus previous applied discrete setpoint; target changes are held between FPGA batches. Position is internal encoder feedback, not an independent output shaft measurement."
+  }
+}

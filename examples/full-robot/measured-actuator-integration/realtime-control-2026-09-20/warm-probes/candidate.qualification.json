@@ -1,0 +1,30 @@
+{
+  "name": "warm-probes/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": true,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.298807888,
+  "baseline_wall_s": 54.659522937,
+  "candidate_wall_s": 36.875590187,
+  "speedup": 1.4822684236324302,
+  "simulation_per_wall": 0.08135463011674346,
+  "max_error": {
+    "motor_angle_rad": 1.9701518194636947e-11,
+    "link_position_m": 7.399843486797281e-12,
+    "current_a": 2.1149103648920864e-10,
+    "contact_force_n": 8.3667000674434e-8
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

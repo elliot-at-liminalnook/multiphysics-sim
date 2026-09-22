@@ -1,0 +1,117 @@
+{
+  "frames": 1000,
+  "captures": 5,
+  "stats": {
+    "window_ms": {
+      "min": 2.92926,
+      "median": 2.93696,
+      "p95": 3.12736,
+      "max": 3.64516
+    },
+    "gaps_ms": {
+      "min": 1.0658,
+      "median": 1.0924399999999999,
+      "p95": 1.28148,
+      "max": 1.80702
+    },
+    "read_ms": {
+      "min": 0.9631000000000001,
+      "median": 0.9751799999999999,
+      "p95": 0.982,
+      "max": 0.98716
+    },
+    "control_ms": {
+      "min": 0.17502,
+      "median": 0.17502,
+      "p95": 0.17502,
+      "max": 0.17502
+    },
+    "audit_ms": {
+      "min": 0.67862,
+      "median": 0.69668,
+      "p95": 0.7107399999999999,
+      "max": 0.71792
+    },
+    "oldest_feedback_to_command_ms": {
+      "min": 0.8978599999999999,
+      "median": 0.89786,
+      "p95": 0.8978600000000001,
+      "max": 1.6088399999999998
+    },
+    "feedback_completion_skew_ms": {
+      "min": 0.6825199999999999,
+      "median": 0.69086,
+      "p95": 0.69726,
+      "max": 1.0302600000000002
+    }
+  },
+  "worst": {
+    "capture": "motion-10ms-cap100-02",
+    "frame": 0,
+    "events": [
+      {
+        "kind": "Telemetry",
+        "id": 10,
+        "start_ms": 0,
+        "end_ms": 0.3216,
+        "duration_ms": 0.3216,
+        "gap_before_ms": 0
+      },
+      {
+        "kind": "Telemetry",
+        "id": 11,
+        "start_ms": 0.34264,
+        "end_ms": 0.67142,
+        "duration_ms": 0.32878,
+        "gap_before_ms": 0.02104
+      },
+      {
+        "kind": "Telemetry",
+        "id": 12,
+        "start_ms": 1.02202,
+        "end_ms": 1.35186,
+        "duration_ms": 0.32984,
+        "gap_before_ms": 0.3506
+      },
+      {
+        "kind": "Control",
+        "id": 254,
+        "start_ms": 1.75494,
+        "end_ms": 1.92996,
+        "duration_ms": 0.17502,
+        "gap_before_ms": 0.40308
+      },
+      {
+        "kind": "Audit",
+        "id": 10,
+        "start_ms": 2.30714,
+        "end_ms": 2.53768,
+        "duration_ms": 0.23054,
+        "gap_before_ms": 0.37718
+      },
+      {
+        "kind": "Audit",
+        "id": 11,
+        "start_ms": 2.85934,
+        "end_ms": 3.10552,
+        "duration_ms": 0.24618,
+        "gap_before_ms": 0.32166
+      },
+      {
+        "kind": "Audit",
+        "id": 12,
+        "start_ms": 3.41154,
+        "end_ms": 3.64516,
+        "duration_ms": 0.23362,
+        "gap_before_ms": 0.30602
+      }
+    ],
+    "read_ms": 0.98022,
+    "control_ms": 0.17502,
+    "audit_ms": 0.71034,
+    "gaps_ms": 1.7795800000000002,
+    "window_ms": 3.64516,
+    "oldest_feedback_to_command_ms": 1.6083599999999998,
+    "feedback_completion_skew_ms": 1.0302600000000002
+  }
+}

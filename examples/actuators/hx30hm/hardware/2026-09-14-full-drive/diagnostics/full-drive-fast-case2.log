@@ -1,0 +1,431 @@
+verilator --language 1364-2005 --binary --timing -j 4 -Wno-fatal --top-module bridge_experiment_tb -GCASE=2 --Mdir impl/vexperiment_case2 tb/bridge_experiment_tb.v src/uart_tx.v src/uart_rx.v src/host_packet_queue.v src/trajectory_store.v src/trajectory_upload.v src/bridge_control.v src/hx_safety.v src/button.v impl/fixed-pd/fixed_pd.v src/experiment_session.v src/experiment_transactions.v src/experiment_scheduler.v src/experiment_packet.v src/experiment_reply.v src/experiment_event_stream.v src/experiment_event_packet.v
+%Warning-WIDTHEXPAND: src/experiment_event_packet.v:45:24: Operator EQ expects 6 bits on the LHS, but LHS's VARREF 'stored_width' generates 5 bits.
+                                                         : ... note: In instance 'bridge_experiment_tb.dut.experiment.session.recorder.encoder'
+   45 |         && stored_width==expected_width
+      |                        ^~
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.051
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: src/experiment_event_packet.v:68:41: Operator ADD expects 7 bits on the RHS, but RHS's VARREF 'stored_width' generates 5 bits.
+                                                         : ... note: In instance 'bridge_experiment_tb.dut.experiment.session.recorder.encoder'
+   68 |                     packet_length<=7'd37+stored_width;index<=2;sum<=0;state<=CHECKSUM;
+      |                                         ^
+%Warning-WIDTHTRUNC: src/experiment_reply.v:80:60: Operator ASSIGNDLY expects 6 bits on the Assign RHS, but Assign RHS's SUB generates 7 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut.experiment.session.transactions.replies'
+   80 |                             reply_error<=status;reply_width<=total-7'd6;reply_data<=payload;
+      |                                                            ^~
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.051
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: src/experiment_packet.v:47:21: Operator ASSIGN expects 4 bits on the Assign RHS, but Assign RHS's SHIFTR generates 32 or 7 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.experiment.session.transactions.builder'
+   47 |                 axis=(index-15)>>2;
+      |                     ^
+%Warning-WIDTHEXPAND: src/trajectory_store.v:68:22: Operator XOR expects 32 bits on the RHS, but RHS's VARREF 'b' generates 8 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.trajectory.upload.memory_bank'
+   68 |         begin c=value^b;for(k=0;k<8;k=k+1)c=(c>>1)^(c[0] ? 32'hedb88320 : 0);crc_byte=c;end
+      |                      ^
+%Warning-WIDTHEXPAND: src/trajectory_store.v:74:53: Operator SUB expects 32 bits on the LHS, but LHS's SIGNED generates 17 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.trajectory.upload.memory_bank'
+   74 |     wire signed [31:0] offset=$signed({1'b0,target})-$signed({1'b0,home});
+      |                                                     ^
+%Warning-WIDTHEXPAND: src/trajectory_store.v:74:53: Operator SUB expects 32 bits on the RHS, but RHS's SIGNED generates 17 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.trajectory.upload.memory_bank'
+   74 |     wire signed [31:0] offset=$signed({1'b0,target})-$signed({1'b0,home});
+      |                                                     ^
+%Warning-WIDTHEXPAND: src/trajectory_store.v:75:53: Operator SUB expects 32 bits on the LHS, but LHS's SIGNED generates 17 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.trajectory.upload.memory_bank'
+   75 |     wire signed [31:0] change=$signed({1'b0,target})-$signed({1'b0,previous_targets[axis*16 +: 16]});
+      |                                                     ^
+%Warning-WIDTHEXPAND: src/trajectory_store.v:75:53: Operator SUB expects 32 bits on the RHS, but RHS's SIGNED generates 17 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.trajectory.upload.memory_bank'
+   75 |     wire signed [31:0] change=$signed({1'b0,target})-$signed({1'b0,previous_targets[axis*16 +: 16]});
+      |                                                     ^
+%Warning-WIDTHEXPAND: src/trajectory_store.v:77:44: Operator NEQ expects 32 bits on the RHS, but RHS's VARREF 'delta' generates 16 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.trajectory.upload.memory_bank'
+   77 |         || delta>32 || delta< -32 || change!=delta || (scan==0 && (target!=home || delta!=0)))
+      |                                            ^~
+%Warning-WIDTHEXPAND: src/hx_safety.v:45:40: Operator EQ expects 8 bits on the RHS, but RHS's VARREF 'host_length' generates 7 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+   45 |         && host_packet[8*(3) +: 8]+8'd4==host_length && host_checksum==255;
+      |                                        ^~
+%Warning-WIDTHEXPAND: src/hx_safety.v:83:74: Operator SUB expects 32 bits on the LHS, but LHS's VARREF 'host_length' generates 7 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+   83 |                 allow_forward=write_ok(latched,armed,hid,addr,host_length-7,ordinary_zero,host_packet[55:48]==1);
+      |                                                                          ^
+%Warning-WIDTHEXPAND: src/hx_safety.v:88:35: Operator GT expects 32 bits on the LHS, but LHS's VARREF 'host_length' generates 7 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+   88 |                     if(host_length>q+1 && !write_ok(latched,armed,host_packet[8*q +: 8],addr,2,
+      |                                   ^
+%Warning-WIDTHEXPAND: src/hx_safety.v:95:35: Operator GT expects 32 bits on the LHS, but LHS's VARREF 'host_length' generates 7 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+   95 |                     if(host_length>q+1 && !write_ok(latched,armed,host_packet[8*q +: 8],addr,1,
+      |                                   ^
+%Warning-WIDTHTRUNC: src/hx_safety.v:124:39: Bit extraction of array[20:0] requires 5 bit index, not 7 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+  124 |                     if(rx_count<21) rb[rx_count]<=servo_data;
+      |                                       ^
+%Warning-WIDTHTRUNC: src/hx_safety.v:128:44: Operator ASSIGNDLY expects 7 bits on the Assign RHS, but Assign RHS's ADD generates 32 or 8 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+  128 |                         else begin rx_total<=servo_data+4; rx_count<=4; end
+      |                                            ^~
+%Warning-WIDTHTRUNC: src/hx_safety.v:159:76: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's ADD generates 32 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+  159 |                 if(!healthy[n]) begin trip_reason=sample_reason[n]; trip_id=FIRST_ID+n; end
+      |                                                                            ^
+%Warning-WIDTHTRUNC: src/hx_safety.v:160:88: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's ADD generates 32 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+  160 |                 else if(feedback_age[n]>=FEEDBACK_TIMEOUT) begin trip_reason=7; trip_id=FIRST_ID+n; end
+      |                                                                                        ^
+%Warning-WIDTHTRUNC: src/hx_safety.v:161:86: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's ADD generates 32 bits.
+                                           : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+  161 |                 else if(command_age[n]>=COMMAND_TIMEOUT) begin trip_reason=8; trip_id=FIRST_ID+n; end
+      |                                                                                      ^
+%Warning-WIDTHEXPAND: src/hx_safety.v:165:24: Operator ASSIGNW expects 16 bits on the Assign RHS, but Assign RHS's VARREF 'armed' generates 9 bits.
+                                            : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+  165 |     wire [15:0] armed16=armed;
+      |                        ^
+%Warning-WIDTHEXPAND: src/hx_safety.v:166:24: Operator ASSIGNW expects 16 bits on the Assign RHS, but Assign RHS's VARREF 'fresh' generates 9 bits.
+                                            : ... note: In instance 'bridge_experiment_tb.dut.safety.supervisor'
+  166 |     wire [15:0] fresh16=fresh;
+      |                        ^
+%Warning-WIDTHTRUNC: impl/fixed-pd/fixed_pd.v:41:79: Operator ASSIGNDLY expects 16 bits on the Assign RHS, but Assign RHS's COND generates 32 bits.
+                                                   : ... note: In instance 'bridge_experiment_tb.dut.law'
+   41 | reg signed [31:0] raw;always @(posedge clk) begin raw <= node_7/32'sd256;duty <= raw>limit ? limit : (raw< -limit ? -limit : raw);end
+      |                                                                               ^~
+%Warning-WIDTHEXPAND: src/trajectory_upload.v:17:82: Operator EQ expects 9 bits on the RHS, but RHS's VARREF 'packet_length' generates 7 bits.
+                                                   : ... note: In instance 'bridge_experiment_tb.dut.trajectory.upload'
+   17 |     wire framing=packet_ok && packet[15:0]==16'hffff && {1'b0,packet[31:24]}+9'd4==packet_length;
+      |                                                                                  ^~
+%Warning-WIDTHTRUNC: src/host_packet_queue.v:62:30: Bit extraction of array[63:0] requires 6 bit index, not 7 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.buffered_host.host_queue'
+   62 |                         bytes[index]<=data;sum<=sum+data;
+      |                              ^
+%Warning-WIDTHTRUNC: src/host_packet_queue.v:63:43: Operator ASSIGNDLY expects 7 bits on the Assign RHS, but Assign RHS's ADD generates 32 or 8 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut.buffered_host.host_queue'
+   63 |                         if(index==3) total<=data+4;
+      |                                           ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:79:24: Operator ASSIGN expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+   79 |     reg [3:0] cstate = C_H1;
+      |                        ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:117:64: Operator SUB expects 32 bits on the LHS, but LHS's SIGNED generates 17 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  117 |     wire signed [31:0] axis_error=$signed({1'b0,targets[axis]})-$signed({1'b0,axis_position});
+      |                                                                ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:117:64: Operator SUB expects 32 bits on the RHS, but RHS's SIGNED generates 17 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  117 |     wire signed [31:0] axis_error=$signed({1'b0,targets[axis]})-$signed({1'b0,axis_position});
+      |                                                                ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:118:65: Operator SUB expects 32 bits on the LHS, but LHS's SIGNED generates 17 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  118 |     wire signed [31:0] axis_travel=$signed({1'b0,axis_position})-$signed({1'b0,axis_anchor});
+      |                                                                 ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:118:65: Operator SUB expects 32 bits on the RHS, but RHS's SIGNED generates 17 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  118 |     wire signed [31:0] axis_travel=$signed({1'b0,axis_position})-$signed({1'b0,axis_anchor});
+      |                                                                 ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:154:18: Operator NEQ expects 4 bits on the RHS, but RHS's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  154 |         && cstate!=C_SEND && !s_tx_busy && stop_gap==0 && reply_wait==0 && rx_quiet>=SERVO_CLKS*20;
+      |                  ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:155:30: Operator EQ expects 4 bits on the RHS, but RHS's VARREF 'C_CHECK' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  155 |     wire check_safety=(cstate==C_CHECK) && !stop_active && !begin_stop && !s_tx_busy && stop_gap==0;
+      |                              ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:286:51: Operator NEQ expects 4 bits on the RHS, but RHS's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  286 |     wire servo_tx_enable = !(RELEASE_TX && cstate != C_SEND && !stop_active && !s_tx_busy);
+      |                                                   ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:290:30: Operator NEQ expects 4 bits on the RHS, but RHS's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  290 |     wire listening = (cstate != C_SEND) && !stop_active && !s_tx_busy && (guard == 0);
+      |                              ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:300:38: Operator EQ expects 4 bits on the RHS, but RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  300 |         if(experiment_owner && cstate==C_H1 && !s_tx_busy && reply_wait==0 && rx_quiet>=SERVO_CLKS*20)
+      |                                      ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:307:20: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  307 |             cstate <= C_H1;
+      |                    ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:342:43: Operator COND expects 4 bits on the Conditional True, but Conditional True's VARREF 'C_CHECK' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  342 |                     cstate<=SAFETY_ENABLE ? C_CHECK : C_SEND;experiment_owner<=0;
+      |                                           ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:342:43: Operator COND expects 4 bits on the Conditional False, but Conditional False's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  342 |                     cstate<=SAFETY_ENABLE ? C_CHECK : C_SEND;experiment_owner<=0;
+      |                                           ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:346:47: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_CHECK' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  346 |                     experiment_owner<=1;cstate<=C_CHECK;
+      |                                               ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:348:60: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H2' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  348 |                     pbuf[0] <= 8'hFF; pcnt <= 7'd1; cstate <= C_H2;
+      |                                                            ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:353:64: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_BODY' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  353 |                         pbuf[1] <= 8'hFF; pcnt <= 7'd2; cstate <= C_BODY;
+      |                                                                ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:356:32: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  356 |                         cstate <= C_H1;
+      |                                ^~
+%Warning-WIDTHTRUNC: src/bridge_control.v:360:25: Bit extraction of array[63:0] requires 6 bit index, not 7 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+  360 |                     pbuf[pcnt] <= h_data;
+      |                         ^
+%Warning-WIDTHTRUNC: src/bridge_control.v:364:30: Operator ASSIGNDLY expects 7 bits on the Assign RHS, but Assign RHS's ADD generates 8 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+  364 |                         ptot <= h_data + 7'd4;
+      |                              ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:365:76: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  365 |                         if(SAFETY_ENABLE && (h_data<2 || h_data>60)) cstate<=C_H1;
+      |                                                                            ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:369:49: Operator COND expects 4 bits on the Conditional True, but Conditional True's VARREF 'C_CHECK' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  369 |                         cstate <= SAFETY_ENABLE ? C_CHECK : C_SEND;
+      |                                                 ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:369:49: Operator COND expects 4 bits on the Conditional False, but Conditional False's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  369 |                         cstate <= SAFETY_ENABLE ? C_CHECK : C_SEND;
+      |                                                 ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:371:32: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  371 |                         cstate <= C_H1;               
+      |                                ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:410:53: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_LOCAL' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  410 |                     end else if(safety_local) cstate<=C_LOCAL;
+      |                                                     ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:411:64: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  411 |                     else if(safety_allow) begin pidx<=0; cstate<=C_SEND; end
+      |                                                                ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:412:47: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  412 |                     else begin pcnt<=0; cstate<=C_H1; end
+      |                                               ^~
+%Warning-WIDTHTRUNC: src/bridge_control.v:424:33: Bit extraction of array[63:0] requires 6 bit index, not 7 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+  424 |                             pbuf[build_index]<=axis+4;
+      |                                 ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:424:52: Operator ADD expects 32 or 8 bits on the LHS, but LHS's VARREF 'axis' generates 4 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  424 |                             pbuf[build_index]<=axis+4;
+      |                                                    ^
+%Warning-WIDTHTRUNC: src/bridge_control.v:441:29: Bit extraction of array[63:0] requires 6 bit index, not 7 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+  441 |                         pbuf[pidx]<=~build_sum; packet_checksum<=255; cstate<=C_CHECK;
+      |                             ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:441:77: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_CHECK' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  441 |                         pbuf[pidx]<=~build_sum; packet_checksum<=255; cstate<=C_CHECK;
+      |                                                                             ^~
+%Warning-WIDTHTRUNC: src/bridge_control.v:442:61: Bit extraction of array[63:0] requires 6 bit index, not 7 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+  442 |                     end else begin build_sum<=build_sum+pbuf[pidx]; pidx<=pidx+1; end
+      |                                                             ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:444:62: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_LOCAL' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  444 |                 C_CTL_FAULT: begin experiment_owner<=0;cstate<=C_LOCAL;end
+      |                                                              ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:446:51: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  446 |                 C_TRAJ_REPLY: begin pcnt<=0;cstate<=C_H1;end
+      |                                                   ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:447:47: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  447 |                 C_LOCAL: begin pcnt<=0; cstate<=C_H1; end
+      |                                               ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:449:101: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                  : ... note: In instance 'bridge_experiment_tb.dut'
+  449 |                     if(experiment_owner) begin experiment_control_done<=1;experiment_owner<=0;cstate<=C_H1;end
+      |                                                                                                     ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:450:32: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_LOCAL' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  450 |                     else cstate<=C_LOCAL;
+      |                                ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:453:35: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  453 |                     pcnt<=0;cstate<=C_H1;
+      |                                   ^~
+%Warning-WIDTHTRUNC: src/bridge_control.v:455:39: Bit extraction of array[63:0] requires 6 bit index, not 7 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+  455 |                     s_tx_data  <= pbuf[pidx];
+      |                                       ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:460:69: Operator COND expects 4 bits on the Conditional True, but Conditional True's VARREF 'C_RECEIPT' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  460 |                         cstate <= (SAFETY_ENABLE && pbuf[4]==8'h83) ? C_RECEIPT : C_H1;
+      |                                                                     ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:460:69: Operator COND expects 4 bits on the Conditional False, but Conditional False's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  460 |                         cstate <= (SAFETY_ENABLE && pbuf[4]==8'h83) ? C_RECEIPT : C_H1;
+      |                                                                     ^
+%Warning-WIDTHEXPAND: src/bridge_control.v:465:33: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  465 |                 default: cstate <= C_H1;
+      |                                 ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:338:13: Operator CASE expects 32 or 4 bits on the Case Item, but Case Item's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  338 |             case (cstate)
+      |             ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:338:13: Operator CASE expects 32 or 4 bits on the Case Item, but Case Item's VARREF 'C_H2' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  338 |             case (cstate)
+      |             ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:338:13: Operator CASE expects 32 or 4 bits on the Case Item, but Case Item's VARREF 'C_BODY' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  338 |             case (cstate)
+      |             ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:338:13: Operator CASE expects 32 or 4 bits on the Case Item, but Case Item's VARREF 'C_CHECK' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  338 |             case (cstate)
+      |             ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:338:13: Operator CASE expects 32 or 4 bits on the Case Item, but Case Item's VARREF 'C_LOCAL' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  338 |             case (cstate)
+      |             ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:338:13: Operator CASE expects 32 or 4 bits on the Case Item, but Case Item's VARREF 'C_RECEIPT' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  338 |             case (cstate)
+      |             ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:338:13: Operator CASE expects 32 or 4 bits on the Case Item, but Case Item's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  338 |             case (cstate)
+      |             ^~~~
+%Warning-WIDTHEXPAND: src/bridge_control.v:486:25: Operator EQ expects 4 bits on the RHS, but RHS's VARREF 'C_H1' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  486 |     wire bus_idle=cstate==C_H1 && !stop_active && !begin_stop && !s_tx_busy
+      |                         ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:494:21: Operator GTE expects 8 bits on the RHS, but RHS's VARREF 'experiment_log_length' generates 7 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  494 |         && fifo_free>=experiment_log_length && experiment_log_length>=6 && experiment_log_length<=64;
+      |                     ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:499:69: Operator EQ expects 4 bits on the RHS, but RHS's VARREF 'C_SEND' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  499 |         || (s_valid && experiment_log_sending) || (h_valid && cstate==C_SEND);
+      |                                                                     ^~
+%Warning-WIDTHEXPAND: src/bridge_control.v:531:22: Operator EQ expects 4 bits on the RHS, but RHS's VARREF 'C_LOCAL' generates 3 bits.
+                                                 : ... note: In instance 'bridge_experiment_tb.dut'
+  531 |             if(cstate==C_LOCAL) begin
+      |                      ^~
+%Warning-WIDTHTRUNC: src/bridge_control.v:552:38: Bit extraction of array[30:0] requires 5 bit index, not 6 bits.
+                                                : ... note: In instance 'bridge_experiment_tb.dut'
+  552 |                 fifo[wptr]<=local_buf[local_index]; wptr<=wptr+1;
+      |                                      ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:38:27: Operator ADD expects 32 bits on the LHS, but LHS's VARREF 'sb' generates 8 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+   38 |             if(cn==3)ct=sb+4;cn=cn+1;
+      |                           ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:43:29: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's ARRAYSEL generates 8 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+   43 |                     reply_id=command[2];reply_address=command[5];reply_width=command[6];reply_pending=1;
+      |                             ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:43:54: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's ARRAYSEL generates 8 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+   43 |                     reply_id=command[2];reply_address=command[5];reply_width=command[6];reply_pending=1;
+      |                                                      ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:43:77: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's ARRAYSEL generates 8 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+   43 |                     reply_id=command[2];reply_address=command[5];reply_width=command[6];reply_pending=1;
+      |                                                                             ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:54:42: Operator NEQ expects 32 bits on the LHS, but LHS's ARRAYSEL generates 8 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+   54 |                         if(command[7+i*3]!=i+4)$fatal(1,"motor order");
+      |                                          ^~
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:62:41: Operator ASSIGN expects 1 bits on the Assign RHS, but Assign RHS's ARRAYSEL generates 8 bits.
+                                                    : ... note: In instance 'bridge_experiment_tb'
+   62 |                     torque[command[2]-4]=command[6];
+      |                                         ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:72:33: Operator ADD expects 32 bits on the LHS, but LHS's VARREF 'hb' generates 8 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+   72 |             if(hn==3)begin ht=hb+4;if(ht>64 || ht<6)$fatal(1,"invalid host frame size");end
+      |                                 ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:81:84: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's ARRAYSEL generates 8 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+   81 |                     if(host_frame[7]==4)begin terminals=terminals+1;terminal_result=host_frame[15];end
+      |                                                                                    ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:117:56: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's VARREF 'reply_id' generates 32 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  117 |             response[0]=255;response[1]=255;response[2]=reply_id;response[3]=reply_width+2;
+      |                                                        ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:117:77: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's ADD generates 32 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  117 |             response[0]=255;response[1]=255;response[2]=reply_id;response[3]=reply_width+2;
+      |                                                                             ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:119:53: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's VARREF 'position' generates 32 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  119 |                 position=2000+reply_id-4;response[5]=position;response[6]=position>>8;response[11]=120;response[12]=40;
+      |                                                     ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:119:74: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's SHIFTR generates 32 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  119 |                 position=2000+reply_id-4;response[5]=position;response[6]=position>>8;response[11]=120;response[12]=40;
+      |                                                                          ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:121:28: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's ARRAYSEL generates 1 bits.
+                                                      : ... note: In instance 'bridge_experiment_tb'
+  121 |                 response[5]=torque[reply_id-4];response[9]=pwm[reply_id-4];response[10]=pwm[reply_id-4]>>8;
+      |                            ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:121:59: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's ARRAYSEL generates 16 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  121 |                 response[5]=torque[reply_id-4];response[9]=pwm[reply_id-4];response[10]=pwm[reply_id-4]>>8;
+      |                                                           ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:121:88: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's SHIFTR generates 16 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  121 |                 response[5]=torque[reply_id-4];response[9]=pwm[reply_id-4];response[10]=pwm[reply_id-4]>>8;
+      |                                                                                        ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:120:38: Operator EQ expects 32 bits on the RHS, but RHS's CONST '8'h28' generates 8 bits.
+                                                      : ... note: In instance 'bridge_experiment_tb'
+  120 |             end else if(reply_address==8'h28)begin
+      |                                      ^~
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:118:29: Operator EQ expects 32 bits on the RHS, but RHS's CONST '8'h38' generates 8 bits.
+                                                      : ... note: In instance 'bridge_experiment_tb'
+  118 |             if(reply_address==8'h38)begin
+      |                             ^~
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:115:64: Operator EQ expects 32 bits on the RHS, but RHS's CONST '8'h38' generates 8 bits.
+                                                      : ... note: In instance 'bridge_experiment_tb'
+  115 |         if(!(running && CASE==1 && reply_id==6 && reply_address==8'h38))begin
+      |                                                                ^~
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:137:53: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's VARREF 'j' generates 32 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  137 |             message[0]=255;message[1]=255;message[2]=j;message[3]=4;message[4]=2;message[5]=8'h38;message[6]=15;
+      |                                                     ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:139:81: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's VARREF 'j' generates 32 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  139 |             message[2]=254;message[3]=4;message[4]=8'ha0;message[5]=1;message[6]=j;
+      |                                                                                 ^
+%Warning-WIDTHTRUNC: tb/bridge_experiment_tb.v:141:23: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's VARREF 'j' generates 32 bits.
+                                                     : ... note: In instance 'bridge_experiment_tb'
+  141 |             message[2]=j;message[3]=4;message[4]=3;message[5]=8'h28;message[6]=1;
+      |                       ^
+%Warning-WIDTHEXPAND: tb/bridge_experiment_tb.v:145:78: Operator TASKREF 'send' expects 32 bits on the Function Argument, but Function Argument's ARRAYSEL generates 7 bits.
+                                                      : ... note: In instance 'bridge_experiment_tb'
+  145 |             for(i=0;i<64;i=i+1)message[i]=packets[j][i*8 +: 8];base=receipts;send(lengths[j]);wait(receipts>base);
+      |                                                                              ^~~~
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -c -o verilated.o /Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -c -o verilated_timing.o /Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/verilated_timing.cpp
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -c -o verilated_threads.o /Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/verilated_threads.cpp
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -x c++-header Vbridge_experiment_tb__pch.h -o Vbridge_experiment_tb__pch.h.fast.gch
+g++   -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -x c++-header Vbridge_experiment_tb__pch.h -o Vbridge_experiment_tb__pch.h.slow.gch
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.fast.gch -c Vbridge_experiment_tb.cpp
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.fast.gch -c Vbridge_experiment_tb___024root__0.cpp
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.fast.gch -c Vbridge_experiment_tb___024root__1.cpp
+g++ -Os  -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.fast.gch -c Vbridge_experiment_tb__main.cpp
+g++   -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.slow.gch -c Vbridge_experiment_tb__ConstPool__0__Slow.cpp
+g++   -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.slow.gch -c Vbridge_experiment_tb___024root__Slow.cpp
+g++   -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.slow.gch -c Vbridge_experiment_tb___024root__0__Slow.cpp
+g++   -I.  -MMD -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include -I/Users/elliot/.local/opt/oss-cad-suite/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Xclang -fno-pch-timestamp -Qunused-arguments  -Wno-c++11-narrowing -Wno-constant-logical-operand -Wno-int-in-bool-context -Wno-non-pod-varargs -Wno-parentheses-equality -Wno-shadow -Wno-sign-compare  -Wno-tautological-compare -Wno-uninitialized -Wno-unnecessary-virtual-specifier -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-vla-cxx-extension    -DVL_TIME_CONTEXT   -std=gnu++20 -include-pch Vbridge_experiment_tb__pch.h.slow.gch -c Vbridge_experiment_tb__Syms__Slow.cpp
+g++  -Wl,-U,__Z15vl_time_stamp64v,-U,__Z13sc_time_stampv,-U,_vlog_startup_routines   verilated.o verilated_timing.o verilated_threads.o Vbridge_experiment_tb__ALL.a    -pthread -lpthread   -o Vbridge_experiment_tb
+rm Vbridge_experiment_tb__ALL.verilator_deplist.tmp
+- V e r i l a t i o n   R e p o r t: Verilator 5.051 devel rev v5.050-155-g86fa00416 (mod)
+- Verilator: Built from 1.263 MB sources in 19 modules, into 1.833 MB in 8 C++ files needing 0.007 MB
+- Verilator: Walltime 9.475 s (elab=0.072, cvt=0.502, bld=8.802); cpu 0.703 s on 4 threads; allocated 36.969 MB
+./impl/vexperiment_case2/Vbridge_experiment_tb
+progress ticks 1000000 bridge 0 owner 0 frame 0 controls 1 records 20 latch 0 reason 0 scheduler 6 event 0 ready 1
+progress ticks 2000000 bridge 0 owner 0 frame 0 controls 1 records 20 latch 0 reason 0 scheduler 6 event 0 ready 1
+progress ticks 3000000 bridge 0 owner 0 frame 1 controls 2 records 39 latch 0 reason 0 scheduler 6 event 0 ready 1
+[30381170000] %Fatal: bridge_experiment_tb.v:163: Assertion failed in bridge_experiment_tb: independent command watchdog bypassed
+%Error: tb/bridge_experiment_tb.v:163: Verilog $stop
+Aborting...
+make: *** [sim-bridge-experiment-fast] Error 1

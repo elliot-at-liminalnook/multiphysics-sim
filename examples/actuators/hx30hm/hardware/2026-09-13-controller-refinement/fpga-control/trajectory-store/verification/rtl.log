@@ -1,0 +1,8 @@
+iverilog -g2005 -s trajectory_store_tb -o impl/trajectory_store_tb.vvp tb/trajectory_store_tb.v src/trajectory_store.v
+vvp impl/trajectory_store_tb.vvp
+PASS trajectory store: 19 groups, Rust vectors and 256-row capacity
+tb/trajectory_store_tb.v:146: $finish called at 147380000 (1ps)
+iverilog -g2005 -s trajectory_upload_tb -o impl/trajectory_upload_tb.vvp tb/trajectory_upload_tb.v src/trajectory_upload.v src/trajectory_store.v src/host_packet_queue.v
+vvp impl/trajectory_upload_tb.vvp
+PASS trajectory upload: 11 groups, Rust packets through host queue to sealed RAM
+tb/trajectory_upload_tb.v:85: $finish called at 70250000 (1ps)

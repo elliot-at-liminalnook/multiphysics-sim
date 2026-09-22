@@ -1,0 +1,13 @@
+   Compiling sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+   Compiling sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+   Compiling sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+   Compiling sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+   Compiling sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+   Compiling sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+   Compiling sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+   Compiling sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Finished `release` profile [optimized] target(s) in 17.25s
+     Running `target/release/examples/systems_baseline --check examples/systems-viewer/evidence/pre-migration-baseline.json`
+All five baseline trajectories match (absolute + relative tolerance 1e-10)

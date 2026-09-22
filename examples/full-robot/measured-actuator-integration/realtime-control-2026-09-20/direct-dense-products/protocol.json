@@ -1,0 +1,61 @@
+{
+  "scope": "Opt-in shared finite dense matrix kernels for sparse-valued small matrices; no packing buffers or transpose materialization. All coefficients and physical checks remain. Float accumulation order may differ; full physical qualification is required.",
+  "sources_before": {
+    "crates/sim-solve/src/lib.rs": "42fb209f7df912fea5a0bde2c76c659447f3f3415384816e50e386f90174a400",
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "34b267a744bf575305275488bcbba1d9ffa2b1a33f7acbf78da083313d8127b0",
+    "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs": "842600643485ba27cc3938a68e991e1dbdc453a5226d261179ecddf97d083d29",
+    "crates/sim-domain-robot/tests/embedding.rs": "5c7926aa21ddc15359f48216c0542eca5a7a7bb3bc119af3ac49ecd373f588c7",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "b3ad8731953b05674c32335e5040be754c785b9637824a81071c5a8d8957f4c9",
+    "crates/sim-domain-robot/tests/inverse_loads.rs": "e5781bd67884c955d93786b067b7b576dd881cf17dcde29a653ed67de1a084af"
+  },
+  "new_sources": [
+    "crates/sim-solve/src/dense_products.rs"
+  ],
+  "binary_before_sha256": "dbcadb5ebe789dcf74f2ac28301cb89f03f7b2365515ee1a1cb3c92bbd0f3e00",
+  "inputs": {
+    "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+    "config.json": "7e649c37845711afbf32a23d162163829f504d88df4c9219c71d7fb6a8108abb",
+    "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+    "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "variants": {
+    "direct": {
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "d01131c1ce9d6da9cfda622a98bd111d61a2c744e980bfc3048fa2ca7f54d488",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      },
+      "analytic_mechanism_motion": false
+    },
+    "analytic": {
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "0b3380cf0a1155ba0b91e0cb0cab2173ab4c96bea85b867ca032c5f10b465d1d",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      },
+      "analytic_mechanism_motion": true
+    }
+  },
+  "sources_candidate": {
+    "crates/sim-solve/src/lib.rs": "3f4c692668c67783f7866b58bf79d65db80b282a7b254e212e6d7105cfe31d96",
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "fe59aea3e9ecab668748c559e1859f979e9c34783cb54c7ba7cdb49a75673c99",
+    "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs": "ee975d774cca536786d9557a27986e63c643b57c7ed33f26d7a9bfbe86fab11d",
+    "crates/sim-domain-robot/tests/embedding.rs": "fb61f7b1c2134c0113e70fecfee612e2ba8619e88011595c9e9977ae828b013d",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "35f03537a69a9db8d49ecae28d55a958886ce52518a4f1047c86cb061a880c01",
+    "crates/sim-domain-robot/tests/inverse_loads.rs": "802227c61389dc010420576f01e99ffbdf0709a059c9d53998bbb74c10f09bdd",
+    "crates/sim-solve/src/dense_products.rs": "aa246266f810933a0942595816e430a2778e02b6660b1d460f23634ccbe5ef91"
+  },
+  "binary_candidate_sha256": "02ccdd9c51128d8c87a99b1ef801a999ba34e8f2a28c305f688d81e9fba4edac"
+}

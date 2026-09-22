@@ -1,0 +1,1316 @@
+[
+  {
+    "common_100hz_grid_rms_degrees": 0.8913847275969349,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.3515625,
+      "peak_degrees": 2.197265625,
+      "previous_target_rms_degrees": 0.6313284775271039,
+      "rms_degrees": 0.8922604338015993,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.779296875
+    },
+    "pattern": "gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "99eada6687fa6d82af404d15f468addae48dd380f2dce04e57f32b493d2da712"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.9185273321372956,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 2.197265625,
+      "previous_target_rms_degrees": 0.8021537263893521,
+      "rms_degrees": 0.9176331251476072,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.251953125
+    },
+    "pattern": "gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "99eada6687fa6d82af404d15f468addae48dd380f2dce04e57f32b493d2da712"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.9472642769514033,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 2.28515625,
+      "previous_target_rms_degrees": 0.8896428479370039,
+      "rms_degrees": 0.9445258496389396,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.1640625
+    },
+    "pattern": "gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "99eada6687fa6d82af404d15f468addae48dd380f2dce04e57f32b493d2da712"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.9769857173389058,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.7454066625785484,
+      "rms_degrees": 0.9778625554051716,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.251953125
+    },
+    "pattern": "gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "99eada6687fa6d82af404d15f468addae48dd380f2dce04e57f32b493d2da712",
+    "timestep_rms_delta_degrees": 0.00003607287781792756,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.9286638730748156,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 2.197265625,
+      "previous_target_rms_degrees": 0.818985593755907,
+      "rms_degrees": 0.9284686356544163,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.076171875
+    },
+    "pattern": "gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "99eada6687fa6d82af404d15f468addae48dd380f2dce04e57f32b493d2da712",
+    "timestep_rms_delta_degrees": 0.000046256983827319686,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.913089096165542,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.263671875,
+      "peak_degrees": 2.197265625,
+      "previous_target_rms_degrees": 0.8585412675235512,
+      "rms_degrees": 0.9116709516970353,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 2.900390625
+    },
+    "pattern": "gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "99eada6687fa6d82af404d15f468addae48dd380f2dce04e57f32b493d2da712",
+    "timestep_rms_delta_degrees": 0.0002505483408297149,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.200166979665436,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 0.6803722221153805,
+      "rms_degrees": 1.201243328667414,
+      "saturated_fraction": 0.0025,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "pattern": "reversal",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "eacb93fc103479f1e4befa252a64630aa7a8969fb65a4a4eca15dc3bfdebc140"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.3926940628952282,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 1.1054932284930643,
+      "rms_degrees": 1.3900896392021236,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "pattern": "reversal",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "eacb93fc103479f1e4befa252a64630aa7a8969fb65a4a4eca15dc3bfdebc140"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.5068327996090038,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.009765625,
+      "previous_target_rms_degrees": 1.3621026658422692,
+      "rms_degrees": 1.5041274267275515,
+      "saturated_fraction": 0.000625,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "pattern": "reversal",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "eacb93fc103479f1e4befa252a64630aa7a8969fb65a4a4eca15dc3bfdebc140"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.533750719702685,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 0.9689617540824993,
+      "rms_degrees": 1.5321166252535399,
+      "saturated_fraction": 0.0025,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "pattern": "reversal",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "eacb93fc103479f1e4befa252a64630aa7a8969fb65a4a4eca15dc3bfdebc140"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.4910484387834417,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.009765625,
+      "previous_target_rms_degrees": 1.2044182799421375,
+      "rms_degrees": 1.4878555049341744,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "pattern": "reversal",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "eacb93fc103479f1e4befa252a64630aa7a8969fb65a4a4eca15dc3bfdebc140"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.4754038029128231,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 1.3315157745908088,
+      "rms_degrees": 1.4724876853738804,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "pattern": "reversal",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "eacb93fc103479f1e4befa252a64630aa7a8969fb65a4a4eca15dc3bfdebc140"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 8.88835937164302,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -12.83203125,
+      "peak_degrees": 24.521484375,
+      "previous_target_rms_degrees": 7.260381735141499,
+      "rms_degrees": 8.889586544852591,
+      "saturated_fraction": 0.5552380952380952,
+      "tail_encoder_span_degrees": 32.6953125
+    },
+    "pattern": "full-gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "f48bcc492876130b3397db38ba5c5f1a91a4fcf89597844c67394dce88549d03"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 9.097267235472636,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -11.953125,
+      "peak_degrees": 24.78515625,
+      "previous_target_rms_degrees": 8.20466600540799,
+      "rms_degrees": 9.042721577779448,
+      "saturated_fraction": 0.4804761904761905,
+      "tail_encoder_span_degrees": 32.16796875
+    },
+    "pattern": "full-gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "f48bcc492876130b3397db38ba5c5f1a91a4fcf89597844c67394dce88549d03"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 9.201770936022896,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -11.25,
+      "peak_degrees": 24.78515625,
+      "previous_target_rms_degrees": 8.70793152188736,
+      "rms_degrees": 9.13247377582592,
+      "saturated_fraction": 0.4569047619047619,
+      "tail_encoder_span_degrees": 32.255859375
+    },
+    "pattern": "full-gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "f48bcc492876130b3397db38ba5c5f1a91a4fcf89597844c67394dce88549d03"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 9.66883169503499,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -14.677734375,
+      "peak_degrees": 25.927734375,
+      "previous_target_rms_degrees": 8.022934871758167,
+      "rms_degrees": 9.667672352396501,
+      "saturated_fraction": 0.48,
+      "tail_encoder_span_degrees": 31.376953125
+    },
+    "pattern": "full-gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "f48bcc492876130b3397db38ba5c5f1a91a4fcf89597844c67394dce88549d03"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 9.313527908581783,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -12.568359375,
+      "peak_degrees": 25.400390625,
+      "previous_target_rms_degrees": 8.427207772963346,
+      "rms_degrees": 9.261546833511122,
+      "saturated_fraction": 0.4471428571428571,
+      "tail_encoder_span_degrees": 31.025390625
+    },
+    "pattern": "full-gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "f48bcc492876130b3397db38ba5c5f1a91a4fcf89597844c67394dce88549d03"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 9.142371150063946,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 10,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -11.513671875,
+      "peak_degrees": 25.13671875,
+      "previous_target_rms_degrees": 8.655969934915197,
+      "rms_degrees": 9.075033486404699,
+      "saturated_fraction": 0.4266666666666667,
+      "tail_encoder_span_degrees": 30.9375
+    },
+    "pattern": "full-gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "f48bcc492876130b3397db38ba5c5f1a91a4fcf89597844c67394dce88549d03"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.704209591673622,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.87890625,
+      "peak_degrees": 6.240234375,
+      "previous_target_rms_degrees": 1.1272212307198135,
+      "rms_degrees": 1.705462090880102,
+      "saturated_fraction": 0.05619047619047619,
+      "tail_encoder_span_degrees": 7.55859375
+    },
+    "pattern": "gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "42977289a35aff66d72a00cea41fdea9ba5ad01b6d7f6455d0047ecc37ab1339"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.5781720806728505,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.703125,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 1.3023045873217138,
+      "rms_degrees": 1.5593189228326814,
+      "saturated_fraction": 0.020476190476190478,
+      "tail_encoder_span_degrees": 6.591796875
+    },
+    "pattern": "gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "42977289a35aff66d72a00cea41fdea9ba5ad01b6d7f6455d0047ecc37ab1339"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.5926084043985647,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.703125,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 1.4503912458953814,
+      "rms_degrees": 1.5690050355298517,
+      "saturated_fraction": 0.007857142857142858,
+      "tail_encoder_span_degrees": 6.064453125
+    },
+    "pattern": "gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "42977289a35aff66d72a00cea41fdea9ba5ad01b6d7f6455d0047ecc37ab1339"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.7183127823631446,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -1.58203125,
+      "peak_degrees": 6.064453125,
+      "previous_target_rms_degrees": 1.1962907138290353,
+      "rms_degrees": 1.717301032903552,
+      "saturated_fraction": 0.030476190476190476,
+      "tail_encoder_span_degrees": 6.6796875
+    },
+    "pattern": "gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "42977289a35aff66d72a00cea41fdea9ba5ad01b6d7f6455d0047ecc37ab1339",
+    "timestep_rms_delta_degrees": 0.0005065746012986594,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.5496061861877644,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.87890625,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.2846370680256,
+      "rms_degrees": 1.5317783611916382,
+      "saturated_fraction": 0.014761904761904763,
+      "tail_encoder_span_degrees": 5.9765625
+    },
+    "pattern": "gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "42977289a35aff66d72a00cea41fdea9ba5ad01b6d7f6455d0047ecc37ab1339",
+    "timestep_rms_delta_degrees": 0.0007573514406438164,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.4832842367633146,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.791015625,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 1.3407892452391987,
+      "rms_degrees": 1.4603471022003738,
+      "saturated_fraction": 0.008571428571428572,
+      "tail_encoder_span_degrees": 5.712890625
+    },
+    "pattern": "gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "42977289a35aff66d72a00cea41fdea9ba5ad01b6d7f6455d0047ecc37ab1339",
+    "timestep_rms_delta_degrees": 0.0008237213706430158,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.0778170144464898,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.361328125,
+      "previous_target_rms_degrees": 0.5854465716813594,
+      "rms_degrees": 1.0786224544440735,
+      "saturated_fraction": 0.0025,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "pattern": "reversal",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "5c2b2337cd69cb5fcb427b4079b2b372d19adc232691b541808d2871f45f9255"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.2600128911133872,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.185546875,
+      "previous_target_rms_degrees": 0.9708284416130064,
+      "rms_degrees": 1.2582372576096579,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "pattern": "reversal",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "5c2b2337cd69cb5fcb427b4079b2b372d19adc232691b541808d2871f45f9255"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.3759817311490343,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 1.228576076457588,
+      "rms_degrees": 1.3729446828913623,
+      "saturated_fraction": 0.000625,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "pattern": "reversal",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "5c2b2337cd69cb5fcb427b4079b2b372d19adc232691b541808d2871f45f9255"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.4057492862286378,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 0.8363359874086723,
+      "rms_degrees": 1.404772936436685,
+      "saturated_fraction": 0.0025,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "pattern": "reversal",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "5c2b2337cd69cb5fcb427b4079b2b372d19adc232691b541808d2871f45f9255"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.3619685203685936,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 1.070521703169577,
+      "rms_degrees": 1.3587098960959114,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "pattern": "reversal",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "5c2b2337cd69cb5fcb427b4079b2b372d19adc232691b541808d2871f45f9255"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.3456496033388907,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.009765625,
+      "previous_target_rms_degrees": 1.1990025726208038,
+      "rms_degrees": 1.3429589715571688,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "pattern": "reversal",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "5c2b2337cd69cb5fcb427b4079b2b372d19adc232691b541808d2871f45f9255"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 19.891593164778904,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -41.66015625,
+      "peak_degrees": 51.50390625,
+      "previous_target_rms_degrees": 18.38053723863427,
+      "rms_degrees": 19.892466866831988,
+      "saturated_fraction": 0.6228571428571429,
+      "tail_encoder_span_degrees": 24.697265625
+    },
+    "pattern": "full-gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "4b8d9cf2209f81e88711780aa0a456a9ab13fa79b1d4312b78a572d0a701b1d5"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 19.89211877629695,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -40.078125,
+      "peak_degrees": 51.15234375,
+      "previous_target_rms_degrees": 18.89611314782782,
+      "rms_degrees": 19.667359119783463,
+      "saturated_fraction": 0.6004761904761905,
+      "tail_encoder_span_degrees": 29.1796875
+    },
+    "pattern": "full-gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "4b8d9cf2209f81e88711780aa0a456a9ab13fa79b1d4312b78a572d0a701b1d5"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 19.972724725798574,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -38.935546875,
+      "peak_degrees": 51.240234375,
+      "previous_target_rms_degrees": 19.31002536214924,
+      "rms_degrees": 19.69272056960963,
+      "saturated_fraction": 0.585952380952381,
+      "tail_encoder_span_degrees": 29.970703125
+    },
+    "pattern": "full-gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "4b8d9cf2209f81e88711780aa0a456a9ab13fa79b1d4312b78a572d0a701b1d5"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 20.332929743273368,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -42.451171875,
+      "peak_degrees": 52.03125,
+      "previous_target_rms_degrees": 18.832153591206584,
+      "rms_degrees": 20.333905548483525,
+      "saturated_fraction": 0.6076190476190476,
+      "tail_encoder_span_degrees": 28.388671875
+    },
+    "pattern": "full-gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "4b8d9cf2209f81e88711780aa0a456a9ab13fa79b1d4312b78a572d0a701b1d5"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 19.864722757590158,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -39.990234375,
+      "peak_degrees": 51.15234375,
+      "previous_target_rms_degrees": 18.865513708544217,
+      "rms_degrees": 19.638992402992727,
+      "saturated_fraction": 0.5857142857142857,
+      "tail_encoder_span_degrees": 28.828125
+    },
+    "pattern": "full-gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "4b8d9cf2209f81e88711780aa0a456a9ab13fa79b1d4312b78a572d0a701b1d5"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 19.62109446161469,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 11,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -38.759765625,
+      "peak_degrees": 50.712890625,
+      "previous_target_rms_degrees": 18.950409213600164,
+      "rms_degrees": 19.34050541810334,
+      "saturated_fraction": 0.5742857142857143,
+      "tail_encoder_span_degrees": 29.1796875
+    },
+    "pattern": "full-gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "4b8d9cf2209f81e88711780aa0a456a9ab13fa79b1d4312b78a572d0a701b1d5"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.8564390935488125,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.703125,
+      "peak_degrees": 2.724609375,
+      "previous_target_rms_degrees": 0.5764969100595209,
+      "rms_degrees": 0.8571626797155079,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 4.04296875
+    },
+    "pattern": "gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "dd72d3222548f3d9b27e89f5a1324fa98f0521f4c8824797590f681ba4e941e1"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.8762147020774668,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.263671875,
+      "peak_degrees": 2.724609375,
+      "previous_target_rms_degrees": 0.7467920634661851,
+      "rms_degrees": 0.8725889034314733,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.515625
+    },
+    "pattern": "gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "dd72d3222548f3d9b27e89f5a1324fa98f0521f4c8824797590f681ba4e941e1"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.9042240285751765,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 2.724609375,
+      "previous_target_rms_degrees": 0.83950172125923,
+      "rms_degrees": 0.8989470180318615,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.251953125
+    },
+    "pattern": "gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "dd72d3222548f3d9b27e89f5a1324fa98f0521f4c8824797590f681ba4e941e1"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.9374264490743135,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.263671875,
+      "peak_degrees": 2.900390625,
+      "previous_target_rms_degrees": 0.6848006326491689,
+      "rms_degrees": 0.9376111645867539,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.515625
+    },
+    "pattern": "gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "dd72d3222548f3d9b27e89f5a1324fa98f0521f4c8824797590f681ba4e941e1",
+    "timestep_rms_delta_degrees": 0.0009298724460213847,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.8851110752265647,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 2.724609375,
+      "previous_target_rms_degrees": 0.7607684233223578,
+      "rms_degrees": 0.8816141321222053,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.251953125
+    },
+    "pattern": "gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "dd72d3222548f3d9b27e89f5a1324fa98f0521f4c8824797590f681ba4e941e1",
+    "timestep_rms_delta_degrees": 0.00043070401460343355,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 0.8652793468536947,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 2.63671875,
+      "previous_target_rms_degrees": 0.8020218758991949,
+      "rms_degrees": 0.8606669832990043,
+      "saturated_fraction": 0.0,
+      "tail_encoder_span_degrees": 3.1640625
+    },
+    "pattern": "gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "dd72d3222548f3d9b27e89f5a1324fa98f0521f4c8824797590f681ba4e941e1",
+    "timestep_rms_delta_degrees": 0.0002865103627052168,
+    "timestep_tolerance_degrees": 0.1
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.0956053616612125,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.361328125,
+      "previous_target_rms_degrees": 0.5991569079301636,
+      "rms_degrees": 1.0966006596150173,
+      "saturated_fraction": 0.0025,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "pattern": "reversal",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "36aafd34b16bfc8f0a2617fd36866aa946946937c79331e68ac96d6555fadf24"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.284891191838555,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.185546875,
+      "previous_target_rms_degrees": 0.9916997596818133,
+      "rms_degrees": 1.2782761556693816,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "pattern": "reversal",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "36aafd34b16bfc8f0a2617fd36866aa946946937c79331e68ac96d6555fadf24"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.3955338025357165,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 1.248799057074233,
+      "rms_degrees": 1.3930646733895966,
+      "saturated_fraction": 0.000625,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "pattern": "reversal",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "36aafd34b16bfc8f0a2617fd36866aa946946937c79331e68ac96d6555fadf24"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.425282624041716,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 0.8564489314525877,
+      "rms_degrees": 1.4240451223532373,
+      "saturated_fraction": 0.0025,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "pattern": "reversal",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "36aafd34b16bfc8f0a2617fd36866aa946946937c79331e68ac96d6555fadf24"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.3789791758190186,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 1.0903132258090542,
+      "rms_degrees": 1.3778590042942427,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "pattern": "reversal",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "36aafd34b16bfc8f0a2617fd36866aa946946937c79331e68ac96d6555fadf24"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 1.364098096626242,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.009765625,
+      "previous_target_rms_degrees": 1.2172018635481383,
+      "rms_degrees": 1.3607054152269304,
+      "saturated_fraction": 0.00125,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "pattern": "reversal",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "36aafd34b16bfc8f0a2617fd36866aa946946937c79331e68ac96d6555fadf24"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 14.469777689034421,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 24.873046875,
+      "peak_degrees": 42.451171875,
+      "previous_target_rms_degrees": 13.0623039496853,
+      "rms_degrees": 14.470276382191493,
+      "saturated_fraction": 0.44285714285714284,
+      "tail_encoder_span_degrees": 34.013671875
+    },
+    "pattern": "full-gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "6385af5059dc648a97976300d44f190f66341e76117aeeaa522fcfb5996dd08b"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 13.799449818339122,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 23.115234375,
+      "peak_degrees": 40.693359375,
+      "previous_target_rms_degrees": 13.022009777582756,
+      "rms_degrees": 13.746562176250416,
+      "saturated_fraction": 0.37714285714285717,
+      "tail_encoder_span_degrees": 33.486328125
+    },
+    "pattern": "full-gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "6385af5059dc648a97976300d44f190f66341e76117aeeaa522fcfb5996dd08b"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 13.620461262304506,
+    "controller_family": "fixed-original",
+    "gains": {
+      "kd_q8": 0,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 22.060546875,
+      "peak_degrees": 40.517578125,
+      "previous_target_rms_degrees": 13.186123431966148,
+      "rms_degrees": 13.553102005896612,
+      "saturated_fraction": 0.34595238095238096,
+      "tail_encoder_span_degrees": 33.134765625
+    },
+    "pattern": "full-gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "6385af5059dc648a97976300d44f190f66341e76117aeeaa522fcfb5996dd08b"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 14.394945388034625,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 1024,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 25.576171875,
+      "peak_degrees": 41.66015625,
+      "previous_target_rms_degrees": 12.961683996329322,
+      "rms_degrees": 14.395606412920232,
+      "saturated_fraction": 0.37523809523809526,
+      "tail_encoder_span_degrees": 33.310546875
+    },
+    "pattern": "full-gait",
+    "rate_hz": 100,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "6385af5059dc648a97976300d44f190f66341e76117aeeaa522fcfb5996dd08b"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 13.71623060682513,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 2048,
+      "kp_q8": 4096,
+      "kv_q8": 2048,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 23.02734375,
+      "peak_degrees": 40.60546875,
+      "previous_target_rms_degrees": 12.934810003365817,
+      "rms_degrees": 13.662282344035196,
+      "saturated_fraction": 0.3466666666666667,
+      "tail_encoder_span_degrees": 32.783203125
+    },
+    "pattern": "full-gait",
+    "rate_hz": 200,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "6385af5059dc648a97976300d44f190f66341e76117aeeaa522fcfb5996dd08b"
+  },
+  {
+    "common_100hz_grid_rms_degrees": 13.398998781748604,
+    "controller_family": "period-compensated",
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "id": 12,
+    "metrics_at_control_rate": {
+      "final_error_degrees": 21.62109375,
+      "peak_degrees": 39.990234375,
+      "previous_target_rms_degrees": 12.96476372599826,
+      "rms_degrees": 13.330689849950254,
+      "saturated_fraction": 0.32357142857142857,
+      "tail_encoder_span_degrees": 32.51953125
+    },
+    "pattern": "full-gait",
+    "rate_hz": 400,
+    "sample_to_apply_assumption_s": 0.00125,
+    "simulation_only": true,
+    "source_blake3": "6385af5059dc648a97976300d44f190f66341e76117aeeaa522fcfb5996dd08b"
+  }
+]

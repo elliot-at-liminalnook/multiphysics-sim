@@ -1,0 +1,308 @@
+// Host trajectory/transport harness. Feedback-to-PWM arithmetic runs in FPGA RTL.
+fn run_fpga_bench(
+    bus: &mut Bus,
+    out: &std::path::Path,
+    ids: &[u8],
+    plan: &sim_runtime::controller_refinement::fpga::Plan,
+) -> Result<serde_json::Value, E> {
+    use sim_runtime::controller_refinement::fpga::{Frame, Observation, Recording};
+    plan.validate()?;
+    if ids != [4, 5, 6, 7, 8, 9, 10, 11, 12] {
+        return Err("All-nine stop scope required".into());
+    }
+    if blake3::hash(&fs::read(&plan.bitstream_path)?)
+        .to_hex()
+        .as_str()
+        != plan.bitstream_blake3
+    {
+        return Err("FPGA image identity changed".into());
+    }
+    // Save exact sources before motion; later workspace edits must not erase them.
+    fs::write(
+        out.join("host-source.rs.txt"),
+        include_bytes!("hx_fpga.rs.inc"),
+    )?;
+    fs::write(
+        out.join("transport-source.rs.txt"),
+        include_bytes!("characterize_hx_bridge.rs"),
+    )?;
+    fs::write(
+        out.join("controller-ir.rs.txt"),
+        include_bytes!("../../sim-domain-control/src/fixed_pd.rs"),
+    )?;
+    fs::write(
+        out.join("controller-rtl.v"),
+        sim_domain_control::fixed_pd::verilog(),
+    )?;
+    let mut r = Recording {
+        version: 1,
+        plan: plan.clone(),
+        home: [0; 9],
+        frames: vec![],
+        completed: false,
+        failure: None,
+        stop_verified: false,
+        stop_request_s: 0.,
+        stop_receipt_s: 0.,
+        transactions_origin_host_s: 0.,
+        initial: json!({}),
+        recovery: json!({}),
+        sources: std::collections::BTreeMap::from([
+            (
+                "host".into(),
+                blake3::hash(include_bytes!("hx_fpga.rs.inc"))
+                    .to_hex()
+                    .to_string(),
+            ),
+            (
+                "controller_ir".into(),
+                blake3::hash(include_bytes!("../../sim-domain-control/src/fixed_pd.rs"))
+                    .to_hex()
+                    .to_string(),
+            ),
+            (
+                "rtl".into(),
+                blake3::hash(sim_domain_control::fixed_pd::verilog().as_bytes())
+                    .to_hex()
+                    .to_string(),
+            ),
+            ("bitstream".into(), plan.bitstream_blake3.clone()),
+        ]),
+    };
+    let mut events = File::create(out.join("fpga-frames.jsonl"))?;
+    let mut origin = Instant::now();
+    let operation = (|| -> Result<(), E> {
+        supervisor(bus, servo_safety::Command::Stop)?;
+        let mut initial = serde_json::Map::new();
+        for &id in ids {
+            write_checked(bus, id, 0x2c, &[0, 0])?;
+            write_checked(bus, id, 0x28, &[0])?;
+            let t = feedback(bus, id)?;
+            check_feedback(&t, t.position_raw, 180, 58)?;
+            if t.speed_raw != 0
+                || t.current_raw >= 2000
+                || !(600..=3495).contains(&t.position_raw)
+                || bus.read(id, 0x21, 1)? != [2]
+            {
+                return Err(
+                    "FPGA preflight needs stationary healthy PWM-mode motors with travel clearance"
+                        .into(),
+                );
+            }
+            r.home[(id - 4) as usize] = t.position_raw;
+            initial.insert(id.to_string(), json!(t));
+        }
+        r.initial = json!(initial);
+        let mut previous = r.home;
+        for &id in &plan.ids {
+            feedback(bus, id)?;
+            supervisor(bus, servo_safety::Command::Arm(id))?.require_armed(id)?;
+        }
+        sync_pwm(bus, &plan.ids, 0, 10)?;
+        sync_torque_on(bus, &plan.ids)?;
+        for &id in &plan.ids {
+            let torque = bus.read(id, 0x28, 1)?;
+            r.initial[id.to_string()]["torque_enable_readback_before_motion"] = json!(torque);
+            if torque != [1] {
+                return Err(
+                    format!("ID {id}: torque enable not confirmed; no trajectory started").into(),
+                );
+            }
+        }
+        origin = Instant::now();
+        r.transactions_origin_host_s = bus.start.elapsed().as_secs_f64();
+        fs::write(
+            out.join("fpga-recording.json"),
+            serde_json::to_vec_pretty(&r)?,
+        )?;
+        for tick in 0..plan.targets.len() {
+            let scheduled = tick as f64 * plan.period_s;
+            while origin.elapsed().as_secs_f64() < scheduled {
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            if out.join("STOP").exists() {
+                return Err("Operator STOP".into());
+            }
+            if origin.elapsed().as_secs_f64() > scheduled + plan.period_s * 0.5 {
+                return Err("Missed FPGA host schedule; no catch-up bursts".into());
+            }
+            let mut observations = vec![];
+            let mask = plan.ids.iter().fold(0u16, |m, id| m | (1 << (*id - 4)));
+            let status = servo_safety::Status::decode(&bus.txn(
+                254,
+                0xa0,
+                &[5, mask as u8, (mask >> 8) as u8],
+                servo_safety::STATUS_WIDTH,
+            )?)?;
+            for &id in &plan.ids {
+                status.require_armed(id)?;
+            }
+            for &id in &plan.ids {
+                let request_s = origin.elapsed().as_secs_f64();
+                let t = feedback(bus, id)?;
+                let completion_s = origin.elapsed().as_secs_f64();
+                check_feedback(&t, r.home[(id - 4) as usize], 180, 58)?;
+                if t.current_raw >= 2000 {
+                    return Err("Raw current threshold".into());
+                }
+                observations.push(Observation {
+                    id,
+                    request_s,
+                    completion_s,
+                    telemetry: t,
+                });
+            }
+            let command_request_s = origin.elapsed().as_secs_f64();
+            let status = servo_safety::Status::decode(&bus.txn(
+                254,
+                0xa1,
+                &plan.parameters(tick, &r.home)?,
+                servo_safety::STATUS_WIDTH,
+            )?)?;
+            let command_receipt_s = origin.elapsed().as_secs_f64();
+            for &id in &plan.ids {
+                status.require_armed(id)?;
+            }
+            let mut pwm_readback = [0i16; 9];
+            let mut torque_readback = [0u8; 9];
+            let mut arithmetic_matches = true;
+            for o in &observations {
+                let i = (o.id - 4) as usize;
+                let bytes = bus.read(o.id, 0x28, 6)?;
+                torque_readback[i] = bytes[0];
+                let raw = u16::from_le_bytes([bytes[4], bytes[5]]);
+                pwm_readback[i] = (raw & 1023) as i16 * if raw & 1024 != 0 { -1 } else { 1 };
+                let delta = plan.targets[tick][i]
+                    - if tick == 0 {
+                        0
+                    } else {
+                        plan.targets[tick - 1][i]
+                    };
+                let expected = sim_domain_control::fixed_pd::step(
+                    plan.gains,
+                    (r.home[i] as i32 + plan.targets[tick][i] as i32) as u16,
+                    o.telemetry.position_raw,
+                    if tick == 0 {
+                        o.telemetry.position_raw
+                    } else {
+                        previous[i]
+                    },
+                    delta,
+                )?;
+                arithmetic_matches &= pwm_readback[i] == expected;
+                previous[i] = o.telemetry.position_raw;
+            }
+            let frame = Frame {
+                tick,
+                observations,
+                command_request_s,
+                command_receipt_s,
+                pwm_readback,
+                torque_readback: Some(torque_readback),
+                arithmetic_matches,
+            };
+            writeln!(events, "{}", serde_json::to_string(&frame)?)?;
+            events.flush()?;
+            r.frames.push(frame);
+            if plan
+                .ids
+                .iter()
+                .any(|id| torque_readback[(*id - 4) as usize] != 1)
+            {
+                return Err("Torque became disabled during the controller trial".into());
+            }
+            if !arithmetic_matches {
+                return Err(
+                    "FPGA applied PWM differs from shared Rust controller; retained failing frame"
+                        .into(),
+                );
+            }
+            if origin.elapsed().as_secs_f64() > scheduled + plan.period_s {
+                return Err("FPGA loop exceeded period including PWM readback".into());
+            }
+        }
+        Ok(())
+    })();
+    r.stop_request_s = origin.elapsed().as_secs_f64();
+    let stop = supervisor(bus, servo_safety::Command::Stop).map_err(|e| e.to_string());
+    r.stop_receipt_s = origin.elapsed().as_secs_f64();
+    let (final_ok, recovery) = verify_fpga_stop(bus, ids, stop.is_ok());
+    r.stop_verified = final_ok;
+    r.completed = operation.is_ok() && final_ok && r.frames.len() == plan.targets.len();
+    r.failure = operation
+        .err()
+        .map(|e| e.to_string())
+        .or_else(|| (!final_ok).then(|| "Stop not verified".into()));
+    r.recovery = json!(recovery);
+    fs::write(
+        out.join("fpga-recording.json"),
+        serde_json::to_vec_pretty(&r)?,
+    )?;
+    let scores = r.scores();
+    fs::write(out.join("scores.json"), serde_json::to_vec_pretty(&scores)?)?;
+    Ok(
+        json!({"completed":r.completed,"failure":r.failure,"stop_verified":r.stop_verified,"frames":r.frames.len(),"scores":scores}),
+    )
+}
+
+fn verify_fpga_stop(bus: &mut Bus, ids: &[u8], stop_ok: bool) -> (bool, serde_json::Value) {
+    let mut recovery = serde_json::Map::new();
+    let mut final_ok = stop_ok;
+    for &id in ids {
+        let result = (|| -> Result<(), E> {
+            write_checked(bus, id, 0x2c, &[0, 0])?;
+            write_checked(bus, id, 0x28, &[0])?;
+            Ok(())
+        })()
+        .map_err(|e| e.to_string());
+        final_ok &= result.is_ok();
+        recovery.insert(id.to_string(), json!({"stop_writes":result}));
+    }
+    let mut tails =
+        std::collections::BTreeMap::<u8, std::collections::VecDeque<(Instant, u16)>>::new();
+    let until = Instant::now() + Duration::from_secs(2);
+    while Instant::now() < until {
+        for &id in ids {
+            match feedback(bus, id) {
+                Ok(t) => {
+                    let h = tails.entry(id).or_default();
+                    h.push_back((Instant::now(), t.speed_raw));
+                    while h.len() > 32 {
+                        h.pop_front();
+                    }
+                }
+                Err(_) => {
+                    tails.remove(&id);
+                }
+            }
+        }
+        if ids.iter().all(|id| {
+            tails
+                .get(id)
+                .is_some_and(|t| stationary_history(t, bus.start))
+        }) {
+            break;
+        }
+    }
+    for &id in ids {
+        let result = (|| -> Result<serde_json::Value, E> {
+            let pwm = bus.read(id, 0x2c, 2)?;
+            let torque = bus.read(id, 0x28, 1)?;
+            let t = feedback(bus, id)?;
+            if pwm != [0, 0]
+                || torque != [0]
+                || t.speed_raw != 0
+                || !tails
+                    .get(&id)
+                    .is_some_and(|t| stationary_history(t, bus.start))
+            {
+                return Err("Final stationary PWM-zero/torque-off state not verified".into());
+            }
+            Ok(json!({"pwm":pwm,"torque":torque,"telemetry":t}))
+        })()
+        .map_err(|e| e.to_string());
+        final_ok &= result.is_ok();
+        recovery.get_mut(&id.to_string()).unwrap()["final_state"] = json!(result);
+    }
+    (final_ok, json!(recovery))
+}

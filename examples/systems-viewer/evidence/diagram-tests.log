@@ -1,0 +1,23 @@
+   Compiling sim-diagram v0.1.0 (/Users/elliot/physics-simulator/crates/sim-diagram)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.96s
+     Running unittests src/lib.rs (target/debug/deps/sim_diagram-17f905a8ab4ab1c6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/interaction.rs (target/debug/deps/interaction-a0041e641da232fa)
+
+running 3 tests
+test routing_retains_one_branched_connection_and_is_deterministic ... ok
+test actual_pointer_click_selects_a_component_without_changing_model ... ok
+test drag_updates_presentation_and_reroutes_the_same_terminals ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests sim_diagram
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

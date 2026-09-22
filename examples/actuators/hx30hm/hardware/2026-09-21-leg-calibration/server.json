@@ -1,0 +1,41 @@
+{
+  "serial": "/dev/cu.usbserial-20250303171",
+  "viewer": "/Users/elliot/physics-simulator/runs/interactive/realtime-force-storage-simd",
+  "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+  "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+  "roles": {
+    "1": "knee",
+    "2": "worm",
+    "3": "belt/hip"
+  },
+  "sweep_tuning": {
+    "period_s": 0.03,
+    "maximum_feedback_interval_s": 0.12,
+    "maximum_speed_counts_s": 500.0,
+    "maximum_acceleration_counts_s2": 100.0,
+    "response_rate_per_s": 2.0,
+    "following_error_counts": 64.0,
+    "velocity_filter_s": 0.08,
+    "stalled_at_limit_s": 3.0,
+    "pid": {
+      "kp": 5.215189175235227,
+      "ki": 0.8,
+      "kd": 0.04,
+      "integral_limit": 0.125,
+      "duty_limit": 1.0
+    },
+    "provenance": "Provisional commissioning controller parameters, not fitted to this loaded printed leg. Uses measured encoder feedback; no inferred joint gearing. Operator-selected PWM ceiling, independent FPGA deadlines, and taught encoder limits remain authoritative. Adaptive fallback braking and crawl speed are provisional commissioning assumptions, not measured mechanical guarantees; direction-specific stop trials are logged and cannot expand hard limits.",
+    "adaptive": {
+      "bootstrap_speed_rad_s": 0.007669903939428206,
+      "fallback_deceleration_rad_s2": 0.015339807878856412,
+      "reaction_time_s": 0.25,
+      "position_uncertainty_rad": 0.0030679615757712823,
+      "boundary_margin_rad": 0.018407769454627694,
+      "learning_inset_fraction": 0.25,
+      "minimum_stops": 3,
+      "braking_safety_factor": 0.5,
+      "trial_speed_growth": 1.25,
+      "maximum_evidence_age_s": 120
+    }
+  }
+}

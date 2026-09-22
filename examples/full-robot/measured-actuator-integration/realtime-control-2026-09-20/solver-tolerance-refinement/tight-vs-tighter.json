@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "results": [
+    {
+      "candidate": "solver-tolerance-refinement/tight-6400/candidate",
+      "reference": "solver-tolerance-refinement/tighter-6400/candidate",
+      "max_error": {
+        "motor_angle_rad": 1.2355538814290412e-9,
+        "link_position_m": 3.54018492237474e-10,
+        "current_a": 8.838654919074429e-9,
+        "contact_force_n": 0.0000044227150389940895
+      },
+      "contactIdentities": true,
+      "cadence": true,
+      "passes_existing_physical_gates": true,
+      "candidate_wall_s": 31.897566286,
+      "reference_wall_s": 33.54236411
+    }
+  ],
+  "scope": "Three-second fixed-input numerical sensitivity. The referenced recipes and protocols specify timestep and solver-tolerance changes; model, seed and motor/controller clocks must match. Neither reference is assumed exact. These comparisons do not establish convergence or hardware accuracy. Performance gates are separate."
+}

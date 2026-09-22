@@ -1,0 +1,40 @@
+{
+  "rows": [
+    {
+      "id": 10,
+      "baseline_replay_rms_deg": 2.888220204293005,
+      "baseline_replay_pass": false,
+      "baseline_closed-loop_rms_deg": 1.793270310118184,
+      "baseline_closed-loop_pass": false,
+      "candidate_replay_rms_deg": 2.5008551088847124,
+      "candidate_replay_pass": false,
+      "candidate_closed-loop_rms_deg": 1.9139180031554994,
+      "candidate_closed-loop_pass": false
+    },
+    {
+      "id": 11,
+      "baseline_replay_rms_deg": 2.636542962890234,
+      "baseline_replay_pass": false,
+      "baseline_closed-loop_rms_deg": 1.7226562500000002,
+      "baseline_closed-loop_pass": false,
+      "candidate_replay_rms_deg": 2.565472994911868,
+      "candidate_replay_pass": false,
+      "candidate_closed-loop_rms_deg": 1.7618946740390662,
+      "candidate_closed-loop_pass": false
+    },
+    {
+      "id": 12,
+      "baseline_replay_rms_deg": 2.558447634186598,
+      "baseline_replay_pass": false,
+      "baseline_closed-loop_rms_deg": 1.6542127063151144,
+      "baseline_closed-loop_pass": false,
+      "candidate_replay_rms_deg": 1.6365602548557259,
+      "candidate_replay_pass": false,
+      "candidate_closed-loop_rms_deg": 1.0850132363913958,
+      "candidate_closed-loop_pass": false
+    }
+  ],
+  "rms_gate_deg": 0.263671875,
+  "decision": "No model promotion. All gates fail; own-feedback prediction regresses on IDs 10 and 11.",
+  "assumptions": "Shared Rust controller and motor plant; each axis simulated independently with mean recorded voltage, not identified coupled battery/wiring dynamics. Fits use raw-PWM replay training and the existing bounded parameter family. Several fit coordinates reach or approach their bounds; do not interpret them as identified physical constants."
+}

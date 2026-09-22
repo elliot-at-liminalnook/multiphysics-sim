@@ -1,0 +1,19 @@
+iverilog -g2005 -s experiment_scheduler_tb -o impl/experiment_scheduler_tb.vvp tb/experiment_scheduler_tb.v src/experiment_scheduler.v
+vvp impl/experiment_scheduler_tb.vvp
+PASS 1: three exact-period frames, nine fresh reads and nine torque/PWM audits each
+PASS 2: sparse IDs 4 and 12 only
+PASS 3: arbitration stall reaches fixed deadline without catch-up
+PASS 4: unchanged sample sequence cannot drive controller
+PASS 5: evidence overflow aborts
+PASS 6: torque/PWM mismatch stops before another frame
+PASS 7: unrelated audit reply cannot acknowledge a motor
+PASS 8: independent supervisor trip preempts sequencer
+PASS 9: lost host lease/arm cannot be renewed by sequencer
+PASS 10: cancellation withdraws pending packets
+PASS 11: missing trajectory row cannot extend deadline
+PASS 12: invalid cadence/count/duration/freshness rejected
+PASS 13: start collision stops; held start cannot restart
+PASS 14: revoked trajectory validity stops
+PASS 15: event held through backpressure; next request withheld until consumption
+PASS: experiment scheduler contract
+tb/experiment_scheduler_tb.v:158: $finish called at 44960000 (1ps)

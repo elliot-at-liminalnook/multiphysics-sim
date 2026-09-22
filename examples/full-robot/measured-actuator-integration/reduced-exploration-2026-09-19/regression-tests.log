@@ -1,0 +1,73 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 2m 53s
+     Running tests/embedded_motor.rs (target/release/deps/embedded_motor-f7912e527a049922)
+
+running 16 tests
+test newton_failure_audit_is_time_scoped_and_does_not_change_the_failure ... ok
+test explicit_auxiliary_rates_resolve_small_changes_at_nonzero_angle ... ok
+test controller_sample_reuse_requires_cross_step_reuse_and_preserves_legacy_serialization ... ok
+test registered_event_modes_initialize_and_release_without_velocity_impulses ... ok
+test unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation ... ok
+test accepted_contact_trace_uses_original_endpoint_forces_without_changing_motion ... ok
+test cross_step_workspace_rolls_back_and_refreshes_for_timestep_changes ... ok
+test registered_servo_preserves_quantization_deadband_delay_and_saturation ... ok
+test driver_binding_and_boundary_validation_are_explicit ... ok
+test fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency ... ok
+test motor_bindings_boundaries_and_combined_failure_fail_closed ... ok
+test scheduled_servo_drives_motor_and_failed_interval_does_not_advance_controller ... ok
+test servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run ... ok
+test eventful_motor_locates_engagement_and_matches_piecewise_linear_motion ... ok
+test driver_feedback_matches_independent_loaded_motor_with_series_drop_and_foldback ... ok
+test registered_motor_and_mechanics_match_independent_linear_circuit ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/experiment.rs (target/release/deps/experiment-c390a7ac9f014688)
+
+running 6 tests
+test task_termination_and_controller_failure_never_produce_eligible_speed ... ok
+test changed_context_commands_and_saved_state_are_rejected_without_new_motion ... ok
+test json_integer_and_float_spelling_preserves_context_and_checkpoint_replay ... ok
+test journal_rejects_duplicates_terminal_replacement_and_progress_regression ... ok
+test interruption_json_checkpoint_and_bounded_replay_match_uninterrupted_state ... ok
+test bayesian_proposals_reconstruct_from_the_same_completed_journal ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.51s
+
+     Running tests/exploration.rs (target/release/deps/exploration-13806d0a0bd18d66)
+
+running 5 tests
+test refuses_implicit_reductions_misaligned_clocks_and_bad_references ... ok
+test profile_preserves_every_physical_and_controller_field ... ok
+test recipe_runtime_actions_and_observation_tampering_are_rejected ... ok
+test production_capture_qualification_and_journal_use_one_runtime ... ok
+test failed_incomplete_slow_or_inaccurate_captures_never_unlock_search ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.28s
+
+     Running tests/fidelity.rs (target/release/deps/fidelity-a153d4e70de8b7f7)
+
+running 7 tests
+test solver_failure_can_commit_physics_beyond_the_last_observed_task_endpoint ... ok
+test known_position_and_contact_errors_are_measured_by_name_in_si_units ... ok
+test failed_and_incomplete_prefixes_never_gain_an_eligible_score ... ok
+test identical_capture_is_exact_and_preserves_outcome_cost_and_resolved_context ... ok
+test rejects_unmatched_actions_frames_metadata_and_unexplained_terminal_events ... ok
+test context_covers_world_actuators_initial_conditions_seed_policy_and_missing_values ... ok
+test timestep_comparison_requires_exact_declared_edits_and_matches_actions_in_seconds ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
+

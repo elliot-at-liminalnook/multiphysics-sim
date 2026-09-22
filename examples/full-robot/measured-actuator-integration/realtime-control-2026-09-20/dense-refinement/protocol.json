@@ -1,0 +1,17 @@
+{
+  "scope": "Replay first 0.2 s at every 1.25 ms FPGA application boundary. Compare shared physical frame fields with source captures before interpreting timestep sensitivity. Not a new fidelity gate or exact continuous-time reference.",
+  "sources": {
+    "be6400": {
+      "source": "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/warm-probes/shared-body.native.json",
+      "sha256": "33e9e6e80c1cdc75b77cca4b74d02f1d4f407bd8edff743a975df1706cb19b48"
+    },
+    "be12800": {
+      "source": "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/reference-12800hz/reference.native.json",
+      "sha256": "290905bb4ba96a2c7dd37a3e891dae8c34fb7f882a5fd300e6c438bea4f8d550"
+    },
+    "sdirk6400": {
+      "source": "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/stage-proposal-reuse/step-1/candidate.native.json",
+      "sha256": "58cf9b59995984f128648bd79219be034f73fcff9bd698e044ae9487068642f2"
+    }
+  }
+}

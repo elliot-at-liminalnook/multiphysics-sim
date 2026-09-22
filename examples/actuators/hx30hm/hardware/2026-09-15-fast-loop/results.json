@@ -1,0 +1,348 @@
+{
+  "captures": [
+    {
+      "capture": "motion-10ms-cap100-01",
+      "period_ms": 10.0,
+      "drive_cap_percent": 10.0,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 200,
+      "motors": {
+        "10": {
+          "minimum_request_gap_ms": 9.99822,
+          "median_request_gap_ms": 10.000000000000009,
+          "maximum_request_gap_ms": 10.000000000000009,
+          "position_changed_pairs": 180,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 43,
+          "tracking_rms_deg": 0.4644086067289303,
+          "tracking_peak_deg": 0.87890625,
+          "tracking_pass": false
+        },
+        "11": {
+          "minimum_request_gap_ms": 9.98969999999999,
+          "median_request_gap_ms": 10.00116000000001,
+          "maximum_request_gap_ms": 10.004939999999962,
+          "position_changed_pairs": 185,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.9,
+          "max_temperature_c": 41,
+          "tracking_rms_deg": 0.31333963130816994,
+          "tracking_peak_deg": 0.615234375,
+          "tracking_pass": false
+        },
+        "12": {
+          "minimum_request_gap_ms": 9.66408,
+          "median_request_gap_ms": 10.00090000000009,
+          "maximum_request_gap_ms": 10.01112000000004,
+          "position_changed_pairs": 186,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 40,
+          "tracking_rms_deg": 0.34226600060075546,
+          "tracking_peak_deg": 0.703125,
+          "tracking_pass": false
+        }
+      },
+      "maximum_frame_transaction_window_ms": 3.64208
+    },
+    {
+      "capture": "motion-10ms-cap100-02",
+      "period_ms": 10.0,
+      "drive_cap_percent": 10.0,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 200,
+      "motors": {
+        "10": {
+          "minimum_request_gap_ms": 9.99822,
+          "median_request_gap_ms": 10.000000000000009,
+          "maximum_request_gap_ms": 10.000000000000009,
+          "position_changed_pairs": 177,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 43,
+          "tracking_rms_deg": 0.5098035074824957,
+          "tracking_peak_deg": 0.87890625,
+          "tracking_pass": false
+        },
+        "11": {
+          "minimum_request_gap_ms": 9.990159999999971,
+          "median_request_gap_ms": 10.001079999999995,
+          "maximum_request_gap_ms": 10.004899999999983,
+          "position_changed_pairs": 184,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.9,
+          "max_temperature_c": 41,
+          "tracking_rms_deg": 0.35369834603658196,
+          "tracking_peak_deg": 0.703125,
+          "tracking_pass": false
+        },
+        "12": {
+          "minimum_request_gap_ms": 9.66632,
+          "median_request_gap_ms": 10.000540000000058,
+          "maximum_request_gap_ms": 10.011820000000004,
+          "position_changed_pairs": 187,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 40,
+          "tracking_rms_deg": 0.31744215190473396,
+          "tracking_peak_deg": 0.615234375,
+          "tracking_pass": false
+        }
+      },
+      "maximum_frame_transaction_window_ms": 3.64516
+    },
+    {
+      "capture": "motion-10ms-cap100-03",
+      "period_ms": 10.0,
+      "drive_cap_percent": 10.0,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 200,
+      "motors": {
+        "10": {
+          "minimum_request_gap_ms": 9.99822,
+          "median_request_gap_ms": 10.000000000000009,
+          "maximum_request_gap_ms": 10.000000000000009,
+          "position_changed_pairs": 175,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 44,
+          "tracking_rms_deg": 0.4286864671262296,
+          "tracking_peak_deg": 0.87890625,
+          "tracking_pass": false
+        },
+        "11": {
+          "minimum_request_gap_ms": 9.989519999999974,
+          "median_request_gap_ms": 10.001399999999993,
+          "maximum_request_gap_ms": 10.005159999999957,
+          "position_changed_pairs": 183,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.9,
+          "max_temperature_c": 41,
+          "tracking_rms_deg": 0.4205913086955023,
+          "tracking_peak_deg": 0.791015625,
+          "tracking_pass": false
+        },
+        "12": {
+          "minimum_request_gap_ms": 9.6637,
+          "median_request_gap_ms": 10.000539999999948,
+          "maximum_request_gap_ms": 10.008379999999983,
+          "position_changed_pairs": 186,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 40,
+          "tracking_rms_deg": 0.2983754038494367,
+          "tracking_peak_deg": 0.615234375,
+          "tracking_pass": false
+        }
+      },
+      "maximum_frame_transaction_window_ms": 3.64444
+    },
+    {
+      "capture": "motion-10ms-cap50-01",
+      "period_ms": 10.0,
+      "drive_cap_percent": 5.0,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 200,
+      "motors": {
+        "10": {
+          "minimum_request_gap_ms": 9.99822,
+          "median_request_gap_ms": 10.000000000000009,
+          "maximum_request_gap_ms": 10.000000000000009,
+          "position_changed_pairs": 148,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.8,
+          "max_temperature_c": 43,
+          "tracking_rms_deg": 1.4344493173532398,
+          "tracking_peak_deg": 2.548828125,
+          "tracking_pass": false
+        },
+        "11": {
+          "minimum_request_gap_ms": 9.987620000000001,
+          "median_request_gap_ms": 10.00134000000008,
+          "maximum_request_gap_ms": 10.004899999999983,
+          "position_changed_pairs": 164,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.9,
+          "max_temperature_c": 41,
+          "tracking_rms_deg": 1.3644011087055785,
+          "tracking_peak_deg": 2.373046875,
+          "tracking_pass": false
+        },
+        "12": {
+          "minimum_request_gap_ms": 9.6621,
+          "median_request_gap_ms": 10.000239999999994,
+          "maximum_request_gap_ms": 10.010520000000023,
+          "position_changed_pairs": 174,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 40,
+          "tracking_rms_deg": 1.2667993818994043,
+          "tracking_peak_deg": 2.28515625,
+          "tracking_pass": false
+        }
+      },
+      "maximum_frame_transaction_window_ms": 3.6407
+    },
+    {
+      "capture": "motion-40ms-cap100-01",
+      "period_ms": 40.0,
+      "drive_cap_percent": 10.0,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "motors": {
+        "10": {
+          "minimum_request_gap_ms": 39.99822,
+          "median_request_gap_ms": 40.000000000000036,
+          "maximum_request_gap_ms": 40.000000000000036,
+          "position_changed_pairs": 48,
+          "total_adjacent_pairs": 49,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 43,
+          "tracking_rms_deg": 0.6728083315665693,
+          "tracking_peak_deg": 1.494140625,
+          "tracking_pass": false
+        },
+        "11": {
+          "minimum_request_gap_ms": 39.99019999999997,
+          "median_request_gap_ms": 40.00134,
+          "maximum_request_gap_ms": 40.005320000000125,
+          "position_changed_pairs": 43,
+          "total_adjacent_pairs": 49,
+          "voltage_min_v": 11.9,
+          "max_temperature_c": 41,
+          "tracking_rms_deg": 0.6625111129116592,
+          "tracking_peak_deg": 1.142578125,
+          "tracking_pass": false
+        },
+        "12": {
+          "minimum_request_gap_ms": 39.663819999999994,
+          "median_request_gap_ms": 40.00028000000001,
+          "maximum_request_gap_ms": 40.008780000000186,
+          "position_changed_pairs": 47,
+          "total_adjacent_pairs": 49,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 40,
+          "tracking_rms_deg": 0.5415089695575948,
+          "tracking_peak_deg": 1.142578125,
+          "tracking_pass": false
+        }
+      },
+      "maximum_frame_transaction_window_ms": 3.64494
+    },
+    {
+      "capture": "motion-40ms-cap100-02",
+      "period_ms": 40.0,
+      "drive_cap_percent": 10.0,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 50,
+      "motors": {
+        "10": {
+          "minimum_request_gap_ms": 39.99822,
+          "median_request_gap_ms": 40.000000000000036,
+          "maximum_request_gap_ms": 40.000000000000036,
+          "position_changed_pairs": 48,
+          "total_adjacent_pairs": 49,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 43,
+          "tracking_rms_deg": 0.6384030397500543,
+          "tracking_peak_deg": 1.318359375,
+          "tracking_pass": false
+        },
+        "11": {
+          "minimum_request_gap_ms": 39.98863999999999,
+          "median_request_gap_ms": 40.00029999999999,
+          "maximum_request_gap_ms": 40.007020000000004,
+          "position_changed_pairs": 48,
+          "total_adjacent_pairs": 49,
+          "voltage_min_v": 11.9,
+          "max_temperature_c": 41,
+          "tracking_rms_deg": 0.7022455437458734,
+          "tracking_peak_deg": 1.494140625,
+          "tracking_pass": false
+        },
+        "12": {
+          "minimum_request_gap_ms": 39.66534,
+          "median_request_gap_ms": 40.00038,
+          "maximum_request_gap_ms": 40.009299999999996,
+          "position_changed_pairs": 47,
+          "total_adjacent_pairs": 49,
+          "voltage_min_v": 11.700000000000001,
+          "max_temperature_c": 40,
+          "tracking_rms_deg": 0.578611427014434,
+          "tracking_peak_deg": 1.318359375,
+          "tracking_pass": false
+        }
+      },
+      "maximum_frame_transaction_window_ms": 3.64408
+    },
+    {
+      "capture": "zero-10ms-01",
+      "period_ms": 10.0,
+      "drive_cap_percent": 0.0,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 200,
+      "motors": {
+        "10": {
+          "minimum_request_gap_ms": 9.99822,
+          "median_request_gap_ms": 10.000000000000009,
+          "maximum_request_gap_ms": 10.000000000000009,
+          "position_changed_pairs": 0,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.8,
+          "max_temperature_c": 43
+        },
+        "11": {
+          "minimum_request_gap_ms": 9.989399999999815,
+          "median_request_gap_ms": 10.000980000000048,
+          "maximum_request_gap_ms": 10.004980000000053,
+          "position_changed_pairs": 0,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.9,
+          "max_temperature_c": 41
+        },
+        "12": {
+          "minimum_request_gap_ms": 9.6652,
+          "median_request_gap_ms": 10.000740000000008,
+          "maximum_request_gap_ms": 10.008019999999895,
+          "position_changed_pairs": 0,
+          "total_adjacent_pairs": 199,
+          "voltage_min_v": 11.8,
+          "max_temperature_c": 40
+        }
+      },
+      "maximum_frame_transaction_window_ms": 3.6419
+    }
+  ],
+  "comparison": [
+    {
+      "id": 10,
+      "40ms_pooled_rms_deg": 0.6558313396703073,
+      "10ms_pooled_rms_deg": 0.46880950550037886,
+      "rms_reduction_percent": 28.51675771760863
+    },
+    {
+      "id": 11,
+      "40ms_pooled_rms_deg": 0.6826674807116503,
+      "10ms_pooled_rms_deg": 0.36523111107331696,
+      "rms_reduction_percent": 46.49941276057563
+    },
+    {
+      "id": 12,
+      "40ms_pooled_rms_deg": 0.5603673561080301,
+      "10ms_pooled_rms_deg": 0.3198663348939465,
+      "rms_reduction_percent": 42.918456721757856
+    }
+  ],
+  "total_frames": 1100,
+  "all_completed": true,
+  "all_stop_verified": true,
+  "interpretation": "Matched two-second physical trajectories at 10 percent drive; fixed discrete gains unchanged. Feedforward depends on per-tick target delta, so this compares configurations rather than isolating cadence. Reply timestamps do not bound internal sensor age; encoder change fractions are not sensor freshness certification. No model fit or promotion."
+}

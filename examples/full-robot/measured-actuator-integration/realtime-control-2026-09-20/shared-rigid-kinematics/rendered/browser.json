@@ -1,0 +1,496 @@
+{
+  "errors": [],
+  "readiness": "Experimental fitted motors · 400 Hz motor loop · 200 Hz native measurement profile · 50 Hz motion policy. Faster detailed solver measured 0.08× real time on this Mac; still below real time. Calibration remains provisional.",
+  "status": "",
+  "actuation": "Motor feedback/PWM: 400 Hz · native measurement profile: 200 Hz · motion policy: 50 Hz. 3 CAD-bound motor parameter sets; provisional calibration.",
+  "performance": "0.09× live",
+  "speed": "Actual net travel: 0.028 m/s · 0.006 m since reset. Mean over elapsed simulation time.",
+  "probe": {
+    "actions": [
+      {
+        "id": 2,
+        "wall_ms": 2532.8799999952316,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "id": 3,
+        "wall_ms": 2796.4600000083447,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0.1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "id": 4,
+        "wall_ms": 3024.2249999940395,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0.1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3
+        ]
+      },
+      {
+        "id": 5,
+        "wall_ms": 3224.3499999940395,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0.05,
+          0,
+          0.15,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4
+        ]
+      },
+      {
+        "id": 6,
+        "wall_ms": 3444.4099999964237,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0.05,
+          0,
+          -0.15,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5
+        ]
+      },
+      {
+        "id": 7,
+        "wall_ms": 3621.175000011921,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0.05,
+          0,
+          -0.15,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6
+        ]
+      },
+      {
+        "id": 8,
+        "wall_ms": 3804.610000014305,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          -0.05,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          7
+        ]
+      },
+      {
+        "id": 9,
+        "wall_ms": 4045.610000014305,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          -0.05,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8
+        ]
+      },
+      {
+        "id": 10,
+        "wall_ms": 4287.384999990463,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          9
+        ]
+      },
+      {
+        "id": 11,
+        "wall_ms": 4523.324999988079,
+        "action": [
+          -0.45661383205104644,
+          0.25,
+          0.25,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          10
+        ]
+      }
+    ],
+    "frames": [
+      {
+        "id": 1,
+        "wall_ms": 2172.5550000071526,
+        "time_s": 0,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9974622004597852,
+          "displacement_xy_m": [
+            0,
+            0
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.29412144525991857,
+          "net_distance_m": 0,
+          "net_speed_m_s": 0,
+          "progress_reward_m": 0
+        },
+        "completed_steps": 0
+      },
+      {
+        "id": 2,
+        "wall_ms": 2795.7599999904633,
+        "time_s": 0.02,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9974490752239109,
+          "displacement_xy_m": [
+            -0.000020726835631819374,
+            0.000008136045895099087
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.29287555178081215,
+          "net_distance_m": 0.00002226649855984582,
+          "net_speed_m_s": 3.7110830933076367e-7,
+          "progress_reward_m": 0.00002226649855984582
+        },
+        "completed_steps": 128
+      },
+      {
+        "id": 3,
+        "wall_ms": 3023.75,
+        "time_s": 0.04,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9974225095132936,
+          "displacement_xy_m": [
+            -0.00008790574649435168,
+            0.000040271264937198625
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.292197291967594,
+          "net_distance_m": 0.00009669123562335557,
+          "net_speed_m_s": 0.0000016115205937225928,
+          "progress_reward_m": 0.00007442473706350974
+        },
+        "completed_steps": 256
+      },
+      {
+        "id": 4,
+        "wall_ms": 3223.7899999916553,
+        "time_s": 0.06,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9973945377649959,
+          "displacement_xy_m": [
+            -0.0000894020663251005,
+            0.00008308284580239161
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.2930925924457132,
+          "net_distance_m": 0.00012204707587575236,
+          "net_speed_m_s": 0.000002034117931262539,
+          "progress_reward_m": 0.000025355840252396785
+        },
+        "completed_steps": 384
+      },
+      {
+        "id": 5,
+        "wall_ms": 3427.330000013113,
+        "time_s": 0.08,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.997335519813647,
+          "displacement_xy_m": [
+            0.0001548058601611238,
+            0.00017532238141901302
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.2936973720561541,
+          "net_distance_m": 0.00023388627956051484,
+          "net_speed_m_s": 0.000003898104659341914,
+          "progress_reward_m": 0.00011183920368476248
+        },
+        "completed_steps": 512
+      },
+      {
+        "id": 6,
+        "wall_ms": 3620.735000014305,
+        "time_s": 0.1,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.997252609920506,
+          "displacement_xy_m": [
+            0.000722925356681281,
+            0.0005124603621600721
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.29382192876618834,
+          "net_distance_m": 0.0008861358214844886,
+          "net_speed_m_s": 0.00001476893035807481,
+          "progress_reward_m": 0.0006522495419239738
+        },
+        "completed_steps": 640
+      },
+      {
+        "id": 7,
+        "wall_ms": 3804.1800000071526,
+        "time_s": 0.12,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9971363639084886,
+          "displacement_xy_m": [
+            0.0016994295399508016,
+            0.0011533763731207333
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.29433706071037435,
+          "net_distance_m": 0.002053859250126583,
+          "net_speed_m_s": 0.000034230987502109716,
+          "progress_reward_m": 0.0011677234286420943
+        },
+        "completed_steps": 768
+      },
+      {
+        "id": 8,
+        "wall_ms": 4045.219999998808,
+        "time_s": 0.14,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9971673824772431,
+          "displacement_xy_m": [
+            0.0029767391679801566,
+            0.0020872088919600754
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.29523286210035615,
+          "net_distance_m": 0.00363557657502416,
+          "net_speed_m_s": 0.00006059294291706933,
+          "progress_reward_m": 0.001581717324897577
+        },
+        "completed_steps": 896
+      },
+      {
+        "id": 9,
+        "wall_ms": 4286.965000003576,
+        "time_s": 0.16,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9972302766627946,
+          "displacement_xy_m": [
+            0.004057639596544135,
+            0.0029627697356156626
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.295575213405585,
+          "net_distance_m": 0.005024185864567807,
+          "net_speed_m_s": 0.00008373643107613011,
+          "progress_reward_m": 0.0013886092895436467
+        },
+        "completed_steps": 1024
+      },
+      {
+        "id": 10,
+        "wall_ms": 4522.835000008345,
+        "time_s": 0.18,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.9972644121418671,
+          "displacement_xy_m": [
+            0.004547988921358451,
+            0.00344967634060582
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.295294057000095,
+          "net_distance_m": 0.005708280834343626,
+          "net_speed_m_s": 0.0000951380139057271,
+          "progress_reward_m": 0.0006840949697758192
+        },
+        "completed_steps": 1152
+      },
+      {
+        "id": 11,
+        "wall_ms": 4740.675000011921,
+        "time_s": 0.2,
+        "error": null,
+        "done": false,
+        "speed": {
+          "body_floor_contact": false,
+          "body_up_z": 0.997281979622232,
+          "displacement_xy_m": [
+            0.004316933465678782,
+            0.0034482544479863125
+          ],
+          "fallen": false,
+          "hull_floor_clearance_m": 0.2951660666682986,
+          "net_distance_m": 0.005525067717698564,
+          "net_speed_m_s": 0.00009208446196164272,
+          "progress_reward_m": -0.0001832131166450623
+        },
+        "completed_steps": 1280
+      }
+    ],
+    "errors": []
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "mode": "stop",
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/capture.json",
+      "sha256": "3ab7345b82d8abe81fee2b551f4b32633fa283338018790ca98afa0f3f63d79e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/capture.json",
+      "sha256": "6a19cde42209d13f8d51c321f97b3b22c8362e8a1047ed982ed323e09defb9f2"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/validation-protocol.json",
+      "sha256": "534cd4168b53b92687d47b4cbd130e0e6e858a9dd429e792689f8a49fb56e450"
+    }
+  ],
+  "metrics": {
+    "maximum_final_second_drift_m": 0.0001925981496482756,
+    "maximum_displacement_after_stop_request_m": 0.039485338436733346
+  },
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "horizon": true,
+    "drift": true,
+    "stop_command": true
+  },
+  "pass": true
+}

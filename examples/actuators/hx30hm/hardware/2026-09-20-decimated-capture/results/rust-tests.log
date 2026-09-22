@@ -1,0 +1,64 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 16.57s
+     Running tests/fpga_batch.rs (target/debug/deps/fpga_batch-2d2ce21111719e0a)
+
+running 5 tests
+test truncation_checksums_and_reference_corruption_are_rejected ... ok
+test overflow_is_decodable_as_evidence_but_cannot_pass_audit ... ok
+test batch_identity_cannot_be_hidden_by_expansion ... ok
+test actual_rtl_batches_pass_existing_controller_and_timing_auditor ... ok
+test faster_cadences_and_faults_use_the_same_auditor_without_relaxing_acquisition ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/fpga_events.rs (target/debug/deps/fpga_events-5310d23b16729b37)
+
+running 8 tests
+test sparse_selection_keeps_canonical_unselected_pwm ... ok
+test source_identity_sequence_timing_and_arithmetic_are_enforced ... ok
+test malformed_frames_and_terminal_metadata_fail_without_panics ... ok
+test rtl_bytes_cover_all_nine_axes_and_full_width_clocks ... ok
+test device_adapter_preserves_timing_but_cannot_certify_physical_stopping ... ok
+test failed_audit_retains_raw_readback_and_cannot_be_promoted ... ok
+test full_bridge_uart_records_reproduce_shared_full_scale_controller_and_faults ... ok
+test interrupted_prefixes_remain_unscored_and_missing_middle_is_rejected ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/fpga_sampled_capture.rs (target/debug/deps/fpga_sampled_capture-9d9b43b91bbf547a)
+
+running 3 tests
+test sampled_review_rejects_unexpected_gaps_stride_and_fake_audit_success ... ok
+test real_uart_retains_200hz_frames_while_all_400hz_transactions_continue ... ok
+test faults_and_odd_cycle_evidence_are_preserved ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fpga_upload.rs (target/debug/deps/fpga_upload-35e505ae7fd214f4)
+
+running 10 tests
+test full_drive_requires_device_clock_and_40ms_period ... ok
+test sparse_plan_zeroes_unused_axes_but_preserves_original_evidence ... ok
+test fast_device_period_is_limited_to_three_motors ... ok
+test source_or_packet_changes_invalidate_saved_upload ... ok
+test uploads_are_bounded_nonexecuting_and_agree_with_existing_controller_packets ... ok
+test start_binds_sealed_plan_identity_cadence_and_compiled_gains ... ok
+test rejects_unrepresentable_timing_invalid_homes_and_firmware_identity ... ok
+test actual_rtl_uart_receipts_decode_and_confirm_each_upload_stage ... ok
+test upload_transfer_checks_capability_and_stops_on_rejection_or_cancellation ... ok
+test rtl_fixture_is_reproducible_from_its_frozen_rust_source ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

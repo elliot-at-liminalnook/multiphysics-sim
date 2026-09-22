@@ -1,0 +1,25 @@
+{
+  "recorded_utc": "2026-09-13T18:26:29.476821+00:00",
+  "passing_tests_including_doctest": 77,
+  "native_workspace_all_targets": "passed",
+  "wasm_selected_packages": "passed",
+  "numerical_baselines": {
+    "cases": 5,
+    "abs_relative_threshold": 1e-10,
+    "result": "passed"
+  },
+  "capture_on_off": "deterministic and seeded noisy trajectories and residual-call counts identical",
+  "supported_flow_capture": "retained accepted backward Euler and implicit midpoint solver stages",
+  "pending": [
+    "inspection subscription/frame adapter",
+    "live viewer transport and values",
+    "observation overhead acceptance",
+    "other full-plan requirements"
+  ],
+  "logs": {
+    "accepted-flow-final-tests.log": "4f064bd1475e5bc33b09318d23a5ff3619b69da1ebcb300e8052f8800f2f2c60",
+    "accepted-flow-final-workspace-check.log": "6602f6afbb519402dac7a752e8d7e1cc3fa418eaf5fa047d849f6d88928a1038",
+    "accepted-flow-final-wasm-check.log": "9800a6971e13dd7f34ca7b17a3c090ca719e1629b588e093191cf262b0852475",
+    "accepted-flow-baseline-check.log": "ed16a884ae636348aeef4fb087674800eb0cd6e693321ce09ca0260f87c298a8"
+  }
+}

@@ -1,0 +1,20 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+error[E0308]: mismatched types
+   --> crates/sim-solve/src/profile.rs:107:5
+    |
+106 |   pub fn all() -> [&'static Bucket; 50] {
+    |                   --------------------- expected `[&'static Bucket; 50]` because of return type
+107 | /     [&STEP, &IMPLICIT, &NEWTON, &ITERATIONS, &FRESH, &STALE_FULL_REFRESH, &RESIDUAL, &JACOBIAN, &ANALYTIC_SLOTS, &RATE_SLOTS, &FD...
+108 | |         &EMBEDDED_VELOCITY_PREDICTOR, &EMBEDDED_PREDICTOR_USED, &EMBEDDED_PREDICTOR_FALLBACK, &EMBEDDED_MAPPING, &EMBEDDED_HISTOR...
+109 | |         &EMBEDDED_CLOSURE_JACOBIAN, &EMBEDDED_CLOSURE_FACTOR, &EMBEDDED_CLOSURE_SVD,
+110 | |         &EMBEDDED_INERTIA, &EMBEDDED_PROJECT_INERTIA, &EMBEDDED_FORCE_EVALUATION,
+111 | |         &CONTACT_GEOMETRY, &CONTACT_FORCES, &CONTACT_TOPOLOGY, &CONTACT_SAMPLES, &CONTACT_PAIRS,
+112 | |         &POLICY_REFERENCE, &POLICY_OBSERVATIONS, &POLICY_BODY_FEEDBACK, &POLICY_POINT_FEEDBACK, &POLICY_SCRIPT,
+113 | |         &BROYDEN_UPDATE, &BROYDEN_REFRESH, &BROYDEN_CAP]
+    | |________________________________________________________^ expected an array with a size of 50, found one with a size of 51
+    |
+    = note: expected array `[&'static Bucket; 50]`
+               found array `[&Bucket; 51]`
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `sim-solve` (lib test) due to 1 previous error

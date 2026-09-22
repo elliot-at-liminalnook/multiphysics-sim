@@ -1,0 +1,350 @@
+{
+  "scope": "Read-only configuration preflight against the starting detailed spec. Does not resolve or run a sensitivity experiment; runtime acceptance remains pending.",
+  "binding_count": 12,
+  "family": "hx30hm-provisional",
+  "per_unit_deviations_present": false,
+  "source": "baseline-preparation-final/spec.json",
+  "cases": [
+    {
+      "name": "nominal-15s",
+      "changes": []
+    },
+    {
+      "name": "lower_supply-15s",
+      "changes": [
+        {
+          "target": "config",
+          "pointer": "/motors/servos/0/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/1/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/2/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/3/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/4/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/5/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/6/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/7/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/8/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/9/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/10/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/11/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        }
+      ]
+    },
+    {
+      "name": "higher_supply-15s",
+      "changes": [
+        {
+          "target": "config",
+          "pointer": "/motors/servos/0/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/1/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/2/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/3/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/4/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/5/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/6/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/7/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/8/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/9/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/10/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/11/supply_voltage_v",
+          "before": 11.1,
+          "after": 12,
+          "unit": "V"
+        }
+      ]
+    },
+    {
+      "name": "motor_variation-15s",
+      "changes": [
+        {
+          "target": "robot",
+          "pointer": "/actuator_profiles/families/hx30hm-provisional/motor/resistance/value",
+          "before": 3.6999999999999997,
+          "after": 4.07,
+          "unit": "Ω"
+        },
+        {
+          "target": "robot",
+          "pointer": "/actuator_profiles/families/hx30hm-provisional/motor/torque_constant/value",
+          "before": 0.009734075474443412,
+          "after": 0.00924737170072124,
+          "unit": "N·m/A"
+        },
+        {
+          "target": "robot",
+          "pointer": "/actuator_profiles/families/hx30hm-provisional/motor/back_emf_constant/value",
+          "before": 0.009734075474443412,
+          "after": 0.00924737170072124,
+          "unit": "V·s/rad"
+        }
+      ]
+    },
+    {
+      "name": "lower_floor_friction-15s",
+      "changes": [
+        {
+          "target": "robot",
+          "pointer": "/world/floor_friction",
+          "before": 0.31724137931034485,
+          "after": 0.23793103448275865,
+          "unit": "1"
+        }
+      ]
+    },
+    {
+      "name": "combined-15s",
+      "changes": [
+        {
+          "target": "config",
+          "pointer": "/motors/servos/0/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/1/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/2/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/3/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/4/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/5/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/6/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/7/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/8/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/9/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/10/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/servos/11/supply_voltage_v",
+          "before": 11.1,
+          "after": 10.5,
+          "unit": "V"
+        },
+        {
+          "target": "robot",
+          "pointer": "/actuator_profiles/families/hx30hm-provisional/motor/resistance/value",
+          "before": 3.6999999999999997,
+          "after": 4.07,
+          "unit": "Ω"
+        },
+        {
+          "target": "robot",
+          "pointer": "/actuator_profiles/families/hx30hm-provisional/motor/torque_constant/value",
+          "before": 0.009734075474443412,
+          "after": 0.00924737170072124,
+          "unit": "N·m/A"
+        },
+        {
+          "target": "robot",
+          "pointer": "/actuator_profiles/families/hx30hm-provisional/motor/back_emf_constant/value",
+          "before": 0.009734075474443412,
+          "after": 0.00924737170072124,
+          "unit": "V·s/rad"
+        },
+        {
+          "target": "robot",
+          "pointer": "/world/floor_friction",
+          "before": 0.31724137931034485,
+          "after": 0.23793103448275865,
+          "unit": "1"
+        }
+      ]
+    },
+    {
+      "name": "nominal-30s",
+      "changes": []
+    }
+  ]
+}

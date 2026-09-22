@@ -1,0 +1,11 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+    Finished `test` profile [optimized + debuginfo] target(s) in 16.72s
+     Running tests/reference_governor.rs (target/debug/deps/reference_governor-6def7a9737239e75)
+
+running 2 tests
+test invalid_update_rolls_back_and_unknown_parameters_fail ... ok
+test same_kernel_bounded_reversal_and_replay ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

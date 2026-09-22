@@ -1,0 +1,9 @@
+import fs from'node:fs';import path from'node:path';import assert from'node:assert/strict';
+const here=import.meta.dirname,root=path.resolve(here,'../../../..'),read=p=>JSON.parse(fs.readFileSync(p));
+for(const p of ['warm-probes/candidate.qualification.json','sequence-warm-probes/candidate.qualification.json'])assert(read(here+'/'+p).accepted_as_solver_optimization,p);
+const measured=read(here+'/warm-probes/candidate.wasm.json'),ratio=3/measured.wall_s;assert(!measured.error&&measured.frames.at(-1).time_s===3);
+const config=read(here+'/../browser-control-400hz/config.json');Object.assign(config.implicit,{reuse_auxiliary_solve:true,linearized_jacobian_probes:true,reuse_exact_probe_base:true});
+fs.writeFileSync(here+'/browser.config.json',JSON.stringify(config));
+const file=root+'/web/viewer/presets.json',catalog=read(file),base=catalog.presets.find(p=>p.id==='robot-measured-400hz');assert(base);
+const preset={...base,id:'robot-measured-400hz-reuse',label:'Quadruped · Detailed motors · Faster simulation',config:path.relative(root,here+'/browser.config.json'),description:'Live WASD with the same bench-fit motor candidates and 400 Hz integer controller. W/S request forward/reverse; A/D request arcing turns. Release keys or Stop motion to request a controlled stop.',readiness:`Experimental fitted motors · 400 Hz motor loop · 200 Hz native measurement profile · 50 Hz motion policy. Faster detailed solver measured ${ratio.toFixed(2)}× real time on this Mac; still below real time. Calibration remains provisional.`,evidence:base.evidence+' Solver reuse is qualified against the retained detailed trajectory for short forward and forward/turn/reverse/stop cases. Model parameters and physics timestep are unchanged; sustained gait and realtime operation remain unqualified.'};
+catalog.presets=catalog.presets.filter(p=>p.id!==preset.id);catalog.presets.unshift(preset);fs.writeFileSync(file,JSON.stringify(catalog,null,2)+'\n');console.log(preset.id,ratio);

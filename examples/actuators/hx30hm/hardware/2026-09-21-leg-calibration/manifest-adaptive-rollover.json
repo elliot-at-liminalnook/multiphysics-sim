@@ -1,0 +1,31 @@
+{
+  "time": "2026-09-22T01:16:21.917942+00:00",
+  "status": "FPGA v5 loaded into SRAM and read back disarmed; web UI loaded; powered motor checks and physical learning validation pending",
+  "fpga_profile": 5,
+  "hardware_loaded": true,
+  "nonzero_hardware_tested": false,
+  "host_binary_sha256": "5e5fcb0ce6c5b68b3c65ce3cce239a84c6373d97a514f304d22bac3113e429b1",
+  "source_sha256": {
+    "crates/sim-domain-control/src/adaptive_braking.rs": "b0b65aafcfa0064e06415cd9138dece03b95cb45ba9afe88341b7f981883b524",
+    "crates/sim-domain-control/src/lib.rs": "f7d98d6127286aa89fd9af1730a04a3aad27d278f75fb1003984b13972ee36e7",
+    "crates/sim-domain-control/src/motion_primitives.rs": "5f7a347164fa63aff9fe6b478bd16e332e481a45f70bd9b4936810df64c225bf",
+    "crates/sim-domain-control/examples/adaptive_braking.rs": "7cfbfc2829c9e4289744b81f788fa3d184c7646b6ce515c88236139fcf4f610d",
+    "crates/sim-runtime/src/acquisition/calibration.rs": "b8680f1fc4460c713afb7bbeccf4c39412e438f8fc8c3d7ad17c362950eff337",
+    "crates/sim-runtime/src/acquisition/calibration_serial.rs": "72c75e0f03a00fad7237a5da75aaa9b6dfab5387b537152ca96a7637d906c4bc",
+    "crates/sim-runtime/src/acquisition/calibration_sweep.rs": "b696d5a81e3d6fbee64a15a5fe5a15fecaa6fc1ac5469ec02219b4cc745cc024",
+    "crates/sim-runtime/src/acquisition/servo_bus.rs": "647ba6489993849bdcdc72ed40c94d0b1cde69d0e4cc9a7954b8f93c25bc8a44",
+    "crates/sim-runtime/examples/serve_actuator_calibration.rs": "f0ac08546035b9905282d5b74e66ea124aec798e286de51211a9942f3f7033eb",
+    "web/viewer/calibration-ui.mjs": "59b5b000b6fbeecd07259fb33332f8194abe11772104804e0d0959825f6b709a",
+    "web/viewer/actuator-motion-view.mjs": "0b6c9b14884eb691efd3e8d02b4e09c3ae168116d9d6bf51b2f93a2c02b53410",
+    "web/tests/calibration-ui.mjs": "8c03e0ee275553e7e8d674e16be2ad8d1f3d64a7153785191f52992fc02263c8",
+    "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json": "321b6e4dd0b15d9d2d1cd5a8df720678c765e4334a460f6aebd4cbf9754381eb",
+    "fpga/src/hx_safety.v": "2024746bc27a74d96c359a054ca72f9aa3d462c30e53e7100485c01b962747d0",
+    "fpga/src/bridge.v": "2f1892ff12e47a69f4a2af16bc925cf2b92bac9a28c09de037bbda03e138c706",
+    "fpga/tb/hx_calibration_tb.v": "42b5d5fa7a24883427ba362539da550acfa521786fad5eb6ee28635e7e081aa7",
+    "fpga/tb/bridge_reply_gap_tb.v": "242861e8d44a059ba8480a9307c2332739bc4b89e265c5999ae65c51464136e4",
+    "fpga/Makefile": "7cd7bf6ac0fc88adc5eac66ca10a3f9bec912ff150989c3b12e2aaa568afb672",
+    "fpga/impl/bridge_calibration.fs": "e3bba71113275b403960e7d7deafd0245f9173d8a14980998a3d48784d938576"
+  },
+  "current_calibration_sha256": "fc96455da8c3c3ee6ac50880dd7bdfecd7f3a8c21fcf92bec5d3bd22788eb121",
+  "deployment_receipt": "deployment-adaptive-rollover.json"
+}

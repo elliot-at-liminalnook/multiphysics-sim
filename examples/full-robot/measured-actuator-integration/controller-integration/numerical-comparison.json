@@ -1,0 +1,127 @@
+{
+  "scope": "50 ms integration diagnostic, not a gait-speed or calibration acceptance result",
+  "seed": 2301,
+  "window_s": [
+    0.0,
+    0.05
+  ],
+  "nominal_completed_steps": 320,
+  "refined_completed_steps": 640,
+  "budget_deg": 0.0264,
+  "motors": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "rms_angle_difference_deg": 0.00018029172269404365,
+      "peak_angle_difference_deg": 0.0003063722906019687,
+      "peak_speed_difference_rad_s": 0.0011988214786060772,
+      "peak_current_difference_a": 0.00019277124632477438,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "rms_angle_difference_deg": 0.00038974140521785665,
+      "peak_angle_difference_deg": 0.0008213825636774612,
+      "peak_speed_difference_rad_s": 0.0028360633846497493,
+      "peak_current_difference_a": 0.0008876336377790506,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "rms_angle_difference_deg": 0.0014921813134871926,
+      "peak_angle_difference_deg": 0.0038798031705896585,
+      "peak_speed_difference_rad_s": 0.008598217875799063,
+      "peak_current_difference_a": 0.004091895580934868,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "rms_angle_difference_deg": 0.00024465404099790843,
+      "peak_angle_difference_deg": 0.0005229612455524561,
+      "peak_speed_difference_rad_s": 0.001282072060639905,
+      "peak_current_difference_a": 0.0007070510929897134,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "rms_angle_difference_deg": 0.0005941864574869969,
+      "peak_angle_difference_deg": 0.0009720330971601201,
+      "peak_speed_difference_rad_s": 0.003887493167044384,
+      "peak_current_difference_a": 0.0004049978745603311,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "rms_angle_difference_deg": 0.0020918897977436827,
+      "peak_angle_difference_deg": 0.0046030090912159505,
+      "peak_speed_difference_rad_s": 0.015646569442276603,
+      "peak_current_difference_a": 0.005305111310288324,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "rms_angle_difference_deg": 0.00025546682719683976,
+      "peak_angle_difference_deg": 0.000483638516356263,
+      "peak_speed_difference_rad_s": 0.0014289467850126959,
+      "peak_current_difference_a": 0.00022689520425223098,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "rms_angle_difference_deg": 0.0005838364365367013,
+      "peak_angle_difference_deg": 0.001222798988030031,
+      "peak_speed_difference_rad_s": 0.004191613318662694,
+      "peak_current_difference_a": 0.0015666733479264283,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "rms_angle_difference_deg": 0.0013084736075031933,
+      "peak_angle_difference_deg": 0.0033370145102263587,
+      "peak_speed_difference_rad_s": 0.005493959008007421,
+      "peak_current_difference_a": 0.004046398601584789,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "rms_angle_difference_deg": 7.718709793719815e-05,
+      "peak_angle_difference_deg": 0.0001585165751094114,
+      "peak_speed_difference_rad_s": 0.000771996043380966,
+      "peak_current_difference_a": 0.000715662841343695,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "rms_angle_difference_deg": 0.0006896260219818967,
+      "peak_angle_difference_deg": 0.0012769409711475348,
+      "peak_speed_difference_rad_s": 0.004344252773551788,
+      "peak_current_difference_a": 0.001600509072539974,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "rms_angle_difference_deg": 0.001168624553275735,
+      "peak_angle_difference_deg": 0.0029404318242747087,
+      "peak_speed_difference_rad_s": 0.010059118670070102,
+      "peak_current_difference_a": 0.004063967365776633,
+      "peak_duty_difference": 0.0,
+      "angle_budget_pass": true
+    }
+  ],
+  "all_angle_budgets_pass": true,
+  "limitations": [
+    "Two timestep levels over 50 ms, not a convergence order proof or full gait qualification.",
+    "Voltage and temperature are imposed; shared battery and wiring effects remain absent.",
+    "Current, torque and power are uncalibrated predictions; no accepted motor fit."
+  ]
+}

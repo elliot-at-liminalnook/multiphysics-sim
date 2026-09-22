@@ -1,0 +1,30 @@
+{
+  "name": "jacobian-use-limit/uses-256/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": false,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.174938426,
+  "baseline_wall_s": 22.389637358,
+  "candidate_wall_s": 22.275917091,
+  "speedup": 1.0051050767757592,
+  "simulation_per_wall": 0.134674589950421,
+  "max_error": {
+    "motor_angle_rad": 8.539302820409489e-9,
+    "link_position_m": 3.495386488353655e-9,
+    "current_a": 6.158237619846574e-8,
+    "contact_force_n": 0.00003072034169375498
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

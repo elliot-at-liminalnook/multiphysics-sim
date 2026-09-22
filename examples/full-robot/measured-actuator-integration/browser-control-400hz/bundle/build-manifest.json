@@ -1,0 +1,37 @@
+{
+  "inputs": {
+    "examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json": "225ad4f0d0bbe065f8d19e150530d031e5f1514153211c9cfee288b522efc3da",
+    "examples/full-robot/measured-actuator-integration/browser-control-400hz/config.json": "a9a38cb64d489fffae1552ecbd2b38daa649337b8b9b0fb5c8e5e16844983829",
+    "examples/full-robot/measured-actuator-integration/browser-control-400hz/task.json": "2f39cf7deae53be5a0c6f86255fd22719d6ec2b8a26fe83ca6aca2ea9c275cd4",
+    "web/leaderboard/package.mjs": "a7a3ea0253b9df9a5fadee4657654fbe6bf1c2bb3e44f0db036fee813703dbd4",
+    "web/viewer/leaderboard.js": "3ed0f63771eaa9d06a52f028d03714fad04e1e7c7953d4022680b3af0928374b",
+    "web/viewer/leaderboard-model.mjs": "cc84b2eaec7618b9100d3f995e16111980a98b5fefa0bd1fc5a8a43263188d76",
+    "web/viewer/leaderboard.css": "358d83728bd0d39e1e73ce4b0f7ea85685a2565c9ba08eee3d72cc120049aae7",
+    "web/viewer/video-export.js": "72053261254e4266bda6511a3b9774a0240dfffaf4230d9311fdbef4289c15ad",
+    "web/build-viewer.mjs": "a2f1cc74c5e7e427d398b494081da08e4876cf8f0b1c8f1d1296f3463dab50cb",
+    "web/serve-viewer.mjs": "f4df0ed6bb95ecb6d26c4d0aaa934f30e66f18cc02d67e98c8006b70f8195cb5",
+    "web/viewer/presets.json": "39c28bdd7a6292cd83c66919807e95f0f618f3a0a524a8e16e37a98eac161e56",
+    "web/viewer/viewer.js": "a8102dd983dd8d97d6ba691f82248cdaaf582eca6bffcd1b3ac6d431bc5d3a46",
+    "web/viewer/motion-commands.mjs": "2841869ed3fe30bae918512d97eff4195f4c60dfd4c20f532b78d1a7b8acf1d4",
+    "web/viewer/hardware-sync.mjs": "c4eeebba5d0141c472539bc88fc5f8a13d7299ee57fe66be4852cfe1f27aea23",
+    "web/viewer/viewer.css": "b64c47f3c1b91c3a93eb53f6234aef5c372af1dcd6be82558cb5e92a8e8e8269",
+    "web/viewer/index.html": "1eff96e7279577a43f655955a4340e7a895b91b3a4e8645ece373ea75aff1145",
+    "web/worker.js": "42a6a0e8110d6b1eaf4236f37a64fe6aadcecf2dfa8a7a66715a4bdda463a339",
+    "web/worker-message.mjs": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+    "web/package-lock.json": "ef2213ccff1ae7ae056f819e43e7757ae643d5d78a0c9fb2d65ee3f27bff9a05",
+    "runs/wasm-builds/scalar-release/target/wasm32-unknown-unknown/release/sim_web.wasm": "cbf6090aae2adbdf49eb543ff6021f268e74678b46f912a5ba15021af1f058fa"
+  },
+  "presets": [
+    {
+      "id": "robot-measured-400hz",
+      "mode": "embedded",
+      "path": "data/robot-measured-400hz.json"
+    }
+  ],
+  "wasm": {
+    "path": "runs/wasm-builds/scalar-release/target/wasm32-unknown-unknown/release/sim_web.wasm",
+    "sha256": "cbf6090aae2adbdf49eb543ff6021f268e74678b46f912a5ba15021af1f058fa",
+    "browser_module_sha256": "6784aeb2eb7bed3b3a1307bddc3868d40d492073bd90ffb3b18d8e21e1771d42",
+    "bindgen_version": "wasm-bindgen 0.2.127"
+  }
+}

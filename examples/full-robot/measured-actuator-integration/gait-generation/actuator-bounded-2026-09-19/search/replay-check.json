@@ -1,0 +1,25 @@
+{
+  "mode": "replay",
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/search/baseline-capture.json",
+      "sha256": "fe29189e4ef3e68ecc8135ffd557e3e8a10eb39ef87e24eba066b2ef1005e15e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/search/baseline-replay.json",
+      "sha256": "be38e171c40d51bb90e7bbdc885621df91dea1fe5ea1e8c43bd85602fcb19c48"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/validation-protocol.json",
+      "sha256": "145229c751987a91be80bf8a02775db09833eddb4b2b82be4d019a467259f64e"
+    }
+  ],
+  "metrics": {},
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "frames_exact": true,
+    "transitions_exact": true
+  },
+  "pass": true
+}

@@ -1,0 +1,94 @@
+{
+  "mode": "reverse",
+  "simulation_only": true,
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/capture.json",
+      "sha256": "e2335ce62945fc258d95f5e96d502934c0ae44525bbf61e9e95b9f63f14ab534"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/capture.json",
+      "sha256": "d4f71dee84344307f2865df2a2484b532118f97e1cec07b88bf95b8615c19117"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/qualification-protocol.json",
+      "sha256": "0f7c9143e4db595cca4b156482bdbc873588cc5ab8585bc63a9e07851e7285cb"
+    }
+  ],
+  "metrics": {
+    "signed_reverse_travel_m": 0.34516233001260566,
+    "minimum_body_up_z": 0.9994373505996436,
+    "motors": [
+      {
+        "coordinate": "joint.-Y | Hip servo output",
+        "rms_degrees": 0.7394567763730232,
+        "peak_degrees": 1.9700485849908806
+      },
+      {
+        "coordinate": "joint.-Y | Worm servo output",
+        "rms_degrees": 0.6915656952481946,
+        "peak_degrees": 1.3134399314847562
+      },
+      {
+        "coordinate": "joint.-Y | Foot servo output",
+        "rms_degrees": 0.88414008413761,
+        "peak_degrees": 2.6866070554570873
+      },
+      {
+        "coordinate": "joint.+X | Hip servo output",
+        "rms_degrees": 0.556506264654869,
+        "peak_degrees": 1.2117204371685186
+      },
+      {
+        "coordinate": "joint.+X | Worm servo output",
+        "rms_degrees": 0.5678728322585832,
+        "peak_degrees": 1.1699555168127875
+      },
+      {
+        "coordinate": "joint.+X | Foot servo output",
+        "rms_degrees": 1.4057438128063502,
+        "peak_degrees": 3.5305679380018327
+      },
+      {
+        "coordinate": "joint.+Y | Hip servo output",
+        "rms_degrees": 0.5614870734227619,
+        "peak_degrees": 1.4033935960491049
+      },
+      {
+        "coordinate": "joint.+Y | Worm servo output",
+        "rms_degrees": 0.4695651445404575,
+        "peak_degrees": 1.6469155767061279
+      },
+      {
+        "coordinate": "joint.+Y | Foot servo output",
+        "rms_degrees": 1.606802668973743,
+        "peak_degrees": 3.567669629905027
+      },
+      {
+        "coordinate": "joint.-X | Hip servo output",
+        "rms_degrees": 0.5433262815978945,
+        "peak_degrees": 1.5230929740716919
+      },
+      {
+        "coordinate": "joint.-X | Worm servo output",
+        "rms_degrees": 0.5733273446499513,
+        "peak_degrees": 1.5352027834827233
+      },
+      {
+        "coordinate": "joint.-X | Foot servo output",
+        "rms_degrees": 1.031351210225258,
+        "peak_degrees": 3.06711859497479
+      }
+    ]
+  },
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "horizon": true,
+    "forward_then_reverse_command": true,
+    "reverse_travel": true,
+    "upright": true,
+    "tracking": true
+  },
+  "pass": true
+}

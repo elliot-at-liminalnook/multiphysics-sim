@@ -1,0 +1,8 @@
+iverilog -g2005 -s experiment_transactions_tb -P experiment_transactions_tb.LOGGED=1 -o impl/experiment_recording_tb.vvp tb/experiment_transactions_tb.v src/experiment_transactions.v src/experiment_scheduler.v src/experiment_packet.v src/experiment_reply.v src/experiment_event_stream.v src/experiment_event_packet.v
+vvp impl/experiment_recording_tb.vvp
+PASS experiment transactions: 9 groups, complete/sparse nine-axis runs, raw/supervisor association, final-wire PWM audits, frozen gains, backpressure/cancel
+tb/experiment_transactions_tb.v:199: $finish called at 197580000 (1ps)
+iverilog -g2005 -s experiment_transactions_tb -o impl/experiment_transactions_tb.vvp tb/experiment_transactions_tb.v src/experiment_transactions.v src/experiment_scheduler.v src/experiment_packet.v src/experiment_reply.v
+vvp impl/experiment_transactions_tb.vvp
+PASS experiment transactions: 9 groups, complete/sparse nine-axis runs, raw/supervisor association, final-wire PWM audits, frozen gains, backpressure/cancel
+tb/experiment_transactions_tb.v:199: $finish called at 187930000 (1ps)

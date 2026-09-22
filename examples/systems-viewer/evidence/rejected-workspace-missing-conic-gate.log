@@ -1,0 +1,160 @@
+    Blocking waiting for file lock on build directory
+    Checking foldhash v0.2.0
+    Checking sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling ahash v0.8.12
+   Compiling constant_time_eq v0.4.2
+   Compiling arrayvec v0.7.8
+   Compiling cpufeatures v0.3.1
+    Checking sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+    Checking objc2 v0.6.4
+    Checking zune-core v0.5.3
+    Checking quick-error v2.0.1
+    Checking weezl v0.1.12
+    Checking fax v0.2.7
+    Checking read-fonts v0.41.0
+    Checking objc2-app-kit v0.2.2
+   Compiling winit v0.30.13
+    Checking hashbrown v0.17.1
+   Compiling blake3 v1.8.7
+    Checking zune-jpeg v0.5.15
+    Checking sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+    Checking sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+    Checking sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+    Checking sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+    Checking sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+    Checking sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+    Checking sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+    Checking indexmap v2.14.1
+    Checking sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+    Checking sim-domain-fluid v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-fluid)
+    Checking sim-domain-magnetic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-magnetic)
+    Checking sim-domain-line v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-line)
+    Checking sim-domain-granular v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-granular)
+    Checking sim-domain-acoustic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-acoustic)
+    Checking sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+    Checking sim-domain-chemical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-chemical)
+    Checking sim-domain-radiative v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-radiative)
+    Checking sim-domain-hydraulic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-hydraulic)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+    Checking petgraph v0.8.3
+    Checking petgraph v0.7.1
+    Checking block2 v0.6.2
+    Checking objc2-core-foundation v0.3.2
+    Checking naga v24.0.0
+    Checking tiff v0.11.3
+    Checking accesskit_macos v0.19.0
+    Checking sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+    Checking rhai v1.26.0
+    Checking dispatch2 v0.3.1
+    Checking skrifa v0.44.0
+    Checking bevy_reflect v0.16.1
+    Checking ctrlc v3.5.2
+    Checking image v0.25.10
+    Checking sysinfo v0.34.2
+    Checking objc2-io-kit v0.3.2
+    Checking swash v0.2.10
+    Checking gilrs-core v0.6.8
+    Checking accesskit_winit v0.25.0
+    Checking cosmic-text v0.13.2
+    Checking sim-geometry v0.1.0 (/Users/elliot/physics-simulator/crates/sim-geometry)
+    Checking gilrs v0.11.2
+    Checking wgpu-hal v24.0.4
+    Checking naga_oil v0.17.1
+    Checking wgpu-core v24.0.5
+    Checking sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+    Checking bevy_ecs v0.16.1
+    Checking bevy_math v0.16.1
+    Checking sim-dynamics v0.1.0 (/Users/elliot/physics-simulator/crates/sim-dynamics)
+    Checking wgpu v24.0.5
+    Checking sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Checking sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Checking bevy_color v0.16.2
+    Checking bevy_app v0.16.1
+    Checking bevy_asset v0.16.1
+    Checking bevy_input v0.16.1
+    Checking bevy_log v0.16.1
+    Checking bevy_time v0.16.1
+    Checking bevy_a11y v0.16.1
+    Checking bevy_state v0.16.1
+    Checking bevy_transform v0.16.1
+    Checking bevy_diagnostic v0.16.1
+    Checking bevy_window v0.16.1
+    Checking bevy_gilrs v0.16.1
+    Checking bevy_image v0.16.1
+    Checking bevy_audio v0.16.1
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Checking sim-phenomena v0.1.0 (/Users/elliot/physics-simulator/crates/sim-phenomena)
+    Checking bevy_input_focus v0.16.1
+    Checking bevy_mesh v0.16.1
+warning: `sim-runtime` (lib test) generated 1 warning (1 duplicate)
+    Checking bevy_winit v0.16.1
+error[E0432]: unresolved import `sim_solve::conic`
+  --> crates/sim-runtime/examples/prepare_contact_order_neighbors.rs:11:16
+   |
+11 | use sim_solve::conic::ConicConfig;
+   |                ^^^^^ could not find `conic` in `sim_solve`
+   |
+note: found an item that was configured out
+  --> crates/sim-solve/src/lib.rs:17:9
+   |
+16 | #[cfg(feature = "conic")]
+   |       ----------------- the item is gated behind the `conic` feature
+17 | pub mod conic;
+   |         ^^^^^
+
+error[E0599]: no method named `adjacent_contact_order_neighbors` found for struct `JointContactMotion` in the current scope
+  --> crates/sim-runtime/examples/prepare_contact_order_neighbors.rs:42:10
+   |
+40 |       let neighbors = source
+   |  _____________________-
+41 | |         .candidate
+42 | |         .adjacent_contact_order_neighbors(&source.variables, source.robot.direction_world)?;
+   | |         -^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `JointContactMotion`
+   | |_________|
+   |
+
+error[E0599]: no method named `uniform_force_bounds` found for struct `JointContactMotion` in the current scope
+  --> crates/sim-runtime/examples/prepare_contact_order_neighbors.rs:54:35
+   |
+54 |     let bounds = source.candidate.uniform_force_bounds(&source.variables)?;
+   |                                   ^^^^^^^^^^^^^^^^^^^^ method not found in `JointContactMotion`
+
+error[E0599]: no method named `force_variables_for_bounds` found for struct `JointContactMotion` in the current scope
+  --> crates/sim-runtime/examples/prepare_contact_order_neighbors.rs:66:38
+   |
+66 |     refined_variables.extend(refined.force_variables_for_bounds(&bounds)?);
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `JointContactMotion`
+
+error[E0599]: no method named `optimize_joint_forces_conic` found for struct `ContactPlanner<'a>` in the current scope
+   --> crates/sim-runtime/examples/prepare_contact_order_neighbors.rs:85:21
+    |
+ 85 |             planner.optimize_joint_forces_conic(&candidate, &variables, &ConicConfig::default());
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: there is a method `optimize_joint` with a similar name, but with different arguments
+   --> crates/sim-runtime/src/contact_planning/joint.rs:987:5
+    |
+987 | /     pub fn optimize_joint(
+988 | |         &self,
+989 | |         initial: &JointContactMotion,
+990 | |         variables: &[JointContactVariable],
+991 | |         search: &AugmentedLagrangianConfig,
+992 | |         progress: impl FnMut(&JointContactReport),
+993 | |     ) -> Result<JointContactOptimization, String> {
+    | |_________________________________________________^
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `sim-runtime` (example "prepare_contact_order_neighbors") due to 5 previous errors
+warning: build failed, waiting for other jobs to finish...

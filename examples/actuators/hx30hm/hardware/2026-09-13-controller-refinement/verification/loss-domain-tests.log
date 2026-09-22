@@ -1,0 +1,28 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.56s
+     Running tests/motor.rs (target/debug/deps/motor-d118a4c0f0278d28)
+
+running 5 tests
+test actuator_discovery_declares_units_defaults_and_rejects_invalid_values ... ok
+test backlash_opens_a_dead_zone ... ok
+test stall_torque_and_no_load_speed_match_the_spec ... ok
+test winding_heats_with_the_thermal_time_constant ... ok
+test battery_bridge_and_firmware_drive_a_motor ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests/motor_jacobian.rs (target/debug/deps/motor_jacobian-c176e21052f952e6)
+
+running 8 tests
+test exact_motor_partials_require_explicit_opt_in ... ok
+test zero_backlash_keeps_the_spring_derivative_at_zero_deflection ... ok
+test backlash_probe_crossing_reproduces_false_stiffness_but_local_derivative_is_zero ... ok
+test discontinuous_backlash_damping_can_leave_an_implicit_step_without_a_root ... ok
+test reciprocal_motor_accounts_for_heat_and_stored_energy_in_both_power_directions ... ok
+test narrow_loss_transition_preserves_default_equations_and_has_consistent_partials ... ok
+test all_motor_partials_match_independent_differences_in_smooth_modes ... ok
+test quasistatic_motor_partials_match_each_reduced_equation ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

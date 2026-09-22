@@ -1,0 +1,4 @@
+script check-hierarchy.ys
+synth_gowin -family gw5a -strict-gw5a-dffs -nodsp -nolutram -nowidelut -noalu -top top
+check -assert
+stat

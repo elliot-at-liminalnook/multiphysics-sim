@@ -1,0 +1,21 @@
+{
+  "selected": false,
+  "reason": "No native or browser candidate passes the unchanged 1.2x speed gate. Direct kernels move sampled time without reducing full replay runtime.",
+  "simulation_sources_restored_to_before": true,
+  "restored_source_hashes": {
+    "crates/sim-solve/src/lib.rs": "42fb209f7df912fea5a0bde2c76c659447f3f3415384816e50e386f90174a400",
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "34b267a744bf575305275488bcbba1d9ffa2b1a33f7acbf78da083313d8127b0",
+    "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs": "842600643485ba27cc3938a68e991e1dbdc453a5226d261179ecddf97d083d29",
+    "crates/sim-domain-robot/tests/embedding.rs": "5c7926aa21ddc15359f48216c0542eca5a7a7bb3bc119af3ac49ecd373f588c7",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "b3ad8731953b05674c32335e5040be754c785b9637824a81071c5a8d8957f4c9",
+    "crates/sim-domain-robot/tests/inverse_loads.rs": "e5781bd67884c955d93786b067b7b576dd881cf17dcde29a653ed67de1a084af"
+  },
+  "new_source_files_removed_from_active_tree": [
+    "crates/sim-solve/src/dense_products.rs"
+  ],
+  "candidate_source_snapshots_and_binaries_retained": true,
+  "shared_browser_profiler_retained": "web/tests/profile-worker-cpu.mjs",
+  "restored_binary_sha256": "dbcadb5ebe789dcf74f2ac28301cb89f03f7b2365515ee1a1cb3c92bbd0f3e00",
+  "restored_release_build_passed": true,
+  "restored_replay_parity_verified": true
+}

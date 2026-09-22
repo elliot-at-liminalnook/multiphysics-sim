@@ -1,0 +1,23 @@
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.61s
+     Running tests/actuator_profiles.rs (target/debug/deps/actuator_profiles-46c013f11d946a49)
+
+running 3 tests
+test profiles_cannot_silently_run_catalog_position_firmware ... ok
+test profile_resolution_is_idempotent_and_uses_registry_units_bounds_and_identity ... ok
+test resolved_profile_changes_the_shared_physical_motor_not_only_metadata ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+

@@ -1,0 +1,914 @@
+mod common;
+use common::*;
+use nalgebra::{Quaternion, UnitQuaternion, Vector3};
+use sim_core::Behavior;
+use sim_domain_robot::articulated::embedding::RigidEmbedding;
+use sim_domain_robot::{Articulated, Generalized, Options};
+use std::sync::Arc;
+
+fn body(slider: bool, contact: bool) -> (Articulated, Generalized) {
+    let mut m = empty_model();
+    m.gravity = [0.0; 3];
+    if slider {
+        m.links
+            .push(box_link("ground", [0.1; 3], 1.0, [0.0; 3], true));
+    }
+    m.links
+        .push(box_link("body", [0.1; 3], 2.0, [0.0, 0.0, 1.0], false));
+    if slider {
+        m.joints.push(joint(
+            "slide",
+            "prismatic",
+            Some("ground"),
+            "body",
+            [0.0, 0.0, 1.0],
+            [1.0, 0.0, 0.0],
+        ));
+    }
+    let art = Articulated::new(
+        Arc::new(m),
+        &Options {
+            contact,
+            flex: false,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let states = art.states().iter().map(|s| s.initial).collect();
+    let g = art.generalized(
+        states,
+        vec![0.0; art.state_count],
+        &vec![0.0; art.port_names.len() + 1],
+        vec![],
+    );
+    (art, g)
+}
+
+#[test]
+fn sdirk_mechanics_uses_two_stages_and_exact_force_clock() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace,ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    use std::cell::RefCell;
+    for slider in [true,false] {
+        let (art,g)=body(slider,false);
+        let map=RigidEmbedding::new(&art,&if slider{vec!["slide.slide".into()]}else{vec![]},Default::default()).unwrap();
+        let mut config=ImplicitStepConfig{sdirk2:true,..Default::default()};
+        config.newton.absolute_tolerance=1e-12;config.newton.relative_tolerance=1e-12;
+        let times=RefCell::new(vec![]);
+        let loads=|t:f64,_:&Generalized|{times.borrow_mut().push(t);let mut f=vec![0.;if slider{1}else{6}];f[0]=4.;Ok(f)};
+        let mut workspace=ImplicitSolverWorkspace::default();
+        let step=map.advance_implicit_mechanics_cached(&g,0.3,0.1,&config,&HybridConfig::default(),&mut workspace,loads).unwrap();
+        assert_eq!(step.segments.len(),1);assert!(step.segments[0].first_stage_diagnostics.is_some());
+        let (x,v)=if slider{(step.endpoint.generalized.q[0],step.endpoint.generalized.qd[0])}else{
+            let b=art.bases.iter().find(|b|!b.grounded).unwrap();
+            (step.endpoint.generalized.states[b.state],step.endpoint.generalized.states[b.state+7])
+        };
+        assert!((x-0.01).abs()<1e-10,"{x}");assert!((v-0.2).abs()<1e-10);
+        for t in times.borrow().iter(){assert!(t.to_bits()==(0.3+sim_dynamics::sdirk::GAMMA*0.1).to_bits()||t.to_bits()==0.4f64.to_bits());}
+        assert!(step.segments[0].diagnostics.endpoint_audit.is_none());
+        let mut audited_config=config.clone();audited_config.newton_audit_window_s=Some([0.3,0.4]);
+        let audited=map.advance_implicit_mechanics(&g,0.3,0.1,&audited_config,&HybridConfig::default(),loads).unwrap();
+        for (a,b) in [(&step.endpoint.generalized.q,&audited.endpoint.generalized.q),
+            (&step.endpoint.generalized.qd,&audited.endpoint.generalized.qd),
+            (&step.endpoint.generalized.states,&audited.endpoint.generalized.states)] {
+            assert_eq!(a.iter().map(|x|x.to_bits()).collect::<Vec<_>>(),b.iter().map(|x|x.to_bits()).collect::<Vec<_>>());
+        }
+        let first=audited.segments[0].first_stage_diagnostics.as_ref().unwrap().endpoint_audit.as_ref().unwrap();
+        let second=audited.segments[0].diagnostics.endpoint_audit.as_ref().unwrap();
+        let gamma=sim_dynamics::sdirk::GAMMA;
+        assert_eq!(first.equation_start_time_s,0.3);
+        assert!((first.endpoint_reduced_velocity[0]-gamma*0.2).abs()<1e-12);
+        assert!((second.seed_reduced_velocity[0]-(1.-gamma)*0.2).abs()<1e-12);
+        assert!((second.endpoint_reduced_velocity[0]-0.2).abs()<1e-12);
+        assert_eq!(first.initial_reduced_velocity_guess,first.seed_reduced_velocity);
+        assert_eq!(second.initial_reduced_velocity_guess,first.endpoint_reduced_velocity);
+        assert!(!first.newton.iterations.is_empty());
+        assert_eq!(second.endpoint_joint_positions,audited.endpoint.generalized.q);
+        audited_config.newton_audit_window_s=Some([0.5,0.6]);
+        let outside=map.advance_implicit_mechanics(&g,0.3,0.1,&audited_config,&HybridConfig::default(),loads).unwrap();
+        assert!(outside.segments[0].diagnostics.endpoint_audit.is_none());
+        assert!(outside.segments[0].first_stage_diagnostics.as_ref().unwrap().endpoint_audit.is_none());
+        let mut ordinary=config.clone();ordinary.sdirk2=false;
+        let invalid=vec![f64::NAN;first.seed_reduced_velocity.len()];
+        assert!(map.step_implicit_with_velocity_guess(&g,0.3,0.1,&ordinary,&invalid,loads).unwrap_err().contains("velocity guess"));
+        assert!(map.step_implicit_with_velocity_guess(&g,0.3,0.1,&ordinary,&[],loads).unwrap_err().contains("velocity guess"));
+        let before=workspace.clone();let mut after=before.clone();
+        assert!(map.advance_implicit_mechanics_cached(&g,0.,0.1,&config,&HybridConfig::default(),&mut after,|_,_|Err("stage failure".into())).is_err());
+        assert!(map.step_implicit(&g,0.,0.1,&config,|_,_|Ok(vec![])).unwrap_err().contains("advancement adapter"));
+    }
+}
+
+#[test]
+fn sdirk_mechanical_oscillator_converges_and_dissipates() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    use sim_dynamics::hybrid::HybridConfig;
+    let solve=|h:f64|{
+        let (art,mut g)=body(true,false);g.q[0]=0.1;
+        let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+        let mut config=ImplicitStepConfig{sdirk2:true,..Default::default()};
+        config.newton.absolute_tolerance=1e-12;config.newton.relative_tolerance=1e-12;
+        let mut energy=1.;
+        for i in 0..(1./h).round() as usize {
+            let step=map.advance_implicit_mechanics(&g,i as f64*h,h,&config,&HybridConfig::default(),|_,g|Ok(vec![-200.*g.q[0]-4.*g.qd[0]])).unwrap();
+            g=step.endpoint.generalized;let next=100.*g.q[0].powi(2)+g.qd[0].powi(2);
+            assert!(next<=energy+1e-11);energy=next;
+        }
+        g.q[0]
+    };
+    let w=99f64.sqrt();let exact=0.1*(-1f64).exp()*(w.cos()+w.sin()/w);
+    let e1=(solve(0.02)-exact).abs();let e2=(solve(0.01)-exact).abs();
+    assert!(e1/e2>3.5&&e1/e2<4.5,"{e1}/{e2}");
+}
+
+#[test]
+fn failed_cached_mechanics_restarts_fresh_before_subdivision() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art, mut g)=body(true,false);g.q[0]=0.1;
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let config=ImplicitStepConfig {reuse_step_jacobian:true,..Default::default()};
+    let mut workspace=ImplicitSolverWorkspace::default();
+    let load=|t:f64,g:&Generalized| Ok(vec![-40000.0*g.q[0].powi(3)-2.0*g.qd[0]+(20.0*t).sin()]);
+    g=map.advance_implicit_mechanics_cached(&g,0.0,0.01,&config,&HybridConfig::default(),&mut workspace,load).unwrap().endpoint.generalized;
+    let mut restart=config.clone();restart.restart_failed_reused_mechanics=true;restart.cached_mechanical_iteration_limit=Some(1);
+    let recovered=map.advance_implicit_mechanics_cached(&g,0.01,0.01,&restart,&HybridConfig::default(),&mut workspace,load).unwrap();
+    assert_eq!(recovered.segments.len(),1);
+    assert_eq!(recovered.refinement.rejected_trials,0);
+    assert!(recovered.segments[0].diagnostics.fresh_restart_reason.is_some());
+    assert!(!recovered.segments[0].diagnostics.started_with_reused_jacobian);
+    let fresh=map.advance_implicit_mechanics(&g,0.01,0.01,&config,&HybridConfig::default(),load).unwrap();
+    assert_eq!(fresh.endpoint.generalized.q,recovered.endpoint.generalized.q);
+    assert_eq!(fresh.endpoint.generalized.qd,recovered.endpoint.generalized.qd);
+    restart.restart_failed_reused_mechanics=false;
+    assert!(map.advance_implicit_mechanics(&g,0.01,0.01,&restart,&HybridConfig::default(),load).is_err());
+    restart.restart_failed_reused_mechanics=true;restart.reuse_step_jacobian=false;
+    assert!(map.advance_implicit_mechanics(&g,0.01,0.01,&restart,&HybridConfig::default(),load).is_err());
+}
+
+#[test]
+fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    for (broyden_updates, broyden_negligible_updates, linearized_jacobian_probes, extrapolate_velocity_seed, reuse_exact_probe_base) in
+        [(false, false, false, false, false), (true, false, false, false, false), (true, true, false, false, false), (true, false, true, false, false), (true, false, true, true, false), (true, false, true, false, true)] {
+    let (art, mut g) = body(true, false);
+    g.q[0] = 0.1;
+    let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+    let mut config = ImplicitStepConfig {reuse_step_jacobian: true, ..Default::default()};
+    config.newton.broyden_updates = broyden_updates;
+    config.newton.broyden_negligible_updates = broyden_negligible_updates;
+    config.linearized_jacobian_probes = linearized_jacobian_probes;
+    config.extrapolate_velocity_seed = extrapolate_velocity_seed;
+    config.reuse_exact_probe_base = reuse_exact_probe_base;
+    config.reuse_mechanical_endpoint = reuse_exact_probe_base;
+    let refinement = HybridConfig {maximum_halvings: 1, ..Default::default()};
+    let mut workspace = ImplicitSolverWorkspace::default();
+    let load = |_: f64, g: &Generalized| Ok(vec![-30.0*g.q[0]-2.0*g.qd[0]]);
+    let mut reused = 0;
+    for i in 0..40 {
+        let h = 0.01;
+        let expected_v = (2.0*g.qd[0]-h*30.0*g.q[0])/(2.0+h*2.0+h*h*30.0);
+        let expected_q = g.q[0]+h*expected_v;
+        let step = map.advance_implicit_mechanics_cached(&g,i as f64*h,h,&config,&refinement,&mut workspace,load).unwrap();
+        assert_eq!(step.segments.len(),1);
+        reused += usize::from(step.segments[0].diagnostics.started_with_reused_jacobian);
+        assert!((step.endpoint.generalized.q[0]-expected_q).abs()<1e-10);
+        assert!((step.endpoint.generalized.qd[0]-expected_v).abs()<1e-10);
+        g = step.endpoint.generalized;
+    }
+    assert!(reused>20);
+    let mut reference_workspace = workspace.clone();
+    assert!(map.advance_implicit_mechanics_cached(&g,0.4,0.01,&config,&refinement,&mut workspace,|_,_|Err("deliberate force failure".into())).is_err());
+    let actual = map.advance_implicit_mechanics_cached(&g,0.4,0.01,&config,&refinement,&mut workspace,load).unwrap();
+    let reference = map.advance_implicit_mechanics_cached(&g,0.4,0.01,&config,&refinement,&mut reference_workspace,load).unwrap();
+    assert_eq!(actual.endpoint.generalized.q,reference.endpoint.generalized.q);
+    assert_eq!(actual.endpoint.generalized.qd,reference.endpoint.generalized.qd);
+    assert_eq!(serde_json::to_value(actual.segments).unwrap(),serde_json::to_value(reference.segments).unwrap());
+    let smaller = map.advance_implicit_mechanics_cached(&actual.endpoint.generalized,0.41,0.005,&config,&refinement,&mut workspace,load).unwrap();
+    assert!(!smaller.segments[0].diagnostics.started_with_reused_jacobian);
+    let mut changed=config.clone(); changed.linearized_probe_relative_step*=4.0;
+    let changed=map.advance_implicit_mechanics_cached(&smaller.endpoint.generalized,0.415,0.005,&changed,&refinement,&mut workspace,load).unwrap();
+    assert!(!changed.segments[0].diagnostics.started_with_reused_jacobian);
+    if reuse_exact_probe_base {
+        let mut toggled=config.clone();toggled.linearized_probe_relative_step*=4.0;toggled.reuse_exact_probe_base=false;
+        let toggled=map.advance_implicit_mechanics_cached(&changed.endpoint.generalized,0.42,0.005,&toggled,&refinement,&mut workspace,load).unwrap();
+        assert!(!toggled.segments[0].diagnostics.started_with_reused_jacobian);
+    }
+    }
+}
+
+#[test]
+fn matrix_lifetime_preserves_the_linear_implicit_solution_and_default_policy() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    let mut records = Vec::new();
+    for limit in [None, Some(64), Some(1), Some(256), Some(1024)] {
+        let (art, mut g) = body(true, false);
+        g.q[0] = 0.1;
+        let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+        let config = ImplicitStepConfig {reuse_step_jacobian:true,
+            step_jacobian_max_uses:limit, ..Default::default()};
+        let mut workspace = ImplicitSolverWorkspace::default();
+        let mut trajectory = Vec::new();
+        let mut reused = 0;
+        for i in 0..100 {
+            let h = 0.01;
+            let expected_v = (2.0*g.qd[0]-h*30.0*g.q[0])/(2.0+h*2.0+h*h*30.0);
+            let expected_q = g.q[0]+h*expected_v;
+            let step = map.advance_implicit_mechanics_cached(&g,i as f64*h,h,&config,
+                &HybridConfig::default(),&mut workspace,
+                |_,g| Ok(vec![-30.0*g.q[0]-2.0*g.qd[0]])).unwrap();
+            assert_eq!(step.segments.len(),1);
+            reused += usize::from(step.segments[0].diagnostics.started_with_reused_jacobian);
+            assert!((step.endpoint.generalized.q[0]-expected_q).abs()<1e-10);
+            assert!((step.endpoint.generalized.qd[0]-expected_v).abs()<1e-10);
+            g=step.endpoint.generalized;
+            trajectory.push((g.q[0],g.qd[0]));
+        }
+        records.push((reused,trajectory));
+    }
+    assert_eq!(records[0],records[1],"omitted and explicit default must be identical");
+    assert_eq!(records[2].0,0,"one-visit limit must start every next step cold");
+    assert!(records[3].0>records[0].0);
+    assert_eq!(records[4].0,99,"long lifetime reuses this constant linear system");
+}
+
+#[test]
+fn matrix_lifetime_changes_invalidate_and_invalid_limits_preserve_workspace() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art,g)=body(true,false);
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let config=ImplicitStepConfig {reuse_step_jacobian:true,step_jacobian_max_uses:Some(1024),..Default::default()};
+    let mut workspace=ImplicitSolverWorkspace::default();
+    let first=map.advance_implicit_mechanics_cached(&g,0.0,0.01,&config,
+        &HybridConfig::default(),&mut workspace,|_,_|Ok(vec![2.0])).unwrap();
+    let g=first.endpoint.generalized;
+    let saved=workspace.clone();
+    for invalid in [ImplicitStepConfig {step_jacobian_max_uses:Some(0),..config.clone()},
+        ImplicitStepConfig {reuse_step_jacobian:false,..config.clone()}] {
+        let error=map.advance_implicit_mechanics_cached(&g,0.01,0.01,&invalid,
+            &HybridConfig::default(),&mut workspace,|_,_|Ok(vec![2.0])).err().expect("invalid matrix lifetime");
+        assert!(error.contains("matrix-use limit"),"{error}");
+    }
+    let actual=map.advance_implicit_mechanics_cached(&g,0.01,0.01,&config,
+        &HybridConfig::default(),&mut workspace,|_,_|Ok(vec![2.0])).unwrap();
+    let mut reference_workspace=saved.clone();
+    let reference=map.advance_implicit_mechanics_cached(&g,0.01,0.01,&config,
+        &HybridConfig::default(),&mut reference_workspace,|_,_|Ok(vec![2.0])).unwrap();
+    assert!(actual.segments[0].diagnostics.started_with_reused_jacobian);
+    assert_eq!(serde_json::to_value(&actual.segments).unwrap(),serde_json::to_value(&reference.segments).unwrap());
+    assert_eq!(actual.endpoint.generalized.q,reference.endpoint.generalized.q);
+    assert_eq!(actual.endpoint.generalized.qd,reference.endpoint.generalized.qd);
+    for limit in [Some(1),Some(64),None] {
+        let changed=ImplicitStepConfig {step_jacobian_max_uses:limit,..config.clone()};
+        let mut workspace=saved.clone();
+        let step=map.advance_implicit_mechanics_cached(&g,0.01,0.01,&changed,
+            &HybridConfig::default(),&mut workspace,|_,_|Ok(vec![2.0])).unwrap();
+        assert!(!step.segments[0].diagnostics.started_with_reused_jacobian);
+        assert!((step.endpoint.generalized.qd[0]-0.02).abs()<1e-10);
+    }
+}
+
+#[test]
+fn derivative_probe_radius_rejects_invalid_configuration_without_changing_state() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    let (art,g)=body(true,false);
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let before=(g.q.clone(),g.qd.clone(),g.states.clone());
+    for radius in [0.0,-1e-6,f64::NAN,f64::INFINITY,1e-3] {
+        let config=ImplicitStepConfig {linearized_jacobian_probes:true,linearized_probe_relative_step:radius,..Default::default()};
+        assert!(map.step_implicit(&g,0.0,0.01,&config,|_,_|Ok(vec![0.0])).is_err());
+        assert_eq!(before,(g.q.clone(),g.qd.clone(),g.states.clone()));
+    }
+}
+
+#[test]
+fn temporal_velocity_guess_preserves_constant_force_and_invalidates_history() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace,ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    for linearized_jacobian_probes in [false,true] {
+        let (art,mut g)=body(true,false); let mut baseline=g.clone();
+        let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+        let config=ImplicitStepConfig {reuse_step_jacobian:true,extrapolate_velocity_seed:true,linearized_jacobian_probes,..Default::default()};
+        let original=ImplicitStepConfig {extrapolate_velocity_seed:false,..config.clone()};
+        let mut workspace=ImplicitSolverWorkspace::default();let mut reference_workspace=workspace.clone();
+        let load=|_:f64,_:&Generalized|Ok(vec![3.0]);
+        let mut used=0;let mut iterations=0;let mut reference_iterations=0;
+        for i in 0..20 {
+            let expected_v=g.qd[0]+0.02*1.5;let expected_q=g.q[0]+0.02*expected_v;
+            let step=map.advance_implicit_mechanics_cached(&g,i as f64*0.02,0.02,&config,&HybridConfig::default(),&mut workspace,load).unwrap();
+            let reference=map.advance_implicit_mechanics_cached(&baseline,i as f64*0.02,0.02,&original,&HybridConfig::default(),&mut reference_workspace,load).unwrap();
+            assert_eq!(step.segments.len(),1);let d=&step.segments[0].diagnostics;
+            used+=usize::from(d.predicted_velocity_seed==Some(true));iterations+=d.nonlinear.iterations;
+            reference_iterations+=reference.segments[0].diagnostics.nonlinear.iterations;
+            g=step.endpoint.generalized;baseline=reference.endpoint.generalized;
+            assert!((g.q[0]-expected_q).abs()<1e-10&&(g.qd[0]-expected_v).abs()<1e-10);
+            assert!((g.q[0]-baseline.q[0]).abs()<1e-10&&(g.qd[0]-baseline.qd[0]).abs()<1e-10);
+        }
+        assert!(used>15);assert!(iterations<reference_iterations,"{iterations} versus {reference_iterations}");
+        let changed_step=map.advance_implicit_mechanics_cached(&g,0.4,0.01,&config,&HybridConfig::default(),&mut workspace,load).unwrap();
+        assert_eq!(changed_step.segments[0].diagnostics.predicted_velocity_seed,Some(false));
+        g=changed_step.endpoint.generalized;g.qd[0]+=0.01;
+        let changed_velocity=map.advance_implicit_mechanics_cached(&g,0.41,0.01,&config,&HybridConfig::default(),&mut workspace,load).unwrap();
+        assert_eq!(changed_velocity.segments[0].diagnostics.predicted_velocity_seed,Some(false));
+        assert!(!changed_velocity.segments[0].diagnostics.started_with_reused_jacobian);
+        workspace.clear();g=changed_velocity.endpoint.generalized;
+        let reset=map.advance_implicit_mechanics_cached(&g,0.42,0.01,&config,&HybridConfig::default(),&mut workspace,load).unwrap();
+        assert_eq!(reset.segments[0].diagnostics.predicted_velocity_seed,Some(false));
+        let invalid=ImplicitStepConfig {reuse_step_jacobian:false,..config};
+        assert!(map.step_implicit(&g,0.42,0.01,&invalid,load).is_err());
+    }
+}
+
+#[test]
+fn temporal_velocity_guess_rejects_bad_geometry_and_retries_a_failed_newton_seed() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace,ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    for linearized_jacobian_probes in [false,true] {
+        let (art,mut g)=body(true,false);g.qd[0]=-1.0;
+        let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+        let config=ImplicitStepConfig {reuse_step_jacobian:true,extrapolate_velocity_seed:true,linearized_jacobian_probes,..Default::default()};
+        let mut workspace=ImplicitSolverWorkspace::default();
+        let first=map.advance_implicit_mechanics_cached(&g,0.0,1.0,&config,&HybridConfig::default(),&mut workspace,|_,_|Ok(vec![2.0])).unwrap();
+        g=first.endpoint.generalized;assert!(g.qd[0].abs()<1e-10);
+        let saved=workspace.clone();
+        let limited=|_:f64,g:&Generalized|if g.qd[0]>0.5 {Err("prediction outside load domain".into())}else{Ok(vec![0.2])};
+        let rejected=map.advance_implicit_mechanics_cached(&g,1.0,1.0,&config,&HybridConfig::default(),&mut workspace,limited).unwrap();
+        assert_eq!(rejected.segments[0].diagnostics.predicted_velocity_seed,Some(false));
+        assert!((rejected.endpoint.generalized.qd[0]-0.1).abs()<1e-10);
+        workspace=saved;
+        // The predicted point is valid and improves the residual, but this
+        // synthetic load rejects its derivative probes and trial corrections.
+        // The original guess lies on a continuous branch with a negative root.
+        let old_v=g.qd[0];
+        let predicted_v=old_v+(old_v+1.0);
+        let load=|_:f64,g:&Generalized| {
+            let v=g.qd[0];let f=if v>0.25 {
+                if (v-predicted_v).abs()>1e-10 {return Err("predicted Newton trial outside load domain".into());}
+                0.5
+            }else{v+1.0};Ok(vec![2.0*(v-old_v-f)])
+        };
+        let expected=map.advance_implicit_mechanics(&g,1.0,1.0,&ImplicitStepConfig::default(),&HybridConfig::default(),load).unwrap();
+        let actual=map.advance_implicit_mechanics_cached(&g,1.0,1.0,&config,&HybridConfig::default(),&mut workspace,load).unwrap();
+        assert_eq!(actual.segments.len(),1);
+        assert_eq!(actual.segments[0].diagnostics.predicted_velocity_seed,Some(true));
+        assert!(actual.segments[0].diagnostics.exact_jacobian_fallback.is_some(),"{:?}",actual.segments[0].diagnostics);
+        assert_eq!(actual.endpoint.generalized.q,expected.endpoint.generalized.q);
+        assert_eq!(actual.endpoint.generalized.qd,expected.endpoint.generalized.qd);
+        assert!(actual.endpoint.generalized.qd[0]<0.0);
+    }
+}
+
+#[test]
+fn temporal_velocity_history_clears_after_contact_release() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace,ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art,mut g)=body(false,true);let s=art.bases[0].state;g.states[s+2]=0.0499;
+    let map=RigidEmbedding::new(&art,&[],Default::default()).unwrap();
+    let config=ImplicitStepConfig {reuse_step_jacobian:true,extrapolate_velocity_seed:true,..Default::default()};
+    let mut workspace=ImplicitSolverWorkspace::default();
+    let down=|_:f64,_:&Generalized|Ok(vec![0.0,0.0,-10.0,0.0,0.0,0.0]);
+    for i in 0..2 {
+        let step=map.advance_implicit_mechanics_cached(&g,i as f64*0.01,0.01,&config,&HybridConfig::default(),&mut workspace,down).unwrap();
+        assert!(!step.endpoint.contacts.is_empty());g=step.endpoint.generalized;
+    }
+    let up=|_:f64,_:&Generalized|Ok(vec![0.0,0.0,200.0,0.0,0.0,0.0]);
+    let release=map.advance_implicit_mechanics_cached(&g,0.02,0.01,&config,&HybridConfig::default(),&mut workspace,up).unwrap();
+    assert!(release.endpoint.contacts.is_empty());g=release.endpoint.generalized;
+    let free=map.advance_implicit_mechanics_cached(&g,0.03,0.01,&config,&HybridConfig::default(),&mut workspace,up).unwrap();
+    assert_eq!(free.segments[0].diagnostics.predicted_velocity_seed,Some(false));
+}
+
+#[test]
+fn mechanical_subdivision_preserves_direct_steps_and_recovers_nonlinear_drag() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art, mut g)=body(true,false);
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let config=ImplicitStepConfig::default();
+    let load=|_:f64,_:&Generalized| Ok(vec![2.0]);
+    let direct=map.step_implicit(&g,0.0,0.02,&config,load).unwrap();
+    let recovered=map.advance_implicit_mechanics(&g,0.0,0.02,&config,&HybridConfig::default(),load).unwrap();
+    assert_eq!(direct.endpoint.generalized.q,recovered.endpoint.generalized.q);
+    assert_eq!(direct.endpoint.generalized.qd,recovered.endpoint.generalized.qd);
+    assert_eq!(recovered.refinement.continuous_attempts,1);
+    assert_eq!(recovered.segments.len(),1);
+    assert!((recovered.endpoint.generalized.qd[0]-0.02).abs()<1e-12);
+
+    // A deliberately small nonlinear iteration allowance fails the large step
+    // for cubic drag. Smaller steps must meet exactly the same solver tolerances.
+    g.qd[0]=10.0;
+    let mut config=config;config.newton.max_iterations=5;
+    let drag=|_:f64,g:&Generalized| Ok(vec![-2.0*g.qd[0].powi(3)]);
+    assert!(map.step_implicit(&g,0.0,0.1,&config,drag).is_err());
+    let recovered=map.advance_implicit_mechanics(&g,0.0,0.1,&config,&HybridConfig {maximum_halvings:10,maximum_segments:256,..Default::default()},drag).unwrap();
+    assert!(recovered.refinement.rejected_trials>0);
+    assert!(recovered.segments.len()>1);
+    let mut replay=g.clone();let mut time=0.0;
+    for segment in &recovered.segments {
+        assert!((segment.start_time_s-time).abs()<1e-12);
+        replay=map.step_implicit(&replay,time,segment.step_s,&config,drag).unwrap().endpoint.generalized;
+        time+=segment.step_s;
+    }
+    assert!((time-0.1).abs()<1e-12);
+    assert_eq!(replay.q,recovered.endpoint.generalized.q);
+    assert_eq!(replay.qd,recovered.endpoint.generalized.qd);
+    assert!(replay.qd[0]>0.0&&replay.qd[0]<g.qd[0]);
+    let before=(g.q.clone(),g.qd.clone(),g.states.clone());
+    assert!(map.advance_implicit_mechanics(&g,0.0,0.1,&config,&HybridConfig {maximum_halvings:0,..Default::default()},drag).is_err());
+    assert_eq!(before,(g.q.clone(),g.qd.clone(),g.states.clone()));
+}
+
+#[test]
+fn world_load_pulse_matches_linear_and_angular_impulse() {
+    use sim_domain_robot::world_load::{WorldLoadPulse, WorldLoadSchedule};
+    let (art, mut g)=body(false,false);
+    let map=RigidEmbedding::new(&art,&[],Default::default()).unwrap();
+    let loads=WorldLoadSchedule {version:1,base_link:"body".into(),provenance:"free cube impulse test".into(),
+        maximum_force_n:2.0,maximum_moment_nm:0.1,
+        pulses:vec![WorldLoadPulse {name:"push and twist".into(),start_s:0.02,duration_s:0.04,
+            force_world_n:[2.0,0.0,0.0],moment_world_nm:[0.0,0.0,0.1]}],
+    }.bind(&["body".into()],0.01,10).unwrap();
+    for i in 0..10 {
+        let w=loads.wrench(i);
+        g=map.step_midpoint(&g,i as f64*0.01,0.01,|_,_|Ok(w.to_vec())).unwrap().endpoint.generalized;
+    }
+    let s=art.bases[0].state;
+    assert!((2.0*g.states[s+7]-2.0*0.04).abs()<1e-12);
+    assert!((art.links[0].inertia[(2,2)]*g.states[s+12]-0.1*0.04).abs()<1e-12);
+}
+
+#[test]
+fn condensed_cross_coupled_states_match_independent_linear_system() {
+    use sim_domain_robot::articulated::embedding::{CoupledForces, ImplicitStepConfig};
+    use nalgebra::{Matrix3, Vector3};
+    let (art, seed) = body(true, false);
+    let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+    // Two mutually coupled internal states drive a 2 kg slider. Condensation
+    // must retain both off-diagonal terms and feedback from mechanical speed.
+    for rates in [false, true] {
+        for h in [0.01, 0.001] {
+            let matrix = Matrix3::new(2.0/h, -1.0, -2.0, 2.0, 1.0/h+3.0, -0.7, -1.0, -0.2, 1.0/h+5.0).lu();
+            let mut g = seed.clone();
+            let mut x = vec![0.3, -0.2];
+            for i in 0..20 {
+                let drive = if i<10 {4.0} else {-4.0};
+                let expected = matrix.solve(&Vector3::new(2.0*g.qd[0]/h, x[0]/h+drive, x[1]/h-1.0)).unwrap();
+                let q = g.q[0]+h*expected[0];
+                let step = map.step_implicit_coupled_with_rates(
+                    &g, &x, i as f64*h, h,
+                    &ImplicitStepConfig {condense_auxiliary:true, auxiliary_rate_unknowns:rates, ..Default::default()},
+                    |_,_,g,x,r| Ok(CoupledForces {
+                        generalized_loads:vec![x[0]+2.0*x[1]],
+                        auxiliary_residuals:vec![r[0]+3.0*x[0]-0.7*x[1]+2.0*g.qd[0]-drive, r[1]-0.2*x[0]+5.0*x[1]-g.qd[0]+1.0],
+                    }),
+                ).unwrap();
+                assert!((step.endpoint.generalized.qd[0]-expected[0]).abs()<1e-10);
+                assert!((step.endpoint.generalized.q[0]-q).abs()<1e-10);
+                assert!((step.auxiliary[0]-expected[1]).abs()<1e-10);
+                assert!((step.auxiliary[1]-expected[2]).abs()<1e-10);
+                assert!(step.diagnostics.maximum_auxiliary_residual<=1e-10);
+                assert!(step.diagnostics.auxiliary_evaluations>step.diagnostics.endpoint_evaluations);
+                g=step.endpoint.generalized;
+                x=step.auxiliary;
+            }
+        }
+    }
+    let before = seed.states.clone();
+    let failed = map.step_implicit_coupled(&seed, &[0.0], 0.0, 0.01,
+        &ImplicitStepConfig {condense_auxiliary:true,..Default::default()},
+        |_,_,_,_| Ok(CoupledForces {generalized_loads:vec![1.0], auxiliary_residuals:vec![1.0]}));
+    assert!(failed.unwrap_err().contains("local auxiliary solve"));
+    assert_eq!(seed.states,before);
+}
+
+#[test]
+fn prepared_dynamics_owns_contact_state_and_applies_fresh_forces() {
+    let (art, mut seed) = body(false, true);
+    let base = art.bases[0].state;
+    seed.states[base + 2] = 0.0499;
+    let map = RigidEmbedding::new(&art, &[], Default::default()).unwrap();
+    let mut motion = map
+        .solve(&seed, &[], &[0.2, 0.0, 0.0, 0.0, 0.0, 0.0])
+        .unwrap();
+    let prepared = map.prepare_dynamics(&motion).unwrap();
+    let original = prepared.accelerations(&[0.0; 6]).unwrap();
+    assert!(!original.contacts.is_empty());
+    let projected_map = RigidEmbedding::new(&art, &[],
+        sim_domain_robot::articulated::embedding::EmbeddingConfig {
+            direct_projected_inertia: true, ..Default::default()
+        }).unwrap();
+    let projected = projected_map.accelerations(&motion, &[0.0; 6]).unwrap();
+    assert!((&projected.full_accelerations - &original.full_accelerations).amax() < 1e-12);
+    assert_eq!(projected.bristle_rates, original.bristle_rates);
+    assert_eq!(projected.contacts.len(), original.contacts.len());
+    for (a, b) in projected.contacts.iter().zip(&original.contacts) {
+        assert_eq!(a.force, b.force);
+        assert_eq!(a.point, b.point);
+    }
+    let forced = prepared
+        .accelerations(&[6.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        .unwrap();
+    let required = prepared.required_reduced_forces(forced.reduced_accelerations.as_slice()).unwrap();
+    assert!((required[0] - 6.0).abs() < 1e-10);
+    assert!(required.rows(1,5).amax() < 1e-10);
+    assert!(prepared.required_reduced_forces(&[0.0;5]).is_err());
+    assert!(prepared.required_reduced_forces(&[f64::NAN;6]).is_err());
+    // Independent F=ma: 6 N changes a 2 kg COM's acceleration by 3 m/s^2.
+    assert!((forced.full_accelerations[0] - original.full_accelerations[0] - 3.0).abs() < 1e-12);
+    assert_eq!(forced.bristle_rates, original.bristle_rates);
+    assert_eq!(forced.contacts.len(), original.contacts.len());
+    // Mutating the input after preparation cannot change the owned snapshot.
+    motion.generalized.states[base + 2] = 1.0;
+    motion.generalized.states[art.links[0].bristle_state] = 0.01;
+    let unchanged = prepared.accelerations(&[0.0; 6]).unwrap();
+    assert_eq!(unchanged.full_accelerations, original.full_accelerations);
+    assert_eq!(unchanged.bristle_rates, original.bristle_rates);
+    let fresh = map
+        .prepare_dynamics(&motion)
+        .unwrap()
+        .accelerations(&[0.0; 6])
+        .unwrap();
+    assert!(fresh.contacts.is_empty());
+    assert!(fresh.full_accelerations.amax() < 1e-12);
+    assert!(prepared.accelerations(&[f64::NAN; 6]).is_err());
+    assert!(prepared.accelerations(&[0.0; 5]).is_err());
+    let invalid = sim_domain_robot::articulated::embedding::ImplicitStepConfig {
+        reuse_mechanical_dynamics: true,
+        ..Default::default()
+    };
+    assert!(
+        map.step_implicit(&seed, 0.0, 0.001, &invalid, |_, _| Ok(vec![0.0; 6]))
+            .is_err()
+    );
+}
+
+#[test]
+fn free_body_constant_force_and_world_rotation_match_exact_motion() {
+    let (art, mut g) = body(false, false);
+    let map = RigidEmbedding::new(&art, &[], Default::default()).unwrap();
+    let s = art.bases[0].state;
+    let q0 = UnitQuaternion::from_axis_angle(&Vector3::x_axis(), 0.4);
+    g.states[s + 3..s + 7].copy_from_slice(&[q0.w, q0.i, q0.j, q0.k]);
+    g.states[s + 7..s + 13].copy_from_slice(&[0.3, -0.2, 0.1, 0.0, 0.0, 1.0]);
+    for i in 0..20 {
+        g = map
+            .step_midpoint(&g, i as f64 * 0.01, 0.01, |_, _| {
+                Ok(vec![2.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            })
+            .unwrap()
+            .endpoint
+            .generalized;
+    }
+    let t = 0.2;
+    for (actual, expected) in
+        g.states[s..s + 3]
+            .iter()
+            .zip([0.3 * t + 0.5 * t * t, -0.2 * t, 1.0 + 0.1 * t])
+    {
+        assert!((actual - expected).abs() < 1e-12);
+    }
+    let expected = UnitQuaternion::from_axis_angle(&Vector3::z_axis(), t) * q0;
+    let actual = UnitQuaternion::from_quaternion(Quaternion::new(
+        g.states[s + 3],
+        g.states[s + 4],
+        g.states[s + 5],
+        g.states[s + 6],
+    ));
+    assert!(actual.angle_to(&expected) < 1e-12);
+    assert!((g.states[s + 7] - 0.5).abs() < 1e-12);
+    assert!((g.rates[s + 7] - 1.0).abs() < 1e-12);
+    assert_eq!(&g.rates[s..s + 3], &g.states[s + 7..s + 10]);
+}
+
+#[test]
+fn oscillator_error_decreases_quadratically_with_step_refinement() {
+    let (art, mut seed) = body(true, false);
+    seed.q[0] = 0.2;
+    let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+    let mut errors = Vec::new();
+    for steps in [50, 100, 200] {
+        let h = 1.0 / steps as f64;
+        let mut g = seed.clone();
+        for i in 0..steps {
+            g = map
+                .step_midpoint(&g, i as f64 * h, h, |_, g| Ok(vec![-8.0 * g.q[0]]))
+                .unwrap()
+                .endpoint
+                .generalized;
+        }
+        let expected_q = 0.2 * 2.0_f64.cos();
+        let expected_v = -0.4 * 2.0_f64.sin();
+        errors.push((g.q[0] - expected_q).hypot((g.qd[0] - expected_v) / 2.0));
+    }
+    assert!(errors[2] < 1e-5, "{errors:?}");
+    assert!(
+        errors
+            .windows(2)
+            .all(|e| e[0] / e[1] > 3.8 && e[0] / e[1] < 4.2),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn contact_memory_decays_and_failure_leaves_input_unchanged() {
+    let (art, mut seed) = body(false, true);
+    let s = art.links[0].bristle_state;
+    seed.states[s] = 0.001;
+    let map = RigidEmbedding::new(&art, &[], Default::default()).unwrap();
+    let mut errors = Vec::new();
+    for n in [20, 40, 80] {
+        let h = 0.02 / n as f64;
+        let mut g = seed.clone();
+        for i in 0..n {
+            g = map
+                .step_midpoint(&g, i as f64 * h, h, |_, _| Ok(vec![0.0; 6]))
+                .unwrap()
+                .endpoint
+                .generalized;
+        }
+        errors.push((g.states[s] - 0.001 * (-4.0_f64).exp()).abs());
+        assert!((g.rates[s] + 200.0 * g.states[s]).abs() < 1e-14);
+    }
+    assert!(errors.windows(2).all(|e| e[0] / e[1] > 3.8), "{errors:?}");
+    let before = seed.clone();
+    assert!(
+        map.step_midpoint(&seed, 0.0, 0.01, |t, _| if t > 0.0 {
+            Err("load failure".into())
+        } else {
+            Ok(vec![0.0; 6])
+        })
+        .is_err()
+    );
+    assert_eq!(seed.states, before.states);
+    assert_eq!(seed.q, before.q);
+    assert_eq!(seed.rates, before.rates);
+    for h in [0.0, -0.1, f64::NAN] {
+        assert!(
+            map.step_midpoint(&seed, 0.0, h, |_, _| Ok(vec![0.0; 6]))
+                .is_err()
+        );
+    }
+}
+
+#[test]
+fn implicit_stiff_viscous_load_matches_backward_euler_without_reversal() {
+    use sim_domain_robot::articulated::embedding::{ImplicitStepConfig,ImplicitSolverWorkspace};
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art, _) = body(true, false);
+    let mut model = (*art.model).clone();
+    model.joints[0].physics.friction.viscous = 20_000.0;
+    let art = Articulated::new(
+        Arc::new(model),
+        &Options {
+            contact: false,
+            flex: false,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let seed = art.generalized(
+        art.states().iter().map(|s| s.initial).collect(),
+        vec![0.0; art.state_count],
+        &vec![0.0; art.port_names.len() + 1],
+        vec![],
+    );
+    let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+    let h = 0.01; // h*b/m=100: far outside explicit midpoint's stability region.
+    for extrapolate_velocity_seed in [false,true] {
+    let mut g=seed.clone();g.qd[0]=1.0;
+    let config=ImplicitStepConfig {reuse_step_jacobian:extrapolate_velocity_seed,extrapolate_velocity_seed,..Default::default()};
+    let mut workspace=ImplicitSolverWorkspace::default();
+    let mut expected_v = 1.0;
+    let mut expected_q = 0.0;
+    for i in 0..4 {
+        expected_v /= 101.0;
+        expected_q += h * expected_v;
+        let step = map
+            .advance_implicit_mechanics_cached(&g, i as f64 * h, h, &config, &HybridConfig::default(), &mut workspace, |_, _| {
+                Ok(vec![0.0])
+            })
+            .unwrap();
+        assert_eq!(step.segments.len(),1);
+        assert!(step.segments[0].diagnostics.maximum_scaled_velocity_residual < 1e-9);
+        g = step.endpoint.generalized;
+        assert!(g.qd[0] >= 0.0);
+        assert!((g.qd[0] - expected_v).abs() < 1e-12);
+        assert!((g.q[0] - expected_q).abs() < 1e-12);
+    }
+    }
+}
+
+#[test]
+fn implicit_oscillator_refines_to_the_continuous_solution() {
+    for linearized_jacobian_probes in [false,true] {
+    let config=sim_domain_robot::articulated::embedding::ImplicitStepConfig {linearized_jacobian_probes,..Default::default()};
+    let (art, mut seed) = body(true, false);
+    seed.q[0] = 0.2;
+    let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+    let mut errors = Vec::new();
+    for n in [40, 80, 160] {
+        let h = 1.0 / n as f64;
+        let mut g = seed.clone();
+        for i in 0..n {
+            g = map
+                .step_implicit(&g, i as f64 * h, h, &config, |_, g| {
+                    Ok(vec![-8.0 * g.q[0]])
+                })
+                .unwrap()
+                .endpoint
+                .generalized;
+        }
+        errors.push((g.q[0] - 0.2 * 2.0_f64.cos()).hypot((g.qd[0] + 0.4 * 2.0_f64.sin()) / 2.0));
+    }
+    assert!(errors[2] < 0.0025, "{errors:?}");
+    assert!(
+        errors
+            .windows(2)
+            .all(|e| e[0] / e[1] > 1.9 && e[0] / e[1] < 2.1),
+        "{errors:?}"
+    );
+    }
+}
+
+#[test]
+fn implicit_contact_memory_and_atomic_failure() {
+    let (art, mut seed) = body(false, true);
+    let s = art.links[0].bristle_state;
+    seed.states[s..s + 3].copy_from_slice(&[0.001, -0.002, 0.003]);
+    let map = RigidEmbedding::new(&art, &[], Default::default()).unwrap();
+    let h = 0.1; // 20 decay time constants in one step.
+    let second_order=map.advance_implicit_mechanics(&seed,0.,h,
+        &sim_domain_robot::articulated::embedding::ImplicitStepConfig{sdirk2:true,..Default::default()},
+        &sim_dynamics::hybrid::HybridConfig::default(),|_,_|Ok(vec![0.;6])).unwrap();
+    let gamma=sim_dynamics::sdirk::GAMMA;let z=-200.*h;
+    let amplification=(1.+(1.-2.*gamma)*z)/(1.-gamma*z).powi(2);
+    for k in 0..3{
+        let actual=second_order.endpoint.generalized.states[s+k];
+        assert!((actual-seed.states[s+k]*amplification).abs()<1e-14);
+        assert!(actual.abs()<seed.states[s+k].abs());
+    }
+    let step = map
+        .step_implicit(&seed, 0.0, h, &Default::default(), |_, _| Ok(vec![0.0; 6]))
+        .unwrap();
+    assert!(step.diagnostics.maximum_contact_history_residual < 1e-15);
+    for k in 0..3 {
+        assert!(
+            (step.endpoint.generalized.states[s + k] - seed.states[s + k] / 21.0).abs() < 1e-15
+        );
+    }
+    let before = seed.clone();
+    assert!(
+        map.step_implicit(&seed, 0.0, h, &Default::default(), |_, _| Err(
+            "load failure".into()
+        ))
+        .is_err()
+    );
+    assert_eq!(seed.states, before.states);
+    assert_eq!(seed.q, before.q);
+    assert_eq!(seed.qd, before.qd);
+    for h in [0.0, -0.1, f64::NAN] {
+        assert!(
+            map.step_implicit(&seed, 0.0, h, &Default::default(), |_, _| Ok(vec![0.0; 6]))
+                .is_err()
+        );
+    }
+}
+
+#[test]
+fn implicit_sliding_contact_matches_independent_scalar_force_balance() {
+    let mut m = empty_model();
+    m.gravity = [0.0; 3];
+    m.links
+        .push(box_link("ground", [0.1; 3], 1.0, [0.0, 0.0, -10.0], true));
+    m.links
+        .push(box_link("body", [0.1; 3], 2.0, [0.0, 0.0, 0.049], false));
+    m.joints.push(joint(
+        "slide",
+        "prismatic",
+        Some("ground"),
+        "body",
+        [0.0, 0.0, 0.049],
+        [1.0, 0.0, 0.0],
+    ));
+    let art = Articulated::new(
+        Arc::new(m),
+        &Options {
+            contact: true,
+            flex: false,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let mut g = art.generalized(
+        art.states().iter().map(|s| s.initial).collect(),
+        vec![0.0; art.state_count],
+        &vec![0.0; art.port_names.len() + 1],
+        vec![],
+    );
+    let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+    g.qd[0] = 0.2;
+    let s = art.links[1].bristle_state;
+    g.states[s] = 1e-5;
+    let h = 0.005;
+    // Five bottom fixture vertices, each penetrating by 1 mm. A prismatic
+    // guide holds height/orientation; only horizontal velocity is unknown.
+    let normal = 5.0 * art.floor_k * 0.001;
+    let gamma=sim_dynamics::sdirk::GAMMA;
+    let scalar_stage=|old_v:f64,old_z:f64|{
+        let residual=|v:f64|{
+            let mu=0.3+0.1*(-(v/0.01).powi(2)).exp();
+            let decay=art.floor_k*v.abs()/(mu*normal+1e-3);
+            let z=(old_z+gamma*h*v)/(1.+gamma*h*decay);
+            let force=-art.floor_k*z-2.*(art.floor_k*2.).sqrt()*(v-decay*z);
+            (v-old_v-gamma*h*force/2.,z)
+        };
+        let(mut lo,mut hi)=(-0.5,0.5);assert!(residual(lo).0<0.&&residual(hi).0>0.);
+        for _ in 0..80{let mid=0.5*(lo+hi);if residual(mid).0<0.{lo=mid;}else{hi=mid;}}
+        let v=0.5*(lo+hi);(v,residual(v).1)
+    };
+    let(v1,z1)=scalar_stage(g.qd[0],g.states[s]);
+    let(v2,z2)=scalar_stage(g.qd[0]+(1.-gamma)/gamma*(v1-g.qd[0]),g.states[s]+(1.-gamma)/gamma*(z1-g.states[s]));
+    let sdirk=map.advance_implicit_mechanics(&g,0.,h,
+        &sim_domain_robot::articulated::embedding::ImplicitStepConfig{sdirk2:true,..Default::default()},
+        &sim_dynamics::hybrid::HybridConfig::default(),|_,_|Ok(vec![0.])).unwrap();
+    assert_eq!(sdirk.segments.len(),1);
+    assert!((sdirk.endpoint.generalized.qd[0]-v2).abs()<1e-9);
+    assert!((sdirk.endpoint.generalized.states[s]-z2).abs()<1e-11);
+    assert!((sdirk.endpoint.generalized.q[0]-h*((1.-gamma)*v1+gamma*v2)).abs()<1e-11);
+    let residual = |v: f64| {
+        let mu = 0.3 + 0.1 * (-(v / 0.01).powi(2)).exp();
+        let decay = art.floor_k * v.abs() / (mu * normal + 1e-3);
+        let z = (g.states[s] + h * v) / (1.0 + h * decay);
+        let zd = v - decay * z;
+        let force = -art.floor_k * z - 2.0 * (art.floor_k * 2.0).sqrt() * zd;
+        (v - 0.2 - h * force / 2.0, z)
+    };
+    let (mut lo, mut hi) = (0.0, 0.2);
+    assert!(residual(lo).0 < 0.0 && residual(hi).0 > 0.0);
+    for _ in 0..80 {
+        let mid = 0.5 * (lo + hi);
+        if residual(mid).0 < 0.0 {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    let expected = 0.5 * (lo + hi);
+    for (linearized_jacobian_probes,reuse_exact_probe_base) in [(false,false),(true,false),(true,true)] {
+    let config=sim_domain_robot::articulated::embedding::ImplicitStepConfig {linearized_jacobian_probes,reuse_exact_probe_base,reuse_mechanical_endpoint:reuse_exact_probe_base,..Default::default()};
+    let step = map
+        .step_implicit(&g, 0.0, h, &config, |_, _| Ok(vec![0.0]))
+        .unwrap();
+    let end = &step.endpoint.generalized;
+    if reuse_exact_probe_base {assert!(step.diagnostics.reused_exact_probe_bases.unwrap()>0);}
+    assert!(
+        (end.qd[0] - expected).abs() < 1e-9,
+        "{} vs {expected}",
+        end.qd[0]
+    );
+    assert!((end.states[s] - residual(expected).1).abs() < 1e-11);
+    assert!((end.q[0] - h * expected).abs() < 1e-11);
+    let measured_normal: f64 = step
+        .endpoint
+        .contacts
+        .iter()
+        .filter(|c| c.link == 1)
+        .map(|c| c.force.z)
+        .sum();
+    assert!((measured_normal - normal).abs() < 1e-8);
+    assert!(step.diagnostics.maximum_contact_history_residual < 1e-11);
+    }
+}
+
+#[test]
+fn private_predictor_falls_back_on_stiff_load_and_preserves_failed_workspace() {
+    use sim_domain_robot::articulated::embedding::{ImplicitStepConfig,ImplicitSolverWorkspace};
+    let (art,g)=body(true,false);
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let seed=map.solve(&g,&[0.0],&[25.0]).unwrap().generalized;
+    let config=ImplicitStepConfig {mechanical_predictor:true,reuse_step_jacobian:true,..Default::default()};
+    let ordinary=ImplicitStepConfig {mechanical_predictor:false,..config.clone()};
+    let force=|_:f64,g:&Generalized|Ok(vec![-1e2*g.qd[0].powi(3)]);
+    let baseline=map.step_implicit(&seed,0.0,0.01,&ordinary,force).unwrap();
+    let result=map.step_implicit(&seed,0.0,0.01,&config,force).unwrap();
+    assert_eq!(result.diagnostics.mechanical_prediction_used,Some(false));
+    assert!(result.diagnostics.mechanical_prediction_fallback.as_ref().unwrap().contains("predictor"));
+    assert_eq!(result.endpoint.generalized.q,baseline.endpoint.generalized.q);
+    assert_eq!(result.endpoint.generalized.qd,baseline.endpoint.generalized.qd);
+    let mut workspace=ImplicitSolverWorkspace::default();
+    let first=map.advance_implicit_mechanics_cached(&g,0.0,0.001,&config,&Default::default(),&mut workspace,|_,_|Ok(vec![2.0])).unwrap();
+    assert_eq!(first.segments[0].diagnostics.mechanical_prediction_used,Some(true));
+    let mut before=workspace.clone();
+    let failed=map.advance_implicit_mechanics_cached(&first.endpoint.generalized,0.001,0.001,&config,
+        &sim_dynamics::hybrid::HybridConfig {maximum_halvings:0,..Default::default()},&mut workspace,
+        |_,_|Err("deliberate rejected load".into()));
+    assert!(failed.is_err());
+    let a=map.advance_implicit_mechanics_cached(&first.endpoint.generalized,0.001,0.001,&config,&Default::default(),&mut workspace,|_,_|Ok(vec![2.0])).unwrap();
+    let b=map.advance_implicit_mechanics_cached(&first.endpoint.generalized,0.001,0.001,&config,&Default::default(),&mut before,|_,_|Ok(vec![2.0])).unwrap();
+    assert_eq!(a.endpoint.generalized.q,b.endpoint.generalized.q);
+    assert_eq!(a.endpoint.generalized.qd,b.endpoint.generalized.qd);
+    let invalid=ImplicitStepConfig {newton:sim_solve::NewtonConfig {max_iterations:0,..Default::default()},..config};
+    assert!(map.step_implicit(&g,0.0,0.001,&invalid,|_,_|panic!("invalid config must reject before prediction")).is_err());
+}

@@ -1,0 +1,9 @@
+
+running 4 tests
+test power_checkpoints_replay_and_failed_intervals_do_not_commit_charge_or_energy ... ok
+test topology_requires_exact_coverage_acyclic_feeds_and_explicit_battery_parameters ... ok
+test simultaneous_motor_load_reduces_other_motor_speed_and_separate_feeds_reduce_sag ... ok
+test shared_supply_matches_kcl_voltage_drops_charge_and_terminal_energy_through_reversal ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+

@@ -1,0 +1,52 @@
+[
+  {
+    "source": "crates/sim-domain-control/src/reference_governor.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/crates/sim-domain-control/src/reference_governor.rs",
+    "sha256": "1ba04918912e811ffcefa41603d3aba7fbec1a8460cf7ad8264e363cea237862"
+  },
+  {
+    "source": "crates/sim-runtime/src/acquisition/calibration.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/crates/sim-runtime/src/acquisition/calibration.rs",
+    "sha256": "2cfab8878dd489b187362b13ba68efeddac399ba16b1da060d5323de13fed7b0"
+  },
+  {
+    "source": "crates/sim-runtime/src/acquisition/calibration_sweep.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/crates/sim-runtime/src/acquisition/calibration_sweep.rs",
+    "sha256": "facfd7b35fa710d66a1ac3c2795aadfc2a04910e8cb6d8e31f58d72511b8b7f9"
+  },
+  {
+    "source": "crates/sim-runtime/src/acquisition/calibration_serial.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/crates/sim-runtime/src/acquisition/calibration_serial.rs",
+    "sha256": "9c60ed28119aa9854395c3bed659e0269d5c346dfd88dfa2a8c588b0a9b15f87"
+  },
+  {
+    "source": "crates/sim-runtime/examples/serve_actuator_calibration.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/crates/sim-runtime/examples/serve_actuator_calibration.rs",
+    "sha256": "b47fd59fb1b2c5bb3699c3e8934923c7cf0951b0c41df2d5cca4c3d0af851a0b"
+  },
+  {
+    "source": "web/viewer/calibration-ui.mjs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/web/viewer/calibration-ui.mjs",
+    "sha256": "cae27ba9955f6429fe56a766abb8ecc60b81919c8384a0e23f64bea677be83f8"
+  },
+  {
+    "source": "web/viewer/actuator-motion-view.mjs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/web/viewer/actuator-motion-view.mjs",
+    "sha256": "09570f5bf61ddbf845cbdb04e0974bbc89ec8492975426fb25ebd513fda7dea8"
+  },
+  {
+    "source": "web/tests/calibration-ui.mjs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/web/tests/calibration-ui.mjs",
+    "sha256": "4a5112daa4c6c197f72ea3c349a38eef88c819b5ca7c4a17ec221879c24d8bbb"
+  },
+  {
+    "source": "web/tests/calibration-sweep-ui.mjs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/web/tests/calibration-sweep-ui.mjs",
+    "sha256": "488ea4d33a5317455e901932cc31ab02d7ccafbd17372cab93ead434eb4264f3"
+  },
+  {
+    "source": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source-continuous/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json",
+    "sha256": "cada03e479910662e444ca942e3250ae84d50aa0bd8a0cb56f316c57c61b2106"
+  }
+]

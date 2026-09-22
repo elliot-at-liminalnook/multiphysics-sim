@@ -1,0 +1,21 @@
+    Checking sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+error[E0425]: cannot find type `Params` in crate `sim_core`
+  --> crates/sim-domain-control/src/pwm_feedback.rs:13:19
+   |
+13 |     p: &sim_core::Params,
+   |                   ^^^^^^ not found in `sim_core`
+   |
+note: these type aliases exist but are inaccessible
+  --> crates/sim-domain-control/src/elements.rs:17:1
+   |
+17 | type Params = BTreeMap<String, f64>;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `crate::elements::Params`: not accessible
+   |
+  ::: crates/sim-domain-control/src/external.rs:23:1
+   |
+23 | type Params = BTreeMap<String, f64>;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `crate::external::Params`: not accessible
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `sim-domain-control` (lib) due to 1 previous error

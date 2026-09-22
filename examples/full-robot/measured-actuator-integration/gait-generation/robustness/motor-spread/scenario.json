@@ -1,0 +1,27 @@
+{
+  "name": "motor-spread",
+  "calibrated": false,
+  "parent": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/pilot.spec.json",
+    "sha256": "2f1c8fe4a81b1a668e20d287784722c276373f5283d7b807c2c4880688b3eb4e"
+  },
+  "generator_sha256": "bb38aac9c8a1b33a15e742a7581949cb65e35d1a1665958dc4bd690304f2b163",
+  "scope": "Hypothetical sensitivity case, not a measured parameter set, physical rating, confidence bound or identified motor assignment.",
+  "assumptions": {
+    "factors": [
+      0.8,
+      1,
+      1.2
+    ],
+    "parameters": [
+      "rotor_inertia",
+      "gear_friction"
+    ],
+    "assignment": "Sort stable CAD motor IDs and cycle factors; deterministic synthetic heterogeneity, not physical-unit attribution.",
+    "limitations": [
+      "20 percent spread is an unmeasured probe, not an observed population distribution.",
+      "Electrical torque/back-EMF constants remain coupled and unchanged.",
+      "Other parameters and correlations need separate scenarios."
+    ]
+  }
+}

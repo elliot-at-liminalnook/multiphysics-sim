@@ -1,0 +1,510 @@
+{
+  "motor_trial_statistics_exact": true,
+  "accepted_interval_diagnostics_exact": true,
+  "intervals": 19200,
+  "scope": "Read-only profiling counters and all interval diagnostics match the prior binary exactly. Timings are historical profile comparisons, not unprofiled performance acceptance.",
+  "before": {
+    "step (total)": {
+      "calls": 0,
+      "name": "step (total)",
+      "seconds": 0.0
+    },
+    "implicit solve": {
+      "calls": 0,
+      "name": "implicit solve",
+      "seconds": 0.0
+    },
+    "newton calls": {
+      "calls": 198689,
+      "name": "newton calls",
+      "seconds": 0.0
+    },
+    "newton iterations": {
+      "calls": 505853,
+      "name": "newton iterations",
+      "seconds": 0.0
+    },
+    "fresh jacobians": {
+      "calls": 23159,
+      "name": "fresh jacobians",
+      "seconds": 0.0
+    },
+    "stale full-step refreshes": {
+      "calls": 70,
+      "name": "stale full-step refreshes",
+      "seconds": 0.0
+    },
+    "residual evaluations": {
+      "calls": 705324,
+      "name": "residual evaluations",
+      "seconds": 18.897620743
+    },
+    "jacobian assembly": {
+      "calls": 23159,
+      "name": "jacobian assembly",
+      "seconds": 4.475862192
+    },
+    "  slots supplied": {
+      "calls": 0,
+      "name": "  slots supplied",
+      "seconds": 0.0
+    },
+    "  slots with supplied rate partials": {
+      "calls": 0,
+      "name": "  slots with supplied rate partials",
+      "seconds": 0.0
+    },
+    "  slots finite-difference": {
+      "calls": 0,
+      "name": "  slots finite-difference",
+      "seconds": 0.0
+    },
+    "  component FD residual calls": {
+      "calls": 0,
+      "name": "  component FD residual calls",
+      "seconds": 0.0
+    },
+    "factorisation": {
+      "calls": 23159,
+      "name": "factorisation",
+      "seconds": 0.252811946
+    },
+    "  factor entries sum/sort": {
+      "calls": 23159,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.066288359
+    },
+    "  sparse matrix construction": {
+      "calls": 0,
+      "name": "  sparse matrix construction",
+      "seconds": 0.0
+    },
+    "  symbolic cache lookup/build": {
+      "calls": 0,
+      "name": "  symbolic cache lookup/build",
+      "seconds": 0.0
+    },
+    "    symbolic cache misses": {
+      "calls": 0,
+      "name": "    symbolic cache misses",
+      "seconds": 0.0
+    },
+    "  sparse numeric factorisation": {
+      "calls": 0,
+      "name": "  sparse numeric factorisation",
+      "seconds": 0.0
+    },
+    "back-substitution": {
+      "calls": 505846,
+      "name": "back-substitution",
+      "seconds": 0.495101063
+    },
+    "guards": {
+      "calls": 0,
+      "name": "guards",
+      "seconds": 0.0
+    },
+    "event location": {
+      "calls": 0,
+      "name": "event location",
+      "seconds": 0.0
+    },
+    "jumps (incl. coupler)": {
+      "calls": 0,
+      "name": "jumps (incl. coupler)",
+      "seconds": 0.0
+    },
+    "embedded velocity predictor": {
+      "calls": 0,
+      "name": "embedded velocity predictor",
+      "seconds": 0.0
+    },
+    "embedded predictor guesses used": {
+      "calls": 0,
+      "name": "embedded predictor guesses used",
+      "seconds": 0.0
+    },
+    "embedded predictor fallbacks": {
+      "calls": 0,
+      "name": "embedded predictor fallbacks",
+      "seconds": 0.0
+    },
+    "embedded closure mapping": {
+      "calls": 129594,
+      "name": "embedded closure mapping",
+      "seconds": 6.785334343000001
+    },
+    "embedded contact history": {
+      "calls": 160308,
+      "name": "embedded contact history",
+      "seconds": 0.402131883
+    },
+    "embedded dynamics preparation": {
+      "calls": 179489,
+      "name": "embedded dynamics preparation",
+      "seconds": 7.624493824000001
+    },
+    "embedded applied force solve": {
+      "calls": 198689,
+      "name": "embedded applied force solve",
+      "seconds": 0.603166203
+    },
+    "embedded component equations": {
+      "calls": 835596,
+      "name": "embedded component equations",
+      "seconds": 3.795359308
+    },
+    "embedded component derivative proposals": {
+      "calls": 0,
+      "name": "embedded component derivative proposals",
+      "seconds": 0.0
+    },
+    "embedded supplied auxiliary matrices": {
+      "calls": 0,
+      "name": "embedded supplied auxiliary matrices",
+      "seconds": 0.0
+    },
+    "  closure Jacobian": {
+      "calls": 129594,
+      "name": "  closure Jacobian",
+      "seconds": 1.077269014
+    },
+    "  closure factorization": {
+      "calls": 129594,
+      "name": "  closure factorization",
+      "seconds": 1.621980725
+    },
+    "    closure SVD": {
+      "calls": 519521,
+      "name": "    closure SVD",
+      "seconds": 0.585657387
+    },
+    "  embedded rigid inertia": {
+      "calls": 179489,
+      "name": "  embedded rigid inertia",
+      "seconds": 1.707087897
+    },
+    "  embedded inertia projection": {
+      "calls": 179489,
+      "name": "  embedded inertia projection",
+      "seconds": 0.76488862
+    },
+    "  embedded force evaluation": {
+      "calls": 179489,
+      "name": "  embedded force evaluation",
+      "seconds": 3.2397126960000002
+    },
+    "contact geometry queries": {
+      "calls": 179939,
+      "name": "contact geometry queries",
+      "seconds": 1.1907651000000001
+    },
+    "contact force evaluation": {
+      "calls": 179939,
+      "name": "contact force evaluation",
+      "seconds": 1.855985282
+    },
+    "  contact exclusion metadata": {
+      "calls": 179939,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.038910434
+    },
+    "  contact sample transforms": {
+      "calls": 179939,
+      "name": "  contact sample transforms",
+      "seconds": 0.7519925230000001
+    },
+    "  contact pair queries": {
+      "calls": 179939,
+      "name": "  contact pair queries",
+      "seconds": 0.035465753
+    },
+    "policy online reference": {
+      "calls": 0,
+      "name": "policy online reference",
+      "seconds": 0.0
+    },
+    "policy observations": {
+      "calls": 150,
+      "name": "policy observations",
+      "seconds": 0.0039780480000000005
+    },
+    "policy body feedback": {
+      "calls": 0,
+      "name": "policy body feedback",
+      "seconds": 0.0
+    },
+    "policy point feedback": {
+      "calls": 0,
+      "name": "policy point feedback",
+      "seconds": 0.0
+    },
+    "policy script": {
+      "calls": 150,
+      "name": "policy script",
+      "seconds": 0.088171502
+    },
+    "Broyden update attempts": {
+      "calls": 0,
+      "name": "Broyden update attempts",
+      "seconds": 0.0
+    },
+    "Broyden rejected/capped updates": {
+      "calls": 0,
+      "name": "Broyden rejected/capped updates",
+      "seconds": 0.0
+    }
+  },
+  "candidate": {
+    "step (total)": {
+      "calls": 0,
+      "name": "step (total)",
+      "seconds": 0.0
+    },
+    "implicit solve": {
+      "calls": 0,
+      "name": "implicit solve",
+      "seconds": 0.0
+    },
+    "newton calls": {
+      "calls": 198689,
+      "name": "newton calls",
+      "seconds": 0.0
+    },
+    "newton iterations": {
+      "calls": 505853,
+      "name": "newton iterations",
+      "seconds": 0.0
+    },
+    "fresh jacobians": {
+      "calls": 23159,
+      "name": "fresh jacobians",
+      "seconds": 0.0
+    },
+    "stale full-step refreshes": {
+      "calls": 70,
+      "name": "stale full-step refreshes",
+      "seconds": 0.0
+    },
+    "residual evaluations": {
+      "calls": 705324,
+      "name": "residual evaluations",
+      "seconds": 17.881869747
+    },
+    "jacobian assembly": {
+      "calls": 23159,
+      "name": "jacobian assembly",
+      "seconds": 4.095416532000001
+    },
+    "  slots supplied": {
+      "calls": 0,
+      "name": "  slots supplied",
+      "seconds": 0.0
+    },
+    "  slots with supplied rate partials": {
+      "calls": 0,
+      "name": "  slots with supplied rate partials",
+      "seconds": 0.0
+    },
+    "  slots finite-difference": {
+      "calls": 0,
+      "name": "  slots finite-difference",
+      "seconds": 0.0
+    },
+    "  component FD residual calls": {
+      "calls": 0,
+      "name": "  component FD residual calls",
+      "seconds": 0.0
+    },
+    "factorisation": {
+      "calls": 23159,
+      "name": "factorisation",
+      "seconds": 0.249879914
+    },
+    "  factor entries sum/sort": {
+      "calls": 23159,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.06460006900000001
+    },
+    "  sparse matrix construction": {
+      "calls": 0,
+      "name": "  sparse matrix construction",
+      "seconds": 0.0
+    },
+    "  symbolic cache lookup/build": {
+      "calls": 0,
+      "name": "  symbolic cache lookup/build",
+      "seconds": 0.0
+    },
+    "    symbolic cache misses": {
+      "calls": 0,
+      "name": "    symbolic cache misses",
+      "seconds": 0.0
+    },
+    "  sparse numeric factorisation": {
+      "calls": 0,
+      "name": "  sparse numeric factorisation",
+      "seconds": 0.0
+    },
+    "back-substitution": {
+      "calls": 505846,
+      "name": "back-substitution",
+      "seconds": 0.487455666
+    },
+    "guards": {
+      "calls": 0,
+      "name": "guards",
+      "seconds": 0.0
+    },
+    "event location": {
+      "calls": 0,
+      "name": "event location",
+      "seconds": 0.0
+    },
+    "jumps (incl. coupler)": {
+      "calls": 0,
+      "name": "jumps (incl. coupler)",
+      "seconds": 0.0
+    },
+    "embedded velocity predictor": {
+      "calls": 0,
+      "name": "embedded velocity predictor",
+      "seconds": 0.0
+    },
+    "embedded predictor guesses used": {
+      "calls": 0,
+      "name": "embedded predictor guesses used",
+      "seconds": 0.0
+    },
+    "embedded predictor fallbacks": {
+      "calls": 0,
+      "name": "embedded predictor fallbacks",
+      "seconds": 0.0
+    },
+    "embedded closure mapping": {
+      "calls": 129594,
+      "name": "embedded closure mapping",
+      "seconds": 6.6747440870000005
+    },
+    "embedded contact history": {
+      "calls": 160308,
+      "name": "embedded contact history",
+      "seconds": 0.396841323
+    },
+    "embedded dynamics preparation": {
+      "calls": 179489,
+      "name": "embedded dynamics preparation",
+      "seconds": 6.48037223
+    },
+    "embedded applied force solve": {
+      "calls": 198689,
+      "name": "embedded applied force solve",
+      "seconds": 0.5829295830000001
+    },
+    "embedded component equations": {
+      "calls": 835596,
+      "name": "embedded component equations",
+      "seconds": 3.696259903
+    },
+    "embedded component derivative proposals": {
+      "calls": 0,
+      "name": "embedded component derivative proposals",
+      "seconds": 0.0
+    },
+    "embedded supplied auxiliary matrices": {
+      "calls": 0,
+      "name": "embedded supplied auxiliary matrices",
+      "seconds": 0.0
+    },
+    "  closure Jacobian": {
+      "calls": 129594,
+      "name": "  closure Jacobian",
+      "seconds": 1.069887268
+    },
+    "  closure factorization": {
+      "calls": 129594,
+      "name": "  closure factorization",
+      "seconds": 1.587568569
+    },
+    "    closure SVD": {
+      "calls": 519521,
+      "name": "    closure SVD",
+      "seconds": 0.574828627
+    },
+    "  embedded rigid inertia": {
+      "calls": 179489,
+      "name": "  embedded rigid inertia",
+      "seconds": 1.6805612
+    },
+    "  embedded inertia projection": {
+      "calls": 179489,
+      "name": "  embedded inertia projection",
+      "seconds": 0.7347247140000001
+    },
+    "  embedded force evaluation": {
+      "calls": 179489,
+      "name": "  embedded force evaluation",
+      "seconds": 2.5978070420000003
+    },
+    "contact geometry queries": {
+      "calls": 179939,
+      "name": "contact geometry queries",
+      "seconds": 1.154927446
+    },
+    "contact force evaluation": {
+      "calls": 179939,
+      "name": "contact force evaluation",
+      "seconds": 1.807289488
+    },
+    "  contact exclusion metadata": {
+      "calls": 179939,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.040575480000000004
+    },
+    "  contact sample transforms": {
+      "calls": 179939,
+      "name": "  contact sample transforms",
+      "seconds": 0.715591996
+    },
+    "  contact pair queries": {
+      "calls": 179939,
+      "name": "  contact pair queries",
+      "seconds": 0.035960844000000006
+    },
+    "policy online reference": {
+      "calls": 0,
+      "name": "policy online reference",
+      "seconds": 0.0
+    },
+    "policy observations": {
+      "calls": 150,
+      "name": "policy observations",
+      "seconds": 0.004007166
+    },
+    "policy body feedback": {
+      "calls": 0,
+      "name": "policy body feedback",
+      "seconds": 0.0
+    },
+    "policy point feedback": {
+      "calls": 0,
+      "name": "policy point feedback",
+      "seconds": 0.0
+    },
+    "policy script": {
+      "calls": 150,
+      "name": "policy script",
+      "seconds": 0.08583664
+    },
+    "Broyden update attempts": {
+      "calls": 0,
+      "name": "Broyden update attempts",
+      "seconds": 0.0
+    },
+    "Broyden rejected/capped updates": {
+      "calls": 0,
+      "name": "Broyden rejected/capped updates",
+      "seconds": 0.0
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "scope": "Opt-in private frozen-mechanics implicit velocity guess followed by the unchanged exact coupled solve from the original state. Predictor states never commit. Failed predictor or exact attempt falls back to the original guess; acceptance tolerances and recipe physics unchanged.",
+  "sources_before": {
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "0faa53508aab20d17a11c1491443e9e5a7216ac212b70880bf0bfd793e57b36d",
+    "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs": "52af76397954d25348b25e2205315ec1560dff69ca67e713e7ea56651b0b8534",
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "23a47fe59e7478b30e6febf9f0850b4c20a611143e59a60505f16564398af406",
+    "crates/sim-solve/src/profile.rs": "2d9af05f3a39291fd97d03422eaaac31c50f61c4c8d667a7072be1c0aa6affaa",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "cbfc71a5808c49868330e019c425e549395b37fcd8dfc46c7fcaef1deb92331e",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "809fb5adf0c78757e51e32b4be6debc227509881ae3448bf9d904e0be3219faf"
+  },
+  "binary_before_sha256": "5625ea64cffd144c2def96b622e44bfbe090b568b7e3f36a6715cd1661668f8d",
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "sources_candidate": {
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "c1481075e81659dc5053efe2713709f2d492b16f74ceff31e24799a06cbd5bdf",
+    "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs": "a87dcb0c74e00974bc0aae825e6c610fb9764e2ec0da1c924393cb30d8348870",
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "23a47fe59e7478b30e6febf9f0850b4c20a611143e59a60505f16564398af406",
+    "crates/sim-solve/src/profile.rs": "ae070ac351d14cae4d70f983115aa32c8b167eb15899dd4badd6ced94332cd99",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "de81b664e1191c98d91df0f7d29f50d9560d445b485d520ed0b314dd2c432e16",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "23fbad8aa40c10a1f124d0fd2d85e93f576a5bdd6590299c3e445c93a2772fc8",
+    "crates/sim-domain-robot/src/articulated/embedding/predictor.rs": "7828375cb0b529e3b3d09c8dfff0a8c1d260d1c1ea37a4aa2e37f9a80d18f0fe",
+    "crates/sim-domain-robot/tests/embedding.rs": "d6b91800f7b98da31f33fe32e4c2146cccc442177cb2b7db3bf8c815f4cc192b"
+  },
+  "new_sources": [
+    "crates/sim-domain-robot/src/articulated/embedding/predictor.rs"
+  ],
+  "additional_test_source": "crates/sim-domain-robot/tests/embedding.rs",
+  "binary_candidate_sha256": "bbf0360740c5f2f2ec4c668fd6afaab773d51588e1b8fca2b2beec5f2e53e39b",
+  "snapshot_paths_candidate": {
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "implicit.rs",
+    "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs": "dynamics.rs",
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "embedding.rs",
+    "crates/sim-solve/src/profile.rs": "profile.rs",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "embedded_motor.rs",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "embedded_step.rs",
+    "crates/sim-domain-robot/src/articulated/embedding/predictor.rs": "predictor.rs",
+    "crates/sim-domain-robot/tests/embedding.rs": "test-embedding.rs"
+  },
+  "snapshot_note": "Recovered source embedding.rs from its identical pre-change snapshot after detecting a basename collision with test embedding.rs. Test now preserved as test-embedding.rs; all copies match the originally captured hashes."
+}

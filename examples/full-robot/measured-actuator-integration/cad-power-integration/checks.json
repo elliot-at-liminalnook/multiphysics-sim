@@ -1,0 +1,28 @@
+{
+  "runtime": {
+    "passed": 36,
+    "failed": 0,
+    "log": "runtime-tests.log"
+  },
+  "cad": {
+    "passed": 5,
+    "failed": 0,
+    "log": "cad-tests.log"
+  },
+  "core_regression": {
+    "passed": 21,
+    "failed": 0,
+    "log": "core-tests.log"
+  },
+  "wasm": {
+    "passed": true,
+    "log": "wasm-check.log",
+    "scope": "Compilation only; not browser performance"
+  },
+  "limitations": [
+    "Synthetic declared power parameters; no new hardware measurements",
+    "No quadruped battery/wiring profile authored",
+    "No physical BMS or continuous envelope event locator",
+    "First failed physical test predicate retained and explained in README"
+  ]
+}

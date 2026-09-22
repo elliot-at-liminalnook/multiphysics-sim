@@ -1,0 +1,37 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+    Finished `test` profile [optimized] target(s) in 46.21s
+     Running unittests src/lib.rs (target/debug/deps/sim_inspect-7f1a4d213301ee02)
+
+running 2 tests
+test plot::tests::thermal_net_offers_all_terminals_but_no_unrelated_state ... ok
+test plot::tests::history_preserves_sample_time_gaps_bounds_and_rejects_stale_frames ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/animation.rs (target/debug/deps/animation-a75cfa7f03572167)
+
+running 5 tests
+test sample_times_and_missing_values_are_not_fabricated ... ok
+test bindings_require_real_parts_typed_observables_and_valid_axes_scales ... FAILED
+test runtime_extension_accepts_added_states_but_rejects_physical_and_observation_changes ... ok
+test live_gate_holds_paused_frames_and_rejects_reset_races_and_foreign_data ... ok
+test native_transport_delivers_latest_reset_and_reports_closed_publisher ... ok
+
+failures:
+
+---- bindings_require_real_parts_typed_observables_and_valid_axes_scales stdout ----
+
+thread 'bindings_require_real_parts_typed_observables_and_valid_axes_scales' (2590368) panicked at crates/sim-inspect/tests/animation.rs:93:5:
+assertion `left == right` failed
+  left: [0.9499999, 0.22, 0.07999998]
+ right: [0.95, 0.22, 0.08]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    bindings_require_real_parts_typed_observables_and_valid_axes_scales
+
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+
+error: test failed, to rerun pass `-p sim-inspect --test animation`

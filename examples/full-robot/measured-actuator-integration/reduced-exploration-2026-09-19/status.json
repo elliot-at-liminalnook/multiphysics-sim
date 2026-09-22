@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "status": "qualified_for_recorded_cases",
+  "profile": "../../../primitives/reduced-exploration-outer-broyden.profile.json",
+  "source_archive": "outer-broyden-library-source.tar.gz",
+  "gait_search_run": false,
+  "hardware_operated": false,
+  "budgets_relaxed": false,
+  "duration_s_per_case": 3.6,
+  "case_names": [
+    "forward",
+    "stop",
+    "reverse"
+  ],
+  "cases": [
+    {
+      "name": "forward",
+      "receipt": "outer-forward/qualification.json",
+      "qualified": true,
+      "speedup": 1.1587501176499273,
+      "rejection_reasons": [],
+      "capture_hashes": [
+        "6754c411f2bb55fb926d114f7c1a0b1f8de438a57aa2f6e9c14aa6e0554f744c",
+        "d8f907e0178cffa11fe684aed4db66913b1858e16cf41c2a2734616ffd0b3f3e"
+      ],
+      "recipe_id": "815d89b35fb17fb7c370062b3d21580b3addeb632122fd60a4ea518d1d61b609",
+      "peak_by_unit": {
+        "1": 0.002036138872597487,
+        "A": 0.09563914186193245,
+        "N": 3.539607099342069,
+        "N·m": 0.08515335562475645,
+        "V": 0.5318349493733674,
+        "W": 0.9565910651151341,
+        "m": 0.0004915959066338904,
+        "m/s": 0.020593287810504,
+        "rad": 0.002995144693782703,
+        "rad/s": 0.48094479634546716
+      }
+    },
+    {
+      "name": "stop",
+      "receipt": "outer-stop/qualification.json",
+      "qualified": true,
+      "speedup": 1.165644267491477,
+      "rejection_reasons": [],
+      "capture_hashes": [
+        "38fc8cb7ac666debc921b1fc07b36d2351cc079408e6d5b118884f8f283ab147",
+        "ff04d6db3dc1732c2f9e879d693ef727aebea9b0b6a6db84b2266661dbc89ce7"
+      ],
+      "recipe_id": "0878f94e183211c67dbe50ef5a2f953821dc681c1bb75282c47cfa2b4116a82e",
+      "peak_by_unit": {
+        "1": 5.471171141135933E-9,
+        "A": 3.5929798136713487E-8,
+        "N": 0.000029377835042421196,
+        "N·m": 2.311829733064874E-7,
+        "V": 1.796489845773408E-9,
+        "W": 3.5597730618786017E-7,
+        "m": 8.864927125706856E-10,
+        "m/s": 1.4916744166260099E-7,
+        "rad": 5.061387087224034E-9,
+        "rad/s": 0.0000032030392040915956
+      }
+    },
+    {
+      "name": "reverse",
+      "receipt": "outer-reverse/qualification.json",
+      "qualified": true,
+      "speedup": 1.155830341598664,
+      "rejection_reasons": [],
+      "capture_hashes": [
+        "df4416950944cc1e1a04c4fa34270af33dddb1c69b774ee1aba60e053d4d51d3",
+        "3f583c16772fc2f69c88c2049a9223a9e4a26ffad9c73d246bd8aca14d38e9fe"
+      ],
+      "recipe_id": "6e8afdc844386f7871e6a25b23edd61a2df3ad4327ed727f54ff028af2a252c7",
+      "peak_by_unit": {
+        "1": 5.471171141135933E-9,
+        "A": 7.158662002071381E-8,
+        "N": 0.0000409267514758227,
+        "N·m": 2.3880748015875364E-7,
+        "V": 3.579331053771284E-9,
+        "W": 3.5597730618786017E-7,
+        "m": 1.1238615593711643E-9,
+        "m/s": 1.8779861629680816E-7,
+        "rad": 5.36704636289187E-9,
+        "rad/s": 0.000004150971104399659
+      }
+    }
+  ],
+  "limits": "Sampled simulator agreement at the tested baseline only; not full search-space, long-horizon, realtime or hardware qualification. Single sequential timing per case."
+}

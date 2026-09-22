@@ -1,0 +1,41 @@
+    Blocking waiting for file lock on build directory
+   Compiling gemm-common v0.18.2
+   Compiling ahash v0.8.12
+   Compiling sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+   Compiling sim-domain-magnetic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-magnetic)
+   Compiling gemm-f32 v0.18.2
+   Compiling gemm-c32 v0.18.2
+   Compiling gemm-f64 v0.18.2
+   Compiling gemm-c64 v0.18.2
+   Compiling rhai v1.26.0
+   Compiling gemm v0.18.2
+   Compiling faer v0.22.6
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 2m 48s
+     Running tests/motion_forecast.rs (target/debug/deps/motion_forecast-c7f78b4f88aa8f17)
+
+running 4 tests
+test constant_acceleration_reference_is_exact_and_translation_invariant ... ok
+test multi_step_labels_use_applied_future_actions_and_stay_inside_split_windows ... ok
+test physical_forecast_action_gradient_includes_both_normalization_scales ... ok
+test forecast_residual_learns_action_dependence_on_held_out_actions ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+

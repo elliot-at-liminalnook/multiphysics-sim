@@ -1,0 +1,30 @@
+{
+  "name": "force-output-storage/analytic/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": false,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.167485552,
+  "baseline_wall_s": 23.862128341000002,
+  "candidate_wall_s": 20.928729663,
+  "speedup": 1.1401613344543302,
+  "simulation_per_wall": 0.1433436261209735,
+  "max_error": {
+    "motor_angle_rad": 2.4424906541753444e-14,
+    "link_position_m": 7.484863629972551e-15,
+    "current_a": 1.4854784069484595e-13,
+    "contact_force_n": 7.190310546419509e-11
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

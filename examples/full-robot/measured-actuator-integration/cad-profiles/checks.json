@@ -1,0 +1,29 @@
+{
+  "complete_goal": false,
+  "tests": [
+    {
+      "command": "cargo test --locked -p sim-domain-control sampled_fixed_pd",
+      "passed": 2,
+      "log": "sampled-controller-tests.log"
+    },
+    {
+      "command": "cargo test --locked -p sim-domain-robot --test embedded_motor",
+      "passed": 16,
+      "log": "embedded-controller-tests.log"
+    },
+    {
+      "command": "cargo test --locked -p sim-runtime --test actuator_profiles",
+      "passed": 3,
+      "log": "rust-profile-tests.log"
+    },
+    {
+      "command": "cd cad && .venv/bin/python -m pytest tests/test_actuator_profiles.py tests/test_physical.py -q",
+      "passed": 15,
+      "log": "cad-final-tests.log"
+    }
+  ],
+  "cad_archive": "revision-receipt.json",
+  "full_physical_export": "Failed; retained in failed-physical-export.log",
+  "ci": "Profile acceptance job added; remote execution not verified",
+  "controller_scope": "Shared motor event adapter tested. CAD profile selection in EmbeddedSession and shared battery/branch coupling not yet implemented."
+}

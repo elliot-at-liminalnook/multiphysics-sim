@@ -1,0 +1,99 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.04s
+     Running unittests src/lib.rs (target/debug/deps/sim_domain_control-b7eca533802e80c5)
+
+running 1 test
+test reference_governor::tests::changes_and_reversals_retain_bounds_and_settle ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s
+
+     Running tests/angle_integral.rs (target/debug/deps/angle_integral-6a70daf01f11ee40)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/command_lease.rs (target/debug/deps/command_lease-6b7d16962696ce51)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/heading.rs (target/debug/deps/heading-09a326fad68f52ac)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/load_damping.rs (target/debug/deps/load_damping-9260a13bf5408c35)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/motion_clock.rs (target/debug/deps/motion_clock-5791804c8f8b64b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/motion_parameters.rs (target/debug/deps/motion_parameters-40dcf077bba47169)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/neural.rs (target/debug/deps/neural-d56c667eb2673eeb)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/planar_prediction.rs (target/debug/deps/planar_prediction-7c81f0bbc228533f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/ppo.rs (target/debug/deps/ppo-829870b1eb73554f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/projected_ascent.rs (target/debug/deps/projected_ascent-699209c09901cc49)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/stepping.rs (target/debug/deps/stepping-36d5a99d0464d6a3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s
+
+     Running tests/support_preload.rs (target/debug/deps/support_preload-b552507a9acdd758)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/trajectory.rs (target/debug/deps/trajectory-6ccb01462db67b60)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running tests/trajectory_affine.rs (target/debug/deps/trajectory_affine-3b2249893c7883db)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/trajectory_phase.rs (target/debug/deps/trajectory_phase-c62b33a9f4fe0129)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+

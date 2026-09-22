@@ -1,0 +1,60 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+   Compiling sim-viewer v0.1.0 (/Users/elliot/physics-simulator/crates/sim-viewer)
+error[E0308]: mismatched types
+   --> crates/sim-viewer/src/experiments_ui/refinement.rs:296:197
+    |
+296 | ..._pretty(&sim_runtime::controller_refinement::context::CaptureContext::unknown(r)).unwrap();}
+    |             -------------------------------------------------------------------- ^ expected `&Recording`, found `&Run`
+    |             |
+    |             arguments to this function are incorrect
+    |
+    = note: expected reference `&sim_runtime::controller_refinement::recording::Recording`
+               found reference `&Run`
+note: associated function defined here
+   --> crates/sim-runtime/src/controller_refinement/context.rs:49:12
+    |
+ 49 |     pub fn unknown(recording: &super::recording::Recording) -> Self {
+    |            ^^^^^^^
+
+error[E0599]: no method named `fingerprint` found for reference `&Run` in the current scope
+   --> crates/sim-viewer/src/experiments_ui/refinement.rs:299:342
+    |
+299 | ...ing())?;c.validate()?;if c.recording_hash!=r.fingerprint(){return Err("Snapshot must describe the selected recording".into());}i...
+    |                                                 ^^^^^^^^^^^ method not found in `&Run`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+299 |                             if ui.button("Capture setup revision").clicked(){let result=(||->Result<sim_runtime::controller_refinement::context::CaptureContext,String>{let c:sim_runtime::controller_refinement::context::CaptureContext=serde_json::from_str(&self.context_editor).map_err(|e|e.to_string())?;c.validate()?;if c.recording_hash!=r.experiment.fingerprint(){return Err("Snapshot must describe the selected recording".into());}if let Some(id)=&r.experiment.component_id{if c.bindings.iter().any(|b|b.hardware_id==r.experiment.device&&&b.cad_component_id!=id){return Err("Binding conflicts with captured CAD identity".into());}}Ok(c)})();match result{Ok(c)=>{s.refinement.capture_contexts.push(c);self.context_error=None;},Err(e)=>self.context_error=Some(e)}}
+    |                                                                                                                                                                                                                                                                                                                                                      +++++++++++
+299 |                             if ui.button("Capture setup revision").clicked(){let result=(||->Result<sim_runtime::controller_refinement::context::CaptureContext,String>{let c:sim_runtime::controller_refinement::context::CaptureContext=serde_json::from_str(&self.context_editor).map_err(|e|e.to_string())?;c.validate()?;if c.recording_hash!=r.model.fingerprint(){return Err("Snapshot must describe the selected recording".into());}if let Some(id)=&r.experiment.component_id{if c.bindings.iter().any(|b|b.hardware_id==r.experiment.device&&&b.cad_component_id!=id){return Err("Binding conflicts with captured CAD identity".into());}}Ok(c)})();match result{Ok(c)=>{s.refinement.capture_contexts.push(c);self.context_error=None;},Err(e)=>self.context_error=Some(e)}}
+    |                                                                                                                                                                                                                                                                                                                                                      ++++++
+
+error[E0599]: no method named `fingerprint` found for reference `&Run` in the current scope
+   --> crates/sim-viewer/src/experiments_ui/refinement.rs:301:125
+    |
+301 | ...numerate().filter(|(_,c)|c.recording_hash==r.fingerprint()){ui.collapsing(format!("Setup revision {}",i+1),|ui|{ui.monospace(ser...
+    |                                                 ^^^^^^^^^^^ method not found in `&Run`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+301 |                             for (i,c) in s.refinement.capture_contexts.iter().enumerate().filter(|(_,c)|c.recording_hash==r.experiment.fingerprint()){ui.collapsing(format!("Setup revision {}",i+1),|ui|{ui.monospace(serde_json::to_string_pretty(c).unwrap());});}
+    |                                                                                                                             +++++++++++
+301 |                             for (i,c) in s.refinement.capture_contexts.iter().enumerate().filter(|(_,c)|c.recording_hash==r.model.fingerprint()){ui.collapsing(format!("Setup revision {}",i+1),|ui|{ui.monospace(serde_json::to_string_pretty(c).unwrap());});}
+    |                                                                                                                             ++++++
+
+Some errors have detailed explanations: E0308, E0599.
+For more information about an error, try `rustc --explain E0308`.
+error: could not compile `sim-viewer` (bin "sim-viewer" test) due to 3 previous errors

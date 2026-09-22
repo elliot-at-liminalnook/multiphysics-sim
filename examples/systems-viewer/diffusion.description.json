@@ -1,0 +1,2176 @@
+{
+  "version": 1,
+  "id": "d40a0578644598730b6ed6409e5a4b4adeef33b5fc742a9425200691df7c5a67",
+  "source_hash": "example.diffusion.relaxation.v1",
+  "model_revision": 1,
+  "definitions": {
+    "version": 1,
+    "quantities": [
+      {
+        "id": {
+          "name": "example.diffusion.concentration",
+          "version": 1
+        },
+        "label": "Species concentration",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              -3,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "mol/m³",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Angle",
+          "version": 1
+        },
+        "label": "Angle",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "rad",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.AngularAcceleration",
+          "version": 1
+        },
+        "label": "AngularAcceleration",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "rad/s²",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.AngularImpulse",
+          "version": 1
+        },
+        "label": "AngularImpulse",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "N·m·s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.AngularVelocity",
+          "version": 1
+        },
+        "label": "AngularVelocity",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "rad/s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.ChemicalPotential",
+          "version": 1
+        },
+        "label": "ChemicalPotential",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -2,
+              0,
+              0,
+              -1,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "J/mol",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Current",
+          "version": 1
+        },
+        "label": "Current",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "A",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Dimensionless",
+          "version": 1
+        },
+        "label": "Dimensionless",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "1",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Energy",
+          "version": 1
+        },
+        "label": "Energy",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "J",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Entropy",
+          "version": 1
+        },
+        "label": "Entropy",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -2,
+              0,
+              -1,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "J/K",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Force",
+          "version": 1
+        },
+        "label": "Force",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              1,
+              1,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "N",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Frequency",
+          "version": 1
+        },
+        "label": "Frequency",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "Hz",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.HeatFlow",
+          "version": 1
+        },
+        "label": "HeatFlow",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -3,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "W",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Impulse",
+          "version": 1
+        },
+        "label": "Impulse",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              1,
+              1,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "N·s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Length",
+          "version": 1
+        },
+        "label": "Length",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "m",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.LinearAcceleration",
+          "version": 1
+        },
+        "label": "LinearAcceleration",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              1,
+              0,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "m/s²",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.LinearVelocity",
+          "version": 1
+        },
+        "label": "LinearVelocity",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              1,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "m/s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.MagneticFlux",
+          "version": 1
+        },
+        "label": "MagneticFlux",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -2,
+              -1,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "Wb",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Mass",
+          "version": 1
+        },
+        "label": "Mass",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "kg",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.MassFlow",
+          "version": 1
+        },
+        "label": "MassFlow",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              1,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "kg/s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.MassNormalizedDisplacement",
+          "version": 1
+        },
+        "label": "MassNormalizedDisplacement",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 2
+          }
+        },
+        "canonical_unit": "m·√kg",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.MassNormalizedVelocity",
+          "version": 1
+        },
+        "label": "MassNormalizedVelocity",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 2
+          }
+        },
+        "canonical_unit": "m·√kg/s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.ModalCoordinate",
+          "version": 1
+        },
+        "label": "ModalCoordinate",
+        "dimension": {
+          "kind": "opaque",
+          "basis": "sim.modal.normalization_unspecified",
+          "time_derivatives": 0
+        },
+        "canonical_unit": "modal",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.ModalVelocity",
+          "version": 1
+        },
+        "label": "ModalVelocity",
+        "dimension": {
+          "kind": "opaque",
+          "basis": "sim.modal.normalization_unspecified",
+          "time_derivatives": 1
+        },
+        "canonical_unit": "modal/s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.MolarFlow",
+          "version": 1
+        },
+        "label": "MolarFlow",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              -1,
+              0,
+              0,
+              1,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "mol/s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Power",
+          "version": 1
+        },
+        "label": "Power",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -3,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "W",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Pressure",
+          "version": 1
+        },
+        "label": "Pressure",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              -1,
+              1,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "Pa",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Radiosity",
+          "version": 1
+        },
+        "label": "Radiosity",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              1,
+              -3,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "W/m²",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.SpecificEnthalpy",
+          "version": 1
+        },
+        "label": "SpecificEnthalpy",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              0,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "J/kg",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Temperature",
+          "version": 1
+        },
+        "label": "Temperature",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "K",
+        "nature": "absolute_temperature",
+        "display_units": [
+          {
+            "symbol": "°C",
+            "scale": 1.0,
+            "offset": 273.15
+          }
+        ]
+      },
+      {
+        "id": {
+          "name": "sim.quantity.TemperatureDifference",
+          "version": 1
+        },
+        "label": "Temperature difference",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "K",
+        "nature": "temperature_difference",
+        "display_units": [
+          {
+            "symbol": "Δ°C",
+            "scale": 1.0,
+            "offset": 0.0
+          }
+        ]
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Time",
+          "version": 1
+        },
+        "label": "Time",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "s",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Torque",
+          "version": 1
+        },
+        "label": "Torque",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -2,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "N·m",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.Voltage",
+          "version": 1
+        },
+        "label": "Voltage",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              2,
+              1,
+              -3,
+              -1,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "V",
+        "nature": "linear",
+        "display_units": []
+      },
+      {
+        "id": {
+          "name": "sim.quantity.VolumeFlow",
+          "version": 1
+        },
+        "label": "VolumeFlow",
+        "dimension": {
+          "kind": "si",
+          "dimension": {
+            "powers": [
+              3,
+              0,
+              -1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "denominator": 1
+          }
+        },
+        "canonical_unit": "m³/s",
+        "nature": "linear",
+        "display_units": []
+      }
+    ],
+    "connectors": [
+      {
+        "id": {
+          "name": "example.diffusion.species",
+          "version": 1
+        },
+        "label": "Species diffusion",
+        "lanes": [
+          {
+            "across": {
+              "name": "concentration",
+              "quantity": {
+                "name": "example.diffusion.concentration",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "molar_flow",
+              "quantity": {
+                "name": "sim.quantity.MolarFlow",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "unavailable"
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.acoustic",
+          "version": 1
+        },
+        "label": "acoustic",
+        "lanes": [
+          {
+            "across": {
+              "name": "pressure",
+              "quantity": {
+                "name": "sim.quantity.Pressure",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "volume_flow",
+              "quantity": {
+                "name": "sim.quantity.VolumeFlow",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": false,
+              "through_lane": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.chemical",
+          "version": 1
+        },
+        "label": "chemical",
+        "lanes": [
+          {
+            "across": {
+              "name": "chemical_potential",
+              "quantity": {
+                "name": "sim.quantity.ChemicalPotential",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "molar_flow",
+              "quantity": {
+                "name": "sim.quantity.MolarFlow",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": false,
+              "through_lane": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.composite.22a7ae7db9e703aebb1b8b26f7ac8f0ef11afad2508562aea358c41da4c74cbc",
+          "version": 1
+        },
+        "label": "Composite connector",
+        "lanes": [],
+        "rule": {
+          "kind": "composite",
+          "members": [
+            {
+              "name": "electrical",
+              "connector": {
+                "name": "sim.connector.electrical",
+                "version": 1
+              }
+            },
+            {
+              "name": "rotational",
+              "connector": {
+                "name": "sim.connector.rotational",
+                "version": 1
+              }
+            },
+            {
+              "name": "thermal",
+              "connector": {
+                "name": "sim.connector.thermal",
+                "version": 1
+              }
+            }
+          ]
+        },
+        "energy": {
+          "kind": "unavailable"
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.composite.bad7c46fce0e7efaef4a7a7aba7674432da7cdea8db93f2832c5518fd644bb5c",
+          "version": 1
+        },
+        "label": "Composite connector",
+        "lanes": [],
+        "rule": {
+          "kind": "composite",
+          "members": [
+            {
+              "name": "electrical",
+              "connector": {
+                "name": "sim.connector.electrical",
+                "version": 1
+              }
+            },
+            {
+              "name": "thermal",
+              "connector": {
+                "name": "sim.connector.thermal",
+                "version": 1
+              }
+            },
+            {
+              "name": "chemical",
+              "connector": {
+                "name": "sim.connector.chemical",
+                "version": 1
+              }
+            }
+          ]
+        },
+        "energy": {
+          "kind": "unavailable"
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.electrical",
+          "version": 1
+        },
+        "label": "electrical",
+        "lanes": [
+          {
+            "across": {
+              "name": "voltage",
+              "quantity": {
+                "name": "sim.quantity.Voltage",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "current",
+              "quantity": {
+                "name": "sim.quantity.Current",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": false,
+              "through_lane": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.fluid_ph",
+          "version": 1
+        },
+        "label": "fluid_ph",
+        "lanes": [
+          {
+            "across": {
+              "name": "pressure",
+              "quantity": {
+                "name": "sim.quantity.Pressure",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "mass_flow",
+              "quantity": {
+                "name": "sim.quantity.MassFlow",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "enthalpy",
+              "quantity": {
+                "name": "sim.quantity.SpecificEnthalpy",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "enthalpy_flow",
+              "quantity": {
+                "name": "sim.quantity.Power",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "direct_flow",
+          "through_lane": 1
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.frame",
+          "version": 1
+        },
+        "label": "frame",
+        "lanes": [
+          {
+            "across": {
+              "name": "x",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "fx",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "y",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "fy",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "z",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "fz",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "qw",
+              "quantity": {
+                "name": "sim.quantity.Dimensionless",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "tx",
+              "quantity": {
+                "name": "sim.quantity.Torque",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "qx",
+              "quantity": {
+                "name": "sim.quantity.Dimensionless",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "ty",
+              "quantity": {
+                "name": "sim.quantity.Torque",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "qy",
+              "quantity": {
+                "name": "sim.quantity.Dimensionless",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "tz",
+              "quantity": {
+                "name": "sim.quantity.Torque",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "qz",
+              "quantity": {
+                "name": "sim.quantity.Dimensionless",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "vx",
+              "quantity": {
+                "name": "sim.quantity.LinearVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "vy",
+              "quantity": {
+                "name": "sim.quantity.LinearVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "vz",
+              "quantity": {
+                "name": "sim.quantity.LinearVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "wx",
+              "quantity": {
+                "name": "sim.quantity.AngularVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "wy",
+              "quantity": {
+                "name": "sim.quantity.AngularVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "wz",
+              "quantity": {
+                "name": "sim.quantity.AngularVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "owned",
+          "contribution_rows": [
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "unit_quaternions": [
+            [
+              3,
+              4,
+              5,
+              6
+            ]
+          ]
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 7,
+              "across_rate": false,
+              "through_lane": 0
+            },
+            {
+              "across_lane": 8,
+              "across_rate": false,
+              "through_lane": 1
+            },
+            {
+              "across_lane": 9,
+              "across_rate": false,
+              "through_lane": 2
+            },
+            {
+              "across_lane": 10,
+              "across_rate": false,
+              "through_lane": 3
+            },
+            {
+              "across_lane": 11,
+              "across_rate": false,
+              "through_lane": 4
+            },
+            {
+              "across_lane": 12,
+              "across_rate": false,
+              "through_lane": 5
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.granular",
+          "version": 1
+        },
+        "label": "granular",
+        "lanes": [
+          {
+            "across": {
+              "name": "stress",
+              "quantity": {
+                "name": "sim.quantity.Pressure",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "particle_flow",
+              "quantity": {
+                "name": "sim.quantity.MassFlow",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "unavailable"
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.hydraulic",
+          "version": 1
+        },
+        "label": "hydraulic",
+        "lanes": [
+          {
+            "across": {
+              "name": "pressure",
+              "quantity": {
+                "name": "sim.quantity.Pressure",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "volume_flow",
+              "quantity": {
+                "name": "sim.quantity.VolumeFlow",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": false,
+              "through_lane": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.magnetic",
+          "version": 1
+        },
+        "label": "magnetic",
+        "lanes": [
+          {
+            "across": {
+              "name": "mmf",
+              "quantity": {
+                "name": "sim.quantity.Current",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "flux_rate",
+              "quantity": {
+                "name": "sim.quantity.Voltage",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": false,
+              "through_lane": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.normalized_acoustic",
+          "version": 1
+        },
+        "label": "normalized_acoustic",
+        "lanes": [
+          {
+            "across": {
+              "name": "pressure",
+              "quantity": {
+                "name": "sim.quantity.Dimensionless",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "volume_flow",
+              "quantity": {
+                "name": "sim.quantity.Dimensionless",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "unavailable"
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.planar",
+          "version": 1
+        },
+        "label": "planar",
+        "lanes": [
+          {
+            "across": {
+              "name": "x",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "fx",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "y",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "fy",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": true,
+              "through_lane": 0
+            },
+            {
+              "across_lane": 1,
+              "across_rate": true,
+              "through_lane": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.planar_frame",
+          "version": 1
+        },
+        "label": "planar_frame",
+        "lanes": [
+          {
+            "across": {
+              "name": "x",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "fx",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "y",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "fy",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "theta",
+              "quantity": {
+                "name": "sim.quantity.Angle",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "torque",
+              "quantity": {
+                "name": "sim.quantity.Torque",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "vx",
+              "quantity": {
+                "name": "sim.quantity.LinearVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": 0
+          },
+          {
+            "across": {
+              "name": "vy",
+              "quantity": {
+                "name": "sim.quantity.LinearVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": 1
+          },
+          {
+            "across": {
+              "name": "omega",
+              "quantity": {
+                "name": "sim.quantity.AngularVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": 2
+          }
+        ],
+        "rule": {
+          "kind": "owned",
+          "contribution_rows": [
+            3,
+            4,
+            5
+          ],
+          "unit_quaternions": []
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 3,
+              "across_rate": false,
+              "through_lane": 0
+            },
+            {
+              "across_lane": 4,
+              "across_rate": false,
+              "through_lane": 1
+            },
+            {
+              "across_lane": 5,
+              "across_rate": false,
+              "through_lane": 2
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.radiative",
+          "version": 1
+        },
+        "label": "radiative",
+        "lanes": [
+          {
+            "across": {
+              "name": "radiosity",
+              "quantity": {
+                "name": "sim.quantity.Radiosity",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "radiant_flux",
+              "quantity": {
+                "name": "sim.quantity.Power",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "direct_flow",
+          "through_lane": 0
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.rotational",
+          "version": 1
+        },
+        "label": "rotational",
+        "lanes": [
+          {
+            "across": {
+              "name": "angle",
+              "quantity": {
+                "name": "sim.quantity.Angle",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "torque",
+              "quantity": {
+                "name": "sim.quantity.Torque",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "speed",
+              "quantity": {
+                "name": "sim.quantity.AngularVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": 0
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": true,
+              "through_lane": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.thermal",
+          "version": 1
+        },
+        "label": "thermal",
+        "lanes": [
+          {
+            "across": {
+              "name": "temperature",
+              "quantity": {
+                "name": "sim.quantity.Temperature",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "heat_flow",
+              "quantity": {
+                "name": "sim.quantity.HeatFlow",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "heat",
+          "temperature_lane": 0,
+          "through_lane": 0
+        }
+      },
+      {
+        "id": {
+          "name": "sim.connector.translational",
+          "version": 1
+        },
+        "label": "translational",
+        "lanes": [
+          {
+            "across": {
+              "name": "position",
+              "quantity": {
+                "name": "sim.quantity.Length",
+                "version": 1
+              }
+            },
+            "through": {
+              "name": "force",
+              "quantity": {
+                "name": "sim.quantity.Force",
+                "version": 1
+              }
+            },
+            "derivative_of": null
+          },
+          {
+            "across": {
+              "name": "velocity",
+              "quantity": {
+                "name": "sim.quantity.LinearVelocity",
+                "version": 1
+              }
+            },
+            "through": null,
+            "derivative_of": 0
+          }
+        ],
+        "rule": {
+          "kind": "balanced"
+        },
+        "energy": {
+          "kind": "products",
+          "terms": [
+            {
+              "across_lane": 0,
+              "across_rate": true,
+              "through_lane": 0
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "components": {
+    "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f": {
+      "id": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f",
+      "label": "Diffusion path",
+      "component_type": "example.diffusion.conductance",
+      "group": null,
+      "source": null,
+      "cad": null,
+      "persistent_identity": false,
+      "parameters": {
+        "conductance": {
+          "value": 0.5,
+          "unit": "m³/s",
+          "provenance": {
+            "kind": "unspecified"
+          },
+          "uncertainty": null
+        }
+      }
+    },
+    "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987": {
+      "id": "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987",
+      "label": "Storage volume",
+      "component_type": "example.diffusion.storage",
+      "group": null,
+      "source": null,
+      "cad": null,
+      "persistent_identity": false,
+      "parameters": {
+        "initial.concentration": {
+          "value": 3.0,
+          "unit": "mol/m³",
+          "provenance": {
+            "kind": "unspecified"
+          },
+          "uncertainty": null
+        },
+        "volume": {
+          "value": 2.0,
+          "unit": "m³",
+          "provenance": {
+            "kind": "unspecified"
+          },
+          "uncertainty": null
+        }
+      }
+    },
+    "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37": {
+      "id": "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37",
+      "label": "Reservoir",
+      "component_type": "example.diffusion.boundary",
+      "group": null,
+      "source": null,
+      "cad": null,
+      "persistent_identity": false,
+      "parameters": {
+        "concentration": {
+          "value": 1.0,
+          "unit": "mol/m³",
+          "provenance": {
+            "kind": "unspecified"
+          },
+          "uncertainty": null
+        }
+      }
+    }
+  },
+  "ports": {
+    "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61": {
+      "id": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61",
+      "component": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f",
+      "name": "a",
+      "schema": {
+        "kind": "physical",
+        "connector": {
+          "name": "example.diffusion.species",
+          "version": 1
+        }
+      },
+      "composite_parent": null
+    },
+    "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62": {
+      "id": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62",
+      "component": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f",
+      "name": "b",
+      "schema": {
+        "kind": "physical",
+        "connector": {
+          "name": "example.diffusion.species",
+          "version": 1
+        }
+      },
+      "composite_parent": null
+    },
+    "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573": {
+      "id": "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573",
+      "component": "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987",
+      "name": "species",
+      "schema": {
+        "kind": "physical",
+        "connector": {
+          "name": "example.diffusion.species",
+          "version": 1
+        }
+      },
+      "composite_parent": null
+    },
+    "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573": {
+      "id": "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573",
+      "component": "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37",
+      "name": "species",
+      "schema": {
+        "kind": "physical",
+        "connector": {
+          "name": "example.diffusion.species",
+          "version": 1
+        }
+      },
+      "composite_parent": null
+    }
+  },
+  "nets": {
+    "net/6d1ca4d578e6a09a6053d3f346c652764b2cddd5caaee62eadfb1801e398efb3": {
+      "id": "net/6d1ca4d578e6a09a6053d3f346c652764b2cddd5caaee62eadfb1801e398efb3",
+      "ports": [
+        "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61",
+        "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573"
+      ]
+    },
+    "net/72bb887d5e7a6b776cb7f5ceeae023bfff990aa1e2c45b16993580ca79702ec8": {
+      "id": "net/72bb887d5e7a6b776cb7f5ceeae023bfff990aa1e2c45b16993580ca79702ec8",
+      "ports": [
+        "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62",
+        "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573"
+      ]
+    }
+  },
+  "groups": {},
+  "observables": {
+    "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61/across/636f6e63656e74726174696f6e": {
+      "id": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61/across/636f6e63656e74726174696f6e",
+      "label": "Diffusion path.a.concentration",
+      "quantity": {
+        "name": "example.diffusion.concentration",
+        "version": 1
+      },
+      "location": {
+        "kind": "across",
+        "port": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61",
+        "lane": "concentration"
+      },
+      "sign_convention": null,
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "available"
+      }
+    },
+    "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61/through/6d6f6c61725f666c6f77": {
+      "id": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61/through/6d6f6c61725f666c6f77",
+      "label": "Diffusion path.a.molar_flow",
+      "quantity": {
+        "name": "sim.quantity.MolarFlow",
+        "version": 1
+      },
+      "location": {
+        "kind": "through",
+        "port": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/61",
+        "lane": "molar_flow"
+      },
+      "sign_convention": "Positive into this component",
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Accepted-state flow capture has not been implemented"
+      }
+    },
+    "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62/across/636f6e63656e74726174696f6e": {
+      "id": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62/across/636f6e63656e74726174696f6e",
+      "label": "Diffusion path.b.concentration",
+      "quantity": {
+        "name": "example.diffusion.concentration",
+        "version": 1
+      },
+      "location": {
+        "kind": "across",
+        "port": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62",
+        "lane": "concentration"
+      },
+      "sign_convention": null,
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "available"
+      }
+    },
+    "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62/through/6d6f6c61725f666c6f77": {
+      "id": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62/through/6d6f6c61725f666c6f77",
+      "label": "Diffusion path.b.molar_flow",
+      "quantity": {
+        "name": "sim.quantity.MolarFlow",
+        "version": 1
+      },
+      "location": {
+        "kind": "through",
+        "port": "source/28a000864b0450f0dc4d7f883a0d905fb5600139d41786bd64decaa208fbdf7f/port/62",
+        "lane": "molar_flow"
+      },
+      "sign_convention": "Positive into this component",
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Accepted-state flow capture has not been implemented"
+      }
+    },
+    "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573/across/636f6e63656e74726174696f6e": {
+      "id": "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573/across/636f6e63656e74726174696f6e",
+      "label": "Storage volume.species.concentration",
+      "quantity": {
+        "name": "example.diffusion.concentration",
+        "version": 1
+      },
+      "location": {
+        "kind": "across",
+        "port": "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573",
+        "lane": "concentration"
+      },
+      "sign_convention": null,
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "available"
+      }
+    },
+    "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573/through/6d6f6c61725f666c6f77": {
+      "id": "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573/through/6d6f6c61725f666c6f77",
+      "label": "Storage volume.species.molar_flow",
+      "quantity": {
+        "name": "sim.quantity.MolarFlow",
+        "version": 1
+      },
+      "location": {
+        "kind": "through",
+        "port": "source/6ce76f4bdfdae5384ab0eaed5a89bf6b201abb9c354b36bb2c3b92cd59029987/port/73706563696573",
+        "lane": "molar_flow"
+      },
+      "sign_convention": "Positive into this component",
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Accepted-state flow capture has not been implemented"
+      }
+    },
+    "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573/across/636f6e63656e74726174696f6e": {
+      "id": "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573/across/636f6e63656e74726174696f6e",
+      "label": "Reservoir.species.concentration",
+      "quantity": {
+        "name": "example.diffusion.concentration",
+        "version": 1
+      },
+      "location": {
+        "kind": "across",
+        "port": "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573",
+        "lane": "concentration"
+      },
+      "sign_convention": null,
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "available"
+      }
+    },
+    "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573/through/6d6f6c61725f666c6f77": {
+      "id": "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573/through/6d6f6c61725f666c6f77",
+      "label": "Reservoir.species.molar_flow",
+      "quantity": {
+        "name": "sim.quantity.MolarFlow",
+        "version": 1
+      },
+      "location": {
+        "kind": "through",
+        "port": "source/d65ea9c9fe1352e95b8aa2d99ad0db2141949df30a89aae7402287def3cd1d37/port/73706563696573",
+        "lane": "molar_flow"
+      },
+      "sign_convention": "Positive into this component",
+      "coordinate_frame": null,
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Accepted-state flow capture has not been implemented"
+      }
+    }
+  },
+  "diagnostics": []
+}

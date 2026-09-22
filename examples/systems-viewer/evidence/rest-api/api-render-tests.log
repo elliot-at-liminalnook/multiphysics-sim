@@ -1,0 +1,29 @@
+   Compiling num-traits v0.2.19
+   Compiling bytemuck v1.25.2
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+   Compiling moxcms v0.8.1
+   Compiling image v0.25.10
+   Compiling glam v0.29.3
+   Compiling sim-api v0.1.0 (/Users/elliot/physics-simulator/crates/sim-api)
+   Compiling sim-render v0.1.0 (/Users/elliot/physics-simulator/crates/sim-render)
+    Finished `test` profile [optimized] target(s) in 1m 13s
+     Running unittests src/lib.rs (target/debug/deps/sim_api-8c472eaeb7875732)
+
+running 6 tests
+test tests::stop_on_error_and_queued_cancellation_never_apply_later_commands ... ok
+test tests::batches_wait_for_completion_and_retain_order_and_partial_errors ... ok
+test tests::empty_oversized_batches_and_reserved_command_injection_are_rejected ... ok
+test tests::actual_http_reads_published_state_and_rejects_browser_and_rebinding ... ok
+test client::tests::one_client_plan_executes_ordered_batches_and_returns_failures ... ok
+test tests::real_http_transfers_large_json_and_binary_artifacts_without_truncation ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running unittests src/lib.rs (target/debug/deps/sim_render-3a4682d6d796dedb)
+
+running 2 tests
+test physical::tests::section_clips_geometry_and_keeps_vertices_on_requested_halfspace ... ok
+test physical::tests::box_section_produces_a_real_png_and_cap_metadata ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

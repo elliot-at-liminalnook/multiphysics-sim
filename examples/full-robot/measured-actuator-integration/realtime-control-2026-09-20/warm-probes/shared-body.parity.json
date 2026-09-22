@@ -1,0 +1,26 @@
+{
+  "frames": 151,
+  "all_physical_frame_fields_exact": true,
+  "fields": [
+    "completed_steps",
+    "contact_history",
+    "contacts",
+    "done",
+    "driver_readings",
+    "error",
+    "joint_positions",
+    "joint_velocities",
+    "motor_readings",
+    "motor_states",
+    "original_rows",
+    "policy",
+    "policy_inputs",
+    "poses",
+    "requested_steps",
+    "servo_commands",
+    "servo_states",
+    "servo_targets_rad",
+    "time_s"
+  ],
+  "excluded": "stepping_wall_s is observational wall time"
+}

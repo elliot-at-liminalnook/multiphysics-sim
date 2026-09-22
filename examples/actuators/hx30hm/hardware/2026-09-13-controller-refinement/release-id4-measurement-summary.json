@@ -1,0 +1,137 @@
+{
+  "interpretation": "Net endpoint offset from the last observed sample before release, not displacement interpolated to command application. A count is encoder resolution, not calibrated accuracy. Device sample age is unknown.",
+  "trials": [
+    {
+      "trial": 0,
+      "repetition": 0,
+      "condition": "zero_pwm_release_positive",
+      "net_counts_from_last_pre_release_sample": 3,
+      "release_request_s": 0.340982345,
+      "release_receipt_s": 0.346876201,
+      "last_pre_release_request_s": 0.329034405,
+      "last_pre_release_completion_s": 0.334825335,
+      "sample_count": 90
+    },
+    {
+      "trial": 1,
+      "repetition": 0,
+      "condition": "torque_off_release_positive",
+      "net_counts_from_last_pre_release_sample": 5,
+      "release_request_s": 1.535086218,
+      "release_receipt_s": 1.541094884,
+      "last_pre_release_request_s": 1.523830379,
+      "last_pre_release_completion_s": 1.529063571,
+      "sample_count": 91
+    },
+    {
+      "trial": 2,
+      "repetition": 0,
+      "condition": "zero_pwm_release_negative",
+      "net_counts_from_last_pre_release_sample": -3,
+      "release_request_s": 2.734737527,
+      "release_receipt_s": 2.740518174,
+      "last_pre_release_request_s": 2.722327442,
+      "last_pre_release_completion_s": 2.728504877,
+      "sample_count": 91
+    },
+    {
+      "trial": 3,
+      "repetition": 0,
+      "condition": "torque_off_release_negative",
+      "net_counts_from_last_pre_release_sample": -5,
+      "release_request_s": 3.928170889,
+      "release_receipt_s": 3.934258589,
+      "last_pre_release_request_s": 3.916074258,
+      "last_pre_release_completion_s": 3.922139426,
+      "sample_count": 91
+    },
+    {
+      "trial": 4,
+      "repetition": 1,
+      "condition": "zero_pwm_release_positive",
+      "net_counts_from_last_pre_release_sample": 3,
+      "release_request_s": 5.128102331,
+      "release_receipt_s": 5.134100191,
+      "last_pre_release_request_s": 5.115942508,
+      "last_pre_release_completion_s": 5.121947104,
+      "sample_count": 90
+    },
+    {
+      "trial": 5,
+      "repetition": 1,
+      "condition": "torque_off_release_positive",
+      "net_counts_from_last_pre_release_sample": 5,
+      "release_request_s": 6.322127926,
+      "release_receipt_s": 6.327858319,
+      "last_pre_release_request_s": 6.309856353,
+      "last_pre_release_completion_s": 6.315952974,
+      "sample_count": 91
+    },
+    {
+      "trial": 6,
+      "repetition": 1,
+      "condition": "zero_pwm_release_negative",
+      "net_counts_from_last_pre_release_sample": -3,
+      "release_request_s": 7.521759298,
+      "release_receipt_s": 7.527872701,
+      "last_pre_release_request_s": 7.509694349,
+      "last_pre_release_completion_s": 7.515846425,
+      "sample_count": 90
+    },
+    {
+      "trial": 7,
+      "repetition": 1,
+      "condition": "torque_off_release_negative",
+      "net_counts_from_last_pre_release_sample": -4,
+      "release_request_s": 8.709834593,
+      "release_receipt_s": 8.715799243,
+      "last_pre_release_request_s": 8.697925273,
+      "last_pre_release_completion_s": 8.703758425,
+      "sample_count": 91
+    },
+    {
+      "trial": 8,
+      "repetition": 2,
+      "condition": "zero_pwm_release_positive",
+      "net_counts_from_last_pre_release_sample": 3,
+      "release_request_s": 9.909646288,
+      "release_receipt_s": 9.915584201,
+      "last_pre_release_request_s": 9.897576511,
+      "last_pre_release_completion_s": 9.90371793,
+      "sample_count": 90
+    },
+    {
+      "trial": 9,
+      "repetition": 2,
+      "condition": "torque_off_release_positive",
+      "net_counts_from_last_pre_release_sample": 4,
+      "release_request_s": 11.097378143,
+      "release_receipt_s": 11.103623096,
+      "last_pre_release_request_s": 11.085452079,
+      "last_pre_release_completion_s": 11.091424035,
+      "sample_count": 90
+    },
+    {
+      "trial": 10,
+      "repetition": 2,
+      "condition": "zero_pwm_release_negative",
+      "net_counts_from_last_pre_release_sample": -3,
+      "release_request_s": 12.285501689,
+      "release_receipt_s": 12.291403109,
+      "last_pre_release_request_s": 12.273483984,
+      "last_pre_release_completion_s": 12.279482277,
+      "sample_count": 91
+    },
+    {
+      "trial": 11,
+      "repetition": 2,
+      "condition": "torque_off_release_negative",
+      "net_counts_from_last_pre_release_sample": -4,
+      "release_request_s": 13.479361,
+      "release_receipt_s": 13.485442938,
+      "last_pre_release_request_s": 13.467236105,
+      "last_pre_release_completion_s": 13.473487758,
+      "sample_count": 90
+    }
+  ]
+}

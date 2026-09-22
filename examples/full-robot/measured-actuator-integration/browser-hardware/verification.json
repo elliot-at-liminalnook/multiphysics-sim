@@ -1,0 +1,67 @@
+{
+  "implemented": "Browser finite gait playback through shared Rust binding and supervised FPGA controller",
+  "url": "http://127.0.0.1:4180",
+  "physical_ids": [
+    10,
+    11,
+    12
+  ],
+  "default_mapping": {
+    "leg": "-Y",
+    "hip": 10,
+    "worm": 11,
+    "foot": 12
+  },
+  "physical_clip": {
+    "run": "examples/full-robot/measured-actuator-integration/browser-hardware/sessions/session-1789507774456885000",
+    "completed": true,
+    "frames": 200,
+    "samples": 600,
+    "motion_ranges": [
+      {
+        "id": 10,
+        "range_counts": 18
+      },
+      {
+        "id": 11,
+        "range_counts": 21
+      },
+      {
+        "id": 12,
+        "range_counts": 16
+      }
+    ],
+    "stop_verified": true
+  },
+  "early_stops": [
+    {
+      "mode": "button",
+      "run": "examples/full-robot/measured-actuator-integration/browser-hardware/sessions/session-1789507713227566000",
+      "samples": 45,
+      "stop_verified": true,
+      "reason": "Browser STOP"
+    },
+    {
+      "mode": "disconnect",
+      "run": "examples/full-robot/measured-actuator-integration/browser-hardware/sessions/session-1789507716889957000",
+      "samples": 378,
+      "stop_verified": true,
+      "reason": "Browser lease expired"
+    }
+  ],
+  "software": {
+    "binding_tests": 3,
+    "capture_tests": 2,
+    "ui_mapping_and_duplicate_rejection": true,
+    "page_errors": [],
+    "http_access_tests": "http-access-tests.json"
+  },
+  "limitations": [
+    "Recorded gait targets, not live quadruped physics or continuous steering.",
+    "Single active three-motor leg; arbitrary leg selection and per-joint ID/polarity are editable.",
+    "Physical tests used 3% reference amplitude and 10% PWM ceiling.",
+    "Unloaded bench assignments and per-run homes are not installed joint calibration.",
+    "Raw servo current remains uncalibrated; no measured amperage or watts claimed.",
+    "A concurrent software fixture run hit the existing 150 ms heartbeat timeout; it stopped and verified recovery. Serial execution passed without changing limits."
+  ]
+}

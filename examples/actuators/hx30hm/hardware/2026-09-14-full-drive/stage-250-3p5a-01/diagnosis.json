@@ -1,0 +1,11 @@
+{
+  "requested_voltage_v": 12.6,
+  "requested_current_limit_a": 3.5,
+  "source": "User confirmed increasing the limit after the proposed 3.0 to 3.5 A diagnostic; supply display not independently read",
+  "plan": "Unchanged plans/stage-250.json",
+  "result": "Aborted on initial supervisor STOP reply timeout, before capability query, upload, ARM, torque enable or motion",
+  "motion_commanded_by_retry": false,
+  "stop_verified": false,
+  "comparison_available": false,
+  "connection_diagnosis": "No supervisor STATUS response at 1 Mbaud or 115200. JTAG detection was read-only; SRAM reload not performed. USB device minor number changed since earlier successful runs, consistent with reconnection; loss of volatile image is suspected, not proven."
+}

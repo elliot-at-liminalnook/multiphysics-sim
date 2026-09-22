@@ -1,0 +1,18 @@
+{
+  "control": "pwm_sweep",
+  "schedule": {
+    "levels": [
+      25,
+      50
+    ],
+    "repetitions": 3,
+    "include_concurrent": false,
+    "include_individual": true
+  },
+  "pulse_ms": 100,
+  "rest_ms": 600,
+  "travel_limit_counts": 600,
+  "temperature_cutoff_c": 60,
+  "direction_bit": 10,
+  "bench_condition": "User-reported unloaded bench; no intentional external load; attached output hardware unspecified; measured initial 12.1-12.4 V and 45-46 C; same supervised SRAM bridge; small onset pulses in both directions, no inferred supply current limit; repetitions 0 and 1 assigned training, repetition 2 reserved validation before acquisition; zero-PWM braking release"
+}

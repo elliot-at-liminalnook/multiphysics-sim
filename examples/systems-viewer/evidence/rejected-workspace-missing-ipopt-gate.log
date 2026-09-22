@@ -1,0 +1,99 @@
+    Checking sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+    Checking bevy_render v0.16.1
+    Checking sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+    Checking sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+    Checking sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+    Checking sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+    Checking sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+    Checking sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+    Checking sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+    Checking sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+    Checking sim-domain-granular v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-granular)
+    Checking sim-domain-chemical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-chemical)
+    Checking sim-domain-radiative v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-radiative)
+    Checking sim-domain-fluid v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-fluid)
+    Checking sim-domain-hydraulic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-hydraulic)
+    Checking sim-domain-acoustic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-acoustic)
+    Checking sim-domain-line v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-line)
+    Checking sim-domain-magnetic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-magnetic)
+    Checking sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+    Checking sim-geometry v0.1.0 (/Users/elliot/physics-simulator/crates/sim-geometry)
+    Checking sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+    Checking sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Checking sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Checking sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+    Checking sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Checking sim-phenomena v0.1.0 (/Users/elliot/physics-simulator/crates/sim-phenomena)
+warning: `sim-runtime` (lib test) generated 1 warning (1 duplicate)
+    Checking sim-web v0.1.0 (/Users/elliot/physics-simulator/crates/sim-web)
+    Checking bevy_core_pipeline v0.16.1
+    Checking bevy_picking v0.16.1
+    Checking bevy_scene v0.16.1
+    Checking bevy_animation v0.16.1
+    Checking bevy_sprite v0.16.1
+    Checking bevy_pbr v0.16.1
+error[E0432]: unresolved import `sim_runtime::contact_planning::JointIpoptConfig`
+  --> crates/sim-runtime/examples/support/joint_checkpoint.rs:4:77
+   |
+ 4 | use sim_runtime::contact_planning::{JointContactMotion, JointContactReport, JointIpoptConfig};
+   |                                                                             ^^^^^^^^^^^^^^^^ no `JointIpoptConfig` in `contact_planning`
+   |
+note: found an item that was configured out
+  --> crates/sim-runtime/src/contact_planning.rs:32:17
+   |
+31 | #[cfg(all(feature = "native-ipopt", not(target_arch = "wasm32")))]
+   |           ------------------------ the item is gated behind the `native-ipopt` feature
+32 | pub use joint::{JointIpoptConfig, JointIpoptOptimization};
+   |                 ^^^^^^^^^^^^^^^^
+
+error[E0432]: unresolved import `sim_runtime::contact_planning::JointIpoptConfig`
+  --> crates/sim-runtime/examples/optimize_joint_ipopt.rs:8:9
+   |
+ 8 |         JointIpoptConfig,
+   |         ^^^^^^^^^^^^^^^^ no `JointIpoptConfig` in `contact_planning`
+   |
+note: found an item that was configured out
+  --> crates/sim-runtime/src/contact_planning.rs:32:17
+   |
+31 | #[cfg(all(feature = "native-ipopt", not(target_arch = "wasm32")))]
+   |           ------------------------ the item is gated behind the `native-ipopt` feature
+32 | pub use joint::{JointIpoptConfig, JointIpoptOptimization};
+   |                 ^^^^^^^^^^^^^^^^
+
+error[E0432]: unresolved import `sim_solve::ipopt`
+  --> crates/sim-runtime/examples/optimize_joint_ipopt.rs:13:16
+   |
+13 | use sim_solve::ipopt::IpoptLibrary;
+   |                ^^^^^ could not find `ipopt` in `sim_solve`
+   |
+note: found an item that was configured out
+  --> crates/sim-solve/src/lib.rs:25:9
+   |
+24 | #[cfg(all(feature = "native-ipopt", not(target_arch = "wasm32")))]
+   |           ------------------------ the item is gated behind the `native-ipopt` feature
+25 | pub mod ipopt;
+   |         ^^^^^
+
+error[E0599]: no method named `optimize_joint_ipopt_with_observer` found for struct `ContactPlanner<'a>` in the current scope
+  --> crates/sim-runtime/examples/optimize_joint_ipopt.rs:49:30
+   |
+49 |     let optimization=planner.optimize_joint_ipopt_with_observer(&recipe.candidate,&recipe.variables,&config,&library,|candidate,r|{
+   |                      --------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `ContactPlanner<'_>`
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `sim-runtime` (example "optimize_joint_ipopt_steps") due to 4 previous errors
+warning: build failed, waiting for other jobs to finish...

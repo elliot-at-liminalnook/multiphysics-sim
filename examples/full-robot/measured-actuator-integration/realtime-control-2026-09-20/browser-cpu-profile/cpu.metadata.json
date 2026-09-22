@@ -1,0 +1,29 @@
+{
+  "version": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/153.0.8010.48",
+    "revision": "@199a3a541d76237379e353b348e64045584db057",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "jsVersion": "15.3.76.12"
+  },
+  "sampling_interval_us": 1000,
+  "events": [
+    {
+      "type": "attached",
+      "sessionId": "E9B80FDBB463EE08464020CD9DD403AF",
+      "targetInfo": {
+        "targetId": "FF99C18CE4170D3B2E0A2F4324C5D2FB",
+        "type": "worker",
+        "title": "http://127.0.0.1:4192/worker.js",
+        "url": "http://127.0.0.1:4192/worker.js",
+        "attached": true,
+        "parentId": "2D15A47DD2A2C89DA751A74DE151E435",
+        "canAccessOpener": false,
+        "parentFrameId": "2D15A47DD2A2C89DA751A74DE151E435",
+        "browserContextId": "567DE84EC87D3CD2BAC3C0BF0B1A6226"
+      },
+      "waitingForDebugger": false
+    }
+  ],
+  "scope": "Dedicated-worker CPU samples after initial model load, during action replay only. Includes worker waiting, serialization and message handling. Profiled wall time is not throughput acceptance."
+}

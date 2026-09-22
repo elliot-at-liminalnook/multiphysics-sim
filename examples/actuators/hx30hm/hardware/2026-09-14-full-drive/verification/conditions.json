@@ -1,0 +1,15 @@
+{
+  "software_only": true,
+  "motor_physics": "stationary synthetic encoders; not a plant model",
+  "clock_hz": 50000000,
+  "motor_uart_clocks_per_bit": 50,
+  "host_uart_clocks_per_bit": {
+    "normal": 50,
+    "backpressure_case5": 500
+  },
+  "motor_reply_delay_ticks": 50000,
+  "period_ticks": 2000000,
+  "normal_case_heartbeat_interval_ticks": 2500000,
+  "normal_case_shortened_independent_lease_ticks": 4000000,
+  "source_notes": "final RTL uses byte packet banks, serialized controller packet writes, and nine-entry SYNC bound"
+}

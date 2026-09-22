@@ -1,0 +1,160 @@
+{
+  "frozen_utc": "2026-09-14T12:24:10.182170+00:00",
+  "candidate_sha256": "8ef0f5db80e1a65f404efe2967f9c0a1bf7e18425e78604e03622588a9393cc3",
+  "fit_attempt_sha256": {
+    "fit-id4-attempt.json": "cb36096c10de2d4b076f7a69aa5904aeda7814a19ac3178fe49e13010db809e5",
+    "fit-id5-attempt.json": "2b3371742a9d07ae8a6b9f7d5fb6ee66d625a025e41d00657de1ad684c7f72a8",
+    "fit-id6-attempt.json": "d32b0e6a279add6f1e8816f441b091c3e7497ce953ecbf1cba20a65d0e37d03a",
+    "fit-id7-attempt.json": "41c2ca47d5e8df5256346259075eb351ead739d5023af8894aa7b434de98a8fa",
+    "fit-id8-attempt.json": "08e9dc0e6b99c648b9b92210f3bb12bf87781701217c1862cd12a4f84ce2b295",
+    "fit-id9-attempt.json": "978c732a2f72dfe1ec2b7a81b15142be12ff79dda57cc010cf9648a8ffaa42c4",
+    "fit-id10-attempt.json": "58b2bc7ebfbb881dbc672be8db97a3fae7b96ca36ad83221f39b5d62b8e83ad9",
+    "fit-id11-attempt.json": "b6d198605d8a44fa858438f75c4c820474f4cac5a132795e70540db2263bca38",
+    "fit-id12-attempt.json": "0bcef00d9283ce06cfd115cb1801e9ea7ccf3efc3b27348ac05d8dc2e698d68e"
+  },
+  "fits": [
+    {
+      "id": 4,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 1.1053434913417828,
+        "candidate": 0.9678886353966709
+      },
+      "bound_hits": [],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": -1.004023848803239,
+        "motor.no_load_current": -0.028440708947934254,
+        "motor.rotor_inertia": 6.883602494174047e-08
+      }
+    },
+    {
+      "id": 5,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 1.2297321199425695,
+        "candidate": 0.9538703999642323
+      },
+      "bound_hits": [
+        "motor.loss_speed_scale",
+        "motor.rotor_inertia"
+      ],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": 3.0,
+        "motor.no_load_current": -0.036109708382631,
+        "motor.rotor_inertia": 2.776754539644348e-07
+      }
+    },
+    {
+      "id": 6,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 1.551384450773573,
+        "candidate": 1.0867108380171553
+      },
+      "bound_hits": [
+        "motor.loss_speed_scale",
+        "motor.rotor_inertia"
+      ],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": -4.98,
+        "motor.no_load_current": 0.005246574535792761,
+        "motor.rotor_inertia": -1.7324546035565205e-08
+      }
+    },
+    {
+      "id": 7,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 1.1451063047587895,
+        "candidate": 0.6856900324564299
+      },
+      "bound_hits": [
+        "motor.loss_speed_scale",
+        "motor.rotor_inertia"
+      ],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": -4.98,
+        "motor.no_load_current": -0.035773297223127686,
+        "motor.rotor_inertia": 2.776754539644348e-07
+      }
+    },
+    {
+      "id": 8,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 0.8836461335490388,
+        "candidate": 0.8304863359021268
+      },
+      "bound_hits": [],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": -3.4860880071147866,
+        "motor.no_load_current": -0.013638913338904705,
+        "motor.rotor_inertia": 2.643208382245231e-07
+      }
+    },
+    {
+      "id": 9,
+      "evaluations": 40,
+      "training_rms_degrees": {
+        "baseline": 1.4874645860838516,
+        "candidate": 1.0811917219832192
+      },
+      "bound_hits": [
+        "motor.loss_speed_scale"
+      ],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": -4.98,
+        "motor.no_load_current": -0.00923319437786499,
+        "motor.rotor_inertia": 4.583676808129615e-08
+      }
+    },
+    {
+      "id": 10,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 0.9343664548408609,
+        "candidate": 0.7079327095233762
+      },
+      "bound_hits": [
+        "motor.rotor_inertia"
+      ],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": 2.529302282413976,
+        "motor.no_load_current": -0.02677177573996798,
+        "motor.rotor_inertia": 2.776754539644348e-07
+      }
+    },
+    {
+      "id": 11,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 1.383591257749567,
+        "candidate": 1.119342133232598
+      },
+      "bound_hits": [
+        "motor.loss_speed_scale",
+        "motor.rotor_inertia"
+      ],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": -4.98,
+        "motor.no_load_current": -0.007199708190866336,
+        "motor.rotor_inertia": 2.776754539644348e-07
+      }
+    },
+    {
+      "id": 12,
+      "evaluations": 80,
+      "training_rms_degrees": {
+        "baseline": 1.0438845170972832,
+        "candidate": 0.938384234972566
+      },
+      "bound_hits": [],
+      "candidate_deltas": {
+        "motor.loss_speed_scale": -1.0296713305898182,
+        "motor.no_load_current": -0.021314981504807734,
+        "motor.rotor_inertia": -1.1625863793719708e-09
+      }
+    }
+  ],
+  "status": "Provisional fitted candidate; no fresh confirmation inspected; not promoted to CAD. Per-device effective parameters may absorb timing or drive-model error; not identified constants."
+}

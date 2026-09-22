@@ -1,0 +1,10 @@
+iverilog -g2005 -s hx_calibration_tb -o impl/hx_calibration_tb.vvp tb/hx_calibration_tb.v src/hx_safety.v
+vvp impl/hx_calibration_tb.vvp
+PASS all 128 SYNC word/byte length predicates match previous arithmetic
+PASS continuous encoder: both zero crossings, multiple turns, independent signed limits, anchor validation, ambiguous-jump stop
+PASS calibration profile: windows, PWM cap, ID isolation, command gating, watchdog, S2
+tb/hx_calibration_tb.v:187: $finish called at 67720000 (1ps)
+iverilog -g2005 -s bridge_reply_gap_tb -o impl/bridge_reply_gap_tb.vvp tb/bridge_reply_gap_tb.v src/uart_tx.v src/uart_rx.v src/bridge.v src/hx_safety.v src/button.v
+vvp impl/bridge_reply_gap_tb.vvp
+PASS: complete reply survives inter-byte pause with repeat STOP pending
+tb/bridge_reply_gap_tb.v:156: $finish called at 626680000 (1ps)

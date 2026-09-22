@@ -1,0 +1,789 @@
+[
+  {
+    "name": "case0-100hz",
+    "scenario": 0,
+    "period_ticks": 500000,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87616
+      },
+      {
+        "frame": 1,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 2,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 3,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 4,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 5,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 6,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 7,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 8,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 9,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 10,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 11,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 12,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 13,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 14,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 15,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 16,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 17,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 18,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 19,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 20,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 21,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 22,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 23,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 24,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      }
+    ],
+    "stats": {
+      "window_ms": {
+        "min": 1.94562,
+        "median": 1.94562,
+        "max": 1.94606
+      },
+      "gaps_ms": {
+        "min": 0.11898,
+        "median": 0.11898,
+        "max": 0.11942
+      },
+      "feedback_to_command_ms": {
+        "min": 0.87572,
+        "median": 0.87572,
+        "max": 0.87616
+      }
+    },
+    "acceptance": "PASS full UART case 0: controls 25, +100% 18, -100% 18, terminal 0; all modeled motors zero/off"
+  },
+  {
+    "name": "case0-200hz",
+    "scenario": 0,
+    "period_ticks": 250000,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87616
+      },
+      {
+        "frame": 1,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 2,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 3,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 4,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 5,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 6,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 7,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 8,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 9,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 10,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 11,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 12,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 13,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 14,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 15,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 16,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 17,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 18,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 19,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 20,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 21,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 22,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 23,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 24,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      }
+    ],
+    "stats": {
+      "window_ms": {
+        "min": 1.94562,
+        "median": 1.94562,
+        "max": 1.94606
+      },
+      "gaps_ms": {
+        "min": 0.11898,
+        "median": 0.11898,
+        "max": 0.11942
+      },
+      "feedback_to_command_ms": {
+        "min": 0.87572,
+        "median": 0.87572,
+        "max": 0.87616
+      }
+    },
+    "acceptance": "PASS full UART case 0: controls 25, +100% 18, -100% 18, terminal 0; all modeled motors zero/off"
+  },
+  {
+    "name": "case0-400hz",
+    "scenario": 0,
+    "period_ticks": 125000,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87616
+      },
+      {
+        "frame": 1,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 2,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 3,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 4,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 5,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 6,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 7,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 8,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 9,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 10,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 11,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 12,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 13,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 14,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 15,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 16,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 17,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 18,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 19,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 20,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 21,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 22,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 23,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 24,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      }
+    ],
+    "stats": {
+      "window_ms": {
+        "min": 1.94562,
+        "median": 1.94562,
+        "max": 1.94606
+      },
+      "gaps_ms": {
+        "min": 0.11898,
+        "median": 0.11898,
+        "max": 0.11942
+      },
+      "feedback_to_command_ms": {
+        "min": 0.87572,
+        "median": 0.87572,
+        "max": 0.87616
+      }
+    },
+    "acceptance": "PASS full UART case 0: controls 25, +100% 18, -100% 18, terminal 0; all modeled motors zero/off"
+  },
+  {
+    "name": "case1-200hz",
+    "scenario": 1,
+    "period_ticks": 250000,
+    "frames": [],
+    "stats": {
+      "window_ms": {},
+      "gaps_ms": {},
+      "feedback_to_command_ms": {}
+    },
+    "acceptance": "PASS full UART case 1: controls 0, +100% 0, -100% 0, terminal 3; all modeled motors zero/off"
+  },
+  {
+    "name": "case2-200hz",
+    "scenario": 2,
+    "period_ticks": 250000,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 1,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 2,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 3,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 4,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 5,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 6,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 7,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 8,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 9,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 10,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 11,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 12,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 13,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      }
+    ],
+    "stats": {
+      "window_ms": {
+        "min": 1.94562,
+        "median": 1.94562,
+        "max": 1.94562
+      },
+      "gaps_ms": {
+        "min": 0.11898,
+        "median": 0.11898,
+        "max": 0.11898
+      },
+      "feedback_to_command_ms": {
+        "min": 0.87572,
+        "median": 0.87572,
+        "max": 0.87572
+      }
+    },
+    "acceptance": "PASS full UART case 2: controls 15, +100% 12, -100% 9, terminal 2; all modeled motors zero/off"
+  },
+  {
+    "name": "case3-200hz",
+    "scenario": 3,
+    "period_ticks": 250000,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87616
+      }
+    ],
+    "stats": {
+      "window_ms": {
+        "min": 1.94606,
+        "median": 1.94606,
+        "max": 1.94606
+      },
+      "gaps_ms": {
+        "min": 0.11942,
+        "median": 0.11942,
+        "max": 0.11942
+      },
+      "feedback_to_command_ms": {
+        "min": 0.87616,
+        "median": 0.87616,
+        "max": 0.87616
+      }
+    },
+    "acceptance": "PASS full UART case 3: controls 2, +100% 3, -100% 0, terminal 4; all modeled motors zero/off"
+  },
+  {
+    "name": "case4-200hz",
+    "scenario": 4,
+    "period_ticks": 250000,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87616
+      }
+    ],
+    "stats": {
+      "window_ms": {
+        "min": 1.94606,
+        "median": 1.94606,
+        "max": 1.94606
+      },
+      "gaps_ms": {
+        "min": 0.11942,
+        "median": 0.11942,
+        "max": 0.11942
+      },
+      "feedback_to_command_ms": {
+        "min": 0.87616,
+        "median": 0.87616,
+        "max": 0.87616
+      }
+    },
+    "acceptance": "PASS full UART case 4: controls 2, +100% 3, -100% 0, terminal 7; all modeled motors zero/off"
+  },
+  {
+    "name": "case5-200hz",
+    "scenario": 5,
+    "period_ticks": 250000,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 1.94606,
+        "gaps_ms": 0.11942,
+        "feedback_to_command_ms": 0.87616
+      },
+      {
+        "frame": 1,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 2,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 3,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      },
+      {
+        "frame": 4,
+        "window_ms": 1.94562,
+        "gaps_ms": 0.11898,
+        "feedback_to_command_ms": 0.87572
+      }
+    ],
+    "stats": {
+      "window_ms": {
+        "min": 1.94562,
+        "median": 1.94562,
+        "max": 1.94606
+      },
+      "gaps_ms": {
+        "min": 0.11898,
+        "median": 0.11898,
+        "max": 0.11942
+      },
+      "feedback_to_command_ms": {
+        "min": 0.87572,
+        "median": 0.87572,
+        "max": 0.87616
+      }
+    },
+    "acceptance": "PASS full UART case 5: controls 5, +100% 3, -100% 3, terminal 3; all modeled motors zero/off"
+  },
+  {
+    "name": "case6-200hz",
+    "scenario": 6,
+    "period_ticks": 250000,
+    "frames": [],
+    "stats": {
+      "window_ms": {},
+      "gaps_ms": {},
+      "feedback_to_command_ms": {}
+    },
+    "acceptance": "PASS full UART case 6: controls 0, +100% 0, -100% 0, terminal 3; all modeled motors zero/off"
+  },
+  {
+    "name": "case7-200hz",
+    "scenario": 7,
+    "period_ticks": 250000,
+    "frames": [],
+    "stats": {
+      "window_ms": {},
+      "gaps_ms": {},
+      "feedback_to_command_ms": {}
+    },
+    "acceptance": "PASS full UART case 7: controls 0, +100% 0, -100% 0, terminal 3; all modeled motors zero/off"
+  }
+]

@@ -1,0 +1,933 @@
+{
+  "scope": "Ordered native single-run measurements of the same three-second command schedule. No repeated-machine estimate or timestep/hardware fidelity claim; original gates are unchanged.",
+  "default_parity": {
+    "frames": 151,
+    "exact_fields": [
+      "completed_steps",
+      "contact_history",
+      "contacts",
+      "done",
+      "driver_readings",
+      "error",
+      "joint_positions",
+      "joint_velocities",
+      "motor_readings",
+      "motor_states",
+      "original_rows",
+      "policy",
+      "policy_inputs",
+      "poses",
+      "requested_steps",
+      "servo_commands",
+      "servo_states",
+      "servo_targets_rad",
+      "time_s"
+    ],
+    "all_task_transitions_exact": true
+  },
+  "runs": {
+    "default": {
+      "qualification": {
+        "name": "outer-secant-only/candidate",
+        "no_detected_fall": true,
+        "accepted_as_solver_optimization": false,
+        "realtime_accepted": false,
+        "policy_step_p95_s": 0.18019528,
+        "baseline_wall_s": 22.763944476,
+        "candidate_wall_s": 22.763944476,
+        "speedup": 1,
+        "simulation_per_wall": 0.1317873536004666,
+        "max_error": {
+          "motor_angle_rad": 0,
+          "link_position_m": 0,
+          "current_a": 0,
+          "contact_force_n": 0
+        },
+        "gates": {
+          "candidate_minimum_speedup": 1.2,
+          "realtime_sim_per_wall": 1,
+          "policy_step_p95_s": 0.02,
+          "motor_angle_rad": 0.0017453292519943296,
+          "link_position_m": 0.001,
+          "current_a": 0.1,
+          "contact_force_n": 1,
+          "require_equal_contact_identities": true
+        },
+        "contactIdentities": true,
+        "cadence": true,
+        "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+      },
+      "profile_parity": {
+        "frames": 151,
+        "exact_fields": [
+          "completed_steps",
+          "contact_history",
+          "contacts",
+          "done",
+          "driver_readings",
+          "error",
+          "joint_positions",
+          "joint_velocities",
+          "motor_readings",
+          "motor_states",
+          "original_rows",
+          "policy",
+          "policy_inputs",
+          "poses",
+          "requested_steps",
+          "servo_commands",
+          "servo_states",
+          "servo_targets_rad",
+          "time_s"
+        ],
+        "all_task_transitions_exact": true
+      },
+      "statistics": {
+        "maximum_auxiliary_residual": 6.187670370115701e-10,
+        "maximum_scaled_velocity_residual": 0.0000010179113243274918,
+        "successful_trial_auxiliary_evaluations": 835596,
+        "successful_trial_auxiliary_newton_iterations": 414653,
+        "successful_trial_auxiliary_solves": 179489,
+        "successful_trial_colored_auxiliary_solves": 179489,
+        "successful_trial_dynamics_cache_hits": 19200,
+        "successful_trial_dynamics_preparations": 160289,
+        "successful_trial_endpoint_evaluations": 179489,
+        "successful_trial_implicit_stages": 19200,
+        "successful_trial_mechanical_cache_hits": 21954,
+        "successful_trial_mechanical_preparations": 160308,
+        "successful_trial_newton_iterations": 91123,
+        "successful_trial_stage_fresh_restarts": 0,
+        "successful_trial_stages_with_reused_jacobian": 17311,
+        "successful_trial_supplied_auxiliary_jacobians": 0,
+        "successful_trials": 19200,
+        "successful_trials_with_reused_jacobian": 17311
+      },
+      "buckets": [
+        {
+          "calls": 198689,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 505853,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 23159,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 70,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 705324,
+          "name": "residual evaluations",
+          "seconds": 17.912668931000002
+        },
+        {
+          "calls": 23159,
+          "name": "jacobian assembly",
+          "seconds": 4.094133665
+        },
+        {
+          "calls": 23159,
+          "name": "factorisation",
+          "seconds": 0.25699225000000003
+        },
+        {
+          "calls": 23159,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.073692877
+        },
+        {
+          "calls": 505846,
+          "name": "back-substitution",
+          "seconds": 0.48965354600000005
+        },
+        {
+          "calls": 129594,
+          "name": "embedded closure mapping",
+          "seconds": 6.686937972000001
+        },
+        {
+          "calls": 160308,
+          "name": "embedded contact history",
+          "seconds": 0.39076835400000004
+        },
+        {
+          "calls": 179489,
+          "name": "embedded dynamics preparation",
+          "seconds": 6.482786837000001
+        },
+        {
+          "calls": 198689,
+          "name": "embedded applied force solve",
+          "seconds": 0.584045479
+        },
+        {
+          "calls": 835596,
+          "name": "embedded component equations",
+          "seconds": 3.7053047950000004
+        },
+        {
+          "calls": 129594,
+          "name": "  closure Jacobian",
+          "seconds": 1.068867454
+        },
+        {
+          "calls": 129594,
+          "name": "  closure factorization",
+          "seconds": 1.543418906
+        },
+        {
+          "calls": 519521,
+          "name": "    closure SVD",
+          "seconds": 0.587933185
+        },
+        {
+          "calls": 179489,
+          "name": "  embedded rigid inertia",
+          "seconds": 1.676953109
+        },
+        {
+          "calls": 179489,
+          "name": "  embedded inertia projection",
+          "seconds": 0.7621691850000001
+        },
+        {
+          "calls": 179489,
+          "name": "  embedded force evaluation",
+          "seconds": 2.6003715560000003
+        },
+        {
+          "calls": 179939,
+          "name": "contact geometry queries",
+          "seconds": 1.1530105990000001
+        },
+        {
+          "calls": 179939,
+          "name": "contact force evaluation",
+          "seconds": 1.8107945740000002
+        },
+        {
+          "calls": 179939,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.038394577
+        },
+        {
+          "calls": 179939,
+          "name": "  contact sample transforms",
+          "seconds": 0.7205576290000001
+        },
+        {
+          "calls": 179939,
+          "name": "  contact pair queries",
+          "seconds": 0.035310523
+        },
+        {
+          "calls": 150,
+          "name": "policy observations",
+          "seconds": 0.003935129
+        },
+        {
+          "calls": 150,
+          "name": "policy script",
+          "seconds": 0.09345433700000001
+        }
+      ],
+      "controller_exact": {
+        "servo_states": true,
+        "servo_commands": true
+      }
+    },
+    "outer": {
+      "qualification": {
+        "name": "outer-secant-only/outer/candidate",
+        "no_detected_fall": true,
+        "accepted_as_solver_optimization": false,
+        "realtime_accepted": false,
+        "policy_step_p95_s": 0.160310934,
+        "baseline_wall_s": 22.763944476,
+        "candidate_wall_s": 21.014732715,
+        "speedup": 1.0832374022892728,
+        "simulation_per_wall": 0.14275699056874727,
+        "max_error": {
+          "motor_angle_rad": 5.706627059787195e-9,
+          "link_position_m": 3.011951866144196e-9,
+          "current_a": 3.927986247376225e-8,
+          "contact_force_n": 0.000027033666449416236
+        },
+        "gates": {
+          "candidate_minimum_speedup": 1.2,
+          "realtime_sim_per_wall": 1,
+          "policy_step_p95_s": 0.02,
+          "motor_angle_rad": 0.0017453292519943296,
+          "link_position_m": 0.001,
+          "current_a": 0.1,
+          "contact_force_n": 1,
+          "require_equal_contact_identities": true
+        },
+        "contactIdentities": true,
+        "cadence": true,
+        "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+      },
+      "profile_parity": {
+        "frames": 151,
+        "exact_fields": [
+          "completed_steps",
+          "contact_history",
+          "contacts",
+          "done",
+          "driver_readings",
+          "error",
+          "joint_positions",
+          "joint_velocities",
+          "motor_readings",
+          "motor_states",
+          "original_rows",
+          "policy",
+          "policy_inputs",
+          "poses",
+          "requested_steps",
+          "servo_commands",
+          "servo_states",
+          "servo_targets_rad",
+          "time_s"
+        ],
+        "all_task_transitions_exact": true
+      },
+      "statistics": {
+        "maximum_auxiliary_residual": 2.4189138582778047e-9,
+        "maximum_scaled_velocity_residual": 7.610794246454104e-7,
+        "successful_trial_auxiliary_evaluations": 773834,
+        "successful_trial_auxiliary_newton_iterations": 379015,
+        "successful_trial_auxiliary_solves": 166454,
+        "successful_trial_colored_auxiliary_solves": 166454,
+        "successful_trial_dynamics_cache_hits": 19200,
+        "successful_trial_dynamics_preparations": 147254,
+        "successful_trial_endpoint_evaluations": 166454,
+        "successful_trial_implicit_stages": 19200,
+        "successful_trial_mechanical_cache_hits": 22597,
+        "successful_trial_mechanical_preparations": 147280,
+        "successful_trial_newton_iterations": 66375,
+        "successful_trial_stage_fresh_restarts": 0,
+        "successful_trial_stages_with_reused_jacobian": 19014,
+        "successful_trial_supplied_auxiliary_jacobians": 0,
+        "successful_trials": 19200,
+        "successful_trials_with_reused_jacobian": 19014
+      },
+      "buckets": [
+        {
+          "calls": 185654,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 445471,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 23791,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 74,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 631916,
+          "name": "residual evaluations",
+          "seconds": 14.631665979000001
+        },
+        {
+          "calls": 23791,
+          "name": "jacobian assembly",
+          "seconds": 4.964428366
+        },
+        {
+          "calls": 23791,
+          "name": "factorisation",
+          "seconds": 0.266595798
+        },
+        {
+          "calls": 50192,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.127888996
+        },
+        {
+          "calls": 445464,
+          "name": "back-substitution",
+          "seconds": 0.43768468400000005
+        },
+        {
+          "calls": 104866,
+          "name": "embedded closure mapping",
+          "seconds": 5.4802367510000005
+        },
+        {
+          "calls": 147280,
+          "name": "embedded contact history",
+          "seconds": 0.362373907
+        },
+        {
+          "calls": 166454,
+          "name": "embedded dynamics preparation",
+          "seconds": 6.022868095000001
+        },
+        {
+          "calls": 185654,
+          "name": "embedded applied force solve",
+          "seconds": 0.546069361
+        },
+        {
+          "calls": 773834,
+          "name": "embedded component equations",
+          "seconds": 3.406893649
+        },
+        {
+          "calls": 104866,
+          "name": "  closure Jacobian",
+          "seconds": 0.871099398
+        },
+        {
+          "calls": 104866,
+          "name": "  closure factorization",
+          "seconds": 1.2789463460000001
+        },
+        {
+          "calls": 420400,
+          "name": "    closure SVD",
+          "seconds": 0.48464164400000004
+        },
+        {
+          "calls": 166454,
+          "name": "  embedded rigid inertia",
+          "seconds": 1.5563474160000002
+        },
+        {
+          "calls": 166454,
+          "name": "  embedded inertia projection",
+          "seconds": 0.696033474
+        },
+        {
+          "calls": 166454,
+          "name": "  embedded force evaluation",
+          "seconds": 2.4208763380000002
+        },
+        {
+          "calls": 166904,
+          "name": "contact geometry queries",
+          "seconds": 1.0702656110000002
+        },
+        {
+          "calls": 166904,
+          "name": "contact force evaluation",
+          "seconds": 1.6846700950000002
+        },
+        {
+          "calls": 166904,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.034244904
+        },
+        {
+          "calls": 166904,
+          "name": "  contact sample transforms",
+          "seconds": 0.6608124200000001
+        },
+        {
+          "calls": 166904,
+          "name": "  contact pair queries",
+          "seconds": 0.035531407
+        },
+        {
+          "calls": 150,
+          "name": "policy observations",
+          "seconds": 0.004053842
+        },
+        {
+          "calls": 150,
+          "name": "policy script",
+          "seconds": 0.09587679
+        },
+        {
+          "calls": 29595,
+          "name": "Broyden update attempts",
+          "seconds": 0.35387855900000004
+        },
+        {
+          "calls": 3194,
+          "name": "Broyden rejected/capped updates",
+          "seconds": 0
+        }
+      ],
+      "controller_exact": {
+        "servo_states": true,
+        "servo_commands": true
+      }
+    },
+    "outer-tail": {
+      "qualification": {
+        "name": "outer-secant-only/outer-tail/candidate",
+        "no_detected_fall": true,
+        "accepted_as_solver_optimization": false,
+        "realtime_accepted": false,
+        "policy_step_p95_s": 0.181087175,
+        "baseline_wall_s": 22.763944476,
+        "candidate_wall_s": 24.14755735,
+        "speedup": 0.9427017460215287,
+        "simulation_per_wall": 0.12423616834271646,
+        "max_error": {
+          "motor_angle_rad": 7.550023273239503e-9,
+          "link_position_m": 4.037474088235895e-9,
+          "current_a": 5.868640107209444e-8,
+          "contact_force_n": 0.00003610550014595742
+        },
+        "gates": {
+          "candidate_minimum_speedup": 1.2,
+          "realtime_sim_per_wall": 1,
+          "policy_step_p95_s": 0.02,
+          "motor_angle_rad": 0.0017453292519943296,
+          "link_position_m": 0.001,
+          "current_a": 0.1,
+          "contact_force_n": 1,
+          "require_equal_contact_identities": true
+        },
+        "contactIdentities": true,
+        "cadence": true,
+        "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+      },
+      "profile_parity": {
+        "frames": 151,
+        "exact_fields": [
+          "completed_steps",
+          "contact_history",
+          "contacts",
+          "done",
+          "driver_readings",
+          "error",
+          "joint_positions",
+          "joint_velocities",
+          "motor_readings",
+          "motor_states",
+          "original_rows",
+          "policy",
+          "policy_inputs",
+          "poses",
+          "requested_steps",
+          "servo_commands",
+          "servo_states",
+          "servo_targets_rad",
+          "time_s"
+        ],
+        "all_task_transitions_exact": true
+      },
+      "statistics": {
+        "maximum_auxiliary_residual": 6.937212697192587e-10,
+        "maximum_scaled_velocity_residual": 4.142027317803783e-7,
+        "successful_trial_auxiliary_evaluations": 904476,
+        "successful_trial_auxiliary_newton_iterations": 439775,
+        "successful_trial_auxiliary_solves": 201375,
+        "successful_trial_colored_auxiliary_solves": 201375,
+        "successful_trial_dynamics_cache_hits": 19200,
+        "successful_trial_dynamics_preparations": 182175,
+        "successful_trial_endpoint_evaluations": 201375,
+        "successful_trial_implicit_stages": 19200,
+        "successful_trial_mechanical_cache_hits": 24545,
+        "successful_trial_mechanical_preparations": 182195,
+        "successful_trial_newton_iterations": 66350,
+        "successful_trial_stage_fresh_restarts": 0,
+        "successful_trial_stages_with_reused_jacobian": 19014,
+        "successful_trial_supplied_auxiliary_jacobians": 0,
+        "successful_trials": 19200,
+        "successful_trials_with_reused_jacobian": 19014
+      },
+      "buckets": [
+        {
+          "calls": 220575,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 506200,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 25747,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 68,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 727560,
+          "name": "residual evaluations",
+          "seconds": 15.190028221
+        },
+        {
+          "calls": 25747,
+          "name": "jacobian assembly",
+          "seconds": 7.614206838
+        },
+        {
+          "calls": 25747,
+          "name": "factorisation",
+          "seconds": 0.293762116
+        },
+        {
+          "calls": 67728,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.17439784700000002
+        },
+        {
+          "calls": 506193,
+          "name": "back-substitution",
+          "seconds": 0.5018634630000001
+        },
+        {
+          "calls": 104825,
+          "name": "embedded closure mapping",
+          "seconds": 5.5130623960000005
+        },
+        {
+          "calls": 182195,
+          "name": "embedded contact history",
+          "seconds": 0.44280214300000004
+        },
+        {
+          "calls": 201375,
+          "name": "embedded dynamics preparation",
+          "seconds": 7.268949238
+        },
+        {
+          "calls": 220575,
+          "name": "embedded applied force solve",
+          "seconds": 0.649266179
+        },
+        {
+          "calls": 904476,
+          "name": "embedded component equations",
+          "seconds": 4.004843568
+        },
+        {
+          "calls": 104825,
+          "name": "  closure Jacobian",
+          "seconds": 0.8705282320000001
+        },
+        {
+          "calls": 104825,
+          "name": "  closure factorization",
+          "seconds": 1.291821573
+        },
+        {
+          "calls": 420278,
+          "name": "    closure SVD",
+          "seconds": 0.486933104
+        },
+        {
+          "calls": 201375,
+          "name": "  embedded rigid inertia",
+          "seconds": 1.8782687500000002
+        },
+        {
+          "calls": 201375,
+          "name": "  embedded inertia projection",
+          "seconds": 0.8532346510000001
+        },
+        {
+          "calls": 201375,
+          "name": "  embedded force evaluation",
+          "seconds": 2.9270870700000002
+        },
+        {
+          "calls": 201825,
+          "name": "contact geometry queries",
+          "seconds": 1.299006142
+        },
+        {
+          "calls": 201825,
+          "name": "contact force evaluation",
+          "seconds": 2.0416170250000003
+        },
+        {
+          "calls": 201825,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.042394318
+        },
+        {
+          "calls": 201825,
+          "name": "  contact sample transforms",
+          "seconds": 0.807755004
+        },
+        {
+          "calls": 201825,
+          "name": "  contact pair queries",
+          "seconds": 0.039942779000000005
+        },
+        {
+          "calls": 150,
+          "name": "policy observations",
+          "seconds": 0.0038963340000000004
+        },
+        {
+          "calls": 150,
+          "name": "policy script",
+          "seconds": 0.09598271300000001
+        },
+        {
+          "calls": 47140,
+          "name": "Broyden update attempts",
+          "seconds": 0.555355036
+        },
+        {
+          "calls": 5159,
+          "name": "Broyden rejected/capped updates",
+          "seconds": 0
+        }
+      ],
+      "controller_exact": {
+        "servo_states": true,
+        "servo_commands": true
+      }
+    },
+    "outer-analytic": {
+      "qualification": {
+        "name": "outer-secant-only/outer-analytic/candidate",
+        "no_detected_fall": true,
+        "accepted_as_solver_optimization": false,
+        "realtime_accepted": false,
+        "policy_step_p95_s": 0.149532709,
+        "baseline_wall_s": 22.763944476,
+        "candidate_wall_s": 19.126856915,
+        "speedup": 1.1901560500589963,
+        "simulation_per_wall": 0.15684751620885956,
+        "max_error": {
+          "motor_angle_rad": 5.706528916071818e-9,
+          "link_position_m": 3.011671900365762e-9,
+          "current_a": 3.926864367009841e-8,
+          "contact_force_n": 0.000027032863581393835
+        },
+        "gates": {
+          "candidate_minimum_speedup": 1.2,
+          "realtime_sim_per_wall": 1,
+          "policy_step_p95_s": 0.02,
+          "motor_angle_rad": 0.0017453292519943296,
+          "link_position_m": 0.001,
+          "current_a": 0.1,
+          "contact_force_n": 1,
+          "require_equal_contact_identities": true
+        },
+        "contactIdentities": true,
+        "cadence": true,
+        "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+      },
+      "profile_parity": {
+        "frames": 151,
+        "exact_fields": [
+          "completed_steps",
+          "contact_history",
+          "contacts",
+          "done",
+          "driver_readings",
+          "error",
+          "joint_positions",
+          "joint_velocities",
+          "motor_readings",
+          "motor_states",
+          "original_rows",
+          "policy",
+          "policy_inputs",
+          "poses",
+          "requested_steps",
+          "servo_commands",
+          "servo_states",
+          "servo_targets_rad",
+          "time_s"
+        ],
+        "all_task_transitions_exact": true
+      },
+      "statistics": {
+        "maximum_auxiliary_residual": 2.418910280193795e-9,
+        "maximum_scaled_velocity_residual": 7.610774751670712e-7,
+        "successful_trial_auxiliary_evaluations": 773860,
+        "successful_trial_auxiliary_newton_iterations": 379023,
+        "successful_trial_auxiliary_solves": 166454,
+        "successful_trial_colored_auxiliary_solves": 166454,
+        "successful_trial_dynamics_cache_hits": 19200,
+        "successful_trial_dynamics_preparations": 147254,
+        "successful_trial_endpoint_evaluations": 166454,
+        "successful_trial_implicit_stages": 19200,
+        "successful_trial_mechanical_cache_hits": 22597,
+        "successful_trial_mechanical_preparations": 147280,
+        "successful_trial_newton_iterations": 66375,
+        "successful_trial_stage_fresh_restarts": 0,
+        "successful_trial_stages_with_reused_jacobian": 19014,
+        "successful_trial_supplied_auxiliary_jacobians": 0,
+        "successful_trials": 19200,
+        "successful_trials_with_reused_jacobian": 19014
+      },
+      "buckets": [
+        {
+          "calls": 185654,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 445479,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 23795,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 74,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 631930,
+          "name": "residual evaluations",
+          "seconds": 13.616605280000002
+        },
+        {
+          "calls": 23795,
+          "name": "jacobian assembly",
+          "seconds": 5.078308196
+        },
+        {
+          "calls": 23795,
+          "name": "factorisation",
+          "seconds": 0.26675445200000003
+        },
+        {
+          "calls": 50196,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.12714244700000002
+        },
+        {
+          "calls": 445472,
+          "name": "back-substitution",
+          "seconds": 0.43555747600000005
+        },
+        {
+          "calls": 104866,
+          "name": "embedded closure mapping",
+          "seconds": 4.0168096040000005
+        },
+        {
+          "calls": 147280,
+          "name": "embedded contact history",
+          "seconds": 0.35869064300000003
+        },
+        {
+          "calls": 166454,
+          "name": "embedded dynamics preparation",
+          "seconds": 6.0865767260000005
+        },
+        {
+          "calls": 185654,
+          "name": "embedded applied force solve",
+          "seconds": 0.5657415600000001
+        },
+        {
+          "calls": 773860,
+          "name": "embedded component equations",
+          "seconds": 3.5120946020000003
+        },
+        {
+          "calls": 104866,
+          "name": "  closure Jacobian",
+          "seconds": 0.876928483
+        },
+        {
+          "calls": 104866,
+          "name": "  closure factorization",
+          "seconds": 0.998733799
+        },
+        {
+          "calls": 420333,
+          "name": "    closure SVD",
+          "seconds": 0.471458215
+        },
+        {
+          "calls": 166454,
+          "name": "  embedded rigid inertia",
+          "seconds": 1.568618257
+        },
+        {
+          "calls": 166454,
+          "name": "  embedded inertia projection",
+          "seconds": 0.714229199
+        },
+        {
+          "calls": 166454,
+          "name": "  embedded force evaluation",
+          "seconds": 2.464244486
+        },
+        {
+          "calls": 166904,
+          "name": "contact geometry queries",
+          "seconds": 1.092130778
+        },
+        {
+          "calls": 166904,
+          "name": "contact force evaluation",
+          "seconds": 1.7152074890000002
+        },
+        {
+          "calls": 166904,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.035642771000000004
+        },
+        {
+          "calls": 166904,
+          "name": "  contact sample transforms",
+          "seconds": 0.6747922070000001
+        },
+        {
+          "calls": 166904,
+          "name": "  contact pair queries",
+          "seconds": 0.033166224
+        },
+        {
+          "calls": 150,
+          "name": "policy observations",
+          "seconds": 0.004045069
+        },
+        {
+          "calls": 150,
+          "name": "policy script",
+          "seconds": 0.090510559
+        },
+        {
+          "calls": 29595,
+          "name": "Broyden update attempts",
+          "seconds": 0.350790296
+        },
+        {
+          "calls": 3194,
+          "name": "Broyden rejected/capped updates",
+          "seconds": 0
+        }
+      ],
+      "controller_exact": {
+        "servo_states": true,
+        "servo_commands": true
+      }
+    }
+  },
+  "default_solver_diagnostics_exact": true
+}

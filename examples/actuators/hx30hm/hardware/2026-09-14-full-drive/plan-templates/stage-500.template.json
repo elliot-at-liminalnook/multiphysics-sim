@@ -1,0 +1,84 @@
+{
+  "control": "fpga_device_pd",
+  "name": "All-nine staged 50% short reversal commissioning",
+  "role": "timing",
+  "ids": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "period_s": 0.04,
+  "gains": {
+    "kp_q8": 4096,
+    "kd_q8": 0,
+    "kv_q8": 4096,
+    "limit": 500
+  },
+  "targets": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      -32,
+      -32,
+      -32,
+      -32,
+      -32,
+      -32,
+      -32,
+      -32,
+      -32
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rms_limit_counts": 3.0,
+  "peak_limit_counts": 10.0,
+  "bitstream_path": "UNBOUND-AND-NOT-LOADED.fs",
+  "bitstream_blake3": "0000000000000000000000000000000000000000000000000000000000000000"
+}

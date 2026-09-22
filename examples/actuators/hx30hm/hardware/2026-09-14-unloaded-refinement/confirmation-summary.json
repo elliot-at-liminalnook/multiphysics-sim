@@ -1,0 +1,767 @@
+{
+  "created_utc": "2026-09-14T12:26:24.579718+00:00",
+  "scope": "Fresh confirmation after candidate freeze; all nine motors, unchanged gains and accuracy limits. Prediction conditioned on captured timing, mean servo voltage and initial temperature. No high-drive, loaded or calibrated electrical acceptance.",
+  "modes": {
+    "closed-loop": {
+      "pooled_rms_degrees": {
+        "baseline": 0.7876124387529602,
+        "candidate": 0.617512248643209
+      },
+      "relative_improvement": 0.2159694054338116,
+      "per_motor": [
+        {
+          "id": 4,
+          "pooled_rms_degrees": {
+            "baseline": 0.9935053686218654,
+            "candidate": 0.5672054571666676
+          },
+          "relative_improvement": 0.4290866712140037,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 5,
+          "pooled_rms_degrees": {
+            "baseline": 0.8485423436026742,
+            "candidate": 0.4705268244783829
+          },
+          "relative_improvement": 0.4454881031856852,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 6,
+          "pooled_rms_degrees": {
+            "baseline": 0.7612804227615985,
+            "candidate": 0.9167212267735418
+          },
+          "relative_improvement": -0.20418337233482364,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 7,
+          "pooled_rms_degrees": {
+            "baseline": 0.6783068435083014,
+            "candidate": 0.4473573016033734
+          },
+          "relative_improvement": 0.3404794513209147,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 8,
+          "pooled_rms_degrees": {
+            "baseline": 0.8053236733587746,
+            "candidate": 0.6469680498067143
+          },
+          "relative_improvement": 0.19663599716571645,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 9,
+          "pooled_rms_degrees": {
+            "baseline": 0.7304661388656539,
+            "candidate": 0.677075508268084
+          },
+          "relative_improvement": 0.07309117802569265,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 10,
+          "pooled_rms_degrees": {
+            "baseline": 0.7094711440215301,
+            "candidate": 0.36552670453540825
+          },
+          "relative_improvement": 0.48478989228021974,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 11,
+          "pooled_rms_degrees": {
+            "baseline": 0.7768737292106712,
+            "candidate": 0.7742299345654031
+          },
+          "relative_improvement": 0.0034031201543579526,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 12,
+          "pooled_rms_degrees": {
+            "baseline": 0.7397742942747649,
+            "candidate": 0.48808589842186717
+          },
+          "relative_improvement": 0.34022322457100185,
+          "all_fresh_trials_pass_3_count_gate": false
+        }
+      ],
+      "per_trial": {
+        "confirm-mixed": {
+          "baseline": [
+            {
+              "id": 4,
+              "rms_degrees": 1.0532623835301298,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.9237424395384746,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 0.8487670932672173,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.7743838906874614,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.8443736844225502,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.8092516006015507,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.7032267179028829,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.8009003341333075,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.8743370814687262,
+              "pass": false
+            }
+          ],
+          "candidate": [
+            {
+              "id": 4,
+              "rms_degrees": 0.5892241805015264,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.37403746098057733,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 0.9732855174543225,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.3699999298920436,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.6720211845873459,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.7116186211811203,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.3501354500390148,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.7741991396671325,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.4828802857451608,
+              "pass": false
+            }
+          ]
+        },
+        "confirm-sync": {
+          "baseline": [
+            {
+              "id": 4,
+              "rms_degrees": 1.0346263752921607,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.8980659048114262,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 0.8144496121776763,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.6887362375978693,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.8452203443007756,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.7635944454033051,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.7203100109264208,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.8302791576417283,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.7634070832497295,
+              "pass": false
+            }
+          ],
+          "candidate": [
+            {
+              "id": 4,
+              "rms_degrees": 0.5368873831016976,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.4452739498116406,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 0.993721324578904,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.37518306078708097,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.7230850184934872,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.6854049666158823,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.3391358467614324,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.8455587708786217,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.39650121192698806,
+              "pass": false
+            }
+          ]
+        },
+        "confirm-mixed-10pct": {
+          "baseline": [
+            {
+              "id": 4,
+              "rms_degrees": 0.8839374228030176,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.7072834387082017,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 0.5957431467088697,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.5534189251497161,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.7199127080771506,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.602310310355831,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.7047507247136217,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.6926713135275522,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.542717525626426,
+              "pass": false
+            }
+          ],
+          "candidate": [
+            {
+              "id": 4,
+              "rms_degrees": 0.5742237324401186,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.5709759759074602,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 0.7657458151647861,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.5680874832909761,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.5303192961869322,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.6317536714701512,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.40400663268432824,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.6956594223183867,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.569470764213533,
+              "pass": false
+            }
+          ]
+        }
+      }
+    },
+    "replay": {
+      "pooled_rms_degrees": {
+        "baseline": 1.3224000898415151,
+        "candidate": 1.1732576478765357
+      },
+      "relative_improvement": 0.11278163326717072,
+      "per_motor": [
+        {
+          "id": 4,
+          "pooled_rms_degrees": {
+            "baseline": 1.342427157054367,
+            "candidate": 1.1225372484989433
+          },
+          "relative_improvement": 0.1638002534438585,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 5,
+          "pooled_rms_degrees": {
+            "baseline": 0.9582014131278023,
+            "candidate": 0.8193528147472123
+          },
+          "relative_improvement": 0.144905441046423,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 6,
+          "pooled_rms_degrees": {
+            "baseline": 1.619534029408493,
+            "candidate": 1.4377374867515094
+          },
+          "relative_improvement": 0.11225237590307491,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 7,
+          "pooled_rms_degrees": {
+            "baseline": 1.1591718716827915,
+            "candidate": 0.9722561300510658
+          },
+          "relative_improvement": 0.1612493765574009,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 8,
+          "pooled_rms_degrees": {
+            "baseline": 1.157998901682911,
+            "candidate": 0.9990573254577443
+          },
+          "relative_improvement": 0.13725537735327575,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 9,
+          "pooled_rms_degrees": {
+            "baseline": 1.6623664056550198,
+            "candidate": 1.4356631277333163
+          },
+          "relative_improvement": 0.13637383259822067,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 10,
+          "pooled_rms_degrees": {
+            "baseline": 1.0059541824251599,
+            "candidate": 0.9006903226142582
+          },
+          "relative_improvement": 0.10464080934295739,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 11,
+          "pooled_rms_degrees": {
+            "baseline": 1.5802217661069364,
+            "candidate": 1.5347107684982002
+          },
+          "relative_improvement": 0.028800386493129992,
+          "all_fresh_trials_pass_3_count_gate": false
+        },
+        {
+          "id": 12,
+          "pooled_rms_degrees": {
+            "baseline": 1.199324513098822,
+            "candidate": 1.1041635957111382
+          },
+          "relative_improvement": 0.07934542848774628,
+          "all_fresh_trials_pass_3_count_gate": false
+        }
+      ],
+      "per_trial": {
+        "confirm-mixed": {
+          "baseline": [
+            {
+              "id": 4,
+              "rms_degrees": 0.9829381719880309,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.9002137248266164,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 1.6290748563817785,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 1.6200933471912295,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 1.0621211554605967,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 1.1620683422377747,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 1.0663552743654396,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 1.4871350778413148,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 1.0146620660477887,
+              "pass": false
+            }
+          ],
+          "candidate": [
+            {
+              "id": 4,
+              "rms_degrees": 0.5635366424317777,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.4134563111331357,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 1.731533713109216,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 1.332766332866516,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.8230979494416202,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.8875712191522338,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.8731910535311255,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 1.492176635063521,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.6861350641775606,
+              "pass": false
+            }
+          ]
+        },
+        "confirm-sync": {
+          "baseline": [
+            {
+              "id": 4,
+              "rms_degrees": 1.4793229714492442,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 1.0540091134243768,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 1.564985206217206,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.9721089857248276,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 1.3636428659457456,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 1.0747069203274022,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.7242710526724493,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.888215671020879,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.8109291737740909,
+              "pass": false
+            }
+          ],
+          "candidate": [
+            {
+              "id": 4,
+              "rms_degrees": 1.4196142312014515,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 1.2269760698069487,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 1.1217298663521473,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.6730846781860281,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 1.1832335273310148,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 0.9309924287908148,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 0.7377734178518953,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 0.8547293197749847,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 0.5543228885280616,
+              "pass": false
+            }
+          ]
+        },
+        "confirm-mixed-10pct": {
+          "baseline": [
+            {
+              "id": 4,
+              "rms_degrees": 1.5005892549870592,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.9127594879334314,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 1.663011675804564,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.6792201046505641,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 1.0174778396480213,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 2.405200283410991,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 1.1722411537349156,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 2.119151875690181,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 1.6211084571998515,
+              "pass": false
+            }
+          ],
+          "candidate": [
+            {
+              "id": 4,
+              "rms_degrees": 1.2030758538054722,
+              "pass": false
+            },
+            {
+              "id": 5,
+              "rms_degrees": 0.5810341711188873,
+              "pass": false
+            },
+            {
+              "id": 6,
+              "rms_degrees": 1.394553817438196,
+              "pass": false
+            },
+            {
+              "id": 7,
+              "rms_degrees": 0.7788047670850345,
+              "pass": false
+            },
+            {
+              "id": 8,
+              "rms_degrees": 0.9575044668705982,
+              "pass": false
+            },
+            {
+              "id": 9,
+              "rms_degrees": 2.128110964556553,
+              "pass": false
+            },
+            {
+              "id": 10,
+              "rms_degrees": 1.0615822811714906,
+              "pass": false
+            },
+            {
+              "id": 11,
+              "rms_degrees": 2.0270318469428417,
+              "pass": false
+            },
+            {
+              "id": 12,
+              "rms_degrees": 1.6969020440912936,
+              "pass": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  "acceptance": "Not accepted: all fresh per-motor RMS results remain outside the original three-count prediction gate; preserve regressions and the unchanged baseline."
+}

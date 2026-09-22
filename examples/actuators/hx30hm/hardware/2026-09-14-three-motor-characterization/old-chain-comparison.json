@@ -1,0 +1,19 @@
+{
+  "old_capture": "examples/actuators/hx30hm/hardware/2026-09-14-full-drive/stage-500-3p5a-01/fpga-recording.json",
+  "new_capture": "stage-500-01/fpga-recording.json",
+  "old_subset": [
+    {
+      "id": 10,
+      "nine_chain_minimum_v": 9.4
+    },
+    {
+      "id": 11,
+      "nine_chain_minimum_v": 9.700000000000001
+    },
+    {
+      "id": 12,
+      "nine_chain_minimum_v": 9.600000000000001
+    }
+  ],
+  "caveat": "Same motors and short target pattern at 50 percent cap, but supply changed from reported 12.6 to nominal 12.0 V and temperatures/timing differ; this is not a controlled wiring-resistance identification."
+}

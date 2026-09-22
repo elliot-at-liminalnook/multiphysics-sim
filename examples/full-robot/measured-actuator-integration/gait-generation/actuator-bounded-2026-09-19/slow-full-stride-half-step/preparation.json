@@ -1,0 +1,26 @@
+{
+  "mode": "half-step",
+  "horizon_s": 10,
+  "seed": 2301,
+  "values": {
+    "pace_scale": 0.15,
+    "motion_amplitude": 1.1,
+    "tracking_gain": 0,
+    "velocity_lead_scale": 0
+  },
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/search/pilot.spec.json",
+      "sha256": "b99754c96da5963237e18c7314e056d94186a1a9818854fa1dd5c36c784a8a3f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/current-controller/pilot.spec.json",
+      "sha256": "a250342510c9a8ffbfa52d9dbd77bb9002c3ce57800844b3421df697a4192737"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/slow-full-stride-values.json",
+      "sha256": "2fef7a80a219ca50f8e1b5f6a0459fbd98ab4d9fa0b3da1077ad54236366d417"
+    }
+  ],
+  "script_sha256": "afc389a89c461d863d40d845d43a88367cc4afde8d4c0eee659eac3c492746d9"
+}

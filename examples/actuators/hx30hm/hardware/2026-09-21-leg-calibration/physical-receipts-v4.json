@@ -1,0 +1,43 @@
+{
+  "source": "measurements/serial.jsonl",
+  "provenance": "Operator used the browser after FPGA version 4 was loaded; agent sent no nonzero jogs",
+  "profile4_status_replies": 134,
+  "verified_stop_ids": [
+    1,
+    2,
+    3
+  ],
+  "latest_verified_stops": [
+    {
+      "event": "stop_verified",
+      "id": 1,
+      "position_raw": 2848,
+      "retries": 0,
+      "unix_ms": 1790034850118
+    },
+    {
+      "event": "stop_verified",
+      "id": 2,
+      "position_raw": 784,
+      "retries": 0,
+      "unix_ms": 1790034841796
+    },
+    {
+      "event": "stop_verified",
+      "id": 3,
+      "position_raw": 2577,
+      "retries": 0,
+      "unix_ms": 1790034879546
+    }
+  ],
+  "worm_40pct_step": {
+    "start_raw": 845,
+    "commanded_delta": -20,
+    "target_raw": 825,
+    "final_raw": 784,
+    "actual_delta": -61,
+    "raw_pwm_magnitude": 400,
+    "stop_verified": true
+  },
+  "all_three_zero_watchdog_tests": "Not claimed; operator enabled tested axes individually through the browser."
+}

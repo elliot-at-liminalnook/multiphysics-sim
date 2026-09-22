@@ -1,0 +1,74 @@
+{
+  "scope": "Flat-ground simulated gait qualification for the recorded provisional CAD motor model. No browser, hardware, battery, terrain or disturbance qualification.",
+  "directory": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast",
+  "cad_sha256": "f873aa7dc89be5c92291403c12d46d060c03e3ee183a626b32115ba0ae712ac9",
+  "runtime_identity": {
+    "features": [
+      "BAYESIAN"
+    ],
+    "library_source_blake3": "eba42b4583365cf6b72f172751aa4ece0fed557bd4a3dc6b898654b8a94cb394",
+    "version": 1
+  },
+  "seed": 2301,
+  "receipts": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/geometry-report.json",
+      "sha256": "1a2008828f23daa78a89ee44e8c275c87b6a0618f993525aaf109d8bc0176fb5",
+      "available": true,
+      "pass": true
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/direction-report.json",
+      "sha256": "6abd432ca1215663daa7b3a80c7f3febefc5929329af66627c1b1ea7eb007939",
+      "available": true,
+      "pass": true
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/geometry-report.json",
+      "available": false,
+      "pass": false
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/direction-report.json",
+      "available": false,
+      "pass": false
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/half-step/check.json",
+      "sha256": "5b9ceb63fc43127727703e218166fafa2a3713b76847d54a2afc92a21dc72411",
+      "available": true,
+      "pass": true
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/replay/check.json",
+      "available": false,
+      "pass": false
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/check.json",
+      "sha256": "4c5ddd1949fe436ebb2ec431a0df65f14a7ed7a2adcd873905c57c7ccd65cedd",
+      "available": true,
+      "pass": true
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/geometry-report.json",
+      "sha256": "23daacf199ff0ad2f517406c5cc0ba69b48084fe9ed66ebba65dad6c4ec9c799",
+      "available": true,
+      "pass": true
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/check.json",
+      "available": false,
+      "pass": false
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/geometry-report.json",
+      "available": false,
+      "pass": false
+    }
+  ],
+  "complete": false,
+  "qualified_in_simulation": false,
+  "hardware_qualified": false,
+  "browser_promoted": false
+}

@@ -1,0 +1,32 @@
+{
+  "scope": "Provisional short-window integration diagnostic; no walking speed claim",
+  "world_and_uncertainty": "Exact historical environment and uncertainty settings retained",
+  "controller_and_policy": "Historical Rhai gait/controller and initial joint references unchanged; CAD fixed-PD closes the new PWM loop",
+  "solver_changes": {
+    "step_s": "unchanged",
+    "implicit_accuracy_tolerances": "unchanged",
+    "motor_event_schedule": "Uses historical subdivision limits; replaces mechanics-only subdivision",
+    "restart_failed_reused_mechanics": "removed: option only supported by old mechanical subdivision adapter",
+    "cached_mechanical_iteration_limit": "removed with mechanics-only restart adapter"
+  },
+  "profile": "Provisional family; no accepted calibrated motor fit; supply voltage and temperature imposed from historical experiment boundaries; no battery coupling yet",
+  "external_drive_connections": "See explicit comparison-overrides.json; unmeasured historical assumptions",
+  "cad_provenance_updates": [
+    {
+      "path": "policy.body_feedback.expected_cad_sha256",
+      "before": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "after": "b44568c7e9224063423a28129d33cc3498576b045b78d49157c602b637dbfa2d"
+    },
+    {
+      "path": "policy.point_feedback.expected_cad_sha256",
+      "before": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "after": "b44568c7e9224063423a28129d33cc3498576b045b78d49157c602b637dbfa2d"
+    },
+    {
+      "path": "policy.task_observations.expected_cad_sha256",
+      "before": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "after": "b44568c7e9224063423a28129d33cc3498576b045b78d49157c602b637dbfa2d"
+    }
+  ],
+  "cad_provenance_basis": "Separate revision with all 114 geometry entries byte-identical; motor profiles/feedback bindings added. Numeric policy parameters unchanged."
+}

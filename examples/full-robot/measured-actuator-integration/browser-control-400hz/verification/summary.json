@@ -1,0 +1,72 @@
+{
+  "simulation_only": true,
+  "motors": 12,
+  "physical_parameter_checks": 228,
+  "control_hz": 400,
+  "native_measurement_hz": 200,
+  "outer_policy_hz": 50,
+  "wasd_and_release": true,
+  "elapsed_time_speed_display": true,
+  "comparisons": [
+    {
+      "name": "coarse-4",
+      "max_error": {
+        "motor_angle_deg": 0.18446500816682246,
+        "link_position_m": 0.001193745909920488,
+        "current_a": 0.10652243493641221
+      },
+      "limits": {
+        "motor_angle_deg": 0.1,
+        "link_position_m": 0.001,
+        "current_a": 0.1
+      },
+      "accepted": false,
+      "simulation_per_wall": 0.0459014060747839,
+      "scope": "One-second common-input browser comparison; host contention can affect timing."
+    },
+    {
+      "name": "coarse-8",
+      "max_error": {
+        "motor_angle_deg": 0.24551825102994468,
+        "link_position_m": 0.0032381555986163136,
+        "current_a": 0.20529340311290406
+      },
+      "limits": {
+        "motor_angle_deg": 0.1,
+        "link_position_m": 0.001,
+        "current_a": 0.1
+      },
+      "accepted": false,
+      "simulation_per_wall": 0.06779396735359586,
+      "scope": "One-second common-input browser comparison; host contention can affect timing."
+    }
+  ],
+  "long_trial": {
+    "duration_s": 3,
+    "wall_s": 54.92665999993679,
+    "simulation_per_wall": 0.05461828554664443,
+    "net_distance_m": 0.4615086301053998,
+    "mean_net_speed_m_s": 0.15383621003513326,
+    "fallen": false,
+    "scope": "Single seed, short forward request; not a validated sustainable gait speed."
+  },
+  "calibration": "Provisional fitted candidates, not accepted twelve-motor hardware calibration",
+  "sha256": {
+    "scene.json": "225ad4f0d0bbe065f8d19e150530d031e5f1514153211c9cfee288b522efc3da",
+    "config.json": "a9a38cb64d489fffae1552ecbd2b38daa649337b8b9b0fb5c8e5e16844983829",
+    "task.json": "2f39cf7deae53be5a0c6f86255fd22719d6ec2b8a26fe83ca6aca2ea9c275cd4",
+    "overrides.json": "8a1c741b91f27c305099c3fe7147be954bf8e6ac25e49a77135a3a2eb4c59f5b",
+    "controller-identity.json": "d0ae555501c4128da09ce2aee5788beb41087dd54214a1cff05ccc5407ca81c7",
+    "prepare.mjs": "560f61f4c207341f6752cbff433c09d56233512fc7a9fbe525cd28790e4142d8",
+    "verify.mjs": "30a86ebaa99610429de5e7093a722aa73e30bc2fb958db14997bb6fe4f00f652",
+    "README.md": "49bab38b23b65e036c5663f0b6636b70b04b29a5d34766605f502f93893ce42b",
+    "bundle/build-manifest.json": "b31eef7b8533e8d8da767e5004076aec038ffc0d8dc4e21fb077e2a0769302d5",
+    "bundle/sim_web_bg.wasm": "6784aeb2eb7bed3b3a1307bddc3868d40d492073bd90ffb3b18d8e21e1771d42",
+    "verification/native-cadence.json": "69b9307fa6f1db2ea533365edd02bda67c2d244fa44b202a1e6f406aa1d5c3b3",
+    "verification/browser.json": "fceb4c9c8a53f71b019670f1f708fc22a3a6f001e4f182b0835d4368232c225e",
+    "verification/reference.browser.json": "d2b2a8c8bb9e671c4a8f3ca1d920ed63c51157f5f1448fcd344202389ab1ebc3",
+    "verification/coarse-4.browser.json": "3e28b9ae8a685abe1a6fd9faa06be0fff080fc7b91b59e7e43745df9722e8e64",
+    "verification/coarse-8.browser.json": "f11773cc2b2dc0527018eeb150b7493487e35ae60d60316b33c668f7dfac5e0c",
+    "verification/long-reference.browser.json": "f90ec1c643a40e1243f492fddb669dcfff41888a6c57b19afd54798b8e99a2d4"
+  }
+}

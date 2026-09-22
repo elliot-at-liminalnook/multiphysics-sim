@@ -1,0 +1,111 @@
+{
+  "objective": "Implement all six milestones of IMPLEMENTATION-PLAN.md",
+  "complete": false,
+  "milestones": [
+    {
+      "step": 1,
+      "status": "Evidence frozen for selected baseline and 34 retained captures",
+      "evidence": [
+        "baseline-audit.json",
+        "evidence-manifest.json"
+      ]
+    },
+    {
+      "step": 2,
+      "status": "Measured-voltage replay and fitting implemented; per-motor refits and closed-loop validation fail; motor-model refinement remains",
+      "evidence": [
+        "voltage-conditioning/README.md",
+        "voltage-conditioning/fit-summary.json"
+      ]
+    },
+    {
+      "step": 3,
+      "status": "CAD motor/controller/feedback and shared power-tree authoring, native validation, save/reload/export and undo are implemented. Focused CAD tests pass. Twelve-motor revisions preserve geometry; quadruped battery/wiring parameters remain unauthored and unmeasured.",
+      "evidence": [
+        "cad-profiles/revision-receipt.json",
+        "controller-integration/cad-receipt.json",
+        "controller-integration/robot-controller.simrobot.receipt.json",
+        "controller-integration/cad-feedback-tests.log",
+        "cad-power-integration/checks.json"
+      ]
+    },
+    {
+      "step": 4,
+      "status": "CAD-selected FPGA control, detailed motors and shared power-bank selection work in EmbeddedSession and the environment. Reference and embedded circuits use shared registered components; power observation/replay and transactional operating-envelope tests pass. Quadruped still uses explicit imposed supplies.",
+      "evidence": [
+        "controller-integration/runtime-tests.log",
+        "controller-integration/nominal-window.json",
+        "power-coupling/README.md",
+        "power-coupling/focused-tests.log",
+        "power-coupling/checks.json",
+        "power-coupling/power-controller-tests.log",
+        "cad-power-integration/checks.json"
+      ]
+    },
+    {
+      "step": 5,
+      "status": "Partial: existing measured-voltage comparisons plus working browser finite FPGA gait playback, editable single-leg motor mapping and live actual encoder traces. Full live robot/simulation/electrical comparison remains."
+    },
+    {
+      "step": 6,
+      "status": "Original full-authority gait completes ten seconds at 0.450412 m/s without a fall; exact replay and the predeclared half-step bounds pass. All four feet attain sampled clearance peaks of 12-42 mm. The six-trial search winner at two seconds slows to 0.160519 m/s over ten seconds and is not promoted; exact replay and trace aggregation confirm the slowdown. Original gait thirty-second run completes without a fall: 12.653113 m net travel, 0.421770 m/s; longer-horizon replay and numerical checks remain. The 35% winner has exact replay and passing ten-second half-step checks but weak clearance on one foot. Native release remains far slower than realtime. Sustained 300-second, browser/fidelity, battery and loaded-hardware qualification remain.",
+      "evidence": [
+        "controller-integration/comparison-recipe.json",
+        "controller-integration/numerical-comparison.json",
+        "controller-integration/wasm-check.log",
+        "gait-generation/preparation.json",
+        "gait-generation/results.json",
+        "gait-generation/timestep-comparison.json",
+        "gait-generation/selection.json",
+        "gait-generation/baseline-10s/results.json",
+        "gait-generation/full-authority/robot.receipt.json",
+        "gait-generation/ten-second-comparison.json",
+        "gait-generation/full-authority/first-four-comparison.json",
+        "gait-generation/full-authority-10s/results.json",
+        "gait-generation/selected-10s/replay-verification.json",
+        "gait-generation/selected-10s/timestep-comparison.json",
+        "gait-generation/selected-10s/geometry-summary.json",
+        "gait-generation/full-authority-10s/release-verification.json",
+        "gait-generation/full-authority-10s/geometry-summary.json",
+        "gait-generation/full-authority/selection.json",
+        "gait-generation/release-performance.json",
+        "gait-generation/full-authority-10s/timestep-comparison.json",
+        "gait-generation/full-authority-10s/trace-summary.json",
+        "gait-generation/full-authority-selected-10s/results.json",
+        "gait-generation/full-authority-selected-10s/release-verification.json",
+        "gait-generation/full-authority-selected-10s/trace-summary.json",
+        "MOTOR-MODEL-STATUS.md",
+        "gait-generation/full-authority-30s/results.json",
+        "gait-generation/robustness/delay-10ms/preparation.json",
+        "gait-generation/robustness/backlash-05deg/preparation.json"
+      ]
+    }
+  ],
+  "next_actions": [
+    "Complete the initial shared-runtime trials for isolated 10 ms delay and 0.5 degree internal-backlash CAD scenarios; their exports and unchanged-physics comparisons pass",
+    "Author provisional battery/wiring scenarios; user pack preference is optional and pending",
+    "Add reproducible synthetic motor-family variation without inventing physical-unit assignments",
+    "Integrate shared thermal states into the gait runtime; fixed hot-temperature scenarios remain sensitivity probes",
+    "Use longer scoring horizons and compare candidate performance across scenarios; retain failures and original baselines",
+    "Qualify sustained travel, contact/slip and numerical/browser fidelity; continue motor calibration separately"
+  ],
+  "unknown_measurements": [
+    "Loaded torque and leg/transmission dynamics",
+    "Calibrated supply current/power",
+    "Battery and power-branch parameters",
+    "Physical unit to quadruped joint assignments"
+  ],
+  "current_priority": "Generate gaits across explicitly provisional nonideal scenarios: power sag, command delay, backlash and motor variation. Add dynamic thermal integration; the historical 0.264 degree bench target is not a gait gate.",
+  "known_runtime_limitations": [
+    "The legacy exported world.floor_friction_static field is not represented by shared World; existing material-pair friction still applies. The authority comparison preserves the same imported baseline behavior.",
+    "All gait runs so far use imposed supplies and temperature; no calibrated battery/wiring/load model is asserted."
+  ],
+  "browser_hardware": {
+    "status": "Working finite browser gait playback on editable single-leg mapping; actual 100 Hz runs, operator stop and owner-tab-disconnect stop verified on IDs 10–12",
+    "evidence": [
+      "browser-hardware/README.md",
+      "browser-hardware/verification.json"
+    ],
+    "remaining": "Live shared-runtime quadruped simulation, continuous steering, installed-leg calibration and persistent whole-robot mapping"
+  }
+}

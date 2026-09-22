@@ -1,0 +1,14 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4m 20s
+     Running tests/embedded_power.rs (target/debug/deps/embedded_power-8119139a486343e0)
+
+running 5 tests
+test fpga_controller_preserves_subperiod_pwm_delay_with_shared_power ... ok
+test power_checkpoints_replay_and_failed_intervals_do_not_commit_charge_or_energy ... ok
+test topology_requires_exact_coverage_acyclic_feeds_and_explicit_battery_parameters ... ok
+test simultaneous_motor_load_reduces_other_motor_speed_and_separate_feeds_reduce_sag ... ok
+test shared_supply_matches_kcl_voltage_drops_charge_and_terminal_energy_through_reversal ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+

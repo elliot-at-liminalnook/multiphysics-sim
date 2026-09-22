@@ -1,0 +1,39 @@
+{
+  "bindings": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "motor_id": 10,
+      "polarity": 1
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "motor_id": 11,
+      "polarity": 1
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "motor_id": 12,
+      "polarity": 1
+    }
+  ],
+  "amplitude": 0.03,
+  "source": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-10s/release-replay-capture.json",
+  "initial": {
+    "sequence": 0,
+    "time_s": 0,
+    "targets_rad": {
+      "joint.-Y | Hip servo output": -0.07775224690283092,
+      "joint.-Y | Worm servo output": -0.12525545580343606,
+      "joint.-Y | Foot servo output": -0.8735909910745306,
+      "joint.+X | Hip servo output": 0.1513974802050533,
+      "joint.+X | Worm servo output": -0.18401731443341288,
+      "joint.+X | Foot servo output": -0.8181288923097786,
+      "joint.+Y | Hip servo output": 0.23790030876019985,
+      "joint.+Y | Worm servo output": 0.0019583286620677913,
+      "joint.+Y | Foot servo output": -1.1362585601810484,
+      "joint.-X | Hip servo output": -0.1131458490048312,
+      "joint.-X | Worm servo output": 0.1384210840406683,
+      "joint.-X | Foot servo output": -1.2553759883105409
+    }
+  }
+}

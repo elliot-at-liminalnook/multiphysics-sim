@@ -1,0 +1,49 @@
+{
+  "checked_date": "2026-09-15",
+  "cad": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/robot.simrobot.json",
+    "sha256": "df553251b7fa1d0f21f3474bb96f3733f84c049afad11c2e4c5ef7f6c86c1dcf",
+    "cad_sha256": "7600b5476c5ddefd354c9f00909b923907abe148b67a829a8ffec5d9d429fdcb",
+    "link_count": 29,
+    "motor_count": 12,
+    "mass_kg": 3.976239082561776,
+    "mass_lb": 8.766106631294914
+  },
+  "candidate": {
+    "name": "Gens ace 2200mAh 3S 45C 11.1V Air Classic",
+    "sku": "GEA223S45DGT",
+    "url": "https://www.genstattu.com/gens-ace-2200mah-3s-45c-11-1v-g-tech-lipo-battery-pack-with-deans-plug/",
+    "price_usd": 35.09,
+    "price_excludes_shipping_tax": true,
+    "voltage_nominal_v": 11.1,
+    "capacity_ah": 2.2,
+    "mass_kg": 0.18,
+    "listed_mass_tolerance_kg": 0.02,
+    "dimensions_mm": [
+      106,
+      34,
+      23
+    ],
+    "connector": "Deans",
+    "manufacturer_discharge_c": 45,
+    "source": "Manufacturer listing, not bench measurements"
+  },
+  "target": {
+    "maximum_total_mass_kg": 2.7215542200000002,
+    "maximum_price_usd": 200,
+    "remaining_mass_before_battery_kg": -1.254684862561776,
+    "maximum_other_components_kg_with_200g_battery": 2.52155422
+  },
+  "current_total_with_nominal_candidate_kg": 4.156239082561776,
+  "current_total_with_nominal_candidate_lb": 9.162938703227693,
+  "meets_current_modeled_mass_limit": false,
+  "limitations": [
+    "CAD mass is a derived estimate, not a weighed assembly.",
+    "Per-solid geometry mass calculation does not apply the displayed print infill setting.",
+    "Internal motor geometry is excluded where the 52 g specification already accounts for it.",
+    "Unmodeled electronics, wiring, connector adapters and battery mount add mass.",
+    "Battery dimensions, mass and capacity are catalog values; internal resistance, discharge curve and sag remain unmeasured.",
+    "Current battery-chain simulation is a separate hypothetical 2 Ah electrical scenario; it does not include the candidate battery body mass or inertia.",
+    "No purchase, mass change or automatic battery selection was performed."
+  ]
+}

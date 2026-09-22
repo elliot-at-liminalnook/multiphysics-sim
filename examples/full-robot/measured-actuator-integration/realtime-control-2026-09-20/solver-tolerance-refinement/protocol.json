@@ -1,0 +1,46 @@
+{
+  "scope": "Solver tolerance sensitivity and its separation from timestep sensitivity. No reference is assumed converged. Same code, controller, contact laws, model, seed and three-second actions; solver tolerances only tightened. Predictor remains disabled.",
+  "baseline": "../mechanical-predictor/numeric/candidate.native.json",
+  "binary": "../mechanical-predictor/candidate-native.bin",
+  "binary_sha256": "bbf0360740c5f2f2ec4c668fd6afaab773d51588e1b8fca2b2beec5f2e53e39b",
+  "inputs": {
+    "tight-6400": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb",
+      "config.json": "02cdc116f3c09e15b98779e26aa8d22b15df2efc09eb32d58c40600dd9211514"
+    },
+    "tighter-6400": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb",
+      "config.json": "f992991fa28eeba12c384f074992cf3b02eb46d4c315318e4a85f172afa91f24"
+    },
+    "tighter-12800": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb",
+      "config.json": "14800c8aeef54a846e74e90405bfff6f9119991fee61d5831c89477b30ad7102"
+    },
+    "default-12800": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb",
+      "config.json": "3f4ce55f61edf1b3f8da078f24c19c5c4eb9545cffcc714d7ac010913ae1b386"
+    }
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "analysis_sources_sha256": {
+    "analyze.mjs": "2f083f8ee73effde51e3b859c484fc634023678186f8c4c74478ccce49cdb867",
+    "../compare-refinement.mjs": "4820bb80edbe058ce1d434a9501edf72ebb46e3878c4ae1aa5c338ace4bd74ae"
+  }
+}

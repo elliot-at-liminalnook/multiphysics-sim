@@ -1,0 +1,218 @@
+{
+  "replay_parity": {
+    "be6400": {
+      "exact_matching_source_frames": 11,
+      "dense_frames": 161
+    },
+    "be12800": {
+      "exact_matching_source_frames": 11,
+      "dense_frames": 161
+    },
+    "sdirk6400": {
+      "exact_matching_source_frames": 11,
+      "dense_frames": 161
+    }
+  },
+  "first_controller_differences": {
+    "be_refinement": {
+      "servo_targets_rad": {
+        "time_s": 0.02125,
+        "differences": [
+          {
+            "index": 0,
+            "left": -0.07461993440240337,
+            "right": -0.07462031268015826
+          },
+          {
+            "index": 1,
+            "left": -0.11399614412166324,
+            "right": -0.11399750057969284
+          },
+          {
+            "index": 2,
+            "left": -0.8461731896333445,
+            "right": -0.8461822513077272
+          },
+          {
+            "index": 3,
+            "left": 0.15255632019526788,
+            "right": 0.152556018714509
+          },
+          {
+            "index": 4,
+            "left": -0.17544220180668524,
+            "right": -0.17544836501077035
+          },
+          {
+            "index": 5,
+            "left": -0.8057892063416063,
+            "right": -0.8058027476092953
+          },
+          {
+            "index": 6,
+            "left": 0.23955684173158243,
+            "right": 0.23955777280236598
+          },
+          {
+            "index": 7,
+            "left": -0.0007639262848353305,
+            "right": -0.0007637211627721588
+          },
+          {
+            "index": 8,
+            "left": -1.1194153822786794,
+            "right": -1.119423466450194
+          },
+          {
+            "index": 9,
+            "left": -0.10730922556406643,
+            "right": -0.10730868567215203
+          },
+          {
+            "index": 10,
+            "left": 0.13614985320325584,
+            "right": 0.13614869855190956
+          },
+          {
+            "index": 11,
+            "left": -1.231563566207237,
+            "right": -1.2315724148625422
+          }
+        ]
+      },
+      "servo_states": {
+        "time_s": 0.025,
+        "differences": [
+          {
+            "index": 89,
+            "left": 1219.0,
+            "right": 1218.0
+          },
+          {
+            "index": 93,
+            "left": 0.416,
+            "right": 0.432
+          }
+        ]
+      },
+      "servo_commands": {
+        "time_s": 0.02625,
+        "differences": [
+          {
+            "index": 11,
+            "left": 0.416,
+            "right": 0.432
+          }
+        ]
+      }
+    },
+    "fine_method": {
+      "servo_targets_rad": {
+        "time_s": 0.02125,
+        "differences": [
+          {
+            "index": 0,
+            "left": -0.07462031268015826,
+            "right": -0.07462184307068209
+          },
+          {
+            "index": 1,
+            "left": -0.11399750057969284,
+            "right": -0.1140004203149819
+          },
+          {
+            "index": 2,
+            "left": -0.8461822513077272,
+            "right": -0.8461924062951315
+          },
+          {
+            "index": 3,
+            "left": 0.152556018714509,
+            "right": 0.1525555183913579
+          },
+          {
+            "index": 4,
+            "left": -0.17544836501077035,
+            "right": -0.17546360565818797
+          },
+          {
+            "index": 5,
+            "left": -0.8058027476092953,
+            "right": -0.8058180443324605
+          },
+          {
+            "index": 6,
+            "left": 0.23955777280236598,
+            "right": 0.2395597274763728
+          },
+          {
+            "index": 7,
+            "left": -0.0007637211627721588,
+            "right": -0.0007660062859876655
+          },
+          {
+            "index": 8,
+            "left": -1.119423466450194,
+            "right": -1.119431822277026
+          },
+          {
+            "index": 9,
+            "left": -0.10730868567215203,
+            "right": -0.10730832869993878
+          },
+          {
+            "index": 10,
+            "left": 0.13614869855190956,
+            "right": 0.13614356226214297
+          },
+          {
+            "index": 11,
+            "left": -1.2315724148625422,
+            "right": -1.2315840713409214
+          }
+        ]
+      },
+      "servo_states": {
+        "time_s": 0.02,
+        "differences": [
+          {
+            "index": 17,
+            "left": 1471.0,
+            "right": 1470.0
+          },
+          {
+            "index": 21,
+            "left": 0.368,
+            "right": 0.384
+          }
+        ]
+      },
+      "servo_commands": {
+        "time_s": 0.02125,
+        "differences": [
+          {
+            "index": 2,
+            "left": 0.368,
+            "right": 0.384
+          }
+        ]
+      }
+    }
+  },
+  "fields_checked": [
+    "joint_positions",
+    "joint_velocities",
+    "motor_states",
+    "servo_states",
+    "servo_commands",
+    "servo_targets_rad",
+    "motor_readings",
+    "driver_readings",
+    "poses",
+    "contacts",
+    "original_rows",
+    "policy"
+  ],
+  "interpretation": "BE6400 vs BE12800 first differ in policy targets at the 21.25 ms observation, then encoder history and pending PWM at 25 ms; held PWM first differs at 26.25 ms by 0.016 for motor 11. These observed quantized branches can amplify integration differences. This does not establish which integrator is accurate or waive the fidelity gates. 800 Hz snapshots resolve these scheduled boundaries, not all unscheduled motor/contact events.",
+  "scope": "0 to 0.2 s replay windows. Original 50 Hz physical/policy frame fields match exactly. Input values at host boundaries, observation wall time and report stride metadata are excluded."
+}

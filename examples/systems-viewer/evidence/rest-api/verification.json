@@ -1,0 +1,28 @@
+{
+  "verified_at_utc": "2026-09-20T18:02:12.468073+00:00",
+  "platform": "Intel macOS",
+  "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+  "cargo": "1.97.1 (c980f4866 2026-06-30)",
+  "focused_tests": {
+    "sim-api": 6,
+    "sim-inspect-lib": 4,
+    "sim-render": 2,
+    "sim-spatial": 6,
+    "sim-viewer": 17
+  },
+  "acceptance": "run-20260920-complete",
+  "inputs_sha256": {
+    "Cargo.lock": "89fc3c0fbe4d0020aa754f4020daafe25f673d24394284281ab1e77f7c7400c9",
+    "examples/systems-viewer/spatial/motor-thermal.description.json": "4327ed26fa7cf1293663e1130e8bdfdebf4f7d425841be6599f869c4cb761388",
+    "examples/systems-viewer/spatial/motor-thermal.spatial.json": "199eaff0196faca8370faf4046c326d3a63a413ca3f701abf2bf3441dde89e83",
+    "examples/systems-viewer/spatial/motor-thermal.animation.json": "208fd325ce02b604330c2add2539c6ba31a6e03720c33c47263887ec79bd12f1",
+    "examples/systems-viewer/spatial/motor-thermal.live.json": "d976f47d085f76ce4a0b6e0e0352dcde8bf6487203b449678efe0b250d628dbd"
+  },
+  "binaries_sha256": {
+    "target/debug/sim-viewer": "e0315a3dcb8b51699f3ac5935386d2dc1e4def1ab10984572c311071d214049d",
+    "target/debug/sim-spatial": "1011eeaeddb057c21a25121892487b765bcf720f302881076dfa4c4776be0173",
+    "target/debug/sim-system-worker": "36862d554f569ed049deaecbd9df8048ef52d2395ee874925f293033ddef513a",
+    "target/debug/simctl": "4a50f501e356fb811afd09d432b40edd17712a26dd1a4341a6e8c59c130a7690"
+  },
+  "visual_review": "Five exported PNGs inspected off-screen; native windows were not opened or restarted."
+}

@@ -1,0 +1,45 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 9.39s
+     Running tests/fpga_upload.rs (target/debug/deps/fpga_upload-35e505ae7fd214f4)
+
+running 10 tests
+test sparse_plan_zeroes_unused_axes_but_preserves_original_evidence ... ok
+test fast_device_period_is_limited_to_three_motors ... ok
+test full_drive_requires_device_clock_and_40ms_period ... ok
+test uploads_are_bounded_nonexecuting_and_agree_with_existing_controller_packets ... ok
+test source_or_packet_changes_invalidate_saved_upload ... ok
+test start_binds_sealed_plan_identity_cadence_and_compiled_gains ... ok
+test rejects_unrepresentable_timing_invalid_homes_and_firmware_identity ... ok
+test actual_rtl_uart_receipts_decode_and_confirm_each_upload_stage ... ok
+test rtl_fixture_is_reproducible_from_its_frozen_rust_source ... ok
+test upload_transfer_checks_capability_and_stops_on_rejection_or_cancellation ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/live_stream.rs (target/debug/deps/live_stream-8991f956eaea6149)
+
+running 2 tests
+test changed_reference_missing_ack_and_foreign_run_are_rejected ... ok
+test streamed_uart_reference_and_stop_cases_reproduce_shared_controller ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests examples/serve_motor_bench.rs (target/debug/examples/serve_motor_bench-bffe6f5cc6e22102)
+
+running 1 test
+test stop_request_tests::early_stop_does_not_create_the_child_capture_directory ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

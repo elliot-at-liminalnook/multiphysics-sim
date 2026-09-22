@@ -1,0 +1,51 @@
+{
+  "scope": "Shared Rust compiled-geometry audit at saved poses only. Five-millimetre lift counts are descriptive, not an acceptance threshold. No continuous collision or hardware-clearance certificate.",
+  "capture": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-10s/release-replay-capture.json",
+    "sha256": "a651f28023f889f3c5821b9426a23de7ad41fcd1fce0b4aa1613baf8b6fc101c"
+  },
+  "audit": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-10s/geometry-audit.json",
+    "sha256": "9e1db235a0f2bc6293131a3cdd1c0ff985f3086d5e52d917aee717d6b8ce0459",
+    "recorded_capture_blake3": "325fc8558bd7e97a6805968497612da73fea2498a998f10f5b50abf27466c1d3"
+  },
+  "completed": true,
+  "frame_count": 501,
+  "sample_period_s": 0.02,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "minimum_clearance_m": -0.0001532108750810779,
+      "maximum_clearance_m": 0.01369342610006219,
+      "samples_above_5mm": 48,
+      "samples": 501
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "minimum_clearance_m": -0.00029787024480731894,
+      "maximum_clearance_m": 0.016488793250990952,
+      "samples_above_5mm": 115,
+      "samples": 501
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "minimum_clearance_m": -0.0001767221013879161,
+      "maximum_clearance_m": 0.042002393687332495,
+      "samples_above_5mm": 131,
+      "samples": 501
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "minimum_clearance_m": -0.0003174742671375186,
+      "maximum_clearance_m": 0.012336068873178618,
+      "samples_above_5mm": 84,
+      "samples": 501
+    }
+  ],
+  "worst_sampled_overlap": {
+    "time_s": 2.2600000000000002,
+    "link": "-X | Thigh sector gear",
+    "other": "-X | Hip output shaft and pulley",
+    "penetration_m": 0.00006934465013501323
+  }
+}

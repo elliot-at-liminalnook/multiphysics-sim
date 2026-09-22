@@ -1,0 +1,30 @@
+{
+  "frames": 151,
+  "equal_frame_counts": true,
+  "examined_fields": [
+    "completed_steps",
+    "contact_history",
+    "contacts",
+    "done",
+    "driver_readings",
+    "error",
+    "joint_positions",
+    "joint_velocities",
+    "motor_readings",
+    "motor_states",
+    "original_rows",
+    "policy",
+    "policy_inputs",
+    "poses",
+    "requested_steps",
+    "servo_commands",
+    "servo_states",
+    "servo_targets_rad",
+    "time_s"
+  ],
+  "different_fields": [],
+  "transitions_exact": true,
+  "historical_wall_s": 50.969339972,
+  "current_wall_s": 46.206576994,
+  "scope": "Historical replay consistency, not a paired performance benchmark."
+}

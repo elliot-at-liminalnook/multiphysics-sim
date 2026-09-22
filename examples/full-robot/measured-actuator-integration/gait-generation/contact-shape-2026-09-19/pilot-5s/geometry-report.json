@@ -1,0 +1,189 @@
+{
+  "simulation_only": true,
+  "capture": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/capture.json",
+    "sha256": "96a6858d351b02cd70102a1c73810a6912a7f4d3a7cf068993e8c3987b3fb42a"
+  },
+  "protocol": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/validation-protocol.json",
+    "sha256": "534cd4168b53b92687d47b4cbd130e0e6e858a9dd429e792689f8a49fb56e450"
+  },
+  "horizon_s": 5,
+  "wall_s": 125.327140511,
+  "seed": 2301,
+  "controller_values": {
+    "motion_amplitude": 1,
+    "pace_scale": 1,
+    "tracking_gain": 0,
+    "velocity_lead_scale": 0
+  },
+  "net_distance_m": 0.36968885107744237,
+  "net_speed_m_s": 0.07393777021548847,
+  "minimum_body_up_z": 0.9989945115230557,
+  "motors": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "rms_tracking_degrees": 0.45515222081984696,
+      "peak_tracking_degrees": 0.9212836914435113,
+      "maximum_command_speed_degrees_s": 37.878008412979796,
+      "maximum_command_acceleration_degrees_s2": 229.15875447880367,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "rms_tracking_degrees": 0.2921215231630708,
+      "peak_tracking_degrees": 0.7362031396966684,
+      "maximum_command_speed_degrees_s": 80.00000000000004,
+      "maximum_command_acceleration_degrees_s2": 400.0000000000071,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "rms_tracking_degrees": 2.021697141575124,
+      "peak_tracking_degrees": 3.846849666073687,
+      "maximum_command_speed_degrees_s": 64.04109918256323,
+      "maximum_command_acceleration_degrees_s2": 400.0000000000071,
+      "saturated_fraction": 0,
+      "tracking_pass": false,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "rms_tracking_degrees": 0.784687407661728,
+      "peak_tracking_degrees": 2.1148284410179894,
+      "maximum_command_speed_degrees_s": 32.90808462730545,
+      "maximum_command_acceleration_degrees_s2": 243.64204064489854,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "rms_tracking_degrees": 1.032029977232528,
+      "peak_tracking_degrees": 1.6421245840788188,
+      "maximum_command_speed_degrees_s": 80.00000000000004,
+      "maximum_command_acceleration_degrees_s2": 400.0000000000071,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "rms_tracking_degrees": 0.9666721141684685,
+      "peak_tracking_degrees": 2.168018752240378,
+      "maximum_command_speed_degrees_s": 58.288879929705146,
+      "maximum_command_acceleration_degrees_s2": 400.0000000000071,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "rms_tracking_degrees": 0.33583718663183265,
+      "peak_tracking_degrees": 0.6584224002874641,
+      "maximum_command_speed_degrees_s": 35.461014773341674,
+      "maximum_command_acceleration_degrees_s2": 279.7203150867819,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "rms_tracking_degrees": 0.829758809852136,
+      "peak_tracking_degrees": 1.4667330629132713,
+      "maximum_command_speed_degrees_s": 80,
+      "maximum_command_acceleration_degrees_s2": 400.00000000000693,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "rms_tracking_degrees": 1.1517347370773519,
+      "peak_tracking_degrees": 2.93529921450914,
+      "maximum_command_speed_degrees_s": 53.870913643182526,
+      "maximum_command_acceleration_degrees_s2": 400.0000000000071,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "rms_tracking_degrees": 0.5707480539264155,
+      "peak_tracking_degrees": 1.3291031334600776,
+      "maximum_command_speed_degrees_s": 42.489518431990554,
+      "maximum_command_acceleration_degrees_s2": 255.59014767119024,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "rms_tracking_degrees": 0.13929340761502954,
+      "peak_tracking_degrees": 0.2989802219870019,
+      "maximum_command_speed_degrees_s": 80.00000000000004,
+      "maximum_command_acceleration_degrees_s2": 400.00000000000693,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "rms_tracking_degrees": 2.2402758907751323,
+      "peak_tracking_degrees": 4.155227580727642,
+      "maximum_command_speed_degrees_s": 61.69647176932312,
+      "maximum_command_acceleration_degrees_s2": 400.0000000000071,
+      "saturated_fraction": 0,
+      "tracking_pass": false,
+      "command_bounds_pass": true
+    }
+  ],
+  "geometry": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/geometry.json",
+    "sha256": "743edee8242d9f9a95763592eb59ab8c6d33988ea4df330740b0069a81ae6e49",
+    "feet": [
+      {
+        "link": "-Y | Sliding foot crosshead",
+        "maximum_clearance_m": 0.005365532236594972,
+        "minimum_clearance_m": -0.00010284024419171534,
+        "clearance_excursions": 4
+      },
+      {
+        "link": "+X | Sliding foot crosshead",
+        "maximum_clearance_m": 0.013936035692700577,
+        "minimum_clearance_m": -0.00010258725542322544,
+        "clearance_excursions": 3
+      },
+      {
+        "link": "+Y | Sliding foot crosshead",
+        "maximum_clearance_m": 0.02417968107759566,
+        "minimum_clearance_m": -0.00010924000444390014,
+        "clearance_excursions": 4
+      },
+      {
+        "link": "-X | Sliding foot crosshead",
+        "maximum_clearance_m": 0.011060989814739242,
+        "minimum_clearance_m": -0.00014301161121660355,
+        "clearance_excursions": 3
+      }
+    ],
+    "maximum_inter_link_penetration_m": 0.00004137701573443874
+  },
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "upright": true,
+    "command_bounds": true,
+    "tracking": false,
+    "finalist_horizon": false,
+    "travel": true,
+    "foot_lift": true,
+    "sampled_collision": true
+  },
+  "passes_all_finalist_checks": false,
+  "limitations": "Provisional CAD actuator scenario. Tracking uses same-time physical joint and held motor target, after 1 s startup. Sampled geometry cannot certify continuous clearance. Numerical and stop checks are separate."
+}

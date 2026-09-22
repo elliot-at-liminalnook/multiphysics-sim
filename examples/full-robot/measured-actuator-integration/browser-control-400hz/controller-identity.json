@@ -1,0 +1,7 @@
+{
+  "path": "crates/sim-domain-control/src/fixed_pd.rs",
+  "sha256": "5c21b5168eb953bf6754d63a7e9ba0f6fc1cf75cca378f241cd0610c431e294f",
+  "blake3": "bc7964115b34900144cc48eb26eddc8ae1c237bd500444d05c9cef69b0ea633e",
+  "replaces": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+  "verification": "Current shared controller passes full-rate RTL capture arithmetic checks; new code adds bounded power-of-two generation. This explicit source identity update does not promote model calibration."
+}

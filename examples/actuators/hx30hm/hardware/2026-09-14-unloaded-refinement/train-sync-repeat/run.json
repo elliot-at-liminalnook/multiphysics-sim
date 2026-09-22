@@ -1,0 +1,143 @@
+{
+  "baud": 115200,
+  "completed": true,
+  "current": "0.001 A/count uncalibrated internal current; not measured total supply current",
+  "ids": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "mode": "fpga_computed_pd_host_scheduled",
+  "port": "/dev/cu.usbserial-20250303171",
+  "result": {
+    "completed": true,
+    "failure": null,
+    "frames": 54,
+    "scores": {
+      "electrical": "Servo voltage in 0.1 V counts; current remains uncalibrated raw counts. Measured amps, watts and battery validation unavailable.",
+      "motors": {
+        "10": {
+          "max_current_raw_uncalibrated": 0,
+          "max_temperature_c": 46,
+          "peak_counts": 24.0,
+          "peak_degrees": 2.109375,
+          "rms_counts": 9.054362566270553,
+          "rms_degrees": 0.7957935849261228,
+          "saturated_fraction": 0.4444444444444444,
+          "tracking_pass": false,
+          "voltage_max_v": 12.0,
+          "voltage_min_v": 11.8
+        },
+        "11": {
+          "max_current_raw_uncalibrated": 47,
+          "max_temperature_c": 45,
+          "peak_counts": 19.0,
+          "peak_degrees": 1.669921875,
+          "rms_counts": 9.797958971132712,
+          "rms_degrees": 0.861148737697211,
+          "saturated_fraction": 0.4444444444444444,
+          "tracking_pass": false,
+          "voltage_max_v": 12.200000000000001,
+          "voltage_min_v": 12.0
+        },
+        "12": {
+          "max_current_raw_uncalibrated": 0,
+          "max_temperature_c": 44,
+          "peak_counts": 22.0,
+          "peak_degrees": 1.93359375,
+          "rms_counts": 9.849797892267562,
+          "rms_degrees": 0.8657048928750787,
+          "saturated_fraction": 0.4444444444444444,
+          "tracking_pass": false,
+          "voltage_max_v": 12.0,
+          "voltage_min_v": 11.8
+        },
+        "4": {
+          "max_current_raw_uncalibrated": 0,
+          "max_temperature_c": 46,
+          "peak_counts": 33.0,
+          "peak_degrees": 2.900390625,
+          "rms_counts": 13.408123574079177,
+          "rms_degrees": 1.1784483610030527,
+          "saturated_fraction": 0.46296296296296297,
+          "tracking_pass": false,
+          "voltage_max_v": 11.9,
+          "voltage_min_v": 11.700000000000001
+        },
+        "5": {
+          "max_current_raw_uncalibrated": 2,
+          "max_temperature_c": 45,
+          "peak_counts": 31.0,
+          "peak_degrees": 2.724609375,
+          "rms_counts": 12.807694446583158,
+          "rms_degrees": 1.1256762697192229,
+          "saturated_fraction": 0.4444444444444444,
+          "tracking_pass": false,
+          "voltage_max_v": 12.100000000000001,
+          "voltage_min_v": 11.9
+        },
+        "6": {
+          "max_current_raw_uncalibrated": 23,
+          "max_temperature_c": 45,
+          "peak_counts": 37.0,
+          "peak_degrees": 3.251953125,
+          "rms_counts": 13.02916955370753,
+          "rms_degrees": 1.1451418553063257,
+          "saturated_fraction": 0.46296296296296297,
+          "tracking_pass": false,
+          "voltage_max_v": 11.9,
+          "voltage_min_v": 11.700000000000001
+        },
+        "7": {
+          "max_current_raw_uncalibrated": 0,
+          "max_temperature_c": 45,
+          "peak_counts": 30.0,
+          "peak_degrees": 2.63671875,
+          "rms_counts": 11.307978173412362,
+          "rms_degrees": 0.9938652691475709,
+          "saturated_fraction": 0.4444444444444444,
+          "tracking_pass": false,
+          "voltage_max_v": 12.0,
+          "voltage_min_v": 11.8
+        },
+        "8": {
+          "max_current_raw_uncalibrated": 51,
+          "max_temperature_c": 45,
+          "peak_counts": 33.0,
+          "peak_degrees": 2.900390625,
+          "rms_counts": 11.897712198383164,
+          "rms_degrees": 1.0456973611860203,
+          "saturated_fraction": 0.4444444444444444,
+          "tracking_pass": false,
+          "voltage_max_v": 12.100000000000001,
+          "voltage_min_v": 11.9
+        },
+        "9": {
+          "max_current_raw_uncalibrated": 49,
+          "max_temperature_c": 47,
+          "peak_counts": 28.0,
+          "peak_degrees": 2.4609375,
+          "rms_counts": 9.31148235801925,
+          "rms_degrees": 0.8183920041227856,
+          "saturated_fraction": 0.46296296296296297,
+          "tracking_pass": false,
+          "voltage_max_v": 12.0,
+          "voltage_min_v": 11.9
+        }
+      },
+      "target_comparison": "Encoder observation versus previous applied discrete setpoint; target changes are held between FPGA batches. Position is internal encoder feedback, not an independent output shaft measurement."
+    },
+    "stop_verified": true
+  },
+  "seconds": 1.0,
+  "source_blake3": "43fcaf55bca0664a66eb7f8d3a074da384b8a82ae4701d54ac65c9355f8e2df5",
+  "started_unix_s": 1789387304.474563,
+  "timing": "Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.",
+  "voltage": "0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f"
+}

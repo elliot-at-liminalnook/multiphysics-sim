@@ -1,0 +1,2722 @@
+[
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 0.7334787296885421,
+      "rms_degrees": 0.7795556578080911,
+      "saturated_fraction": 0.065,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-nominal-original-100",
+    "pattern": "hold",
+    "trace": "baseline-hold-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 0.8350765750516244,
+      "rms_degrees": 0.875824675899828,
+      "saturated_fraction": 0.0375,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-nominal-selected-100",
+    "pattern": "hold",
+    "trace": "baseline-hold-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.185546875,
+      "previous_target_rms_degrees": 0.8988293663921513,
+      "rms_degrees": 0.9391762053697198,
+      "saturated_fraction": 0.0875,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-low-voltage-delay-load-original-100",
+    "pattern": "hold",
+    "trace": "baseline-hold-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.185546875,
+      "previous_target_rms_degrees": 0.9996954931122649,
+      "rms_degrees": 1.03612199754311,
+      "saturated_fraction": 0.055,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-low-voltage-delay-load-selected-100",
+    "pattern": "hold",
+    "trace": "baseline-hold-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 6.15234375,
+      "previous_target_rms_degrees": 3.186695782802422,
+      "rms_degrees": 3.3416964562119635,
+      "saturated_fraction": 0.7475,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-nominal-original-100",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.3515625,
+      "peak_degrees": 5.009765625,
+      "previous_target_rms_degrees": 2.7500497640095185,
+      "rms_degrees": 2.8514446913539007,
+      "saturated_fraction": 0.645,
+      "tail_encoder_span_degrees": 0.52734375
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-nominal-selected-100",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 6.240234375,
+      "previous_target_rms_degrees": 3.3677767704858312,
+      "rms_degrees": 3.4874198166027974,
+      "saturated_fraction": 0.7425,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-low-voltage-delay-load-original-100",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.439453125,
+      "peak_degrees": 5.361328125,
+      "previous_target_rms_degrees": 2.982660010522956,
+      "rms_degrees": 3.070900198330563,
+      "saturated_fraction": 0.6575,
+      "tail_encoder_span_degrees": 0.3515625
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-low-voltage-delay-load-selected-100",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.306640625,
+      "previous_target_rms_degrees": 2.08674074630541,
+      "rms_degrees": 2.2290802222867927,
+      "saturated_fraction": 0.6325,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-nominal-original-100",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.8671875,
+      "previous_target_rms_degrees": 1.8034987064036485,
+      "rms_degrees": 1.9009738509392904,
+      "saturated_fraction": 0.54,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-nominal-selected-100",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.482421875,
+      "previous_target_rms_degrees": 2.354119668902175,
+      "rms_degrees": 2.467508752453711,
+      "saturated_fraction": 0.6975,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-low-voltage-delay-load-original-100",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.130859375,
+      "previous_target_rms_degrees": 2.069777567149421,
+      "rms_degrees": 2.1563271218481317,
+      "saturated_fraction": 0.5725,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-low-voltage-delay-load-selected-100",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -1.58203125,
+      "peak_degrees": 2.548828125,
+      "previous_target_rms_degrees": 0.8183205846052973,
+      "rms_degrees": 0.93563177063177,
+      "saturated_fraction": 0.43714285714285717,
+      "tail_encoder_span_degrees": 2.109375
+    },
+    "model": "baseline",
+    "name": "baseline-gait-nominal-original-100",
+    "pattern": "gait",
+    "trace": "baseline-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -1.669921875,
+      "peak_degrees": 2.548828125,
+      "previous_target_rms_degrees": 0.9109665977954994,
+      "rms_degrees": 0.9702378901827721,
+      "saturated_fraction": 0.3019047619047619,
+      "tail_encoder_span_degrees": 1.40625
+    },
+    "model": "baseline",
+    "name": "baseline-gait-nominal-selected-100",
+    "pattern": "gait",
+    "trace": "baseline-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.021484375,
+      "peak_degrees": 2.900390625,
+      "previous_target_rms_degrees": 1.0324632517906538,
+      "rms_degrees": 1.1316083549737765,
+      "saturated_fraction": 0.5057142857142857,
+      "tail_encoder_span_degrees": 1.845703125
+    },
+    "model": "baseline",
+    "name": "baseline-gait-low-voltage-delay-load-original-100",
+    "pattern": "gait",
+    "trace": "baseline-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.021484375,
+      "peak_degrees": 2.8125,
+      "previous_target_rms_degrees": 1.036736890207251,
+      "rms_degrees": 1.0920994351806281,
+      "saturated_fraction": 0.3238095238095238,
+      "tail_encoder_span_degrees": 1.0546875
+    },
+    "model": "baseline",
+    "name": "baseline-gait-low-voltage-delay-load-selected-100",
+    "pattern": "gait",
+    "trace": "baseline-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -25.13671875,
+      "peak_degrees": 30.234375,
+      "previous_target_rms_degrees": 13.589640961291876,
+      "rms_degrees": 13.770351983281346,
+      "saturated_fraction": 0.9047619047619048,
+      "tail_encoder_span_degrees": 3.33984375
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-nominal-original-100",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -26.630859375,
+      "peak_degrees": 32.431640625,
+      "previous_target_rms_degrees": 13.620803926819546,
+      "rms_degrees": 13.715401863761636,
+      "saturated_fraction": 0.8609523809523809,
+      "tail_encoder_span_degrees": 2.8125
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-nominal-selected-100",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -24.697265625,
+      "peak_degrees": 29.8828125,
+      "previous_target_rms_degrees": 13.664126930000787,
+      "rms_degrees": 13.807702570962814,
+      "saturated_fraction": 0.9066666666666666,
+      "tail_encoder_span_degrees": 2.724609375
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-low-voltage-delay-load-original-100",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -27.24609375,
+      "peak_degrees": 32.783203125,
+      "previous_target_rms_degrees": 13.816798679848084,
+      "rms_degrees": 13.90753280576611,
+      "saturated_fraction": 0.8590476190476191,
+      "tail_encoder_span_degrees": 1.93359375
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-low-voltage-delay-load-selected-100",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.264693443571629,
+      "rms_degrees": 2.2818706660985737,
+      "saturated_fraction": 0.4575,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "name": "id10-hold-nominal-original-100",
+    "pattern": "hold",
+    "trace": "id10-hold-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -0.263671875,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.3262267598708504,
+      "rms_degrees": 2.3429528979012915,
+      "saturated_fraction": 0.3075,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-hold-nominal-selected-100",
+    "pattern": "hold",
+    "trace": "id10-hold-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.628877500742458,
+      "rms_degrees": 2.643784478145358,
+      "saturated_fraction": 0.6075,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "name": "id10-hold-low-voltage-delay-load-original-100",
+    "pattern": "hold",
+    "trace": "id10-hold-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -0.439453125,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.681078269100575,
+      "rms_degrees": 2.695696596061164,
+      "saturated_fraction": 0.41,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-hold-low-voltage-delay-load-selected-100",
+    "pattern": "hold",
+    "trace": "id10-hold-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.80078125,
+      "previous_target_rms_degrees": 3.4872730673513086,
+      "rms_degrees": 3.509040770406094,
+      "saturated_fraction": 0.7325,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-reversal-nominal-original-100",
+    "pattern": "reversal",
+    "trace": "id10-reversal-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 3.4135523923477042,
+      "rms_degrees": 3.4288609927378992,
+      "saturated_fraction": 0.665,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-reversal-nominal-selected-100",
+    "pattern": "reversal",
+    "trace": "id10-reversal-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.80078125,
+      "previous_target_rms_degrees": 3.5034861233026624,
+      "rms_degrees": 3.520318522238628,
+      "saturated_fraction": 0.725,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-reversal-low-voltage-delay-load-original-100",
+    "pattern": "reversal",
+    "trace": "id10-reversal-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 3.445996275020275,
+      "rms_degrees": 3.458621729273792,
+      "saturated_fraction": 0.6575,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-reversal-low-voltage-delay-load-selected-100",
+    "pattern": "reversal",
+    "trace": "id10-reversal-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 2.707305894270985,
+      "rms_degrees": 2.7290251357869906,
+      "saturated_fraction": 0.7275,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-chirp-nominal-original-100",
+    "pattern": "chirp",
+    "trace": "id10-chirp-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 4.833984375,
+      "previous_target_rms_degrees": 2.626040388745294,
+      "rms_degrees": 2.64170183425102,
+      "saturated_fraction": 0.605,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-chirp-nominal-selected-100",
+    "pattern": "chirp",
+    "trace": "id10-chirp-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 2.722077799445514,
+      "rms_degrees": 2.7388332099061037,
+      "saturated_fraction": 0.73,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-chirp-low-voltage-delay-load-original-100",
+    "pattern": "chirp",
+    "trace": "id10-chirp-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 4.74609375,
+      "previous_target_rms_degrees": 2.6572491730019285,
+      "rms_degrees": 2.6703711845328906,
+      "saturated_fraction": 0.6175,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-chirp-low-voltage-delay-load-selected-100",
+    "pattern": "chirp",
+    "trace": "id10-chirp-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.28515625,
+      "peak_degrees": 2.8125,
+      "previous_target_rms_degrees": 1.2253430789722233,
+      "rms_degrees": 1.249051524400081,
+      "saturated_fraction": 0.6647619047619048,
+      "tail_encoder_span_degrees": 0.439453125
+    },
+    "model": "id10",
+    "name": "id10-gait-nominal-original-100",
+    "pattern": "gait",
+    "trace": "id10-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.4609375,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 1.250649637619747,
+      "rms_degrees": 1.2622315462656264,
+      "saturated_fraction": 0.35333333333333333,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "model": "id10",
+    "name": "id10-gait-nominal-selected-100",
+    "pattern": "gait",
+    "trace": "id10-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.28515625,
+      "peak_degrees": 2.724609375,
+      "previous_target_rms_degrees": 1.2371113749053482,
+      "rms_degrees": 1.255305773547006,
+      "saturated_fraction": 0.6933333333333334,
+      "tail_encoder_span_degrees": 0.3515625
+    },
+    "model": "id10",
+    "name": "id10-gait-low-voltage-delay-load-original-100",
+    "pattern": "gait",
+    "trace": "id10-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.548828125,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 1.2699076536780056,
+      "rms_degrees": 1.2799539956272468,
+      "saturated_fraction": 0.3523809523809524,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-gait-low-voltage-delay-load-selected-100",
+    "pattern": "gait",
+    "trace": "id10-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -24.873046875,
+      "peak_degrees": 31.376953125,
+      "previous_target_rms_degrees": 13.83443560014139,
+      "rms_degrees": 13.87798733752332,
+      "saturated_fraction": 0.9171428571428571,
+      "tail_encoder_span_degrees": 0.52734375
+    },
+    "model": "id10",
+    "name": "id10-full-gait-nominal-original-100",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -27.509765625,
+      "peak_degrees": 32.431640625,
+      "previous_target_rms_degrees": 14.13225393269196,
+      "rms_degrees": 14.168142442744013,
+      "saturated_fraction": 0.8533333333333334,
+      "tail_encoder_span_degrees": 0.3515625
+    },
+    "model": "id10",
+    "name": "id10-full-gait-nominal-selected-100",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -25.400390625,
+      "peak_degrees": 31.640625,
+      "previous_target_rms_degrees": 13.916356169470417,
+      "rms_degrees": 13.95515407856967,
+      "saturated_fraction": 0.9247619047619048,
+      "tail_encoder_span_degrees": 0.3515625
+    },
+    "model": "id10",
+    "name": "id10-full-gait-low-voltage-delay-load-original-100",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -27.421875,
+      "peak_degrees": 32.431640625,
+      "previous_target_rms_degrees": 14.159105256563148,
+      "rms_degrees": 14.193557559996439,
+      "saturated_fraction": 0.8590476190476191,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "model": "id10",
+    "name": "id10-full-gait-low-voltage-delay-load-selected-100",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.3140015868085921,
+      "rms_degrees": 1.3430308702092297,
+      "saturated_fraction": 0.1625,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-hold-nominal-original-100",
+    "pattern": "hold",
+    "trace": "id11-hold-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.4102885429905316,
+      "rms_degrees": 1.4373745241550022,
+      "saturated_fraction": 0.105,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-hold-nominal-selected-100",
+    "pattern": "hold",
+    "trace": "id11-hold-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.8169194634727803,
+      "rms_degrees": 1.8382855273844267,
+      "saturated_fraction": 0.2975,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-hold-low-voltage-delay-load-original-100",
+    "pattern": "hold",
+    "trace": "id11-hold-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.8891987110186041,
+      "rms_degrees": 1.9097562967978872,
+      "saturated_fraction": 0.1975,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-hold-low-voltage-delay-load-selected-100",
+    "pattern": "hold",
+    "trace": "id11-hold-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 6.064453125,
+      "previous_target_rms_degrees": 3.471404323039061,
+      "rms_degrees": 3.5323640197045445,
+      "saturated_fraction": 0.735,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-reversal-nominal-original-100",
+    "pattern": "reversal",
+    "trace": "id11-reversal-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.263671875,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 3.2589412353030687,
+      "rms_degrees": 3.3047751557108187,
+      "saturated_fraction": 0.6725,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "model": "id11",
+    "name": "id11-reversal-nominal-selected-100",
+    "pattern": "reversal",
+    "trace": "id11-reversal-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.888671875,
+      "previous_target_rms_degrees": 3.4951610834222238,
+      "rms_degrees": 3.5291533533330854,
+      "saturated_fraction": 0.735,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-reversal-low-voltage-delay-load-original-100",
+    "pattern": "reversal",
+    "trace": "id11-reversal-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 3.380782895074353,
+      "rms_degrees": 3.4067878998375245,
+      "saturated_fraction": 0.6725,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id11",
+    "name": "id11-reversal-low-voltage-delay-load-selected-100",
+    "pattern": "reversal",
+    "trace": "id11-reversal-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 2.631410672680321,
+      "rms_degrees": 2.6907955633989675,
+      "saturated_fraction": 0.725,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-chirp-nominal-original-100",
+    "pattern": "chirp",
+    "trace": "id11-chirp-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 4.658203125,
+      "previous_target_rms_degrees": 2.4203456849297593,
+      "rms_degrees": 2.4662836043731278,
+      "saturated_fraction": 0.6,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-chirp-nominal-selected-100",
+    "pattern": "chirp",
+    "trace": "id11-chirp-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 2.708486190786047,
+      "rms_degrees": 2.7421593297831897,
+      "saturated_fraction": 0.7325,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id11",
+    "name": "id11-chirp-low-voltage-delay-load-original-100",
+    "pattern": "chirp",
+    "trace": "id11-chirp-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 2.5840927412704153,
+      "rms_degrees": 2.610806512200738,
+      "saturated_fraction": 0.6075,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-chirp-low-voltage-delay-load-selected-100",
+    "pattern": "chirp",
+    "trace": "id11-chirp-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -4.74609375,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.7914273344023912,
+      "rms_degrees": 1.8417947298455544,
+      "saturated_fraction": 0.6295238095238095,
+      "tail_encoder_span_degrees": 0.87890625
+    },
+    "model": "id11",
+    "name": "id11-gait-nominal-original-100",
+    "pattern": "gait",
+    "trace": "id11-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -3.955078125,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 1.7878797099246626,
+      "rms_degrees": 1.816155791704338,
+      "saturated_fraction": 0.43333333333333335,
+      "tail_encoder_span_degrees": 0.3515625
+    },
+    "model": "id11",
+    "name": "id11-gait-nominal-selected-100",
+    "pattern": "gait",
+    "trace": "id11-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -4.921875,
+      "peak_degrees": 5.80078125,
+      "previous_target_rms_degrees": 1.845336379379711,
+      "rms_degrees": 1.8771829159637188,
+      "saturated_fraction": 0.6514285714285715,
+      "tail_encoder_span_degrees": 0.615234375
+    },
+    "model": "id11",
+    "name": "id11-gait-low-voltage-delay-load-original-100",
+    "pattern": "gait",
+    "trace": "id11-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -4.04296875,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 1.8023834524613052,
+      "rms_degrees": 1.8245741345430442,
+      "saturated_fraction": 0.4419047619047619,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "model": "id11",
+    "name": "id11-gait-low-voltage-delay-load-selected-100",
+    "pattern": "gait",
+    "trace": "id11-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -57.919921875,
+      "peak_degrees": 66.708984375,
+      "previous_target_rms_degrees": 21.034011565582727,
+      "rms_degrees": 21.157535917182365,
+      "saturated_fraction": 0.9247619047619048,
+      "tail_encoder_span_degrees": 1.318359375
+    },
+    "model": "id11",
+    "name": "id11-full-gait-nominal-original-100",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -48.69140625,
+      "peak_degrees": 60.29296875,
+      "previous_target_rms_degrees": 20.1853599645672,
+      "rms_degrees": 20.26742911730087,
+      "saturated_fraction": 0.8980952380952381,
+      "tail_encoder_span_degrees": 0.791015625
+    },
+    "model": "id11",
+    "name": "id11-full-gait-nominal-selected-100",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -56.953125,
+      "peak_degrees": 65.302734375,
+      "previous_target_rms_degrees": 20.739917399989096,
+      "rms_degrees": 20.84199760686901,
+      "saturated_fraction": 0.9323809523809524,
+      "tail_encoder_span_degrees": 0.703125
+    },
+    "model": "id11",
+    "name": "id11-full-gait-low-voltage-delay-load-original-100",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -49.658203125,
+      "peak_degrees": 60.732421875,
+      "previous_target_rms_degrees": 20.22130076902225,
+      "rms_degrees": 20.296938672999453,
+      "saturated_fraction": 0.9019047619047619,
+      "tail_encoder_span_degrees": 0.52734375
+    },
+    "model": "id11",
+    "name": "id11-full-gait-low-voltage-delay-load-selected-100",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.4655152269585558,
+      "rms_degrees": 1.491598682168515,
+      "saturated_fraction": 0.2,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-hold-nominal-original-100",
+    "pattern": "hold",
+    "trace": "id12-hold-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.5620503350767396,
+      "rms_degrees": 1.5865475087474745,
+      "saturated_fraction": 0.13,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-hold-nominal-selected-100",
+    "pattern": "hold",
+    "trace": "id12-hold-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.0104536207950177,
+      "rms_degrees": 2.029783511809233,
+      "saturated_fraction": 0.3625,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-hold-low-voltage-delay-load-original-100",
+    "pattern": "hold",
+    "trace": "id12-hold-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.0805773498634093,
+      "rms_degrees": 2.099261644533495,
+      "saturated_fraction": 0.2425,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-hold-low-voltage-delay-load-selected-100",
+    "pattern": "hold",
+    "trace": "id12-hold-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.9765625,
+      "previous_target_rms_degrees": 3.4735788293418266,
+      "rms_degrees": 3.5231179306016194,
+      "saturated_fraction": 0.735,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-reversal-nominal-original-100",
+    "pattern": "reversal",
+    "trace": "id12-reversal-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.263671875,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 3.300954130261389,
+      "rms_degrees": 3.3373304045373873,
+      "saturated_fraction": 0.67,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id12",
+    "name": "id12-reversal-nominal-selected-100",
+    "pattern": "reversal",
+    "trace": "id12-reversal-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.888671875,
+      "previous_target_rms_degrees": 3.5006130907686703,
+      "rms_degrees": 3.528378965226584,
+      "saturated_fraction": 0.735,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-reversal-low-voltage-delay-load-original-100",
+    "pattern": "reversal",
+    "trace": "id12-reversal-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 3.401784472041552,
+      "rms_degrees": 3.4233736910634165,
+      "saturated_fraction": 0.6675,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-reversal-low-voltage-delay-load-selected-100",
+    "pattern": "reversal",
+    "trace": "id12-reversal-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.6623098923416313,
+      "rms_degrees": 2.7112014158335818,
+      "saturated_fraction": 0.725,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-chirp-nominal-original-100",
+    "pattern": "chirp",
+    "trace": "id12-chirp-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 4.74609375,
+      "previous_target_rms_degrees": 2.484002715233687,
+      "rms_degrees": 2.5208986342197957,
+      "saturated_fraction": 0.6,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-chirp-nominal-selected-100",
+    "pattern": "chirp",
+    "trace": "id12-chirp-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.361328125,
+      "previous_target_rms_degrees": 2.7202396915514977,
+      "rms_degrees": 2.7476470591348274,
+      "saturated_fraction": 0.7375,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id12",
+    "name": "id12-chirp-low-voltage-delay-load-original-100",
+    "pattern": "chirp",
+    "trace": "id12-chirp-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 2.609678239391415,
+      "rms_degrees": 2.6316234948754573,
+      "saturated_fraction": 0.6125,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-chirp-low-voltage-delay-load-selected-100",
+    "pattern": "chirp",
+    "trace": "id12-chirp-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 2.109375,
+      "peak_degrees": 3.1640625,
+      "previous_target_rms_degrees": 1.2458137166799172,
+      "rms_degrees": 1.2960472419847717,
+      "saturated_fraction": 0.7438095238095238,
+      "tail_encoder_span_degrees": 0.966796875
+    },
+    "model": "id12",
+    "name": "id12-gait-nominal-original-100",
+    "pattern": "gait",
+    "trace": "id12-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 2.28515625,
+      "peak_degrees": 3.251953125,
+      "previous_target_rms_degrees": 1.327947832359934,
+      "rms_degrees": 1.348339367336069,
+      "saturated_fraction": 0.22666666666666666,
+      "tail_encoder_span_degrees": 0.439453125
+    },
+    "model": "id12",
+    "name": "id12-gait-nominal-selected-100",
+    "pattern": "gait",
+    "trace": "id12-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 1.845703125,
+      "peak_degrees": 2.900390625,
+      "previous_target_rms_degrees": 1.2506408138750065,
+      "rms_degrees": 1.280192506993784,
+      "saturated_fraction": 0.7352380952380952,
+      "tail_encoder_span_degrees": 0.52734375
+    },
+    "model": "id12",
+    "name": "id12-gait-low-voltage-delay-load-original-100",
+    "pattern": "gait",
+    "trace": "id12-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 2.373046875,
+      "peak_degrees": 3.33984375,
+      "previous_target_rms_degrees": 1.3930647559068075,
+      "rms_degrees": 1.408756311465107,
+      "saturated_fraction": 0.23047619047619047,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "model": "id12",
+    "name": "id12-gait-low-voltage-delay-load-selected-100",
+    "pattern": "gait",
+    "trace": "id12-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 18.45703125,
+      "peak_degrees": 33.22265625,
+      "previous_target_rms_degrees": 13.980534089842148,
+      "rms_degrees": 14.043565657018954,
+      "saturated_fraction": 0.9333333333333333,
+      "tail_encoder_span_degrees": 1.0546875
+    },
+    "model": "id12",
+    "name": "id12-full-gait-nominal-original-100",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-nominal-original-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 31.640625,
+      "peak_degrees": 41.044921875,
+      "previous_target_rms_degrees": 17.378781651053075,
+      "rms_degrees": 17.431759289249463,
+      "saturated_fraction": 0.8761904761904762,
+      "tail_encoder_span_degrees": 0.791015625
+    },
+    "model": "id12",
+    "name": "id12-full-gait-nominal-selected-100",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-nominal-selected-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 18.896484375,
+      "peak_degrees": 33.134765625,
+      "previous_target_rms_degrees": 14.051805713166262,
+      "rms_degrees": 14.092931376267158,
+      "saturated_fraction": 0.9295238095238095,
+      "tail_encoder_span_degrees": 0.615234375
+    },
+    "model": "id12",
+    "name": "id12-full-gait-low-voltage-delay-load-original-100",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-low-voltage-delay-load-original-100.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": 29.267578125,
+      "peak_degrees": 38.408203125,
+      "previous_target_rms_degrees": 16.07655826991897,
+      "rms_degrees": 16.11779964043473,
+      "saturated_fraction": 0.9038095238095238,
+      "tail_encoder_span_degrees": 0.52734375
+    },
+    "model": "id12",
+    "name": "id12-full-gait-low-voltage-delay-load-selected-100",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-low-voltage-delay-load-selected-100.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 1.7578125,
+      "previous_target_rms_degrees": 0.07058662384662162,
+      "rms_degrees": 0.1833104321596952,
+      "saturated_fraction": 0.0125,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-nominal-original-350",
+    "pattern": "hold",
+    "trace": "baseline-hold-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 1.7578125,
+      "previous_target_rms_degrees": 0.07861176483397699,
+      "rms_degrees": 0.18654772215929702,
+      "saturated_fraction": 0.0125,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-nominal-selected-350",
+    "pattern": "hold",
+    "trace": "baseline-hold-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 2.900390625,
+      "previous_target_rms_degrees": 0.18788869622840582,
+      "rms_degrees": 0.2892389532170684,
+      "saturated_fraction": 0.015,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-low-voltage-delay-load-original-350",
+    "pattern": "hold",
+    "trace": "baseline-hold-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 2.900390625,
+      "previous_target_rms_degrees": 0.18623689541382207,
+      "rms_degrees": 0.2881686851499903,
+      "saturated_fraction": 0.0125,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-hold-low-voltage-delay-load-selected-350",
+    "pattern": "hold",
+    "trace": "baseline-hold-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 0.2950233133446747,
+      "rms_degrees": 0.6729374845924068,
+      "saturated_fraction": 0.0225,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-nominal-original-350",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.833984375,
+      "previous_target_rms_degrees": 0.27980432894059465,
+      "rms_degrees": 0.6607890510233901,
+      "saturated_fraction": 0.02,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-nominal-selected-350",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.361328125,
+      "previous_target_rms_degrees": 0.477853495982866,
+      "rms_degrees": 0.987508962083541,
+      "saturated_fraction": 0.3725,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-low-voltage-delay-load-original-350",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 0.440725696501673,
+      "rms_degrees": 0.938332760021877,
+      "saturated_fraction": 0.325,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-reversal-low-voltage-delay-load-selected-350",
+    "pattern": "reversal",
+    "trace": "baseline-reversal-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 1.23046875,
+      "previous_target_rms_degrees": 0.12034919476431873,
+      "rms_degrees": 0.493206603981968,
+      "saturated_fraction": 0.06,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-nominal-original-350",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 1.23046875,
+      "previous_target_rms_degrees": 0.10826969233671317,
+      "rms_degrees": 0.4798498121379879,
+      "saturated_fraction": 0.045,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-nominal-selected-350",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.38116067559110217,
+      "rms_degrees": 0.7934167658052509,
+      "saturated_fraction": 0.14,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-low-voltage-delay-load-original-350",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 2.28515625,
+      "previous_target_rms_degrees": 0.3363754611315166,
+      "rms_degrees": 0.751284929120444,
+      "saturated_fraction": 0.125,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "baseline",
+    "name": "baseline-chirp-low-voltage-delay-load-selected-350",
+    "pattern": "chirp",
+    "trace": "baseline-chirp-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.439453125,
+      "peak_degrees": 1.142578125,
+      "previous_target_rms_degrees": 0.147194150960116,
+      "rms_degrees": 0.41506253216204814,
+      "saturated_fraction": 0.004761904761904762,
+      "tail_encoder_span_degrees": 4.04296875
+    },
+    "model": "baseline",
+    "name": "baseline-gait-nominal-original-350",
+    "pattern": "gait",
+    "trace": "baseline-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.439453125,
+      "peak_degrees": 1.142578125,
+      "previous_target_rms_degrees": 0.13005210586781324,
+      "rms_degrees": 0.3952147351626056,
+      "saturated_fraction": 0.0038095238095238095,
+      "tail_encoder_span_degrees": 4.04296875
+    },
+    "model": "baseline",
+    "name": "baseline-gait-nominal-selected-350",
+    "pattern": "gait",
+    "trace": "baseline-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.791015625,
+      "peak_degrees": 1.7578125,
+      "previous_target_rms_degrees": 0.3599481218287764,
+      "rms_degrees": 0.6338637566388611,
+      "saturated_fraction": 0.07142857142857142,
+      "tail_encoder_span_degrees": 4.39453125
+    },
+    "model": "baseline",
+    "name": "baseline-gait-low-voltage-delay-load-original-350",
+    "pattern": "gait",
+    "trace": "baseline-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.703125,
+      "peak_degrees": 1.7578125,
+      "previous_target_rms_degrees": 0.31726538864890763,
+      "rms_degrees": 0.5935553898643778,
+      "saturated_fraction": 0.06095238095238095,
+      "tail_encoder_span_degrees": 4.39453125
+    },
+    "model": "baseline",
+    "name": "baseline-gait-low-voltage-delay-load-selected-350",
+    "pattern": "gait",
+    "trace": "baseline-gait-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -24.345703125,
+      "peak_degrees": 31.201171875,
+      "previous_target_rms_degrees": 11.983642498898934,
+      "rms_degrees": 12.746831035287693,
+      "saturated_fraction": 0.800952380952381,
+      "tail_encoder_span_degrees": 16.171875
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-nominal-original-350",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -24.169921875,
+      "peak_degrees": 30.9375,
+      "previous_target_rms_degrees": 11.817109746067052,
+      "rms_degrees": 12.56770815386422,
+      "saturated_fraction": 0.7780952380952381,
+      "tail_encoder_span_degrees": 15.64453125
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-nominal-selected-350",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -26.279296875,
+      "peak_degrees": 32.958984375,
+      "previous_target_rms_degrees": 13.200405575355038,
+      "rms_degrees": 13.897897127656503,
+      "saturated_fraction": 0.8266666666666667,
+      "tail_encoder_span_degrees": 15.732421875
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-low-voltage-delay-load-original-350",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -25.751953125,
+      "peak_degrees": 32.607421875,
+      "previous_target_rms_degrees": 12.901569680306459,
+      "rms_degrees": 13.586161181752699,
+      "saturated_fraction": 0.8085714285714286,
+      "tail_encoder_span_degrees": 14.765625
+    },
+    "model": "baseline",
+    "name": "baseline-full-gait-low-voltage-delay-load-selected-350",
+    "pattern": "full-gait",
+    "trace": "baseline-full-gait-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.130859375,
+      "previous_target_rms_degrees": 0.3334925191975343,
+      "rms_degrees": 0.41706393694419286,
+      "saturated_fraction": 0.02,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "name": "id10-hold-nominal-original-350",
+    "pattern": "hold",
+    "trace": "id10-hold-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.130859375,
+      "previous_target_rms_degrees": 0.33931928482903057,
+      "rms_degrees": 0.4217376485394168,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "name": "id10-hold-nominal-selected-350",
+    "pattern": "hold",
+    "trace": "id10-hold-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.74609375,
+      "previous_target_rms_degrees": 0.4446735817935363,
+      "rms_degrees": 0.5180516793677321,
+      "saturated_fraction": 0.0225,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "name": "id10-hold-low-voltage-delay-load-original-350",
+    "pattern": "hold",
+    "trace": "id10-hold-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.74609375,
+      "previous_target_rms_degrees": 0.44673171513927606,
+      "rms_degrees": 0.5198193661859031,
+      "saturated_fraction": 0.0225,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "name": "id10-hold-low-voltage-delay-load-selected-350",
+    "pattern": "hold",
+    "trace": "id10-hold-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.361328125,
+      "previous_target_rms_degrees": 1.678676425119709,
+      "rms_degrees": 2.225091387982859,
+      "saturated_fraction": 0.58,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-reversal-nominal-original-350",
+    "pattern": "reversal",
+    "trace": "id10-reversal-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 1.5956324511487399,
+      "rms_degrees": 2.138389924158576,
+      "saturated_fraction": 0.555,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-reversal-nominal-selected-350",
+    "pattern": "reversal",
+    "trace": "id10-reversal-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.09765625,
+      "previous_target_rms_degrees": 2.7362477456158043,
+      "rms_degrees": 3.1941350432304363,
+      "saturated_fraction": 0.645,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "name": "id10-reversal-low-voltage-delay-load-original-350",
+    "pattern": "reversal",
+    "trace": "id10-reversal-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 2.5899042320956585,
+      "rms_degrees": 3.04998831512214,
+      "saturated_fraction": 0.635,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-reversal-low-voltage-delay-load-selected-350",
+    "pattern": "reversal",
+    "trace": "id10-reversal-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.21875,
+      "previous_target_rms_degrees": 1.1137427728591864,
+      "rms_degrees": 1.4936041373697688,
+      "saturated_fraction": 0.28,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-chirp-nominal-original-350",
+    "pattern": "chirp",
+    "trace": "id10-chirp-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.955078125,
+      "previous_target_rms_degrees": 1.0472639130091377,
+      "rms_degrees": 1.4264299145157433,
+      "saturated_fraction": 0.2575,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-chirp-nominal-selected-350",
+    "pattern": "chirp",
+    "trace": "id10-chirp-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 1.647878904749936,
+      "rms_degrees": 1.9839398365012402,
+      "saturated_fraction": 0.3625,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "name": "id10-chirp-low-voltage-delay-load-original-350",
+    "pattern": "chirp",
+    "trace": "id10-chirp-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.74609375,
+      "previous_target_rms_degrees": 1.575493081429029,
+      "rms_degrees": 1.9135597658694439,
+      "saturated_fraction": 0.36,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "name": "id10-chirp-low-voltage-delay-load-selected-350",
+    "pattern": "chirp",
+    "trace": "id10-chirp-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.7125106007640671,
+      "rms_degrees": 0.951997111944647,
+      "saturated_fraction": 0.12571428571428572,
+      "tail_encoder_span_degrees": 3.515625
+    },
+    "model": "id10",
+    "name": "id10-gait-nominal-original-350",
+    "pattern": "gait",
+    "trace": "id10-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.6838868552109546,
+      "rms_degrees": 0.9189550232189594,
+      "saturated_fraction": 0.12,
+      "tail_encoder_span_degrees": 3.427734375
+    },
+    "model": "id10",
+    "name": "id10-gait-nominal-selected-350",
+    "pattern": "gait",
+    "trace": "id10-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -1.142578125,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 0.9867375884961511,
+      "rms_degrees": 1.1961400349047686,
+      "saturated_fraction": 0.1457142857142857,
+      "tail_encoder_span_degrees": 3.33984375
+    },
+    "model": "id10",
+    "name": "id10-gait-low-voltage-delay-load-original-350",
+    "pattern": "gait",
+    "trace": "id10-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -1.0546875,
+      "peak_degrees": 2.900390625,
+      "previous_target_rms_degrees": 0.9417723174051338,
+      "rms_degrees": 1.1498246337623872,
+      "saturated_fraction": 0.1419047619047619,
+      "tail_encoder_span_degrees": 3.1640625
+    },
+    "model": "id10",
+    "name": "id10-gait-low-voltage-delay-load-selected-350",
+    "pattern": "gait",
+    "trace": "id10-gait-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -27.24609375,
+      "peak_degrees": 34.013671875,
+      "previous_target_rms_degrees": 13.996282259050826,
+      "rms_degrees": 14.584617532252908,
+      "saturated_fraction": 0.8457142857142858,
+      "tail_encoder_span_degrees": 12.3046875
+    },
+    "model": "id10",
+    "name": "id10-full-gait-nominal-original-350",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -27.158203125,
+      "peak_degrees": 33.92578125,
+      "previous_target_rms_degrees": 13.817431496090453,
+      "rms_degrees": 14.394822947531466,
+      "saturated_fraction": 0.82,
+      "tail_encoder_span_degrees": 12.568359375
+    },
+    "model": "id10",
+    "name": "id10-full-gait-nominal-selected-350",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -27.59765625,
+      "peak_degrees": 34.1015625,
+      "previous_target_rms_degrees": 14.482664221523747,
+      "rms_degrees": 14.95028745700219,
+      "saturated_fraction": 0.8533333333333334,
+      "tail_encoder_span_degrees": 9.66796875
+    },
+    "model": "id10",
+    "name": "id10-full-gait-low-voltage-delay-load-original-350",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -27.861328125,
+      "peak_degrees": 34.27734375,
+      "previous_target_rms_degrees": 14.400590615422015,
+      "rms_degrees": 14.866614937880664,
+      "saturated_fraction": 0.8361904761904762,
+      "tail_encoder_span_degrees": 9.66796875
+    },
+    "model": "id10",
+    "name": "id10-full-gait-low-voltage-delay-load-selected-350",
+    "pattern": "full-gait",
+    "trace": "id10-full-gait-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.8671875,
+      "previous_target_rms_degrees": 0.2947941181274137,
+      "rms_degrees": 0.3835597627270775,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-hold-nominal-original-350",
+    "pattern": "hold",
+    "trace": "id11-hold-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.8671875,
+      "previous_target_rms_degrees": 0.29642733903586027,
+      "rms_degrees": 0.38481643263848975,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-hold-nominal-selected-350",
+    "pattern": "hold",
+    "trace": "id11-hold-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.5703125,
+      "previous_target_rms_degrees": 0.40307698518334817,
+      "rms_degrees": 0.4812563511813306,
+      "saturated_fraction": 0.02,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-hold-low-voltage-delay-load-original-350",
+    "pattern": "hold",
+    "trace": "id11-hold-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.5703125,
+      "previous_target_rms_degrees": 0.4005296419296967,
+      "rms_degrees": 0.4791248413850008,
+      "saturated_fraction": 0.02,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-hold-low-voltage-delay-load-selected-350",
+    "pattern": "hold",
+    "trace": "id11-hold-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.1103737861603475,
+      "rms_degrees": 1.681842858252984,
+      "saturated_fraction": 0.4975,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-reversal-nominal-original-350",
+    "pattern": "reversal",
+    "trace": "id11-reversal-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.068350225266464,
+      "rms_degrees": 1.6373506841941363,
+      "saturated_fraction": 0.4925,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-reversal-nominal-selected-350",
+    "pattern": "reversal",
+    "trace": "id11-reversal-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.712890625,
+      "previous_target_rms_degrees": 2.241085991462023,
+      "rms_degrees": 2.7735202400867784,
+      "saturated_fraction": 0.6325,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id11",
+    "name": "id11-reversal-low-voltage-delay-load-original-350",
+    "pattern": "reversal",
+    "trace": "id11-reversal-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.058944585390738,
+      "rms_degrees": 2.5940207374555597,
+      "saturated_fraction": 0.615,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-reversal-low-voltage-delay-load-selected-350",
+    "pattern": "reversal",
+    "trace": "id11-reversal-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.779296875,
+      "previous_target_rms_degrees": 0.8434180560420144,
+      "rms_degrees": 1.2451266658646585,
+      "saturated_fraction": 0.2325,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-chirp-nominal-original-350",
+    "pattern": "chirp",
+    "trace": "id11-chirp-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.603515625,
+      "previous_target_rms_degrees": 0.7852819541397591,
+      "rms_degrees": 1.1859373552525851,
+      "saturated_fraction": 0.215,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-chirp-nominal-selected-350",
+    "pattern": "chirp",
+    "trace": "id11-chirp-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 1.427120217545084,
+      "rms_degrees": 1.7915572051684168,
+      "saturated_fraction": 0.3225,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "name": "id11-chirp-low-voltage-delay-load-original-350",
+    "pattern": "chirp",
+    "trace": "id11-chirp-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.658203125,
+      "previous_target_rms_degrees": 1.3220602352137543,
+      "rms_degrees": 1.6925164999220967,
+      "saturated_fraction": 0.31,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "name": "id11-chirp-low-voltage-delay-load-selected-350",
+    "pattern": "chirp",
+    "trace": "id11-chirp-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -2.4609375,
+      "peak_degrees": 5.80078125,
+      "previous_target_rms_degrees": 1.538909616823125,
+      "rms_degrees": 1.8525403494822887,
+      "saturated_fraction": 0.2542857142857143,
+      "tail_encoder_span_degrees": 4.658203125
+    },
+    "model": "id11",
+    "name": "id11-gait-nominal-original-350",
+    "pattern": "gait",
+    "trace": "id11-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -2.548828125,
+      "peak_degrees": 5.888671875,
+      "previous_target_rms_degrees": 1.4983593278641811,
+      "rms_degrees": 1.8154285242998465,
+      "saturated_fraction": 0.25047619047619046,
+      "tail_encoder_span_degrees": 4.658203125
+    },
+    "model": "id11",
+    "name": "id11-gait-nominal-selected-350",
+    "pattern": "gait",
+    "trace": "id11-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -2.98828125,
+      "peak_degrees": 5.712890625,
+      "previous_target_rms_degrees": 1.7636537989996803,
+      "rms_degrees": 2.008164091428109,
+      "saturated_fraction": 0.2857142857142857,
+      "tail_encoder_span_degrees": 4.306640625
+    },
+    "model": "id11",
+    "name": "id11-gait-low-voltage-delay-load-original-350",
+    "pattern": "gait",
+    "trace": "id11-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -3.1640625,
+      "peak_degrees": 5.712890625,
+      "previous_target_rms_degrees": 1.7209150673399394,
+      "rms_degrees": 1.9723471651641207,
+      "saturated_fraction": 0.2819047619047619,
+      "tail_encoder_span_degrees": 4.130859375
+    },
+    "model": "id11",
+    "name": "id11-gait-low-voltage-delay-load-selected-350",
+    "pattern": "gait",
+    "trace": "id11-gait-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -52.646484375,
+      "peak_degrees": 63.80859375,
+      "previous_target_rms_degrees": 20.418146932043868,
+      "rms_degrees": 20.994432061528762,
+      "saturated_fraction": 0.8685714285714285,
+      "tail_encoder_span_degrees": 13.88671875
+    },
+    "model": "id11",
+    "name": "id11-full-gait-nominal-original-350",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -54.31640625,
+      "peak_degrees": 63.720703125,
+      "previous_target_rms_degrees": 20.38165663254502,
+      "rms_degrees": 20.94655552227336,
+      "saturated_fraction": 0.8447619047619047,
+      "tail_encoder_span_degrees": 13.53515625
+    },
+    "model": "id11",
+    "name": "id11-full-gait-nominal-selected-350",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -53.7890625,
+      "peak_degrees": 65.126953125,
+      "previous_target_rms_degrees": 20.937009910590053,
+      "rms_degrees": 21.42209073023969,
+      "saturated_fraction": 0.8704761904761905,
+      "tail_encoder_span_degrees": 11.865234375
+    },
+    "model": "id11",
+    "name": "id11-full-gait-low-voltage-delay-load-original-350",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -55.1953125,
+      "peak_degrees": 65.56640625,
+      "previous_target_rms_degrees": 20.887600700720746,
+      "rms_degrees": 21.364694735559045,
+      "saturated_fraction": 0.8666666666666667,
+      "tail_encoder_span_degrees": 12.041015625
+    },
+    "model": "id11",
+    "name": "id11-full-gait-low-voltage-delay-load-selected-350",
+    "pattern": "full-gait",
+    "trace": "id11-full-gait-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.955078125,
+      "previous_target_rms_degrees": 0.3002143570884417,
+      "rms_degrees": 0.3883880652521994,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-hold-nominal-original-350",
+    "pattern": "hold",
+    "trace": "id12-hold-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.955078125,
+      "previous_target_rms_degrees": 0.3026170072386355,
+      "rms_degrees": 0.3902482313840624,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-hold-nominal-selected-350",
+    "pattern": "hold",
+    "trace": "id12-hold-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.5703125,
+      "previous_target_rms_degrees": 0.40625058687607846,
+      "rms_degrees": 0.4839175125008696,
+      "saturated_fraction": 0.0225,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-hold-low-voltage-delay-load-original-350",
+    "pattern": "hold",
+    "trace": "id12-hold-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.5703125,
+      "previous_target_rms_degrees": 0.4045117677879479,
+      "rms_degrees": 0.4824586923735562,
+      "saturated_fraction": 0.02,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-hold-low-voltage-delay-load-selected-350",
+    "pattern": "hold",
+    "trace": "id12-hold-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.1826352307859214,
+      "rms_degrees": 1.7543979286948734,
+      "saturated_fraction": 0.515,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-reversal-nominal-original-350",
+    "pattern": "reversal",
+    "trace": "id12-reversal-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.1381326907053597,
+      "rms_degrees": 1.7064989600012153,
+      "saturated_fraction": 0.4975,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-reversal-nominal-selected-350",
+    "pattern": "reversal",
+    "trace": "id12-reversal-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.321082247587122,
+      "rms_degrees": 2.8432956793760082,
+      "saturated_fraction": 0.6425,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id12",
+    "name": "id12-reversal-low-voltage-delay-load-original-350",
+    "pattern": "reversal",
+    "trace": "id12-reversal-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 2.1502913366362058,
+      "rms_degrees": 2.674717645806186,
+      "saturated_fraction": 0.62,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-reversal-low-voltage-delay-load-selected-350",
+    "pattern": "reversal",
+    "trace": "id12-reversal-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.8671875,
+      "previous_target_rms_degrees": 0.883224256246685,
+      "rms_degrees": 1.282314881466605,
+      "saturated_fraction": 0.24,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-chirp-nominal-original-350",
+    "pattern": "chirp",
+    "trace": "id12-chirp-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.603515625,
+      "previous_target_rms_degrees": 0.8176308532421351,
+      "rms_degrees": 1.217205829996519,
+      "saturated_fraction": 0.2175,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-chirp-nominal-selected-350",
+    "pattern": "chirp",
+    "trace": "id12-chirp-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.009765625,
+      "previous_target_rms_degrees": 1.4671088444402944,
+      "rms_degrees": 1.8282042266110776,
+      "saturated_fraction": 0.33,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "name": "id12-chirp-low-voltage-delay-load-original-350",
+    "pattern": "chirp",
+    "trace": "id12-chirp-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.658203125,
+      "previous_target_rms_degrees": 1.3634453704767697,
+      "rms_degrees": 1.7304021335980175,
+      "saturated_fraction": 0.31,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "name": "id12-chirp-low-voltage-delay-load-selected-350",
+    "pattern": "chirp",
+    "trace": "id12-chirp-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 0.720452986317056,
+      "rms_degrees": 0.9510809177047881,
+      "saturated_fraction": 0.11142857142857143,
+      "tail_encoder_span_degrees": 3.515625
+    },
+    "model": "id12",
+    "name": "id12-gait-nominal-original-350",
+    "pattern": "gait",
+    "trace": "id12-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 0.692720876785712,
+      "rms_degrees": 0.923765889533866,
+      "saturated_fraction": 0.10666666666666667,
+      "tail_encoder_span_degrees": 3.515625
+    },
+    "model": "id12",
+    "name": "id12-gait-nominal-selected-350",
+    "pattern": "gait",
+    "trace": "id12-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 1.0546875,
+      "peak_degrees": 3.515625,
+      "previous_target_rms_degrees": 0.9537844375595439,
+      "rms_degrees": 1.1503331856794683,
+      "saturated_fraction": 0.13142857142857142,
+      "tail_encoder_span_degrees": 3.251953125
+    },
+    "model": "id12",
+    "name": "id12-gait-low-voltage-delay-load-original-350",
+    "pattern": "gait",
+    "trace": "id12-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.966796875,
+      "peak_degrees": 3.427734375,
+      "previous_target_rms_degrees": 0.9172482152706929,
+      "rms_degrees": 1.115454366945159,
+      "saturated_fraction": 0.12571428571428572,
+      "tail_encoder_span_degrees": 3.251953125
+    },
+    "model": "id12",
+    "name": "id12-gait-low-voltage-delay-load-selected-350",
+    "pattern": "gait",
+    "trace": "id12-gait-low-voltage-delay-load-selected-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 26.54296875,
+      "peak_degrees": 38.3203125,
+      "previous_target_rms_degrees": 14.720774767297211,
+      "rms_degrees": 15.379956287263095,
+      "saturated_fraction": 0.8838095238095238,
+      "tail_encoder_span_degrees": 14.326171875
+    },
+    "model": "id12",
+    "name": "id12-full-gait-nominal-original-350",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-nominal-original-350.json"
+  },
+  {
+    "condition": "nominal",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 27.158203125,
+      "peak_degrees": 38.408203125,
+      "previous_target_rms_degrees": 14.787037298589482,
+      "rms_degrees": 15.442686640424693,
+      "saturated_fraction": 0.878095238095238,
+      "tail_encoder_span_degrees": 14.23828125
+    },
+    "model": "id12",
+    "name": "id12-full-gait-nominal-selected-350",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-nominal-selected-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "original",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 24.697265625,
+      "peak_degrees": 36.9140625,
+      "previous_target_rms_degrees": 14.79271222006932,
+      "rms_degrees": 15.34014884947564,
+      "saturated_fraction": 0.8857142857142857,
+      "tail_encoder_span_degrees": 11.77734375
+    },
+    "model": "id12",
+    "name": "id12-full-gait-low-voltage-delay-load-original-350",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-low-voltage-delay-load-original-350.json"
+  },
+  {
+    "condition": "low-voltage-delay-load",
+    "controller": "selected",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 25.3125,
+      "peak_degrees": 37.08984375,
+      "previous_target_rms_degrees": 14.82414315030483,
+      "rms_degrees": 15.372152270785863,
+      "saturated_fraction": 0.8809523809523809,
+      "tail_encoder_span_degrees": 11.77734375
+    },
+    "model": "id12",
+    "name": "id12-full-gait-low-voltage-delay-load-selected-350",
+    "pattern": "full-gait",
+    "trace": "id12-full-gait-low-voltage-delay-load-selected-350.json"
+  }
+]

@@ -1,0 +1,58 @@
+    Blocking waiting for file lock on build directory
+   Compiling num-traits v0.2.19
+   Compiling emath v0.36.2
+   Compiling bytemuck_derive v1.12.0
+   Compiling ahash v0.8.12
+   Compiling sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling ecolor v0.36.2
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+   Compiling sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+   Compiling euclid v0.22.14
+   Compiling bytemuck v1.25.2
+   Compiling guillotiere v0.7.0
+   Compiling color v0.3.3
+   Compiling font-types v0.12.4
+   Compiling read-fonts v0.41.0
+   Compiling peniko v0.6.1
+   Compiling vello_common v0.1.0
+   Compiling vello_cpu v0.1.0
+   Compiling harfrust v0.12.0
+   Compiling skrifa v0.44.0
+   Compiling epaint v0.36.2
+   Compiling egui v0.36.2
+   Compiling sim-diagram v0.1.0 (/Users/elliot/physics-simulator/crates/sim-diagram)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4m 45s
+     Running unittests src/lib.rs (target/debug/deps/sim_diagram-17f905a8ab4ab1c6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/interaction.rs (target/debug/deps/interaction-a0041e641da232fa)
+
+running 3 tests
+test routing_retains_one_branched_connection_and_is_deterministic ... ok
+test actual_pointer_click_selects_a_component_without_changing_model ... FAILED
+test drag_updates_presentation_and_reroutes_the_same_terminals ... FAILED
+
+failures:
+
+---- actual_pointer_click_selects_a_component_without_changing_model stdout ----
+
+thread 'actual_pointer_click_selects_a_component_without_changing_model' (293471) panicked at /Users/elliot/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/epaint-0.36.2/src/textures.rs:337:9:
+Dropped TexturesDelta with 1 unapplied deltas. Deltas need to be handled. If you want to drop this intentionally call `clear` before dropping.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- drag_updates_presentation_and_reroutes_the_same_terminals stdout ----
+
+thread 'drag_updates_presentation_and_reroutes_the_same_terminals' (293472) panicked at /Users/elliot/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/epaint-0.36.2/src/textures.rs:337:9:
+Dropped TexturesDelta with 1 unapplied deltas. Deltas need to be handled. If you want to drop this intentionally call `clear` before dropping.
+
+
+failures:
+    actual_pointer_click_selects_a_component_without_changing_model
+    drag_updates_presentation_and_reroutes_the_same_terminals
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p sim-diagram --test interaction`

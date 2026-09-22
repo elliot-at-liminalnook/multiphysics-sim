@@ -1,0 +1,740 @@
+{
+  "total_main_thread_samples": 5618,
+  "reported_allocator_leaf_samples": 2167,
+  "reported_allocator_fraction": 0.38572445710217157,
+  "top_leaf_samples": [
+    {
+      "symbol": "_nanov2_free",
+      "image": "libsystem_malloc.dylib",
+      "samples": 428
+    },
+    {
+      "symbol": "nanov2_malloc_type",
+      "image": "libsystem_malloc.dylib",
+      "samples": 310
+    },
+    {
+      "symbol": "_RNvMs0_NtCshFkTLQvPegU_16sim_domain_robot11articulatedNtB5_11Articulated10kinematics",
+      "image": "candidate-native.bin",
+      "samples": 249
+    },
+    {
+      "symbol": "<deduplicated_symbol>",
+      "image": "candidate-native.bin",
+      "samples": 207
+    },
+    {
+      "symbol": "_RNvMNtNtCshFkTLQvPegU_16sim_domain_robot11articulated7inertiaNtB4_11Articulated26rigid_mass_with_kinematics",
+      "image": "candidate-native.bin",
+      "samples": 188
+    },
+    {
+      "symbol": "tiny_free_no_lock",
+      "image": "libsystem_malloc.dylib",
+      "samples": 136
+    },
+    {
+      "symbol": "free_tiny",
+      "image": "libsystem_malloc.dylib",
+      "samples": 132
+    },
+    {
+      "symbol": "_RINvMs_NtNtCs74fepxjsnsH_8nalgebra8geometry10reflectionINtB5_10ReflectiondNtNtNtB9_4base9dimension3DynINtNtB1e_11matrix_view14ViewStorageMutdB1a_INtB1c_5ConstKj1_EB2j_B1a_EE22reflect_rows_with_signB1a_B1a_IB1D_dB1a_B1a_B2j_B1a_EB1C_ECsiAXCkxZ7Qpr_11sim_compile",
+      "image": "candidate-native.bin",
+      "samples": 116
+    },
+    {
+      "symbol": "_platform_bzero$VARIANT$Haswell",
+      "image": "libsystem_platform.dylib",
+      "samples": 116
+    },
+    {
+      "symbol": "_platform_memmove$VARIANT$Haswell",
+      "image": "libsystem_platform.dylib",
+      "samples": 111
+    },
+    {
+      "symbol": "tiny_free_list_add_ptr",
+      "image": "libsystem_malloc.dylib",
+      "samples": 104
+    },
+    {
+      "symbol": "_RNvNtCshEkU146zpEA_14matrixmultiply12dgemm_kernel17kernel_target_fma",
+      "image": "candidate-native.bin",
+      "samples": 102
+    },
+    {
+      "symbol": "tiny_malloc_should_clear",
+      "image": "libsystem_malloc.dylib",
+      "samples": 98
+    },
+    {
+      "symbol": "tiny_malloc_from_free_list",
+      "image": "libsystem_malloc.dylib",
+      "samples": 92
+    },
+    {
+      "symbol": "nanov2_calloc_type",
+      "image": "libsystem_malloc.dylib",
+      "samples": 83
+    },
+    {
+      "symbol": "tanh",
+      "image": "libsystem_m.dylib",
+      "samples": 83
+    },
+    {
+      "symbol": "_RNvMs0_NtCshFkTLQvPegU_16sim_domain_robot11articulatedNtB5_11Articulated25evaluate_reusing_contacts",
+      "image": "candidate-native.bin",
+      "samples": 71
+    },
+    {
+      "symbol": "_RNvMs_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embeddingNtB4_15DependentFactor5solve",
+      "image": "candidate-native.bin",
+      "samples": 67
+    },
+    {
+      "symbol": "_RNvMs_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated11constraintsNtB6_11Articulated31rigid_closure_velocity_jacobian",
+      "image": "candidate-native.bin",
+      "samples": 65
+    },
+    {
+      "symbol": "_RINvXs0_NtNtNtCsbAqs9W1eE8G_4core4iter8adapters3mapINtB6_3MapINtNtNtBc_5slice4iter4IterINtNtNtCs74fepxjsnsH_8nalgebra4base6matrix6MatrixdINtNtB1s_9dimension5ConstKj3_EIB2c_Kj1_EINtNtB1s_13array_storage12ArrayStoragedKB2B_KB2L_EEENCNCNCNvMNtNtCshFkTLQvPegU_16sim_domain_robot11articulated8preparedNtB3O_15ContactGeometry16new_reusing_impls2_000ENtNtNtBa_6traits8iterator8Iterator4folduNCINvNvB5w_8for_each4callNtB3O_13ContactSampleNCINvMsj_NtCsl2jJwwz0T1e_5alloc3vecINtB73_3VecB6z_E14extend_trustedBN_E0E0EB3S_",
+      "image": "candidate-native.bin",
+      "samples": 64
+    },
+    {
+      "symbol": "_RNvXs0_NtCshFkTLQvPegU_16sim_domain_robot5motorNtB5_9MotorUnitNtNtCsiuKpjY8V3i7_8sim_core9equations8Behavior8residual",
+      "image": "candidate-native.bin",
+      "samples": 64
+    },
+    {
+      "symbol": "set_tiny_meta_header_in_use",
+      "image": "libsystem_malloc.dylib",
+      "samples": 62
+    },
+    {
+      "symbol": "_szone_free",
+      "image": "libsystem_malloc.dylib",
+      "samples": 61
+    },
+    {
+      "symbol": "free_small",
+      "image": "libsystem_malloc.dylib",
+      "samples": 61
+    },
+    {
+      "symbol": "rack_get_thread_index",
+      "image": "libsystem_malloc.dylib",
+      "samples": 55
+    },
+    {
+      "symbol": "_RINvXs4_NtNtCsl2jJwwz0T1e_5alloc3vec9into_iterINtB6_8IntoIterINtNtCsbAqs9W1eE8G_4core6option6OptionNtNtCshFkTLQvPegU_16sim_domain_robot11articulated7LinkKinEENtNtNtNtB12_4iter6traits8iterator8Iterator8try_foldINtNtB8_13in_place_drop11InPlaceDropB1z_ENCINvNtNtB2C_8adapters3map12map_try_foldBX_B1z_B3l_INtNtB12_6result6ResultB3l_zENCNvMs0_B1B_NtB1B_11Articulated10kinematics0NCINvNtB8_16in_place_collect24write_in_place_with_dropB1z_E0E0B4P_EB1D_",
+      "image": "candidate-native.bin",
+      "samples": 52
+    },
+    {
+      "symbol": "small_malloc_should_clear",
+      "image": "libsystem_malloc.dylib",
+      "samples": 50
+    },
+    {
+      "symbol": "tiny_free_list_remove_ptr",
+      "image": "libsystem_malloc.dylib",
+      "samples": 48
+    },
+    {
+      "symbol": "_RINvNtNtCs74fepxjsnsH_8nalgebra6linalg11householder22clear_column_uncheckeddNtNtNtB6_4base9dimension3DynB1c_ECshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 47
+    },
+    {
+      "symbol": "_malloc_zone_malloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 45
+    },
+    {
+      "symbol": "_RNvNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding13factor_blocks18independent_blocks",
+      "image": "candidate-native.bin",
+      "samples": 41
+    },
+    {
+      "symbol": "_RNvMNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding7driversNtB2_18EmbeddedDriverBank8evaluate",
+      "image": "candidate-native.bin",
+      "samples": 40
+    },
+    {
+      "symbol": "_RNvMs0_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embeddingNtB5_14RigidEmbedding10set_motion",
+      "image": "candidate-native.bin",
+      "samples": 40
+    },
+    {
+      "symbol": "small_free_list_add_ptr",
+      "image": "libsystem_malloc.dylib",
+      "samples": 38
+    },
+    {
+      "symbol": "small_free_list_remove_ptr_no_clear",
+      "image": "libsystem_malloc.dylib",
+      "samples": 36
+    },
+    {
+      "symbol": "nanov2_malloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 35
+    },
+    {
+      "symbol": "tiny_try_realloc_in_place",
+      "image": "libsystem_malloc.dylib",
+      "samples": 35
+    },
+    {
+      "symbol": "_RNvMs_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated11constraintsNtB6_11Articulated23original_closure_values",
+      "image": "candidate-native.bin",
+      "samples": 34
+    },
+    {
+      "symbol": "_RNvMNtNtCshFkTLQvPegU_16sim_domain_robot11articulated7inertiaNtB4_11Articulated36rigid_motion_columns_with_kinematics",
+      "image": "candidate-native.bin",
+      "samples": 32
+    },
+    {
+      "symbol": "_RNvMsd_CskbQtStsmF4M_6blake3NtB5_6Hasher6update",
+      "image": "candidate-native.bin",
+      "samples": 32
+    },
+    {
+      "symbol": "blake3_compress_in_place_sse41",
+      "image": "candidate-native.bin",
+      "samples": 32
+    },
+    {
+      "symbol": "_RNvXs_NtNtCsl2jJwwz0T1e_5alloc3vec21spec_from_iter_nestedINtB6_3VecNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated7inertia12MotionColumnEINtB4_18SpecFromIterNestedB13_INtNtNtNtCsbAqs9W1eE8G_4core4iter8adapters3map3MapINtNtNtB2S_5slice4iter4IterB13_ENCNvMB15_NtB17_11Articulated36rigid_motion_columns_with_kinematicss_0EE9from_iterB19_",
+      "image": "candidate-native.bin",
+      "samples": 31
+    },
+    {
+      "symbol": "_RINvMNtNtCs74fepxjsnsH_8nalgebra6linalg5solveINtNtNtB7_4base6matrix6MatrixdNtNtBM_9dimension3DynB1b_INtNtBM_11vec_storage10VecStoragedB1b_B1b_EE26solve_upper_triangular_mutB1b_INtB1d_5ConstKj1_EIB1B_dB1b_B2O_EECsbPPGCghH0cR_9sim_solve",
+      "image": "candidate-native.bin",
+      "samples": 29
+    },
+    {
+      "symbol": "_RNvNtCshFkTLQvPegU_16sim_domain_robot11articulated9world_box",
+      "image": "candidate-native.bin",
+      "samples": 29
+    },
+    {
+      "symbol": "_RINvCsbPPGCghH0cR_9sim_solve42solve_newton_cached_audited_with_referenceRNCNCNvMs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8implicitNtB1l_14RigidEmbedding27step_implicit_coupled_exacts2_0s0_0NCINvNtB2_8coloring50solve_newton_numeric_colored_scaled_cached_auditedB19_E0EB1p_",
+      "image": "candidate-native.bin",
+      "samples": 28
+    },
+    {
+      "symbol": "_RNvMs0_NtNtCs74fepxjsnsH_8nalgebra6linalg3svdINtB5_3SVDdNtNtNtB9_4base9dimension3DynBS_E3newCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 28
+    },
+    {
+      "symbol": "_RNvMsa_CskbQtStsmF4M_6blake3NtB5_10ChunkState6update",
+      "image": "candidate-native.bin",
+      "samples": 28
+    },
+    {
+      "symbol": "_RINvMs_NtNtCs74fepxjsnsH_8nalgebra4base12constructionINtNtB7_6matrix6MatrixdNtNtB7_9dimension3DynB1c_INtNtB7_11vec_storage10VecStoragedB1c_B1c_EE15from_fn_genericNCNvMs0_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embeddingNtB2I_14RigidEmbedding10solve_impls4_0EB2M_",
+      "image": "candidate-native.bin",
+      "samples": 27
+    },
+    {
+      "symbol": "_RINvXs0_NtNtNtCsbAqs9W1eE8G_4core4iter8adapters3mapINtB6_3MapINtNtB8_3zip3ZipINtNtNtBc_5slice4iter4IterNtNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding6servos10BoundServoEIB1e_NtB1F_13ServoBoundaryEENCNvMB1F_NtB1F_17EmbeddedServoBank8commands0ENtNtNtBa_6traits8iterator8Iterator8try_folduNCINvXB8_INtB8_12GenericShuntBN_INtNtBc_6result6ResultNtNtBc_7convert10InfallibleNtNtCsl2jJwwz0T1e_5alloc6string6StringEEB49_8try_folduNCINvNvB49_12try_for_each4calldINtNtNtBc_3ops12control_flow11ControlFlowdENcNtB7x_5Break0E0B7x_E0IB7y_B7x_EEB1L_",
+      "image": "candidate-native.bin",
+      "samples": 27
+    },
+    {
+      "symbol": "_RNCNvMs0_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embeddingNtB7_14RigidEmbedding5solve0Bb_",
+      "image": "candidate-native.bin",
+      "samples": 27
+    },
+    {
+      "symbol": "_RNvMs_NtNtCs74fepxjsnsH_8nalgebra6linalg13decompositionINtNtNtB8_4base6matrix6MatrixdNtNtBW_9dimension3DynB1l_INtNtBW_11vec_storage10VecStoragedB1l_B1l_EE8choleskyCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 27
+    },
+    {
+      "symbol": "_RNvMNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding6servosNtB2_17EmbeddedServoBank8validate",
+      "image": "candidate-native.bin",
+      "samples": 25
+    },
+    {
+      "symbol": "_RNvXs9_NtNtCs74fepxjsnsH_8nalgebra4base3opsRINtNtB7_6matrix6MatrixdNtNtB7_9dimension3DynB13_INtNtB7_11vec_storage10VecStoragedB13_B13_EEINtNtNtCsbAqs9W1eE8G_4core3ops5arith3MulRIBH_dB13_INtB15_5ConstKj1_EIB1t_dB13_B2Y_EEE3mulCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 25
+    },
+    {
+      "symbol": "_free",
+      "image": "libsystem_malloc.dylib",
+      "samples": 25
+    },
+    {
+      "symbol": "tiny_size",
+      "image": "libsystem_malloc.dylib",
+      "samples": 25
+    },
+    {
+      "symbol": "madvise",
+      "image": "libsystem_kernel.dylib",
+      "samples": 24
+    },
+    {
+      "symbol": "small_malloc_from_free_list",
+      "image": "libsystem_malloc.dylib",
+      "samples": 24
+    },
+    {
+      "symbol": "_RNvCs9wFQrvczXsK_7___rustc14___rust_dealloc",
+      "image": "candidate-native.bin",
+      "samples": 23
+    },
+    {
+      "symbol": "_RNvMs0_NtCsiuKpjY8V3i7_8sim_core9equationsNtB5_7Context10state_rate",
+      "image": "candidate-native.bin",
+      "samples": 23
+    },
+    {
+      "symbol": "_RNvXs1_NtCshFkTLQvPegU_16sim_domain_robot5motorNtB5_7HBridgeNtNtCsiuKpjY8V3i7_8sim_core9equations8Behavior8residual",
+      "image": "candidate-native.bin",
+      "samples": 23
+    },
+    {
+      "symbol": "_RINvMNtNtCs74fepxjsnsH_8nalgebra6linalg5solveINtNtNtB7_4base6matrix6MatrixdNtNtBM_9dimension3DynB1b_INtNtBM_11vec_storage10VecStoragedB1b_B1b_EE26solve_upper_triangular_mutB1b_B1b_B1A_ECshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 22
+    },
+    {
+      "symbol": "_RINvNtCshEkU146zpEA_14matrixmultiply7packing9pack_avx2NtNtB4_6kernel2U4dEB4_",
+      "image": "candidate-native.bin",
+      "samples": 22
+    },
+    {
+      "symbol": "_RNvMs_NtNtCs74fepxjsnsH_8nalgebra6linalg2luINtB4_2LUdNtNtNtB8_4base9dimension3DynBP_E3newCsbPPGCghH0cR_9sim_solve",
+      "image": "candidate-native.bin",
+      "samples": 22
+    },
+    {
+      "symbol": "szone_malloc_should_clear",
+      "image": "libsystem_malloc.dylib",
+      "samples": 22
+    },
+    {
+      "symbol": "_tiny_check_and_zero_inline_meta_from_freelist",
+      "image": "libsystem_malloc.dylib",
+      "samples": 21
+    },
+    {
+      "symbol": "_RNvMNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding6motorsNtB2_17EmbeddedMotorBank22evaluate_into_readings",
+      "image": "candidate-native.bin",
+      "samples": 20
+    },
+    {
+      "symbol": "_RNCNCNvMs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8implicitNtBb_14RigidEmbedding27step_implicit_coupled_exacts0_0s6_0Bf_",
+      "image": "candidate-native.bin",
+      "samples": 19
+    },
+    {
+      "symbol": "_RNCNvMs0_NtCshFkTLQvPegU_16sim_domain_robot11articulatedNtB7_11Articulated14contact_forces0B9_",
+      "image": "candidate-native.bin",
+      "samples": 19
+    },
+    {
+      "symbol": "_RNvMNtCs6OyoPSRCtK8_12sim_dynamics8jacobianNtB2_8Sparsity3new",
+      "image": "candidate-native.bin",
+      "samples": 19
+    },
+    {
+      "symbol": "_RNvNvNtCseadqcJvHmKT_11sim_runtime15physics_context11fingerprint4feed",
+      "image": "candidate-native.bin",
+      "samples": 19
+    },
+    {
+      "symbol": "_RNvXs9_NtNtCs74fepxjsnsH_8nalgebra4base3opsRINtNtB7_6matrix6MatrixdNtNtB7_9dimension3DynB13_INtNtB7_11vec_storage10VecStoragedB13_B13_EENtNtNtCsbAqs9W1eE8G_4core3ops5arith3Mul3mulCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 19
+    },
+    {
+      "symbol": "_RINvMs0_NtNtCs74fepxjsnsH_8nalgebra6linalg2luINtB6_2LUdNtNtNtBa_4base9dimension3DynBR_E5solveBR_INtBT_5ConstKj1_EINtNtBV_11vec_storage10VecStoragedBR_B1w_EECsbPPGCghH0cR_9sim_solve",
+      "image": "candidate-native.bin",
+      "samples": 18
+    },
+    {
+      "symbol": "_RNCNvMs0_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embeddingNtB7_14RigidEmbedding21factor_dependent_mode0Bb_",
+      "image": "candidate-native.bin",
+      "samples": 18
+    },
+    {
+      "symbol": "_RNvCs9wFQrvczXsK_7___rustc11___rdl_alloc",
+      "image": "candidate-native.bin",
+      "samples": 18
+    },
+    {
+      "symbol": "_RNvMs0_NtNtCs74fepxjsnsH_8nalgebra6linalg3svdINtB5_3SVDdNtNtNtB9_4base9dimension3DynBS_E3newCsiAXCkxZ7Qpr_11sim_compile",
+      "image": "candidate-native.bin",
+      "samples": 18
+    },
+    {
+      "symbol": "_RINvYNtNtNtCse4rRoTBuTkI_10serde_json5value3ser10SerializerNtNtCs1tHXQxyyjHA_10serde_core3ser10Serializer11collect_seqRINtNtCsl2jJwwz0T1e_5alloc3vec3VecdEECshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 17
+    },
+    {
+      "symbol": "_RNvMs4_NtCsl2jJwwz0T1e_5alloc7raw_vecNtB5_11RawVecInner11finish_growCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 17
+    },
+    {
+      "symbol": "_RINvMs7_NtNtCs74fepxjsnsH_8nalgebra4base6matrixINtB6_6MatrixdNtNtB8_9dimension3DynBX_INtNtB8_11vec_storage10VecStoragedBX_BX_EE9fold_withdNCNvMNtB8_7min_maxBJ_4amax0NCB2e_s_0ECshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 16
+    },
+    {
+      "symbol": "_RINvNtCshEkU146zpEA_14matrixmultiply7packing9pack_avx2NtNtB4_6kernel2U8dEB4_",
+      "image": "candidate-native.bin",
+      "samples": 16
+    },
+    {
+      "symbol": "_RNCNvMs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8implicitNtB9_14RigidEmbedding27step_implicit_coupled_exacts3_0Bd_",
+      "image": "candidate-native.bin",
+      "samples": 16
+    },
+    {
+      "symbol": "_RNvMNtNtCshFkTLQvPegU_16sim_domain_robot11articulated8preparedNtB2_15ContactGeometry16new_reusing_impl",
+      "image": "candidate-native.bin",
+      "samples": 16
+    },
+    {
+      "symbol": "_RNvXs_NtCsl1DN0dp660G_18sim_domain_control16sampled_fixed_pdNtB4_14SampledFixedPdNtNtCsiuKpjY8V3i7_8sim_core9equations8Behavior8residual",
+      "image": "candidate-native.bin",
+      "samples": 16
+    },
+    {
+      "symbol": "free",
+      "image": "libsystem_malloc.dylib",
+      "samples": 16
+    },
+    {
+      "symbol": "_RINvMs_NtNtCs74fepxjsnsH_8nalgebra6linalg8choleskyINtB5_8CholeskydNtNtNtB9_4base9dimension3DynE5solveB12_INtB14_5ConstKj1_EINtNtB16_11vec_storage10VecStoragedB12_B1F_EECshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 15
+    },
+    {
+      "symbol": "_RNCNvXs_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding10motor_stepINtB6_12MotorStepperNCNvMNtCseadqcJvHmKT_11sim_runtime8embeddedNtB1G_15EmbeddedSession11advance_ones5_0NtNtB8_6servos20EmbeddedServoControlENtNtCs6OyoPSRCtK8_12sim_dynamics6hybrid13HybridStepper7advances_0B1I_",
+      "image": "candidate-native.bin",
+      "samples": 15
+    },
+    {
+      "symbol": "small_free_list_remove_ptr",
+      "image": "libsystem_malloc.dylib",
+      "samples": 15
+    },
+    {
+      "symbol": "_RINvXs_NtNtNtCsbAqs9W1eE8G_4core4iter8adapters5chainINtB5_5ChainIBP_IBP_INtNtNtBb_5slice4iter4IterdEB18_EB18_EB18_ENtNtNtB9_6traits8iterator8Iterator8try_folduNCINvNvB1P_3any5checkRdNCNvMNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding6motorsNtB2Z_17EmbeddedMotorBank19validate_evaluation0E0INtNtNtBb_3ops12control_flow11ControlFlowuEEB35_",
+      "image": "candidate-native.bin",
+      "samples": 14
+    },
+    {
+      "symbol": "_RNvMs_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8dynamicsNtB4_24PreparedEmbeddedDynamics13solve_applied",
+      "image": "candidate-native.bin",
+      "samples": 14
+    },
+    {
+      "symbol": "__sincos_stret",
+      "image": "libsystem_m.dylib",
+      "samples": 14
+    },
+    {
+      "symbol": "_malloc_zone_realloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 14
+    },
+    {
+      "symbol": "get_tiny_previous_free_msize",
+      "image": "libsystem_malloc.dylib",
+      "samples": 14
+    },
+    {
+      "symbol": "nanov2_pointer_size",
+      "image": "libsystem_malloc.dylib",
+      "samples": 14
+    },
+    {
+      "symbol": "nanov2_size",
+      "image": "libsystem_malloc.dylib",
+      "samples": 14
+    },
+    {
+      "symbol": "_RNCNvMs0_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embeddingNtB7_14RigidEmbedding8jacobian0Bb_",
+      "image": "candidate-native.bin",
+      "samples": 13
+    },
+    {
+      "symbol": "_RNvCs9wFQrvczXsK_7___rustc12___rust_alloc",
+      "image": "candidate-native.bin",
+      "samples": 13
+    },
+    {
+      "symbol": "_RNvCs9wFQrvczXsK_7___rustc35___rust_no_alloc_shim_is_unstable_v2",
+      "image": "candidate-native.bin",
+      "samples": 13
+    },
+    {
+      "symbol": "_RNvNtCshFkTLQvPegU_16sim_domain_robot4math8rot_axis",
+      "image": "candidate-native.bin",
+      "samples": 13
+    },
+    {
+      "symbol": "_RNvXNtNtNtCsbAqs9W1eE8G_4core3ops8function5implsRNCNCNvMs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8implicitNtBX_14RigidEmbedding27step_implicit_coupled_exacts2_0s0_0INtB4_2FnTRSdQB3a_EE4callB11_",
+      "image": "candidate-native.bin",
+      "samples": 12
+    },
+    {
+      "symbol": "_RNvXsa_NtCsl2jJwwz0T1e_5alloc3vecINtB5_3VecNtNtCse4rRoTBuTkI_10serde_json5value5ValueENtNtCsbAqs9W1eE8G_4core5clone5Clone5cloneCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 12
+    },
+    {
+      "symbol": "malloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 12
+    },
+    {
+      "symbol": "_RINvMs_NtNtCs74fepxjsnsH_8nalgebra8geometry10reflectionINtB5_10ReflectiondNtNtNtB9_4base9dimension3DynINtNtB1e_11matrix_view11ViewStoragedB1a_INtB1c_5ConstKj1_EB2g_B1a_EE17reflect_with_signB1a_B1a_INtB1F_14ViewStorageMutdB1a_B1a_B2g_B1a_EECshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 11
+    },
+    {
+      "symbol": "_RNCNCNvMs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8implicitNtBb_14RigidEmbedding27step_implicit_coupled_exacts2_0s_0Bf_",
+      "image": "candidate-native.bin",
+      "samples": 11
+    },
+    {
+      "symbol": "_RNvMs_NtNtCs74fepxjsnsH_8nalgebra6linalg10col_piv_qrINtB4_8ColPivQRdNtNtNtB8_4base9dimension3DynB14_E3newCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 11
+    },
+    {
+      "symbol": "_platform_memcmp$VARIANT$Base",
+      "image": "libsystem_platform.dylib",
+      "samples": 11
+    },
+    {
+      "symbol": "exp",
+      "image": "libsystem_m.dylib",
+      "samples": 11
+    },
+    {
+      "symbol": "_RNvMNtNtCshFkTLQvPegU_16sim_domain_robot11articulated7closureNtB4_11Articulated30constraint_rows_with_reactions",
+      "image": "candidate-native.bin",
+      "samples": 10
+    },
+    {
+      "symbol": "_RINvNtCsbAqs9W1eE8G_4core3ptr9drop_glueNtNtCse4rRoTBuTkI_10serde_json5value5ValueECseadqcJvHmKT_11sim_runtime",
+      "image": "candidate-native.bin",
+      "samples": 9
+    },
+    {
+      "symbol": "_RNCNCNvMs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8implicitNtBb_14RigidEmbedding27step_implicit_coupled_exacts2_00Bf_",
+      "image": "candidate-native.bin",
+      "samples": 9
+    },
+    {
+      "symbol": "_RNvXsa_NtCsl2jJwwz0T1e_5alloc3vecINtB5_3VecNtNtCse4rRoTBuTkI_10serde_json5value5ValueENtNtCsbAqs9W1eE8G_4core5clone5Clone5cloneCs14iYTkDoUYQ_15run_environment",
+      "image": "candidate-native.bin",
+      "samples": 9
+    },
+    {
+      "symbol": "_platform_memset_pattern16$VARIANT$Haswell",
+      "image": "libsystem_platform.dylib",
+      "samples": 9
+    },
+    {
+      "symbol": "_realloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 9
+    },
+    {
+      "symbol": "_RINvNtNtCs74fepxjsnsH_8nalgebra6linalg11householder19clear_row_uncheckeddNtNtNtB6_4base9dimension3DynB19_ECshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 8
+    },
+    {
+      "symbol": "_RNCNvMs_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8dynamicsNtB6_24PreparedEmbeddedDynamics13accelerations0Bc_",
+      "image": "candidate-native.bin",
+      "samples": 8
+    },
+    {
+      "symbol": "_RNvXsD_NtCshFkTLQvPegU_16sim_domain_robot11articulatedNtB5_13JointReactionNtNtCsbAqs9W1eE8G_4core5clone5Clone5clone",
+      "image": "candidate-native.bin",
+      "samples": 8
+    },
+    {
+      "symbol": "nanov2_realloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 8
+    },
+    {
+      "symbol": "_RINvXs0_NtNtNtCsbAqs9W1eE8G_4core4iter8adapters3mapINtB6_3MapINtNtB8_9enumerate9EnumerateINtNtB8_3zip3ZipINtNtNtBc_5slice4iter4IterNtNtCshFkTLQvPegU_16sim_domain_robot11articulated5LinkCEIB1G_NtB27_7LinkKinEEENCNCNvMNtB27_8preparedNtB3s_15ContactGeometry16new_reusing_impls2_00ENtNtNtBa_6traits8iterator8Iterator4folduNCINvNvB4s_8for_each4callINtNtCsl2jJwwz0T1e_5alloc3vec3VecNtB3s_13ContactSampleENCINvMsj_B5y_IB5w_B5v_E14extend_trustedBN_E0E0EB29_",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNCNvMNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8dynamicsNtB6_14RigidEmbedding21prepare_dynamics_impls3_0Ba_",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNvCs9wFQrvczXsK_7___rustc13___rdl_dealloc",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNvMNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding6motorsNtB2_17EmbeddedMotorBank10event_data",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNvMs0_CsbPPGCghH0cR_9sim_solveNtB5_13JacobianCache17factorise_tracked",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNvMs_NtCsiAXCkxZ7Qpr_11sim_compile6islandNtB4_4Slot6gather",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNvXNtNtCsl2jJwwz0T1e_5alloc3vec14spec_from_iterINtB4_3VecdEINtB2_12SpecFromIterdINtNtNtCsbAqs9W1eE8G_4core4iter8adapters12GenericShuntINtNtB1k_3map3MapINtNtB1k_3zip3ZipINtNtNtB1o_5slice4iter4IterNtNtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding6servos10BoundServoEIB2I_NtB3a_13ServoBoundaryEENCNvMB3a_NtB3a_17EmbeddedServoBank8commands0EINtNtB1o_6result6ResultNtNtB1o_7convert10InfallibleNtNtB6_6string6StringEEE9from_iterB3g_",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNvXs_NtNtCse4rRoTBuTkI_10serde_json5value4fromNtB6_5ValueINtNtCsbAqs9W1eE8G_4core7convert4FromdE4from",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_RNvXsa_NtCsl2jJwwz0T1e_5alloc3vecINtB5_3VecNtNtCse4rRoTBuTkI_10serde_json5value5ValueENtNtCsbAqs9W1eE8G_4core5clone5Clone5cloneCseadqcJvHmKT_11sim_runtime",
+      "image": "candidate-native.bin",
+      "samples": 7
+    },
+    {
+      "symbol": "_malloc_zone_calloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 7
+    },
+    {
+      "symbol": "_platform_memset$VARIANT$Haswell",
+      "image": "libsystem_platform.dylib",
+      "samples": 7
+    },
+    {
+      "symbol": "nanov2_find_block_and_allocate",
+      "image": "libsystem_malloc.dylib",
+      "samples": 7
+    },
+    {
+      "symbol": "DYLD-STUB$$_platform_memmove",
+      "image": "libsystem_platform.dylib",
+      "samples": 6
+    },
+    {
+      "symbol": "_RINvCsbPPGCghH0cR_9sim_solve42solve_newton_cached_audited_with_referenceRNCNvMs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding8implicitNtB1j_14RigidEmbedding27step_implicit_coupled_exacts3_0NCB1b_sg_0EB1n_",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RINvNtCse4rRoTBuTkI_10serde_json3ser18format_escaped_strQINtNtCsl2jJwwz0T1e_5alloc3vec3VechENtB2_16CompactFormatterECsiuKpjY8V3i7_8sim_core",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RINvNtNtNtNtCsbAqs9W1eE8G_4core5slice4sort6shared9smallsort18small_sort_generalTjjdENCINvMB8_SB1f_16sort_unstable_byNCNvMs_CsbPPGCghH0cR_9sim_solveNtB1X_14SparseJacobian6summed0E0EB1X_",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RINvNtNtNtNtCsbAqs9W1eE8G_4core5slice4sort8unstable9quicksort9quicksortTjjdENCINvMB8_SB17_16sort_unstable_byNCNvMs_CsbPPGCghH0cR_9sim_solveNtB1P_14SparseJacobian6summed0E0EB1P_",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RNvMs0_NtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embeddingNtB5_14RigidEmbedding13factor_matrix",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RNvMs3_NtCsiAXCkxZ7Qpr_11sim_compile6islandNtB5_6Island13residual_full",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RNvMs3_NtCsl2jJwwz0T1e_5alloc7raw_vecINtB5_6RawVecNtNtCshFkTLQvPegU_16sim_domain_robot11articulated13TransmissionCE8grow_oneBQ_",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RNvMs4_NtCsl2jJwwz0T1e_5alloc7raw_vecNtB5_11RawVecInner11finish_growCsl1DN0dp660G_18sim_domain_control",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RNvMs_NtNtCs74fepxjsnsH_8nalgebra6linalg10col_piv_qrINtB4_8ColPivQRdNtNtNtB8_4base9dimension3DynB14_E6unpackCshFkTLQvPegU_16sim_domain_robot",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "_RNvXsy_NtCshFkTLQvPegU_16sim_domain_robot11articulatedNtB5_11GeneralizedNtNtCsbAqs9W1eE8G_4core5clone5Clone5clone",
+      "image": "candidate-native.bin",
+      "samples": 6
+    },
+    {
+      "symbol": "szone_size",
+      "image": "libsystem_malloc.dylib",
+      "samples": 6
+    },
+    {
+      "symbol": "_RINvXNtNtCse4rRoTBuTkI_10serde_json5value3serNtB5_5ValueNtNtCs1tHXQxyyjHA_10serde_core3ser9Serialize9serializeQNtNtNtCsbnIwWVgSdpn_4rhai5serde3ser17DynamicSerializerECshFdeCLRf4fs_10sim_script",
+      "image": "candidate-native.bin",
+      "samples": 5
+    },
+    {
+      "symbol": "_RNCNvMNtCseadqcJvHmKT_11sim_runtime8embeddedNtB4_15EmbeddedSession11advance_ones2_0B6_",
+      "image": "candidate-native.bin",
+      "samples": 5
+    },
+    {
+      "symbol": "_RNvMNtNtCshFkTLQvPegU_16sim_domain_robot11articulated7inertiaNtB4_11Articulated21validate_rigid_motion",
+      "image": "candidate-native.bin",
+      "samples": 5
+    },
+    {
+      "symbol": "_RNvMs4_NtNtNtNtCsl2jJwwz0T1e_5alloc11collections5btree3map5entryINtB5_11VacantEntryINtCs6peVIlIiAM0_11smartstring11SmartStringNtNtB1m_6config11LazyCompactENtNtNtCsbnIwWVgSdpn_4rhai5types7dynamic7DynamicE12insert_entryCshFdeCLRf4fs_10sim_script",
+      "image": "candidate-native.bin",
+      "samples": 5
+    },
+    {
+      "symbol": "_RNvXs0_NtNtNtCshFkTLQvPegU_16sim_domain_robot11articulated9embedding6servosNtB5_20EmbeddedServoControlNtNtB7_7control19SampledMotorControl10boundaries",
+      "image": "candidate-native.bin",
+      "samples": 5
+    },
+    {
+      "symbol": "hypot",
+      "image": "libsystem_m.dylib",
+      "samples": 5
+    },
+    {
+      "symbol": "szone_realloc",
+      "image": "libsystem_malloc.dylib",
+      "samples": 5
+    }
+  ],
+  "frames_exact": 151,
+  "task_transitions_exact": true,
+  "scope": "Eight-second OS sample includes startup and simulation, not a steady-state allocation-time measurement. Collapsed leaf table omits symbols with fewer than five samples. Sampled wall time is excluded from speed comparisons."
+}

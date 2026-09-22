@@ -1,0 +1,13 @@
+Quadruped · Detailed motors · Faster simulation
+
+Requires Node.js 22 or newer. In this directory run:
+  node serve-viewer.mjs . 4173
+Then open http://127.0.0.1:4173/?preset=robot-measured-400hz-reuse
+
+Live WASD with the same bench-fit motor candidates and 400 Hz integer controller. W/S request forward/reverse; A/D request arcing turns. Release keys or Stop motion to request a controlled stop.
+
+Experimental fitted motors · 400 Hz motor loop · 200 Hz native measurement profile · 50 Hz motion policy. Faster detailed solver measured 0.08× real time on this Mac; still below real time. Calibration remains provisional.
+
+Uses the exact ID 10/11/12 candidate parameters from the measured-voltage motor study, repeated by actuator role across four legs as an explicit assumption. Internal motor/gearbox dynamics, encoder quantization and the FPGA integer law execute in Rust. The 1.25 ms feedback delay is an estimate. Supply is imposed at 11.1 V; loaded accuracy, battery behavior, twelve-motor physical bus timing and whole-robot hardware transfer remain unqualified. Model and cadence overrides are saved with input replay. Solver reuse is qualified against the retained detailed trajectory for short forward and forward/turn/reverse/stop cases. Model parameters and physics timestep are unchanged; sustained gait and realtime operation remain unqualified.
+
+Keep build-manifest.json with this bundle. File URLs do not support the Rust worker.

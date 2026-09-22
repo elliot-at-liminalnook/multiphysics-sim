@@ -1,0 +1,975 @@
+{
+  "scope": "Campaign evidence and preparation/measurement tools. Base Rust source archive and CAD artifact are referenced by source-provenance.json and experiment inputs.",
+  "entries": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/check_bounded_validation.mjs",
+      "bytes": 3325,
+      "sha256": "e707064f12f4aca9331b4e03b5b523503486f449a0acad4bb42b804c50ee1fb0"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/check_contact_direction.mjs",
+      "bytes": 4355,
+      "sha256": "a2b8c17678c9cebd7efefa4b0d63991d7cbeaa1cb7568a6b01e97c289413059b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/README.md",
+      "bytes": 7826,
+      "sha256": "32dcdac72de027502d43e5cb3d0fe798cd92ac75de0638b6eb1b89b1797d5bd9"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-compact/design.json",
+      "bytes": 185,
+      "sha256": "41d158aee772aed7db03a33d82db7fc950b32f1d36306a7a463a2bf505917752"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-compact/recipe.json",
+      "bytes": 13475,
+      "sha256": "b9480f4f25a60afa4590de58effd7e6b031ea47dcc5587fe3e85d16dfdee9198"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/compile.log",
+      "bytes": 131,
+      "sha256": "9ba9b22b34665170a9e878f3cf764ecf449737a36881914c092f09a4b10ac416"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/compiled.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/design.json",
+      "bytes": 179,
+      "sha256": "232b5b4c608e2a66883862b1c56e88464fcb60c68a822ead82aa8437e682e30b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/capture.json",
+      "bytes": 18698310,
+      "sha256": "b9c72f05f23b2665c752d7e27fd5b548e1ac60529b4e85efb2ea02586d6c3090"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/geometry-report.json",
+      "bytes": 7149,
+      "sha256": "0f1ebb0e664459c243d47d3ab44c61c9ea832f152cd3ee4fc4b5a514e4df80a5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/geometry.json",
+      "bytes": 819694,
+      "sha256": "aa5843b541db34a2fa083e0146a8c81fa341667f873c740c275ecba28d91311e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/preparation.json",
+      "bytes": 1340,
+      "sha256": "9a00e48f2cae38997c4be6a64e9721e171f20cec07d61130fd72587a3b7d1a40"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/report.json",
+      "bytes": 5962,
+      "sha256": "ecdfab9260f274eac1e88ef79061f986adba05ad25fc4d7e6856fa60561075af"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/episode/spec.json",
+      "bytes": 9012810,
+      "sha256": "9426be4c3ffdc8b55d09f82d3dd06d4675ba55b110d2deab0da5d13aa78e6935"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/fine/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/fine/compiled.json",
+      "bytes": 1228683,
+      "sha256": "13026a6c2ed1d52e0d70f348206192eb22d3a307c995f70e7151caeb8baabe66"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/fine/recipe.json",
+      "bytes": 13469,
+      "sha256": "f8704fe191dcd6afb51b8427a57c200675f903ae1c2616002da4c792b0a656ef"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/crawl-high/recipe.json",
+      "bytes": 13468,
+      "sha256": "f92484653e46383422b9764ea60e3c8554706015e68bf64e1b95596795282d14"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/initial-designs.json",
+      "bytes": 1137,
+      "sha256": "b7a1ea2feac110ad0cb5433d9fe5f7f20745917012848d2a2d0c39b4ebb7148e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/compiled.json",
+      "bytes": 1235330,
+      "sha256": "266c96e07988c909d37d789e2c6a9446da2cd3c1af34f8e87ea6d07670a140b6"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/design.json",
+      "bytes": 218,
+      "sha256": "6992b38248804890da77e5de97efdb22638b178c1812ec4c56ecf87b06e212bc"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/capture.json",
+      "bytes": 18703976,
+      "sha256": "b52bb43c9e2fb183d31720d23ed031fb065e43646e5e5ea06a8741c18e8de3e4"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/geometry-report.json",
+      "bytes": 7157,
+      "sha256": "52916c3b981f0894de763d050b419795772a4e195b12845658256686cfac0d8e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/geometry.json",
+      "bytes": 796888,
+      "sha256": "3539a4aa4f1a614dc2f9b7f318e72ea916470b65852abbdf86b2ec739c24005c"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/preparation.json",
+      "bytes": 1337,
+      "sha256": "7113e5c4ffdb20714bd46635ffbb30832752c88f9031f76375a644e762832d5d"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/report.json",
+      "bytes": 5969,
+      "sha256": "00712f8a192fa0e21c7dee68b1c7c962e6ea20eae4f4ade7b2bd606fa2bb32e2"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/episode/spec.json",
+      "bytes": 9017335,
+      "sha256": "d18a13bf5a420e03dc69e2d27d8413409eb050e3afa95f543534e65aca77c3a1"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/lean-forward/recipe.json",
+      "bytes": 13469,
+      "sha256": "424f8ed74de58850a1559e60e185d66691bd8383475f75f1673aa709e6b2cbda"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/long-run-protocol.json",
+      "bytes": 1939,
+      "sha256": "bddeb34ef9303cac4b54809b941cb05f37bf2ffb57b035f456028aa71fc15b7e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/markers.json",
+      "bytes": 906,
+      "sha256": "910ef65d6bef5d792631a6e6364f6790989f0cc6168318e048195c0fe7812532"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/capture.json",
+      "bytes": 22450346,
+      "sha256": "d4f71dee84344307f2865df2a2484b532118f97e1cec07b88bf95b8615c19117"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/geometry-report.json",
+      "bytes": 7169,
+      "sha256": "797f1599d715169a9a7c920226ecbdeaa73d80962d2066bb8be84efe72f70613"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/geometry.json",
+      "bytes": 809315,
+      "sha256": "bbc0e14927da3e3efa52baa1819ccce6117fd5dd9c242af0fb16ce0d21529a6c"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/preparation.json",
+      "bytes": 312,
+      "sha256": "a861e58f7559dd7738a02f6267c65ff57497506a6465afe9246de45963945e76"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/report.json",
+      "bytes": 5982,
+      "sha256": "40d7093557190f512981d908d5a6195dc60a90c28d0b449937e7cfbf370b8e3c"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/spec.json",
+      "bytes": 12753063,
+      "sha256": "1d2c3934c5991e5e446c6582a4aff90887d67fd9beef424e1697bf3d3ff20bda"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/capture.json",
+      "bytes": 18079908,
+      "sha256": "96a6858d351b02cd70102a1c73810a6912a7f4d3a7cf068993e8c3987b3fb42a"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/geometry-report.json",
+      "bytes": 7122,
+      "sha256": "db60bf5fcbdd271df6f5c412b369c3c37beac298cdd4119a49df76eed885f96e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/geometry.json",
+      "bytes": 819119,
+      "sha256": "743edee8242d9f9a95763592eb59ab8c6d33988ea4df330740b0069a81ae6e49"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/preparation.json",
+      "bytes": 1330,
+      "sha256": "cfd2aee2c6c08fae90f91c4997ea3d079d74b47fc5fe076b6c4f4bece7295d5a"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/report.json",
+      "bytes": 5946,
+      "sha256": "d16886495ca578198b5fa0242b371193adf2831203fcccd7de68fc6a715d20df"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot-5s/spec.json",
+      "bytes": 8404362,
+      "sha256": "24252c653ee28996fcf6e5f91eaa12167818b1720959006eb20af093f128fada"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot.compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot.compiled.json",
+      "bytes": 624259,
+      "sha256": "7c2f9c533c6a5ff55531460d8024e953e2d297a16e8c894f2974023ad5036800"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/pilot.recipe.json",
+      "bytes": 24083,
+      "sha256": "aaedb2566217b74855f1d02f31e97e5ce1f97f1b5268d5ec5c20b859a6cc6d7b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/planning.scene.json",
+      "bytes": 25343809,
+      "sha256": "7ae893703cb8d3a856f172db053f7b8baacf7337044227af79d4d9e8a3820e3a"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/provenance.json",
+      "bytes": 899,
+      "sha256": "88c49a6e5537d9480f0d4c4c1f9bb5d33854c27ea6dc4387837402247f320760"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/qualification-protocol.json",
+      "bytes": 1004,
+      "sha256": "0f7c9143e4db595cca4b156482bdbc873588cc5ab8585bc63a9e07851e7285cb"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/screening-01.json",
+      "bytes": 6682,
+      "sha256": "8a4ae216d04ead28c448e604375ef30d879640925c77d746aebddb5711f283d8"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/screening-02.json",
+      "bytes": 9528,
+      "sha256": "0a7371bd84e622c77631f9c4d94e23cd3660cdbc2ba4e526646324ae0b60877e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/selected-simulation.json",
+      "bytes": 1042,
+      "sha256": "f6026d2d3ec053814e66adbe8c2cd1738fcaaac104373f725b0340aade2c768f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/source-delta/crates/sim-runtime/examples/search_motion.rs",
+      "bytes": 9281,
+      "sha256": "30519feece66eb2db8f04e1d28e465c1a2e3ff4202293dfb4288e19874f37ea4"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/source-provenance.json",
+      "bytes": 1570,
+      "sha256": "bf25f86a363b7a9d01bede5140dfe61c6e2eee4bdb974559ada789ee92249e13"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/compiled.json",
+      "bytes": 1226245,
+      "sha256": "810a28b4508b6a8374fc142d9cd129de2bf647eb253d19b8c2889bd05340e354"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/design.json",
+      "bytes": 208,
+      "sha256": "dcc946eeca62dffdd065aabf6eda8c68f66dd8a6648209aed7400b619f35842b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/capture.json",
+      "bytes": 18695300,
+      "sha256": "91f59bc5126fdae0d75e3a0c48a91c96ff8290c6d738073c8920e8bb1133636a"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/geometry-report.json",
+      "bytes": 7161,
+      "sha256": "e1d291cf974cddf38d6298a2ed4ed33bee4431ceba95169bb9952abd2e0e3fc9"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/geometry.json",
+      "bytes": 809428,
+      "sha256": "47159c7911ad1e9e8ee9a5f748a3b7e93867a8e988dac32b186ccc92557a9fd8"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/preparation.json",
+      "bytes": 1342,
+      "sha256": "dbf8f93c2a34273fb20366df4b69a18ceee465933af08315cdb8dd654f80c954"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/report.json",
+      "bytes": 5966,
+      "sha256": "cb04a4545fb12f757b05d5ab3dfa87937903d0ebbb7e2fb9b75827e449e69ed6"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/episode/spec.json",
+      "bytes": 9010202,
+      "sha256": "9e1934ceb1c25e5c45a14416118234227539e533dade3bde0f031727a60ec1f0"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-forward/recipe.json",
+      "bytes": 13460,
+      "sha256": "c48722c972e3e5341a5b6fbf1ef3d89823a902656df28e9d84ddb2cebbdc11d3"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/compiled.json",
+      "bytes": 1225602,
+      "sha256": "a908b494dc1d4af6137ee062e13b8a405eff076eb842995aff03e55e028e5c3b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/design.json",
+      "bytes": 283,
+      "sha256": "4d680e389e8814a19d71c74ea3717d4fad5ffb3e878c1890e577b42ba20c55f6"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/capture.json",
+      "bytes": 18727789,
+      "sha256": "e83b7268b17cfa993c5b9cb049b470886ba6ef7e2786f29136ded30beeab4112"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/geometry-report.json",
+      "bytes": 7166,
+      "sha256": "d82193643b8422a038a07e0692e8d549364bde199bf528f93fde1693ba4e06cf"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/geometry.json",
+      "bytes": 817568,
+      "sha256": "0e78801c2bcbfaf19b4794a65fce6dc08a8a06a4cd3940454b7b4cff87c906ea"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/preparation.json",
+      "bytes": 1344,
+      "sha256": "9f44b1c7b4edad5e1cc85bfe34d83d48994ce3207ab78cb10c097c36df5ef417"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/report.json",
+      "bytes": 5968,
+      "sha256": "286dd6f000e97bd49c1af0e58a8c7957839588ec6f6e5dc08707c0b245ca7fd9"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/episode/spec.json",
+      "bytes": 9008491,
+      "sha256": "995a0230a6d324ded52291070433fd5849d00882a63dfb08017267a0ce662294"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/recipe.json",
+      "bytes": 13452,
+      "sha256": "68d3f7917dcc1590b687cbe5dd084b9b80b586bbcf8740e4c54df17b14392b69"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/compile.log",
+      "bytes": 131,
+      "sha256": "bde9309956969b9a649eddf931f47e46064794ca16afad930a47f12715965661"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/compiled.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/design.json",
+      "bytes": 174,
+      "sha256": "42777534e40789279a4d8f9b70492f0318093dd08f5c8e4609964a9725fed934"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/capture.json",
+      "bytes": 18718516,
+      "sha256": "8839d1e17278ba77ef5d6201652ca35398fe6a9f9d30098d125459b85d20c048"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/geometry-report.json",
+      "bytes": 7149,
+      "sha256": "c682f3ee3861e1d9103ebc6a90c0ce3e028b0dcfb4cf3d0f7202c9217160aaf8"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/geometry.json",
+      "bytes": 820429,
+      "sha256": "c08e69ee6cc53a06adf7a9d0a5d759703e8e0c2589f5fe2e19129011149282ed"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/preparation.json",
+      "bytes": 1339,
+      "sha256": "6991a0b8498f63cd9941cb763df781e3c5d21937ea9568c609aba32c989c7a1e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/report.json",
+      "bytes": 5963,
+      "sha256": "ee1f3cf3f92f408501523cba44cf016ac610cc6ab6ad29f1bcb71a116111f430"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/episode/spec.json",
+      "bytes": 9009245,
+      "sha256": "df9df59e779ceb36dbffc2efa6e70f5d1201a0838cec3a75096efebc55d23832"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/fine/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/fine/compiled.json",
+      "bytes": 1226013,
+      "sha256": "9680d0fc3fdfc6451b6e0185cae5c463f88ec1695c4b9c5b6680723449baf6e9"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/fine/recipe.json",
+      "bytes": 13452,
+      "sha256": "a2eabfd8a25ff744e69751c6b323e753276119a4573c32ae2ee462b02628b615"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered/recipe.json",
+      "bytes": 13451,
+      "sha256": "cf03de62ab91348d258be79e82f9623d70ea56d166815a04e9fef8a193330491"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/compiled.json",
+      "bytes": 620290,
+      "sha256": "6034d7b5be7e559517908a9ceb47baf0a3aca46fc6695d0136c3b52092e1870f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/design.json",
+      "bytes": 172,
+      "sha256": "26f2ae013b2e55c173f6a4cf3e77b679787404d072e64b52d4c4eee86f85e8aa"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/capture.json",
+      "bytes": 18098500,
+      "sha256": "9df2a6d93f6f0ea5ff6775dc09403872008ec3399f068668d3348438c661ee0f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/geometry-report.json",
+      "bytes": 7151,
+      "sha256": "0e1321d29091966ac1be45d71c0975e3a7d4fd123f6b9e814071ecda194f4501"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/geometry.json",
+      "bytes": 820834,
+      "sha256": "ade32dd97614a0ff1f26b4177a83d7f8c0adf05e9949aa21575f48edc870ee97"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/preparation.json",
+      "bytes": 1333,
+      "sha256": "7f6f4252b291146977863aa26124b1788a7f46ec62d8a415b6b2874322cbbe31"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/report.json",
+      "bytes": 5966,
+      "sha256": "792c5f9710901034e0c6d944da9e9dc323c646b7f31dde58f7c523039b33a0c0"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/episode/spec.json",
+      "bytes": 8400577,
+      "sha256": "3ea98e39a872f020618fa02bf81c9f9726d73e9f6965915e2dd6bb72ba5f324c"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-low/recipe.json",
+      "bytes": 13448,
+      "sha256": "5a08a9daed6ae08c040a761e84dac16f453c9a2f88ac26e1a8780c1ba6e0f832"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/capture.json",
+      "bytes": 28066909,
+      "sha256": "dccd971892884506a572c5d43f303948007007ca8e0ecab8f8d4a40c6b1e2499"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/direction-report.json",
+      "bytes": 1271,
+      "sha256": "1376c7a32a02bd43df2e4c659fb47a700818978bdd8017a630ff700981586c6e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/geometry-report.json",
+      "bytes": 7143,
+      "sha256": "e559489bb6ffaea9010881378df3c14d9ba5933372016d6203a1bd9df601cac8"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/geometry.json",
+      "bytes": 1616518,
+      "sha256": "e85279b54f1c19fdea283f0317e03377358ccae9d73fd05e9697dd9b4fb8902f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/preparation.json",
+      "bytes": 1338,
+      "sha256": "2da24d6260d088b5524fb3c2c39ec9728cca9c5560f99b7ce2147af3e1471369"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/report.json",
+      "bytes": 5959,
+      "sha256": "4cd2e65f8c609892d3c7229ea6b9d1104f422a4fedc057d80acbc382b9e088a4"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/spec.json",
+      "bytes": 9027980,
+      "sha256": "7cce3c17281bb4026d2ac7f6c5aac5644a23d338709374421666f883fb76b402"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/compiled.json",
+      "bytes": 1228600,
+      "sha256": "d838b99c6677a1c786e5506f4cab94042137c33ef7d071a34822b87c6b210b7f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/design.json",
+      "bytes": 219,
+      "sha256": "61dab3478316e507133af4a0c490aeed563cda452f86ffd580689d09834dc57e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/capture.json",
+      "bytes": 18682640,
+      "sha256": "0a013dad04a53dc363a15175706e682120ce159b70cad37b016098cf15a0b1f1"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/geometry-report.json",
+      "bytes": 7158,
+      "sha256": "311880f84465086d3bedc78b2847d4b0bf9f26e6b86925988774e499d5675d6b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/geometry.json",
+      "bytes": 810538,
+      "sha256": "f96f594b13da292f78df8f2dc03219578de7bfd23e11e6e756a25780d4c15952"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/preparation.json",
+      "bytes": 1337,
+      "sha256": "8c28d3e3ab56685259e91450a9cbe3a7a29ff5d8a61a8fadfe8ccea26097a190"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/report.json",
+      "bytes": 5969,
+      "sha256": "2e1107a0009c1c421a777a20592d124426ec94b022c42843be606fd8e21d331a"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/episode/spec.json",
+      "bytes": 9010479,
+      "sha256": "be168634a786671432897d85c386a2e0986f26a2007cf3a2ccb85b1a7e4f7f16"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/recipe.json",
+      "bytes": 13458,
+      "sha256": "f40537e3689afa3fcce3201d065bc6c8ac14a889ad03e76cfa73ee56f4e873a5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/capture.json",
+      "bytes": 29302469,
+      "sha256": "3ab7345b82d8abe81fee2b551f4b32633fa283338018790ca98afa0f3f63d79e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/direction-report.json",
+      "bytes": 1270,
+      "sha256": "6abd432ca1215663daa7b3a80c7f3febefc5929329af66627c1b1ea7eb007939"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/geometry-report.json",
+      "bytes": 7149,
+      "sha256": "1a2008828f23daa78a89ee44e8c275c87b6a0618f993525aaf109d8bc0176fb5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/geometry.json",
+      "bytes": 1593456,
+      "sha256": "b399ec1d0cb9813ec8a878e42f5b1f1abbc68fab133fef855abc9d65ef5c2309"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/preparation.json",
+      "bytes": 1343,
+      "sha256": "8b5d620070109bd3c9b41da7775731884a6e5ac3a42b92fdb1712a6f1b546e4a"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/report.json",
+      "bytes": 5960,
+      "sha256": "6f20dd629410994d4fd57ea14f4e7a3c3cd69416bad145cb8b1ae9bf9a23a6bf"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/spec.json",
+      "bytes": 10274741,
+      "sha256": "29048865d2248051cd57647e1c243ba70a1967de9c58941f76c7806f4a339ce5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/compile.log",
+      "bytes": 127,
+      "sha256": "2e04bade9e58335714b2c65dd6746c21d87538e58ef4a899b40461d2234a97d9"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/compiled.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/design.json",
+      "bytes": 344,
+      "sha256": "6bab9eb692e3a9a665e009b236a14e8ad747e4258f98d94d6b00ad32d7bcd484"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/fine/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/fine/compiled.json",
+      "bytes": 2464578,
+      "sha256": "8c2861730bdec8152f17ab7e15cef1ad1d9c9bd09dc3dec9492185539337c74b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/fine/recipe.json",
+      "bytes": 13461,
+      "sha256": "699c3fc0f5658f3a7a700e675b5d729cd696a1eabf2431bba82faab05f37d703"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/half-step/capture.json",
+      "bytes": 29306412,
+      "sha256": "2848ceda6c445e6b9e17ece3eb522d69dd1d93b66887ecd899c526396a855eb5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/half-step/check.json",
+      "bytes": 1184,
+      "sha256": "5b9ceb63fc43127727703e218166fafa2a3713b76847d54a2afc92a21dc72411"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/half-step/preparation.json",
+      "bytes": 381,
+      "sha256": "5a815b6b6e351d6d583d5a5c825caedacba8baa5c3f4c99c1aea220dd875617c"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/half-step/report.json",
+      "bytes": 5961,
+      "sha256": "6e10d700974bda4af64607c647360041b3a14b87aaf05e45433b2ad4734711c2"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/half-step/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/half-step/spec.json",
+      "bytes": 10274743,
+      "sha256": "35ac2e5cc609c0032cddb4bad92eda22e473bed3b091c2d545fbac90e2681409"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/capture.json",
+      "bytes": 66838298,
+      "sha256": "44b46ce0997c966319e463fe6b4713a6a50d2fe9605fc372b39f8dc1f7ec2b37"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/direction-report.json",
+      "bytes": 1269,
+      "sha256": "9b11a2a791dc99393d4296485b4400f71f7cae0c01ae8c76daa32b3056e3de46"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/geometry-report.json",
+      "bytes": 7148,
+      "sha256": "4a2d766069010c3e978a069eb9aaa52c138ff44489f365c5ba41cbe717456dd6"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/geometry.json",
+      "bytes": 4769422,
+      "sha256": "beefaf5e218cd1db1d3a27657e45211d3f6b7df43cd61d4ffb3098c379fd0024"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/preparation.json",
+      "bytes": 376,
+      "sha256": "d6ed0127d00cfa58470b2947ff67ddffecfd862e2d3e2d24ba033fe9641d82c9"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/report.json",
+      "bytes": 5958,
+      "sha256": "e2d2402ea0b1b80f5289bf68d080ea6552f6f208ba3efae092484e927439dae6"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/long/spec.json",
+      "bytes": 10360243,
+      "sha256": "2464a1e628be545e9843f627ec22939d86fac3ddfbc896d9ad0930e406f2b4da"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/qualification-progress.json",
+      "bytes": 3160,
+      "sha256": "0d191713a64285c88e5edcb02f14d035d94ebf35a307deed992990b3131efad1"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/qualification.json",
+      "bytes": 4152,
+      "sha256": "3ce0978dfe1c40e1d1251097259f45e965d1fc4918b1e9677eb00f2700550cc6"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/recipe.json",
+      "bytes": 13461,
+      "sha256": "9b9ee99ff84e52b732e92f53100e8494e79ff4397a251d5ab1892e73c4fe907b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/replay/capture.json",
+      "bytes": 29243689,
+      "sha256": "d9d9c9d669f3d1430c1d81178d43f751f74d12f3be5d00a468c493b155b51fc5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/replay/check.json",
+      "bytes": 896,
+      "sha256": "c5b50a27aee1453e371d4ade5fa84c6b15c1d03b333cc1cc2d88d065f1c6221d"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/replay/recording.json",
+      "bytes": 10277578,
+      "sha256": "c6b4d2d96fd29cd05c0c71ffe0a839fcc6d7137f5a2788084581c08282ef45d9"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/replay/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/README.md",
+      "bytes": 658,
+      "sha256": "0622c32c54ebe97d458112da3506a3e86c17ffb4b2b60a441ce315199fe8ecd5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/capture.json",
+      "bytes": 29359263,
+      "sha256": "e2335ce62945fc258d95f5e96d502934c0ae44525bbf61e9e95b9f63f14ab534"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/check.json",
+      "bytes": 3001,
+      "sha256": "f91cd282b3961393199d987b8eb3d6779a2f48cb0859b4901c65557c17f7de6b"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/geometry-report.json",
+      "bytes": 7163,
+      "sha256": "7a70569531119645325813d96a20edd44c9a69c04bba2b1868dc74ce74d4c508"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/geometry.json",
+      "bytes": 1601703,
+      "sha256": "8b1c805424ba09832bcfa3e42f5e54375a01e39491f72a0ba6eed6e3ecc1f927"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/preparation.json",
+      "bytes": 379,
+      "sha256": "082d8c34498abd2ff839de65912a92b47ace693c7894138ea9f63570a1d163ee"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/reverse/spec.json",
+      "bytes": 10275041,
+      "sha256": "4238fcf1927fa726bf04bf9bef855e87b30dc1b1d7be5e0fbe790cbe15be5d8d"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/capture.json",
+      "bytes": 29411716,
+      "sha256": "6a19cde42209d13f8d51c321f97b3b22c8362e8a1047ed982ed323e09defb9f2"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/check.json",
+      "bytes": 1033,
+      "sha256": "4c5ddd1949fe436ebb2ec431a0df65f14a7ed7a2adcd873905c57c7ccd65cedd"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/geometry-report.json",
+      "bytes": 7147,
+      "sha256": "23daacf199ff0ad2f517406c5cc0ba69b48084fe9ed66ebba65dad6c4ec9c799"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/geometry.json",
+      "bytes": 1649163,
+      "sha256": "add2c1a9921e4d0c68418bdec14c5af14fda5e150bccfde2071607ce1e97debc"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/preparation.json",
+      "bytes": 376,
+      "sha256": "ffb0805401a54c6d3a5951190be27902cbbad8b6621de02c37aa0225381c8e8e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/stop/spec.json",
+      "bytes": 10272041,
+      "sha256": "130dbab48144aa32355da33a278d5b9ecc466a1534b59d7f763e99087f1e12c4"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/validation-protocol.json",
+      "bytes": 2004,
+      "sha256": "534cd4168b53b92687d47b4cbd130e0e6e858a9dd429e792689f8a49fb56e450"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/prepare_contact_qualification.mjs",
+      "bytes": 1906,
+      "sha256": "fce2a4a9e02cb3c1655b06b00e1ca3c0fb4af3076182d3083f1064429856dec2"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/prepare_contact_shape_experiment.mjs",
+      "bytes": 4508,
+      "sha256": "92929d3d202f08af06528732f43d79101852522fe58613a14753c84ab34bd82f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/qualify_contact_candidate.mjs",
+      "bytes": 3218,
+      "sha256": "2a9067daaad159eb5ccf8c80b9e658dd4eec8d1d16b522ce27f974a862b735bc"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/summarize_bounded_capture.mjs",
+      "bytes": 5225,
+      "sha256": "3385f61b4898604f53a2fe7e2bfcfed484b57ae4da97cfe3e5f31559ca500667"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/summarize_contact_campaign.mjs",
+      "bytes": 2068,
+      "sha256": "10c15898a3a1aa28feb246ddb9217de354c0013083fe9d120909a91d3a865bfc"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "cause": "Default -Y clip at 10% scale, 1x speed, source start 0 has a 33-count step at 1.52s on motor 11; existing limit is 32.",
+  "shared_tests_passed": 4,
+  "browser_verified": {
+    "ten_percent": "Specific motor/joint/time/step-limit error shown; Run disabled",
+    "nine_percent": "Ready, preview successful, Run enabled",
+    "mapping_preserved": true
+  },
+  "default_amplitude": 0.03,
+  "limits_changed": false,
+  "hardware_moved_for_this_fix": false,
+  "source_sha256": {
+    "crates/sim-runtime/src/controller_refinement/trajectory_binding.rs": "176fe11bd45b24866b9aa9964dd6ee956ada6d0ff823a878770b3f63f9a9f8cd",
+    "web/motor-bench/index.html": "db7d152da15ffad472340706230f428cfd9ea9096eb630a228dce515ad0db688"
+  }
+}

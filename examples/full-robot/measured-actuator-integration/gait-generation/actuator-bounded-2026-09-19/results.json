@@ -1,0 +1,216 @@
+{
+  "simulation_only": true,
+  "scope": "Short search ranking is not promotion. Full tracking/geometry, numerical, stop, and replay checks remain separate.",
+  "journal": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/search/journal.json/state-00000000000000000016.json",
+    "sha256": "793e230d2bdae3a64fce68013408bbb0a6a097b084de6a7457231f8f81c97f05",
+    "revision": 16
+  },
+  "context_id": "0cfa4480bab54a04e57dcd8ea6bce0f3514476eb597727b2b9f6a6a4ca4b54a8",
+  "runtime": {
+    "version": 1,
+    "library_source_blake3": "eba42b4583365cf6b72f172751aa4ece0fed557bd4a3dc6b898654b8a94cb394",
+    "features": [
+      "BAYESIAN"
+    ]
+  },
+  "seed": 2301,
+  "completed_trials": 8,
+  "trials": [
+    {
+      "id": "3b5b3e82f1ecf94a3761280e006f2631e438dd44f4b3372c2e9ff2bcb4eb1ca7",
+      "method": "baseline",
+      "values": {
+        "motion_amplitude": 0.7,
+        "pace_scale": 0.35,
+        "tracking_gain": 0,
+        "velocity_lead_scale": 0
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.03752552819875322,
+      "eligible_short_screen_score": 0.03752552819875322
+    },
+    {
+      "id": "c288e07da9440727eb9da0c98764c2024a55e534a2e4f36566b9fb3b4fdd3938",
+      "method": "latin_hypercube:2301:0",
+      "values": {
+        "motion_amplitude": 0.7126905835040751,
+        "pace_scale": 0.2102836695046595,
+        "tracking_gain": 0.005343411454442948,
+        "velocity_lead_scale": 0.10912101925210638
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.027553740069993924,
+      "eligible_short_screen_score": 0.027553740069993924
+    },
+    {
+      "id": "297a74058b689d2e58724abe9b2279e30ec729b24730b1b429fd52452c31fbaf",
+      "method": "latin_hypercube:2301:1",
+      "values": {
+        "motion_amplitude": 0.986432682515084,
+        "pace_scale": 0.9358160693814471,
+        "tracking_gain": 0.11587317292808363,
+        "velocity_lead_scale": 0.0014325552935786413
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.03379847191605893,
+      "eligible_short_screen_score": 0.03379847191605893
+    },
+    {
+      "id": "c71dfd9bd6d3b56b3eb476180d8aa30130208461ccc2e7a8e9555299d1462b02",
+      "method": "latin_hypercube:2301:2",
+      "values": {
+        "motion_amplitude": 0.5149129756203862,
+        "pace_scale": 0.7380477817437462,
+        "tracking_gain": -0.11194162940401553,
+        "velocity_lead_scale": 0.1290976720512413
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.025640198857503956,
+      "eligible_short_screen_score": 0.025640198857503956
+    },
+    {
+      "id": "7a30258622e16d59b1b0a919880756860f42fd087b54a0f4ae4c9190cd372cfb",
+      "method": "latin_hypercube:2301:3",
+      "values": {
+        "motion_amplitude": 0.842718252859839,
+        "pace_scale": 0.6589502369086878,
+        "tracking_gain": -0.3296523504415434,
+        "velocity_lead_scale": 0.1712712841037487
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.03720958283497822,
+      "eligible_short_screen_score": 0.03720958283497822
+    },
+    {
+      "id": "b6fb001a6e342928367e0fb6ac17fec0a2e7caad2438a80b492ade51a81bcc55",
+      "method": "latin_hypercube:2301:4",
+      "values": {
+        "motion_amplitude": 0.6011996072205128,
+        "pace_scale": 0.48744357562099916,
+        "tracking_gain": -0.36369131638917773,
+        "velocity_lead_scale": 0.04694753513310246
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.01906120381159452,
+      "eligible_short_screen_score": 0.01906120381159452
+    },
+    {
+      "id": "e8fdf497fb0cc357c7c94a81ea83293fdbdf740f43355a9f483037054f8d518d",
+      "method": "egobox-ego-0.38.1 / constrained LogEI / constant-mean Matern-5/2 GP / normalized inputs / zero constraint tolerance:2307",
+      "values": {
+        "motion_amplitude": 0.7827122321206335,
+        "pace_scale": 0.25953380977826224,
+        "tracking_gain": -0.1735207658076161,
+        "velocity_lead_scale": 1.214306433183765e-18
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.033066957773446405,
+      "eligible_short_screen_score": 0.033066957773446405
+    },
+    {
+      "id": "0c9749ccba0682984b426be674678489ac95ce91dccecb7ccf1d9f0de8591e2a",
+      "method": "egobox-ego-0.38.1 / constrained LogEI / constant-mean Matern-5/2 GP / normalized inputs / zero constraint tolerance:2308",
+      "values": {
+        "motion_amplitude": 0.4852746798636671,
+        "pace_scale": 0.8856188675049262,
+        "tracking_gain": -0.1635111758436325,
+        "velocity_lead_scale": 0.17572987659639283
+      },
+      "complete": true,
+      "preparation_failure": null,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.016258726800777352,
+      "eligible_short_screen_score": 0.016258726800777352
+    }
+  ],
+  "captured": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/baseline-10s/geometry-report.json",
+      "sha256": "7d7d37ecbf794a7395041ae2b09b8ea8fcb06500ade856cc3b8d12b400ea2701",
+      "horizon_s": 10,
+      "net_speed_m_s": 0.03990558842213446,
+      "worst_motor_rms_degrees": 2.162017068357522,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": true,
+        "travel": true,
+        "foot_lift": false,
+        "sampled_collision": true
+      },
+      "passes_all_finalist_checks": false
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/trial2-10s/geometry-report.json",
+      "sha256": "c34a0a264abe149be95aa422356f4e76022dc220cba67d7c904803788568b675",
+      "horizon_s": 10,
+      "net_speed_m_s": 0.028812196054002055,
+      "worst_motor_rms_degrees": 2.3792648270717818,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": true,
+        "travel": true,
+        "foot_lift": false,
+        "sampled_collision": true
+      },
+      "passes_all_finalist_checks": false
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/slow-full-stride-10s/geometry-report.json",
+      "sha256": "e3c149bb8f7470322a0572327328ad3ed75f3ed34465bd8c28bcc2b154d8306f",
+      "horizon_s": 10,
+      "net_speed_m_s": 0.03272833337620617,
+      "worst_motor_rms_degrees": 2.4232125569380747,
+      "checks": {
+        "completed": true,
+        "not_fallen": true,
+        "upright": true,
+        "command_bounds": true,
+        "tracking": false,
+        "finalist_horizon": true,
+        "travel": true,
+        "foot_lift": true,
+        "sampled_collision": true
+      },
+      "passes_all_finalist_checks": false
+    }
+  ],
+  "fastest_short_screen": {
+    "id": "3b5b3e82f1ecf94a3761280e006f2631e438dd44f4b3372c2e9ff2bcb4eb1ca7",
+    "method": "baseline",
+    "values": {
+      "motion_amplitude": 0.7,
+      "pace_scale": 0.35,
+      "tracking_gain": 0,
+      "velocity_lead_scale": 0
+    },
+    "complete": true,
+    "preparation_failure": null,
+    "termination_reasons": [],
+    "net_speed_m_s": 0.03752552819875322,
+    "eligible_short_screen_score": 0.03752552819875322
+  },
+  "promoted_candidate": null
+}

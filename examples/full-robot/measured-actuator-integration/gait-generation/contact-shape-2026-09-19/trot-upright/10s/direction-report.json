@@ -1,0 +1,35 @@
+{
+  "mode": "forward",
+  "simulation_only": true,
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/trot-upright/10s/capture.json",
+      "sha256": "dccd971892884506a572c5d43f303948007007ca8e0ecab8f8d4a40c6b1e2499"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/matched-baseline-5s/capture.json",
+      "sha256": "d4f71dee84344307f2865df2a2484b532118f97e1cec07b88bf95b8615c19117"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/qualification-protocol.json",
+      "sha256": "0f7c9143e4db595cca4b156482bdbc873588cc5ab8585bc63a9e07851e7285cb"
+    }
+  ],
+  "metrics": {
+    "signed_forward_distance_m": 0.9688534121645871,
+    "signed_forward_speed_m_s": 0.09688534121645871,
+    "forward_alignment": 0.9994917391405642,
+    "matched_baseline_forward_speed_m_s": 0.03230423341985793,
+    "speed_ratio_to_matched_baseline": 2.999153081803258
+  },
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "horizon": true,
+    "forward_command": true,
+    "forward_speed": false,
+    "alignment": true,
+    "speed_ratio": true
+  },
+  "pass": false
+}

@@ -1,0 +1,25 @@
+{
+  "source": "User stated: 12.6 v, up to 3 amps",
+  "nominal_voltage_v": 12.6,
+  "rated_maximum_current_a": 10.0,
+  "model": "WANPTEK DPS3010U",
+  "actual_current_measured": false,
+  "current_limit_setting_independently_verified": false,
+  "electrical_sensing": "Servo voltage and uncalibrated raw servo current only",
+  "observed_all_nine_50pct_minimum_servo_voltage_v": 9.1,
+  "higher_drive_stages": "Short 50% comparison completed at 3.5 A; higher or longer stress held because minimum motor voltage remains 9.1 V.",
+  "model_and_single_daisy_chain_confirmed_by_user": true,
+  "power_distribution": "One daisy chain for all nine motors",
+  "current_limit_setting_a_user_report": 3.5,
+  "rating_source": "https://www.wanptek.com/productinfo/1171926.html",
+  "rating_source_note": "Manufacturer lists DPS3010U 0-30 V, 0-10 A, 300 W. This is not a verified current rating for the bench leads, servo connectors or daisy-chain power path.",
+  "setting_confirmation": "User confirmed increasing the limit following the proposed 3.0 to 3.5 A change; not independently read from display.",
+  "latest_trial": "extended-250-30s-block-03",
+  "observed_all_nine_50pct_minimum_servo_voltage_at_3p5a_v": 9.1,
+  "user_display_observation_25pct": {
+    "current_a": 0.86,
+    "mode": "CV",
+    "source_file": "extended-supply-display-observation.json",
+    "synchronized_measurement": false
+  }
+}

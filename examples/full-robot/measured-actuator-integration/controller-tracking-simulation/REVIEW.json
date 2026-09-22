@@ -1,0 +1,118 @@
+{
+  "simulation_only": true,
+  "hardware_changed": false,
+  "promoted_to_cad_or_live_viewer": false,
+  "reason_not_promoted": "Original full gait remains poorly tracked; provisional models and disconnected hardware. Reference conditioning changes the gait and requires whole-robot validation.",
+  "gain_configurations": 119,
+  "validation_cases": 160,
+  "validation_simulation_failures": 0,
+  "numerical_checks_pass": true,
+  "exact_replays_pass": true,
+  "validation_regressions": [
+    {
+      "name": "baseline-hold-nominal-selected-100",
+      "rms_increase_degrees": 0.09626901809173694
+    },
+    {
+      "name": "baseline-hold-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.09694579217339017
+    },
+    {
+      "name": "baseline-gait-nominal-selected-100",
+      "rms_increase_degrees": 0.03460611955100201
+    },
+    {
+      "name": "baseline-full-gait-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.09983023480329578
+    },
+    {
+      "name": "id10-hold-nominal-selected-100",
+      "rms_increase_degrees": 0.06108223180271777
+    },
+    {
+      "name": "id10-hold-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.051912117915805744
+    },
+    {
+      "name": "id10-gait-nominal-selected-100",
+      "rms_increase_degrees": 0.013180021865545344
+    },
+    {
+      "name": "id10-gait-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.024648222080240867
+    },
+    {
+      "name": "id10-full-gait-nominal-selected-100",
+      "rms_increase_degrees": 0.290155105220693
+    },
+    {
+      "name": "id10-full-gait-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.2384034814267686
+    },
+    {
+      "name": "id11-hold-nominal-selected-100",
+      "rms_increase_degrees": 0.09434365394577249
+    },
+    {
+      "name": "id11-hold-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.07147076941346042
+    },
+    {
+      "name": "id12-hold-nominal-selected-100",
+      "rms_increase_degrees": 0.09494882657895953
+    },
+    {
+      "name": "id12-hold-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.06947813272426195
+    },
+    {
+      "name": "id12-gait-nominal-selected-100",
+      "rms_increase_degrees": 0.05229212535129735
+    },
+    {
+      "name": "id12-gait-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 0.12856380447132287
+    },
+    {
+      "name": "id12-full-gait-nominal-selected-100",
+      "rms_increase_degrees": 3.388193632230509
+    },
+    {
+      "name": "id12-full-gait-low-voltage-delay-load-selected-100",
+      "rms_increase_degrees": 2.024868264167571
+    },
+    {
+      "name": "baseline-hold-nominal-selected-350",
+      "rms_increase_degrees": 0.0032372899996018223
+    },
+    {
+      "name": "id10-hold-nominal-selected-350",
+      "rms_increase_degrees": 0.0046737115952239505
+    },
+    {
+      "name": "id10-hold-low-voltage-delay-load-selected-350",
+      "rms_increase_degrees": 0.001767686818170966
+    },
+    {
+      "name": "id11-hold-nominal-selected-350",
+      "rms_increase_degrees": 0.001256669911412267
+    },
+    {
+      "name": "id12-hold-nominal-selected-350",
+      "rms_increase_degrees": 0.001860166131863017
+    },
+    {
+      "name": "id12-full-gait-nominal-selected-350",
+      "rms_increase_degrees": 0.06273035316159792
+    },
+    {
+      "name": "id12-full-gait-low-voltage-delay-load-selected-350",
+      "rms_increase_degrees": 0.0320034213102236
+    }
+  ],
+  "runtime_source_identities": [
+    "7ec85fbc878322faa09b8f4503440f4c4b356450d52e8d580f92614b80a16047"
+  ],
+  "source_snapshot": "source/",
+  "note": "Historical inputs use the first campaign format. Current tuner also binds resume to runtime and tuner source identity. Plotting script is analysis-only; all controller/plant execution is Rust."
+}

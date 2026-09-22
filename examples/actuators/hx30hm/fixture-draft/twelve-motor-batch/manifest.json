@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "total_holders": 12,
+  "total_cradles": 12,
+  "total_caps": 12,
+  "plate_count": 3,
+  "units": "mm",
+  "source_sha256": "3eee8a2bd17574820b193fa1a7fa93dfa4deea51154fbca452d0dfb1a735c8bf",
+  "generator_sha256": "8e768c11e589f429f04b384d0b57667f52f4ab0f5c617ed9f3549f3ac352005e",
+  "status": "geometry prepared; not sliced or sent to printer",
+  "plates": [
+    {
+      "file": "plate-1-motors-01-04.3mf",
+      "objects": 8,
+      "cradles": 4,
+      "caps": 4,
+      "xy_min_mm": [
+        20.0,
+        20.0
+      ],
+      "xy_max_mm": [
+        230.0,
+        287.0
+      ],
+      "nonoverlapping": true,
+      "closed_meshes": true,
+      "sha256": "5090a56249b01b269851bccb35e0a5702822541a46f0c91e6380459674697ad7"
+    },
+    {
+      "file": "plate-2-motors-05-08.3mf",
+      "objects": 8,
+      "cradles": 4,
+      "caps": 4,
+      "xy_min_mm": [
+        20.0,
+        20.0
+      ],
+      "xy_max_mm": [
+        230.0,
+        287.0
+      ],
+      "nonoverlapping": true,
+      "closed_meshes": true,
+      "sha256": "1098a679369f46971493bc830b82b0369da264d33baaa019e12aca9aad1a386c"
+    },
+    {
+      "file": "plate-3-motors-09-12.3mf",
+      "objects": 8,
+      "cradles": 4,
+      "caps": 4,
+      "xy_min_mm": [
+        20.0,
+        20.0
+      ],
+      "xy_max_mm": [
+        230.0,
+        287.0
+      ],
+      "nonoverlapping": true,
+      "closed_meshes": true,
+      "sha256": "08fc04de9c37e782831fe3cd325eeb991b7c1b15129cdba317f481cce0e9c7f7"
+    }
+  ]
+}

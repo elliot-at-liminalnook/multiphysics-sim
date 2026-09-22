@@ -1,0 +1,49 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 12s
+     Running tests/actuator_group.rs (target/debug/deps/actuator_group-78a4b229a8f659dc)
+
+running 4 tests
+test zero_resistance_group_matches_existing_single_motor_fixture ... FAILED
+test ideal_supply_keeps_independent_axes_identical ... FAILED
+test all_axes_load_the_same_supply_with_current_and_power_accounting ... FAILED
+test conflicting_conditions_and_ambiguous_axis_keys_are_rejected ... ok
+
+failures:
+
+---- zero_resistance_group_matches_existing_single_motor_fixture stdout ----
+
+thread 'zero_resistance_group_matches_existing_single_motor_fixture' (1216393) panicked at crates/sim-runtime/tests/actuator_group.rs:94:59:
+called `Result::unwrap()` on an `Err` value: "port PortId(2v1) appears in more than one connection"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- ideal_supply_keeps_independent_axes_identical stdout ----
+
+thread 'ideal_supply_keeps_independent_axes_identical' (1216392) panicked at crates/sim-runtime/tests/actuator_group.rs:34:59:
+called `Result::unwrap()` on an `Err` value: "port PortId(2v1) appears in more than one connection"
+
+---- all_axes_load_the_same_supply_with_current_and_power_accounting stdout ----
+
+thread 'all_axes_load_the_same_supply_with_current_and_power_accounting' (1216390) panicked at crates/sim-runtime/tests/actuator_group.rs:34:59:
+called `Result::unwrap()` on an `Err` value: "port PortId(2v1) appears in more than one connection"
+
+
+failures:
+    all_axes_load_the_same_supply_with_current_and_power_accounting
+    ideal_supply_keeps_independent_axes_identical
+    zero_resistance_group_matches_existing_single_motor_fixture
+
+test result: FAILED. 1 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+error: test failed, to rerun pass `-p sim-runtime --test actuator_group`

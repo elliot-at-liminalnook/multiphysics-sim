@@ -1,0 +1,143 @@
+{
+  "scope": "Matched two-second controller-authority pilot. Same four gait settings; raw CAD physical equality and preserved runtime definitions verified in preparation.json. No long-horizon or hardware conclusion.",
+  "sources": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/pilot-journal/state-00000000000000000008.json",
+      "sha256": "3450c899f20ce8507feae0fe7809600bc58350ee31f9c251e3d0ddf4a887e62d"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/pilot-journal/state-00000000000000000008.json",
+      "sha256": "ddc229ba6159c8d3ff01daf78af4f4f19cd706f694398f4d5279164709793340"
+    }
+  ],
+  "rows": [
+    {
+      "values": {
+        "pace_scale": 1,
+        "tracking_gain": -0.45661383205104644
+      },
+      "pwm_350": {
+        "displacement_xy_m": [
+          0.16866014130506585,
+          0.12917336489552134
+        ],
+        "net_distance_m": 0.21244293695831895,
+        "net_speed_m_s": 0.10622146847915948,
+        "progress_reward_m": 0.0009312919578731982,
+        "body_up_z": 0.9984536187240276,
+        "hull_floor_clearance_m": 0.25997628466153194,
+        "body_floor_contact": false,
+        "fallen": false
+      },
+      "pwm_1000": {
+        "displacement_xy_m": [
+          0.4640131298386951,
+          0.6198490528557066
+        ],
+        "net_distance_m": 0.7742874356392581,
+        "net_speed_m_s": 0.38714371781962903,
+        "progress_reward_m": 0.00655240396761414,
+        "body_up_z": 0.9999668929553859,
+        "hull_floor_clearance_m": 0.2867851925880817,
+        "body_floor_contact": false,
+        "fallen": false
+      }
+    },
+    {
+      "values": {
+        "pace_scale": 0.7462405523838223,
+        "tracking_gain": 0.08163164463312578
+      },
+      "pwm_350": {
+        "displacement_xy_m": [
+          0.17228778363960184,
+          0.14951813144303108
+        ],
+        "net_distance_m": 0.22812003862366362,
+        "net_speed_m_s": 0.11406001931183181,
+        "progress_reward_m": 0.001280896989216157,
+        "body_up_z": 0.998718441974879,
+        "hull_floor_clearance_m": 0.2763725912514409,
+        "body_floor_contact": false,
+        "fallen": false
+      },
+      "pwm_1000": {
+        "displacement_xy_m": [
+          0.2555258308577744,
+          0.2753113982031096
+        ],
+        "net_distance_m": 0.3756192436711771,
+        "net_speed_m_s": 0.18780962183558855,
+        "progress_reward_m": 0.001223636795631089,
+        "body_up_z": 0.9994056712989687,
+        "hull_floor_clearance_m": 0.29459740112404076,
+        "body_floor_contact": false,
+        "fallen": false
+      }
+    },
+    {
+      "values": {
+        "pace_scale": 0.9984562307480702,
+        "tracking_gain": 0.666220387796852
+      },
+      "pwm_350": {
+        "displacement_xy_m": [
+          0.13981776859642914,
+          0.1350956720842008
+        ],
+        "net_distance_m": 0.1944218327019024,
+        "net_speed_m_s": 0.0972109163509512,
+        "progress_reward_m": 0.0008507913658105937,
+        "body_up_z": 0.9987005644095174,
+        "hull_floor_clearance_m": 0.27579554015295626,
+        "body_floor_contact": false,
+        "fallen": false
+      },
+      "pwm_1000": {
+        "displacement_xy_m": [
+          0.22507648357547816,
+          0.299352554821603
+        ],
+        "net_distance_m": 0.37452820392718533,
+        "net_speed_m_s": 0.18726410196359267,
+        "progress_reward_m": 0.0022311730558696174,
+        "body_up_z": 0.9998882170113135,
+        "hull_floor_clearance_m": 0.29418805713781476,
+        "body_floor_contact": false,
+        "fallen": false
+      }
+    },
+    {
+      "values": {
+        "pace_scale": 0.338652455153911,
+        "tracking_gain": -0.6939302676715838
+      },
+      "pwm_350": {
+        "displacement_xy_m": [
+          0.18253960907532113,
+          0.17320105823967377
+        ],
+        "net_distance_m": 0.25163329560436537,
+        "net_speed_m_s": 0.12581664780218269,
+        "progress_reward_m": 0.0025287395543007463,
+        "body_up_z": 0.9968910709295753,
+        "hull_floor_clearance_m": 0.2772320561351195,
+        "body_floor_contact": false,
+        "fallen": false
+      },
+      "pwm_1000": {
+        "displacement_xy_m": [
+          0.18316559223963663,
+          0.20964987947088273
+        ],
+        "net_distance_m": 0.2783930784747575,
+        "net_speed_m_s": 0.13919653923737876,
+        "progress_reward_m": 0.004573273878835826,
+        "body_up_z": 0.9938796728545815,
+        "hull_floor_clearance_m": 0.29755053149212074,
+        "body_floor_contact": false,
+        "fallen": false
+      }
+    }
+  ]
+}

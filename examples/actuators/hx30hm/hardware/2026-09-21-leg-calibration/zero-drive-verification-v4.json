@@ -1,0 +1,104 @@
+{
+  "verification": "STOP/readback and zero-drive independent watchdog checks only; no jog/PWM nonzero commands",
+  "unix_ms": 1790035005043,
+  "inspect": {
+    "1": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 4.368777283898306,
+      "position_raw": 2848,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 35,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "2": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 1.2026409377023426,
+      "position_raw": 784,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 33,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "3": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 4.364175341534649,
+      "position_raw": 2845,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 35,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    }
+  },
+  "axes": {
+    "1": {
+      "enable_message": "Ready for deliberate jogs. Zero-drive watchdogs verified; mechanical stopping distance remains unqualified.",
+      "stop_message": "Torque off and stationary encoder verified.",
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 4.368777283898306,
+        "position_raw": 2848,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 35,
+        "voltage_raw": 120,
+        "voltage_v": 12.0
+      }
+    },
+    "2": {
+      "enable_message": "Ready for deliberate jogs. Zero-drive watchdogs verified; mechanical stopping distance remains unqualified.",
+      "stop_message": "Torque off and stationary encoder verified.",
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 1.2026409377023426,
+        "position_raw": 784,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 33,
+        "voltage_raw": 120,
+        "voltage_v": 12.0
+      }
+    },
+    "3": {
+      "enable_message": "Ready for deliberate jogs. Zero-drive watchdogs verified; mechanical stopping distance remains unqualified.",
+      "stop_message": "Torque off and stationary encoder verified.",
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 4.364175341534649,
+        "position_raw": 2845,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 34,
+        "voltage_raw": 120,
+        "voltage_v": 12.0
+      }
+    }
+  }
+}

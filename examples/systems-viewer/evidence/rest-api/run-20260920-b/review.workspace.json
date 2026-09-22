@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "description_id": "9bee4165ea081b9edf4ea7d0eed7f2c2b78fad38c94360ead9075ede8082e812",
+  "annotations": {
+    "component/example/motor-thermal/ambient": {
+      "target": {
+        "kind": "component",
+        "id": "example/motor-thermal/ambient"
+      },
+      "label": null,
+      "text": "REST acceptance note"
+    }
+  },
+  "groups": {},
+  "views": {
+    "presentation/view/7ee06ece75d3825b0a98040b5c43b9a8421e53c4ebd16a1e1ac9231f6c2e6447": {
+      "state": {
+        "version": 1,
+        "description_id": "presentation/view/7ee06ece75d3825b0a98040b5c43b9a8421e53c4ebd16a1e1ac9231f6c2e6447",
+        "revision": 0,
+        "positions": {
+          "example/motor-thermal/ambient": {
+            "x": 896.0,
+            "y": 272.0
+          },
+          "example/motor-thermal/case": {
+            "x": 448.0,
+            "y": 0.0
+          },
+          "example/motor-thermal/cooling": {
+            "x": 896.0,
+            "y": 0.0
+          },
+          "example/motor-thermal/ground": {
+            "x": 0.0,
+            "y": 512.0
+          },
+          "example/motor-thermal/motor": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "example/motor-thermal/rotor": {
+            "x": 448.0,
+            "y": 272.0
+          },
+          "example/motor-thermal/supply": {
+            "x": 0.0,
+            "y": 272.0
+          }
+        },
+        "pinned": [],
+        "collapsed": [],
+        "camera": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "zoom": 1.0,
+        "plot_observables": []
+      },
+      "selected": {
+        "Component": "example/motor-thermal/case"
+      }
+    }
+  },
+  "collapsed": [],
+  "focus": null,
+  "dimmed_domains": [],
+  "next_group": 1
+}

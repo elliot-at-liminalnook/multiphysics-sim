@@ -1,0 +1,125 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4m 29s
+     Running unittests src/lib.rs (target/debug/deps/sim_domain_robot-8362ca84ab519279)
+
+running 30 tests
+test articulated::embedding::factor_blocks::tests::repartitions_every_matrix_and_never_discards_tiny_couplings ... ok
+test effective_servo::optimization_tests::extended_penalty_keeps_physical_feasibility_and_free_backdrive ... ok
+test effective_servo::optimization_tests::moving_reference_realizes_feedforward_and_feedback_without_bypassing_limits ... ok
+test math::rotation_motion_tests::angular_rates_match_matrix_derivatives_at_zero_and_finite_rotations ... ok
+test effective_servo::command::tests::feedforward_can_exceed_command_bounds_while_pose_and_torque_remain_admissible ... ok
+test articulated::broad_phase_tests::moving_sample_bounds_preserve_every_point_box_hit_and_order ... ok
+test motion_capability::tests::affine_force_load_map_matches_moments_joint_work_and_force_derivatives ... ok
+test articulated::prepared::exclusion_tests::exclusion_cache_preserves_pair_priority_and_refreshes_after_model_edits ... ok
+test motion_capability::tests::constrained_pair_transfers_load_for_moment_and_rejects_tensile_support ... ok
+test motion_capability::tests::constrained_support_matches_analytic_friction_cone_projection ... ok
+test articulated::prepared::exclusion_tests::joint_exclusion_follows_translation_rotation_and_preserves_outer_contacts ... ok
+test motion_capability::tests::coupled_transmission_bound_satisfies_velocity_and_active_rate_constraint ... ok
+test motion_capability::tests::constrained_support_retains_balance_regularization_and_disabled_points ... ok
+test motion_capability::tests::force_jacobian_and_cone_residuals_are_physical ... ok
+test contract::tests::separates_authored_properties_defaults_and_unmodeled_evidence ... ok
+test contract::tests::merged_members_resolve_but_ambiguous_joint_references_do_not ... ok
+test motion_capability::tests::point_support_matches_static_balance_and_identifies_unsupported_moment ... ok
+test motion_capability::tests::rejects_unreachable_singular_and_redundant_cases ... ok
+test contract::tests::stable_ids_preserve_topology_across_renaming_and_reordering ... ok
+test contract::tests::keeps_loop_and_transmission_relations_and_rejects_dangling_references ... ok
+test motion_capability::tests::weighted_support_uses_availability_and_disables_zero_weight_points ... ok
+test sdf::refinement_tests::local_detail_preserves_parent_and_blends_value_and_gradient ... ok
+test sdf::refinement_tests::invalid_or_overlapping_detail_cannot_disable_geometry_silently ... ok
+test sdf::tests::contact_budget_retains_thin_foot_and_all_support_extrema ... ok
+test sdf::tests::box_distance_and_gradient ... ok
+test sdf::band_tests::rotating_boundary_samples_remain_eligible_for_collision ... ok
+test actuator_audit::tests::stall_matches_independent_electrical_and_torque_balance ... ok
+test actuator_audit::tests::stall_includes_temperature_and_driver_foldback ... ok
+test motion_capability::tests::joint_load_and_speed_search_reaches_analytic_limit_missed_by_equal_allocation ... ok
+test articulated::embedding::factor_blocks::factor_tests::block_least_squares_matches_whole_matrix_and_keeps_global_rank_threshold ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/embedded_motor.rs (target/debug/deps/embedded_motor-026b60e210a42cc7)
+
+running 16 tests
+test newton_failure_audit_is_time_scoped_and_does_not_change_the_failure ... ok
+test explicit_auxiliary_rates_resolve_small_changes_at_nonzero_angle ... ok
+test registered_event_modes_initialize_and_release_without_velocity_impulses ... ok
+test controller_sample_reuse_requires_cross_step_reuse_and_preserves_legacy_serialization ... ok
+test unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation ... ok
+test accepted_contact_trace_uses_original_endpoint_forces_without_changing_motion ... ok
+test cross_step_workspace_rolls_back_and_refreshes_for_timestep_changes ... ok
+test registered_servo_preserves_quantization_deadband_delay_and_saturation ... ok
+test driver_binding_and_boundary_validation_are_explicit ... ok
+test motor_bindings_boundaries_and_combined_failure_fail_closed ... ok
+test fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency ... ok
+test scheduled_servo_drives_motor_and_failed_interval_does_not_advance_controller ... ok
+test servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run ... ok
+test eventful_motor_locates_engagement_and_matches_piecewise_linear_motion ... ok
+test driver_feedback_matches_independent_loaded_motor_with_series_drop_and_foldback ... ok
+test registered_motor_and_mechanics_match_independent_linear_circuit ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running unittests src/lib.rs (target/debug/deps/sim_solve-54d18db13ae4dc97)
+
+running 42 tests
+test affine_response::tests::residuals_expose_non_affine_response ... ok
+test affine_response::tests::identifies_response_and_respects_unit_changes ... ok
+test coloring::disjoint_tests::nonlinear_grouped_probes_match_individual_columns ... ok
+test affine_feasibility::tests::separates_unrepresentable_balance_from_rank_deficiency_and_box_limits ... ok
+test derivative_audit::tests::analytic_polynomial_has_second_order_remainder_and_converging_slope ... ok
+test domain_restore::tests::restores_a_local_bracket_without_claiming_other_valid_intervals_are_absent ... ok
+test derivative_audit::tests::discontinuity_is_exposed_and_invalid_probes_are_rejected ... ok
+test domain_restore::tests::invalid_references_inputs_and_fatal_errors_are_not_hidden ... ok
+test equality_dogleg::tests::whitened_constraints_recover_a_direction_lost_by_normal_equations ... ok
+test equality_dogleg::tests::infeasible_bounds_and_evaluation_budget_never_report_convergence ... ok
+test equality_dogleg::tests::refinement_closes_ill_conditioned_original_equations ... ok
+test equality_dogleg::tests::equality_prevents_trading_feasibility_for_tracking ... ok
+test equality_dogleg::tests::redundant_consistent_constraints_and_inconsistent_constraints_are_distinct ... ok
+test coloring::disjoint_tests::cached_colored_solves_recheck_changed_nonlinear_equations ... FAILED
+test equality_dogleg::tests::nonlinear_manifold_requires_both_stationarity_and_feasibility ... ok
+test inequality_augmented_lagrangian::tests::hard_evaluation_budget_counts_every_call ... ok
+test equality_dogleg::tests::exact_penalty_globalization_solves_nonlinear_and_linear_constraints ... ok
+test inequality_augmented_lagrangian::tests::active_inequality_recovers_constrained_minimum_and_multiplier ... ok
+test inequality_augmented_lagrangian::tests::inactive_constraints_leave_objective_minimum_free ... ok
+test inequality_augmented_lagrangian::tests::rejects_invalid_controls_and_nonfinite_inequalities ... ok
+test inequality_augmented_lagrangian::tests::nonlinear_disk_boundary_is_satisfied ... ok
+test inequality_augmented_lagrangian::tests::stationary_fixed_infeasible_point_is_never_success ... ok
+test inequality_augmented_lagrangian::tests::split_outer_solve_reproduces_uninterrupted_values_multipliers_and_steps ... ok
+test inequality_barrier::tests::exact_residuals_and_strict_domain ... ok
+test inequality_augmented_lagrangian::tests::supplied_inequality_derivatives_enforce_constraint_and_count_both_callbacks ... ok
+test least_squares::tests::active_and_fixed_bounds_do_not_imply_residual_feasibility ... ok
+test inequality_barrier::tests::unsafe_trials_are_rejected_and_interior_stationary_point_is_reached ... ok
+test least_squares::tests::derivative_refinement_recovers_from_an_aliased_cost_gradient ... ok
+test least_squares::tests::coupled_nonlinear_fit_and_unit_scaling ... ok
+test least_squares::tests::hessian_scaling_resolves_independent_stiff_and_soft_directions ... ok
+test least_squares::tests::mixed_jacobian_scales_columns_preserves_fixed_variables_and_counts_calls ... ok
+test least_squares::tests::rejects_invalid_trials_and_honors_evaluation_budget ... ok
+test least_squares::tests::unmodified_initial_value_keeps_exact_residual_pair ... ok
+test pulse_response::tests::pulse_integral_continuity_symmetry_and_asymptote ... ok
+test tests::scaled_secant_is_satisfied_without_mutating_snapshot ... ok
+test tests::solves_nonlinear_system ... ok
+test tests::tracked_matrix_uses_the_factorizations_duplicate_sum_order ... ok
+test uncertainty::tests::rejects_degenerate_or_incomplete_calibration_data ... ok
+test uncertainty::tests::scales_minimize_gaussian_nll_and_preserve_units ... ok
+test tests::direct_csc_matches_triplet_constructor_bits_for_duplicates_zeros_and_empty_columns ... ok
+test tests::unsafe_or_exhausted_secants_request_fresh_derivatives ... ok
+test pulse_response::tests::recovers_known_dynamics_from_irregular_samples_and_rejects_flat_data ... ok
+
+failures:
+
+---- coloring::disjoint_tests::cached_colored_solves_recheck_changed_nonlinear_equations stdout ----
+
+thread 'coloring::disjoint_tests::cached_colored_solves_recheck_changed_nonlinear_equations' (3069385) panicked at crates/sim-solve/src/coloring.rs:64:15:
+called `Result::unwrap()` on an `Err` value: NotConverged { iterations: 18, residual: 3.855205488179081e-9 }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    coloring::disjoint_tests::cached_colored_solves_recheck_changed_nonlinear_equations
+
+test result: FAILED. 41 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p sim-solve --lib`

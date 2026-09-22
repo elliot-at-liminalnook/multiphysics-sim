@@ -1,0 +1,161 @@
+{
+  "scope": "Read-only diagnostic; loaded means modeled foot force > 1 N, not a real measurement.",
+  "motors": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "bias_degrees": -0.11801048138272742,
+      "variation_rms_degrees": 0.4902463680230902,
+      "loaded": {
+        "samples": 359,
+        "rms_degrees": 0.5329370677946781
+      },
+      "unloaded": {
+        "samples": 92,
+        "rms_degrees": 0.37170272300853036
+      }
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "bias_degrees": 0.14748460792823198,
+      "variation_rms_degrees": 0.12262325764783949,
+      "loaded": {
+        "samples": 359,
+        "rms_degrees": 0.20561514931143143
+      },
+      "unloaded": {
+        "samples": 92,
+        "rms_degrees": 0.12396577799102293
+      }
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "bias_degrees": 1.5074713005796323,
+      "variation_rms_degrees": 1.5497896895379113,
+      "loaded": {
+        "samples": 359,
+        "rms_degrees": 2.4153728057052826
+      },
+      "unloaded": {
+        "samples": 92,
+        "rms_degrees": 0.3859216909324122
+      }
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "bias_degrees": -0.0015686790263034541,
+      "variation_rms_degrees": 0.43926118356437344,
+      "loaded": {
+        "samples": 331,
+        "rms_degrees": 0.48207650425333887
+      },
+      "unloaded": {
+        "samples": 120,
+        "rms_degrees": 0.29008730425476464
+      }
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "bias_degrees": 0.2756914943767414,
+      "variation_rms_degrees": 0.5521328350553698,
+      "loaded": {
+        "samples": 331,
+        "rms_degrees": 0.6607570160200906
+      },
+      "unloaded": {
+        "samples": 120,
+        "rms_degrees": 0.4765476696071013
+      }
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "bias_degrees": 0.7138676737936284,
+      "variation_rms_degrees": 0.7461458984589969,
+      "loaded": {
+        "samples": 331,
+        "rms_degrees": 1.1935391656629306
+      },
+      "unloaded": {
+        "samples": 120,
+        "rms_degrees": 0.27985638713710814
+      }
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "bias_degrees": 0.09610772451881139,
+      "variation_rms_degrees": 0.5514371429484451,
+      "loaded": {
+        "samples": 312,
+        "rms_degrees": 0.6431341266399723
+      },
+      "unloaded": {
+        "samples": 139,
+        "rms_degrees": 0.2969538140257516
+      }
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "bias_degrees": 0.418922628565481,
+      "variation_rms_degrees": 0.6280082587870743,
+      "loaded": {
+        "samples": 312,
+        "rms_degrees": 0.89439008711518
+      },
+      "unloaded": {
+        "samples": 139,
+        "rms_degrees": 0.23137596628676896
+      }
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "bias_degrees": 0.9009797083498918,
+      "variation_rms_degrees": 0.8568396794718698,
+      "loaded": {
+        "samples": 312,
+        "rms_degrees": 1.4796772361457513
+      },
+      "unloaded": {
+        "samples": 139,
+        "rms_degrees": 0.31862549984271205
+      }
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "bias_degrees": 0.003167972914863637,
+      "variation_rms_degrees": 0.3909402546608989,
+      "loaded": {
+        "samples": 296,
+        "rms_degrees": 0.4308116349898215
+      },
+      "unloaded": {
+        "samples": 155,
+        "rms_degrees": 0.3004897397247791
+      }
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "bias_degrees": -0.03735279345467897,
+      "variation_rms_degrees": 0.14399386805218642,
+      "loaded": {
+        "samples": 296,
+        "rms_degrees": 0.14983498994826686
+      },
+      "unloaded": {
+        "samples": 155,
+        "rms_degrees": 0.14668451212747738
+      }
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "bias_degrees": 1.4390263910312788,
+      "variation_rms_degrees": 1.5420530092812372,
+      "loaded": {
+        "samples": 296,
+        "rms_degrees": 2.598136973889603
+      },
+      "unloaded": {
+        "samples": 155,
+        "rms_degrees": 0.23114391178739693
+      }
+    }
+  ]
+}

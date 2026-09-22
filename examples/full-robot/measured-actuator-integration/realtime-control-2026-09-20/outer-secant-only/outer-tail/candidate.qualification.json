@@ -1,0 +1,30 @@
+{
+  "name": "outer-secant-only/outer-tail/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": false,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.181087175,
+  "baseline_wall_s": 22.763944476,
+  "candidate_wall_s": 24.14755735,
+  "speedup": 0.9427017460215287,
+  "simulation_per_wall": 0.12423616834271646,
+  "max_error": {
+    "motor_angle_rad": 7.550023273239503e-9,
+    "link_position_m": 4.037474088235895e-9,
+    "current_a": 5.868640107209444e-8,
+    "contact_force_n": 0.00003610550014595742
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

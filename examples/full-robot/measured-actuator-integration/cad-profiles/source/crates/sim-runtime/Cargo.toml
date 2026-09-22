@@ -1,0 +1,73 @@
+[package]
+name = "sim-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+native-ipopt = ["sim-solve/native-ipopt"]
+conic = ["sim-solve/conic"]
+bayesian = ["sim-solve/bayesian"]
+
+[[example]]
+name = "search_motion"
+required-features = ["bayesian"]
+
+[[example]]
+name = "solve_joint_force_cones"
+required-features = ["conic"]
+
+[[example]]
+name = "prepare_contact_order_neighbors"
+required-features = ["conic"]
+
+[[example]]
+name = "optimize_joint_ipopt"
+required-features = ["native-ipopt"]
+
+[[example]]
+name = "optimize_joint_ipopt_checkpoint"
+required-features = ["native-ipopt"]
+
+[[example]]
+name = "optimize_joint_ipopt_events"
+required-features = ["native-ipopt"]
+
+[[example]]
+name = "optimize_joint_ipopt_steps"
+required-features = ["native-ipopt"]
+
+[dependencies]
+blake3 = "=1.8.7"
+nalgebra.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sim-compile = { path = "../sim-compile" }
+sim-core = { path = "../sim-core" }
+sim-inspect = { path = "../sim-inspect", features = ["runtime"] }
+sim-couple = { path = "../sim-couple" }
+sim-domain-acoustic = { path = "../sim-domain-acoustic" }
+sim-domain-bridges = { path = "../sim-domain-bridges" }
+sim-domain-control = { path = "../sim-domain-control" }
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-fluid = { path = "../sim-domain-fluid" }
+sim-domain-hydraulic = { path = "../sim-domain-hydraulic" }
+sim-domain-multibody = { path = "../sim-domain-multibody" }
+sim-domain-magnetic = { path = "../sim-domain-magnetic" }
+sim-domain-chemical = { path = "../sim-domain-chemical" }
+sim-domain-radiative = { path = "../sim-domain-radiative" }
+sim-domain-line = { path = "../sim-domain-line" }
+sim-domain-granular = { path = "../sim-domain-granular" }
+sim-domain-robot = { path = "../sim-domain-robot" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-sensing = { path = "../sim-domain-sensing" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }
+sim-domain-translational = { path = "../sim-domain-translational" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-solve = { path = "../sim-solve" }
+sim-script = { path = "../sim-script" }
+
+web-time = "1.1"
+
+[build-dependencies]
+blake3 = "=1.8.7"

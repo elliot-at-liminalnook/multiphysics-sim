@@ -1,0 +1,244 @@
+{
+  "simulation_only": true,
+  "logging_stride": 2,
+  "control_hz": 400,
+  "normal_logging_hz": 200,
+  "steady_state_logging_bits_s": 452000,
+  "host_link_utilization": 0.452,
+  "full_controller_evidence": false,
+  "whole_image_luts": 19210,
+  "device_luts": 23040,
+  "rust_tests_passed": 26,
+  "cases": [
+    {
+      "case": "case0-400hz",
+      "retained_frames": 13,
+      "control_cycles": 25,
+      "terminal_result": 0,
+      "stats": {
+        "window_ms": {
+          "min": 1.94562,
+          "median": 1.94562,
+          "max": 1.94606
+        },
+        "gaps_ms": {
+          "min": 0.11898,
+          "median": 0.11898,
+          "max": 0.11942
+        },
+        "feedback_to_command_ms": {
+          "min": 0.87572,
+          "median": 0.87572,
+          "max": 0.87616
+        }
+      }
+    },
+    {
+      "case": "case1-400hz",
+      "retained_frames": 0,
+      "control_cycles": 0,
+      "terminal_result": 3,
+      "stats": {
+        "window_ms": {},
+        "gaps_ms": {},
+        "feedback_to_command_ms": {}
+      }
+    },
+    {
+      "case": "case2-200hz",
+      "retained_frames": 8,
+      "control_cycles": 15,
+      "terminal_result": 2,
+      "stats": {
+        "window_ms": {
+          "min": 1.94562,
+          "median": 1.94562,
+          "max": 1.94562
+        },
+        "gaps_ms": {
+          "min": 0.11898,
+          "median": 0.11898,
+          "max": 0.11898
+        },
+        "feedback_to_command_ms": {
+          "min": 0.87572,
+          "median": 0.87572,
+          "max": 0.87572
+        }
+      }
+    },
+    {
+      "case": "case3-400hz",
+      "retained_frames": 2,
+      "control_cycles": 2,
+      "terminal_result": 4,
+      "stats": {
+        "window_ms": {
+          "min": 1.94606,
+          "median": 1.94606,
+          "max": 1.94606
+        },
+        "gaps_ms": {
+          "min": 0.11942,
+          "median": 0.11942,
+          "max": 0.11942
+        },
+        "feedback_to_command_ms": {
+          "min": 0.87616,
+          "median": 0.87616,
+          "max": 0.87616
+        }
+      }
+    },
+    {
+      "case": "case4-400hz",
+      "retained_frames": 2,
+      "control_cycles": 2,
+      "terminal_result": 7,
+      "stats": {
+        "window_ms": {
+          "min": 1.94606,
+          "median": 1.94606,
+          "max": 1.94606
+        },
+        "gaps_ms": {
+          "min": 0.11942,
+          "median": 0.11942,
+          "max": 0.11942
+        },
+        "feedback_to_command_ms": {
+          "min": 0.87616,
+          "median": 0.87616,
+          "max": 0.87616
+        }
+      }
+    },
+    {
+      "case": "case5-400hz",
+      "retained_frames": 6,
+      "control_cycles": 9,
+      "terminal_result": 3,
+      "stats": {
+        "window_ms": {
+          "min": 1.94562,
+          "median": 1.94562,
+          "max": 1.94606
+        },
+        "gaps_ms": {
+          "min": 0.11898,
+          "median": 0.11898,
+          "max": 0.11942
+        },
+        "feedback_to_command_ms": {
+          "min": 0.87572,
+          "median": 0.87572,
+          "max": 0.87616
+        }
+      }
+    },
+    {
+      "case": "case6-400hz",
+      "retained_frames": 1,
+      "control_cycles": 0,
+      "terminal_result": 3,
+      "stats": {
+        "window_ms": {},
+        "gaps_ms": {},
+        "feedback_to_command_ms": {}
+      }
+    },
+    {
+      "case": "case7-400hz",
+      "retained_frames": 1,
+      "control_cycles": 0,
+      "terminal_result": 3,
+      "stats": {
+        "window_ms": {},
+        "gaps_ms": {},
+        "feedback_to_command_ms": {}
+      }
+    }
+  ],
+  "sha256": {
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/PROTOCOL.md": "4310310a06487c6ed7dfa9bf415ce52af1d84ba78d0f0b517fed80337a58e8ed",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/README.md": "38dbd362b734d969d3a558db2579dc4e777e507d9d35dde946d6d5ccdde1c796",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/check-hierarchy.ys": "612ea78642f9b27f1cc34e4b96a771fb80ddb2dae92bb4f176fa056bbd06cbbf",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/impl/fixed-pd/fixed_pd.v": "1419a9a3def289d4ec4ad33b9d8fc978e9c10fa8da38f2688b474fe0a41092d1",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/bridge.v": "f7b74108d548f811fb544f72619f4ab346047580a763d18960c0a600e00c4a6c",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/bridge_control.v": "049d785b7455721bb3a98edb9ff6fe5adf41734a0931f0308621d3ce181260b6",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/bridge_safety.cst": "1e3b3d5ece05801e6593b2338194cceb970f8b9294b5ddadd3e250f34f17a058",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/bus_level_probe.v": "e289bd412b673637ea5c7c0d3b0b79f5ef528114876a9a32c4f58baec193d3b4",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/button.v": "cb791c547c6a4e09b9ef442e1a8698e62d71d36c5ea418dbc769a21bbcff6e15",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/capture_stream.v": "3e95e8d56b619d4be7562074d3eeac6c055f49e0400bc2ec1833a8e0d56a59bc",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/crc8.v": "2a1573d476bc0cf468d4566a385e6a10f9ae3a9f7d97860b545aa12cc5897641",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_event_packet.v": "1148a2a011941a8549574da3d34c93b7ae06eeef313daf65c7c6b7d7d57d125a",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_event_stream.v": "5e56d0b0c1b331fe20231b547ca4daa28dfc58d1a612b31ab3c803fe5a26396a",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_frame_log.v": "c8ae7002ce02a5a9f9d07c105da75a1d15c3e7c14dd240d76fe252eba0fe3601",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_packet.v": "b0429a5d280f517465d7bf2e30467d2c9fc0131a72ede0c8676fc879e9a9712b",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_reply.v": "9a681a9e1e9cf0cd50a30c0990beac567433850d3f424db67a957f185d7ab34c",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_scheduler.v": "778cc3e351c811dab5489da8423348a286d0709c20ca870df4a93f0819da025f",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_session.v": "46f54905a70483a924c43f3f128324edade12926b3360f858f955b4e1e0d51de",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/experiment_transactions.v": "44c48e6f4c25f16a35d628a08564608db07eef840e994ad4e6c89764b81ee6ae",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/host_packet_queue.v": "f29165db43fe606d24896379ca5c1d7ec6bda9a958913d4ae4061e0e41e79cca",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/hx_bus.v": "ad15377f24bf9fc8f40c9b0105640ba157a072e6f48e7cb4788ddc90207ae2cf",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/hx_safety.v": "e7324bdea0d90c931b0988e2cce35726023bc58868dab077bc26372b0160db81",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/link_core.v": "60e54f22c9b883222be7e56997808fc56218bb2a64a814bfb4efe4e8e9f8edbe",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/link_rx.v": "fb1803d8a9ec149e6385b27e68d4273a73f7d98e1d3da2935c67b3709e4fb926",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/link_top.v": "55ec66818823348cbe0a6507f0ac5d936622fadea1bc086d712ecf68cbaa14ba",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/link_tx.v": "9b2513a3efd8b9f5d09b3b02dce1dbbd9d0c8574602cee13405d76d30db378c9",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/servo.v": "a283bcd12d5297eaa2297fdaedb708a871e3964f7d6a9f6063364d82759837de",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/trajectory_store.v": "af2e9dec1117093c82f867d7ccbf2ccf0f638c21a427d471dd505568a22b78cc",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/trajectory_upload.v": "e5e01b9d40f406da33555fcb1c2305e9a167a33ad27921de8fb239ec96666d48",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/uart_rx.v": "d08e66b6ffd40d2c2e393462a62473fddd4766b2863daeaae023adb90a1ab3b2",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/src/uart_tx.v": "23e6690a69e1c25db555efe9822168c51d370443638c598ca65d7c4709038eb7",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/synthesize.ys": "0c2584809913c3d86c51d2741ab57cafb0d4d98e99ca80125868b52c274ceccc",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/tb/bridge_experiment_tb.v": "2ac2b8944fe45d2cee183535fbff8d694be89e392dd339306feb7d30f916d6c8",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/tb/frame_log_overflow_tb.v": "21eb26b5939355d882dbcdf83336f8d5778e846348e41ba6db69e2b52b6c82d6",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/tb/trajectory-fast-loop/crc.hex": "c837331f0d737f4230f7e738db3abc5c87a379e41f31008fa4598593af6e56d6",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/tb/trajectory-fast-loop/lengths.hex": "b49435c84caf8b0371de7516a05a409f53383d2e84d90bba8428eb8b60c94921",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/firmware/tb/trajectory-fast-loop/packets.hex": "f9cb89f75c180c8f73c01732839f47d98d8f364f06c461f9e5eba255936e264e",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/build.log": "0bb4d15636056e480569f2a3b8df5244e39245eaf0239dfd33e6e817b720566f",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case0-400hz/events.json": "f2c25767e7e43e952e3e66f6de398866ca2da4197ab8a9531a5a3cf34400da4c",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case0-400hz/review.json": "0ee19da5bf72e9a2c67454981be7284d3e11720a8977fb26cbb1c206f393072a",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case0-400hz/run.log": "11b247a4690d0ba19f2b5ec02cf0e50dfd7e44dc092f8aebb8ddda509c7bb788",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case0-400hz/uart.hex": "efff6354fe95cc9c1f6e99ea7c1d8dbd99bee9c78173140ada03dd09beba7887",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case1-400hz/events.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case1-400hz/review.json": "51f55764d23bb6fb5d4445f7866d51f500147dcf458adcd6e2fe3de987de0689",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case1-400hz/run.log": "5b4fa253a9c398cae57582c6054cd8052cf93cac787f556618d808ff6115ad7f",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case1-400hz/uart.hex": "1e004bc1d5daca859b6da8906dc34be9c6a2348fd9f91dcfabb12ab09d67479c",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case2-200hz/events.json": "7e82682f135b61a00a00703639c90a9f48e2697808a8377fc0af7f73be51eb2a",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case2-200hz/review.json": "2a1d6b73dea334b807d27f14dfd59364f2370bbe4811883b407461686298ef78",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case2-200hz/run.log": "d8fdbe7c77f07d03bcf1757e37dff18e6936539fe4ed815f827c395f81aa0043",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case2-200hz/uart.hex": "7f47fa4b0ee204ab15118f16ab7a47a109f0d7de79d4df1d8c84e73974be00d6",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case3-400hz/events.json": "233d241b6a3a43d84daf90077a14e497d43b594900c5b273461b69022cc31589",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case3-400hz/review.json": "eefcce782baf31998f36bd39895c6fca0c364e56dee8aa23d90e63924bb0134c",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case3-400hz/run.log": "6e7ae8a4dc6c4413f700154ee5469f3d5feb09f55ab508784cdcde359ac50d65",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case3-400hz/uart.hex": "faa81d68d7106e4f7dd78a06072015520fa3a131050861b3791e124f2013477e",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case4-400hz/events.json": "845030dc8585d6a8dc57a90dce154507b2fe23d689a2932f8ad6cb525316cdd6",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case4-400hz/review.json": "2ca3521338b1537979c17778db150d4bf44a7601e6b005722f7ef30fe1954709",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case4-400hz/run.log": "1499d391348e913a7d5665bff1ec8e2809cba1d2feab7b2c1b5fb9305e46b4a8",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case4-400hz/uart.hex": "8cbc0e99fdd8406163743fc00cfbd2041db3f67248ad5129a786ed54e00c5362",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case5-400hz/events.json": "56e60ffb703752f5b78f080ddfb3e65c0ca24605ec697bda164ac32ca7c4eaf6",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case5-400hz/review.json": "77370597947b59a4ce486afee4c970c3ad747cdc895d30bf2514f884bd9bb5f7",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case5-400hz/run.log": "342d44413fb612038acbac22a345cedf992c3f4eb2cfb3121ac779f7b696bb83",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case5-400hz/uart.hex": "9a301e5ff735b8f87ee6d627adccf4343cff41bbaa8a904ccd02e7493681b163",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case6-400hz/events.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case6-400hz/review.json": "1fad8fb2ac641166908c15e99a7d463f37b2219e4960bf138d0c1ae1cbcf7d83",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case6-400hz/run.log": "ccd837201c36c03ff9b676cc13ab3bb29898806d32493472c6abac8f9b5278b7",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case6-400hz/uart.hex": "91ee0ce934a8355ceb054ce6a2a08823f6fedc9ccb032fc81a3892b627d8ac79",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case7-400hz/events.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case7-400hz/review.json": "52dad5587ef7cdcd25be18b7bf7e475ae4d09c3a8620599ffc776075a248ef44",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case7-400hz/run.log": "d3080cdb2ee131fdbfca9d2e55850f8627bb9c182547e4d901350481b703b2dd",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/case7-400hz/uart.hex": "f343fad51a9a183a2520c037ff3cfd1ea98e6aeacbfaf49f8ceef094466e5d83",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/full-image-synthesis.log": "e4b627a400ddb382529cd687564d8ff0ef4ef8c9251f335d028f20f8e6977b7b",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/logger-tests.log": "6948fbccb41d27f02b08a2303e0b4ca6f76f265c1a8693da038c845bed231a63",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/rust-tests.log": "51a4c9d543aa3de551d1d7b94a1eb1c07628cd384bebf5ece5afe15a7b5282c1",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/summary.json": "f469d60e0d9af9faa90a76bc1b03a2eab06c8586018bd86a9d6086e21e460590",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/results/workspace.txt": "e7199e63725fd9b5db02d2889932d60d52e29f065c6995c98b60961e18e73666",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/run.mjs": "b3d4c39b8396c9c673669a8a936d278002f7bd31d9a968562688b81a803f0b2a",
+    "examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/verify.mjs": "0229f1a3587280f1fb8d56c0bfc02e03de26e2eb79e390db633f9c3a9551bdaa",
+    "crates/sim-runtime/src/controller_refinement/fpga_batch.rs": "c1ac02c1fa02f6e4e730756239887b5d845480fc09b81892c9cb090987f9909e",
+    "crates/sim-runtime/src/controller_refinement/fpga_events.rs": "582367c1ce4784eadf5e459b6265ea7d7719e7263e3c922c42b2f9b79a6ffd24",
+    "crates/sim-runtime/tests/fpga_sampled_capture.rs": "b0a93debf70b9c46828d0f8e6703500fc8a05cbd3332267ab881beddbe1f88e0"
+  }
+}

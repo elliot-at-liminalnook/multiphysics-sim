@@ -1,0 +1,32 @@
+{
+  "scope": "Measured tracking against previous applied discrete setpoint, not model-prediction error; unloaded motors, capped PWM",
+  "results": [
+    {
+      "id": 10,
+      "rms_deg": 0.8900200646528252,
+      "peak_deg": 2.724609375,
+      "at_pwm_limit_fraction": 0.64,
+      "voltage_min": 11.700000000000001,
+      "voltage_max": 11.8,
+      "temperature_max": 48
+    },
+    {
+      "id": 11,
+      "rms_deg": 1.6550880530867411,
+      "peak_deg": 4.658203125,
+      "at_pwm_limit_fraction": 0.645,
+      "voltage_min": 11.9,
+      "voltage_max": 12,
+      "temperature_max": 46
+    },
+    {
+      "id": 12,
+      "rms_deg": 1.217467587018009,
+      "peak_deg": 3.779296875,
+      "at_pwm_limit_fraction": 0.54,
+      "voltage_min": 11.700000000000001,
+      "voltage_max": 11.8,
+      "temperature_max": 45
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "comparisons": {
+    "be6400_vs_be12800": {
+      "max_error": {
+        "motor_angle_rad": 0.00010585643203575579,
+        "link_position_m": 1.0154755115157e-05,
+        "current_a": 0.0011842858844166304,
+        "contact_resultant_n": 0.3659180228218391
+      },
+      "different_contact_identity_frames": 0
+    },
+    "be12800_vs_be25600": {
+      "max_error": {
+        "motor_angle_rad": 5.6590827867908366e-05,
+        "link_position_m": 5.13940924308525e-06,
+        "current_a": 0.0005970802685620336,
+        "contact_resultant_n": 0.2594288870852325
+      },
+      "different_contact_identity_frames": 0
+    },
+    "sdirk800_vs_sdirk12800": {
+      "max_error": {
+        "motor_angle_rad": 0.00010410475061251034,
+        "link_position_m": 8.985176385786246e-06,
+        "current_a": 0.0003872646495175838,
+        "contact_resultant_n": 1.1223921179555503
+      },
+      "different_contact_identity_frames": 0
+    },
+    "sdirk1600_vs_sdirk12800": {
+      "max_error": {
+        "motor_angle_rad": 2.4525203468850343e-05,
+        "link_position_m": 2.0006942708493732e-06,
+        "current_a": 0.00010497417168775502,
+        "contact_resultant_n": 0.29664700139468336
+      },
+      "different_contact_identity_frames": 0
+    },
+    "sdirk6400_vs_sdirk12800": {
+      "max_error": {
+        "motor_angle_rad": 1.1184430236399479e-06,
+        "link_position_m": 8.252124806027231e-08,
+        "current_a": 5.103945703632817e-06,
+        "contact_resultant_n": 0.01473233427115781
+      },
+      "different_contact_identity_frames": 0
+    },
+    "be25600_vs_sdirk12800": {
+      "max_error": {
+        "motor_angle_rad": 6.384984438678742e-05,
+        "link_position_m": 5.2995767593136446e-06,
+        "current_a": 0.0006070744633094316,
+        "contact_resultant_n": 0.3510812153253655
+      },
+      "different_contact_identity_frames": 0
+    }
+  },
+  "scope": "Unpowered zero-voltage 0.1 s settling diagnostic, no controller or gait. Reference is another finite-step method, not an exact solution. Contact resultant is summed by link/other pair, including absent pairs as zero; it is not the per-contact gate used for gait qualification. No timing acceptance: compilation overlapped these runs."
+}

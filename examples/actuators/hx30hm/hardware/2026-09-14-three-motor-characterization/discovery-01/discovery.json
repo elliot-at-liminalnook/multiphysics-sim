@@ -1,0 +1,174 @@
+{
+  "utc": "2026-09-14T15:27:16.150148+00:00",
+  "operations": "Global STOP, capability query, telemetry reads only. No ARM or motion.",
+  "records": [
+    {
+      "name": "stop",
+      "request_hex": "fffffe03a0005e",
+      "reply": {
+        "id": 254,
+        "error": 0,
+        "params": [
+          1,
+          1,
+          10,
+          254,
+          0,
+          0,
+          0,
+          0,
+          60,
+          90,
+          126,
+          208,
+          7
+        ],
+        "bad_checksum": false
+      }
+    },
+    {
+      "name": "capability",
+      "request_hex": "fffffe03a20458",
+      "reply": {
+        "id": 254,
+        "error": 0,
+        "params": [
+          1,
+          162,
+          4,
+          0,
+          1,
+          0,
+          255,
+          1,
+          250,
+          0,
+          250,
+          0,
+          128,
+          132,
+          30,
+          0,
+          194,
+          91,
+          208,
+          63,
+          128,
+          240,
+          250,
+          2,
+          7
+        ],
+        "bad_checksum": false
+      }
+    },
+    {
+      "name": "id-4-telemetry",
+      "request_hex": "ffff040402380fae",
+      "reply": null
+    },
+    {
+      "name": "id-5-telemetry",
+      "request_hex": "ffff050402380fad",
+      "reply": null
+    },
+    {
+      "name": "id-6-telemetry",
+      "request_hex": "ffff060402380fac",
+      "reply": null
+    },
+    {
+      "name": "id-7-telemetry",
+      "request_hex": "ffff070402380fab",
+      "reply": null
+    },
+    {
+      "name": "id-8-telemetry",
+      "request_hex": "ffff080402380faa",
+      "reply": null
+    },
+    {
+      "name": "id-9-telemetry",
+      "request_hex": "ffff090402380fa9",
+      "reply": null
+    },
+    {
+      "name": "id-10-telemetry",
+      "request_hex": "ffff0a0402380fa8",
+      "reply": {
+        "id": 10,
+        "error": 0,
+        "params": [
+          245,
+          9,
+          0,
+          0,
+          0,
+          0,
+          125,
+          49,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "bad_checksum": false
+      }
+    },
+    {
+      "name": "id-11-telemetry",
+      "request_hex": "ffff0b0402380fa7",
+      "reply": {
+        "id": 11,
+        "error": 0,
+        "params": [
+          77,
+          10,
+          0,
+          0,
+          0,
+          0,
+          127,
+          46,
+          0,
+          0,
+          0,
+          0,
+          0,
+          21,
+          0
+        ],
+        "bad_checksum": false
+      }
+    },
+    {
+      "name": "id-12-telemetry",
+      "request_hex": "ffff0c0402380fa6",
+      "reply": {
+        "id": 12,
+        "error": 0,
+        "params": [
+          216,
+          6,
+          0,
+          0,
+          0,
+          0,
+          124,
+          45,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "bad_checksum": false
+      }
+    }
+  ]
+}

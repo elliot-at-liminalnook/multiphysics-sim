@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "description_id": "9bee4165ea081b9edf4ea7d0eed7f2c2b78fad38c94360ead9075ede8082e812",
+  "revision": 7,
+  "notes": {
+    "heat": {
+      "id": "heat",
+      "label": "Motor / heat path",
+      "text": "Electrical input drives the rotor. Losses heat the case. Shared annotation edited from the physical host.",
+      "targets": {
+        "kind": "components",
+        "ids": [
+          "example/motor-thermal/case",
+          "example/motor-thermal/motor",
+          "example/motor-thermal/rotor"
+        ]
+      },
+      "links": [
+        {
+          "label": "Motor",
+          "target": {
+            "kind": "selection",
+            "target": {
+              "kind": "components",
+              "ids": [
+                "example/motor-thermal/motor"
+              ]
+            }
+          }
+        },
+        {
+          "label": "Inspect both views",
+          "target": {
+            "kind": "view",
+            "id": "heat-path"
+          }
+        }
+      ],
+      "color": [
+        26,
+        135,
+        145
+      ]
+    }
+  },
+  "views": {
+    "heat-path": {
+      "id": "heat-path",
+      "label": "Motor and heat path",
+      "selection": {
+        "kind": "components",
+        "ids": [
+          "example/motor-thermal/case",
+          "example/motor-thermal/motor",
+          "example/motor-thermal/rotor"
+        ]
+      },
+      "physical": {
+        "focus": [
+          0.0,
+          0.05,
+          0.0
+        ],
+        "radius": 0.5,
+        "yaw": 0.72,
+        "pitch": 0.5,
+        "exploded": true,
+        "connections": false,
+        "hidden": []
+      },
+      "schematic": {
+        "state": {
+          "version": 1,
+          "description_id": "presentation/view/7ee06ece75d3825b0a98040b5c43b9a8421e53c4ebd16a1e1ac9231f6c2e6447",
+          "revision": 0,
+          "positions": {
+            "example/motor-thermal/ambient": {
+              "x": 896.0,
+              "y": 272.0
+            },
+            "example/motor-thermal/case": {
+              "x": 448.0,
+              "y": 0.0
+            },
+            "example/motor-thermal/cooling": {
+              "x": 896.0,
+              "y": 0.0
+            },
+            "example/motor-thermal/ground": {
+              "x": 0.0,
+              "y": 512.0
+            },
+            "example/motor-thermal/motor": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "example/motor-thermal/rotor": {
+              "x": 448.0,
+              "y": 272.0
+            },
+            "example/motor-thermal/supply": {
+              "x": 0.0,
+              "y": 272.0
+            }
+          },
+          "pinned": [],
+          "collapsed": [],
+          "camera": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "zoom": 1.0,
+          "plot_observables": []
+        },
+        "collapsed": [],
+        "focus": null
+      }
+    }
+  },
+  "navigation": {
+    "revision": 7,
+    "view": "heat-path"
+  },
+  "undo": [
+    {
+      "operation": "delete_view",
+      "id": "heat-path"
+    },
+    {
+      "operation": "put_view",
+      "view": {
+        "id": "heat-path",
+        "label": "Motor and heat path",
+        "selection": {
+          "kind": "components",
+          "ids": [
+            "example/motor-thermal/case",
+            "example/motor-thermal/motor",
+            "example/motor-thermal/rotor"
+          ]
+        },
+        "physical": {
+          "focus": [
+            0.0,
+            0.05,
+            0.0
+          ],
+          "radius": 0.5,
+          "yaw": 0.72,
+          "pitch": 0.5,
+          "exploded": true,
+          "connections": false,
+          "hidden": []
+        },
+        "schematic": null
+      }
+    },
+    {
+      "operation": "delete_note",
+      "id": "heat"
+    },
+    {
+      "operation": "put_note",
+      "note": {
+        "id": "heat",
+        "label": "Motor / heat path",
+        "text": "Electrical input drives the rotor. Losses heat the case; inspect these components together.",
+        "targets": {
+          "kind": "components",
+          "ids": [
+            "example/motor-thermal/case",
+            "example/motor-thermal/motor",
+            "example/motor-thermal/rotor"
+          ]
+        },
+        "links": [
+          {
+            "label": "Motor",
+            "target": {
+              "kind": "selection",
+              "target": {
+                "kind": "components",
+                "ids": [
+                  "example/motor-thermal/motor"
+                ]
+              }
+            }
+          },
+          {
+            "label": "Inspect both views",
+            "target": {
+              "kind": "view",
+              "id": "heat-path"
+            }
+          }
+        ],
+        "color": [
+          26,
+          135,
+          145
+        ]
+      }
+    }
+  ],
+  "redo": []
+}

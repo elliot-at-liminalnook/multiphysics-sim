@@ -1,0 +1,1351 @@
+{
+  "scope": "Physical unloaded bench; internal encoder feedback; not full-load or endurance acceptance",
+  "runs": {
+    "batch-zero-nine": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 12,
+      "motor_updates": 108,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.15,
+      "drive_limit_percent": 0.0,
+      "role": "timing",
+      "motors": {
+        "4": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "5": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 51,
+          "voltage_range_v": [
+            11.9,
+            12.200000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "6": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "7": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "8": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.0,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "9": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 55,
+          "voltage_range_v": [
+            11.9,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "10": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "11": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.200000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "12": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "966efbebda5e3fdbb1fd3529a7a6ab4fc551a70bb98f9115e14bee11b82ba9b9"
+    },
+    "complex-gain2-id4": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 81,
+      "motor_updates": 81,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 0.4753161532671077,
+          "peak_deg": 1.23046875,
+          "encoder_span_counts": 77,
+          "positive_sampled_travel_counts": 174,
+          "negative_sampled_travel_counts": 178,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "fb7afe7d742d6a7cd77cab44fca5553fb75e21462115383c0f0f70a47068923d"
+    },
+    "complex-gain3-id4": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 81,
+      "motor_updates": 81,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 1.5280316845070399,
+          "peak_deg": 5.009765625,
+          "encoder_span_counts": 65,
+          "positive_sampled_travel_counts": 119,
+          "negative_sampled_travel_counts": 118,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            12.0,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "d015b345833eead35008ab7012704dfb2b317be0e0fc8edfd99f509dbd79c4d6"
+    },
+    "faster-validation-id4": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 81,
+      "motor_updates": 81,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 5.0,
+      "role": "validation",
+      "motors": {
+        "4": {
+          "rms_deg": 1.4740272029607728,
+          "peak_deg": 4.658203125,
+          "encoder_span_counts": 76,
+          "positive_sampled_travel_counts": 225,
+          "negative_sampled_travel_counts": 200,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "0cb47af74cdcaa6c03390bfa846d6ca333117817b6922a8c8f72f0fae901cc7f"
+    },
+    "nine-7p5pct-training": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 54,
+      "motor_updates": 486,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.15,
+      "drive_limit_percent": 7.5,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 1.1037316575043699,
+          "peak_deg": 2.197265625,
+          "encoder_span_counts": 96,
+          "positive_sampled_travel_counts": 243,
+          "negative_sampled_travel_counts": 257,
+          "maximum_temperature_c": 51,
+          "voltage_range_v": [
+            11.700000000000001,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "5": {
+          "rms_deg": 1.1414507659440327,
+          "peak_deg": 2.4609375,
+          "encoder_span_counts": 108,
+          "positive_sampled_travel_counts": 253,
+          "negative_sampled_travel_counts": 267,
+          "maximum_temperature_c": 51,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "6": {
+          "rms_deg": 0.9165131411445364,
+          "peak_deg": 1.845703125,
+          "encoder_span_counts": 110,
+          "positive_sampled_travel_counts": 226,
+          "negative_sampled_travel_counts": 234,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.700000000000001,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "7": {
+          "rms_deg": 0.9746808043088188,
+          "peak_deg": 2.021484375,
+          "encoder_span_counts": 101,
+          "positive_sampled_travel_counts": 236,
+          "negative_sampled_travel_counts": 224,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "8": {
+          "rms_deg": 0.9411549846216217,
+          "peak_deg": 2.109375,
+          "encoder_span_counts": 93,
+          "positive_sampled_travel_counts": 210,
+          "negative_sampled_travel_counts": 198,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "9": {
+          "rms_deg": 0.8883767109407992,
+          "peak_deg": 1.93359375,
+          "encoder_span_counts": 97,
+          "positive_sampled_travel_counts": 216,
+          "negative_sampled_travel_counts": 208,
+          "maximum_temperature_c": 55,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "10": {
+          "rms_deg": 0.9107197993776767,
+          "peak_deg": 2.109375,
+          "encoder_span_counts": 97,
+          "positive_sampled_travel_counts": 209,
+          "negative_sampled_travel_counts": 212,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "11": {
+          "rms_deg": 0.8798822705672582,
+          "peak_deg": 2.109375,
+          "encoder_span_counts": 95,
+          "positive_sampled_travel_counts": 190,
+          "negative_sampled_travel_counts": 190,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.0,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": true
+        },
+        "12": {
+          "rms_deg": 0.8711408251713804,
+          "peak_deg": 2.109375,
+          "encoder_span_counts": 91,
+          "positive_sampled_travel_counts": 184,
+          "negative_sampled_travel_counts": 191,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        }
+      },
+      "recording_sha256": "f2ac311627913c68104c5bfb545dbce043eb2a84100d6b5b17d54922ac6a389c"
+    },
+    "nine-conservative-training": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 54,
+      "motor_updates": 486,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.15,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 0.9200182821696355,
+          "peak_deg": 2.197265625,
+          "encoder_span_counts": 67,
+          "positive_sampled_travel_counts": 152,
+          "negative_sampled_travel_counts": 146,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.700000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "5": {
+          "rms_deg": 0.8084557456960916,
+          "peak_deg": 1.845703125,
+          "encoder_span_counts": 100,
+          "positive_sampled_travel_counts": 182,
+          "negative_sampled_travel_counts": 170,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "6": {
+          "rms_deg": 1.7606178785673667,
+          "peak_deg": 3.33984375,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            11.700000000000001,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        },
+        "7": {
+          "rms_deg": 0.5911632204789725,
+          "peak_deg": 1.494140625,
+          "encoder_span_counts": 81,
+          "positive_sampled_travel_counts": 142,
+          "negative_sampled_travel_counts": 160,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "8": {
+          "rms_deg": 1.690313748461304,
+          "peak_deg": 3.33984375,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "9": {
+          "rms_deg": 1.6637426794336738,
+          "peak_deg": 3.427734375,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 56,
+          "voltage_range_v": [
+            11.9,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "10": {
+          "rms_deg": 1.473266798792671,
+          "peak_deg": 3.1640625,
+          "encoder_span_counts": 82,
+          "positive_sampled_travel_counts": 115,
+          "negative_sampled_travel_counts": 152,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "11": {
+          "rms_deg": 1.3161331029210124,
+          "peak_deg": 2.900390625,
+          "encoder_span_counts": 80,
+          "positive_sampled_travel_counts": 154,
+          "negative_sampled_travel_counts": 136,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.0,
+            12.200000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "12": {
+          "rms_deg": 1.2705074371876848,
+          "peak_deg": 2.900390625,
+          "encoder_span_counts": 56,
+          "positive_sampled_travel_counts": 82,
+          "negative_sampled_travel_counts": 73,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "48e6784b0835863dda6dc4d8c1bf419c56cddc42b23918319a58f7ea458f6049"
+    },
+    "nine-faster-7p5pct-validation": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 54,
+      "motor_updates": 486,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.15,
+      "drive_limit_percent": 7.5,
+      "role": "validation",
+      "motors": {
+        "4": {
+          "rms_deg": 1.041310567387994,
+          "peak_deg": 2.373046875,
+          "encoder_span_counts": 100,
+          "positive_sampled_travel_counts": 329,
+          "negative_sampled_travel_counts": 347,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.700000000000001,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "5": {
+          "rms_deg": 1.1207091838238104,
+          "peak_deg": 2.28515625,
+          "encoder_span_counts": 114,
+          "positive_sampled_travel_counts": 367,
+          "negative_sampled_travel_counts": 378,
+          "maximum_temperature_c": 51,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "6": {
+          "rms_deg": 1.3606498265312252,
+          "peak_deg": 3.603515625,
+          "encoder_span_counts": 111,
+          "positive_sampled_travel_counts": 335,
+          "negative_sampled_travel_counts": 333,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.600000000000001,
+            11.8
+          ],
+          "per_frame_torque_verified": true
+        },
+        "7": {
+          "rms_deg": 0.9110338948515359,
+          "peak_deg": 2.548828125,
+          "encoder_span_counts": 100,
+          "positive_sampled_travel_counts": 350,
+          "negative_sampled_travel_counts": 342,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "8": {
+          "rms_deg": 1.0831262439471903,
+          "peak_deg": 2.373046875,
+          "encoder_span_counts": 109,
+          "positive_sampled_travel_counts": 364,
+          "negative_sampled_travel_counts": 360,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "9": {
+          "rms_deg": 0.9917760281139115,
+          "peak_deg": 2.724609375,
+          "encoder_span_counts": 101,
+          "positive_sampled_travel_counts": 319,
+          "negative_sampled_travel_counts": 317,
+          "maximum_temperature_c": 55,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "10": {
+          "rms_deg": 0.9917760281139115,
+          "peak_deg": 2.109375,
+          "encoder_span_counts": 99,
+          "positive_sampled_travel_counts": 372,
+          "negative_sampled_travel_counts": 373,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "11": {
+          "rms_deg": 0.9742404032903379,
+          "peak_deg": 1.93359375,
+          "encoder_span_counts": 112,
+          "positive_sampled_travel_counts": 368,
+          "negative_sampled_travel_counts": 377,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.0,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": true
+        },
+        "12": {
+          "rms_deg": 0.9496285766518139,
+          "peak_deg": 2.4609375,
+          "encoder_span_counts": 129,
+          "positive_sampled_travel_counts": 408,
+          "negative_sampled_travel_counts": 422,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.8,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        }
+      },
+      "recording_sha256": "1bbe59fc55242d2c0f4c1ab91a79ad2f1245ec9dde5703fad4a756dec3bd50c8"
+    },
+    "nine-training": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 54,
+      "motor_updates": 486,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.15,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 0.591646987516132,
+          "peak_deg": 1.0546875,
+          "encoder_span_counts": 82,
+          "positive_sampled_travel_counts": 193,
+          "negative_sampled_travel_counts": 197,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.700000000000001,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "5": {
+          "rms_deg": 0.6414164794403526,
+          "peak_deg": 1.318359375,
+          "encoder_span_counts": 93,
+          "positive_sampled_travel_counts": 186,
+          "negative_sampled_travel_counts": 193,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            12.200000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "6": {
+          "rms_deg": 1.7606178785673667,
+          "peak_deg": 3.33984375,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            11.700000000000001,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "7": {
+          "rms_deg": 0.5627745911806215,
+          "peak_deg": 0.966796875,
+          "encoder_span_counts": 85,
+          "positive_sampled_travel_counts": 206,
+          "negative_sampled_travel_counts": 200,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "8": {
+          "rms_deg": 3.5036825153276787,
+          "peak_deg": 7.294921875,
+          "encoder_span_counts": 46,
+          "positive_sampled_travel_counts": 46,
+          "negative_sampled_travel_counts": 1,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "9": {
+          "rms_deg": 1.6637426794336738,
+          "peak_deg": 3.427734375,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 56,
+          "voltage_range_v": [
+            11.9,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "10": {
+          "rms_deg": 3.183578772012312,
+          "peak_deg": 6.416015625,
+          "encoder_span_counts": 35,
+          "positive_sampled_travel_counts": 35,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "11": {
+          "rms_deg": 0.6754184697303811,
+          "peak_deg": 1.7578125,
+          "encoder_span_counts": 92,
+          "positive_sampled_travel_counts": 193,
+          "negative_sampled_travel_counts": 194,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.0,
+            12.200000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "12": {
+          "rms_deg": 0.5253053049914387,
+          "peak_deg": 1.142578125,
+          "encoder_span_counts": 79,
+          "positive_sampled_travel_counts": 176,
+          "negative_sampled_travel_counts": 177,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "e481afaf64607e87e47a11bca0bdcf694dfde5dbec8384f38c51aca2248dc865"
+    },
+    "nine-training-torque-audited": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 54,
+      "motor_updates": 486,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.15,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 1.3610702992935892,
+          "peak_deg": 4.39453125,
+          "encoder_span_counts": 86,
+          "positive_sampled_travel_counts": 161,
+          "negative_sampled_travel_counts": 159,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.700000000000001,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "5": {
+          "rms_deg": 0.6211352064584236,
+          "peak_deg": 1.40625,
+          "encoder_span_counts": 98,
+          "positive_sampled_travel_counts": 197,
+          "negative_sampled_travel_counts": 203,
+          "maximum_temperature_c": 51,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "6": {
+          "rms_deg": 2.4857496381228206,
+          "peak_deg": 5.44921875,
+          "encoder_span_counts": 45,
+          "positive_sampled_travel_counts": 20,
+          "negative_sampled_travel_counts": 45,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            11.700000000000001,
+            11.8
+          ],
+          "per_frame_torque_verified": true
+        },
+        "7": {
+          "rms_deg": 0.5172094795650531,
+          "peak_deg": 1.0546875,
+          "encoder_span_counts": 89,
+          "positive_sampled_travel_counts": 193,
+          "negative_sampled_travel_counts": 190,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "8": {
+          "rms_deg": 1.690313748461304,
+          "peak_deg": 3.33984375,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "9": {
+          "rms_deg": 1.742610041948795,
+          "peak_deg": 4.5703125,
+          "encoder_span_counts": 37,
+          "positive_sampled_travel_counts": 48,
+          "negative_sampled_travel_counts": 49,
+          "maximum_temperature_c": 55,
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ],
+          "per_frame_torque_verified": true
+        },
+        "10": {
+          "rms_deg": 1.2706763165305324,
+          "peak_deg": 4.21875,
+          "encoder_span_counts": 71,
+          "positive_sampled_travel_counts": 119,
+          "negative_sampled_travel_counts": 125,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        },
+        "11": {
+          "rms_deg": 0.5975413492491545,
+          "peak_deg": 1.23046875,
+          "encoder_span_counts": 88,
+          "positive_sampled_travel_counts": 179,
+          "negative_sampled_travel_counts": 175,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.0,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": true
+        },
+        "12": {
+          "rms_deg": 1.591946647478479,
+          "peak_deg": 4.74609375,
+          "encoder_span_counts": 71,
+          "positive_sampled_travel_counts": 98,
+          "negative_sampled_travel_counts": 65,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.8,
+            11.9
+          ],
+          "per_frame_torque_verified": true
+        }
+      },
+      "recording_sha256": "52ce2724557ab0731d3012df8e56b1334644985d51a8957e2b91975c6eaae9bf"
+    },
+    "pilot-gain2-id4": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 81,
+      "motor_updates": 81,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 0.19725595582738434,
+          "peak_deg": 0.615234375,
+          "encoder_span_counts": 38,
+          "positive_sampled_travel_counts": 59,
+          "negative_sampled_travel_counts": 61,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "b10d33220ae52467c35d6417a30bdd2cb59e8bfffa93ce6e1cd755afa96cf33a"
+    },
+    "pilot-id4": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 81,
+      "motor_updates": 81,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "4": {
+          "rms_deg": 0.391478559625536,
+          "peak_deg": 0.966796875,
+          "encoder_span_counts": 34,
+          "positive_sampled_travel_counts": 49,
+          "negative_sampled_travel_counts": 50,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "3bb2b17935e2bdda3e54551ceb48dce9024da6df1ef45d07ba898db403dcfb09"
+    },
+    "response-id6-5pct": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 21,
+      "motor_updates": 21,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 5.0,
+      "role": "training",
+      "motors": {
+        "6": {
+          "rms_deg": 0.8803698750771515,
+          "peak_deg": 2.724609375,
+          "encoder_span_counts": 31,
+          "positive_sampled_travel_counts": 31,
+          "negative_sampled_travel_counts": 31,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.0,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "3f6ee618d61e878834585ab9a4b1f8f1f199953d1a22a731c8bbfa03b96a9cef"
+    },
+    "response-id8-7p5pct": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 21,
+      "motor_updates": 21,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 7.5,
+      "role": "training",
+      "motors": {
+        "8": {
+          "rms_deg": 0.9034654655337465,
+          "peak_deg": 2.8125,
+          "encoder_span_counts": 47,
+          "positive_sampled_travel_counts": 55,
+          "negative_sampled_travel_counts": 47,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.200000000000001,
+            12.3
+          ],
+          "per_frame_torque_verified": true
+        }
+      },
+      "recording_sha256": "31554a7e0f213fb093a2c481eeb9fc89b3062fdab380f7d8104f39d6ce46e1da"
+    },
+    "torque-audit-zero-nine": {
+      "completed": true,
+      "failure": null,
+      "stop_verified": true,
+      "frames": 12,
+      "motor_updates": 108,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.15,
+      "drive_limit_percent": 0.0,
+      "role": "timing",
+      "motors": {
+        "4": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        },
+        "5": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 51,
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "6": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.8,
+            11.8
+          ],
+          "per_frame_torque_verified": false
+        },
+        "7": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        },
+        "8": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "9": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 55,
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "10": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        },
+        "11": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "12": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "789bc55488cd383e5b6b82ef3c2ca705e0772b483182cc4d031ae84ab0ff23a4"
+    },
+    "zero-nine": {
+      "completed": false,
+      "failure": "FPGA loop exceeded period including PWM readback",
+      "stop_verified": true,
+      "frames": 1,
+      "motor_updates": 9,
+      "all_pwm_arithmetic_matched": true,
+      "period_s": 0.1,
+      "drive_limit_percent": 0.0,
+      "role": "timing",
+      "motors": {
+        "4": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "5": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "6": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 53,
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        },
+        "7": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "8": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "9": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 56,
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ],
+          "per_frame_torque_verified": false
+        },
+        "10": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 52,
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        },
+        "11": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 50,
+          "voltage_range_v": [
+            12.100000000000001,
+            12.100000000000001
+          ],
+          "per_frame_torque_verified": false
+        },
+        "12": {
+          "rms_deg": 0.0,
+          "peak_deg": 0.0,
+          "encoder_span_counts": 0,
+          "positive_sampled_travel_counts": 0,
+          "negative_sampled_travel_counts": 0,
+          "maximum_temperature_c": 49,
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ],
+          "per_frame_torque_verified": false
+        }
+      },
+      "recording_sha256": "255b42f8e8ebf1a8b167e4abb3257e30922106eb7aa7ed87cdd8198f783b7cc5"
+    }
+  },
+  "final_stationary_observation": {
+    "4": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.961440677
+    },
+    "5": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.9596871060000001
+    },
+    "6": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.9599974739999999
+    },
+    "7": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.959747492
+    },
+    "8": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.959836443
+    },
+    "9": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.9596878679999999
+    },
+    "10": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.959737425
+    },
+    "11": {
+      "samples": 18,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.9593171810000001
+    },
+    "12": {
+      "samples": 17,
+      "encoder_span_counts": 0,
+      "all_reported_speeds_zero": true,
+      "window_s": 0.905791166
+    }
+  },
+  "model_validation": [
+    {
+      "id": 4,
+      "rms_deg": 0.663236216172174,
+      "pass": false
+    },
+    {
+      "id": 5,
+      "rms_deg": 0.7114175705707562,
+      "pass": false
+    },
+    {
+      "id": 6,
+      "rms_deg": 0.5764614605953792,
+      "pass": false
+    },
+    {
+      "id": 7,
+      "rms_deg": 0.4045374058048434,
+      "pass": false
+    },
+    {
+      "id": 8,
+      "rms_deg": 0.6800620263926012,
+      "pass": false
+    },
+    {
+      "id": 9,
+      "rms_deg": 0.5078594479499916,
+      "pass": false
+    },
+    {
+      "id": 10,
+      "rms_deg": 0.47451291458032585,
+      "pass": false
+    },
+    {
+      "id": 11,
+      "rms_deg": 0.4669153549953875,
+      "pass": false
+    },
+    {
+      "id": 12,
+      "rms_deg": 0.632319505592956,
+      "pass": false
+    }
+  ],
+  "limitations": [
+    "FPGA computes control; host schedules feedback and setpoints",
+    "No calibrated measured amps or watts",
+    "Independent motor simulations do not validate shared battery behavior",
+    "No motor model was accepted or promoted"
+  ]
+}

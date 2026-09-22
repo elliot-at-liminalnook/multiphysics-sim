@@ -1,0 +1,25 @@
+{
+  "mode": "replay",
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/10s/capture.json",
+      "sha256": "3ab7345b82d8abe81fee2b551f4b32633fa283338018790ca98afa0f3f63d79e"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/replay/capture.json",
+      "sha256": "d9d9c9d669f3d1430c1d81178d43f751f74d12f3be5d00a468c493b155b51fc5"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/validation-protocol.json",
+      "sha256": "534cd4168b53b92687d47b4cbd130e0e6e858a9dd429e792689f8a49fb56e450"
+    }
+  ],
+  "metrics": {},
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "frames_exact": true,
+    "transitions_exact": true
+  },
+  "pass": true
+}

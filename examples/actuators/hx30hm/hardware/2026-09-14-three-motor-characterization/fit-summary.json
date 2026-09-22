@@ -1,0 +1,173 @@
+[
+  {
+    "id": 10,
+    "evaluations": 48,
+    "scores": [
+      {
+        "device": 10,
+        "failure": null,
+        "id": "8bebb956897cce43ab4c0c39e97fce7fdad6dbc2e8e1163b81ee364ce074d070/10",
+        "split": "train",
+        "baseline_rms_deg": 3.364156691098225,
+        "candidate_rms_deg": 1.8101769458984893,
+        "candidate_pass": false
+      },
+      {
+        "device": 10,
+        "failure": null,
+        "id": "fefa16b7e995de36a3cf8684e41a0d4d6389a29362c840736cf06cfd8653a0b3/10",
+        "split": "train",
+        "baseline_rms_deg": 2.963653593623885,
+        "candidate_rms_deg": 1.8094856828917159,
+        "candidate_pass": false
+      },
+      {
+        "device": 10,
+        "failure": null,
+        "id": "e3eca846eb95ee24b3f9227fbcf93b6ece8f43e5aefb2c97fe93b42bbe31eae9/10",
+        "split": "train",
+        "baseline_rms_deg": 3.240209164208773,
+        "candidate_rms_deg": 1.6039037376665155,
+        "candidate_pass": false
+      },
+      {
+        "device": 10,
+        "failure": null,
+        "id": "a7537e8c2d52b67b82c13719f545f23d27850e619727fb87e23064cc92089a79/10",
+        "split": "train",
+        "baseline_rms_deg": 2.4427269381383847,
+        "candidate_rms_deg": 1.0809560227915225,
+        "candidate_pass": false
+      },
+      {
+        "device": 10,
+        "failure": null,
+        "id": "499e2c7051ed77e10110f5a890bb6f09128509233e9f4c5c424f94788f02553d/10",
+        "split": "held_out_fpga",
+        "baseline_rms_deg": 2.889124511858552,
+        "candidate_rms_deg": 2.4990752588044,
+        "candidate_pass": false
+      }
+    ],
+    "deltas": {
+      "motor.loss_speed_scale": 3.0,
+      "motor.no_load_current": 0.19837711977894007,
+      "motor.rotor_inertia": 2.776754539644348e-07
+    },
+    "status": "Candidate only; convergence does not imply identified constants or accepted validation"
+  },
+  {
+    "id": 11,
+    "evaluations": 65,
+    "scores": [
+      {
+        "device": 11,
+        "failure": null,
+        "id": "8bebb956897cce43ab4c0c39e97fce7fdad6dbc2e8e1163b81ee364ce074d070/11",
+        "split": "train",
+        "baseline_rms_deg": 3.5044909538668896,
+        "candidate_rms_deg": 2.2672493773381523,
+        "candidate_pass": false
+      },
+      {
+        "device": 11,
+        "failure": null,
+        "id": "fefa16b7e995de36a3cf8684e41a0d4d6389a29362c840736cf06cfd8653a0b3/11",
+        "split": "train",
+        "baseline_rms_deg": 3.0594882440731674,
+        "candidate_rms_deg": 2.0344565562520676,
+        "candidate_pass": false
+      },
+      {
+        "device": 11,
+        "failure": null,
+        "id": "c572ba25b94bcaef7dc805027f6c9eacdec7bdd670a95222653717b64f314d4e/11",
+        "split": "train",
+        "baseline_rms_deg": 3.538678087089173,
+        "candidate_rms_deg": 2.493878947408923,
+        "candidate_pass": false
+      },
+      {
+        "device": 11,
+        "failure": null,
+        "id": "a7537e8c2d52b67b82c13719f545f23d27850e619727fb87e23064cc92089a79/11",
+        "split": "train",
+        "baseline_rms_deg": 2.4069561126960166,
+        "candidate_rms_deg": 1.1250213762972916,
+        "candidate_pass": false
+      },
+      {
+        "device": 11,
+        "failure": null,
+        "id": "499e2c7051ed77e10110f5a890bb6f09128509233e9f4c5c424f94788f02553d/11",
+        "split": "held_out_fpga",
+        "baseline_rms_deg": 2.6409193906578925,
+        "candidate_rms_deg": 2.5595656504386124,
+        "candidate_pass": false
+      }
+    ],
+    "deltas": {
+      "motor.loss_speed_scale": 2.9941223362617775,
+      "motor.no_load_current": 0.18302290375212477,
+      "motor.rotor_inertia": 2.767488558533019e-07
+    },
+    "status": "Candidate only; convergence does not imply identified constants or accepted validation"
+  },
+  {
+    "id": 12,
+    "evaluations": 31,
+    "scores": [
+      {
+        "device": 12,
+        "failure": null,
+        "id": "8bebb956897cce43ab4c0c39e97fce7fdad6dbc2e8e1163b81ee364ce074d070/12",
+        "split": "train",
+        "baseline_rms_deg": 3.215671023528771,
+        "candidate_rms_deg": 1.865064999101744,
+        "candidate_pass": false
+      },
+      {
+        "device": 12,
+        "failure": null,
+        "id": "fefa16b7e995de36a3cf8684e41a0d4d6389a29362c840736cf06cfd8653a0b3/12",
+        "split": "train",
+        "baseline_rms_deg": 3.026162146462502,
+        "candidate_rms_deg": 1.8311741969212403,
+        "candidate_pass": false
+      },
+      {
+        "device": 12,
+        "failure": null,
+        "id": "d20cd858177f278aaca9349565af7e6d5fae18b36393234fe96bdbdee0334353/12",
+        "split": "train",
+        "baseline_rms_deg": 3.2315487032291306,
+        "candidate_rms_deg": 1.7487372188514119,
+        "candidate_pass": false
+      },
+      {
+        "device": 12,
+        "failure": null,
+        "id": "a7537e8c2d52b67b82c13719f545f23d27850e619727fb87e23064cc92089a79/12",
+        "split": "train",
+        "baseline_rms_deg": 2.355992645560452,
+        "candidate_rms_deg": 1.2769348474719953,
+        "candidate_pass": false
+      },
+      {
+        "device": 12,
+        "failure": null,
+        "id": "499e2c7051ed77e10110f5a890bb6f09128509233e9f4c5c424f94788f02553d/12",
+        "split": "held_out_fpga",
+        "baseline_rms_deg": 2.565206593501136,
+        "candidate_rms_deg": 1.6281677623584248,
+        "candidate_pass": false
+      }
+    ],
+    "deltas": {
+      "motor.loss_speed_scale": 3.0,
+      "motor.no_load_current": 0.08074125859217315,
+      "motor.rotor_inertia": 2.776754539644348e-07
+    },
+    "status": "Candidate only; convergence does not imply identified constants or accepted validation"
+  }
+]

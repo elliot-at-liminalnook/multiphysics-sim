@@ -1,0 +1,54 @@
+{
+  "electrical": "Servo voltage in 0.1 V counts; current remains uncalibrated raw counts. Measured amps, watts and battery validation unavailable.",
+  "motors": {
+    "10": {
+      "encoder_span_counts": 43,
+      "max_current_raw_uncalibrated": 0,
+      "max_temperature_c": 48,
+      "negative_observed_travel_counts": 219,
+      "peak_counts": 27.0,
+      "peak_degrees": 2.373046875,
+      "positive_observed_travel_counts": 251,
+      "rms_counts": 12.397004246418337,
+      "rms_degrees": 1.0895804513453617,
+      "saturated_fraction": 0.9428571428571428,
+      "torque_enable_audited_every_frame": true,
+      "tracking_pass": false,
+      "voltage_max_v": 11.8,
+      "voltage_min_v": 11.8
+    },
+    "11": {
+      "encoder_span_counts": 43,
+      "max_current_raw_uncalibrated": 52,
+      "max_temperature_c": 46,
+      "negative_observed_travel_counts": 159,
+      "peak_counts": 15.0,
+      "peak_degrees": 1.318359375,
+      "positive_observed_travel_counts": 174,
+      "rms_counts": 8.016055317744685,
+      "rms_degrees": 0.704536111911154,
+      "saturated_fraction": 0.5714285714285714,
+      "torque_enable_audited_every_frame": true,
+      "tracking_pass": false,
+      "voltage_max_v": 12.0,
+      "voltage_min_v": 11.9
+    },
+    "12": {
+      "encoder_span_counts": 42,
+      "max_current_raw_uncalibrated": 0,
+      "max_temperature_c": 45,
+      "negative_observed_travel_counts": 158,
+      "peak_counts": 18.0,
+      "peak_degrees": 1.58203125,
+      "positive_observed_travel_counts": 141,
+      "rms_counts": 8.095854318282731,
+      "rms_degrees": 0.7115496959428181,
+      "saturated_fraction": 0.4,
+      "torque_enable_audited_every_frame": true,
+      "tracking_pass": false,
+      "voltage_max_v": 11.8,
+      "voltage_min_v": 11.700000000000001
+    }
+  },
+  "target_comparison": "Encoder observation versus previous applied discrete setpoint; target changes are held between FPGA batches. Position is internal encoder feedback, not an independent output shaft measurement."
+}

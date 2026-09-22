@@ -1,0 +1,16 @@
+   Compiling sim-spatial v0.1.0 (/Users/elliot/physics-simulator/crates/sim-spatial)
+    Finished `test` profile [optimized] target(s) in 17.41s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/sim_spatial-2e4a469beb34c9b9)
+
+running 6 tests
+test tests::linked_net_and_port_selection_reveal_geometry_without_editing_sources ... ok
+test tests::mesh_click_and_list_button_resolve_the_same_source_identity ... ok
+test rest::tests::rest_selection_display_and_camera_preserve_source ... ok
+test animation::tests::ecs_applies_pose_and_temperature_without_mutating_physical_definition ... ok
+test animation::tests::quarter_turn_uses_world_axis_keeps_pivot_and_holds_without_clock_integration ... ok
+test notes::tests::shared_note_builds_native_cards_and_link_hover_click_use_source_selection ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+

@@ -54,6 +54,28 @@ The full quadruped schematic groups 195 compiled components into subsystems:
 
 ![Schematic of the full quadruped: joint measurements, controller boundary, actuators, mechanical assembly, thermal paths and power](docs/images/schematic-full-robot.png)
 
+### System builder
+
+![System builder: the motor-driver board with CAD-built component models, a library sidebar and an inspector](docs/images/system-builder.png)
+
+Build hierarchical multiphysics systems in the physical view: place parts from
+the component library, connect typed ports, group parts into subsystems, drill
+into any subsystem to implement it further, swap implementations that keep the
+same ports, place reference images, and run the result on the shared runtime.
+The schematic edits the same file in build mode, and the `sim-system` CLI and
+both REST APIs use the same commands and undo history. Components render with
+real-size models built in CAD (`cad/scripts/component_models.py`).
+
+![Drilled into the MOSFET H-bridge: the rest of the board is ghosted and the inspector shows one switch](docs/images/system-builder-drill-in.png)
+
+```sh
+target/release/sim-spatial --system examples/systems-builder/motor-driver-board/board.system.json --schematic
+target/release/sim-system run examples/systems-builder/motor-driver-board/board.system.json 0.06
+```
+
+The proving case, commands and acceptance checks are in
+[examples/systems-builder](examples/systems-builder/README.md).
+
 ### Browser robot workspace with WASD control
 
 ![Browser workspace: the CAD-derived quadruped walking forward under W with detailed motor models](docs/images/web-wasd.png)

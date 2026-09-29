@@ -116,17 +116,17 @@ def view(root):
     verification = next(n for n in flow["nodes"] if n["id"] == "verify")
     verification["live_output"] = []
     if state["phase"] == "verify":
-        for name in dict.fromkeys(["diff", *(state.get("plan") or {}).get("checks", [])]):
-            prefix = root / "logs" / f"check-{state['rounds']:04d}-{name}"
+        for index, name in enumerate(pair.check_names(state.get("plan"))):
+            prefix = pair.check_prefix(root, state["rounds"], index, name)
             out, err = prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
             if out.exists() or err.exists():
-                verification["live_output"].append({"name": name, "command": config["checks"].get(name, []),
+                verification["live_output"].append({"name": name, "command": pair.check_argv(config["checks"], name),
                     "text": tail(out, 6000) + tail(err, 6000),
                     "updated_at": max(p.stat().st_mtime for p in (out, err) if p.exists())})
     journal = shared_notebook.entries(root)
     return {"notebook": {"entries": journal[-80:], "total": len(journal), "system": shared_notebook.SYSTEM, "path": str(root / "shared")}, "workflow": flow, "state": state, "active": active, "calls": records,
-            "mission": (root / "prompts/mission.md").read_text(),
-            "roles": {role: (root / f"prompts/{role}.md").read_text() for role in ("director", "orchestrator", "worker") if (root / f"prompts/{role}.md").exists()},
+            "mission": pair.Runner(root).prompt_file("mission.md"),
+            "roles": {role: pair.Runner(root).prompt_file(f"{role}.md") for role in ("director", "orchestrator", "worker")},
             "outer_settings": pair.Runner(root).outer_settings(),
             "limits": {k: config[k] for k in ("max_rounds", "max_hours", "budget_usd", "call_budget_usd", "turn_minutes", "max_turns")},
             "workspace": config["worktree"], "source": config["repo"], "steering": steering,

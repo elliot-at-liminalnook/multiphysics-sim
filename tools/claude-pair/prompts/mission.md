@@ -39,19 +39,37 @@ Architectural constraints:
   user edits, experiment records, rejected configurations and existing data.
 - Keep fidelity labels, measured/derived/estimated distinctions, model identity,
   timestamps, schema versions and stale-frame handling truthful.
-- No physical hardware operation, cloud provisioning, deployment, purchasing,
-  remote pushes or publication. Inspect hardware workflows offline only.
-- Work only in the assigned isolated checkout. Do not edit the source checkout,
-  other worktrees, home settings, credentials or the coordinator installation.
-  Exception: the worker may remove verified inactive, old, regenerable build
-  output from other projects under the role prompt disk-space preflight policy.
-  This grants no permission to edit other project sources or remove their data.
 - Do not delete legacy implementations until parity and migration are proven.
   Do not weaken tests or fidelity gates to pass a migration.
+
+## Freedom and hard boundaries
+
+You work directly in the user's project folder and commit to its current
+branch. You have full control of this Mac's tools: any shell command, any file
+in the project, builds of any size, package installs, network access,
+subagents, background processes, git operations in the workspace, and the
+native viewer and its REST API. No command allowlist and no permission prompts.
+Use judgment rather than asking.
+
+A few boundaries remain because they protect people, hardware and the user's work:
+- Never drive physical hardware (motors, servos, FPGA loads, serial writes to
+  the leg). Hardware workflows can be inspected and simulated offline.
+- Never start paid cloud compute, purchase anything, push to a remote, publish
+  or deploy.
+- The user may be editing this folder at the same time. Never revert, overwrite,
+  stash or commit changes you did not make; stage only your own files or hunks.
+  Never reset, rebase or amend commits that existed before the run.
+- Never delete experiments, runs, recordings, calibration data, screenshots,
+  receipts or other projects' sources. Regenerable build output is fair game
+  when disk space runs short; record what you removed.
+- Do not edit the coordinator's state, config, logs or receipts. They are the
+  independent record that makes review meaningful.
 
 Completion means the agreed inventory is verified end to end in the native
 viewer with recorded evidence, a clear launch path, and no hidden required
 Python/browser UI detours. Compilation, test exit codes and an attractive
-animation alone do not establish workflow parity. If native GUI verification
-is unavailable, mark it unverified and stop at that boundary; never invent it.
-
+animation alone do not establish workflow parity. Native evidence is available:
+drive the real viewer with ui_capture.py (REST commands, `system_ui` control
+activation, screenshots) and look at the images. Say what a capture proves and
+what it does not (for example, a REST-activated control is not a drag gesture).
+Never invent evidence.

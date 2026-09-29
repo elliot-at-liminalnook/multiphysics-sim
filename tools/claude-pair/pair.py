@@ -5,13 +5,13 @@ Python standard library only; macOS/Linux. No model calls until `run`.
 """
 import argparse
 import contextlib
-import ctypes
 import fcntl
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import subprocess
@@ -38,7 +38,7 @@ PLAN_SCHEMA = obj({
     "action": {"enum": ["work", "complete", "blocked"]},
     "review": {"enum": ["none", "accept", "revise"]},
     "coordination_notes": STRINGS, "summary": TEXT, "worker_prompt": TEXT, "acceptance_criteria": STRINGS,
-    "checks": STRINGS,
+    "checks": STRINGS, "waived_checks": STRINGS,
     "checklist": {"type": "array", "items": obj({
         "id": TEXT, "workflow": TEXT,
         "status": {"enum": ["pending", "in_progress", "verified", "blocked"]},
@@ -63,80 +63,78 @@ def read_json(path):
     return json.loads(Path(path).read_text())
 
 
+def clip(text, limit):
+    return text if len(text) <= limit else text[:limit] + f"\n… {len(text) - limit} more characters omitted"
+
+
 def git(repo, *args, env=None):
     return subprocess.run(["git", "-C", str(repo), *args], check=True,
                           capture_output=True, env=env).stdout
 
 
-def source_files(repo):
-    raw = git(repo, "ls-files", "--cached", "--others", "--exclude-standard", "-z")
-    return sorted(set(os.fsdecode(p) for p in raw.split(b"\0") if p))
+def baseline_ref(stamp):
+    return "refs/claude-pair/" + re.sub(r"[^A-Za-z0-9_-]", "-", stamp) + "/baseline"
 
 
-def signatures(repo, files):
-    result = {}
-    for name in files:
-        p = repo / name
-        try:
-            s = p.lstat()
-            result[name] = [s.st_size, s.st_mtime_ns, s.st_ctime_ns, s.st_mode]
-        except FileNotFoundError:
-            result[name] = None
-    return result
+def check_argv(catalogue, name):
+    """A catalogue name runs its saved argv; any other text is a shell command."""
+    return catalogue[name] if name in catalogue else ["/bin/bash", "-c", name]
 
 
-def copy_file(source, dest):
-    """APFS clone when available, otherwise ordinary independent copies."""
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    if sys.platform == "darwin":
-        libc = ctypes.CDLL(None, use_errno=True)
-        clone = libc.clonefile
-        clone.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
-        clone.restype = ctypes.c_int
-        if clone(os.fsencode(source), os.fsencode(dest), 0) == 0:
-            return
-    if shutil.disk_usage(dest.parent).free < source.stat().st_size + 2 * 1024**3:
-        raise RuntimeError("Snapshot copy would leave less than 2 GiB free")
-    shutil.copy2(source, dest)
+def check_names(plan):
+    return list(dict.fromkeys(["diff", *(plan or {}).get("checks", [])]))
 
 
-def snapshot(repo, dest):
-    """Snapshot working files without changing the source HEAD, index or edits."""
-    files = source_files(repo)
-    before = signatures(repo, files)
-    for name in files:
-        p = repo / name
-        if p.is_symlink() and not p.resolve().is_relative_to(repo):
-            raise RuntimeError(f"External symlink cannot be isolated: {name}")
-        if p.is_dir():
-            raise RuntimeError(f"Nested repository/submodule needs explicit handling: {name}")
+def check_prefix(root, rounds, index, name):
+    slug = name if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", name) else f"cmd{index:02d}"
+    return Path(root) / "logs" / f"check-{rounds:04d}-{slug}"
+
+
+check_passed = outer_loop.check_passed
+
+
+def cargo_path(path):
+    cargo = Path.home() / ".cargo" / "bin"
+    parts = [p for p in (path or "").split(os.pathsep) if p]
+    return os.pathsep.join(([str(cargo)] if cargo.is_dir() and str(cargo) not in parts else []) + parts)
+
+
+def folder_tree(repo):
+    """Tree object for everything in the folder now (tracked edits and
+    non-ignored untracked files), built with a temporary index so HEAD, the
+    real index and every file stay untouched."""
+    with tempfile.TemporaryDirectory() as tmp:
+        env = dict(os.environ, GIT_INDEX_FILE=str(Path(tmp) / "index"))
+        git(repo, "read-tree", "HEAD", env=env)
+        git(repo, "add", "-A", "--", ".", env=env)
+        return git(repo, "write-tree", env=env).decode().strip()
+
+
+def working_baseline(repo, message):
+    """A commit for the folder exactly as it is when the run starts, including
+    the user's uncommitted work. Reviews diff against it, so work that existed
+    before the run is never mistaken for agent work."""
     head = git(repo, "rev-parse", "HEAD").decode().strip()
-    git(repo, "worktree", "add", "--detach", "--no-checkout", str(dest), head)
-    for name in files:
-        src, dst = repo / name, dest / name
-        if src.is_symlink():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            # Rewrite internal absolute symlinks so they cannot edit the source.
-            target = os.readlink(src)
-            if os.path.isabs(target):
-                target = os.path.relpath(dest / src.resolve().relative_to(repo), dst.parent)
-            dst.symlink_to(target)
-        elif src.is_file():
-            copy_file(src, dst)
-    if source_files(repo) != files or signatures(repo, files) != before:
-        raise RuntimeError("Source changed during snapshot; incomplete worktree retained. Reinitialize at a new path.")
-    git(dest, "read-tree", head)
-    git(dest, "add", "-A", "--", ".")
-    tree = git(dest, "write-tree").decode().strip()
-    env = dict(os.environ, GIT_AUTHOR_NAME="Claude Pair Snapshot",
-               GIT_AUTHOR_EMAIL="local-snapshot@localhost",
-               GIT_COMMITTER_NAME="Claude Pair Snapshot",
-               GIT_COMMITTER_EMAIL="local-snapshot@localhost")
-    baseline = git(dest, "commit-tree", tree, "-p", head, "-m",
-                   "Local working-copy snapshot for Rust viewer consolidation", env=env).decode().strip()
-    git(dest, "update-ref", "HEAD", baseline, head)
-    return {"source_head": head, "baseline": baseline, "file_count": len(files),
-            "source_signatures_sha256": hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest()}
+    if not git(repo, "status", "--porcelain").strip():
+        return head, head
+    env = dict(os.environ, GIT_AUTHOR_NAME="Claude Pair Baseline", GIT_AUTHOR_EMAIL="local-baseline@localhost",
+               GIT_COMMITTER_NAME="Claude Pair Baseline", GIT_COMMITTER_EMAIL="local-baseline@localhost")
+    return head, git(repo, "commit-tree", folder_tree(repo), "-p", head, "-m", message, env=env).decode().strip()
+
+
+def exclude_state(repo, root):
+    """Keep run state out of git status, diffs and commits."""
+    try:
+        relative = root.relative_to(repo)
+    except ValueError:
+        return
+    exclude = Path(git(repo, "rev-parse", "--git-path", "info/exclude").decode().strip())
+    exclude = exclude if exclude.is_absolute() else repo / exclude
+    pattern = "/" + relative.parts[0] + "*/"
+    lines = exclude.read_text().splitlines() if exclude.exists() else []
+    if pattern not in lines:
+        exclude.parent.mkdir(parents=True, exist_ok=True)
+        exclude.write_text("\n".join(lines + ["# claude-pair run state", pattern]) + "\n")
 
 
 @contextlib.contextmanager
@@ -180,9 +178,13 @@ def guard_plan(plan, state, checks):
             if state["report"]["status"] != "done" or state["report"]["blockers"]:
                 raise ValueError("Cannot accept a blocked worker")
             receipts = state.get("receipts", [])
-            expected = set(previous["checks"]) | {"diff"}
-            if {r["name"] for r in receipts} != expected or any(r["exit_code"] != 0 for r in receipts):
+            expected = set(check_names(previous))
+            if {r["name"] for r in receipts} != expected:
                 raise ValueError("Cannot accept without passing independent checks")
+            failing = [r["name"] for r in receipts if not check_passed(r, plan["waived_checks"])]
+            if failing:
+                raise ValueError("Cannot accept without passing independent checks: " + ", ".join(failing) +
+                                 " (a failure can be waived only if it was already failing before the assignment)")
     elif plan["review"] != "none":
         raise ValueError("Cannot review a worker that has not run")
     items = plan["checklist"]
@@ -193,8 +195,8 @@ def guard_plan(plan, state, checks):
         raise ValueError("Cannot silently drop checklist items")
     if any(i["status"] == "verified" and not i["evidence"].strip() for i in items):
         raise ValueError("Verified items require evidence")
-    if not set(plan["checks"]).issubset(checks):
-        raise ValueError("Unknown verification check")
+    if any(not c.strip() for c in plan["checks"]):
+        raise ValueError("Checks must be catalogue names or nonempty shell commands")
     if plan["action"] == "work" and (not plan["worker_prompt"].strip() or not plan["acceptance_criteria"]):
         raise ValueError("Assignment requires a prompt and acceptance criteria")
     if plan["action"] == "complete":
@@ -210,8 +212,26 @@ class Runner:
         if self.config["checks"].get("diff") == ["git", "diff", "--check"]:
             self.config["checks"]["diff"] = ["git", "diff", "--check", self.config["baseline"]]
         self.state = read_json(root / "state.json")
+        # Usage totals are cumulative per session, and sessions are now fresh
+        # per assignment/batch, so the ledger is keyed by session ID.
+        costs = self.state.setdefault("session_costs", {})
+        for role in ("director", "orchestrator", "worker"):
+            if role in costs:
+                sid = self.state["sessions"].get(role)
+                value = costs.pop(role)
+                if sid:
+                    costs[sid] = max(costs.get(sid, 0.0), value)
         self.repo = Path(self.config["worktree"])
         self.deadline = 0
+
+    def env(self, **extra):
+        """Environment for agents and checks: cargo on PATH and the run's paths."""
+        env = dict(os.environ, PATH=cargo_path(os.environ.get("PATH")), CARGO_TERM_COLOR="never",
+                   PAIR_STATE=str(self.root), PAIR_WORKSPACE=str(self.repo), PAIR_SOURCE=str(self.config["repo"]),
+                   PAIR_TOOLS=str(HERE), PAIR_CAPTURES=str(self.root / "captures"),
+                   PAIR_BASELINE=self.config["baseline"])
+        env.update(extra)
+        return env
 
     def outer_settings(self):
         path = self.root / "outer-settings.json"
@@ -231,15 +251,16 @@ class Runner:
         if (self.root / "shared/SYSTEM.md").exists():
             shared_notebook.current(self.root, self.state, self.config)
 
-    def process(self, argv, prefix, stdin=None):
+    def process(self, argv, prefix, stdin=None, cwd=None, env=None):
         """Persist output before interpretation; stop the process group on limits."""
         out, err = prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
         timeout = min(self.config["turn_minutes"] * 60, self.deadline - time.monotonic())
         if timeout <= 0 or (self.root / "STOP").exists():
             raise InterruptedError("Stop requested or run time exhausted")
+        (self.root / "captures").mkdir(exist_ok=True)
         with out.open("wb") as of, err.open("wb") as ef:
-            p = subprocess.Popen(argv, cwd=self.repo, stdin=subprocess.PIPE if stdin else subprocess.DEVNULL,
-                                 stdout=of, stderr=ef, start_new_session=True)
+            p = subprocess.Popen(argv, cwd=cwd or self.repo, stdin=subprocess.PIPE if stdin else subprocess.DEVNULL,
+                                 stdout=of, stderr=ef, start_new_session=True, env=env or self.env())
             self.state["child_pid"] = p.pid
             self.save()
             try:
@@ -265,12 +286,47 @@ class Runner:
                 self.save()
         return p.returncode, out, err
 
-    def call(self, role, prompt):
+    def prompt_file(self, name):
+        """Run-local prompt copy when present (edited while stopped), else the installed one."""
+        local = self.root / "prompts" / name
+        return (local if local.exists() else HERE / "prompts" / name).read_text()
+
+    def instructions(self, role):
+        text = "\n\n".join([self.prompt_file("mission.md"), self.prompt_file(f"{role}.md"),
+                             self.prompt_file("handbook.md"), shared_notebook.SYSTEM])
+        text += ("\n# This run\n\n"
+                 f"- Workspace: {self.repo}. This is the user's own project folder and your working "
+                 f"directory. Edit here and commit to the current branch ({self.config.get('branch') or 'detached HEAD'}).\n"
+                 f"- Run state, logs and receipts: {self.root} (git-ignored; do not edit)\n"
+                 f"- Screenshots and UI captures: {self.root / 'captures'} (view PNGs with the Read tool)\n"
+                 f"- Native UI capture: python3 {HERE / 'ui_capture.py'} --help\n"
+                 f"- Baseline (the folder as it was when the run started, including the user's "
+                 f"uncommitted edits): {self.config['baseline']}, pinned as {self.config.get('baseline_ref', 'no ref')}\n"
+                 "- Your shell and every check get PAIR_STATE, PAIR_WORKSPACE, PAIR_SOURCE, PAIR_TOOLS, "
+                 "PAIR_CAPTURES and PAIR_BASELINE, with ~/.cargo/bin on PATH.\n")
+        if self.state.get("outer"):
+            text += "\nA Director now selects bounded batches above this pair. The batch contract overrides older whole-mission completion instructions."
+            if role != "director":
+                text += outer_loop.contract_prompt(self)
+        if self.config["audit_only"]:
+            text += "\nAUDIT ONLY: do not modify files. The current task is a bounded inventory, not implementation. Report findings via structured output."
+        return text
+
+    def call(self, role, prompt, scope=None):
+        """One agent turn. A role keeps its session only while `scope` (the
+        assignment or batch) is unchanged and the session is short; otherwise it
+        starts fresh and relies on the task contract and notebook for context."""
         shared_notebook.setup(self.root, self.state, self.config)
         prompt += shared_notebook.context(self.root, role)
         prompt += disk_preflight.context(self.repo)
         schema = {"director": outer_loop.DIRECTOR_SCHEMA, "orchestrator": PLAN_SCHEMA, "worker": REPORT_SCHEMA}[role]
+        scopes = self.state.setdefault("session_scopes", {})
+        counts = self.state.setdefault("session_calls", {})
         session = self.state["sessions"].get(role)
+        retrying = session and self.state.pop("retry_session", None) == session
+        if session and not retrying and (role == "director" or scopes.get(role) != scope or
+                                         counts.get(session, 0) >= self.config.get("max_session_calls", 8)):
+            session = None
         sid = session or str(uuid.uuid4())
         self.state["calls"] += 1
         prefix = self.root / "logs" / f"{self.state['calls']:04d}-{role}"
@@ -282,37 +338,29 @@ class Runner:
         self.state["cost_usd"] += reservation
         self.state["inflight"] = {"role": role, "session_id": sid, "prefix": str(prefix), "reserved_usd": reservation,
                                   "started_at": time.time()}
+        scopes[role] = scope
+        counts[sid] = counts.get(sid, 0) + 1
         self.save()
-        instructions = (self.root / "prompts" / "mission.md").read_text() + "\n\n" + (self.root / "prompts" / f"{role}.md").read_text()
-        instructions += "\n\n" + shared_notebook.SYSTEM
-        read_only = role in ("director", "orchestrator") or self.config["audit_only"]
-        if self.state.get("outer"):
-            instructions += "\nA read-only Director now selects bounded batches above this pair. The batch contract overrides older whole-mission completion instructions. Only the worker edits code."
-            if role != "director":
-                instructions += outer_loop.contract_prompt(self)
-        if self.config["audit_only"]:
-            instructions += "\nAUDIT ONLY: do not modify files. The current task is a bounded inventory, not implementation. Report findings via structured output."
         argv = [self.config["claude"], "--print", "--output-format", "stream-json", "--verbose",
                 "--system-prompt-snapshot", "off",
-                "--json-schema", json.dumps(schema), "--append-system-prompt", instructions,
-                "--safe-mode", "--setting-sources", "", "--settings", '{"disableAllHooks":true}',
-                "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}',
-                "--no-chrome", "--disable-slash-commands", "--permission-prompts", "none",
-                "--permission-mode", "dontAsk" if read_only else "auto",
-                "--tools", "Read,Glob,Grep" if read_only else "Read,Glob,Grep,Edit,Write,Bash",
+                "--json-schema", json.dumps(schema), "--append-system-prompt", self.instructions(role),
+                # Project settings, AGENTS.md/CLAUDE.md and project skills load; the
+                # user's personal settings, hooks and MCP servers do not.
+                "--setting-sources", "project",
+                "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--no-chrome",
                 "--max-budget-usd", str(reservation), "--max-turns", str(self.config["max_turns"]),
+                "--add-dir", str(self.root),
                 "--resume" if session else "--session-id", sid]
-        if read_only:
-            argv += ["--allowedTools", "Read,Glob,Grep"]
-        if role in ("director", "orchestrator"):
-            argv += ["--add-dir", str(self.root)]
-        if role == "worker":
-            argv += ["--add-dir", str(self.root / "shared")]
+        if self.config["audit_only"]:
+            argv += ["--permission-mode", "dontAsk", "--permission-prompts", "none",
+                     "--tools", "Read,Glob,Grep", "--allowedTools", "Read,Glob,Grep"]
+        else:
+            argv += ["--dangerously-skip-permissions"]
         if not session:
-            argv += ["--name", f"Rust viewer {role} ({self.root.name})"]
+            argv += ["--name", f"Pair {role} ({self.root.name})"]
         if self.config.get("model"):
             argv += ["--model", self.config["model"]]
-        print(f"{role}: call {self.state['calls']} ({prefix.name})", flush=True)
+        print(f"{role}: call {self.state['calls']} ({prefix.name}{', resumed' if session else ', fresh session'})", flush=True)
         code, out, err = self.process(argv, prefix, prompt)
         raw = out.read_text()
         try:
@@ -327,17 +375,21 @@ class Runner:
             raise RuntimeError("Claude returned an unexpected session ID")
         self.state["sessions"][role] = sid
         total = result.get("total_cost_usd")
-        prior = self.state["session_costs"].get(role, 0.0)
+        prior = self.state["session_costs"].get(sid, 0.0)
         if not isinstance(total, (float, int)) or not math.isfinite(total) or total < prior:
             raise RuntimeError("Missing or regressed cumulative usage; reserved cap retained")
         self.state["cost_usd"] += total - prior - reservation
-        self.state["session_costs"][role] = total
+        self.state["session_costs"][sid] = total
         self.state.pop("inflight")
         self.save()
         if code or result.get("is_error") or result.get("subtype") != "success":
             raise RuntimeError(f"Claude did not finish successfully; see {out} and {err}")
         if result.get("permission_denials"):
-            raise RuntimeError(f"Claude reported permission denials; see {out}. No automatic bypass.")
+            # Not a boundary any more (agents run without permission prompts);
+            # recorded so a refused interactive tool is visible in the journal.
+            shared_notebook.append(self.root, {"id": f"denials-{self.state['calls']:04d}", "author": "coordinator",
+                "kind": "Permission denials", "summary": f"{role} had {len(result['permission_denials'])} tool call(s) refused.",
+                "notes": [json.dumps(d)[:600] for d in result["permission_denials"][:8]], "source": str(out)})
         data = result.get("structured_output")
         validate(data, schema)
         shared_notebook.response(self.root, role, self.state["calls"], data, out)
@@ -347,28 +399,57 @@ class Runner:
         # The orchestrator can open all logs with Read; full diffs stay on disk.
         prefix = self.root / "logs" / f"review-{self.state['rounds']:04d}"
         diff = prefix.with_suffix(".diff")
+        # Compare whole-folder trees so untracked files (the user's and the
+        # agents') are neither hidden nor shown as deletions.
+        base, now = self.config["baseline"], folder_tree(self.repo)
         with diff.open("wb") as f:
-            subprocess.run(["git", "diff", "--no-ext-diff", self.config["baseline"]], cwd=self.repo, stdout=f, check=True)
+            subprocess.run(["git", "diff", "--no-ext-diff", base, now], cwd=self.repo, stdout=f, check=True)
         status = git(self.repo, "status", "--short").decode(errors="replace")
         prefix.with_suffix(".status.txt").write_text(status)
-        return {"local_commits": git(self.repo, "log", "--format=%h %s", self.config["baseline"] + "..HEAD").decode(errors="replace"),
+        stat = git(self.repo, "diff", "--stat=160", base, now).decode(errors="replace")
+        commits = git(self.repo, "log", "--stat=160", "--format=%n%h %s", base + "..HEAD").decode(errors="replace")
+        captures = sorted((self.root / "captures").glob("**/*.png"), key=lambda p: p.stat().st_mtime, reverse=True)
+        return {"local_commits": git(self.repo, "log", "--format=%h %s", base + "..HEAD").decode(errors="replace"),
+                "diffstat": clip(stat, 6000), "commits_with_stats": clip(commits, 6000),
+                "untracked": [line[3:] for line in status.splitlines() if line.startswith("??")][:200],
                 "diff_file": str(diff), "status_file": str(prefix.with_suffix('.status.txt')),
-                "note": "Untracked files are listed in status, not in diff. Read every relevant new file directly.",
+                "recent_captures": [str(p) for p in captures[:20]],
+                "note": "diff_file compares the run's baseline with everything in the folder now, including new untracked files. Use the diffstat to choose what to read. View captures with Read.",
                 "worker_report": self.state.get("report"), "independent_checks": self.state.get("receipts", [])}
 
+    def run_checks(self, suffix=""):
+        rounds = self.state["rounds"]
+        for index, name in enumerate(check_names(self.state["plan"])):
+            if suffix and name == "diff":
+                continue  # nothing to compare before any edits
+            prefix = check_prefix(self.root, rounds, index, name)
+            argv = check_argv(self.config["checks"], name)
+            code, out, err = self.process(argv, prefix.with_name(prefix.name + suffix))
+            yield {"name": name, "command": argv, "exit_code": code, "stdout": str(out), "stderr": str(err)}
+
+    def precheck(self):
+        """Run a new assignment's checks before the worker edits anything, so a
+        later failure can be told apart from one that was already there."""
+        self.state["prechecks"] = {r["name"]: r for r in self.run_checks("-before")}
+
     def verify(self):
+        before = self.state.get("prechecks", {})
         receipts = []
-        names = list(dict.fromkeys(["diff", *self.state["plan"]["checks"]]))
-        for name in names:
-            prefix = self.root / "logs" / f"check-{self.state['rounds']:04d}-{name}"
-            argv = self.config["checks"][name]
-            code, out, err = self.process(argv, prefix)
-            receipts.append({"name": name, "command": argv, "exit_code": code,
-                             "stdout": str(out), "stderr": str(err)})
+        for receipt in self.run_checks():
+            if receipt["exit_code"] != 0 and receipt["name"] in before:
+                receipt["before"] = before[receipt["name"]]
+            receipts.append(receipt)
         self.state["receipts"] = receipts
+
+        def verdict(r):
+            if r["exit_code"] == 0:
+                return " passed"
+            b = r.get("before")
+            return " failed" + ("" if not b else " (already failing before this assignment)" if b["exit_code"]
+                                else " (passed before this assignment: new failure)")
         shared_notebook.append(self.root, {"id": f"checks-{self.state['rounds']:04d}-{self.state['calls']:04d}",
             "author": "coordinator", "kind": "Independent verification",
-            "summary": "Independent checks finished: " + "; ".join(r["name"] + (" passed" if r["exit_code"] == 0 else " failed") for r in receipts),
+            "summary": "Independent checks finished: " + "; ".join(r["name"][:120] + verdict(r) for r in receipts),
             "notes": [r["stdout"] + " | " + r["stderr"] for r in receipts], "source": str(self.root / "logs")})
 
     def run(self, steps=0, retry=False):
@@ -378,10 +459,11 @@ class Runner:
             print("Mission already complete")
             return
         if self.state.get("inflight") and not retry:
-            raise RuntimeError("Interrupted/uncertain call. Inspect its logs and worktree, then use --retry-interrupted. The reserved usage cap remains charged.")
+            raise RuntimeError("Interrupted/uncertain call. Inspect its logs and the project folder, then use --retry-interrupted. The reserved usage cap remains charged.")
         if retry and self.state.get("inflight"):
             interrupted = self.state.pop("inflight")
             self.state["sessions"][interrupted["role"]] = interrupted["session_id"]
+            self.state["retry_session"] = interrupted["session_id"]
         if (self.root / "STOP").exists():
             raise RuntimeError("STOP is present. Use the resume command to clear it deliberately.")
         if self.state.get("run_started_at"):
@@ -422,13 +504,18 @@ class Runner:
                     prompt = outer_loop.director_prompt(self)
                     if steering_path.exists():
                         prompt += "\nCURRENT OPERATOR GUIDANCE:\n" + read_json(steering_path)["text"]
-                    decision = self.call("director", prompt)
+                    decision = self.call("director", prompt, scope="director")
                     outer_loop.guard_decision(decision, self.state, self.config["checks"])
                     write_json(self.root / "logs" / f"director-{self.state['calls']:04d}.json", decision)
                     if not outer_loop.dispatch(self, decision):
                         break
                 elif phase == "orchestrator":
-                    prompt = "Read the mission and inspect the repository. Maintain your checklist. Verification catalogue:\n" + json.dumps(self.config["checks"])
+                    prompt = ("Read the mission and inspect the repository. Maintain your checklist. "
+                              "Checks may be names from this catalogue or any shell command, run from the workspace root:\n"
+                              + json.dumps(self.config["checks"]))
+                    if self.state.get("plan"):
+                        prompt += ("\nYour previous plan (you may be in a fresh session: carry its checklist IDs forward "
+                                   "and treat it as your own earlier decision):\n" + json.dumps(self.state["plan"]))
                     if self.state.get("report"):
                         prompt += "\nReview the worker using this evidence:\n" + json.dumps(self.evidence())
                     elif self.state.get("operator_replan"):
@@ -449,7 +536,8 @@ class Runner:
                         self.save()
                     if self.state.get("outer", {}).get("current_batch"):
                         prompt += outer_loop.contract_prompt(self)
-                    plan = self.call("orchestrator", prompt)
+                    batch = (self.state.get("outer", {}).get("current_batch") or {}).get("id", "mission")
+                    plan = self.call("orchestrator", prompt, scope="batch:" + batch)
                     guard_plan(plan, self.state, self.config["checks"])
                     outer_loop.guard_contract(self, plan)
                     if self.config["audit_only"] and set(plan["checks"]) - {"diff"}:
@@ -459,6 +547,11 @@ class Runner:
                         "summary": f"Orchestrator response passed the handoff guards: action={plan['action']}, review={plan['review']}.",
                         "notes": ["Evidence remains scoped to the reviewed assignment; this does not establish whole-project completion."],
                         "source": str(self.root / "logs" / f"plan-{self.state['calls']:04d}.json")})
+                    new_assignment = plan["action"] == "work" and plan["review"] != "revise"
+                    if new_assignment:
+                        # A new assignment gets a fresh worker; repairs resume the same one.
+                        self.state["assignment"] = self.state.get("assignment", 0) + 1
+                        self.state["prechecks"] = {}
                     self.state["plan"] = plan
                     self.state.pop("operator_replan", None)
                     write_json(self.root / "logs" / f"plan-{self.state['calls']:04d}.json", plan)
@@ -468,6 +561,8 @@ class Runner:
                         self.state["status"] = plan["action"]
                         self.state["message"] = plan["summary"]
                         break
+                    elif new_assignment and self.config.get("precheck") and len(check_names(plan)) > 1:
+                        self.state["phase"] = "precheck"
                     else:
                         self.state["phase"] = "worker"
                 elif phase == "worker":
@@ -475,11 +570,14 @@ class Runner:
                         raise InterruptedError("Worker-turn ceiling reached; reviewed progress is saved")
                     plan = self.state["plan"]
                     prompt = plan["worker_prompt"] + "\n\nAcceptance criteria:\n" + json.dumps(plan["acceptance_criteria"])
-                    self.state["report"] = self.call("worker", prompt)
+                    self.state["report"] = self.call("worker", prompt, scope=f"assignment:{self.state.get('assignment', 0)}")
                     self.state["rounds"] += 1
                     self.state["phase"] = "verify"
                     self.state["receipts"] = []
                     write_json(self.root / "logs" / f"worker-{self.state['rounds']:04d}.json", self.state["report"])
+                elif phase == "precheck":
+                    self.precheck()
+                    self.state["phase"] = "worker"
                 elif phase == "verify":
                     self.verify()
                     self.state["phase"] = "orchestrator"
@@ -504,30 +602,48 @@ class Runner:
         return 1 if self.state["status"] == "blocked" else 0
 
 
+def default_repo():
+    return Path(git(Path.cwd(), "rev-parse", "--show-toplevel").decode().strip())
+
+
+def default_state(repo=None):
+    return (repo or default_repo()) / ".claude-pair"
+
+
 def initialize(args):
-    root = Path(args.state).expanduser().resolve()
-    repo = Path(args.repo).expanduser().resolve()
-    if root.exists():
-        raise ValueError("State directory already exists; use run/resume or choose a new directory")
-    if root.is_relative_to(repo):
-        raise ValueError("Keep coordinator state/worktree outside the source checkout")
+    """Set up a run that works directly in the project folder; no model calls."""
+    repo = Path(args.repo).expanduser().resolve() if args.repo else default_repo()
+    root = Path(args.state).expanduser().resolve() if args.state else default_state(repo)
+    if git(repo, "rev-parse", "--show-toplevel").decode().strip() != str(repo):
+        raise ValueError("--repo must be the repository root")
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
         value = getattr(args, name)
         if not math.isfinite(value) or value <= 0:
             raise ValueError(f"{name} must be positive and finite")
-    if git(repo, "rev-parse", "--show-toplevel").decode().strip() != str(repo):
-        raise ValueError("--repo must be the repository root")
     claude = shutil.which(args.claude)
     if not claude:
         raise ValueError("Claude Code executable not found")
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    if root.exists():
+        if not args.fresh:
+            raise ValueError(f"A run already exists at {root}. Continue it with `run`, or start over with `init --fresh` "
+                             "(the old run is kept beside it).")
+        with lock(root):
+            pass  # refuses while a coordinator is running
+        archived = root.with_name(f"{root.name}-{stamp}")
+        root.rename(archived)
+        print(f"Previous run kept at {archived}", flush=True)
     root.mkdir(parents=True)
+    exclude_state(repo, root)
     (root / "logs").mkdir()
-    shutil.copytree(HERE / "prompts", root / "prompts")
-    print("Snapshotting tracked and non-ignored working files; source checkout is preserved.", flush=True)
-    snap = snapshot(repo, root / "workspace")
-    config = {"repo": str(repo), "worktree": str(root / "workspace"), **snap,
+    head, baseline = working_baseline(repo, "Working-folder baseline for a claude-pair run")
+    ref = baseline_ref(stamp)
+    git(repo, "update-ref", ref, baseline)
+    branch = git(repo, "rev-parse", "--abbrev-ref", "HEAD").decode().strip()
+    config = {"repo": str(repo), "worktree": str(repo), "in_place": True, "source_head": head,
+              "baseline": baseline, "baseline_ref": ref, "branch": None if branch == "HEAD" else branch,
               "claude": claude, "model": args.model, "audit_only": args.audit_only,
-              "checks": read_json(HERE / "checks.json")}
+              "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": True}
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
         config[name] = getattr(args, name)
     config["checks"]["diff"] = ["git", "diff", "--check", config["baseline"]]
@@ -536,15 +652,14 @@ def initialize(args):
         "calls": 0, "rounds": 0, "elapsed_seconds": 0, "cost_usd": 0,
         "sessions": {}, "session_costs": {}, "message": "Ready; no model calls yet."})
     Runner(root).save()
-    print(f"Ready: {root}\nRun: python3 {HERE / 'pair.py'} run --state {root}")
+    dirty = "" if head == baseline else " Uncommitted edits were recorded in the baseline, so reviews show only agent work."
+    print(f"Ready: agents will work in {repo} on {config['branch'] or 'detached HEAD'}.{dirty}\n"
+          f"State: {root}\nRun: python3 {HERE / 'pair.py'} run")
 
 
 def configure_outer(root, enabled, max_batches):
     if type(enabled) is not bool or type(max_batches) is not int or max_batches < 1:
         raise ValueError("Use a boolean enabled flag and a positive whole batch limit")
-    target = root / "prompts/director.md"
-    if not target.exists():
-        shutil.copyfile(HERE / "prompts/director.md", target)
     write_json(root / "outer-settings.json", {"enabled": enabled, "max_batches": max_batches})
     # This settings file is independent of the running coordinator's state.
     try:
@@ -590,9 +705,10 @@ def main():
     signal.signal(signal.SIGTERM, terminated)
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
-    init = sub.add_parser("init", help="Snapshot the current working tree; no model calls")
-    init.add_argument("--repo", required=True)
-    init.add_argument("--state", required=True)
+    init = sub.add_parser("init", help="Set up a run in this project folder; no model calls")
+    init.add_argument("--repo", help="Project folder (default: the git repository containing the current directory)")
+    init.add_argument("--state", help="Run state directory (default: <repo>/.claude-pair, git-ignored)")
+    init.add_argument("--fresh", action="store_true", help="Start a new run, keeping the previous one beside it")
     init.add_argument("--claude", default="claude")
     init.add_argument("--model", help="Omit to use Claude Code's default model")
     init.add_argument("--audit-only", action="store_true")
@@ -604,7 +720,7 @@ def main():
     init.add_argument("--call-budget-usd", type=float, default=10)
     for name in ("run", "resume", "status", "stop", "enable-outer", "watch-outer"):
         p = sub.add_parser(name)
-        p.add_argument("--state", required=True)
+        p.add_argument("--state", help="Run state directory (default: <repo>/.claude-pair)")
         if name == "enable-outer":
             p.add_argument("--max-batches", type=int, default=8)
         if name in ("run", "resume"):
@@ -615,7 +731,7 @@ def main():
         if args.command == "init":
             initialize(args)
             return 0
-        root = Path(args.state).expanduser().resolve()
+        root = Path(args.state).expanduser().resolve() if args.state else default_state()
         if args.command == "enable-outer":
             configure_outer(root, True, args.max_batches)
             print("Director enabled; active work is preserved and upgrades at the next safe restart.")

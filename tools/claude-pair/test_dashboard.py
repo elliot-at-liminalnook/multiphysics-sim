@@ -140,7 +140,7 @@ class DashboardTests(unittest.TestCase):
         runner.save()
         self.post("steering", {"text": "Start with the builder"})
         calls = []
-        def fake_call(runner, role, prompt):
+        def fake_call(runner, role, prompt, scope=None):
             calls.append((role, prompt))
             return plan()
         with patch.object(pair.Runner, "call", fake_call):

@@ -36,7 +36,7 @@ class OuterTests(unittest.TestCase):
         pair.configure_outer(root, True, 2)
         return root
 
-    def fake_call(self, runner, role, prompt):
+    def fake_call(self, runner, role, prompt, scope=None):
         runner.state['calls'] += 1
         runner.state['cost_usd'] += .1
         if role == 'director':
@@ -56,7 +56,7 @@ class OuterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = self.setup_run(tmp)
             roles = []
-            def call(runner, role, prompt):
+            def call(runner, role, prompt, scope=None):
                 roles.append(role)
                 return self.fake_call(runner, role, prompt)
             with patch.object(pair.Runner, 'call', call):
@@ -76,7 +76,7 @@ class OuterTests(unittest.TestCase):
             root = self.setup_run(tmp)
             def verify(runner):
                 runner.state['receipts'] = [{'name': 'diff', 'exit_code': 1}]
-            with patch.object(pair.Runner, 'call', lambda runner, role, prompt: self.fake_call(runner, role, prompt)), patch.object(pair.Runner, 'verify', verify):
+            with patch.object(pair.Runner, 'call', lambda runner, role, prompt, scope=None: self.fake_call(runner, role, prompt)), patch.object(pair.Runner, 'verify', verify):
                 pair.Runner(root).run()
             s = pair.read_json(root / 'state.json')
             self.assertEqual(s['status'], 'blocked')

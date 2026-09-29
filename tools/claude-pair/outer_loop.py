@@ -29,6 +29,15 @@ DIRECTOR_SCHEMA = obj({
     "batch": BATCH})
 
 
+def check_passed(receipt, waived=()):
+    """A failure is waivable only when the orchestrator names it and the same
+    command was already failing before the assignment's edits began."""
+    if receipt["exit_code"] == 0:
+        return True
+    before = receipt.get("before") or {}
+    return receipt["name"] in waived and before.get("exit_code") not in (None, 0)
+
+
 def nonempty(values):
     return bool(values) and all(isinstance(v, str) and v.strip() for v in values)
 
@@ -66,8 +75,8 @@ def guard_decision(decision, state, checks):
     for task in batch["tasks"]:
         if not nonempty([task["id"], task["title"], task["brief"]]) or not nonempty(task["done_when"]):
             raise ValueError("Tasks need a brief and observable acceptance criteria")
-        if not set(task["checks"]).issubset(checks):
-            raise ValueError("Director selected an unknown independent check")
+        if any(not isinstance(c, str) or not c.strip() for c in task["checks"]):
+            raise ValueError("Checks must be catalogue names or nonempty shell commands")
 
 
 def batch_checklist(batch):
@@ -120,7 +129,8 @@ def director_prompt(runner):
               "across cohesion, feature gaps, shared-library improvements and technical debt. "
               "Choose ONE cohesive batch with 1–4 ordered tasks, or explain why stopping is wiser. "
               "Do not dispatch a task already completed, and do not invent success or GUI evidence.\n")
-    prompt += "\nIndependent verification catalogue:\n" + json.dumps(runner.config["checks"])
+    prompt += ("\nIndependent checks may be names from this catalogue or any shell command "
+               "(run from the workspace root):\n" + json.dumps(runner.config["checks"]))
     prompt += "\nLong-term roadmap (historical evidence, inspect freshness):\n" + json.dumps(outer["roadmap"])
     prompt += "\nPrevious hopper (reconsider deferred items; they are not automatic promises):\n" + json.dumps(outer["hopper"])
     prompt += "\nCompleted batch IDs:\n" + json.dumps([b["id"] for b in outer["history"]])
@@ -188,6 +198,6 @@ def guard_contract(runner, plan):
         raise ValueError("Orchestrator omitted required batch tasks or outcomes")
     required_checks = {check for task in batch["tasks"] for check in task["checks"]}
     if plan["action"] == "complete":
-        passed = {r["name"] for r in runner.state.get("receipts", []) if r["exit_code"] == 0}
+        passed = {r["name"] for r in runner.state.get("receipts", []) if check_passed(r, plan["waived_checks"])}
         if not required_checks.issubset(passed):
             raise ValueError("Completion requires all Director-requested independent checks")

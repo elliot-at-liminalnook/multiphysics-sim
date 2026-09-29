@@ -18,7 +18,8 @@ def call_stage(role, prompt):
 
 def describe(state, active, records, checks, now):
     phase = state['phase']
-    current = ('review' if state.get('report') else 'assign') if phase == 'orchestrator' else phase
+    current = (('review' if state.get('report') else 'assign') if phase == 'orchestrator'
+               else 'worker' if phase == 'precheck' else phase)
     latest = {step: next((r for r in reversed(records) if r['stage'] == step), None) for step, *_ in STEPS}
     nodes = []
     for key, title, owner, purpose in STEPS:

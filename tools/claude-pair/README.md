@@ -1,11 +1,11 @@
 # Claude pair: one Rust viewer
 
-Two persistent Claude Code sessions cooperate through a small local coordinator,
-with an optional third read-only Director session choosing subsequent batches.
+Two Claude Code roles cooperate through a small local coordinator, with an
+optional third Director role choosing subsequent batches.
 The orchestrator reads the project, maintains a migration checklist and writes
 one bounded assignment. The worker implements it. The coordinator runs selected
 checks independently, and the orchestrator reviews the files and results before
-issuing the next assignment. The sessions take turns; only the worker edits.
+issuing the next assignment. The roles take turns; the worker implements.
 
 This uses your installed `claude` command and existing Claude login. Model
 inference is remote; the coordinator, source files and build commands run on
@@ -13,25 +13,32 @@ this Mac. It does not provision cloud machines or start Codex tasks.
 
 ## Start
 
-Requires Python 3.9+, Git, and Claude Code with `--system-prompt-snapshot off` support (tested with 2.1.284).
+Requires Python 3.9+, Git, and Claude Code with `--system-prompt-snapshot off` support (tested with 2.1.285).
 
 ```sh
-python3 tools/claude-pair/pair.py init \
-  --repo /Users/elliot/physics-simulator \
-  --state /Users/elliot/Documents/Codex/viewer-claude-pair
-
-python3 tools/claude-pair/pair.py run \
-  --state /Users/elliot/Documents/Codex/viewer-claude-pair
+python3 tools/claude-pair/pair.py init
+python3 tools/claude-pair/pair.py run
 ```
 
-Run these from the physics-simulator root. `init` captures the current working
-files, including staged, unstaged and non-ignored untracked work, in a separate
-Git worktree. Your source HEAD, index and working files stay intact. The snapshot
-has its own baseline commit so later diffs show only the worker's changes.
-On APFS, copies use copy-on-write. Git must still hash/compress new source data;
-large experiment collections can make initialization slow. Ignored build
-outputs and caches are not copied. External symlinks and nested repositories
-require explicit handling and cause initialization to stop.
+Run these anywhere inside the project. The agents work **directly in this
+folder** and commit to its current branch; there is no separate copy. Run state
+(config, logs, journal, captures) lives in `.claude-pair/`, which `init` adds to
+`.git/info/exclude`, so it never shows up in `git status` or commits. Every
+other command finds it automatically. `--state` and `--repo` are only needed for
+a different location.
+
+`init` records a baseline commit for the folder as it is at that moment,
+including uncommitted edits and non-ignored untracked files. It uses a temporary
+index, so your HEAD, index and files are untouched. Reviews diff against that
+baseline, so your pre-run work is never mistaken for agent work. The baseline is
+pinned at `refs/claude-pair/<timestamp>/baseline`. `init` refuses if a run
+already exists; `init --fresh` starts a new one and keeps the old run beside it
+as `.claude-pair-<timestamp>/` (also ignored).
+
+You can keep working in the folder during a run. The agents are told never to
+revert, stash or commit changes they didn't make, and to stage only their own
+files. Your concurrent edits will still appear in review diffs, and a build you
+start can contend with theirs for the Cargo lock.
 
 The default run ends after **12 worker turns, 8 active hours, or $100 of estimated
 model usage**, whichever applies first. Each Claude call also has a 45-minute,
@@ -55,7 +62,7 @@ For a live control panel, run:
 
 ```sh
 python3 tools/claude-pair/open_dashboard.py \
-  --state /Users/elliot/Documents/Codex/viewer-claude-pair --open
+  --open
 ```
 
 The local dashboard shows the mission, both exact prompts, live activity for new
@@ -71,9 +78,9 @@ writes. It starts no agents until Continue/Start is clicked. Closing the browser
 does not stop either the server or a running pair; use Stop for the agents.
 
 ```sh
-python3 tools/claude-pair/pair.py status --state /Users/elliot/Documents/Codex/viewer-claude-pair
-python3 tools/claude-pair/pair.py stop --state /Users/elliot/Documents/Codex/viewer-claude-pair
-python3 tools/claude-pair/pair.py resume --state /Users/elliot/Documents/Codex/viewer-claude-pair
+python3 tools/claude-pair/pair.py status
+python3 tools/claude-pair/pair.py stop
+python3 tools/claude-pair/pair.py resume
 ```
 
 `STATUS.md` gives the current phase and checklist. `state.json` records both
@@ -86,7 +93,7 @@ planning, working, verification and review are separate transitions.
 
 Stop creates a stop marker; the coordinator terminates its active process group
 and saves partial progress. Ctrl-C and SIGTERM also stop the child. If a Claude
-call was interrupted or its outcome is uncertain, inspect its logs and workspace
+call was interrupted or its outcome is uncertain, inspect its logs and the project folder
 before `resume --retry-interrupted`. It resumes that session, preserving files;
 it does not roll edits back. The full reservation remains in the usage ledger
 when the actual cost is unknown, and recovery may overcount that cost. Never
@@ -96,7 +103,7 @@ An abrupt OS kill can leave a child alive: check for that process before retryin
 Only one coordinator may run per state directory. Keep the terminal/coordinator
 running and the Mac awake for continued work; no daemon or scheduled automation
 is installed. You can inspect a stopped session interactively with
-`claude --resume SESSION_ID` in its workspace, but do not run it concurrently
+`claude --resume SESSION_ID` in the project folder, but do not run it concurrently
 with the coordinator.
 
 ## Scope and review
@@ -106,33 +113,86 @@ interface, preserves CAD source ownership and shared Rust execution, and require
 evidence before removing a legacy interface. Python/OCCT can remain a backend
 dependency; the user should not need its separate UI for a migrated workflow.
 
-The orchestrator has only Read, Glob and Grep. The worker has file tools and
-Bash in Claude's automatic permission-review mode. There is no permissions
-bypass. Hooks, external MCP servers, Chrome integration and skills are disabled
-for these sessions; role/mission prompts are supplied explicitly. Denied actions
-stop the handoff and are recorded. This is a workflow boundary, not an OS security
-sandbox: the worker's commands still run as your user. It is instructed not to
-touch the source checkout, coordinator, hardware, remote services or home settings.
+### Full control
 
-`checks.json` is a catalogue of exact argument arrays; the orchestrator selects
-names, not arbitrary shell text. It is copied into the run configuration at
-initialization. Add focused checks there while stopped as needed. Checks use
-the isolated workspace and its build cache. The worker may run additional checks,
-but those reports are distinguished from independent coordinator receipts.
+Every role runs with `--dangerously-skip-permissions` and the complete built-in
+tool set: any shell command, file edits, subagents, web access, background
+processes, builds and the native viewer. There is no command allowlist and no
+permission prompt. Project settings, `AGENTS.md` and project skills load
+(`--setting-sources project`). Your personal settings, hooks and MCP servers do
+not, so a run behaves the same regardless of your interactive setup. Chrome
+integration is off. A refused tool call (for example an interactive-only tool)
+is recorded in the journal instead of stopping the run.
+
+The only limits are a few hard boundaries stated in `prompts/mission.md`: no
+hardware motion, no paid cloud, pushes, publication or purchases, no edits to
+changes the agents didn't make (reverting, stashing or committing your work), no
+deletion of experiments or other protected data, and no
+tampering with coordinator state or receipts. These are instructions to the
+model, not an OS sandbox: commands run as your user with your access.
+
+### Fresh sessions
+
+A role keeps its Claude session only while its scope is unchanged. The worker
+resumes for `review=revise` repairs and starts fresh for each new assignment.
+The orchestrator starts fresh for each batch. The Director is always fresh. Any
+session is also replaced after `max_session_calls` turns (default 8, in
+`config.json`). Fresh sessions work from the self-contained task contract, the
+orchestrator's previous plan (included in its prompt) and the shared notebook.
+The usage ledger reconciles each session's cumulative total separately.
+
+### Checks and before/after receipts
+
+A check is a name from `checks.json` (an exact argument array) or any shell
+command, which runs with `bash -c` from the project root. Checks get
+`~/.cargo/bin` on `PATH` and `PAIR_STATE`, `PAIR_WORKSPACE`, `PAIR_SOURCE`,
+`PAIR_TOOLS`, `PAIR_CAPTURES` and `PAIR_BASELINE`. For each new assignment the
+coordinator runs its checks once **before** the worker starts (set
+`precheck: false` in `.claude-pair/config.json` to skip this). A check that fails
+afterwards carries that earlier receipt. Acceptance still requires every check to
+pass, except those the orchestrator lists in `waived_checks`. A waiver is
+accepted only for a check that was already failing before the assignment, so a
+pre-existing failure can't block unrelated work forever and a new failure can
+never be waived.
+
+Review evidence includes a diffstat, commits with stats, untracked files and
+recent captures alongside the full diff file, so the orchestrator can read the
+relevant parts. The diff compares the baseline with everything in the folder
+now, so new untracked files are included and your pre-run untracked files never
+appear as deletions.
+
+### Native UI capture
+
+`ui_capture.py` launches the native viewer (`sim-spatial`) on a free loopback
+port and runs a JSON script of REST commands (`system_ui` activates live
+controls through the same handlers as a click). It saves window screenshots
+exactly as drawn, writes `capture.json` and stops the viewer. It exits nonzero
+if any step fails, so it works as an independent check:
+
+```sh
+python3 tools/claude-pair/ui_capture.py --out "$PAIR_CAPTURES/board" \
+  --steps '[{"command":"display","args":{"action":{"kind":"set_exploded","enabled":true}}},{"screenshot":"exploded"}]' \
+  -- --system examples/systems-builder/motor-driver-board/board.system.json
+```
+
+Agents view the PNGs with Read. The viewer opens a real window, so a run needs
+a logged-in desktop session. A REST-activated control is evidence of the UI
+handler and what it draws, not of a mouse gesture. Build the viewer in the
+viewer first; an older binary may lack newer commands.
+
+### Completion
 
 Completion requires an accepted worker result and evidence for every checklist
-item. Failed checks cannot be accepted by the state machine. The orchestrator
-must inspect untracked files separately from the Git diff. Native UI parity is
-still a model-reviewed claim and needs real interaction evidence; this tool does
-not automate screenshots or provide a GUI testing rig. If that evidence isn't
-available, the agents must report it as unverified. No automatic merges, source
-checkout updates, pushes or deployments are performed. The worker is encouraged
-to make small local commits of completed tasks in the isolated checkout; reviews
-and whitespace checks include those commits against the original baseline.
-Review the isolated changes before integrating them into your ongoing work.
+item. The orchestrator must inspect untracked files separately from the Git diff.
+No pushes or deployments are performed. The worker commits each small
+completed task to the folder's current branch, and reviews and whitespace checks
+cover those commits against the run's baseline. Commits are not gated on
+acceptance. If you want to review before anything lands on `main`, check out a
+branch before `init`.
 
-`init --audit-only` still creates a snapshot but gives both sessions read-only
-tools and only permits the diff check, useful for inventory without code edits.
+`init --audit-only` gives every session read-only
+tools (Read, Glob, Grep, no Bash) and only permits the diff check, useful for
+inventory without code edits.
 
 ## Continuous improvement: the Director and hopper
 
@@ -140,10 +200,10 @@ Enable the outer loop in the dashboard, or use:
 
 ```sh
 python3 tools/claude-pair/pair.py enable-outer \
-  --state /Users/elliot/Documents/Codex/viewer-claude-pair --max-batches 8
+  --max-batches 8
 ```
 
-The Director is a third persistent, read-only Claude session. It compares 3–6
+The Director is a third Claude role, always started in a fresh session. It compares 3–6
 source-backed candidates across at least two of four categories: cohesion,
 feature gaps, shared-library improvements, and technical debt. It explains the
 benefit, effort, risk, and reason for choosing or deferring each candidate. It
@@ -188,12 +248,16 @@ batch decisions also remain in the conversation history and log files.
 
 ```sh
 cd tools/claude-pair
-python3 -m unittest -v test_pair.py test_dashboard.py test_outer.py
+python3 -m unittest -v test_pair.py test_dashboard.py test_outer.py test_notebook.py test_workflow.py test_control.py
 ```
 
-Tests exercise snapshot isolation (including staged/unstaged/deleted/untracked
-files and links), prompt forwarding, resume, final review, run limits, rejected
+Tests exercise the in-place baseline (staged/unstaged/deleted/untracked files
+and links, with HEAD, index and files untouched), state exclusion, `--fresh`, prompt forwarding, resume, final review, run limits, rejected
 false completion, check gating, locking, stop handling and usage accounting.
+`test_control.py` covers the full-control flags, audit-only read-only mode,
+session scoping and caps, shell checks and their environment, before/after
+receipts and waivers, evidence summaries, the pinned baseline, and `ui_capture.py`
+against a fake viewer.
 
 Implementation references: [Claude programmatic mode](https://code.claude.com/docs/en/headless)
 and [CLI reference](https://code.claude.com/docs/en/cli-reference). Cost reports
@@ -220,7 +284,7 @@ Longer objective and Director sections are expandable below the map.
 
 ## Shared team notebook
 
-All three roles share the isolated project checkout and a coordinator-maintained
+All three roles share the project folder and a coordinator-maintained
 `shared/` directory in the run state. `SYSTEM.md` explains the roles, serial
 handoff loop, authority and evidence rules. `CURRENT.md` holds the current batch,
 assignment, report, check receipts, limits and user guidance. `journal.jsonl` is
@@ -232,7 +296,7 @@ role; the worker receives access to the shared directory too. Role schemas inclu
 `coordination_notes: string[]`. Notes can address another role, raise questions,
 record decisions or explain artifacts and cleanup. Use entry IDs when replying.
 The coordinator appends the agent's summary and notes after its successful response
-returns, before dispatching the next agent. Planners remain read-only. Notes from
+returns, before dispatching the next agent. Notes from
 an interrupted turn are not claimed as delivered; public live activity remains in
 its transcript and the workflow panel.
 
@@ -258,7 +322,7 @@ The orchestrator favors small complete assignments with clear stopping points;
 the Director can refill the hopper later. Workers make small local commits after
 focused task checks pass, stage only their task changes, and report commit IDs and
 remaining edits. They do not push or rewrite history. These checkpoints remain
-subject to independent checks and orchestrator review against the original snapshot.
+subject to independent checks and orchestrator review against the run's baseline.
 
 ## Prompt research
 

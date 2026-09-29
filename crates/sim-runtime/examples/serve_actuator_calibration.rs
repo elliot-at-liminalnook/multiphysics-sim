@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use sim_runtime::acquisition::{
     calibration::{AxisCalibration, Calibration},
     calibration_serial::CalibrationBus,
-    calibration_sweep::{MotionCommand, SweepInput, SweepTuning},
+    calibration_sweep::{DriveMode, MotionCommand, SweepInput, SweepTuning},
 };
 use std::{
     fs,
@@ -29,6 +29,9 @@ struct Config {
     fixture: String,
     roles: std::collections::BTreeMap<u8, String>,
     sweep_tuning: SweepTuning,
+    /// Characterization campaign plan (PLAN.md); axes come from taught poses.
+    #[serde(default)]
+    campaign_plan: Option<PathBuf>,
 }
 fn default_drive() -> u16 {
     25
@@ -61,6 +64,58 @@ struct Request {
     motion: String,
     #[serde(default)]
     target_raw: f64,
+    #[serde(default)]
+    disabled: bool,
+    /// Energize the other enabled motors to hold position during a session.
+    #[serde(default)]
+    hold_others: bool,
+    /// Servo drive for a session: pwm (host loop), servo_position or servo_speed.
+    #[serde(default)]
+    drive_mode: DriveMode,
+    /// Campaign: reuse completed stages of the last interrupted campaign.
+    #[serde(default)]
+    resume: bool,
+    /// Gait playback: repository path of a compiled gait (compiled.json).
+    #[serde(default)]
+    gait: String,
+    /// Gait playback: display bindings of motors to CAD joints (the leg
+    /// mirror's), with the CAD home angle from the same Rust mirror.
+    #[serde(default)]
+    bindings: Vec<GaitBinding>,
+    /// Gait playback speed, a fraction of the gait's own timing.
+    #[serde(default)]
+    speed_scale: f64,
+    #[serde(default)]
+    playing: bool,
+    /// Gait playback on the leg: fraction of each motor's measured capability.
+    #[serde(default)]
+    effort: f64,
+    /// Saving `reference`: the CAD joint angle (rad) the leg mirror shows as the
+    /// alignment pose. Omitted means the joint's CAD home.
+    #[serde(default)]
+    reference_joint_rad: Option<f64>,
+    /// Lesson lab step: the joint role, open-loop duty and duration.
+    #[serde(default)]
+    role: String,
+    #[serde(default)]
+    duty: f64,
+    #[serde(default)]
+    seconds: f64,
+}
+#[derive(Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
+struct GaitBinding {
+    id: u8,
+    joint: String,
+    polarity: f64,
+    home_rad: f64,
+}
+/// Browser-held playback controls for a hardware gait session (lease).
+struct GaitLease {
+    owner: String,
+    speed_scale: f64,
+    playing: bool,
+    last_seen: Instant,
 }
 struct Job {
     request: Request,
@@ -76,7 +131,8 @@ struct BrowserSweep {
     last_seen: Instant,
     motion: MotionCommand,
     teaching: bool,
-    capture: Option<String>,
+    /// Pose to save once settled, with the alignment joint angle for `reference`.
+    capture: Option<(String, Option<f64>)>,
 }
 impl BrowserSweep {
     fn update(&mut self, client: &str, r: &Request, tuning: &SweepTuning) -> R<()> {
@@ -87,7 +143,7 @@ impl BrowserSweep {
         {
             return Err("Sweep update rejected: wrong owner, run, axis or stale sequence".into());
         }
-        if self.last_seen.elapsed() > Duration::from_millis(750) {
+        if self.last_seen.elapsed() > Duration::from_millis(1500) {
             return Err("Sweep browser lease expired; start again explicitly".into());
         }
         let input = SweepInput {
@@ -103,6 +159,25 @@ impl BrowserSweep {
         self.last_seen = Instant::now();
         Ok(())
     }
+}
+/// Poses taught in another multi-turn tracking session are not meaningful now;
+/// motion continues as if they were untaught instead of being refused.
+fn usable(a: &AxisCalibration, session: Option<&str>) -> AxisCalibration {
+    let mut a = a.clone();
+    if a.coordinate_session.is_some() && a.coordinate_session.as_deref() != session {
+        a.lower = None;
+        a.upper = None;
+    }
+    a
+}
+/// Whether an axis has poses or an alignment tied to the multi-turn session.
+fn multi_turn(a: &AxisCalibration) -> bool {
+    a.coordinate_session.is_some() || a.reference_session.is_some()
+}
+/// Only a lost serial link can hide encoder turns; motion faults keep them.
+fn readback_lost(e: &str) -> bool {
+    let e = e.to_ascii_lowercase();
+    e.contains("timeout") || e.contains("readback") || e.contains("receive") || e.contains("serial")
 }
 fn motion_request(r: &Request) -> R<MotionCommand> {
     match r.motion.as_str() {
@@ -125,6 +200,7 @@ struct App {
     token: String,
     viewer: PathBuf,
     sweep: Mutex<Option<BrowserSweep>>,
+    gait: Mutex<Option<GaitLease>>,
     sweep_tuning: SweepTuning,
 }
 fn stamp() -> u128 {
@@ -155,7 +231,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
         }
     } else {
         let mut c = Calibration::default();
-        c.fixture = cfg.fixture;
+        c.fixture = cfg.fixture.clone();
         c.axes = cfg
             .roles
             .iter()
@@ -178,6 +254,8 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
     let mut selected = 0;
     let mut last_seq = 0;
     let mut verified = false;
+    // Motors whose zero-drive watchdogs were proven for the current selection.
+    let mut proven = std::collections::BTreeSet::<u8>::new();
     {
         let mut s = app.state.lock().unwrap();
         s["calibration"] = json!(cal);
@@ -200,12 +278,16 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                                     verified = false;
                                     owner.clear();
                                     let _ = b.stop(*id);
-                                    b.reset_turn_tracking();
+                                    // Only this axis's turns are uncertain; the others kept reading.
+                                    b.reset_turn_tracking_for(*id);
                                     let mut s = app.state.lock().unwrap();
                                     s["enabled_id"] = Value::Null;
-                                    s["coordinate_session"] = json!(stamp().to_string());
+                                    if multi_turn(&cal.axes[id]) {
+                                        s["coordinate_session"] = json!(stamp().to_string());
+                                    }
                                     s["message"] = json!(format!(
-                                        "Readback lost: {e}. Select a motor to reconnect; multi-turn poses need a new reference."
+                                        "Readback lost from {}: {e}. Select a motor to reconnect.",
+                                        cfg.roles[id]
                                     ));
                                     break;
                                 }
@@ -246,6 +328,27 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
             if !cfg.roles.contains_key(&r.id) {
                 return Err("Unknown motor ID".into());
             }
+            if r.action == "set_disabled" {
+                if app.state.lock().unwrap()["enabled_id"] == json!(r.id) {
+                    return Err("Stop this motor before disabling it".into());
+                }
+                let mut next = cal.clone();
+                next.axes.get_mut(&r.id).unwrap().disabled = r.disabled;
+                save(&cfg.output.join(format!("calibration-{}.json", stamp())), &next)?;
+                save(&path, &next)?;
+                cal = next;
+                let mut s = app.state.lock().unwrap();
+                s["calibration"] = json!(cal);
+                s["message"] = json!(if r.disabled {
+                    "Motor disabled. It cannot be selected or driven until enabled."
+                } else {
+                    "Motor enabled. Select it to reconnect."
+                });
+                return Ok(s.clone());
+            }
+            if cal.axes[&r.id].disabled && !matches!(r.action.as_str(), "stop" | "clear" | "flip" | "direction") {
+                return Err(format!("{} is disabled; enable it before moving it", cfg.roles[&r.id]));
+            }
             if r.action == "select" {
                 if bus.is_none() {
                     bus = Some(CalibrationBus::open(
@@ -259,7 +362,20 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 owner.clear();
                 selected = r.id;
                 b.reconnect_stopped(r.id)?;
+                proven.clear();
                 let t = b.prove_watchdogs(r.id)?;
+                proven.insert(r.id);
+                let mut unproven = Vec::new();
+                if r.hold_others {
+                    for other in cfg.roles.keys().copied().filter(|k| *k != r.id && !cal.axes[k].disabled) {
+                        match b.prove_watchdogs(other) {
+                            Ok(_) => {
+                                proven.insert(other);
+                            }
+                            Err(e) => unproven.push(format!("{}: {e}", cfg.roles[&other])),
+                        }
+                    }
+                }
                 owner = job.client.clone();
                 idle_polling = true;
                 verified = true;
@@ -272,9 +388,11 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 s["enabled_id"] = json!(r.id);
                 s["capture_message"] = Value::Null;
                 s["sweep"] = Value::Null;
-                s["message"] = json!(
-                    "Ready. Hold Q toward upper or A toward lower; release to hold position."
-                );
+                s["message"] = json!(if unproven.is_empty() {
+                    "Ready. Hold Q toward upper or A toward lower; release to hold position.".to_string()
+                } else {
+                    format!("Ready. Not held (watchdog check failed): {}", unproven.join("; "))
+                });
                 return Ok(s.clone());
             }
             let b = bus.as_mut().ok_or("Select a motor first")?;
@@ -350,31 +468,179 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 return Err("Stale or duplicate command rejected".into());
             }
             last_seq = r.sequence;
-            if cal.axes[&r.id]
-                .coordinate_session
-                .as_ref()
-                .is_some_and(|session| {
-                    app.state.lock().unwrap()["coordinate_session"].as_str()
-                        != Some(session.as_str())
-                })
-            {
-                return Err("Multi-turn reference was lost on reconnect. Reset both poses and re-teach before movement".into());
+            let current_session = app.state.lock().unwrap()["coordinate_session"].as_str().map(str::to_string);
+            if r.action == "tune" {
+                // Operator confirms the axis is mid-travel with room both ways.
+                if !r.supported {
+                    return Err("Confirm the motor is mid-travel with room to move both ways".into());
+                }
+                let t = b.stop(r.id)?;
+                let position = t.position_continuous.ok_or("Missing encoder coordinate")?;
+                let axis = usable(&cal.axes[&r.id], current_session.as_deref());
+                let (lo, hi) = axis.encoder_bounds();
+                let room = [lo.map(|l| position - l), hi.map(|h| h - position)].into_iter().flatten().min().unwrap_or(i32::MAX);
+                let travel = (room - 60).min(200);
+                if travel < 40 {
+                    return Err(format!("Only {room} counts to the nearest saved pose; move toward the middle first (needs 100)"));
+                }
+                let duty = (r.drive_pwm as f64 / 1000.).clamp(0.05, 1.);
+                {
+                    let mut s = app.state.lock().unwrap();
+                    s["tuning"] = json!({"running":true,"motor_id":r.id,"stage":"Starting","travel_counts":travel});
+                    s["message"] = json!(format!("Tuning {} — short moves within ±{travel} counts. Z stops.", cfg.roles[&r.id]));
+                    let _ = job.reply.send(Ok(s.clone()));
+                }
+                app.cancel.store(false, Ordering::SeqCst);
+                let result = b.identify(r.id, travel, duty, cfg.sweep_tuning.period_s, &app.cancel, |stage| {
+                    app.state.lock().unwrap()["tuning"]["stage"] = json!(stage);
+                });
+                verified = false;
+                owner.clear();
+                let outcome = result.and_then(|record| {
+                    let steps: Vec<sim_runtime::acquisition::motor_identification::StepTrace> =
+                        serde_json::from_value(record["steps"].clone()).map_err(|e| e.to_string())?;
+                    let fits: Vec<_> = steps.iter().filter_map(sim_runtime::acquisition::motor_identification::fit_step).collect();
+                    let breakaway: [f64; 2] = serde_json::from_value(record["breakaway_duty"].clone()).map_err(|e| e.to_string())?;
+                    let name = format!("tune-{}-{}.json", r.id, stamp());
+                    let tuning = sim_runtime::acquisition::motor_identification::design(
+                        &fits, breakaway, record["loop_period_s"].as_f64().unwrap_or(cfg.sweep_tuning.period_s),
+                        cfg.sweep_tuning.velocity_filter_s, &name)?;
+                    let artifact = json!({"record":record,"fits":fits,"tuning":tuning,"role":cfg.roles[&r.id],
+                        "provenance":"Open-loop PWM identification under this fixture's load and supply; commissioning estimate, not a validated joint model"});
+                    fs::write(cfg.output.join(&name), serde_json::to_vec_pretty(&artifact).unwrap()).map_err(|e| e.to_string())?;
+                    Ok(tuning)
+                });
+                let mut s = app.state.lock().unwrap();
+                s["tuning"]["running"] = json!(false);
+                s["enabled_id"] = Value::Null;
+                match outcome {
+                    Ok(tuning) => {
+                        let mut next = cal.clone();
+                        next.axes.get_mut(&r.id).unwrap().tuning = Some(tuning.clone());
+                        save(&cfg.output.join(format!("calibration-{}.json", stamp())), &next)?;
+                        save(&path, &next)?;
+                        cal = next;
+                        s["calibration"] = json!(cal);
+                        s["tuning"]["result"] = json!(tuning);
+                        s["message"] = json!(format!(
+                            "Tuned {}: {:.0} counts/s per unit duty, lag {:.0} ms, friction {:.0}%. New gains kp {:.2}, ki {:.2}, kd {:.3}. Select it to use them.",
+                            cfg.roles[&r.id], tuning.gain_counts_s_per_duty, tuning.time_constant_s * 1000.,
+                            tuning.friction_duty * 100., tuning.pid.kp, tuning.pid.ki, tuning.pid.kd));
+                    }
+                    Err(e) => {
+                        s["tuning"]["error"] = json!(e);
+                        s["message"] = json!(format!("Tuning stopped: {e}. Torque off; previous gains kept."));
+                    }
+                }
+                return Ok(s.clone());
             }
-            if r.action == "sweep_start" || r.action == "motion_start" {
-                let teaching = r.action == "motion_start";
+            if r.action == "gait_start" {
+                let reply = |s: &Value| {
+                    let _ = job.reply.send(Ok(s.clone()));
+                };
+                let outcome = run_gait(&app, &cfg, b, &cal, &proven, current_session.as_deref(), &job.client, r, reply);
+                *app.gait.lock().unwrap() = None;
+                app.stop.store(true, Ordering::SeqCst);
+                verified = false;
+                owner.clear();
+                let mut s = app.state.lock().unwrap();
+                s["busy"] = json!(false);
+                s["gait"]["running"] = json!(false);
+                s["enabled_id"] = Value::Null;
+                match outcome {
+                    Ok(message) => s["message"] = json!(format!("{message}. Torque off and stationary encoder verified.")),
+                    Err(e) => {
+                        s["gait"]["error"] = json!(e);
+                        s["message"] = json!(format!("Gait stopped: {e}. Torque off."));
+                    }
+                }
+                return Ok(s.clone());
+            }
+            if r.action == "lab_step" {
+                let reply = |s: &Value| {
+                    let _ = job.reply.send(Ok(s.clone()));
+                };
+                let outcome = run_lab_step(&app, &cfg, b, &cal, &proven, current_session.as_deref(), r, reply);
+                verified = false;
+                owner.clear();
+                let mut s = app.state.lock().unwrap();
+                s["lab"]["running"] = json!(false);
+                s["busy"] = json!(false);
+                s["enabled_id"] = Value::Null;
+                match outcome {
+                    Ok(result) => {
+                        s["lab"]["result"] = result.clone();
+                        s["message"] = json!(format!("Lab step finished: {}. Torque off.", result["headline"].as_str().unwrap_or("")));
+                    }
+                    Err(e) => {
+                        s["lab"]["error"] = json!(e);
+                        s["message"] = json!(format!("Lab step stopped: {e}. Torque off."));
+                    }
+                }
+                return Ok(s.clone());
+            }
+            if r.action == "campaign" {
+                let reply = |s: &Value| {
+                    let _ = job.reply.send(Ok(s.clone()));
+                };
+                let outcome = run_campaign(&app, &cfg, b, &cal, &proven, current_session.as_deref(), r, reply);
+                verified = false;
+                owner.clear();
+                let mut s = app.state.lock().unwrap();
+                s["campaign"]["running"] = json!(false);
+                s["busy"] = json!(false);
+                s["enabled_id"] = Value::Null;
+                match outcome {
+                    Ok(summary) => {
+                        s["campaign"]["result"] = summary.clone();
+                        s["message"] = json!(format!("Campaign finished: {}. Results in {}. Nothing was promoted to CAD.", summary["headline"].as_str().unwrap_or(""), summary["directory"].as_str().unwrap_or("")));
+                    }
+                    Err(e) => {
+                        s["campaign"]["error"] = json!(e);
+                        s["message"] = json!(format!("Campaign stopped: {e}. Torque off; completed stages are kept as receipts (Resume continues)."));
+                    }
+                }
+                return Ok(s.clone());
+            }
+            if r.action == "sweep_start" || r.action == "motion_start" || r.action == "sweep_all" {
+                let all = r.action == "sweep_all";
+                let teaching = r.action == "motion_start" || all;
                 if app.stop.load(Ordering::SeqCst) {
                     return Err("Stop is latched; enable this axis first".into());
                 }
                 let input = SweepInput {
-                    speed_counts_s: if teaching { r.speed_counts_s } else { 5. },
+                    speed_counts_s: if teaching || all { r.speed_counts_s } else { 5. },
                     pwm_limit: r.drive_pwm,
                 };
                 input.validate(&cfg.sweep_tuning)?;
-                let axis = cal.axes[&r.id].clone();
+                let axis = usable(&cal.axes[&r.id], current_session.as_deref());
                 axis.validate()?;
-                if !teaching && (axis.lower.is_none() || axis.upper.is_none()) {
+                if (!teaching || all) && (axis.lower.is_none() || axis.upper.is_none()) {
                     return Err("Teach both poses before starting a sweep".into());
                 }
+                // Other motors join the session: held in place while jogging,
+                // or swept together. Only proven, enabled, current motors join.
+                let mut ids = vec![r.id];
+                let mut skipped = Vec::new();
+                if all || (teaching && r.hold_others) {
+                    for k in cfg.roles.keys().copied().filter(|k| *k != r.id) {
+                        let a = usable(&cal.axes[&k], current_session.as_deref());
+                        let why = if a.disabled {
+                            Some("disabled")
+                        } else if all && (a.lower.is_none() || a.upper.is_none()) {
+                            Some("poses not taught")
+                        } else if !proven.contains(&k) {
+                            Some("watchdogs not proven; select with hold enabled")
+                        } else {
+                            None
+                        };
+                        match why {
+                            Some(w) => skipped.push(format!("{} ({w})", cfg.roles[&k])),
+                            None => ids.push(k),
+                        }
+                    }
+                }
+                let axes: Vec<AxisCalibration> = ids.iter().map(|k| usable(&cal.axes[k], current_session.as_deref())).collect();
                 app.cancel.store(false, Ordering::SeqCst);
                 if r.sequence <= app.cancel_sequence.load(Ordering::SeqCst)
                     || app.stop.load(Ordering::SeqCst)
@@ -400,29 +666,47 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 {
                     let mut s = app.state.lock().unwrap();
                     s["busy"] = json!(true);
-                    s["sweep"] = json!({"running":true,"run_id":run_id,"motor_id":r.id,"samples":[],"speed_counts_s":5.,"pwm_limit":r.drive_pwm,"clearance_counts":r.clearance_counts,"teaching":teaching});
-                    s["message"] = json!(
-                        "Starting continuous traversal at 5 motor counts/s. Keep this tab active; Stop ends the sweep."
-                    );
+                    s["sweep"] = json!({"running":true,"run_id":run_id,"motor_id":r.id,"motor_ids":ids,"skipped":skipped,"all":all,"axes":{},"samples":[],"speed_counts_s":input.speed_counts_s,"pwm_limit":r.drive_pwm,"drive_mode":r.drive_mode,"clearance_counts":r.clearance_counts,"teaching":teaching});
+                    s["message"] = json!(if all {
+                        format!("Sweeping {} together. Keep this tab active; Stop ends the sweep.", ids.iter().map(|k| cfg.roles[k].as_str()).collect::<Vec<_>>().join(", "))
+                    } else {
+                        "Starting continuous traversal. Keep this tab active; Stop ends the sweep.".to_string()
+                    });
                     let _ = job.reply.send(Ok(s.clone()));
                 }
                 let mut history = std::collections::VecDeque::new();
-                let result=b.controlled_motion(r.id,&axis,r.clearance_counts,&cfg.sweep_tuning,&app.cancel,teaching,|| {
+                // Per axis: half-cycles at first sample and latest; sweep-all holds an axis after two.
+                let progress = std::cell::RefCell::new(std::collections::BTreeMap::<u8, (u64, u64)>::new());
+                let done = |k: &u8| progress.borrow().get(k).is_some_and(|(s, l)| *l >= *s + 2);
+                let result=b.controlled_motion_multi(&ids,&axes,r.clearance_counts,&cfg.sweep_tuning,&app.cancel,teaching,r.drive_mode,|| {
                     if app.cancel.load(Ordering::SeqCst) || app.stop.load(Ordering::SeqCst) {return Ok(None);}
                     let lock=app.sweep.lock().unwrap();let ctl=lock.as_ref().ok_or("Sweep controls closed")?;
-                    if ctl.last_seen.elapsed()>Duration::from_millis(750) {return Err("Browser heartbeat lost; sweep stopped".into());}
-                    let a:AxisCalibration=serde_json::from_value(app.state.lock().unwrap()["calibration"]["axes"][r.id.to_string()].clone()).map_err(|e|e.to_string())?;
+                    if ctl.last_seen.elapsed()>Duration::from_millis(1500) {return Err("Browser heartbeat lost; sweep stopped".into());}
+                    let a=usable(&serde_json::from_value(app.state.lock().unwrap()["calibration"]["axes"][r.id.to_string()].clone()).map_err(|e|e.to_string())?,current_session.as_deref());
                     if matches!(ctl.motion,MotionCommand::Target(_)|MotionCommand::Sweep|MotionCommand::Learn) && (a.lower.is_none()||a.upper.is_none()){return Err("Teach both poses before learning, sweeping, or using the angle dial".into());}
-                    Ok(Some((ctl.input,ctl.motion,a)))
-                },|t,sample| {
+                    let mut plan=vec![(ctl.input,ctl.motion,a)];
+                    if all {
+                        if ids.iter().all(|k|done(k)) {return Ok(None);}
+                        if done(&r.id) {plan[0].1=MotionCommand::Hold;}
+                    }
+                    for k in &ids[1..] {
+                        let ak=usable(&serde_json::from_value(app.state.lock().unwrap()["calibration"]["axes"][k.to_string()].clone()).map_err(|e|e.to_string())?,current_session.as_deref());
+                        plan.push((ctl.input,if all && !done(k) {MotionCommand::Sweep} else {MotionCommand::Hold},ak));
+                    }
+                    Ok(Some(plan))
+                },|id,t,sample| {
+                    {let mut s=app.state.lock().unwrap();s["samples"][id.to_string()]=json!(t);s["sweep"]["axes"][id.to_string()]=json!(sample);}
+                    {let mut p=progress.borrow_mut();let e=p.entry(id).or_insert((sample.half_cycles as u64,sample.half_cycles as u64));e.1=sample.half_cycles as u64;}
+                    if id!=r.id {return Ok(());}
                     history.push_back(json!(sample));if history.len()>300 {history.pop_front();}
                     let capture={let mut lock=app.sweep.lock().unwrap();lock.as_mut().and_then(|ctl|ctl.capture.take())};
-                    if let Some(boundary)=capture {
+                    if let Some((boundary,joint_rad))=capture {
                         let stable=history.len()>=6 && history.iter().rev().take(6).all(|s|s["position_continuous"].as_i64().is_some_and(|p|(p-t.position_continuous.unwrap_or(t.position_raw as i32) as i64).abs()<=2));
                         if sample.holding && sample.velocity_counts_s.abs()<2. && (sample.target_raw-t.position_continuous.unwrap_or(t.position_raw as i32) as f64).abs()<3. && stable {
                             let mut next=cal.clone();let a=next.axes.get_mut(&r.id).unwrap();
                             match boundary.as_str(){"lower"=>a.lower=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),"upper"=>a.upper=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),"reference"=>a.reference=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),_=>return Err("Unknown pose".into())};
                             if a.lower.into_iter().chain(a.upper).any(|p|!(0..=4095).contains(&p)) {a.coordinate_session=Some(app.state.lock().unwrap()["coordinate_session"].as_str().unwrap().to_string());}
+                            if boundary=="reference" {a.reference_session=a.reference.filter(|p|!(0..=4095).contains(p)).map(|_|app.state.lock().unwrap()["coordinate_session"].as_str().unwrap().to_string());a.reference_joint_rad=joint_rad;}
                             next.validate()?;
                             if next.axes[&r.id].reversed()!=cal.axes[&r.id].reversed(){return Err("Pose would reverse upper/lower direction; swap direction explicitly first".into());}
                             save(&cfg.output.join(format!("calibration-{}.json",stamp())),&next)?;save(&path,&next)?;cal=next;
@@ -436,7 +720,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                         let artifact_path=cfg.output.join(format!("response-{}-{}.json",r.id,run_id));
                         let tmp=artifact_path.with_extension("tmp");fs::write(&tmp,serde_json::to_vec_pretty(&artifact).unwrap()).map_err(|e|e.to_string())?;fs::rename(tmp,artifact_path).map_err(|e|e.to_string())?;
                     }
-                    s["message"]=json!(if teaching {if sample.holding {"Holding position · Q/A to move · Z stops drive"}else{"Moving under feedback control · release to hold"}}else{"Sweeping between taught poses · Q/A takes over · Z stops drive"});
+                    s["message"]=json!(if all {"Sweeping enabled motors together · Z stops drive"} else if teaching {if sample.holding {"Holding position · Q/A to move · Z stops drive"}else{"Moving under feedback control · release to hold"}}else{"Sweeping between taught poses · Q/A takes over · Z stops drive"});
                     Ok(())
                 });
                 *app.sweep.lock().unwrap() = None;
@@ -450,9 +734,15 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                     s["enabled_id"] = Value::Null;
                 }
                 let outcome = result?;
-                if outcome.motion_error.is_some() {
-                    b.reset_turn_tracking();
-                    app.state.lock().unwrap()["coordinate_session"] = json!(stamp().to_string());
+                // Every axis kept reading through the session, so turn counts stay valid
+                // unless the fault was a lost serial link.
+                if outcome.motion_error.as_deref().is_some_and(readback_lost) {
+                    for k in &ids {
+                        b.reset_turn_tracking_for(*k);
+                    }
+                    if ids.iter().any(|k| multi_turn(&cal.axes[k])) {
+                        app.state.lock().unwrap()["coordinate_session"] = json!(stamp().to_string());
+                    }
                 }
                 let mut s = app.state.lock().unwrap();
                 s["samples"][r.id.to_string()] = json!(outcome.telemetry);
@@ -576,6 +866,12 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                     }
                     _ => return Err("Unknown boundary".into()),
                 };
+                if r.boundary == "reference" {
+                    a.reference_session = a.reference.filter(|p| !(0..=4095).contains(p)).map(|_| {
+                        app.state.lock().unwrap()["coordinate_session"].as_str().unwrap().to_string()
+                    });
+                    a.reference_joint_rad = r.reference_joint_rad;
+                }
                 if a.lower
                     .into_iter()
                     .chain(a.upper)
@@ -615,11 +911,16 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
             let stopped = bus
                 .as_mut()
                 .map(|b| b.stop(if selected == 0 { 3 } else { selected }));
+            let lost = readback_lost(e);
             if let Some(b) = bus.as_mut() {
-                b.reset_turn_tracking();
+                if lost && selected != 0 {
+                    b.reset_turn_tracking_for(selected);
+                }
             }
             let mut s = app.state.lock().unwrap();
-            s["coordinate_session"] = json!(stamp().to_string());
+            if lost && cal.axes.get(&selected).is_some_and(multi_turn) {
+                s["coordinate_session"] = json!(stamp().to_string());
+            }
             s["enabled_id"] = Value::Null;
             s["busy"] = json!(false);
             s["error"] = json!(e);
@@ -696,6 +997,12 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
                     include_bytes!("../../../web/viewer/actuator-motion-view.mjs").to_vec(),
                 ));
             }
+            if path == "/calibration-mirror.mjs" {
+                return Ok((
+                    "text/javascript".into(),
+                    include_bytes!("../../../web/viewer/calibration-mirror.mjs").to_vec(),
+                ));
+            }
             if path == "/calibration-ui.mjs" {
                 return Ok((
                     "text/javascript".into(),
@@ -736,6 +1043,15 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
                 "application/json".into(),
                 app.state.lock().unwrap().to_string().into_bytes(),
             ));
+        }
+        if method == "GET" && path == "/calibration/gaits" {
+            return Ok(("application/json".into(), serde_json::to_vec(&gait_catalog()?).unwrap()));
+        }
+        if method == "GET" && path == "/calibration/gait" {
+            let query = first[1].split_once('?').map(|q| q.1).unwrap_or("");
+            let rel = query.strip_prefix("path=").ok_or("gait path required")?;
+            let rel = percent_decode(rel)?;
+            return Ok(("application/json".into(), serde_json::to_vec(&gait_with_governor(&rel)?).unwrap()));
         }
         if method == "GET" && path == "/calibration/export" {
             return Ok((
@@ -785,7 +1101,21 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
             if ctl.motion != MotionCommand::Hold {
                 return Err("Release before saving".into());
             }
-            ctl.capture = Some(request.boundary.clone());
+            ctl.capture = Some((request.boundary.clone(), request.reference_joint_rad));
+            return Ok(("application/json".into(), b"{\"ok\":true}".to_vec()));
+        }
+        if request.action == "gait_update" {
+            let mut lock = app.gait.lock().unwrap();
+            let lease = lock.as_mut().ok_or("No gait is playing on the leg")?;
+            if lease.owner != client {
+                return Err("Another tab owns the gait session".into());
+            }
+            if !(request.speed_scale > 0. && request.speed_scale <= 1.) {
+                return Err("Speed scale must be in (0, 1]".into());
+            }
+            lease.speed_scale = request.speed_scale;
+            lease.playing = request.playing;
+            lease.last_seen = Instant::now();
             return Ok(("application/json".into(), b"{\"ok\":true}".to_vec()));
         }
         if request.action == "sweep_update" || request.action == "motion_update" {
@@ -834,6 +1164,670 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
         ),
     }
 }
+fn repo_root() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+}
+fn percent_decode(s: &str) -> R<String> {
+    let bytes = s.as_bytes();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'%' if i + 2 < bytes.len() => {
+                out.push(u8::from_str_radix(std::str::from_utf8(&bytes[i + 1..i + 3]).map_err(|e| e.to_string())?, 16).map_err(|e| e.to_string())?);
+                i += 3;
+            }
+            b'+' => { out.push(b' '); i += 1; }
+            c => { out.push(c); i += 1; }
+        }
+    }
+    String::from_utf8(out).map_err(|e| e.to_string())
+}
+/// A compiled gait inside the repository's examples (never an arbitrary file).
+fn gait_file(rel: &str) -> R<std::path::PathBuf> {
+    let root = repo_root().join("examples").canonicalize().map_err(|e| e.to_string())?;
+    let file = repo_root().join(rel).canonicalize().map_err(|e| format!("{rel}: {e}"))?;
+    if !file.starts_with(&root) || file.file_name().and_then(|n| n.to_str()) != Some("compiled.json") {
+        return Err("Gaits are compiled.json files inside examples/".into());
+    }
+    Ok(file)
+}
+/// Completed gait-search trials, best first, with their simulated result.
+fn gait_catalog() -> R<Value> {
+    let base = repo_root().join("examples/full-robot/measured-actuator-integration");
+    let mut rows = Vec::new();
+    for study in fs::read_dir(&base).map_err(|e| e.to_string())?.flatten() {
+        let comparison = study.path().join("comparison");
+        let Ok(trials) = fs::read_dir(&comparison) else { continue };
+        let measured = comparison.join("actuator-provenance.json").exists();
+        for t in trials.flatten() {
+            let dir = t.path();
+            let (Ok(trial), true) = (fs::read(dir.join("trial.json")), dir.join("compiled.json").exists()) else { continue };
+            let Ok(trial) = serde_json::from_slice::<Value>(&trial) else { continue };
+            let outcome = &trial["observation"]["outcome"];
+            if outcome["status"] != "complete" {
+                continue;
+            }
+            // Only gaits that passed the search's own gates (tracking, upright).
+            let Ok(evaluation) = fs::read(dir.join("evaluation.json")).map_err(|e| e.to_string()).and_then(|b| serde_json::from_slice::<Value>(&b).map_err(|e| e.to_string())) else { continue };
+            if evaluation["rejection_reasons"].as_array().is_none_or(|r| !r.is_empty()) {
+                continue;
+            }
+            let rel = dir.join("compiled.json").strip_prefix(repo_root()).map(|p| p.display().to_string()).unwrap_or_default();
+            let rel = rel.trim_start_matches("./").to_string();
+            rows.push(json!({
+                "path": rel,
+                "study": study.file_name().to_string_lossy(),
+                "trial": t.file_name().to_string_lossy(),
+                "objective": outcome["objective"],
+                "speed_m_s": evaluation["eligible_speed_m_s"],
+                "tracking_rms_rad_max": evaluation["tracking_rms_rad"].as_array().map(|v| v.iter().filter_map(|x| x.as_f64()).fold(0f64, f64::max)),
+                "measured_actuators": measured,
+                "values": trial["observation"]["values"],
+            }));
+        }
+    }
+    rows.sort_by(|a, b| {
+        (b["measured_actuators"].as_bool(), b["speed_m_s"].as_f64().unwrap_or(f64::NEG_INFINITY))
+            .partial_cmp(&(a["measured_actuators"].as_bool(), a["speed_m_s"].as_f64().unwrap_or(f64::NEG_INFINITY)))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let mut rows: Vec<Value> = rows.into_iter().take(60).collect();
+    rows.extend(lab_catalog(&base));
+    Ok(json!({"gaits": rows}))
+}
+/// Gait-lab results (`<lab>/results/<name>-<hash>/`): gaits that passed their
+/// gates, fastest first, then pose sequences that passed their checks.
+fn lab_catalog(base: &std::path::Path) -> Vec<Value> {
+    let (mut gaits, mut poses) = (Vec::new(), Vec::new());
+    for lab in fs::read_dir(base).into_iter().flatten().flatten() {
+        let Ok(results) = fs::read_dir(lab.path().join("results")) else { continue };
+        for r in results.flatten() {
+            let dir = r.path();
+            let Some(report) = fs::read_to_string(dir.join("report.yaml")).ok().and_then(|t| serde_norway::from_str::<Value>(&t).ok()) else { continue };
+            if !dir.join("compiled.json").exists() {
+                continue;
+            }
+            let rel = dir.join("compiled.json").strip_prefix(repo_root()).map(|p| p.display().to_string()).unwrap_or_default();
+            let row = |kind: &str, name: &Value| json!({
+                "path": rel.trim_start_matches("./"), "kind": kind, "study": lab.file_name().to_string_lossy(), "trial": name,
+                "speed_m_s": report["speed_m_s"], "measured_actuators": true, "summary": report["summary"],
+            });
+            match (report["kind"].as_str(), report["status"].as_str()) {
+                (Some("pose_sequence"), Some("ready")) => poses.push(row("pose_sequence", &report["sequence"])),
+                (None, Some("passed")) if dir.join("spec-identity.json").exists() => gaits.push(row("lab_gait", &report["gait"])),
+                _ => {}
+            }
+        }
+    }
+    gaits.sort_by(|a, b| b["speed_m_s"].as_f64().partial_cmp(&a["speed_m_s"].as_f64()).unwrap_or(std::cmp::Ordering::Equal));
+    gaits.into_iter().chain(poses).collect()
+}
+/// A trial's compiled gait with the reference governor the simulation ran it
+/// through attached (`playback_governor`, from the trial's detailed spec).
+fn gait_with_governor(rel: &str) -> R<Value> {
+    let file = gait_file(rel)?;
+    let mut compiled: Value = serde_json::from_slice(&fs::read(&file).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    let spec = file.with_file_name("detailed.spec.json");
+    let governor = fs::read(&spec).ok()
+        .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+        .map(|v| v["scene"]["controller"]["parameters"]["reference_governor"].clone())
+        .filter(|g| g.is_object())
+        // Studies with minimal artifacts record the governor with the spec hashes.
+        .or_else(|| fs::read(file.with_file_name("spec-identity.json")).ok()
+            .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+            .map(|v| v["reference_governor"].clone())
+            .filter(|g| g.is_object()));
+    compiled["playback_governor"] = governor.unwrap_or(Value::Null);
+    Ok(compiled)
+}
+/// Per-motor statistics of one leg gait run.
+fn gait_statistics(rows: &[Value], ids: &[u8], roles: &std::collections::BTreeMap<u8, String>, predicted: &std::collections::BTreeMap<u8, f64>, pwm_ceiling: f64) -> Value {
+    let mut out = serde_json::Map::new();
+    for id in ids {
+        let r: Vec<&Value> = rows.iter().filter(|x| x["id"] == *id && x["playing"] == true && x["actual"].is_number()).collect();
+        let f = |x: &Value, k: &str| x[k].as_f64().unwrap_or(f64::NAN);
+        let n = r.len().max(1) as f64;
+        let err: Vec<f64> = r.iter().map(|x| f(x, "actual") - f(x, "command")).collect();
+        let raw: Vec<f64> = r.iter().map(|x| f(x, "actual") - f(x, "desired")).collect();
+        let rms = |v: &[f64]| (v.iter().map(|e| e * e).sum::<f64>() / v.len().max(1) as f64).sqrt();
+        let peak = |v: &[f64]| v.iter().fold(0f64, |m, e| m.max(e.abs()));
+        let pwm: Vec<f64> = r.iter().map(|x| f(x, "pwm").abs()).collect();
+        let governed = r.iter().filter(|x| (f(x, "command") - f(x, "desired")).abs() > 20.).count() as f64 / n;
+        let clamped = r.iter().filter(|x| x["clamped"] == true).count() as f64 / n;
+        // Measured acceleration over ~50 ms windows (belt-slip screen).
+        let mut peak_acc = 0f64;
+        for w in r.windows(3) {
+            let dt = f(w[2], "wall_s") - f(w[0], "wall_s");
+            if dt > 0.03 && dt < 0.2 {
+                peak_acc = peak_acc.max(((f(w[2], "velocity") - f(w[0], "velocity")) / dt).abs());
+            }
+        }
+        // Lag: shift (in samples) of the actual trace that best matches the command.
+        let (cmd, act): (Vec<f64>, Vec<f64>) = r.iter().map(|x| (f(x, "command"), f(x, "actual"))).unzip();
+        let lag = (0..20usize).min_by(|a, b| {
+            let e = |k: usize| cmd.iter().zip(act.iter().skip(k)).map(|(c, a)| (a - c).powi(2)).sum::<f64>() / (cmd.len().saturating_sub(k)).max(1) as f64;
+            e(*a).total_cmp(&e(*b))
+        }).unwrap_or(0);
+        let period = if r.len() > 1 { (f(r[r.len() - 1], "wall_s") - f(r[0], "wall_s")) / (r.len() - 1) as f64 } else { 0. };
+        let volts: Vec<f64> = r.iter().map(|x| f(x, "voltage_v")).filter(|v| v.is_finite()).collect();
+        let temps: Vec<f64> = r.iter().map(|x| f(x, "temperature_c")).filter(|v| v.is_finite()).collect();
+        out.insert(id.to_string(), json!({
+            "role": roles[id], "samples": r.len(),
+            "tracking_rms_counts": rms(&err), "tracking_peak_counts": peak(&err),
+            "tracking_rms_deg": rms(&err) * 360. / 4096., "tracking_peak_deg": peak(&err) * 360. / 4096.,
+            "error_vs_raw_gait_rms_counts": rms(&raw),
+            "simulated_tracking_rms_counts": predicted.get(id),
+            "lag_s": lag as f64 * period,
+            "mean_effort": pwm.iter().sum::<f64>() / n / 1000., "saturated_fraction": pwm.iter().filter(|p| **p >= 0.95 * pwm_ceiling).count() as f64 / n,
+            "peak_measured_acceleration_counts_s2": peak_acc,
+            "governor_limited_fraction": governed, "clamped_fraction": clamped,
+            "minimum_voltage_v": volts.iter().cloned().fold(f64::INFINITY, f64::min),
+            "maximum_temperature_c": temps.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
+        }));
+    }
+    Value::Object(out)
+}
+/// Recent leg gait runs (summaries only), newest first.
+fn gait_run_history(cfg: &Config) -> Value {
+    let dir = cfg.output.join("gait-runs");
+    let mut runs: Vec<(String, Value)> = fs::read_dir(&dir).ok().into_iter().flatten().flatten()
+        .filter_map(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            let v: Value = serde_json::from_slice(&fs::read(e.path()).ok()?).ok()?;
+            Some((name.clone(), json!({"file": name, "gait": v["gait"], "effort": v["effort"], "speed_scale": v["speed_scale"], "gait_time_s": v["gait_time_s"], "statistics": v["statistics"], "outcome": v["outcome"]})))
+        }).collect();
+    runs.sort_by(|a, b| b.0.cmp(&a.0));
+    json!(runs.into_iter().take(12).map(|r| r.1).collect::<Vec<_>>())
+}
+/// Play a gait on the physical leg. Each bound motor follows the gait's
+/// governed reference (the same shared Rust sampler and reference governor
+/// the simulation used), tightened to `effort` × that motor's measured
+/// capability from the accepted actuator registry, and for the belt to the
+/// campaign plan's belt acceleration limit. Motion stays inside the taught
+/// poses (the desired reference is clamped before the governor), goes
+/// through the shared feedback controller and the FPGA window, needs a live
+/// browser lease, and starts from the leg's measured pose. Every period is
+/// recorded; per-motor statistics are saved with the run.
+#[allow(clippy::too_many_arguments)]
+fn run_gait(
+    app: &App,
+    cfg: &Config,
+    b: &mut CalibrationBus,
+    cal: &Calibration,
+    proven: &std::collections::BTreeSet<u8>,
+    session: Option<&str>,
+    client: &str,
+    r: &Request,
+    reply: impl FnOnce(&Value),
+) -> R<String> {
+    use sim_runtime::gait_playback::{Gait, GovernedGait, LegBinding};
+    const RAD: f64 = std::f64::consts::TAU / 4096.;
+    if !r.supported {
+        return Err("Confirm the leg is suspended with clear space around every joint".into());
+    }
+    let effort = if r.effort > 0. { r.effort.clamp(0.05, 1.) } else { 0.5 };
+    let compiled = gait_with_governor(&r.gait)?;
+    let gait = Gait::from_compiled(&compiled, &r.gait)?;
+    if r.bindings.is_empty() {
+        return Err("Bind at least one motor to a CAD joint in the leg mirror".into());
+    }
+    let mut bindings = Vec::new();
+    let mut axes = Vec::new();
+    for g in &r.bindings {
+        let a = usable(cal.axes.get(&g.id).ok_or("Unknown motor")?, session);
+        let role = &cfg.roles[&g.id];
+        if a.disabled {
+            return Err(format!("{role} is disabled"));
+        }
+        if a.lower.is_none() || a.upper.is_none() {
+            return Err(format!("Teach both poses of {role} first"));
+        }
+        if !proven.contains(&g.id) {
+            return Err(format!("{role}: watchdogs not proven; select a motor with hold enabled"));
+        }
+        let reference = a.reference.ok_or(format!("{role}: save its sim alignment first"))?;
+        if (reference < 0 || reference > 4095) && a.reference_session.as_deref() != session {
+            return Err(format!("{role}: its sim alignment is from an earlier encoder session; re-align"));
+        }
+        // The saved alignment pose wins over the page's: the reference counts
+        // were captured at that joint angle.
+        let home_rad = a.reference_joint_rad.unwrap_or(g.home_rad);
+        let binding = LegBinding { id: g.id, joint: g.joint.clone(), polarity: g.polarity, reference_counts: reference as f64, home_rad };
+        binding.validate()?;
+        if gait.index(&g.joint).is_none() {
+            return Err(format!("the gait has no joint {}", g.joint));
+        }
+        bindings.push(binding);
+        axes.push(a);
+    }
+    // The gait must fit the taught poses as mapped: a wrong sign or alignment
+    // puts it outside, and every target would be pinned at a pose.
+    let window = |a: &AxisCalibration| {
+        let (lo, hi) = a.encoder_bounds();
+        (lo.unwrap().min(hi.unwrap()) as f64 + 6., lo.unwrap().max(hi.unwrap()) as f64 - 6.)
+    };
+    let mut misfit = Vec::new();
+    for (bd, a) in bindings.iter().zip(&axes) {
+        let (lo, hi) = window(a);
+        let i = gait.index(&bd.joint).unwrap();
+        let fit = |polarity: f64| -> R<f64> {
+            let flipped = LegBinding { polarity, ..bd.clone() };
+            let mut inside = 0;
+            for k in 0..200 {
+                let q = gait.sample(gait.info.period_s * k as f64 / 200.)?[i];
+                inside += usize::from((lo..=hi).contains(&flipped.counts(q)));
+            }
+            Ok(inside as f64 / 200.)
+        };
+        let (here, flipped) = (fit(bd.polarity)?, fit(-bd.polarity)?);
+        if here < 0.95 {
+            let role = &cfg.roles[&bd.id];
+            misfit.push(if flipped >= 0.95 {
+                format!("{role}: only {:.0}% of the gait fits its taught poses with this direction, {:.0}% with the opposite; its mirror sign is probably reversed (flip +/− in the leg mirror, check with Q)", here * 100., flipped * 100.)
+            } else {
+                format!("{role}: only {:.0}% of the gait fits its taught poses ({:.0}% reversed); re-save its sim alignment at the CAD home pose or widen its poses", here * 100., flipped * 100.)
+            });
+        }
+    }
+    if !misfit.is_empty() {
+        return Err(misfit.join("; "));
+    }
+    // Per-motor limits: effort × measured capability (accepted registry, at the
+    // measured supply), belt acceleration from the campaign plan.
+    let registry = sim_runtime::actuator_registry::Registry::load(&repo_root().join("examples/actuators/hx30hm/accepted/registry.json"))?;
+    let plan_limits: Value = cfg.campaign_plan.as_ref().and_then(|p| fs::read(p).ok()).and_then(|b| serde_json::from_slice::<Value>(&b).ok()).map(|v| v["limits"].clone()).unwrap_or(Value::Null);
+    let supply = app.state.lock().unwrap()["samples"].as_object().and_then(|m| m.values().filter_map(|t| t["voltage_v"].as_f64()).reduce(f64::min)).unwrap_or(12.0);
+    let mut governed = GovernedGait::new(gait.clone());
+    let mut limits = serde_json::Map::new();
+    for (bd, a) in bindings.iter().zip(&axes) {
+        let i = gait.index(&bd.joint).unwrap();
+        let family_name = registry.role_family(&bd.joint)?.to_string();
+        let family = &registry.families[&family_name];
+        let (full_speed, measured_acc) = sim_runtime::actuator_registry::family_limits(family, supply)?;
+        let role = &cfg.roles[&bd.id];
+        let belt_acc = plan_limits[role.as_str()]["max_acceleration_counts_s2"].as_f64().map(|c| c * RAD);
+        let speed = effort * full_speed;
+        let acc = measured_acc.map(|m| effort * m).unwrap_or(f64::INFINITY).min(belt_acc.unwrap_or(f64::INFINITY));
+        governed.limit(i, speed, acc)?;
+        let (lo, hi) = window(a);
+        governed.clamp(i, bd.joint_rad(lo), bd.joint_rad(hi));
+        let c = governed.config(i).unwrap();
+        limits.insert(bd.id.to_string(), json!({"role": role, "family": family_name, "family_hash": family.content_hash(),
+            "motor_full_drive_speed_rad_s": full_speed, "motor_measured_acceleration_rad_s2": measured_acc, "belt_acceleration_limit_rad_s2": belt_acc,
+            "governor_speed_rad_s": c.maximum_speed_rad_s, "governor_acceleration_rad_s2": c.maximum_acceleration_rad_s2,
+            "governor_speed_counts_s": c.maximum_speed_rad_s / RAD, "governor_acceleration_counts_s2": c.maximum_acceleration_rad_s2 / RAD}));
+    }
+    // Simulated tracking of the same gait (the search's evaluation), for comparison.
+    let evaluation: Value = fs::read(gait_file(&r.gait)?.with_file_name("evaluation.json")).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(Value::Null);
+    let predicted: std::collections::BTreeMap<u8, f64> = bindings.iter().filter_map(|bd| {
+        let i = gait.index(&bd.joint)?;
+        Some((bd.id, evaluation["tracking_rms_rad"][i].as_f64()? / RAD))
+    }).collect();
+    let ids: Vec<u8> = bindings.iter().map(|b| b.id).collect();
+    let speed_scale = if r.speed_scale > 0. { r.speed_scale.min(1.) } else { 1. };
+    let pwm_ceiling = r.drive_pwm.clamp(1, 1000) as f64;
+    {
+        let mut s = app.state.lock().unwrap();
+        s["busy"] = json!(true);
+        s["gait"] = json!({"running": true, "phase": "approach", "gait": r.gait, "t": 0., "speed_scale": speed_scale, "effort": effort,
+            "motor_ids": ids, "bindings": bindings.iter().map(|b| json!(b)).collect::<Vec<_>>(), "limits": limits,
+            "gait_governor": gait.info.governor, "targets": {}, "errors": {}, "clamped": 0, "statistics": {}});
+        s["gait_runs"] = gait_run_history(cfg);
+        s["message"] = json!("Moving the leg to the gait's first pose through the gait's governor. Z stops drive.");
+        reply(&s);
+    }
+    *app.gait.lock().unwrap() = Some(GaitLease { owner: client.into(), speed_scale, playing: true, last_seen: Instant::now() });
+    app.cancel.store(false, Ordering::SeqCst);
+    app.stop.store(false, Ordering::SeqCst);
+    let run_started = Instant::now();
+    writeln_log(cfg, json!({"event": "gait_start", "gait": r.gait, "bindings": bindings, "speed_scale": speed_scale, "effort": effort, "limits": limits}))?;
+    let started = std::cell::Cell::new(false);
+    let clock = std::cell::Cell::new((0f64, Instant::now()));
+    let governed = std::cell::RefCell::new(governed);
+    let positions = std::cell::RefCell::new(std::collections::BTreeMap::<u8, f64>::new());
+    let commands = std::cell::RefCell::new(std::collections::BTreeMap::<u8, (f64, f64, f64, bool)>::new());
+    let rows = std::cell::RefCell::new(Vec::<Value>::new());
+    let clamped = std::cell::Cell::new(0u64);
+    let tolerance = cfg.sweep_tuning.hold_deadband_counts.unwrap_or(8.).max(8.) + 4.;
+    // Each motor's governed reference starts from its first reading in this session.
+    let initialized = std::cell::RefCell::new(std::collections::BTreeSet::<u8>::new());
+    let result = b.controlled_motion_multi(&ids, &axes, 20, &cfg.sweep_tuning, &app.cancel, false, r.drive_mode, || {
+        if app.cancel.load(Ordering::SeqCst) || app.stop.load(Ordering::SeqCst) {
+            return Ok(None);
+        }
+        let (scale, playing) = {
+            let lock = app.gait.lock().unwrap();
+            let lease = lock.as_ref().ok_or("Gait controls closed")?;
+            if lease.last_seen.elapsed() > Duration::from_millis(1500) {
+                return Err("Browser heartbeat lost; gait stopped".into());
+            }
+            (lease.speed_scale, lease.playing)
+        };
+        let (mut t, last) = clock.get();
+        let now = Instant::now();
+        let dt = (now - last).as_secs_f64().clamp(0.001, 0.2);
+        if started.get() && playing {
+            t += dt * scale;
+        }
+        clock.set((t, now));
+        let mut g = governed.borrow_mut();
+        for bd in &bindings {
+            let first = if initialized.borrow().contains(&bd.id) { None } else { positions.borrow().get(&bd.id).copied() };
+            if let Some(p) = first {
+                g.start_from(gait.index(&bd.joint).unwrap(), bd.joint_rad(p));
+                initialized.borrow_mut().insert(bd.id);
+            }
+        }
+        if initialized.borrow().len() < bindings.len() {
+            // First period: nothing read yet; hold until every motor has a reading.
+            return Ok(Some(axes.iter().map(|a| (SweepInput { speed_counts_s: 60., pwm_limit: r.drive_pwm.clamp(1, 1000) }, MotionCommand::Hold, a.clone())).collect()));
+        }
+        let out = g.step(t, dt, scale)?;
+        let desired = g.gait.sample(t)?;
+        let desired_start = g.desired(0.)?;
+        drop(g);
+        // Start the clock once every motor has reached the governed first pose.
+        if !started.get() {
+            // Per motor: distance still to govern (reference to first pose),
+            // and the motor's distance from the reference, in counts.
+            let gaps: Vec<(u8, f64, f64)> = bindings.iter().map(|bd| {
+                let i = gait.index(&bd.joint).unwrap();
+                let goal = bd.counts(out[i].0);
+                let first = bd.counts(desired_start[i]);
+                (bd.id, (first - goal).abs(), positions.borrow().get(&bd.id).map_or(f64::INFINITY, |p| (p - goal).abs()))
+            }).collect();
+            if gaps.iter().all(|(_, left, off)| *left < 2. && *off < tolerance) {
+                started.set(true);
+            } else if run_started.elapsed() > Duration::from_secs(30) {
+                return Err(format!("The leg did not reach the gait's first pose within 30 s ({})", gaps.iter().map(|(id, left, off)| format!("{}: reference {left:.0} counts from the first pose, motor {off:.0} counts from the reference", cfg.roles[id])).collect::<Vec<_>>().join("; ")));
+            }
+        }
+        let mut plan = Vec::new();
+        let mut shown = serde_json::Map::new();
+        for (bd, a) in bindings.iter().zip(&axes) {
+            let i = gait.index(&bd.joint).unwrap();
+            let (q, v) = out[i];
+            let goal = bd.counts(q);
+            let raw = bd.counts(desired[i]);
+            let (lo, hi) = window(a);
+            let is_clamped = raw < lo || raw > hi;
+            if is_clamped {
+                clamped.set(clamped.get() + 1);
+            }
+            let velocity = bd.polarity * v / RAD;
+            commands.borrow_mut().insert(bd.id, (goal, raw, velocity, is_clamped));
+            let speed = (velocity.abs() + 60.).min(cfg.sweep_tuning.maximum_speed_counts_s);
+            plan.push((SweepInput { speed_counts_s: speed, pwm_limit: r.drive_pwm.clamp(1, 1000) }, MotionCommand::Track(goal.clamp(lo, hi), velocity), a.clone()));
+            shown.insert(bd.id.to_string(), json!(goal));
+        }
+        let mut s = app.state.lock().unwrap();
+        s["gait"]["t"] = json!(t);
+        s["gait"]["phase"] = json!(if started.get() { if playing { "playing" } else { "paused" } } else { "approach" });
+        s["gait"]["speed_scale"] = json!(scale);
+        s["gait"]["targets"] = Value::Object(shown);
+        s["gait"]["clamped"] = json!(clamped.get());
+        Ok(Some(plan))
+    }, |id, t, sample| {
+        let p = t.position_continuous.unwrap_or(t.position_raw as i32) as f64;
+        positions.borrow_mut().insert(id, p);
+        let (command, desired, velocity, is_clamped) = commands.borrow().get(&id).copied().unwrap_or((p, p, 0., false));
+        {
+            let mut rows = rows.borrow_mut();
+            if rows.len() < 60_000 {
+                rows.push(json!({"id": id, "wall_s": run_started.elapsed().as_secs_f64(), "gait_s": clock.get().0, "playing": started.get(),
+                    "command": command, "desired": desired, "command_velocity": velocity, "clamped": is_clamped,
+                    "actual": p, "velocity": sample.velocity_counts_s, "pwm": sample.pwm, "voltage_v": t.voltage_v, "temperature_c": t.temperature_c,
+                    "warnings": sample.warnings}));
+            }
+        }
+        let mut s = app.state.lock().unwrap();
+        s["samples"][id.to_string()] = json!(t);
+        s["gait"]["errors"][id.to_string()] = json!(p - command);
+        if !sample.warnings.is_empty() {
+            s["gait"]["warnings"] = json!(sample.warnings);
+        }
+        // Rolling statistics every ~1 s of samples.
+        if rows.borrow().len() % 100 == 0 {
+            s["gait"]["statistics"] = gait_statistics(&rows.borrow(), &ids, &cfg.roles, &predicted, pwm_ceiling);
+        }
+        Ok(())
+    })?;
+    let statistics = gait_statistics(&rows.borrow(), &ids, &cfg.roles, &predicted, pwm_ceiling);
+    let outcome = result.motion_error.clone().unwrap_or_else(|| "stopped".into());
+    let dir = cfg.output.join("gait-runs");
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let record = json!({"version": 1, "gait": r.gait, "gait_governor": gait.info.governor, "effort": effort, "speed_scale": speed_scale,
+        "pwm_ceiling": pwm_ceiling, "drive_mode": r.drive_mode, "bindings": bindings, "limits": limits, "registry": registry.identity(),
+        "gait_time_s": clock.get().0, "wall_s": run_started.elapsed().as_secs_f64(), "outcome": outcome, "clamped_targets": clamped.get(),
+        "statistics": statistics, "samples": *rows.borrow(),
+        "scope": "Suspended leg (no ground contact); tracking error is actual minus the governed command sent to the shared controller."});
+    fs::write(dir.join(format!("run-{}.json", stamp())), serde_json::to_vec(&record).unwrap()).map_err(|e| e.to_string())?;
+    writeln_log(cfg, json!({"event": "gait_end", "gait": r.gait, "motion_error": result.motion_error, "clamped_targets": clamped.get(), "statistics": statistics}))?;
+    {
+        let mut s = app.state.lock().unwrap();
+        s["gait"]["statistics"] = statistics;
+        s["gait_runs"] = gait_run_history(cfg);
+    }
+    match result.motion_error {
+        Some(e) => Err(e),
+        None => Ok(format!("Gait stopped after {:.1} s of gait time; statistics saved", clock.get().0)),
+    }
+}
+fn writeln_log(cfg: &Config, value: Value) -> R<()> {
+    use std::io::Write as _;
+    let mut f = fs::OpenOptions::new().create(true).append(true).open(cfg.output.join("gait.jsonl")).map_err(|e| e.to_string())?;
+    let mut value = value;
+    value["unix_ms"] = json!(stamp());
+    writeln!(f, "{value}").map_err(|e| e.to_string())
+}
+/// The characterization campaign on the connected leg (PLAN.md). Axes are the
+/// enabled, watchdog-proven motors with both poses taught; each is rehearsed
+/// with its tuned model (untuned axes are refused). Stage results are written
+/// as receipts the moment they finish; a resumed campaign reuses them.
+#[allow(clippy::too_many_arguments)]
+/// A lesson's lab step (`sim-lab`): one taught, proven motor at a bounded
+/// duty for a few seconds, through the campaign's guarded session (travel
+/// window with braking margin, sag, temperature, stop). Needs the operator's
+/// confirmation that the leg is supported; writes a receipt.
+#[allow(clippy::too_many_arguments)]
+fn run_lab_step(
+    app: &App,
+    cfg: &Config,
+    b: &mut CalibrationBus,
+    cal: &Calibration,
+    proven: &std::collections::BTreeSet<u8>,
+    session: Option<&str>,
+    r: &Request,
+    reply: impl FnOnce(&Value),
+) -> R<Value> {
+    use sim_runtime::acquisition::{calibration_serial::BusRig, characterization as ch};
+    if !r.supported {
+        return Err("Confirm the operator checklist (at the bench, leg supported, supervisor running)".into());
+    }
+    if app.stop.load(Ordering::SeqCst) {
+        return Err("Stop is latched; clear it at the bench first".into());
+    }
+    let (id, role) = cfg.roles.iter().find(|(_, role)| role.as_str() == r.role || role.starts_with(&format!("{}/", r.role)) || role.ends_with(&format!("/{}", r.role))).map(|(i, role)| (*i, role.clone())).ok_or_else(|| format!("No motor has the role `{}`", r.role))?;
+    let a = usable(&cal.axes[&id], session);
+    let (lo, hi) = a.encoder_bounds();
+    if a.disabled {
+        return Err(format!("{role} is disabled"));
+    }
+    let (Some(lo), Some(hi)) = (lo, hi) else { return Err(format!("Teach both poses of {role} first")) };
+    if !proven.contains(&id) {
+        return Err(format!("Prove {role}'s watchdogs first (select it with hold enabled)"));
+    }
+    // Gates and drive limits from the campaign plan, when configured.
+    let plan: Option<ch::Plan> = cfg.campaign_plan.as_ref().and_then(|p| fs::read(p).ok()).and_then(|b| serde_json::from_slice(&b).ok());
+    let gates = plan.as_ref().map(|p| p.gates.clone()).unwrap_or_default();
+    let limits: std::collections::BTreeMap<u8, ch::AxisLimits> = plan.as_ref().and_then(|p| p.limits.get(&role).cloned()).map(|l| [(id, l)].into()).unwrap_or_default();
+    let axis = ch::Axis { id, role: role.clone(), lower: lo.min(hi) as f64, upper: lo.max(hi) as f64 };
+    {
+        let mut s = app.state.lock().unwrap();
+        s["busy"] = json!(true);
+        s["lab"] = json!({"running": true, "role": role, "duty": r.duty, "seconds": r.seconds});
+        s["message"] = json!(format!("Lab step on {role}: duty {:.2} for {:.1} s. Stop ends it.", r.duty, r.seconds));
+        reply(&s);
+    }
+    app.cancel.store(false, Ordering::SeqCst);
+    let windows = vec![(id, axis.lower as i32, axis.upper as i32)];
+    let step = {
+        let mut bus = BusRig::new(b, &windows, cfg.sweep_tuning.period_s, &app.cancel)?;
+        let mut limited = ch::LimitedRig::new(&mut bus, limits.clone());
+        let result = {
+            let mut session = ch::Session::new(&mut limited, gates, vec![axis.clone()])?;
+            session.limits = limits;
+            ch::lab_step(&mut session, id, r.duty, r.seconds)
+        };
+        let _ = ch::Rig::stop(&mut limited);
+        result?
+    };
+    const RAD: f64 = std::f64::consts::TAU / 4096.;
+    let dir = cfg.output.join("labs");
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let path = dir.join(format!("lab-{}-{}.json", role.replace('/', "-"), stamp()));
+    let steady_rad_s = step.steady_counts_s.map(|c| c * RAD);
+    let receipt = json!({"role": role, "motor_id": id, "duty": r.duty, "seconds": r.seconds, "steady_counts_s": step.steady_counts_s, "steady_rad_s": steady_rad_s, "stopped": step.stopped, "samples": step.samples, "window": [axis.lower, axis.upper], "supply_v": step.samples.first().map(|s| s.voltage_v)});
+    fs::write(&path, serde_json::to_vec_pretty(&receipt).unwrap()).map_err(|e| e.to_string())?;
+    writeln_log(cfg, json!({"event": "lab_step", "role": role, "duty": r.duty, "seconds": r.seconds, "steady_rad_s": steady_rad_s, "stopped": step.stopped, "receipt": path}))?;
+    Ok(json!({"role": role, "steady_rad_s": steady_rad_s, "stopped": step.stopped, "seconds": step.seconds, "receipt": path, "supply_v": step.samples.first().map(|s| s.voltage_v),
+        "headline": match steady_rad_s { Some(v) => format!("{role} ran at {v:.3} rad/s"), None => format!("{role} did not reach a steady speed") }}))
+}
+
+fn run_campaign(
+    app: &App,
+    cfg: &Config,
+    b: &mut CalibrationBus,
+    cal: &Calibration,
+    proven: &std::collections::BTreeSet<u8>,
+    session: Option<&str>,
+    r: &Request,
+    reply: impl FnOnce(&Value),
+) -> R<Value> {
+    use sim_runtime::acquisition::{calibration_serial::BusRig, characterization as ch, virtual_bench::MotorModel};
+    if !r.supported {
+        return Err("Confirm the leg is suspended with clear space around every joint".into());
+    }
+    let plan_path = cfg.campaign_plan.clone().ok_or("No campaign_plan in the server configuration")?;
+    let mut plan: ch::Plan = serde_json::from_slice(&fs::read(&plan_path).map_err(|e| format!("{}: {e}", plan_path.display()))?).map_err(|e| e.to_string())?;
+    // Axes from taught poses; untaught, disabled, unproven or untuned motors are left out.
+    let (mut axes, mut models, mut skipped) = (Vec::new(), std::collections::BTreeMap::new(), Vec::new());
+    for (id, role) in &cfg.roles {
+        let a = usable(&cal.axes[id], session);
+        let (lo, hi) = a.encoder_bounds();
+        let why = if a.disabled {
+            Some("disabled")
+        } else if lo.is_none() || hi.is_none() {
+            Some("poses not taught")
+        } else if !proven.contains(id) {
+            Some("watchdogs not proven; select a motor with hold enabled")
+        } else if a.tuning.is_none() {
+            Some("not tuned; the campaign rehearses with the tuned model")
+        } else {
+            None
+        };
+        if let Some(w) = why {
+            skipped.push(format!("{role} ({w})"));
+            continue;
+        }
+        let (lo, hi) = (lo.unwrap().min(hi.unwrap()), lo.unwrap().max(hi.unwrap()));
+        let t = a.tuning.as_ref().unwrap();
+        axes.push(ch::Axis { id: *id, role: role.clone(), lower: lo as f64, upper: hi as f64 });
+        models.insert(*id, MotorModel {
+            speed_gain: t.gain_counts_s_per_duty,
+            lag_s: t.time_constant_s.max(0.01),
+            breakaway_duty: 0.5 * (t.breakaway_duty[0] + t.breakaway_duty[1]),
+            moving_friction_duty: t.friction_duty,
+            ..Default::default()
+        });
+    }
+    if axes.is_empty() {
+        return Err(format!("No motor is ready for the campaign: {}", skipped.join(", ")));
+    }
+    plan.axes = axes.clone();
+    // Receipts: the newest unfinished campaign directory when resuming.
+    let root = cfg.output.join("campaigns");
+    fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+    let previous = fs::read_dir(&root).ok().into_iter().flatten().flatten().map(|e| e.path())
+        .filter(|p| p.is_dir() && !p.join("report.json").exists()).max();
+    let (dir, resume) = match (r.resume, previous) {
+        (true, Some(dir)) => {
+            let mut receipts: Vec<ch::StageResult> = Vec::new();
+            let mut names: Vec<_> = fs::read_dir(dir.join("receipts")).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).collect();
+            names.sort();
+            for n in names {
+                receipts.push(serde_json::from_slice(&fs::read(&n).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?);
+            }
+            (dir, receipts)
+        }
+        (true, None) => return Err("No interrupted campaign to resume".into()),
+        (false, _) => (root.join(format!("campaign-{}", stamp())), Vec::new()),
+    };
+    fs::create_dir_all(dir.join("receipts")).map_err(|e| e.to_string())?;
+    fs::write(dir.join("plan.json"), serde_json::to_vec_pretty(&plan).unwrap()).map_err(|e| e.to_string())?;
+    {
+        let mut s = app.state.lock().unwrap();
+        s["busy"] = json!(true);
+        s["campaign"] = json!({"running": true, "axes": axes, "skipped": skipped, "stage": "Starting", "completed": resume.len(), "directory": dir, "log": []});
+        s["message"] = json!(format!("Characterization campaign on {}. Stop ends it; completed stages are kept.", axes.iter().map(|a| a.role.as_str()).collect::<Vec<_>>().join(", ")));
+        reply(&s);
+    }
+    app.cancel.store(false, Ordering::SeqCst);
+    app.stop.store(false, Ordering::SeqCst);
+    let windows: Vec<(u8, i32, i32)> = axes.iter().map(|a| (a.id, a.lower as i32, a.upper as i32)).collect();
+    let started = Instant::now();
+    let report = {
+        let mut rig = BusRig::new(b, &windows, cfg.sweep_tuning.period_s, &app.cancel)?;
+        let mut receipt_index = resume.len();
+        let result = ch::run_with(
+            &plan,
+            &mut rig,
+            Some(ch::per_axis_predictor(models.clone())),
+            // No CAD scene in this server: multi-axis combinations stay within
+            // taught poses, which were reached together only if taught so.
+            &|_| Ok(()),
+            &mut |m| {
+                let mut s = app.state.lock().unwrap();
+                s["campaign"]["stage"] = json!(m);
+                if let Some(log) = s["campaign"]["log"].as_array_mut() {
+                    log.push(json!(m));
+                }
+            },
+            &resume,
+            &mut |stage| {
+                receipt_index += 1;
+                let _ = fs::write(dir.join("receipts").join(format!("{receipt_index:03}-{}-{}.json", stage.stage, stage.id)), serde_json::to_vec_pretty(stage).unwrap());
+                let mut s = app.state.lock().unwrap();
+                s["campaign"]["completed"] = json!(receipt_index);
+                s["campaign"]["last"] = json!({"stage": stage.stage, "axis": stage.id, "completed": stage.completed, "abort": stage.abort});
+            },
+        );
+        let _ = ch::Rig::stop(&mut rig);
+        result?
+    };
+    let fitted_replay: Vec<Value> = report.fitted.iter().map(|(id, fits)| {
+        let prior = &models[id];
+        json!({"axis": id, "tuned_model_rms_counts": ch::replay_error(&report.samples, *id, prior, cfg.sweep_tuning.period_s),
+               "fitted_model_rms_counts": ch::replay_error(&report.samples, *id, &ch::fitted_model(prior, fits), cfg.sweep_tuning.period_s)})
+    }).collect();
+    let coordinates: std::collections::BTreeMap<u8, Vec<String>> = cfg.roles.iter().map(|(id, role)| {
+        let joint = if role.contains("knee") { "Foot" } else if role.contains("worm") { "Worm" } else { "Hip" };
+        (*id, ["-Y", "+X", "+Y", "-X"].iter().map(|leg| format!("joint.{leg} | {joint} servo output")).collect())
+    }).collect();
+    let promotion = ch::promotion(&report, &json!({"source": "tuned per-motor models"}), &coordinates, &format!("Hardware campaign on {} ({})", cfg.fixture, dir.display()));
+    let ranking = ch::select_tests(&report, &plan.sensitivity);
+    let aborted: Vec<Value> = report.stages.iter().filter(|s| !s.completed).map(|s| json!({"stage": s.stage, "axis": s.id, "abort": s.abort})).collect();
+    let summary = json!({
+        "directory": dir, "wall_s": started.elapsed().as_secs_f64(), "axes": axes, "skipped": skipped,
+        "aborted": aborted, "replay": fitted_replay, "ranking": ranking.iter().take(8).collect::<Vec<_>>(),
+        "headline": format!("{} stages, {} stopped by a gate", report.stages.len(), aborted.len()),
+    });
+    for (name, value) in [("report.json", serde_json::to_value(&report).unwrap()), ("promotion.json", promotion), ("summary.json", summary.clone())] {
+        fs::write(dir.join(name), serde_json::to_vec_pretty(&value).unwrap()).map_err(|e| e.to_string())?;
+    }
+    Ok(summary)
+}
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args().collect::<Vec<_>>();
     if args.len() != 3 {
@@ -853,7 +1847,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (tx, rx) = mpsc::sync_channel(1);
     let app = Arc::new(App {
         state: Mutex::new(
-            json!({"coordinate_session":stamp().to_string(),"connected":false,"enabled_id":null,"busy":false,"samples":{},"message":"Starting","error":null,"output":cfg.output}),
+            json!({"coordinate_session":stamp().to_string(),"maximum_speed_counts_s":cfg.sweep_tuning.maximum_speed_counts_s,"connected":false,"enabled_id":null,"busy":false,"samples":{},"message":"Starting","error":null,"output":cfg.output}),
         ),
         jobs: tx,
         stop: AtomicBool::new(true),
@@ -863,8 +1857,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         token,
         viewer: cfg.viewer.clone(),
         sweep: Mutex::new(None),
+        gait: Mutex::new(None),
         sweep_tuning: cfg.sweep_tuning.clone(),
     });
+    app.state.lock().unwrap()["gait_runs"] = gait_run_history(&cfg);
     let a = app.clone();
     std::thread::spawn(move || worker(a, rx, cfg));
     println!("Calibration and robot viewer: {origin}");
@@ -879,6 +1875,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn lab_results_join_the_gait_list() {
+        let base = std::env::temp_dir().join(format!("lab-catalog-{}", std::process::id()));
+        let results = base.join("gait-lab-test/results");
+        let entry = |name: &str, report: &str, governor: bool| {
+            let d = results.join(name);
+            fs::create_dir_all(&d).unwrap();
+            fs::write(d.join("report.yaml"), report).unwrap();
+            fs::write(d.join("compiled.json"), "{}").unwrap();
+            if governor {
+                fs::write(d.join("spec-identity.json"), "{}").unwrap();
+            }
+        };
+        entry("slow", "gait: slow\nstatus: passed\nspeed_m_s: 0.1\n", true);
+        entry("fast", "gait: fast\nstatus: passed\nspeed_m_s: 0.2\n", true);
+        entry("fell", "gait: fell\nstatus: rejected\nspeed_m_s: null\n", true);
+        entry("no-governor", "gait: old\nstatus: passed\nspeed_m_s: 0.3\n", false);
+        entry("crouch", "kind: pose_sequence\nsequence: crouch\nstatus: ready\n", false);
+        entry("blocked", "kind: pose_sequence\nsequence: over\nstatus: blocked\n", false);
+        let rows = lab_catalog(&base);
+        fs::remove_dir_all(&base).ok();
+        let names: Vec<(&str, &str)> = rows.iter().map(|r| (r["kind"].as_str().unwrap(), r["trial"].as_str().unwrap())).collect();
+        assert_eq!(names, [("lab_gait", "fast"), ("lab_gait", "slow"), ("pose_sequence", "crouch")], "passed gaits fastest first, then ready poses");
+    }
     fn tuning() -> SweepTuning {
         serde_json::from_str::<Config>(include_str!(
             "../../../examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json"
@@ -911,7 +1931,7 @@ mod tests {
         assert_eq!(lease.input.speed_counts_s, 10.);
         assert!(lease.update("owner", &request, &tuning()).is_err());
         request.sequence = 3;
-        lease.last_seen = Instant::now() - Duration::from_secs(1);
+        lease.last_seen = Instant::now() - Duration::from_secs(2);
         assert!(lease.update("owner", &request, &tuning()).is_err());
     }
 }

@@ -3,9 +3,15 @@
 //! the shared `sim-system` commands and runs it on the shared runtime in a
 //! background thread; it contains no physics of its own.
 mod animation;
+pub(crate) mod annotate;
 pub mod builder;
+pub mod lesson;
 mod linked;
 pub mod models;
+pub mod place_view;
+pub mod markdown;
+pub(crate) mod physics_view;
+pub(crate) mod view;
 mod notes;
 pub mod rest;
 use bevy::{
@@ -54,6 +60,32 @@ pub struct SpatialScene {
     pub ghost: std::collections::BTreeSet<String>,
     /// Build mode replaces the parts list with the builder panel.
     pub builder_mode: bool,
+    /// Height of the build-mode graph dock above the status bar (0 = hidden).
+    pub builder_dock: f32,
+    /// Learn mode: the 3D view is drawn inside a lesson's scene card.
+    pub learn_view: Option<LearnView>,
+    /// Display directives from lesson scripts and narration (spotlight,
+    /// pins, inset, X-ray, explode), or set by the learner.
+    pub directives: sim_script::presentation::ViewState,
+    /// How far the exploded view has opened, 0–1 (eased).
+    pub explode_t: f32,
+    /// Sliding parts are drawn this many times further from their start
+    /// (a lesson scene's `magnify`; display only).
+    pub motion_scale: f32,
+    /// Reader preference: no glides, orbiting, explode easing or motion blur.
+    pub reduced_motion: bool,
+    /// Parts a lesson script is pointing at: everything else dims a little.
+    pub soft_focus: Vec<String>,
+    /// A second run shown beside (split) or over (ghost) this one.
+    pub companion: Option<view::CompanionView>,
+}
+
+/// Where the 3D view is embedded in a lesson page, in physical pixels: the
+/// card's whole viewport and the part of it currently visible (scrolled).
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
+pub struct LearnView {
+    pub full: Rect,
+    pub visible: Rect,
 }
 
 /// The catalog colour of one piece of a display model.
@@ -92,7 +124,7 @@ impl SpatialScene {
         Self {
             description,
             spatial,
-            state: SpatialViewState::default(),
+            state: SpatialViewState { overlays: sim_inspect::spatial::Overlay::defaults(), ..Default::default() },
             selection: SelectionTarget::None,
             details: SelectionDetails::default(),
             animation: None,
@@ -106,6 +138,14 @@ impl SpatialScene {
             note_error: None,
             ghost: Default::default(),
             builder_mode: false,
+            builder_dock: 0.,
+            learn_view: None,
+            directives: Default::default(),
+            explode_t: 0.,
+            motion_scale: 1.,
+            reduced_motion: false,
+            soft_focus: Vec::new(),
+            companion: None,
         }
     }
     pub fn new(
@@ -178,7 +218,7 @@ impl SpatialScene {
         if self.builder_mode { builder::TOPBAR } else { TOP }
     }
     fn bottom(&self) -> f32 {
-        if self.builder_mode { builder::STATUSBAR } else { BOTTOM }
+        if self.builder_mode { builder::STATUSBAR + self.builder_dock } else { BOTTOM }
     }
     fn select(&mut self, component: String) {
         if let Err(e) = self.apply(SpatialCommand::Select { component }) {
@@ -209,12 +249,21 @@ impl SpatialScene {
         result
     }
     fn bounds(&self) -> (Vec3, f32) {
-        if self.spatial.parts.is_empty() {
+        self.bounds_of(None)
+    }
+    /// Centre and radius of the parts of one instance path (and everything
+    /// inside it), or of every part.
+    pub(crate) fn bounds_of(&self, prefix: Option<&str>) -> (Vec3, f32) {
+        let inside = |c: &str| prefix.is_none_or(|p| p.is_empty() || c == p || c.starts_with(&format!("{p}/")));
+        if !self.spatial.parts.iter().any(|p| inside(&p.component)) {
+            if prefix.is_some() {
+                return self.bounds_of(None);
+            }
             return (Vec3::ZERO, 0.1);
         }
         let mut lo = Vec3::splat(f32::INFINITY);
         let mut hi = Vec3::splat(f32::NEG_INFINITY);
-        for p in &self.spatial.parts {
+        for p in self.spatial.parts.iter().filter(|p| inside(&p.component)) {
             let center = Vec3::from_array(p.position)
                 + if self.state.exploded {
                     Vec3::from_array(p.exploded_offset)
@@ -229,6 +278,21 @@ impl SpatialScene {
             lo = lo.min(center - radius);
             hi = hi.max(center + radius);
         }
+        // Pieces drawn inside a part (a link's arm, a gear train) can reach
+        // well beyond its housing: frame them too.
+        if let Some(a) = &self.animation {
+            for b in &a.internals {
+                let Some(p) = self.spatial.parts.iter().find(|p| p.id == b.part && inside(&p.component)) else { continue };
+                let offset = if self.state.exploded { Vec3::from_array(p.exploded_offset) } else { Vec3::ZERO };
+                let reach = match b.element {
+                    sim_inspect::animation::InternalElement::Arm => b.length + b.radius,
+                    _ => b.radius.hypot(b.length * 0.5),
+                };
+                let center = Vec3::from_array(b.center) + offset;
+                lo = lo.min(center - reach);
+                hi = hi.max(center + reach);
+            }
+        }
         ((lo + hi) * 0.5, (hi - lo).length() * 0.5)
     }
 }
@@ -241,7 +305,9 @@ impl Plugin for SpatialViewerPlugin {
                 require_markers: true,
                 ..default()
             })
-            .add_systems(Startup, (setup_scene, setup_ui))
+            .init_resource::<physics_view::Labels>()
+            .init_resource::<view::PartHover>()
+            .add_systems(Startup, (setup_scene, setup_ui, rest::wake_on_request))
             .add_systems(
                 Update,
                 (
@@ -263,6 +329,12 @@ impl Plugin for SpatialViewerPlugin {
                     animation::draw_markers,
                 )
                     .chain(),
+            )
+            .add_systems(
+                Update,
+                (view::animate, physics_view::overlay_clicks, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, view::caption_fonts)
+                    .chain()
+                    .after(animation::draw_markers),
             );
     }
 }
@@ -290,6 +362,34 @@ pub fn run_builder(scene: SpatialScene, builder: builder::Builder, api: sim_api:
         }))
         .add_plugins(SpatialViewerPlugin)
         .add_plugins(builder::BuilderPlugin)
+        .run();
+}
+
+/// Lesson mode: lessons around the builder's scene (Learn screen first).
+pub fn run_lessons(scene: SpatialScene, builder: builder::Builder, learn: lesson::Learn, api: sim_api::Server, models: models::ModelLibrary) {
+    let mut app = App::new();
+    app.insert_resource(models).insert_resource(rest::Rest(api, None))
+        .insert_resource(builder)
+        .insert_resource(scene)
+        .insert_resource(learn)
+        .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
+        .insert_resource(AmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
+        .insert_resource(WinitSettings {
+            focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
+            unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
+        })
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Systems — Lessons".into(),
+                resolution: (1560.0_f32, 980.0_f32).into(),
+                resize_constraints: bevy::window::WindowResizeConstraints { min_width: 1100.0, min_height: 720.0, ..default() },
+                ..default()
+            }),
+            ..default()
+        }))
+        .add_plugins(SpatialViewerPlugin)
+        .add_plugins(builder::BuilderPlugin)
+        .add_plugins(lesson::LearnPlugin)
         .run();
 }
 
@@ -354,13 +454,17 @@ pub fn run_with_api(
 struct Part {
     index: usize,
 }
-#[derive(Component)]
+#[derive(Component, Default)]
 struct Orbit {
     focus: Vec3,
     radius: f32,
     yaw: f32,
     pitch: f32,
     home: bool,
+    /// An eased camera move in progress (see `view.rs`).
+    glide: Option<view::Glide>,
+    /// Slow circling, rad/s; any learner input stops it.
+    spin: f32,
 }
 #[derive(Component, Clone)]
 enum Action {
@@ -408,12 +512,53 @@ fn setup_scene(
             yaw: 0.35,
             pitch: 0.6,
             home: true,
+            ..Default::default()
         },
+    ));
+    // Split view: a second camera on the companion run's copy.
+    commands.spawn((
+        Camera3d::default(),
+        Camera { order: 1, is_active: false, ..default() },
+        Projection::Perspective(PerspectiveProjection { near: 0.001, ..default() }),
+        Tonemapping::None,
+        Transform::default(),
+        view::SplitCamera,
+    ));
+    for right in [false, true] {
+        commands.spawn((
+            view::SplitLabel(right),
+            Node { position_type: PositionType::Absolute, padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), ..default() },
+            BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.8)),
+            BorderRadius::all(Val::Px(4.)),
+            Visibility::Hidden,
+            GlobalZIndex(23),
+            Pickable::IGNORE,
+            children![(Text::new(""), TextFont { font_size: 12., ..default() }, TextColor(if right { Color::srgb(0.72, 0.58, 1.0) } else { ACCENT }), view::ViewCaption, Pickable::IGNORE)],
+        ));
+    }
+    // Picture-in-picture close-up: drawn after the main view, before the UI.
+    commands.spawn((
+        Camera3d::default(),
+        Camera { order: 2, is_active: false, ..default() },
+        Projection::Perspective(PerspectiveProjection { near: 0.0005, ..default() }),
+        Tonemapping::None,
+        Transform::default(),
+        view::InsetCamera,
+    ));
+    commands.spawn((
+        view::InsetFrame,
+        Node { position_type: PositionType::Absolute, border: UiRect::all(Val::Px(2.)), justify_content: JustifyContent::FlexStart, align_items: AlignItems::FlexStart, ..default() },
+        BorderColor(ACCENT),
+        BorderRadius::all(Val::Px(4.)),
+        Visibility::Hidden,
+        GlobalZIndex(22),
+        Pickable::IGNORE,
+        children![(Text::new(""), TextFont { font_size: 11., ..default() }, TextColor(ACCENT), BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.8)), Node { padding: UiRect::axes(Val::Px(6.), Val::Px(2.)), ..default() }, view::ViewCaption, Pickable::IGNORE)],
     ));
     commands.spawn((
         Camera2d,
         Camera {
-            order: 1,
+            order: 3,
             clear_color: ClearColorConfig::None,
             ..default()
         },
@@ -464,7 +609,7 @@ pub(crate) fn spawn_parts(
                     SceneContent,
                 ));
                 if !scene.ghost.contains(&part.component) {
-                    entity.insert(Pickable::default()).observe(pick_part);
+                    entity.insert(Pickable::default()).observe(pick_part).observe(builder::placement::start_part).observe(view::part_over).observe(view::part_out);
                 }
             }
             continue;
@@ -489,9 +634,10 @@ pub(crate) fn spawn_parts(
             SceneContent,
         ));
         if !scene.ghost.contains(&part.component) {
-            entity.insert(Pickable::default()).observe(pick_part);
+            entity.insert(Pickable::default()).observe(pick_part).observe(builder::placement::start_part).observe(view::part_over).observe(view::part_out);
         }
     }
+    physics_view::spawn_internals(commands, scene, meshes, materials);
 }
 
 fn pick_part(
@@ -500,13 +646,22 @@ fn pick_part(
     mut scene: ResMut<SpatialScene>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     builder: Option<ResMut<builder::Builder>>,
+    learn: Option<ResMut<lesson::Learn>>,
 ) {
     if click.button != bevy::picking::pointer::PointerButton::Primary {
         return;
     }
     if let Ok(part) = parts.get(click.target()) {
         let id = scene.spatial.parts[part.index].component.clone();
+        if let Some(mut learn) = learn.filter(|l| l.active) {
+            learn.pick(&mut scene, &id);
+            return;
+        }
         if let Some(mut builder) = builder {
+            if builder.mode == builder::Mode::Annotate {
+                if let Some(world)=click.hit.position {builder::discussion::begin_surface(&mut builder,&scene,part.index,world);}
+                return;
+            }
             let shift = keys.as_ref().is_some_and(|k| k.pressed(KeyCode::ShiftLeft) || k.pressed(KeyCode::ShiftRight));
             builder::click_part(&mut builder, &id, shift);
             return;
@@ -790,10 +945,17 @@ fn keyboard(
     actions: Query<(&Interaction, &Action), (Changed<Interaction>, With<Button>)>,
     mut scene: ResMut<SpatialScene>,
     mut camera: Single<&mut Orbit>,
+    window: Option<Single<&Window>>,
     builder: Option<Res<builder::Builder>>,
+    learn: Option<Res<lesson::Learn>>,
 ) {
-    if builder.as_ref().is_some_and(|b| b.typing()) {
+    if builder.as_ref().is_some_and(|b| b.typing()) || learn.as_ref().is_some_and(|l| l.active) {
         return;
+    }
+    // F: fly to the selected part (the whole system when nothing is selected).
+    if let Some(window) = window.filter(|_| keys.just_pressed(KeyCode::KeyF)) {
+        let focus = scene.details.components.iter().next().cloned().or_else(|| scene.state.selected.clone());
+        view::zoom_to(&scene, &mut camera, &window, focus.as_deref(), 1.0, view::GLIDE_S);
     }
     for (interaction, action) in &actions {
         if *interaction == Interaction::Pressed {
@@ -802,7 +964,7 @@ fn keyboard(
     }
     for (key, action) in [
         (KeyCode::Escape, Action::Clear),
-        (KeyCode::KeyF, Action::Home),
+        (KeyCode::KeyH, Action::Home),
         (KeyCode::KeyE, Action::Explode),
         (KeyCode::KeyC, Action::Connections),
     ] {
@@ -851,6 +1013,30 @@ fn camera_viewport(
     window: Single<&Window>,
     mut camera: Single<&mut Camera, With<Orbit>>,
 ) {
+    if let Some(view) = scene.learn_view {
+        // Embedded in a lesson card: render only the visible part of the
+        // card, with the projection of the whole card (no squash when scrolled).
+        let (viewport, sub) = if view.visible.width() < 1.0 || view.visible.height() < 1.0 {
+            (Viewport { physical_position: UVec2::ZERO, physical_size: UVec2::ONE, ..default() }, None)
+        } else {
+            let sub = bevy::render::camera::SubCameraView {
+                full_size: view.full.size().max(Vec2::ONE).as_uvec2(),
+                offset: view.visible.min - view.full.min,
+                size: view.visible.size().max(Vec2::ONE).as_uvec2(),
+            };
+            (Viewport { physical_position: view.visible.min.max(Vec2::ZERO).as_uvec2(), physical_size: view.visible.size().max(Vec2::ONE).as_uvec2(), ..default() }, Some(sub))
+        };
+        if camera.viewport.as_ref().is_none_or(|old| old.physical_size != viewport.physical_size || old.physical_position != viewport.physical_position) {
+            camera.viewport = Some(viewport);
+        }
+        if camera.sub_camera_view != sub {
+            camera.sub_camera_view = sub;
+        }
+        return;
+    }
+    if camera.sub_camera_view.is_some() {
+        camera.sub_camera_view = None;
+    }
     let scale = window.scale_factor();
     let width = (window.width() - scene.left() - scene.right()).max(1.0);
     let height = (window.height() - scene.top() - scene.bottom()).max(1.0);
@@ -867,6 +1053,7 @@ fn camera_viewport(
     }
 }
 fn orbit(
+    time: Res<Time>,
     buttons: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
     mut motion: EventReader<MouseMotion>,
@@ -883,25 +1070,36 @@ fn orbit(
         }
     });
     let (mut transform, mut orbit) = camera.into_inner();
-    let in_scene = window.cursor_position().is_some_and(|p| {
-        p.x > scene.left()
-            && p.x < window.width() - scene.right()
-            && p.y > scene.top()
-            && p.y < window.height() - scene.bottom()
+    let learn = scene.learn_view;
+    let in_scene = window.cursor_position().is_some_and(|p| match learn {
+        Some(v) => v.visible.contains(p * window.scale_factor()),
+        None => {
+            p.x > scene.left()
+                && p.x < window.width() - scene.right()
+                && p.y > scene.top()
+                && p.y < window.height() - scene.bottom()
+        }
     });
+    // In a lesson the wheel scrolls the page; zoom needs Ctrl or Cmd.
+    let zoom = if learn.is_some() && !(keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight) || keys.pressed(KeyCode::SuperLeft) || keys.pressed(KeyCode::SuperRight)) { 0.0 } else { zoom };
     let (_, extent) = scene.bounds();
     if orbit.home {
-        let (center, radius) = scene.bounds();
-        orbit.focus = center;
-        let aspect = ((window.width() - scene.left() - scene.right())
-            / (window.height() - scene.top() - scene.bottom()))
-            .max(0.1);
-        orbit.radius = radius * 2.9 / aspect.min(1.0);
-        orbit.yaw = 0.35;
-        orbit.pitch = 0.60;
-        orbit.home = false;
+        // The overview: a glide once the view has been placed, a cut the first time.
+        let pose = view::frame_pose(&scene, None, 1.0, 0.35, 0.60, view::aspect(&scene, &window));
+        let seconds = if orbit.radius > 0. && orbit.focus != Vec3::ZERO { view::GLIDE_S } else { 0. };
+        orbit.glide_to(pose, seconds);
     }
+    if scene.reduced_motion {
+        // Cuts instead of glides; no circling.
+        orbit.finish_glide();
+        orbit.spin = 0.;
+    }
+    orbit.step(time.delta_secs().min(0.1));
     if in_scene {
+        let dragging = (buttons.pressed(MouseButton::Right) || buttons.pressed(MouseButton::Middle)) && drag != Vec2::ZERO;
+        if dragging || zoom != 0.0 {
+            orbit.interrupt();
+        }
         let pan_modifier = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
         if buttons.pressed(MouseButton::Right) && !pan_modifier {
             orbit.yaw -= drag.x * 0.007;
@@ -934,7 +1132,7 @@ fn update_parts(
         &mut Visibility,
         &MeshMaterial3d<StandardMaterial>,
         Option<&ModelColor>,
-    )>,
+    ), Without<view::CompanionPart>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     if !scene.is_changed() {
@@ -965,10 +1163,21 @@ fn update_parts(
             if scene.ghost.contains(&p.component) {
                 material.base_color = material.base_color.with_alpha(0.13);
                 material.alpha_mode = AlphaMode::Blend;
+            } else if let Some(alpha) = view::emphasis(&scene, &p.component) {
+                // Spotlight and X-ray: everything else goes see-through.
+                material.base_color = material.base_color.with_alpha(alpha);
+                material.alpha_mode = AlphaMode::Blend;
+            } else if physics_view::has_internals(&scene, &p.id) {
+                // See-through housing: the moving pieces inside are drawn.
+                material.base_color = material.base_color.with_alpha(0.28);
+                material.alpha_mode = AlphaMode::Blend;
             } else {
                 material.alpha_mode = AlphaMode::Opaque;
             }
-            material.emissive = if selected && model.is_some() {
+            let glow = animation::part_temperature(&scene, part.index).filter(|_| scene.state.overlays.contains(&sim_inspect::spatial::Overlay::Heat)).map(|k| ((k - 293.15) / 60.).clamp(0., 1.) as f32).unwrap_or(0.);
+            material.emissive = if glow > 0.01 {
+                LinearRgba::new(1.4 * glow, 0.38 * glow, 0.08 * glow, 1.)
+            } else if selected && model.is_some() {
                 LinearRgba::new(0.30, 0.19, 0.03, 1.)
             } else if selected && thermal.is_some() {
                 LinearRgba::new(0.12, 0.07, 0.01, 1.)
@@ -1272,6 +1481,7 @@ mod tests {
                 yaw: 0.0,
                 pitch: 0.0,
                 home: false,
+                ..Default::default()
             })
             .id();
         let part = app

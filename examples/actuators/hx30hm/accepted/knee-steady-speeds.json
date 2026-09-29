@@ -1,0 +1,64 @@
+{
+ "schema": "sim.fit-data/1",
+ "description": "HX-30HM servo 1 (knee) steady output speed versus commanded duty, suspended leg, both directions, two runs.",
+ "source": {
+  "path": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/campaigns/campaign-1790182543587/report.json",
+  "sha256": "9365b43b0ed60bc208cd8566e7744916fcafc3a6b64739048b17df5a0f266c63",
+  "stages": "D (+ repeat), servo id 1"
+ },
+ "conditions": {
+  "supply_v": 12.4,
+  "counts_per_rad": 651.8986469044033,
+  "temperature_c": 38.0
+ },
+ "points": [
+  {
+   "run": 0,
+   "duty": 0.15,
+   "speed_rad_s": 0.452095714417653,
+   "time_constant_s": 0.09725986878747098
+  },
+  {
+   "run": 0,
+   "duty": -0.15,
+   "speed_rad_s": -0.7490290138696472,
+   "time_constant_s": 0.013685690504052741
+  },
+  {
+   "run": 0,
+   "duty": 0.3,
+   "speed_rad_s": 1.188798882628849,
+   "time_constant_s": 0.05616515078328277
+  },
+  {
+   "run": 0,
+   "duty": -0.3,
+   "speed_rad_s": -1.5211310142462817,
+   "time_constant_s": 0.02025816515378533
+  },
+  {
+   "run": 1,
+   "duty": 0.15,
+   "speed_rad_s": 0.4414987777049312,
+   "time_constant_s": 0.08646366919687265
+  },
+  {
+   "run": 1,
+   "duty": -0.15,
+   "speed_rad_s": -0.7431309961749728,
+   "time_constant_s": 0.01124864
+  },
+  {
+   "run": 1,
+   "duty": 0.3,
+   "speed_rad_s": 1.1566514326408126,
+   "time_constant_s": 0.04801020627936659
+  },
+  {
+   "run": 1,
+   "duty": -0.3,
+   "speed_rad_s": -1.5854409277020005,
+   "time_constant_s": 0.032433975100275424
+  }
+ ]
+}

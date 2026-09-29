@@ -1,0 +1,664 @@
+{
+  "schema": "sim.system/1",
+  "title": "Pull-out test: heat-set insert vs self-tapped screw",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Pull-out test: heat-set insert vs self-tapped screw",
+      "description": "Two M3 screws in the same printed PLA, pulled straight out by the same growing force: one in a brass heat-set insert, one cut straight into the plastic.",
+      "instances": {
+        "insert": {
+          "display_id": "8e0b6bc3cdc7e8f9505384b2",
+          "label": "M3 heat-set insert",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.threaded_joint"
+          },
+          "parameters": {
+            "diameter": {
+              "value": 0.0056,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 brass insert (Ø5.6 mm outside, 5.7 mm long); its knurls grip about half the melted-in surface (estimate)."
+              }
+            },
+            "efficiency": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 brass insert (Ø5.6 mm outside, 5.7 mm long); its knurls grip about half the melted-in surface (estimate)."
+              }
+            },
+            "length": {
+              "value": 0.0057,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 brass insert (Ø5.6 mm outside, 5.7 mm long); its knurls grip about half the melted-in surface (estimate)."
+              }
+            },
+            "peak_displacement": {
+              "value": 0.0003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 brass insert (Ø5.6 mm outside, 5.7 mm long); its knurls grip about half the melted-in surface (estimate)."
+              }
+            },
+            "shear_strength": {
+              "value": 17000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 brass insert (Ø5.6 mm outside, 5.7 mm long); its knurls grip about half the melted-in surface (estimate)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.022,
+              0.0,
+              0.008
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "insert_boss": {
+          "display_id": "7ccfab97a96e116fd26acd39",
+          "label": "Boss (M3 heat-set insert)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              -0.012,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.006,
+              "length": 0.024
+            },
+            "color_srgb": [
+              0.2,
+              0.46,
+              0.72
+            ],
+            "model": "insert_boss"
+          }
+        },
+        "insert_drag": {
+          "display_id": "831c1ee0ab53e3cee62bf2b7",
+          "label": "Tearing drag (stand-in)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 3000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Drag on the escaping screw (3000 N·s/m), so its escape can be watched: before the peak it adds under 0.4 N, so it does not change the peak at this slow pull."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.018,
+              0.0,
+              0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "insert_force": {
+          "display_id": "baae84205086483e93900fc0",
+          "label": "Pull on the screw",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.force_source"
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.004,
+                0.01,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "insert_screw": {
+          "display_id": "2500ea06c4b26d0c75a53437",
+          "label": "Screw (M3 heat-set insert)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A screw with a light hanger: 10 g."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.006,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0028,
+              "length": 0.021
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "m3_screw"
+          }
+        },
+        "insert_stop": {
+          "display_id": "0aeb3876a23fb2ca411f0028",
+          "label": "Catch (8 mm)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": -0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A catch 8 mm up, where the escaping screw is stopped."
+              }
+            },
+            "stiffness": {
+              "value": 10000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A catch 8 mm up, where the escaping screw is stopped."
+              }
+            },
+            "upper": {
+              "value": 0.008,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A catch 8 mm up, where the escaping screw is stopped."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pull": {
+          "display_id": "dbcb33820671cc64292a2ed8",
+          "label": "Pull (150 N/s)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.force_command"
+          },
+          "parameters": {
+            "limit": {
+              "value": 1200.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Hanging weight added steadily: 150 N per second, up to 1200 N (a pull-out test)."
+              }
+            },
+            "ramp": {
+              "value": 150.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Hanging weight added steadily: 150 N per second, up to 1200 N (a pull-out test)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.006,
+                0.006,
+                0.006
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "tapped": {
+          "display_id": "32c9f3beee1662c6a5ea65b6",
+          "label": "M3 screw, self-tapped",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.threaded_joint"
+          },
+          "parameters": {
+            "diameter": {
+              "value": 0.003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 screw cut straight into a Ø2.5 mm printed hole, 6 mm deep; the thread fills about 40 % of the shear surface (estimate)."
+              }
+            },
+            "efficiency": {
+              "value": 0.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 screw cut straight into a Ø2.5 mm printed hole, 6 mm deep; the thread fills about 40 % of the shear surface (estimate)."
+              }
+            },
+            "length": {
+              "value": 0.006,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 screw cut straight into a Ø2.5 mm printed hole, 6 mm deep; the thread fills about 40 % of the shear surface (estimate)."
+              }
+            },
+            "peak_displacement": {
+              "value": 0.0003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 screw cut straight into a Ø2.5 mm printed hole, 6 mm deep; the thread fills about 40 % of the shear surface (estimate)."
+              }
+            },
+            "shear_strength": {
+              "value": 17000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Printed PLA boss pulled along the layer stacking; shear strength about 17 MPa there (estimate). An M3 screw cut straight into a Ø2.5 mm printed hole, 6 mm deep; the thread fills about 40 % of the shear surface (estimate)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.038,
+              0.0,
+              0.008
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "tapped_boss": {
+          "display_id": "e20bf69d3ab7e031572b85f5",
+          "label": "Boss (M3 screw, self-tapped)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              0.03,
+              -0.012,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.006,
+              "length": 0.024
+            },
+            "color_srgb": [
+              0.2,
+              0.46,
+              0.72
+            ],
+            "model": "tapped_boss"
+          }
+        },
+        "tapped_drag": {
+          "display_id": "e1047d469a0ff75420a470ba",
+          "label": "Tearing drag (stand-in)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 3000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Drag on the escaping screw (3000 N·s/m), so its escape can be watched: before the peak it adds under 0.4 N, so it does not change the peak at this slow pull."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.042,
+              0.0,
+              0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "tapped_force": {
+          "display_id": "6b1a50a311a8b06d85612727",
+          "label": "Pull on the screw",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.force_source"
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.004,
+                0.01,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "tapped_screw": {
+          "display_id": "722f8b4247b1654635500503",
+          "label": "Screw (M3 screw, self-tapped)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A screw with a light hanger: 10 g."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.006,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0028,
+              "length": 0.021
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "m3_screw"
+          }
+        },
+        "tapped_stop": {
+          "display_id": "8fad22758fdb55e0c8c7fa11",
+          "label": "Catch (8 mm)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": -0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A catch 8 mm up, where the escaping screw is stopped."
+              }
+            },
+            "stiffness": {
+              "value": 10000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A catch 8 mm up, where the escaping screw is stopped."
+              }
+            },
+            "upper": {
+              "value": 0.008,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A catch 8 mm up, where the escaping screw is stopped."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "insert_screw",
+          "terminals": [
+            {
+              "instance": "insert_screw",
+              "port": "axis"
+            },
+            {
+              "instance": "insert",
+              "port": "screw"
+            },
+            {
+              "instance": "insert_drag",
+              "port": "a"
+            },
+            {
+              "instance": "insert_stop",
+              "port": "axis"
+            },
+            {
+              "instance": "insert_force",
+              "port": "axis"
+            }
+          ]
+        },
+        {
+          "label": "insert_boss",
+          "terminals": [
+            {
+              "instance": "insert_boss",
+              "port": "axis"
+            },
+            {
+              "instance": "insert",
+              "port": "boss"
+            },
+            {
+              "instance": "insert_drag",
+              "port": "b"
+            }
+          ]
+        },
+        {
+          "label": "tapped_screw",
+          "terminals": [
+            {
+              "instance": "tapped_screw",
+              "port": "axis"
+            },
+            {
+              "instance": "tapped",
+              "port": "screw"
+            },
+            {
+              "instance": "tapped_drag",
+              "port": "a"
+            },
+            {
+              "instance": "tapped_stop",
+              "port": "axis"
+            },
+            {
+              "instance": "tapped_force",
+              "port": "axis"
+            }
+          ]
+        },
+        {
+          "label": "tapped_boss",
+          "terminals": [
+            {
+              "instance": "tapped_boss",
+              "port": "axis"
+            },
+            {
+              "instance": "tapped",
+              "port": "boss"
+            },
+            {
+              "instance": "tapped_drag",
+              "port": "b"
+            }
+          ]
+        },
+        {
+          "label": "pull",
+          "terminals": [
+            {
+              "instance": "pull",
+              "port": "force"
+            },
+            {
+              "instance": "insert_force",
+              "port": "force"
+            },
+            {
+              "instance": "tapped_force",
+              "port": "force"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0001,
+    "rationale": "Tearing curves and a fast escape onto a catch: backward Euler at 0.1 ms."
+  }
+}

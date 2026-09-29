@@ -1,0 +1,22 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "magnetic.saturable_core",
+  "label": "Saturable core",
+  "kind": "generic",
+  "parameters": {
+    "area": 0.0001,
+    "length": 0.1,
+    "relative_permeability": 1000.0,
+    "saturation": 1.5
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: a, b"
+    }
+  ]
+}

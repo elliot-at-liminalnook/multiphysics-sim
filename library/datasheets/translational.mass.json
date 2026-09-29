@@ -1,0 +1,31 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "translational.mass",
+  "label": "Point mass",
+  "kind": "generic",
+  "parameters": {
+    "damping": 0.0,
+    "mass": 0.5
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -1.734723475976807e-18,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 1.000e-2 J → change -1.735e-18 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 5.2e-6, 1.3e-6, 3.3e-7 (1 → 0.125 ms); observed order 2.0"
+    }
+  ]
+}

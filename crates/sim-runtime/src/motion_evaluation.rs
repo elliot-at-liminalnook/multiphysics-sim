@@ -117,3 +117,13 @@ pub fn evaluate(capture: &EnvironmentCapture, g: &Gates) -> Result<Report, Strin
         rejection_reasons: reasons,
     })
 }
+
+/// Rejections that can only persist once reached (a fall, body-floor contact,
+/// the orientation gate, the tracking peak gate). Evaluating a partial
+/// capture and finding one of these decides the trial: the full run would
+/// be rejected for the same reason, so it can stop early.
+pub fn decided_rejection(report: &Report) -> Option<String> {
+    const MONOTONIC: [&str; 4] = ["fallen", "body-floor contact", "body orientation gate", "tracking peak gate"];
+    let decided: Vec<&str> = report.rejection_reasons.iter().map(String::as_str).filter(|r| MONOTONIC.contains(r)).collect();
+    (!decided.is_empty()).then(|| decided.join("; "))
+}

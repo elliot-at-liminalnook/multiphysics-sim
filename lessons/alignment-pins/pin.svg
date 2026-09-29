@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="IBM Plex Sans">
+  <rect x="1" y="1" width="758" height="328" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">A pin in a slightly larger hole: the parts can shift by c either way</text>
+  <!-- top plate (orange) and base (blue), cut through the pin -->
+  <rect x="80" y="80" width="600" height="80" fill="#ed8c29" fill-opacity="0.35" stroke="#ed8c29" stroke-width="2"/>
+  <rect x="80" y="160" width="600" height="90" fill="#3375b8" fill-opacity="0.35" stroke="#3375b8" stroke-width="2"/>
+  <text x="96" y="104" font-size="13" fill="#ed8c29">top plate (printed)</text>
+  <text x="96" y="238" font-size="13" fill="#6fa6dc">base (printed)</text>
+  <!-- hole in plate (wider) and hole in base -->
+  <rect x="340" y="80" width="80" height="80" fill="#141a21" stroke="#ed8c29" stroke-width="2"/>
+  <rect x="340" y="160" width="80" height="90" fill="#141a21" stroke="#3375b8" stroke-width="2"/>
+  <!-- pin -->
+  <rect x="352" y="88" width="56" height="156" rx="4" fill="#a3a6ab" stroke="#d5d8dc" stroke-width="2"/>
+  <text x="380" y="300" font-size="13" fill="#d5d8dc" text-anchor="middle">steel pin, Ø d</text>
+  <line x1="380" y1="252" x2="380" y2="284" stroke="#d5d8dc" stroke-width="1.2"/>
+  <!-- clearance arrows -->
+  <line x1="340" y1="120" x2="352" y2="120" stroke="#e6ebf1" stroke-width="1.8"/>
+  <line x1="408" y1="120" x2="420" y2="120" stroke="#e6ebf1" stroke-width="1.8"/>
+  <text x="330" y="116" font-size="14" fill="#e6ebf1" text-anchor="end">c</text>
+  <text x="430" y="116" font-size="14" fill="#e6ebf1">c</text>
+  <text x="560" y="116" font-size="13" fill="#e6ebf1" text-anchor="middle">hole Ø D = d + 2c</text>
+  <!-- force arrow -->
+  <line x1="150" y1="60" x2="250" y2="60" stroke="#f2c14e" stroke-width="3"/><path d="M250,60 l-12,-6 l0,12 z" fill="#f2c14e"/>
+  <text x="200" y="52" font-size="13" fill="#f2c14e" text-anchor="middle">push</text>
+</svg>

@@ -1,0 +1,745 @@
+{
+  "schema": "sim.system/1",
+  "title": "Rover wheel traction",
+  "revision": 2,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Rover wheel traction",
+      "description": "One wheel of a 4 kg rover, full throttle then brake. The tyre can push only as hard as grip × the weight on it; beyond that the wheel spins.",
+      "instances": {
+        "rover": {
+          "display_id": "52e2c66fa37ca529ffe00c53",
+          "label": "Rover drive",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "rover_drive"
+          }
+        },
+        "throttle": {
+          "display_id": "3d7542d08f8ae907fb45f416",
+          "label": "Throttle",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pulse"
+          },
+          "parameters": {
+            "amplitude": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Full throttle for 0.35 s from 0.05 s, then 0 (the driver shorts the motor: braking)."
+              }
+            },
+            "duration": {
+              "value": 0.35,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Full throttle for 0.35 s from 0.05 s, then 0 (the driver shorts the motor: braking)."
+              }
+            },
+            "start": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Full throttle for 0.35 s from 0.05 s, then 0 (the driver shorts the motor: braking)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.12,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "wall": {
+          "display_id": "30b7f859571b8fc95d014259",
+          "label": "Wall 0.6 m ahead (never reached)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": -1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A wall in front of the rover, farther than it travels here: it frames the run."
+              }
+            },
+            "upper": {
+              "value": 0.6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A wall in front of the rover, farther than it travels here: it frames the run."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.62,
+              0.04,
+              0.035
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.12,
+                0.02,
+                0.12
+              ]
+            },
+            "color_srgb": [
+              0.45,
+              0.47,
+              0.52
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "throttle",
+          "terminals": [
+            {
+              "instance": "throttle",
+              "port": "value"
+            },
+            {
+              "instance": "rover",
+              "port": "throttle"
+            }
+          ]
+        },
+        {
+          "label": "chassis",
+          "terminals": [
+            {
+              "instance": "rover",
+              "port": "chassis"
+            },
+            {
+              "instance": "wall",
+              "port": "axis"
+            }
+          ]
+        }
+      ]
+    },
+    "rover_drive": {
+      "label": "Rover drive",
+      "description": "One driven wheel with its motor, gearbox and driver, carrying a quarter of a 4 kg rover.",
+      "interface": "drive",
+      "ports": {
+        "chassis": {
+          "label": "Chassis"
+        },
+        "throttle": {
+          "label": "Throttle"
+        }
+      },
+      "instances": {
+        "body": {
+          "display_id": "45ccdbc51890f1ff8fdf5865",
+          "label": "Chassis share (1 kg)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A quarter of a 4 kg rover."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.05,
+                0.14,
+                0.08
+              ]
+            },
+            "color_srgb": [
+              0.82,
+              0.62,
+              0.22
+            ]
+          }
+        },
+        "driver": {
+          "display_id": "d5baae36e9247fa08ee836d7",
+          "label": "Driver",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A MOSFET H-bridge."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.065,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.04,
+                0.01,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.45,
+              0.3
+            ],
+            "model": "driver_board"
+          }
+        },
+        "frame": {
+          "display_id": "b1b5c7eec2c0796ec91140a5",
+          "label": "Motor mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gearbox": {
+          "display_id": "eaa3ea585f38990a81b84666",
+          "label": "Gearbox 30:1",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "ratio": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.005,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "b2691880218e1c711afef83e",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.09,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "hub": {
+          "display_id": "e3cfad8f1b90086b921314cc",
+          "label": "Wheel",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.0002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An 80 mm wheel with a rubber tyre, 2e-4 kg·m²."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.04,
+              0.035
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.04,
+              "length": 0.024
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "wheel"
+          }
+        },
+        "motor": {
+          "display_id": "496be8eb15b367a380fd3490",
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "inductance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "resistance": {
+              "value": 2.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "torque_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.04,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "pack": {
+          "display_id": "29916e555ee549f469318889",
+          "label": "Battery",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 3S pack held at 12 V."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.09,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        },
+        "rotor": {
+          "display_id": "7dc81b0f0410043ae96293d7",
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 2e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.002,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "tyre": {
+          "display_id": "eeb77bc4b856f23ccd574619",
+          "label": "Tyre on the floor",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.drive_wheel"
+          },
+          "parameters": {
+            "grip": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An 80 mm wheel carrying 9.8 N (a quarter of a 4 kg rover); rubber on dry floor μ ≈ 0.8."
+              }
+            },
+            "normal_load": {
+              "value": 9.81,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An 80 mm wheel carrying 9.8 N (a quarter of a 4 kg rover); rubber on dry floor μ ≈ 0.8."
+              }
+            },
+            "radius": {
+              "value": 0.04,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An 80 mm wheel carrying 9.8 N (a quarter of a 4 kg rover); rubber on dry floor μ ≈ 0.8."
+              }
+            },
+            "rolling": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An 80 mm wheel carrying 9.8 N (a quarter of a 4 kg rover); rubber on dry floor μ ≈ 0.8."
+              }
+            },
+            "slip_speed": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An 80 mm wheel carrying 9.8 N (a quarter of a 4 kg rover); rubber on dry floor μ ≈ 0.8."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.04,
+              0.035
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.001,
+              "length": 0.001
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "pack",
+              "port": "p"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "label": "motor +",
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "motor − (0 V: the averaged bridge output is referenced here)",
+          "terminals": [
+            {
+              "instance": "pack",
+              "port": "n"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "driver",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gearbox",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "label": "axle",
+          "terminals": [
+            {
+              "instance": "gearbox",
+              "port": "output"
+            },
+            {
+              "instance": "hub",
+              "port": "shaft"
+            },
+            {
+              "instance": "tyre",
+              "port": "axle"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "throttle"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "label": "chassis",
+          "terminals": [
+            {
+              "instance": "tyre",
+              "port": "chassis"
+            },
+            {
+              "instance": "body",
+              "port": "axis"
+            },
+            {
+              "boundary": "chassis"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0005,
+    "rationale": "Tyre slip is a steep smoothed switch (2 cm/s): backward Euler, 0.5 ms."
+  },
+  "studies": {
+    "grip": {
+      "at": "",
+      "instance": "rover",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "tyre/grip",
+        "values": [
+          0.2,
+          0.4,
+          0.8,
+          1.0
+        ]
+      },
+      "duration": 0.4,
+      "observe": [
+        "rover/body.axis.velocity"
+      ],
+      "metrics": [
+        {
+          "label": "speed at 0.25 s (m/s)",
+          "observable": "rover/body.axis.velocity",
+          "reduce": "final",
+          "window": [
+            0.0,
+            0.25
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" font-family="IBM Plex Sans">
+  <rect x="1" y="1" width="758" height="338" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">What an accelerometer on a tilted, still leg feels</text>
+  <!-- hip and leg tilted by φ -->
+  <circle cx="200" cy="70" r="8" fill="#e6ebf1"/>
+  <line x1="200" y1="70" x2="270" y2="250" stroke="#8fb3e8" stroke-width="10" stroke-linecap="round"/>
+  <line x1="200" y1="70" x2="200" y2="270" stroke="#99a6b5" stroke-dasharray="4 4"/>
+  <path d="M200,140 A70,70 0 0 0 225,135" fill="none" stroke="#e6ebf1" stroke-width="1.8"/>
+  <text x="212" y="162" font-size="14" fill="#e6ebf1">φ</text>
+  <!-- IMU box -->
+  <rect x="238" y="185" width="30" height="22" rx="3" fill="#33528c" stroke="#8fb3e8" transform="rotate(-21 253 196)"/>
+  <!-- gravity reading arrow (up, specific force) -->
+  <line x1="253" y1="196" x2="253" y2="110" stroke="#de9454" stroke-width="3"/><path d="M253,104 l-6,10 l12,0 z" fill="#de9454"/>
+  <text x="262" y="118" font-size="13" fill="#de9454">reads g, straight up</text>
+  <!-- components along the leg and across -->
+  <line x1="253" y1="196" x2="222" y2="116" stroke="#4dd4bf" stroke-width="2.5"/><path d="M220,110 l-2,11 l9,-5 z" fill="#4dd4bf"/>
+  <text x="170" y="112" font-size="12.5" fill="#4dd4bf">ay = g·cos φ</text>
+  <line x1="253" y1="196" x2="283" y2="184" stroke="#f5d24b" stroke-width="2.5"/><path d="M289,182 l-10,-4 l3,9 z" fill="#f5d24b"/>
+  <text x="292" y="200" font-size="12.5" fill="#f5d24b">ax = g·sin φ</text>
+  <!-- formula box -->
+  <rect x="430" y="70" width="306" height="210" rx="8" fill="#1a2129" stroke="#2e353f"/>
+  <text x="583" y="104" font-size="16" fill="#e6ebf1" text-anchor="middle">at rest: φ = atan(ax / ay)</text>
+  <text x="446" y="140" font-size="13" fill="#99a6b5">Swinging, the leg's own motion adds</text>
+  <text x="446" y="160" font-size="13" fill="#99a6b5">to both readings:</text>
+  <text x="583" y="190" font-size="14" fill="#e6ebf1" text-anchor="middle">ax = g·sin φ + r·α</text>
+  <text x="583" y="214" font-size="14" fill="#e6ebf1" text-anchor="middle">ay = g·cos φ + r·ω²</text>
+  <text x="446" y="250" font-size="12.5" fill="#de9454">so atan(ax/ay) is only right when still.</text>
+  <text x="24" y="318" font-size="12.5" fill="#99a6b5">An accelerometer cannot tell gravity from acceleration: it measures their difference.</text>
+</svg>

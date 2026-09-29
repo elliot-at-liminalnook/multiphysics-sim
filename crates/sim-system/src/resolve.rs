@@ -155,6 +155,9 @@ impl<'a> Resolver<'a> {
     /// subsystem graph is acyclic, parameters are known with matching units,
     /// and every net joins compatible port types.
     pub fn validate(&self) -> Result<(), SystemError> {
+        for d in self.document.definitions.values() {d.grid.validate()?; if !d.icon.is_empty()&&!sim_core::icons::NAMES.contains(&d.icon.as_str()){return Err(SystemError::Invalid("unknown display icon".into()));}}
+        for (id,t) in &self.document.discussions.threads {crate::display::validate_thread(t)?;if id!=&t.id{return Err(SystemError::Invalid("thread key does not match its ID".into()));}}
+
         let doc = self.document;
         if doc.schema != SCHEMA {
             return Err(SystemError::Invalid(format!("unsupported schema `{}`; expected `{SCHEMA}`", doc.schema)));

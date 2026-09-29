@@ -1,0 +1,22 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "robot.switchable_h_bridge",
+  "label": "Averaged H-bridge with enable and passive flyback paths",
+  "kind": "generic",
+  "parameters": {
+    "diode_drop": 0.7,
+    "diode_resistance": 0.1,
+    "off_conductance": 1e-8,
+    "on_resistance": 0.1
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) command, enabled: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

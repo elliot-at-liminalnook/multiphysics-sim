@@ -1,0 +1,22 @@
+part propeller "Propeller"
+category Actuators
+summary "A spinning propeller: thrust and drag torque grow with the square of speed, thrust fades as the aircraft climbs."
+explain "Propeller theory in coefficients: thrust T = ρ·n²·D⁴·C_T and torque Q = ρ·n²·D⁵·C_Q, with n in rev/s. Moving along the thrust axis at v raises the advance ratio J = v/(n·D) and lowers thrust, here linearly: C_T(J) = C_T0·(1 − J/J₀), zero at J₀. The motor must supply Q; the airframe receives T."
+tradeoffs "Bigger diameter: more thrust per watt (efficient hover) but slower response and more inertia; higher pitch: more speed, more torque. Match the motor's Kv: large props want low-Kv motors."
+limits "Axial flight only, no ground effect, blade flapping or stall; linear C_T(J); air density constant."
+pairs part.bldc_motor rotational.inertia translational.mass translational.load_force
+port shaft rotational
+port airframe translational
+param diameter m ~ 0.254 "Diameter (10 in = 0.254 m)"
+param thrust_coefficient 1 = 0.11 "C_T at zero advance"
+param torque_coefficient 1 = 0.006 "C_Q"
+param zero_thrust_advance 1 = 0.8 "Advance ratio J₀ at which thrust vanishes"
+param density kg/m^3 = 1.225 "Air density"
+param reference_speed rad/s = 1000 "Speed the derived thrust and torque are quoted at"
+let n = shaft.w/6.283185307
+let thrust = density*diameter^4*thrust_coefficient*(n*abs(n) - abs(n)*airframe.v/(zero_thrust_advance*diameter))
+flow shaft = density*diameter^5*torque_coefficient*n*abs(n)
+flow airframe = -thrust
+derive "static thrust at the reference speed" = density*diameter^4*thrust_coefficient*(reference_speed/6.283185307)^2 N
+derive "torque at the reference speed" = density*diameter^5*torque_coefficient*(reference_speed/6.283185307)^2 N·m
+derive "hover power at the reference speed" = density*diameter^5*torque_coefficient*(reference_speed/6.283185307)^2*reference_speed W

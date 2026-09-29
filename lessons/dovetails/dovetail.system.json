@@ -1,0 +1,779 @@
+{
+  "schema": "sim.system/1",
+  "title": "Dovetail: pulling out and sliding in",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Dovetail: pulling out and sliding in",
+      "description": "Left: a dovetail's tail pulled straight out of its socket, harder and harder. Right: a tight dovetail pushed along its groove until it breaks free and slides home.",
+      "instances": {
+        "fit": {
+          "display_id": "2fc5b219a616e2eb869c7546",
+          "label": "Dovetail (slid in)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.dovetail"
+          },
+          "parameters": {
+            "angle": {
+              "value": 0.2618,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            },
+            "clearance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The fit in this rig."
+              }
+            },
+            "flank_stiffness": {
+              "value": 2000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            },
+            "friction": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            },
+            "interference": {
+              "value": 0.00002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The fit in this rig."
+              }
+            },
+            "smoothing": {
+              "value": 0.0001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The fit in this rig."
+              }
+            },
+            "wall_stiffness": {
+              "value": 5000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.06,
+              -0.004,
+              0.018
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "fixed": {
+          "display_id": "ccd11f935b645dd43275d991",
+          "label": "No sliding in this rig",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              -0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "fixed2": {
+          "display_id": "35a8ba8cb458803151566e49",
+          "label": "No pulling in this rig",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              0.1,
+              -0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "groove": {
+          "display_id": "79e61d994a713e07ea6d98cf",
+          "label": "Grooved part (fixed)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              0.06,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.08,
+                0.02,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.46,
+              0.72
+            ],
+            "model": "dovetail_groove_long"
+          }
+        },
+        "hand": {
+          "display_id": "1d3fc232d3a134b2413d7885",
+          "label": "Your hand (stand-in)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 100.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Your hand's own give while pushing, as 100 N·s/m of drag: a stand-in, so the part moves at hand speed once it breaks free."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.03,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "hold": {
+          "display_id": "17569de4e2ec692d405bdd64",
+          "label": "Settling (stand-in)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 50.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Light damping so the tail settles; it does not carry load at these speeds."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.0,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "joint": {
+          "display_id": "8f0a0fe568f81eb168f6fe48",
+          "label": "Dovetail (pulled)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.dovetail"
+          },
+          "parameters": {
+            "angle": {
+              "value": 0.2618,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            },
+            "clearance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The fit in this rig."
+              }
+            },
+            "flank_stiffness": {
+              "value": 2000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            },
+            "friction": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            },
+            "interference": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The fit in this rig."
+              }
+            },
+            "wall_stiffness": {
+              "value": 5000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A printed dovetail 20 mm long: flanks at 15° from the pull; each flank's contact about 2 MN/m; walls 4 mm thick and 6 mm tall, 3EI/h³ ≈ 5 MN/m (estimates for PLA)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              -0.004,
+              0.018
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pull": {
+          "display_id": "dbcb33820671cc64292a2ed8",
+          "label": "Pull (100 N/s up to 200 N)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.force_command"
+          },
+          "parameters": {
+            "limit": {
+              "value": 200.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Pulling the tail straight out, more and more: 100 N per second, up to 200 N."
+              }
+            },
+            "ramp": {
+              "value": 100.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Pulling the tail straight out, more and more: 100 N per second, up to 200 N."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.006,
+                0.006,
+                0.006
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "puller": {
+          "display_id": "e7fcf4bbed73455211d48545",
+          "label": "Pulling force",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.force_source"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.035,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.004,
+                0.01,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "push": {
+          "display_id": "d5856729f2effc78a91eb512",
+          "label": "Push (5 N/s up to 40 N)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.force_command"
+          },
+          "parameters": {
+            "limit": {
+              "value": 40.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Pushing the part along the groove, harder and harder: 5 N per second, up to 40 N (a firm push by hand)."
+              }
+            },
+            "ramp": {
+              "value": 5.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Pushing the part along the groove, harder and harder: 5 N per second, up to 40 N (a firm push by hand)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.006,
+                0.006,
+                0.006
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "pusher": {
+          "display_id": "eaeb6c5b8cf3ab8e135679b3",
+          "label": "Pushing force",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.force_source"
+          },
+          "placement": {
+            "position": [
+              0.01,
+              0.012,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.004,
+                0.01,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "slider": {
+          "display_id": "0fd714c3989d46abf6b1828e",
+          "label": "Sliding part",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 0.03,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The 30 g part whose tail slides along the groove."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.012,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.024,
+                0.024,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.93,
+              0.55,
+              0.16
+            ],
+            "model": "dovetail_slider"
+          }
+        },
+        "socket": {
+          "display_id": "a7ade0ad4a8a80f9c3c1c192",
+          "label": "Socket part (fixed)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.04,
+                0.02,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.46,
+              0.72
+            ],
+            "model": "dovetail_socket"
+          }
+        },
+        "stop": {
+          "display_id": "e0c3a158d9e84ff89ca5a2d6",
+          "label": "Fully home (50 mm)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": -0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The groove ends 50 mm in."
+              }
+            },
+            "upper": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The groove ends 50 mm in."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.1,
+              0.012,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "tail": {
+          "display_id": "bb6472069b4116d56889323e",
+          "label": "Tail part",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 0.03,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The 30 g part carrying the tail, pulled straight out of the socket."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.012,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.024,
+                0.024,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.93,
+              0.55,
+              0.16
+            ],
+            "model": "dovetail_tail"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "tail",
+          "terminals": [
+            {
+              "instance": "tail",
+              "port": "axis"
+            },
+            {
+              "instance": "joint",
+              "port": "tail"
+            },
+            {
+              "instance": "hold",
+              "port": "a"
+            },
+            {
+              "instance": "puller",
+              "port": "axis"
+            }
+          ]
+        },
+        {
+          "label": "socket",
+          "terminals": [
+            {
+              "instance": "socket",
+              "port": "axis"
+            },
+            {
+              "instance": "joint",
+              "port": "socket"
+            },
+            {
+              "instance": "hold",
+              "port": "b"
+            }
+          ]
+        },
+        {
+          "label": "no slide",
+          "terminals": [
+            {
+              "instance": "fixed",
+              "port": "axis"
+            },
+            {
+              "instance": "joint",
+              "port": "slide"
+            },
+            {
+              "instance": "joint",
+              "port": "rail"
+            }
+          ]
+        },
+        {
+          "label": "pull",
+          "terminals": [
+            {
+              "instance": "pull",
+              "port": "force"
+            },
+            {
+              "instance": "puller",
+              "port": "force"
+            }
+          ]
+        },
+        {
+          "label": "slider",
+          "terminals": [
+            {
+              "instance": "slider",
+              "port": "axis"
+            },
+            {
+              "instance": "fit",
+              "port": "slide"
+            },
+            {
+              "instance": "hand",
+              "port": "a"
+            },
+            {
+              "instance": "stop",
+              "port": "axis"
+            },
+            {
+              "instance": "pusher",
+              "port": "axis"
+            }
+          ]
+        },
+        {
+          "label": "groove",
+          "terminals": [
+            {
+              "instance": "groove",
+              "port": "axis"
+            },
+            {
+              "instance": "fit",
+              "port": "rail"
+            },
+            {
+              "instance": "hand",
+              "port": "b"
+            }
+          ]
+        },
+        {
+          "label": "no pull",
+          "terminals": [
+            {
+              "instance": "fixed2",
+              "port": "axis"
+            },
+            {
+              "instance": "fit",
+              "port": "tail"
+            },
+            {
+              "instance": "fit",
+              "port": "socket"
+            }
+          ]
+        },
+        {
+          "label": "push",
+          "terminals": [
+            {
+              "instance": "push",
+              "port": "force"
+            },
+            {
+              "instance": "pusher",
+              "port": "force"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0002,
+    "rationale": "Stiff flank contacts and regularised friction: backward Euler at 0.2 ms."
+  }
+}

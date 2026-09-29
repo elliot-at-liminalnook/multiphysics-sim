@@ -1,0 +1,18 @@
+[package]
+name = "sim-parts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sim-core = { path = "../sim-core" }
+serde.workspace = true
+blake3 = "=1.8.7"
+
+[dev-dependencies]
+sim-compile = { path = "../sim-compile" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-bridges = { path = "../sim-domain-bridges" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }

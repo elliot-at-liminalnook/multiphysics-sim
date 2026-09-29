@@ -1,0 +1,105 @@
+{
+  "axis": {
+    "coordinate_session": null,
+    "lower": 2657,
+    "reference": 2722,
+    "reverse": false,
+    "role": "knee",
+    "tuning": {
+      "breakaway_duty": [
+        0.05600000000000002,
+        0.09600000000000006
+      ],
+      "friction_duty": 0.028909380957011843,
+      "gain_counts_s_per_duty": 3421.336920096943,
+      "loop_delay_s": 0.030482027,
+      "method": "SIMC PID for an integrating plant with first-order lag; closed-loop time 2× delay; friction feed-forward from the kinetic (moving) friction",
+      "pid": {
+        "duty_limit": 1.0,
+        "integral_limit": 0.3470990355420019,
+        "kd": 0.0487593149745539,
+        "ki": 0.7202555305566325,
+        "kp": 0.7409099281950623
+      },
+      "record": "tune-1-1790375136176.json",
+      "time_constant_s": 0.06581004400000001
+    },
+    "upper": 3564
+  },
+  "evidence": {
+    "completed_stops": 1,
+    "context": [
+      4.075786953412148,
+      5.4671075280244255,
+      1.0
+    ],
+    "directions": [
+      {
+        "acceleration_rad_s2": 0.0,
+        "stops": [],
+        "weakened_deceleration_rad_s2": null
+      },
+      {
+        "acceleration_rad_s2": 0.0,
+        "stops": [
+          {
+            "completed_s": 13.541830996,
+            "effective_deceleration_rad_s2": 6.1854064027646505,
+            "excursion_rad": 0.04448544284868383,
+            "speed_rad_s": 0.7669903939428205
+          }
+        ],
+        "weakened_deceleration_rad_s2": null
+      }
+    ],
+    "episode": null,
+    "motion_speed_limit_rad_s": 0.7669903939428205,
+    "previous": [
+      13.422224184,
+      0.000024493572302004236
+    ],
+    "reset_reason": "Taught poses changed",
+    "was_braking": true
+  },
+  "motor_id": 1,
+  "provenance": "Online observations under this session's load, effort ceiling and environment; not a physical safety certification; not auto-loaded next session",
+  "run_id": 1790376343453,
+  "schema_version": 1,
+  "tuning": {
+    "adaptive": {
+      "bootstrap_speed_rad_s": 0.007669903939428206,
+      "boundary_margin_rad": 0.018407769454627694,
+      "braking_safety_factor": 0.5,
+      "fallback_deceleration_rad_s2": 0.015339807878856412,
+      "learning_inset_fraction": 0.25,
+      "learning_start_fraction": 0.25,
+      "maximum_evidence_age_s": 120.0,
+      "minimum_stops": 3,
+      "position_uncertainty_rad": 0.0030679615757712823,
+      "reaction_time_s": 0.25,
+      "trial_speed_growth": 1.6
+    },
+    "effort_slew_per_s": 4.0,
+    "following_error_counts": 64.0,
+    "hold_deadband_counts": 16.0,
+    "maximum_acceleration_counts_s2": 100.0,
+    "maximum_feedback_interval_s": 0.12,
+    "maximum_speed_counts_s": 500.0,
+    "operator_jog_acceleration_counts_s2": 1500.0,
+    "operator_jog_deceleration_counts_s2": 1000.0,
+    "operator_jog_speed_limit_counts_s": 500.0,
+    "operator_jog_stop_lead_s": 0.1,
+    "period_s": 0.03,
+    "pid": {
+      "duty_limit": 1.0,
+      "integral_limit": 0.125,
+      "kd": 0.04,
+      "ki": 0.8,
+      "kp": 5.215189175235227
+    },
+    "provenance": "Provisional commissioning controller parameters, not fitted to this loaded printed leg. Uses measured encoder feedback; no inferred joint gearing. Operator-held Q/A jogs follow the requested speed up to 500 counts/s with no learning-envelope slowing or predictive brake; the reference stops at a taught pose at 1000 counts/s^2, 0.1 s of travel early to allow for response lag. Tracking error, stalls, feedback gaps and travel beyond taught poses are logged warnings that retrack or block outward drive, not stops (operator request 2026-09-22). Automatic sweeps and learning keep the adaptive stopping envelope, which is a provisional assumption, not a measured stopping guarantee. Holds follow the part until it stops after a release, accept up to 16 counts of error once settled (no drive), and return from larger disturbances at 40 counts/s; drive changes at most 4 duty/s. Per-motor gains from Tune this motor replace the shared provisional PID. Held jogs accelerate at up to 1500 counts/s^2; tuned motors add velocity feed-forward from their measured response.",
+    "response_rate_per_s": 2.0,
+    "stalled_at_limit_s": 3.0,
+    "velocity_filter_s": 0.08
+  }
+}

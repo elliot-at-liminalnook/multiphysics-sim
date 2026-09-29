@@ -22,6 +22,19 @@ const USAGE: &str = "usage: sim-system <command> …
                                        implementations that can replace an instance
   reference FILE AT ID IMAGE [--view spatial|schematic] [--width W] [--origin X,Y,Z]
                                        import a PNG/JPEG reference image
+  study FILE NAME [--threads N]         run a saved comparison or sweep; print the trade-off table
+  datasheet TYPE|--all [--write DIR] [--parameters CAD.physics.json]
+                                       run a part's bench; print (or write) its datasheet;
+                                       --parameters benches the part as derived from CAD
+  realtime FILE [--publish]            measure the realtime profile against the detailed model;
+                                       --publish records the measurement in the file
+  cad-params FILE AT INSTANCE CAD.physics.json
+                                       set an instance's parameters from a CAD derivation (recorded as derived)
+  fit SPEC [--promote]                 fit a part to measured data (sim.fit/1); --promote writes the
+                                       values as measured (with uncertainty) and publishes the part
+  catalog [DATASHEETS_DIR]             Markdown catalog of every annotated part (summary, ports,
+                                       datasheet highlights), grouped by palette section
+  parts [DIR]                          load authored parts (library/parts); report errors by line
 Paths: AT is an instance path from the root, `` or `/` for the root itself.
 The default library directory is library/systems (override with SIM_SYSTEM_LIBRARY).";
 
@@ -92,7 +105,7 @@ fn show(document: &SystemDocument, registry: &sim_core::BehaviorRegistry, path: 
 fn run() -> Result<(), String> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let command = args.first().ok_or(USAGE)?.as_str();
-    let registry = sim_runtime::registry();
+    let registry = sim_runtime::system_registry();
     let file = || args.get(1).map(PathBuf::from).ok_or_else(|| USAGE.to_string());
     let store = || file().map(SystemStore::new);
     let e = |e: sim_system::SystemError| e.to_string();
@@ -116,6 +129,145 @@ fn run() -> Result<(), String> {
             let expected = flag(&args, "--expect").map(|v| v.parse::<u64>().map_err(|_| "invalid --expect")).transpose()?;
             let label = flag(&args, "--label").unwrap_or_else(|| format!("{} command(s) from CLI", commands.len()));
             print(&store()?.apply(&registry, &label, &commands, expected).map_err(e)?)?;
+        }
+        "study" => {
+            let document = store()?.load_valid(&registry).map_err(e)?;
+            let name = args.get(2).ok_or(USAGE)?;
+            let study = document.studies.get(name).ok_or_else(|| format!("no study `{name}` (saved: {})", document.studies.keys().cloned().collect::<Vec<_>>().join(", ")))?;
+            let threads = flag(&args, "--threads").and_then(|t| t.parse().ok()).unwrap_or(4);
+            let result = sim_runtime::system_study::run(&document, &registry, name, study, threads, None, &|done, total| eprintln!("{done}/{total}"))?;
+            println!("{}", sim_runtime::system_study::table(&result));
+        }
+        "datasheet" => {
+            let which = args.get(1).ok_or(USAGE)?;
+            let types = if which == "--all" { sim_runtime::bench::noted(&registry) } else { vec![which.clone()] };
+            let write = flag(&args, "--write").map(PathBuf::from);
+            let mut failed = Vec::new();
+            let cad = flag(&args, "--parameters").map(|p| sim_runtime::bench::cad_parameters(std::path::Path::new(&p))).transpose()?;
+            for t in types {
+                let sheet = match &cad {
+                    Some((component, params, record)) if *component == t => sim_runtime::bench::datasheet_with(&registry, &t, params, Some(record.clone()))?,
+                    Some((component, ..)) => return Err(format!("the CAD derivation is for {component}, not {t}")),
+                    None => sim_runtime::bench::datasheet(&registry, &t)?,
+                };
+                if !sheet.passed() {
+                    failed.push(t.clone());
+                }
+                match &write {
+                    Some(dir) => {
+                        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+                        let path = sim_runtime::bench::path(dir, &t);
+                        std::fs::write(&path, serde_json::to_vec_pretty(&sheet).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+                        println!("{t}: {} → {}", if sheet.passed() { "pass" } else { "FAIL" }, path.display());
+                    }
+                    None => print(&sheet)?,
+                }
+            }
+            if !failed.is_empty() {
+                return Err(format!("checks failed: {}", failed.join(", ")));
+            }
+        }
+        "realtime" => {
+            let store = store()?;
+            let document = store.load_valid(&registry).map_err(e)?;
+            let report = sim_runtime::realtime_fidelity::measure(&document, &registry)?;
+            print(&report.measurement)?;
+            let verdict = sim_runtime::realtime_fidelity::within_bound(&document, &report.measurement);
+            if args.iter().any(|a| a == "--publish") {
+                let mut profile = document.realtime.clone().unwrap();
+                profile.measured = Some(report.measurement.clone());
+                print(&store.apply(&registry, "Publish realtime measurement", &[sim_system::Command::SetRealtime { realtime: Some(profile) }], Some(document.revision)).map_err(e)?)?;
+            }
+            verdict?;
+        }
+        "cad-params" => {
+            let (level, instance, physics) = (at(args.get(2).ok_or(USAGE)?), args.get(3).ok_or(USAGE)?.clone(), PathBuf::from(args.get(4).ok_or(USAGE)?));
+            let record: serde_json::Value = serde_json::from_slice(&std::fs::read(&physics).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            let commands = sim_system::library::cad_physics_commands(&level, &instance, &record).map_err(e)?;
+            print(&store()?.apply(&registry, &format!("Parameters from {}", physics.display()), &commands, None).map_err(e)?)?;
+        }
+        "fit" => {
+            use sim_runtime::part_fit::{Condition, Unknown};
+            let spec_path = PathBuf::from(args.get(1).ok_or(USAGE)?);
+            let spec: serde_json::Value = serde_json::from_slice(&std::fs::read(&spec_path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            let text = |k: &str| spec[k].as_str().map(str::to_string).ok_or_else(|| format!("fit spec lacks `{k}`"));
+            let data_path = spec["data"]["path"].as_str().ok_or("fit spec lacks data.path")?;
+            let bytes = std::fs::read(data_path).map_err(|e| format!("{data_path}: {e}"))?;
+            let hash = blake3::hash(&bytes).to_hex().to_string();
+            if spec["data"]["blake3"].as_str() != Some(hash.as_str()) {
+                return Err(format!("{data_path} changed since the spec was written (hash mismatch); rebuild the spec"));
+            }
+            let model_path = text("model")?;
+            let mut model: SystemDocument = serde_json::from_slice(&std::fs::read(&model_path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            let unknowns: Vec<Unknown> = serde_json::from_value(spec["unknowns"].clone()).map_err(|e| e.to_string())?;
+            let conditions: Vec<Condition> = serde_json::from_value(spec["conditions"].clone()).map_err(|e| e.to_string())?;
+            let duration = spec["duration"].as_f64().ok_or("fit spec lacks duration")?;
+            let result = sim_runtime::part_fit::fit(&model, &registry, &unknowns, &conditions, duration)?;
+            for ((name, v), (_, sd)) in result.values.iter().zip(&result.uncertainties) {
+                let unit = unknowns.iter().find(|u| &u.name == name).map(|u| u.unit.as_str()).unwrap_or("");
+                let compare = spec["compare"][name].as_object().map(|c| format!("   (reference {:.6} ± {:.6}: {})", c["value"].as_f64().unwrap_or(f64::NAN), c["uncertainty"].as_f64().unwrap_or(f64::NAN), c["source"].as_str().unwrap_or(""))).unwrap_or_default();
+                println!("{name} = {v:.6} ± {sd:.6} {unit}{compare}");
+            }
+            for (label, measured, predicted) in &result.residuals {
+                println!("  {label}: measured {measured:+.4}, model {predicted:+.4}");
+            }
+            println!("rms {:.4} after {} iterations", result.rms, result.iterations);
+            let mut record = serde_json::json!({"schema": "sim.fit-result/1", "spec": spec_path, "data": {"path": data_path, "blake3": hash}, "result": result});
+            if args.iter().any(|a| a == "--promote") {
+                let promote: Vec<String> = serde_json::from_value(spec["promote"]["unknowns"].clone()).map_err(|e| e.to_string())?;
+                let chosen: Vec<Unknown> = unknowns.iter().filter(|u| promote.contains(&u.name)).cloned().collect();
+                let chosen_result = sim_runtime::part_fit::FitResult {
+                    values: result.values.iter().filter(|(n, _)| promote.contains(n)).cloned().collect(),
+                    uncertainties: result.uncertainties.iter().filter(|(n, _)| promote.contains(n)).cloned().collect(),
+                    ..result.clone()
+                };
+                let commands = sim_runtime::part_fit::promote(&chosen, &chosen_result, data_path, &hash);
+                sim_system::apply(&mut model, &registry, &commands).map_err(e)?;
+                std::fs::write(&model_path, serde_json::to_vec_pretty(&model).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+                let definition = spec["promote"]["definition"].as_str().ok_or("promote.definition")?;
+                let library_dir = PathBuf::from(spec["promote"]["library"].as_str().unwrap_or("library/systems"));
+                let published = sim_system::library::publish(&model, definition, &library_dir).map_err(e)?;
+                for p in &published {
+                    println!("published {} v{} ({})", p.id, p.version, if p.changed { "changed" } else { "unchanged" });
+                }
+                record["published"] = serde_json::json!(published);
+            }
+            let out = spec_path.with_file_name(spec_path.file_name().unwrap().to_string_lossy().replace(".fit.json", ".fit-result.json"));
+            std::fs::write(&out, serde_json::to_vec_pretty(&record).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            println!("wrote {}", out.display());
+        }
+        "catalog" => {
+            let sheets = PathBuf::from(args.get(1).cloned().unwrap_or_else(|| "library/datasheets".into()));
+            let mut by: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+            let order = ["Actuators", "Transmissions", "Mechanical", "Power", "Electrical", "Sensing", "Control", "Thermal"];
+            for d in registry.descriptors() {
+                let Some(n) = d.notes else { continue };
+                let t = &d.type_id.0;
+                let ports = sim_system::snap::element_port_types(&registry, t).into_iter().map(|(k, v)| format!("{k} ({v})")).collect::<Vec<_>>().join(", ");
+                let sheet: Option<sim_runtime::bench::Datasheet> = std::fs::read(sim_runtime::bench::path(&sheets, t)).ok().and_then(|b| serde_json::from_slice(&b).ok());
+                let highlights = sheet.map(|s| s.values.iter().filter(|v| !v.name.contains("audit") && !v.name.contains("realtime")).take(4).map(|v| format!("{} {} {}", v.name, if v.unit == "yes=1" { (if v.value >= 0.5 { "yes" } else { "no" }).to_string() } else { format!("{:.4}", v.value).trim_end_matches('0').trim_end_matches('.').to_string() }, if v.unit == "yes=1" || v.unit == "1" { "" } else { &v.unit })).collect::<Vec<_>>().join("; ")).unwrap_or_default();
+                let category = if n.category.is_empty() { "Other".to_string() } else { n.category.to_string() };
+                by.entry(category).or_default().push(format!(
+                    "### {} — `{t}`\n\n{}\n\n- Ports: {}\n{}{}",
+                    d.display_name,
+                    n.summary,
+                    if ports.is_empty() { "none".into() } else { ports },
+                    if n.pairs_with.is_empty() { String::new() } else { format!("- Pairs with: {}\n", n.pairs_with.iter().map(|p| format!("`{p}`")).collect::<Vec<_>>().join(", ")) },
+                    if highlights.is_empty() { String::new() } else { format!("- Datasheet: {highlights}\n") },
+                ));
+            }
+            let mut out = String::from("# Component catalog\n\nEvery annotated part in the registry, grouped by palette section. Generated by `sim-system catalog > library/CATALOG.md`; open a part in the builder's library for its full notes (how it works, equations, trade-offs, limits, parameter help) and datasheet.\n\n");
+            let mut sections: Vec<&String> = by.keys().collect();
+            sections.sort_by_key(|k| order.iter().position(|o| o == k).unwrap_or(99));
+            for k in sections {
+                out.push_str(&format!("## {k}\n\n{}\n", by[k].join("\n")));
+            }
+            print!("{out}");
+        }
+        "parts" => {
+            let dir = args.get(1).map(PathBuf::from).unwrap_or_else(|| PathBuf::from("library/parts"));
+            let mut r = sim_runtime::registry();
+            print(&sim_parts::load_dir(&mut r, &dir))?;
         }
         "undo" => print(&store()?.undo().map_err(e)?)?,
         "redo" => print(&store()?.redo().map_err(e)?)?,

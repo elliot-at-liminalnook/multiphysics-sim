@@ -1,0 +1,175 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "dc_motor_12v",
+  "definitions": {
+    "dc_motor_12v": {
+      "label": "DC motor 12 V",
+      "description": "Brushed motor with its rotor inertia and mount (case grounded inside). Exposes winding resistance and motor constant k (= k_t = k_e).",
+      "interface": "motor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "p": {
+          "label": "Supply +"
+        },
+        "shaft": {
+          "label": "Output shaft"
+        }
+      },
+      "parameters": {
+        "k": {
+          "unit": "N·m/A",
+          "default": 0.012,
+          "description": "Motor constant k = k_t = k_e"
+        },
+        "resistance": {
+          "unit": "Ω",
+          "default": 2.0,
+          "description": "Winding resistance"
+        }
+      },
+      "instances": {
+        "mount": {
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.008,
+              -0.018,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size); not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.022,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "winding": {
+          "label": "Brushed motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "parameter": "k"
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size); not a measured part."
+              }
+            },
+            "resistance": {
+              "parameter": "resistance"
+            },
+            "torque_constant": {
+              "parameter": "k"
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "winding",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "winding",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "winding",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "winding",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "boundary": "shaft"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

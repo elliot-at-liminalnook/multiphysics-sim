@@ -1,0 +1,495 @@
+{
+  "schema": "sim.system/1",
+  "title": "Motor winding heating",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Motor winding heating",
+      "description": "A motor runs a steady load for five minutes. Its winding heats by I²·R and loses heat to the air; the temperature climbs toward the level where the two balance.",
+      "instances": {
+        "air": {
+          "display_id": "4eac8f82f82024386c298afd",
+          "label": "Room air (20 °C)",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 293.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Still room air."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.07,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "cooling": {
+          "display_id": "51690c0faf9dd53e786d0aa5",
+          "label": "Case to air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Winding to case to still air: 0.15 W/K (6.7 K/W)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.07,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.03,
+                0.015,
+                0.02
+              ]
+            },
+            "color_srgb": [
+              0.55,
+              0.57,
+              0.6
+            ],
+            "model": "heatsink"
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.0,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "load": {
+          "display_id": "e4ddf49ff64d1bf72206a477",
+          "label": "Load",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.load_torque"
+          },
+          "parameters": {
+            "torque": {
+              "value": -0.025,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A steady 25 mN·m load: about 2.1 A, a third of stall, but more than this motor can shed continuously."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.016,
+                0.016,
+                0.016
+              ]
+            },
+            "color_srgb": [
+              0.35,
+              0.36,
+              0.38
+            ]
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.coreless_motor"
+          },
+          "parameters": {
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A coreless 12 V motor with the torque–speed lesson's constants; its resistance rises 0.39 %/K as the copper warms."
+              }
+            },
+            "initial.heat.temperature": {
+              "value": 293.15
+            },
+            "resistance": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A coreless 12 V motor with the torque–speed lesson's constants; its resistance rises 0.39 %/K as the copper warms."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A coreless 12 V motor with the torque–speed lesson's constants; its resistance rises 0.39 %/K as the copper warms."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.012,
+              "length": 0.041
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "dc_motor"
+          }
+        },
+        "rotor": {
+          "display_id": "5bb5143f5f36f47cb9735055",
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A coreless 12 V motor with the torque–speed lesson's constants; its resistance rises 0.39 %/K as the copper warms."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.035,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.002,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "supply": {
+          "display_id": "5c375faedf24a2cc595952ea",
+          "label": "Supply",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A bench supply or a charged pack."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.02,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        },
+        "winding": {
+          "display_id": "ebe22fd71d2863074e05cb99",
+          "label": "Winding",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 9.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "About 24 g of copper and its insulation: 9 J/K."
+              }
+            },
+            "initial.temperature": {
+              "value": 293.15
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.07,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "0 V",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "load",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "label": "winding heat",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "heat"
+            },
+            {
+              "instance": "winding",
+              "port": "node"
+            },
+            {
+              "instance": "cooling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "air",
+          "terminals": [
+            {
+              "instance": "cooling",
+              "port": "b"
+            },
+            {
+              "instance": "air",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.005,
+    "rationale": "Minutes of heating with 0.25 ms electrical dynamics: backward Euler (stable on stiff parts) at 5 ms; the electrical and mechanical states settle within a step."
+  },
+  "studies": {
+    "load": {
+      "at": "",
+      "instance": "load",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "torque",
+        "values": [
+          -0.01,
+          -0.015,
+          -0.02,
+          -0.025
+        ]
+      },
+      "duration": 300.0,
+      "observe": [
+        "winding.node.temperature",
+        "motor.p.current"
+      ],
+      "metrics": [
+        {
+          "label": "winding after 5 min (K)",
+          "observable": "winding.node.temperature",
+          "reduce": "final",
+          "window": [
+            0.0,
+            300.0
+          ]
+        },
+        {
+          "label": "current (A)",
+          "observable": "motor.p.current",
+          "reduce": "mean",
+          "window": [
+            250.0,
+            300.0
+          ]
+        }
+      ]
+    }
+  }
+}

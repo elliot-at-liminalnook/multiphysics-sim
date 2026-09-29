@@ -1,0 +1,29 @@
+{
+  "stage": "F",
+  "id": 3,
+  "completed": true,
+  "metrics": {
+    "steps": [
+      {
+        "damping_ratio": 1.0,
+        "from": 2873.0,
+        "natural_frequency_rad_s": 1.8074715233463399,
+        "overshoot_fraction": 0.0,
+        "rise_10_90_s": 0.9958663120000324,
+        "settling_2pct_s": 1.5777730419999898,
+        "to": 2993.0
+      },
+      {
+        "damping_ratio": 1.0,
+        "from": 2993.0,
+        "natural_frequency_rad_s": 1.8752725435164834,
+        "overshoot_fraction": 0.0,
+        "rise_10_90_s": 0.959860477999996,
+        "settling_2pct_s": 1.2069911109999794,
+        "to": 2873.0
+      }
+    ]
+  },
+  "samples": 142,
+  "simulated_s": 4.955703563000043
+}

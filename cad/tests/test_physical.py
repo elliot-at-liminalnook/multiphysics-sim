@@ -282,6 +282,12 @@ def test_joint_inference_from_pin_and_hole(monkeypatch):
     mass = next(l for l in model["links"] if l["name"] == "arm")["mass"]
     assert p["friction"]["coulomb"] == pytest.approx(mass * 9.81 * 0.0019 * (p["friction"]["static_ratio"] and 1.0) * 0.375, rel=0.2)
     assert p["stiffness"]["radial"] > 1e5 and p["bearing"]["kind"] == "printed_pin"
+    # Breakaway as the runtime evaluates it (coulomb·static_ratio + stribeck)
+    # is µ_s · m g · r: the static excess is counted once.
+    from robocad.physical import _friction_pair
+    mu_s, mu_k = _friction_pair(doc, p["materials"]["hole"], p["materials"]["pin"])
+    breakaway = p["friction"]["coulomb"] * p["friction"]["static_ratio"] + p["friction"]["stribeck"]
+    assert breakaway == pytest.approx(p["friction"]["coulomb"] * mu_s / mu_k, rel=1e-9)
     from robocad import physical
     def forbid_collision(*args, **kwargs):
         pytest.fail('Joint inspection must not build collision geometry')
@@ -364,6 +370,15 @@ def test_results_and_identification_round_trip(tmp_path):
     out = ops.load_results(p)
     assert out['trace'] == res['trace'] and doc.results["links"]["thigh"]["yield_margin"] == 2.75
     assert out['stale']  # Legacy results have no captured physical identity.
+    # Results carrying the exported model's identity (as sim-cad writes them) are current.
+    exported = export_physical_model(doc, None, flex=False)["source"]["physical_hash"]
+    assert exported
+    with open(p, "w") as f:
+        json.dump({**res, "provenance": {"physical_hash": exported}}, f)
+    assert not ops.load_results(p)['stale']
+    with open(p, "w") as f:
+        json.dump({**res, "provenance": None}, f)
+    assert ops.load_results(p)['stale']
     thigh = next(n for n in doc.walk() if n.name == "thigh")
     assert thigh.results["section"] == "links" and thigh.results["peak_stress_pa"] == 1.2e7
     fit = {"identification": {"knee": {"friction": {"coulomb": 0.004, "viscous": 0.0005}, "backlash": 0.02, "stiffness_scale": 0.8, "torque_constant_scale": 1.7, "back_emf_constant_scale": 1.7, "rms_error_rad": 0.01}}, "source_log": "run1.csv"}
@@ -436,3 +451,18 @@ def test_bounded_local_distance_grid_preserves_geometry_and_caps_allocation():
             signed_distance_grid(meshes, .001, **args)
     with pytest.raises(ValueError, match='dimensions overflow'):
         signed_distance_grid(meshes, 1., bounds_m=[[0,0,0],[float(np.iinfo(np.intp).max),1,1]], maximum_nodes=100)
+
+
+def test_declared_floor_material_sets_the_floor_contact_pairs():
+    # Rust reads each link material's "world" pair for floor contact.
+    from robocad.physical import _friction_pair
+    doc, ops = _leg()
+    default = export_physical_model(doc, None, flex=False)
+    ops.set_robot_setting("world", {**doc.robot_settings.get("world", {}), "floor_material": "steel"})
+    steel = export_physical_model(doc, None, flex=False)
+    for mid, block in steel["materials"].items():
+        s, k = _friction_pair(doc, mid, "steel")
+        assert block["friction"]["world"] == {"static": s, "kinetic": k}
+    assert steel["world"]["floor_friction"] == pytest.approx(
+        sum(block["friction"]["world"]["kinetic"] for block in (steel["materials"][l["material"]] for l in steel["links"])) / len(steel["links"]))
+    assert default["materials"] != steel["materials"]

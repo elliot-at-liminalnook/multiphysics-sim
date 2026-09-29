@@ -13,7 +13,7 @@ fn request() -> Request {
             minimum_excursions: 2,
             maximum_inter_link_penetration_m: 0.001,
         },
-        audit: json!({"capture_blake3":hash,"capture_completed":true,"capture_error":null,"frames":[0.,0.004,0.,0.006,0.].iter().enumerate().map(|(i,gap)|json!({"time_s":i as f64*0.5,"maximum_inter_link_penetration_m":0.,"floor_clearances":[{"link":"foot","surface_samples":8,"minimum_clearance_m":gap}]})).collect::<Vec<_>>()}),
+        audit: json!({"capture_blake3":hash,"capture_completed":true,"capture_error":null,"frames":([0.,0.004,0.,0.006,0.].iter().enumerate().map(|(i,gap)|json!({"time_s":i as f64*0.5,"maximum_inter_link_penetration_m":0.,"floor_clearances":[{"link":"foot","surface_samples":8,"minimum_clearance_m":gap}]})).collect::<Vec<_>>())}),
     }
 }
 #[test]

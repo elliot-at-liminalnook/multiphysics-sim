@@ -204,15 +204,15 @@ impl CadRobot {
             .iter()
             .position(|b| b.ground)
             .unwrap_or_else(|| {
-                // The heaviest body that is nobody's child.
+                // The heaviest body that is nobody's child (body 0 if every body is one).
                 let children: Vec<&str> = model.joints.iter().map(|j| j.child.as_str()).collect();
-                let mut best = 0;
-                for (i, b) in model.bodies.iter().enumerate() {
-                    if !children.contains(&b.name.as_str()) && b.mass_kg > model.bodies[best].mass_kg.max(if children.contains(&model.bodies[best].name.as_str()) { -1.0 } else { model.bodies[best].mass_kg }) {
-                        best = i;
-                    }
-                }
-                best
+                model
+                    .bodies
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, b)| !children.contains(&b.name.as_str()))
+                    .min_by(|(_, a), (_, b)| b.mass_kg.total_cmp(&a.mass_kg)) // first of the heaviest
+                    .map_or(0, |(i, _)| i)
             });
         let root_body = &model.bodies[root];
         let root_fixed = root_body.ground;

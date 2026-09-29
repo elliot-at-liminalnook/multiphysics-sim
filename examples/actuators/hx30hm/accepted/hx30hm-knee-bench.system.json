@@ -1,0 +1,310 @@
+{
+  "schema": "sim.system/1",
+  "title": "HX-30HM knee servo bench (suspended leg)",
+  "revision": 2,
+  "root": "root",
+  "definitions": {
+    "hx30hm_knee_gearmotor": {
+      "label": "HX-30HM knee gearmotor",
+      "description": "HX-30HM servo drive train: brushed motor, rotor, 200:1 gear at the family's estimated efficiency, output friction. k and friction are fitted to the knee servo's measured steady speeds; the rest are estimates.",
+      "interface": "gearmotor.dc",
+      "ports": {
+        "n": {},
+        "output": {},
+        "p": {}
+      },
+      "instances": {
+        "friction": {
+          "label": "Output friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "torque": {
+              "value": 0.13643667524146186,
+              "provenance": {
+                "kind": "measured",
+                "source": {
+                  "artifact_hash": "70e678fce1143dd6c1b45509c060a28a317a851ff6782485f5477765b1b3a36b",
+                  "path": "examples/actuators/hx30hm/accepted/knee-steady-speeds.json",
+                  "line": null
+                }
+              },
+              "uncertainty": 0.02288024727306479
+            }
+          }
+        },
+        "gear": {
+          "label": "200:1 gear",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.504,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "HX-30HM provisional family estimate (examples/actuators/hx30hm/accepted/hx30hm-provisional.json); not identified."
+              }
+            },
+            "ratio": {
+              "value": 200.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "HX-30HM provisional family estimate (examples/actuators/hx30hm/accepted/hx30hm-provisional.json); not identified."
+              }
+            }
+          }
+        },
+        "motor": {
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.012132012912849833,
+              "provenance": {
+                "kind": "measured",
+                "source": {
+                  "artifact_hash": "70e678fce1143dd6c1b45509c060a28a317a851ff6782485f5477765b1b3a36b",
+                  "path": "examples/actuators/hx30hm/accepted/knee-steady-speeds.json",
+                  "line": null
+                }
+              },
+              "uncertainty": 0.0003864502100290958
+            },
+            "inductance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "neglected: electrical time constant far below the 100 Hz measurement"
+              }
+            },
+            "resistance": {
+              "value": 3.7,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "HX-30HM provisional family estimate (examples/actuators/hx30hm/accepted/hx30hm-provisional.json); not identified."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012132012912849833,
+              "provenance": {
+                "kind": "measured",
+                "source": {
+                  "artifact_hash": "70e678fce1143dd6c1b45509c060a28a317a851ff6782485f5477765b1b3a36b",
+                  "path": "examples/actuators/hx30hm/accepted/knee-steady-speeds.json",
+                  "line": null
+                }
+              },
+              "uncertainty": 0.0003864502100290958
+            }
+          }
+        },
+        "mount": {
+          "label": "Case",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-7,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "small can motor rotor, order of magnitude"
+              }
+            }
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "gear",
+              "port": "output"
+            },
+            {
+              "instance": "friction",
+              "port": "shaft"
+            },
+            {
+              "boundary": "output"
+            }
+          ]
+        }
+      ]
+    },
+    "root": {
+      "label": "HX-30HM knee servo bench (suspended leg)",
+      "instances": {
+        "gnd": {
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          }
+        },
+        "gravity": {
+          "label": "Gravity bias (mid range)",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.load_torque"
+          },
+          "parameters": {
+            "torque": {
+              "value": 0.0
+            }
+          }
+        },
+        "leg": {
+          "label": "Suspended leg",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "printed leg about the knee, order of magnitude"
+              }
+            }
+          }
+        },
+        "servo": {
+          "label": "Knee servo",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "hx30hm_knee_gearmotor"
+          }
+        },
+        "supply": {
+          "label": "Supply × duty",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "servo",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "servo",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "servo",
+              "port": "output"
+            },
+            {
+              "instance": "leg",
+              "port": "shaft"
+            },
+            {
+              "instance": "gravity",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.001,
+    "rationale": "Steady speeds after ≤ 0.1 s time constants; friction regularisation is stiff."
+  }
+}

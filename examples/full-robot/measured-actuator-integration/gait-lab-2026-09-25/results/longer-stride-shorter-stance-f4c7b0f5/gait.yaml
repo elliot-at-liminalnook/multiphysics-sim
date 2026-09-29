@@ -1,0 +1,27 @@
+version: 1
+name: longer-stride-shorter-stance
+notes: |
+  From 3701-Bayesian-003 (0.119 m/s). Hypothesis: 0.24 m travel with 0.61 stance (0.58 left only a 0.033 s all-feet-down window; 0.061 s needed)
+  gives each swing ~13% more time, so joints stay under motor speed while the
+  body covers more ground per cycle.
+cycle:
+  period_s: 1.2736230285125745
+  travel_m: 0.24
+body:
+  height_offset_m: -0.02339378872688437
+leg_defaults:
+  stance: 0.61
+  swing_height_m: 0.026318953023198765
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.5538277203672304
+  +Y:
+    phase: 0.0943408092390769
+  -X:
+    phase: 0.45271276109505837
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 9.20041309815592
+  governor_speed_rad_s: 2.461293951408869

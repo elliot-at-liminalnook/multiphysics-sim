@@ -1,0 +1,28 @@
+version: 1
+name: long-stride-short-stance
+notes: |
+  Idea and what changed. Keep a short hypothesis here.
+cycle:
+  period_s: 1.27        # one full cycle: every leg lifts and lands once
+  travel_m: 0.22        # body travel per cycle along the walking diagonal
+body:
+  height_offset_m: -0.023
+  controls:             # optional; >= 4, evenly spaced over the cycle
+    - {ry_deg: 0}       # x_m y_m z_m rx_deg ry_deg rz_deg (rotation vector,
+    - {ry_deg: 2}       #   ≈ roll/pitch/yaw for small angles). The body
+    - {ry_deg: 0}       #   follows a smooth B-spline within these controls,
+    - {ry_deg: -2}      #   not through each one.
+leg_defaults:           # used by every leg that does not set its own
+  stance: 0.63          # fraction of the cycle on the ground
+  swing_height_m: 0.026 # mid-swing lift
+  return_ramp: 0.25     # swing speed-up/slow-down fraction (omit: rest-to-rest)
+legs:                   # every leg must appear: -Y, +X, +Y, -X
+  +X: {phase: 0.554}    # when stance starts, fraction of the cycle (0 to <1)
+  +Y: {phase: 0.094}
+  -X: {phase: 0.453, swing_height_m: 0.03, offset_m: [0.01, 0, 0]}
+  -Y: {phase: 0.0}
+controller:             # required; the study's motor-derived ranges apply
+  governor_speed_rad_s: 2.46          # 1.40 .. 4.43
+  governor_acceleration_rad_s2: 9.2   # 6.98 .. 10.62
+tune:                   # optional: ranges a numeric search may vary later
+  cycle.travel_m: [0.18, 0.26]

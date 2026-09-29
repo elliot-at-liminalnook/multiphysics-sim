@@ -1,0 +1,20 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "control.lag_chain",
+  "label": "Lag chain (transport delay)",
+  "kind": "generic",
+  "parameters": {
+    "delay": 0.01,
+    "stages": 8.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) input: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

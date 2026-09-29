@@ -1,0 +1,22 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "robot.effective_servo",
+  "label": "Effective bounded position servo",
+  "kind": "generic",
+  "parameters": {
+    "damping": 0.1,
+    "no_load_speed": 6.0,
+    "stall_torque": 1.5,
+    "stiffness": 5.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) target: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

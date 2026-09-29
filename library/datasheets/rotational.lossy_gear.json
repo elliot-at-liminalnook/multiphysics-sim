@@ -1,0 +1,85 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "rotational.lossy_gear",
+  "label": "Gear stage with losses",
+  "kind": "gear",
+  "parameters": {
+    "correction": 10.0,
+    "efficiency": 0.95,
+    "ratio": 10.0,
+    "smoothing_speed": 0.01
+  },
+  "conditions": {
+    "drive torque (N·m)": 0.05
+  },
+  "values": [
+    {
+      "name": "ratio (measured)",
+      "value": 9.999999999997408,
+      "unit": "1"
+    },
+    {
+      "name": "forward efficiency",
+      "value": 0.9500000000002711,
+      "unit": "1"
+    },
+    {
+      "name": "backdrive efficiency",
+      "value": 0.9499999999998959,
+      "unit": "1"
+    },
+    {
+      "name": "self-locking",
+      "value": 0.0,
+      "unit": "yes=1"
+    },
+    {
+      "name": "backdrive output speed",
+      "value": 47.49999999999059,
+      "unit": "rad/s"
+    },
+    {
+      "name": "realtime model: largest change",
+      "value": 0.0,
+      "unit": "1"
+    },
+    {
+      "name": "audit energy change",
+      "value": -0.06776732673267047,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "efficiency within (0, 1]",
+      "passed": true,
+      "detail": "forward 95.00 %"
+    },
+    {
+      "name": "forward efficiency matches the notes",
+      "passed": true,
+      "detail": "bench 95.00 % vs notes 95.00 %"
+    },
+    {
+      "name": "self-locking matches the notes",
+      "passed": true,
+      "detail": "bench back-drives, notes back-drivable"
+    },
+    {
+      "name": "realtime model",
+      "passed": true,
+      "detail": "smoothing_speed = 0.05 → largest bench change 0.000 % (none)"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 1.945e-1 J → change -6.777e-2 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 6.2e-13, 1.1e-12, 2.4e-13 (1 → 0.125 ms); observed order 2.2"
+    }
+  ]
+}

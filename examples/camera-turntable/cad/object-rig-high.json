@@ -1,0 +1,35 @@
+{
+ "schema": "sim.vision-rig/1",
+ "axis_point": [
+  0.0,
+  0.0,
+  0.054
+ ],
+ "axis": [
+  -0.0,
+  -0.0,
+  -1.0
+ ],
+ "optical_center": [
+  0.2106616666951055,
+  0.0,
+  0.2715068870317342
+ ],
+ "optical_axis": [
+  -0.8191520442889918,
+  -0.0,
+  -0.573576436351046
+ ],
+ "up": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "source": {
+  "cad": "examples/camera-turntable/cad/turntable.rcad",
+  "sha256": "dce8a9fd2412a2b1333988f28366f2dbf63240fe051ebd96896a9005be9fbd12",
+  "camera_node": "Object camera (high ring, reference)",
+  "rule": "object frame: camera fixed on the stand, object turning, so the camera orbits with the axis reversed",
+  "uncertainty": "detent tilt and stand placement unmeasured (\u00b11\u00b0, \u00b13 mm estimated)"
+ }
+}

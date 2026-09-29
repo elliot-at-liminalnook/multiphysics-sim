@@ -17,6 +17,132 @@ pub struct Settings {
     pub maximum_training_rows: usize,
     pub cma_population: usize,
     pub cma_sigma: f64,
+    /// Bayesian only: acquisition proposals drawn per attempt (different
+    /// seeds); the one most likely feasible under `feasibility` is used.
+    /// 1 reproduces the original single-proposal behaviour.
+    #[serde(default = "one")]
+    pub feasibility_candidates: usize,
+    /// Kernel width in normalized coordinates for `feasibility` (default 0.15).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feasibility_length_scale: Option<f64>,
+}
+fn one() -> usize {
+    1
+}
+/// Probability that `values` is feasible (prepares and completes), estimated
+/// from every observation: completed = feasible, failed/screened = infeasible.
+/// Gaussian-kernel average in normalized coordinates with a uniform prior
+/// (one pseudo-observation each way), so it is 0.5 far from all evidence and
+/// falls near known failures. A ranking aid for proposals, not a certificate.
+pub fn feasibility(problem: &Problem, history: &[Observation], values: &[f64], length_scale: f64) -> Result<f64, String> {
+    let x = problem.normalized(values)?;
+    let (mut feasible, mut total) = (1.0, 2.0);
+    for o in history {
+        let y = problem.normalized(&o.values)?;
+        let d2: f64 = x.iter().zip(&y).map(|(a, b)| (a - b) * (a - b)).sum();
+        let w = (-d2 / (2. * length_scale * length_scale)).exp();
+        total += w;
+        if matches!(o.outcome, bayesian::Outcome::Complete { .. }) {
+            feasible += w;
+        }
+    }
+    Ok(feasible / total)
+}
+/// A candidate rejected before any dynamic trial. It is part of the proposal
+/// history (optimizers learn from it) but does not consume a trial slot.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Screened {
+    pub observation: Observation,
+    /// "schedule" (arithmetic contact-schedule screen) or "preparation".
+    pub stage: String,
+    pub preparation_wall_s: f64,
+}
+/// Propose candidates until one passes preparation, preparing up to `parallel`
+/// at a time. Candidates are generated speculatively as if each earlier
+/// in-flight candidate failed; after preparation, results are taken in
+/// proposal order and everything after the first success is discarded, so
+/// the outcome is independent of thread timing and identical to proposing
+/// one at a time. `cheap` rejects without preparing (recorded as "schedule").
+/// Returns the screened candidates in order and, unless `max_candidates` ran
+/// out, the accepted values with their preparation result and wall time.
+pub fn propose_until_prepared<P: Send>(
+    problem: &Problem,
+    baseline: &[f64],
+    history: &[Observation],
+    algorithm: Algorithm,
+    settings: &Settings,
+    parallel: usize,
+    max_candidates: usize,
+    cheap: impl Fn(&[f64]) -> Result<(), String> + Sync,
+    prepare: impl Fn(&[f64]) -> Result<P, String> + Sync,
+    evidence: impl Fn(usize) -> String,
+) -> Result<(Vec<Screened>, Option<(Vec<f64>, P, f64)>), String> {
+    if parallel == 0 || max_candidates == 0 {
+        return Err("screened proposals need positive parallelism and candidate budget".into());
+    }
+    let mut real = history.to_vec();
+    let mut screened = Vec::new();
+    while screened.len() < max_candidates {
+        // Speculative batch: cheap rejections are real outcomes immediately.
+        let mut spec = real.clone();
+        let mut batch: Vec<(usize, Vec<f64>)> = Vec::new();
+        let mut order: Vec<Screened> = Vec::new();
+        while batch.len() < parallel && screened.len() + order.len() < max_candidates {
+            let values = suggest(problem, baseline, &spec, algorithm, settings)?;
+            let index = screened.len() + order.len();
+            let observation = |outcome| Observation {
+                context_id: problem.context_id.clone(),
+                values: values.clone(),
+                outcome,
+                evidence: evidence(index),
+            };
+            match cheap(&values) {
+                Err(reason) => {
+                    let o = observation(bayesian::Outcome::Failed { reason });
+                    spec.push(o.clone());
+                    order.push(Screened { observation: o, stage: "schedule".into(), preparation_wall_s: 0. });
+                }
+                Ok(()) => {
+                    let o = observation(bayesian::Outcome::Failed { reason: "speculative: preparation pending".into() });
+                    spec.push(o.clone());
+                    batch.push((order.len(), values.clone()));
+                    order.push(Screened { observation: o, stage: "preparation".into(), preparation_wall_s: 0. });
+                }
+            }
+        }
+        let results: Vec<(Result<P, String>, f64)> = std::thread::scope(|scope| {
+            let handles: Vec<_> = batch
+                .iter()
+                .map(|(_, v)| {
+                    let prepare = &prepare;
+                    scope.spawn(move || {
+                        let t = std::time::Instant::now();
+                        let r = prepare(v);
+                        (r, t.elapsed().as_secs_f64())
+                    })
+                })
+                .collect();
+            handles.into_iter().map(|h| h.join().unwrap_or_else(|_| (Err("preparation panicked".into()), 0.))).collect()
+        });
+        let mut results = batch.into_iter().zip(results).collect::<std::collections::VecDeque<_>>();
+        for (k, mut entry) in order.into_iter().enumerate() {
+            if entry.stage == "preparation" {
+                let ((slot, values), (result, wall)) = results.pop_front().expect("one result per prepared candidate");
+                debug_assert_eq!(slot, k);
+                match result {
+                    Ok(prepared) => return Ok((screened, Some((values, prepared, wall)))),
+                    Err(reason) => {
+                        entry.observation.outcome = bayesian::Outcome::Failed { reason };
+                        entry.preparation_wall_s = wall;
+                    }
+                }
+            }
+            real.push(entry.observation.clone());
+            screened.push(entry);
+        }
+    }
+    Ok((screened, None))
 }
 // Keep experiment identity, purpose and attempt in separate fields. Adding an
 // attempt to the master seed makes neighboring experiments share random streams.
@@ -116,26 +242,53 @@ pub fn suggest(
                     let radius = (p.bounds[1] - p.bounds[0]) * 0.05;
                     p.bounds = [(x - radius).max(p.bounds[0]), (x + radius).min(p.bounds[1])];
                 }
-                Ok(bayesian::initial_design(
-                    &local,
-                    1,
-                    attempt_seed(settings.seed, history.len(), "feasibility-bootstrap"),
-                )?
-                .remove(0))
+                let draws = (0..settings.feasibility_candidates.max(1))
+                    .map(|j| {
+                        let purpose = if j == 0 { "feasibility-bootstrap".to_string() } else { format!("feasibility-bootstrap/{j}") };
+                        Ok(bayesian::initial_design(&local, 1, attempt_seed(settings.seed, history.len(), &purpose))?.remove(0))
+                    })
+                    .collect::<Result<Vec<_>, String>>()?;
+                most_feasible(problem, history, draws, settings)
             } else {
-                Ok(bayesian::suggest(
-                    problem,
-                    history,
-                    &bayesian::Config {
-                        seed: attempt_seed(settings.seed, history.len(), "bayesian-acquisition"),
-                        acquisition_starts: settings.acquisition_starts,
-                        maximum_training_rows: settings.maximum_training_rows,
-                    },
-                )?
-                .values)
+                let mut draws = Vec::new();
+                let mut last_error = None;
+                for j in 0..settings.feasibility_candidates.max(1) {
+                    let purpose = if j == 0 { "bayesian-acquisition".to_string() } else { format!("bayesian-acquisition/{j}") };
+                    match bayesian::suggest(
+                        problem,
+                        history,
+                        &bayesian::Config {
+                            seed: attempt_seed(settings.seed, history.len(), &purpose),
+                            acquisition_starts: settings.acquisition_starts,
+                            maximum_training_rows: settings.maximum_training_rows,
+                        },
+                    ) {
+                        Ok(p) => draws.push(p.values),
+                        Err(e) => last_error = Some(e),
+                    }
+                }
+                if draws.is_empty() {
+                    return Err(last_error.unwrap_or_else(|| "no acquisition proposal".into()));
+                }
+                most_feasible(problem, history, draws, settings)
             }
         }
     }
+}
+/// The draw most likely feasible (first on ties, so one draw is unchanged).
+fn most_feasible(problem: &Problem, history: &[Observation], draws: Vec<Vec<f64>>, settings: &Settings) -> Result<Vec<f64>, String> {
+    let scale = settings.feasibility_length_scale.unwrap_or(0.15);
+    if !(scale.is_finite() && scale > 0.) {
+        return Err("feasibility length scale must be positive".into());
+    }
+    let mut best: Option<(f64, Vec<f64>)> = None;
+    for d in draws {
+        let p = feasibility(problem, history, &d, scale)?;
+        if best.as_ref().is_none_or(|(b, _)| p > *b) {
+            best = Some((p, d));
+        }
+    }
+    best.map(|(_, d)| d).ok_or_else(|| "no candidate".into())
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -152,6 +305,16 @@ pub struct Trial {
     pub total_wall_s: f64,
     pub charged_simulation_s: f64,
     pub actual_simulation_s: f64,
+    /// Candidates rejected before this trial without consuming a trial slot
+    /// (screened-proposal hosts only). They precede `observation` in history.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub screened: Vec<Screened>,
+}
+impl Trial {
+    /// This trial's contribution to the optimizer history, in proposal order.
+    pub fn history(&self) -> impl Iterator<Item = &Observation> {
+        self.screened.iter().map(|s| &s.observation).chain(std::iter::once(&self.observation))
+    }
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Progress {
@@ -163,6 +326,10 @@ pub struct Progress {
     pub best_speed_m_s: Option<f64>,
     pub improvement_m_s: Option<f64>,
     pub improvement_per_wall_hour: Option<f64>,
+    #[serde(default)]
+    pub screened_candidates: usize,
+    #[serde(default)]
+    pub screened_preparation_wall_hours: f64,
 }
 pub fn progress(trials: &[Trial]) -> Result<Progress, String> {
     let mut p = Progress {
@@ -174,6 +341,8 @@ pub fn progress(trials: &[Trial]) -> Result<Progress, String> {
         best_speed_m_s: None,
         improvement_m_s: None,
         improvement_per_wall_hour: None,
+        screened_candidates: 0,
+        screened_preparation_wall_hours: 0.,
     };
     let mut baseline = None;
     for (i, t) in trials.iter().enumerate() {
@@ -198,6 +367,8 @@ pub fn progress(trials: &[Trial]) -> Result<Progress, String> {
             return Err("invalid matched trial order, timing or simulation budget".into());
         }
         p.attempts += 1;
+        p.screened_candidates += t.screened.len();
+        p.screened_preparation_wall_hours += t.screened.iter().map(|s| s.preparation_wall_s).sum::<f64>() / 3600.;
         p.wall_hours += t.total_wall_s / 3600.;
         p.charged_simulation_s += t.charged_simulation_s;
         p.actual_simulation_s += t.actual_simulation_s;

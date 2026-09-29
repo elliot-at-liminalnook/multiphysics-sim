@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "runtime_identity": {
+    "features": [],
+    "library_source_blake3": "e103c5a3a23eda8be93c172e91c993d9c2fe022f8ba2b2eed16f0ddc54892ad8",
+    "version": 1
+  },
+  "experiment_source_blake3": "1f9ed8e0b2a06ed0d0498c9ce1e2dfef19a5796dde5ce939fb0a73ba211e98ed",
+  "plan": "hx30hm-knee-measured-dyno-plan.json",
+  "plan_blake3": "34e0202ae1c5811f472cfc7d9f86276928cd33d1e4523145fbbb41003a4f42cd",
+  "measured": "campaign-1790182543587 stage D fits (run and K repeat averaged)",
+  "rows": [
+    {
+      "family": "provisional",
+      "duty": 0.15,
+      "simulated_counts_s": 347.0727937649743,
+      "measured_counts_s": 291.5,
+      "error_counts_s": 55.57279376497428
+    },
+    {
+      "family": "provisional",
+      "duty": -0.15,
+      "simulated_counts_s": -525.4183272866816,
+      "measured_counts_s": -486.0,
+      "error_counts_s": -39.418327286681574
+    },
+    {
+      "family": "provisional",
+      "duty": 0.3,
+      "simulated_counts_s": 974.9238753003818,
+      "measured_counts_s": 764.5,
+      "error_counts_s": 210.42387530038184
+    },
+    {
+      "family": "provisional",
+      "duty": -0.3,
+      "simulated_counts_s": -1153.2694088582784,
+      "measured_counts_s": -1013.0,
+      "error_counts_s": -140.26940885827844
+    },
+    {
+      "family": "knee",
+      "duty": 0.15,
+      "simulated_counts_s": 308.38498408317156,
+      "measured_counts_s": 291.5,
+      "error_counts_s": 16.88498408317156
+    },
+    {
+      "family": "knee",
+      "duty": -0.15,
+      "simulated_counts_s": -419.2425930526294,
+      "measured_counts_s": -486.0,
+      "error_counts_s": 66.75740694737061
+    },
+    {
+      "family": "knee",
+      "duty": 0.3,
+      "simulated_counts_s": 812.1389658947475,
+      "measured_counts_s": 764.5,
+      "error_counts_s": 47.63896589474746
+    },
+    {
+      "family": "knee",
+      "duty": -0.3,
+      "simulated_counts_s": -922.9965750495815,
+      "measured_counts_s": -1013.0,
+      "error_counts_s": 90.00342495041855
+    }
+  ],
+  "rms_relative_speed_error": {
+    "provisional": 0.18564520529485545,
+    "knee": 0.092195884848856
+  },
+  "interpretation": "Steady open-loop speed only, gravity at mid-range as a constant load, estimated load inertia. Not a transient, stiction or closed-loop validation."
+}

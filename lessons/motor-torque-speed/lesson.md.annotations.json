@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "subject": "motor-torque-speed",
+  "revision": 2,
+  "threads": {
+    "t-1790459282131360000": {
+      "id": "t-1790459282131360000",
+      "title": "Could you go into more detail please",
+      "resolved": false,
+      "targets": [
+        {
+          "kind": "text",
+          "quote": {
+            "section": "One motor, one line",
+            "exact": "τ = k·i (torque constant k, N·m/A) V = R·i + k·ω (winding resistance R, speed ω)",
+            "prefix": "-EMF — that opposes the supply: ",
+            "suffix": " Eliminate the current and the m",
+            "offset": 170,
+            "missing": false
+          }
+        }
+      ],
+      "comments": [
+        {
+          "id": "c-1790459282131374000",
+          "author": "elliot",
+          "body": "Could you go into more detail please",
+          "created_at": "1790459282",
+          "edited_at": null,
+          "links": []
+        },
+        {
+          "id": "agent-1790459402070112000",
+          "author": "Codex",
+          "body": "Those equations describe **two linked effects: current creates torque, and rotation generates a voltage that reduces the current.** The straight line describes their steady balance at a fixed supply voltage.\n\n**1. Current creates torque: `τ = kₜ i`.**\n\nThe winding carries current through the motor’s magnetic field, producing a twisting force. Here, `τ` is motor torque in N·m, `i` is current in amperes, and `kₜ = 0.012 N·m/A`: each ampere produces 0.012 N·m of torque. Doubling current doubles torque in this model.\n\n**2. Rotation creates back-EMF: `V = Ri + kₑω`.**\n\nA spinning motor also acts as a generator. Its generated voltage, `e = kₑω`, opposes the applied voltage. The voltage left to drive current through the winding resistance is therefore `V − e`:\n\n```text\ni = (V − kₑω)/R\n```\n\nHere, `ω` is shaft speed relative to the case, in rad/s. The lesson fixes the case to the mount and connects the shaft to the rotor inertia and load. Its electrical terminals connect across the 12 V supply. See [system connections](/Users/elliot/physics-simulator/lessons/motor-torque-speed/motor.system.json:240).\n\nThe lesson writes both constants as `k` because they have equal numerical values in consistent SI units for this ideal motor. Their units differ: `kₜ` is N·m/A, while `kₑ` is V·s/rad. This equality makes converted electrical power `ei` equal mechanical power `τω`.\n\n**Combining the equations gives the line.**\n\n```text\nτ = kₜ(V − kₑω)/R\n  = 0.072 − 0.000072ω   N·m\n```\n\nUsing the lesson’s authored values, the calculated steady operating points are:\n\n| Opposing load | Current | Back-EMF | Speed |\n|---|---:|---:|---:|\n| 0 N·m | 0 A | 12 V | 1000 rad/s |\n| 0.02 N·m | 1.67 A | 8.67 V | 722 rad/s |\n| 0.04 N·m | 3.33 A | 5.33 V | 444 rad/s |\n| 0.072 N·m, stall | 6 A | 0 V | 0 rad/s |\n\nFor example, at 0.02 N·m, torque balance requires `i = 0.02/0.012 = 1.67 A`. Resistance uses `Ri = 3.33 V`, leaving 8.67 V of back-EMF, so speed is `8.67/0.012 ≈ 722 rad/s`. The motor parameters are explicitly **estimated teaching values, not measurements**: [parameter definitions](/Users/elliot/physics-simulator/lessons/motor-torque-speed/motor.system.json:62).\n\n**Why does adding load slow it down?** Initially, load torque exceeds motor torque, so the rotor decelerates. Lower speed reduces back-EMF, allowing more current and therefore more motor torque. It settles when motor torque balances the new load.\n\nThere is an important qualification to the quoted passage: during that transition, the full equations are:\n\n```text\nV = Ri + kₑω + L·di/dt\nJ·dω/dt = kₜi − opposing load torque\n```\n\nConsequently, current and speed cannot jump instantly, and transient points need not sit exactly on the steady torque–speed line. With the authored `L = 0.0005 H` and `J = 3×10⁻⁶ kg·m²`, the electrical time scale is `L/R = 0.25 ms`; the approximate mechanical time scale is `JR/(kₜkₑ) = 41.7 ms`. The [Rust implementation and model limits](/Users/elliot/physics-simulator/crates/sim-domain-bridges/src/elements.rs:227) include inductance but exclude friction, heating-dependent resistance, and magnetic saturation. That is why zero no-load current is an ideal-model result.\n\nThe current lesson still matches your quoted passage, and the system still declares revision 1. These numbers are analytical predictions; the supplied context contains no `model_context`, viewer status, or fresh run results to verify simulation behavior.",
+          "created_at": "1790459452",
+          "edited_at": null,
+          "links": []
+        }
+      ],
+      "pin_m": null,
+      "view": null
+    }
+  },
+  "undo": [
+    {
+      "operation": "delete_thread",
+      "id": "t-1790459282131360000"
+    },
+    {
+      "operation": "put_thread",
+      "thread": {
+        "id": "t-1790459282131360000",
+        "title": "Could you go into more detail please",
+        "resolved": false,
+        "targets": [
+          {
+            "kind": "text",
+            "quote": {
+              "section": "One motor, one line",
+              "exact": "τ = k·i (torque constant k, N·m/A) V = R·i + k·ω (winding resistance R, speed ω)",
+              "prefix": "-EMF — that opposes the supply: ",
+              "suffix": " Eliminate the current and the m",
+              "offset": 170,
+              "missing": false
+            }
+          }
+        ],
+        "comments": [
+          {
+            "id": "c-1790459282131374000",
+            "author": "elliot",
+            "body": "Could you go into more detail please",
+            "created_at": "1790459282",
+            "edited_at": null,
+            "links": []
+          }
+        ],
+        "pin_m": null,
+        "view": null
+      }
+    }
+  ],
+  "redo": []
+}

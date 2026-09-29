@@ -1,0 +1,19 @@
+# A commanded force profile: a steady ramp, a step held for a while, plus a sine.
+part force_command "Force command (ramp + step + sine)"
+category Control
+summary "A known force over time: a ramp that climbs steadily (then holds), a step held for a set time, and a sine. Feed it to a force source to push, pull or load a part."
+explain "force = min(ramp·τ, limit) + step·w(t) + amplitude·sin(2π·f·t), with τ = max(t − start, 0) and w(t) rising from 0 to 1 at `start` and back at `start + duration` (edges smoothed over `edge`). A ramp is how a test machine or a slowly added weight loads a joint."
+tradeoffs "An ideal force: nothing limits it, so a joint that gives way under it is pulled on at the same force (like a hanging weight), not held at a position (like a screw-driven test machine)."
+limits "Ideal, instantaneous force (apart from the edge smoothing)."
+pairs translational.force_source translational.mass part.dowel_pin part.dovetail part.threaded_joint
+output force Force
+param ramp N/s = 0 "Ramp rate from `start`"
+param limit N = 1e9 "Largest ramp force (the ramp holds there)"
+param step N = 0 "Step force"
+param start s = 0 "When the ramp and the step start"
+param duration s = 1 "How long the step stays on"
+param edge s = 0.0005 "Time over which each edge of the step is smoothed"
+param amplitude N = 0 "Sine amplitude"
+param frequency Hz = 1 "Sine frequency"
+set force = min(ramp*max(t - start, 0), limit) + step*0.5*(tanh((t - start)/edge) - tanh((t - start - duration)/edge)) + amplitude*sin(6.283185307*frequency*t)
+derive "time to reach the limit" = limit/ramp s

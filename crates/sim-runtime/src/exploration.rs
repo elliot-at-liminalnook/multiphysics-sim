@@ -36,6 +36,19 @@ pub struct Profile {
     /// Absolute matched-endpoint error budgets, keyed by canonical SI unit.
     pub absolute_tolerances: BTreeMap<String, f64>,
     pub minimum_speedup: f64,
+    /// Task-level qualification instead of trajectory/electrical budgets: the
+    /// reduced run only has to reach the same outcome (completion, falls,
+    /// contacts) and a matching task score. For searches that rank gaits by
+    /// distance over time and accept lower physical fidelity to run faster.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub task_level: Option<TaskLevel>,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TaskLevel {
+    /// |reduced − detailed| score must be within max(absolute, relative × |detailed|).
+    pub relative_score_tolerance: f64,
+    pub absolute_score_tolerance: f64,
 }
 impl Profile {
     pub fn validate(&self) -> Result<(), String> {
@@ -61,6 +74,11 @@ impl Profile {
                 .any(|v| !v.is_finite() || *v < 0.)
         {
             return Err("v1 exploration requires detailed or winding-only motors, an actual reduction, aligned 1..64 step multiplier, accuracy budgets and speedup >= 1".into());
+        }
+        if let Some(t) = &self.task_level {
+            if [t.relative_score_tolerance, t.absolute_score_tolerance].iter().any(|v| !v.is_finite() || *v < 0.) {
+                return Err("task-level score tolerances must be finite and nonnegative".into());
+            }
         }
         Ok(())
     }
@@ -450,11 +468,25 @@ pub fn qualify(
     if report.reference.eligible_score.is_none() || report.candidate.eligible_score.is_none() {
         reasons.push("both full episodes must complete without failure/termination".into());
     }
-    if !report.trajectory_within_tolerances || !report.categorical_outcomes_match {
-        reasons.push("mechanical fidelity budget or outcome mismatch".into());
-    }
-    if errors.is_empty() || errors.values().any(|e| !e.within_tolerance) {
-        reasons.push("electrical fidelity budget failed or no motor observations".into());
+    match &recipe.profile.task_level {
+        Some(task) => {
+            if !report.categorical_outcomes_match {
+                reasons.push("task outcome mismatch".into());
+            }
+            if let (Some(a), Some(b)) = (report.reference.eligible_score, report.candidate.eligible_score) {
+                if (a - b).abs() > task.absolute_score_tolerance.max(task.relative_score_tolerance * a.abs()) {
+                    reasons.push(format!("task score {b} differs from detailed {a} beyond the task tolerance"));
+                }
+            }
+        }
+        None => {
+            if !report.trajectory_within_tolerances || !report.categorical_outcomes_match {
+                reasons.push("mechanical fidelity budget or outcome mismatch".into());
+            }
+            if errors.is_empty() || errors.values().any(|e| !e.within_tolerance) {
+                reasons.push("electrical fidelity budget failed or no motor observations".into());
+            }
+        }
     }
     let speedup = a.wall_s / b.wall_s;
     if !speedup.is_finite() || speedup < recipe.profile.minimum_speedup {

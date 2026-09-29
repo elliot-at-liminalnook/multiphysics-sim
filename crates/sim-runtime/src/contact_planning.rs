@@ -167,6 +167,22 @@ pub struct ContactPlanFrame {
     pub maximum_floor_penetration_m: f64,
     pub floor_clearances: Vec<FloorClearance>,
 }
+/// A steered gait placed through the CAD model (kinematics only).
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct SteeredTrace {
+    pub times_s: Vec<f64>,
+    /// Independent coordinates per sample (rad), in recipe order.
+    pub coordinates: Vec<Vec<f64>>,
+    pub samples: Vec<sim_domain_control::contact_phase::steered::SteeredSample>,
+    pub maximum_marker_error_m: f64,
+    /// Deepest internal link overlap per sample (m).
+    pub internal_overlap_m: Vec<f64>,
+    /// Time (s), link pair and depth (m) of the deepest overlap.
+    pub worst_overlap: Option<(f64, String, f64)>,
+    /// The first unreachable reference, where the trace stopped.
+    pub failure: Option<String>,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct ContactPlanReport {
     pub sampling: ContactSampling,
@@ -324,26 +340,7 @@ impl<'a> ContactPlanner<'a> {
                 &vec![0.0; map.reduced_dimension()],
             )?
             .generalized;
-        let points = markers
-            .markers
-            .iter()
-            .map(|m| {
-                let found = art
-                    .links
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, l)| l.name == m.link)
-                    .map(|(i, _)| i)
-                    .collect::<Vec<_>>();
-                if found.len() != 1 {
-                    return Err(format!("ambiguous marker link {}", m.link));
-                }
-                Ok(EmbeddedPoint {
-                    link: found[0],
-                    local_point_m: m.local_point_m,
-                })
-            })
-            .collect::<Result<Vec<_>, String>>()?;
+        let points = crate::online_reference::marker_points(art, &markers.markers)?;
         let motors = recipe
             .independent_coordinates
             .iter()
@@ -367,6 +364,74 @@ impl<'a> ContactPlanner<'a> {
             coordinate_frame: markers.coordinate_frame.clone(),
             joint_cache: Default::default(),
         })
+    }
+    /// Place a steered gait through this CAD model every `dt` seconds under
+    /// `commands(t)`, starting at `start_twist`: kinematics only, no loads or
+    /// dynamics. Records internal link overlap per sample; stops at the
+    /// first unreachable reference and reports it.
+    pub fn trace_steered(
+        &self,
+        gait: ContactPhaseConfig,
+        steering: sim_domain_control::contact_phase::steered::SteeringConfig,
+        start_phase_s: f64,
+        start_twist: [f64; 3],
+        commands: impl Fn(f64) -> [f64; 3],
+        duration_s: f64,
+        dt: f64,
+    ) -> Result<SteeredTrace, String> {
+        use sim_domain_control::contact_phase::steered::{PathStart, SteeredGait};
+        if !(dt > 0. && duration_s.is_finite() && duration_s >= 0.) {
+            return Err("positive sample interval and finite duration required".into());
+        }
+        let base = self.art.bases[0].state;
+        let start: [f64; 3] = std::array::from_fn(|i| self.seed.states[base + i]);
+        let mut steered = SteeredGait::new(gait, steering, [start[0], start[1]], PathStart { time_s: start_phase_s, pose: [0.; 3], twist: start_twist })?;
+        let mut placement = crate::online_reference::BodyPlacement::new(self.points.clone());
+        let mut trace = SteeredTrace::default();
+        for k in 0..=(duration_s / dt).floor() as usize {
+            let t = k as f64 * dt;
+            let placed = steered.step(start_phase_s + t, commands(t)).and_then(|sample| {
+                let body = std::array::from_fn(|i| start[i] + sample.body_offset_m[i]);
+                let feet: Vec<[f64; 3]> = sample.feet.iter().map(|f| f.position_world_m).collect();
+                let placed = placement.solve(
+                    self.art,
+                    &self.map,
+                    &self.seed,
+                    body,
+                    UnitQuaternion::from_scaled_axis(V::from(sample.body_rotation_vector_rad)),
+                    &feet,
+                    &self.recipe.joint_search_bounds,
+                    &self.recipe.placement,
+                    f64::INFINITY,
+                    &format!("maneuver at {t:.3} s"),
+                )?;
+                Ok((sample, placed))
+            });
+            match placed {
+                Ok((sample, placed)) => {
+                    let overlap = self
+                        .art
+                        .inter_link_penetrations(&placed.links)?
+                        .into_iter()
+                        .max_by(|a, b| a.penetration_m.total_cmp(&b.penetration_m));
+                    let depth = overlap.as_ref().map_or(0., |c| c.penetration_m);
+                    if let Some(c) = overlap.filter(|_| trace.worst_overlap.as_ref().is_none_or(|w| depth > w.2)) {
+                        trace.worst_overlap = Some((t, format!("{} / {}", self.art.links[c.link].name, self.art.links[c.other].name), depth));
+                    }
+                    trace.internal_overlap_m.push(depth);
+                    placement.commit(&placed);
+                    trace.maximum_marker_error_m = trace.maximum_marker_error_m.max(placed.fit.maximum_position_error_m);
+                    trace.times_s.push(t);
+                    trace.coordinates.push(placed.fit.coordinates.clone());
+                    trace.samples.push(sample);
+                }
+                Err(e) => {
+                    trace.failure = Some(e);
+                    break;
+                }
+            }
+        }
+        Ok(trace)
     }
     pub fn evaluate(&self, config: &ContactPhaseConfig) -> Result<ContactPlanReport, String> {
         let mut report = self.evaluate_clock(

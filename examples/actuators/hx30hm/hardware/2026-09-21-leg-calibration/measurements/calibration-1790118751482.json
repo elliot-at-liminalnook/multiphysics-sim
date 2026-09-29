@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+  "units": "Continuous motor encoder counts in the powered tracking session; 4096 counts/revolution; not joint degrees",
+  "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+  "axes": {
+    "1": {
+      "role": "knee",
+      "lower": 3012,
+      "upper": 3286,
+      "reference": null,
+      "reverse": false,
+      "coordinate_session": null
+    },
+    "2": {
+      "role": "worm",
+      "lower": null,
+      "upper": 2699,
+      "reference": null,
+      "reverse": true,
+      "coordinate_session": null
+    },
+    "3": {
+      "role": "belt/hip",
+      "lower": 888,
+      "upper": 2116,
+      "reference": null,
+      "reverse": false,
+      "coordinate_session": null
+    }
+  }
+}

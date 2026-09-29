@@ -1,0 +1,90 @@
+kind: maneuver
+maneuver: forward-start-stop
+gait: 6216-Bayesian-009
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/maneuvers/forward-start-stop.yaml
+status: blocked
+summary: 'Blocked after moving 2.27 m, turned 0 deg over 14.0 s: at 4.31 s: -Y | Thigh sector gear / -Y | Worm and input spindle b4c1 overlap 0.330 mm, beyond the planner''s 0.100 mm and the gait''s own 0.314 mm.'
+reasons:
+- 'at 4.31 s: -Y | Thigh sector gear / -Y | Worm and input spindle b4c1 overlap 0.330 mm, beyond the planner''s 0.100 mm and the gait''s own 0.314 mm'
+joints:
+- joint: joint.-Y | Foot servo output
+  reference_peak_rad_s: 4.88064061427661
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 98.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Worm servo output
+  reference_peak_rad_s: 5.890666030969959
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 95.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Worm servo output
+  reference_peak_rad_s: 5.614657014645341
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 91.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Worm servo output
+  reference_peak_rad_s: 5.6157132179284694
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 91.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Worm servo output
+  reference_peak_rad_s: 5.4896916889582315
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 89.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Hip servo output
+  reference_peak_rad_s: 3.709265937158679
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 84.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Hip servo output
+  reference_peak_rad_s: 3.6602153086688904
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 83.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Hip servo output
+  reference_peak_rad_s: 3.3373532073959487
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 75.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Hip servo output
+  reference_peak_rad_s: 3.268883612232559
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 74.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Foot servo output
+  reference_peak_rad_s: 3.569836812555316
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 72.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Foot servo output
+  reference_peak_rad_s: 3.574336668583522
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 72.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Foot servo output
+  reference_peak_rad_s: 3.2210867462313053
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 65.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+checked_s: 14.0
+travel_m:
+- 1.604778839902882
+- 1.604778839902882
+turned_deg: 0.0
+maximum_marker_error_m: 7.686209823773326e-10
+maneuver_overlap_mm: 0.3300044756300758
+gait_overlap_mm: 0.314127000549961
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-steer/forward-start-stop-18c4e409

@@ -1,0 +1,15 @@
+part hard_stop_linear "Linear end stop"
+category Mechanical
+summary "A mechanical limit for a slide: free between two positions, a stiff bumper beyond them."
+explain "Inside [lower, upper] no force. Past a limit, F = k·δ + c·|δ|·v (Hunt–Crossley contact damping), so impacts rebound less as they penetrate further."
+tradeoffs "Catches carriages at the end of travel; a switch (part.limit_switch) just before it lets a controller stop gently instead."
+limits "Penalty contact; very stiff stops need small steps."
+pairs translational.mass part.timing_belt part.rack_pinion bridge.lead_screw part.solenoid part.voice_coil
+port axis translational
+param lower m ~ 0 "Lower limit"
+param upper m ~ 0.2 "Upper limit"
+param stiffness N/m = 100000 "Stop stiffness"
+param damping N·s/m^2 = 1000000 "Contact damping per metre of penetration"
+let over = max(axis.s - upper, 0) - max(lower - axis.s, 0)
+flow axis = stiffness*over + damping*abs(over)*axis.v
+energy 0.5*stiffness*over^2

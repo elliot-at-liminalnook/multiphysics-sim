@@ -1,0 +1,22 @@
+part pid_position "PID position controller (linear)"
+category Control
+summary "Turns a linear position error into a drive command (−1…1): proportional, integral and filtered derivative action."
+explain "e = target − measured; u = kp·e + ki·∫e dt + kd·ė (filtered), plus a constant feed-forward offset, clipped to ±limit. Same structure as the angle PID, for linear axes."
+tradeoffs "As for the angle PID: kp stiffness, kd damping (noise), ki steady-load error (overshoot, wind-up)."
+limits "Continuous-time, no anti-wind-up, ideal sensor inputs."
+pairs robot.h_bridge sensor.linear_encoder part.position_setpoint
+input target Length
+input measured Length
+output command Dimensionless
+param kp 1/m ~ 50 "Command per metre of error"
+param ki 1/m/s = 0 "Integral gain"
+param kd s/m = 2 "Derivative gain"
+param filter s = 0.005 "Derivative filter time constant"
+param limit 1 = 1 "Output limit (±)"
+param offset 1 = 0 "Feed-forward added to the command (e.g. the hover throttle)"
+state integral Dimensionless = 0
+state filtered Length = 0
+let e = target - measured
+eq der(integral) = ki*e
+eq filter*der(filtered) = e - filtered
+set command = max(-limit, min(limit, offset + kp*e + integral + kd*(e - filtered)/filter))

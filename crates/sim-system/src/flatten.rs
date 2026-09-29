@@ -251,6 +251,15 @@ pub fn default_appearance(component_type: &str) -> Appearance {
         "robot.motor_unit" => b(0.054, 0.0435, 0.020),
         "bridge.brushed_motor" | "bridge.motor" => SpatialShape::Cylinder { radius: 0.012, length: 0.041 },
         "rotational.inertia" => SpatialShape::Cylinder { radius: 0.015, length: 0.010 },
+        "part.stepper_motor" => b(0.0423, 0.064, 0.0423),
+        "part.bldc_motor" => SpatialShape::Cylinder { radius: 0.016, length: 0.034 },
+        "part.propeller" => b(0.254, 0.008, 0.018),
+        "part.drive_wheel" => SpatialShape::Cylinder { radius: 0.04, length: 0.024 },
+        "part.timing_belt" => SpatialShape::Cylinder { radius: 0.008, length: 0.016 },
+        "part.rack_pinion" => b(0.08, 0.01, 0.03),
+        "part.solenoid" => b(0.02, 0.038, 0.016),
+        "part.coreless_motor" | "part.brushed_motor_eq" => SpatialShape::Cylinder { radius: 0.012, length: 0.041 },
+        "robot.h_bridge" | "robot.switchable_h_bridge" | "actuator.pwm_driver" => b(0.04, 0.01, 0.03),
         _ => SpatialShape::Sphere { radius: 0.0025 },
     };
     Appearance { shape, color_srgb: color, model: None }

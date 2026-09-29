@@ -1,0 +1,431 @@
+{
+  "schema": "sim.system/1",
+  "title": "Friction and the dead band",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Friction and the dead band",
+      "description": "A slow sine command drives a small motor through an H-bridge against dry (Coulomb) friction. Small commands do nothing at all: the dead band.",
+      "instances": {
+        "driver": {
+          "display_id": "260c0acaa3aca88d43f9d936",
+          "label": "H-bridge driver",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A MOSFET H-bridge module."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.09,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.04,
+                0.01,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.45,
+              0.3
+            ],
+            "model": "driver_board"
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Motor mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.062,
+              0.022,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "friction": {
+          "display_id": "517ebe4f88fbaa745880700e",
+          "label": "Gearbox and seal friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "smoothing_speed": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Dry friction in a small gearbox and shaft seal, referred to the motor shaft: 15 mN·m, about a fifth of stall torque."
+              }
+            },
+            "torque": {
+              "value": 0.015,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Dry friction in a small gearbox and shaft seal, referred to the motor shaft: 15 mN·m, about a fifth of stall torque."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.015,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.099999994,
+              0.0,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "load": {
+          "display_id": "e4ddf49ff64d1bf72206a477",
+          "label": "Rotor and output wheel",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.00001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The rotor (3e-6) and a light wheel (2e-5 kg·m²), with a little oil drag (viscous friction)."
+              }
+            },
+            "inertia": {
+              "value": 0.000023,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The rotor (3e-6) and a light wheel (2e-5 kg·m²), with a little oil drag (viscous friction)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.025,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "DC motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "resistance": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "supply": {
+          "display_id": "5c375faedf24a2cc595952ea",
+          "label": "Supply",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A bench supply or a charged pack."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.099999994,
+              0.02,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        },
+        "wave": {
+          "display_id": "175ba445ab60739ee55a0664",
+          "label": "Slow command sweep",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.sine"
+          },
+          "parameters": {
+            "amplitude": {
+              "value": 0.6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "One slow sweep up and down: ±0.6 of full drive over 8 s, starting from zero (this sine block is a cosine, so its phase is −π/2)."
+              }
+            },
+            "frequency": {
+              "value": 0.125,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "One slow sweep up and down: ±0.6 of full drive over 8 s, starting from zero (this sine block is a cosine, so its phase is −π/2)."
+              }
+            },
+            "phase": {
+              "value": -1.5707963267948966,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "One slow sweep up and down: ±0.6 of full drive over 8 s, starting from zero (this sine block is a cosine, so its phase is −π/2)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.13,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "label": "command",
+          "terminals": [
+            {
+              "instance": "wave",
+              "port": "value"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "label": "motor +",
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "motor − (0 V: the averaged bridge output is referenced here)",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "driver",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "label": "motor shaft",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "load",
+              "port": "shaft"
+            },
+            {
+              "instance": "friction",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.001,
+    "rationale": "Dry friction is a steep (smoothed) switch at zero speed: backward Euler, 1 ms."
+  }
+}

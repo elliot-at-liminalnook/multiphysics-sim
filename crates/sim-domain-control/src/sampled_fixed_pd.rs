@@ -1,6 +1,12 @@
 //! Scheduled angular adapter for the exact integer law used in FPGA RTL.
 //! Commands are sampled, delayed by the declared duration (not rounded to a
 //! sample count), then held. All history is transactional behavior state.
+//!
+//! `multi_turn = 1` counts encoder turns (continuous rotation) and feeds the
+//! same law its differences (`fixed_pd::step_differences`); the error is
+//! clamped to ±4095 counts, where every allowed nonzero kp already saturates
+//! the output. The deployed RTL is single-turn: a multi-turn result describes
+//! the loop the FPGA would run once it tracks turns, and is labelled so.
 use crate::fixed_pd::{self, Gains};
 use sim_core::{
     Behavior, BehaviorDescriptor, BehaviorRegistry, Context, EquationError,
@@ -19,7 +25,8 @@ pub struct SampledFixedPd {
     quantum: f64,
     zero: f64,
     direction: f64,
-    initial_target: u16,
+    initial_target: i64,
+    multi_turn: bool,
     queue: usize,
 }
 
@@ -79,6 +86,7 @@ impl SampledFixedPd {
             direction,
             zero: param(p, "encoder_zero")?,
             initial_target: 0,
+            multi_turn: p.get("multi_turn").copied().unwrap_or(0.) != 0.,
             queue: (latency / period).ceil() as usize + 1,
         };
         result.initial_target = result
@@ -86,9 +94,10 @@ impl SampledFixedPd {
             .ok_or_else(|| invalid("initial target outside non-wrapping encoder range"))?;
         Ok(result)
     }
-    fn count(&self, angle: f64) -> Option<u16> {
+    fn count(&self, angle: f64) -> Option<i64> {
         let count = (angle * self.direction / self.quantum + self.zero).round();
-        (count.is_finite() && (0. ..=4095.).contains(&count)).then_some(count as u16)
+        let range = if self.multi_turn { count.abs() < (1u64 << 52) as f64 } else { (0. ..=4095.).contains(&count) };
+        (count.is_finite() && range).then_some(count as i64)
     }
     fn clock(&self) -> usize {
         5 + self.queue
@@ -120,10 +129,15 @@ impl SampledFixedPd {
             let previous = if sampled == 0. {
                 position
             } else {
-                view.state(1) as u16
+                view.state(1) as i64
             };
-            let delta = target as i16 - view.state(2) as i16;
-            let command = fixed_pd::step(self.gains, target, position, previous, delta).ok()?;
+            let delta = target - view.state(2) as i64;
+            let command = if self.multi_turn {
+                let error = (target - position).clamp(-4095, 4095) as i32;
+                fixed_pd::step_differences(self.gains, error, (position - previous) as i32, delta as i32).ok()?
+            } else {
+                fixed_pd::step(self.gains, target as u16, position as u16, previous as u16, delta as i16).ok()?
+            };
             states[5 + (sampled % self.queue as f64) as usize] =
                 command as f64 * self.direction / 1000.;
             states[1] = position as f64;
@@ -213,6 +227,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
             P::required("encoder_zero", "1").integer(0., 4095.),
             P::required("encoder_direction", "1"),
             P::required("initial_target", "rad"),
+            P::optional("multi_turn", "1", 0.).integer(0., 1.),
         ]),
     )
 }
@@ -310,6 +325,45 @@ mod tests {
                 }
             }
         }
+    }
+    #[test]
+    fn multi_turn_keeps_the_single_turn_law_and_follows_past_one_turn() {
+        let params = |multi: f64| {
+            SampledFixedPd::from_parameters(&BTreeMap::from([
+                ("kp_q8".into(), 256.),
+                ("kd_q8".into(), 512.),
+                ("kv_q8".into(), 256.),
+                ("limit".into(), 350.),
+                ("period".into(), 0.01),
+                ("latency".into(), 0.),
+                ("offset".into(), 0.),
+                ("encoder_quantum".into(), 0.001),
+                ("encoder_zero".into(), 2048.),
+                ("encoder_direction".into(), 1.),
+                ("initial_target".into(), 0.),
+                ("multi_turn".into(), multi),
+            ]))
+            .unwrap()
+        };
+        // Inside one turn both modes give identical integer commands.
+        let (mut single, mut multi) = (params(0.), params(1.));
+        let mut a: Vec<_> = single.states().iter().map(|s| s.initial).collect();
+        let mut b: Vec<_> = multi.states().iter().map(|s| s.initial).collect();
+        for k in 0..30 {
+            let t = k as f64 * 0.01;
+            let (target, position) = (0.02 * k as f64, 0.018 * k as f64 - 0.01);
+            tick(&mut single, &mut a, t, target, position);
+            tick(&mut multi, &mut b, t, target, position);
+            assert_eq!(a[0], b[0]);
+        }
+        // Past the 12-bit range only the multi-turn controller keeps running.
+        for k in 30..400 {
+            let (target, position) = (0.02 * k as f64, 0.02 * k as f64 - 0.005);
+            tick(&mut multi, &mut b, k as f64 * 0.01, target, position);
+            // Still driving forward at 8 rad (over 1.2 turns of counts).
+            assert!(k < 32 || b[0] > 0.);
+        }
+        assert!(single.count(3.0).is_none() && multi.count(3.0).is_some());
     }
     #[test]
     fn restored_state_replays_and_encoder_overflow_is_rejected() {

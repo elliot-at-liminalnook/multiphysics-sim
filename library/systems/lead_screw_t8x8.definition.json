@@ -1,0 +1,96 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "lead_screw_t8x8",
+  "definitions": {
+    "lead_screw_t8x8": {
+      "label": "Lead screw T8×8",
+      "description": "The 3D-printer Z screw: 8 mm, 8 mm lead (4 starts). Fast per turn, ≈ 60 % efficient, and it back-drives.",
+      "interface": "screw",
+      "ports": {
+        "nut": {
+          "label": "Nut"
+        },
+        "screw": {
+          "label": "Screw shaft"
+        }
+      },
+      "instances": {
+        "screw": {
+          "label": "Lead screw T8×8",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.lead_screw"
+          },
+          "parameters": {
+            "friction": {
+              "value": 0.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Lead screw T8×8; catalogue-style values."
+              }
+            },
+            "lead": {
+              "value": 0.008,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Lead screw T8×8; catalogue-style values."
+              }
+            },
+            "pitch_diameter": {
+              "value": 0.0072,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Lead screw T8×8; catalogue-style values."
+              }
+            },
+            "pressure_angle": {
+              "value": 0.26,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Lead screw T8×8; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "boundary": "screw"
+            },
+            {
+              "instance": "screw",
+              "port": "screw"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "nut"
+            },
+            {
+              "instance": "screw",
+              "port": "nut"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

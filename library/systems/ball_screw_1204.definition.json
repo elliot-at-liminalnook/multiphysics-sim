@@ -1,0 +1,96 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "ball_screw_1204",
+  "definitions": {
+    "ball_screw_1204": {
+      "label": "Ball screw 1204",
+      "description": "12 mm ball screw, 4 mm lead: ≈ 90 % efficient, precise, back-drives (needs a brake on vertical axes).",
+      "interface": "screw",
+      "ports": {
+        "nut": {
+          "label": "Nut"
+        },
+        "screw": {
+          "label": "Screw shaft"
+        }
+      },
+      "instances": {
+        "screw": {
+          "label": "Ball screw 1204",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.lead_screw"
+          },
+          "parameters": {
+            "friction": {
+              "value": 0.005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Ball screw 1204; catalogue-style values."
+              }
+            },
+            "lead": {
+              "value": 0.004,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Ball screw 1204; catalogue-style values."
+              }
+            },
+            "pitch_diameter": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Ball screw 1204; catalogue-style values."
+              }
+            },
+            "pressure_angle": {
+              "value": 0.785,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative Ball screw 1204; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "boundary": "screw"
+            },
+            {
+              "instance": "screw",
+              "port": "screw"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "nut"
+            },
+            {
+              "instance": "screw",
+              "port": "nut"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

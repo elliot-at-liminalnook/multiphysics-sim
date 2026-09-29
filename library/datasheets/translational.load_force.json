@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "translational.load_force",
+  "label": "Load force",
+  "kind": "generic",
+  "parameters": {
+    "force": -10.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 123.99999999998393,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "total energy rose by 1.240e2 J from 2.000e-3 J at every step (1 → 0.125 ms: 1.24e2, 1.24e2, 1.24e2, 1.24e2) (a source: allowed)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 2.3e-14, 3.4e-14, 8.4e-14 (1 → 0.125 ms); observed order -1.3"
+    }
+  ]
+}

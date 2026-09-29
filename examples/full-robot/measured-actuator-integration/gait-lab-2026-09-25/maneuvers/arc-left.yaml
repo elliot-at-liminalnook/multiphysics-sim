@@ -1,0 +1,9 @@
+version: 1
+name: arc-left
+notes: Walk forward at 0.2 m/s while turning left at 10 deg/s (about a 1.15 m radius).
+limits: {forward_m_s: 0.3, lateral_m_s: 0.25, yaw_deg_s: 25, forward_m_s2: 0.15, lateral_m_s2: 0.15, yaw_deg_s2: 20}
+commands:
+  - {at_s: 0}
+  - {at_s: 1.5, forward_m_s: 0.2, yaw_deg_s: 10}
+  - {at_s: 14}
+duration_s: 18

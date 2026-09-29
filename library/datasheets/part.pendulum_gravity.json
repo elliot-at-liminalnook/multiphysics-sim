@@ -1,0 +1,33 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.pendulum_gravity",
+  "label": "Gravity on a pendulum link",
+  "kind": "generic",
+  "parameters": {
+    "arm": 0.1,
+    "g": 9.80665,
+    "mass": 0.5
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -1.6275696415601892e-9,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.000e-2 J → change -1.628e-9 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 4.6e-3, 1.2e-3, 2.9e-4 (1 → 0.125 ms); observed order 2.0"
+    }
+  ],
+  "source_hash": "807e9aee572b5c217d981ef7d9489966bd7fe45c1f0f6c19539cf7b7a6957a05"
+}

@@ -29,10 +29,15 @@ flat list with `index = (ix * ny + iy) * nz + iz`; quaternions are `[w, x, y, z]
 ```
 {
   "version": 4,
-  "source": {"file": "leg.rcad", "exported": "2026-09-03T12:00:00"},
+  "source": {"file": "leg.rcad", "exported": "2026-09-03T12:00:00",
+             "physical_hash": CAD snapshot identity; results carry it back so CAD can flag stale results},
   "gravity": [0, 0, -9.81],
   "world": {"floor_z": 0.0, "floor_friction": 0.8, "floor_stiffness": 2e5, "floor_damping": 2e3,
-            "terrain": null | {"origin": [x, y], "cell": m, "dims": [nx, ny], "heights": [flat]}},
+            "ambient_c": 20.0,                       // environment temperature for the thermal network
+            "floor_friction_static": 0.7,            // recorded only (mean static μ); not read by the runtime
+            // Floor contact uses each link material's materials[m].friction["world"] pair, written
+            // against the document's floor material; floor_friction is their mean over links (planners).
+            "terrain": null | {"origin": [x, y], "cell": m, "dims": [nx, ny], "heights": [flat]}},  // heights[ix*ny + iy]
   "materials": {id: Material},
   "links": [Link], "joints": [Joint], "motors": [Motor],
   "battery": Battery | null, "sensors": [Sensor], "cables": [Cable],
@@ -88,7 +93,7 @@ replay uses scaled boundary arrows alongside rigid CAD meshes.
 ```
 {"name", "id", "type": "revolute"|"continuous"|"prismatic"|"fixed"|"ball"|"loop_revolute"|"loop_spherical",
  "parent": link name | null (world), "child": link name,
- "origin": [3] (world), "axis": [3] unit, "limits": [lo, hi] | null, "home": rad,
+ "origin": [3] (world), "axis": [3] unit, "limits": [lo, hi] | null, "home": rad (m for prismatic),
  "physics": {
     "source": "inferred"|"declared", "pin_radius", "hole_radius", "contact_length",
     "flex_patch_radius": m, "flex_patch_source": "inferred"|"declared",
@@ -99,9 +104,11 @@ replay uses scaled boundary arrows alongside rigid CAD meshes.
                        "reference": nonempty string, "uncertainty_rad": optional nonnegative rad},
     "wobble": rad (angular play from clearance/contact_length),
     "friction": {"coulomb": N·m, "viscous": N·m·s/rad, "stribeck": N·m, "stribeck_speed": rad/s, "static_ratio": 1.2},
+    // At rest the runtime applies coulomb·static_ratio + stribeck. The CAD export states the
+    // static excess once, as stribeck = (mu_s − mu_k)·N·r, and writes static_ratio = 1.
     "stiffness": {"radial": N/m, "axial": N/m, "bending": N·m/rad}, "damping_ratio": 0.05,
     "bearing": {"kind": "printed_pin"|"ball_bearing"|"servo_horn"|"bolt", "allowable_pressure": Pa}},
- "fastened": null | {"screw": "M3", "count": n, "preload": N, "stiffness": N/m, "shear_capacity": N, "pattern_radius": m},
+ "fastened": null | {"screw": "M3", "count": n, "preload": N, "stiffness": N/m, "shear_capacity": N, "pattern_radius": m},  // stiffness and shear capacity are for the whole pattern; preload is per screw
  "motor": motor name | null}
 ```
 Tree joints (`revolute|continuous|prismatic|fixed|ball`) must form a forest;
@@ -140,7 +147,8 @@ explains why the old inference needs re-evaluation before controller training.
  "electrical": {"resistance", "inductance", "torque_constant", "back_emf_constant", "no_load_current",
                 "rotor_inertia" (rotor side), "supply_voltage", "current_limit", "poles": 0 | n},
  "gearbox": {"ratio", "efficiency", "backlash_rad" (output side), "inertia" (output side), "stiffness": N·m/rad (gear train), "max_output_torque", "max_output_speed"},
- "thermal": {"winding_heat_capacity", "case_heat_capacity", "r_winding_case", "r_case_mount", "r_case_ambient", "resistance_temp_coeff": 0.0039, "torque_derating_per_c": 0.001, "max_winding_c"},
+ "thermal": {"winding_heat_capacity", "case_heat_capacity", "r_winding_case", "r_case_mount", "r_case_ambient", "resistance_temp_coeff": 0.0039, "torque_derating_per_c": 0.001, "max_winding_c",
+             "ambient_c": datasheet rating ambient, informational — the simulation uses world.ambient_c},
  "firmware": {"kind": "servo"|"position"|"velocity"|"torque"|"stepper"|"none", "loop_rate_hz", "latency_s", "deadband_rad", "sensor_resolution_rad", "kp", "ki", "kd", "output": "voltage"|"current"},
  "driver": {"kind": "h_bridge"|"servo_internal"|"stepper"|"esc", "pwm_hz", "on_resistance", "current_limit"}}
 ```
@@ -223,9 +231,9 @@ for a complete declaration. It is intentionally not an accepted calibration.
 Battery: {"cells", "nominal_voltage", "internal_resistance", "capacity_ah", "initial_soc": 1.0, "cutoff_voltage"}
 Sensor:  {"name", "id", "kind": "imu"|"encoder"|"current"|"force", "link", "point": [3] link frame, "axes": [[3x3]] rows = sensor x,y,z in link frame,
           "rate_hz", "noise": {"accel": σ m/s², "gyro": σ rad/s, "angle": σ}, "bias": {"accel": [3], "gyro": [3]}, "bias_walk": σ/√s,
-          "quantization": {"angle": rad, "accel": m/s²}, "joint": name (encoder/current), "range": {"accel": g, "gyro": rad/s}}
+          "quantization": {"angle": rad, "accel": m/s², "gyro": rad/s}, "joint": name (encoder/current), "range": {"accel": g, "gyro": rad/s}}
 Cable:   {"name", "id", "from": {"link", "point"}, "to": {"link", "point"}, "length", "mass", "stiffness": N (EA), "damping", "segments": 4}
-Control: {"period_s", "latency_s", "targets": {joint: rad}, "mode": "hold"|"trajectory", "trajectory": [{"t", "targets": {...}}]}
+Control: {"period_s", "latency_s", "targets": {joint: rad}, "mode": "hold"|"trajectory", "trajectory": [{"t", "targets": {...}}]}  // a point omitting a joint holds its target
 Uncertainty: {"dimension_m": {"sigma"}, "mass": {"sigma_fraction"}, "friction": {"sigma_fraction"}, "stiffness": {"sigma_fraction"},
               "backlash": {"sigma_fraction"}, "motor_torque": {"sigma_fraction"}, "com_m": {"sigma"}, "seed": 0}
 ```
@@ -234,7 +242,8 @@ Uncertainty: {"dimension_m": {"sigma"}, "mass": {"sigma_fraction"}, "friction": 
 
 `<name>.simresult.json` written beside the model after every run:
 ```
-{"version": 1, "model": path, "duration_s", "steps", "wall_s", "warnings": [str],
+{"version": 1, "model": path, "provenance": {"physical_hash", "cad_source"} | null,  // copied from the model's source
+ "duration_s", "steps", "wall_s", "warnings": [str],
  "links": {name: {"peak_stress_pa", "yield_margin" (yield/peak - 1), "hotspot": {"cells": [[xyz] link frame], "stress_pa": []},
                   "max_deflection_m", "peak_temperature_c", "tg_margin_c"}},
  "joints": {name: {"peak_reaction_force_n", "peak_reaction_torque_nm", "bearing_pressure_pa", "bearing_margin",

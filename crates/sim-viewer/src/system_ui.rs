@@ -17,6 +17,11 @@ pub(super) struct SystemBuilder {
     checked: std::time::Instant,
     pub(super) level: String,
     pub(super) selected: BTreeSet<String>,
+    comment_body: String,
+    comment_author: String,
+    comment_thread: Option<String>,
+    comment_edit: Option<String>,
+    comment_original: Option<String>,
     filter: String,
     status: String,
     library_dir: PathBuf,
@@ -31,15 +36,35 @@ pub(super) struct SystemBuilder {
     live_path: Option<PathBuf>,
     textures: std::collections::BTreeMap<String, egui::TextureHandle>,
     needs_view: bool,
+    /// Background compile of `document` at the given revision. At most one
+    /// runs at a time, so two jobs never write the build bundle concurrently.
+    compiling: Option<(u64, std::sync::mpsc::Receiver<Result<CompileOutput, String>>)>,
     /// Computed once; the registry does not change while running.
     elements: Vec<library::ElementEntry>,
     /// Refreshed on reload, not every frame.
     library_entries: Vec<library::LibraryEntry>,
 }
 
+pub(super) struct CompileOutput {
+    description: SystemDescription,
+    findings: Vec<sim_system::Finding>,
+    compile_error: Option<String>,
+    live_path: PathBuf,
+}
+
+/// Flatten, construct the runtime once to report compile errors, and write
+/// the live bundle. Pure with respect to the builder, so it can run on a thread.
+fn compile_output(document: &SystemDocument, registry: &sim_core::BehaviorRegistry, build_dir: &std::path::Path) -> Result<CompileOutput, String> {
+    let config = system_builder::config_for(document);
+    let compiled = system_builder::compile(document, registry, config.clone())?;
+    let compile_error = sim_compile::Runtime::new(compiled.flat.model.clone(), registry, config.integrator).err().map(|e| system_builder::locate(&compiled.flat, e.to_string()));
+    let bundle = system_builder::write_bundle(&compiled, build_dir, "system")?;
+    Ok(CompileOutput { findings: compiled.flat.findings.clone(), compile_error, live_path: bundle.live, description: compiled.description })
+}
+
 impl SystemBuilder {
     pub(super) fn open(path: PathBuf, library_dir: PathBuf) -> Result<Self, String> {
-        let registry = sim_runtime::registry();
+        let registry = sim_runtime::system_registry();
         let store = SystemStore::new(path.clone());
         let document = store.load_valid(&registry).map_err(|e| e.to_string())?;
         let name = path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
@@ -52,6 +77,7 @@ impl SystemBuilder {
             checked: std::time::Instant::now(),
             level: String::new(),
             selected: BTreeSet::new(),
+            comment_body:String::new(),comment_author:"User".into(),comment_thread:None,comment_edit:None,comment_original:None,
             filter: String::new(),
             status: "Build mode. Place parts from the palette; edits are shared with every open editor.".into(),
             library_dir,
@@ -66,6 +92,7 @@ impl SystemBuilder {
             live_path: None,
             textures: Default::default(),
             needs_view: true,
+            compiling: None,
             elements: Vec::new(),
             library_entries: Vec::new(),
         })
@@ -76,15 +103,28 @@ impl SystemBuilder {
         })
     }
 
-    /// Compile the current document into a description and runnable capture.
+    /// Compile the current document into a description and runnable capture
+    /// (blocking; used once at startup before the window opens).
     pub(super) fn compile(&mut self) -> Result<SystemDescription, String> {
-        let config = system_builder::config_for(&self.document);
-        let compiled = system_builder::compile(&self.document, &self.registry, config.clone())?;
-        self.findings = compiled.flat.findings.clone();
-        self.compile_error = sim_compile::Runtime::new(compiled.flat.model.clone(), &self.registry, config.integrator).err().map(|e| system_builder::locate(&compiled.flat, e.to_string()));
-        let bundle = system_builder::write_bundle(&compiled, &self.build_dir, "system")?;
-        self.live_path = Some(bundle.live);
-        Ok(compiled.description)
+        let output = compile_output(&self.document, &self.registry, &self.build_dir)?;
+        Ok(self.accept(output))
+    }
+
+    fn accept(&mut self, output: CompileOutput) -> SystemDescription {
+        self.findings = output.findings;
+        self.compile_error = output.compile_error;
+        self.live_path = Some(output.live_path);
+        output.description
+    }
+
+    /// Start compiling the current revision off the UI thread.
+    fn start_compile(&mut self) {
+        let (document, registry, build_dir) = (self.document.clone(), self.registry.clone(), self.build_dir.clone());
+        let (send, receive) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = send.send(compile_output(&document, &registry, &build_dir));
+        });
+        self.compiling = Some((self.document.revision, receive));
     }
 
     fn definition_id(&self) -> Option<String> {
@@ -152,9 +192,10 @@ impl SystemBuilder {
 
     pub(super) fn state_json(&self) -> serde_json::Value {
         serde_json::json!({
+            "display_semantics":sim_system::display::SEMANTICS,"overlap_policy":sim_system::display_overlap::POLICY, "grid":self.definition().map(|d|d.grid), "discussions":self.document.discussions,
             "path": self.store.path, "title": self.document.title, "revision": self.document.revision,
             "level": self.level, "definition": self.definition_id(), "selected": self.selected,
-            "status": self.status, "findings": self.findings, "compile_error": self.compile_error,
+            "status": self.status, "findings": self.findings, "compile_error": self.compile_error, "compiling": self.compiling.is_some() || self.needs_view,
             "history": self.store.history(),
         })
     }
@@ -171,20 +212,37 @@ impl Viewer {
                 b.status = "Reloaded: the system file changed in another editor.".into();
             }
         }
-        if b.needs_view {
+        // Compile off the UI thread; a new edit waits for the job in flight,
+        // whose result is then discarded as stale.
+        if b.needs_view && b.compiling.is_none() {
             b.needs_view = false;
-            let compiled = b.compile();
-            match compiled {
-                Ok(description) => self.system_replace(description),
-                Err(e) => {
-                    if let Some(b) = self.system.as_mut() {
-                        b.status = format!("Does not compile yet: {e}");
+            b.start_compile();
+        }
+        let finished = match &b.compiling {
+            Some((revision, receive)) => match receive.try_recv() {
+                Ok(result) => Some((*revision, result)),
+                Err(std::sync::mpsc::TryRecvError::Empty) => None,
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => Some((*revision, Err("the compile job stopped unexpectedly".into()))),
+            },
+            None => None,
+        };
+        let compiling = b.compiling.is_some();
+        if let Some((revision, result)) = finished {
+            b.compiling = None;
+            if revision != b.document.revision {
+                b.needs_view = true;
+            } else {
+                match result {
+                    Ok(output) => {
+                        let description = b.accept(output);
+                        self.system_replace(description);
                     }
+                    Err(e) => b.status = format!("Does not compile yet: {e}"),
                 }
             }
         }
         self.system_backdrops(ctx);
-        ctx.request_repaint_after(std::time::Duration::from_millis(400));
+        ctx.request_repaint_after(std::time::Duration::from_millis(if compiling { 30 } else { 400 }));
     }
 
     fn system_replace(&mut self, description: SystemDescription) {
@@ -265,10 +323,13 @@ impl Viewer {
         #[derive(serde::Deserialize)]
         #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
         enum Request {
+            SystemGrid { #[serde(default)] grid:Option<sim_system::display::Grid>, #[serde(default)]expected_revision:Option<u64> },
+            SystemMove { names:Vec<String>,position_m:[f32;3],#[serde(default)]snap:bool,#[serde(default)]preview:bool,#[serde(default)]expected_revision:Option<u64> },
             System {
                 #[serde(default)]
                 label: Option<String>,
                 commands: Vec<SystemCommand>,
+                #[serde(default)] expected_revision:Option<u64>,
             },
             SystemState,
             SystemLevel {
@@ -282,9 +343,22 @@ impl Viewer {
         }
         let b = self.system.as_mut().ok_or("start the schematic with --system FILE to edit systems")?;
         let result = match sim_api::decode::<Request>(command)? {
-            Request::System { label, commands } => {
+            Request::System { label, commands, expected_revision } => {
+                if expected_revision.is_some_and(|r|r!=b.document.revision){return Err("stale system edit".into());}
                 let label = label.unwrap_or_else(|| format!("{} command(s) via REST", commands.len()));
                 b.apply(&label, commands).map(|a| serde_json::json!(a))
+            }
+            Request::SystemGrid{grid,expected_revision}=>{
+                if expected_revision.is_some_and(|r|r!=b.document.revision){return Err("stale display grid".into());}
+                if let Some(grid)=grid{b.apply("Display grid",vec![SystemCommand::SetDisplayGrid{at:b.level.clone(),grid}])?;}
+                Ok(serde_json::json!({"grid":b.definition().map(|d|d.grid),"semantics":sim_system::display::SEMANTICS,"unit":"m","frame":"enclosing_definition"}))
+            }
+            Request::SystemMove{names,position_m,snap,preview,expected_revision}=>{
+                if expected_revision.is_some_and(|r|r!=b.document.revision){return Err("stale display placement".into());}
+                let commands=sim_system::display::moves(&b.document,&b.registry,&b.level,&names,position_m,snap).map_err(|e|e.to_string())?;
+                let overlap=sim_system::display_overlap::preview(&b.document,&b.registry,&commands).map_err(|e|e.to_string())?;
+                if !preview{overlap.require_allowed().map_err(|e|e.to_string())?;b.apply("Move display parts",commands.clone())?;}
+                Ok(serde_json::json!({"commands":commands,"overlap":overlap,"preview":preview,"frame":"enclosing_definition","unit":"m","level":b.level,"semantics":sim_system::display::SEMANTICS,"revision":b.document.revision}))
             }
             Request::SystemState => Ok(b.state_json()),
             Request::SystemLevel { path } => b.set_level(&path).map(|_| b.state_json()),
@@ -331,6 +405,7 @@ impl Viewer {
                 });
                 ui.small(b.store.path.display().to_string());
                 ui.label(&b.status);
+                self.builder_discussions(ui,&mut b);
                 if let Some(e) = &b.compile_error {
                     ui.colored_label(egui::Color32::from_rgb(180, 80, 20), format!("Compile: {e}"));
                 }
@@ -601,7 +676,10 @@ impl Viewer {
                 }
                 egui::ScrollArea::vertical().id_salt("palette").max_height(260.).show(ui, |ui| {
                     for (label, detail, kind, library_path) in items.into_iter().filter(|(l, d, _, _)| needle.is_empty() || l.to_lowercase().contains(&needle) || d.to_lowercase().contains(&needle)).take(120) {
-                        if ui.button(format!("+ {label}")).on_hover_text(&detail).clicked() {
+                        let explicit=match &kind {InstanceKind::Element{component_type}=>b.elements.iter().find(|e|&e.component_type==component_type).map(|e|e.icon.as_str()).unwrap_or(""),InstanceKind::Subsystem{definition}=>b.document.definitions.get(definition).map(|d|d.icon.as_str()).unwrap_or("")};
+                        let icon=sim_core::icons::resolve(explicit,&detail);
+                        let response=ui.horizontal(|ui|{let(rect,_)=ui.allocate_exact_size(egui::vec2(24.,24.),egui::Sense::hover());for line in sim_core::icons::strokes(icon){ui.painter().add(egui::Shape::line(line.into_iter().map(|p|rect.min+egui::vec2(p[0],p[1])).collect(),egui::Stroke::new(1.5,ui.visuals().text_color())));}ui.button(format!("+ {label}"))}).inner;
+                        if response.on_hover_text(&detail).clicked() {
                             let mut commands = Vec::new();
                             if let Some(path) = &library_path {
                                 match library::import(std::path::Path::new(path)) {
@@ -692,5 +770,53 @@ impl Viewer {
                 }
             }
         }
+    }
+}
+
+impl Viewer {
+    fn builder_discussions(&mut self,ui:&mut egui::Ui,b:&mut SystemBuilder){
+        use sim_system::display::{Thread,Comment};
+        ui.collapsing("Part and group discussions",|ui|{
+            let threads:Vec<_>=b.document.discussions.threads.values().cloned().collect();
+            for t in threads {
+                if ui.selectable_label(b.comment_thread.as_ref()==Some(&t.id),format!("{} {}",if t.resolved{"✓"}else{"•"},t.title)).clicked() && b.comment_body.is_empty(){b.comment_thread=Some(t.id.clone());}
+                if b.comment_thread.as_ref()!=Some(&t.id){continue}
+                for target in t.targets.iter().chain(t.comments.iter().flat_map(|c|&c.links)){
+                    let response=ui.link(if target.missing{format!("Missing: {}",target.path)}else{format!("↗ {}",target.path)});
+                    let ids=self.description.components.keys().filter(|id|*id==&target.path||id.starts_with(&format!("{}/",target.path))).cloned().collect::<BTreeSet<_>>();
+                    if response.hovered(){self.diagram.annotation_hover=ids.clone();}
+                    if response.clicked()&&!ids.is_empty(){let _=self.api_select(sim_inspect::selection::SelectionTarget::Components{ids});}
+                }
+                for c in &t.comments{
+                    ui.weak(format!("{} · {}",c.author,sim_system::display::relative_time(&c.created_at)));ui.label(sim_system::display::plain_comment(&c.body));
+                    if ui.small_button("Edit reply").clicked()&&b.comment_body.is_empty(){b.comment_body=c.body.clone();b.comment_original=Some(c.body.clone());b.comment_edit=Some(c.id.clone());}
+                }
+                if ui.button(if t.resolved{"Reopen"}else{"Resolve"}).clicked(){let mut t=t.clone();t.resolved=!t.resolved;let _=b.apply("Resolve thread",vec![SystemCommand::PutThread{thread:t}]);}
+            }
+            if ui.button("New thread on selection").clicked()&&b.comment_body.is_empty(){b.comment_thread=None;b.comment_edit=None;}
+            ui.horizontal(|ui|{ui.label("Author");ui.text_edit_singleline(&mut b.comment_author);});
+            ui.text_edit_multiline(&mut b.comment_body);
+            ui.horizontal(|ui|{
+                if ui.button("Save comment").clicked()&&!b.comment_body.trim().is_empty(){
+                    let stamp=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
+                    let id=format!("comment-{}",stamp.as_nanos());
+                    let comment=Comment{id,author:b.comment_author.clone(),body:b.comment_body.clone(),created_at:stamp.as_secs().to_string(),edited_at:None,links:vec![]};
+                    let command=if let Some(id)=&b.comment_thread {
+                        if let Some(edit)=&b.comment_edit{
+                            let Some(mut t)=b.document.discussions.threads.get(id).cloned() else {b.status="Thread deleted by another editor; draft kept.".into();return};
+                            let Some(c)=t.comments.iter_mut().find(|c|&c.id==edit) else {b.status="Comment deleted by another editor; draft kept.".into();return};
+                            if b.comment_original.as_deref()!=Some(c.body.as_str()){b.status="Comment changed by another editor; draft kept. Cancel and reopen to reconcile.".into();return}
+                            c.body=comment.body;c.edited_at=Some(comment.created_at);SystemCommand::PutThread{thread:t}
+                        }
+                        else{SystemCommand::AddComment{thread:id.clone(),comment}}
+                    }else{
+                        let targets=b.selected.iter().filter_map(|n|sim_system::display::bind(&b.document,&sim_system::join_path(&b.level,n)).ok()).collect();
+                        SystemCommand::PutThread{thread:Thread{id:format!("thread-{}",stamp.as_nanos()),title:b.comment_body.lines().next().unwrap_or("Discussion").chars().take(80).collect(),targets,comments:vec![comment],resolved:false,pin_m:Some([0.;3]),view:None}}
+                    };
+                    match b.apply("Save comment",vec![command]){Ok(_)=>{b.comment_body.clear();b.comment_edit=None},Err(e)=>b.status=e}
+                }
+                if ui.button("Cancel draft").clicked(){b.comment_body.clear();b.comment_edit=None;}
+            });
+        });
     }
 }

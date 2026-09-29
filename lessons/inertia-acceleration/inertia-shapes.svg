@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="IBM Plex Sans">
+  <!-- Three bodies of the same mass m and the same outer size r (or length L), turning about the marked axis. -->
+  <rect x="1" y="1" width="758" height="358" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">Same mass, different places: the inertia each one has about its axis</text>
+  <!-- ring -->
+  <circle cx="130" cy="160" r="70" fill="none" stroke="#de9454" stroke-width="12"/>
+  <circle cx="130" cy="160" r="5" fill="#e6ebf1"/>
+  <line x1="130" y1="160" x2="200" y2="160" stroke="#99a6b5" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="165" y="152" font-size="13" fill="#99a6b5" text-anchor="middle">r</text>
+  <text x="130" y="268" font-size="15" fill="#de9454" text-anchor="middle">ring (all mass at r)</text>
+  <text x="130" y="296" font-size="17" fill="#e6ebf1" text-anchor="middle">J = m·r²</text>
+  <!-- disc -->
+  <circle cx="380" cy="160" r="70" fill="#4dd4bf" fill-opacity="0.28" stroke="#4dd4bf" stroke-width="3"/>
+  <circle cx="380" cy="160" r="5" fill="#e6ebf1"/>
+  <line x1="380" y1="160" x2="450" y2="160" stroke="#99a6b5" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="415" y="152" font-size="13" fill="#99a6b5" text-anchor="middle">r</text>
+  <text x="380" y="268" font-size="15" fill="#4dd4bf" text-anchor="middle">disc (spread from 0 to r)</text>
+  <text x="380" y="296" font-size="17" fill="#e6ebf1" text-anchor="middle">J = ½·m·r²</text>
+  <!-- rod about its end -->
+  <rect x="560" y="95" width="150" height="16" rx="4" fill="#8fb3e8" fill-opacity="0.35" stroke="#8fb3e8" stroke-width="2.5" transform="rotate(35 560 103)"/>
+  <circle cx="560" cy="103" r="7" fill="#e6ebf1"/>
+  <text x="600" y="190" font-size="13" fill="#99a6b5">L</text>
+  <text x="630" y="268" font-size="15" fill="#8fb3e8" text-anchor="middle">rod (a leg) about its end</text>
+  <text x="630" y="296" font-size="17" fill="#e6ebf1" text-anchor="middle">J = m·L²/3</text>
+  <text x="24" y="338" font-size="12.5" fill="#99a6b5">Each bit of mass counts by the square of its distance from the axis. Mass at twice the distance costs four times as much.</text>
+</svg>

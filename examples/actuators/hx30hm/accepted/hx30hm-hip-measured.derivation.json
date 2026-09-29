@@ -1,0 +1,60 @@
+{
+  "axis": 3,
+  "base_family_hash": "1bd830483b89f8d6ebbbd23f436e4d9fd1e37c3374839181d15215aa490d4f3b",
+  "campaign_report": {
+    "path": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/campaigns/campaign-1790182543587/report.json",
+    "sha256": "9365b43b0ed60bc208cd8566e7744916fcafc3a6b64739048b17df5a0f266c63"
+  },
+  "equations": {
+    "back_emf": "Ke = Kt = V/(slope·N), slope in output rad/s per duty",
+    "friction_duty": "half-sum of both directions' zero-speed intercepts",
+    "full_drive_speed": "slope·(1 − d_f)",
+    "gear_friction": "N·η·Kt·(V·d_f/R − I0)",
+    "gravity_duty": "half-difference of the intercepts (increasing minus decreasing)"
+  },
+  "family_hash": "535287eeb2443196cd6662ecf5b3ea060bfa3bdea903ff519d9f8403608d1e41",
+  "inputs": {
+    "estimated_efficiency": 0.5037278591966505,
+    "estimated_ratio": 200.0,
+    "estimated_resistance_ohm": 3.6999999999999997,
+    "estimated_rotor_loss_a": 0.1,
+    "stage_D_lines": [
+      {
+        "decreasing": {
+          "slope_counts_s_per_duty": 2871.4746180343745,
+          "zero_speed_duty": -0.0014022458292814455
+        },
+        "increasing": {
+          "slope_counts_s_per_duty": 3124.2631921271573,
+          "zero_speed_duty": 0.06564433048976481
+        }
+      },
+      {
+        "decreasing": {
+          "slope_counts_s_per_duty": 2994.361125985916,
+          "zero_speed_duty": 0.007417532134910643
+        },
+        "increasing": {
+          "slope_counts_s_per_duty": 2930.3697117672705,
+          "zero_speed_duty": 0.05602191765959055
+        }
+      }
+    ],
+    "supply_v_median_while_driven": 12.5
+  },
+  "results": {
+    "base_ke": 0.009734075474443412,
+    "friction_duty_at_speed": 0.03192038361374614,
+    "friction_uncertainty": 0.005,
+    "full_drive_speed_rad_s": 4.425520274745219,
+    "gear_friction_nm": 0.01079744010324426,
+    "gear_friction_uncertainty": 0.02327292092824786,
+    "gravity_duty_mid_range": 0.028912740460931542,
+    "ke": 0.013671833427002926,
+    "ke_times_ratio": 2.7343666854005853,
+    "ke_uncertainty": 0.0006922863504444185,
+    "slope_counts_s_per_duty": 2980.1171619786796,
+    "slope_uncertainty": 149.005858098934
+  },
+  "version": 1
+}

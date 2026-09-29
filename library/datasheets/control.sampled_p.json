@@ -1,0 +1,21 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "control.sampled_p",
+  "label": "Sampled proportional controller",
+  "kind": "generic",
+  "parameters": {
+    "gain": 1.0,
+    "period": 0.01,
+    "setpoint": 0.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) measured: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

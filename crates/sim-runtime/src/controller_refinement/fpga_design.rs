@@ -50,10 +50,7 @@ impl Profile {
         {
             return Err("Profile needs finite bounded amplitude, resolvable frequencies and a ramp no longer than half the trajectory".into());
         }
-        let smooth = |x: f64| {
-            let x = x.clamp(0., 1.);
-            x * x * x * (10. + x * (-15. + 6. * x))
-        };
+        let smooth = |x: f64| sim_domain_control::smooth_return::rest_to_rest(x.clamp(0., 1.))[0];
         let mut plan = template.clone();
         for (tick, targets) in plan.targets.iter_mut().enumerate() {
             let t = tick as f64 * plan.period_s;

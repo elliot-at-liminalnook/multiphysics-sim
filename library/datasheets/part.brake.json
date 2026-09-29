@@ -1,0 +1,21 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.brake",
+  "label": "Electromagnetic brake",
+  "kind": "generic",
+  "parameters": {
+    "smoothing": 0.01,
+    "torque": 0.5
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) engage: benches need a fixed drive, so only the ports are documented"
+    }
+  ],
+  "source_hash": "e4cd592360fd49636a47d330258667f6dc1a8734a0d25eae3e10e5428063ca01"
+}

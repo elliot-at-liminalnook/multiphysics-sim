@@ -14,6 +14,7 @@ pub const DOUBLE_WELL: &str = "translational.double_well";
 pub const LANGEVIN: &str = "translational.langevin";
 pub const FORCE_SOURCE: &str = "translational.force_source";
 pub const POSITION_SENSOR: &str = "translational.position_sensor";
+pub const LOAD_FORCE: &str = "translational.load_force";
 pub const BELT_FRICTION: &str = "translational.belt_friction";
 
 type Params = BTreeMap<String, f64>;
@@ -88,7 +89,8 @@ pub struct Ground {
 }
 impl Behavior for Ground {
     fn pinned(&self) -> Vec<(usize, usize, f64)> {
-        vec![(0, 0, 0.0)]
+        // The value the residual holds the node at.
+        vec![(0, 0, self.position)]
     }
     fn states(&self) -> Vec<StateDeclaration> {
         vec![StateDeclaration::new("reaction", QuantityKind::Force, 0.0)]
@@ -216,17 +218,59 @@ fn langevin(p: &Params) -> Made {
     Ok(Box::new(Langevin { damping: param(p, "damping")?, intensity: param_or(p, "intensity", 0.0), drive_amplitude: param_or(p, "drive_amplitude", 0.0), drive_frequency: param_or(p, "drive_frequency", 0.0) }))
 }
 
+/// A constant force along the axis (positive along its position), such as
+/// the weight on a vertical axis.
+pub struct LoadForce {
+    pub force: f64,
+}
+impl Behavior for LoadForce {
+    fn states(&self) -> Vec<StateDeclaration> {
+        Vec::new()
+    }
+    fn residual(&self, ctx: &mut Context) {
+        ctx.add_through(0, -self.force);
+    }
+    fn jacobian(&self, _view: &View, _out: &mut sim_core::LocalJacobian) -> bool {
+        true
+    }
+}
+fn load_force(p: &Params) -> Made {
+    Ok(Box::new(LoadForce { force: param(p, "force")? }))
+}
+
+use sim_core::ComponentNotes as Notes;
+static LOAD_FORCE_NOTES: Notes = Notes { category: "Mechanical",
+    explanation: "A constant external force on an axis: a payload's weight on a vertical axis is −m·g.",
+    equations: &["F applied = F₀"],
+    limits: "Constant; adds no mass (add the payload's mass separately).",
+    typical: &[("force", -10.0)],
+    pairs_with: &[MASS, "bridge.lead_screw"],
+    active: true,
+    ..Notes::new("A constant load force, e.g. the weight on a vertical axis.")
+};
+const AXIS_PAIRS: &[&str] = &[MASS, "bridge.lead_screw", LOAD_FORCE, SPRING, DAMPER, FORCE_SOURCE, POSITION_SENSOR, GROUND];
+static MASS_NOTES: Notes = Notes { category: "Mechanical",
+    explanation: "A rigid body moving along one axis: a carriage, slider or payload. Stores kinetic energy ½mv².",
+    equations: &["m·dv/dt = Σ forces − c·v", "dx/dt = v"],
+    typical: &[("mass", 0.5)],
+    pairs_with: AXIS_PAIRS,
+    ..Notes::new("A sliding mass on a line.")
+};
+static FORCE_SOURCE_NOTES: Notes = Notes { category: "Mechanical", explanation: "Applies the force its signal input commands (external loads, disturbances).", pairs_with: &[MASS], active: true, ..Notes::new("An ideal commanded force.") };
+static GROUND_NOTES: Notes = Notes { category: "Mechanical", explanation: "An immovable frame for linear motion: end stops, the machine bed.", pairs_with: &[SPRING, DAMPER], ..Notes::new("The fixed frame for linear motion.") };
+
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
     registry.register(BehaviorDescriptor::new(DOUBLE_WELL, "Bistable spring", vec![acausal("axis", ConnectorKind::Translational)], double_well).with_parameters(vec![P::required("a", "N/m"), P::required("b", "N/m³")]))?;
     registry.register(BehaviorDescriptor::new(LANGEVIN, "Langevin bath with drive", vec![acausal("axis", ConnectorKind::Translational)], langevin).with_parameters(vec![P::required("damping", "N·s/m"), P::optional("intensity", "N²·s", 0.0).nonnegative(), P::optional("drive_amplitude", "N", 0.0), P::optional("drive_frequency", "Hz", 0.0)]))?;
     use sim_core::connectors::Translational as T;
     for descriptor in [
-        BehaviorDescriptor::new(MASS, "Point mass", vec![acausal("axis", T)], mass).with_parameters(vec![P::required("mass", "kg").positive(), P::optional("damping", "N·s/m", 0.0), P::optional("initial.velocity", "m/s", 0.0)]),
+        BehaviorDescriptor::new(MASS, "Point mass", vec![acausal("axis", T)], mass).with_parameters(vec![P::required("mass", "kg").positive(), P::optional("damping", "N·s/m", 0.0), P::optional("initial.velocity", "m/s", 0.0)]).with_notes(&MASS_NOTES),
         BehaviorDescriptor::new(SPRING, "Linear spring", vec![acausal("a", T), acausal("b", T)], spring).with_parameters(vec![P::required("stiffness", "N/m"), P::optional("rest", "m", 0.0)]),
         BehaviorDescriptor::new(DAMPER, "Linear damper", vec![acausal("a", T), acausal("b", T)], damper).with_parameters(vec![P::required("damping", "N·s/m")]),
-        BehaviorDescriptor::new(GROUND, "Fixed position", vec![acausal("axis", T)], ground).with_parameters(vec![P::optional("position", "m", 0.0)]),
-        BehaviorDescriptor::new(FORCE_SOURCE, "Commanded force", vec![acausal("axis", T), signal_in("force", QuantityKind::Force)], force_source).with_parameters(vec![]),
+        BehaviorDescriptor::new(GROUND, "Fixed position", vec![acausal("axis", T)], ground).with_parameters(vec![P::optional("position", "m", 0.0)]).with_notes(&GROUND_NOTES),
+        BehaviorDescriptor::new(LOAD_FORCE, "Load force", vec![acausal("axis", T)], load_force).with_parameters(vec![P::required("force", "N")]).with_notes(&LOAD_FORCE_NOTES),
+        BehaviorDescriptor::new(FORCE_SOURCE, "Commanded force", vec![acausal("axis", T), signal_in("force", QuantityKind::Force)], force_source).with_parameters(vec![]).with_notes(&FORCE_SOURCE_NOTES),
         BehaviorDescriptor::new(POSITION_SENSOR, "Position sensor", vec![acausal("axis", T), signal_out("position", QuantityKind::Length)], position_sensor).with_parameters(vec![]),
         BehaviorDescriptor::new(BELT_FRICTION, "Belt with Stribeck friction", vec![acausal("axis", T)], belt_friction).with_parameters(vec![P::required("normal_force", "N"), P::required("static_friction", "1"), P::required("kinetic_friction", "1"), P::required("stribeck_velocity", "m/s").positive(), P::optional("regularisation", "m/s", 1.0e-4).positive(), P::required("belt_speed", "m/s")]),
     ] {

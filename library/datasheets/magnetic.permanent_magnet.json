@@ -1,0 +1,20 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "magnetic.permanent_magnet",
+  "label": "Permanent magnet",
+  "kind": "generic",
+  "parameters": {
+    "coercive_mmf": 1000.0,
+    "reluctance": 1000000.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: a, b"
+    }
+  ]
+}

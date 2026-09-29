@@ -1,0 +1,8 @@
+study examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/study.json (6e861cd6), legs ["-Y", "+X", "+Y", "-X"], controller {"governor_acceleration_rad_s2": [6.981317007977318, 10.61841268613613], "governor_speed_rad_s": [1.3962634015954636, 4.425520274745219]}
+passed          0.167  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5014-CmaEs-088.yaml  Passed: 0.167 m/s (0.601 m in 3.6 s). Tightest joint: joint.-X | Worm servo output at 91% of motor speed.
+invalid             -  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5014-CmaEs-092.yaml  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5014-CmaEs-092.yaml: No such file or directory (os error 2)
+passed          0.164  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5001-CmaEs-021.yaml  Passed: 0.164 m/s (0.590 m in 3.6 s). Tightest joint: joint.-Y | Foot servo output at 75% of motor speed.
+
+leaderboard (m/s, detailed fidelity):
+  0.167  5014-CmaEs-088  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/5014-CmaEs-088-a7af463c/report.yaml
+  0.164  5001-CmaEs-021  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/5001-CmaEs-021-2d10626b/report.yaml

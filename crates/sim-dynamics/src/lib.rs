@@ -374,6 +374,9 @@ pub struct Simulation<S: System> {
     pub record_every: u64,
     /// Bisection tolerance on event time as a fraction of the step.
     pub event_tolerance: f64,
+    /// Snap the clock onto `start + k·h` in `run` when it differs only by
+    /// roundoff (opt-in; off keeps the historical `t += h` clock exactly).
+    pub snap_to_grid: bool,
     halt_at_event: bool,
     /// Rate of the last accepted step, used as the predictor for implicit
     /// steps (a compiled DAE has no explicit derivative to predict from).
@@ -426,6 +429,7 @@ impl<S: System> Simulation<S> {
             record_every: 1,
             event_tolerance: 1.0e-6,
             halt_at_event: false,
+            snap_to_grid: false,
             previous_rate: vec![0.0; dimension],
             guards_before: Vec::new(),
             guards_after: Vec::new(),
@@ -485,6 +489,7 @@ impl<S: System> Simulation<S> {
             let h_try = h.min(end - self.time);
             let (time, state, previous_rate) = (self.time, self.state.clone(), self.previous_rate.clone());
             let (events, event_count) = (self.events.len(), self.stats.events);
+            let (trace_len, steps, attempts) = (self.trace.len(), self.stats.steps, self.implicit_attempts.len());
             let cache = self.newton_cache.take();
             match self.step(h_try) {
                 Ok(()) => {
@@ -499,11 +504,22 @@ impl<S: System> Simulation<S> {
                         .fold(0.0_f64, f64::max);
                     let fired = self.events.len() > events;
                     if error > 1.0 && h_try > h_min && !fired {
+                        // Undo the rejected step completely: its observation,
+                        // trace samples and step count, and its implicit
+                        // attempts no longer belong to the committed trajectory.
+                        self.system.invalidate_observation();
                         self.time = time;
                         self.state = state;
                         self.previous_rate = previous_rate;
                         self.events.truncate(events);
                         self.stats.events = event_count;
+                        self.stats.steps = steps;
+                        self.trace.time.truncate(trace_len);
+                        self.trace.state.truncate(trace_len);
+                        self.trace.energy.truncate(trace_len);
+                        for attempt in self.implicit_attempts.iter_mut().skip(attempts) {
+                            if attempt.committed == Some(true) { attempt.committed = Some(false); }
+                        }
                         self.newton_cache = None;
                         h = (h_try * (0.9 / error.sqrt()).max(0.2)).max(h_min);
                         continue;
@@ -745,7 +761,7 @@ impl<S: System> Simulation<S> {
             // femtosecond step the implicit solve cannot condition. The step
             // sizes (and so the cached factorisation) are unchanged.
             let target = start + (index + 1) as f64 * h;
-            if (self.time - target).abs() <= 1024.0 * f64::EPSILON * target.abs().max(h) {
+            if self.snap_to_grid && (self.time - target).abs() <= 1024.0 * f64::EPSILON * target.abs().max(h) {
                 self.time = target;
             }
         }
@@ -1251,6 +1267,18 @@ mod adaptive_tests {
         let steps = sim.run_adaptive(2.0, 1.0e-3, 1.0e-4, 1.0e-5, 0.5).unwrap();
         assert!((sim.state[0] - (-100.0_f64).exp()).abs() < 1.0e-3, "{}", sim.state[0]);
         assert!(steps < 400, "took {steps} steps where a fixed 1 ms grid takes 2000");
+    }
+
+    #[test]
+    fn rejected_adaptive_steps_leave_no_trace_or_step_count() {
+        // A 0.5 s first try on a 20 ms transient is rejected several times.
+        let mut sim = Simulation::new(Decay, Integrator::implicit_midpoint(), vec![1.0]);
+        sim.record_every = 1;
+        let recorded = sim.trace.len();
+        let steps = sim.run_adaptive(0.5, 0.5, 1.0e-4, 1.0e-6, 0.5).unwrap();
+        assert_eq!(sim.stats.steps as usize, steps);
+        assert_eq!(sim.trace.len() - recorded, steps);
+        assert!(sim.trace.time.windows(2).all(|w| w[1] > w[0]), "trace times must increase");
     }
 }
 

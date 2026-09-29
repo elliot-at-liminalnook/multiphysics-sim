@@ -21,6 +21,8 @@ fn same_baseline_reproducible_proposals_and_failures_count_against_budget() {
         maximum_training_rows: 32,
         cma_population: 4,
         cma_sigma: 0.2,
+        feasibility_candidates: 1,
+        feasibility_length_scale: None,
     };
     for algorithm in [Algorithm::Bayesian, Algorithm::CmaEs] {
         assert_eq!(
@@ -61,6 +63,7 @@ fn same_baseline_reproducible_proposals_and_failures_count_against_budget() {
             total_wall_s: 3600.,
             charged_simulation_s: 5.,
             actual_simulation_s: if attempt == 0 { 5. } else { 0. },
+            screened: vec![],
         };
         let mut trials = vec![t(0, first), t(1, failed)];
         let p = progress(&trials).unwrap();
@@ -94,6 +97,8 @@ fn adjacent_master_seeds_do_not_replay_shifted_bootstrap_samples() {
         maximum_training_rows: 32,
         cma_population: 4,
         cma_sigma: 0.2,
+        feasibility_candidates: 1,
+        feasibility_length_scale: None,
     };
     let baseline = Observation {
         context_id: p.context_id.clone(),

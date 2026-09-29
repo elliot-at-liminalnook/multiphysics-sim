@@ -70,6 +70,7 @@ fn profiles(id: &str) -> Profiles {
                     evidence: "synthetic".into(),
                     implementation_blake3: "0".repeat(64),
                 },
+                envelope: None,
             },
         )]),
         bindings: BTreeMap::from([(

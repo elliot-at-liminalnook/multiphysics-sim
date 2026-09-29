@@ -1,0 +1,10 @@
+version: 1
+name: turn-in-place
+notes: Turn left in place at 20 deg/s, then right.
+limits: {forward_m_s: 0.3, lateral_m_s: 0.25, yaw_deg_s: 25, forward_m_s2: 0.15, lateral_m_s2: 0.15, yaw_deg_s2: 20}
+commands:
+  - {at_s: 0}
+  - {at_s: 1.5, yaw_deg_s: 20}
+  - {at_s: 9, yaw_deg_s: -20}
+  - {at_s: 16}
+duration_s: 20

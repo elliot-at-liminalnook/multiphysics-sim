@@ -4,3 +4,4 @@ pub mod elements;
 
 pub mod voltage_history;
 pub mod semiconductors;
+pub mod notes;

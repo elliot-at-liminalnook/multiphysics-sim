@@ -1,0 +1,19 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "robot.h_bridge",
+  "label": "Averaged H-bridge driver",
+  "kind": "generic",
+  "parameters": {
+    "on_resistance": 0.1
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) command: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

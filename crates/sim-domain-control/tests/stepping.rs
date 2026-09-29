@@ -1,4 +1,4 @@
-use sim_domain_control::stepping::*;
+use sim_domain_control::{planar::advance_planar, stepping::*};
 fn sequence() -> StepSequence {
     StepSequence::new(
         StepSequenceConfig {
@@ -253,15 +253,6 @@ fn support_and_landing_guards_wait_and_timeout_without_advancing_state() {
     let before = format!("{s:?}");
     assert!(s.sample(99., [0.; 3], true, true).is_err());
     assert_eq!(format!("{s:?}"), before);
-}
-#[test]
-fn planar_twist_matches_circular_arc_and_small_angle_limit() {
-    let r = advance_planar([0.; 3], [1., 0., 1.], std::f64::consts::FRAC_PI_2);
-    assert!((r[0] - 1.).abs() < 1e-12 && (r[1] - 1.).abs() < 1e-12);
-    let r = advance_planar([0., 0., std::f64::consts::FRAC_PI_2], [1., 0., 0.], 2.);
-    assert!(r[0].abs() < 1e-12 && (r[1] - 2.).abs() < 1e-12);
-    let r = advance_planar([0.; 3], [1., 0., 1e-10], 2.);
-    assert!((r[0] - 2.).abs() < 1e-12 && (r[1] - 2e-10).abs() < 1e-20);
 }
 
 #[test]

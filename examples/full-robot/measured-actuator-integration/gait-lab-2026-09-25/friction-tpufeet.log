@@ -1,0 +1,5 @@
+study examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/study-tpufeet.json (e2d5dd26), legs ["-Y", "+X", "+Y", "-X"], controller {"governor_acceleration_rad_s2": [6.981317007977318, 10.61841268613613], "governor_speed_rad_s": [1.3962634015954636, 4.425520274745219]}
+passed          0.170  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5014-CmaEs-088.yaml  Passed: 0.170 m/s (0.613 m in 3.6 s). Tightest joint: joint.-X | Worm servo output at 91% of motor speed.
+
+leaderboard (m/s, detailed fidelity):
+  0.170  5014-CmaEs-088  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-tpufeet/5014-CmaEs-088-20fb1796/report.yaml

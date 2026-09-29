@@ -5,7 +5,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() != 3 {
         return Err("usage: prepare_contact_motion recipe.json values.json fresh-directory".into());
     }
-    let recipe: Recipe = serde_json::from_slice(&std::fs::read(&args[0])?)?;
+    let mut recipe: Recipe = serde_json::from_slice(&std::fs::read(&args[0])?)?;
+    recipe.sync_actuators(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))?;
     let values = serde_json::from_slice(&std::fs::read(&args[1])?)?;
     let start = std::time::Instant::now();
     let result = recipe.prepare(&values);

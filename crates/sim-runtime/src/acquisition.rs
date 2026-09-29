@@ -233,3 +233,7 @@ mod tests {
 }
 
 pub mod calibration_sweep;
+pub mod motor_identification;
+pub mod virtual_bench;
+pub mod actuator_promotion;
+pub mod characterization;

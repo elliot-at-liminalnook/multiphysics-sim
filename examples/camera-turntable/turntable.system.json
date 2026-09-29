@@ -1,0 +1,1037 @@
+{
+  "schema": "sim.system/1",
+  "title": "Camera turntable (belt-driven, stop and shoot)",
+  "revision": 14,
+  "root": "root",
+  "definitions": {
+    "hx30hm_knee_gearmotor": {
+      "label": "HX-30HM knee gearmotor",
+      "description": "HX-30HM servo drive train: brushed motor, rotor, 200:1 gear at the family's estimated efficiency, output friction. k and friction are fitted to the knee servo's measured steady speeds; the rest are estimates.",
+      "interface": "gearmotor.dc",
+      "ports": {
+        "n": {},
+        "output": {},
+        "p": {}
+      },
+      "instances": {
+        "friction": {
+          "display_id": "e6350c385c185fda647d2058",
+          "label": "Output friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "torque": {
+              "value": 0.13643667524146186,
+              "provenance": {
+                "kind": "measured",
+                "source": {
+                  "artifact_hash": "70e678fce1143dd6c1b45509c060a28a317a851ff6782485f5477765b1b3a36b",
+                  "path": "examples/actuators/hx30hm/accepted/knee-steady-speeds.json",
+                  "line": null
+                }
+              },
+              "uncertainty": 0.02288024727306479
+            }
+          }
+        },
+        "gear": {
+          "display_id": "65ee119329ec62e01c5377d4",
+          "label": "200:1 gear",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.504,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "HX-30HM provisional family estimate (examples/actuators/hx30hm/accepted/hx30hm-provisional.json); not identified."
+              }
+            },
+            "ratio": {
+              "value": 200.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "HX-30HM provisional family estimate (examples/actuators/hx30hm/accepted/hx30hm-provisional.json); not identified."
+              }
+            }
+          }
+        },
+        "motor": {
+          "display_id": "2a7f1fbb827d9225951dc30b",
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.012132012912849833,
+              "provenance": {
+                "kind": "measured",
+                "source": {
+                  "artifact_hash": "70e678fce1143dd6c1b45509c060a28a317a851ff6782485f5477765b1b3a36b",
+                  "path": "examples/actuators/hx30hm/accepted/knee-steady-speeds.json",
+                  "line": null
+                }
+              },
+              "uncertainty": 0.0003864502100290958
+            },
+            "inductance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "neglected: electrical time constant far below the 100 Hz measurement"
+              }
+            },
+            "resistance": {
+              "value": 3.7,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "HX-30HM provisional family estimate (examples/actuators/hx30hm/accepted/hx30hm-provisional.json); not identified."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012132012912849833,
+              "provenance": {
+                "kind": "measured",
+                "source": {
+                  "artifact_hash": "70e678fce1143dd6c1b45509c060a28a317a851ff6782485f5477765b1b3a36b",
+                  "path": "examples/actuators/hx30hm/accepted/knee-steady-speeds.json",
+                  "line": null
+                }
+              },
+              "uncertainty": 0.0003864502100290958
+            }
+          }
+        },
+        "mount": {
+          "display_id": "2be071805b5f93464463417e",
+          "label": "Case",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          }
+        },
+        "rotor": {
+          "display_id": "5265c053967eeb9509e1ef99",
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-7,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "small can motor rotor, order of magnitude"
+              }
+            }
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "gear",
+              "port": "output"
+            },
+            {
+              "instance": "friction",
+              "port": "shaft"
+            },
+            {
+              "boundary": "output"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/hx30hm_knee_gearmotor.definition.json",
+        "content_hash": "60599ec1f8ce07134d32e418bcd3fabae86f2301d07b831b9e45063272f6c364"
+      },
+      "version": 1
+    },
+    "root": {
+      "label": "Camera turntable",
+      "instances": {
+        "bearing_drag": {
+          "display_id": "ad8549b5f4231446a6ae2070",
+          "label": "Bearing grease drag (disc to base)",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.0002,
+              "unit": "N·m·s/rad",
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "estimate: viscous drag of two greased, sealed 6808 bearings; measure a coast-down"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "bearings": {
+          "display_id": "65f1d6aa63de84bc9e7e4a8e",
+          "label": "Bearing seals + slip-ring drag",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "torque": {
+              "value": 0.026000000000000002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "two 6808-2RS contact-seal drags + capsule slip-ring brush drag (from CAD examples/camera-turntable/cad/turntable.rcad)"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "belt": {
+          "display_id": "87f2ea14986f83c3a5fe07f9",
+          "label": "GT2 610 mm closed belt",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.belt_drive"
+          },
+          "parameters": {
+            "damping": {
+              "value": 63.72803929266137,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "c = 2e-4 s × k (light rubber damping); not measured (from CAD examples/camera-turntable/cad/turntable.rcad)"
+              }
+            },
+            "pretension": {
+              "value": 25.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Typical static tension per run for a 6 mm GT2 belt, set by sliding the servo cradle; measure with a belt tension gauge or the pluck frequency (from CAD examples/camera-turntable/cad/turntable.rcad)"
+              }
+            },
+            "radius_driven": {
+              "value": 0.08912676813146139,
+              "provenance": {
+                "kind": "derived",
+                "rule": "r = teeth × pitch / 2π (CAD examples/camera-turntable/cad/turntable.rcad)",
+                "inputs_hash": "9b8f813c0d2a7e70b9191c6afbb4a8c39902e3cab05e1e77269a592ce9310fd8"
+              }
+            },
+            "radius_driver": {
+              "value": 0.009549296585513721,
+              "provenance": {
+                "kind": "derived",
+                "rule": "r = teeth × pitch / 2π (CAD examples/camera-turntable/cad/turntable.rcad)",
+                "inputs_hash": "90ce8b6d4ce0855846571e8510acb25da50e741b708eb514af6787da4a3792d0"
+              }
+            },
+            "stiffness": {
+              "value": 318640.19646330684,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "k = EA/L_run1 + EA/L_run2 (pretensioned runs in parallel; free spans in series; tooth compliance neglected) (from CAD examples/camera-turntable/cad/turntable.rcad)"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0475,
+              -0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.29,
+                0.007,
+                0.19
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.17,
+              0.19
+            ],
+            "model": "turntable_belt"
+          }
+        },
+        "bleed_n": {
+          "display_id": "62322ff402b5aff6d1559c97",
+          "label": "Common-mode bleed (−)",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 10000000.0,
+              "unit": "Ω",
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "numerical: defines the averaged bridge common mode; draws < 2 µA"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.005,
+              0.26
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "bleed_p": {
+          "display_id": "1e81675f486caf59fe8e2a98",
+          "label": "Common-mode bleed (+)",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 10000000.0,
+              "unit": "Ω",
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "numerical: defines the averaged bridge common mode; draws < 2 µA"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.005,
+              0.26
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "camera_angle": {
+          "display_id": "d252970b5426accd04ea8c39",
+          "label": "True camera (disc) angle",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.angle_sensor"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.084,
+              -0.14
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "controller": {
+          "display_id": "d66ce92a5125114064f4bc51",
+          "label": "FPGA position loop (integer PD, multi-turn)",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.sampled_fixed_pd"
+          },
+          "parameters": {
+            "encoder_direction": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "positive duty turns the servo output positive"
+              }
+            },
+            "encoder_quantum": {
+              "value": 0.0015339807878856412,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: controller.encoder_quantum",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            },
+            "encoder_zero": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "multi-turn counting from the start pose"
+              }
+            },
+            "initial_target": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "start pose"
+              }
+            },
+            "kd_q8": {
+              "value": 4096.0,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: controller.gains.kd_q8",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            },
+            "kp_q8": {
+              "value": 4096.0,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: controller.gains.kp_q8",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            },
+            "kv_q8": {
+              "value": 4096.0,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: controller.gains.kv_q8",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            },
+            "latency": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: controller.latency",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            },
+            "limit": {
+              "value": 1000.0,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: controller.gains.limit",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            },
+            "multi_turn": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "ASSUMPTION: continuous rotation needs turn counting; the deployed FPGA RTL is single-turn"
+              }
+            },
+            "offset": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "controller clock aligned with the simulation start"
+              }
+            },
+            "period": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: controller.period",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.005,
+              0.23
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "disc": {
+          "display_id": "77981a78fd03c52c4d742cb1",
+          "label": "Turntable disc, camera and ESP32 (turning)",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.0028844026666059908,
+              "provenance": {
+                "kind": "derived",
+                "rule": "I = Σ (I_zz,com + m·r²) over the bodies; printed bodies × fill fraction (CAD examples/camera-turntable/cad/turntable.rcad)",
+                "inputs_hash": "10ada5c36e22ad695368519a7d0f2825329b9b8e5d96804baac6eb5ed4415030"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.056024794,
+              -0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.15,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.93,
+              0.55,
+              0.16
+            ],
+            "model": "turntable_disc"
+          }
+        },
+        "driver": {
+          "display_id": "296960cfa905caa782c7f3b0",
+          "label": "Servo motor driver (averaged PWM bridge)",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "current_limit": {
+              "value": 3.0,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: driver.current_limit",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            },
+            "on_resistance": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "derived",
+                "rule": "accepted actuator family hx30hm-knee-measured: driver.on_resistance",
+                "inputs_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.005,
+              0.23
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "frame": {
+          "display_id": "e5b7b9c52f727bc165833c17",
+          "label": "Base, post and servo mount (fixed)",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0025,
+              -0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.15,
+              "length": 0.005
+            },
+            "color_srgb": [
+              0.2,
+              0.46,
+              0.72
+            ],
+            "model": "turntable_base"
+          }
+        },
+        "gnd": {
+          "display_id": "c3238056a4dc3f715631cdeb",
+          "label": "Ground",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.005,
+              0.23
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pulley": {
+          "display_id": "5f2ff65f477533871cf66797",
+          "label": "GT2 30T drive pulley + horn",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 2.8206892238058333e-7,
+              "provenance": {
+                "kind": "derived",
+                "rule": "I = Σ (I_zz,com + m·r²) over the bodies; printed bodies × fill fraction (about the servo shaft) (CAD examples/camera-turntable/cad/turntable.rcad)",
+                "inputs_hash": "5387600d08c38a5f3f40829de1cf0b7c803284afe644f78c20eec2583eba5b0f"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.123287715,
+              0.0475,
+              -0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0115,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.93,
+              0.55,
+              0.16
+            ],
+            "model": "turntable_pulley"
+          }
+        },
+        "schedule": {
+          "display_id": "38112a0eb2f0a9eb9ea7ea73",
+          "label": "Stop-and-shoot schedule (10° per shot)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.index_move"
+          },
+          "parameters": {
+            "gain": {
+              "value": 9.333333333333332,
+              "provenance": {
+                "kind": "derived",
+                "rule": "belt ratio r_driven / r_driver from cad/belt-drive.physics.json",
+                "inputs_hash": "a296bf95f5920bdaefc8518228e2edbf413f0212a8f0106e818c7290fede0b5d"
+              }
+            },
+            "move": {
+              "value": 1.2,
+              "unit": "s",
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "design choice"
+              }
+            },
+            "period": {
+              "value": 2.0,
+              "unit": "s",
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "design choice: 1.2 s move + 0.8 s still for the exposure"
+              }
+            },
+            "step": {
+              "value": 0.17453292519943295,
+              "unit": "rad",
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "design choice: 36 photos per turn (102° field of view → ~92° overlap)"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.06,
+              0.005,
+              0.23
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "servo": {
+          "display_id": "f65eabf66ed706ac3bcb5bf5",
+          "label": "HX-30HM gearmotor (measured knee family)",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "hx30hm_knee_gearmotor"
+          },
+          "placement": {
+            "position": [
+              0.123287715,
+              0.03,
+              -0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "servo_angle": {
+          "display_id": "ef42724c28888165c1b845e5",
+          "label": "Servo output encoder (what the servo reports)",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.angle_sensor"
+          },
+          "placement": {
+            "position": [
+              0.123287715,
+              0.044,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "supply": {
+          "display_id": "3c4f800c2ca20e79a7ec1636",
+          "label": "Servo supply (12 V bench supply)",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 12.0,
+              "unit": "V",
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "design choice: the bench supply for the servo; set to what you use"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.005,
+              0.23
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "label": "servo output",
+          "terminals": [
+            {
+              "instance": "servo",
+              "port": "output"
+            },
+            {
+              "instance": "pulley",
+              "port": "shaft"
+            },
+            {
+              "instance": "belt",
+              "port": "driver"
+            },
+            {
+              "instance": "servo_angle",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "label": "target",
+          "terminals": [
+            {
+              "instance": "schedule",
+              "port": "angle"
+            },
+            {
+              "instance": "controller",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "label": "measured",
+          "terminals": [
+            {
+              "instance": "servo_angle",
+              "port": "angle"
+            },
+            {
+              "instance": "controller",
+              "port": "position"
+            }
+          ]
+        },
+        {
+          "label": "duty",
+          "terminals": [
+            {
+              "instance": "controller",
+              "port": "duty"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "label": "base",
+          "terminals": [
+            {
+              "instance": "frame",
+              "port": "flange"
+            },
+            {
+              "instance": "bearing_drag",
+              "port": "b"
+            }
+          ]
+        },
+        {
+          "label": "turntable",
+          "terminals": [
+            {
+              "instance": "belt",
+              "port": "driven"
+            },
+            {
+              "instance": "disc",
+              "port": "shaft"
+            },
+            {
+              "instance": "bearings",
+              "port": "shaft"
+            },
+            {
+              "instance": "camera_angle",
+              "port": "shaft"
+            },
+            {
+              "instance": "bearing_drag",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "motor +",
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "p"
+            },
+            {
+              "instance": "servo",
+              "port": "p"
+            },
+            {
+              "instance": "bleed_p",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "motor −",
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "n"
+            },
+            {
+              "instance": "servo",
+              "port": "n"
+            },
+            {
+              "instance": "bleed_n",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "0 V",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "bleed_p",
+              "port": "n"
+            },
+            {
+              "instance": "bleed_n",
+              "port": "n"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0005,
+    "rationale": "The FPGA controller switches its held PWM every 10 ms (scheduled events) and gearbox friction is a stiff regularised state; backward Euler is L-stable for both. 0.5 ms resolves the 2 ms command latency. ASSUMPTION: the controller runs the FPGA integer PD with multi_turn = 1; the deployed RTL is single-turn."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "stage": "C",
+  "id": 1,
+  "completed": true,
+  "metrics": {
+    "braking": [
+      {
+        "deceleration_counts_s2": 5000.0,
+        "direction": 1.0,
+        "distance_counts": 1.0,
+        "reached": true,
+        "speed_at_release": 100.0,
+        "target_counts_s": 100.0
+      },
+      {
+        "deceleration_counts_s2": 555.5555555555555,
+        "direction": -1.0,
+        "distance_counts": 9.0,
+        "reached": true,
+        "speed_at_release": -100.0,
+        "target_counts_s": 100.0
+      },
+      {
+        "deceleration_counts_s2": 2222.222222222222,
+        "direction": 1.0,
+        "distance_counts": 9.0,
+        "reached": true,
+        "speed_at_release": 200.0,
+        "target_counts_s": 200.0
+      },
+      {
+        "deceleration_counts_s2": 2500.0,
+        "direction": -1.0,
+        "distance_counts": 8.0,
+        "reached": true,
+        "speed_at_release": -200.0,
+        "target_counts_s": 200.0
+      }
+    ],
+    "deceleration_counts_s2": {
+      "decreasing": 555.5555555555555,
+      "increasing": 2222.222222222222
+    }
+  },
+  "samples": 455,
+  "simulated_s": 14.381166286999985
+}

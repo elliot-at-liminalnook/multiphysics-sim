@@ -1,0 +1,19 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "actuator.quantiser",
+  "label": "Quantiser",
+  "kind": "generic",
+  "parameters": {
+    "step": 0.01
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) input: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

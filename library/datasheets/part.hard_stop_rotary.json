@@ -1,0 +1,34 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.hard_stop_rotary",
+  "label": "Rotary end stop",
+  "kind": "generic",
+  "parameters": {
+    "damping": 5.0,
+    "lower": -1.57,
+    "stiffness": 50.0,
+    "upper": 1.57
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.03237928382386132,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.000e-2 J → change -3.238e-2 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 2.0e-4, 6.0e-4, 8.5e-5 (1 → 0.125 ms); observed order 2.8"
+    }
+  ],
+  "source_hash": "6da229318ea993a8eaf9bf95b004e21027f0e13a14b8e6b5a6be74a9af75798e"
+}

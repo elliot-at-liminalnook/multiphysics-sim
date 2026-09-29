@@ -1,0 +1,93 @@
+{
+  "stage": "G",
+  "id": 3,
+  "completed": true,
+  "metrics": {
+    "acceleration_counts_s2": {
+      "decreasing": 16113.488228586988,
+      "increasing": 13490.555435585506
+    },
+    "ladder": [
+      {
+        "acceleration_counts_s2": 4869.572873212045,
+        "direction": 1.0,
+        "duty": 0.2,
+        "minimum_voltage_v": 12.4,
+        "return_error_counts": 3.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 499.99999999999994
+      },
+      {
+        "acceleration_counts_s2": 5772.494988279663,
+        "direction": -1.0,
+        "duty": 0.2,
+        "minimum_voltage_v": 12.4,
+        "return_error_counts": 2.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 650.0
+      },
+      {
+        "acceleration_counts_s2": 5564.378805546606,
+        "direction": 1.0,
+        "duty": 0.35,
+        "minimum_voltage_v": 12.4,
+        "return_error_counts": 2.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 950.0
+      },
+      {
+        "acceleration_counts_s2": 8361.108076807945,
+        "direction": -1.0,
+        "duty": 0.35,
+        "minimum_voltage_v": 12.4,
+        "return_error_counts": 2.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 1200.0
+      },
+      {
+        "acceleration_counts_s2": 12686.550080461675,
+        "direction": 1.0,
+        "duty": 0.5,
+        "minimum_voltage_v": 12.3,
+        "return_error_counts": 2.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 1300.0
+      },
+      {
+        "acceleration_counts_s2": 7600.136741660207,
+        "direction": -1.0,
+        "duty": 0.5,
+        "minimum_voltage_v": 12.3,
+        "return_error_counts": 2.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 1450.0
+      },
+      {
+        "acceleration_counts_s2": 13490.555435585506,
+        "direction": 1.0,
+        "duty": 0.7,
+        "minimum_voltage_v": 12.200000000000001,
+        "return_error_counts": -3.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 1699.9999999999998
+      },
+      {
+        "acceleration_counts_s2": 16113.488228586988,
+        "direction": -1.0,
+        "duty": 0.7,
+        "minimum_voltage_v": 12.200000000000001,
+        "return_error_counts": 3.0,
+        "temperature_c": 38.0,
+        "top_speed_counts_s": 1900.0
+      }
+    ],
+    "repeat": "K",
+    "repeat_of": "G",
+    "top_speed_counts_s": {
+      "decreasing": 1900.0,
+      "increasing": 1699.9999999999998
+    }
+  },
+  "samples": 2802,
+  "simulated_s": 91.09126536200006
+}

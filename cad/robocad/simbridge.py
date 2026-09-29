@@ -163,8 +163,11 @@ def export_sim_model(doc: Document, path: str, plane: Plane = Plane.xz(), sectio
             continue
         sim_joints.append(dict(j, child=child, parent=parent, pivot2=list(plane.to_local(tuple(j["pivot"]))[:2]), axis_sign=1.0 if v_dot(v_unit(tuple(j["axis"])), v_unit(plane.normal)) >= 0 else -1.0))
     model = {"format": "simrobot", "version": 2, "unit": "mm", "plane": plane.to_json(), "bodies": bodies, "joints": sim_joints, "source": doc.path}
-    with open(path, "w") as f:
+    # Atomic replace: the running simulator viewer reloads this file on change.
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w") as f:
         json.dump(model, f, indent=1)
+    os.replace(tmp, path)
     return model
 
 
@@ -195,8 +198,15 @@ class SimLink:
             self.export()
 
     def export(self):
-        # v3 without the modal reduction: the live loop wants a save to show up in a second or two.
-        if self.doc.path:
+        # v4 without the modal reduction: the live loop wants a save to show up in a second or two.
+        if not self.doc.path:
+            return
+        background = getattr(self.app, "_export_in_background", None)
+        if background is not None:
+            # Collision grids still take seconds on a full robot: keep the
+            # editor responsive and export the latest save when one is running.
+            background(sim_model_path(self.doc.path), planar=True, label="live simulation model", flex=False, queue=True)
+        else:
             export_sim_model(self.doc, sim_model_path(self.doc.path), flex=False)
 
     def launch(self):

@@ -1,0 +1,68 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.propeller",
+  "label": "Propeller",
+  "kind": "linear",
+  "parameters": {
+    "density": 1.225,
+    "diameter": 0.254,
+    "reference_speed": 1000.0,
+    "thrust_coefficient": 0.11,
+    "torque_coefficient": 0.006,
+    "zero_thrust_advance": 0.8
+  },
+  "conditions": {
+    "drive torque (N·m)": 0.05
+  },
+  "values": [
+    {
+      "name": "ratio (measured)",
+      "value": 7013.714563618809,
+      "unit": "rad/m"
+    },
+    {
+      "name": "forward efficiency",
+      "value": 0.010245678747500112,
+      "unit": "1"
+    },
+    {
+      "name": "backdrive efficiency",
+      "value": 0.0,
+      "unit": "1"
+    },
+    {
+      "name": "self-locking",
+      "value": 0.0,
+      "unit": "yes=1"
+    },
+    {
+      "name": "backdrive output speed",
+      "value": 25249.372429028408,
+      "unit": "m/s"
+    },
+    {
+      "name": "audit energy change",
+      "value": -0.00004438860133698652,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "efficiency within (0, 1]",
+      "passed": true,
+      "detail": "forward 1.02 %"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.200e-2 J → change -4.439e-5 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.6e-14, 9.0e-15, 4.1e-15 (1 → 0.125 ms); observed order 1.1"
+    }
+  ],
+  "source_hash": "7a53744b0d1391271e1727f365a6fb7537acd35f9ba20bc1da2e5b7008d1b037"
+}

@@ -1,0 +1,89 @@
+kind: maneuver
+maneuver: arc-left
+gait: 6216-Bayesian-009
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/maneuvers/arc-left.yaml
+status: ready
+summary: 'Ready (kinematics only): moved 2.03 m, turned 125 deg over 18.0 s. Fastest joint: joint.-Y | Worm servo output at 82% of motor speed.'
+reasons: []
+joints:
+- joint: joint.-Y | Worm servo output
+  reference_peak_rad_s: 5.040428992669721
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 82.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Worm servo output
+  reference_peak_rad_s: 4.977697950382953
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 81.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Hip servo output
+  reference_peak_rad_s: 3.020960966501468
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 68.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Hip servo output
+  reference_peak_rad_s: 2.964625961378986
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 67.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Foot servo output
+  reference_peak_rad_s: 3.213166893997099
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 65.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Worm servo output
+  reference_peak_rad_s: 3.957788735506312
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 64.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Worm servo output
+  reference_peak_rad_s: 3.6032397389497124
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 58.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Foot servo output
+  reference_peak_rad_s: 2.727877987698435
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 55.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Foot servo output
+  reference_peak_rad_s: 2.1417999836213286
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 43.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Foot servo output
+  reference_peak_rad_s: 1.961169847049904
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 39.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Hip servo output
+  reference_peak_rad_s: 1.6887550136249763
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 38.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Hip servo output
+  reference_peak_rad_s: 1.5493289052783326
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 35.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+checked_s: 18.0
+travel_m:
+- -0.7482004597772363
+- 1.8908758355800228
+turned_deg: 124.99999999999602
+maximum_marker_error_m: 6.811594490963803e-10
+maneuver_overlap_mm: 0.22392186445263654
+gait_overlap_mm: 0.314127000549961
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-steer/arc-left-df91bf2a

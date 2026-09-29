@@ -1,0 +1,31 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "rotational.inertia",
+  "label": "Rotational inertia",
+  "kind": "generic",
+  "parameters": {
+    "damping": 0.0,
+    "inertia": 0.00001
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -1.1926223897340549e-17,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.000e-4 J → change -1.193e-17 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.6e0, 3.6e-1, 7.1e-2 (1 → 0.125 ms); observed order 2.3"
+    }
+  ]
+}

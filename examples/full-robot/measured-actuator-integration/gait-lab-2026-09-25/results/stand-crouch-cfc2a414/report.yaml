@@ -1,0 +1,82 @@
+kind: pose_sequence
+sequence: stand-crouch
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/poses/stand-crouch.yaml
+status: ready
+summary: 'Ready: 2 poses over a 5.00 s loop, inside command bounds and CAD limits. Fastest joint: joint.-Y | Foot servo output at 13% of motor speed.'
+period_s: 5.0
+reasons: []
+joints:
+- joint: joint.-Y | Foot servo output
+  reference_peak_rad_s: 0.6544984694978737
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 13.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Foot servo output
+  reference_peak_rad_s: 0.6544984694978737
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 13.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Foot servo output
+  reference_peak_rad_s: 0.6544984694978737
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 13.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Foot servo output
+  reference_peak_rad_s: 0.6544984694978737
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 13.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Hip servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Worm servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Hip servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Worm servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Hip servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Worm servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Hip servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Worm servo output
+  reference_peak_rad_s: 0.0
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 0.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/stand-crouch-cfc2a414
+compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/stand-crouch-cfc2a414/compiled.json

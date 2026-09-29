@@ -46,7 +46,12 @@ def state(doc):
     # Kernel handles are immutable values under Ops. Deep-copy mutable node,
     # material and annotation data, without trying to pickle OCCT objects.
     memo = {id(n.body): n.body for n in doc.nodes.values() if n.body is not None}
-    return deepcopy({key: getattr(doc, key) for key in STATE_FIELDS}, memo)
+    value = {key: getattr(doc, key) for key in STATE_FIELDS}
+    # Drop cache entries for bodies an edit replaced or deleted: they are not
+    # node bodies, so the memo cannot share them and OCCT shapes cannot be copied.
+    value['_snapshot_body_cache'] = {k: v for k, v in value['_snapshot_body_cache'].items()
+                                     if k in doc.nodes and v[0] is doc.nodes[k].body}
+    return deepcopy(value, memo)
 
 
 class PublishState(Command):

@@ -1,0 +1,107 @@
+{
+  "axis": {
+    "coordinate_session": "1790377849541",
+    "lower": -869,
+    "reference": 1019,
+    "reference_joint_rad": 0.0,
+    "reverse": true,
+    "role": "worm",
+    "tuning": {
+      "breakaway_duty": [
+        0.07200000000000004,
+        0.05600000000000002
+      ],
+      "friction_duty": 0.04472409514901854,
+      "gain_counts_s_per_duty": 3278.771939467143,
+      "loop_delay_s": 0.031002141,
+      "method": "SIMC PID for an integrating plant with first-order lag; closed-loop time 2× delay; friction feed-forward from the kinetic (moving) friction",
+      "pid": {
+        "duty_limit": 1.0,
+        "integral_limit": 0.3387178640590002,
+        "kd": 0.04740153409936412,
+        "ki": 0.738077398706238,
+        "kp": 0.7661527838838664
+      },
+      "record": "tune-2-1790194303892.json",
+      "time_constant_s": 0.061869557999999714
+    },
+    "upper": -5563
+  },
+  "evidence": {
+    "completed_stops": 1,
+    "context": [
+      -8.533535123007821,
+      -1.3330293046726223,
+      1.0
+    ],
+    "directions": [
+      {
+        "acceleration_rad_s2": 0.0,
+        "stops": [],
+        "weakened_deceleration_rad_s2": null
+      },
+      {
+        "acceleration_rad_s2": 0.8870078361353168,
+        "stops": [
+          {
+            "completed_s": 11.763635972,
+            "effective_deceleration_rad_s2": 36.35771427052757,
+            "excursion_rad": 0.24236896448593104,
+            "speed_rad_s": 4.224577050827213
+          }
+        ],
+        "weakened_deceleration_rad_s2": null
+      }
+    ],
+    "episode": null,
+    "motion_speed_limit_rad_s": 4.316777482580027,
+    "previous": [
+      11.686271405,
+      0.000023836580633237593
+    ],
+    "reset_reason": "Taught poses changed",
+    "was_braking": true
+  },
+  "motor_id": 2,
+  "provenance": "Online observations under this session's load, effort ceiling and environment; not a physical safety certification; not auto-loaded next session",
+  "run_id": 1790378663608,
+  "schema_version": 1,
+  "tuning": {
+    "adaptive": {
+      "bootstrap_speed_rad_s": 0.007669903939428206,
+      "boundary_margin_rad": 0.018407769454627694,
+      "braking_safety_factor": 0.5,
+      "fallback_deceleration_rad_s2": 0.015339807878856412,
+      "learning_inset_fraction": 0.25,
+      "learning_start_fraction": 0.25,
+      "maximum_evidence_age_s": 120.0,
+      "minimum_stops": 3,
+      "position_uncertainty_rad": 0.0030679615757712823,
+      "reaction_time_s": 0.25,
+      "trial_speed_growth": 1.6
+    },
+    "effort_slew_per_s": 20.0,
+    "following_error_counts": 400.0,
+    "hold_deadband_counts": 16.0,
+    "maximum_acceleration_counts_s2": 12000.0,
+    "maximum_feedback_interval_s": 0.12,
+    "maximum_speed_counts_s": 3000.0,
+    "operator_jog_acceleration_counts_s2": 12000.0,
+    "operator_jog_deceleration_counts_s2": 12000.0,
+    "operator_jog_speed_limit_counts_s": 3000.0,
+    "operator_jog_stop_lead_s": 0.1,
+    "period_s": 0.03,
+    "pid": {
+      "duty_limit": 1.0,
+      "integral_limit": 0.125,
+      "kd": 0.04,
+      "ki": 0.8,
+      "kp": 5.215189175235227
+    },
+    "provenance": "Provisional commissioning controller parameters, not fitted to this loaded printed leg. Uses measured encoder feedback; no inferred joint gearing. Operator-held Q/A jogs follow the requested speed up to 500 counts/s with no learning-envelope slowing or predictive brake; the reference stops at a taught pose at 1000 counts/s^2, 0.1 s of travel early to allow for response lag. Tracking error, stalls, feedback gaps and travel beyond taught poses are logged warnings that retrack or block outward drive, not stops (operator request 2026-09-22). Automatic sweeps and learning keep the adaptive stopping envelope, which is a provisional assumption, not a measured stopping guarantee. Holds follow the part until it stops after a release, accept up to 16 counts of error once settled (no drive), and return from larger disturbances at 40 counts/s; drive changes at most 4 duty/s. Per-motor gains from Tune this motor replace the shared provisional PID. Held jogs accelerate at up to 1500 counts/s^2; tuned motors add velocity feed-forward from their measured response. Full-speed fixture trial (operator request 2026-09-25: leg suspended and clipped at its center, free to swing): speed cap 3000 counts/s (measured top speed ~2850-3290), acceleration 12000 counts/s^2 (measured motor ~13800), following error 400 counts (~80 ms host-loop lag at full speed), effort slew 20/s. Previous values: {\"maximum_speed_counts_s\": 500.0, \"maximum_acceleration_counts_s2\": 100.0, \"following_error_counts\": 64.0, \"operator_jog_speed_limit_counts_s\": 500.0, \"operator_jog_acceleration_counts_s2\": 1500.0, \"operator_jog_deceleration_counts_s2\": 1000.0, \"effort_slew_per_s\": 4.0}. Taught poses and FPGA windows remain the travel limits; loaded stopping distance at these speeds is unmeasured. Gait playback (tracked references) skips the passive-braking stopping envelope (track_stopping_envelope=false, operator request 2026-09-25): the envelope's coasting estimate (~1200 counts/s^2 worm) latched a brake at gait speeds while stage G measured 13800-17300 counts/s^2 active deceleration; the gait reference stays governed and clamped inside the taught poses and the FPGA window still trips.",
+    "response_rate_per_s": 2.0,
+    "stalled_at_limit_s": 3.0,
+    "track_stopping_envelope": false,
+    "velocity_filter_s": 0.08
+  }
+}

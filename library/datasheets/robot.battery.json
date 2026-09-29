@@ -1,0 +1,33 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "robot.battery",
+  "label": "Battery pack",
+  "kind": "generic",
+  "parameters": {
+    "capacity_ah": 1.0,
+    "cells": 3.0,
+    "initial_soc": 1.0,
+    "internal_resistance": 0.05
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 37.208804168984436,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "total energy rose by 3.721e1 J from 2.900e-1 J at every step (1 → 0.125 ms: 3.72e1, 3.72e1, 3.72e1, 3.72e1) (a source: allowed)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.7e-12, 9.2e-13, 2.3e-13 (1 → 0.125 ms); observed order 2.0"
+    }
+  ]
+}

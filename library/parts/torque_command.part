@@ -1,0 +1,17 @@
+# A commanded torque profile: a step held for a while, plus a sine or a frequency sweep.
+part torque_command "Torque command (step + sine)"
+category Control
+summary "A known torque over time: a step held for a set time, plus a sine that can sweep in frequency. Feed it to a torque source."
+explain "torque = step·w(t) + amplitude·sin(2π·(f·t + ½·chirp·t²)), where w(t) rises from 0 to 1 at `start` and falls back at `start + duration`, each edge smoothed over `edge` seconds. With chirp = 0 the sine has a fixed frequency f; with chirp > 0 its frequency climbs by chirp Hz every second, which sweeps through a resonance."
+tradeoffs "An ideal torque: it ignores the motor, its speed limit and its current. Use it to study a mechanism alone, then replace it with a real motor."
+limits "Ideal, instantaneous torque (apart from the edge smoothing)."
+pairs rotational.torque_source rotational.inertia rotational.spring
+output torque Torque
+param step N·m = 0 "Step torque"
+param start s = 0 "When the step switches on"
+param duration s = 1 "How long the step stays on"
+param edge s = 0.0005 "Time over which each edge of the step is smoothed"
+param amplitude N·m = 0 "Sine amplitude"
+param frequency Hz = 1 "Sine frequency (at t = 0 when sweeping)"
+param chirp Hz/s = 0 "How fast the sine's frequency climbs"
+set torque = step*0.5*(tanh((t - start)/edge) - tanh((t - start - duration)/edge)) + amplitude*sin(6.283185307*(frequency*t + 0.5*chirp*t*t))

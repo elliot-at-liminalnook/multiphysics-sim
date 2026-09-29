@@ -12,6 +12,37 @@ pub struct AxisCalibration {
     pub reverse: bool,
     #[serde(default)]
     pub coordinate_session: Option<String>,
+    /// Tracking session of a multi-turn `reference` (outside one encoder
+    /// turn); it is not meaningful in any other session.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reference_session: Option<String>,
+    /// CAD joint angle (rad) the leg mirror showed when `reference` was saved
+    /// (the alignment pose). Absent means the joint's CAD home.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reference_joint_rad: Option<f64>,
+    /// Operator-disabled: the motor may not be selected or driven.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub disabled: bool,
+    /// Gains fitted to this motor by an identification run; replaces the
+    /// shared provisional gains for this axis.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tuning: Option<MotorTuning>,
+}
+/// Per-motor feedback gains from a measured open-loop response.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MotorTuning {
+    pub pid: sim_domain_control::pwm_feedback::Pid,
+    /// Duty added in the direction of the position error to overcome friction.
+    pub friction_duty: f64,
+    /// Measured response the gains were designed from.
+    pub gain_counts_s_per_duty: f64,
+    pub time_constant_s: f64,
+    pub loop_delay_s: f64,
+    pub breakaway_duty: [f64; 2],
+    /// Identification record (samples and fits) in the measurements folder.
+    pub record: String,
+    pub method: String,
 }
 impl AxisCalibration {
     pub fn validate(&self) -> Result<(), String> {
@@ -25,9 +56,23 @@ impl AxisCalibration {
         {
             return Err("Continuous encoder coordinate exceeds supported numeric range".into());
         }
+        if self.reference_joint_rad.is_some_and(|q| !q.is_finite() || q.abs() > 100.) {
+            return Err("Alignment joint angle must be a finite angle".into());
+        }
         if let (Some(l), Some(u)) = (self.lower, self.upper) {
             if u.abs_diff(l) <= 8 {
                 return Err("Bounds need more than eight encoder counts of clearance".into());
+            }
+        }
+        if let Some(t) = &self.tuning {
+            t.pid.validate()?;
+            if !(t.friction_duty.is_finite() && (0. ..1.).contains(&t.friction_duty))
+                || !(t.gain_counts_s_per_duty.is_finite() && t.gain_counts_s_per_duty > 0.)
+                || !(t.time_constant_s.is_finite() && t.time_constant_s > 0.)
+                || !(t.loop_delay_s.is_finite() && t.loop_delay_s >= 0.)
+                || t.breakaway_duty.iter().any(|d| !(d.is_finite() && (0. ..=1.).contains(d)))
+            {
+                return Err(format!("Motor tuning for {} is not a valid measured response", self.role));
             }
         }
         Ok(())
@@ -48,7 +93,11 @@ impl AxisCalibration {
                 self.lower = None;
                 self.upper = None;
             }
-            "reference" => self.reference = None,
+            "reference" => {
+                self.reference = None;
+                self.reference_session = None;
+                self.reference_joint_rad = None;
+            }
             _ => return Err("Choose lower, upper, both, or reference".into()),
         }
         if self.lower.is_none() && self.upper.is_none() {
@@ -130,6 +179,10 @@ mod tests {
             reference: None,
             reverse: false,
             coordinate_session: None,
+            reference_session: None,
+            reference_joint_rad: None,
+            disabled: false,
+            tuning: None,
         };
         assert!(a.jog(1004, -1).is_err());
         assert!(a.jog(1096, 1).is_err());
@@ -171,6 +224,26 @@ mod tests {
         assert!(a.validate().is_err());
     }
     #[test]
+    fn alignment_angle_is_kept_with_its_reference_and_cleared_with_it() {
+        let text = r#"{"role":"knee","lower":2629,"upper":3387,"reference":2900,"reference_joint_rad":-1.248}"#;
+        let mut a: AxisCalibration = serde_json::from_str(text).unwrap();
+        assert_eq!(a.reference_joint_rad, Some(-1.248));
+        a.validate().unwrap();
+        let back: AxisCalibration = serde_json::from_str(&serde_json::to_string(&a).unwrap()).unwrap();
+        assert_eq!((back.reference, back.reference_joint_rad), (Some(2900), Some(-1.248)));
+        // Older saves have no angle (CAD home) and serialize without one.
+        let old: AxisCalibration = serde_json::from_str(r#"{"role":"knee","lower":null,"upper":null,"reference":2722}"#).unwrap();
+        assert_eq!(old.reference_joint_rad, None);
+        assert!(!serde_json::to_string(&old).unwrap().contains("reference_joint_rad"));
+        a.reference_joint_rad = Some(f64::NAN);
+        assert!(a.validate().is_err());
+        a.reference_joint_rad = Some(-1.248);
+        a.clear("lower").unwrap();
+        assert_eq!(a.reference_joint_rad, Some(-1.248));
+        a.clear("reference").unwrap();
+        assert_eq!((a.reference, a.reference_joint_rad), (None, None));
+    }
+    #[test]
     fn clearing_reversed_bounds_retains_mounting_and_reference() {
         let mut a = AxisCalibration {
             role: "worm".into(),
@@ -179,6 +252,10 @@ mod tests {
             reference: Some(2000),
             reverse: false,
             coordinate_session: None,
+            reference_session: None,
+            reference_joint_rad: None,
+            disabled: false,
+            tuning: None,
         };
         a.clear("lower").unwrap();
         assert!(a.reverse);

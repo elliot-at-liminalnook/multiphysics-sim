@@ -279,11 +279,104 @@ pub struct BehaviorDescriptor {
     pub equations: Option<Equations>,
     /// None means discovery is not yet complete for this native component.
     pub parameters: Option<Vec<ParameterDeclaration>>,
+    /// Learning notes: what the component is, its equations, trade-offs and
+    /// derived values. Shared by every inspector, the library and exports.
+    pub notes: Option<&'static ComponentNotes>,
 }
 
 impl BehaviorDescriptor {
     pub fn new(type_id: &str, display_name: &'static str, ports: Vec<PortDeclaration>, equations: Equations) -> Self {
-        Self { type_id: BehaviorTypeId::from(type_id), display_name, ports, equations: Some(equations), parameters: None }
+        Self { type_id: BehaviorTypeId::from(type_id), display_name, ports, equations: Some(equations), parameters: None, notes: None }
+    }
+    pub fn with_notes(mut self, notes: &'static ComponentNotes) -> Self {
+        self.notes = Some(notes);
+        self
+    }
+}
+
+/// Explanations attached to a registered component, written for someone
+/// learning what the part does and how it trades off against its neighbours.
+/// Text only, except `derived`, which evaluates explicit geometry-to-physics
+/// derivations (lead angle, efficiency, stall torque) from parameter values.
+pub struct ComponentNotes {
+    /// Shared vector icon identifier; empty selects the type default.
+    pub icon: &'static str,
+    /// One sentence: what it is.
+    pub summary: &'static str,
+    /// Palette section (Actuators, Transmissions, Mechanical, Power,
+    /// Sensing, Control, Electrical, Thermal); empty = by type prefix.
+    pub category: &'static str,
+    /// How it works and how this model represents it.
+    pub explanation: &'static str,
+    /// The model's governing equations, one per line, in plain text.
+    pub equations: &'static [&'static str],
+    /// Why you would (or would not) pick it over its alternatives.
+    pub tradeoffs: &'static str,
+    /// What the model leaves out; honest limits.
+    pub limits: &'static str,
+    /// Help text per parameter name.
+    pub parameters: &'static [(&'static str, &'static str)],
+    /// Component types that commonly attach to this one, most typical first.
+    pub pairs_with: &'static [&'static str],
+    /// A source: it may add energy to what it is connected to (supplies,
+    /// commanded or constant loads). Passive parts failing an energy audit
+    /// are flagged; active ones are not.
+    pub active: bool,
+    /// Typical values for required parameters, applied (and recorded as
+    /// estimates) when a part is placed from the library so it runs at once.
+    pub typical: &'static [(&'static str, f64)],
+    /// The part's realtime model: parameter values that simplify it for
+    /// interactive/browser profiles (e.g. zero inductance, coarser friction
+    /// smoothing). Empty when the detailed model is already realtime-cheap.
+    pub realtime: &'static [(&'static str, f64)],
+    /// Values derived from the (default-filled) parameters.
+    pub derived: Option<fn(&std::collections::BTreeMap<String, f64>) -> Vec<DerivedValue>>,
+    /// The same for parts defined at run time (equation files), whose
+    /// derivations are data rather than a Rust function.
+    pub derived_with: Option<&'static DeriveFn>,
+}
+
+pub type DeriveFn = dyn Fn(&std::collections::BTreeMap<String, f64>) -> Vec<DerivedValue> + Send + Sync;
+
+impl std::fmt::Debug for ComponentNotes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ComponentNotes").field("summary", &self.summary).field("derived", &self.has_derived()).finish_non_exhaustive()
+    }
+}
+
+impl ComponentNotes {
+    pub const fn new(summary: &'static str) -> Self {
+        Self { icon: "", summary, category: "", explanation: "", equations: &[], tradeoffs: "", limits: "", parameters: &[], pairs_with: &[], active: false, typical: &[], realtime: &[], derived: None, derived_with: None }
+    }
+    pub fn has_derived(&self) -> bool {
+        self.derived.is_some() || self.derived_with.is_some()
+    }
+    /// Derived values at these parameter values (empty when none are declared).
+    pub fn derive(&self, parameters: &std::collections::BTreeMap<String, f64>) -> Vec<DerivedValue> {
+        match (self.derived, self.derived_with) {
+            (Some(f), _) => f(parameters),
+            (None, Some(f)) => f(parameters),
+            _ => Vec::new(),
+        }
+    }
+    pub fn parameter_help(&self, name: &str) -> Option<&'static str> {
+        self.parameters.iter().find(|(n, _)| *n == name).map(|(_, h)| *h)
+    }
+}
+
+/// A quantity computed from parameters, for inspectors.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct DerivedValue {
+    pub name: String,
+    pub value: f64,
+    pub unit: String,
+    /// How it is computed, e.g. `λ = atan(z₁·m / d₁)`.
+    pub formula: String,
+}
+
+impl DerivedValue {
+    pub fn new(name: &str, value: f64, unit: &str, formula: &str) -> Self {
+        Self { name: name.into(), value, unit: unit.into(), formula: formula.into() }
     }
 }
 
@@ -369,6 +462,33 @@ impl BehaviorRegistry {
         self.frozen = std::sync::OnceLock::from(frozen);
         self.descriptors.insert(id, descriptor);
         Ok(())
+    }
+
+    /// Attach learning notes to an already registered type. Returns false when
+    /// the type is not registered (so optional crates can annotate freely).
+    pub fn annotate(&mut self, id: &str, notes: &'static ComponentNotes) -> bool {
+        match self.descriptors.get_mut(&BehaviorTypeId::from(id)) {
+            Some(d) => {
+                d.notes = Some(notes);
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// Register, or replace an existing type (hot reload of authored parts).
+    /// A rejected replacement leaves the old descriptor in place.
+    pub fn replace(&mut self, descriptor: BehaviorDescriptor) -> Result<(), RegistryError> {
+        let old = self.descriptors.remove(&descriptor.type_id);
+        match self.register(descriptor) {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                if let Some(old) = old {
+                    self.descriptors.insert(old.type_id.clone(), old);
+                }
+                Err(e)
+            }
+        }
     }
 
     pub fn register_definition(&mut self, definition: &dyn definitions::ComponentDefinition) -> Result<(), RegistryError> {
@@ -549,3 +669,5 @@ mod tests {
         assert_eq!((store.get(a).unwrap(), store.get(b).unwrap()), (3.0, 4.0));
     }
 }
+
+pub mod icons;

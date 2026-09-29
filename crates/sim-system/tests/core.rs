@@ -127,7 +127,7 @@ fn parameters_flow_down_the_hierarchy() {
     let doubled = capacitor_voltage(&doc, &r, "filter/c", 1e-3);
     assert!((doubled - (1.0 - (-0.5f64).exp())).abs() < 1e-5, "{doubled}");
     // Units are checked, never converted.
-    let wrong = apply(&mut doc, &r, &[Command::SetParameter { at: "".into(), name: "vs".into(), parameter: "voltage".into(), binding: Some(ParameterBinding::Value { value: 1000., unit: Some("mV".into()), provenance: None }) }]);
+    let wrong = apply(&mut doc, &r, &[Command::SetParameter { at: "".into(), name: "vs".into(), parameter: "voltage".into(), binding: Some(ParameterBinding::Value { value: 1000., unit: Some("mV".into()), provenance: None, uncertainty: None }) }]);
     assert!(wrong.unwrap_err().to_string().contains("not converted"));
 }
 

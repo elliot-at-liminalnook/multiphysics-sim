@@ -1,0 +1,297 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.bldc_motor",
+  "label": "Brushless DC motor (with ESC)",
+  "kind": "motor",
+  "parameters": {
+    "inductance": 0.00003,
+    "kv": 96.3,
+    "loss_speed": 5.0,
+    "no_load_current": 0.5,
+    "resistance": 0.12
+  },
+  "conditions": {
+    "test voltage (V)": 12.0,
+    "thermal ports on a 10 kJ/K mass starting at (K)": 293.15
+  },
+  "values": [
+    {
+      "name": "no-load speed",
+      "value": 1149.8220000000022,
+      "unit": "rad/s"
+    },
+    {
+      "name": "no-load current",
+      "value": 0.5000000000001001,
+      "unit": "A"
+    },
+    {
+      "name": "stall current",
+      "value": 100.0,
+      "unit": "A"
+    },
+    {
+      "name": "stall torque",
+      "value": 1.0384215991692598,
+      "unit": "N·m"
+    },
+    {
+      "name": "terminal resistance (from stall)",
+      "value": 0.12,
+      "unit": "Ω"
+    },
+    {
+      "name": "torque constant (from no-load)",
+      "value": 0.010384215991692598,
+      "unit": "N·m/A"
+    },
+    {
+      "name": "peak efficiency",
+      "value": 0.8523809523809411,
+      "unit": "1"
+    },
+    {
+      "name": "torque at peak efficiency",
+      "value": 0.10384215991692598,
+      "unit": "N·m"
+    },
+    {
+      "name": "realtime model: largest change",
+      "value": 1.1102230246249329e-15,
+      "unit": "1"
+    },
+    {
+      "name": "audit energy change",
+      "value": 6.821210263296962e-13,
+      "unit": "J"
+    }
+  ],
+  "curves": [
+    {
+      "name": "speed–torque",
+      "x_label": "torque (N·m)",
+      "y_label": "speed (rad/s)",
+      "points": [
+        [
+          0.0,
+          1149.8220000000022
+        ],
+        [
+          0.10384215991692598,
+          1034.2619999999908
+        ],
+        [
+          0.20768431983385197,
+          918.7019999999958
+        ],
+        [
+          0.3115264797507779,
+          803.1419999999955
+        ],
+        [
+          0.41536863966770393,
+          687.581999999996
+        ],
+        [
+          0.5192107995846299,
+          572.0219999999982
+        ],
+        [
+          0.6230529595015558,
+          456.46199999999993
+        ],
+        [
+          0.7268951194184818,
+          340.9020000000019
+        ],
+        [
+          0.8307372793354079,
+          225.34200000000394
+        ]
+      ]
+    },
+    {
+      "name": "current–torque",
+      "x_label": "torque (N·m)",
+      "y_label": "current (A)",
+      "points": [
+        [
+          0.0,
+          0.5000000000001001
+        ],
+        [
+          0.10384215991692598,
+          10.500000000000016
+        ],
+        [
+          0.20768431983385197,
+          20.499999999999996
+        ],
+        [
+          0.3115264797507779,
+          30.499999999999993
+        ],
+        [
+          0.41536863966770393,
+          40.49999999999999
+        ],
+        [
+          0.5192107995846299,
+          50.49999999999999
+        ],
+        [
+          0.6230529595015558,
+          60.499999999999986
+        ],
+        [
+          0.7268951194184818,
+          70.49999999999999
+        ],
+        [
+          0.8307372793354079,
+          80.49999999999999
+        ]
+      ]
+    },
+    {
+      "name": "efficiency–torque",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.10384215991692598,
+          0.8523809523809411
+        ],
+        [
+          0.20768431983385197,
+          0.7756097560975554
+        ],
+        [
+          0.3115264797507779,
+          0.6836065573770436
+        ],
+        [
+          0.41536863966770393,
+          0.5876543209876494
+        ],
+        [
+          0.5192107995846299,
+          0.49009900990098726
+        ],
+        [
+          0.6230529595015558,
+          0.3917355371900816
+        ],
+        [
+          0.7268951194184818,
+          0.29290780141844064
+        ],
+        [
+          0.8307372793354079,
+          0.19378881987577928
+        ]
+      ]
+    },
+    {
+      "name": "efficiency at 3 V",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.025960539979231496,
+          0.7333333333333288
+        ],
+        [
+          0.07788161993769448,
+          0.6375000000000034
+        ],
+        [
+          0.12980269989615748,
+          0.4615384615384622
+        ],
+        [
+          0.18172377985462046,
+          0.2722222222222215
+        ]
+      ]
+    },
+    {
+      "name": "efficiency at 6 V",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.05192107995846299,
+          0.8090909090909102
+        ],
+        [
+          0.15576323987538895,
+          0.6677419354838703
+        ],
+        [
+          0.25960539979231495,
+          0.480392156862748
+        ],
+        [
+          0.3634475597092409,
+          0.2859154929577487
+        ]
+      ]
+    },
+    {
+      "name": "efficiency at 9 V",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.07788161993769449,
+          0.8374999999999887
+        ],
+        [
+          0.23364485981308342,
+          0.6782608695652225
+        ],
+        [
+          0.38940809968847245,
+          0.48684210526316496
+        ],
+        [
+          0.5451713395638613,
+          0.29056603773584944
+        ]
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "speed falls with load",
+      "passed": true,
+      "detail": "9 points"
+    },
+    {
+      "name": "efficiency below 100 %",
+      "passed": true,
+      "detail": "peak 85.2 %"
+    },
+    {
+      "name": "realtime model",
+      "passed": true,
+      "detail": "inductance = 0 → largest bench change 0.000 % (no-load current)"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 4.845e-1 J → change 6.821e-13 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.8e-9, 9.4e-10, 2.4e-10 (1 → 0.125 ms); observed order 2.0"
+    }
+  ],
+  "source_hash": "33f4bb70c22a2d849ad4b7c735ea9209c315c982ed2841a4095342dd12f24e21"
+}

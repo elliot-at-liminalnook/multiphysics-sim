@@ -1,0 +1,14 @@
+# Gravity on a swinging link about a horizontal joint axis.
+part pendulum_gravity "Gravity on a pendulum link"
+category Mechanical
+summary "The torque gravity puts on a link swinging about a joint: largest when horizontal."
+explain "A link of mass m whose centre of mass sits a distance r from the joint feels gravity torque −m·g·r·sin φ, with φ measured from hanging straight down. Add the link's inertia (m·r² for a point mass, m·L²/3 for a uniform rod about its end) separately."
+limits "Rigid link, fixed horizontal joint axis, uniform gravity."
+pairs rotational.inertia rotational.worm_gear
+port shaft rotational
+param mass kg ~ 0.5 "Link mass"
+param arm m ~ 0.1 "Joint to centre of mass"
+param g m/s^2 = 9.80665 "Gravitational acceleration"
+flow shaft = mass*g*arm*sin(shaft.phi)
+energy mass*g*arm*(1 - cos(shaft.phi))
+derive "peak gravity torque" = mass*g*arm N·m

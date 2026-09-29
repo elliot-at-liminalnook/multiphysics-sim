@@ -1,0 +1,18 @@
+version: 1
+name: stand-crouch
+notes: |
+  Lower the body by bending every knee (the foot servo), hold, and rise.
+  Angles are joint coordinates in degrees; unnamed joints keep the standing pose.
+base: stance
+poses:
+  crouch:
+    all:
+      foot_servo_deg: -90.0
+  stand: {}
+sequence:
+- pose: stand
+  move_s: 1.5
+  hold_s: 1.0
+- pose: crouch
+  move_s: 1.5
+  hold_s: 1.0

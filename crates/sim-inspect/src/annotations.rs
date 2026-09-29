@@ -26,17 +26,8 @@ pub enum LinkTarget {
     Selection { target: SelectionTarget },
     View { id: String },
 }
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(deny_unknown_fields)]
-pub struct PhysicalView {
-    pub focus: [f32; 3],
-    pub radius: f32,
-    pub yaw: f32,
-    pub pitch: f32,
-    pub exploded: bool,
-    pub connections: bool,
-    pub hidden: BTreeSet<String>,
-}
+/// Shared with system discussions and lessons (`sim-annotate`).
+pub use sim_annotate::PhysicalView;
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", content = "id", rename_all = "snake_case")]
 pub enum Focus {
@@ -96,17 +87,12 @@ impl Document {
         if self.version != 1 || self.description_id != d.id {
             return Err("annotations belong to another model or schema".into());
         }
-        if self.undo.len() > 32
-            || self.redo.len() > 32
-            || self.undo.iter().chain(&self.redo).any(|c| {
-                matches!(
-                    c,
-                    Command::Undo | Command::Redo | Command::FollowView { .. }
-                )
-            })
-        {
-            return Err("invalid annotation history".into());
-        }
+        sim_annotate::history::validate(&self.undo, &self.redo, |c| {
+            matches!(
+                c,
+                Command::Undo | Command::Redo | Command::FollowView { .. }
+            )
+        })?;
         if self.notes.len() > 256 || self.views.len() > 128 {
             return Err("annotation limit: 256 notes and 128 saved views".into());
         }
@@ -278,20 +264,14 @@ impl Document {
             }
         }
         if let Some(inverse) = inverse {
-            if undo {
-                next.redo.push(inverse);
+            let step = if undo {
+                sim_annotate::history::Step::Undo
+            } else if redo {
+                sim_annotate::history::Step::Redo
             } else {
-                next.undo.push(inverse);
-                if !redo {
-                    next.redo.clear();
-                }
-            }
-            if next.undo.len() > 32 {
-                next.undo.remove(0);
-            }
-            if next.redo.len() > 32 {
-                next.redo.remove(0);
-            }
+                sim_annotate::history::Step::Do
+            };
+            sim_annotate::history::record(&mut next.undo, &mut next.redo, inverse, step);
         }
         next.revision = revision;
         next.validate(d)?;
@@ -310,186 +290,26 @@ pub enum Command {
     DeleteView { id: String },
     FollowView { id: String },
 }
+impl sim_annotate::store::Revisioned for Document {
+    type Command = Command;
+    type Context = SystemDescription;
+    fn empty(d: &SystemDescription) -> Self {
+        Document::new(d)
+    }
+    fn revision(&self) -> u64 {
+        self.revision
+    }
+    fn validate(&self, d: &SystemDescription) -> Result<(), String> {
+        Document::validate(self, d)
+    }
+    fn apply(&mut self, command: Command, d: &SystemDescription) -> Result<(), String> {
+        Document::apply(self, command, d)
+    }
+}
+/// The locked, revisioned sidecar store shared with lessons (`sim-annotate`).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod native {
-    use super::*;
-    use std::{
-        fs::{self, File, OpenOptions, TryLockError},
-        io::{Read, Write},
-        path::{Path, PathBuf},
-        sync::{
-            Arc, Mutex,
-            atomic::{AtomicBool, Ordering},
-            mpsc,
-        },
-        time::{Duration, SystemTime, UNIX_EPOCH},
-    };
-    struct Request {
-        id: u64,
-        command: Command,
-        expected: Option<u64>,
-    }
-    struct State {
-        document: Document,
-        error: Option<String>,
-        results: BTreeMap<u64, Result<Document, String>>,
-    }
-    pub struct Store {
-        state: Arc<Mutex<State>>,
-        tx: mpsc::SyncSender<Request>,
-        next: u64,
-        stop: Arc<AtomicBool>,
-        pub path: PathBuf,
-    }
-    fn read(path: &Path, d: &SystemDescription) -> Result<Document, String> {
-        let mut bytes = Vec::new();
-        match File::open(path) {
-            Ok(f) => {
-                f.take(4_194_305)
-                    .read_to_end(&mut bytes)
-                    .map_err(|e| e.to_string())?;
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Document::new(d)),
-            Err(e) => return Err(e.to_string()),
-        }
-        if bytes.len() > 4_194_304 {
-            return Err("annotation file exceeds 4 MiB".into());
-        }
-        let doc: Document = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
-        doc.validate(d)?;
-        Ok(doc)
-    }
-    fn edit(path: &Path, d: &SystemDescription, request: Request) -> Result<Document, String> {
-        let lock = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(format!("{}.lock", path.display()))
-            .map_err(|e| e.to_string())?;
-        let mut acquired = false;
-        for _ in 0..20 {
-            match lock.try_lock() {
-                Ok(()) => {
-                    acquired = true;
-                    break;
-                }
-                Err(TryLockError::WouldBlock) => std::thread::sleep(Duration::from_millis(5)),
-                Err(e) => return Err(e.to_string()),
-            }
-        }
-        if !acquired {
-            return Err("annotation file is busy; retry with a fresh revision".into());
-        }
-        let mut doc = read(path, d)?;
-        if request.expected.is_some_and(|r| r != doc.revision) {
-            return Err("annotation revision conflict; read annotations and merge edits".into());
-        }
-        doc.apply(request.command, d)?;
-        let bytes = serde_json::to_vec_pretty(&doc).map_err(|e| e.to_string())?;
-        if bytes.len() > 4_194_304 {
-            return Err("annotation file exceeds 4 MiB".into());
-        }
-        let tmp = PathBuf::from(format!(
-            "{}.{}.{}.tmp",
-            path.display(),
-            std::process::id(),
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_nanos()
-        ));
-        let result = (|| -> std::io::Result<()> {
-            let mut f = OpenOptions::new().create_new(true).write(true).open(&tmp)?;
-            f.write_all(&bytes)?;
-            f.sync_all()?;
-            fs::rename(&tmp, path)
-        })();
-        if result.is_err() {
-            let _ = fs::remove_file(&tmp);
-        }
-        result.map_err(|e| e.to_string())?;
-        Ok(doc)
-    }
-    impl Store {
-        pub fn new(d: Arc<SystemDescription>, path: PathBuf) -> Self {
-            let state = Arc::new(Mutex::new(State {
-                document: Document::new(&d),
-                error: None,
-                results: BTreeMap::new(),
-            }));
-            let worker = state.clone();
-            let stop = Arc::new(AtomicBool::new(false));
-            let stopping = stop.clone();
-            let (tx, rx) = mpsc::sync_channel::<Request>(32);
-            let file = path.clone();
-            std::thread::spawn(move || {
-                while !stopping.load(Ordering::Relaxed) {
-                    match rx.recv_timeout(Duration::from_millis(100)) {
-                        Ok(request) => {
-                            let id = request.id;
-                            let result = edit(&file, &d, request);
-                            let mut s = worker.lock().unwrap();
-                            if let Ok(doc) = &result {
-                                s.document = doc.clone();
-                                s.error = None;
-                            } else {
-                                s.error = result.as_ref().err().cloned();
-                            }
-                            if s.results.len() >= 64 {
-                                s.results.pop_first();
-                            }
-                            s.results.insert(id, result);
-                        }
-                        Err(mpsc::RecvTimeoutError::Disconnected) => break,
-                        Err(mpsc::RecvTimeoutError::Timeout) => match read(&file, &d) {
-                            Ok(doc) => {
-                                let mut s = worker.lock().unwrap();
-                                if s.document.revision != doc.revision {
-                                    s.error = None;
-                                }
-                                s.document = doc;
-                            }
-                            Err(e) => worker.lock().unwrap().error = Some(e),
-                        },
-                    }
-                }
-            });
-            Self {
-                state,
-                tx,
-                next: 1,
-                stop,
-                path,
-            }
-        }
-        pub fn document(&self) -> Document {
-            self.state.lock().unwrap().document.clone()
-        }
-        pub fn error(&self) -> Option<String> {
-            self.state.lock().unwrap().error.clone()
-        }
-        pub fn submit(&mut self, command: Command, expected: Option<u64>) -> Result<u64, String> {
-            let id = self.next;
-            self.tx
-                .try_send(Request {
-                    id,
-                    command,
-                    expected,
-                })
-                .map_err(|e| e.to_string())?;
-            self.next += 1;
-            Ok(id)
-        }
-        pub fn result(&mut self, id: u64) -> Option<Result<Document, String>> {
-            self.state.lock().unwrap().results.remove(&id)
-        }
-    }
-    impl Drop for Store {
-        fn drop(&mut self) {
-            self.stop.store(true, Ordering::Relaxed);
-        }
-    }
+    pub type Store = sim_annotate::store::Store<super::Document>;
 }
 #[cfg(test)]
 mod tests {
@@ -568,6 +388,24 @@ mod tests {
         assert_eq!(disk, reopened.document());
         drop(reopened);
         std::fs::remove_dir_all(directory).unwrap();
+    }
+    /// The shared-crate refactor must not change the sidecar format: every
+    /// committed sidecar reads and writes back to the same JSON.
+    #[test]
+    fn committed_sidecars_round_trip_unchanged() {
+        let base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/systems-viewer/evidence/rest-api");
+        let mut checked = 0;
+        for run in std::fs::read_dir(&base).unwrap().flatten() {
+            let path = run.path().join("discussion.annotations.json");
+            let Ok(bytes) = std::fs::read(&path) else { continue };
+            let original: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+            let doc: Document = serde_json::from_value(original.clone()).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+            // Compare written text (f32 camera fields print as they were read).
+            let written: serde_json::Value = serde_json::from_str(&serde_json::to_string(&doc).unwrap()).unwrap();
+            assert_eq!(written, original, "{}", path.display());
+            checked += 1;
+        }
+        assert!(checked >= 3, "found {checked} sidecars");
     }
     #[test]
     fn notes_allow_overlapping_multi_part_groups_but_reject_dangling_links() {

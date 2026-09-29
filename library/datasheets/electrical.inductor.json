@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "electrical.inductor",
+  "label": "Inductor",
+  "kind": "generic",
+  "parameters": {
+    "inductance": 0.001
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -1.2212453270876722e-15,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.900e-1 J → change -1.221e-15 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 2.9e-4, 7.3e-5, 1.8e-5 (1 → 0.125 ms); observed order 2.0"
+    }
+  ]
+}

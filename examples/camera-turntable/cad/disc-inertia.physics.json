@@ -1,0 +1,84 @@
+{
+ "schema": "sim.cad-physics/1",
+ "cad": {
+  "path": "examples/camera-turntable/cad/turntable.rcad",
+  "sha256": "dce8a9fd2412a2b1333988f28366f2dbf63240fe051ebd96896a9005be9fbd12"
+ },
+ "component_type": "rotational.inertia",
+ "parameters": {
+  "inertia": {
+   "value": 0.0028844026666059908,
+   "unit": "kg\u00b7m\u00b2",
+   "uncertainty": 0.0006694320150138747,
+   "provenance": {
+    "kind": "derived",
+    "rule": "I = \u03a3 (I_zz,com + m\u00b7r\u00b2) over the bodies; printed bodies \u00d7 fill fraction",
+    "inputs": {
+     "bodies": [
+      {
+       "name": "Turntable disc with GT2 ring and bearing hub",
+       "mass_kg": 0.2538215639329046,
+       "Izz_kg_m2": 0.0025505327546480098,
+       "source": "CAD volume and material density",
+       "printed_fill": 0.6
+      },
+      {
+       "name": "Slip-ring carrier",
+       "mass_kg": 0.009084108617130496,
+       "Izz_kg_m2": 7.143835901014137e-06,
+       "source": "CAD volume and material density",
+       "printed_fill": 0.6
+      },
+      {
+       "name": "Slip-ring flange clamp",
+       "mass_kg": 0.0065510636348755326,
+       "Izz_kg_m2": 3.7821180086479894e-06,
+       "source": "CAD volume and material density",
+       "printed_fill": 0.6
+      },
+      {
+       "name": "Slip ring (reference)",
+       "mass_kg": 0.015,
+       "Izz_kg_m2": 1.7904729729729826e-06,
+       "source": "estimate: capsule slip ring of this size",
+       "printed_fill": null
+      },
+      {
+       "name": "Camera mount",
+       "mass_kg": 0.006038507446759521,
+       "Izz_kg_m2": 0.00011375331627453565,
+       "source": "CAD volume and material density",
+       "printed_fill": 0.6
+      },
+      {
+       "name": "Camera Module 3 Wide (reference)",
+       "mass_kg": 0.004,
+       "Izz_kg_m2": 8.927884222413646e-05,
+       "source": "Raspberry Pi product brief (\u22484 g)",
+       "printed_fill": null
+      },
+      {
+       "name": "ESP32 board standoffs",
+       "mass_kg": 0.00030993193828430913,
+       "Izz_kg_m2": 2.516035223290479e-06,
+       "source": "CAD volume and material density",
+       "printed_fill": 0.6
+      },
+      {
+       "name": "ESP32-P4-WIFI6-M (reference)",
+       "mass_kg": 0.015,
+       "Izz_kg_m2": 0.00011560529135338349,
+       "source": "estimate",
+       "printed_fill": null
+      }
+     ],
+     "print_fill": [
+      0.6,
+      0.15
+     ],
+     "rotating_mass_kg": 0.3098051755699545
+    }
+   }
+  }
+ }
+}

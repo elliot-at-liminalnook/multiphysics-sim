@@ -1,0 +1,61 @@
+{
+  "stage": "B",
+  "id": 1,
+  "completed": true,
+  "metrics": {
+    "compliance_counts_per_duty": null,
+    "holds": [
+      {
+        "backlash_counts": null,
+        "drift_off_counts": 0.0,
+        "load_duty": -0.008337499999999994,
+        "position": 2799.25,
+        "self_locking": true,
+        "static_band_duty": 0.012205
+      },
+      {
+        "backlash_counts": null,
+        "drift_off_counts": 0.0,
+        "load_duty": -0.0022825000000000015,
+        "position": 2923.75,
+        "self_locking": true,
+        "static_band_duty": 0.013695
+      },
+      {
+        "backlash_counts": null,
+        "drift_off_counts": 0.0,
+        "load_duty": -0.011412500000000004,
+        "position": 3048.25,
+        "self_locking": true,
+        "static_band_duty": 0.018260000000000005
+      },
+      {
+        "backlash_counts": null,
+        "drift_off_counts": 0.0,
+        "load_duty": 0.0022824999999999963,
+        "position": 3172.75,
+        "self_locking": true,
+        "static_band_duty": 0.01826
+      },
+      {
+        "backlash_counts": null,
+        "drift_off_counts": 0.0,
+        "load_duty": 0.002282500000000005,
+        "position": 3297.25,
+        "self_locking": true,
+        "static_band_duty": 0.022824999999999998
+      },
+      {
+        "backlash_counts": null,
+        "drift_off_counts": 0.0,
+        "load_duty": 0.0022824999999999963,
+        "position": 3421.75,
+        "self_locking": true,
+        "static_band_duty": 0.01826
+      }
+    ],
+    "known_load_duty": 0.0
+  },
+  "samples": 1793,
+  "simulated_s": 56.855308187999995
+}

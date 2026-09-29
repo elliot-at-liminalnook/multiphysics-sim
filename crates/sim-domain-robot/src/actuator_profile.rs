@@ -56,6 +56,48 @@ pub struct FixedPd {
     pub evidence: String,
     pub implementation_blake3: String,
 }
+/// Measured operating envelope at the motor output, at a declared supply
+/// voltage (e.g. from a characterization campaign). Systems that bound
+/// reference motion (gait-search screens, reference governors) read limits
+/// from the resolved profile, never from hand-copied numbers.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Envelope {
+    /// Supply voltage the envelope was measured at (V).
+    pub supply_voltage: Parameter,
+    /// Output speed at full drive, beyond friction (rad/s).
+    pub full_drive_speed: Parameter,
+    /// Output acceleration reached under the campaign's highest drive (rad/s²).
+    pub acceleration: Parameter,
+    /// Output deceleration when drive is removed (rad/s²).
+    pub coast_deceleration: Parameter,
+    /// Drive fraction needed to keep moving slowly (1).
+    pub low_speed_friction: Parameter,
+    /// Drive fraction at which a stationary output first moves (1).
+    pub breakaway: Parameter,
+}
+impl Envelope {
+    pub(crate) fn validate(&self, evidence: &BTreeMap<String, Evidence>) -> Result<(), String> {
+        for (p, unit) in [
+            (&self.supply_voltage, "V"),
+            (&self.full_drive_speed, "rad/s"),
+            (&self.acceleration, "rad/s²"),
+            (&self.coast_deceleration, "rad/s²"),
+            (&self.low_speed_friction, "1"),
+            (&self.breakaway, "1"),
+        ] {
+            p.validate(unit, evidence)?;
+            if p.value < 0. || (unit != "1" && p.value == 0.) {
+                return Err(format!("Envelope value in {unit} must be positive"));
+            }
+            // Dimensionless entries are fractions of full drive.
+            if unit == "1" && p.value > 1. {
+                return Err("Envelope drive fractions must not exceed full drive (1)".into());
+            }
+        }
+        Ok(())
+    }
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Family {
@@ -71,6 +113,28 @@ pub struct Family {
     pub motor: BTreeMap<String, Parameter>,
     pub driver: BTreeMap<String, Parameter>,
     pub controller: FixedPd,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub envelope: Option<Envelope>,
+}
+impl Family {
+    /// Content identity of the family (canonical JSON, BLAKE3). Consumers
+    /// record it; a mismatch against the accepted registry means a stale copy.
+    pub fn content_hash(&self) -> String {
+        let value = serde_json::to_value(self).expect("family serializes");
+        blake3::hash(canonical(&value).as_bytes()).to_hex().to_string()
+    }
+}
+/// Deterministic JSON text (object keys sorted) for content hashing.
+pub fn canonical(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::Object(map) => {
+            let mut keys: Vec<_> = map.keys().collect();
+            keys.sort();
+            format!("{{{}}}", keys.iter().map(|k| format!("{}:{}", serde_json::to_string(k).unwrap(), canonical(&map[*k]))).collect::<Vec<_>>().join(","))
+        }
+        serde_json::Value::Array(items) => format!("[{}]", items.iter().map(canonical).collect::<Vec<_>>().join(",")),
+        other => other.to_string(),
+    }
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -115,6 +179,10 @@ pub struct Resolved {
     pub controller: FixedPd,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub feedback: Option<Feedback>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub envelope: Option<Envelope>,
+    /// [`Family::content_hash`] of the family this motor resolved from.
+    pub family_hash: String,
 }
 impl Resolved {
     pub fn controller_parameters(&self, extra_ratio: f64) -> Result<BTreeMap<String, f64>, String> {
@@ -212,6 +280,9 @@ impl Profiles {
                 {
                     return Err("Evidence requires identity, path, SHA-256 and tested scope".into());
                 }
+            }
+            if let Some(e) = &f.envelope {
+                e.validate(&f.evidence)?;
             }
             f.controller.gains.validate()?;
             f.controller.period.validate("s", &f.evidence)?;
@@ -312,6 +383,8 @@ impl Profiles {
                 driver,
                 controller: f.controller.clone(),
                 feedback: b.feedback.clone(),
+                envelope: f.envelope.clone(),
+                family_hash: f.content_hash(),
             };
             if b.feedback.is_some() {
                 let params = resolved.controller_parameters(motors[0].gear_ratio)?;

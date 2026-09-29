@@ -1,0 +1,86 @@
+{
+ "schema": "sim.cad-physics/1",
+ "cad": {
+  "path": "examples/systems-builder/worm-drive/cad/worm-set.rcad",
+  "sha256": "02cad38323940ebc4757ddccdf04dbf795554d2248d153900cf15dbeb5cac395"
+ },
+ "component_type": "rotational.worm_gear",
+ "parameters": {
+  "module": {
+   "value": 0.0005000000000000008,
+   "unit": "m",
+   "provenance": {
+    "kind": "derived",
+    "rule": "m = (r_tip \u2212 r_root) / 2.25 (addendum m, dedendum 1.25 m)",
+    "inputs": {
+     "r_tip_mm": 4.500000000000002,
+     "r_root_mm": 3.375
+    }
+   }
+  },
+  "worm_pitch_diameter": {
+   "value": 0.008000000000000002,
+   "unit": "m",
+   "provenance": {
+    "kind": "derived",
+    "rule": "d\u2081 = 2\u00b7(r_tip \u2212 m)",
+    "inputs": {
+     "r_tip_mm": 4.500000000000002,
+     "module_mm": 0.5000000000000008
+    }
+   }
+  },
+  "worm_starts": {
+   "value": 1,
+   "unit": "1",
+   "provenance": {
+    "kind": "derived",
+    "rule": "z\u2081 = lead / (\u03c0\u00b7m), lead from the thread helix",
+    "inputs": {
+     "lead_mm": 1.5707963267948961,
+     "module_mm": 0.5000000000000008,
+     "raw": 0.9999999999999981
+    }
+   }
+  },
+  "wheel_teeth": {
+   "value": 30,
+   "unit": "1",
+   "provenance": {
+    "kind": "derived",
+    "rule": "z\u2082 = number of wheel tooth bodies",
+    "inputs": {
+     "teeth": 30
+    }
+   }
+  },
+  "pressure_angle": {
+   "value": 0.3490658503988659,
+   "unit": "rad",
+   "provenance": {
+    "kind": "declared",
+    "rule": "standard 20\u00b0 normal pressure angle (not measurable from the simplified tooth bodies)"
+   }
+  },
+  "friction": {
+   "value": 0.07,
+   "unit": "1",
+   "provenance": {
+    "kind": "estimated",
+    "rule": "lubricated steel on brass (material pair table)",
+    "inputs": {
+     "pair": [
+      "steel",
+      "brass"
+     ]
+    }
+   }
+  }
+ },
+ "checks": {
+  "wheel_module_mm": 0.5000000000000003,
+  "worm_module_mm": 0.5000000000000008,
+  "agree": true,
+  "starts_raw": 0.9999999999999981
+ }
+}

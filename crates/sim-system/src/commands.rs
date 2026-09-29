@@ -12,6 +12,11 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Command {
+    /// Display-only settings. No physics or CAD geometry changes.
+    SetDisplayGrid { #[serde(default)] at: String, grid: crate::display::Grid },
+    PutThread { thread: crate::display::Thread },
+    DeleteThread { id: String },
+    AddComment { thread: String, comment: crate::display::Comment },
     SetTitle { title: String },
     /// Record (or clear) the numerical settings this system runs with.
     SetRunSettings { run: Option<RunSettings> },
@@ -135,6 +140,20 @@ pub enum Command {
     },
     /// Add definitions (for example from a library file).
     AddDefinitions { definitions: BTreeMap<String, Definition> },
+    /// Replace existing definitions (a newer library version). Every
+    /// placement must still connect; the edit is atomic like all others.
+    UpdateDefinitions { definitions: BTreeMap<String, Definition> },
+    /// Make an inner instance's parameter a parameter of its definition:
+    /// the definition declares `parameter` (unit and default from the inner
+    /// value) and the inner instance inherits it.
+    ExposeParameter {
+        definition: String,
+        instance: String,
+        inner: String,
+        parameter: String,
+        #[serde(default)]
+        description: String,
+    },
     RemoveDefinition { id: String },
     SetDefinitionInfo {
         id: String,
@@ -166,6 +185,12 @@ pub enum Command {
         at: String,
         id: String,
     },
+    /// Save (Some) or delete (None) a named comparison or sweep.
+    SetStudy { name: String, study: Option<Study> },
+    /// Set or clear the realtime profile (and its measured error).
+    SetRealtime { realtime: Option<RealtimeProfile> },
+    /// Name (or clear) a definition's realtime counterpart.
+    SetRealtimeCounterpart { definition: String, realtime: Option<String> },
 }
 
 fn default_true() -> bool {
@@ -184,9 +209,12 @@ pub struct Outcome {
 /// document is left unchanged.
 pub fn apply(document: &mut SystemDocument, registry: &BehaviorRegistry, commands: &[Command]) -> Result<Vec<Outcome>, SystemError> {
     let mut draft = document.clone();
+    crate::display::assign_ids(&mut draft);
     let mut outcomes = Vec::new();
     for (index, command) in commands.iter().enumerate() {
         let outcome = apply_one(&mut draft, registry, command).map_err(|e| SystemError::Command { index, message: e.to_string() })?;
+        crate::display::assign_ids(&mut draft);
+        crate::display::refresh(&mut draft);
         outcomes.push(outcome);
     }
     Resolver::new(&draft, registry).validate().map_err(|e| SystemError::Command { index: commands.len().saturating_sub(1), message: e.to_string() })?;
@@ -210,6 +238,32 @@ fn outcome(document: &SystemDocument, registry: &BehaviorRegistry, definition: &
 fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command: &Command) -> Result<Outcome, SystemError> {
     let at_definition = |document: &SystemDocument, at: &str| Resolver::new(document, registry).definition_id_at(at);
     match command {
+        Command::SetDisplayGrid { at, grid } => {
+            grid.validate()?;
+            let id = at_definition(document, at)?;
+            document.definitions.get_mut(&id).unwrap().grid=grid.clone();
+            Ok(outcome(document, registry, &id, "Display grid updated (no physics change)".into()))
+        }
+        Command::PutThread { thread } => {
+            crate::display::validate_thread(thread)?;
+            let mut thread=thread.clone();
+            for target in thread.targets.iter_mut().chain(thread.comments.iter_mut().flat_map(|c|c.links.iter_mut())) {
+                if target.lineage.is_empty() { *target=crate::display::bind(document,&target.path)?; }
+            }
+            document.discussions.threads.insert(thread.id.clone(),thread);
+            Ok(Outcome { definition:None,shared_by:0,message:"Discussion saved".into() })
+        }
+        Command::DeleteThread { id } => {
+            document.discussions.threads.remove(id).ok_or_else(||SystemError::Invalid("unknown thread".into()))?;
+            Ok(Outcome { definition:None,shared_by:0,message:"Discussion deleted".into() })
+        }
+        Command::AddComment { thread, comment } => {
+            let mut c=comment.clone();
+            for target in &mut c.links { if target.lineage.is_empty() { *target=crate::display::bind(document,&target.path)?; } }
+            let t=document.discussions.threads.get_mut(thread).ok_or_else(||SystemError::Invalid("unknown thread".into()))?;
+            t.comments.push(c); crate::display::validate_thread(t)?;
+            Ok(Outcome { definition:None,shared_by:0,message:"Reply added".into() })
+        }
         Command::SetTitle { title } => {
             document.title = title.clone();
             Ok(Outcome { definition: None, shared_by: 0, message: "Renamed system".into() })
@@ -227,11 +281,13 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
         Command::AddInstance { at, name, instance } => {
             name_ok(name)?;
             let id = at_definition(document, at)?;
+            let mut added = instance.clone();
+            added.display_id = blake3::hash(format!("new:{id}:{name}:{}",document.revision+1).as_bytes()).to_hex()[..24].into();
             let d = definition_mut(document, &id)?;
             if d.instances.contains_key(name) {
                 return Err(SystemError::Invalid(format!("`{id}` already has an instance `{name}`")));
             }
-            d.instances.insert(name.clone(), instance.clone());
+            d.instances.insert(name.clone(), added);
             Ok(outcome(document, registry, &id, format!("Added {name}")))
         }
         Command::RemoveInstance { at, name } => {
@@ -399,8 +455,13 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                 if !valid_definition_id(id) {
                     return Err(SystemError::Invalid(format!("invalid definition id `{id}`")));
                 }
+                // Same contents from another library file (or version tag) is the same definition.
+                let same = |a: &Definition, b: &Definition| {
+                    let strip = |x: &Definition| Definition { source: None, version: None, ..x.clone() };
+                    strip(a) == strip(b)
+                };
                 match document.definitions.get(id) {
-                    Some(existing) if existing == d => {}
+                    Some(existing) if same(existing, d) => {}
                     Some(_) => return Err(SystemError::Invalid(format!("definition `{id}` already exists with different contents; make it unique or remove it first"))),
                     None => {
                         document.definitions.insert(id.clone(), d.clone());
@@ -408,6 +469,45 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                 }
             }
             Ok(Outcome { definition: None, shared_by: 0, message: format!("Added {} definition(s)", definitions.len()) })
+        }
+        Command::UpdateDefinitions { definitions } => {
+            for (id, d) in definitions {
+                if !valid_definition_id(id) {
+                    return Err(SystemError::Invalid(format!("invalid definition id `{id}`")));
+                }
+                document.definitions.insert(id.clone(), d.clone());
+            }
+            Ok(Outcome { definition: None, shared_by: 0, message: format!("Updated {} definition(s): {}", definitions.len(), definitions.keys().cloned().collect::<Vec<_>>().join(", ")) })
+        }
+        Command::ExposeParameter { definition, instance, inner, parameter, description } => {
+            if !valid_name(parameter) {
+                return Err(SystemError::Invalid(format!("invalid parameter name `{parameter}`")));
+            }
+            let spec = document.definitions.get(definition).and_then(|d| d.instances.get(instance)).cloned().ok_or_else(|| SystemError::Invalid(format!("no instance `{instance}` in `{definition}`")))?;
+            // Unit and current value of the inner parameter.
+            let (unit, declared_default) = match &spec.kind {
+                InstanceKind::Element { component_type } => {
+                    let d = registry.get(&component_type.as_str().into()).map_err(|e| SystemError::Invalid(e.to_string()))?;
+                    let p = d.parameters.iter().flatten().find(|p| &p.name == inner).ok_or_else(|| SystemError::Invalid(format!("{component_type} has no parameter `{inner}`")))?;
+                    (p.unit.clone(), p.default)
+                }
+                InstanceKind::Subsystem { definition: child } => {
+                    let p = document.definitions.get(child).and_then(|c| c.parameters.get(inner)).ok_or_else(|| SystemError::Invalid(format!("`{child}` has no parameter `{inner}`")))?;
+                    (p.unit.clone(), p.default)
+                }
+            };
+            let current = match spec.parameters.get(inner) {
+                Some(ParameterBinding::Value { value, .. }) => Some(*value),
+                Some(ParameterBinding::Parameter { .. }) => return Err(SystemError::Invalid(format!("{instance}.{inner} already inherits a parameter"))),
+                None => declared_default,
+            };
+            let d = definition_mut(document, definition)?;
+            if d.parameters.contains_key(parameter) {
+                return Err(SystemError::Invalid(format!("`{definition}` already has a parameter `{parameter}`")));
+            }
+            d.parameters.insert(parameter.clone(), ParameterDecl { unit, default: current, description: description.clone() });
+            d.instances.get_mut(instance).unwrap().parameters.insert(inner.clone(), ParameterBinding::Parameter { parameter: parameter.clone() });
+            Ok(outcome(document, registry, definition, format!("Exposed {instance}.{inner} as {definition}.{parameter}")))
         }
         Command::RemoveDefinition { id } => {
             if id == &document.root || !placements_of(document, id).is_empty() {
@@ -463,6 +563,46 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
             let def = at_definition(document, at)?;
             definition_mut(document, &def)?.references.remove(id).ok_or_else(|| SystemError::Invalid(format!("no reference `{id}`")))?;
             Ok(outcome(document, registry, &def, format!("Removed reference {id}")))
+        }
+        Command::SetRealtime { realtime } => {
+            if let Some(r) = realtime {
+                if !(r.interval > 0.0 && r.duration > 0.0 && r.bound >= 0.0) {
+                    return Err(SystemError::Invalid("realtime profile needs a positive step and duration and a non-negative bound".into()));
+                }
+            }
+            document.realtime = realtime.clone();
+            Ok(Outcome { definition: None, shared_by: 0, message: if realtime.is_some() { "Set the realtime profile".into() } else { "Cleared the realtime profile".into() } })
+        }
+        Command::SetRealtimeCounterpart { definition, realtime } => {
+            if let Some(r) = realtime {
+                if !document.definitions.contains_key(r) {
+                    return Err(SystemError::Invalid(format!("unknown definition `{r}`")));
+                }
+            }
+            definition_mut(document, definition)?.realtime = realtime.clone();
+            Ok(outcome(document, registry, definition, format!("Realtime model of {definition}: {}", realtime.as_deref().unwrap_or("itself"))))
+        }
+        Command::SetStudy { name, study } => {
+            if !valid_name(name) {
+                return Err(SystemError::Invalid(format!("invalid study name `{name}`")));
+            }
+            match study {
+                Some(study) => {
+                    let parent = Resolver::new(document, registry).definition_id_at(&study.at)?;
+                    if !document.definitions[&parent].instances.contains_key(&study.instance) {
+                        return Err(SystemError::Invalid(format!("study `{name}`: no instance `{}` in `{parent}`", study.instance)));
+                    }
+                    if !(study.duration > 0.0 && study.duration.is_finite()) {
+                        return Err(SystemError::Invalid(format!("study `{name}`: duration must be positive")));
+                    }
+                    document.studies.insert(name.clone(), study.clone());
+                    Ok(Outcome { definition: None, shared_by: 0, message: format!("Saved study {name}") })
+                }
+                None => {
+                    document.studies.remove(name).ok_or_else(|| SystemError::Invalid(format!("no study `{name}`")))?;
+                    Ok(Outcome { definition: None, shared_by: 0, message: format!("Removed study {name}") })
+                }
+            }
         }
     }
 }

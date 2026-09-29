@@ -7,6 +7,7 @@ pub mod external;
 pub mod trajectory;
 pub mod motion_parameters;
 pub mod periodic_drift;
+pub mod planar;
 pub mod planar_prediction;
 pub mod contact_phase;
 pub mod smooth_return;
@@ -34,5 +35,9 @@ pub mod fixed_pd;
 pub mod sampled_fixed_pd;
 pub mod reference_governor;
 pub mod motion_primitives;
+pub mod gait_script;
+pub mod maneuver_script;
+pub mod pose_script;
 
 pub mod adaptive_braking;
+pub mod notes;

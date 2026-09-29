@@ -1,0 +1,24 @@
+{
+ "schema": "sim.cad-physics/1",
+ "cad": {
+  "path": "examples/camera-turntable/cad/turntable.rcad",
+  "sha256": "dce8a9fd2412a2b1333988f28366f2dbf63240fe051ebd96896a9005be9fbd12"
+ },
+ "component_type": "rotational.coulomb_friction",
+ "parameters": {
+  "torque": {
+   "value": 0.026000000000000002,
+   "unit": "N\u00b7m",
+   "uncertainty": 0.015600000000000001,
+   "provenance": {
+    "kind": "estimated",
+    "rule": "two 6808-2RS contact-seal drags + capsule slip-ring brush drag",
+    "inputs": {
+     "bearing_seals_Nm": 0.016,
+     "slip_ring_Nm": 0.01,
+     "relative_uncertainty": 0.6
+    }
+   }
+  }
+ }
+}

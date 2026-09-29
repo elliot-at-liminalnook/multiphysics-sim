@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" font-family="IBM Plex Sans">
+  <!-- Torque toward the target, −T_hold·sin(N·e), N = 50, over e from −7.2° to +7.2° (one electrical cycle each way). x: 380 + 45·e(deg); y: 170 − 100·(τ/T_hold). -->
+  <rect x="1" y="1" width="758" height="338" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">A stepper's pull toward its target, against how far the rotor lags</text>
+  <line x1="56" y1="170" x2="704" y2="170" stroke="#99a6b5" stroke-width="1.5"/>
+  <line x1="380" y1="60" x2="380" y2="290" stroke="#99a6b5" stroke-width="1.5"/>
+  <text x="700" y="190" font-size="12.5" fill="#99a6b5" text-anchor="end">rotor behind target →</text>
+  <text x="388" y="70" font-size="12.5" fill="#99a6b5">torque forward</text>
+  <polyline fill="none" stroke="#4dd4bf" stroke-width="3" points="56,170 97,241 137,270 178,241 218,170 259,99 299,70 340,99 380,170 421,241 461,270 502,241 542,170 583,99 623,70 664,99 704,170" transform="matrix(1 0 0 -1 0 340)"/>
+  <text x="461" y="62" font-size="12.5" fill="#4dd4bf" text-anchor="middle">T_hold at 1.8° (one step)</text>
+  <line x1="461" y1="70" x2="461" y2="170" stroke="#4dd4bf" stroke-dasharray="3 4"/>
+  <text x="542" y="190" font-size="12.5" fill="#de9454" text-anchor="middle">3.6°: pull falls to zero</text>
+  <rect x="560" y="210" width="176" height="74" rx="8" fill="#1a2129" stroke="#2e353f"/>
+  <text x="574" y="234" font-size="12.5" fill="#e6ebf1">Lag more than two steps</text>
+  <text x="574" y="252" font-size="12.5" fill="#e6ebf1">and the pull reverses:</text>
+  <text x="574" y="270" font-size="12.5" fill="#de9454">steps are lost.</text>
+  <text x="24" y="318" font-size="12.5" fill="#99a6b5">Near the target it is a stiff spring (T_hold × 50 per radian). The most it can pull is the holding torque, at a lag of one full step.</text>
+</svg>

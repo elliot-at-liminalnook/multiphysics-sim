@@ -124,6 +124,26 @@ pub fn step(
     // Division truncates toward zero on both backends, including negative commands.
     Ok((raw / 256).clamp(-(g.limit as i32), g.limit as i32) as i16)
 }
+/// The same law and rounding on count differences, for a multi-turn encoder
+/// whose absolute count no longer fits 12 bits. `error` = target − position,
+/// `moved` = position − previous, `delta` = target step; each is bounded like
+/// the single-turn inputs, so every intermediate still fits signed 32 bits.
+pub fn step_differences(g: Gains, error: i32, moved: i32, delta: i32) -> Result<i16, String> {
+    g.validate()?;
+    if [error, moved, delta].iter().any(|x| x.unsigned_abs() > 4095) {
+        return Err("Fixed PD differences must stay within 4095 encoder counts".into());
+    }
+    let raw = law().eval(&[
+        error,
+        0,
+        -moved,
+        delta,
+        g.kp_q8.into(),
+        g.kd_q8.into(),
+        g.kv_q8.into(),
+    ]);
+    Ok((raw / 256).clamp(-(g.limit as i32), g.limit as i32) as i16)
+}
 pub fn verilog() -> String {
     let mut statements = vec![];
     let numerator = law().pipeline(&mut statements);

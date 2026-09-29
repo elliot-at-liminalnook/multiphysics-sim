@@ -23,6 +23,11 @@ pub struct SessionConfig {
     /// island's integrator and multirate step size.
     pub integrator: Integrator,
     pub seed: u64,
+    /// Snap each island's clock onto its step grid so scheduled switching
+    /// events land on step ends (`Runtime::set_grid_snapping`). Part of the
+    /// recorded configuration so every host running a launch agrees.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub grid_snapping: bool,
 }
 impl SessionConfig {
     pub fn validate(&self) -> Result<(), String> {
@@ -132,6 +137,7 @@ impl Recording {
                 interval: island.step_size,
                 integrator: island.integrator,
                 seed: self.config.seed,
+                grid_snapping: self.config.grid_snapping,
             }
             .validate()?;
             if !island.event_tolerance.is_finite() || island.event_tolerance <= 0. {
@@ -281,6 +287,7 @@ impl SystemSession {
         if system.runtime.time != 0. {
             return Err("session factory must return a fresh runtime at time zero".into());
         }
+        system.runtime.set_grid_snapping(config.grid_snapping);
         system
             .inspection
             .description
@@ -296,6 +303,7 @@ impl SystemSession {
                 interval: step,
                 integrator: island.integrator,
                 seed: config.seed,
+                grid_snapping: config.grid_snapping,
             }
             .validate()?;
             if island.time != 0. {
@@ -459,7 +467,11 @@ impl SystemSession {
             // (repeated `t += h` random-walks the clock away from scheduled
             // event times until an edge splits off a femtosecond step).
             let target = next.step as f64 * self.config.interval;
-            let duration = target - self.system.runtime.time;
+            let duration = if self.system.runtime.grid_snapping() {
+                target - self.system.runtime.time
+            } else {
+                self.config.interval
+            };
             self.system
                 .runtime
                 .advance(duration, self.config.interval)
@@ -512,6 +524,45 @@ impl SystemSession {
         }
     }
     /// Reconstruct before swapping, so a failed reset preserves the old session.
+    /// Replace the model while running (an edit in a viewer). When the new
+    /// model has the same structure (a parameter edit), the committed state
+    /// and clock carry over and the run continues; otherwise (a structural
+    /// edit) the new model starts at t = 0. Subscriptions are kept where the
+    /// new description still has the observables. Returns whether the state
+    /// was preserved. Any active recording ends.
+    pub fn hot_swap(&mut self, factory: impl FnMut(&SessionConfig) -> Result<PreparedSystem, String> + 'static) -> Result<bool, String> {
+        let mut factory: Factory = Box::new(factory);
+        let mut system = factory(&self.config)?;
+        Self::initialize(&mut system, &self.config)?;
+        let snapshot = self.system.runtime.snapshot();
+        let preserved = system.runtime.restore(&snapshot).is_ok();
+        if !preserved {
+            // A failed restore may have partially written state: rebuild clean.
+            system = factory(&self.config)?;
+            Self::initialize(&mut system, &self.config)?;
+        }
+        let known: BTreeSet<String> = self.selected.iter().filter(|id| system.inspection.description.observables.contains_key(*id)).cloned().collect();
+        let display = system.inspection.subscribe(known.iter().map(String::as_str)).map_err(|e| e.to_string())?;
+        let mut status = self.status.clone();
+        status.generation = status.generation.checked_add(1).ok_or("generation exhausted")?;
+        status.sequence = 0;
+        if !preserved {
+            status.time = 0.;
+            status.step = 0;
+            status.events = 0;
+        }
+        status.message = Some(if preserved { "model updated; state carried over".into() } else { "model structure changed; restarted at t = 0".into() });
+        let frame = display.sample(&system.runtime, Self::stamp(&status)).map_err(|e| e.to_string())?;
+        let _ = self.take_recording();
+        self.factory = factory;
+        self.system = system;
+        self.display = display;
+        self.selected = known;
+        self.status = status;
+        self.last_frame = frame;
+        Ok(preserved)
+    }
+
     fn reset(&mut self) -> Result<Option<Recording>, String> {
         let mut system = (self.factory)(&self.config)?;
         Self::initialize(&mut system, &self.config)?;

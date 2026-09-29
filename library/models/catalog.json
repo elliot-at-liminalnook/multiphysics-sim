@@ -51,6 +51,102 @@
     "heatsink": {
       "file": "heatsink.obj",
       "description": "Finned aluminium heatsink, 30 \u00d7 20 \u00d7 15 mm"
+    },
+    "worm": {
+      "file": "worm.obj",
+      "description": "Single-start steel worm, module 0.5, pitch \u00d88"
+    },
+    "worm_wheel_drum": {
+      "file": "worm_wheel_drum.obj",
+      "description": "30-tooth bronze worm wheel on a \u00d820 winch drum"
+    },
+    "worm_gear_frame": {
+      "file": "worm_gear_frame.obj",
+      "description": "Worm-gear base plate and bearing blocks"
+    },
+    "lead_screw_nut": {
+      "file": "lead_screw_nut.obj",
+      "description": "Tr8 lead screw with flanged bronze nut"
+    },
+    "nema17": {
+      "file": "nema17.obj",
+      "description": "NEMA 17 stepper motor"
+    },
+    "outrunner": {
+      "file": "outrunner.obj",
+      "description": "2212-class brushless outrunner on a cross mount"
+    },
+    "propeller": {
+      "file": "propeller.obj",
+      "description": "10-inch two-blade propeller"
+    },
+    "wheel": {
+      "file": "wheel.obj",
+      "description": "80 mm robot wheel with rubber tyre"
+    },
+    "gt2_pulley": {
+      "file": "gt2_pulley.obj",
+      "description": "GT2 20-tooth pulley with belt"
+    },
+    "rack_pinion": {
+      "file": "rack_pinion.obj",
+      "description": "Module-1 pinion on a rack"
+    },
+    "solenoid": {
+      "file": "solenoid.obj",
+      "description": "Open-frame pull solenoid"
+    },
+    "driver_board": {
+      "file": "driver_board.obj",
+      "description": "H-bridge motor driver board"
+    },
+    "pin_plate": {
+      "file": "pin_plate.obj",
+      "description": "Printed plate with one \u00d83.2 mm pin hole (slides along X)"
+    },
+    "pin_plate_two": {
+      "file": "pin_plate_two.obj",
+      "description": "Printed plate with two pin holes 60 mm apart (slides along X)"
+    },
+    "pin_base": {
+      "file": "pin_base.obj",
+      "description": "Printed base with one pin hole"
+    },
+    "pin_base_two": {
+      "file": "pin_base_two.obj",
+      "description": "Printed base with two pin holes 60 mm apart"
+    },
+    "dowel_pin": {
+      "file": "dowel_pin.obj",
+      "description": "\u00d83 \u00d7 14 mm steel dowel pin"
+    },
+    "dovetail_socket": {
+      "file": "dovetail_socket.obj",
+      "description": "Printed block with a 15\u00b0 dovetail groove"
+    },
+    "dovetail_tail": {
+      "file": "dovetail_tail.obj",
+      "description": "Printed part with a 15\u00b0 dovetail tail (pulled upward)"
+    },
+    "dovetail_groove_long": {
+      "file": "dovetail_groove_long.obj",
+      "description": "Printed rail with an 80 mm dovetail groove along X"
+    },
+    "dovetail_slider": {
+      "file": "dovetail_slider.obj",
+      "description": "Printed part with a dovetail tail sliding along X"
+    },
+    "insert_boss": {
+      "file": "insert_boss.obj",
+      "description": "Printed \u00d812 mm boss with an M3 brass heat-set insert"
+    },
+    "tapped_boss": {
+      "file": "tapped_boss.obj",
+      "description": "Printed \u00d812 mm boss with a \u00d82.5 mm pilot hole for a self-tapped M3 screw"
+    },
+    "m3_screw": {
+      "file": "m3_screw.obj",
+      "description": "M3 socket-head screw, 18 mm shank"
     }
   },
   "defaults": {
@@ -68,6 +164,20 @@
     "robot.motor_unit": "servo",
     "bridge.brushed_motor": "dc_motor",
     "bridge.motor": "dc_motor",
-    "rotational.inertia": "flywheel"
+    "rotational.inertia": "flywheel",
+    "rotational.worm_gear": "worm_gear_frame",
+    "bridge.lead_screw": "lead_screw_nut",
+    "part.stepper_motor": "nema17",
+    "part.bldc_motor": "outrunner",
+    "part.propeller": "propeller",
+    "part.drive_wheel": "wheel",
+    "part.timing_belt": "gt2_pulley",
+    "part.rack_pinion": "rack_pinion",
+    "part.solenoid": "solenoid",
+    "robot.h_bridge": "driver_board",
+    "robot.switchable_h_bridge": "driver_board",
+    "actuator.pwm_driver": "driver_board",
+    "part.coreless_motor": "dc_motor",
+    "part.brushed_motor_eq": "dc_motor"
   }
 }

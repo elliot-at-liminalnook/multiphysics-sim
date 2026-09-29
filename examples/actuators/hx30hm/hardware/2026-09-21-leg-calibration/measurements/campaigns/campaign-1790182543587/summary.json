@@ -1,0 +1,101 @@
+{
+  "aborted": [],
+  "axes": [
+    {
+      "id": 1,
+      "lower": 2702.0,
+      "role": "knee",
+      "upper": 3464.0
+    },
+    {
+      "id": 3,
+      "lower": 2393.0,
+      "role": "belt/hip",
+      "upper": 3473.0
+    }
+  ],
+  "directory": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/campaigns/campaign-1790182543587",
+  "headline": "19 stages, 0 stopped by a gate",
+  "ranking": [
+    {
+      "axis": 1,
+      "measure_with": "C coast-down",
+      "quantity": "braking_decreasing",
+      "relative_uncertainty": 0.25,
+      "score": 0.125,
+      "sensitivity": 0.5
+    },
+    {
+      "axis": 1,
+      "measure_with": "C coast-down",
+      "quantity": "braking_increasing",
+      "relative_uncertainty": 0.25,
+      "score": 0.125,
+      "sensitivity": 0.5
+    },
+    {
+      "axis": 3,
+      "measure_with": "C coast-down",
+      "quantity": "braking_decreasing",
+      "relative_uncertainty": 0.25,
+      "score": 0.125,
+      "sensitivity": 0.5
+    },
+    {
+      "axis": 3,
+      "measure_with": "C coast-down",
+      "quantity": "braking_increasing",
+      "relative_uncertainty": 0.25,
+      "score": 0.125,
+      "sensitivity": 0.5
+    },
+    {
+      "axis": 1,
+      "measure_with": "G effort ladder",
+      "quantity": "acceleration_decreasing",
+      "relative_uncertainty": 0.10924076652884664,
+      "score": 0.09831668987596197,
+      "sensitivity": 0.9
+    },
+    {
+      "axis": 1,
+      "measure_with": "G effort ladder",
+      "quantity": "top_speed_increasing",
+      "relative_uncertainty": 0.09677419354838711,
+      "score": 0.09677419354838711,
+      "sensitivity": 1.0
+    },
+    {
+      "axis": 3,
+      "measure_with": "A load profile, cosine fit",
+      "quantity": "constant_load",
+      "relative_uncertainty": 0.40821254972581583,
+      "score": 0.08164250994516317,
+      "sensitivity": 0.2
+    },
+    {
+      "axis": 1,
+      "measure_with": "G effort ladder",
+      "quantity": "top_speed_decreasing",
+      "relative_uncertainty": 0.07936507936507929,
+      "score": 0.07936507936507929,
+      "sensitivity": 1.0
+    }
+  ],
+  "replay": [
+    {
+      "axis": 1,
+      "fitted_model_rms_counts": 27.464124289424678,
+      "tuned_model_rms_counts": 34.778051197216385
+    },
+    {
+      "axis": 3,
+      "fitted_model_rms_counts": 44.40687615328289,
+      "tuned_model_rms_counts": 76.1470714973238
+    }
+  ],
+  "skipped": [
+    "worm (poses not taught)"
+  ],
+  "wall_s": 810.329217952
+}

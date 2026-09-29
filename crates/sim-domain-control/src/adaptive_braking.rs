@@ -18,6 +18,14 @@ pub struct Config {
     pub braking_safety_factor: f64,
     pub trial_speed_growth: f64,
     pub maximum_evidence_age_s: f64,
+    /// Learning starts its trials at this fraction of the requested speed
+    /// (never below the bootstrap speed); the stopping-distance limit still
+    /// applies with the fallback deceleration until stops are measured.
+    #[serde(default = "default_learning_start_fraction")]
+    pub learning_start_fraction: f64,
+}
+fn default_learning_start_fraction() -> f64 {
+    0.25
 }
 impl Config {
     pub fn validate(&self) -> Result<(), String> {
@@ -33,7 +41,8 @@ impl Config {
         .any(|x| !x.is_finite() || *x <= 0.)
             || !(0.2..=0.4).contains(&self.learning_inset_fraction)
             || !(0.1..=0.5).contains(&self.braking_safety_factor)
-            || !(1.01..=1.25).contains(&self.trial_speed_growth)
+            || !(1.01..=2.0).contains(&self.trial_speed_growth)
+            || !(0.0..=1.0).contains(&self.learning_start_fraction)
             || !(3..=16).contains(&self.minimum_stops)
         {
             return Err("Invalid adaptive braking assumptions".into());
@@ -82,6 +91,9 @@ pub struct Envelope {
     pub stopping_distance_rad: f64,
     pub deceleration_rad_s2: f64,
     pub measured_speed_limit_rad_s: f64,
+    /// Speed from which a stop fits before the bound at the current braking
+    /// assumption and reaction time, before any demonstrated-speed limit.
+    pub stopping_speed_limit_rad_s: f64,
     pub accepted_stops: usize,
     pub brake_now: bool,
     pub margin_rad: f64,
@@ -207,6 +219,7 @@ impl Model {
             stopping_distance_rad: stopping,
             deceleration_rad_s2: a,
             measured_speed_limit_rad_s: demonstrated,
+            stopping_speed_limit_rad_s: geometric.max(0.),
             accepted_stops: self.evidence(c, direction, time).len(),
             brake_now: outward > c.bootstrap_speed_rad_s * 0.4 && stopping >= distance,
             margin_rad: margin,
@@ -351,6 +364,7 @@ mod tests {
             braking_safety_factor: 0.5,
             trial_speed_growth: 1.25,
             maximum_evidence_age_s: 120.,
+            learning_start_fraction: 0.25,
         }
     }
     fn stop(

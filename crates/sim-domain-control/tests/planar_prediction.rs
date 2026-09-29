@@ -2,7 +2,7 @@ use sim_domain_control::{
     planar_prediction::{
         PlanarPrediction, PlanarResponseWindow, PlanarTrendPrediction, TimedPlanarPose,
     },
-    stepping::advance_planar,
+    planar::advance_planar,
 };
 
 #[test]

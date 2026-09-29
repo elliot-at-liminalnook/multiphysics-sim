@@ -1,0 +1,465 @@
+{
+  "schema": "sim.system/1",
+  "title": "Lead-screw lift",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Lead-screw lift",
+      "description": "The 12 V can motor lifts 2 kg straight up with a T8 lead screw; at 0.8 s the power goes off.",
+      "instances": {
+        "carriage": {
+          "display_id": "c4d823eacd5a404f2933bea7",
+          "label": "Carriage and 2 kg load",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 2 kg load on a vertical carriage."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.034,
+                0.022,
+                0.034
+              ]
+            },
+            "color_srgb": [
+              0.35,
+              0.36,
+              0.38
+            ]
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Motor mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.1,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "DC motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "resistance": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "display_id": "5bb5143f5f36f47cb9735055",
+          "label": "Motor rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.058,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.002,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "screw": {
+          "display_id": "b0658c785a9051abeb0ed68c",
+          "label": "Lead screw T8, 8 mm lead",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.lead_screw"
+          },
+          "parameters": {
+            "friction": {
+              "value": 0.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A T8 lead screw (8 mm diameter) with a 4-start, 8 mm lead thread and a bronze nut in the carriage, μ ≈ 0.15."
+              }
+            },
+            "lead": {
+              "value": 0.008,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A T8 lead screw (8 mm diameter) with a 4-start, 8 mm lead thread and a bronze nut in the carriage, μ ≈ 0.15."
+              }
+            },
+            "pitch_diameter": {
+              "value": 0.008,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A T8 lead screw (8 mm diameter) with a 4-start, 8 mm lead thread and a bronze nut in the carriage, μ ≈ 0.15."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.165,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.004,
+              "length": 0.2
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "stops": {
+          "display_id": "3ae5754fb2f6830e936bff39",
+          "label": "End stops",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": -0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Travel from −5 cm to +12 cm."
+              }
+            },
+            "upper": {
+              "value": 0.12,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Travel from −5 cm to +12 cm."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.05,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "supply": {
+          "display_id": "5c375faedf24a2cc595952ea",
+          "label": "Supply (off at 0.8 s)",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.switched_voltage_source"
+          },
+          "parameters": {
+            "off_at": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "12 V, switched off at 0.8 s."
+              }
+            },
+            "on_at": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "12 V, switched off at 0.8 s."
+              }
+            },
+            "voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "12 V, switched off at 0.8 s."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.12,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        },
+        "weight": {
+          "display_id": "bc91ad4d0db8f395f44a9396",
+          "label": "Weight",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.load_force"
+          },
+          "parameters": {
+            "force": {
+              "value": -19.62,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "m·g = 2 × 9.81 N, pulling down."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "0 V",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "label": "motor shaft",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "screw",
+              "port": "screw"
+            }
+          ]
+        },
+        {
+          "label": "carriage",
+          "terminals": [
+            {
+              "instance": "screw",
+              "port": "nut"
+            },
+            {
+              "instance": "carriage",
+              "port": "axis"
+            },
+            {
+              "instance": "weight",
+              "port": "axis"
+            },
+            {
+              "instance": "stops",
+              "port": "axis"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0002,
+    "rationale": "Stiff belt and end stops, and the screw's friction switches with direction: backward Euler, 0.2 ms."
+  }
+}

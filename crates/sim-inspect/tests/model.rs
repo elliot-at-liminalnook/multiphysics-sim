@@ -274,6 +274,7 @@ fn process_local_factory_handles_are_not_physical_parameters_or_identity() {
             display_name: "Referenced model",
             ports: vec![],
             equations: None,
+            notes: None,
             parameters: Some(vec![
                 sim_core::ParameterDeclaration::required("reference", "handle")
                     .implementation_reference(),

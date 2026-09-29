@@ -1,0 +1,32 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "bridge.thermistor",
+  "label": "Temperature-dependent resistor",
+  "kind": "generic",
+  "parameters": {
+    "coefficient": -0.04,
+    "reference": 298.15,
+    "resistance": 10000.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 1.1937117960769683e-12,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.900e-1 J → change 1.194e-12 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 7.9e-17, 1.6e-16, 1.6e-16 (1 → 0.125 ms); observed order 0.0"
+    }
+  ]
+}

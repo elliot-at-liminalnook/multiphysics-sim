@@ -102,7 +102,9 @@ impl Telemetry {
             speed_rad_s: signed_speed * std::f64::consts::TAU / 4096.,
             load_raw: word(4),
             voltage_raw: p[6],
-            voltage_v: p[6] as f64 * 0.1,
+            // Divide, not multiply: 126 * 0.1 is 12.600000000000001 and tripped
+            // the 12.6 V commissioning limit on a legal reading.
+            voltage_v: p[6] as f64 / 10.,
             temperature_c: p[7],
             status: p[9],
             moving: p[10],
@@ -130,6 +132,17 @@ mod tests {
         assert_eq!(signed_pwm_write_parameters(0, 11).unwrap(), [0x2c, 0, 0]);
         assert!(signed_pwm_write_parameters(i16::MIN, 11).is_err());
         assert!(signed_pwm_write_parameters(-100, 9).is_err());
+    }
+    #[test]
+    fn voltage_decodes_to_the_exact_tenth() {
+        let mut p = [0u8; 15];
+        for raw in 90..=140u8 {
+            p[6] = raw;
+            let t = Telemetry::decode(&p).unwrap();
+            assert_eq!(t.voltage_v, format!("{}.{}", raw / 10, raw % 10).parse::<f64>().unwrap(), "raw {raw}");
+        }
+        p[6] = 126;
+        assert!((9.0..=12.6).contains(&Telemetry::decode(&p).unwrap().voltage_v), "12.6 V is inside the limit");
     }
     #[test]
     fn documented_position_reply() {

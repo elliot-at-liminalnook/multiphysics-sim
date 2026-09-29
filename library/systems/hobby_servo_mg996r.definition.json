@@ -1,0 +1,426 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "hobby_servo_mg996r",
+  "definitions": {
+    "hobby_servo_mg996r": {
+      "label": "Hobby servo (MG996R-class)",
+      "description": "A standard RC servo: DC motor, 300:1 plastic-and-metal gears, a potentiometer and a 50 Hz position loop inside one case. Give it power and a target angle.",
+      "interface": "servo",
+      "ports": {
+        "horn": {
+          "label": "Output horn"
+        },
+        "n": {
+          "label": "Power −"
+        },
+        "p": {
+          "label": "Power +"
+        },
+        "target": {
+          "label": "Target angle"
+        }
+      },
+      "instances": {
+        "air": {
+          "label": "Air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 293.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.04,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "case_heat": {
+          "label": "Case",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 20.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "initial.temperature": {
+              "value": 293.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "driver": {
+          "label": "Driver",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "loop": {
+          "label": "Position loop",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.servo_firmware"
+          },
+          "parameters": {
+            "deadband": {
+              "value": 0.005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "kd": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "kp": {
+              "value": 8.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "rate": {
+              "value": 50.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "Motor and gears",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.motor_unit"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "gear_friction": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "ratio": {
+              "value": 300.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "resistance": {
+              "value": 2.6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "rotor_inertia": {
+              "value": 1e-7,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            },
+            "torque_constant": {
+              "value": 0.0032,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            }
+          }
+        },
+        "pot": {
+          "label": "Potentiometer",
+          "kind": {
+            "kind": "element",
+            "component_type": "sensor.encoder"
+          },
+          "placement": {
+            "position": [
+              0.01,
+              0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "tach": {
+          "label": "Speed estimate",
+          "kind": {
+            "kind": "element",
+            "component_type": "sensor.tachometer"
+          },
+          "placement": {
+            "position": [
+              0.01,
+              0.015,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "to_air": {
+          "label": "Case to air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.1,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative MG996R-class servo at 6 V: ≈ 1.1 N·m stall, 0.17 s/60°, 50 Hz position loop."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "pot",
+              "port": "angle"
+            },
+            {
+              "instance": "loop",
+              "port": "measured"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "tach",
+              "port": "speed"
+            },
+            {
+              "instance": "loop",
+              "port": "rate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "loop",
+              "port": "command"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "winding"
+            },
+            {
+              "instance": "case_heat",
+              "port": "node"
+            },
+            {
+              "instance": "to_air",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "to_air",
+              "port": "b"
+            },
+            {
+              "instance": "air",
+              "port": "node"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "target"
+            },
+            {
+              "instance": "loop",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "pot",
+              "port": "shaft"
+            },
+            {
+              "instance": "tach",
+              "port": "shaft"
+            },
+            {
+              "boundary": "horn"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

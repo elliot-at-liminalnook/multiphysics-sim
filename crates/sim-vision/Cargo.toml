@@ -1,0 +1,16 @@
+[package]
+name = "sim-vision"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+# Native builds render and match rows in parallel; wasm stays single-threaded.
+parallel = ["dep:rayon"]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+image = { version = "=0.25.10", default-features = false, features = ["png"] }
+rayon = { version = "1", optional = true }

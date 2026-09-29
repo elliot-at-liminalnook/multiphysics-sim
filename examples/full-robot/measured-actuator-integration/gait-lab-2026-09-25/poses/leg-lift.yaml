@@ -1,0 +1,12 @@
+version: 1
+name: leg-lift-plus-x
+notes: |
+  Lift the +X foot and swing its hip forward, hold, and put it back.
+poses:
+  stand: {}
+  lift:
+    legs:
+      +X: {foot_servo_deg: -100, hip_servo_deg: 15}
+sequence:
+  - {pose: stand, move_s: 1.0, hold_s: 1.0}
+  - {pose: lift, move_s: 1.0, hold_s: 1.5}

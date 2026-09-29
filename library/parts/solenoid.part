@@ -1,0 +1,27 @@
+# Pull solenoid: coil around a plunger; inductance rises as the air gap closes.
+part solenoid "Pull solenoid"
+category Actuators
+summary "A coil that pulls an iron plunger in: strong at short stroke, weak when open, energy-consistent force from the changing inductance."
+explain "The coil's inductance grows as the plunger closes the air gap, modeled as L(x) = L_c·g/(g + x) for gap x ≥ 0. The electrical equation includes the motional term: L·di/dt + i·(dL/dx)·v = V − R·i. The pull force follows from energy conservation: F = ½·i²·dL/dx (negative dL/dx, so it pulls x toward 0). Force therefore rises steeply as the gap closes; the flux-linkage change also slows the current rise while the plunger moves."
+tradeoffs "Simple, cheap, fast short-stroke actuation for latches, valves and grippers. Force varies strongly with position and it only pulls (add a spring to return); holding in wastes power as heat (PWM the hold current down). A voice coil gives force that is independent of position and bidirectional."
+limits "Linear magnetics (no saturation or fringing detail), no hard stop included (add part.hard_stop_linear), gap clipped at zero, constant resistance."
+pairs translational.mass translational.spring part.hard_stop_linear electrical.switched_voltage_source electrical.ground translational.ground
+port p electrical
+port n electrical
+port plunger translational
+port frame translational
+param resistance Ω ~ 12 "Coil resistance"
+param inductance_closed H ~ 0.06 "Inductance with the gap closed"
+param gap_scale m = 0.002 "Gap at which the inductance has halved"
+state i Current = 0
+let x = max(plunger.s - frame.s, 0)
+let l = inductance_closed*gap_scale/(gap_scale + x)
+let dldx = -inductance_closed*gap_scale/(gap_scale + x)^2
+eq l*der(i) + i*dldx*(plunger.v - frame.v) = p.v - n.v - resistance*i
+flow p = i
+flow n = -i
+flow plunger = -0.5*i^2*dldx
+flow frame = 0.5*i^2*dldx
+energy 0.5*l*i^2
+derive "electrical time constant (closed)" = inductance_closed/resistance s
+derive "pull force per amp² at closure" = 0.5*inductance_closed/gap_scale N/A^2

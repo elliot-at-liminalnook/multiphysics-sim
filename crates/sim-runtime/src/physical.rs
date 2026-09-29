@@ -396,6 +396,15 @@ impl PhysicalRobot {
             m.connect(case_ports);
             // Electrical path: supply → bridge → unit, and the firmware.
             let fw = &motor.firmware;
+            // Only position servo firmware on an H-bridge is modelled; say so
+            // when the CAD declares another loop or driver instead of silently
+            // treating the command as a position target.
+            if !opts.driver_control && !matches!(fw.kind.as_str(), "servo" | "position" | "none") {
+                warnings.push(format!("motor {}: `{}` firmware is simulated as a position servo; its target is an angle", motor.name, fw.kind));
+            }
+            if fw.kind != "none" && !matches!(motor.driver.kind.as_str(), "h_bridge" | "servo_internal" | "") {
+                warnings.push(format!("motor {}: `{}` driver is simulated as an averaged H-bridge", motor.name, motor.driver.kind));
+            }
             let (bridge, firmware) = if fw.kind == "none" && !opts.driver_control {
                 m.connect([unit.port("p")]);
                 gnd_ports.push(unit.port("n"));
@@ -529,9 +538,14 @@ impl PhysicalRobot {
         let battery_ids = battery.as_ref().map(|b| (runtime.state_id(b.behavior, "soc"), runtime.across_id(b.port("p")), runtime.across_id(b.port("n")), runtime.state_id(b.behavior, "current")));
         // Targets: the control block's hold values (rad) in `targets_order`.
         let initial: Vec<f64> = targets_order.iter().map(|p| model.control.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(0.0)).collect();
-        let targets = Arc::new(Mutex::new(initial));
+        let targets = Arc::new(Mutex::new(initial.clone()));
+        if !matches!(model.control.mode.as_str(), "hold" | "trajectory") {
+            return Err(format!("control mode `{}` is not supported; use `hold` or `trajectory`", model.control.mode));
+        }
         let trajectory: Vec<(f64, Vec<f64>)> = if model.control.mode == "trajectory" {
-            model.control.trajectory.iter().map(|pt| (pt.t, targets_order.iter().map(|p| pt.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(0.0)).collect())).collect()
+            // A point that omits a joint holds that joint's control target
+            // (e.g. joints absent from an identification log), not zero.
+            model.control.trajectory.iter().map(|pt| (pt.t, targets_order.iter().zip(&initial).map(|(p, hold)| pt.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(*hold)).collect())).collect()
         } else {
             Vec::new()
         };
@@ -979,9 +993,15 @@ impl PhysicalRobot {
         for (k, ids) in self.motors.iter().enumerate() {
             trace_motors.insert(ids.name.clone(), json!({"current": self.trace_motors.iter().map(|r| r[k][0]).collect::<Vec<f64>>(), "winding_c": self.trace_motors.iter().map(|r| r[k][1]).collect::<Vec<f64>>(), "torque_nm": self.trace_motors.iter().map(|r| r[k][2]).collect::<Vec<f64>>()}));
         }
+        // CAD compares this with its current snapshot to flag stale results.
+        let provenance = match self.model.source.get("physical_hash") {
+            Some(hash) if hash.is_string() => json!({"physical_hash": hash, "cad_source": self.model.source}),
+            _ => Value::Null,
+        };
         json!({
             "version": 1,
             "model": model_path,
+            "provenance": provenance,
             "duration_s": self.runtime.time,
             "steps": self.steps,
             "step_refinements": self.step_refinements,
@@ -1358,17 +1378,28 @@ pub struct Log {
 
 pub fn read_log(path: &str) -> Result<Log, String> {
     let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
-    let mut lines = text.lines().filter(|l| !l.trim().is_empty());
-    let header: Vec<String> = lines.next().ok_or("empty log")?.split(',').map(|s| s.trim().to_owned()).collect();
+    let mut lines = text.lines().enumerate().filter(|(_, l)| !l.trim().is_empty());
+    let header: Vec<String> = lines.next().ok_or("empty log")?.1.split(',').map(|s| s.trim().to_owned()).collect();
     let mut columns: Vec<Vec<f64>> = vec![Vec::new(); header.len()];
-    for line in lines {
-        for (k, cell) in line.split(',').enumerate() {
-            if k < columns.len() {
-                columns[k].push(cell.trim().parse().unwrap_or(f64::NAN));
+    // Every row must fill every column: a short row or an unreadable cell would
+    // otherwise shift samples against `t` and silently corrupt the fit.
+    for (number, line) in lines {
+        let cells: Vec<&str> = line.split(',').collect();
+        if cells.len() != header.len() {
+            return Err(format!("{path}:{}: {} cells, header has {}", number + 1, cells.len(), header.len()));
+        }
+        for (k, cell) in cells.iter().enumerate() {
+            let value: f64 = cell.trim().parse().map_err(|_| format!("{path}:{}: `{}` in column {} is not a number", number + 1, cell.trim(), header[k]))?;
+            if !value.is_finite() {
+                return Err(format!("{path}:{}: non-finite value in column {}", number + 1, header[k]));
             }
+            columns[k].push(value);
         }
     }
     let t_index = header.iter().position(|h| h == "t" || h == "time").ok_or("log needs a `t` column")?;
+    if columns[t_index].windows(2).any(|w| w[1] < w[0]) {
+        return Err(format!("{path}: time must not decrease"));
+    }
     let mut log = Log { t: columns[t_index].clone(), angles: BTreeMap::new(), targets: BTreeMap::new(), currents: BTreeMap::new() };
     for (k, h) in header.iter().enumerate() {
         if let Some(j) = h.strip_suffix(".angle") {
@@ -1572,6 +1603,24 @@ mod identification_export_tests {
         assert!((restored.motors[0].electrical.back_emf_constant / model.motors[0].electrical.back_emf_constant - 1.7).abs() < 1e-12);
         assert_eq!(json!(restored.joint(&joints[0]).unwrap().physics.stiffness), json!(expected.joint(&joints[0]).unwrap().physics.stiffness));
         assert_eq!(json!(restored.joint(&joints[0]).unwrap().physics.friction), json!(expected.joint(&joints[0]).unwrap().physics.friction));
+    }
+
+    #[test]
+    fn identification_logs_reject_rows_that_would_shift_samples() {
+        let dir = std::env::temp_dir().join(format!("read-log-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let write = |name: &str, text: &str| {
+            let path = dir.join(name);
+            std::fs::write(&path, text).unwrap();
+            path.to_string_lossy().to_string()
+        };
+        let good = read_log(&write("good.csv", "t,knee.angle,knee.target\n0,0.1,0.2\n0.01,0.11,0.2\n0.01,0.12,0.2\n")).unwrap();
+        assert_eq!(good.t, vec![0.0, 0.01, 0.01]);
+        assert_eq!(good.angles["knee"], vec![0.1, 0.11, 0.12]);
+        assert!(read_log(&write("short.csv", "t,knee.angle\n0,0.1\n0.01\n")).err().unwrap().contains(":3:"));
+        assert!(read_log(&write("text.csv", "t,knee.angle\n0,abc\n")).err().unwrap().contains("not a number"));
+        assert!(read_log(&write("back.csv", "t,knee.angle\n0.02,0\n0.01,0\n")).err().unwrap().contains("must not decrease"));
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

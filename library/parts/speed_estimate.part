@@ -1,0 +1,14 @@
+# Speed from an angle reading: the filtered derivative every controller uses.
+part speed_estimate "Speed from angle (filtered derivative)"
+category Sensing
+summary "Estimates speed by differentiating an angle reading through a low-pass filter, as firmware does with encoder counts."
+explain "speed = (θ − θ_f)/τ, where θ_f follows θ through a first-order lag of time constant τ. For smooth motion this is the true speed delayed by about τ. On a quantized reading (encoder counts) every count arrives as a jump, and the estimate spikes by about one count/τ: a short τ is fast but noisy, a long τ smooth but late."
+tradeoffs "Speed resolution ≈ count size/τ, delay ≈ τ. More counts per turn let τ shrink for the same noise."
+limits "Continuous-time filter (no sampling); first order only."
+pairs sensor.encoder part.pid_angle
+input angle Angle
+output speed AngularVelocity
+param tau s ~ 0.01 "Filter time constant"
+state follow Angle = 0
+eq tau*der(follow) = angle - follow
+set speed = (angle - follow)/tau

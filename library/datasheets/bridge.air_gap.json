@@ -1,0 +1,20 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "bridge.air_gap",
+  "label": "Air gap with armature",
+  "kind": "generic",
+  "parameters": {
+    "area": 0.0001,
+    "gap": 0.001
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: a, b"
+    }
+  ]
+}

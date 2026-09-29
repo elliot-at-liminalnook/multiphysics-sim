@@ -36,6 +36,8 @@ let lastDraw = performance.now(), simulatedWork = 0, wallWork = 0, selectedName;
 let liveTimer, liveStartWall = 0, liveStartSim = 0;
 const videoCapture = installVideoExport(renderer.domElement, $('video'), () => current?.id || 'robot');
 let drawNeeded = true;
+// While a calibration mirror is active, measured geometry replaces simulated frames.
+let mirrorActive = false, mirrorLinks = new Set();
 let lastSubmittedAt = -Infinity;
 controls.addEventListener('change', () => { drawNeeded = true; });
 const driveKeys = new Set();
@@ -90,7 +92,7 @@ function scheduleLive() {
   const delay = Math.max(0, (tick-liveStartSim)*1000-(performance.now()-liveStartWall));
   liveTimer = setTimeout(() => advanceLive(), delay);
 }
-function setPlaying(value) { if(!value)hardwareSync.stop('Simulation paused'); playing = value; clearTimeout(liveTimer);
+function setPlaying(value) { if(value&&mirrorActive)return; if(!value)hardwareSync.stop('Simulation paused'); playing = value; clearTimeout(liveTimer);
   if (!playing && driveKeys.size) {driveKeys.clear();applyDriveKeys();}
   if (playing) { liveStartWall = performance.now(); liveStartSim = tick; scheduleLive(); }
   $('play').textContent = playing ? 'Pause' : 'Play';
@@ -192,6 +194,7 @@ function showMotionProgress(next) {
   box.append(heading, detail);
 }
 function showFrame(next) {
+  if (mirrorActive) return;
   drawNeeded = true;
   if ($('follow').checked && current.data.follow_link && frame) {
     const old = frame.poses.find(p => p.name === current.data.follow_link);
@@ -415,6 +418,13 @@ window.addEventListener('keydown', e => { if ($('leaderboard-dialog').open || /I
 window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(driveKeys.delete(key)){e.preventDefault();applyDriveKeys();}});
 window.addEventListener('blur',()=>{driveKeys.clear();applyDriveKeys();});
 $('task-observation-details').addEventListener('toggle',()=>{if(frame)showTaskObservations(frame);});
+window.robotViewer = {
+  scene: () => current?.data?.scene,
+  begin(links) { setPlaying(false); mirrorActive = true; mirrorLinks = new Set(links); for (const [n, mesh] of meshes) mesh.material.emissive.set(mirrorLinks.has(n) ? 0x1d4a7a : 0x000000); drawNeeded = true; },
+  show(poses) { if (!mirrorActive) return; applyPoses(poses); drawNeeded = true; },
+  fit() { if (mirrorActive) fit(); },
+  end() { if (!mirrorActive) return; mirrorActive = false; mirrorLinks.clear(); for (const mesh of meshes.values()) mesh.material.emissive.set(0x000000); if (frame) applyPoses(frame.poses); selectPart(selectedName); drawNeeded = true; },
+};
 const hardwareSync=installHardwareSync({snapshot:()=>current&&frame?{live:!playback,source:JSON.stringify({preset:current.id,cad:current.data.scene?.robot?.source??current.data.robot?.source}),coordinates:current.data.coordinate_names,targets:frame.servo_targets_rad,time_s:frame.time_s,done:frame.done}:null,play:()=>setPlaying(true),pause:()=>setPlaying(false)});
 let catalog;
 try { catalog = await fetchData('catalog.json'); for (const p of catalog.presets) { const option = document.createElement('option'); option.value = p.id; option.textContent = p.label; $('preset').append(option); }

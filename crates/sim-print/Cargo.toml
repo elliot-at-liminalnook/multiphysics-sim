@@ -1,0 +1,11 @@
+[package]
+name = "sim-print"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Printable parts: the print material registry, a layer-aware voxel stress check for FDM parts, print-settings planning, joint capacities and promotion of measured coupon results."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+rayon = "1.12"

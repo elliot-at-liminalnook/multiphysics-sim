@@ -1,0 +1,9 @@
+study examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/study.json (6e861cd6), legs ["-Y", "+X", "+Y", "-X"], controller {"governor_acceleration_rad_s2": [6.981317007977318, 10.61841268613613], "governor_speed_rad_s": [1.3962634015954636, 4.425520274745219]}
+passed          0.180  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5027-CmaEs-144.yaml  Passed: 0.180 m/s (0.650 m in 3.6 s). Tightest joint: joint.-Y | Foot servo output at 99% of motor speed. (cached)
+passed          0.167  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5014-CmaEs-088.yaml  Passed: 0.167 m/s (0.601 m in 3.6 s). Tightest joint: joint.-X | Worm servo output at 91% of motor speed. (cached)
+passed          0.094  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/leg-run-013.yaml  Passed: 0.094 m/s (0.338 m in 3.6 s). Tightest joint: joint.-Y | Foot servo output at 86% of motor speed.
+
+leaderboard (m/s, detailed fidelity):
+  0.180  5027-CmaEs-144  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/5027-CmaEs-144-38ee2873/report.yaml
+  0.167  5014-CmaEs-088  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/5014-CmaEs-088-a7af463c/report.yaml
+  0.094  3401-Bayesian-013  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/3401-Bayesian-013-7a771cbb/report.yaml

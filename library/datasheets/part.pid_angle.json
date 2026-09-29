@@ -1,0 +1,25 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.pid_angle",
+  "label": "PID position controller (angle)",
+  "kind": "generic",
+  "parameters": {
+    "filter": 0.005,
+    "kd": 0.05,
+    "ki": 0.0,
+    "kp": 2.0,
+    "limit": 1.0,
+    "offset": 0.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) measured, target: benches need a fixed drive, so only the ports are documented"
+    }
+  ],
+  "source_hash": "98501b08d3c58d41dba0c396838eb98e631609be62c530fc6649b2f0e508d2fd"
+}

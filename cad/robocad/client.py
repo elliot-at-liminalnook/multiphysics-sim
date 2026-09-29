@@ -80,6 +80,10 @@ class RoboClient:
     def op(self, operation: str, *args, **kwargs) -> Any:
         return self.post(f"/ops/{operation}", {"args": list(args), "kwargs": kwargs})["result"]
 
+    def script(self, path: str, params: Optional[dict] = None, replace: bool = True, **extra) -> dict:
+        """Run a repository model script (``build(ops, params)``) as one undo step."""
+        return self.post("/doc/script", {"path": path, "params": params or {}, "replace": replace, **extra})
+
     def create(self, **spec) -> dict:
         return self.post("/nodes", spec)
 

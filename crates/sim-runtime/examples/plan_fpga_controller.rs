@@ -79,5 +79,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 fn smooth(x: f64) -> f64 {
-    x * x * x * (10. + x * (-15. + 6. * x))
+    sim_domain_control::smooth_return::rest_to_rest(x)[0]
 }

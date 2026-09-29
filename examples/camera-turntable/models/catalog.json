@@ -1,0 +1,46 @@
+{
+ "schema": "sim.models/1",
+ "units": "m",
+ "up": "+Y",
+ "source": "examples/camera-turntable/cad/export_models.py",
+ "models": {
+  "turntable_disc": {
+   "file": "turntable_disc.obj",
+   "description": "Turntable disc with camera, ESP32 board and slip ring (turns)"
+  },
+  "turntable_base": {
+   "file": "turntable_base.obj",
+   "description": "Turntable base, bearing post, servo and cradle (fixed)"
+  },
+  "turntable_pulley": {
+   "file": "turntable_pulley.obj",
+   "description": "GT2 30-tooth drive pulley on the servo horn (turns with the servo)"
+  },
+  "turntable_belt": {
+   "file": "turntable_belt.obj",
+   "description": "GT2 610 mm closed belt"
+  }
+ },
+ "origins_mm": {
+  "turntable_disc": [
+   0.0,
+   0.0,
+   56.02479392779261
+  ],
+  "turntable_base": [
+   0.0,
+   0.0,
+   2.5
+  ],
+  "turntable_pulley": [
+   123.28771443579402,
+   0.0,
+   47.5
+  ],
+  "turntable_belt": [
+   0.0,
+   0.0,
+   47.5
+  ]
+ }
+}

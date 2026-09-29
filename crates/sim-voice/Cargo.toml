@@ -1,0 +1,16 @@
+[package]
+name = "sim-voice"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Narration for lesson explainers: Gemini TTS through OpenRouter (openrouter-rs), word alignment by transcription, per-section audio cache with a spend ceiling, and the sim-narrate CLI."
+
+[dependencies]
+openrouter-rs = "=0.16.0"
+tokio = { version = "1", features = ["rt"] }
+base64 = "0.22"
+serde.workspace = true
+serde_json.workspace = true
+sim-lesson = { path = "../sim-lesson" }
+sim-annotate = { path = "../sim-annotate" }
+rodio = { version = "=0.20.1", default-features = false, features = ["wav"] }

@@ -1,0 +1,26 @@
+# An accelerometer and gyro riding on a link that swings about a joint.
+part tilt_imu "Tilt IMU on a swinging link"
+category Sensing
+summary "What an IMU mounted on a swinging link reads: gravity plus the link's own acceleration, and a rate gyro with a bias."
+explain "The link's angle φ is measured from hanging straight down, and the IMU sits a distance r from the joint. Its accelerometer measures specific force (acceleration minus gravity) along the link's tangent and toward the joint: ax = g·sin φ + r·α and ay = g·cos φ + r·ω². At rest, atan(ax/ay) = φ exactly; while the link swings, the r·α and r·ω² terms corrupt that tilt. The gyro reads ω + bias. Vibration adds two high-frequency sines to both accelerometer axes. The accelerometer's bandwidth is modelled by taking α from a filtered derivative of ω."
+tradeoffs "Mount the IMU near the joint (small r) to reduce the motion terms, at the cost of a less representative reading of the body it is meant to measure."
+limits "Planar motion about a fixed horizontal joint; deterministic vibration instead of random noise; bias constant; no scale-factor error, cross-axis error or saturation."
+pairs part.pendulum_gravity rotational.inertia part.complementary_tilt
+port shaft rotational
+output ax LinearAcceleration
+output ay LinearAcceleration
+output gyro AngularVelocity
+param radius m ~ 0.1 "Distance from the joint to the IMU"
+param g m/s^2 = 9.80665 "Gravitational acceleration"
+param bias rad/s = 0 "Gyro bias"
+param vibration m/s^2 = 0 "Vibration amplitude on each accelerometer axis"
+param bandwidth s = 0.002 "Accelerometer filter time constant"
+param buzz Hz = 87 "Main vibration frequency (a second one runs at 1.51×)"
+state wf AngularVelocity = 0
+eq bandwidth*der(wf) = shaft.w - wf
+let alpha = (shaft.w - wf)/bandwidth
+let shake = vibration*(sin(6.283185307*buzz*t) + 0.6*sin(9.487610054*buzz*t + 1))
+flow shaft = 0
+set ax = g*sin(shaft.phi) + radius*alpha + shake
+set ay = g*cos(shaft.phi) + radius*shaft.w*shaft.w + 0.8*shake
+set gyro = shaft.w + bias

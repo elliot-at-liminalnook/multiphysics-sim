@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="IBM Plex Sans">
+  <rect x="1" y="1" width="758" height="328" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">What an encoder reports, and what differencing it gives</text>
+  <!-- angle axes -->
+  <line x1="60" y1="170" x2="700" y2="170" stroke="#99a6b5" stroke-width="1.2"/>
+  <line x1="60" y1="170" x2="60" y2="50" stroke="#99a6b5" stroke-width="1.2"/>
+  <text x="66" y="62" font-size="12.5" fill="#99a6b5">angle</text>
+  <line x1="60" y1="170" x2="700" y2="70" stroke="#8fb3e8" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="600" y="78" font-size="12.5" fill="#8fb3e8">true angle</text>
+  <polyline fill="none" stroke="#4dd4bf" stroke-width="3" points="60,170 188,170 188,145 316,145 316,120 444,120 444,95 572,95 572,70 700,70"/>
+  <text x="200" y="138" font-size="12.5" fill="#4dd4bf">one count, Δθ = 2π/N</text>
+  <!-- speed axes -->
+  <line x1="60" y1="300" x2="700" y2="300" stroke="#99a6b5" stroke-width="1.2"/>
+  <line x1="60" y1="300" x2="60" y2="200" stroke="#99a6b5" stroke-width="1.2"/>
+  <text x="66" y="212" font-size="12.5" fill="#99a6b5">speed estimate</text>
+  <line x1="60" y1="270" x2="700" y2="270" stroke="#8fb3e8" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="610" y="262" font-size="12.5" fill="#8fb3e8">true speed</text>
+  <path d="M60,300 L188,300 L190,215 C200,250 215,290 250,298 L316,300 L318,215 C328,250 343,290 378,298 L444,300 L446,215 C456,250 471,290 506,298 L572,300 L574,215 C584,250 599,290 634,298 L700,300" fill="none" stroke="#de9454" stroke-width="2.5"/>
+  <text x="470" y="232" font-size="12.5" fill="#de9454">a spike of about Δθ/τ at every count</text>
+  <text x="24" y="322" font-size="12.5" fill="#99a6b5">When counts arrive less often than the filter time τ, the speed estimate is a row of spikes, not a steady value.</text>
+</svg>

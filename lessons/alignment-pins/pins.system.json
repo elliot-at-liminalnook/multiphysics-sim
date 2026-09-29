@@ -1,0 +1,324 @@
+{
+  "schema": "sim.system/1",
+  "title": "Plate on a dowel pin",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Plate on a dowel pin",
+      "description": "A printed plate located on a base by one steel pin in a slightly larger printed hole, pushed sideways back and forth.",
+      "instances": {
+        "base": {
+          "display_id": "5708f15e05ce10f53c7b8fe7",
+          "label": "Base part",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.008,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.1,
+                0.012,
+                0.05
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.46,
+              0.72
+            ],
+            "model": "pin_base"
+          }
+        },
+        "hand": {
+          "display_id": "1d3fc232d3a134b2413d7885",
+          "label": "Sideways force",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.force_source"
+          },
+          "placement": {
+            "position": [
+              -0.045,
+              0.004,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.004,
+                0.01,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "pin": {
+          "display_id": "93f8d4b1f1ae1261f5e8c46f",
+          "label": "Dowel pin",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.dowel_pin"
+          },
+          "parameters": {
+            "clearance": {
+              "value": 0.0001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "diameter": {
+              "value": 0.003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "engaged": {
+              "value": 0.006,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "wall_modulus": {
+              "value": 3500000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            }
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0015,
+              "length": 0.014
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "dowel_pin"
+          }
+        },
+        "plate": {
+          "display_id": "2b6e27396111315b37a0125f",
+          "label": "Top plate",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 0.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 150 g printed plate resting on the base, free to shift sideways."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.004,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.006,
+                0.07,
+                0.04
+              ]
+            },
+            "color_srgb": [
+              0.93,
+              0.55,
+              0.16
+            ],
+            "model": "pin_plate"
+          }
+        },
+        "push": {
+          "display_id": "d5856729f2effc78a91eb512",
+          "label": "Push (±20 N, 0.5 Hz)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.force_command"
+          },
+          "parameters": {
+            "amplitude": {
+              "value": 20.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A hand pushing the plate sideways, back and forth: ±20 N once every 2 s."
+              }
+            },
+            "frequency": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A hand pushing the plate sideways, back and forth: ±20 N once every 2 s."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.006,
+                0.006,
+                0.006
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "rub": {
+          "display_id": "a1b5c3fa02c9690477e47b8f",
+          "label": "Sliding friction (stand-in)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 300.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The plate sliding on the base, as viscous drag (300 N·s/m): a stand-in for the friction of a lightly clamped plate, so it drifts rather than jumps across the clearance."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              -0.002,
+              0.03
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "plate",
+          "terminals": [
+            {
+              "instance": "plate",
+              "port": "axis"
+            },
+            {
+              "instance": "pin",
+              "port": "a"
+            },
+            {
+              "instance": "rub",
+              "port": "a"
+            },
+            {
+              "instance": "hand",
+              "port": "axis"
+            }
+          ]
+        },
+        {
+          "label": "base",
+          "terminals": [
+            {
+              "instance": "base",
+              "port": "axis"
+            },
+            {
+              "instance": "pin",
+              "port": "b"
+            },
+            {
+              "instance": "rub",
+              "port": "b"
+            }
+          ]
+        },
+        {
+          "label": "push",
+          "terminals": [
+            {
+              "instance": "push",
+              "port": "force"
+            },
+            {
+              "instance": "hand",
+              "port": "force"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0001,
+    "rationale": "Stiff pin contact (10 MN/m) on a 150 g plate: backward Euler at 0.1 ms."
+  }
+}

@@ -1,0 +1,49 @@
+{
+ "schema": "sim.scan/1",
+ "description": "Object scan, low ring: object on the platform, camera fixed on the stand (low detent).",
+ "system": "turntable.system.json",
+ "rig": "cad/object-rig-low.json",
+ "scene": "scene/objects.scene.json",
+ "camera": {
+  "preset": "camera_module_3_wide",
+  "width": 1152
+ },
+ "true_angle": "camera_angle.shaft.angle",
+ "reported": {
+  "observable": "servo_angle.shaft.angle",
+  "ratio_from": {
+   "instance": "belt",
+   "numerator": "radius_driven",
+   "denominator": "radius_driver"
+  },
+  "quantum_from": {
+   "instance": "controller",
+   "parameter": "encoder_quantum"
+  }
+ },
+ "schedule_from": "schedule",
+ "shots": {
+  "count": 36,
+  "mode": "dwell",
+  "delay_after_move_s": 0.3
+ },
+ "render": {
+  "supersample": 2,
+  "time_samples": 4
+ },
+ "reconstruct": {
+  "image_width": 576,
+  "neighbors_deg": 25.0,
+  "mvs": {
+   "step": 2,
+   "half_window": 3,
+   "depths": 128,
+   "z_min": 0.12,
+   "z_max": 0.6,
+   "min_score": 0.85,
+   "min_texture": 0.004,
+   "min_views": 2
+  }
+ },
+ "test_errors": null
+}

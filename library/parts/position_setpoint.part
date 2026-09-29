@@ -1,0 +1,13 @@
+part position_setpoint "Position setpoint (ramp + sine)"
+category Control
+summary "A commanded linear position that ramps and can wobble sinusoidally: the target for a linear axis controller."
+explain "position = start + rate·clamp(t − ramp_from, 0, ramp_for) + amplitude·sin(2π·f·t)."
+pairs part.pid_position translational.mass
+output position Length
+param start m = 0 "Position at t = 0"
+param rate m/s = 0 "Ramp speed"
+param ramp_from s = 0 "When the ramp starts"
+param ramp_for s = 1 "How long the ramp lasts"
+param amplitude m = 0 "Sine amplitude"
+param frequency Hz = 1 "Sine frequency"
+set position = start + rate*min(max(t - ramp_from, 0), ramp_for) + amplitude*sin(6.283185307*frequency*t)

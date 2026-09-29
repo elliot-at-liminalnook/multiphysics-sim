@@ -32,8 +32,7 @@ pub struct Piece {
 
 #[derive(Resource, Default)]
 pub struct ModelLibrary {
-    directory: PathBuf,
-    files: BTreeMap<String, String>,
+    files: BTreeMap<String, PathBuf>,
     defaults: BTreeMap<String, String>,
     loaded: BTreeMap<String, Option<Vec<Piece>>>,
     pub error: Option<String>,
@@ -43,16 +42,31 @@ impl ModelLibrary {
     /// Read the catalog; a missing catalog simply means shapes are drawn.
     pub fn open(directory: impl Into<PathBuf>) -> Self {
         let directory = directory.into();
-        let mut library = Self { directory: directory.clone(), ..default() };
+        let mut library = Self::default();
         match std::fs::read(directory.join("catalog.json")).map_err(|e| e.to_string()).and_then(|b| serde_json::from_slice::<CatalogFile>(&b).map_err(|e| e.to_string())) {
             Ok(catalog) if catalog.schema == "sim.models/1" => {
-                library.files = catalog.models.into_iter().map(|(k, v)| (k, v.file)).collect();
+                library.files = catalog.models.into_iter().map(|(k, v)| (k, directory.join(v.file))).collect();
                 library.defaults = catalog.defaults;
             }
             Ok(catalog) => library.error = Some(format!("unsupported model catalog `{}`", catalog.schema)),
             Err(e) => library.error = Some(format!("no model catalog in {}: {e}", directory.display())),
         }
         library
+    }
+
+    /// Add a project's own catalog (a `models/` folder next to a system
+    /// file): its models join the shared ones and win on a name clash. A
+    /// missing folder is not an error; a broken catalog is reported.
+    pub fn extend(&mut self, directory: &Path) {
+        let Ok(bytes) = std::fs::read(directory.join("catalog.json")) else { return };
+        match serde_json::from_slice::<CatalogFile>(&bytes) {
+            Ok(catalog) if catalog.schema == "sim.models/1" => {
+                self.files.extend(catalog.models.into_iter().map(|(k, v)| (k, directory.join(v.file))));
+                self.defaults.extend(catalog.defaults);
+            }
+            Ok(catalog) => self.error = Some(format!("unsupported model catalog `{}` in {}", catalog.schema, directory.display())),
+            Err(e) => self.error = Some(format!("model catalog {}: {e}", directory.display())),
+        }
     }
 
     /// The model for a part: its explicit choice, else its component type's default.
@@ -62,7 +76,7 @@ impl ModelLibrary {
 
     pub fn pieces(&mut self, id: &str, meshes: &mut Assets<Mesh>) -> Option<Vec<Piece>> {
         if !self.loaded.contains_key(id) {
-            let parsed = self.files.get(id).map(|file| load_obj(&self.directory.join(file)));
+            let parsed = self.files.get(id).map(|file| load_obj(file));
             let pieces = match parsed {
                 Some(Ok(groups)) => Some(
                     groups

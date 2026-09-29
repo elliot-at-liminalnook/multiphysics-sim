@@ -51,6 +51,7 @@ blake3 = "=1.8.7"
 nalgebra.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+serde_norway.workspace = true
 sim-compile = { path = "../sim-compile" }
 sim-core = { path = "../sim-core" }
 sim-inspect = { path = "../sim-inspect", features = ["runtime"] }
@@ -76,8 +77,17 @@ sim-dynamics = { path = "../sim-dynamics" }
 sim-solve = { path = "../sim-solve" }
 sim-script = { path = "../sim-script" }
 sim-system = { path = "../sim-system" }
+sim-lesson = { path = "../sim-lesson" }
+sim-agent = { path = "../sim-agent" }
+sim-annotate = { path = "../sim-annotate" }
+sim-parts = { path = "../sim-parts" }
+sim-vision = { path = "../sim-vision" }
 
 web-time = "1.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+sim-vision = { path = "../sim-vision", features = ["parallel"] }
+sim-print = { path = "../sim-print" }
 
 [build-dependencies]
 blake3 = "=1.8.7"

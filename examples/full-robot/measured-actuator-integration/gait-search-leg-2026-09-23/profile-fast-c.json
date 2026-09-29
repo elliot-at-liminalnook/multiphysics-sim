@@ -1,0 +1,25 @@
+{
+ "version": 1,
+ "name": "outer-mechanism-broyden-v1-fast-c",
+ "motor_dynamics": "detailed",
+ "step_multiplier": 2,
+ "absolute_tolerances": {
+  "1": 0.02,
+  "rad": 0.017453292519943295,
+  "rad/s": 0.5,
+  "m": 0.01,
+  "m/s": 0.1,
+  "m/s\u00b2": 2,
+  "s": 1e-09,
+  "N": 10,
+  "N\u00b7m": 0.25,
+  "A": 0.2,
+  "V": 0.75,
+  "W": 1,
+  "J": 1
+ },
+ "minimum_speedup": 1.1,
+ "linearized_mechanism_probes": true,
+ "predict_velocity_seed": false,
+ "broyden_updates": true
+}

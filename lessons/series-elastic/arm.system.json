@@ -1,0 +1,448 @@
+{
+  "schema": "sim.system/1",
+  "title": "Series-elastic arm",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Series-elastic arm",
+      "description": "A servo swings an arm through a soft torsion spring into a wall. The spring's twist measures the torque, and it cushions the impact.",
+      "instances": {
+        "arm": {
+          "display_id": "bf8cf8a5ef4957c5cbaa5d4c",
+          "label": "Arm (swings level: gravity does no work)",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.pendulum_gravity"
+          },
+          "parameters": {
+            "arm": {
+              "value": 0.12,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.3 kg arm with its centre of mass 0.12 m out, swinging in a horizontal plane, so gravity is set to zero."
+              }
+            },
+            "g": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.3 kg arm with its centre of mass 0.12 m out, swinging in a horizontal plane, so gravity is set to zero."
+              }
+            },
+            "mass": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.3 kg arm with its centre of mass 0.12 m out, swinging in a horizontal plane, so gravity is set to zero."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "arm_inertia": {
+          "display_id": "9123eba195485784c2868f07",
+          "label": "Arm inertia",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00432,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "m·r² = 0.3 × 0.12² for the arm's mass at its centre."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.008,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Frame",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "display_id": "5bb5143f5f36f47cb9735055",
+          "label": "Motor rotor, through the gearbox",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A servo's rotor (5e-6 kg·m²) seen through its 100:1 gearbox: 5e-6 × 100² = 0.05 kg·m², twelve times the arm's own inertia."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.045,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.012,
+              "length": 0.006
+            },
+            "color_srgb": [
+              0.72,
+              0.45,
+              0.2
+            ]
+          }
+        },
+        "servo": {
+          "display_id": "81e1bd1f25c7cdda6e6cac54",
+          "label": "Servo",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.effective_servo"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A hobby servo modelled as a stiff position loop within its speed–torque envelope: 2 N·m stall, 5 rad/s no-load."
+              }
+            },
+            "no_load_speed": {
+              "value": 5.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A hobby servo modelled as a stiff position loop within its speed–torque envelope: 2 N·m stall, 5 rad/s no-load."
+              }
+            },
+            "stall_torque": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A hobby servo modelled as a stiff position loop within its speed–torque envelope: 2 N·m stall, 5 rad/s no-load."
+              }
+            },
+            "stiffness": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A hobby servo modelled as a stiff position loop within its speed–torque envelope: 2 N·m stall, 5 rad/s no-load."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.02,
+                0.038,
+                0.04
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "servo"
+          }
+        },
+        "spring": {
+          "display_id": "0c3d22394265030de68a530f",
+          "label": "Series spring",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 3.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A torsion spring between the servo horn and the arm: 3 N·m/rad (soft, about 0.05 N·m per degree)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "target": {
+          "display_id": "cd79c52a62eb50cf12338f9b",
+          "label": "Target angle",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.angle_setpoint"
+          },
+          "parameters": {
+            "ramp_for": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Swing to 1.2 rad over 0.8 s: past the wall at 0.8 rad."
+              }
+            },
+            "ramp_from": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Swing to 1.2 rad over 0.8 s: past the wall at 0.8 rad."
+              }
+            },
+            "rate": {
+              "value": 1.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Swing to 1.2 rad over 0.8 s: past the wall at 0.8 rad."
+              }
+            },
+            "start": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Swing to 1.2 rad over 0.8 s: past the wall at 0.8 rad."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "wall": {
+          "display_id": "3f566f1d95a3e18b23a5a66c",
+          "label": "Wall at 0.8 rad",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_rotary"
+          },
+          "parameters": {
+            "damping": {
+              "value": 800.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An obstacle the arm hits at 0.8 rad (46°), faced with a rubber bumper (400 N·m/rad, well damped: 800 N·m·s/rad per radian pressed in)."
+              }
+            },
+            "lower": {
+              "value": -3.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An obstacle the arm hits at 0.8 rad (46°), faced with a rubber bumper (400 N·m/rad, well damped: 800 N·m·s/rad per radian pressed in)."
+              }
+            },
+            "stiffness": {
+              "value": 400.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An obstacle the arm hits at 0.8 rad (46°), faced with a rubber bumper (400 N·m/rad, well damped: 800 N·m·s/rad per radian pressed in)."
+              }
+            },
+            "upper": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An obstacle the arm hits at 0.8 rad (46°), faced with a rubber bumper (400 N·m/rad, well damped: 800 N·m·s/rad per radian pressed in)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.08,
+              0.06
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.01,
+                0.03,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.7,
+              0.3,
+              0.25
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "target",
+          "terminals": [
+            {
+              "instance": "target",
+              "port": "angle"
+            },
+            {
+              "instance": "servo",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "label": "servo case",
+          "terminals": [
+            {
+              "instance": "servo",
+              "port": "housing"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "label": "servo horn",
+          "terminals": [
+            {
+              "instance": "servo",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "spring",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "arm",
+          "terminals": [
+            {
+              "instance": "spring",
+              "port": "b"
+            },
+            {
+              "instance": "arm",
+              "port": "shaft"
+            },
+            {
+              "instance": "arm_inertia",
+              "port": "shaft"
+            },
+            {
+              "instance": "wall",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0002,
+    "rationale": "Contact at the bumper (400 N·m/rad against 4.3e-3 kg·m²: 300 rad/s) and a 300 N·m/rad coupling in the stiff variant: backward Euler, 0.2 ms."
+  }
+}

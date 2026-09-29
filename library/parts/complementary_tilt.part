@@ -1,0 +1,24 @@
+# Blends an accelerometer's tilt with an integrated gyro: the complementary filter.
+part complementary_tilt "Complementary tilt filter"
+category Control
+summary "Estimates tilt from an IMU: trusts the gyro over short times and the accelerometer over long ones."
+explain "The accelerometer gives a tilt atan(ax/ay) that is right on average but disturbed whenever the body accelerates; the gyro, integrated, follows every motion but drifts with its bias. The filter integrates the gyro and pulls the estimate toward the accelerometer's tilt with time constant τ: dθ/dt = gyro + (θ_acc − θ)/τ. Motions faster than τ come from the gyro, slow truth from the accelerometer, and a constant gyro bias leaves only a small steady error, bias·τ. It also outputs the two raw estimates for comparison."
+tradeoffs "Longer τ rejects more acceleration disturbance but leaves a larger bias error (bias·τ) and corrects a wrong start more slowly; shorter τ does the opposite. A Kalman filter picks the blend from noise statistics; this fixed blend is its simplest version."
+limits "Planar tilt within ±90° (it uses atan(ax/ay)); no gyro-bias estimation."
+pairs part.tilt_imu sensor.imu part.pid_angle
+input ax LinearAcceleration
+input ay LinearAcceleration
+input gyro AngularVelocity
+output tilt Angle
+output accel_tilt Angle
+output gyro_tilt Angle
+param time_constant s ~ 0.5 "Crossover time constant τ"
+param min_ay m/s^2 = 0.01 "Smallest vertical reading used (guards the division before the first sample and past ±90°)"
+state integrated Angle = 0
+state blended Angle = 0
+let acc = atan(ax/max(ay, min_ay))
+eq der(integrated) = gyro
+eq time_constant*der(blended) = time_constant*gyro + acc - blended
+set tilt = blended
+set accel_tilt = acc
+set gyro_tilt = integrated

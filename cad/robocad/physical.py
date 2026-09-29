@@ -79,13 +79,17 @@ def _friction_pair(doc: Document, a_mat: Optional[str], b_mat: Optional[str]) ->
     return f["static"], f["kinetic"]
 
 
-def material_block(doc: Document, mid: str) -> dict:
+def material_block(doc: Document, mid: str, floor_material: str = "world") -> dict:
     m = doc.materials[mid]
     p = m.props()
     friction = {}
     for other in list(doc.materials) + ["steel", "world"]:
         s, k = _friction_pair(doc, mid, other if other != mid else mid)
         friction[other] = {"static": s, "kinetic": k}
+    # The runtime's floor contact reads each link material's "world" pair,
+    # so that entry describes the floor the document declares.
+    s, k = _friction_pair(doc, mid, floor_material)
+    friction["world"] = {"static": s, "kinetic": k}
     return {
         "id": m.id, "name": m.name, "density": m.density * 1000.0,
         "youngs_modulus": p["youngs_modulus"], "poisson": p["poisson"], "yield_strength": p["yield_strength"], "ultimate_strength": p["ultimate_strength"],
@@ -551,13 +555,16 @@ def joint_physics(doc: Document, j: dict, parent_members: list[Node], child_memb
         "clearance": clearance, "backlash": backlash, "bearing_clearance_angle_rad": backlash, "wobble": wobble,
         "drive_backlash": {"width_rad": None, "provenance": "unmeasured",
             "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion"},
-        "friction": {"coulomb": coulomb, "viscous": viscous, "stribeck": stribeck, "stribeck_speed": 0.1, "static_ratio": mu_s / max(mu_k, 1e-6)},
+        # Static friction is stated once: breakaway = coulomb + stribeck = mu_s·N·r.
+        # The runtime adds `stribeck` and scales `coulomb` by `static_ratio`, so
+        # the ratio stays 1 here (mu_s/mu_k as well would count the excess twice).
+        "friction": {"coulomb": coulomb, "viscous": viscous, "stribeck": stribeck, "stribeck_speed": 0.1, "static_ratio": 1.0},
         "stiffness": {"radial": radial, "axial": 0.5 * radial, "bending": radial * contact * contact / 12.0}, "damping_ratio": 0.05,
         "bearing": {"kind": kind, "allowable_pressure": hole_props["bearing_pressure"], "pressure": N / max(2 * pin_r * contact, 1e-9)},
         "materials": {"pin": pin_mat, "hole": hole_mat}, "outboard_mass": outboard_mass, "lever": lever,
     }
     if j["type"] == "prismatic":
-        physics["friction"] = {"coulomb": mu_k * N, "viscous": 5.0, "stribeck": (mu_s - mu_k) * N, "stribeck_speed": 0.01, "static_ratio": mu_s / max(mu_k, 1e-6)}
+        physics["friction"] = {"coulomb": mu_k * N, "viscous": 5.0, "stribeck": max(0.0, (mu_s - mu_k) * N), "stribeck_speed": 0.01, "static_ratio": 1.0}
     return physics
 
 
@@ -681,7 +688,9 @@ def default_settings() -> dict:
         "battery": None,
         "control": {"period_s": 0.02, "latency_s": 0.004, "targets": {}, "mode": "hold", "trajectory": []},
         "uncertainty": {"dimension_m": {"sigma": 0.15e-3}, "mass": {"sigma_fraction": 0.05}, "friction": {"sigma_fraction": 0.2}, "stiffness": {"sigma_fraction": 0.15}, "backlash": {"sigma_fraction": 0.3}, "motor_torque": {"sigma_fraction": 0.1}, "com_m": {"sigma": 0.5e-3}, "seed": 0},
-        "world": {"floor_z": None, "floor_material": "world", "floor_stiffness": 2.0e5, "floor_damping": 2.0e3, "terrain": None},
+        # ambient_c is the environment temperature the simulator's thermal network
+        # uses (motor windings/cases start there); 20 °C matches the runtime default.
+        "world": {"floor_z": None, "floor_material": "world", "floor_stiffness": 2.0e5, "floor_damping": 2.0e3, "terrain": None, "ambient_c": 20.0},
         "identification": {},
     }
 
@@ -800,7 +809,7 @@ def _assembly_properties(doc, cache=None, joint_ids=None, verbose=False):
 
             spec = MOTOR_LIBRARY[doc.nodes[j["motor"]["id"]].robot["spec"]]
             motor_meta = {"shaft_diameter": spec.shaft_diameter, "kind": spec.kind}
-        phys = cached('joint', {'physics_semantics': 4, 'joint': j, 'parent': member_inputs(pm), 'child': member_inputs(cm), 'materials': material_inputs,
+        phys = cached('joint', {'physics_semantics': 5, 'joint': j, 'parent': member_inputs(pm), 'child': member_inputs(cm), 'materials': material_inputs,
                                'mass': outboard_mass, 'com': outboard_com.tolist(), 'motor': motor_meta},
                       lambda: joint_physics(doc, j, pm, cm, links[parent_link]["material"] if parent_link else None, links[child_link]["material"], outboard_mass, outboard_com, motor_meta))
         override = (doc.nodes[j["id"]].robot or {}).get("physics") if j["id"] in doc.nodes else None
@@ -827,11 +836,15 @@ def _assembly_properties(doc, cache=None, joint_ids=None, verbose=False):
                 phys['drive_backlash'] = validate_drive_backlash({'width_rad': ident['backlash'], 'provenance': 'derived',
                     'reference': f'identified from {ident.get("source_log", "unspecified source log")}; fitted at {ident.get("fitted_at", "unspecified time")}'})
         limits = j.get("limits")
-        if limits and j["type"] == "prismatic":
-            limits = [None if v is None else v * MM for v in limits]
+        home = j.get("home", 0.0)
+        if j["type"] == "prismatic":
+            # CAD authors slides in mm (limits and home alike); the model is SI.
+            if limits:
+                limits = [None if v is None else v * MM for v in limits]
+            home = home * MM
         out_joints.append({
             "name": j["name"], "id": j["id"], "type": j["type"], "parent": link_names[parent_link] if parent_link else None, "child": link_names[child_link],
-            "origin": _to_m(j["pivot"]), "axis": [float(c) for c in v_unit(tuple(j["axis"]))], "limits": limits, "home": j.get("home", 0.0),
+            "origin": _to_m(j["pivot"]), "axis": [float(c) for c in v_unit(tuple(j["axis"]))], "limits": limits, "home": home,
             "physics": phys, "fastened": None, "motor": j["motor"]["name"] if j.get("motor") else None, "declared": {"damping": j.get("damping", 0.0), "friction": j.get("friction", 0.0), "stroke": j.get("stroke", 0.0) * MM},
         })
     return joints, raw, links, members_of, link_of_body, motor_nodes, joint_of_motor, out_joints, materials_used, geometry_keys, cached
@@ -944,10 +957,10 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
     model = {
         "format": "simrobot", "version": SCHEMA_VERSION,
         "source": {"file": doc.path, "exported": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                   "collision_ray_backend": ray_backend},
+                   "collision_ray_backend": ray_backend, "physical_hash": _physical_hash(doc)},
         "gravity": [0.0, 0.0, -G],
         "world": world,
-        "materials": {mid: material_block(doc, mid) for mid in sorted(materials_used | {l["material"] for l in out_links})},
+        "materials": {mid: material_block(doc, mid, floor_mat) for mid in sorted(materials_used | {l["material"] for l in out_links})},
         "links": out_links, "joints": out_joints, "motors": out_motors, "transmissions": transmissions,
         "battery": st["battery"], "sensors": sensors, "cables": cables,
         "control": control, "uncertainty": st["uncertainty"], "identification": st["identification"],
@@ -959,14 +972,28 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
         # Reference only: circuit/subsystem topology lives in the system file.
         model['system'] = st['system']
     if path:
-        with open(path, "w") as f:
+        # Atomic replace: the simulator viewers poll this file and must never
+        # read a half-written model.
+        tmp = f"{path}.{os.getpid()}.tmp"
+        with open(tmp, "w") as f:
             json.dump(model, f)
+        os.replace(tmp, path)
     if verbose:
         print(f"physical model: {len(out_links)} links, {len(out_joints)} joints, {len(out_motors)} motors, {len(sensors)} sensors, {len(cables)} cables in {time.time() - t_start:.1f} s")
     return model
 
 
 # ------------------------------------------------------------------ results and identification
+
+
+def _physical_hash(doc: Document):
+    """Snapshot identity of the exported state; results carry it back so
+    `load_results` can tell whether they still describe this document."""
+    try:
+        from .snapshots import capture
+        return capture(doc).physical_hash
+    except Exception:
+        return None
 
 
 def load_results(doc: Document, path: str) -> dict:
@@ -992,7 +1019,7 @@ def load_results(doc: Document, path: str) -> dict:
     res["path"] = path
     res["loaded"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     from .snapshots import capture
-    identity = res.get('provenance', {}).get('physical_hash')
+    identity = (res.get('provenance') or {}).get('physical_hash')
     res['stale'] = identity is None or identity != capture(doc).physical_hash
     doc.results = res
     doc.dirty = True

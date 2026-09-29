@@ -1,0 +1,14 @@
+{
+ "version": 1,
+ "description": "Accepted HX-30HM actuator families for the quadruped. The single source of motor values: scenes, gait-search recipes and viewers apply or check this registry (sim_runtime::actuator_registry) and record the family hashes they used. Change a family only by promoting new evidence and updating its hash here.",
+ "families": {
+  "hx30hm-provisional": {"path": "hx30hm-provisional.json", "content_hash": "1bd830483b89f8d6ebbbd23f436e4d9fd1e37c3374839181d15215aa490d4f3b", "accepted": "Provisional estimates (controller v2 of the 2026-09-19 gait-generation study); used where no joint-role measurement exists (worm). Not a calibration."},
+  "hx30hm-knee-measured": {"path": "hx30hm-knee-measured.json", "content_hash": "a67f006e173dd6a15f43833b9df3e7247ad460c36fbf5c3238896bfdc14ae9f8", "accepted": "2026-09-23: campaign-1790182543587 servo 1 (knee). Back-EMF/torque constant, gear friction and envelope derived; others estimated."},
+  "hx30hm-hip-measured": {"path": "hx30hm-hip-measured.json", "content_hash": "535287eeb2443196cd6662ecf5b3ea060bfa3bdea903ff519d9f8403608d1e41", "accepted": "2026-09-23: campaign-1790182543587 servo 3 (belt/hip). Motor-side values; the run had no belt limits, so joint alignment (not these motor values) may be affected by a belt skip."}
+ },
+ "roles": {
+  "Foot servo output": "hx30hm-knee-measured",
+  "Hip servo output": "hx30hm-hip-measured",
+  "Worm servo output": "hx30hm-provisional"
+ }
+}

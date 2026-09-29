@@ -1,6 +1,6 @@
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    if let Err(error) = sim_runtime::system_worker::serve(sim_runtime::registry()) {
+    if let Err(error) = sim_runtime::system_worker::serve(sim_runtime::system_registry()) {
         eprintln!("{error}");
         std::process::exit(1);
     }

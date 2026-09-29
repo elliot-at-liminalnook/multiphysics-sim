@@ -1,0 +1,9 @@
+version: 1
+name: forward-start-stop
+notes: Step in place, ramp to the gait's own speed (travel/period), walk, stop.
+limits: {forward_m_s: 0.3, lateral_m_s: 0.25, yaw_deg_s: 25, forward_m_s2: 0.15, lateral_m_s2: 0.15, yaw_deg_s2: 20}
+commands:
+  - {at_s: 0}
+  - {at_s: 1.5, forward_m_s: 0.267}
+  - {at_s: 10}
+duration_s: 14

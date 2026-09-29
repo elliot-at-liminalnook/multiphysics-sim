@@ -1,0 +1,22 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "bridge.motor",
+  "label": "Motor behind one plug",
+  "kind": "generic",
+  "parameters": {
+    "coefficient": 0.0,
+    "reference": 293.15,
+    "resistance": 2.0,
+    "torque_constant": 0.012
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: plug"
+    }
+  ]
+}

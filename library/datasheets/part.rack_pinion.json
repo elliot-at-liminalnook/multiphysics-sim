@@ -1,0 +1,64 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.rack_pinion",
+  "label": "Rack and pinion",
+  "kind": "linear",
+  "parameters": {
+    "correction": 10.0,
+    "radius": 0.01
+  },
+  "conditions": {
+    "drive torque (N·m)": 0.05
+  },
+  "values": [
+    {
+      "name": "ratio (measured)",
+      "value": 100.00000000002314,
+      "unit": "rad/m"
+    },
+    {
+      "name": "forward efficiency",
+      "value": 0.9999999999997651,
+      "unit": "1"
+    },
+    {
+      "name": "backdrive efficiency",
+      "value": 0.9999999998906121,
+      "unit": "1"
+    },
+    {
+      "name": "self-locking",
+      "value": 0.0,
+      "unit": "yes=1"
+    },
+    {
+      "name": "backdrive output speed",
+      "value": 4.999999999454098,
+      "unit": "m/s"
+    },
+    {
+      "name": "audit energy change",
+      "value": -6.245004513516506e-16,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "efficiency within (0, 1]",
+      "passed": true,
+      "detail": "forward 100.00 %"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.200e-2 J → change -6.245e-16 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.6e-16, 1.8e-16, 6.3e-15 (1 → 0.125 ms); observed order -5.1"
+    }
+  ],
+  "source_hash": "2ba98460d2d99112ac86c1c70d7111eac1d8a1c9d34de81f48023686240c6b37"
+}

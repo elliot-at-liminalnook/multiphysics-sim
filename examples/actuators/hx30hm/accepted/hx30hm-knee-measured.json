@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "description": "HX-30HM knee servo: back-EMF/torque constant, gear friction and operating envelope from campaign campaign-1790182543587; other values remain the base family's estimates.",
+  "shaft_coordinate": "motor_output_relative_to_housing",
+  "limitations": [
+    "One physical servo on a suspended printed leg (no ground load); applied to every joint of this role as a type profile, without per-unit identities.",
+    "Only Ke·N is identified (2.426 V·s/rad at the output); Ke = Kt is derived given the estimated 200:1 ratio.",
+    "Gear friction comes from at-speed friction (0.034 duty) through the estimated resistance 3.6999999999999997 Ω, efficiency 0.504 and rotor loss 0.1 A; its uncertainty is conditional on those estimates.",
+    "Low-speed friction (0.050) and breakaway (0.072) exceed the at-speed value; the regularized Coulomb model does not represent stiction. They are kept in the envelope.",
+    "Envelope acceleration is the lower direction's value at up to 70% drive in the air; coast deceleration is with drive removed.",
+    "Step timing in the campaign is dominated by the host serial loop (~30 ms); no latency or inertia is derived from it.",
+    "Resistance, inductance, inertia, efficiency, backlash, stiffness, current and thermal values are not identified and remain the base family's estimates.",
+    "Torque under load, electrical current, battery, thermal and external transmission behavior remain uncalibrated.",
+    "100 Hz is the modeled controller cadence; 2 ms transport latency is an explicit unmeasured estimate.",
+    "Encoder frame and phase bindings are provisional simulation choices, not measured hardware calibration.",
+    "Controller limit 1000/1000 is an experimental simulation setting, not a motor or power-supply rating.",
+    "Offline gait-search scenario: Kd=4096 and 2 ms delay are provisional, not commissioned hardware settings."
+  ],
+  "evidence": {
+    "baseline": {
+      "path": "examples/full-robot/measured-actuator-integration/voltage-conditioning/validation-baseline-closed-loop.json",
+      "sha256": "db0a235be561f6576a5ee2209ed660b7a80f7ed2d5c2f077ffa0410014eb502d",
+      "scope": "Rejected baseline own-feedback prediction; values remain estimates."
+    },
+    "cadence": {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/README.md",
+      "sha256": "646115f7e5ae33e40a3f45849f1914cb8065061fbd1dc60659cd82026c6277fa",
+      "scope": "100 Hz acquisition qualification; does not measure internal sensor age."
+    },
+    "campaign": {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/campaigns/campaign-1790182543587/report.json",
+      "sha256": "9365b43b0ed60bc208cd8566e7744916fcafc3a6b64739048b17df5a0f266c63",
+      "scope": "Characterization campaign campaign-1790182543587, servo ID 1 (knee) on the printed test leg, suspended; stages A–K as recorded in the report."
+    },
+    "controller": {
+      "path": "crates/sim-domain-control/src/fixed_pd.rs",
+      "sha256": "5c21b5168eb953bf6754d63a7e9ba0f6fc1cf75cca378f241cd0610c431e294f",
+      "scope": "Shared integer law compiled to FPGA RTL and executed by Rust."
+    },
+    "controller_authority_comparison": {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/robot.authority.json",
+      "sha256": "5aece196161b205a33c18b8c4bb27f62ebe71ac8185bb56bef072133557f2d57",
+      "scope": "Simulation controller-authority comparison only; not hardware qualification or calibration."
+    },
+    "feedback_assumptions": {
+      "path": "examples/full-robot/measured-actuator-integration/controller-integration/feedback-assumptions.json",
+      "sha256": "fad620aca6645f5bca40d52155b40ad4d7185b888d5811283aea4c85f3356a87",
+      "scope": "Provisional simulation coordinate choices; not physical encoder calibration"
+    },
+    "historical_gait": {
+      "path": "examples/full-robot/trusted-baseline/fastest573.input.json",
+      "sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6",
+      "scope": "Pinned initial joint references; no physical encoder calibration"
+    },
+    "offline_tracking": {
+      "path": "examples/full-robot/measured-actuator-integration/controller-tracking-full-drive-simulation/REVIEW.json",
+      "sha256": "014da1701a18c1f4bd0ea77193c630d2f6fb849de967b86da5dac6e2a2cbc2a1",
+      "scope": "Simulation-selected full-drive gains and assumed 2 ms delivery delay; no physical calibration or hardware commissioning."
+    },
+    "promotion": {
+      "path": "crates/sim-runtime/src/acquisition/actuator_promotion.rs",
+      "sha256": "7c68bdda5e69ec883f1ea921407f862a00b810f303b2af6d42c0164798617798",
+      "scope": "Explicit duty-domain to physical-parameter derivation (actuator_promotion.rs)."
+    },
+    "registry": {
+      "path": "crates/sim-domain-robot/src/motor.rs",
+      "sha256": "431ff205d2256078fa557f54dd21298994e6c04336d8e421d03d75a8126056be",
+      "scope": "Explicit library defaults for otherwise absent physical parameters; not measurements."
+    }
+  },
+  "motor": {
+    "back_emf_constant": {
+      "value": 0.012132012913329035,
+      "unit": "V·s/rad",
+      "provenance": "derived",
+      "uncertainty": 0.001010967875889402,
+      "evidence": "campaign"
+    },
+    "backlash": {
+      "value": 0.0,
+      "unit": "rad",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "derating": {
+      "value": 0.0,
+      "unit": "1/K",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "efficiency": {
+      "value": 0.5037278591966505,
+      "unit": "1",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "gear_damping": {
+      "value": 0.1,
+      "unit": "N·m·s/rad",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "gear_friction": {
+      "value": 0.018572213025563625,
+      "unit": "N·m",
+      "provenance": "derived",
+      "uncertainty": 0.020539278665991107,
+      "evidence": "campaign"
+    },
+    "gear_inertia": {
+      "value": 0.00002,
+      "unit": "kg·m²",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "gear_stiffness": {
+      "value": 50.0,
+      "unit": "N·m/rad",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "inductance": {
+      "value": 0.00148,
+      "unit": "H",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "loss_speed_scale": {
+      "value": 5.0,
+      "unit": "rad/s",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "registry"
+    },
+    "no_load_current": {
+      "value": 0.1,
+      "unit": "A",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "ratio": {
+      "value": 200.0,
+      "unit": "1",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "reference": {
+      "value": 298.15,
+      "unit": "K",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "resistance": {
+      "value": 3.6999999999999997,
+      "unit": "Ω",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "rotor_inertia": {
+      "value": 2.2324546035565207e-8,
+      "unit": "kg·m²",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "temp_coeff": {
+      "value": 0.0039,
+      "unit": "1/K",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "torque_constant": {
+      "value": 0.012132012913329035,
+      "unit": "N·m/A",
+      "provenance": "derived",
+      "uncertainty": 0.001010967875889402,
+      "evidence": "campaign"
+    }
+  },
+  "driver": {
+    "current_limit": {
+      "value": 3.0,
+      "unit": "A",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "on_resistance": {
+      "value": 0.05,
+      "unit": "Ω",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    }
+  },
+  "controller": {
+    "gains": {
+      "kp_q8": 4096,
+      "kd_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "period": {
+      "value": 0.01,
+      "unit": "s",
+      "provenance": "measured",
+      "uncertainty": null,
+      "evidence": "cadence"
+    },
+    "latency": {
+      "value": 0.002,
+      "unit": "s",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "offline_tracking"
+    },
+    "encoder_quantum": {
+      "value": 0.0015339807878856412,
+      "unit": "rad",
+      "provenance": "derived",
+      "uncertainty": null,
+      "evidence": "controller"
+    },
+    "evidence": "offline_tracking",
+    "implementation_blake3": "bc7964115b34900144cc48eb26eddc8ae1c237bd500444d05c9cef69b0ea633e"
+  },
+  "envelope": {
+    "supply_voltage": {
+      "value": 12.4,
+      "unit": "V",
+      "provenance": "measured",
+      "uncertainty": 0.1,
+      "evidence": "campaign"
+    },
+    "full_drive_speed": {
+      "value": 4.934786194157919,
+      "unit": "rad/s",
+      "provenance": "derived",
+      "uncertainty": 0.4100852882304566,
+      "evidence": "campaign"
+    },
+    "acceleration": {
+      "value": 21.87430614184184,
+      "unit": "rad/s²",
+      "provenance": "measured",
+      "uncertainty": 1.1664050332810951,
+      "evidence": "campaign"
+    },
+    "coast_deceleration": {
+      "value": 1.9174759848570515,
+      "unit": "rad/s²",
+      "provenance": "measured",
+      "uncertainty": 0.4793689962142629,
+      "evidence": "campaign"
+    },
+    "low_speed_friction": {
+      "value": 0.04985156206956912,
+      "unit": "1",
+      "provenance": "measured",
+      "uncertainty": 0.002516888680763674,
+      "evidence": "campaign"
+    },
+    "breakaway": {
+      "value": 0.07200000000000005,
+      "unit": "1",
+      "provenance": "measured",
+      "uncertainty": 0.0050000000000000044,
+      "evidence": "campaign"
+    }
+  }
+}

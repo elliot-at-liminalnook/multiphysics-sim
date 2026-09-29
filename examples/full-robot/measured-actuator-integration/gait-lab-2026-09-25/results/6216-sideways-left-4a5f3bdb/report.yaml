@@ -1,0 +1,101 @@
+gait: 6216-sideways-left
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/6216-sideways-left.yaml
+status: passed
+summary: 'Passed: 0.153 m/s (0.551 m in 3.6 s). Tightest joint: joint.+Y | Worm servo output at 100% of motor speed.'
+speed_m_s: 0.15299972153802519
+forward_distance_m: 0.5507989975368907
+simulated_s: 3.6
+gates:
+- gate: body_up_z_minimum
+  value: 0.99364426489537
+  limit: 0.9
+  ok: true
+- gate: tracking_rms_deg_worst_joint
+  value: 1.624798016539815
+  limit: 5.0
+  ok: true
+- gate: tracking_peak_deg_worst_joint
+  value: 3.1970327988654597
+  limit: 14.999999999999998
+  ok: true
+reasons: []
+joints:
+- joint: joint.+Y | Worm servo output
+  reference_peak_rad_s: 6.154766891069919
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 100.0
+  tracking_rms_deg: 1.2844386966650205
+  tracking_peak_deg: 2.7312931249046444
+- joint: joint.-Y | Foot servo output
+  reference_peak_rad_s: 4.780225895645464
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 96.0
+  tracking_rms_deg: 1.624798016539815
+  tracking_peak_deg: 3.125918478428215
+- joint: joint.-X | Worm servo output
+  reference_peak_rad_s: 5.838895097467012
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 94.0
+  tracking_rms_deg: 1.2830218885120033
+  tracking_peak_deg: 3.0248320723424413
+- joint: joint.+X | Worm servo output
+  reference_peak_rad_s: 5.768445266562774
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 93.0
+  tracking_rms_deg: 1.0864500662281775
+  tracking_peak_deg: 3.147796299587159
+- joint: joint.-Y | Worm servo output
+  reference_peak_rad_s: 5.576904043195166
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 90.0
+  tracking_rms_deg: 0.9705829832551445
+  tracking_peak_deg: 3.1970327988654597
+- joint: joint.+Y | Hip servo output
+  reference_peak_rad_s: 3.949854835570063
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 89.0
+  tracking_rms_deg: 1.0333557954538013
+  tracking_peak_deg: 2.15748303813147
+- joint: joint.-X | Hip servo output
+  reference_peak_rad_s: 3.7030896575121313
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 84.0
+  tracking_rms_deg: 0.8737729279555679
+  tracking_peak_deg: 2.05665037445838
+- joint: joint.+X | Foot servo output
+  reference_peak_rad_s: 3.8821108886984996
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 78.0
+  tracking_rms_deg: 1.4785256983446384
+  tracking_peak_deg: 3.108137249870957
+- joint: joint.+X | Hip servo output
+  reference_peak_rad_s: 3.384725543864076
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 76.0
+  tracking_rms_deg: 0.9363596281329644
+  tracking_peak_deg: 2.140030868048701
+- joint: joint.+Y | Foot servo output
+  reference_peak_rad_s: 3.783476693385464
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 76.0
+  tracking_rms_deg: 0.589081240395563
+  tracking_peak_deg: 1.9456704162714702
+- joint: joint.-Y | Hip servo output
+  reference_peak_rad_s: 3.201528707495008
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 72.0
+  tracking_rms_deg: 0.8049758498496037
+  tracking_peak_deg: 1.868074946337447
+- joint: joint.-X | Foot servo output
+  reference_peak_rad_s: 3.5239427456815235
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 71.0
+  tracking_rms_deg: 0.3842329211418292
+  tracking_peak_deg: 1.1895777035584623
+fidelity: 'fast: reduced model outer-mechanism-broyden-v1-task-q32, qualified at task level against the detailed model; confirm finalists with --fidelity detailed'
+timing:
+  preparation_s: 33.271023431
+  simulation_s: 56.295595571
+  simulated_s: 3.6
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/6216-sideways-left-4a5f3bdb
+compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results/6216-sideways-left-4a5f3bdb/compiled.json

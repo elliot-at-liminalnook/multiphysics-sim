@@ -1,0 +1,41 @@
+# A dovetail: a tapered tongue slid into a matching undercut groove.
+part dovetail "Dovetail joint"
+category Mechanical
+summary "A tapered tongue in an undercut groove: it slides in one way and cannot be pulled out, because pulling wedges it against the groove's slanted faces."
+explain "Pull axis (tail, socket): after the clearance, pulling the tail out presses each slanted face (flank) with a force N at angle α from the pull, so F = 2·N·sin α. The flank also pushes the socket's wall outward with S = N·cos α = F/(2·tan α): a shallow flank holds with a large N but spreads the walls hard. Each flank is a contact spring k_f in series with its wall bending outward (k_w), seen along the flank. Slide axis (slide, rail): sliding the tail along the groove rubs both flanks: friction μ·2·N, where N includes the preload of an interference fit (N = k·interference)."
+tradeoffs "Self-locking against pulling and easy to align: no screws for location, and the joint assembles by sliding. Shallow flanks hold more but spread (and crack) the socket walls; steep flanks spread less but leave a thin, weak neck. An interference fit is stiff and quiet but needs force to slide in; clearance slides easily but wobbles."
+limits "The two axes are separate springs (no rotation); linear contact and wall stiffness (estimates); friction regularised with a small speed; no yielding or cracking (compare the spreading force with the wall's strength)."
+pairs part.force_command translational.mass translational.ground translational.damper
+port tail translational
+port socket translational
+port slide translational
+port rail translational
+param angle rad ~ 0.2618 "Flank angle from the pull direction (15°)"
+param flank_stiffness N/m ~ 2e6 "Contact stiffness of one flank along its normal"
+param wall_stiffness N/m ~ 5e5 "How stiffly one socket wall resists being pushed outward"
+param clearance m = 0 "Gap along a flank's normal before it touches (loose fit)"
+param interference m = 0 "Overlap along a flank's normal (tight fit): it presses both flanks even at rest"
+param friction 1 ~ 0.3 "Sliding friction coefficient (PLA on PLA ≈ 0.3)"
+param smoothing m/s = 0.001 "Speed over which friction builds up (regularisation)"
+let keff = 1/(1/flank_stiffness + cos(angle)^2/wall_stiffness)
+let approach = max((tail.s - socket.s)*sin(angle) - clearance, 0)
+let n_pull = keff*approach
+let n = n_pull + keff*interference
+let pull = 2*n_pull*sin(angle)
+flow tail = pull
+flow socket = -pull
+let rub = friction*2*n*tanh((slide.v - rail.v)/smoothing)
+flow slide = rub
+flow rail = -rub
+energy keff*approach^2
+output spread Force
+output flank Force
+output holding Force
+output rubbing Force
+set spread = n*cos(angle)
+set flank = n
+set holding = pull
+set rubbing = abs(rub)
+derive "stiffness along one flank (with its wall)" = 1/(1/flank_stiffness + cos(angle)^2/wall_stiffness) N/m
+derive "wall spreading per newton of pull" = 0.5*cos(angle)/sin(angle)
+derive "force to slide in (tight fit)" = friction*2*interference/(1/flank_stiffness + cos(angle)^2/wall_stiffness) N

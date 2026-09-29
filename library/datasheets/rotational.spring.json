@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "rotational.spring",
+  "label": "Torsional spring",
+  "kind": "generic",
+  "parameters": {
+    "stiffness": 30.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 1.7541523789077473e-14,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 1.945e-1 J → change 1.754e-14 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.9e-2, 3.4e-3, 4.2e-4 (1 → 0.125 ms); observed order 3.0"
+    }
+  ]
+}

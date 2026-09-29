@@ -1,0 +1,35 @@
+{
+ "schema": "sim.vision-rig/1",
+ "axis_point": [
+  0.0,
+  0.0,
+  0.054
+ ],
+ "axis": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "optical_center": [
+  9.576737969332303e-18,
+  0.1564,
+  0.084
+ ],
+ "optical_axis": [
+  6.123233995736766e-17,
+  1.0,
+  0.0
+ ],
+ "up": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "source": {
+  "cad": "examples/camera-turntable/cad/turntable.rcad",
+  "sha256": "dce8a9fd2412a2b1333988f28366f2dbf63240fe051ebd96896a9005be9fbd12",
+  "camera_node": "Camera Module 3 Wide (reference)",
+  "rule": "optical centre = lens front on the camera board (CAD reference body); axis from the turntable joint",
+  "uncertainty": "lens entrance pupil position and camera tilt on the mount are unmeasured (\u00b12 mm, \u00b11\u00b0 estimated)"
+ }
+}

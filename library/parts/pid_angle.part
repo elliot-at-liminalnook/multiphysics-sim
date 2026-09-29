@@ -1,0 +1,23 @@
+# Continuous PID on an angle error with a filtered derivative and output limit.
+part pid_angle "PID position controller (angle)"
+category Control
+summary "Turns an angle error into a motor drive command (−1…1): proportional, integral and filtered derivative action."
+explain "e = target − measured. u = kp·e + ki·∫e dt + kd·ė, where ė is the error's derivative through a first-order filter (time constant τ_f) so encoder noise does not explode, plus a constant feed-forward offset, and u is clipped to ±limit. kp sets stiffness, kd damping, ki removes steady error against constant loads such as gravity. Feed u to an H-bridge or PWM driver."
+tradeoffs "Higher kp: stiffer and faster but closer to oscillation and saturation. kd adds damping but amplifies noise (hence the filter). ki cancels steady load error but causes overshoot and wind-up while saturated (this model has no anti-wind-up). Sampled, delayed controllers (robot.servo_firmware) are more realistic for microcontrollers."
+limits "Continuous-time (no sampling or latency), no anti-wind-up, ideal sensor inputs."
+pairs robot.h_bridge sensor.encoder part.angle_setpoint actuator.pwm_driver
+input target Angle
+input measured Angle
+output command Dimensionless
+param kp 1/rad ~ 2 "Proportional gain: command per radian of error"
+param ki 1/rad/s = 0 "Integral gain"
+param kd s/rad = 0.05 "Derivative gain"
+param filter s = 0.005 "Derivative filter time constant"
+param limit 1 = 1 "Output limit (±)"
+param offset 1 = 0 "Feed-forward added to the command (e.g. the hover throttle)"
+state integral Dimensionless = 0
+state filtered Angle = 0
+let e = target - measured
+eq der(integral) = ki*e
+eq filter*der(filtered) = e - filtered
+set command = max(-limit, min(limit, offset + kp*e + integral + kd*(e - filtered)/filter))

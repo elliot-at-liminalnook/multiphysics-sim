@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="IBM Plex Sans">
+  <rect x="1" y="1" width="758" height="358" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">A gear pair with ratio N = 5: what passes through it, and what the motor feels</text>
+  <!-- pinion -->
+  <circle cx="190" cy="175" r="34" fill="#1d2630" stroke="#4dd4bf" stroke-width="3"/>
+  <g stroke="#4dd4bf" stroke-width="3">
+    <line x1="190" y1="137" x2="190" y2="131"/><line x1="224" y1="175" x2="230" y2="175"/><line x1="190" y1="213" x2="190" y2="219"/><line x1="156" y1="175" x2="150" y2="175"/>
+  </g>
+  <circle cx="190" cy="175" r="5" fill="#e6ebf1"/>
+  <text x="190" y="240" font-size="13" fill="#4dd4bf" text-anchor="middle">motor pinion</text>
+  <!-- gear (drawn 3.5x for space) -->
+  <circle cx="345" cy="175" r="120" fill="#1d2630" stroke="#de9454" stroke-width="3"/>
+  <circle cx="345" cy="175" r="6" fill="#e6ebf1"/>
+  <text x="345" y="315" font-size="13" fill="#de9454" text-anchor="middle">output gear (5 × the teeth)</text>
+  <!-- arrows -->
+  <path d="M160,120 A50,50 0 0 1 222,122" fill="none" stroke="#4dd4bf" stroke-width="2.2"/>
+  <path d="M222,122 l-2,10 l8,-6 z" fill="#4dd4bf"/>
+  <path d="M430,80 A130,130 0 0 0 330,56" fill="none" stroke="#de9454" stroke-width="2.2"/>
+  <path d="M330,56 l9,6 l-1,-9 z" fill="#de9454"/>
+  <!-- table -->
+  <rect x="490" y="62" width="246" height="236" rx="8" fill="#1a2129" stroke="#2e353f"/>
+  <text x="506" y="92" font-size="13" fill="#99a6b5">at the motor</text><text x="720" y="92" font-size="13" fill="#99a6b5" text-anchor="end">at the output</text>
+  <text x="506" y="126" font-size="16" fill="#4dd4bf">τ</text><text x="613" y="126" font-size="15" fill="#e6ebf1" text-anchor="middle">→</text><text x="720" y="126" font-size="16" fill="#de9454" text-anchor="end">N·τ</text>
+  <text x="506" y="162" font-size="16" fill="#4dd4bf">ω</text><text x="613" y="162" font-size="15" fill="#e6ebf1" text-anchor="middle">→</text><text x="720" y="162" font-size="16" fill="#de9454" text-anchor="end">ω / N</text>
+  <text x="506" y="198" font-size="16" fill="#4dd4bf">τ·ω</text><text x="613" y="198" font-size="15" fill="#e6ebf1" text-anchor="middle">=</text><text x="720" y="198" font-size="16" fill="#de9454" text-anchor="end">τ·ω</text>
+  <line x1="506" y1="214" x2="720" y2="214" stroke="#2e353f"/>
+  <text x="506" y="244" font-size="16" fill="#4dd4bf">J_load / N²</text><text x="613" y="244" font-size="15" fill="#e6ebf1" text-anchor="middle">←</text><text x="720" y="244" font-size="16" fill="#de9454" text-anchor="end">J_load</text>
+  <text x="506" y="276" font-size="12" fill="#99a6b5">the load, as the motor feels it</text>
+  <text x="24" y="340" font-size="12.5" fill="#99a6b5">Torque is multiplied by N, speed divided by N, power unchanged (ideal gears). The load's inertia shrinks by N² on its way back.</text>
+</svg>

@@ -1,0 +1,39 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "sensor.force",
+  "label": "Load cell",
+  "kind": "generic",
+  "parameters": {
+    "bandwidth": 0.0,
+    "fault.duration": 0.0,
+    "fault.mode": 0.0,
+    "fault.samples": 0.0,
+    "latency": 0.0,
+    "noise": 0.0,
+    "period": 0.0,
+    "quantum": 0.0,
+    "seed": 0.0,
+    "stages": 4.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -9.050524218956468e-12,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 6.500e-3 J → change -9.051e-12 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 2.8e-10, 1.1e-9, 1.5e-9 (1 → 0.125 ms); observed order -0.4"
+    }
+  ]
+}

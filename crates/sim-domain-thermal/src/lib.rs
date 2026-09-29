@@ -101,7 +101,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::connectors::Thermal as H;
     for descriptor in [
         BehaviorDescriptor::new(CAPACITANCE, "Thermal capacitance", vec![acausal("node", H)], capacitance).with_parameters(vec![P::required("heat_capacity", "J/K").positive()]),
-        BehaviorDescriptor::new(CONDUCTANCE, "Thermal conductance", vec![acausal("a", H), acausal("b", H)], conductance).with_parameters(vec![P::alternative("conductance", "W/K"), P::alternative("resistance", "K/W")]),
+        BehaviorDescriptor::new(CONDUCTANCE, "Thermal conductance", vec![acausal("a", H), acausal("b", H)], conductance).with_parameters(vec![P::alternative("conductance", "W/K").nonnegative(), P::alternative("resistance", "K/W").positive()]),
         BehaviorDescriptor::new(AMBIENT, "Fixed temperature", vec![acausal("node", H)], ambient).with_parameters(vec![P::required("temperature", "K").nonnegative()]),
         BehaviorDescriptor::new(HEAT_SOURCE, "Constant heat source", vec![acausal("node", H)], heat_source).with_parameters(vec![P::optional("power", "W", 0.0)]),
     ] {
@@ -109,3 +109,4 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     }
     Ok(())
 }
+pub mod notes;

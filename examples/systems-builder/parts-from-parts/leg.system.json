@@ -1,0 +1,788 @@
+{
+  "schema": "sim.system/1",
+  "title": "One-joint leg",
+  "revision": 2,
+  "root": "root",
+  "definitions": {
+    "dc_motor_12v": {
+      "label": "DC motor 12 V",
+      "description": "Brushed motor with its rotor inertia and mount (case grounded inside). Exposes winding resistance and motor constant k (= k_t = k_e).",
+      "interface": "motor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "p": {
+          "label": "Supply +"
+        },
+        "shaft": {
+          "label": "Output shaft"
+        }
+      },
+      "parameters": {
+        "k": {
+          "unit": "N·m/A",
+          "default": 0.012,
+          "description": "Motor constant k = k_t = k_e"
+        },
+        "resistance": {
+          "unit": "Ω",
+          "default": 2.0,
+          "description": "Winding resistance"
+        }
+      },
+      "instances": {
+        "mount": {
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.008,
+              -0.018,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size); not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.022,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "winding": {
+          "label": "Brushed motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "parameter": "k"
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size); not a measured part."
+              }
+            },
+            "resistance": {
+              "parameter": "resistance"
+            },
+            "torque_constant": {
+              "parameter": "k"
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "winding",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "winding",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "winding",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "winding",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "boundary": "shaft"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/joint_actuator.definition.json",
+        "content_hash": "a14583a33e795ae5da8185af5b7ed892eb4b1d9310c0e8ead3044219f4fc81db"
+      },
+      "version": 1
+    },
+    "joint_actuator": {
+      "label": "Joint actuator",
+      "description": "A gearmotor driving a joint through an output bearing (viscous loss 1 mN·m·s).",
+      "interface": "actuator.rotary",
+      "ports": {
+        "joint": {
+          "label": "Joint"
+        },
+        "n": {
+          "label": "Supply −"
+        },
+        "p": {
+          "label": "Supply +"
+        }
+      },
+      "instances": {
+        "bearing": {
+          "label": "Output bearing",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.001
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.01,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "drive": {
+          "label": "Gearmotor",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "worm_gearmotor_30"
+          }
+        },
+        "housing": {
+          "label": "Housing",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.02,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "bearing",
+              "port": "b"
+            },
+            {
+              "instance": "housing",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "drive",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "drive",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "drive",
+              "port": "output"
+            },
+            {
+              "instance": "bearing",
+              "port": "a"
+            },
+            {
+              "boundary": "joint"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/joint_actuator.definition.json",
+        "content_hash": "a14583a33e795ae5da8185af5b7ed892eb4b1d9310c0e8ead3044219f4fc81db"
+      },
+      "version": 1
+    },
+    "root": {
+      "label": "One-joint leg",
+      "instances": {
+        "gnd": {
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gravity": {
+          "label": "Gravity on the thigh",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.pendulum_gravity"
+          },
+          "parameters": {
+            "arm": {
+              "value": 0.1,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "centre of a 0.2 m rod"
+              }
+            },
+            "mass": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "thigh mass"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.05,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "hip": {
+          "label": "Hip actuator",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "joint_actuator"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "supply": {
+          "label": "6 V pulse",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.switched_voltage_source"
+          },
+          "parameters": {
+            "off_at": {
+              "value": 0.12
+            },
+            "voltage": {
+              "value": 6.0
+            }
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.0,
+              0.04
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "thigh": {
+          "label": "Thigh link",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.004,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Uniform 0.3 kg, 0.2 m rod about its end: m·L²/3"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "hip",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "hip",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "hip",
+              "port": "joint"
+            },
+            {
+              "instance": "thigh",
+              "port": "shaft"
+            },
+            {
+              "instance": "gravity",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    },
+    "worm_gearbox_30": {
+      "label": "Worm gearbox 30:1",
+      "description": "Single-start steel worm on a 30-tooth bronze wheel (module 0.5, worm pitch Ø8). Self-locking: the load cannot drive the worm. Forward efficiency ≈ 45 % at μ = 0.07.",
+      "interface": "gearbox.rotational",
+      "ports": {
+        "input": {
+          "label": "Worm shaft"
+        },
+        "output": {
+          "label": "Wheel shaft"
+        }
+      },
+      "instances": {
+        "coupling": {
+          "label": "Shaft coupling",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Small beam coupling, 5 mm bore: catalogue range 20–60 N·m/rad."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.016,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.005,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.25,
+              0.25,
+              0.27
+            ]
+          }
+        },
+        "mesh": {
+          "label": "Worm-wheel mesh",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.worm_gear"
+          },
+          "parameters": {
+            "friction": {
+              "value": 0.07,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Lubricated steel on bronze at low sliding speed (Shigley Fig. 15-11 range 0.02–0.1); not measured."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "worm": {
+          "label": "Worm",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 4e-8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Steel cylinder Ø8 × 18 mm: ½·m·r² with m ≈ 7 g."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0045,
+              "length": 0.026
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "worm"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "input shaft",
+          "terminals": [
+            {
+              "boundary": "input"
+            },
+            {
+              "instance": "coupling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "worm shaft",
+          "terminals": [
+            {
+              "instance": "coupling",
+              "port": "b"
+            },
+            {
+              "instance": "worm",
+              "port": "shaft"
+            },
+            {
+              "instance": "mesh",
+              "port": "worm"
+            }
+          ]
+        },
+        {
+          "label": "wheel shaft",
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "mesh",
+              "port": "wheel"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/joint_actuator.definition.json",
+        "content_hash": "a14583a33e795ae5da8185af5b7ed892eb4b1d9310c0e8ead3044219f4fc81db"
+      },
+      "version": 1
+    },
+    "worm_gearmotor_30": {
+      "label": "Worm gearmotor 30:1",
+      "description": "DC motor 12 V on a self-locking 30:1 worm gearbox.",
+      "interface": "gearmotor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "output": {
+          "label": "Output shaft"
+        },
+        "p": {
+          "label": "Supply +"
+        }
+      },
+      "instances": {
+        "gearbox": {
+          "label": "Gearbox",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "worm_gearbox_30"
+          }
+        },
+        "motor": {
+          "label": "Motor",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "dc_motor_12v"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gearbox",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "gearbox",
+              "port": "output"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/joint_actuator.definition.json",
+        "content_hash": "a14583a33e795ae5da8185af5b7ed892eb4b1d9310c0e8ead3044219f4fc81db"
+      },
+      "version": 1
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0005,
+    "rationale": "Scheduled supply edge and a self-locking worm (stiff regularised friction): backward Euler, 0.5 ms as in the worm-drive winch."
+  },
+  "realtime": {
+    "interval": 0.002,
+    "integrator": "backward_euler",
+    "observe": [
+      "thigh.shaft.angle",
+      "thigh.shaft.speed"
+    ],
+    "duration": 1.5,
+    "bound": 0.05,
+    "notes": "Realtime models: motor winding inductance dropped (current algebraic), friction smoothing 0.05 rad/s; 2 ms step.",
+    "measured": {
+      "content_hash": "887ede1881bc6c30ec323d81ef381566d0f3f247bd8d6abd36752541d70965cb",
+      "errors": {
+        "thigh.shaft.angle": 0.00534449877510967,
+        "thigh.shaft.speed": 0.018851707532639945
+      },
+      "detailed_speed": 4.662123783433174,
+      "realtime_speed": 56.74696867151185,
+      "host": "x86_64 macos (release build)"
+    }
+  }
+}

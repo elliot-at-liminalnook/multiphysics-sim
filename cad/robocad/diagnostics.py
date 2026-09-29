@@ -6,6 +6,7 @@ and print the latest editor session. No geometry or comment bodies are logged.
 import atexit
 from datetime import datetime, timezone
 import faulthandler
+import signal
 import json
 import logging
 import os
@@ -83,6 +84,10 @@ def start(role='editor', *, model_path=None):
     log.setLevel(logging.INFO)
     log.propagate = False
     faulthandler.enable(file=_stream, all_threads=True)
+    # `kill -USR1 <pid>` writes every thread's Python stack to session.log
+    # without stopping the app: the way to see what a hung UI thread is doing.
+    if hasattr(signal, 'SIGUSR1'):
+        faulthandler.register(signal.SIGUSR1, file=_stream, all_threads=True)
     _session = dict(pid=os.getpid(), parent_pid=os.getppid(), role=role,
                     started_at=_now(), folder=str(folder), log_path=str(folder / 'session.log'),
                     model_path=str(model_path) if model_path else None,

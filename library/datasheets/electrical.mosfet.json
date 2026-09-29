@@ -1,0 +1,26 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "electrical.mosfet",
+  "label": "N-channel MOSFET switch with body diode and heat",
+  "kind": "generic",
+  "parameters": {
+    "body.forward_voltage": 0.8,
+    "body.on_resistance": 0.02,
+    "body.smoothing": 0.02,
+    "off_conductance": 1e-8,
+    "on_resistance": 0.02,
+    "output_capacitance": 5e-10,
+    "reference": 298.15,
+    "temperature_coefficient": 0.004
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) gate: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

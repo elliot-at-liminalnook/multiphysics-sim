@@ -1,0 +1,31 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "rotational.coulomb_friction",
+  "label": "Coulomb friction",
+  "kind": "generic",
+  "parameters": {
+    "smoothing_speed": 0.01,
+    "torque": 0.01
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.03750000000000419,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.000e-2 J → change -3.750e-2 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 7.1e-14, 1.6e-13, 2.8e-13 (1 → 0.125 ms); observed order -0.8"
+    }
+  ]
+}

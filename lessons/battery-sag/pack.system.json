@@ -1,0 +1,563 @@
+{
+  "schema": "sim.system/1",
+  "title": "Battery sag at motor start",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Battery sag at motor start",
+      "description": "A 540 motor starts at full drive from a small, worn 2S pack that also powers the controller. The start current pulls the pack's voltage down.",
+      "instances": {
+        "driver": {
+          "display_id": "260c0acaa3aca88d43f9d936",
+          "label": "Driver",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A MOSFET H-bridge."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.04,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.04,
+                0.01,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.45,
+              0.3
+            ],
+            "model": "driver_board"
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.01,
+              0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "go": {
+          "display_id": "588ac6410aeb9ad1ee8f19bc",
+          "label": "Start command",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pulse"
+          },
+          "parameters": {
+            "amplitude": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Full drive from 0.1 s."
+              }
+            },
+            "duration": {
+              "value": 10.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Full drive from 0.1 s."
+              }
+            },
+            "start": {
+              "value": 0.1,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Full drive from 0.1 s."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "load": {
+          "display_id": "e4ddf49ff64d1bf72206a477",
+          "label": "Rotor and wheel",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.00002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Rotor plus a wheel and gearing referred to the motor: 5e-5 kg·m², so spin-up takes about 0.2 s."
+              }
+            },
+            "inertia": {
+              "value": 0.00005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Rotor plus a wheel and gearing referred to the motor: 5e-5 kg·m², so spin-up takes about 0.2 s."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.035,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.025,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        },
+        "logic": {
+          "display_id": "542a5caa2765cac318a5724c",
+          "label": "Controller board",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 37.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The controller and its 5 V regulator: about 0.2 A from the pack."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.0,
+              0.03
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.005,
+                0.0015,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "soic8"
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "540 motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 540-size brushed motor: 0.3 Ω, 10 mN·m/A (≈ 18 A at stall on a fresh 2S pack). Catalogue-style values."
+              }
+            },
+            "inductance": {
+              "value": 0.00005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 540-size brushed motor: 0.3 Ω, 10 mN·m/A (≈ 18 A at stall on a fresh 2S pack). Catalogue-style values."
+              }
+            },
+            "resistance": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 540-size brushed motor: 0.3 Ω, 10 mN·m/A (≈ 18 A at stall on a fresh 2S pack). Catalogue-style values."
+              }
+            },
+            "torque_constant": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 540-size brushed motor: 0.3 Ω, 10 mN·m/A (≈ 18 A at stall on a fresh 2S pack). Catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.018,
+              "length": 0.05
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "dc_motor"
+          }
+        },
+        "pack": {
+          "display_id": "2679bd24c07c0fd3f39f4942",
+          "label": "2S LiPo, small and worn",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.battery"
+          },
+          "parameters": {
+            "capacity_ah": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small 2S LiPo (7.4 V nominal) whose internal resistance has grown to 0.12 Ω with age."
+              }
+            },
+            "cells": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small 2S LiPo (7.4 V nominal) whose internal resistance has grown to 0.12 Ω with age."
+              }
+            },
+            "initial_soc": {
+              "value": 0.9,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small 2S LiPo (7.4 V nominal) whose internal resistance has grown to 0.12 Ω with age."
+              }
+            },
+            "internal_resistance": {
+              "value": 0.12,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small 2S LiPo (7.4 V nominal) whose internal resistance has grown to 0.12 Ω with age."
+              }
+            },
+            "nominal_voltage": {
+              "value": 7.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small 2S LiPo (7.4 V nominal) whose internal resistance has grown to 0.12 Ω with age."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        },
+        "sense": {
+          "display_id": "c3de8fe9d12c101f0a1dd72a",
+          "label": "Pack voltage",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_sense"
+          },
+          "parameters": {
+            "scale": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Reads the pack's terminal voltage directly (scale 1 V)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "pack +",
+          "terminals": [
+            {
+              "instance": "pack",
+              "port": "p"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_p"
+            },
+            {
+              "instance": "sense",
+              "port": "p"
+            },
+            {
+              "instance": "logic",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "command",
+          "terminals": [
+            {
+              "instance": "go",
+              "port": "value"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "label": "motor +",
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "motor − (0 V: the averaged bridge output is referenced here)",
+          "terminals": [
+            {
+              "instance": "pack",
+              "port": "n"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_n"
+            },
+            {
+              "instance": "sense",
+              "port": "n"
+            },
+            {
+              "instance": "logic",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "driver",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "load",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0002,
+    "rationale": "Driver and battery are algebraic; motor L/R = 0.17 ms: backward Euler, 0.2 ms."
+  },
+  "studies": {
+    "pack": {
+      "at": "",
+      "instance": "pack",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "internal_resistance",
+        "values": [
+          0.02,
+          0.06,
+          0.12,
+          0.2
+        ]
+      },
+      "duration": 0.5,
+      "observe": [
+        "sense.reading",
+        "motor.p.current"
+      ],
+      "metrics": [
+        {
+          "label": "lowest pack voltage (V)",
+          "observable": "sense.reading",
+          "reduce": "min",
+          "window": [
+            0.1,
+            0.5
+          ]
+        },
+        {
+          "label": "peak current (A)",
+          "observable": "motor.p.current",
+          "reduce": "peak",
+          "window": [
+            0.1,
+            0.5
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+[package]
+name = "sim-model-context"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Read-only, source-bound engineering context for model annotations and automation"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+sim-core = { path = "../sim-core" }
+sim-system = { path = "../sim-system" }
+sim-inspect = { path = "../sim-inspect" }
+
+[dev-dependencies]
+sim-domain-electrical = { path = "../sim-domain-electrical" }

@@ -102,6 +102,8 @@ pub(super) fn server_with(port: u16, builder: bool) -> std::io::Result<sim_api::
         all.extend([
             c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
                 "Apply sim-system commands atomically (shared validation and undo history with the physical viewer and CLI)"),
+            c("system_grid",json!({}),"Read/update display-only grid in enclosing-definition metres; changes no physics/CAD."),
+            c("system_move",json!({"names":["motor"],"position_m":[0.04,0,0.02],"snap":true,"preview":true}),"Display-only move with shared snapping, conservative overlap report, revision guard and atomic undo. Invalid preview returns overlap.allowed=false; commit rejects."),
             c("system_state", json!({}), "System file, revision, level, selection, findings and compile status"),
             c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path"),
             c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),

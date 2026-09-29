@@ -480,6 +480,7 @@ mod tests {
             yaw: 0.,
             pitch: 0.,
             home: false,
+            ..Default::default()
         });
         app.world_mut().spawn((NotesPanel, Node::default()));
         app.update();

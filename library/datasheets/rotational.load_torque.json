@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "rotational.load_torque",
+  "label": "Load torque",
+  "kind": "generic",
+  "parameters": {
+    "torque": -0.1
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.7499999999999716,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "total energy rose by 7.500e-1 J from 5.000e-2 J at every step (1 → 0.125 ms: 7.50e-1, 7.50e-1, 7.50e-1, 7.50e-1) (a source: allowed)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.0e-14, 4.1e-14, 5.4e-14 (1 → 0.125 ms); observed order -0.4"
+    }
+  ]
+}

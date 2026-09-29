@@ -1,0 +1,26 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "contact.wheel",
+  "label": "Wheel with rolling contact on the plane",
+  "kind": "generic",
+  "parameters": {
+    "damping": 500.0,
+    "friction": 1.0,
+    "inertia": 0.0001,
+    "px": 0.0,
+    "py": 0.0,
+    "radius": 0.03,
+    "regularisation": 0.01,
+    "stiffness": 100000.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: frame"
+    }
+  ]
+}

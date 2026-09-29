@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
 from PySide6.QtCore import QPoint, QRect, QSettings, Qt, QTimer, Signal, QUrl
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QKeySequence, QPainter, QPen
-from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QInputDialog, QLabel, QMainWindow, QMenu, QMessageBox, QRubberBand, QToolBar, QVBoxLayout, QWidget, QScrollArea, QFrame
+from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QInputDialog, QLabel, QMainWindow, QMenu, QMessageBox, QRubberBand, QToolBar, QVBoxLayout, QWidget, QScrollArea, QFrame, QDialog, QFormLayout, QComboBox, QDoubleSpinBox, QDialogButtonBox
 
 from ..analysis import face_distance, measure_angle_edges, measure_angle_faces, measure_points, measure_radius
 from ..commands import CommandStack, Ops
@@ -390,6 +390,14 @@ class MainWindow(QMainWindow):
         c("print.wall_check", "Wall thickness check…", self.wall_check, "Print")
         c("print.validate", "Validate for printing", self.validate, "Print")
         c("print.overhangs", "Toggle overhang shading", self.toggle_overhangs, "Print")
+        c("print.split", "Split selected for printing…", self.print_split, "Print")
+        c("print.strength", "Check strength (document's print study)", self.print_strength, "Print")
+        c("print.plan", "Plan print settings and plates (document's print study)", self.print_plan, "Print")
+        c("print.strength_split", "Whole or split for strength? (selected part of the print study)", self.print_strength_split, "Print")
+        c("print.assembly", "Assembly guide for the selected split…", self.print_assembly, "Print")
+        c("print.coupons", "Test coupons (for the selected split, or the material)…", self.print_coupons, "Print")
+        c("print.overlay", "Strength overlay on/off", self.toggle_stress, "Print")
+        c("print.jobs", "Print jobs…", self.print_jobs_status, "Print")
         c("inspect.curvature", "Curvature comb on selected curve", self.curvature_comb, "Inspect")
         c("inspect.continuity", "Continuity check (G0/G1/G2)", self.continuity, "Inspect")
         c("inspect.draft", "Draft-angle shading", self.draft_shading, "Inspect")
@@ -412,7 +420,7 @@ class MainWindow(QMainWindow):
         c("robot.load_results", "Robot: load simulation results…", self.robot_load_results, "Robot")
         c("robot.apply_identification", "Robot: apply identified joint parameters…", self.robot_apply_identification, "Robot")
         c("view.stress", "Toggle stress overlay (from loaded results)", self.toggle_stress, "Inspect")
-        c("sim.export_physical", "Simulation: export physical model (v3, with flexible links)…", self.sim_export_physical, "Simulation")
+        c("sim.export_physical", "Simulation: export physical model (simrobot v4, with flexible links)…", self.sim_export_physical, "Simulation")
         c("sim.export", "Simulation: export robot model…", self.sim_export, "Simulation")
         c("sim.link", "Simulation: live link (watch + run viewer)", self.sim_link_toggle, "Simulation")
         c("api.address", "REST API: show address", self.show_api, "Bridge")
@@ -1126,6 +1134,146 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "Validation", "\n".join(messages))
 
+    # ---- printing: split, strength (jobs shared with REST /print) ----------
+    def _print_jobs(self):
+        if not self.api:
+            QMessageBox.warning(self, "Printing", "Printing jobs run through the window's REST service, which is not running.")
+            return None
+        return self.api.service.print_jobs
+
+    def _watch_print_job(self, job: dict, done_text: Callable[[dict], str]):
+        """Report a background print job in the status bar until it ends."""
+        jobs = self._print_jobs()
+        timer = QTimer(self)
+
+        def poll():
+            j = jobs.get(job['id'])
+            if j['state'] in ('queued', 'running'):
+                self.status(f"{j['kind']}: {j['message'] or 'working'} ({j['fraction'] * 100:.0f} %) — Print ▸ Print jobs… to cancel")
+                return
+            timer.stop()
+            if j['state'] == 'done':
+                self.status(done_text(j['result']))
+                self.viewport.clear_stress_colors()
+                self._refresh_panels()
+            elif j['state'] == 'failed':
+                QMessageBox.warning(self, j['kind'].capitalize(), j['error'] or 'failed')
+            else:
+                self.status(f"{j['kind']} cancelled")
+        timer.timeout.connect(poll)
+        timer.start(250)
+
+    def print_split(self):
+        from ..print_registry import load, usable_mm
+        jobs = self._print_jobs()
+        bodies = [i for i in self.viewport.selection.nodes() if self.doc.nodes[i].body is not None]
+        if jobs is None or len(bodies) != 1:
+            if jobs is not None:
+                QMessageBox.information(self, "Split for printing", "Select one body to split.")
+            return
+        printers = list(load()[0]['printers'])
+        labels = [f"{p} ({' × '.join(f'{x:g}' for x in usable_mm(p))} mm)" for p in printers]
+        choice, ok = QInputDialog.getItem(self, "Split for printing", "Printer:", labels, 0, False)
+        if not ok:
+            return
+        joint, ok = QInputDialog.getItem(self, "Split for printing", "Joints:", ["auto", "pins+screws", "dovetail", "pins"], 0, False)
+        if not ok:
+            return
+        job = jobs.split_job({'node': bodies[0], 'printer': printers[labels.index(choice)], 'joint': joint})
+        self._watch_print_job(job, lambda r: f"split into {len(r['piece_nodes'])} pieces; hardware: " + ", ".join(f"{h['count']}× {h['item']} {h['size']}" for h in r['hardware']))
+
+    def print_strength(self):
+        jobs = self._print_jobs()
+        if jobs is None:
+            return
+        study = self.doc.robot_settings.get('print_study')
+        if not study:
+            QMessageBox.information(self, "Check strength",
+                "This document has no print study yet. Set robot_settings['print_study'] to a /print/analyze body "
+                "(parts with fixtures and loads; loads may read a simulation), e.g. from a script, then run this again.\n\n"
+                "Example region forms: {'contact': other_node}, {'bottom': true}, {'faces': [3, 4]}, {'sphere': {...}}.")
+            return
+        job = jobs.analyze(study)
+        def text(r):
+            worst = min(r['parts'], key=lambda p: p['safety_factor'])
+            return f"strength: least safety factor {worst['safety_factor']:.2f} on {worst['name']} ({worst['mode']}); Print ▸ Strength overlay shows where"
+        self._watch_print_job(job, text)
+
+    def print_plan(self):
+        jobs = self._print_jobs()
+        if jobs is None:
+            return
+        study = self.doc.robot_settings.get('print_study')
+        if not study:
+            self.print_strength()  # explains how to add one
+            return
+        job = jobs.plan(study)
+        self._watch_print_job(job, lambda r: f"plan: {len(r['plate_files'])} plate(s), about {r['total_hours']:.1f} h and {r['total_filament_g']:.0f} g (estimates); 3MF files in {r['plates']}")
+
+    def print_strength_split(self):
+        jobs = self._print_jobs()
+        if jobs is None:
+            return
+        study = self.doc.robot_settings.get('print_study') or {}
+        sel = set(self.viewport.selection.nodes())
+        part = next((p for p in study.get('parts', []) if p.get('node') in sel), None)
+        if part is None:
+            QMessageBox.information(self, "Whole or split?", "Select a part that is in the document's print study (it needs its fixtures and loads).")
+            return
+        body = {k: study[k] for k in ('printer', 'material', 'simulation', 'safety_target', 'space') if k in study}
+        job = jobs.strength_split({**body, 'node': part['node'], 'part': part})
+        self._watch_print_job(job, lambda r: f"{r['recommendation']}: {r['why']}")
+
+    def print_assembly(self):
+        jobs = self._print_jobs()
+        if jobs is None:
+            return
+        groups = [i for i in self.viewport.selection.nodes() if (self.doc.nodes[i].robot or {}).get('print_split')]
+        if not groups:
+            parents = {self.doc.nodes[i].parent for i in self.viewport.selection.nodes()}
+            groups = [p for p in parents if p and (self.doc.nodes[p].robot or {}).get('print_split')]
+        if not groups:
+            QMessageBox.information(self, "Assembly guide", "Select a split (the group Split for printing made) or one of its pieces.")
+            return
+        job = jobs.assembly({'group': groups[0]})
+        def done(r):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(r['guide']))
+            return f"assembly: {len(r['steps'])} steps; guide {r['guide']}"
+        self._watch_print_job(job, done)
+
+    def print_coupons(self):
+        from ..print_registry import load
+        jobs = self._print_jobs()
+        if jobs is None:
+            return
+        sel = self.viewport.selection.nodes()
+        groups = [i for i in sel if (self.doc.nodes[i].robot or {}).get('print_split')]
+        groups += [p for p in {self.doc.nodes[i].parent for i in sel} if p and (self.doc.nodes[p].robot or {}).get('print_split')]
+        printers, materials = list(load()[0]['printers']), list(load()[0]['materials'])
+        printer, ok = QInputDialog.getItem(self, "Test coupons", "Printer:", printers, 0, False)
+        if not ok:
+            return
+        material, ok = QInputDialog.getItem(self, "Test coupons", "Filament:", materials, 0, False)
+        if not ok:
+            return
+        job = jobs.coupons({'group': groups[0] if groups else None, 'printer': printer, 'material': material})
+        def done(r):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.dirname(r['protocol'])))
+            return f"coupons: {len(r['coupons'])} on {len(r['plates'])} plate(s); break them, fill results.json, then `sim-print promote results.json`"
+        self._watch_print_job(job, done)
+
+    def print_jobs_status(self):
+        jobs = self._print_jobs()
+        if jobs is None:
+            return
+        running = [j for j in jobs.list() if j['state'] in ('queued', 'running')]
+        lines = [f"{j['kind']} {j['id']}: {j['state']} {j['fraction'] * 100:.0f} % {j['message']}" for j in jobs.list()[-8:]]
+        if running and QMessageBox.question(self, "Print jobs", "\n".join(lines) + "\n\nCancel the running jobs?") == QMessageBox.Yes:
+            for j in running:
+                jobs.cancel(j['id'])
+        elif not running:
+            QMessageBox.information(self, "Print jobs", "\n".join(lines) or "No print jobs yet.")
+
     def curvature_comb(self):
         from ..analysis import curvature_comb
 
@@ -1550,20 +1698,73 @@ class MainWindow(QMainWindow):
         self.status("stress overlay " + ("on: blue 0 → red at yield, from the loaded results" if self.viewport.show_stress else "off"))
 
     def sim_export_physical(self):
-        from ..physical import export_physical_model
-
         p, _ = QFileDialog.getSaveFileName(self, "Export physical model", "", "Sim model (*.simrobot.json)")
         if p:
-            model = export_physical_model(self.doc, p, flex=True)
-            self.status(f"physical model written: {p} ({len(model['links'])} links, {sum(1 for l in model['links'] if l['flex'])} flexible)")
+            self._export_in_background(p, planar=False, label="physical model")
 
     def sim_export(self):
-        from ..simbridge import export_sim_model
-
         p, _ = QFileDialog.getSaveFileName(self, "Export simulation model", "", "Sim model (*.simrobot.json)")
         if p:
-            export_sim_model(self.doc, p)
-            self.status(f"Simulation model written: {p}")
+            # Same model as simbridge.export_sim_model (v4, flexible links, x–z planar hint).
+            self._export_in_background(p, planar=True, label="simulation model")
+
+    def _export_in_background(self, path: str, planar: bool, label: str, flex: bool = True, queue: bool = False):
+        """Flexible-link export takes minutes on a full robot: run it in a
+        child process on a snapshot of the current state, polled from a timer.
+        With `queue`, a request made while another export runs is kept (latest
+        wins) and started when that one finishes, e.g. saves during a live link."""
+        import shutil
+        import subprocess
+        import tempfile
+        from ..snapshots import capture
+
+        job = getattr(self, "_export_job", None)
+        if job and job["process"].poll() is None:
+            if queue:
+                job["pending"] = (path, planar, label, flex)
+                return
+            self.error("a model export is already running")
+            return
+        snapshot = capture(self.doc)
+        folder = tempfile.mkdtemp(prefix="robocad-export-")
+        archive = os.path.join(folder, "model.rcad")
+        with open(archive, "wb") as f:
+            f.write(snapshot.data)
+        package_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        env = dict(os.environ, PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(package_root), os.environ.get("PYTHONPATH")])))
+        process = subprocess.Popen(
+            [sys.executable, "-m", "robocad.export_worker", archive, path, "1" if flex else "0", "1" if planar else "0", self.doc.path or "", snapshot.physical_hash],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+        timer = QTimer(self)
+        started = time.monotonic()
+
+        def poll():
+            if process.poll() is None:
+                self.status(f"exporting {label} in the background… {time.monotonic() - started:.0f} s")
+                return
+            timer.stop()
+            out, err = process.communicate()
+            shutil.rmtree(folder, ignore_errors=True)
+            pending = (self._export_job or {}).get("pending")
+            self._export_job = None
+            if process.returncode == 0:
+                try:
+                    summary = json.loads(out.strip().splitlines()[-1])
+                    self.status(f"{label} written: {path} ({summary['links']} links, {summary['flexible']} flexible)")
+                except (ValueError, IndexError, KeyError):
+                    self.status(f"{label} written: {path}")
+            elif process.returncode is not None and process.returncode < 0:
+                self.status(f"{label} export cancelled")
+            else:
+                self.error(f"{label} export failed: {(err.strip().splitlines() or ['unknown error'])[-1]}")
+            if pending:
+                path_, planar_, label_, flex_ = pending
+                self._export_in_background(path_, planar=planar_, label=label_, flex=flex_, queue=True)
+
+        timer.timeout.connect(poll)
+        timer.start(250)
+        self._export_job = {"process": process, "timer": timer, "folder": folder}
+        self.status(f"exporting {label} in the background…")
 
     def sim_link_toggle(self):
         from ..simbridge import SimLink
@@ -1723,7 +1924,14 @@ class MainWindow(QMainWindow):
                 e.ignore()
                 return
             if r == QMessageBox.Save:
-                self.save()
+                try:
+                    self.save()
+                except Exception as err:
+                    self.error(f"Could not save: {err}")
+                if self.doc.dirty:
+                    # Save As was cancelled or failed: keep the window and its edits.
+                    e.ignore()
+                    return
         # Discard picks queued by the last frame before child widgets are
         # destroyed; their callbacks can otherwise access deleted panels.
         self.components_panel.cancel_jobs()
@@ -1735,6 +1943,10 @@ class MainWindow(QMainWindow):
         self._autosave_poll.stop()
         self._autosave_executor.shutdown(wait=False)
         self.experiments_panel.shutdown()
+        job = getattr(self, "_export_job", None)
+        if job and job["process"].poll() is None:
+            job["timer"].stop()
+            job["process"].terminate()
         self.pose_panel.stop()
         self.stop_bridge()
         if self.api:

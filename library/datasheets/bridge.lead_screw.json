@@ -1,0 +1,87 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "bridge.lead_screw",
+  "label": "Lead screw",
+  "kind": "linear",
+  "parameters": {
+    "correction": 10.0,
+    "friction": 0.15,
+    "lead": 0.002,
+    "pitch_diameter": 0.007,
+    "pressure_angle": 0.2617993877991494,
+    "smoothing_speed": 0.01
+  },
+  "conditions": {
+    "drive torque (N·m)": 0.05
+  },
+  "values": [
+    {
+      "name": "ratio (measured)",
+      "value": 3141.592653589779,
+      "unit": "rad/m"
+    },
+    {
+      "name": "forward efficiency",
+      "value": 0.36153921601134786,
+      "unit": "1"
+    },
+    {
+      "name": "backdrive efficiency",
+      "value": 0.0,
+      "unit": "1"
+    },
+    {
+      "name": "self-locking",
+      "value": 1.0,
+      "unit": "yes=1"
+    },
+    {
+      "name": "backdrive output speed",
+      "value": 2.135859325306148e-6,
+      "unit": "m/s"
+    },
+    {
+      "name": "realtime model: largest change",
+      "value": 0.0,
+      "unit": "1"
+    },
+    {
+      "name": "audit energy change",
+      "value": -0.050063174995458745,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "efficiency within (0, 1]",
+      "passed": true,
+      "detail": "forward 36.15 %"
+    },
+    {
+      "name": "forward efficiency matches the notes",
+      "passed": true,
+      "detail": "bench 36.15 % vs notes 36.41 %"
+    },
+    {
+      "name": "self-locking matches the notes",
+      "passed": true,
+      "detail": "bench holds, notes locks"
+    },
+    {
+      "name": "realtime model",
+      "passed": true,
+      "detail": "smoothing_speed = 0.05 → largest bench change 0.000 % (none)"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.200e-2 J → change -5.006e-2 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 2.8e-16, 5.6e-16, 5.6e-16 (1 → 0.125 ms); observed order 0.0"
+    }
+  ]
+}

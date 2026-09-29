@@ -1,0 +1,713 @@
+{
+  "schema": "sim.system/1",
+  "title": "Long leads and a bus capacitor",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Long leads and a bus capacitor",
+      "description": "A motor switched at 20 kHz by a low-side MOSFET, fed from a bench supply through a metre of thin wire. Each switching edge asks the wire for a step in current; the bus capacitor at the board supplies it instead.",
+      "instances": {
+        "air": {
+          "display_id": "4eac8f82f82024386c298afd",
+          "label": "Air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 298.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Room air."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.04,
+              0.02,
+              0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "bench": {
+          "display_id": "6cf487b1d4a3b2b97e341ed8",
+          "label": "Bench supply",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 12 V bench supply."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.13,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.03,
+                0.02,
+                0.025
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ]
+          }
+        },
+        "cap": {
+          "display_id": "55f222248365d9cffdb38809",
+          "label": "Bus capacitor",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.capacitor"
+          },
+          "parameters": {
+            "capacitance": {
+              "value": 0.0001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An electrolytic at the board's power input: 100 µF."
+              }
+            },
+            "initial.p.voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "An electrolytic at the board's power input: 100 µF."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.004,
+              "length": 0.011
+            },
+            "color_srgb": [
+              0.2,
+              0.3,
+              0.6
+            ],
+            "model": "radial_capacitor"
+          }
+        },
+        "diode": {
+          "display_id": "29129e67fee2d54f3af780d5",
+          "label": "Freewheel diode",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.diode"
+          },
+          "parameters": {
+            "forward_voltage": {
+              "value": 0.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Schottky freewheel diode across the motor."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.01,
+              0.075,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.013,
+                0.004,
+                0.0027
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "do41_diode"
+          }
+        },
+        "duty": {
+          "display_id": "05076e2ae719d369acc32df2",
+          "label": "Duty 50 %",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.constant"
+          },
+          "parameters": {
+            "value": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Half duty."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.06,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Clamp",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.13,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "Motor (held still)",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A stalled motor at 50 % PWM: 1 Ω and 0.2 mH, so its current is nearly steady while the supply current is chopped."
+              }
+            },
+            "inductance": {
+              "value": 0.0002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A stalled motor at 50 % PWM: 1 Ω and 0.2 mH, so its current is nearly steady while the supply current is chopped."
+              }
+            },
+            "resistance": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A stalled motor at 50 % PWM: 1 Ω and 0.2 mH, so its current is nearly steady while the supply current is chopped."
+              }
+            },
+            "torque_constant": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A stalled motor at 50 % PWM: 1 Ω and 0.2 mH, so its current is nearly steady while the supply current is chopped."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.01,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "pwm": {
+          "display_id": "5aee3702c55182332a1b7f31",
+          "label": "PWM 20 kHz",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pwm"
+          },
+          "parameters": {
+            "frequency": {
+              "value": 20000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "20 kHz PWM at 50 % duty."
+              }
+            },
+            "initial_duty": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "20 kHz PWM at 50 % duty."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.04,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.005,
+                0.0015,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "soic8"
+          }
+        },
+        "sense": {
+          "display_id": "c3de8fe9d12c101f0a1dd72a",
+          "label": "Board voltage",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_sense"
+          },
+          "parameters": {
+            "scale": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The voltage the board sees."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "switch": {
+          "display_id": "cdb838cf893666a6597d1465",
+          "label": "Low-side MOSFET",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A logic-level MOSFET, 20 mΩ."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.01,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.01,
+                0.0185,
+                0.0046
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "to220"
+          }
+        },
+        "wire_l": {
+          "display_id": "4f2fa9d8b4141036b9caf1f4",
+          "label": "Lead inductance",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.inductor"
+          },
+          "parameters": {
+            "inductance": {
+              "value": 1e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 1 m loop of wire: about 1 µH per metre."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.001,
+              "length": 0.03
+            },
+            "color_srgb": [
+              0.85,
+              0.3,
+              0.2
+            ]
+          }
+        },
+        "wire_r": {
+          "display_id": "c7f9e9054d27cdcb22357ddd",
+          "label": "Lead resistance",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 0.1,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "1 m of 22 AWG, there and back: 0.1 Ω."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.09,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.001,
+              "length": 0.03
+            },
+            "color_srgb": [
+              0.85,
+              0.3,
+              0.2
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "supply +",
+          "terminals": [
+            {
+              "instance": "bench",
+              "port": "p"
+            },
+            {
+              "instance": "wire_r",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "wire_r",
+              "port": "n"
+            },
+            {
+              "instance": "wire_l",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "board +",
+          "terminals": [
+            {
+              "instance": "wire_l",
+              "port": "n"
+            },
+            {
+              "instance": "cap",
+              "port": "p"
+            },
+            {
+              "instance": "sense",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            },
+            {
+              "instance": "diode",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "label": "0 V",
+          "terminals": [
+            {
+              "instance": "bench",
+              "port": "n"
+            },
+            {
+              "instance": "cap",
+              "port": "n"
+            },
+            {
+              "instance": "sense",
+              "port": "n"
+            },
+            {
+              "instance": "switch",
+              "port": "source"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "label": "switch node",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "n"
+            },
+            {
+              "instance": "diode",
+              "port": "p"
+            },
+            {
+              "instance": "switch",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "duty",
+              "port": "value"
+            },
+            {
+              "instance": "pwm",
+              "port": "duty"
+            }
+          ]
+        },
+        {
+          "label": "gate",
+          "terminals": [
+            {
+              "instance": "pwm",
+              "port": "gate"
+            },
+            {
+              "instance": "switch",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "switch",
+              "port": "heat"
+            },
+            {
+              "instance": "air",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 2e-7,
+    "rationale": "Switching edges and a 1 µH lead: backward Euler at 0.2 µs (250 steps per PWM period)."
+  },
+  "studies": {
+    "capacitor": {
+      "at": "",
+      "instance": "cap",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "capacitance",
+        "values": [
+          1e-6,
+          0.00001,
+          0.0001,
+          0.001
+        ]
+      },
+      "duration": 0.004,
+      "observe": [
+        "sense.reading"
+      ],
+      "metrics": [
+        {
+          "label": "lowest board voltage (V)",
+          "observable": "sense.reading",
+          "reduce": "min",
+          "window": [
+            0.003,
+            0.004
+          ]
+        },
+        {
+          "label": "highest board voltage (V)",
+          "observable": "sense.reading",
+          "reduce": "max",
+          "window": [
+            0.003,
+            0.004
+          ]
+        }
+      ]
+    }
+  }
+}

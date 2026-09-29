@@ -1,0 +1,256 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "gearmotor_37mm_30",
+  "definitions": {
+    "gearmotor_37mm_30": {
+      "label": "37 mm gearmotor 12 V 30:1",
+      "description": "A workhorse for rovers and arms: 333 rpm, ≈ 1.5 N·m stall at 12 V, 80 % gearbox.",
+      "interface": "gearmotor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "output": {
+          "label": "Output shaft"
+        },
+        "p": {
+          "label": "Supply +"
+        }
+      },
+      "instances": {
+        "friction": {
+          "label": "Gear friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "torque": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.025,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gear": {
+          "label": "Gearbox",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "ratio": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.015,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "inductance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "resistance": {
+              "value": 2.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "torque_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "mount": {
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              -0.015,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 2e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "gear",
+              "port": "output"
+            },
+            {
+              "instance": "friction",
+              "port": "shaft"
+            },
+            {
+              "boundary": "output"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

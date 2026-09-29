@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "thermal.ambient",
+  "label": "Fixed temperature",
+  "kind": "generic",
+  "parameters": {
+    "temperature": 293.15
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.0,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "holds its node(s): audited at rest"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 0.0e0, 0.0e0, 0.0e0 (1 → 0.125 ms); observed order NaN"
+    }
+  ]
+}

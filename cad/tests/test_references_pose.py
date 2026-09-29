@@ -90,3 +90,12 @@ def test_pose_rejects_cycles_and_closed_constraints():
     o.undo()
     o.add_joint('loop_revolute',c,a,(0,0,0))
     with pytest.raises(KernelError,match='constraint solver'): PoseModel(d)
+
+
+def test_prismatic_limits_and_home_export_in_metres():
+    from robocad.physical import export_physical_model
+    d,o,a,b,c,j1,j2 = mechanism()
+    o.set_joint(j2,type='prismatic',axis=(1,0,0),lower=0,upper=20,home=5)
+    joint = next(j for j in export_physical_model(d, None, flex=False)['joints'] if j['id'] == j2)
+    assert joint['type'] == 'prismatic'
+    assert joint['limits'] == pytest.approx([0.0, 0.020]) and joint['home'] == pytest.approx(0.005)

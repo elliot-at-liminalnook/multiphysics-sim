@@ -257,6 +257,36 @@ class Service:
         self.app = app
         self.run_on_main = run_on_main or self._run_locked
         self.conv = ArgConverter(doc)
+        from .print_jobs import PrintJobs
+        self.print_jobs = PrintJobs(lambda: self.doc, lambda: self.ops, lambda fn: self.run_on_main(fn), lambda: self._refresh())
+
+    def print_request(self, method, parts, body):
+        """/print: registry, split (seconds, synchronous), analyze|plan|assembly|coupons
+        (background jobs), jobs (state, cancel)."""
+        from .experiments import RevisionConflict
+        jobs = self.print_jobs
+        try:
+            if parts == ['print', 'registry'] and method == 'GET':
+                from . import print_registry as pr
+                data, sha = pr.load()
+                return {'path': pr.default_path(), 'sha256': sha, 'revision': data['revision'],
+                        'printers': {k: {'name': v['name'], 'usable_mm': pr.usable_mm(k)} for k, v in data['printers'].items()},
+                        'materials': {k: {'name': v['name'], 'cad_material': v['cad_material']} for k, v in data['materials'].items()}}
+            if parts == ['print', 'split'] and method == 'POST':
+                return jobs.split_job(body) if body.get('background') else jobs.split(body)
+            if len(parts) == 2 and method == 'POST' and hasattr(jobs, parts[1]) and parts[1] in ('analyze', 'plan', 'assembly', 'coupons', 'strength_split'):
+                return getattr(jobs, parts[1])(body)
+            if parts == ['print', 'jobs'] and method == 'GET':
+                return jobs.list()
+            if len(parts) == 3 and parts[1] == 'jobs':
+                if method == 'GET':
+                    return jobs.wait(parts[2], float(body.get('wait', 0))) if body.get('wait') else jobs.get(parts[2])
+                if method == 'DELETE':
+                    return jobs.cancel(parts[2])
+        except RevisionConflict as error: raise ApiError(409, str(error))
+        except KeyError as error: raise ApiError(404, str(error))
+        except (KernelError, ValueError, TypeError, FileNotFoundError, RuntimeError) as error: raise ApiError(422, str(error))
+        raise ApiError(405, 'Unsupported print operation')
 
     def _run_locked(self, fn):
         with self.doc._lock:
@@ -449,6 +479,35 @@ class Service:
         if not hasattr(self, '_candidates'):
             self._candidates = Candidates(self.doc, self.ops, self.experiments.root/'candidates')
         return self._candidates
+
+    def model_script(self, body):
+        """Run a repository model script: snapshot on the UI thread, build on
+        this request thread, publish as one undo step (see model_scripts)."""
+        from .candidates import PublishState, change_set, check_revision
+        from .experiments import RevisionConflict
+        from .model_scripts import stage
+        from .snapshots import capture
+
+        def snapshot():
+            with self.doc._lock:
+                if 'expected_revision' in body: check_revision(self.doc, body['expected_revision'])
+                return capture(self.doc)
+
+        def publish():
+            with self.doc._lock:
+                check_revision(self.doc, before.revision)
+                self.ops.stack.push(PublishState(self.doc, staged, body.get('label') or f"Run {summary['script']}"))
+            self._refresh()
+            return self.doc.revision
+
+        try:
+            before = self.run_on_main(snapshot)
+            staged, summary = stage(before, body.get('path'), body.get('params'), body.get('replace', True))
+            changes = change_set(before, capture(staged)) if body.get('changes') else None
+            revision = self.run_on_main(publish)
+        except RevisionConflict as error: raise ApiError(409, str(error))
+        except (KernelError, ValueError, TypeError) as error: raise ApiError(422, str(error))
+        return {'revision': revision, **summary, **({'changes': changes} if changes is not None else {})}
 
     def candidate_request(self, method, parts, body):
         from .experiments import RevisionConflict
@@ -768,6 +827,38 @@ class Service:
         except KernelError as exc:
             raise ApiError(422, str(exc)) from exc
 
+    def render_request(self, q: dict) -> bytes:
+        """GET /render without stalling the window: with a GUI, draw through
+        the GPU viewport (a temporary camera, like /capture); options only the
+        software renderer has (labels, ids, highlight, xray/wireframe) run it
+        on a snapshot copy on this request thread."""
+        software_only = any(q.get(key) for key in ('ids', 'highlight')) or q.get('labels', '0') not in ('0', 'false') \
+            or q.get('mode', 'shaded') not in ('shaded',)
+        if self.app is not None and not software_only:
+            return self.run_on_main(lambda: self.render_gpu(q))
+        if self.app is None:
+            return self.run_on_main(lambda: self.render(q))
+        import io as _io
+        from .snapshots import capture as _capture
+        data = self.run_on_main(lambda: _capture(self.doc).data)
+        copy_doc = Document.load(_io.BytesIO(data))
+        return Service(copy_doc).render(q)
+
+    def render_gpu(self, q: dict) -> bytes:
+        import math
+        presets = {"iso": (-1.0, -1.4, 0.9), "front": (0.0, -1.0, 0.0), "back": (0.0, 1.0, 0.0), "right": (1.0, 0.0, 0.0), "left": (-1.0, 0.0, 0.0), "top": (0.0, -0.001, 1.0), "bottom": (0.0, -0.001, -1.0), "iso2": (1.0, -1.4, 0.9), "under": (-1.0, -1.4, -0.9)}
+        view = q.get("view", "iso")
+        d = presets.get(view) or tuple(float(x) for x in view.split(","))
+        norm = math.sqrt(sum(x * x for x in d)) or 1.0
+        request = {"view": {"yaw": math.degrees(math.atan2(d[1], d[0])),
+                            "pitch": max(-89.5, min(89.5, math.degrees(math.asin(d[2] / norm))))}}
+        focus = q.get("focus")
+        request["focus_ids"] = [focus] if focus else [n.id for n in self.doc.walk() if n.kind in ("body", "instance", "mesh") and self.doc.is_visible(n.id)]
+        if q.get("section"):
+            axis, _, value = q["section"].partition(":")
+            request["view"]["section"] = {"enabled": True, "plane": {"axis": axis, "offset": float(value or 0)}}
+        return self.capture(request)
+
     def render(self, q: dict) -> bytes:
         from .io.snapshot import render
 
@@ -1020,6 +1111,12 @@ def make_handler(service: Service):
             head = parts[0]
             if head == 'system':
                 return self._send(201 if method == 'POST' else 200, run(lambda: s.system_request(method, body, parts, q)))
+            if parts == ['doc', 'script'] and method == 'POST':
+                return self._send(200, s.model_script(body))
+            if head == 'print':
+                # Split works on its own snapshot; analysis runs as a job. Neither holds the UI thread.
+                payload = s.print_request(method, parts, body)
+                return self._send(202 if method == 'POST' and parts[1] != 'split' else 200, payload)
             if head == 'candidates' or parts == ['doc', 'batch']:
                 payload = run(lambda: s.candidate_request(method, parts, body))
                 return self._send(202 if parts[-1] == 'experiments' and method == 'POST' else 200, payload)
@@ -1103,7 +1200,7 @@ def make_handler(service: Service):
                 return self._send(201 if method == 'POST' and len(parts) == 1 else 200,
                                   run(lambda: s.saved_view_request(method, parts, body)))
             if head == "render":
-                return png(run(lambda: s.render(q)))
+                return png(s.render_request(q))
             if head == "screenshot":
                 return png(run(s.screenshot))
             if head == "capture" and method == "POST":
@@ -1130,7 +1227,15 @@ def make_handler(service: Service):
                             "display_triangles":sum(it.indices.size//3 for it in v.items.values()) if v is not None else None}
                 return self._send(200,run(performance))
             if head == "physical":
-                return self._send(200, run(lambda: s.ops.physical(q.get("path"), flex=q.get("flex", "1") not in ("0", "false"))))
+                flex = q.get("flex", "1") not in ("0", "false")
+                if s.app is None:
+                    return self._send(200, run(lambda: s.ops.physical(q.get("path"), flex=flex)))
+                # Desktop: snapshot on the GUI thread, derive in a child process
+                # from this request thread, so the editor stays responsive.
+                from .snapshots import capture
+                from .export_worker import export_snapshot
+                snapshot, source = run(lambda: (capture(s.doc), s.doc.path))
+                return self._send(200, export_snapshot(snapshot, q.get("path"), flex=flex, source_file=source))
             if head == "actuator-profiles":
                 if method == "GET":
                     return self._send(200, run(lambda: s.doc.robot_settings.get("actuator_profiles")))
@@ -1213,6 +1318,7 @@ class ApiServer:
     def __init__(self, doc: Document, ops: Optional[Ops] = None, app=None, host: str = "127.0.0.1", port: int = DEFAULT_PORT):
         self.host, self.port = host, port
         self._queue: "queue.Queue[tuple[Callable, dict]]" = queue.Queue()
+        self._state_lock = threading.Lock()
         self.service = Service(doc, ops, app, self._run_on_main if app is not None else None)
         self._server: Optional[ThreadingHTTPServer] = None
         self._thread: Optional[threading.Thread] = None
@@ -1227,9 +1333,16 @@ class ApiServer:
     def _run_on_main(self, fn: Callable):
         done = threading.Event()
         slot: dict = {}
-        self._queue.put((fn, {"done": done, "slot": slot}))
+        ctx = {"done": done, "slot": slot, "state": "pending"}
+        self._queue.put((fn, ctx))
         if not done.wait(120):
-            raise ApiError(504, "the GUI did not answer in time")
+            with self._state_lock:
+                started = ctx["state"] == "running"
+                ctx["state"] = "cancelled" if not started else ctx["state"]
+            if not started:
+                # Never let a request the client was told failed edit the document later.
+                raise ApiError(504, "the GUI did not answer in time; the request was cancelled")
+            done.wait()
         if "error" in slot:
             raise slot["error"]
         return slot.get("result")
@@ -1242,6 +1355,10 @@ class ApiServer:
                 fn, ctx = self._queue.get_nowait()
             except queue.Empty:
                 return
+            with self._state_lock:
+                if ctx["state"] == "cancelled":
+                    continue
+                ctx["state"] = "running"
             try:
                 ctx["slot"]["result"] = fn()
             except BaseException as e:  # hand the exception back to the request thread

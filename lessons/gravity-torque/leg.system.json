@@ -1,0 +1,314 @@
+{
+  "schema": "sim.system/1",
+  "title": "Lifting a leg against gravity",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Lifting a leg against gravity",
+      "description": "A hip servo lifts a 0.4 kg leg from hanging straight down to level. Gravity's torque grows with the angle, and the servo sags where it is largest.",
+      "instances": {
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Hip frame",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.07,
+              -0.03
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "leg": {
+          "display_id": "04cfe781c85af880b894519c",
+          "label": "Leg",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.pendulum_gravity"
+          },
+          "parameters": {
+            "arm": {
+              "value": 0.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.4 kg leg with its centre of mass 0.15 m below the hip."
+              }
+            },
+            "mass": {
+              "value": 0.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.4 kg leg with its centre of mass 0.15 m below the hip."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          }
+        },
+        "leg_inertia": {
+          "display_id": "e68f7056dd453b65202b530f",
+          "label": "Leg inertia",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.009,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "m·r² = 0.4 × 0.15² with the leg's mass at its centre."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.005
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.008,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "servo": {
+          "display_id": "81e1bd1f25c7cdda6e6cac54",
+          "label": "Hip servo",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.effective_servo"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.25,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A standard hobby servo as a position loop within its envelope: 1.2 N·m stall (≈ 12 kg·cm), 6 rad/s no-load, 8 N·m/rad stiffness."
+              }
+            },
+            "no_load_speed": {
+              "value": 6.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A standard hobby servo as a position loop within its envelope: 1.2 N·m stall (≈ 12 kg·cm), 6 rad/s no-load, 8 N·m/rad stiffness."
+              }
+            },
+            "stall_torque": {
+              "value": 1.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A standard hobby servo as a position loop within its envelope: 1.2 N·m stall (≈ 12 kg·cm), 6 rad/s no-load, 8 N·m/rad stiffness."
+              }
+            },
+            "stiffness": {
+              "value": 8.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A standard hobby servo as a position loop within its envelope: 1.2 N·m stall (≈ 12 kg·cm), 6 rad/s no-load, 8 N·m/rad stiffness."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              -0.03
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.02,
+                0.038,
+                0.04
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "servo"
+          }
+        },
+        "target": {
+          "display_id": "cd79c52a62eb50cf12338f9b",
+          "label": "Target angle",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.angle_setpoint"
+          },
+          "parameters": {
+            "ramp_for": {
+              "value": 1.5707963267948966,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Lift at 1 rad/s from hanging (0) to level (π/2), then hold."
+              }
+            },
+            "ramp_from": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Lift at 1 rad/s from hanging (0) to level (π/2), then hold."
+              }
+            },
+            "rate": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Lift at 1 rad/s from hanging (0) to level (π/2), then hold."
+              }
+            },
+            "start": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Lift at 1 rad/s from hanging (0) to level (π/2), then hold."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.09,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "target",
+          "terminals": [
+            {
+              "instance": "target",
+              "port": "angle"
+            },
+            {
+              "instance": "servo",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "label": "servo case",
+          "terminals": [
+            {
+              "instance": "servo",
+              "port": "housing"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "label": "hip",
+          "terminals": [
+            {
+              "instance": "servo",
+              "port": "shaft"
+            },
+            {
+              "instance": "leg",
+              "port": "shaft"
+            },
+            {
+              "instance": "leg_inertia",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.001,
+    "rationale": "Servo envelope switches at stall: backward Euler, 1 ms."
+  },
+  "studies": {
+    "leg_mass": {
+      "at": "",
+      "instance": "leg",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "mass",
+        "values": [
+          0.2,
+          0.4,
+          0.6,
+          0.8,
+          1.0
+        ]
+      },
+      "duration": 2.5,
+      "observe": [
+        "leg.shaft.angle"
+      ],
+      "metrics": [
+        {
+          "label": "angle held at level (rad, target 1.571)",
+          "observable": "leg.shaft.angle",
+          "reduce": "mean",
+          "window": [
+            2.2,
+            2.5
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+# A typed angle command: ramp plus sine, for steppers, servos and controllers.
+part angle_setpoint "Angle setpoint (ramp + sine)"
+category Control
+summary "A commanded angle that ramps at a set speed and can wobble sinusoidally: the target for a stepper, servo or controller."
+explain "angle = start + rate·clamp(t − ramp_from, 0, ramp_for) + amplitude·sin(2π·f·t). Use the ramp for a move (rate × duration = travel), the sine for a frequency test."
+pairs part.stepper_motor part.pid_angle robot.effective_servo robot.servo_firmware
+output angle Angle
+param start rad = 0 "Angle at t = 0"
+param rate rad/s = 0 "Ramp speed"
+param ramp_from s = 0 "When the ramp starts"
+param ramp_for s = 1 "How long the ramp lasts"
+param amplitude rad = 0 "Sine amplitude"
+param frequency Hz = 1 "Sine frequency"
+set angle = start + rate*min(max(t - ramp_from, 0), ramp_for) + amplitude*sin(6.283185307*frequency*t)
+derive "ramp travel" = rate*ramp_for rad

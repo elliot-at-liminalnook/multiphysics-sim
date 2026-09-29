@@ -4,7 +4,7 @@
 //! a contact or actuator model. Fit only past observations and validate future
 //! endpoints separately. Unobserved turns greater than pi between samples
 //! cannot be recovered; callers must supply sufficiently frequent observations.
-use crate::stepping::advance_planar;
+use crate::planar::advance_planar;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]

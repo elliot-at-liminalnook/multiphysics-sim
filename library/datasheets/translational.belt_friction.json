@@ -1,0 +1,35 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "translational.belt_friction",
+  "label": "Belt with Stribeck friction",
+  "kind": "generic",
+  "parameters": {
+    "belt_speed": 0.1,
+    "kinetic_friction": 0.3,
+    "normal_force": 10.0,
+    "regularisation": 0.0001,
+    "static_friction": 0.5,
+    "stribeck_velocity": 0.01
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.0015000000000000013,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.000e-3 J → change -1.500e-3 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.5e-3, 8.7e-9, 3.3e-15 (1 → 0.125 ms); observed order 21.3"
+    }
+  ]
+}

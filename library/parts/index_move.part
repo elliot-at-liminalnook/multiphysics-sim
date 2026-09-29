@@ -1,0 +1,23 @@
+# Repeated equal moves with a dwell between them: stop-and-shoot scanning.
+part index_move "Indexed moves (stop and shoot)"
+category Control
+summary "A commanded angle that steps by a fixed amount every period: a smooth move, then a still dwell for the photo."
+explain "Each period starts with a move of `step` lasting `move` seconds on a cycloidal profile (speed ∝ 1 − cos, so speed and acceleration are zero at both ends), then holds until the period ends. angle = gain·(start + step·(n + u − sin(2πu)/2π)), with n = floor(τ/period), u = min((τ − n·period)/move, 1), τ = t − begin. Peak speed is 2·step/move; peak acceleration 2π·step/move². `gain` converts a load angle into a motor angle (e.g. a belt ratio)."
+tradeoffs "A shorter move needs more torque and excites belt and structure more; a longer dwell leaves time for ringing to die out before the exposure."
+limits "Periodic and open-ended; before `begin` it holds `start`. The profile is a command: whether the axis follows it is up to the drive."
+pairs control.sampled_fixed_pd robot.servo_firmware part.belt_drive
+output angle Angle
+param step rad ~ 0.1745329 "Load angle per index (10°)"
+param period s ~ 2.0 "Time per index: move plus dwell"
+param move s ~ 1.2 "Move time within each period"
+param start rad = 0 "Load angle before the first move"
+param begin s = 0 "When the first move starts"
+param gain 1 = 1 "Output per unit load angle (belt ratio to command the motor)"
+let tau = max(t - begin, 0)
+let n = floor(tau/period)
+let u = min((tau - n*period)/move, 1)
+set angle = gain*(start + step*(n + u - sin(6.283185307*u)/6.283185307))
+derive "peak load speed" = 2*step/move rad/s
+derive "peak load acceleration" = 6.283185307*step/move^2 rad/s^2
+derive "dwell" = period - move s
+derive "indexes per turn" = 6.283185307/step

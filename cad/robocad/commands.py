@@ -296,6 +296,12 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps, ComponentOps):
         self.stack.push(AddNodes(label, [node]))
         return node.id
 
+    def print_split(self, node_id: str, **options) -> str:
+        """Split a body into printable pieces with joints (see print_split); the
+        pieces go under a new group as one undoable step. Returns the group id."""
+        from .print_split import SplitOptions, apply_split, split_for_printing
+        return apply_split(self, split_for_printing(self.doc, node_id, SplitOptions(**options)))
+
     def undo(self) -> Optional[str]:
         return self.stack.undo()
 
@@ -606,7 +612,6 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps, ComponentOps):
         return [node_id] + [n.id for n in new_nodes]
 
     def _extend_sheet(self, sheet: Body) -> Body:
-        props = self.k.mass_properties(sheet)
         faces = self.k.faces(sheet)
         if len(faces) == 1 and faces[0].kind == SurfaceKind.PLANE:
             from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeFace
@@ -1145,6 +1150,13 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps, ComponentOps):
 
     def set_control(self, period_s: float = 0.02, latency_s: float = 0.004, targets: Optional[dict] = None, mode: str = "hold", trajectory: Optional[list] = None) -> dict:
         """Control loop period and latency and the joint targets (rad, by joint name)."""
+        if mode not in ("hold", "trajectory"):
+            raise KernelError(f"control mode must be 'hold' or 'trajectory', not {mode!r}")
+        if not (period_s > 0 and latency_s >= 0 and math.isfinite(period_s) and math.isfinite(latency_s)):
+            raise KernelError("control period must be positive and latency nonnegative")
+        for point in trajectory or []:
+            if not isinstance(point, dict) or not isinstance(point.get("t"), (int, float)) or not isinstance(point.get("targets"), dict):
+                raise KernelError("trajectory points are {'t': seconds, 'targets': {joint: rad}}")
         return self.set_robot_setting("control", {"period_s": period_s, "latency_s": latency_s, "targets": targets or {}, "mode": mode, "trajectory": trajectory or []})
 
     def set_uncertainty(self, **sigmas) -> dict:

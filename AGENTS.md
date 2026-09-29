@@ -33,9 +33,24 @@ robot design and eventual sim-to-real learning.
 - **Protect responsiveness and user work.** Run expensive geometry, export, and
   simulation work off the UI thread with progress and cancellation. Preserve
   unsaved CAD edits before reload/restart. Previews must not mutate source geometry.
+- **Measured values have one source.** Accepted actuator models live in the
+  actuator registry and flow to CAD, simulation, screens and hardware limits from
+  there. Promote new measurements into it; never hand-copy numbers into configs.
+- **Hardware safety is independent and never bypassed.** The FPGA supervisor,
+  taught travel windows, watchdogs and STOP must hold even if host code is wrong.
+  Load FPGA images only with motor power off and record a deployment receipt.
+  Drive motors only with the operator present and the fixture supported. Record
+  every raised limit, with the reason and the previous value.
+- **Simulate the control loop the hardware runs.** Loop period, latency and gains
+  shape which motions are feasible. When the real loop differs from the
+  simulated one, use a screen for it and label results with the assumption.
+- **Qualify every shortcut.** Reduced-fidelity models must be qualified against
+  the detailed model and re-qualified after library changes. Label results with
+  their fidelity and confirm finalists on the detailed model before hardware.
 - **Make workflows automatable.** UI and REST operations should share validation,
   commands, and undo semantics. Prefer reusable inspection and batch APIs over
-  one-off automation shortcuts.
+  one-off automation shortcuts. Human- and LLM-editable files (gaits, poses) must
+  convert exactly to shared library types and fail with errors that name the path.
 - **Prove behavior, not just animation.** Check analytic cases, conservation where
   applicable, constraint closure, contact, controller behavior, and timestep
   sensitivity. Set explicit accuracy and performance expectations and enforce
@@ -43,5 +58,9 @@ robot design and eventual sim-to-real learning.
   provisional limits honestly.
 - **Preserve reproducibility.** Version or durably reference CAD artifacts as well
   as code; ignored `runs/` is not a baseline. Record model/schema versions,
-  controller configuration, and results. Run checks relevant to each change and
-  report remaining limitations without claiming unverified sim-to-real accuracy.
+  controller configuration, and results. Keep bulky outputs such as recordings and
+  captures out of git; keep what reproduces them. Run checks relevant to each
+  change and report remaining limitations without claiming unverified sim-to-real
+  accuracy.
+- **Paid compute needs a ceiling.** Cloud runs need the user's approval, a stated
+  cost, an automatic shutdown, periodic result sync, and termination when done.

@@ -1,0 +1,539 @@
+{
+  "actuators": [
+    {
+      "axis": 1,
+      "derived": {
+        "full_drive_speed_rad_s": 3.7213898875296954,
+        "measured_acceleration_rad_s2": 13.852250089445143,
+        "no_load_output_speed_rad_s": 4.065340732622921,
+        "top_speed_reached_in_travel_rad_s": 1.3754875204317958
+      },
+      "measured": [
+        {
+          "name": "speed_gain",
+          "source": "D steps (slope between drive levels)",
+          "uncertainty": 128.34038596585103,
+          "unit": "counts/s per duty",
+          "value": 2650.190122802238
+        },
+        {
+          "name": "time_constant",
+          "source": "D steps (63% rise)",
+          "uncertainty": 0.003285264120875703,
+          "unit": "s",
+          "value": 0.06838605794014864
+        },
+        {
+          "name": "moving_friction",
+          "source": "A sweeps (half up/down difference)",
+          "uncertainty": 0.004230283114194365,
+          "unit": "duty",
+          "value": 0.0846056622838873
+        },
+        {
+          "name": "breakaway",
+          "source": "D ramps (first 3-count motion)",
+          "uncertainty": 0.007500000000000006,
+          "unit": "duty",
+          "value": 0.1500000000000001
+        },
+        {
+          "name": "stall_current",
+          "source": "D supply current with back-EMF",
+          "uncertainty": 0.07483178972519831,
+          "unit": "A per duty",
+          "value": 1.496635794503966
+        },
+        {
+          "name": "delay",
+          "source": "E phase fit",
+          "uncertainty": 0.0,
+          "unit": "s",
+          "value": 0.0
+        },
+        {
+          "name": "small_signal_time_constant",
+          "source": "E phase fit",
+          "uncertainty": 0.01375,
+          "unit": "s",
+          "value": 0.055
+        },
+        {
+          "name": "servo_damping_ratio",
+          "source": "F position-mode steps",
+          "uncertainty": 0.20317924660716943,
+          "unit": "1",
+          "value": 0.8127169864286777
+        },
+        {
+          "name": "servo_natural_frequency",
+          "source": "F position-mode steps",
+          "uncertainty": 2.812500000002558,
+          "unit": "rad/s",
+          "value": 11.250000000010232
+        },
+        {
+          "name": "braking_decreasing",
+          "source": "C coast-down",
+          "uncertainty": 199.93373734150876,
+          "unit": "counts/s²",
+          "value": 799.734949366035
+        },
+        {
+          "name": "braking_increasing",
+          "source": "C coast-down",
+          "uncertainty": 199.93373734150876,
+          "unit": "counts/s²",
+          "value": 799.734949366035
+        },
+        {
+          "name": "top_speed_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 44.833922670169024,
+          "unit": "counts/s",
+          "value": 896.6784534033804
+        },
+        {
+          "name": "top_speed_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 44.833922670169024,
+          "unit": "counts/s",
+          "value": 896.6784534033804
+        },
+        {
+          "name": "acceleration_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 451.51315449453443,
+          "unit": "counts/s²",
+          "value": 9030.263089890688
+        },
+        {
+          "name": "acceleration_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 451.51315449453443,
+          "unit": "counts/s²",
+          "value": 9030.263089890688
+        },
+        {
+          "name": "compliance",
+          "source": "B known load, joint side",
+          "uncertainty": 5.0,
+          "unit": "counts per duty",
+          "value": 20.0
+        },
+        {
+          "name": "backlash",
+          "source": "B two-sided approach, joint side",
+          "uncertainty": 0.9880345603213717,
+          "unit": "counts",
+          "value": 3.952138241285487
+        },
+        {
+          "name": "gravity_amplitude",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.00015555884839473207,
+          "unit": "duty",
+          "value": 0.0011294732441098916
+        },
+        {
+          "name": "gravity_zero",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 64.0,
+          "unit": "counts",
+          "value": 3944.7688701530433
+        },
+        {
+          "name": "constant_load",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.005,
+          "unit": "duty",
+          "value": -0.00031143925915244386
+        },
+        {
+          "name": "thermal_resistance_lower_bound",
+          "source": "J first-order plateau rise / supply power (bound)",
+          "uncertainty": 0.975139725894639,
+          "unit": "K/W",
+          "value": 1.950279451789278
+        },
+        {
+          "name": "thermal_time_constant",
+          "source": "J first-order fit (stopped by plateau)",
+          "uncertainty": 10.764568542404058,
+          "unit": "s",
+          "value": 107.64568542404058
+        }
+      ],
+      "prior_estimates": {
+        "backlash_rad": 0.0,
+        "gear_friction_n_m": 0.025,
+        "latency_s": 0.002,
+        "no_load_speed_rad_s": 5.5115660589294615
+      },
+      "provenance": "Simulated campaign on the virtual leg (hidden truth); demonstrates the pipeline, not hardware values"
+    },
+    {
+      "axis": 2,
+      "derived": {
+        "full_drive_speed_rad_s": 4.733709853563244,
+        "measured_acceleration_rad_s2": 28.641999920520348,
+        "no_load_output_speed_rad_s": 5.022475644721984,
+        "top_speed_reached_in_travel_rad_s": 2.2263628386591643
+      },
+      "measured": [
+        {
+          "name": "speed_gain",
+          "source": "D steps (slope between drive levels)",
+          "uncertainty": 163.72884899559526,
+          "unit": "counts/s per duty",
+          "value": 3274.1450769045823
+        },
+        {
+          "name": "time_constant",
+          "source": "D steps (63% rise)",
+          "uncertainty": 0.0030374113543599323,
+          "unit": "s",
+          "value": 0.060748227087198646
+        },
+        {
+          "name": "moving_friction",
+          "source": "A sweeps (half up/down difference)",
+          "uncertainty": 0.002874735604364734,
+          "unit": "duty",
+          "value": 0.057494712087294675
+        },
+        {
+          "name": "breakaway",
+          "source": "D ramps (first 3-count motion)",
+          "uncertainty": 0.004050000000000003,
+          "unit": "duty",
+          "value": 0.08100000000000006
+        },
+        {
+          "name": "stall_current",
+          "source": "D supply current with back-EMF",
+          "uncertainty": 0.045000212296528286,
+          "unit": "A per duty",
+          "value": 0.9000042459305657
+        },
+        {
+          "name": "delay",
+          "source": "E phase fit",
+          "uncertainty": 0.0,
+          "unit": "s",
+          "value": 0.0
+        },
+        {
+          "name": "small_signal_time_constant",
+          "source": "E phase fit",
+          "uncertainty": 0.01125,
+          "unit": "s",
+          "value": 0.045
+        },
+        {
+          "name": "servo_damping_ratio",
+          "source": "F position-mode steps",
+          "uncertainty": 0.25,
+          "unit": "1",
+          "value": 1.0
+        },
+        {
+          "name": "servo_natural_frequency",
+          "source": "F position-mode steps",
+          "uncertainty": 2.812500000002558,
+          "unit": "rad/s",
+          "value": 11.250000000010232
+        },
+        {
+          "name": "braking_decreasing",
+          "source": "C coast-down",
+          "uncertainty": 209.1502930571829,
+          "unit": "counts/s²",
+          "value": 836.6011722287316
+        },
+        {
+          "name": "braking_increasing",
+          "source": "C coast-down",
+          "uncertainty": 209.1502930571829,
+          "unit": "counts/s²",
+          "value": 836.6011722287316
+        },
+        {
+          "name": "top_speed_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 72.56814610200779,
+          "unit": "counts/s",
+          "value": 1451.3629220401556
+        },
+        {
+          "name": "top_speed_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 72.56814610200779,
+          "unit": "counts/s",
+          "value": 1451.3629220401556
+        },
+        {
+          "name": "acceleration_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 933.5840496411622,
+          "unit": "counts/s²",
+          "value": 18671.680992823243
+        },
+        {
+          "name": "acceleration_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 933.5840496411622,
+          "unit": "counts/s²",
+          "value": 18671.680992823243
+        },
+        {
+          "name": "compliance",
+          "source": "B known load, joint side",
+          "uncertainty": 2.0000000000004547,
+          "unit": "counts per duty",
+          "value": 8.000000000001819
+        },
+        {
+          "name": "backlash",
+          "source": "B two-sided approach, joint side",
+          "uncertainty": 2.593229293045004,
+          "unit": "counts",
+          "value": 10.372917172180015
+        },
+        {
+          "name": "gravity_amplitude",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.000011443641177330576,
+          "unit": "duty",
+          "value": 0.000026079566142839114
+        },
+        {
+          "name": "gravity_zero",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 64.0,
+          "unit": "counts",
+          "value": 2123.297542389943
+        },
+        {
+          "name": "constant_load",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.005,
+          "unit": "duty",
+          "value": -3.9574356724965006e-8
+        },
+        {
+          "name": "thermal_resistance_lower_bound",
+          "source": "J first-order plateau rise / supply power (bound)",
+          "uncertainty": 0.9227691120128171,
+          "unit": "K/W",
+          "value": 1.8455382240256342
+        },
+        {
+          "name": "thermal_time_constant",
+          "source": "J first-order fit (stopped by plateau)",
+          "uncertainty": 10.764568542404058,
+          "unit": "s",
+          "value": 107.64568542404058
+        }
+      ],
+      "prior_estimates": {
+        "backlash_rad": 0.0,
+        "gear_friction_n_m": 0.025,
+        "latency_s": 0.002,
+        "no_load_speed_rad_s": 5.5115660589294615
+      },
+      "provenance": "Simulated campaign on the virtual leg (hidden truth); demonstrates the pipeline, not hardware values"
+    },
+    {
+      "axis": 3,
+      "derived": {
+        "full_drive_speed_rad_s": 4.242077157893678,
+        "measured_acceleration_rad_s2": 35.05089459726769,
+        "no_load_output_speed_rad_s": 4.577885185362504,
+        "top_speed_reached_in_travel_rad_s": 2.038349995959142
+      },
+      "measured": [
+        {
+          "name": "speed_gain",
+          "source": "D steps (slope between drive levels)",
+          "uncertainty": 149.3539584444534,
+          "unit": "counts/s per duty",
+          "value": 2984.3171580215303
+        },
+        {
+          "name": "time_constant",
+          "source": "D steps (63% rise)",
+          "uncertainty": 0.0036467628014499875,
+          "unit": "s",
+          "value": 0.06205851961606407
+        },
+        {
+          "name": "moving_friction",
+          "source": "A sweeps (half up/down difference)",
+          "uncertainty": 0.0036677630608497147,
+          "unit": "duty",
+          "value": 0.07335440140407001
+        },
+        {
+          "name": "breakaway",
+          "source": "D ramps (first 3-count motion)",
+          "uncertainty": 0.004800000000000004,
+          "unit": "duty",
+          "value": 0.09600000000000007
+        },
+        {
+          "name": "stall_current",
+          "source": "D supply current with back-EMF",
+          "uncertainty": 0.07960232406410182,
+          "unit": "A per duty",
+          "value": 1.5920271085648965
+        },
+        {
+          "name": "delay",
+          "source": "E phase fit",
+          "uncertainty": 0.0,
+          "unit": "s",
+          "value": 0.0
+        },
+        {
+          "name": "small_signal_time_constant",
+          "source": "E phase fit",
+          "uncertainty": 0.012499999999999999,
+          "unit": "s",
+          "value": 0.049999999999999996
+        },
+        {
+          "name": "servo_damping_ratio",
+          "source": "F position-mode steps",
+          "uncertainty": 0.1961678500836183,
+          "unit": "1",
+          "value": 0.7846714003344732
+        },
+        {
+          "name": "servo_natural_frequency",
+          "source": "F position-mode steps",
+          "uncertainty": 3.0000000000027285,
+          "unit": "rad/s",
+          "value": 12.000000000010914
+        },
+        {
+          "name": "braking_decreasing",
+          "source": "C coast-down",
+          "uncertainty": 185.97751324079755,
+          "unit": "counts/s²",
+          "value": 743.9100529631902
+        },
+        {
+          "name": "braking_increasing",
+          "source": "C coast-down",
+          "uncertainty": 177.54732928585778,
+          "unit": "counts/s²",
+          "value": 710.1893171434311
+        },
+        {
+          "name": "top_speed_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 66.43990713354836,
+          "unit": "counts/s",
+          "value": 1328.7976042833607
+        },
+        {
+          "name": "top_speed_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 70.79842434448885,
+          "unit": "counts/s",
+          "value": 1415.96828271118
+        },
+        {
+          "name": "acceleration_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 1177.6321878272984,
+          "unit": "counts/s²",
+          "value": 22849.63076074767
+        },
+        {
+          "name": "acceleration_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 3610.1041547906825,
+          "unit": "counts/s²",
+          "value": 24709.265582386703
+        },
+        {
+          "name": "compliance",
+          "source": "B known load, joint side",
+          "uncertainty": 10.0,
+          "unit": "counts per duty",
+          "value": 40.0
+        },
+        {
+          "name": "backlash",
+          "source": "B two-sided approach, joint side",
+          "uncertainty": 1.5349697392666428,
+          "unit": "counts",
+          "value": 6.139878957066571
+        },
+        {
+          "name": "gravity_amplitude",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.0029871482202251647,
+          "unit": "duty",
+          "value": 0.029871482202251647
+        },
+        {
+          "name": "gravity_zero",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 64.0,
+          "unit": "counts",
+          "value": 1097.7436515707743
+        },
+        {
+          "name": "constant_load",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.005,
+          "unit": "duty",
+          "value": 0.0003042013538023793
+        },
+        {
+          "name": "thermal_resistance_lower_bound",
+          "source": "J first-order plateau rise / supply power (bound)",
+          "uncertainty": 0.7635646273825737,
+          "unit": "K/W",
+          "value": 1.5271292547651474
+        },
+        {
+          "name": "thermal_time_constant",
+          "source": "J first-order fit (stopped by plateau)",
+          "uncertainty": 10.764568542404058,
+          "unit": "s",
+          "value": 107.64568542404058
+        }
+      ],
+      "prior_estimates": {
+        "backlash_rad": 0.0,
+        "gear_friction_n_m": 0.025,
+        "latency_s": 0.002,
+        "no_load_speed_rad_s": 5.5115660589294615
+      },
+      "provenance": "Simulated campaign on the virtual leg (hidden truth); demonstrates the pipeline, not hardware values"
+    }
+  ],
+  "gait_search_patch": {
+    "governor_acceleration_rad_s2_upper": 6.926125044722571,
+    "governor_speed_rad_s_upper": 2.9771119100237566,
+    "maximum_reference_speed_rad_s_by_coordinate": {
+      "joint.+X | Foot servo output": 2.9771119100237566,
+      "joint.+X | Hip servo output": 3.3936617263149422,
+      "joint.+X | Worm servo output": 3.7869678828505955,
+      "joint.+Y | Foot servo output": 2.9771119100237566,
+      "joint.+Y | Hip servo output": 3.3936617263149422,
+      "joint.+Y | Worm servo output": 3.7869678828505955,
+      "joint.-X | Foot servo output": 2.9771119100237566,
+      "joint.-X | Hip servo output": 3.3936617263149422,
+      "joint.-X | Worm servo output": 3.7869678828505955,
+      "joint.-Y | Foot servo output": 2.9771119100237566,
+      "joint.-Y | Hip servo output": 3.3936617263149422,
+      "joint.-Y | Worm servo output": 3.7869678828505955
+    },
+    "rule": "0.8 × full-drive speed (fitted gain beyond moving friction), not the travel-limited speed reached in G; 0.5 × measured acceleration; apply only after replay agreement and CAD promotion"
+  }
+}

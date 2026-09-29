@@ -267,8 +267,8 @@ impl Viewer {
                 .get(&self.description.id)
                 .cloned()
                 .unwrap_or_else(|| {
-                    std::path::PathBuf::from(&self.workspace_path)
-                        .with_extension("annotations.json")
+                    // Matches the startup default: `<workspace>.annotations.json`.
+                    std::path::PathBuf::from(format!("{}.annotations.json", self.workspace_path))
                 });
             self.connect_annotations(path);
         }
@@ -1090,6 +1090,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         args.get(i + 1)
             .ok_or("--annotations requires a path")?
             .clone()
+    } else if let Some(path) = &system_path {
+        // Same sidecar as the physical viewer's build mode, so notes are shared.
+        format!("{}.annotations.json", path.display())
     } else if matches!(
         args.first().map(String::as_str),
         Some("--description" | "--model")

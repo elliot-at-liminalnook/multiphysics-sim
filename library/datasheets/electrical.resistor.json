@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "electrical.resistor",
+  "label": "Resistor",
+  "kind": "generic",
+  "parameters": {
+    "resistance": 10.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.007250769877220842,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.900e-1 J → change -7.251e-3 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 6.6e-11, 1.7e-11, 4.2e-12 (1 → 0.125 ms); observed order 2.0"
+    }
+  ]
+}

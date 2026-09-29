@@ -1,5 +1,8 @@
 //! Rhai authoring and sampled controllers over the existing Rust simulation API.
 //! Scripts are evaluated from captured sources, never from the live filesystem.
+pub mod presentation;
+pub mod pacing;
+pub mod expr;
 use rhai::{
     Array, CallFnOptions, Dynamic, Engine, EvalAltResult, Map, Module, NativeCallContext, Position,
     Scope, AST,

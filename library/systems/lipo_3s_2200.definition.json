@@ -1,0 +1,76 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "lipo_3s_2200",
+  "definitions": {
+    "lipo_3s_2200": {
+      "label": "LiPo 3S 2200 mAh",
+      "description": "A common robot and drone pack: 11.1 V nominal (12.6 V full), 2.2 Ah, ≈ 30 mΩ.",
+      "interface": "battery",
+      "ports": {
+        "n": {
+          "label": "−"
+        },
+        "p": {
+          "label": "+"
+        }
+      },
+      "instances": {
+        "pack": {
+          "label": "3S pack",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.battery"
+          },
+          "parameters": {
+            "capacity_ah": {
+              "value": 2.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            },
+            "cells": {
+              "value": 3.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            },
+            "internal_resistance": {
+              "value": 0.03,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            }
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "pack",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "pack",
+              "port": "n"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

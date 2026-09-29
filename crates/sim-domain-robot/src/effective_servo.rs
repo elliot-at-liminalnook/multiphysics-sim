@@ -174,11 +174,11 @@ impl Behavior for EffectiveServo {
         let torque = self.torque(
             ctx.across(0) - ctx.across(1),
             ctx.across_rate(0) - ctx.across_rate(1),
-            ctx.signal_in(2),
+            ctx.signal_in(0),
         );
         ctx.add_through(0, -torque);
         ctx.add_through(1, torque);
-        ctx.set_signal(3, torque);
+        ctx.set_signal(0, torque);
     }
 }
 fn make(p: &BTreeMap<String, f64>) -> Result<Box<dyn Behavior>, EquationError> {

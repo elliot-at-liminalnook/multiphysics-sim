@@ -332,3 +332,4 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     }
     Ok(())
 }
+pub mod notes;

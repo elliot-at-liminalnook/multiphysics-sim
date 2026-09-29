@@ -1,0 +1,18 @@
+gait: 5027-CmaEs-144
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5027-CmaEs-144.yaml
+status: screened_out
+summary: 'Not simulated: rejected before physics. physical-leg tracking screen: -Y | Hip servo output predicted 9.9° RMS / 25.2° peak on the leg (limits 7.0° / 18.0°)'
+speed_m_s: null
+forward_distance_m: null
+simulated_s: null
+gates: []
+reasons:
+- 'physical-leg tracking screen: -Y | Hip servo output predicted 9.9° RMS / 25.2° peak on the leg (limits 7.0° / 18.0°)'
+joints: []
+fidelity: detailed model
+timing:
+  preparation_s: 26.440353836
+  simulation_s: 0.0
+  simulated_s: 0.0
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-legscreen/5027-CmaEs-144-a03edd1d
+compiled_gait: null

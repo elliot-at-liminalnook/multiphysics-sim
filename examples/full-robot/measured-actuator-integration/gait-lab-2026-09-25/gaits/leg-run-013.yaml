@@ -1,0 +1,26 @@
+# Exported from examples/full-robot/measured-actuator-integration/gait-search-measured-2026-09-23/comparison/3401-Bayesian-013
+# Search result: 0.092 m/s
+# Edit and evaluate with: gait_lab evaluate examples/full-robot/measured-actuator-integration/gait-search-measured-2026-09-23/comparison-config.json OUT_DIR THIS_FILE
+version: 1
+name: 3401-Bayesian-013
+cycle:
+  period_s: 1.0778629158836641
+  travel_m: 0.13210698662398
+body:
+  height_offset_m: -0.0024599216048572297
+leg_defaults:
+  stance: 0.6242055626265287
+  swing_height_m: 0.020754702924989578
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.5974878155089977
+  +Y:
+    phase: 0.023919834317100923
+  -X:
+    phase: 0.5444353731845155
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 7.1346770323947375
+  governor_speed_rad_s: 1.3962634015954636

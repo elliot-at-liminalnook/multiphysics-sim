@@ -17,6 +17,9 @@ pub const LIBRARY_SCHEMA: &str = "sim.system-library/1";
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SystemDocument {
+    /// Display-only discussions; never compiled into physics.
+    #[serde(default, skip_serializing_if = "crate::display::Discussions::is_empty")]
+    pub discussions: crate::display::Discussions,
     pub schema: String,
     pub title: String,
     /// Incremented by every applied edit, undo and redo.
@@ -31,6 +34,106 @@ pub struct SystemDocument {
     /// runner (viewers, CLI, tests) reproduces the same run.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub run: Option<RunSettings>,
+    /// Saved comparisons and sweeps, rerunnable from the file alone.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub studies: BTreeMap<String, Study>,
+    /// The realtime (interactive/browser) profile and its measured error.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub realtime: Option<RealtimeProfile>,
+}
+
+/// How this system runs in realtime: every part's realtime model (notes
+/// overrides, realtime counterpart definitions) at a coarser step, with the
+/// error against the detailed model measured and published.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RealtimeProfile {
+    pub interval: f64,
+    pub integrator: IntegratorChoice,
+    /// Observables the error is measured on.
+    pub observe: Vec<String>,
+    /// Simulated seconds of the comparison.
+    pub duration: f64,
+    /// Published bound: per observable, the largest error allowed relative
+    /// to that observable's range in the detailed run.
+    #[serde(default)]
+    pub bound: f64,
+    /// Per-observable bounds that differ from `bound`, with the reason in `notes`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub bounds: BTreeMap<String, f64>,
+    /// What the realtime models give up (published with the bound).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub notes: String,
+    /// Last measurement, with the content hash it was measured on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub measured: Option<FidelityMeasurement>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FidelityMeasurement {
+    pub content_hash: String,
+    /// Largest error relative to range, per observable.
+    pub errors: BTreeMap<String, f64>,
+    /// Simulated seconds per wall second (native release build) for each model.
+    pub detailed_speed: f64,
+    pub realtime_speed: f64,
+    pub host: String,
+}
+
+/// A comparison of alternatives or a parameter sweep over one instance.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Study {
+    /// Level holding the instance ("" = top).
+    #[serde(default)]
+    pub at: String,
+    pub instance: String,
+    pub kind: StudyKind,
+    /// Simulated seconds per variant.
+    pub duration: f64,
+    /// Observables to record (readable keys or IDs; substring match).
+    pub observe: Vec<String>,
+    /// Metrics for the trade-off table.
+    #[serde(default)]
+    pub metrics: Vec<Metric>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum StudyKind {
+    /// Run once with the current implementation and once per alternative.
+    Compare { alternatives: Vec<InstanceKind> },
+    /// Run once per value of one parameter of the instance (or, for a
+    /// subsystem, of an element inside it: `parameter = "mesh/worm_starts"`).
+    Sweep { parameter: String, values: Vec<f64> },
+}
+
+/// A number computed from one recorded observable over a time window.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Metric {
+    pub label: String,
+    pub observable: String,
+    pub reduce: Reduce,
+    /// Window start and end, seconds (None = whole run).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<[f64; 2]>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Reduce {
+    Final,
+    Mean,
+    Max,
+    Min,
+    /// Peak absolute value.
+    Peak,
+    /// Last value minus first value in the window.
+    Change,
+    /// Time integral (e.g. energy from power).
+    Integral,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -60,6 +163,11 @@ pub struct RunSettings {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Definition {
+    /// Display-only workplane in this definition's local frame.
+    #[serde(default, skip_serializing_if = "crate::display::Grid::is_default")]
+    pub grid: crate::display::Grid,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub icon: String,
     pub label: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub description: String,
@@ -83,11 +191,19 @@ pub struct Definition {
     /// Library file this definition was imported from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<LibrarySource>,
+    /// Published library version (incremented when the published contents change).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<u32>,
+    /// Definition with the same ports that is this one's realtime model
+    /// (e.g. an averaged bridge for a switching one).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub realtime: Option<String>,
 }
 
 impl Definition {
     pub fn new(label: impl Into<String>) -> Self {
         Self {
+            grid: Default::default(), icon: String::new(),
             label: label.into(),
             description: String::new(),
             interface: None,
@@ -98,6 +214,8 @@ impl Definition {
             references: BTreeMap::new(),
             appearance: None,
             source: None,
+            version: None,
+            realtime: None,
         }
     }
 }
@@ -134,6 +252,8 @@ pub struct ParameterDecl {
 #[serde(deny_unknown_fields)]
 pub struct InstanceSpec {
     #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub display_id: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub label: String,
     pub kind: InstanceKind,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -146,7 +266,7 @@ pub struct InstanceSpec {
 
 impl InstanceSpec {
     pub fn new(kind: InstanceKind) -> Self {
-        Self { label: String::new(), kind, parameters: BTreeMap::new(), placement: Placement::default(), appearance: None }
+        Self { display_id: String::new(), label: String::new(), kind, parameters: BTreeMap::new(), placement: Placement::default(), appearance: None }
     }
     pub fn element(component_type: &str) -> Self {
         Self::new(InstanceKind::Element { component_type: component_type.into() })
@@ -192,6 +312,9 @@ pub enum ParameterBinding {
         unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         provenance: Option<Provenance>,
+        /// One standard deviation, in the same unit, when the value was fitted or measured.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        uncertainty: Option<f64>,
     },
     /// Use a parameter of the enclosing definition.
     Parameter { parameter: String },
@@ -199,7 +322,7 @@ pub enum ParameterBinding {
 
 impl ParameterBinding {
     pub fn value(value: f64) -> Self {
-        Self::Value { value, unit: None, provenance: None }
+        Self::Value { value, unit: None, provenance: None, uncertainty: None }
     }
 }
 
@@ -352,7 +475,7 @@ impl SystemDocument {
     pub fn new(title: &str) -> Self {
         let mut definitions = BTreeMap::new();
         definitions.insert("root".to_string(), Definition::new(title));
-        Self { schema: SCHEMA.into(), title: title.into(), revision: 0, root: "root".into(), definitions, assets: BTreeMap::new(), run: None }
+        Self { discussions: Default::default(), schema: SCHEMA.into(), title: title.into(), revision: 0, root: "root".into(), definitions, assets: BTreeMap::new(), run: None, studies: BTreeMap::new(), realtime: None }
     }
 
     /// Canonical content hash, independent of pretty printing and revision.

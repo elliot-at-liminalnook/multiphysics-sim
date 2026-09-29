@@ -1,11 +1,11 @@
 //! Periodic body/foot reference with independently timed swing/stance phases.
 //! This is a geometric search parameterization, not a contact or balance model.
 use crate::trajectory::{Interpolation, Trajectory, TrajectoryConfig, TrajectorySample};
-use crate::smooth_return::SmoothReturn;
 use serde::{Deserialize, Serialize};
 mod sequence;
-pub use sequence::FootStep;
-use sequence::PreparedFootSequence;
+pub mod steered;
+pub use sequence::{FootStep, lift};
+use sequence::{Placement, PreparedFootSequence};
 #[cfg(test)]
 mod sequence_tests;
 
@@ -23,8 +23,8 @@ pub struct FootPhase {
     /// displacement. This changes policy geometry, not contact or actuator laws.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub return_ramp_fraction: Option<f64>,
-    /// Further stance/swing pairs in the same cycle. Empty retains the legacy
-    /// single-step path exactly. Each step's swing leads to the next touchdown.
+    /// Further stance/swing pairs in the same cycle. Each step's swing leads
+    /// to the next touchdown.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub additional_steps: Vec<FootStep>,
 }
@@ -107,8 +107,7 @@ pub struct ContactInterval {
 pub struct ContactPhaseMotion {
     config: ContactPhaseConfig,
     body: Trajectory,
-    returns: Vec<Option<SmoothReturn>>,
-    sequences: Vec<Option<PreparedFootSequence>>,
+    sequences: Vec<PreparedFootSequence>,
 }
 impl ContactPhaseMotion {
     pub fn new(config: ContactPhaseConfig) -> Result<Self, String> {
@@ -145,14 +144,13 @@ impl ContactPhaseMotion {
         if body.dimension() != 6 {
             return Err("body requires xyz metres and rotation-vector radians".into());
         }
-        let returns = config.feet.iter().map(|foot|
-            foot.return_ramp_fraction.map(SmoothReturn::new).transpose())
-            .collect::<Result<Vec<_>, _>>()?;
-        let sequences = config.feet.iter().map(|foot| {
-            if foot.additional_steps.is_empty() { Ok(None) }
-            else { PreparedFootSequence::new(foot.steps().collect()).map(Some) }
-        }).collect::<Result<Vec<_>, String>>()?;
-        Ok(Self { config, body, returns, sequences })
+        let sequences = config.feet.iter()
+            .map(|foot| PreparedFootSequence::new(foot.steps().collect()))
+            .collect::<Result<Vec<_>, String>>()?;
+        Ok(Self { config, body, sequences })
+    }
+    pub fn config(&self) -> &ContactPhaseConfig {
+        &self.config
     }
     /// Keep coincident events as zero-duration intervals so an optimizer has a
     /// fixed number of slots. They carry no integration weight. Every positive
@@ -196,52 +194,17 @@ impl ContactPhaseMotion {
             body.values[i] += self.config.displacement_world_m[i] * cycles;
             body.rates[i] += self.config.displacement_world_m[i] / p;
         }
+        let displacement = self.config.displacement_world_m;
         let feet = self
-            .config
-            .feet
+            .sequences
             .iter()
-            .zip(&self.returns)
-            .zip(&self.sequences)
-            .map(|((f, smooth_return), sequence)| {
-                if let Some(sequence) = sequence {
-                    return sequence.sample(cycles, p, self.config.displacement_world_m);
-                }
-                let u = (cycles - f.phase_offset).rem_euclid(1.0);
-                let contact = u < f.stance_fraction;
-                let (s, ds, dds, b, db, ddb) = if contact {
-                    (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-                } else {
-                    let v = (u - f.stance_fraction) / (1.0 - f.stance_fraction);
-                    let rate = 1.0 / ((1.0 - f.stance_fraction) * p);
-                    let (s, ds, dds) = if let Some(curve) = smooth_return {
-                        let sample = curve.sample(v)?;
-                        (sample[0], sample[1] * rate, sample[2] * rate * rate)
-                    } else {
-                        (v.powi(3) * (10.0 + v * (-15.0 + 6.0 * v)),
-                         30.0 * v * v * (1.0 - v).powi(2) * rate,
-                         60.0 * v * (1.0 - v) * (1.0 - 2.0 * v) * rate * rate)
-                    };
-                    (s, ds, dds,
-                        64.0 * v.powi(3) * (1.0 - v).powi(3),
-                        192.0 * v * v * (1.0 - v).powi(2) * (1.0 - 2.0 * v) * rate,
-                        384.0 * v * (1.0 - v) * (1.0 - 5.0 * v + 5.0 * v * v) * rate * rate,
-                    )
-                };
-                Ok(FootSample {
-                    position_world_m: std::array::from_fn(|i| {
-                        f.center_world_m[i]
-                            + self.config.displacement_world_m[i]
-                                * (cycles + s - u + f.stance_fraction / 2.0)
-                            + f.swing_offset_world_m[i] * b
+            .map(|sequence| {
+                sequence.sample(cycles, p, |i, turn| Placement {
+                    position_world_m: std::array::from_fn(|axis| {
+                        sequence.steps()[i].center_world_m[axis]
+                            + displacement[axis] * sequence.midstance(i, turn)
                     }),
-                    velocity_world_m_s: std::array::from_fn(|i| {
-                        self.config.displacement_world_m[i] * ds + f.swing_offset_world_m[i] * db
-                    }),
-                    acceleration_world_m_s2: std::array::from_fn(|i| {
-                        self.config.displacement_world_m[i] * dds + f.swing_offset_world_m[i] * ddb
-                    }),
-                    in_contact: contact,
-                    phase: u,
+                    heading_rad: 0.0,
                 })
             })
             .collect::<Result<Vec<_>, String>>()?;
@@ -264,13 +227,7 @@ impl ContactPhaseMotion {
     }
     /// Explicit stance and swing interior samples for every configured step.
     pub fn phase_midpoints(&self) -> Vec<f64> {
-        self.config.feet.iter().zip(&self.sequences).flat_map(|(foot, sequence)| {
-            if let Some(sequence) = sequence { sequence.midpoints() }
-            else { vec![
-                (foot.phase_offset + 0.5 * foot.stance_fraction).rem_euclid(1.0),
-                (foot.phase_offset + foot.stance_fraction + 0.5 * (1.0 - foot.stance_fraction)).rem_euclid(1.0),
-            ] }
-        }).collect()
+        self.sequences.iter().flat_map(|sequence| sequence.midpoints()).collect()
     }
     /// Apply the chain rule for a controller's reference clock. A negative rate
     /// reverses the same geometric motion; zero rate/acceleration holds its pose.

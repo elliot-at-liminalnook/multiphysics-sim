@@ -1,0 +1,12 @@
+part brake "Electromagnetic brake"
+category Mechanical
+summary "A friction brake that clamps a shaft when engaged: holds a load with no power in the motor."
+explain "Engaged by its signal (0 = free, 1 = full), it applies a friction torque of up to T_max opposing rotation (sign smoothed below ε). Spring-applied, power-released brakes (the safe kind) engage when power is lost."
+tradeoffs "Lets efficient, back-drivable drives (spur, planetary, ball screw) hold loads safely. Costs weight and a signal; a self-locking worm or lead screw holds without one but wastes power while moving."
+limits "Constant friction coefficient, instant engagement (no armature delay), smoothed stiction."
+pairs rotational.inertia rotational.lossy_gear control.pulse control.constant
+port shaft rotational
+input engage Dimensionless
+param torque N·m ~ 0.5 "Maximum braking torque"
+param smoothing rad/s = 0.01 "Speed below which the friction sign is smoothed"
+flow shaft = torque*max(0, min(1, engage))*tanh(shaft.w/smoothing)

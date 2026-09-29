@@ -1,0 +1,86 @@
+{
+  "axes": [
+    {
+      "id": 1,
+      "role": "knee",
+      "lower": 2657.0,
+      "upper": 3564.0
+    },
+    {
+      "id": 2,
+      "role": "worm",
+      "lower": -1692.0,
+      "upper": 2836.0
+    },
+    {
+      "id": 3,
+      "role": "belt/hip",
+      "lower": -688.0,
+      "upper": 739.0
+    }
+  ],
+  "gates": {
+    "max_sag_fraction": 0.1,
+    "max_temperature_c": 50.0,
+    "cool_down_to_c": 40.0,
+    "max_drift_counts": 12.0,
+    "inset_counts": 40.0,
+    "assumed_braking_counts_s2": 800.0,
+    "divergence_counts": 40.0,
+    "model_uncertainty": 0.6
+  },
+  "a_speeds_counts_s": [
+    40.0,
+    80.0
+  ],
+  "b_positions": 6,
+  "b_known_load_duty": 0.0,
+  "c_speeds_counts_s": [
+    100.0,
+    200.0
+  ],
+  "d_duties": [
+    0.15,
+    0.3
+  ],
+  "e_frequencies_hz": [],
+  "e_amplitude_duty": 0.0,
+  "f_step_counts": 120.0,
+  "g_duties": [
+    0.2,
+    0.35,
+    0.5,
+    0.7
+  ],
+  "h_multi_axis": true,
+  "i_reference": [],
+  "i_time_scale": 1.0,
+  "j_duty": 0.0,
+  "j_max_s": 0.0,
+  "k_repeat": true,
+  "sensitivity": {
+    "acceleration_decreasing": 0.9,
+    "acceleration_increasing": 0.9,
+    "backlash": 0.6,
+    "braking_decreasing": 0.5,
+    "braking_increasing": 0.5,
+    "breakaway": 0.6,
+    "constant_load": 0.2,
+    "gravity_amplitude": 0.6,
+    "moving_friction": 0.7,
+    "speed_gain": 0.8,
+    "top_speed_decreasing": 1.0,
+    "top_speed_increasing": 1.0
+  },
+  "limits": {
+    "belt/hip": {
+      "max_duty": 0.5,
+      "duty_slew_per_s": 0.25,
+      "max_acceleration_counts_s2": 1500.0,
+      "skip_stages": [
+        "F"
+      ],
+      "extra_inset_counts": 100.0
+    }
+  }
+}

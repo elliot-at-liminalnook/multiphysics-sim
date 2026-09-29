@@ -53,9 +53,71 @@ struct Args {
     /// Validate inputs without opening a window.
     #[arg(long)]
     validate_only: bool,
+    /// Lesson mode: read the lessons in DIR (each `<slug>/lesson.md`),
+    /// with live scenes, notes and the builder one click away.
+    #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system"])]
+    lessons: Option<PathBuf>,
+    /// Walk through a scanned place (a `sim-place build` directory).
+    #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons"])]
+    place: Option<PathBuf>,
+    /// Lesson to open first (slug); default: the first in reading order.
+    #[arg(long, requires = "lessons")]
+    lesson: Option<String>,
+}
+
+fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+    let registry = sim_runtime::system_registry();
+    let mut learn = sim_spatial::lesson::Learn::new(dir.to_path_buf(), args.library.clone(), registry.clone());
+    if args.validate_only {
+        for e in &learn.entries {
+            match &e.error {
+                Some(err) => println!("{}: {err}", e.slug),
+                None => println!("{}: {} ({} scenes)", e.slug, e.title, e.scenes),
+            }
+        }
+        return Ok(());
+    }
+    let slug = args.lesson.clone().or_else(|| learn.entries.iter().find(|e| e.error.is_none()).map(|e| e.slug.clone()));
+    // The builder starts on the first scene's sandbox (or an empty system);
+    // opening the lesson then activates that scene off the UI thread.
+    let first = slug.as_ref().and_then(|s| {
+        let lesson = sim_lesson::Lesson::load(&dir.join(s).join("lesson.md")).ok()?;
+        let scene = lesson.scenes().next().map(|(_, sc)| sc.clone())?;
+        sim_runtime::lesson::sandbox(&lesson, &scene, &registry, false).ok().map(|sb| sb.path)
+    });
+    let initial = match first {
+        Some(p) => p,
+        None => {
+            let p = sim_runtime::lesson::sandbox_root().join("_empty").join("empty.system.json");
+            if !p.exists() {
+                sim_system::SystemStore::create(&p, &sim_system::SystemDocument::new("Lesson"))?;
+            }
+            p
+        }
+    };
+    let builder = sim_spatial::Builder::open(initial, args.library.clone(), registry.clone())?;
+    let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
+    let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
+    let mut scene = sim_spatial::SpatialScene::for_builder(compiled.description.clone(), spatial)?;
+    if let Some(animation) = compiled.animation.clone() {
+        scene.set_animation(animation)?;
+    }
+    if let Some(slug) = &slug {
+        if let Err(e) = learn.open(slug) {
+            eprintln!("Lesson {slug}: {e}");
+        }
+    }
+    let api = sim_spatial::rest::server_for(args.api_port, true, true)?;
+    eprintln!("Physical REST (lessons): http://{}", api.address);
+    let models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models")));
+    if let Some(e) = &models.error {
+        eprintln!("Display models unavailable ({e}); drawing bounding shapes.");
+    }
+    sim_spatial::run_lessons(scene, builder, learn, api, models);
+    Ok(())
 }
 fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
-    let registry = sim_runtime::registry();
+    let registry = sim_runtime::system_registry();
     let builder = sim_spatial::Builder::open(path.to_path_buf(), args.library.clone(), registry.clone())?;
     let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
     let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
@@ -84,7 +146,9 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     }
     let api = sim_spatial::rest::server_with(args.api_port, true)?;
     eprintln!("Physical REST (build mode): http://{}", api.address);
-    let models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models")));
+    let mut models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models")));
+    // A system's own display models (CAD exports next to the file) join the shared catalog.
+    models.extend(&path.parent().unwrap_or(std::path::Path::new(".")).join("models"));
     if let Some(e) = &models.error {
         eprintln!("Display models unavailable ({e}); drawing bounding shapes.");
     }
@@ -94,6 +158,12 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+    if let Some(dir) = args.place.clone() {
+        return sim_spatial::place_view::run_place(dir).map_err(Into::into);
+    }
+    if let Some(dir) = args.lessons.clone() {
+        return lessons_mode(&args, &dir);
+    }
     if let Some(path) = args.system.clone() {
         return build_mode(&args, &path);
     }

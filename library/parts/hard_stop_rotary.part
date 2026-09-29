@@ -1,0 +1,15 @@
+part hard_stop_rotary "Rotary end stop"
+category Mechanical
+summary "A mechanical limit: free between two angles, a stiff bumper beyond them."
+explain "Inside [lower, upper] it does nothing. Past a limit it pushes back like a stiff spring, τ = k·δ, with contact damping c·|δ|·ω that grows with penetration δ (Hunt–Crossley), so contact starts without a jump in force and bounces lose energy realistically."
+tradeoffs "Real joints need them: they catch runaway motion and let homing routines find zero. Softer stops (rubber) are gentler on gears but less precise."
+limits "Penalty contact: a very stiff stop needs a small time step; no stiction on contact."
+pairs rotational.inertia part.stepper_motor bridge.brushed_motor part.pendulum_gravity
+port shaft rotational
+param lower rad ~ -1.57 "Lower limit"
+param upper rad ~ 1.57 "Upper limit"
+param stiffness N·m/rad = 50 "Stop stiffness"
+param damping N·m·s/rad^2 = 5 "Contact damping per radian of penetration"
+let over = max(shaft.phi - upper, 0) - max(lower - shaft.phi, 0)
+flow shaft = stiffness*over + damping*abs(over)*shaft.w
+energy 0.5*stiffness*over^2

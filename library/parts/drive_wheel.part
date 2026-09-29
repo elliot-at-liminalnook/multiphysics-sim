@@ -1,0 +1,20 @@
+part drive_wheel "Drive wheel with tyre grip"
+category Mechanical
+summary "A driven wheel pushing a vehicle along: traction up to the grip limit, then wheelspin."
+explain "Slip speed is the difference between the tyre surface and the ground under it: s = r·ω − v. Traction rises with slip and saturates at μ·N: F = μ·N·tanh(s/s₀). Rolling resistance C_rr·N opposes motion. The wheel feels the reaction torque r·F. With little slip the wheel rolls; ask for more force than μ·N and it spins, and the extra power becomes heat."
+tradeoffs "A bigger wheel goes faster per revolution but needs more torque for the same push (choose the gear ratio with it). Grip scales with the load on the wheel (heavier robots push harder) and with μ (rubber on concrete ≈ 0.8, on dust much less)."
+limits "One wheel, straight-line motion; constant normal load (no weight transfer); a smooth friction curve instead of a peaked tyre curve."
+pairs rotational.inertia rotational.lossy_gear bridge.brushed_motor part.bldc_motor translational.mass translational.load_force
+port axle rotational
+port chassis translational
+param radius m ~ 0.03 "Wheel radius"
+param normal_load N ~ 5 "Weight carried by this wheel"
+param grip 1 = 0.8 "Friction coefficient μ"
+param slip_speed m/s = 0.02 "Slip speed at which traction reaches ~76 % of μ·N"
+param rolling 1 = 0.01 "Rolling resistance coefficient C_rr"
+let slip = radius*axle.w - chassis.v
+let traction = grip*normal_load*tanh(slip/slip_speed)
+flow axle = radius*traction
+flow chassis = -traction + rolling*normal_load*tanh(chassis.v/slip_speed)
+derive "traction limit" = grip*normal_load N
+derive "torque to spin the wheel" = grip*normal_load*radius N·m

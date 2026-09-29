@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "translational.damper",
+  "label": "Linear damper",
+  "kind": "generic",
+  "parameters": {
+    "damping": 10.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.0002499999999999768,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 6.500e-3 J → change -2.500e-4 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 8.9e-16, 3.1e-15, 2.2e-16 (1 → 0.125 ms); observed order 3.8"
+    }
+  ]
+}

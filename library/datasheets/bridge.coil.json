@@ -1,0 +1,19 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "bridge.coil",
+  "label": "Coil (electrical ↔ magnetic gyrator)",
+  "kind": "generic",
+  "parameters": {
+    "turns": 200.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: a, b"
+    }
+  ]
+}

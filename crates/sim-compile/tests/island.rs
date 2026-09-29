@@ -174,3 +174,19 @@ fn frame_quaternions_are_validated_after_combining_owner_and_attachment_values()
         }
     }
 }
+
+#[test]
+fn a_ground_at_a_nonzero_angle_seeds_its_node_with_that_angle() {
+    // The pin must agree with the angle the ground's residual enforces;
+    // a node shared with an element starting at that angle is consistent.
+    let registry = registry();
+    let mut model = ModelWorld::default();
+    let rotor = model.part(&registry, "rotor", rot::INERTIA, [("inertia", 1.0), ("initial.angle", 0.3)]).unwrap();
+    let wall = model.part(&registry, "wall", rot::GROUND, [("angle", 0.3)]).unwrap();
+    model.connect([rotor.port("shaft"), wall.port("flange")]);
+    let mut runtime = Runtime::new(model, &registry, Integrator::implicit_midpoint()).unwrap();
+    let angle = runtime.across_id(rotor.port("shaft"));
+    assert_eq!(runtime.get(angle), 0.3);
+    runtime.advance(0.1, 1.0e-3).unwrap();
+    assert!((runtime.get(angle) - 0.3).abs() < 1.0e-12);
+}

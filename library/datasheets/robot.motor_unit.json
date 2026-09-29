@@ -1,0 +1,301 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "robot.motor_unit",
+  "label": "Motor with gearbox and winding heat",
+  "kind": "motor",
+  "parameters": {
+    "backlash": 0.0,
+    "backlash.events": 0.0,
+    "derating": 0.001,
+    "dynamics.quasistatic_rotor": 0.0,
+    "dynamics.quasistatic_winding": 0.0,
+    "efficiency": 0.5,
+    "gear_damping": 0.01,
+    "gear_friction": 0.0,
+    "gear_inertia": 0.0,
+    "gear_stiffness": 200.0,
+    "inductance": 0.0,
+    "jacobian.analytic": 0.0,
+    "loss_speed_scale": 5.0,
+    "no_load_current": 0.0,
+    "ratio": 200.0,
+    "reference": 293.15,
+    "resistance": 3.7,
+    "rotor_inertia": 1e-7,
+    "temp_coeff": 0.0039,
+    "torque_constant": 0.0097
+  },
+  "conditions": {
+    "test voltage (V)": 12.0,
+    "thermal ports on a 10 kJ/K mass starting at (K)": 293.15
+  },
+  "values": [
+    {
+      "name": "no-load speed",
+      "value": 6.185567149835028,
+      "unit": "rad/s"
+    },
+    {
+      "name": "no-load current",
+      "value": 2.1536781378763843e-15,
+      "unit": "A"
+    },
+    {
+      "name": "stall current",
+      "value": 3.243538776243389,
+      "unit": "A"
+    },
+    {
+      "name": "stall torque",
+      "value": 6.292465083975158,
+      "unit": "N·m"
+    },
+    {
+      "name": "terminal resistance (from stall)",
+      "value": 3.6996628768218995,
+      "unit": "Ω"
+    },
+    {
+      "name": "torque constant (from no-load)",
+      "value": 1.939999956240074,
+      "unit": "N·m/A"
+    },
+    {
+      "name": "peak efficiency",
+      "value": 0.3999902628450811,
+      "unit": "1"
+    },
+    {
+      "name": "torque at peak efficiency",
+      "value": 0.6292465083975158,
+      "unit": "N·m"
+    },
+    {
+      "name": "audit energy change",
+      "value": 0.0001186011740514914,
+      "unit": "J"
+    }
+  ],
+  "curves": [
+    {
+      "name": "speed–torque",
+      "x_label": "torque (N·m)",
+      "y_label": "speed (rad/s)",
+      "points": [
+        [
+          0.0,
+          6.185567149835028
+        ],
+        [
+          0.6292465083975158,
+          4.948339481649035
+        ],
+        [
+          1.2584930167950317,
+          3.711089951477932
+        ],
+        [
+          1.8877395251925475,
+          2.4738094182638823
+        ],
+        [
+          2.5169860335900633,
+          1.2364887403409666
+        ],
+        [
+          3.146232541987579,
+          -3.329865558731557e-6
+        ],
+        [
+          3.775479050385095,
+          -0.0005849539942551253
+        ],
+        [
+          4.40472555878261,
+          -0.0006459044589717231
+        ],
+        [
+          5.033972067180127,
+          -0.0006844763811270361
+        ]
+      ]
+    },
+    {
+      "name": "current–torque",
+      "x_label": "torque (N·m)",
+      "y_label": "current (A)",
+      "points": [
+        [
+          0.0,
+          2.1536781378763843e-15
+        ],
+        [
+          0.6292465083975158,
+          0.6487085708548851
+        ],
+        [
+          1.2584930167950317,
+          1.2974192867566816
+        ],
+        [
+          1.8877395251925475,
+          1.9461329483408485
+        ],
+        [
+          2.5169860335900633,
+          2.594850356286211
+        ],
+        [
+          3.146232541987579,
+          3.2431120574237795
+        ],
+        [
+          3.775479050385095,
+          3.2434169693145405
+        ],
+        [
+          4.40472555878261,
+          3.2434489223520924
+        ],
+        [
+          5.033972067180127,
+          3.2434691434892566
+        ]
+      ]
+    },
+    {
+      "name": "efficiency–torque",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.6292465083975158,
+          0.3999902628450811
+        ],
+        [
+          1.2584930167950317,
+          0.2999788911922937
+        ],
+        [
+          1.8877395251925475,
+          0.19996526190702035
+        ],
+        [
+          2.5169860335900633,
+          0.09994875949172417
+        ],
+        [
+          3.146232541987579,
+          -2.6919954238972254e-7
+        ],
+        [
+          3.775479050385095,
+          -0.00005674266706078309
+        ],
+        [
+          4.40472555878261,
+          -0.00007309687791900532
+        ],
+        [
+          5.033972067180127,
+          -0.00008852751048350492
+        ]
+      ]
+    },
+    {
+      "name": "efficiency at 3 V",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.15731162709937896,
+          0.3999908507920129
+        ],
+        [
+          0.4719348812981369,
+          0.19997220696674145
+        ],
+        [
+          0.7865581354968948,
+          0.000012905847049544903
+        ],
+        [
+          1.1011813896956526,
+          -0.0011648700424453928
+        ]
+      ]
+    },
+    {
+      "name": "efficiency at 6 V",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.3146232541987579,
+          0.3999907332028329
+        ],
+        [
+          0.9438697625962738,
+          0.19997081796742963
+        ],
+        [
+          1.5731162709937896,
+          4.710539851112323e-6
+        ],
+        [
+          2.202362779391305,
+          -0.0002921332353520028
+        ]
+      ]
+    },
+    {
+      "name": "efficiency at 9 V",
+      "x_label": "torque (N·m)",
+      "y_label": "efficiency",
+      "points": [
+        [
+          0.4719348812981369,
+          0.39999053722063777
+        ],
+        [
+          1.4158046438944107,
+          0.1999685029545403
+        ],
+        [
+          2.3596744064906843,
+          1.2128105363920303e-6
+        ],
+        [
+          3.303544169086958,
+          -0.0001299169575752603
+        ]
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "speed falls with load",
+      "passed": true,
+      "detail": "9 points"
+    },
+    {
+      "name": "efficiency below 100 %",
+      "passed": true,
+      "detail": "peak 40.0 %"
+    },
+    {
+      "name": "energy audit",
+      "passed": false,
+      "detail": "total energy rose by 1.186e-4 J from 3.400e-1 J at every step (1 → 0.125 ms: 1.25e-4, 1.20e-4, 1.21e-4, 1.19e-4): a passive part may not create energy"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 8.4e-4, 1.5e-4, 1.1e-4 (1 → 0.125 ms); observed order 0.5"
+    }
+  ]
+}

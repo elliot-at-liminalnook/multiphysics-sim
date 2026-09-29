@@ -1,0 +1,31 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "rotational.backlash_mesh",
+  "label": "Compliant mesh with backlash",
+  "kind": "generic",
+  "parameters": {
+    "gap": 0.005,
+    "stiffness": 50.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 2.2567330656975138e-6,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 1.945e-1 J → change 2.257e-6 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 7.6e-2, 3.4e-4, 2.1e-5 (1 → 0.125 ms); observed order 4.0"
+    }
+  ]
+}

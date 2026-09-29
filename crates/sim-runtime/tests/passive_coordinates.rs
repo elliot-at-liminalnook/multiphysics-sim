@@ -312,6 +312,7 @@ fn stationary_imu_reports_specific_force_in_authored_sensor_axes() {
     imu.bias_walk = 0.;
     imu.quantization.accel = 0.;
     imu.quantization.angle = 0.;
+    imu.quantization.gyro = 0.;
     imu.axes = [[0., 0., 1.], [0., 1., 0.], [-1., 0., 0.]];
     config.applied_generalized_loads = vec![0.; 3];
     config.step_s = 0.003;

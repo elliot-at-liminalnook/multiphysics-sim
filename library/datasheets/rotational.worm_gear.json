@@ -1,0 +1,89 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "rotational.worm_gear",
+  "label": "Worm gear",
+  "kind": "gear",
+  "parameters": {
+    "correction": 10.0,
+    "friction": 0.06,
+    "module": 0.0005,
+    "pressure_angle": 0.3490658503988659,
+    "smoothing_speed": 0.01,
+    "wheel_teeth": 30.0,
+    "worm_pitch_diameter": 0.008,
+    "worm_starts": 1.0
+  },
+  "conditions": {
+    "drive torque (N·m)": 0.05
+  },
+  "values": [
+    {
+      "name": "ratio (measured)",
+      "value": 30.000000000000032,
+      "unit": "1"
+    },
+    {
+      "name": "forward efficiency",
+      "value": 0.492480121947184,
+      "unit": "1"
+    },
+    {
+      "name": "backdrive efficiency",
+      "value": 0.0,
+      "unit": "1"
+    },
+    {
+      "name": "self-locking",
+      "value": 1.0,
+      "unit": "yes=1"
+    },
+    {
+      "name": "backdrive output speed",
+      "value": 0.0007560559028549903,
+      "unit": "rad/s"
+    },
+    {
+      "name": "realtime model: largest change",
+      "value": 0.0,
+      "unit": "1"
+    },
+    {
+      "name": "audit energy change",
+      "value": -0.15005549389567158,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "efficiency within (0, 1]",
+      "passed": true,
+      "detail": "forward 49.25 %"
+    },
+    {
+      "name": "forward efficiency matches the notes",
+      "passed": true,
+      "detail": "bench 49.25 % vs notes 49.27 %"
+    },
+    {
+      "name": "self-locking matches the notes",
+      "passed": true,
+      "detail": "bench holds, notes locks"
+    },
+    {
+      "name": "realtime model",
+      "passed": true,
+      "detail": "smoothing_speed = 0.05 → largest bench change 0.000 % (none)"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 1.945e-1 J → change -1.501e-1 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.9e-14, 3.2e-14, 3.5e-14 (1 → 0.125 ms); observed order -0.1"
+    }
+  ]
+}

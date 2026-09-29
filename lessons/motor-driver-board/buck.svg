@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" font-family="IBM Plex Sans">
+  <!-- Buck converter topology (as in the board's buck_5v subsystem) and its switch-node voltage.
+       Waveform: V_in = 11.1 V, D = 0.45, one period T = 20 µs (50 kHz) → 160 px. -->
+  <rect x="1" y="1" width="758" height="398" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <g fill="none" stroke="#e6ebf1" stroke-width="2.2">
+    <!-- rails -->
+    <path d="M70,70 H150"/><path d="M210,70 H300"/><path d="M300,70 V140"/><path d="M300,70 H330"/><path d="M430,70 H620 V110"/>
+    <path d="M70,210 H620 V170"/><path d="M70,70 V120"/><path d="M70,150 V210"/><path d="M300,170 V210"/>
+    <path d="M500,70 V118"/><path d="M500,132 V210"/>
+  </g>
+  <!-- battery -->
+  <g stroke="#e6ebf1" stroke-width="2.2"><line x1="50" y1="120" x2="90" y2="120"/><line x1="60" y1="140" x2="80" y2="140" stroke-width="4"/><line x1="70" y1="140" x2="70" y2="150"/></g>
+  <text x="96" y="140" font-size="14" fill="#e6ebf1">V_in 11.1 V</text>
+  <!-- switch Q -->
+  <circle cx="150" cy="70" r="4" fill="#e6ebf1"/><circle cx="210" cy="70" r="4" fill="#e6ebf1"/>
+  <line x1="152" y1="68" x2="204" y2="46" stroke="#de9454" stroke-width="2.6"/>
+  <text x="180" y="36" font-size="14" fill="#de9454" text-anchor="middle">Q (MOSFET)</text>
+  <text x="180" y="98" font-size="12" fill="#99a6b5" text-anchor="middle">on for D of each cycle</text>
+  <!-- diode, cathode at the switch node -->
+  <polygon points="288,170 312,170 300,146" fill="none" stroke="#8caaff" stroke-width="2.2"/>
+  <line x1="286" y1="144" x2="314" y2="144" stroke="#8caaff" stroke-width="2.6"/>
+  <line x1="300" y1="140" x2="300" y2="146" stroke="#e6ebf1" stroke-width="2.2"/>
+  <text x="318" y="164" font-size="12.5" fill="#8caaff">diode: carries the</text>
+  <text x="318" y="179" font-size="12.5" fill="#8caaff">current while Q is off</text>
+  <circle cx="300" cy="70" r="4" fill="#e6ebf1"/>
+  <text x="300" y="58" font-size="12" fill="#99a6b5" text-anchor="middle">switch node</text>
+  <!-- inductor -->
+  <path d="M330,70 a12,12 0 0 1 24,0 a12,12 0 0 1 24,0 a12,12 0 0 1 24,0 a12,12 0 0 1 24,0 h4" fill="none" stroke="#4dd4bf" stroke-width="2.4"/>
+  <text x="380" y="44" font-size="14" fill="#4dd4bf" text-anchor="middle">L 47 µH</text>
+  <text x="380" y="98" font-size="12" fill="#99a6b5" text-anchor="middle">smooths the current</text>
+  <!-- capacitor -->
+  <g stroke="#4dd4bf" stroke-width="2.6"><line x1="484" y1="118" x2="516" y2="118"/><line x1="484" y1="132" x2="516" y2="132"/></g>
+  <text x="524" y="130" font-size="14" fill="#4dd4bf">C 100 µF</text>
+  <!-- load -->
+  <path d="M620,110 l-9,5 l18,10 l-18,10 l18,10 l-18,10 l9,5 v10" fill="none" stroke="#e6ebf1" stroke-width="2.2"/>
+  <text x="640" y="144" font-size="14" fill="#e6ebf1">logic</text>
+  <circle cx="500" cy="70" r="4" fill="#e6ebf1"/>
+  <text x="560" y="60" font-size="14" font-weight="600" fill="#e6ebf1" text-anchor="middle">V_out ≈ 5 V</text>
+  <!-- waveform -->
+  <text x="24" y="250" font-size="14" font-weight="600" fill="#e6ebf1">Switch-node voltage</text>
+  <line x1="80" y1="360" x2="700" y2="360" stroke="#2e353f" stroke-width="1.5"/>
+  <text x="72" y="284" font-size="12" fill="#99a6b5" text-anchor="end">11.1 V</text>
+  <text x="72" y="364" font-size="12" fill="#99a6b5" text-anchor="end">0</text>
+  <path d="M80,280 h72 V363 h88 V280 h72 V363 h88 V280 h72 V363 h88 V280 h72 V363 h26" fill="none" stroke="#de9454" stroke-width="2.4"/>
+  <line x1="80" y1="324" x2="700" y2="324" stroke="#4dd4bf" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="736" y="250" font-size="13" fill="#4dd4bf" text-anchor="end">dashed: average = D·V_in ≈ 5 V</text>
+  <g stroke="#99a6b5" stroke-width="1.2"><line x1="80" y1="270" x2="152" y2="270"/><line x1="80" y1="265" x2="80" y2="275"/><line x1="152" y1="265" x2="152" y2="275"/>
+    <line x1="80" y1="382" x2="240" y2="382"/><line x1="240" y1="377" x2="240" y2="387"/><line x1="80" y1="377" x2="80" y2="387"/></g>
+  <text x="116" y="264" font-size="12" fill="#99a6b5" text-anchor="middle">D·T</text>
+  <text x="160" y="396" font-size="12" fill="#99a6b5" text-anchor="middle">T = 20 µs (50 kHz)</text>
+</svg>

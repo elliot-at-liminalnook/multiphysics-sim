@@ -1,0 +1,324 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "drone_unit_2212",
+  "definitions": {
+    "drone_unit_2212": {
+      "label": "Drone motor 2212 920 KV + 10″ prop",
+      "description": "One drone arm: a brushless outrunner and its ESC input, a 10-inch propeller, and the winding's heat path to the air. About 400 g of thrust per unit at 5000 rpm.",
+      "interface": "propulsion",
+      "ports": {
+        "airframe": {
+          "label": "Airframe"
+        },
+        "n": {
+          "label": "ESC −"
+        },
+        "p": {
+          "label": "ESC +"
+        }
+      },
+      "instances": {
+        "air": {
+          "label": "Air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 293.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.04,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "cooling": {
+          "label": "Prop wash cooling",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "2212 motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.bldc_motor"
+          },
+          "parameters": {
+            "kv": {
+              "value": 96.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "no_load_current": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "resistance": {
+              "value": 0.12,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          }
+        },
+        "mount": {
+          "label": "Arm mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "prop": {
+          "label": "10″ propeller",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.propeller"
+          },
+          "parameters": {
+            "diameter": {
+              "value": 0.254,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "thrust_coefficient": {
+              "value": 0.11,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "torque_coefficient": {
+              "value": 0.006,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor and prop",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00004,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "winding": {
+          "label": "Winding",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 15.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "initial.temperature": {
+              "value": 293.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "prop",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "heat"
+            },
+            {
+              "instance": "winding",
+              "port": "node"
+            },
+            {
+              "instance": "cooling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "cooling",
+              "port": "b"
+            },
+            {
+              "instance": "air",
+              "port": "node"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "airframe"
+            },
+            {
+              "instance": "prop",
+              "port": "airframe"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

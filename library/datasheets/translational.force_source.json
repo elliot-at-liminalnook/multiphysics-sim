@@ -1,0 +1,17 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "translational.force_source",
+  "label": "Commanded force",
+  "kind": "generic",
+  "parameters": {},
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) force: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

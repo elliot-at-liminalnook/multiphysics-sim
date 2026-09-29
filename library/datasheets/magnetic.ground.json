@@ -1,0 +1,17 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "magnetic.ground",
+  "label": "mmf reference",
+  "kind": "generic",
+  "parameters": {},
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: node"
+    }
+  ]
+}

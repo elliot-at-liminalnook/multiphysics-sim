@@ -1,10 +1,10 @@
 //! Bounded native process transport for the shared systems session.
 //! UI hosts own the child process, so cancellation does not depend on a solver.
 use crate::system_session::{
-    Command, ModelSource, Phase, Reply, SessionConfig, SessionStatus, SystemSession,
+    Command, ModelSource, Phase, Reply, SessionStatus, SystemSession,
 };
 use serde::{Deserialize, Serialize};
-use sim_core::{BehaviorRegistry, ModelWorld};
+use sim_core::BehaviorRegistry;
 use sim_inspect::SampleFrame;
 use std::{
     io::{self, BufRead, Write},
@@ -13,57 +13,7 @@ use std::{
 
 pub const MAX_MESSAGE_BYTES: usize = 32 * 1024 * 1024;
 const RECORD_BUDGET: usize = 16 * 1024 * 1024;
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Launch {
-    pub version: u32,
-    pub run_id: String,
-    pub model: ModelWorld,
-    pub source_hash: String,
-    pub revision: u64,
-    pub config: SessionConfig,
-    #[serde(default)]
-    pub binding: Option<SourceBinding>,
-}
-/// Authoring identities scoped to one exact model capture, never guessed by a UI.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct SourceBinding {
-    pub model_hash: String,
-    pub description_id: String,
-    pub identities: sim_inspect::model::IdentityBindings,
-}
-impl Launch {
-    pub fn model_hash(&self) -> Result<String, String> {
-        // Canonical JSON object ordering, independent of pretty printing.
-        let value = serde_json::to_value(&self.model).map_err(|e| e.to_string())?;
-        Ok(
-            blake3::hash(&serde_json::to_vec(&value).map_err(|e| e.to_string())?)
-                .to_hex()
-                .to_string(),
-        )
-    }
-    pub fn validate_binding(&self, registry: &BehaviorRegistry) -> Result<(), String> {
-        if let Some(binding) = &self.binding {
-            if self.model_hash()? != binding.model_hash {
-                return Err("live model capture hash mismatch".into());
-            }
-            let d = sim_inspect::model::describe(
-                &self.model,
-                registry,
-                &self.source_hash,
-                self.revision,
-                &binding.identities,
-            )
-            .map_err(|e| e.to_string())?
-            .description;
-            if d.id != binding.description_id {
-                return Err("live model does not match authored description".into());
-            }
-        }
-        Ok(())
-    }
-}
+pub use crate::system_launch::{Launch, SourceBinding};
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Request {

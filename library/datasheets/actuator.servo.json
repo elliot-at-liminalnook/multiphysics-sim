@@ -1,0 +1,20 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "actuator.servo",
+  "label": "Torque servo",
+  "kind": "generic",
+  "parameters": {
+    "bandwidth": 100.0,
+    "torque_constant": 1.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) command: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

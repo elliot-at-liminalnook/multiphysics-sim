@@ -119,8 +119,8 @@ impl Sdf {
             let (fine, fine_gradient) = patch.grid.sample_raw(p);
             if distance >= patch.blend_width_m { return (fine, fine_gradient); }
             let u = distance / patch.blend_width_m;
-            let weight = u*u*u*(10.0 + u*(-15.0 + 6.0*u));
-            let slope = 30.0*u*u*(1.0-u)*(1.0-u) / patch.blend_width_m;
+            let [weight, rate, _] = sim_domain_control::smooth_return::rest_to_rest(u);
+            let slope = rate / patch.blend_width_m;
             return (value + weight*(fine-value),
                 (1.0-weight)*g + weight*fine_gradient + (fine-value)*slope*direction);
         }

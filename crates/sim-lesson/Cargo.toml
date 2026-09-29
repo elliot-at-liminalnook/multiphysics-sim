@@ -1,0 +1,18 @@
+[package]
+name = "sim-lesson"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Lesson files: Markdown with front matter, embedded system scenes, component cards, comparisons and part links; validation with file:line errors, block edits with shared undo, and lesson annotation anchors."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+serde_norway.workspace = true
+blake3 = "=1.8.7"
+sim-annotate = { path = "../sim-annotate" }
+sim-markdown = { path = "../sim-markdown" }
+sim-script = { path = "../sim-script" }
+sim-inspect = { path = "../sim-inspect" }
+sim-system = { path = "../sim-system" }
+resvg = "=0.48.1"

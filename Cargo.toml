@@ -1,8 +1,16 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/sim-model-context",
+    "crates/sim-agent",
+    "crates/sim-markdown",
+    "crates/sim-annotate",
+    "crates/sim-lesson",
+    "crates/sim-voice",
     "crates/sim-api",
     "crates/sim-render",
+    "crates/sim-vision",
+    "crates/sim-print",
     "crates/sim-core",
     "crates/sim-script",
     "crates/sim-compile",
@@ -35,6 +43,7 @@ members = [
     "crates/sim-spatial",
     "crates/sim-inspect",
     "crates/sim-system",
+    "crates/sim-parts",
     "crates/sim-diagram",
     "crates/sim-example-diffusion",
 ]
@@ -55,6 +64,7 @@ petgraph = "0.8.2"
 proptest = "1.7.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["float_roundtrip"] }
+serde_norway = "0.9.42"
 slotmap = { version = "1.0.7", features = ["serde"] }
 thiserror = "2.0.17"
 

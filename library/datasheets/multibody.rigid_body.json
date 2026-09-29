@@ -1,0 +1,23 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "multibody.rigid_body",
+  "label": "Free rigid body",
+  "kind": "generic",
+  "parameters": {
+    "gravity": 0.0,
+    "ixx": 0.01,
+    "iyy": 0.01,
+    "izz": 0.01,
+    "mass": 1.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: frame"
+    }
+  ]
+}

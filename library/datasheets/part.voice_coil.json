@@ -1,0 +1,33 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.voice_coil",
+  "label": "Voice-coil actuator",
+  "kind": "generic",
+  "parameters": {
+    "force_constant": 5.0,
+    "inductance": 0.001,
+    "resistance": 4.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.0008067729083662822,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.965e-1 J → change -8.068e-4 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.4e-15, 3.0e-15, 2.2e-15 (1 → 0.125 ms); observed order 0.4"
+    }
+  ],
+  "source_hash": "2c38763802bc7045b0bbb9dfecd8c0d7bc9ec76b56022f3d94e48be3e06177b4"
+}

@@ -87,7 +87,10 @@ fn main() -> Result<()> {
             lock.try_lock().map_err(|e|format!("qualification directory already has a writer: {e}"))?;
             let recipe:Recipe=read(root.join("recipe.json"))?;let prepared=recipe.prepare()?;
             let (a,b)=if command=="qualify"{
-                let a=run(root,"detailed",&prepared.detailed,args.get(2))?;
+                // A detailed reference already captured for this same recipe (e.g. copied
+                // from another profile's qualification of the same baseline) is reused;
+                // qualify still checks it against this recipe and runtime.
+                let a=if root.join("detailed.capture.json").exists(){read(root.join("detailed.capture.json"))?}else{run(root,"detailed",&prepared.detailed,args.get(2))?};
                 if args.get(2).is_some_and(|p|Path::new(p).exists()){return Err("cancelled; retained detailed prefix; no qualification".into());}
                 (a,run(root,"reduced",&prepared.reduced,args.get(2))?)
             }else{(read(root.join("detailed.capture.json"))?,read(root.join("reduced.capture.json"))?)};

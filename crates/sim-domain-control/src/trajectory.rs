@@ -542,11 +542,10 @@ impl Trajectory {
         let s = (time_s - a.time_s) / h;
         let (position, rate, acceleration) = match self.config.interpolation {
             Interpolation::Linear => (s, 1.0, 0.0),
-            Interpolation::QuinticRestToRest => (
-                s * s * s * (10.0 + s * (-15.0 + 6.0 * s)),
-                30.0 * s * s * (1.0 - s) * (1.0 - s),
-                60.0 * s * (1.0 - s) * (1.0 - 2.0 * s),
-            ),
+            Interpolation::QuinticRestToRest => {
+                let [p, r, a] = crate::smooth_return::rest_to_rest(s);
+                (p, r, a)
+            }
             Interpolation::PeriodicCubicBSpline => unreachable!("periodic sampling handled above"),
         };
         Ok(TrajectorySample {

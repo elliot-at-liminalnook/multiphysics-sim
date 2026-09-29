@@ -1,5 +1,6 @@
 //! Sampled support-phase sequencing and planar foothold references.
 //! Outputs are desired positions, never physical poses or applied forces.
+use crate::{planar::{advance_planar, rotate}, smooth_return::rest_to_rest};
 use serde::{Deserialize, Serialize};
 
 /// Optional velocity-indexed posture schedule. Interpolate between sorted knots;
@@ -130,34 +131,11 @@ fn is_zero(value: &f64) -> bool {
 }
 fn one() -> f64 { 1. }
 fn is_one(value: &f64) -> bool { *value == 1. }
-fn rotate(yaw: f64, v: [f64; 2]) -> [f64; 2] {
-    let (s, c) = yaw.sin_cos();
-    [c * v[0] - s * v[1], s * v[0] + c * v[1]]
-}
 fn smooth(t: f64) -> f64 {
-    let t = t.clamp(0., 1.);
-    t * t * t * (10. + t * (-15. + 6. * t))
+    rest_to_rest(t.clamp(0., 1.))[0]
 }
 fn lerp<const N: usize>(a: [f64; N], b: [f64; N], s: f64) -> [f64; N] {
     std::array::from_fn(|i| a[i] + s * (b[i] - a[i]))
-}
-/// Integrate a constant body-frame planar twist exactly, including zero turn.
-/// This integrates a command reference, not the robot's dynamics.
-pub fn advance_planar(pose: [f64; 3], twist: [f64; 3], dt: f64) -> [f64; 3] {
-    let angle = twist[2] * dt;
-    let (a, b) = if angle.abs() < 1e-6 {
-        (
-            dt * (1. - angle * angle / 6.),
-            dt * (angle / 2. - angle * angle * angle / 24.),
-        )
-    } else {
-        (angle.sin() / twist[2], (1. - angle.cos()) / twist[2])
-    };
-    let delta = rotate(
-        pose[2],
-        [a * twist[0] - b * twist[1], b * twist[0] + a * twist[1]],
-    );
-    [pose[0] + delta[0], pose[1] + delta[1], pose[2] + angle]
 }
 impl StepSequence {
     pub fn new(

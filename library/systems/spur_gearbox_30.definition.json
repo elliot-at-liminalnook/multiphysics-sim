@@ -1,0 +1,167 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "spur_gearbox_30",
+  "definitions": {
+    "spur_gearbox_30": {
+      "label": "Spur gearbox 30:1 (lossless)",
+      "description": "Two-stage spur reduction lumped as one ideal 30:1 gear with a small pinion inertia. Efficient and back-drivable: it cannot hold a load unpowered.",
+      "interface": "gearbox.rotational",
+      "ports": {
+        "input": {
+          "label": "Input shaft"
+        },
+        "output": {
+          "label": "Output shaft"
+        }
+      },
+      "instances": {
+        "coupling": {
+          "label": "Shaft coupling",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Small beam coupling, 5 mm bore: catalogue range 20–60 N·m/rad."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.016,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.7071067811865476,
+              0.7071067811865476
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.005,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.25,
+              0.25,
+              0.27
+            ]
+          }
+        },
+        "gear": {
+          "label": "Spur stages",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ideal_gear"
+          },
+          "parameters": {
+            "ratio": {
+              "value": 30.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pinion": {
+          "label": "Input pinion",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 4e-08
+            }
+          },
+          "placement": {
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.7071067811865476,
+              0.7071067811865476
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.004,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "input shaft",
+          "terminals": [
+            {
+              "boundary": "input"
+            },
+            {
+              "instance": "coupling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "pinion shaft",
+          "terminals": [
+            {
+              "instance": "coupling",
+              "port": "b"
+            },
+            {
+              "instance": "pinion",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "label": "output shaft",
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "gear",
+              "port": "output"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

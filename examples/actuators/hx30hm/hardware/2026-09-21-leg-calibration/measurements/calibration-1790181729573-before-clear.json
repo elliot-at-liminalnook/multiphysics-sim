@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+  "units": "Continuous motor encoder counts in the powered tracking session; 4096 counts/revolution; not joint degrees",
+  "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+  "axes": {
+    "1": {
+      "role": "knee",
+      "lower": 2702,
+      "upper": 3464,
+      "reference": 2616,
+      "reverse": false,
+      "coordinate_session": null,
+      "tuning": {
+        "pid": {
+          "kp": 0.6043830507396725,
+          "ki": 0.5882517809833524,
+          "kd": 0.037262021579039295,
+          "integral_limit": 0.42498808857337744,
+          "duty_limit": 1.0
+        },
+        "friction_duty": 0.060000000000000026,
+        "gain_counts_s_per_duty": 4199.318049139106,
+        "time_constant_s": 0.061652988999999714,
+        "loop_delay_s": 0.030412355,
+        "breakaway_duty": [
+          0.060000000000000026,
+          0.08400000000000005
+        ],
+        "record": "tune-1-1790181647301.json",
+        "method": "SIMC PID for an integrating plant with first-order lag; closed-loop time 2× delay; friction feed-forward from the kinetic (moving) friction"
+      }
+    },
+    "2": {
+      "role": "worm",
+      "lower": 1822,
+      "upper": -1190,
+      "reference": 965,
+      "reverse": true,
+      "coordinate_session": "1790131826981",
+      "tuning": {
+        "pid": {
+          "kp": 0.6821060515338867,
+          "ki": 0.6629678844701193,
+          "kd": 0.04250572440376969,
+          "integral_limit": 0.3770921727223844,
+          "duty_limit": 1.0
+        },
+        "friction_duty": 0.04983455584741503,
+        "gain_counts_s_per_duty": 3715.598309861078,
+        "time_constant_s": 0.06231541899999993,
+        "loop_delay_s": 0.030492634,
+        "breakaway_duty": [
+          0.06400000000000003,
+          0.05200000000000002
+        ],
+        "record": "tune-2-1790181669026.json",
+        "method": "SIMC PID for an integrating plant with first-order lag; closed-loop time 2× delay; friction feed-forward from the kinetic (moving) friction"
+      }
+    },
+    "3": {
+      "role": "belt/hip",
+      "lower": 1366,
+      "upper": 2647,
+      "reference": 2500,
+      "reverse": false,
+      "coordinate_session": null,
+      "tuning": {
+        "pid": {
+          "kp": 0.5753104349615653,
+          "ki": 0.5598112193964992,
+          "kd": 0.03561762148573569,
+          "integral_limit": 0.44657911692000535,
+          "duty_limit": 1.0
+        },
+        "friction_duty": 0.061432591025017996,
+        "gain_counts_s_per_duty": 4410.391742902666,
+        "time_constant_s": 0.06191026499999985,
+        "loop_delay_s": 0.030427028,
+        "breakaway_duty": [
+          0.05600000000000002,
+          0.08800000000000005
+        ],
+        "record": "tune-3-1790181690366.json",
+        "method": "SIMC PID for an integrating plant with first-order lag; closed-loop time 2× delay; friction feed-forward from the kinetic (moving) friction"
+      }
+    }
+  }
+}

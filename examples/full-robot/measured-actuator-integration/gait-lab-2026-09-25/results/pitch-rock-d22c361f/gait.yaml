@@ -1,0 +1,31 @@
+version: 1
+name: pitch-rock
+notes: |
+  From 3701-Bayesian-003. Hypothesis: a small periodic pitch (+-2 deg) unloads
+  the legs that are about to swing.
+cycle:
+  period_s: 1.2736230285125745
+  travel_m: 0.21946775584250794
+body:
+  height_offset_m: -0.02339378872688437
+  controls:
+  - {}
+  - ry_deg: 2.0
+  - {}
+  - ry_deg: -2.0
+leg_defaults:
+  stance: 0.6292357950744023
+  swing_height_m: 0.026318953023198765
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.5538277203672304
+  +Y:
+    phase: 0.0943408092390769
+  -X:
+    phase: 0.45271276109505837
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 9.20041309815592
+  governor_speed_rad_s: 2.461293951408869

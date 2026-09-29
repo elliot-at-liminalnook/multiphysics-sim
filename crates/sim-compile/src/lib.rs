@@ -382,6 +382,7 @@ mod tests {
             type_id: BehaviorTypeId::from(name),
             display_name: "test",
             equations: None,
+            notes: None,
             parameters: None,
             ports: vec![PortDeclaration {
                 name: "pin",
@@ -421,6 +422,7 @@ mod tests {
                 type_id: BehaviorTypeId::from("load"),
                 display_name: "load",
                 equations: None,
+                notes: None,
                 parameters: None,
                 ports: vec![PortDeclaration {
                     name: "pin",

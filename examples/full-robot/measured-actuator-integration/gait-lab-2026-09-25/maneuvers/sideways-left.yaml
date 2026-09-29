@@ -1,0 +1,9 @@
+version: 1
+name: sideways-left
+notes: Walk sideways (crab) to the left of the walking direction at 0.2 m/s; the body does not turn.
+limits: {forward_m_s: 0.3, lateral_m_s: 0.25, yaw_deg_s: 25, forward_m_s2: 0.15, lateral_m_s2: 0.15, yaw_deg_s2: 20}
+commands:
+  - {at_s: 0}
+  - {at_s: 1.5, lateral_m_s: 0.2}
+  - {at_s: 10}
+duration_s: 14

@@ -11,6 +11,7 @@ fn config() -> SessionConfig {
         interval: 0.1,
         integrator: Integrator::implicit_midpoint(),
         seed: 71,
+        grid_snapping: false,
     }
 }
 fn source() -> ModelSource {

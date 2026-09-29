@@ -1,0 +1,34 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.hard_stop_linear",
+  "label": "Linear end stop",
+  "kind": "generic",
+  "parameters": {
+    "damping": 1000000.0,
+    "lower": 0.0,
+    "stiffness": 100000.0,
+    "upper": 0.2
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 3.469446951953614e-17,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.000e-3 J → change 3.469e-17 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.5e-13, 1.1e-13, 6.7e-15 (1 → 0.125 ms); observed order 4.1"
+    }
+  ],
+  "source_hash": "8b1501398a9b969eb19a6c50d9c7ab0f25925f71e89a1488b51e8ea18f3332c9"
+}

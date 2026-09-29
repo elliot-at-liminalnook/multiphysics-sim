@@ -1,0 +1,12 @@
+part limit_switch "Limit switch"
+category Sensing
+summary "Reports 1 once a carriage passes a position, 0 before: for homing and end-of-travel stops."
+explain "pressed = ½·(1 + tanh((x − x_switch)/w)): a smooth step of width w so solvers see no discontinuity. It exerts no force."
+tradeoffs "Cheap and robust for homing; the trip point repeats to about the lever's hysteresis. Optical or hall switches repeat better and don't wear."
+limits "No hysteresis or bounce; ideal repeatability."
+pairs part.timing_belt part.rack_pinion translational.mass part.hard_stop_linear
+port axis translational
+output pressed Dimensionless
+param position m ~ 0.19 "Trip position"
+param width m = 0.0005 "Transition width"
+set pressed = 0.5*(1 + tanh((axis.s - position)/width))

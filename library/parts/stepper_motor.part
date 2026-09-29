@@ -1,0 +1,23 @@
+# Hybrid stepper motor with a current-controlled microstepping driver.
+part stepper_motor "Stepper motor with microstepping driver"
+category Actuators
+summary "A stepper: the driver sets the rotor's magnetic target angle; the rotor follows like a stiff spring, or slips a step if overloaded."
+explain "A hybrid stepper has a toothed rotor (50 teeth for 200 steps/rev). The driver pushes set currents through two phases, which pulls the nearest rotor tooth toward a commanded electrical angle. With the driver in current mode, torque depends on the angle error: τ = −T_hold·sin(N·(θ − θ_target)), N = steps/4. Near the target that is a stiff spring (k = T_hold·N); beyond a quarter electrical cycle the torque falls and reverses, so a load above holding torque, or a target that moves too fast for the rotor to follow, makes it slip whole steps: open-loop position is lost. Detent torque from the magnets cogs the rotor at every step even without current."
+tradeoffs "Precise, cheap positioning with no encoder and full torque at standstill (3D printers, CNC). But it is open loop: missed steps go unnoticed, torque falls with speed, and it draws full current even while holding still (hot and inefficient). A servo (motor + encoder + controller) is smoother, faster and efficient, at more cost and tuning."
+limits "Ideal current-mode driver (no torque drop with speed from back-EMF or supply limits), sinusoidal torque-angle curve, lumped damping for iron loss and driver current-loop effects; no resonance-band modeling beyond what inertia and damping give."
+active
+pairs part.angle_setpoint rotational.inertia part.timing_belt bridge.lead_screw rotational.ground sensor.encoder part.hard_stop_rotary
+port shaft rotational
+port case rotational
+input target Angle
+param holding_torque N·m ~ 0.45 "Holding torque at rated current (NEMA 17: 0.3–0.6 N·m)"
+param steps_per_rev 1 = 200 "Full steps per revolution (200 = 1.8°)"
+param detent_torque N·m = 0.02 "Magnetic cogging torque with no current"
+param damping N·m·s/rad = 0.002 "Iron loss and driver damping"
+let rel = shaft.phi - case.phi
+let poles = steps_per_rev/4
+let torque = holding_torque*sin(poles*(rel - target)) + detent_torque*sin(4*poles*rel) + damping*(shaft.w - case.w)
+flow shaft = torque
+flow case = -torque
+derive "step angle" = 6.283185307/steps_per_rev rad
+derive "stiffness near the target" = holding_torque*steps_per_rev/4 N·m/rad

@@ -1,0 +1,31 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "translational.spring",
+  "label": "Linear spring",
+  "kind": "generic",
+  "parameters": {
+    "rest": 0.0,
+    "stiffness": 1000.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 2.8536201179818477e-16,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 6.500e-3 J → change 2.854e-16 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.7e-2, 4.4e-3, 1.1e-3 (1 → 0.125 ms); observed order 2.0"
+    }
+  ]
+}

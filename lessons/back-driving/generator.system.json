@@ -1,0 +1,339 @@
+{
+  "schema": "sim.system/1",
+  "title": "A motor as a generator",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "A motor as a generator",
+      "description": "A wheel spinning at 600 rad/s turns a motor whose terminals are joined through a resistor. The motor becomes a generator, and its current brakes the wheel.",
+      "instances": {
+        "bearings": {
+          "display_id": "cbd19c790892fb73f27bf5f9",
+          "label": "Bearing friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "smoothing_speed": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Ball bearings and brushes: 2 mN·m."
+              }
+            },
+            "torque": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Ball bearings and brushes: 2 mN·m."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "brake": {
+          "display_id": "73024c871d0a9bf4e6a2af6a",
+          "label": "Brake resistor",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Across the motor's terminals: 1 Ω."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.09,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.013,
+                0.004,
+                0.0027
+              ]
+            },
+            "color_srgb": [
+              0.8,
+              0.52,
+              0.3
+            ],
+            "model": "axial_resistor"
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Motor mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.062,
+              0.022,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "load": {
+          "display_id": "e4ddf49ff64d1bf72206a477",
+          "label": "Spinning load",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A wheel and the motor's rotor, together 3e-5 kg·m², already spinning at 600 rad/s (5700 rpm) when the lesson starts."
+              }
+            },
+            "initial.speed": {
+              "value": 600.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A wheel and the motor's rotor, together 3e-5 kg·m², already spinning at 600 rad/s (5700 rpm) when the lesson starts."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.01,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.03,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "DC motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "resistance": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "label": "terminal +",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "p"
+            },
+            {
+              "instance": "brake",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "terminal −",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "n"
+            },
+            {
+              "instance": "brake",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "label": "motor shaft",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "load",
+              "port": "shaft"
+            },
+            {
+              "instance": "bearings",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0002,
+    "rationale": "The winding's 0.17 ms electrical time constant is stiff for the implicit midpoint rule at useful steps (it rings); backward Euler at 0.2 ms damps it and resolves the 0.4–0.6 s braking to well under 1 %."
+  },
+  "studies": {
+    "resistor": {
+      "at": "",
+      "instance": "brake",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "resistance",
+        "values": [
+          0.01,
+          1.0,
+          5.0,
+          20.0,
+          1000000.0
+        ]
+      },
+      "duration": 2.0,
+      "observe": [
+        "load.shaft.speed"
+      ],
+      "metrics": [
+        {
+          "label": "speed after 0.5 s (rad/s)",
+          "observable": "load.shaft.speed",
+          "reduce": "final",
+          "window": [
+            0.0,
+            0.5
+          ]
+        }
+      ]
+    }
+  }
+}

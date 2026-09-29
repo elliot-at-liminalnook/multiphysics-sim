@@ -1,0 +1,17 @@
+{
+  "time": "2026-09-23T00:03:08Z",
+  "motor_supply_off_reported_by_operator": true,
+  "fpga_profile": 7,
+  "changes": "Several axes may be armed together (independent windows and deadlines, shared latch). Leaving a taught window blocks outward PWM instead of tripping. Servo current and status flags are not calibration trips. Feedback/command deadlines 400/600 ms. Temperature, supply voltage, S2, STOP and ambiguous encoder jumps still latch. Operator request 2026-09-22.",
+  "bitstream": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/impl/bridge_calibration.fs",
+  "bitstream_sha256": "d067a666dc5cdf362bcbca65ebc6660df0da3edf72703068789bf3b6b343e439",
+  "routed_fmax_mhz": 90.54,
+  "fpga_tests": "make sim-calibration, make sim-safety: PASS",
+  "programming": "SRAM only; openFPGALoader -b tangprimer25k exit 0",
+  "readback_reply": [255, 255, 254, 15, 0, 7, 1, 10, 254, 0, 0, 0, 0, 60, 90, 126, 208, 7, 247],
+  "fpga_version_readback": 7,
+  "armed_mask": 0,
+  "host_binary_sha256": "b1d60c233b212906e92a0f52e7ecd8e6d3f83442e260ae8b4eae1bb2d8bd8d0e",
+  "powered_motor_verification": false,
+  "nonzero_hardware_tested": false
+}

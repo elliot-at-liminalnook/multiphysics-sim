@@ -1,0 +1,27 @@
+# Exported from examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/aws-overnight/i-0d2ec498f498c03ac/comparison/6031-Bayesian-005
+# Search result: 0.199 m/s
+# Edit and evaluate with: gait_lab evaluate examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/aws-overnight/i-0d2ec498f498c03ac/comparison-config.json OUT_DIR THIS_FILE
+version: 1
+name: 6031-Bayesian-005
+notes: Tuned from examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/overnight-164.yaml by the search in examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/aws-overnight/i-0d2ec498f498c03ac.
+cycle:
+  period_s: 1.4504638742437577
+  travel_m: 0.392518363563704
+body:
+  height_offset_m: -0.030419004595118107
+leg_defaults:
+  stance: 0.5610260106447968
+  swing_height_m: 0.010720816144669703
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.5543444191773318
+  +Y:
+    phase: 0.0693352951460699
+  -X:
+    phase: 0.555073658672134
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 8.811437293739946
+  governor_speed_rad_s: 2.6710372161299545

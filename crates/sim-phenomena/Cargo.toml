@@ -1,5 +1,7 @@
 [package]
 name = "sim-phenomena"
+# The suite runner; `cargo run -p sim-phenomena -- all` as documented.
+default-run = "sim-phenomena"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

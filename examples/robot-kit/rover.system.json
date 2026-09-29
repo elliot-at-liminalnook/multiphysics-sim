@@ -1,0 +1,940 @@
+{
+  "schema": "sim.system/1",
+  "title": "Two-wheel rover",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "gearmotor_37mm_30": {
+      "label": "37 mm gearmotor 12 V 30:1",
+      "description": "A workhorse for rovers and arms: 333 rpm, ≈ 1.5 N·m stall at 12 V, 80 % gearbox.",
+      "interface": "gearmotor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "output": {
+          "label": "Output shaft"
+        },
+        "p": {
+          "label": "Supply +"
+        }
+      },
+      "instances": {
+        "friction": {
+          "label": "Gear friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "torque": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.025,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gear": {
+          "label": "Gearbox",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "ratio": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.015,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "inductance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "resistance": {
+              "value": 2.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "torque_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "mount": {
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              -0.015,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 2e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 37 mm 12 V 30:1 gearmotor (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "gear",
+              "port": "output"
+            },
+            {
+              "instance": "friction",
+              "port": "shaft"
+            },
+            {
+              "boundary": "output"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/gearmotor_37mm_30.definition.json",
+        "content_hash": "6dd39c0387700edfb636678ecd0566b9552e731fdada6c264131d9d8c5a678da"
+      },
+      "version": 1
+    },
+    "lipo_3s_2200": {
+      "label": "LiPo 3S 2200 mAh",
+      "description": "A common robot and drone pack: 11.1 V nominal (12.6 V full), 2.2 Ah, ≈ 30 mΩ.",
+      "interface": "battery",
+      "ports": {
+        "n": {
+          "label": "−"
+        },
+        "p": {
+          "label": "+"
+        }
+      },
+      "instances": {
+        "pack": {
+          "label": "3S pack",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.battery"
+          },
+          "parameters": {
+            "capacity_ah": {
+              "value": 2.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            },
+            "cells": {
+              "value": 3.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            },
+            "internal_resistance": {
+              "value": 0.03,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            }
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "pack",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "pack",
+              "port": "n"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/lipo_3s_2200.definition.json",
+        "content_hash": "0f698a0e93527ea42571126a402c35db2c9c110e14fb2430f81d1fbe467fa4de"
+      },
+      "version": 1
+    },
+    "root": {
+      "label": "Two-wheel rover",
+      "instances": {
+        "battery": {
+          "label": "3S LiPo",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "lipo_3s_2200"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "chassis": {
+          "label": "Chassis 2 kg",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "left_driver": {
+          "label": "left driver",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.03,
+              -0.04
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "left_hub": {
+          "label": "Wheel inertia",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.0002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.103999995,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "left_motor": {
+          "label": "left gearmotor",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "gearmotor_37mm_30"
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "left_wheel": {
+          "label": "left wheel",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.drive_wheel"
+          },
+          "parameters": {
+            "grip": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "normal_load": {
+              "value": 8.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "radius": {
+              "value": 0.04,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.103999995,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "right_driver": {
+          "label": "right driver",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.08,
+              0.03,
+              -0.04
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "right_hub": {
+          "label": "Wheel inertia",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.0002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.103999995,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "right_motor": {
+          "label": "right gearmotor",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "gearmotor_37mm_30"
+          },
+          "placement": {
+            "position": [
+              0.08,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "right_wheel": {
+          "label": "right wheel",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.drive_wheel"
+          },
+          "parameters": {
+            "grip": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "normal_load": {
+              "value": 8.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "radius": {
+              "value": 0.04,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.103999995,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "slope": {
+          "label": "Slope (0°: try −3.4 N for 10°)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.load_force"
+          },
+          "parameters": {
+            "force": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.05,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "speed": {
+          "label": "Speedometer",
+          "kind": {
+            "kind": "element",
+            "component_type": "sensor.linear_velocity"
+          },
+          "placement": {
+            "position": [
+              0.05,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "throttle": {
+          "label": "Throttle: 80 % for 3 s",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pulse"
+          },
+          "parameters": {
+            "amplitude": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "duration": {
+              "value": 3.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "start": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "left_driver",
+              "port": "p"
+            },
+            {
+              "instance": "left_motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "left_motor",
+              "port": "output"
+            },
+            {
+              "instance": "left_hub",
+              "port": "shaft"
+            },
+            {
+              "instance": "left_wheel",
+              "port": "axle"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "battery",
+              "port": "p"
+            },
+            {
+              "instance": "left_driver",
+              "port": "supply_p"
+            },
+            {
+              "instance": "right_driver",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "battery",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "left_driver",
+              "port": "supply_n"
+            },
+            {
+              "instance": "left_motor",
+              "port": "n"
+            },
+            {
+              "instance": "left_driver",
+              "port": "n"
+            },
+            {
+              "instance": "right_driver",
+              "port": "supply_n"
+            },
+            {
+              "instance": "right_motor",
+              "port": "n"
+            },
+            {
+              "instance": "right_driver",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "right_driver",
+              "port": "p"
+            },
+            {
+              "instance": "right_motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "throttle",
+              "port": "value"
+            },
+            {
+              "instance": "left_driver",
+              "port": "command"
+            },
+            {
+              "instance": "right_driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "right_motor",
+              "port": "output"
+            },
+            {
+              "instance": "right_hub",
+              "port": "shaft"
+            },
+            {
+              "instance": "right_wheel",
+              "port": "axle"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "left_wheel",
+              "port": "chassis"
+            },
+            {
+              "instance": "chassis",
+              "port": "axis"
+            },
+            {
+              "instance": "slope",
+              "port": "axis"
+            },
+            {
+              "instance": "speed",
+              "port": "axis"
+            },
+            {
+              "instance": "right_wheel",
+              "port": "chassis"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.001,
+    "rationale": "Averaged drivers; friction smoothing in the tyres and gears is stiff: backward Euler, 1 ms."
+  },
+  "studies": {
+    "hills": {
+      "at": "",
+      "instance": "slope",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "force",
+        "values": [
+          0.0,
+          -3.4,
+          -6.7,
+          -9.8
+        ]
+      },
+      "duration": 3.0,
+      "observe": [
+        "chassis.axis.velocity",
+        "left_motor/motor.p.current"
+      ],
+      "metrics": [
+        {
+          "label": "cruise speed",
+          "observable": "chassis.axis.velocity",
+          "reduce": "mean",
+          "window": [
+            2.5,
+            3.0
+          ]
+        },
+        {
+          "label": "motor current",
+          "observable": "left_motor/motor.p.current",
+          "reduce": "mean",
+          "window": [
+            2.5,
+            3.0
+          ]
+        }
+      ]
+    }
+  }
+}

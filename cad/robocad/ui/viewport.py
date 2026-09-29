@@ -828,6 +828,16 @@ class Viewport(QOpenGLWidget):
         yield); None when the node carries no stress field."""
         if it.stress_colors is not None:
             return it.stress_colors
+        pr = node.results if node.results and node.results.get("section") == "print" else None
+        if pr:
+            # A print strength check: failure index per voxel (green safe → red at failure).
+            try:
+                from ..print_study import cached_field, failure_colors
+                values = cached_field(pr["result_dir"], pr).sample(np.asarray(it.vertices, dtype=float))
+            except (OSError, KeyError, ValueError):
+                return None
+            it.stress_colors = failure_colors(values).astype(np.float32)
+            return it.stress_colors
         r = node.results if node.results and node.results.get("section") == "links" else None
         hot = (r or {}).get("hotspot") or {}
         cells, stress = hot.get("cells"), hot.get("stress_pa")

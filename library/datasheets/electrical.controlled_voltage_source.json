@@ -1,0 +1,17 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "electrical.controlled_voltage_source",
+  "label": "Controlled voltage source",
+  "kind": "generic",
+  "parameters": {},
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) voltage: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

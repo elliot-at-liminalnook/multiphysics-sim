@@ -371,8 +371,7 @@ class OcctKernel(GeometryKernel):
     def extrude_up_to(self, profile: Body, direction: Vec3, target: Body) -> Body:
         face = _profile_face(profile)
         d = v_unit(direction)
-        # Extrude far, then keep the part up to the target with a boolean.
-        far = BRepPrimAPI_MakePrism(face, V(v_scale(d, 1.0e4))).Shape()
+        # Extrude to the target's first surface along the profile centroid ray.
         hits = self.ray_hits(target, self.mass_properties(Body(face, "sheet")).centroid, d)
         if not hits:
             raise KernelError("nothing in that direction to extrude up to")

@@ -1,0 +1,36 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "sensor.imu",
+  "label": "Planar inertial unit",
+  "kind": "generic",
+  "parameters": {
+    "bandwidth": 0.0,
+    "bias.ax": 0.0,
+    "bias.ay": 0.0,
+    "bias.gyro": 0.0,
+    "fault.duration": 0.0,
+    "fault.mode": 0.0,
+    "fault.samples": 0.0,
+    "gravity": 9.81,
+    "latency": 0.0,
+    "noise.ax": 0.0,
+    "noise.ay": 0.0,
+    "noise.gyro": 0.0,
+    "period": 0.0,
+    "quantum.ax": 0.0,
+    "quantum.ay": 0.0,
+    "quantum.gyro": 0.0,
+    "seed": 0.0,
+    "stages": 4.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: frame"
+    }
+  ]
+}

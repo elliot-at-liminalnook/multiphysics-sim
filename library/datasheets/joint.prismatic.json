@@ -1,0 +1,26 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "joint.prismatic",
+  "label": "Prismatic joint",
+  "kind": "generic",
+  "parameters": {
+    "ax": 0.0,
+    "ay": 0.0,
+    "bx": 0.0,
+    "by": 0.0,
+    "offset": 0.0,
+    "stabilisation": 20.0,
+    "ux": 1.0,
+    "uy": 0.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "ports of kinds the bench has no environment for: a, b"
+    }
+  ]
+}

@@ -142,6 +142,50 @@ pub struct SpatialViewState {
     pub hidden: BTreeSet<String>,
     pub exploded: bool,
     pub connections: bool,
+    /// Physics layers drawn over the parts.
+    #[serde(default)]
+    pub overlays: BTreeSet<Overlay>,
+    /// Everything but the selection drawn see-through.
+    #[serde(default)]
+    pub xray: bool,
+    /// Fast parts as stroboscopic snapshots instead of motion blur.
+    #[serde(default)]
+    pub strobe: bool,
+}
+
+/// A physics visualisation layer, drawn from live or recorded measurements.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Overlay {
+    /// Power into or out of each part, with the whole system's balance.
+    Power,
+    /// Torque arrows on shafts and force arrows on sliding parts.
+    Forces,
+    /// Moving dots along wires, speed ∝ current.
+    Current,
+    /// Temperature glow and heat-flow arrows between thermal parts.
+    Heat,
+    /// Fading copies of moving parts at earlier times.
+    Trails,
+    /// Live readouts on parts: speed, position, temperature, current.
+    Values,
+}
+impl Overlay {
+    pub const ALL: [Overlay; 6] = [Overlay::Values, Overlay::Power, Overlay::Forces, Overlay::Current, Overlay::Heat, Overlay::Trails];
+    pub fn label(self) -> &'static str {
+        match self {
+            Overlay::Power => "Power",
+            Overlay::Forces => "Forces",
+            Overlay::Current => "Current",
+            Overlay::Heat => "Heat",
+            Overlay::Trails => "Trails",
+            Overlay::Values => "Values",
+        }
+    }
+    /// Layers shown until the viewer chooses: the ones that read without clutter.
+    pub fn defaults() -> BTreeSet<Overlay> {
+        [Overlay::Forces, Overlay::Current, Overlay::Heat].into()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -151,6 +195,9 @@ pub enum SpatialCommand {
     ClearSelection,
     SetExploded { enabled: bool },
     SetConnections { enabled: bool },
+    SetOverlay { layer: Overlay, enabled: bool },
+    SetXray { enabled: bool },
+    SetStrobe { enabled: bool },
     HideSelected,
     ShowAll,
 }
@@ -173,6 +220,15 @@ impl SpatialViewState {
             SpatialCommand::ClearSelection => self.selected = None,
             SpatialCommand::SetExploded { enabled } => self.exploded = enabled,
             SpatialCommand::SetConnections { enabled } => self.connections = enabled,
+            SpatialCommand::SetXray { enabled } => self.xray = enabled,
+            SpatialCommand::SetStrobe { enabled } => self.strobe = enabled,
+            SpatialCommand::SetOverlay { layer, enabled } => {
+                if enabled {
+                    self.overlays.insert(layer);
+                } else {
+                    self.overlays.remove(&layer);
+                }
+            }
             SpatialCommand::HideSelected => {
                 if let Some(component) = &self.selected {
                     self.hidden.insert(component.clone());

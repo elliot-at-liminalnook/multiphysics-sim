@@ -1,0 +1,728 @@
+{
+  "schema": "sim.system/1",
+  "title": "Arm joint under sampled control",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Arm joint under sampled control",
+      "description": "The same arm joint, now run by firmware that reads the encoder and updates the motor command only at its loop rate, after a delay.",
+      "instances": {
+        "arm": {
+          "display_id": "bf8cf8a5ef4957c5cbaa5d4c",
+          "label": "Arm",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.pendulum_gravity"
+          },
+          "parameters": {
+            "arm": {
+              "value": 0.12,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.3 kg arm with its centre of mass 0.12 m from the joint."
+              }
+            },
+            "mass": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.3 kg arm with its centre of mass 0.12 m from the joint."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          }
+        },
+        "arm_inertia": {
+          "display_id": "9123eba195485784c2868f07",
+          "label": "Arm inertia",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00432,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "m·r² = 0.3 × 0.12²."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.005
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.008,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "driver": {
+          "display_id": "260c0acaa3aca88d43f9d936",
+          "label": "Driver",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A MOSFET H-bridge."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.04,
+                0.01,
+                0.03
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.45,
+              0.3
+            ],
+            "model": "driver_board"
+          }
+        },
+        "encoder": {
+          "display_id": "43d016472e0436046116bb21",
+          "label": "Joint encoder",
+          "kind": {
+            "kind": "element",
+            "component_type": "sensor.encoder"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              -0.012
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.01,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "firmware": {
+          "display_id": "6edd5fd2ce5d9662553ca35d",
+          "label": "Controller firmware",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.servo_firmware"
+          },
+          "parameters": {
+            "deadband": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "kd": {
+              "value": 0.12,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "ki": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "kp": {
+              "value": 4.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "latency": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "limit": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "offset": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "rate": {
+              "value": 1000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            },
+            "resolution": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A microcontroller loop: PD at 1 kHz with no delay (scenes slow it down)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.005,
+                0.0015,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "soic8"
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.07,
+              -0.02
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gearbox": {
+          "display_id": "398d3f5d8af8ed583a2a620c",
+          "label": "Gearbox 30:1",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "ratio": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.025,
+              0.1,
+              -0.03
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.11,
+              0.0,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "inductance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "resistance": {
+              "value": 2.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            },
+            "torque_constant": {
+              "value": 0.0115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.1,
+              -0.03
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "rotor": {
+          "display_id": "5bb5143f5f36f47cb9735055",
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 2e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 37 mm 12 V gearmotor, 30:1 (333 rpm no-load, ≈ 1.5 N·m stall); catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.04,
+              0.1,
+              -0.03
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.002,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "supply": {
+          "display_id": "5c375faedf24a2cc595952ea",
+          "label": "Supply",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A bench supply or a charged pack."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.11,
+              0.02,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        },
+        "tach": {
+          "display_id": "af2d69de4de63310dbd03210",
+          "label": "Joint speed",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.speed_sensor"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.08,
+              -0.012
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "target": {
+          "display_id": "cd79c52a62eb50cf12338f9b",
+          "label": "Target angle",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.angle_setpoint"
+          },
+          "parameters": {
+            "ramp_for": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A step from hanging (0) to 1 rad at 0.2 s (a fast 50 ms ramp)."
+              }
+            },
+            "ramp_from": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A step from hanging (0) to 1 rad at 0.2 s (a fast 50 ms ramp)."
+              }
+            },
+            "rate": {
+              "value": 20.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A step from hanging (0) to 1 rad at 0.2 s (a fast 50 ms ramp)."
+              }
+            },
+            "start": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A step from hanging (0) to 1 rad at 0.2 s (a fast 50 ms ramp)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.14,
+              0.08,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "label": "motor +",
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "motor − (0 V: the averaged bridge output is referenced here)",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "driver",
+              "port": "supply_n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "driver",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gearbox",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "label": "target",
+          "terminals": [
+            {
+              "instance": "target",
+              "port": "angle"
+            },
+            {
+              "instance": "firmware",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "label": "measured",
+          "terminals": [
+            {
+              "instance": "encoder",
+              "port": "angle"
+            },
+            {
+              "instance": "firmware",
+              "port": "measured"
+            }
+          ]
+        },
+        {
+          "label": "rate",
+          "terminals": [
+            {
+              "instance": "tach",
+              "port": "speed"
+            },
+            {
+              "instance": "firmware",
+              "port": "rate"
+            }
+          ]
+        },
+        {
+          "label": "joint",
+          "terminals": [
+            {
+              "instance": "gearbox",
+              "port": "output"
+            },
+            {
+              "instance": "arm",
+              "port": "shaft"
+            },
+            {
+              "instance": "arm_inertia",
+              "port": "shaft"
+            },
+            {
+              "instance": "encoder",
+              "port": "shaft"
+            },
+            {
+              "instance": "tach",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "label": "command",
+          "terminals": [
+            {
+              "instance": "firmware",
+              "port": "command"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0001,
+    "rationale": "Driver saturation and (for firmware) held samples: backward Euler; the step resolves the loop period."
+  }
+}

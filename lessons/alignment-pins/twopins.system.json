@@ -1,0 +1,343 @@
+{
+  "schema": "sim.system/1",
+  "title": "Two round pins, holes 0.2 mm off",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Two round pins, holes 0.2 mm off",
+      "description": "The plate has two round holes 60 mm apart, but the base's pins are 60.2 mm apart. With 0.05 mm of clearance each, the plate cannot sit on both without pushing them apart.",
+      "instances": {
+        "base": {
+          "display_id": "5708f15e05ce10f53c7b8fe7",
+          "label": "Base part (first pin)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.008,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.1,
+                0.012,
+                0.05
+              ]
+            },
+            "color_srgb": [
+              0.2,
+              0.46,
+              0.72
+            ],
+            "model": "pin_base_two"
+          }
+        },
+        "pin1": {
+          "display_id": "54745dc1e29a7a498d52f224",
+          "label": "First pin",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.dowel_pin"
+          },
+          "parameters": {
+            "clearance": {
+              "value": 0.00005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "diameter": {
+              "value": 0.003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "engaged": {
+              "value": 0.006,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "wall_modulus": {
+              "value": 3500000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0015,
+              "length": 0.014
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "dowel_pin"
+          }
+        },
+        "pin2": {
+          "display_id": "2aae40589c57146fd49c0b4e",
+          "label": "Second pin",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.dowel_pin"
+          },
+          "parameters": {
+            "clearance": {
+              "value": 0.00005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "diameter": {
+              "value": 0.003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "engaged": {
+              "value": 0.006,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            },
+            "wall_modulus": {
+              "value": 3500000000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A Ø3 mm steel dowel pin in printed PLA holes 6 mm deep; wall stiffness E·L/2 with E = 3.5 GPa (estimate)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0015,
+              "length": 0.014
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "dowel_pin"
+          }
+        },
+        "plate": {
+          "display_id": "2b6e27396111315b37a0125f",
+          "label": "Top plate",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 0.15,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 150 g printed plate on two pins 60 mm apart."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.004,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.006,
+                0.09,
+                0.04
+              ]
+            },
+            "color_srgb": [
+              0.93,
+              0.55,
+              0.16
+            ],
+            "model": "pin_plate_two"
+          }
+        },
+        "rub": {
+          "display_id": "a1b5c3fa02c9690477e47b8f",
+          "label": "Sliding friction (stand-in)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 300.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The plate sliding on the base, as viscous drag: a stand-in for friction."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.002,
+              0.03
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "second": {
+          "display_id": "edfb5ea66c1793f196c6578a",
+          "label": "Base part (second pin, 0.2 mm off)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "parameters": {
+            "position": {
+              "value": 0.0002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The second pin sits 0.2 mm from where the plate's second hole expects it: a printing or drilling error."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              -0.008,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "plate",
+          "terminals": [
+            {
+              "instance": "plate",
+              "port": "axis"
+            },
+            {
+              "instance": "pin1",
+              "port": "a"
+            },
+            {
+              "instance": "pin2",
+              "port": "a"
+            },
+            {
+              "instance": "rub",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "base",
+          "terminals": [
+            {
+              "instance": "base",
+              "port": "axis"
+            },
+            {
+              "instance": "pin1",
+              "port": "b"
+            },
+            {
+              "instance": "rub",
+              "port": "b"
+            }
+          ]
+        },
+        {
+          "label": "second hole",
+          "terminals": [
+            {
+              "instance": "second",
+              "port": "axis"
+            },
+            {
+              "instance": "pin2",
+              "port": "b"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0001,
+    "rationale": "Stiff pin contact on a 150 g plate: backward Euler at 0.1 ms."
+  }
+}

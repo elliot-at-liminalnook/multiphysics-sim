@@ -309,10 +309,10 @@ int simloop_next(simloop_t *loop, simloop_frame_t *f) {
 int simloop_send(simloop_t *loop, const simloop_frame_t *f, const double *act) {
     int i;
     if (!loop->pending || f->seq != loop->seq) { snprintf(loop->error, sizeof loop->error, "no frame with seq %llu awaits a reply", f->seq); return -1; }
-    for (i = 0; i < loop->n_actuators; i++) {
+    /* Validate every value before holding any: a rejected reply changes nothing. */
+    for (i = 0; i < loop->n_actuators; i++)
         if (act[i] != act[i] || act[i] - act[i] != 0) { snprintf(loop->error, sizeof loop->error, "actuator %d is not finite", i); return -1; }
-        loop->held[i] = act[i];
-    }
+    for (i = 0; i < loop->n_actuators; i++) loop->held[i] = act[i];
     if (sl_write_act(loop, f->seq) != 0) return -1;
     loop->pending = 0;
     loop->seq++;

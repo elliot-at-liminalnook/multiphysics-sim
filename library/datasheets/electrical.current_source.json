@@ -1,0 +1,30 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "electrical.current_source",
+  "label": "Ideal current source",
+  "kind": "generic",
+  "parameters": {
+    "current": 0.1
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.02249999999992991,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "total energy rose by 2.250e-2 J from 2.900e-1 J at every step (1 → 0.125 ms: 2.25e-2, 2.25e-2, 2.25e-2, 2.25e-2) (a source: allowed)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 0.0e0, 3.7e-15, 1.5e-13 (1 → 0.125 ms); observed order -5.3"
+    }
+  ]
+}

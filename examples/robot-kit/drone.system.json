@@ -1,0 +1,1127 @@
+{
+  "schema": "sim.system/1",
+  "title": "Quadcopter altitude hold",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "drone_unit_2212": {
+      "label": "Drone motor 2212 920 KV + 10″ prop",
+      "description": "One drone arm: a brushless outrunner and its ESC input, a 10-inch propeller, and the winding's heat path to the air. About 400 g of thrust per unit at 5000 rpm.",
+      "interface": "propulsion",
+      "ports": {
+        "airframe": {
+          "label": "Airframe"
+        },
+        "n": {
+          "label": "ESC −"
+        },
+        "p": {
+          "label": "ESC +"
+        }
+      },
+      "instances": {
+        "air": {
+          "label": "Air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 293.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.04,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "cooling": {
+          "label": "Prop wash cooling",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "2212 motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.bldc_motor"
+          },
+          "parameters": {
+            "kv": {
+              "value": 96.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "no_load_current": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "resistance": {
+              "value": 0.12,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          }
+        },
+        "mount": {
+          "label": "Arm mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "prop": {
+          "label": "10″ propeller",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.propeller"
+          },
+          "parameters": {
+            "diameter": {
+              "value": 0.254,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "thrust_coefficient": {
+              "value": 0.11,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "torque_coefficient": {
+              "value": 0.006,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor and prop",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00004,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "winding": {
+          "label": "Winding",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 15.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 2212 920 KV outrunner with a 10 × 4.5 in propeller; catalogue-style values."
+              }
+            },
+            "initial.temperature": {
+              "value": 293.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "prop",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "heat"
+            },
+            {
+              "instance": "winding",
+              "port": "node"
+            },
+            {
+              "instance": "cooling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "cooling",
+              "port": "b"
+            },
+            {
+              "instance": "air",
+              "port": "node"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "airframe"
+            },
+            {
+              "instance": "prop",
+              "port": "airframe"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/drone_unit_2212.definition.json",
+        "content_hash": "bdd359ff3b02b5ecd2c625817830b4be1987056e402c686e5a2992a9c5ffb487"
+      },
+      "version": 1
+    },
+    "lipo_3s_2200": {
+      "label": "LiPo 3S 2200 mAh",
+      "description": "A common robot and drone pack: 11.1 V nominal (12.6 V full), 2.2 Ah, ≈ 30 mΩ.",
+      "interface": "battery",
+      "ports": {
+        "n": {
+          "label": "−"
+        },
+        "p": {
+          "label": "+"
+        }
+      },
+      "instances": {
+        "pack": {
+          "label": "3S pack",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.battery"
+          },
+          "parameters": {
+            "capacity_ah": {
+              "value": 2.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            },
+            "cells": {
+              "value": 3.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            },
+            "internal_resistance": {
+              "value": 0.03,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 3S 2200 mAh 30C pack."
+              }
+            }
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "pack",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "pack",
+              "port": "n"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/lipo_3s_2200.definition.json",
+        "content_hash": "0f698a0e93527ea42571126a402c35db2c9c110e14fb2430f81d1fbe467fa4de"
+      },
+      "version": 1
+    },
+    "root": {
+      "label": "Quadcopter altitude hold",
+      "instances": {
+        "airframe": {
+          "label": "Airframe 1.2 kg",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 1.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.12,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "altimeter": {
+          "label": "Altimeter",
+          "kind": {
+            "kind": "element",
+            "component_type": "sensor.linear_encoder"
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.14,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "arm1": {
+          "label": "Arm 1",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "drone_unit_2212"
+          },
+          "placement": {
+            "position": [
+              0.2,
+              0.13,
+              0.2
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "arm2": {
+          "label": "Arm 2",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "drone_unit_2212"
+          },
+          "placement": {
+            "position": [
+              -0.2,
+              0.13,
+              0.2
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "arm3": {
+          "label": "Arm 3",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "drone_unit_2212"
+          },
+          "placement": {
+            "position": [
+              0.2,
+              0.13,
+              -0.2
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "arm4": {
+          "label": "Arm 4",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "drone_unit_2212"
+          },
+          "placement": {
+            "position": [
+              -0.2,
+              0.13,
+              -0.2
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "autopilot": {
+          "label": "Altitude PID",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.pid_position"
+          },
+          "parameters": {
+            "filter": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "kd": {
+              "value": 0.25,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "ki": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "kp": {
+              "value": 0.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "limit": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "offset": {
+              "value": 0.48,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.16,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "battery": {
+          "label": "3S LiPo",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "lipo_3s_2200"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "esc1": {
+          "label": "ESC 1",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.120000005,
+              0.11,
+              0.120000005
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "esc2": {
+          "label": "ESC 2",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.120000005,
+              0.11,
+              0.120000005
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "esc3": {
+          "label": "ESC 3",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.120000005,
+              0.11,
+              -0.120000005
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "esc4": {
+          "label": "ESC 4",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.120000005,
+              0.11,
+              -0.120000005
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.09,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "ground": {
+          "label": "Ground",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "upper": {
+              "value": 100.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          }
+        },
+        "setpoint": {
+          "label": "Climb to 1 m",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.position_setpoint"
+          },
+          "parameters": {
+            "ramp_for": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "ramp_from": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "rate": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.16,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "weight": {
+          "label": "Weight (1.2 kg × g)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.load_force"
+          },
+          "parameters": {
+            "force": {
+              "value": -11.76798,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.12,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "setpoint",
+              "port": "position"
+            },
+            {
+              "instance": "autopilot",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "altimeter",
+              "port": "position"
+            },
+            {
+              "instance": "autopilot",
+              "port": "measured"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "esc1",
+              "port": "p"
+            },
+            {
+              "instance": "arm1",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "esc2",
+              "port": "p"
+            },
+            {
+              "instance": "arm2",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "esc3",
+              "port": "p"
+            },
+            {
+              "instance": "arm3",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "battery",
+              "port": "p"
+            },
+            {
+              "instance": "esc1",
+              "port": "supply_p"
+            },
+            {
+              "instance": "esc2",
+              "port": "supply_p"
+            },
+            {
+              "instance": "esc3",
+              "port": "supply_p"
+            },
+            {
+              "instance": "esc4",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "battery",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            },
+            {
+              "instance": "esc1",
+              "port": "supply_n"
+            },
+            {
+              "instance": "arm1",
+              "port": "n"
+            },
+            {
+              "instance": "esc1",
+              "port": "n"
+            },
+            {
+              "instance": "esc2",
+              "port": "supply_n"
+            },
+            {
+              "instance": "arm2",
+              "port": "n"
+            },
+            {
+              "instance": "esc2",
+              "port": "n"
+            },
+            {
+              "instance": "esc3",
+              "port": "supply_n"
+            },
+            {
+              "instance": "arm3",
+              "port": "n"
+            },
+            {
+              "instance": "esc3",
+              "port": "n"
+            },
+            {
+              "instance": "esc4",
+              "port": "supply_n"
+            },
+            {
+              "instance": "arm4",
+              "port": "n"
+            },
+            {
+              "instance": "esc4",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "esc4",
+              "port": "p"
+            },
+            {
+              "instance": "arm4",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "autopilot",
+              "port": "command"
+            },
+            {
+              "instance": "esc1",
+              "port": "command"
+            },
+            {
+              "instance": "esc2",
+              "port": "command"
+            },
+            {
+              "instance": "esc3",
+              "port": "command"
+            },
+            {
+              "instance": "esc4",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "airframe",
+              "port": "axis"
+            },
+            {
+              "instance": "weight",
+              "port": "axis"
+            },
+            {
+              "instance": "ground",
+              "port": "axis"
+            },
+            {
+              "instance": "altimeter",
+              "port": "axis"
+            },
+            {
+              "instance": "arm1",
+              "port": "airframe"
+            },
+            {
+              "instance": "arm2",
+              "port": "airframe"
+            },
+            {
+              "instance": "arm3",
+              "port": "airframe"
+            },
+            {
+              "instance": "arm4",
+              "port": "airframe"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.001,
+    "rationale": "Stiff ground contact and fast motor currents: backward Euler, 1 ms."
+  },
+  "studies": {
+    "prop_size": {
+      "at": "",
+      "instance": "arm1",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "prop/diameter",
+        "values": [
+          0.2,
+          0.23,
+          0.254,
+          0.28
+        ]
+      },
+      "duration": 5.0,
+      "observe": [
+        "airframe.axis.position",
+        "battery/pack.p.current",
+        "arm1/motor.p.current"
+      ],
+      "metrics": [
+        {
+          "label": "altitude",
+          "observable": "airframe.axis.position",
+          "reduce": "mean",
+          "window": [
+            4.5,
+            5.0
+          ]
+        },
+        {
+          "label": "battery current at hover (all four)",
+          "observable": "battery/pack.p.current",
+          "reduce": "mean",
+          "window": [
+            4.5,
+            5.0
+          ]
+        },
+        {
+          "label": "motor current (one arm)",
+          "observable": "arm1/motor.p.current",
+          "reduce": "mean",
+          "window": [
+            4.5,
+            5.0
+          ]
+        }
+      ]
+    }
+  }
+}

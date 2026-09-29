@@ -1,0 +1,37 @@
+{
+ "schema": "sim.cad-physics/1",
+ "cad": {
+  "path": "examples/camera-turntable/cad/turntable.rcad",
+  "sha256": "dce8a9fd2412a2b1333988f28366f2dbf63240fe051ebd96896a9005be9fbd12"
+ },
+ "component_type": "rotational.inertia",
+ "parameters": {
+  "inertia": {
+   "value": 2.8206892238058333e-07,
+   "unit": "kg\u00b7m\u00b2",
+   "uncertainty": 2.051723059514344e-08,
+   "provenance": {
+    "kind": "derived",
+    "rule": "I = \u03a3 (I_zz,com + m\u00b7r\u00b2) over the bodies; printed bodies \u00d7 fill fraction (about the servo shaft)",
+    "inputs": {
+     "bodies": [
+      {
+       "name": "Servo horn (reference)",
+       "mass_kg": 0.004,
+       "Izz_kg_m2": 2.000000000000096e-07,
+       "source": "estimate",
+       "printed_fill": null
+      },
+      {
+       "name": "GT2 30T drive pulley",
+       "mass_kg": 0.0016831122582778892,
+       "Izz_kg_m2": 8.206892238057374e-08,
+       "source": "CAD volume and material density",
+       "printed_fill": 0.6
+      }
+     ]
+    }
+   }
+  }
+ }
+}

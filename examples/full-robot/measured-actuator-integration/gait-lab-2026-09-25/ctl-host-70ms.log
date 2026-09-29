@@ -1,0 +1,6 @@
+study examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/study-host-70ms.json (4aa2a857), legs ["-Y", "+X", "+Y", "-X"], controller {"governor_acceleration_rad_s2": [6.981317007977318, 10.61841268613613], "governor_speed_rad_s": [1.3962634015954636, 4.425520274745219]}
+rejected            -  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5027-CmaEs-144.yaml  Rejected after simulation: stopped at 0.50 s: tracking peak gate; incomplete, terminated or failed episode; tracking RMS gate; tracking peak gate.
+rejected            -  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5014-CmaEs-088.yaml  Rejected after simulation: stopped at 0.50 s: tracking peak gate; incomplete, terminated or failed episode; tracking RMS gate; tracking peak gate.
+rejected            -  examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/leg-run-013.yaml  Rejected after simulation: stopped at 0.50 s: tracking peak gate; incomplete, terminated or failed episode; tracking RMS gate; tracking peak gate.
+
+leaderboard (m/s, detailed fidelity):

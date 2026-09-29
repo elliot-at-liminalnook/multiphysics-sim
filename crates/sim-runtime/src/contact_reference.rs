@@ -53,6 +53,33 @@ fn curve(values: Vec<Vec<f64>>, period: f64) -> Result<TrajectoryConfig, String>
     Trajectory::new(config.clone())?;
     Ok(config)
 }
+/// All-stance intervals at least `minimum_s` long, as `[start, end]` seconds.
+/// Pure contact-schedule arithmetic (no kinematics), so callers can reject a
+/// schedule the pause-based stopping controller cannot use before any solve.
+pub fn pause_windows(motion: &ContactPhaseConfig, minimum_s: f64) -> Result<Vec<[f64; 2]>, String> {
+    let period = motion.period_s;
+    let motion = ContactPhaseMotion::new(motion.clone())?;
+    let mut windows = Vec::new();
+    let mut longest = 0f64;
+    for interval in motion.contact_intervals() {
+        let duration = (interval.end_phase - interval.start_phase) * period;
+        let sample = motion.sample((interval.start_phase + interval.end_phase) * 0.5 * period)?;
+        if !sample.feet.iter().all(|f| f.in_contact) {
+            continue;
+        }
+        longest = longest.max(duration);
+        if duration >= minimum_s {
+            windows.push([interval.start_phase * period, interval.end_phase * period]);
+        }
+    }
+    if windows.is_empty() {
+        return Err(format!(
+            "this pause-based controller needs an all-feet-down interval of at least {minimum_s:.3} s; the longest here is {longest:.3} s ({:.1}% of the {period:.3} s cycle). Longer stance or phases that overlap more on the ground lengthen it; other contact schedules need a different stopping controller",
+            100. * longest / period
+        ));
+    }
+    Ok(windows)
+}
 /// Compile through the shared CAD kinematics and inverse-load planner.
 /// No runtime physics is advanced; failed audit flags are retained.
 pub fn compile(
@@ -73,6 +100,8 @@ pub fn compile(
     {
         return Err("unit-rate periodic plan, dense sampling, positive errors and at least two policy periods per pause window required".into());
     }
+    // Schedule-only check first: it needs no kinematics and fails fast.
+    let pause_windows = pause_windows(&recipe.motion, recipe.minimum_pause_window_s)?;
     let mut session = Session::new(scene, 0)?;
     session.robot.art.contact_on = false;
     let seed = session.robot.generalized();
@@ -193,21 +222,6 @@ pub fn compile(
             .collect(),
         period,
     )?;
-    let motion = ContactPhaseMotion::new(recipe.motion.clone())?;
-    let mut pause_windows = Vec::new();
-    for interval in motion.contact_intervals() {
-        let duration = (interval.end_phase - interval.start_phase) * period;
-        if duration < recipe.minimum_pause_window_s {
-            continue;
-        }
-        let sample = motion.sample((interval.start_phase + interval.end_phase) * 0.5 * period)?;
-        if sample.feet.iter().all(|f| f.in_contact) {
-            pause_windows.push([interval.start_phase * period, interval.end_phase * period]);
-        }
-    }
-    if pause_windows.is_empty() {
-        return Err("this pause-based controller needs a sufficiently long all-stance interval; other contact schedules need a different stopping controller".into());
-    }
     let mut pause_static_samples = 0;
     for f in &stationary.frames {
         if pause_windows.iter().any(|w| {
@@ -242,6 +256,7 @@ pub fn compile(
         .unwrap();
     let initial_phase = ((window[0] + window[1]) * 0.5).rem_euclid(period);
     let initial = reference.sample((initial_phase - offset).rem_euclid(period))?;
+    let motion = ContactPhaseMotion::new(recipe.motion.clone())?;
     let body = motion.sample(initial_phase)?.body;
     let initial_base_translation: Vec<_> = (0..3)
         .map(|i| recipe.robot.initial_base_translation_m[i] + body.values[i])

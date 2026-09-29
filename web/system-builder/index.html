@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Runner</title>
+<style>
+  :root { --bg:#0f1318; --panel:#171c23; --line:#2e3540; --text:#e6ebf1; --sub:#99a6b5; --accent:#4dd4bf; --warn:#f2bf63; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 "IBM Plex Sans", system-ui, sans-serif; }
+  header { display:flex; align-items:center; gap:14px; padding:12px 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  header h1 { font-size:15px; margin:0; font-weight:600; }
+  select, button { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font:inherit; }
+  button.primary { background:var(--accent); color:#08201d; border-color:var(--accent); font-weight:600; }
+  main { display:grid; grid-template-columns: minmax(0,1fr) 320px; gap:16px; padding:16px 18px; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  canvas { width:100%; height:360px; background:var(--panel); border:1px solid var(--line); border-radius:8px; display:block; }
+  aside { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+  aside h2 { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--sub); margin:14px 0 6px; font-weight:600; }
+  aside h2:first-child { margin-top:0; }
+  .row { display:flex; justify-content:space-between; gap:10px; padding:2px 0; }
+  .row span:first-child { color:var(--sub); }
+  .note { color:var(--sub); font-size:12px; }
+  .bad { color:var(--warn); }
+  #legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; color:var(--sub); font-size:12px; }
+  #legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>System Runner</h1>
+  <select id="system"></select>
+  <select id="profile"><option value="realtime">Realtime profile</option><option value="detailed">Detailed model</option></select>
+  <button class="primary" id="run">Run</button>
+  <button id="measure">Measure error</button>
+  <span class="note" id="status">Loading the shared Rust runtime…</span>
+</header>
+<main>
+  <section>
+    <canvas id="plot" width="1400" height="720"></canvas>
+    <div id="legend"></div>
+  </section>
+  <aside>
+    <h2>Run</h2>
+    <div class="row"><span>Simulated time</span><span id="t">–</span></div>
+    <div class="row"><span>Pace</span><span id="pace">–</span></div>
+    <div class="row"><span>Compute headroom</span><span id="headroom">–</span></div>
+    <div class="row"><span>Step</span><span id="step">–</span></div>
+    <h2>Published realtime bound</h2>
+    <div id="bound" class="note">–</div>
+    <h2>Measured in this browser</h2>
+    <div id="measured" class="note">Press Measure error: runs the detailed and realtime models for the profile's duration and compares them.</div>
+    <h2>About</h2>
+    <p class="note">The same system files and part files the desktop builder edits, compiled to WebAssembly from the shared Rust runtime. Authored parts (<code>.part</code>) are compiled in the browser. Simulation time advances independently of drawing.</p>
+  </aside>
+</main>
+<script type="module" src="system.js"></script>
+</body>
+</html>

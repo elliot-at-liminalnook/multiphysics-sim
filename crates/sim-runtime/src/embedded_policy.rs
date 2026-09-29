@@ -33,6 +33,9 @@ pub struct PolicyConfig {
     /// Online geometric references; executed through ordinary Rhai motor targets.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub step_reference: Option<crate::step_reference::StepReferenceConfig>,
+    /// Online steered contact-phase gait on the same command channels.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub steered_gait: Option<crate::steered_reference::SteeredReferenceConfig>,
     /// Bounded neural angle corrections applied after baseline Rhai feedback.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub neural_residual: Option<sim_domain_control::neural::Network>,
@@ -57,6 +60,12 @@ pub struct PolicyConfig {
     pub feedback_observations: Option<bool>,
 }
 fn is_false(value: &bool) -> bool { !value }
+impl PolicyConfig {
+    /// Whether motor references come from an online walking reference.
+    pub fn online_reference(&self) -> bool {
+        self.step_reference.is_some() || self.steered_gait.is_some()
+    }
+}
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ObservationSource {
@@ -76,7 +85,7 @@ pub(crate) struct SampledPolicy {
     imu_observer: crate::imu_observation::ImuObserver,
     body_feedback: Option<BodyFeedback>,
     point_feedback: Option<PointFeedback>,
-    step_reference: Option<crate::step_reference::OnlineStepReference>,
+    online: Option<crate::online_reference::OnlineReference>,
     contract: Contract,
     inputs: Vec<InputChannel>,
     values: Vec<f64>,
@@ -272,34 +281,35 @@ impl SampledPolicy {
         )
         .map_err(|e| e.to_string())?;
         policy.open(&contract).map_err(|e| e.to_string())?;
-        let step_reference = config
-            .step_reference
-            .clone()
-            .map(|c| {
-                crate::step_reference::OnlineStepReference::new(
-                    art,
-                    c,
-                    config
-                        .body_feedback
-                        .as_ref()
-                        .ok_or("stepping requires body feedback")?,
-                    config
-                        .point_feedback
-                        .as_ref()
-                        .ok_or("stepping requires point feedback")?,
-                    &program.inputs,
-                    &limits,
-                    period,
-                )
-            })
-            .transpose()?;
+        if config.step_reference.is_some() && config.steered_gait.is_some() {
+            return Err("configure one online reference: step_reference or steered_gait".into());
+        }
+        let bindings = || -> Result<_, String> {
+            Ok((
+                config.body_feedback.as_ref().ok_or("online walking references require body feedback")?,
+                config.point_feedback.as_ref().ok_or("online walking references require point feedback")?,
+            ))
+        };
+        let online = if let Some(c) = config.step_reference.clone() {
+            let (body, feet) = bindings()?;
+            Some(crate::online_reference::OnlineReference::Step(
+                crate::step_reference::OnlineStepReference::new(art, c, body, feet, &program.inputs, &limits, period)?,
+            ))
+        } else if let Some(c) = config.steered_gait.clone() {
+            let (body, feet) = bindings()?;
+            Some(crate::online_reference::OnlineReference::Steered(
+                crate::steered_reference::OnlineSteeredReference::new(art, c, body, feet, &program.inputs, &limits)?,
+            ))
+        } else {
+            None
+        };
         Ok(Self {
             policy: Box::new(policy),
             task_observer,
             imu_observer,
             body_feedback,
             point_feedback,
-            step_reference,
+            online,
             contract,
             inputs: program.inputs.clone(),
             values: program.inputs.iter().map(|i| i.initial).collect(),
@@ -361,7 +371,7 @@ impl SampledPolicy {
             return Err("policy reference dimension mismatch".into());
         }
         let online = self
-            .step_reference
+            .online
             .as_mut()
             .map(|r| {
                 sim_solve::profile::POLICY_REFERENCE
@@ -386,8 +396,8 @@ impl SampledPolicy {
             .map(|feedback| {
                 sim_solve::profile::POLICY_BODY_FEEDBACK.time(|| match &online {
                     Some(p) => {
-                        feedback.sample_pose_target(art, map, g, time, p.reference.body_world_m,
-                            [0.; 3], [p.reference.yaw_rad, 0.])
+                        feedback.sample_pose_target(art, map, g, time, p.body_world_m,
+                            p.body_velocity_m_s, p.yaw)
                     }
                     None => feedback.sample(art, map, g, reference_time, reference_advancing),
                 })
@@ -407,7 +417,7 @@ impl SampledPolicy {
                         g,
                         time,
                         &p.feedback_feet_world_m,
-                        &vec![1.; p.reference.feet_world_m.len()],
+                        &vec![1.; p.feedback_feet_world_m.len()],
                     ),
                     None => feedback.sample(art, map, g, reference_time),
                 })
@@ -494,8 +504,8 @@ impl SampledPolicy {
             self.telemetry["neural_residual"] = json!(self.contract.actuators.iter().zip(&corrections).map(|(c,v)| (c.name.clone(),*v)).collect::<BTreeMap<_,_>>());
             self.corrections = corrections;
         }
-        if let Some(p) = online {
-            self.telemetry["step_reference"] = json!({"reference":p.reference,"coordinates":p.coordinates,"maximum_marker_error_m":p.maximum_marker_error_m,"static_support":p.support,"feedback_feet_world_m":p.feedback_feet_world_m,"preload_extension_m":p.preload_extension_m,"measured_support_force_n":p.measured_support_force_n});
+        if let (Some(p), Some(r)) = (online, &self.online) {
+            self.telemetry[r.key()] = p.telemetry;
         }
         if let Some(sample) = body_feedback {
             self.telemetry["body_feedback"] = json!(sample);
@@ -543,13 +553,8 @@ impl SampledPolicy {
                 metadata["forecast_action_search"]["scope"]=json!("Speed-discovery planning maximizes predicted increase in XY distance from the reset origin using the evaluator's shared endpoint metric. Every candidate endpoint is transformed from the current reference-link frame to world coordinates. Request direction only chooses a subgradient at zero distance; zero requests and expired command leases return to baseline control. Existing actuator bounds and physical execution remain unchanged. A short-horizon forecast is not a full-episode speed or fall certificate.");
             }
         }
-        if let Some(r) = &self.step_reference {
-            let scope = if r.config().sequence.update_command_before_lift {
-                "Online support sequence and bounded CAD inverse kinematics. Non-reversing commands are reconsidered before lift-off after support qualification. Stops cancel unstarted swings and recenter without moving planted foot references; airborne swings finish landing. Translation reversals retain the committed transfer before selecting a new stance. Every reference still passes CAD geometry/placement checks. Ideal floor loads qualify lift, landing and recenter transitions."
-            } else {
-                "Online support sequence and bounded CAD inverse kinematics. Commands latch at foot-transfer boundaries; geometric references never mutate physical state. Ideal floor loads qualify lift/landing transitions."
-            };
-            metadata["step_reference"] = json!({"config":r.config(),"scope":scope});
+        if let Some(r) = &self.online {
+            metadata[r.key()] = r.metadata();
         }
         if let Some(observer) = &self.task_observer {
             metadata["task_observations"] = json!({"config":observer.config(),"coordinate_frame":"Body gravity direction, absolute COM velocity and angular velocity resolved in reference-link axes. Marker position and its time derivative relative to reference-link COM/axes. Floor force in world axes; link resultant excluding internal contacts, not force at marker."});

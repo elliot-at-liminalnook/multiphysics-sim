@@ -1,0 +1,34 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "electrical.diode",
+  "label": "Diode (smooth piecewise-linear)",
+  "kind": "generic",
+  "parameters": {
+    "forward_voltage": 0.7,
+    "junction_capacitance": 1e-10,
+    "off_conductance": 1e-9,
+    "on_resistance": 0.05,
+    "smoothing": 0.02
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -2.455207831486561e-8,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.900e-1 J → change -2.455e-8 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.5e-15, 4.8e-15, 5.5e-14 (1 → 0.125 ms); observed order -3.5"
+    }
+  ]
+}

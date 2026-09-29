@@ -54,6 +54,7 @@ fn recipe() -> Recipe {
             .map(|u| (u.into(), 1e6))
             .collect(),
             minimum_speedup: 1.1,
+            task_level: None,
         },
     }
 }

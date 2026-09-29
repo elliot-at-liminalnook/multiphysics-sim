@@ -1,0 +1,21 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "actuator.pwm_driver",
+  "label": "PWM voltage driver",
+  "kind": "generic",
+  "parameters": {
+    "dead_band": 0.0,
+    "resistance": 0.0,
+    "supply": 12.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) duty: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

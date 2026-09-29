@@ -1,0 +1,224 @@
+{
+  "version": 2,
+  "description": "Provisional HX-30HM internal motor model; baseline of rejected bench calibration, not an accepted fit.",
+  "shaft_coordinate": "motor_output_relative_to_housing",
+  "limitations": [
+    "Unloaded bench only; baseline and all current fitted candidates fail closed-loop accuracy acceptance.",
+    "No physical motor identities assigned to CAD joints. Per-unit deviations are intentionally absent.",
+    "Torque under load, electrical current, battery, thermal and external transmission behavior remain uncalibrated.",
+    "100 Hz is the modeled controller cadence; 2 ms transport latency is an explicit unmeasured estimate.",
+    "Encoder frame and phase bindings are provisional simulation choices, not measured hardware calibration.",
+    "Controller limit 1000/1000 is an experimental simulation setting, not a motor or power-supply rating.",
+    "Offline gait-search scenario: Kd=4096 and 2 ms delay are provisional, not commissioned hardware settings."
+  ],
+  "evidence": {
+    "baseline": {
+      "path": "examples/full-robot/measured-actuator-integration/voltage-conditioning/validation-baseline-closed-loop.json",
+      "sha256": "db0a235be561f6576a5ee2209ed660b7a80f7ed2d5c2f077ffa0410014eb502d",
+      "scope": "Rejected baseline own-feedback prediction; values remain estimates."
+    },
+    "registry": {
+      "path": "crates/sim-domain-robot/src/motor.rs",
+      "sha256": "431ff205d2256078fa557f54dd21298994e6c04336d8e421d03d75a8126056be",
+      "scope": "Explicit library defaults for otherwise absent physical parameters; not measurements."
+    },
+    "controller": {
+      "path": "crates/sim-domain-control/src/fixed_pd.rs",
+      "sha256": "5c21b5168eb953bf6754d63a7e9ba0f6fc1cf75cca378f241cd0610c431e294f",
+      "scope": "Shared integer law compiled to FPGA RTL and executed by Rust."
+    },
+    "cadence": {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/README.md",
+      "sha256": "646115f7e5ae33e40a3f45849f1914cb8065061fbd1dc60659cd82026c6277fa",
+      "scope": "100 Hz acquisition qualification; does not measure internal sensor age."
+    },
+    "feedback_assumptions": {
+      "path": "examples/full-robot/measured-actuator-integration/controller-integration/feedback-assumptions.json",
+      "sha256": "fad620aca6645f5bca40d52155b40ad4d7185b888d5811283aea4c85f3356a87",
+      "scope": "Provisional simulation coordinate choices; not physical encoder calibration"
+    },
+    "historical_gait": {
+      "path": "examples/full-robot/trusted-baseline/fastest573.input.json",
+      "sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6",
+      "scope": "Pinned initial joint references; no physical encoder calibration"
+    },
+    "controller_authority_comparison": {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/robot.authority.json",
+      "sha256": "5aece196161b205a33c18b8c4bb27f62ebe71ac8185bb56bef072133557f2d57",
+      "scope": "Simulation controller-authority comparison only; not hardware qualification or calibration."
+    },
+    "offline_tracking": {
+      "path": "examples/full-robot/measured-actuator-integration/controller-tracking-full-drive-simulation/REVIEW.json",
+      "sha256": "014da1701a18c1f4bd0ea77193c630d2f6fb849de967b86da5dac6e2a2cbc2a1",
+      "scope": "Simulation-selected full-drive gains and assumed 2 ms delivery delay; no physical calibration or hardware commissioning."
+    }
+  },
+  "motor": {
+    "resistance": {
+      "value": 3.6999999999999997,
+      "unit": "\u03a9",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "torque_constant": {
+      "value": 0.009734075474443412,
+      "unit": "N\u00b7m/A",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "inductance": {
+      "value": 0.00148,
+      "unit": "H",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "back_emf_constant": {
+      "value": 0.009734075474443412,
+      "unit": "V\u00b7s/rad",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "no_load_current": {
+      "value": 0.1,
+      "unit": "A",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "loss_speed_scale": {
+      "value": 5,
+      "unit": "rad/s",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "registry"
+    },
+    "rotor_inertia": {
+      "value": 2.2324546035565207e-08,
+      "unit": "kg\u00b7m\u00b2",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "ratio": {
+      "value": 200,
+      "unit": "1",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "efficiency": {
+      "value": 0.5037278591966505,
+      "unit": "1",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "backlash": {
+      "value": 0,
+      "unit": "rad",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "gear_stiffness": {
+      "value": 50,
+      "unit": "N\u00b7m/rad",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "gear_damping": {
+      "value": 0.1,
+      "unit": "N\u00b7m\u00b7s/rad",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "gear_inertia": {
+      "value": 2e-05,
+      "unit": "kg\u00b7m\u00b2",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "gear_friction": {
+      "value": 0.025,
+      "unit": "N\u00b7m",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "temp_coeff": {
+      "value": 0.0039,
+      "unit": "1/K",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "derating": {
+      "value": 0,
+      "unit": "1/K",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "reference": {
+      "value": 298.15,
+      "unit": "K",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    }
+  },
+  "driver": {
+    "on_resistance": {
+      "value": 0.05,
+      "unit": "\u03a9",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    },
+    "current_limit": {
+      "value": 3,
+      "unit": "A",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "baseline"
+    }
+  },
+  "controller": {
+    "gains": {
+      "kp_q8": 4096,
+      "kd_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 1000
+    },
+    "period": {
+      "value": 0.01,
+      "unit": "s",
+      "provenance": "measured",
+      "uncertainty": null,
+      "evidence": "cadence"
+    },
+    "latency": {
+      "value": 0.002,
+      "unit": "s",
+      "provenance": "estimated",
+      "uncertainty": null,
+      "evidence": "offline_tracking"
+    },
+    "encoder_quantum": {
+      "value": 0.0015339807878856412,
+      "unit": "rad",
+      "provenance": "derived",
+      "uncertainty": null,
+      "evidence": "controller"
+    },
+    "evidence": "offline_tracking",
+    "implementation_blake3": "bc7964115b34900144cc48eb26eddc8ae1c237bd500444d05c9cef69b0ea633e"
+  }
+}

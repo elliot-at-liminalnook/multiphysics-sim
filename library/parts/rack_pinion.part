@@ -1,0 +1,17 @@
+part rack_pinion "Rack and pinion"
+category Transmissions
+summary "A spur gear rolling on a straight toothed bar: rotation to straight-line travel, fast and efficient."
+explain "The pinion's pitch circle rolls without slipping on the rack's pitch line, so rack travel = r·θ exactly and the tooth force F gives the pinion torque r·F. The model enforces the constraint with a force multiplier (like the ideal gear) and a small drift correction."
+tradeoffs "Long travel at speed with high efficiency (rolling contact), easy to extend (join racks). But it back-drives (no holding without a brake), has some backlash, and gives little force multiplication compared with a lead screw. Choose it over a belt for stiffness and force, over a screw for speed and length."
+limits "Ideal: no friction, backlash or tooth compliance (add translational.damper, part.hard_stop_linear, translational.spring as needed)."
+pairs bridge.brushed_motor part.stepper_motor translational.mass rotational.inertia part.hard_stop_linear sensor.linear_encoder
+port pinion rotational
+port rack translational
+param radius m ~ 0.01 "Pinion pitch radius (module × teeth / 2)"
+param correction 1/s = 10 "Constraint drift correction (numerical)"
+state force Force = 0
+eq pinion.w*radius - rack.v + correction*(pinion.phi*radius - rack.s) = 0
+flow pinion = radius*force
+flow rack = -force
+derive "travel per revolution" = 6.283185307*radius m
+derive "force per unit torque" = 1/radius 1/m

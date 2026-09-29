@@ -1,0 +1,15 @@
+# Lesson categories, in the order the Learn screen lists them. A lesson
+# names one in its front matter (`category: id`); lessons without one are
+# listed last under "Other lessons".
+- id: motors-and-drives
+  title: Motors and drives
+  summary: How electric motors make torque, heat up, brake and are driven; batteries, wiring and driver boards.
+- id: mechanisms
+  title: Mechanisms and motion
+  summary: Inertia, gears, friction, springs, resonance, gravity, play, linear drives and traction.
+- id: sensing-and-control
+  title: Sensing, control and measurement
+  summary: Encoders, IMUs, control loops and their timing, current control, and checking a model against measurements.
+- id: printed-joints
+  title: Joining 3D-printed parts
+  summary: Locating, joining and fastening printed parts so they assemble easily and carry load.

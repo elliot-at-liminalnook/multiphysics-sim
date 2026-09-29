@@ -45,9 +45,22 @@ pub enum RuntimeError {
     Controller { element: String, time: f64, message: String },
     #[error("`{element}` is not an external control element")]
     NotExternal { element: String },
+    #[error("unsupported: {0}")]
+    Unsupported(String),
 }
 
 impl Runtime {
+    /// Opt into snapping each island's clock onto its step grid (see
+    /// `Simulation::snap_to_grid`). Used where scheduled switching events must
+    /// land on step ends; off by default to keep existing runs bit-identical.
+    pub fn set_grid_snapping(&mut self, on: bool) {
+        for island in &mut self.islands {
+            island.snap_to_grid = on;
+        }
+    }
+    pub fn grid_snapping(&self) -> bool {
+        self.islands.first().is_some_and(|i| i.snap_to_grid)
+    }
     pub fn new(mut model: ModelWorld, registry: &BehaviorRegistry, integrator: Integrator) -> Result<Self, RuntimeError> {
         let islands = compile_islands(&mut model, registry)?;
         let islands = islands
@@ -139,6 +152,14 @@ impl Runtime {
     /// Advance by `duration` in steps of `h`, sampling the committed values
     /// of `ids` every `every` steps into a [`Trace`] (energy included).
     pub fn advance_recording(&mut self, duration: f64, h: f64, every: usize, ids: &[StateId]) -> Result<Trace, RuntimeError> {
+        if every == 0 {
+            return Err(RuntimeError::Unsupported("recording interval must be at least one step".into()));
+        }
+        // This loop steps every island with the one shared `h`; silently
+        // coarsening a multirate island would change the physics.
+        if self.island_steps.iter().any(Option::is_some) {
+            return Err(RuntimeError::Unsupported("advance_recording does not honour per-island step sizes; use advance".into()));
+        }
         let mut trace = Trace::default();
         let steps = (duration / h).round().max(1.0) as usize;
         let end = self.time + duration;

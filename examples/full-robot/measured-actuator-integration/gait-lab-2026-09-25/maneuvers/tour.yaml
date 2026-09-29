@@ -1,0 +1,16 @@
+version: 1
+name: tour
+notes: |
+  Forward, arc left, turn right in place, sideways left, backward, stop.
+  Each change is rate limited and reaches the body one commitment horizon
+  (about 0.7 of a cycle) after it is commanded.
+limits: {forward_m_s: 0.3, lateral_m_s: 0.25, yaw_deg_s: 25, forward_m_s2: 0.15, lateral_m_s2: 0.15, yaw_deg_s2: 20}
+commands:
+  - {at_s: 0}
+  - {at_s: 1, forward_m_s: 0.25}
+  - {at_s: 7, forward_m_s: 0.15, yaw_deg_s: 12}
+  - {at_s: 13, yaw_deg_s: -20}
+  - {at_s: 19, lateral_m_s: 0.15}
+  - {at_s: 25, forward_m_s: -0.15}
+  - {at_s: 31}
+duration_s: 35

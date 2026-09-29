@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="IBM Plex Sans">
+  <rect x="1" y="1" width="758" height="318" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">A battery is an ideal source behind a small resistor</text>
+  <!-- pack outline -->
+  <rect x="60" y="70" width="250" height="190" rx="12" fill="none" stroke="#99a6b5" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="185" y="92" font-size="12.5" fill="#99a6b5" text-anchor="middle">inside the pack</text>
+  <!-- source -->
+  <circle cx="120" cy="170" r="30" fill="#1d2630" stroke="#4dd4bf" stroke-width="2.5"/>
+  <text x="120" y="166" font-size="14" fill="#4dd4bf" text-anchor="middle">+</text><text x="120" y="186" font-size="14" fill="#4dd4bf" text-anchor="middle">E</text>
+  <!-- resistor -->
+  <line x1="120" y1="140" x2="120" y2="110" stroke="#e6ebf1" stroke-width="2"/>
+  <line x1="120" y1="110" x2="170" y2="110" stroke="#e6ebf1" stroke-width="2"/>
+  <polyline points="170,110 180,98 195,122 210,98 225,122 240,98 250,110" fill="none" stroke="#de9454" stroke-width="2.5"/>
+  <text x="210" y="84" font-size="13" fill="#de9454" text-anchor="middle">R_int</text>
+  <line x1="250" y1="110" x2="360" y2="110" stroke="#e6ebf1" stroke-width="2"/>
+  <line x1="120" y1="200" x2="120" y2="230" stroke="#e6ebf1" stroke-width="2"/>
+  <line x1="120" y1="230" x2="360" y2="230" stroke="#e6ebf1" stroke-width="2"/>
+  <circle cx="360" cy="110" r="5" fill="#e6ebf1"/><circle cx="360" cy="230" r="5" fill="#e6ebf1"/>
+  <text x="372" y="115" font-size="13" fill="#e6ebf1">terminal +</text><text x="372" y="235" font-size="13" fill="#e6ebf1">terminal −</text>
+  <!-- current arrow -->
+  <line x1="270" y1="126" x2="330" y2="126" stroke="#f5d24b" stroke-width="2"/><path d="M336,126 l-9,-5 l0,10 z" fill="#f5d24b"/>
+  <text x="300" y="146" font-size="12.5" fill="#f5d24b" text-anchor="middle">I</text>
+  <!-- formula box -->
+  <rect x="480" y="80" width="256" height="160" rx="8" fill="#1a2129" stroke="#2e353f"/>
+  <text x="608" y="118" font-size="17" fill="#e6ebf1" text-anchor="middle">V = E − I·R_int</text>
+  <text x="608" y="156" font-size="12.5" fill="#99a6b5" text-anchor="middle">at rest (I ≈ 0): V ≈ E</text>
+  <text x="608" y="178" font-size="12.5" fill="#99a6b5" text-anchor="middle">at a motor start (I large):</text>
+  <text x="608" y="196" font-size="12.5" fill="#99a6b5" text-anchor="middle">V drops by I·R_int</text>
+  <text x="24" y="296" font-size="12.5" fill="#99a6b5">R_int grows as a pack ages, gets cold or runs low; small packs have more of it than big ones.</text>
+</svg>

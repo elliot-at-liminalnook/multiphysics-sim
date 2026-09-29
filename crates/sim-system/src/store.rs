@@ -136,6 +136,9 @@ impl SystemStore {
         }
         let mut after = before.clone();
         let outcomes = apply(&mut after, registry, commands)?;
+        if crate::display_overlap::needs_check(commands) {
+            crate::display_overlap::check(&before, &after, registry)?.require_allowed()?;
+        }
         write_atomic(&self.path, &serde_json::to_vec_pretty(&after)?)?;
         let mut journal = self.read_journal();
         journal.undo.push(Entry { label: label.into(), document: before, expects: after.content_hash() });

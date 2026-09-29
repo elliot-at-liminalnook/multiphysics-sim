@@ -1,0 +1,19 @@
+part timing_belt "Timing belt drive (GT2)"
+category Transmissions
+summary "A toothed belt from a pulley to a carriage: long, light, fast linear motion with some stretch."
+explain "The pulley winds the belt at r·θ; the carriage sits at x. The belt between them stretches: F = k·(r·θ − x) + c·(r·ω − v), which the pulley feels as torque r·F. Stiffness falls with free belt length (k ≈ EA/L), so a long axis is springy: that springiness plus the carriage mass sets the axis's resonance and limits how hard you can accelerate without ringing."
+tradeoffs "Cheap, quiet, fast, long travel (printers, plotters, pick-and-place). Lower stiffness and force than a screw or rack; it back-drives freely. Wider belts and shorter spans are stiffer; steel-cord belts stretch less."
+limits "Single lumped belt span (no tension change along the loop, no tooth skipping), linear stiffness, pulley assumed on a fixed frame."
+pairs part.stepper_motor bridge.brushed_motor translational.mass part.hard_stop_linear sensor.linear_encoder part.limit_switch
+port pulley rotational
+port carriage translational
+param radius m ~ 0.00637 "Pulley pitch radius (GT2 20-tooth: 6.37 mm)"
+param stiffness N/m ~ 200000 "Belt span stiffness EA/L"
+param damping N·s/m = 50 "Belt internal damping"
+let stretch = radius*pulley.phi - carriage.s
+let tension = stiffness*stretch + damping*(radius*pulley.w - carriage.v)
+flow pulley = radius*tension
+flow carriage = -tension
+energy 0.5*stiffness*stretch^2
+derive "travel per revolution" = 6.283185307*radius m
+derive "stiffness felt at the pulley" = stiffness*radius^2 N·m/rad

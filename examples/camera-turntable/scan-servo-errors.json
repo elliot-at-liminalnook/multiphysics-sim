@@ -1,0 +1,53 @@
+{
+ "schema": "sim.scan/1",
+ "description": "Same scan with deliberate servo-angle errors (0.15\u00b0 random + 0.1\u00b0 once-per-turn), to test image-based angle refinement.",
+ "system": "turntable.system.json",
+ "rig": "cad/camera-rig.json",
+ "scene": "scene/room.scene.json",
+ "camera": {
+  "preset": "camera_module_3_wide",
+  "width": 1152
+ },
+ "true_angle": "camera_angle.shaft.angle",
+ "reported": {
+  "observable": "servo_angle.shaft.angle",
+  "ratio_from": {
+   "instance": "belt",
+   "numerator": "radius_driven",
+   "denominator": "radius_driver"
+  },
+  "quantum_from": {
+   "instance": "controller",
+   "parameter": "encoder_quantum"
+  }
+ },
+ "schedule_from": "schedule",
+ "shots": {
+  "count": 36,
+  "mode": "dwell",
+  "delay_after_move_s": 0.3
+ },
+ "render": {
+  "supersample": 2,
+  "time_samples": 4
+ },
+ "reconstruct": {
+  "image_width": 576,
+  "neighbors_deg": 25.0,
+  "mvs": {
+   "step": 3,
+   "half_window": 3,
+   "depths": 128,
+   "z_min": 0.25,
+   "z_max": 8.0,
+   "min_score": 0.85,
+   "min_texture": 0.004,
+   "min_views": 2
+  }
+ },
+ "test_errors": {
+  "random_sigma_deg": 0.15,
+  "sinusoid_amplitude_deg": 0.1,
+  "seed": 7
+ }
+}

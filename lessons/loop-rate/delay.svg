@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="IBM Plex Sans">
+  <rect x="1" y="1" width="758" height="328" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">A sampled controller acts on old news</text>
+  <!-- axis -->
+  <line x1="60" y1="250" x2="700" y2="250" stroke="#99a6b5" stroke-width="1.2"/>
+  <text x="700" y="270" font-size="12" fill="#99a6b5" text-anchor="end">time</text>
+  <!-- true signal (sine) -->
+  <path d="M60,160 C120,80 180,80 240,160 S360,240 420,160 S540,80 600,160 S660,210 700,215" fill="none" stroke="#8fb3e8" stroke-width="2.5"/>
+  <text x="120" y="76" font-size="12.5" fill="#8fb3e8">the joint's real error</text>
+  <!-- held command: steps sampled every 60px, delayed by 30px latency -->
+  <polyline fill="none" stroke="#de9454" stroke-width="2.5" points="90,160 150,160 150,95 210,95 210,110 270,110 270,178 330,178 330,232 390,232 390,178 450,178 450,110 510,110 510,95 570,95 570,160 630,160 630,213 700,213"/>
+  <text x="520" y="80" font-size="12.5" fill="#de9454">the command it acts on: sampled, held, late</text>
+  <!-- annotations -->
+  <line x1="60" y1="290" x2="120" y2="290" stroke="#4dd4bf" stroke-width="2"/><line x1="60" y1="284" x2="60" y2="296" stroke="#4dd4bf" stroke-width="2"/><line x1="120" y1="284" x2="120" y2="296" stroke="#4dd4bf" stroke-width="2"/>
+  <text x="90" y="312" font-size="12" fill="#4dd4bf" text-anchor="middle">sample period T</text>
+  <line x1="210" y1="290" x2="240" y2="290" stroke="#f5d24b" stroke-width="2"/><line x1="210" y1="284" x2="210" y2="296" stroke="#f5d24b" stroke-width="2"/><line x1="240" y1="284" x2="240" y2="296" stroke="#f5d24b" stroke-width="2"/>
+  <text x="225" y="312" font-size="12" fill="#f5d24b" text-anchor="middle">latency</text>
+  <text x="560" y="300" font-size="13" fill="#e6ebf1">average delay ≈ T/2 + latency</text>
+</svg>

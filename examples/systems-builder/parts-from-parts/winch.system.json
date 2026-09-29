@@ -1,0 +1,655 @@
+{
+  "schema": "sim.system/1",
+  "title": "Gearmotor winch",
+  "revision": 2,
+  "root": "root",
+  "definitions": {
+    "dc_motor_12v": {
+      "label": "DC motor 12 V",
+      "description": "Brushed motor with its rotor inertia and mount (case grounded inside). Exposes winding resistance and motor constant k (= k_t = k_e).",
+      "interface": "motor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "p": {
+          "label": "Supply +"
+        },
+        "shaft": {
+          "label": "Output shaft"
+        }
+      },
+      "parameters": {
+        "k": {
+          "unit": "N·m/A",
+          "default": 0.012,
+          "description": "Motor constant k = k_t = k_e"
+        },
+        "resistance": {
+          "unit": "Ω",
+          "default": 2.0,
+          "description": "Winding resistance"
+        }
+      },
+      "instances": {
+        "mount": {
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.008,
+              -0.018,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size); not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.022,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "winding": {
+          "label": "Brushed motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "parameter": "k"
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size); not a measured part."
+              }
+            },
+            "resistance": {
+              "parameter": "resistance"
+            },
+            "torque_constant": {
+              "parameter": "k"
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "winding",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "winding",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "winding",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "winding",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "boundary": "shaft"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/worm_gearmotor_30.definition.json",
+        "content_hash": "e4eedfe64580585566885bee0d1abf1de8b26ba446f60873d43abb9b540b9c17"
+      },
+      "version": 1
+    },
+    "root": {
+      "label": "Gearmotor winch",
+      "instances": {
+        "drum": {
+          "label": "Drum and 2 kg load",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00021,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "2 kg on a Ø20 drum: m·r² plus wheel"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0185,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          }
+        },
+        "gearmotor": {
+          "label": "Gearmotor",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "worm_gearmotor_30"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "supply": {
+          "label": "12 V supply",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.switched_voltage_source"
+          },
+          "parameters": {
+            "off_at": {
+              "value": 1.2
+            },
+            "voltage": {
+              "value": 12.0
+            }
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.0,
+              0.04
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "weight": {
+          "label": "2 kg on the drum",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.load_torque"
+          },
+          "parameters": {
+            "torque": {
+              "value": -0.19613,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "−m·g·r"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.01,
+              -0.012,
+              0.008
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "gearmotor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "gearmotor",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "gearmotor",
+              "port": "output"
+            },
+            {
+              "instance": "drum",
+              "port": "shaft"
+            },
+            {
+              "instance": "weight",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    },
+    "worm_gearbox_30": {
+      "label": "Worm gearbox 30:1",
+      "description": "Single-start steel worm on a 30-tooth bronze wheel (module 0.5, worm pitch Ø8). Self-locking: the load cannot drive the worm. Forward efficiency ≈ 45 % at μ = 0.07.",
+      "interface": "gearbox.rotational",
+      "ports": {
+        "input": {
+          "label": "Worm shaft"
+        },
+        "output": {
+          "label": "Wheel shaft"
+        }
+      },
+      "instances": {
+        "coupling": {
+          "label": "Shaft coupling",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Small beam coupling, 5 mm bore: catalogue range 20–60 N·m/rad."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.016,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.005,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.25,
+              0.25,
+              0.27
+            ]
+          }
+        },
+        "mesh": {
+          "label": "Worm-wheel mesh",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.worm_gear"
+          },
+          "parameters": {
+            "friction": {
+              "value": 0.07,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Lubricated steel on bronze at low sliding speed (Shigley Fig. 15-11 range 0.02–0.1); not measured."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "worm": {
+          "label": "Worm",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 4e-8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Steel cylinder Ø8 × 18 mm: ½·m·r² with m ≈ 7 g."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0045,
+              "length": 0.026
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "worm"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "input shaft",
+          "terminals": [
+            {
+              "boundary": "input"
+            },
+            {
+              "instance": "coupling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "worm shaft",
+          "terminals": [
+            {
+              "instance": "coupling",
+              "port": "b"
+            },
+            {
+              "instance": "worm",
+              "port": "shaft"
+            },
+            {
+              "instance": "mesh",
+              "port": "worm"
+            }
+          ]
+        },
+        {
+          "label": "wheel shaft",
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "mesh",
+              "port": "wheel"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/worm_gearmotor_30.definition.json",
+        "content_hash": "e4eedfe64580585566885bee0d1abf1de8b26ba446f60873d43abb9b540b9c17"
+      },
+      "version": 1
+    },
+    "worm_gearmotor_30": {
+      "label": "Worm gearmotor 30:1",
+      "description": "DC motor 12 V on a self-locking 30:1 worm gearbox.",
+      "interface": "gearmotor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "output": {
+          "label": "Output shaft"
+        },
+        "p": {
+          "label": "Supply +"
+        }
+      },
+      "instances": {
+        "gearbox": {
+          "label": "Gearbox",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "worm_gearbox_30"
+          }
+        },
+        "motor": {
+          "label": "Motor",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "dc_motor_12v"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gearbox",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "gearbox",
+              "port": "output"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/worm_gearmotor_30.definition.json",
+        "content_hash": "e4eedfe64580585566885bee0d1abf1de8b26ba446f60873d43abb9b540b9c17"
+      },
+      "version": 1
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0005,
+    "rationale": "Scheduled supply edge and a self-locking worm (stiff regularised friction): backward Euler, 0.5 ms as in the worm-drive winch."
+  },
+  "realtime": {
+    "interval": 0.002,
+    "integrator": "backward_euler",
+    "observe": [
+      "drum.shaft.speed",
+      "drum.shaft.angle"
+    ],
+    "duration": 2.0,
+    "bound": 0.05,
+    "notes": "Realtime models: motor winding inductance dropped (current algebraic), friction smoothing 0.05 rad/s; 2 ms step.",
+    "measured": {
+      "content_hash": "2b4e0cd584d606209fdaa7e654def054ac313cc6b1ce36a605496d0525f1c631",
+      "errors": {
+        "drum.shaft.angle": 0.000343807242306323,
+        "drum.shaft.speed": 0.007185545911988576
+      },
+      "detailed_speed": 3.8163022164835216,
+      "realtime_speed": 23.014848489800162,
+      "host": "x86_64 macos (release build)"
+    }
+  }
+}

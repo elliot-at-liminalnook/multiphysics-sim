@@ -289,9 +289,9 @@ impl EmbeddedSession {
             .and_then(|m| m.target_trajectory.clone())
             .map(sim_domain_control::trajectory::Trajectory::new)
             .transpose()?;
-        if config.policy.as_ref().is_some_and(|p|p.step_reference.is_some())
+        if config.policy.as_ref().is_some_and(|p|p.online_reference())
             && (trajectory.is_some()||config.motion_gate.is_some()) {
-            return Err("online step references cannot be combined with an offline trajectory or motion gate".into());
+            return Err("online walking references cannot be combined with an offline trajectory or motion gate".into());
         }
         if let Some(trajectory) = &trajectory {
             let servos = config
@@ -1403,11 +1403,11 @@ impl EmbeddedSession {
             if let Some(reference) = frame.get("servo_targets_rad").cloned() {
                 frame["reference_targets_rad"] = reference;
             }
-            if let Some(reference)=p.telemetry().get("step_reference").and_then(|s|s.get("coordinates")) {
+            if let Some(reference)=["step_reference","steered_gait"].iter().find_map(|k|p.telemetry().get(*k)).and_then(|s|s.get("coordinates")) {
                 frame["reference_targets_rad"]=reference.clone();
             }
             if frame.get("reference_targets_rad").is_none()
-                && config.policy.as_ref().is_some_and(|p| p.step_reference.is_some()) {
+                && config.policy.as_ref().is_some_and(|p| p.online_reference()) {
                 frame["reference_targets_rad"]=json!(config.motors.as_ref().unwrap().servos.as_ref().unwrap().iter().map(|s|s.target_rad).collect::<Vec<_>>());
             }
             frame["servo_targets_rad"] = json!(p.targets);

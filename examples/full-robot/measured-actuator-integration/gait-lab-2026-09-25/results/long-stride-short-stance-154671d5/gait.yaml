@@ -1,0 +1,39 @@
+version: 1
+name: long-stride-short-stance
+notes: |
+  Idea and what changed. Keep a short hypothesis here.
+cycle:
+  period_s: 1.27
+  travel_m: 0.22
+body:
+  height_offset_m: -0.023
+  controls:
+  - {}
+  - ry_deg: 2.0
+  - {}
+  - ry_deg: -2.0
+leg_defaults:
+  stance: 0.63
+  swing_height_m: 0.026
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.554
+  +Y:
+    phase: 0.094
+  -X:
+    phase: 0.453
+    swing_height_m: 0.03
+    offset_m:
+    - 0.01
+    - 0.0
+    - 0.0
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 9.2
+  governor_speed_rad_s: 2.46
+tune:
+  cycle.travel_m:
+  - 0.18
+  - 0.26

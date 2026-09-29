@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" font-family="IBM Plex Sans">
+  <!-- Torque–speed line of the lesson motor: k = 0.012 N·m/A, R = 2 Ω, V = 12 V.
+       x = 80 + 0.58·ω (rad/s), torque y = 360 − 4000·τ (N·m), power y = 360 − 16·P (W). -->
+  <rect x="1" y="1" width="718" height="438" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <!-- grid -->
+  <g stroke="#232b35" stroke-width="1">
+    <line x1="80" y1="280" x2="660" y2="280"/><line x1="80" y1="200" x2="660" y2="200"/>
+    <line x1="80" y1="120" x2="660" y2="120"/><line x1="80" y1="40" x2="660" y2="40"/>
+    <line x1="196" y1="40" x2="196" y2="360"/><line x1="312" y1="40" x2="312" y2="360"/>
+    <line x1="428" y1="40" x2="428" y2="360"/><line x1="544" y1="40" x2="544" y2="360"/>
+  </g>
+  <!-- axes -->
+  <g stroke="#99a6b5" stroke-width="1.5">
+    <line x1="80" y1="360" x2="664" y2="360"/><line x1="80" y1="360" x2="80" y2="36"/>
+    <line x1="660" y1="360" x2="660" y2="36" stroke-dasharray="3 4"/>
+  </g>
+  <g fill="#99a6b5" font-size="12.5">
+    <text x="80" y="380" text-anchor="middle">0</text><text x="196" y="380" text-anchor="middle">200</text>
+    <text x="312" y="380" text-anchor="middle">400</text><text x="428" y="380" text-anchor="middle">600</text>
+    <text x="544" y="380" text-anchor="middle">800</text><text x="660" y="380" text-anchor="middle">1000</text>
+    <text x="370" y="404" text-anchor="middle" font-size="14" fill="#e6ebf1">speed ω (rad/s)</text>
+    <text x="72" y="364" text-anchor="end">0</text><text x="72" y="284" text-anchor="end">0.02</text>
+    <text x="72" y="204" text-anchor="end">0.04</text><text x="72" y="124" text-anchor="end">0.06</text>
+    <text x="72" y="44" text-anchor="end">0.08</text>
+    <text x="24" y="200" text-anchor="middle" font-size="14" fill="#4dd4bf" transform="rotate(-90 24 200)">motor torque τ (N·m)</text>
+    <text x="668" y="284" fill="#de9454">5 W</text><text x="668" y="204" fill="#de9454">10 W</text>
+    <text x="668" y="124" fill="#de9454">15 W</text><text x="668" y="44" fill="#de9454">20 W</text>
+  </g>
+  <!-- power τ·ω (dashed, right axis) -->
+  <path d="M80,360 L138,256.3 L196,175.7 L254,118.1 L312,83.5 L370,72 L428,83.5 L486,118.1 L544,175.7 L602,256.3 L660,360" fill="none" stroke="#de9454" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="420" y="58" text-anchor="middle" font-size="13" fill="#de9454">power out τ·ω (right axis): peak at ω₀/2</text>
+  <!-- load lines -->
+  <g stroke="#8caaff" stroke-width="1.5" stroke-dasharray="4 4">
+    <line x1="80" y1="280" x2="498.8" y2="280"/><line x1="80" y1="200" x2="337.5" y2="200"/>
+  </g>
+  <text x="90" y="274" font-size="12.5" fill="#8caaff">load 0.02 N·m</text>
+  <text x="90" y="194" font-size="12.5" fill="#8caaff">load 0.04 N·m</text>
+  <!-- the torque–speed line -->
+  <line x1="80" y1="72" x2="660" y2="360" stroke="#4dd4bf" stroke-width="4" stroke-linecap="round"/>
+  <!-- stall and no-load -->
+  <circle cx="80" cy="72" r="6" fill="#4dd4bf"/>
+  <text x="96" y="62" font-size="13.5" fill="#e6ebf1">stall τ₀ = k·V/R</text>
+  <circle cx="660" cy="360" r="6" fill="#4dd4bf"/>
+  <text x="706" y="402" font-size="13.5" fill="#e6ebf1" text-anchor="end">↑ no load ω₀ = V/k</text>
+  <!-- operating points and the move between them -->
+  <circle cx="498.8" cy="280" r="7" fill="#141a21" stroke="#e6ebf1" stroke-width="2.5"/>
+  <text x="510" y="275" font-size="14" font-weight="600" fill="#e6ebf1">A  722 rad/s</text>
+  <circle cx="337.5" cy="200" r="7" fill="#141a21" stroke="#e6ebf1" stroke-width="2.5"/>
+  <text x="349" y="195" font-size="14" font-weight="600" fill="#e6ebf1">B  444 rad/s</text>
+  <path d="M488,268 Q430,232 352,208" fill="none" stroke="#e6ebf1" stroke-width="2"/>
+  <path d="M352,208 l12,-1 l-5,9 z" fill="#e6ebf1"/>
+  <text x="360" y="318" font-size="12.5" fill="#99a6b5">load doubles: the motor</text>
+  <text x="360" y="333" font-size="12.5" fill="#99a6b5">slides up the line from A to B</text>
+</svg>

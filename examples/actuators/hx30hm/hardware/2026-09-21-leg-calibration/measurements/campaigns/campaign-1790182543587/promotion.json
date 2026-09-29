@@ -1,0 +1,265 @@
+{
+  "actuators": [
+    {
+      "axis": 1,
+      "derived": {
+        "full_drive_speed_rad_s": 5.113103250915045,
+        "measured_acceleration_rad_s2": 21.87430614184184,
+        "no_load_output_speed_rad_s": 5.38137310634554,
+        "top_speed_reached_in_travel_rad_s": 2.3776702212227434
+      },
+      "measured": [
+        {
+          "name": "speed_gain",
+          "source": "D steps (slope between drive levels)",
+          "uncertainty": 183.0335682122033,
+          "unit": "counts/s per duty",
+          "value": 3508.109846514403
+        },
+        {
+          "name": "time_constant",
+          "source": "D steps (63% rise)",
+          "uncertainty": 0.0040774722519580885,
+          "unit": "s",
+          "value": 0.05208767853132468
+        },
+        {
+          "name": "moving_friction",
+          "source": "A sweeps (half up/down difference)",
+          "uncertainty": 0.002516888680763674,
+          "unit": "duty",
+          "value": 0.04985156206956912
+        },
+        {
+          "name": "breakaway",
+          "source": "D ramps (first 3-count motion)",
+          "uncertainty": 0.0050000000000000044,
+          "unit": "duty",
+          "value": 0.07200000000000005
+        },
+        {
+          "name": "servo_damping_ratio",
+          "source": "F position-mode steps",
+          "uncertainty": 0.25,
+          "unit": "1",
+          "value": 1.0
+        },
+        {
+          "name": "servo_natural_frequency",
+          "source": "F position-mode steps",
+          "uncertainty": 0.4658337482643838,
+          "unit": "rad/s",
+          "value": 1.8633349930575351
+        },
+        {
+          "name": "braking_decreasing",
+          "source": "C coast-down",
+          "uncertainty": 416.6666666666667,
+          "unit": "counts/s²",
+          "value": 1666.6666666666667
+        },
+        {
+          "name": "braking_increasing",
+          "source": "C coast-down",
+          "uncertainty": 312.5,
+          "unit": "counts/s²",
+          "value": 1250.0
+        },
+        {
+          "name": "top_speed_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 150.0,
+          "unit": "counts/s",
+          "value": 1549.9999999999998
+        },
+        {
+          "name": "top_speed_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 124.99999999999989,
+          "unit": "counts/s",
+          "value": 1575.0
+        },
+        {
+          "name": "acceleration_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 760.3778629384315,
+          "unit": "counts/s²",
+          "value": 14259.830575839373
+        },
+        {
+          "name": "acceleration_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 1779.3952676766194,
+          "unit": "counts/s²",
+          "value": 16288.747545603717
+        },
+        {
+          "name": "gravity_amplitude",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.0065230147532386075,
+          "unit": "duty",
+          "value": 0.06523014753238607
+        },
+        {
+          "name": "gravity_zero",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 64.0,
+          "unit": "counts",
+          "value": 824.4859288829279
+        },
+        {
+          "name": "constant_load",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.005,
+          "unit": "duty",
+          "value": 0.03464802292093131
+        }
+      ],
+      "prior_estimates": {
+        "backlash_rad": null,
+        "gear_friction_n_m": null,
+        "latency_s": null,
+        "no_load_speed_rad_s": null
+      },
+      "provenance": "Hardware campaign on Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending. (/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/campaigns/campaign-1790182543587)"
+    },
+    {
+      "axis": 3,
+      "derived": {
+        "full_drive_speed_rad_s": 4.425169499828282,
+        "measured_acceleration_rad_s2": 21.23682537227226,
+        "no_load_output_speed_rad_s": 4.692926076137668,
+        "top_speed_reached_in_travel_rad_s": 2.60776733940559
+      },
+      "measured": [
+        {
+          "name": "speed_gain",
+          "source": "D steps (slope between drive levels)",
+          "uncertainty": 149.7180562992958,
+          "unit": "counts/s per duty",
+          "value": 3059.3121590565365
+        },
+        {
+          "name": "time_constant",
+          "source": "D steps (63% rise)",
+          "uncertainty": 0.0025621671721010597,
+          "unit": "s",
+          "value": 0.04360149271190527
+        },
+        {
+          "name": "moving_friction",
+          "source": "A sweeps (half up/down difference)",
+          "uncertainty": 0.002779261938527778,
+          "unit": "duty",
+          "value": 0.05705535778005538
+        },
+        {
+          "name": "breakaway",
+          "source": "D ramps (first 3-count motion)",
+          "uncertainty": 0.0036500000000000026,
+          "unit": "duty",
+          "value": 0.07400000000000005
+        },
+        {
+          "name": "servo_damping_ratio",
+          "source": "F position-mode steps",
+          "uncertainty": 0.25,
+          "unit": "1",
+          "value": 1.0
+        },
+        {
+          "name": "servo_natural_frequency",
+          "source": "F position-mode steps",
+          "uncertainty": 0.45186788083658497,
+          "unit": "rad/s",
+          "value": 1.8074715233463399
+        },
+        {
+          "name": "braking_decreasing",
+          "source": "C coast-down",
+          "uncertainty": 333.3333333333333,
+          "unit": "counts/s²",
+          "value": 1333.3333333333333
+        },
+        {
+          "name": "braking_increasing",
+          "source": "C coast-down",
+          "uncertainty": 208.33333333333334,
+          "unit": "counts/s²",
+          "value": 833.3333333333334
+        },
+        {
+          "name": "top_speed_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 85.0,
+          "unit": "counts/s",
+          "value": 1699.9999999999998
+        },
+        {
+          "name": "top_speed_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 100.00000000000011,
+          "unit": "counts/s",
+          "value": 1800.0
+        },
+        {
+          "name": "acceleration_increasing",
+          "source": "G effort ladder",
+          "uncertainty": 674.5277717792753,
+          "unit": "counts/s²",
+          "value": 13844.257724729388
+        },
+        {
+          "name": "acceleration_decreasing",
+          "source": "G effort ladder",
+          "uncertainty": 805.6744114293494,
+          "unit": "counts/s²",
+          "value": 16747.24691591459
+        },
+        {
+          "name": "gravity_amplitude",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.004356798010441956,
+          "unit": "duty",
+          "value": 0.043567980104419556
+        },
+        {
+          "name": "gravity_zero",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 64.0,
+          "unit": "counts",
+          "value": 1137.4052841352038
+        },
+        {
+          "name": "constant_load",
+          "source": "A load profile, cosine fit",
+          "uncertainty": 0.005,
+          "unit": "duty",
+          "value": 0.012248521029934897
+        }
+      ],
+      "prior_estimates": {
+        "backlash_rad": null,
+        "gear_friction_n_m": null,
+        "latency_s": null,
+        "no_load_speed_rad_s": null
+      },
+      "provenance": "Hardware campaign on Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending. (/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/campaigns/campaign-1790182543587)"
+    }
+  ],
+  "gait_search_patch": {
+    "governor_acceleration_rad_s2_upper": 10.61841268613613,
+    "governor_speed_rad_s_upper": 3.540135599862626,
+    "maximum_reference_speed_rad_s_by_coordinate": {
+      "joint.+X | Foot servo output": 4.090482600732036,
+      "joint.+X | Hip servo output": 3.540135599862626,
+      "joint.+Y | Foot servo output": 4.090482600732036,
+      "joint.+Y | Hip servo output": 3.540135599862626,
+      "joint.-X | Foot servo output": 4.090482600732036,
+      "joint.-X | Hip servo output": 3.540135599862626,
+      "joint.-Y | Foot servo output": 4.090482600732036,
+      "joint.-Y | Hip servo output": 3.540135599862626
+    },
+    "rule": "0.8 × full-drive speed (fitted gain beyond moving friction), not the travel-limited speed reached in G; 0.5 × measured acceleration; apply only after replay agreement and CAD promotion"
+  }
+}

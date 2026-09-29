@@ -1,0 +1,377 @@
+{
+  "schema": "sim.system/1",
+  "title": "Tilt from an IMU",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Tilt from an IMU",
+      "description": "A leg swings on its hip, carrying an IMU. Its accelerometer, its gyro and a complementary filter each estimate the leg's tilt, and each is wrong in its own way.",
+      "instances": {
+        "filter": {
+          "display_id": "450e04e0a95b4c8182cd629e",
+          "label": "Tilt filter",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.complementary_tilt"
+          },
+          "parameters": {
+            "time_constant": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A complementary filter with a 0.5 s crossover."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.005,
+                0.0015,
+                0.004
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "soic8"
+          }
+        },
+        "imu": {
+          "display_id": "fdb19caa487b1ba044fb4fd6",
+          "label": "IMU on the leg",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.tilt_imu"
+          },
+          "parameters": {
+            "bandwidth": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A cheap MEMS IMU 0.18 m down the leg: gyro bias 0.05 rad/s (3°/s, uncalibrated), 1.5 m/s² of motor vibration."
+              }
+            },
+            "bias": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A cheap MEMS IMU 0.18 m down the leg: gyro bias 0.05 rad/s (3°/s, uncalibrated), 1.5 m/s² of motor vibration."
+              }
+            },
+            "radius": {
+              "value": 0.18,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A cheap MEMS IMU 0.18 m down the leg: gyro bias 0.05 rad/s (3°/s, uncalibrated), 1.5 m/s² of motor vibration."
+              }
+            },
+            "vibration": {
+              "value": 1.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A cheap MEMS IMU 0.18 m down the leg: gyro bias 0.05 rad/s (3°/s, uncalibrated), 1.5 m/s² of motor vibration."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.08,
+              0.012
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.018,
+                0.004,
+                0.018
+              ]
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ],
+            "model": "sot23"
+          }
+        },
+        "kick": {
+          "display_id": "b31c3bf6e9097d87d75e5f6b",
+          "label": "Kick",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.torque_command"
+          },
+          "parameters": {
+            "duration": {
+              "value": 0.14,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A short push that starts the leg swinging: 0.4 N·m for 0.14 s (a swing of about ±0.4 rad)."
+              }
+            },
+            "edge": {
+              "value": 0.005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A short push that starts the leg swinging: 0.4 N·m for 0.14 s (a swing of about ±0.4 rad)."
+              }
+            },
+            "start": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A short push that starts the leg swinging: 0.4 N·m for 0.14 s (a swing of about ±0.4 rad)."
+              }
+            },
+            "step": {
+              "value": 0.4,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A short push that starts the leg swinging: 0.4 N·m for 0.14 s (a swing of about ±0.4 rad)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "leg": {
+          "display_id": "04cfe781c85af880b894519c",
+          "label": "Leg",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.pendulum_gravity"
+          },
+          "parameters": {
+            "arm": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.5 kg leg with its centre of mass 0.2 m below the hip."
+              }
+            },
+            "mass": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A 0.5 kg leg with its centre of mass 0.2 m below the hip."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          }
+        },
+        "leg_inertia": {
+          "display_id": "e68f7056dd453b65202b530f",
+          "label": "Leg inertia and hip friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.04,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "m·r² = 0.5 × 0.2², with some damping in the hip so the swing dies out within a few seconds."
+              }
+            },
+            "inertia": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "m·r² = 0.5 × 0.2², with some damping in the hip so the swing dies out within a few seconds."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.1,
+              0.005
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.01,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "push": {
+          "display_id": "d5856729f2effc78a91eb512",
+          "label": "Hip torque",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.torque_source"
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.1,
+              -0.02
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.012,
+              "length": 0.012
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "command",
+          "terminals": [
+            {
+              "instance": "kick",
+              "port": "torque"
+            },
+            {
+              "instance": "push",
+              "port": "torque"
+            }
+          ]
+        },
+        {
+          "label": "hip",
+          "terminals": [
+            {
+              "instance": "push",
+              "port": "shaft"
+            },
+            {
+              "instance": "leg",
+              "port": "shaft"
+            },
+            {
+              "instance": "leg_inertia",
+              "port": "shaft"
+            },
+            {
+              "instance": "imu",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "label": "ax",
+          "terminals": [
+            {
+              "instance": "imu",
+              "port": "ax"
+            },
+            {
+              "instance": "filter",
+              "port": "ax"
+            }
+          ]
+        },
+        {
+          "label": "ay",
+          "terminals": [
+            {
+              "instance": "imu",
+              "port": "ay"
+            },
+            {
+              "instance": "filter",
+              "port": "ay"
+            }
+          ]
+        },
+        {
+          "label": "gyro",
+          "terminals": [
+            {
+              "instance": "imu",
+              "port": "gyro"
+            },
+            {
+              "instance": "filter",
+              "port": "gyro"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0005,
+    "rationale": "Filtered accelerometer and vibration at 87/131 Hz: backward Euler at 0.5 ms (15 steps per vibration cycle)."
+  }
+}

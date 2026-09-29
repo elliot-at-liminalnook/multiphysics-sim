@@ -1,0 +1,266 @@
+wrote comparison-config.json
+{"leg_tracking_evidence":"examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/gait-runs/run-1790199348224.json (knee/worm/hip, effort 100%, speed 100%, 181 s of gait time)","leg_tracking_prediction_rad":[{"joint":"-Y | Hip servo output","peak":0.1442,"rms":0.05448760991504245},{"joint":"-Y | Worm servo output","peak":0.1505,"rms":0.059096596102092766},{"joint":"-Y | Foot servo output","peak":0.21,"rms":0.11795537267324126},{"joint":"+X | Hip servo output","peak":0.1442,"rms":0.05615644797385782},{"joint":"+X | Worm servo output","peak":0.1505,"rms":0.0591124163016476},{"joint":"+X | Foot servo output","peak":0.21,"rms":0.10969728051337738},{"joint":"+Y | Hip servo output","peak":0.1442,"rms":0.060484421168625416},{"joint":"+Y | Worm servo output","peak":0.1505,"rms":0.059001227258812905},{"joint":"+Y | Foot servo output","peak":0.21,"rms":0.10960334150916703},{"joint":"-X | Hip servo output","peak":0.1442,"rms":0.05785118892438451},{"joint":"-X | Worm servo output","peak":0.1505,"rms":0.05881605680791557},{"joint":"-X | Foot servo output","peak":0.21,"rms":0.093595132714186}],"passed":true,"reference_maximum_speed_rad_s":[1.0355448061661356,2.2822954022675974,3.775532947388824,1.0901707483941503,2.1852376067923025,2.90935061069465,1.227134217708122,2.2293858188853637,2.8368039891346037,1.1377088694680169,2.4354702167720856,2.958517810297891],"scope":"CAD inverse-kinematic closure, compiler interpolation/pause checks, full-curve command bounds and reference speed limits only. No dynamic stability, continuous collision, achieved tracking or loaded motor accuracy is certified.","speed_limit_provenance":"Derived at load from the accepted actuator registry examples/actuators/hx30hm/accepted/registry.json (blake3 43b6065ebc5cacc7854f097f1d80b8877ee4fd811d3e32141122d481a39c1e29): screen = 1 × each joint's full-drive speed from its resolved profile at the simulated supply; governor speed ≤ 0.8 × slowest joint, acceleration ≤ 0.5 × lowest measured envelope. Families: hx30hm-hip-measured 535287eeb244, hx30hm-knee-measured a67f006e173d, hx30hm-provisional 1bd830483b89."}
+Prepared examples/full-robot/measured-actuator-integration/gait-search-leg-2026-09-23/qualification-fast-a (no simulation/search)
+detailed: constructing production environment
+detailed: 0.02s simulated, 0.96s wall
+detailed: 0.52s simulated, 11.43s wall
+detailed: 1.02s simulated, 21.83s wall
+detailed: 1.52s simulated, 33.08s wall
+detailed: 2.02s simulated, 44.09s wall
+detailed: 2.52s simulated, 55.48s wall
+detailed: 3.02s simulated, 66.13s wall
+detailed: 3.52s simulated, 77.39s wall
+reduced: constructing production environment
+reduced: 0.02s simulated, 0.21s wall
+reduced: 0.52s simulated, 4.85s wall
+reduced: 1.02s simulated, 9.70s wall
+reduced: 1.52s simulated, 15.46s wall
+reduced: 2.02s simulated, 20.77s wall
+reduced: 2.52s simulated, 26.00s wall
+reduced: 3.02s simulated, 33.39s wall
+reduced: 3.52s simulated, 39.02s wall
+{"qualified":false,"reasons":["mechanical fidelity budget or outcome mismatch","electrical fidelity budget failed or no motor observations"],"speedup":1.9837358234773534}
+Error: "profile failed its declared qualification gates; captures retained"
+profile fast-a did not qualify; trying the next
+Prepared examples/full-robot/measured-actuator-integration/gait-search-leg-2026-09-23/qualification-fast-b (no simulation/search)
+detailed: constructing production environment
+detailed: 0.02s simulated, 0.92s wall
+detailed: 0.52s simulated, 11.77s wall
+detailed: 1.02s simulated, 22.04s wall
+detailed: 1.52s simulated, 33.69s wall
+detailed: 2.02s simulated, 44.69s wall
+detailed: 2.52s simulated, 56.22s wall
+detailed: 3.02s simulated, 66.95s wall
+detailed: 3.52s simulated, 78.10s wall
+reduced: constructing production environment
+reduced: 0.02s simulated, 0.29s wall
+reduced: 0.52s simulated, 6.70s wall
+reduced: 1.02s simulated, 14.44s wall
+reduced: 1.52s simulated, 21.50s wall
+reduced: 2.02s simulated, 28.25s wall
+reduced: 2.52s simulated, 35.68s wall
+reduced: 3.02s simulated, 43.08s wall
+reduced: 3.52s simulated, 50.37s wall
+{"qualified":false,"reasons":["mechanical fidelity budget or outcome mismatch","electrical fidelity budget failed or no motor observations"],"speedup":1.5489583201724695}
+Error: "profile failed its declared qualification gates; captures retained"
+profile fast-b did not qualify; trying the next
+Prepared examples/full-robot/measured-actuator-integration/gait-search-leg-2026-09-23/qualification-fast-c (no simulation/search)
+detailed: constructing production environment
+detailed: 0.02s simulated, 0.91s wall
+detailed: 0.52s simulated, 11.45s wall
+detailed: 1.02s simulated, 22.34s wall
+detailed: 1.52s simulated, 33.81s wall
+detailed: 2.02s simulated, 43.19s wall
+detailed: 2.52s simulated, 52.79s wall
+detailed: 3.02s simulated, 63.03s wall
+detailed: 3.52s simulated, 74.17s wall
+reduced: constructing production environment
+reduced: 0.02s simulated, 0.32s wall
+reduced: 0.52s simulated, 7.24s wall
+reduced: 1.02s simulated, 14.22s wall
+reduced: 1.52s simulated, 21.72s wall
+reduced: 2.02s simulated, 28.68s wall
+reduced: 2.52s simulated, 35.84s wall
+reduced: 3.02s simulated, 43.04s wall
+reduced: 3.52s simulated, 50.06s wall
+{"qualified":false,"reasons":["mechanical fidelity budget or outcome mismatch","electrical fidelity budget failed or no motor observations"],"speedup":1.472147984875677}
+Error: "profile failed its declared qualification gates; captures retained"
+profile fast-c did not qualify; trying the next
+Prepared examples/full-robot/measured-actuator-integration/gait-search-leg-2026-09-23/qualification-base (no simulation/search)
+detailed: constructing production environment
+detailed: 0.02s simulated, 1.13s wall
+detailed: 0.52s simulated, 12.55s wall
+detailed: 1.02s simulated, 23.49s wall
+detailed: 1.52s simulated, 34.94s wall
+detailed: 2.02s simulated, 45.92s wall
+detailed: 2.52s simulated, 57.42s wall
+detailed: 3.02s simulated, 67.97s wall
+detailed: 3.52s simulated, 78.61s wall
+reduced: constructing production environment
+reduced: 0.02s simulated, 1.03s wall
+reduced: 0.52s simulated, 9.83s wall
+reduced: 1.02s simulated, 19.19s wall
+reduced: 1.52s simulated, 28.70s wall
+reduced: 2.02s simulated, 37.71s wall
+reduced: 2.52s simulated, 47.53s wall
+reduced: 3.02s simulated, 56.58s wall
+reduced: 3.52s simulated, 65.89s wall
+{"qualified":true,"reasons":[],"speedup":1.192229007400458}
+using profile base
+wrote comparison-config.json
+3501 Bayesian attempt 0: preparing
+3501 Bayesian 0: 0.02s simulated
+3501 Bayesian 0: 1.02s simulated
+3501 Bayesian 0: 2.02s simulated
+3501 Bayesian 0: 3.02s simulated
+{"attempts":1,"failed_attempts":0,"wall_hours":0.028362832540277775,"charged_simulation_s":3.6,"actual_simulation_s":3.6,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":0,"screened_preparation_wall_hours":0.0}
+{"attempts":1,"failed_attempts":0,"wall_hours":0.0,"charged_simulation_s":3.6,"actual_simulation_s":3.6,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":null,"screened_candidates":0,"screened_preparation_wall_hours":0.0}
+{"attempts":1,"failed_attempts":0,"wall_hours":0.0,"charged_simulation_s":3.6,"actual_simulation_s":3.6,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":null,"screened_candidates":0,"screened_preparation_wall_hours":0.0}
+{"attempts":1,"failed_attempts":0,"wall_hours":0.0,"charged_simulation_s":3.6,"actual_simulation_s":3.6,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":null,"screened_candidates":0,"screened_preparation_wall_hours":0.0}
+3502 CmaEs attempt 1: 6 candidates screened
+3502 Bayesian attempt 1: 0 candidates screened
+3501 Bayesian attempt 1: 4 candidates screened
+3501 CmaEs attempt 1: 0 candidates screened
+3502 CmaEs 1: 0.02s simulated
+3502 Bayesian 1: 0.02s simulated
+3501 Bayesian 1: 0.02s simulated
+3501 CmaEs 1: 0.02s simulated
+3502 CmaEs 1: 1.02s simulated
+3502 Bayesian 1: 1.02s simulated
+3501 Bayesian 1: 1.02s simulated
+3501 CmaEs 1: 1.02s simulated
+3502 Bayesian 1: 2.02s simulated
+3502 CmaEs 1: 2.02s simulated
+3501 Bayesian 1: 2.02s simulated
+3501 CmaEs 1: 2.02s simulated
+3502 CmaEs 1: 3.02s simulated
+3502 Bayesian 1: 3.02s simulated
+3501 Bayesian 1: 3.02s simulated
+3501 CmaEs 1: 3.02s simulated
+{"attempts":2,"failed_attempts":0,"wall_hours":0.03565051253194445,"charged_simulation_s":7.2,"actual_simulation_s":7.2,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":6,"screened_preparation_wall_hours":0.041774052059166664}
+{"attempts":2,"failed_attempts":0,"wall_hours":0.03587948337027778,"charged_simulation_s":7.2,"actual_simulation_s":7.2,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":0,"screened_preparation_wall_hours":0.0}
+{"attempts":2,"failed_attempts":0,"wall_hours":0.06473372194583334,"charged_simulation_s":7.2,"actual_simulation_s":7.2,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":4,"screened_preparation_wall_hours":0.02302371708111111}
+{"attempts":2,"failed_attempts":0,"wall_hours":0.03662021591555555,"charged_simulation_s":7.2,"actual_simulation_s":7.2,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":0,"screened_preparation_wall_hours":0.0}
+3502 CmaEs attempt 2: 0 candidates screened
+3501 CmaEs attempt 2: 2 candidates screened
+3502 CmaEs 2: 0.02s simulated
+3501 CmaEs 2: 0.02s simulated
+3502 CmaEs 2: 1.02s simulated
+3501 CmaEs 2: 1.02s simulated
+3501 Bayesian attempt 2: 7 candidates screened
+3501 Bayesian 2: 0.02s simulated
+3502 CmaEs 2: 2.02s simulated
+3501 CmaEs 2: 2.02s simulated
+3501 Bayesian 2: 1.02s simulated
+3502 Bayesian attempt 2: 10 candidates screened
+3502 Bayesian 2: 0.02s simulated
+3502 CmaEs 2: 3.02s simulated
+3501 CmaEs 2: 3.02s simulated
+3501 Bayesian 2: 2.02s simulated
+{"attempts":3,"failed_attempts":0,"wall_hours":0.0792976490375,"charged_simulation_s":10.8,"actual_simulation_s":10.8,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":6,"screened_preparation_wall_hours":0.041774052059166664}
+{"attempts":3,"failed_attempts":0,"wall_hours":0.08132987236583333,"charged_simulation_s":10.8,"actual_simulation_s":10.8,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":2,"screened_preparation_wall_hours":0.0}
+3502 Bayesian 2: 1.02s simulated
+3501 Bayesian 2: 3.02s simulated
+3502 Bayesian 2: 2.02s simulated
+3502 CmaEs attempt 3: 0 candidates screened
+{"attempts":3,"failed_attempts":0,"wall_hours":0.12253534964555557,"charged_simulation_s":10.8,"actual_simulation_s":10.8,"best_speed_m_s":0.07003784418696901,"improvement_m_s":0.0007453969116096026,"improvement_per_wall_hour":0.006083117351570218,"screened_candidates":11,"screened_preparation_wall_hours":0.0866388400225}
+3502 CmaEs 3: 0.02s simulated
+3501 CmaEs attempt 3: 4 candidates screened
+3501 CmaEs 3: 0.02s simulated
+3502 Bayesian 2: 3.02s simulated
+3502 CmaEs 3: 1.02s simulated
+3501 CmaEs 3: 1.02s simulated
+3501 Bayesian attempt 3: 0 candidates screened
+{"attempts":3,"failed_attempts":0,"wall_hours":0.10626616293805555,"charged_simulation_s":10.8,"actual_simulation_s":10.8,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":10,"screened_preparation_wall_hours":0.06818863851611111}
+3501 Bayesian 3: 0.02s simulated
+3502 CmaEs 3: 2.02s simulated
+3501 CmaEs 3: 2.02s simulated
+3501 Bayesian 3: 1.02s simulated
+3502 Bayesian attempt 3: 0 candidates screened
+3502 CmaEs 3: 3.02s simulated
+3502 Bayesian 3: 0.02s simulated
+3501 CmaEs 3: 3.02s simulated
+3501 Bayesian 3: 2.02s simulated
+{"attempts":4,"failed_attempts":0,"wall_hours":0.12248591780055557,"charged_simulation_s":14.4,"actual_simulation_s":14.4,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":6,"screened_preparation_wall_hours":0.041774052059166664}
+3502 Bayesian 3: 1.02s simulated
+{"attempts":4,"failed_attempts":0,"wall_hours":0.1248182548538889,"charged_simulation_s":14.4,"actual_simulation_s":14.4,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":6,"screened_preparation_wall_hours":0.018830930658333335}
+3501 Bayesian 3: 3.02s simulated
+3502 Bayesian 3: 2.02s simulated
+{"attempts":4,"failed_attempts":0,"wall_hours":0.1645738940425,"charged_simulation_s":14.4,"actual_simulation_s":14.4,"best_speed_m_s":0.07185932037881426,"improvement_m_s":0.002566873103454853,"improvement_per_wall_hour":0.015597085542570785,"screened_candidates":11,"screened_preparation_wall_hours":0.0866388400225}
+3502 CmaEs attempt 4: 2 candidates screened
+3502 CmaEs 4: 0.02s simulated
+3501 CmaEs attempt 4: 0 candidates screened
+3501 CmaEs 4: 0.02s simulated
+3502 Bayesian 3: 3.02s simulated
+3502 CmaEs 4: 1.02s simulated
+3501 Bayesian attempt 4: 0 candidates screened
+{"attempts":4,"failed_attempts":0,"wall_hours":0.14844268379583334,"charged_simulation_s":14.4,"actual_simulation_s":14.4,"best_speed_m_s":0.06955840313804942,"improvement_m_s":0.0002659558626900149,"improvement_per_wall_hour":0.0017916400855148113,"screened_candidates":10,"screened_preparation_wall_hours":0.06818863851611111}
+3501 CmaEs 4: 1.02s simulated
+3501 Bayesian 4: 0.02s simulated
+3502 CmaEs 4: 2.02s simulated
+3501 CmaEs 4: 2.02s simulated
+3501 Bayesian 4: 1.02s simulated
+3502 Bayesian attempt 4: 0 candidates screened
+3502 Bayesian 4: 0.02s simulated
+3502 CmaEs 4: 3.02s simulated
+3501 Bayesian 4: 2.02s simulated
+3501 CmaEs 4: 3.02s simulated
+{"attempts":5,"failed_attempts":0,"wall_hours":0.1737174598138889,"charged_simulation_s":18.0,"actual_simulation_s":18.0,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":8,"screened_preparation_wall_hours":0.041774052059166664}
+3502 Bayesian 4: 1.02s simulated
+{"attempts":5,"failed_attempts":0,"wall_hours":0.17782923310666668,"charged_simulation_s":18.0,"actual_simulation_s":18.0,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":6,"screened_preparation_wall_hours":0.018830930658333335}
+3501 Bayesian 4: 3.02s simulated
+3502 Bayesian 4: 2.02s simulated
+{"attempts":5,"failed_attempts":0,"wall_hours":0.2146530123011111,"charged_simulation_s":18.0,"actual_simulation_s":18.0,"best_speed_m_s":0.07185932037881426,"improvement_m_s":0.002566873103454853,"improvement_per_wall_hour":0.011958244032718689,"screened_candidates":11,"screened_preparation_wall_hours":0.0866388400225}
+3501 CmaEs attempt 5: 0 candidates screened
+3501 CmaEs 5: 0.02s simulated
+3502 Bayesian 4: 3.02s simulated
+3501 Bayesian attempt 5: 0 candidates screened
+3502 CmaEs attempt 5: 7 candidates screened
+3501 Bayesian 5: 0.02s simulated
+{"attempts":5,"failed_attempts":0,"wall_hours":0.20207467721583333,"charged_simulation_s":18.0,"actual_simulation_s":18.0,"best_speed_m_s":0.07017895665174816,"improvement_m_s":0.0008865093763887472,"improvement_per_wall_hour":0.004387038438477267,"screened_candidates":10,"screened_preparation_wall_hours":0.06818863851611111}
+3501 CmaEs 5: 1.02s simulated
+3502 CmaEs 5: 0.02s simulated
+3501 Bayesian 5: 1.02s simulated
+3502 CmaEs 5: 1.02s simulated
+3501 CmaEs 5: 2.02s simulated
+3502 Bayesian attempt 5: 0 candidates screened
+3502 Bayesian 5: 0.02s simulated
+3501 Bayesian 5: 2.02s simulated
+3502 CmaEs 5: 2.02s simulated
+3501 CmaEs 5: 3.02s simulated
+3502 Bayesian 5: 1.02s simulated
+{"attempts":6,"failed_attempts":0,"wall_hours":0.21868865720583336,"charged_simulation_s":21.6,"actual_simulation_s":21.6,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":6,"screened_preparation_wall_hours":0.018830930658333335}
+3502 CmaEs 5: 3.02s simulated
+3501 Bayesian 5: 3.02s simulated
+{"attempts":6,"failed_attempts":0,"wall_hours":0.25279729763361114,"charged_simulation_s":21.6,"actual_simulation_s":21.6,"best_speed_m_s":0.07290257020667816,"improvement_m_s":0.0036101229313187516,"improvement_per_wall_hour":0.014280702227090426,"screened_candidates":11,"screened_preparation_wall_hours":0.0866388400225}
+{"attempts":6,"failed_attempts":0,"wall_hours":0.22452608568000001,"charged_simulation_s":21.6,"actual_simulation_s":21.6,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":15,"screened_preparation_wall_hours":0.12353192652888889}
+3502 Bayesian 5: 2.02s simulated
+3501 CmaEs attempt 6: 0 candidates screened
+3501 CmaEs 6: 0.02s simulated
+3502 Bayesian 5: 3.02s simulated
+3502 CmaEs attempt 6: 2 candidates screened
+3501 Bayesian attempt 6: 0 candidates screened
+{"attempts":6,"failed_attempts":0,"wall_hours":0.23865342823888888,"charged_simulation_s":21.6,"actual_simulation_s":21.6,"best_speed_m_s":0.07017895665174816,"improvement_m_s":0.0008865093763887472,"improvement_per_wall_hour":0.003714630805560284,"screened_candidates":10,"screened_preparation_wall_hours":0.06818863851611111}
+3502 CmaEs 6: 0.02s simulated
+3501 Bayesian 6: 0.02s simulated
+3501 CmaEs 6: 1.02s simulated
+3502 CmaEs 6: 1.02s simulated
+3501 Bayesian 6: 1.02s simulated
+3501 CmaEs 6: 2.02s simulated
+3502 Bayesian attempt 6: 0 candidates screened
+3502 Bayesian 6: 0.02s simulated
+3501 Bayesian 6: 2.02s simulated
+3502 CmaEs 6: 2.02s simulated
+3501 CmaEs 6: 3.02s simulated
+3502 Bayesian 6: 1.02s simulated
+{"attempts":7,"failed_attempts":0,"wall_hours":0.2669825534425,"charged_simulation_s":25.200000000000003,"actual_simulation_s":25.200000000000003,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":6,"screened_preparation_wall_hours":0.018830930658333335}
+3501 Bayesian 6: 3.02s simulated
+3502 CmaEs 6: 3.02s simulated
+{"attempts":7,"failed_attempts":0,"wall_hours":0.30621142211861113,"charged_simulation_s":25.200000000000003,"actual_simulation_s":25.200000000000003,"best_speed_m_s":0.07290257020667816,"improvement_m_s":0.0036101229313187516,"improvement_per_wall_hour":0.011789641634988942,"screened_candidates":11,"screened_preparation_wall_hours":0.0866388400225}
+3502 Bayesian 6: 2.02s simulated
+{"attempts":7,"failed_attempts":0,"wall_hours":0.280082521185,"charged_simulation_s":25.200000000000003,"actual_simulation_s":25.200000000000003,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":17,"screened_preparation_wall_hours":0.1363174024252778}
+3501 CmaEs attempt 7: 1 candidates screened
+3501 CmaEs 7: 0.02s simulated
+3502 Bayesian 6: 3.02s simulated
+3501 Bayesian attempt 7: 1 candidates screened
+3502 CmaEs attempt 7: 3 candidates screened
+3501 Bayesian 7: 0.02s simulated
+3502 CmaEs 7: 0.02s simulated
+{"attempts":7,"failed_attempts":0,"wall_hours":0.3087747775525,"charged_simulation_s":25.200000000000003,"actual_simulation_s":25.200000000000003,"best_speed_m_s":0.0706163242868384,"improvement_m_s":0.0013238770114789855,"improvement_per_wall_hour":0.0042875166876410135,"screened_candidates":10,"screened_preparation_wall_hours":0.06818863851611111}
+3501 CmaEs 7: 1.02s simulated
+3501 Bayesian 7: 1.02s simulated
+3502 CmaEs 7: 1.02s simulated
+3501 CmaEs 7: 2.02s simulated
+3502 Bayesian attempt 7: 0 candidates screened
+3502 Bayesian 7: 0.02s simulated
+3502 CmaEs 7: 2.02s simulated
+3501 Bayesian 7: 2.02s simulated
+3501 CmaEs 7: 3.02s simulated
+3502 Bayesian 7: 1.02s simulated
+{"attempts":8,"failed_attempts":0,"wall_hours":0.3308264455372222,"charged_simulation_s":28.800000000000004,"actual_simulation_s":28.800000000000004,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":7,"screened_preparation_wall_hours":0.018830930658333335}
+3502 CmaEs 7: 3.02s simulated
+{"attempts":8,"failed_attempts":1,"wall_hours":0.36004161333055557,"charged_simulation_s":28.800000000000004,"actual_simulation_s":28.040000000000003,"best_speed_m_s":0.07290257020667816,"improvement_m_s":0.0036101229313187516,"improvement_per_wall_hour":0.010026960211413907,"screened_candidates":12,"screened_preparation_wall_hours":0.115136669515}
+{"attempts":8,"failed_attempts":1,"wall_hours":0.33172520960888885,"charged_simulation_s":28.800000000000004,"actual_simulation_s":28.240000000000002,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":20,"screened_preparation_wall_hours":0.1629673215438889}
+{"attempts":8,"failed_attempts":1,"wall_hours":0.3317344649030555,"charged_simulation_s":28.800000000000004,"actual_simulation_s":26.460000000000004,"best_speed_m_s":0.0706163242868384,"improvement_m_s":0.0013238770114789855,"improvement_per_wall_hour":0.003990773198274315,"screened_candidates":10,"screened_preparation_wall_hours":0.06818863851611111}
+3501 CmaEs attempt 8: 4 candidates screened
+{"attempts":9,"failed_attempts":1,"wall_hours":0.34093664934111106,"charged_simulation_s":32.400000000000006,"actual_simulation_s":28.800000000000004,"best_speed_m_s":0.06929244727535941,"improvement_m_s":0.0,"improvement_per_wall_hour":0.0,"screened_candidates":11,"screened_preparation_wall_hours":0.02771471203888889}

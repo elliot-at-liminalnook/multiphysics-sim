@@ -1,0 +1,87 @@
+{
+  "axis": {
+    "coordinate_session": null,
+    "lower": 888,
+    "reference": 1483,
+    "reverse": false,
+    "role": "belt/hip",
+    "upper": 2116
+  },
+  "evidence": {
+    "completed_stops": 2,
+    "context": [
+      1.3621749396424494,
+      3.2459033471660166,
+      1.0
+    ],
+    "directions": [
+      {
+        "acceleration_rad_s2": 0.1528839767274902,
+        "stops": [
+          {
+            "completed_s": 2.467358874,
+            "effective_deceleration_rad_s2": 0.3464495059953226,
+            "excursion_rad": 0.009203884727313927,
+            "speed_rad_s": 0.09221252723306521
+          }
+        ],
+        "weakened_deceleration_rad_s2": null
+      },
+      {
+        "acceleration_rad_s2": 0.2112714180603535,
+        "stops": [
+          {
+            "completed_s": 8.017286948,
+            "effective_deceleration_rad_s2": 0.3079551164402834,
+            "excursion_rad": 0.01073786551519973,
+            "speed_rad_s": 0.09221252723306521
+          }
+        ],
+        "weakened_deceleration_rad_s2": null
+      }
+    ],
+    "episode": null,
+    "motion_speed_limit_rad_s": 0.09221252723306521,
+    "previous": [
+      8.017286948,
+      4.104386214780204e-6
+    ],
+    "reset_reason": null,
+    "was_braking": true
+  },
+  "motor_id": 3,
+  "provenance": "Online observations under this session's load, effort ceiling and environment; not a physical safety certification; not auto-loaded next session",
+  "run_id": 1790119250972,
+  "schema_version": 1,
+  "tuning": {
+    "adaptive": {
+      "bootstrap_speed_rad_s": 0.007669903939428206,
+      "boundary_margin_rad": 0.018407769454627694,
+      "braking_safety_factor": 0.5,
+      "fallback_deceleration_rad_s2": 0.015339807878856412,
+      "learning_inset_fraction": 0.25,
+      "maximum_evidence_age_s": 120.0,
+      "minimum_stops": 3,
+      "position_uncertainty_rad": 0.0030679615757712823,
+      "reaction_time_s": 0.25,
+      "trial_speed_growth": 1.25
+    },
+    "following_error_counts": 64.0,
+    "maximum_acceleration_counts_s2": 100.0,
+    "maximum_feedback_interval_s": 0.12,
+    "maximum_speed_counts_s": 500.0,
+    "operator_jog_speed_limit_counts_s": 500.0,
+    "period_s": 0.03,
+    "pid": {
+      "duty_limit": 1.0,
+      "integral_limit": 0.125,
+      "kd": 0.04,
+      "ki": 0.8,
+      "kp": 5.215189175235227
+    },
+    "provenance": "Provisional commissioning controller parameters, not fitted to this loaded printed leg. Uses measured encoder feedback; no inferred joint gearing. Operator-selected PWM ceiling, independent FPGA deadlines, and taught encoder limits remain authoritative. Adaptive fallback braking and crawl speed are provisional commissioning assumptions, not measured mechanical guarantees; direction-specific stop trials are logged and cannot expand hard limits. Operator-held Q/A jogs follow the requested speed up to the 500 counts/s slider maximum; moving away from a taught pose is never slowed or latched, commanded at 70% of the fallback-braking stop-distance speed before taught poses; operator choice 2026-09-22, not a measured stopping guarantee.",
+    "response_rate_per_s": 2.0,
+    "stalled_at_limit_s": 3.0,
+    "velocity_filter_s": 0.08
+  }
+}

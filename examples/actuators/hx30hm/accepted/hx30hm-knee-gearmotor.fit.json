@@ -1,0 +1,225 @@
+{
+  "compare": {
+    "k": {
+      "source": "examples/actuators/hx30hm/accepted/hx30hm-knee-measured.derivation.json (campaign line fit)",
+      "uncertainty": 0.001010967875889402,
+      "value": 0.012132012913329035
+    }
+  },
+  "conditions": [
+    {
+      "label": "run 0 duty +0.15",
+      "measured": 0.452095714417653,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          1.8599999999999999
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "label": "run 0 duty -0.15",
+      "measured": -0.7490290138696472,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          -1.8599999999999999
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "label": "run 0 duty +0.30",
+      "measured": 1.188798882628849,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          3.7199999999999998
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "label": "run 0 duty -0.30",
+      "measured": -1.5211310142462817,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          -3.7199999999999998
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "label": "run 1 duty +0.15",
+      "measured": 0.4414987777049312,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          1.8599999999999999
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "label": "run 1 duty -0.15",
+      "measured": -0.7431309961749728,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          -1.8599999999999999
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "label": "run 1 duty +0.30",
+      "measured": 1.1566514326408126,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          3.7199999999999998
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "label": "run 1 duty -0.30",
+      "measured": -1.5854409277020005,
+      "observable": "leg.shaft.speed",
+      "set": [
+        [
+          {
+            "at": "",
+            "instance": "supply",
+            "parameter": "voltage"
+          },
+          -3.7199999999999998
+        ]
+      ],
+      "window": [
+        1.5,
+        2.0
+      ]
+    }
+  ],
+  "data": {
+    "blake3": "70e678fce1143dd6c1b45509c060a28a317a851ff6782485f5477765b1b3a36b",
+    "path": "examples/actuators/hx30hm/accepted/knee-steady-speeds.json"
+  },
+  "description": "Fit the HX-30HM knee gearmotor's motor constant and output friction (and the rig's gravity bias) to steady speeds measured on the suspended leg.",
+  "duration": 2.0,
+  "model": "examples/actuators/hx30hm/accepted/hx30hm-knee-bench.system.json",
+  "promote": {
+    "definition": "hx30hm_knee_gearmotor",
+    "library": "library/systems",
+    "unknowns": [
+      "k",
+      "friction"
+    ]
+  },
+  "schema": "sim.fit/1",
+  "unknowns": [
+    {
+      "initial": 0.00973,
+      "minimum": 1e-6,
+      "name": "k",
+      "targets": [
+        {
+          "at": "servo",
+          "instance": "motor",
+          "parameter": "torque_constant"
+        },
+        {
+          "at": "servo",
+          "instance": "motor",
+          "parameter": "back_emf_constant"
+        }
+      ],
+      "unit": "V·s/rad"
+    },
+    {
+      "initial": 0.025,
+      "minimum": 0.0,
+      "name": "friction",
+      "targets": [
+        {
+          "at": "servo",
+          "instance": "friction",
+          "parameter": "torque"
+        }
+      ],
+      "unit": "N·m"
+    },
+    {
+      "initial": 0.0,
+      "minimum": null,
+      "name": "gravity_bias",
+      "targets": [
+        {
+          "at": "",
+          "instance": "gravity",
+          "parameter": "torque"
+        }
+      ],
+      "unit": "N·m"
+    }
+  ]
+}

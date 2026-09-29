@@ -414,3 +414,4 @@ mod tests {
         assert!(div.abs() < 1.0e-6 * field.field(r).norm() / 0.05, "divergence {div}");
     }
 }
+pub mod notes;

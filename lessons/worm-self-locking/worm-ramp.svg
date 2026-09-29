@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="IBM Plex Sans">
+  <!-- The wheel tooth pressing on the thread = a block on a ramp of angle λ. The contact can push
+       back in any direction within the friction cone (±φ around the normal). The load needs support
+       straight up; the thread holds if "straight up" lies inside the cone, i.e. λ ≤ φ.
+       Angles are drawn three times larger than they are: λ = 3.6° / 14°, φ = 4.3°. -->
+  <rect x="1" y="1" width="758" height="358" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <line x1="380" y1="20" x2="380" y2="340" stroke="#2e353f"/>
+  <!-- LEFT: one start, holds -->
+  <text x="24" y="36" font-size="15" font-weight="600" fill="#e6ebf1">1 start: λ = 3.6° &lt; φ = 4.3°</text>
+  <polygon points="190,221.5 138.1,102.3 194.7,91.6" fill="#4dd4bf" fill-opacity="0.16" stroke="none"/>
+  <g stroke="#4dd4bf" stroke-width="1.5" stroke-dasharray="5 4"><line x1="190" y1="221.5" x2="138.1" y2="102.3"/><line x1="190" y1="221.5" x2="194.7" y2="91.6"/></g>
+  <line x1="40" y1="250" x2="320" y2="196.9" stroke="#e6ebf1" stroke-width="3"/>
+  <path d="M40,250 L320,250" stroke="#2e353f" stroke-width="1.5"/>
+  <path d="M100,250 A60,60 0 0 0 99,238.8" fill="none" stroke="#e6ebf1" stroke-width="1.8"/>
+  <text x="106" y="245" font-size="13" fill="#e6ebf1">λ</text>
+  <rect x="176" y="203" width="28" height="18" rx="3" fill="#1d2630" stroke="#e6ebf1" stroke-width="1.8" transform="rotate(-10.74 190 212)"/>
+  <line x1="190" y1="221.5" x2="190" y2="118" stroke="#4dd4bf" stroke-width="3"/>
+  <path d="M190,112 l-6,12 h12 z" fill="#4dd4bf"/>
+  <text x="200" y="134" font-size="13" fill="#4dd4bf">support needed</text>
+  <text x="200" y="150" font-size="13" fill="#4dd4bf">(inside the cone)</text>
+  <text x="24" y="160" font-size="12.5" fill="#99a6b5">friction cone ±φ</text>
+  <text x="24" y="290" font-size="14" fill="#e6ebf1">Friction can supply the push:</text>
+  <text x="24" y="310" font-size="14" font-weight="600" fill="#4dd4bf">the thread holds the load.</text>
+  <!-- RIGHT: four starts, slips -->
+  <text x="404" y="36" font-size="15" font-weight="600" fill="#e6ebf1">4 starts: λ = 14° &gt; φ = 4.3°</text>
+  <polygon points="520,189.8 430,126.5 466.2,93.9" fill="#4dd4bf" fill-opacity="0.16" stroke="none"/>
+  <g stroke="#4dd4bf" stroke-width="1.5" stroke-dasharray="5 4"><line x1="520" y1="189.8" x2="430" y2="126.5"/><line x1="520" y1="189.8" x2="466.2" y2="93.9"/></g>
+  <line x1="420" y1="280" x2="620" y2="99.5" stroke="#e6ebf1" stroke-width="3"/>
+  <path d="M420,280 L660,280" stroke="#2e353f" stroke-width="1.5"/>
+  <path d="M480,280 A60,60 0 0 0 464.6,239.8" fill="none" stroke="#e6ebf1" stroke-width="1.8"/>
+  <text x="484" y="262" font-size="13" fill="#e6ebf1">λ</text>
+  <rect x="506" y="171" width="28" height="18" rx="3" fill="#1d2630" stroke="#e6ebf1" stroke-width="1.8" transform="rotate(-42 520 180)"/>
+  <line x1="520" y1="189.8" x2="520" y2="86" stroke="#ef766f" stroke-width="3"/>
+  <path d="M520,80 l-6,12 h12 z" fill="#ef766f"/>
+  <text x="540" y="62" font-size="13" fill="#ef766f">support needed</text>
+  <text x="540" y="78" font-size="13" fill="#ef766f">(outside the cone)</text>
+  <text x="404" y="310" font-size="14" fill="#e6ebf1">Friction cannot supply it:</text>
+  <text x="404" y="330" font-size="14" font-weight="600" fill="#ef766f">the load pushes the worm round.</text>
+  <text x="24" y="344" font-size="11.5" fill="#99a6b5">Angles drawn three times larger than real.</text>
+</svg>

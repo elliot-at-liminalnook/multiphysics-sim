@@ -1,8 +1,10 @@
 // Transport only. Physics, controllers, recording and validation execute in Rust.
-import init, { Simulation, EmbeddedSimulation, EnvironmentSimulation, MotionEvaluation, bind_motion_experiment, inspect_robot_contract, compare_environment_fidelity, materialize_motion } from './sim_web.js';
+import init, { Simulation, EmbeddedSimulation, EnvironmentSimulation, KinematicMirror, GaitPlayer, MotionEvaluation, bind_motion_experiment, inspect_robot_contract, compare_environment_fidelity, materialize_motion } from './sim_web.js';
 const ready = init();
 let simulation;
 let evaluation;
+let mirror;
+let gait;
 let embedded = false, environment = false, chunk = 8, loaded;
 let queue = Promise.resolve();
 self.onmessage = ({ data }) => {
@@ -61,6 +63,30 @@ self.onmessage = ({ data }) => {
         }
         case 'compare_environment_fidelity': {
           result = JSON.parse(compare_environment_fidelity(JSON.stringify(data.reference), JSON.stringify(data.candidate), JSON.stringify(data.plan)));
+          break;
+        }
+        case 'mirror_load': {
+          const next = new KinematicMirror(JSON.stringify(data.scene), data.lift_m);
+          mirror?.free(); mirror = next;
+          result = { coordinates: JSON.parse(mirror.coordinates()) };
+          break;
+        }
+        case 'gait_load': {
+          const next = new GaitPlayer(JSON.stringify(data.compiled), data.name ?? 'gait');
+          gait?.free(); gait = next;
+          result = { info: JSON.parse(gait.info()) };
+          break;
+        }
+        case 'gait_sample': {
+          if (!gait) throw new Error('load a gait first');
+          // Governed (as the simulation commands it) when the gait has a governor.
+          if (data.reset) gait.reset();
+          result = { values: Array.from(data.governed ? gait.governed(data.t, data.dt ?? 0.02, data.scale ?? 1) : gait.sample(data.t)) };
+          break;
+        }
+        case 'mirror_pose': {
+          if (!mirror) throw new Error('load the kinematic mirror first');
+          result = JSON.parse(mirror.pose(new Float64Array(data.coordinates)));
           break;
         }
         case 'load': {

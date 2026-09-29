@@ -1,0 +1,111 @@
+{
+  "axis": {
+    "coordinate_session": null,
+    "lower": 716,
+    "reference": 1289,
+    "reverse": false,
+    "role": "belt/hip",
+    "upper": 1918
+  },
+  "evidence": {
+    "completed_stops": 6,
+    "context": [
+      1.0983302441261191,
+      2.9421751511646597,
+      1.0
+    ],
+    "directions": [
+      {
+        "acceleration_rad_s2": 0.48254424181332395,
+        "stops": [
+          {
+            "completed_s": 41.445286797,
+            "effective_deceleration_rad_s2": 0.7519981428982867,
+            "excursion_rad": 0.009203884727313927,
+            "speed_rad_s": 0.13585584735191403
+          },
+          {
+            "completed_s": 56.305353625,
+            "effective_deceleration_rad_s2": 0.6201402588817825,
+            "excursion_rad": 0.010737865515199285,
+            "speed_rad_s": 0.13085525733627681
+          },
+          {
+            "completed_s": 64.428891124,
+            "effective_deceleration_rad_s2": 0.22784100802336008,
+            "excursion_rad": 0.007669903939428124,
+            "speed_rad_s": 0.06995035529577115
+          },
+          {
+            "completed_s": 75.636019646,
+            "effective_deceleration_rad_s2": 0.09797077458029295,
+            "excursion_rad": 0.007669903939428346,
+            "speed_rad_s": 0.045869314402182296
+          },
+          {
+            "completed_s": 85.019189301,
+            "effective_deceleration_rad_s2": 0.1104992741667446,
+            "excursion_rad": -0.0,
+            "speed_rad_s": 0.0260387222149701
+          }
+        ],
+        "weakened_deceleration_rad_s2": null
+      },
+      {
+        "acceleration_rad_s2": 0.2578125622516021,
+        "stops": [
+          {
+            "completed_s": 68.885866824,
+            "effective_deceleration_rad_s2": 0.1772096729070591,
+            "excursion_rad": 0.010737865515199285,
+            "speed_rad_s": 0.06995035529577115
+          }
+        ],
+        "weakened_deceleration_rad_s2": null
+      }
+    ],
+    "episode": null,
+    "motion_speed_limit_rad_s": 0.06995035529577115,
+    "previous": [
+      84.988946026,
+      -1.013504884522438e-6
+    ],
+    "reset_reason": "Taught poses changed",
+    "was_braking": true
+  },
+  "motor_id": 3,
+  "provenance": "Online observations under this session's load, effort ceiling and environment; not a physical safety certification; not auto-loaded next session",
+  "run_id": 1790119653268,
+  "schema_version": 1,
+  "tuning": {
+    "adaptive": {
+      "bootstrap_speed_rad_s": 0.007669903939428206,
+      "boundary_margin_rad": 0.018407769454627694,
+      "braking_safety_factor": 0.5,
+      "fallback_deceleration_rad_s2": 0.015339807878856412,
+      "learning_inset_fraction": 0.25,
+      "maximum_evidence_age_s": 120.0,
+      "minimum_stops": 3,
+      "position_uncertainty_rad": 0.0030679615757712823,
+      "reaction_time_s": 0.25,
+      "trial_speed_growth": 1.25
+    },
+    "following_error_counts": 64.0,
+    "maximum_acceleration_counts_s2": 100.0,
+    "maximum_feedback_interval_s": 0.12,
+    "maximum_speed_counts_s": 500.0,
+    "operator_jog_speed_limit_counts_s": 500.0,
+    "period_s": 0.03,
+    "pid": {
+      "duty_limit": 1.0,
+      "integral_limit": 0.125,
+      "kd": 0.04,
+      "ki": 0.8,
+      "kp": 5.215189175235227
+    },
+    "provenance": "Provisional commissioning controller parameters, not fitted to this loaded printed leg. Uses measured encoder feedback; no inferred joint gearing. Operator-selected PWM ceiling, independent FPGA deadlines, and taught encoder limits remain authoritative. Adaptive fallback braking and crawl speed are provisional commissioning assumptions, not measured mechanical guarantees; direction-specific stop trials are logged and cannot expand hard limits. Operator-held Q/A jogs follow the requested speed up to the 500 counts/s slider maximum; moving away from a taught pose is never slowed or latched, commanded at 70% of the fallback-braking stop-distance speed before taught poses; operator choice 2026-09-22, not a measured stopping guarantee.",
+    "response_rate_per_s": 2.0,
+    "stalled_at_limit_s": 3.0,
+    "velocity_filter_s": 0.08
+  }
+}

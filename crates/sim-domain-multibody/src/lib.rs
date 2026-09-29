@@ -5,3 +5,4 @@ pub mod contact;
 pub mod elements;
 pub mod planar;
 pub mod smooth_contact;
+pub mod notes;

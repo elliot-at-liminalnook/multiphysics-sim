@@ -1,0 +1,219 @@
+# The ideas lessons teach. Lessons name them in `teaches` and `needs`;
+# questions practise their lesson's concepts (or their own `concepts`).
+# Mastery of a concept comes from the learner's answers to those questions.
+
+torque-constant:
+  title: Torque from current
+  summary: "A motor's torque is proportional to its current: τ = k·i."
+back-emf:
+  title: Back-EMF
+  summary: "A spinning motor makes a voltage proportional to its speed: e = k·ω, with the same k."
+  needs: [torque-constant]
+voltage-budget:
+  title: The voltage budget
+  summary: "The supply is shared between the back-EMF and the winding's resistance: V = R·i + k·ω."
+  needs: [torque-constant, back-emf]
+torque-speed-line:
+  title: The torque–speed line
+  summary: Every steady operating point lies on one straight line from stall to no load.
+  needs: [voltage-budget]
+stall:
+  title: Stall
+  summary: Held still, a motor has no back-EMF, so the resistance alone limits its (largest) current.
+  needs: [voltage-budget]
+lead-angle:
+  title: Lead angle
+  summary: How steep a worm's thread is, from the tooth size, the number of starts and the worm's diameter.
+friction-angle:
+  title: Friction angle
+  summary: The steepest ramp friction can hold, tan φ = μ.
+self-locking:
+  title: Self-locking
+  summary: A worm holds its load when its lead angle is below the friction angle.
+  needs: [lead-angle, friction-angle]
+gear-efficiency:
+  title: Gear efficiency
+  summary: The friction that holds a self-locking worm also costs power while it drives.
+  needs: [self-locking]
+switching:
+  title: Switching instead of dropping
+  summary: A switch is fully on or fully off, so it wastes almost no power, unlike a resistor.
+duty-cycle:
+  title: Duty cycle
+  summary: "Chopping a supply on and off averages it: the output is the duty cycle times the supply."
+  needs: [switching]
+buck-regulator:
+  title: Buck regulator
+  summary: An inductor and capacitor smooth a chopped supply into a steady lower voltage.
+  needs: [duty-cycle]
+conduction-loss:
+  title: Conduction loss
+  summary: "A conducting switch still has a small resistance; its heat is I²·R."
+  needs: [switching]
+model-fidelity:
+  title: Model against measurement
+  summary: A model's parameters are measured, derived or estimated, and agreement with data must be checked, not assumed.
+  needs: [voltage-budget]
+
+# Mechanics of robot joints
+rotational-inertia:
+  title: Torque changes speed
+  summary: "A net torque changes a body's spin rate: τ = J·α. With no net torque, the speed stays as it is."
+inertia-distribution:
+  title: Where the mass sits
+  summary: "Inertia grows with the square of distance from the axis: J = m·r² for a point mass, ½·m·r² for a disc, m·L²/3 for a rod about its end."
+  needs: [rotational-inertia]
+gear-ratio:
+  title: Gear ratio
+  summary: "A ratio N multiplies torque by N and divides speed by N (less the gearbox's losses)."
+  needs: [rotational-inertia]
+reflected-inertia:
+  title: Reflected inertia
+  summary: "Through a ratio N a load's inertia feels N² times smaller to the motor, and the rotor's feels N² larger to the load."
+  needs: [gear-ratio]
+coulomb-friction:
+  title: Dry friction
+  summary: A constant torque opposing motion, whatever the speed; it holds still anything pushed less hard than it.
+dead-band:
+  title: Dead band
+  summary: Commands too small to overcome friction do nothing at all; the motion starts only past a threshold.
+  needs: [coulomb-friction, voltage-budget]
+viscous-friction:
+  title: Viscous friction
+  summary: "A drag proportional to speed (oil, air, iron losses): τ = c·ω."
+spring-torque:
+  title: Spring torque
+  summary: "A torsion spring's torque is proportional to its twist: τ = k·Δθ."
+series-elastic:
+  title: Series-elastic actuation
+  summary: A spring between motor and load measures the torque by its twist and cushions impacts.
+  needs: [spring-torque]
+natural-frequency:
+  title: Natural frequency
+  summary: "A mass on a spring swings at ω_n = √(k/J) when left alone."
+  needs: [spring-torque, rotational-inertia]
+resonance:
+  title: Resonance
+  summary: Shaken at its natural frequency, a lightly damped system's motion grows many times larger than a static push would give.
+  needs: [natural-frequency]
+damping-ratio:
+  title: Damping ratio
+  summary: "ζ = c / (2·√(k·J)) says how quickly ringing dies away and how tall the resonant peak is (about 1/(2ζ))."
+  needs: [natural-frequency, viscous-friction]
+gravity-torque:
+  title: Gravity torque on a link
+  summary: "Gravity pulls a link's centre of mass with torque m·g·r·sin φ: zero hanging, largest when level."
+holding-torque:
+  title: Holding against a load
+  summary: A position servo holds a steady load only by leaving an error; its stiffness sets how large, and its stall torque sets the limit.
+  needs: [gravity-torque, spring-torque]
+backlash:
+  title: Backlash
+  summary: "Free play between gear teeth: on each reversal the output waits while the input crosses the gap."
+  needs: [gear-ratio]
+linear-ratio:
+  title: Rotary to linear
+  summary: "Belts, racks and screws are gear ratios in radians per metre: x = θ/G, F = G·τ·η."
+  needs: [gear-ratio]
+traction-limit:
+  title: Traction limit
+  summary: "A tyre can push only up to μ·N; beyond that the wheel spins and the extra torque is wasted."
+wheel-slip:
+  title: Wheel slip
+  summary: "When the rim moves faster than the ground under it (r·ω > v) the wheel slips, and grip falls to its sliding value."
+  needs: [traction-limit]
+internal-resistance:
+  title: A battery's internal resistance
+  summary: "A battery behaves like an ideal source behind a resistor: its terminal voltage sags by I·R_int under load."
+brownout:
+  title: Brownout
+  summary: A supply dip below what the electronics need resets or confuses them, even if it lasts only milliseconds.
+  needs: [internal-resistance]
+joule-heating:
+  title: Winding heat
+  summary: "A winding turns I²·R into heat; torque needs current, so torque costs heat as its square."
+  needs: [torque-constant]
+thermal-time-constant:
+  title: Thermal time constant
+  summary: "Heat capacity over heat conductance, C/G, sets how long a winding takes to reach its final temperature (about 63 % in one C/G)."
+  needs: [joule-heating]
+continuous-rating:
+  title: Continuous and peak ratings
+  summary: "A motor's continuous current is set by the heat its surroundings can carry away; short peaks can go far higher."
+  needs: [thermal-time-constant]
+generator-braking:
+  title: Generator braking
+  summary: "A back-driven motor is a generator; closing its circuit makes current, and that current's torque brakes the load."
+  needs: [back-emf, torque-constant]
+wiring-drop:
+  title: Wiring drop
+  summary: "Wires have resistance (I·R drop) and inductance (L·di/dt spikes); long thin leads starve the board at every current step."
+decoupling:
+  title: Decoupling capacitor
+  summary: A capacitor at the board supplies fast current pulses locally, so the supply wires carry only the average.
+  needs: [wiring-drop]
+bridge-modes:
+  title: H-bridge modes
+  summary: "The same four switches can drive, brake (short the motor) or coast (let go): braking stops a load quickly, coasting slowly."
+  needs: [generator-braking]
+stepper-sync:
+  title: Stepper synchronism
+  summary: A stepper's rotor is pulled toward the driver's target like a stiff spring; if the target runs more than a step ahead, whole steps are lost.
+  needs: [rotational-inertia]
+acceleration-limit:
+  title: Acceleration limits
+  summary: "Every move needs torque J·α to accelerate; ramping the speed keeps that within what the motor can give."
+  needs: [rotational-inertia]
+quantization:
+  title: Quantization
+  summary: A digital sensor reports whole counts; anything smaller than one count is invisible.
+speed-estimation:
+  title: Speed from position
+  summary: "Differencing counts gives speed with resolution ≈ count/τ and delay ≈ τ: fast and noisy or smooth and late."
+  needs: [quantization]
+pid-control:
+  title: PID control
+  summary: "P pulls toward the target, D damps the approach, I removes the steady error a constant load leaves."
+  needs: [holding-torque]
+loop-latency:
+  title: Loop rate and latency
+  summary: A controller that samples slowly or acts late pushes on old information; above some gain the loop overshoots and oscillates.
+  needs: [pid-control]
+accelerometer-tilt:
+  title: Tilt from an accelerometer
+  summary: "At rest an accelerometer measures gravity, so atan(ax/ay) gives tilt; any other acceleration corrupts it."
+gyro-drift:
+  title: Gyro drift
+  summary: Integrating a gyro follows every quick motion but accumulates its bias into a growing angle error.
+complementary-filter:
+  title: Complementary filter
+  summary: "Blend the two: trust the gyro over short times and the accelerometer over long ones (crossover τ)."
+  needs: [accelerometer-tilt, gyro-drift]
+current-loop:
+  title: Current (torque) control
+  summary: "Regulating current regulates torque directly (τ = k·i), whatever the speed, until the supply runs out of voltage."
+  needs: [torque-constant, back-emf]
+clearance-fit:
+  title: Clearance and fit
+  summary: "A hole a little larger than its pin lets the parts shift by the radial clearance, c = (hole Ø − pin Ø)/2, before anything touches; printed holes come out undersize."
+locating-pins:
+  title: Locating with pins
+  summary: "Pins set where parts sit and carry sideways load; screws only clamp. Past the clearance a pin is a stiff spring."
+over-constraint:
+  title: Over-constraint
+  summary: "Two round pins fix the same direction twice: unless the holes match exactly, the pins fight and lock in force. Make one hole a slot."
+  needs: [locating-pins]
+dovetail-wedge:
+  title: The dovetail wedge
+  summary: "Pulling a dovetail presses its slanted flanks, which push the socket walls apart with S = F/(2·tan α)."
+fit-friction:
+  title: Fit and sliding friction
+  summary: "An interference fit presses the flanks even at rest; friction on them sets the force needed to slide the part in."
+  needs: [clearance-fit]
+thread-pullout:
+  title: Pull-out strength in plastic
+  summary: "A screw tears out when the plastic around it shears: F = τ·π·D·L·η, set by the gripped cylinder's size and the plastic's strength."
+heat-set-inserts:
+  title: Heat-set inserts
+  summary: "A brass insert melted into a boss grips a wider cylinder of plastic than a thread does, so it holds more and keeps a metal thread."
+  needs: [thread-pullout]

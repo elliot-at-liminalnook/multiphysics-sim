@@ -11,6 +11,7 @@ serde.workspace = true
 serde_json.workspace = true
 sim-core = { path = "../sim-core" }
 sim-inspect = { path = "../sim-inspect" }
+sim-annotate = { path = "../sim-annotate" }
 thiserror.workspace = true
 
 [dev-dependencies]

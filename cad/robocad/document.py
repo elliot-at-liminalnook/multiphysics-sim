@@ -23,6 +23,7 @@ import tempfile
 import time
 import uuid
 import zipfile
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Optional
 
@@ -82,7 +83,13 @@ def default_engineering(material_id: str, tags: Optional[list] = None) -> dict:
     E, nu, sy, su, tg, k, cp, alpha, mu_self, mu_steel, bearing, aniso, adhesion = e
     friction = {"self": {"static": round(mu_self * 1.2, 3), "kinetic": mu_self}, "steel": {"static": round(mu_steel * 1.2, 3), "kinetic": mu_steel}, "world": {"static": round(mu_self * 1.2, 3), "kinetic": mu_self}}
     is_print = material_id in ("pla", "petg", "abs", "asa", "tpu", "nylon") or bool(tags and "print" in tags and "resin" not in tags)
-    return {"youngs_modulus": E, "poisson": nu, "yield_strength": sy, "ultimate_strength": su, "glass_transition_c": tg, "thermal_conductivity": k, "specific_heat": cp, "thermal_expansion": alpha, "friction": friction, "bearing_pressure": bearing, "print": {"anisotropy_z": aniso, "layer_adhesion_factor": adhesion} if is_print else None}
+    d = {"youngs_modulus": E, "poisson": nu, "yield_strength": sy, "ultimate_strength": su, "glass_transition_c": tg, "thermal_conductivity": k, "specific_heat": cp, "thermal_expansion": alpha, "friction": friction, "bearing_pressure": bearing, "print": {"anisotropy_z": aniso, "layer_adhesion_factor": adhesion} if is_print else None}
+    # Filaments in the print registry take their mechanical values from it (one source).
+    from .print_registry import cad_engineering
+    reg = cad_engineering(material_id)
+    if reg:
+        d.update(reg)
+    return d
 
 
 @dataclass
@@ -252,7 +259,8 @@ class Document:
         self.nodes: dict[str, Node] = {}
         self.component_definitions: dict = {}
         self.roots: list[str] = []
-        self.materials: dict[str, Material] = {m.id: m for m in DEFAULT_MATERIALS}
+        # Each document owns its materials: editing one must not change another's.
+        self.materials: dict[str, Material] = {m.id: deepcopy(m) for m in DEFAULT_MATERIALS}
         self.active_group: Optional[str] = None
         self.path: Optional[str] = None
         self.dirty = False

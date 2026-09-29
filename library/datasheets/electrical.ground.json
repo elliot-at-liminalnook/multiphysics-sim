@@ -1,0 +1,28 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "electrical.ground",
+  "label": "Electrical ground",
+  "kind": "generic",
+  "parameters": {},
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.0,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "holds its node(s): audited at rest"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 0.0e0, 0.0e0, 0.0e0 (1 → 0.125 ms); observed order NaN"
+    }
+  ]
+}

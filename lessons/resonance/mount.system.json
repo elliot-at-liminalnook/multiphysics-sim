@@ -1,0 +1,303 @@
+{
+  "schema": "sim.system/1",
+  "title": "Payload on a springy mount",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Payload on a springy mount",
+      "description": "A payload on a torsion spring, shaken by a torque whose frequency sweeps upward. Near the natural frequency √(k/J) the motion grows many times larger.",
+      "instances": {
+        "base": {
+          "display_id": "5708f15e05ce10f53c7b8fe7",
+          "label": "Base",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.045,
+              0.035,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "damper": {
+          "display_id": "f9722b181b1ed0c0162542dd",
+          "label": "Mount damping",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.0063,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The mount's own losses: 6.3 mN·m·s/rad, a damping ratio of 0.05 (lightly damped, like most metal structures)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.015,
+              0.02,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "drive": {
+          "display_id": "472d5bd49126d935a207e800",
+          "label": "Torque source",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.torque_source"
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.008,
+              "length": 0.02
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ]
+          }
+        },
+        "mount": {
+          "display_id": "878d75773a6b004c4bdc4ec1",
+          "label": "Flexible mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 4.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A springy mount: 4 N·m/rad, which with the payload rings at about 10 Hz."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.015,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "payload": {
+          "display_id": "9969f7647ad23d8b5060a163",
+          "label": "Payload",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A payload of 0.001 kg·m² (a camera and bracket), turned by the shaker."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.035,
+              "length": 0.012
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        },
+        "shaker": {
+          "display_id": "ef1d53f9ab218aca24933ed4",
+          "label": "Shaker",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.torque_command"
+          },
+          "parameters": {
+            "amplitude": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A sine torque whose frequency climbs from 2 Hz by 4 Hz each second."
+              }
+            },
+            "chirp": {
+              "value": 4.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A sine torque whose frequency climbs from 2 Hz by 4 Hz each second."
+              }
+            },
+            "frequency": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A sine torque whose frequency climbs from 2 Hz by 4 Hz each second."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "command",
+          "terminals": [
+            {
+              "instance": "shaker",
+              "port": "torque"
+            },
+            {
+              "instance": "drive",
+              "port": "torque"
+            }
+          ]
+        },
+        {
+          "label": "payload",
+          "terminals": [
+            {
+              "instance": "drive",
+              "port": "shaft"
+            },
+            {
+              "instance": "payload",
+              "port": "shaft"
+            },
+            {
+              "instance": "mount",
+              "port": "a"
+            },
+            {
+              "instance": "damper",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "base",
+          "terminals": [
+            {
+              "instance": "mount",
+              "port": "b"
+            },
+            {
+              "instance": "damper",
+              "port": "b"
+            },
+            {
+              "instance": "base",
+              "port": "flange"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "implicit_midpoint",
+    "interval": 0.0005,
+    "rationale": "Lightly damped oscillator: implicit midpoint keeps its energy; 0.5 ms is 200 steps per 10 Hz cycle."
+  },
+  "studies": {
+    "stiffness": {
+      "at": "",
+      "instance": "mount",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "stiffness",
+        "values": [
+          1.0,
+          4.0,
+          16.0
+        ]
+      },
+      "duration": 4.0,
+      "observe": [
+        "payload.shaft.angle"
+      ],
+      "metrics": [
+        {
+          "label": "largest swing (rad)",
+          "observable": "payload.shaft.angle",
+          "reduce": "peak",
+          "window": [
+            0.0,
+            4.0
+          ]
+        }
+      ]
+    }
+  }
+}

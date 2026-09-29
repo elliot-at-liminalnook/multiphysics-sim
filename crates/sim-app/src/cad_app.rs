@@ -98,6 +98,9 @@ fn setup(mut commands: Commands) {
 }
 
 fn rebuild(sim: &mut CadSim) {
+    // Stamp before reading: a save that lands during the read changes the
+    // stamp again and is picked up by the next poll.
+    sim.modified = std::fs::metadata(&sim.path).and_then(|m| m.modified()).ok();
     match AnyRobot::load(&sim.path, &BuildOptions::default()) {
         Ok(robot) => {
             sim.error = None;
@@ -111,7 +114,6 @@ fn rebuild(sim: &mut CadSim) {
             sim.error = Some(e);
         }
     }
-    sim.modified = std::fs::metadata(&sim.path).and_then(|m| m.modified()).ok();
     sim.results = std::fs::read_to_string(results_path(&sim.path)).ok().and_then(|t| serde_json::from_str(&t).ok());
 }
 

@@ -1,0 +1,154 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "nema17_stepper",
+  "definitions": {
+    "nema17_stepper": {
+      "label": "NEMA 17 stepper + driver",
+      "description": "The 3D-printer stepper: 200 steps/rev, 0.45 N·m holding torque, with a microstepping current driver. Give it a target angle.",
+      "interface": "stepper",
+      "ports": {
+        "shaft": {
+          "label": "Shaft"
+        },
+        "target": {
+          "label": "Target angle"
+        }
+      },
+      "instances": {
+        "frame": {
+          "label": "Frame",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 5.4e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "stepper": {
+          "label": "Stepper",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.stepper_motor"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            },
+            "detent_torque": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            },
+            "holding_torque": {
+              "value": 0.45,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "stepper",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "target"
+            },
+            {
+              "instance": "stepper",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "stepper",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "boundary": "shaft"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

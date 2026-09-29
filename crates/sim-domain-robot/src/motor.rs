@@ -232,8 +232,10 @@ impl Behavior for MotorUnit {
         let temp = ctx.across(3);
         let r = self.resistance * (1.0 + self.temp_coeff * (temp - self.reference_c));
         let kt = (self.kt * (1.0 - self.derating * (temp - self.reference_c))).max(0.3 * self.kt);
-        // Winding.
-        let emf = self.ke * w_r;
+        // Winding. Magnet derating weakens the flux behind both constants, so
+        // the back-EMF scales with the torque constant and conversion stays lossless.
+        let flux = if self.kt != 0.0 { kt / self.kt } else { 1.0 };
+        let emf = self.ke * flux * w_r;
         if self.inductance > 0.0 && !self.quasistatic_winding {
             ctx.set_state_residual(Self::I, self.inductance * ctx.state_rate(Self::I) - (v - r * i - emf));
         } else {
@@ -335,12 +337,14 @@ impl Behavior for MotorUnit {
         let stiffness = if engaged { self.gear_k } else { 0.0 };
         let damping = self.gear_c * if engaged { 1.0 } else { 0.05 };
         // Electrical and kinematic rows, independent of engagement.
+        let flux = if self.kt != 0.0 { kt/self.kt } else { 1.0 };
+        let dflux = if self.kt != 0.0 { dkt/self.kt } else { 0.0 };
         out.state_state(Self::I,Self::I,r);
-        out.state_state(Self::I,Self::W,self.ke);
+        out.state_state(Self::I,Self::W,self.ke*flux);
         if !self.quasistatic_winding { out.state_rate(Self::I,Self::I,self.inductance.max(0.0)); }
         out.set(Output::State(Self::I),Input::Across(0,0),-1.0);
         out.set(Output::State(Self::I),Input::Across(1,0),1.0);
-        out.set(Output::State(Self::I),Input::Across(3,0),dr*i);
+        out.set(Output::State(Self::I),Input::Across(3,0),dr*i+self.ke*dflux*wr);
         if !self.quasistatic_rotor { out.state_rate(Self::W,Self::W,(self.rotor_inertia*self.ratio*self.ratio+self.gear_inertia)/self.ratio); }
         out.state_rate(Self::TH,Self::TH,1.0);
         out.state_state(Self::TH,Self::W,-1.0/self.ratio);

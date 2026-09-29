@@ -1,0 +1,27 @@
+{
+  "stage": "H",
+  "id": 0,
+  "completed": true,
+  "metrics": {
+    "all_together_minimum_voltage_v": 12.100000000000001,
+    "axes": [
+      1,
+      3
+    ],
+    "coupling": [
+      {
+        "max_holder_error_counts": 2.0,
+        "minimum_voltage_v": 12.100000000000001,
+        "mover": 1
+      },
+      {
+        "max_holder_error_counts": 1.0,
+        "minimum_voltage_v": 12.200000000000001,
+        "mover": 3
+      }
+    ],
+    "preflight_v": 12.5
+  },
+  "samples": 506,
+  "simulated_s": 20.71535998400003
+}

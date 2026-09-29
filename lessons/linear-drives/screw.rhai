@@ -1,0 +1,30 @@
+// Presentation for the screw lift: lift (to about 0.31 s, 0.55 s for the
+// 2 mm screw), rest at the top stop, power off at 0.8 s.
+zoom("", 1.15, 0.8);
+speed(0.1);
+caption("Both screws lift the 2 kg load");
+highlight("screw");
+at(0.27);
+speed(0.02);
+caption("The 8 mm screw reaches the top stop");
+highlight("stops");
+at(0.305);
+speed(0.004);
+at(0.322);
+speed(0.02);
+at(0.35);
+speed(0.1);
+caption("The 2 mm screw is still climbing, slower but stronger");
+highlight("screw");
+at(0.6);
+speed(0.25);
+caption("Both at the top, motors stalled against the stop");
+highlight("stops");
+at(0.78);
+speed(0.05);
+at(0.8);
+caption("Power off: the 8 mm thread runs back down; the 2 mm thread holds");
+highlight("screw");
+pause();
+at(0.95);
+speed(0.25);

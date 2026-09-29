@@ -1,0 +1,27 @@
+# A timing belt between two pulleys: speed ratio plus belt stretch.
+part belt_drive "Timing belt drive (two pulleys)"
+category Transmissions
+summary "A toothed belt from a small driving pulley to a larger driven pulley: reduction by the radius ratio, with a springy belt between them."
+explain "The pulleys' pitch lines should move together: r₁·θ₁ = r₂·θ₂. Any difference stretches the belt, F = k·(r₁·θ₁ − r₂·θ₂) + c·(r₁·ω₁ − r₂·ω₂), and each pulley feels r·F. With the belt pretensioned both runs carry load, so k is the two runs' stiffnesses in parallel (EA/L₁ + EA/L₂). The ratio r₂/r₁ multiplies torque and divides speed; the belt spring and the load inertia set a resonance that limits how fast a move can stop without ringing."
+tradeoffs "Quiet, cheap, no lubrication, long centre distances and big ratios in one stage. Springier than gears and it back-drives freely. Wider belts and shorter runs are stiffer; too few teeth in mesh on the small pulley (under ~6) risks skipping."
+limits "Hub load is the tight plus slack run tension, 2·pretension, until the transmitted force exceeds it (the slack run then goes slack); the wrap angle is taken as 180°. Linear stiffness (real glass-cord belts stiffen with load); no tooth skipping, no slack run (valid while pretension exceeds half the transmitted force); both pulleys on one fixed frame."
+pairs part.index_move control.sampled_fixed_pd rotational.inertia rotational.coulomb_friction sensor.encoder
+port driver rotational
+port driven rotational
+param radius_driver m ~ 0.00955 "Driving pulley pitch radius (GT2 30-tooth: 9.55 mm)"
+param radius_driven m ~ 0.0891 "Driven pulley pitch radius (GT2 280-tooth: 89.1 mm)"
+param stiffness N/m ~ 300000 "Belt stiffness between the pitch lines (both runs)"
+param damping N·s/m = 60 "Belt internal damping"
+param pretension N ~ 25 "Static tension in each run, set when the belt is tensioned (estimate for a 6 mm GT2 belt)"
+let stretch = radius_driver*driver.phi - radius_driven*driven.phi
+let tension = stiffness*stretch + damping*(radius_driver*driver.w - radius_driven*driven.w)
+flow driver = radius_driver*tension
+flow driven = -radius_driven*tension
+energy 0.5*stiffness*stretch^2
+output transmitted Force
+output hub_load Force
+set transmitted = tension
+set hub_load = max(2*pretension, abs(tension))
+derive "reduction ratio" = radius_driven/radius_driver
+derive "stiffness at the driven shaft" = stiffness*radius_driven^2 N·m/rad
+derive "stiffness at the driver" = stiffness*radius_driver^2 N·m/rad

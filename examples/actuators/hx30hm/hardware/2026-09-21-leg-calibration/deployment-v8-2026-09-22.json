@@ -1,0 +1,18 @@
+{
+  "time": "2026-09-23T02:50:27Z",
+  "motor_supply_off_reported_by_operator": "Operator turned motors off for the night before this load",
+  "fpga_profile": 8,
+  "changes": "Profile 7 plus servo control modes: register 0x21 may be 0 (position), 1 (speed) or 2 (PWM); position goals (0x2A, 2 or 6 bytes) only inside the armed window, taken as the nearest turn to the current reading; speed goals (0x2E, bit 15 = decreasing) blocked outward at a window edge; zero speed always allowed.",
+  "bitstream": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/impl/bridge_calibration.fs",
+  "bitstream_sha256": "ae912f43b97be1c76dc95bc9554ae6f8b70921d0753c1771d0bbc1caf1a9b3b1",
+  "routed_fmax_mhz": 65.44,
+  "fpga_tests": "make sim-calibration (incl. servo-mode cases), make sim-safety: PASS",
+  "programming": "SRAM only; openFPGALoader -b tangprimer25k exit 0",
+  "readback_reply": [255, 255, 254, 15, 0, 8, 1, 10, 254, 0, 0, 0, 0, 60, 90, 126, 208, 7, 246],
+  "fpga_version_readback": 8,
+  "armed_mask": 0,
+  "host_binary_sha256": "696e29055d6dedaaa7f703e97eda4f1d97eace81c7124b8b0ffca0a3df632d40",
+  "powered_motor_verification": false,
+  "servo_modes_tested_on_hardware": false,
+  "note": "SRAM image: a power cycle of the FPGA board reverts to its flash image; reload with openFPGALoader -b tangprimer25k <bitstream> (motor supply off)."
+}

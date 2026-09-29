@@ -5,6 +5,38 @@ use sim_core::{Behavior, BehaviorDescriptor, BehaviorRegistry, Context, Quantity
 
 pub const SMOOTH_RETURN: &str = "control.smooth_return";
 
+/// Quintic rest-to-rest unit displacement: position, first and second
+/// derivative with respect to unit phase in [0, 1]. Rate and acceleration are
+/// zero at both ends.
+pub fn rest_to_rest(phase: f64) -> [f64; 3] {
+    let (s, r) = (phase, 1. - phase);
+    [s * s * s * (10. + s * (-15. + 6. * s)), 30. * s * s * r * r, 60. * s * r * (1. - 2. * s)]
+}
+
+/// How a transfer (swing, shift) progresses over its unit phase: quintic
+/// rest-to-rest, or a C2 ramp with a constant-speed middle.
+#[derive(Clone, Debug)]
+pub enum UnitProgress {
+    RestToRest,
+    Ramped(SmoothReturn),
+}
+impl UnitProgress {
+    /// `None` keeps the quintic rest-to-rest profile.
+    pub fn new(ramp_fraction: Option<f64>) -> Result<Self, String> {
+        Ok(match ramp_fraction {
+            None => Self::RestToRest,
+            Some(r) => Self::Ramped(SmoothReturn::new(r)?),
+        })
+    }
+    pub fn sample(&self, phase: f64) -> Result<[f64; 3], String> {
+        match self {
+            Self::RestToRest if phase.is_finite() && (0. ..=1.).contains(&phase) => Ok(rest_to_rest(phase)),
+            Self::RestToRest => Err("progress phase must be finite and in [0, 1]".into()),
+            Self::Ramped(curve) => curve.sample(phase),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct SmoothReturn {
     ramp_fraction: f64,

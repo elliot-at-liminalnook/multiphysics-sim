@@ -10,3 +10,29 @@ __pycache__/
 .*.system.json.history.json
 .*.system.json.lock
 .*.build/
+
+# Local annotation agent conversations, queue and lock.
+.*.agents/
+# Lessons: per-machine edit journal and locks (notes in lesson.md.annotations.json are kept).
+.lesson.md.history.json
+lesson.md.lock
+lesson.md.annotations.json.lock
+# Lesson narration audio (regenerate with sim-narrate; narration.json is kept).
+lessons/*/narration/*.wav
+# Per-crate run caches (lesson frame caches etc.), like the root /runs/.
+runs/
+# CAD editor autosaves; the saved .rcad is the source.
+*.autosave.rcad
+# Gait search / gait lab outputs: bulky and regenerated from the committed
+# configs, gaits, specs and scripts. Files that tests read are re-included.
+/examples/full-robot/measured-actuator-integration/*/comparison/
+/examples/full-robot/measured-actuator-integration/*/qualification*/
+/examples/full-robot/measured-actuator-integration/*/comparison-config.json
+!/examples/full-robot/measured-actuator-integration/gait-search-measured-2026-09-23/comparison-config.json
+/examples/full-robot/measured-actuator-integration/*/baseline.spec.json
+/examples/full-robot/measured-actuator-integration/*/study-*.json
+/examples/full-robot/measured-actuator-integration/gait-lab-*/aws-*/
+/examples/full-robot/measured-actuator-integration/gait-lab-*/mac-*/
+/examples/full-robot/measured-actuator-integration/gait-lab-*/tune-*/
+/examples/full-robot/measured-actuator-integration/gait-lab-*/results*/*/compiled.json
+/examples/full-robot/measured-actuator-integration/gait-lab-*/results*/*/trace.json

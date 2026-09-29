@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" font-family="IBM Plex Sans">
+  <!-- A brushed DC motor as two coupled equations: an electrical loop and a shaft. -->
+  <rect x="1" y="1" width="718" height="298" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">Electrical side</text>
+  <text x="420" y="34" font-size="15" font-weight="600" fill="#e6ebf1">Mechanical side</text>
+  <!-- loop -->
+  <g fill="none" stroke="#e6ebf1" stroke-width="2.2">
+    <path d="M70,90 H180"/><path d="M240,90 H320 V120"/><path d="M320,200 V240 H70 V170"/><path d="M70,110 V90"/>
+  </g>
+  <!-- supply V -->
+  <g stroke="#e6ebf1" stroke-width="2.2"><line x1="50" y1="130" x2="90" y2="130"/><line x1="60" y1="150" x2="80" y2="150" stroke-width="4"/>
+    <line x1="70" y1="110" x2="70" y2="130"/><line x1="70" y1="150" x2="70" y2="170"/></g>
+  <text x="96" y="146" font-size="14" fill="#e6ebf1">V = 12 V</text>
+  <!-- resistor R -->
+  <path d="M180,90 l6,-9 l10,18 l10,-18 l10,18 l10,-18 l10,18 l4,-9" fill="none" stroke="#de9454" stroke-width="2.2"/>
+  <text x="210" y="72" font-size="14" fill="#de9454" text-anchor="middle">R = 2 Ω</text>
+  <text x="210" y="122" font-size="12" fill="#99a6b5" text-anchor="middle">winding resistance</text>
+  <!-- back-EMF source -->
+  <circle cx="320" cy="160" r="40" fill="#141a21" stroke="#8caaff" stroke-width="2.2"/>
+  <text x="320" y="152" font-size="15" fill="#8caaff" text-anchor="middle">E = k·ω</text>
+  <text x="320" y="172" font-size="12" fill="#99a6b5" text-anchor="middle">back-EMF</text>
+  <text x="304" y="136" font-size="16" fill="#8caaff">+</text><text x="306" y="194" font-size="18" fill="#8caaff">−</text>
+  <!-- current arrow -->
+  <path d="M110,78 H150" stroke="#4dd4bf" stroke-width="2.2"/><path d="M150,78 l-9,-5 v10 z" fill="#4dd4bf"/>
+  <text x="130" y="68" font-size="14" fill="#4dd4bf" text-anchor="middle">i</text>
+  <text x="195" y="275" font-size="14" fill="#e6ebf1" text-anchor="middle">V = R·i + k·ω</text>
+  <!-- coupling -->
+  <path d="M362,160 H436" stroke="#99a6b5" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="399" y="150" font-size="12" fill="#99a6b5" text-anchor="middle">same k</text>
+  <!-- rotor and shaft -->
+  <ellipse cx="500" cy="160" rx="34" ry="64" fill="#1d2630" stroke="#e6ebf1" stroke-width="2.2"/>
+  <rect x="534" y="152" width="120" height="16" fill="#2a3440" stroke="#e6ebf1" stroke-width="1.6"/>
+  <!-- torque arcs -->
+  <path d="M470,96 A70,70 0 0 1 560,112" fill="none" stroke="#4dd4bf" stroke-width="2.6"/>
+  <path d="M560,112 l-2,-11 l-8,8 z" fill="#4dd4bf"/>
+  <text x="520" y="80" font-size="14" fill="#4dd4bf" text-anchor="middle">τ = k·i</text>
+  <path d="M640,210 A40,40 0 0 1 596,210" fill="none" stroke="#ef766f" stroke-width="2.6"/>
+  <path d="M596,210 l3,-11 l7,9 z" fill="#ef766f"/>
+  <text x="618" y="244" font-size="14" fill="#ef766f" text-anchor="middle">load τ_L</text>
+  <text x="500" y="275" font-size="14" fill="#e6ebf1" text-anchor="middle">J·dω/dt = k·i − τ_L</text>
+</svg>

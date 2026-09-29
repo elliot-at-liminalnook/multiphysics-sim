@@ -1,0 +1,44 @@
+# A new motor variant, written as equations: coreless (ironless) rotor,
+# copper resistance rising with temperature, NdFeB magnet weakening with it,
+# copper loss heating a thermal port.
+part coreless_motor "Coreless DC motor (thermal)"
+category Actuators
+summary "A brushed motor with an ironless rotor: tiny inductance and inertia, torque that fades as it heats."
+explain "The winding is a self-supporting copper basket with no iron, so inductance is very low and the rotor is light: very fast current and speed response and no cogging. Copper resistance rises about 0.39 %/K; NdFeB magnet flux falls about 0.12 %/K, so k_t and k_e both drop as it warms. All copper loss flows out of the heat port."
+tradeoffs "Faster and smoother than an iron-core motor of the same size and more efficient at light load, but the thin winding has little thermal mass: it overheats quickly at stall and costs more. Compare the brushed motor (iron core)."
+limits "Lumped winding temperature (one node at the heat port); no brush drop or friction; magnet coefficient is linear (valid well below the demagnetisation knee)."
+pairs rotational.inertia rotational.worm_gear rotational.lossy_gear thermal.capacitance thermal.conductance electrical.switched_voltage_source electrical.ground rotational.ground
+
+port p electrical
+port n electrical
+port shaft rotational
+port case rotational
+port heat thermal
+
+param resistance Ω ~ 1.8 "Winding resistance at the reference temperature"
+param alpha_cu 1/K = 0.00393 "Copper resistance temperature coefficient"
+param inductance H = 0.00008 "Winding inductance (small: no iron)"
+param torque_constant N·m/A ~ 0.012 "k_t = k_e at the reference temperature"
+param beta_magnet 1/K = -0.0012 "NdFeB flux temperature coefficient"
+param reference K = 293.15 "Temperature the constants are given at"
+param hot_rise K = 80 "Temperature rise used for the hot derived values"
+
+realtime inductance = 0
+state i Current = 0
+let dT = heat.T - reference
+let r = resistance*(1 + alpha_cu*dT)
+let k = torque_constant*(1 + beta_magnet*dT)
+let w = shaft.w - case.w
+eq inductance*der(i) = p.v - n.v - r*i - k*w
+flow p = i
+flow n = -i
+flow shaft = -k*i
+flow case = k*i
+flow heat = -r*i^2
+energy 0.5*inductance*i^2
+
+derive "stall torque per volt (cold)" = torque_constant/resistance N·m/V
+derive "no-load speed per volt (cold)" = 1/torque_constant rad/s/V
+derive "electrical time constant" = inductance/resistance s
+derive "torque constant when hot" = torque_constant*(1 + beta_magnet*hot_rise) N·m/A
+derive "resistance when hot" = resistance*(1 + alpha_cu*hot_rise) Ω

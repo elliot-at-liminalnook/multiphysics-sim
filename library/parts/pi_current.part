@@ -1,0 +1,22 @@
+# Torque control: a PI loop that holds a motor's current at a target.
+part pi_current "PI current controller (torque control)"
+category Control
+summary "Holds a motor's current, and so its torque (τ = k·i), at a target by adjusting the drive command."
+explain "e = target − measured current. u = offset + kp·e + ki·∫e dt, clipped to ±limit, drives an H-bridge. Because a motor's torque is k·i, holding the current holds the torque whatever the speed: the loop raises the voltage as the back-EMF grows. How fast it follows is set by the winding's L/R and the gains. The target switches on at `start`."
+tradeoffs "Higher kp follows faster but amplifies current-sensor noise and can ring with the PWM; ki removes the steady error. Once the command saturates (the supply cannot overcome the back-EMF), the current and torque fall anyway, and the integral winds up (no anti-wind-up here)."
+limits "Continuous-time; ideal current measurement unless a sensor.current with bandwidth sits in front; no anti-wind-up."
+pairs sensor.current robot.h_bridge actuator.pwm_driver bridge.brushed_motor
+input measured Current
+output command Dimensionless
+param target A ~ 1 "Target current"
+param start s = 0 "When the target switches on"
+param kp 1/A ~ 0.2 "Proportional gain: command per amp of error"
+param ki 1/A/s = 0 "Integral gain"
+param limit 1 = 1 "Command limit (±)"
+param offset 1 = 0 "Feed-forward added to the command (with kp = ki = 0: a fixed voltage command)"
+param rise s = 0.00005 "Time over which the target switches on"
+state integral Dimensionless = 0
+let goal = target*0.5*(1 + tanh((t - start)/rise))
+let e = goal - measured
+eq der(integral) = ki*e
+set command = max(-limit, min(limit, offset + kp*e + integral))

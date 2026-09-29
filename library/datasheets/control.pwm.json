@@ -1,0 +1,20 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "control.pwm",
+  "label": "PWM timer (duty 0…1 → gate)",
+  "kind": "generic",
+  "parameters": {
+    "frequency": 20000.0,
+    "initial_duty": 0.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) duty: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

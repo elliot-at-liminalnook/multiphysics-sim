@@ -194,16 +194,19 @@ class Loop:
         frame = self._pending
         if frame is None:
             raise ProtocolError("no frame awaiting a reply")
+        # Validate a copy: a rejected reply must not leave bad values held.
+        held = list(self._held)
         if values is not None:
-            if len(values) > len(self._held):
-                raise ProtocolError(f"{len(values)} values for {len(self._held)} actuators")
-            self._held[: len(values)] = [float(v) for v in values]
+            if len(values) > len(held):
+                raise ProtocolError(f"{len(values)} values for {len(held)} actuators")
+            held[: len(values)] = [float(v) for v in values]
         for name, value in by_name.items():
             if name not in self._actuator_index:
                 raise ProtocolError(f"unknown actuator {name!r}; have {list(self._actuator_index)}")
-            self._held[self._actuator_index[name]] = float(value)
-        if not all(math.isfinite(v) for v in self._held):
-            raise ProtocolError(f"non-finite actuator value in {self._held!r}")
+            held[self._actuator_index[name]] = float(value)
+        if not all(math.isfinite(v) for v in held):
+            raise ProtocolError(f"non-finite actuator value in {held!r}")
+        self._held = held
         self._write({"type": "act", "seq": frame.seq, "actuators": list(self._held)})
         self._pending = None
         self._seq += 1

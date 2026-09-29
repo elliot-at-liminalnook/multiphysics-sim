@@ -1,0 +1,89 @@
+kind: maneuver
+maneuver: turn-in-place
+gait: 6216-Bayesian-009
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/maneuvers/turn-in-place.yaml
+status: ready
+summary: 'Ready (kinematics only): moved 0.00 m, turned 30 deg over 20.0 s. Fastest joint: joint.+Y | Hip servo output at 27% of motor speed.'
+reasons: []
+joints:
+- joint: joint.+Y | Hip servo output
+  reference_peak_rad_s: 1.1762557673304843
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 27.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Hip servo output
+  reference_peak_rad_s: 1.1428059386618845
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 26.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Hip servo output
+  reference_peak_rad_s: 1.162566422075913
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 26.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Hip servo output
+  reference_peak_rad_s: 1.1265550532562545
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 25.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Foot servo output
+  reference_peak_rad_s: 0.9125595893327842
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 18.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Foot servo output
+  reference_peak_rad_s: 0.8852856660920727
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 18.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Foot servo output
+  reference_peak_rad_s: 0.8739914353492528
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 18.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+Y | Worm servo output
+  reference_peak_rad_s: 1.0724504361916742
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 17.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Foot servo output
+  reference_peak_rad_s: 0.8606430882655003
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 17.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-Y | Worm servo output
+  reference_peak_rad_s: 0.9869874043873877
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 16.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.+X | Worm servo output
+  reference_peak_rad_s: 1.0083921226135217
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 16.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+- joint: joint.-X | Worm servo output
+  reference_peak_rad_s: 1.0021873930412928
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 16.0
+  tracking_rms_deg: null
+  tracking_peak_deg: null
+checked_s: 20.0
+travel_m:
+- 0.0
+- 0.0
+turned_deg: 30.000000000000004
+maximum_marker_error_m: 6.023493692280733e-10
+maneuver_overlap_mm: 0.04613733943293527
+gait_overlap_mm: 0.314127000549961
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-steer/turn-in-place-f27a47e1

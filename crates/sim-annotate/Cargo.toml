@@ -1,0 +1,10 @@
+[package]
+name = "sim-annotate"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Shared annotation model: threads, comments, anchors, bounded undo and a revisioned sidecar store. Used by system discussions, schematic notes and lessons."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true

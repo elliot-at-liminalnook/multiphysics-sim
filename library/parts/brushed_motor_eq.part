@@ -1,0 +1,31 @@
+# The built-in bridge.brushed_motor, written as equations. It exists to prove
+# that authored parts compile to the same physics as hand-written Rust
+# (sim-parts tests compare the two to 1e-9).
+part brushed_motor_eq "Brushed DC motor (equations)"
+category Actuators
+summary "A permanent-magnet brushed DC motor, defined in a .part file."
+explain "Identical to the built-in brushed motor: winding with resistance and inductance, back-EMF proportional to speed, torque proportional to current, reaction on the case."
+pairs rotational.inertia rotational.worm_gear rotational.ideal_gear rotational.ground electrical.switched_voltage_source electrical.ground
+
+port p electrical
+port n electrical
+port shaft rotational
+port case rotational
+
+param resistance Ω ~ 2.0 "Winding resistance R"
+param inductance H = 0 "Winding inductance L"
+param torque_constant N·m/A ~ 0.012 "Torque per amp k_t"
+param back_emf_constant V·s/rad ~ 0.012 "Volts per rad/s k_e"
+
+realtime inductance = 0
+state i Current = 0
+let w = shaft.w - case.w
+eq inductance*der(i) = p.v - n.v - resistance*i - back_emf_constant*w
+flow p = i
+flow n = -i
+flow shaft = -torque_constant*i
+flow case = torque_constant*i
+energy 0.5*inductance*i^2
+
+derive "stall torque per volt" = torque_constant/resistance N·m/V
+derive "no-load speed per volt" = 1/back_emf_constant rad/s/V

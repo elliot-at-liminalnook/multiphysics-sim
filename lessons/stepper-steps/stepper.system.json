@@ -1,0 +1,313 @@
+{
+  "schema": "sim.system/1",
+  "title": "Stepper move",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Stepper move",
+      "description": "A NEMA 17 stepper is told to turn one revolution. The driver moves the magnetic target; the rotor follows like a stiff spring, unless the target runs away from it.",
+      "instances": {
+        "drag": {
+          "display_id": "b3da61239d48319328b6dea7",
+          "label": "Axis friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "smoothing_speed": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Linear-bearing and belt friction referred to the shaft: 0.05 N·m."
+              }
+            },
+            "torque": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Linear-bearing and belt friction referred to the shaft: 0.05 N·m."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.015,
+              0.015,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Frame",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "load": {
+          "display_id": "e4ddf49ff64d1bf72206a477",
+          "label": "Rotor, pulley and carriage",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.0001054,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The rotor (5.4e-6) plus a pulley, belt and carriage referred to the shaft (1e-4): about 20 times the rotor alone."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.015,
+              0.035,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.02,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        },
+        "move": {
+          "display_id": "3b7e5b34c3d164dd3d9b6386",
+          "label": "Move profile",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.trapezoid_move"
+          },
+          "parameters": {
+            "accel": {
+              "value": 20000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "One full turn at up to 60 rad/s; acceleration set per scene."
+              }
+            },
+            "rate": {
+              "value": 60.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "One full turn at up to 60 rad/s; acceleration set per scene."
+              }
+            },
+            "start": {
+              "value": 0.05,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "One full turn at up to 60 rad/s; acceleration set per scene."
+              }
+            },
+            "travel": {
+              "value": 6.283185307179586,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "One full turn at up to 60 rad/s; acceleration set per scene."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "stepper": {
+          "display_id": "f8f3433568e9d4ed709f060e",
+          "label": "NEMA 17 stepper",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.stepper_motor"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor, microstepping current driver."
+              }
+            },
+            "detent_torque": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor, microstepping current driver."
+              }
+            },
+            "holding_torque": {
+              "value": 0.45,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor, microstepping current driver."
+              }
+            },
+            "steps_per_rev": {
+              "value": 200.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor, microstepping current driver."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.035,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.0423,
+                0.04,
+                0.0423
+              ]
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ],
+            "model": "nema17"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "target",
+          "terminals": [
+            {
+              "instance": "move",
+              "port": "angle"
+            },
+            {
+              "instance": "stepper",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "label": "case",
+          "terminals": [
+            {
+              "instance": "stepper",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "stepper",
+              "port": "shaft"
+            },
+            {
+              "instance": "load",
+              "port": "shaft"
+            },
+            {
+              "instance": "drag",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0001,
+    "rationale": "Stepper torque ripple (50 electrical cycles per turn at 60 rad/s ≈ 480 Hz): backward Euler, 0.1 ms."
+  },
+  "studies": {
+    "acceleration": {
+      "at": "",
+      "instance": "move",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "accel",
+        "values": [
+          500.0,
+          2000.0,
+          5000.0,
+          20000.0
+        ]
+      },
+      "duration": 0.5,
+      "observe": [
+        "load.shaft.angle"
+      ],
+      "metrics": [
+        {
+          "label": "final angle (6.283 if no steps lost)",
+          "observable": "load.shaft.angle",
+          "reduce": "final",
+          "window": [
+            0.0,
+            0.5
+          ]
+        }
+      ]
+    }
+  }
+}

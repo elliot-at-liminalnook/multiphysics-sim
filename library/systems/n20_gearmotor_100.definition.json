@@ -1,0 +1,256 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "n20_gearmotor_100",
+  "definitions": {
+    "n20_gearmotor_100": {
+      "label": "N20 gearmotor 6 V 100:1",
+      "description": "Tiny metal-gear motor for small rovers and grippers: 300 rpm, ≈ 0.2 N·m stall at 6 V.",
+      "interface": "gearmotor.dc",
+      "ports": {
+        "n": {
+          "label": "Supply −"
+        },
+        "output": {
+          "label": "Output shaft"
+        },
+        "p": {
+          "label": "Supply +"
+        }
+      },
+      "instances": {
+        "friction": {
+          "label": "Gear friction",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.coulomb_friction"
+          },
+          "parameters": {
+            "torque": {
+              "value": 0.003,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.025,
+              -0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gear": {
+          "label": "Gearbox",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            },
+            "ratio": {
+              "value": 100.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.015,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "motor": {
+          "label": "Motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.0019,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            },
+            "inductance": {
+              "value": 0.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            },
+            "resistance": {
+              "value": 3.75,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            },
+            "torque_constant": {
+              "value": 0.0019,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "mount": {
+          "label": "Mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              -0.015,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 5e-9,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative N20 6 V 100:1 gearmotor (300 rpm no-load, ≈ 0.2 N·m stall); catalogue-style values, not a measured unit."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "mount",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "gear",
+              "port": "output"
+            },
+            {
+              "instance": "friction",
+              "port": "shaft"
+            },
+            {
+              "boundary": "output"
+            }
+          ]
+        }
+      ],
+      "version": 1
+    }
+  }
+}

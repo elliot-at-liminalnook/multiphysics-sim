@@ -1,0 +1,21 @@
+# A point-to-point move with limited acceleration: the trapezoidal speed profile.
+part trapezoid_move "Trapezoidal move (limited acceleration)"
+category Control
+summary "A commanded angle that speeds up at a set acceleration, cruises, and slows down to stop exactly at the target."
+explain "The commanded speed follows a trapezoid: it rises at `accel` from `start`, is capped at `rate`, and falls at `accel` so it reaches zero after travelling `travel`. The angle is its integral. Starting a stepper or a servo this way keeps the torque it needs to accelerate the load within what it can give."
+tradeoffs "Gentler acceleration asks for less torque but makes the move take longer. The fastest move within a motor's torque uses the largest acceleration it can reliably deliver with margin."
+limits "Moves forward only (travel > 0); the slow-down begins from the remaining distance, so a move too short to reach `rate` becomes a triangle."
+pairs part.stepper_motor part.pid_angle robot.effective_servo robot.servo_firmware
+output angle Angle
+param travel rad ~ 6.283185307 "Distance to move"
+param rate rad/s ~ 60 "Cruise speed"
+param accel rad/s^2 ~ 600 "Acceleration and deceleration"
+param start s = 0 "When the move starts"
+param edge s = 0.0002 "Smoothing of the start, and of the final approach (keeps the stop solvable)"
+state moved Angle = 0
+let left = max(travel - moved, 0)
+let soft = accel*edge
+let speed = max(0, min(min(rate, accel*max(t - start, 0)), sqrt(2*accel*left + soft*soft) - soft))
+eq der(moved) = speed*0.5*(1 + tanh((t - start)/edge))
+set angle = moved
+derive "time to reach cruise speed" = rate/accel s

@@ -1,0 +1,270 @@
+{
+  "schema": "sim.system/1",
+  "title": "Encoder counts and speed",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Encoder counts and speed",
+      "description": "A wheel speeds up slowly under a small torque. An encoder reports its angle in whole counts, and firmware estimates speed from them: the counts' size limits what it can know.",
+      "instances": {
+        "drive": {
+          "display_id": "472d5bd49126d935a207e800",
+          "label": "Torque source",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.torque_source"
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.008,
+              "length": 0.02
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ]
+          }
+        },
+        "encoder": {
+          "display_id": "43d016472e0436046116bb21",
+          "label": "Encoder, 64 counts/turn",
+          "kind": {
+            "kind": "element",
+            "component_type": "sensor.encoder"
+          },
+          "parameters": {
+            "counts": {
+              "value": 64.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A cheap magnetic encoder: 64 counts per turn (5.6° per count), read by the firmware every millisecond."
+              }
+            },
+            "period": {
+              "value": 0.001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A cheap magnetic encoder: 64 counts per turn (5.6° per count), read by the firmware every millisecond."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.012,
+              "length": 0.006
+            },
+            "color_srgb": [
+              0.33,
+              0.52,
+              0.86
+            ]
+          }
+        },
+        "estimate": {
+          "display_id": "7498e52f853f73be6fdc9751",
+          "label": "Speed estimate",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.speed_estimate"
+          },
+          "parameters": {
+            "tau": {
+              "value": 0.005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Speed from the counts, filtered over 5 ms."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "push": {
+          "display_id": "d5856729f2effc78a91eb512",
+          "label": "Gentle push",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.torque_command"
+          },
+          "parameters": {
+            "duration": {
+              "value": 10.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small steady torque, so the wheel's speed ramps up slowly: 2 mN·m."
+              }
+            },
+            "edge": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small steady torque, so the wheel's speed ramps up slowly: 2 mN·m."
+              }
+            },
+            "start": {
+              "value": 0.1,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small steady torque, so the wheel's speed ramps up slowly: 2 mN·m."
+              }
+            },
+            "step": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small steady torque, so the wheel's speed ramps up slowly: 2 mN·m."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "wheel": {
+          "display_id": "6e3429ab06fa03b5b09065c5",
+          "label": "Wheel",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.0001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A small wheel, 1e-4 kg·m²."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.025,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.03,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "command",
+          "terminals": [
+            {
+              "instance": "push",
+              "port": "torque"
+            },
+            {
+              "instance": "drive",
+              "port": "torque"
+            }
+          ]
+        },
+        {
+          "label": "shaft",
+          "terminals": [
+            {
+              "instance": "drive",
+              "port": "shaft"
+            },
+            {
+              "instance": "wheel",
+              "port": "shaft"
+            },
+            {
+              "instance": "encoder",
+              "port": "shaft"
+            }
+          ]
+        },
+        {
+          "label": "counts",
+          "terminals": [
+            {
+              "instance": "encoder",
+              "port": "angle"
+            },
+            {
+              "instance": "estimate",
+              "port": "angle"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0002,
+    "rationale": "The encoder's counts are steps: backward Euler, 0.2 ms."
+  }
+}

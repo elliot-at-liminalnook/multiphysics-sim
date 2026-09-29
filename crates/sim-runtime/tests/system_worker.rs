@@ -43,6 +43,7 @@ fn process_builds_steps_rejects_stale_commands_and_can_be_terminated() {
             interval: 0.01,
             integrator: sim_dynamics::Integrator::implicit_midpoint(),
             seed: 71,
+            grid_snapping: false,
         },
     };
     let mut client = Client::spawn(

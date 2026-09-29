@@ -1,0 +1,23 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.stepper_motor",
+  "label": "Stepper motor with microstepping driver",
+  "kind": "generic",
+  "parameters": {
+    "damping": 0.002,
+    "detent_torque": 0.02,
+    "holding_torque": 0.45,
+    "steps_per_rev": 200.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) target: benches need a fixed drive, so only the ports are documented"
+    }
+  ],
+  "source_hash": "13d1a7a813148504e243b19ac476b6af64688c60d38125e1da79402bf91f65a3"
+}

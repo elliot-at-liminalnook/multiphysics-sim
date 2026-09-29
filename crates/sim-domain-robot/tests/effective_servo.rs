@@ -78,7 +78,9 @@ fn registered_component_applies_equal_opposite_shaft_and_housing_torques() {
     let servo = EffectiveServo::new(&parameters()).unwrap();
     for shift in [0.0, 0.7] {
         let mut through = [0.0; 4];
-        let mut signals = [0.0; 4];
+        // Signals are numbered among the signal ports, as the runtime does:
+        // one input (target), one output (torque).
+        let mut signals = [0.0; 1];
         let across = [0.2 + shift, 1.0 + shift, shift, shift];
         let mut ctx = Context::new(
             0.0,
@@ -88,7 +90,7 @@ fn registered_component_applies_equal_opposite_shaft_and_housing_torques() {
             &[Some(1), None, Some(3), None],
             &across,
             &[0.0; 4],
-            &[0.0, 0.0, 0.4, 0.0],
+            &[0.4],
             &mut [],
             &mut through,
             &mut signals,
@@ -96,7 +98,7 @@ fn registered_component_applies_equal_opposite_shaft_and_housing_torques() {
         servo.residual(&mut ctx);
         assert!((through[0] + 1.5).abs() < 1e-14);
         assert!((through[2] - 1.5).abs() < 1e-14);
-        assert!((signals[3] - 1.5).abs() < 1e-14);
+        assert!((signals[0] - 1.5).abs() < 1e-14);
         assert_eq!(through.iter().sum::<f64>(), 0.0);
     }
 }

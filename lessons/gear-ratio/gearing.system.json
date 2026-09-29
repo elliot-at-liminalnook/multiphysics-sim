@@ -1,0 +1,392 @@
+{
+  "schema": "sim.system/1",
+  "title": "Gear ratio and a heavy load",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Gear ratio and a heavy load",
+      "description": "The 12 V can motor turns a load 25 times its own rotor's inertia through a gear pair. The ratio trades speed for torque, and shrinks the load the motor feels by the ratio squared.",
+      "instances": {
+        "frame": {
+          "display_id": "9ee562304f008ad6de826f42",
+          "label": "Motor mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.072,
+              0.022,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gear": {
+          "display_id": "f86d26afdc74d6536fd5127d",
+          "label": "Gear pair",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ideal_gear"
+          },
+          "parameters": {
+            "ratio": {
+              "value": 5.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A spur pair; losses left out so the ratio's effect stands alone."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.02,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "6291f38f64d0dbcff74eac4a",
+          "label": "0 V",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.0,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "load": {
+          "display_id": "e4ddf49ff64d1bf72206a477",
+          "label": "Load (an arm's inertia)",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.000075,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A load 25 times the rotor's inertia: an aluminium disc Ø60 mm, 0.167 kg (7.5e-5 kg·m²), standing in for a small arm."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.03,
+              "length": 0.01
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        },
+        "motor": {
+          "display_id": "857d881dfd59e17b4f4d307d",
+          "label": "DC motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "resistance": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "rotor": {
+          "display_id": "5bb5143f5f36f47cb9735055",
+          "label": "Motor rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm; the same motor as the torque–speed lesson. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.036,
+              0.04,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.002,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "supply": {
+          "display_id": "5c375faedf24a2cc595952ea",
+          "label": "Supply",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_source"
+          },
+          "parameters": {
+            "voltage": {
+              "value": 12.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A bench supply or a charged pack."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.08,
+              0.02,
+              -0.07
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "0 V",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "label": "motor shaft",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "label": "output",
+          "terminals": [
+            {
+              "instance": "gear",
+              "port": "output"
+            },
+            {
+              "instance": "load",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "implicit_midpoint",
+    "interval": 0.0001,
+    "rationale": "Smooth motor: implicit midpoint; 0.1 ms resolves the 0.25 ms electrical time constant."
+  },
+  "studies": {
+    "ratio": {
+      "at": "",
+      "instance": "gear",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "ratio",
+        "values": [
+          1.0,
+          2.0,
+          3.0,
+          5.0,
+          8.0,
+          12.0,
+          20.0
+        ]
+      },
+      "duration": 0.2,
+      "observe": [
+        "load.shaft.angle",
+        "load.shaft.speed"
+      ],
+      "metrics": [
+        {
+          "label": "load angle after 30 ms (rad)",
+          "observable": "load.shaft.angle",
+          "reduce": "final",
+          "window": [
+            0.0,
+            0.03
+          ]
+        },
+        {
+          "label": "top load speed (rad/s)",
+          "observable": "load.shaft.speed",
+          "reduce": "final",
+          "window": [
+            0.0,
+            0.2
+          ]
+        }
+      ]
+    }
+  }
+}

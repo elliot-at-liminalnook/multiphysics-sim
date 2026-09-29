@@ -1,0 +1,33 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.solenoid",
+  "label": "Pull solenoid",
+  "kind": "generic",
+  "parameters": {
+    "gap_scale": 0.002,
+    "inductance_closed": 0.06,
+    "resistance": 12.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.006164811580401053,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.965e-1 J → change -6.165e-3 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 7.1e-7, 1.8e-7, 4.5e-8 (1 → 0.125 ms); observed order 2.0"
+    }
+  ],
+  "source_hash": "498b054f6a645786b7e14a722eb098808095e585d5d7bfe6971ccf4f38de20f6"
+}

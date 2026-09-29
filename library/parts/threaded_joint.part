@@ -1,0 +1,25 @@
+# A screw held in plastic: directly by its thread, or by a heat-set insert.
+part threaded_joint "Screw in plastic (thread or heat-set insert)"
+category Mechanical
+summary "A screw held in a plastic part, pulled out along its axis: stiff at first, then the plastic around it shears and it tears out."
+explain "It tears out when the plastic around a cylinder of diameter D and engaged length L shears: F_max = τ·π·D·L·η, where τ is the plastic's shear strength and η the share of that surface that really grips (thread fill, knurl bite). A self-tapped thread shears at its crests (D ≈ the screw's size); a heat-set insert's knurls grip a wider cylinder (D ≈ the insert's outside) of plastic that melted around them. The pull curve here is F = F_max·u·e^(1−u) with u = pull-out / peak_displacement: it rises, peaks at F_max, then falls as the plastic tears."
+tradeoffs "A self-tapped screw is quick and free but strips after a few assemblies and holds less. A brass heat-set insert holds more, keeps a metal thread for many assemblies, and spreads the load into more plastic; it needs a soldering iron and a boss thick enough (about twice the insert's diameter) not to split."
+limits "A one-way pull test: after the peak the curve is the tearing part, and unloading would not recover it; linear before the peak; strength and stiffness are estimates, not measured on your printer and filament; the part being pulled into (the boss) is taken as rigid."
+pairs part.force_command translational.mass translational.ground part.hard_stop_linear
+port screw translational
+port boss translational
+param diameter m ~ 0.0056 "Diameter of the sheared cylinder (insert outside ≈ 5.6 mm for M3; screw size for a self-tapped thread)"
+param length m ~ 0.0057 "Engaged length"
+param shear_strength Pa ~ 1.7e7 "Shear strength of the plastic there (printed PLA, pulled along the layer stacking: ≈ 15–20 MPa, estimate)"
+param efficiency 1 ~ 0.5 "Share of the cylinder that grips (thread fill or knurl bite)"
+param peak_displacement m ~ 0.0003 "How far it pulls out before the peak"
+let capacity = shear_strength*3.141592654*diameter*length*efficiency
+let y = screw.s - boss.s
+let u = max(y, 0)/peak_displacement
+let force = capacity*u*exp(1 - u) + (2.718281828*capacity/peak_displacement)*min(y, 0)
+flow screw = force
+flow boss = -force
+output load Force
+set load = force
+derive "pull-out strength" = shear_strength*3.141592654*diameter*length*efficiency N
+derive "initial stiffness" = 2.718281828*shear_strength*3.141592654*diameter*length*efficiency/peak_displacement N/m

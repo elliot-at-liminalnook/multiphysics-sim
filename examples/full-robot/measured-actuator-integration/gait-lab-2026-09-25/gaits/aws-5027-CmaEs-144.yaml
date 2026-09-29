@@ -1,0 +1,27 @@
+# Exported from examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/aws-wide-016/comparison/5027-CmaEs-144
+# Search result: 0.187 m/s
+# Edit and evaluate with: gait_lab evaluate examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/aws-wide-016/comparison-config.json OUT_DIR THIS_FILE
+version: 1
+name: 5027-CmaEs-144
+notes: Tuned from examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/wide-016.yaml by the search in examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/aws-wide-016.
+cycle:
+  period_s: 1.3600206885960398
+  travel_m: 0.37425735236484553
+body:
+  height_offset_m: -0.02920031251455887
+leg_defaults:
+  stance: 0.5665102373911524
+  swing_height_m: 0.01422958271946462
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.5872941752213304
+  +Y:
+    phase: 0.08544124070394885
+  -X:
+    phase: 0.5844542346795494
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 8.811437293739946
+  governor_speed_rad_s: 2.360571965418379

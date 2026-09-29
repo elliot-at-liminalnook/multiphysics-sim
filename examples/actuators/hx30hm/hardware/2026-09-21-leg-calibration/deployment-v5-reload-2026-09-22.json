@@ -1,0 +1,15 @@
+{
+  "time": "2026-09-22T21:37:18Z",
+  "reason": "FPGA board was unplugged; SRAM image lost",
+  "motor_supply_off_confirmed_by_operator": true,
+  "bitstream": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/impl/bridge_calibration.fs",
+  "bitstream_sha256": "e3bba71113275b403960e7d7deafd0245f9173d8a14980998a3d48784d938576",
+  "programming": "SRAM only; openFPGALoader -b tangprimer25k exit 0",
+  "readback_request": "STOP/status (op 0) only",
+  "readback_reply": [255, 255, 254, 15, 0, 5, 1, 10, 254, 0, 0, 0, 0, 60, 90, 126, 208, 7, 249],
+  "fpga_version_readback": 5,
+  "armed_mask": 0,
+  "profile_signature_ok": true,
+  "powered_motor_verification": false,
+  "nonzero_hardware_tested": false
+}

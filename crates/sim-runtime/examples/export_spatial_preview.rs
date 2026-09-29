@@ -74,6 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             interval: 0.01,
             integrator: sim_dynamics::Integrator::implicit_midpoint(),
             seed: 71,
+            grid_snapping: false,
         },
         binding: None,
     };

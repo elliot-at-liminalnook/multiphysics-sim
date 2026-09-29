@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="IBM Plex Sans">
+  <rect x="1" y="1" width="758" height="328" rx="12" fill="#141a21" stroke="#2e353f"/>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#e6ebf1">Backlash: the tooth has room to move before it touches either side</text>
+  <!-- output gear teeth (fixed pair of walls) -->
+  <g fill="#de9454" fill-opacity="0.35" stroke="#de9454" stroke-width="2.5">
+    <path d="M120,250 L150,130 L200,130 L230,250 Z"/>
+    <path d="M380,250 L410,130 L460,130 L490,250 Z"/>
+  </g>
+  <text x="175" y="275" font-size="13" fill="#de9454" text-anchor="middle">output tooth</text>
+  <text x="435" y="275" font-size="13" fill="#de9454" text-anchor="middle">output tooth</text>
+  <!-- input tooth in the gap -->
+  <path d="M262,90 L282,210 L328,210 L348,90 Z" fill="#4dd4bf" fill-opacity="0.35" stroke="#4dd4bf" stroke-width="2.5"/>
+  <text x="305" y="80" font-size="13" fill="#4dd4bf" text-anchor="middle">motor tooth</text>
+  <!-- gap arrows -->
+  <line x1="236" y1="190" x2="276" y2="190" stroke="#e6ebf1" stroke-width="1.8"/><path d="M236,190 l8,-4 l0,8 z" fill="#e6ebf1"/><path d="M276,190 l-8,-4 l0,8 z" fill="#e6ebf1"/>
+  <line x1="334" y1="190" x2="374" y2="190" stroke="#e6ebf1" stroke-width="1.8"/><path d="M334,190 l8,-4 l0,8 z" fill="#e6ebf1"/><path d="M374,190 l-8,-4 l0,8 z" fill="#e6ebf1"/>
+  <text x="256" y="178" font-size="12.5" fill="#e6ebf1" text-anchor="middle">g</text>
+  <text x="354" y="178" font-size="12.5" fill="#e6ebf1" text-anchor="middle">g</text>
+  <!-- explanation box -->
+  <rect x="520" y="70" width="216" height="190" rx="8" fill="#1a2129" stroke="#2e353f"/>
+  <text x="536" y="98" font-size="13.5" fill="#e6ebf1">Total free play: 2g</text>
+  <text x="536" y="126" font-size="12.5" fill="#99a6b5">Pushing right: the output</text>
+  <text x="536" y="144" font-size="12.5" fill="#99a6b5">trails the motor by g.</text>
+  <text x="536" y="172" font-size="12.5" fill="#99a6b5">On a reversal the motor</text>
+  <text x="536" y="190" font-size="12.5" fill="#99a6b5">crosses 2g before the</text>
+  <text x="536" y="208" font-size="12.5" fill="#99a6b5">output moves at all.</text>
+  <text x="536" y="240" font-size="12.5" fill="#4dd4bf">here: g = 0.04 rad (2.3°)</text>
+  <text x="24" y="314" font-size="12.5" fill="#99a6b5">Every gear mesh needs a little play to run freely; wear adds more. The model's gap g is half the total play.</text>
+</svg>

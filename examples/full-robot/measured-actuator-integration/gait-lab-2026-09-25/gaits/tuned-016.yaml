@@ -1,0 +1,27 @@
+# Exported from examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/tune-bayesian-020/comparison/4201-Bayesian-016
+# Search result: 0.142 m/s
+# Edit and evaluate with: gait_lab evaluate examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/tune-bayesian-020/comparison-config.json OUT_DIR THIS_FILE
+version: 1
+name: 4201-Bayesian-016
+notes: Tuned from examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/bayesian-020-tune.yaml by the search in examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/tune-bayesian-020.
+cycle:
+  period_s: 1.1726
+  travel_m: 0.2783
+body:
+  height_offset_m: -0.028159452433190103
+leg_defaults:
+  stance: 0.6111375660950249
+  swing_height_m: 0.02163626680229469
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.4935571119462365
+  +Y:
+    phase: 2.8636661565156395e-17
+  -X:
+    phase: 0.5021902381980646
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 8.811437293739946
+  governor_speed_rad_s: 2.407028116364372

@@ -618,9 +618,10 @@ impl Articulated {
                 }
                 "fixed" => {
                     let st = &j.physics.stiffness;
-                    let fast = j.fastened.as_ref().map(|f| f.stiffness * f.count.max(1.0)).unwrap_or(0.0);
+                    // CAD exports `stiffness` and `shear_capacity` for the whole bolt pattern.
+                    let fast = j.fastened.as_ref().map(|f| f.stiffness).unwrap_or(0.0);
                     let k_lin = [st.radial.max(fast), st.radial.max(fast), st.axial.max(fast)];
-                    let k_rot = j.fastened.as_ref().map(|f| (f.stiffness * f.count.max(1.0) * f.pattern_radius.powi(2)).max(st.bending)).unwrap_or(st.bending);
+                    let k_rot = j.fastened.as_ref().map(|f| (f.stiffness * f.pattern_radius.powi(2)).max(st.bending)).unwrap_or(st.bending);
                     let m_c = links[child].mass;
                     let i_c = links[child].inertia[(2, 2)].abs().max(1e-9);
                     let z = j.physics.damping_ratio.max(0.02);
@@ -655,7 +656,7 @@ impl Articulated {
                 pin_radius: j.physics.pin_radius,
                 contact_length: j.physics.contact_length,
                 allowable_pressure: j.physics.bearing.allowable_pressure,
-                shear_capacity: j.fastened.as_ref().map(|f| f.shear_capacity * f.count.max(1.0)),
+                shear_capacity: j.fastened.as_ref().map(|f| f.shear_capacity),
                 is_fixed: j.kind == "fixed",
             });
         }
@@ -779,6 +780,11 @@ impl Articulated {
             links[*li].contact_signal = Some(k);
             signal_out_names.push(format!("contact.{name}"));
         }
+        // Only IMUs have a sampled sensor model here; say so for the rest
+        // rather than dropping authored sensors silently.
+        for s in model.sensors.iter().filter(|s| s.kind != "imu") {
+            warnings.push(format!("sensor {} ({}) is recorded but not simulated; controllers read ideal joint state", s.name, s.kind));
+        }
         let mut imu_specs: Vec<&crate::model::Sensor> = model.sensors.iter().filter(|s| s.kind == "imu").collect();
         imu_specs.sort_by(|a, b| a.name.cmp(&b.name));
         let mut imus = Vec::new();
@@ -802,7 +808,7 @@ impl Articulated {
                 noise: [s.noise.accel, s.noise.gyro],
                 bias0: [s.bias.accel[0], s.bias.accel[1], s.bias.accel[2], s.bias.gyro[0], s.bias.gyro[1], s.bias.gyro[2]],
                 bias_walk: s.bias_walk,
-                quant: [s.quantization.accel, s.quantization.angle],
+                quant: [s.quantization.accel, s.quantization.gyro_step()],
                 range: [if s.range.accel > 0.0 { s.range.accel * 9.81 } else { f64::INFINITY }, if s.range.gyro > 0.0 { s.range.gyro } else { f64::INFINITY }],
                 state,
                 signals: std::array::from_fn(|c| signal + c),

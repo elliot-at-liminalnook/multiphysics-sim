@@ -810,3 +810,21 @@ def test_components_background_controls_and_recipe(win, qapp):
     win.viewport.selection.items=[(instance,'body',0)]; panel.selection_changed()
     assert panel.current_instance==instance and panel.overrides.rowCount()==3
     assert all(not panel.overrides.cellWidget(r,2).isChecked() for r in range(3))
+
+
+def test_close_keeps_unsaved_edits_when_save_as_is_cancelled(qapp, monkeypatch):
+    from PySide6.QtWidgets import QFileDialog, QMessageBox
+    from robocad.document import Document
+    from robocad.commands import Ops
+    monkeypatch.setattr(MainWindow, 'start_api', lambda self: None)
+    doc = Document(); ops = Ops(doc)
+    ops.box((0, 0, 0), (10, 10, 10))
+    assert doc.dirty and not doc.path
+    window = MainWindow(doc); window.show()
+    monkeypatch.setattr(QMessageBox, 'question', staticmethod(lambda *a, **k: QMessageBox.Save))
+    monkeypatch.setattr(QFileDialog, 'getSaveFileName', staticmethod(lambda *a, **k: ('', '')))
+    try:
+        assert not window.close()  # Save chosen, Save As cancelled: nothing is lost
+        assert window.isVisible() and doc.dirty
+    finally:
+        doc.dirty = False; window.close(); window.deleteLater()

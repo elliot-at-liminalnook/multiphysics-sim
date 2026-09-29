@@ -1,4 +1,5 @@
 use super::*;
+use crate::smooth_return::SmoothReturn;
 use crate::trajectory::Keyframe;
 
 fn config() -> ContactPhaseConfig {

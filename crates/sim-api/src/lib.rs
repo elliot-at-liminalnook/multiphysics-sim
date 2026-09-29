@@ -114,6 +114,9 @@ struct Shared {
     next_id: u64,
     images: BTreeMap<u64, StoredImage>,
     next_image: u64,
+    /// Called when a command is queued, so a host that sleeps between
+    /// frames (a background window) can wake to run it.
+    waker: Option<Arc<dyn Fn() + Send + Sync>>,
 }
 /// Drop stops listening; no process-global runtime or renderer dependency.
 pub struct Server {
@@ -146,6 +149,7 @@ impl Server {
             next_id: 1,
             images: BTreeMap::new(),
             next_image: 1,
+            waker: None,
         }));
         let stop = Arc::new(AtomicBool::new(false));
         let s = shared.clone();
@@ -154,8 +158,10 @@ impl Server {
             // A small fixed worker pool bounds connections and isolates slow clients.
             let (tx, rx) = std::sync::mpsc::sync_channel::<TcpStream>(8);
             let rx = Arc::new(Mutex::new(rx));
+            let streams = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let workers: Vec<_> = (0..4).map(|_| {
                 let rx = rx.clone(); let s = s.clone();
+                let streams = streams.clone(); let stopping = stopping.clone();
                 thread::spawn(move || loop {
                     let stream = rx.lock().unwrap().recv();
                     let Ok(mut stream) = stream else { break };
@@ -166,6 +172,10 @@ impl Server {
                     let _ = stream.set_write_timeout(Some(Duration::from_secs(2)));
                     let (status, value) = match read_request(&mut stream, address) {
                         Ok((method, path, body)) => {
+                            if method=="GET" && path.starts_with("/v1/events/") {
+                                stream_resource(&mut stream,&s,&path,&stopping,&streams);
+                                continue;
+                            }
                             let png=if method=="GET"{path.strip_prefix("/v1/images/").and_then(|v|v.strip_suffix(".png")).and_then(|v|v.parse::<u64>().ok()).and_then(|id|s.lock().unwrap().images.get(&id).map(|i|i.png.clone()))}else{None};
                             if let Some(png)=png{
                                 let _=write!(stream,"HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {}\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\n\r\n",png.len());
@@ -207,6 +217,16 @@ impl Server {
         })
     }
     /// Static descriptions are serialized only when their source identity changes.
+    /// Run `wake` whenever a command is queued (for hosts that idle between frames).
+    pub fn set_waker(&self, wake: impl Fn() + Send + Sync + 'static) {
+        self.shared.lock().unwrap().waker = Some(Arc::new(wake));
+    }
+
+    /// True while a job is running or waiting: the host should keep stepping.
+    pub fn busy(&self) -> bool {
+        self.active.is_some() || !self.shared.lock().unwrap().queue.is_empty()
+    }
+
     pub fn publish_changed(
         &mut self,
         resource: &str,
@@ -327,6 +347,28 @@ impl Drop for Server {
         }
     }
 }
+/// SSE snapshots for any published resource. Two bounded stream slots leave
+/// command workers available. Reconnect after 20 seconds; each connection starts
+/// with the complete snapshot, including the resource's retained event cursor.
+fn stream_resource(stream:&mut TcpStream,shared:&Mutex<Shared>,path:&str,stop:&AtomicBool,count:&std::sync::atomic::AtomicUsize){
+    if count.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|n|if n<2{Some(n+1)}else{None}).is_err(){
+        let _=stream.write_all(b"HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");return;
+    }
+    struct Slot<'a>(&'a std::sync::atomic::AtomicUsize);
+    impl Drop for Slot<'_>{fn drop(&mut self){self.0.fetch_sub(1,Ordering::Relaxed);}}
+    let _slot=Slot(count);
+    let resource=format!("/v1/{}",path.trim_start_matches("/v1/events/"));
+    if !shared.lock().unwrap().resources.contains_key(&resource){let _=stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");return;}
+    if stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-store\r\nConnection: close\r\nX-Content-Type-Options: nosniff\r\n\r\nretry: 500\n\n").is_err(){return;}
+    let started=Instant::now();let mut last=Value::Null;let mut heartbeat=Instant::now();
+    while !stop.load(Ordering::Relaxed)&&started.elapsed()<Duration::from_secs(20){
+        let value=shared.lock().unwrap().resources.get(&resource).cloned().unwrap_or(Value::Null);
+        if value!=last{
+            if writeln!(stream,"event: snapshot\ndata: {}\n",value).is_err(){break;}last=value;heartbeat=Instant::now();
+        }else if heartbeat.elapsed()>Duration::from_secs(5){if stream.write_all(b": heartbeat\n\n").is_err(){break;}heartbeat=Instant::now();}
+        thread::sleep(Duration::from_millis(100));
+    }
+}
 fn route(shared: &Mutex<Shared>, method: &str, path: &str, body: Value) -> (u16, Value) {
     let mut s = shared.lock().unwrap();
     if method == "GET" {
@@ -419,6 +461,9 @@ fn route(shared: &Mutex<Shared>, method: &str, path: &str, body: Value) -> (u16,
             continuation: Value::Null,
             started: Instant::now(),
         });
+        if let Some(wake) = &s.waker {
+            wake();
+        }
         return (202, json!({"job_id":id,"url":format!("/v1/jobs/{id}")}));
     }
     (
@@ -618,6 +663,24 @@ mod tests {
         server.poll(|_, _, _| panic!("cancelled command executed"));
         assert_eq!(job(&server, id)["status"], "cancelled");
     }
+    /// A host that idles between frames is woken when work arrives, and
+    /// reports itself busy until the job has run.
+    #[test]
+    fn queued_commands_wake_the_host_and_keep_it_busy_until_run() {
+        let mut server = Server::bind(0, "test", vec![]).unwrap();
+        let woken = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let w = woken.clone();
+        server.set_waker(move || {
+            w.fetch_add(1, Ordering::SeqCst);
+        });
+        assert!(!server.busy());
+        let id = submit(&server, json!([{"command":"x"}]), true);
+        assert_eq!(woken.load(Ordering::SeqCst), 1);
+        assert!(server.busy());
+        server.poll(|_, _, _| Ok(json!(1)).into());
+        assert_eq!(job(&server, id)["status"], "succeeded");
+        assert!(!server.busy());
+    }
     #[test]
     fn empty_oversized_batches_and_reserved_command_injection_are_rejected() {
         let server = Server::bind(0, "test", vec![]).unwrap();
@@ -657,6 +720,25 @@ mod tests {
         let mut response = String::new();
         stream.read_to_string(&mut response).unwrap();
         response
+    }
+    #[test]
+    fn sse_delivers_changes_while_rest_remains_available() {
+        use std::io::{BufRead,BufReader};
+        let server=Server::bind(0,"sse-test",vec![]).unwrap();
+        server.publish("agent",json!({"generation":1,"status":"queued"}));
+        server.publish("state",json!({"revision":7}));
+        let mut socket=TcpStream::connect(server.address).unwrap();
+        socket.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        write!(socket,"GET /v1/events/agent HTTP/1.1\r\nHost: {}\r\n\r\n",server.address).unwrap();
+        let mut reader=BufReader::new(socket);
+        let mut line=String::new();
+        loop{line.clear();reader.read_line(&mut line).unwrap();if line.starts_with("data:"){break;}}
+        assert!(line.contains("queued"));
+        assert!(request(&server,"",None).ends_with("{\"revision\":7}"));
+        server.publish("agent",json!({"generation":2,"status":"running"}));
+        loop{line.clear();reader.read_line(&mut line).unwrap();if line.starts_with("data:"){break;}}
+        assert!(line.contains("running"));
+        drop(reader);drop(server);
     }
     #[test]
     fn actual_http_reads_published_state_and_rejects_browser_and_rebinding() {

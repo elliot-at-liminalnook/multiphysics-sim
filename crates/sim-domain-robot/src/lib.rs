@@ -38,3 +38,4 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     motor::register(registry)?;
     switchable_bridge::register(registry)
 }
+pub mod notes;

@@ -1,0 +1,24 @@
+version: 1
+name: 5014-CmaEs-088
+notes: Tuned from examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/wide-016.yaml by the search in examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/aws-wide-016.
+cycle:
+  period_s: 1.5108070721973914
+  travel_m: 0.3346393934433157
+body:
+  height_offset_m: -0.028526633165321186
+leg_defaults:
+  stance: 0.6103040634009063
+  swing_height_m: 0.011374945385437665
+  return_ramp: 0.25
+legs:
+  +X:
+    phase: 0.6294269876002796
+  +Y:
+    phase: 0.09945422622092803
+  -X:
+    phase: 0.6283397150497515
+  -Y:
+    phase: 0.0
+controller:
+  governor_acceleration_rad_s2: 8.811437293739946
+  governor_speed_rad_s: 3.1470525623632675

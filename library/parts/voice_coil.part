@@ -1,0 +1,25 @@
+part voice_coil "Voice-coil actuator"
+category Actuators
+summary "A coil in a permanent-magnet gap: force proportional to current in both directions, over its whole stroke."
+explain "A current i in a coil of wire length l in field B feels F = B·l·i; moving at speed v it generates a back-EMF B·l·v. With k = B·l (force constant) it is the linear twin of a DC motor: L·di/dt = V − R·i − k·v. The force acts between coil and magnet."
+tradeoffs "Smooth, fast, cog-free, bidirectional force with no backlash: ideal for haptics, fast focus and force-controlled grippers. But force per watt is low and stroke is short (millimetres to centimetres); a motor with a screw or belt goes further and holds loads more efficiently."
+limits "Constant force constant over the stroke (real ones fall off near the ends), no end stops, constant resistance."
+pairs translational.mass translational.spring part.hard_stop_linear sensor.force electrical.controlled_voltage_source translational.ground
+port p electrical
+port n electrical
+port coil translational
+port magnet translational
+param force_constant N/A ~ 5 "Force per amp, B·l (also back-EMF volts per m/s)"
+param resistance Ω ~ 4 "Coil resistance"
+param inductance H = 0.001 "Coil inductance"
+realtime inductance = 0
+state i Current = 0
+let v = coil.v - magnet.v
+eq inductance*der(i) = p.v - n.v - resistance*i - force_constant*v
+flow p = i
+flow n = -i
+flow coil = -force_constant*i
+flow magnet = force_constant*i
+energy 0.5*inductance*i^2
+derive "stall force per volt" = force_constant/resistance N/V
+derive "motor constant squared (force² per watt)" = force_constant^2/resistance N^2/W

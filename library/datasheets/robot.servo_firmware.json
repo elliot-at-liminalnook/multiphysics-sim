@@ -1,0 +1,26 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "robot.servo_firmware",
+  "label": "Sampled servo position loop",
+  "kind": "generic",
+  "parameters": {
+    "deadband": 0.0,
+    "kd": 0.0,
+    "ki": 0.0,
+    "kp": 20.0,
+    "latency": 0.0,
+    "limit": 1.0,
+    "rate": 50.0,
+    "resolution": 0.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) measured, rate, target: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

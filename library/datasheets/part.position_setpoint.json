@@ -1,0 +1,36 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.position_setpoint",
+  "label": "Position setpoint (ramp + sine)",
+  "kind": "generic",
+  "parameters": {
+    "amplitude": 0.0,
+    "frequency": 1.0,
+    "ramp_for": 1.0,
+    "ramp_from": 0.0,
+    "rate": 0.0,
+    "start": 0.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.0,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 0.000e0 J → change 0.000e0 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 0.0e0, 0.0e0, 0.0e0 (1 → 0.125 ms); observed order NaN"
+    }
+  ],
+  "source_hash": "7ab0aca7141508ea50076178b6f245cae54ab22111b43297c4ec804c6038dce9"
+}

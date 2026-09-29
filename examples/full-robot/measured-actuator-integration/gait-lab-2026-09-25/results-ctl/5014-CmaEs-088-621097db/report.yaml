@@ -1,0 +1,105 @@
+gait: 5014-CmaEs-088
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/gaits/aws-5014-CmaEs-088.yaml
+status: rejected
+summary: 'Rejected after simulation: stopped at 0.50 s: tracking peak gate; incomplete, terminated or failed episode; tracking RMS gate; tracking peak gate.'
+speed_m_s: null
+forward_distance_m: -0.009364449698555034
+simulated_s: 0.5
+gates:
+- gate: body_up_z_minimum
+  value: 0.9970346588544727
+  limit: 0.9
+  ok: true
+- gate: tracking_rms_deg_worst_joint
+  value: 17.503971034906986
+  limit: 5.0
+  ok: false
+- gate: tracking_peak_deg_worst_joint
+  value: 26.270091195024538
+  limit: 14.999999999999998
+  ok: false
+reasons:
+- 'stopped at 0.50 s: tracking peak gate'
+- incomplete, terminated or failed episode
+- tracking RMS gate
+- tracking peak gate
+joints:
+- joint: joint.-X | Worm servo output
+  reference_peak_rad_s: 5.619665945619322
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 91.0
+  tracking_rms_deg: 11.78810739598238
+  tracking_peak_deg: 23.070257534947928
+- joint: joint.-Y | Worm servo output
+  reference_peak_rad_s: 5.3547024248626665
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 87.0
+  tracking_rms_deg: 10.505161265332733
+  tracking_peak_deg: 17.58525702022188
+- joint: joint.+Y | Worm servo output
+  reference_peak_rad_s: 5.350786677517672
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 87.0
+  tracking_rms_deg: 17.503971034906986
+  tracking_peak_deg: 26.270091195024538
+- joint: joint.-Y | Foot servo output
+  reference_peak_rad_s: 4.2147211682137256
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 85.0
+  tracking_rms_deg: 8.972250549308482
+  tracking_peak_deg: 11.444349594336078
+- joint: joint.+X | Worm servo output
+  reference_peak_rad_s: 5.233721371639404
+  motor_limit_rad_s: 6.182239023058187
+  percent_of_limit: 85.0
+  tracking_rms_deg: 11.915716967304643
+  tracking_peak_deg: 23.134936820000753
+- joint: joint.+Y | Hip servo output
+  reference_peak_rad_s: 3.423826031193769
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 77.0
+  tracking_rms_deg: 9.60290789382477
+  tracking_peak_deg: 14.562129064683266
+- joint: joint.-X | Hip servo output
+  reference_peak_rad_s: 3.415310451023493
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 77.0
+  tracking_rms_deg: 9.589746864962391
+  tracking_peak_deg: 16.63827443099997
+- joint: joint.+X | Hip servo output
+  reference_peak_rad_s: 3.0969261499454164
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 70.0
+  tracking_rms_deg: 8.35249231236783
+  tracking_peak_deg: 17.48040804059989
+- joint: joint.-Y | Hip servo output
+  reference_peak_rad_s: 3.0136706952677113
+  motor_limit_rad_s: 4.425520274745219
+  percent_of_limit: 68.0
+  tracking_rms_deg: 9.208091780173955
+  tracking_peak_deg: 14.756030559734542
+- joint: joint.+X | Foot servo output
+  reference_peak_rad_s: 3.289783470166845
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 66.0
+  tracking_rms_deg: 10.765222746220282
+  tracking_peak_deg: 15.098599025984772
+- joint: joint.-X | Foot servo output
+  reference_peak_rad_s: 3.293045196953833
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 66.0
+  tracking_rms_deg: 8.409318251612362
+  tracking_peak_deg: 16.414439636143
+- joint: joint.+Y | Foot servo output
+  reference_peak_rad_s: 2.9881776076385425
+  motor_limit_rad_s: 4.975999470435482
+  percent_of_limit: 60.0
+  tracking_rms_deg: 5.748661912370761
+  tracking_peak_deg: 10.253364530346392
+fidelity: 'detailed model; controller override (today host loop: 70 ms cycle, ~35 ms command latency, tuned host PID mapped to Q8 (kp 0.74 duty/rad, kd 0.049 duty s/rad, feed-forward 3421 counts/s per duty)): period 70 ms, latency 35 ms, kp_q8 291, kd_q8 275, kv_q8 1068'
+timing:
+  preparation_s: 64.856654525
+  simulation_s: 21.349428835
+  simulated_s: 0.5
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-ctl/5014-CmaEs-088-621097db
+compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-ctl/5014-CmaEs-088-621097db/compiled.json

@@ -423,6 +423,7 @@ impl Study {
                 interval: e.baseline.step_s,
                 integrator: e.integrator,
                 seed: e.seed,
+                grid_snapping: false,
             }
             .validate()?;
             if e.assumptions.is_empty() {

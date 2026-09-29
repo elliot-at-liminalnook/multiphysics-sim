@@ -14,15 +14,19 @@ try{
    if(c.action==='select'){state.connected=true;state.enabled_id=c.id;state.sweep=null;}
    if(c.action==='motion_start'){state.sweep={running:true,run_id:++run,motor_id:c.id,teaching:true,samples:[]};body=JSON.stringify(state);if(delayStart)await new Promise(r=>setTimeout(r,delayStart));}
    if(c.action==='motion_update'){
-    assert.equal(c.run_id,run);assert.equal(state.sweep.running,true);
-    const latest={elapsed_ms:commands.length*100,position_raw:2000,target_raw:2000,velocity_counts_s:0,requested_speed_counts_s:c.speed_counts_s,pwm:15,toward_upper:true,half_cycles:0,holding:c.motion==='hold'};
+    assert.equal(c.run_id,run);if(!state.sweep.running){body=JSON.stringify({ok:true});}else{
+    const half=(state.sweep.latest?.half_cycles??0)+(c.motion==='sweep'?1:0);const latest={elapsed_ms:commands.length*100,position_raw:2000,target_raw:2000,velocity_counts_s:0,requested_speed_counts_s:c.speed_counts_s,pwm:15,toward_upper:true,half_cycles:half,holding:c.motion==='hold'};
     state.sweep.latest=latest;state.sweep.samples=[latest];
-   }
+   }}
    if(c.action==='stop'||c.action==='clear'){state.enabled_id=null;if(state.sweep)state.sweep.running=false;}
    if(c.action==='clear'){const a=state.calibration.axes[c.id];if(c.boundary==='both'){a.lower=null;a.upper=null;}else a[c.boundary]=null;}
+   if(c.action==='sweep_all'){const ids=Object.keys(state.calibration.axes).map(Number).filter(k=>!state.calibration.axes[k].disabled);state.sweep={running:true,run_id:++run,motor_id:c.id,motor_ids:ids,skipped:['test (disabled)'],axes:{},samples:[]};body=JSON.stringify(state);}
+   if(c.action==='motion_update'&&state.sweep?.motor_ids){for(const k of state.sweep.motor_ids){const h=(state.sweep.axes[k]?.half_cycles??-1)+1;state.sweep.axes[k]={half_cycles:h};}if(Object.values(state.sweep.axes).every(a=>a.half_cycles>=2)){state.sweep.running=false;state.enabled_id=null;}}
+   if(c.action==='tune'){assert.equal(c.supported,true,'operator confirmed mid-travel');state.tuning={running:true,motor_id:c.id,stage:'Finding friction',polls:0};body=JSON.stringify(state);}
+   if(c.action==='set_disabled'){assert.notEqual(state.enabled_id,c.id,'disable only a stopped motor');state.calibration.axes[c.id].disabled=c.disabled;}
    if(c.action==='capture_hold'){assert.equal(c.motion,'hold');state.calibration.axes[c.id][c.boundary]=2000;state.capture_message='Saved '+c.boundary+' pose';}
    body??=JSON.stringify(['motion_update','capture_hold'].includes(c.action)?{ok:true}:state);
-  }else body=JSON.stringify(state);
+  }else{if(state.tuning?.running&&++state.tuning.polls>2){state.tuning.running=false;state.enabled_id=null;state.calibration.axes[state.tuning.motor_id].tuning={pid:{kp:1.5,ki:2,kd:0.07,integral_limit:0.1,duty_limit:1},friction_duty:0.06,record:'tune-2-1.json'};}body=JSON.stringify(state);}
   await route.fulfill({status:200,contentType:type,body});
  });
  await page.goto('http://localhost:49999/');const el=id=>page.locator('#fixture-'+id);const motor=id=>page.locator(`.motor[data-id="${id}"]`);
@@ -49,24 +53,47 @@ try{
  await el('learn').click();await until(()=>commands.at(-1).motion==='learn');
  assert.equal(commands.at(-1).speed_counts_s,50);assert.equal(commands.at(-1).drive_pwm,827);
  await el('learn').click();await until(()=>commands.at(-1).motion==='hold');
- // Focus loss cancels drive and renewal, does not leave a gravity hold unattended.
- await page.evaluate(()=>window.dispatchEvent(new Event('blur')));await until(()=>commands.at(-1).action==='stop');const count=commands.length;await new Promise(r=>setTimeout(r,350));assert.equal(commands.length,count);
+ // Switching windows keeps control; closing the page cancels drive and renewal.
+ const beforeBlur=commands.length;await page.evaluate(()=>window.dispatchEvent(new Event('blur')));await new Promise(r=>setTimeout(r,300));assert.equal(commands.slice(beforeBlur).some(c=>c.action==='stop'),false,'window blur must not stop');
+ await page.evaluate(()=>window.dispatchEvent(new Event('pagehide')));await until(()=>commands.at(-1).action==='stop');const count=commands.length;await new Promise(r=>setTimeout(r,350));assert.equal(commands.length,count);
  await motor(3).click();await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled);await el('reset').click();await until(()=>state.calibration.axes[3].lower===null&&commands.at(-1).action==='select');assert.equal(state.calibration.axes[3].reference,2000);await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled);assert.equal(await el('target').isDisabled(),true);
- // An out-of-range saved pose is explained before attempting motion; reset only it.
+ // Beyond a saved pose: explained with a warning, manual moves stay available; reset only it.
  state.calibration.axes[3]={lower:879,upper:2176,reference:2000,reverse:false};state.samples[3].position_raw=2183;
  await motor(3).click();await until(()=>state.enabled_id===3);await page.waitForFunction(()=>document.querySelector('#fixture-reset').textContent==='Reset upper pose');
- assert.equal(await el('plus').isDisabled(),true);await el('reset').click();await until(()=>state.calibration.axes[3].upper===null&&commands.at(-1).action==='select');
+ assert.equal(await el('plus').isDisabled(),false);assert.match(await el('status').textContent(),/Move back inward freely/);await el('reset').click();await until(()=>state.calibration.axes[3].upper===null&&commands.at(-1).action==='select');
  assert.equal(state.calibration.axes[3].lower,879);await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled);
  // Continuous readback crosses zero without being mistaken for an end stop.
  state.samples[3].position_raw=4095;state.samples[3].position_continuous=-1;state.calibration.axes[3]={lower:null,upper:null,reference:null,reverse:false};
  await motor(3).click();await page.waitForFunction(()=>document.querySelector('#fixture-position').textContent.includes('-0.1'));
- assert.equal(await el('plus').isEnabled(),true);assert.equal(await el('minus').isEnabled(),true);
- // A saved multi-turn pose never silently reuses an old tracking reference.
+ await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled); assert.equal(await el('plus').isEnabled(),true);assert.equal(await el('minus').isEnabled(),true);
+ // A saved multi-turn pose from another session is ignored (with a warning), not reused; manual moves continue.
  state.calibration.axes[3]={lower:-100,upper:100,coordinate_session:'old',reverse:false};state.coordinate_session='new';
- await motor(3).click();await page.waitForFunction(()=>document.querySelector('#fixture-reset').textContent==='Re-teach both poses');assert.equal(await el('plus').isDisabled(),true);
+ await motor(3).click();await page.waitForFunction(()=>document.querySelector('#fixture-reset').textContent==='Re-teach both poses');await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled);assert.equal(await el('plus').isDisabled(),false);assert.equal(await el('sweep').isDisabled(),true);
  state.calibration.axes[3]={lower:null,upper:null,reverse:false};await motor(3).click();await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled);
  // Stop during a delayed start acknowledgement must not resurrect heartbeat.
  delayStart=300;await page.keyboard.down('q');await until(()=>commands.at(-1).action==='motion_start');await page.keyboard.press('z');await page.keyboard.up('q');await until(()=>commands.at(-1).action==='stop');const end=commands.length;await new Promise(r=>setTimeout(r,600));assert.equal(commands.length,end);
+ // Disable the knee: it is stopped first, cannot be selected, and sweep-all skips it.
+ await page.keyboard.press('z');for(const k of [1,2,3])state.calibration.axes[k]={...state.calibration.axes[k],lower:k===2?3000:1000,upper:k===2?1000:3000,coordinate_session:null};state.samples[3]={position_raw:2000,voltage_v:12,temperature_c:25,current_raw:0};
+ await motor(1).click();await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled);
+ await el('disable').click();await until(()=>state.calibration.axes[1].disabled===true);
+ assert.equal(commands.filter(c=>c.action==='set_disabled').at(-1).id,1);
+ const selects=commands.filter(c=>c.action==='select').length;await motor(1).click();await page.waitForTimeout(300);
+ assert.equal(commands.filter(c=>c.action==='select').length,selects,'a disabled motor is never selected');
+ assert.equal(await el('plus').isDisabled(),true);
+ const before2=commands.length;await el('sweep-all').click();
+ await page.waitForFunction(()=>/^Swept /.test(document.querySelector('#fixture-sequence').textContent),null,{timeout:15000});
+ const swept=commands.slice(before2);
+ const sel=swept.filter(c=>c.action==='select');assert.deepEqual(sel.map(c=>[c.id,c.hold_others]),[[2,true]],'sweep-all selects the first enabled motor with every other enabled motor proven');
+ assert.equal(swept.filter(c=>c.action==='sweep_all').length,1,'one simultaneous session');
+ assert.equal(swept.some(c=>c.id===1&&c.action!=='stop'),false,'disabled knee is never driven');
+ assert.match(await el('sequence').textContent(),/Skipped: test \(disabled\)/);
+ // Tune: only after the operator confirms mid-travel; stops, reselects alone, then runs and shows the saved gains.
+ await motor(2).click();await page.waitForFunction(()=>!document.querySelector('#fixture-plus').disabled);
+ assert.equal(await el('tune').isDisabled(),true,'tuning needs the mid-travel confirmation');
+ await el('tune-ok').check();const beforeTune=commands.length;await el('tune').click();
+ await page.waitForFunction(()=>/Tuned gains in use: kp 1.50/.test(document.querySelector('#fixture-tune-status').textContent),null,{timeout:15000});
+ const tuneCmds=commands.slice(beforeTune).map(c=>c.action);assert.deepEqual(tuneCmds.filter(a=>a!=='motion_update'),['stop','select','tune']);
+ assert.equal(commands.slice(beforeTune).find(c=>c.action==='select').hold_others,false,'tuning proves and drives only this motor');
  await page.screenshot({path:'/tmp/calibration-keyboard-ui.png',fullPage:true});
- console.log('PASS: one-click motor setup; Q/A continuous intent; release during startup holds; no restart between directions; hold capture; unrestricted PWM; input key isolation; Z latching; slow sweep/pause; live speed; blur stop; reset with automatic readiness; stale start cannot revive movement.');
+ console.log('PASS: one-click motor setup; Q/A continuous intent; release during startup holds; no restart between directions; hold capture; unrestricted PWM; input key isolation; Z latching; slow sweep/pause; live speed; window switch keeps control, page close stops; reset with automatic readiness; stale start cannot revive movement; disabled motor never selected or driven; sweep-all runs enabled taught motors together; tune needs confirmation, runs alone and shows saved gains.');
 }finally{await browser.close();}

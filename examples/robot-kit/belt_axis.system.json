@@ -1,0 +1,529 @@
+{
+  "schema": "sim.system/1",
+  "title": "Stepper belt axis",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "nema17_stepper": {
+      "label": "NEMA 17 stepper + driver",
+      "description": "The 3D-printer stepper: 200 steps/rev, 0.45 N·m holding torque, with a microstepping current driver. Give it a target angle.",
+      "interface": "stepper",
+      "ports": {
+        "shaft": {
+          "label": "Shaft"
+        },
+        "target": {
+          "label": "Target angle"
+        }
+      },
+      "instances": {
+        "frame": {
+          "label": "Frame",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rotor": {
+          "label": "Rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 5.4e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.02,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "stepper": {
+          "label": "Stepper",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.stepper_motor"
+          },
+          "parameters": {
+            "damping": {
+              "value": 0.002,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            },
+            "detent_torque": {
+              "value": 0.02,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            },
+            "holding_torque": {
+              "value": 0.45,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative NEMA 17 (42 × 42 × 40 mm): 0.45 N·m holding, 54 g·cm² rotor."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "stepper",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "target"
+            },
+            {
+              "instance": "stepper",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "stepper",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "boundary": "shaft"
+            }
+          ]
+        }
+      ],
+      "source": {
+        "path": "library/systems/nema17_stepper.definition.json",
+        "content_hash": "08344e91e1fd9688d84020424ec6aa448f75fd282d53168cd9f89a37a785b668"
+      },
+      "version": 1
+    },
+    "root": {
+      "label": "Stepper belt axis",
+      "instances": {
+        "belt": {
+          "label": "GT2 belt",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.timing_belt"
+          },
+          "parameters": {
+            "radius": {
+              "value": 0.00637,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "typical radius from the part.timing_belt notes; replace with your part's value"
+              }
+            },
+            "stiffness": {
+              "value": 200000.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "typical stiffness from the part.timing_belt notes; replace with your part's value"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.03,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "carriage": {
+          "label": "Carriage 0.5 kg",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 0.5,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.08,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "home": {
+          "label": "Far-end switch",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.limit_switch"
+          },
+          "parameters": {
+            "position": {
+              "value": 0.19,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.12,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "profile": {
+          "label": "Move 200 mm in 1 s",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.angle_setpoint"
+          },
+          "parameters": {
+            "ramp_for": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "ramp_from": {
+              "value": 0.2,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "rate": {
+              "value": 31.397174254317115,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.04,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rail": {
+          "label": "Linear rail drag",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.damper"
+          },
+          "parameters": {
+            "damping": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.08,
+              0.01,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "rail_ground": {
+          "label": "Frame",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.ground"
+          },
+          "placement": {
+            "position": [
+              0.1,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "scale": {
+          "label": "Carriage position",
+          "kind": {
+            "kind": "element",
+            "component_type": "sensor.linear_encoder"
+          },
+          "placement": {
+            "position": [
+              0.1,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "stepper": {
+          "label": "NEMA 17",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "nema17_stepper"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "stops": {
+          "label": "End stops",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": -0.005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            },
+            "upper": {
+              "value": 0.3,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative value for the starter robot; not a measured machine."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.12,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "terminals": [
+            {
+              "instance": "profile",
+              "port": "angle"
+            },
+            {
+              "instance": "stepper",
+              "port": "target"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "stepper",
+              "port": "shaft"
+            },
+            {
+              "instance": "belt",
+              "port": "pulley"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "belt",
+              "port": "carriage"
+            },
+            {
+              "instance": "carriage",
+              "port": "axis"
+            },
+            {
+              "instance": "rail",
+              "port": "a"
+            },
+            {
+              "instance": "stops",
+              "port": "axis"
+            },
+            {
+              "instance": "home",
+              "port": "axis"
+            },
+            {
+              "instance": "scale",
+              "port": "axis"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "rail",
+              "port": "b"
+            },
+            {
+              "instance": "rail_ground",
+              "port": "axis"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0002,
+    "rationale": "Stepper torque ripple (50 cycles/rev) and belt resonance need ≤ 0.2 ms."
+  },
+  "studies": {
+    "move_speed": {
+      "at": "",
+      "instance": "profile",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "rate",
+        "values": [
+          31.4,
+          100.0,
+          200.0,
+          300.0
+        ]
+      },
+      "duration": 1.5,
+      "observe": [
+        "carriage.axis.position"
+      ],
+      "metrics": [
+        {
+          "label": "final position (0.2 m if no steps lost)",
+          "observable": "carriage.axis.position",
+          "reduce": "final",
+          "window": [
+            0.0,
+            1.5
+          ]
+        }
+      ]
+    }
+  }
+}

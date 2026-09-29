@@ -6,6 +6,7 @@
 //! - [`store`]: file-backed editing with a shared undo/redo journal.
 //! - [`flatten`]: hierarchy → flat `ModelWorld` with path identities.
 //! - [`library`]: saved definitions, the element palette, swap alternatives.
+//! - [`snap`]: what attaches to a port, and the commands that attach it.
 //! - [`assets`]: content-addressed reference images.
 pub mod assets;
 pub mod commands;
@@ -13,6 +14,8 @@ pub mod document;
 pub mod flatten;
 pub mod library;
 pub mod resolve;
+pub mod snap;
+pub mod profile;
 pub mod store;
 
 pub use commands::{apply, Command, Outcome};
@@ -34,3 +37,7 @@ pub enum SystemError {
     #[error(transparent)]
     Json(#[from] serde_json::Error),
 }
+
+pub mod display;
+
+pub mod display_overlap;

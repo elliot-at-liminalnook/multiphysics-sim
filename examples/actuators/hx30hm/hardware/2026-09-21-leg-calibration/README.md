@@ -166,3 +166,98 @@ is limited to 80 ms, with unchanged FPGA watchdogs and narrow travel windows.
 The UI reports requested/actual counts and target-reached versus timeout.
 A no-motion timeout does not diagnose friction versus binding.
 The earlier 2.5% source/bitstream and physical receipts remain preserved.
+
+## Suspended simulation mirror (2026-09-22)
+
+While the calibration panel is open, the viewer pauses the simulation and shows
+the CAD robot held 0.25 m above the floor. The chosen simulated leg (default
++X, tinted blue) follows the three measured encoders:
+`joint = CAD home + sign × (continuous counts − saved reference) × 2π/4096`.
+The pose comes from `sim_runtime::kinematic_mirror`, which runs the shared
+closure solver (`RigidEmbedding`) with the base held still. It solves the 1:1
+belt, the 5:1 worm reduction and the foot slider-crank loop from CAD, and
+reports any authored CAD joint limit that is exceeded. It is geometry only: no
+simulated forces, contact or motor model, and it never commands hardware.
+
+To align a motor, move the real leg until it matches the simulated leg's CAD
+home pose, then press **Save sim alignment here**. That stores the
+existing `reference` encoder capture in the versioned calibration. The motor
+to CAD-joint binding (role → servo joint) and each motor's sign are
+display settings stored in the browser and included in **Download
+calibration** as `display_mirror`. They are not promoted to CAD. Matching the
+mirror by eye is a sanity check, not a measured joint-angle calibration.
+
+Checks: `cargo test --release -p sim-runtime --test kinematic_mirror` (each
+leg servo moves only its own leg, the base stays fixed, closure holds, home
+round-trips), and `node web/tests/calibration-ui.mjs`.
+
+## Tuning, smooth jogs and servo control modes (2026-09-22, overnight)
+
+**Tune this motor** (panel, below Learn): with the operator's confirmation that
+the axis is mid-travel, the host runs `CalibrationBus::identify`: a slow PWM
+ramp each way to find breakaway, then ±15/30/50% steps (up to the PWM ceiling)
+that each head back toward the start, within ±200 counts and an FPGA window
+60 counts wider. `acquisition::motor_identification` fits speed gain (slope
+between step sizes), moving friction (intercept), lag and loop delay, and
+designs a SIMC PID for an integrating plant with lag (closed-loop time twice the
+delay). Gains, fit and raw steps are saved per motor (`tuning` in the axis,
+`measurements/tune-<id>-<time>.json`). First results on this fixture: worm
+≈3290 counts/s per duty, 61 ms lag, 4.5% friction; belt/hip ≈3030, 68 ms,
+asymmetric friction (gravity).
+
+**Why jogs were jerky and tuning was smooth.** Tuning drives a constant duty;
+the jog drove only feedback on a slowly accelerating (100 counts/s²) target,
+near the friction level, with friction help that flipped with the error sign,
+so the drive reversed many times per second (stick-slip). Held jogs now
+accelerate at 1500 counts/s² and, for tuned motors, add velocity feed-forward:
+duty = reference speed / measured gain + moving friction in the direction of
+travel. Feedback only trims the error. In simulation of the worm at 300 counts/s:
+19 drive reversals and ±273 counts/s → 0 reversals and ±2 counts/s.
+
+**Holds** follow the part until it stops after a release, accept up to 16 counts
+once settled (no drive, integral cleared), and return from larger disturbances
+by interpolating at 40 counts/s. Drive changes at most 4 duty/s.
+
+**Control modes** (Advanced → Control mode; applies when a session starts):
+- PWM · host feedback loop (default; tuning always uses PWM).
+- Servo position loop (register 0x21 = 0): each period the host writes the
+  reference as a goal with a speed limit 30% above the reference speed,
+  clamped to the armed window.
+- Servo speed loop (0x21 = 1): reference speed plus a 4/s position trim; zero
+  when the hold is within tolerance.
+FPGA calibration profile 8 allows modes 0–2, position goals only inside the
+armed window (nearest turn to the current reading), and speed goals only away
+from a window edge. **Experimental:** the servo modes' register behaviour
+(live mode switching, speed sign bit 15, goal/time/speed layout) follows the
+vendor tool in the hardware repository and has not been exercised on this
+hardware. The host verifies the mode by read-back and refuses to drive if the
+servo did not accept it (it may need a power cycle).
+
+**Simulated bench.** `acquisition::virtual_bench` emulates the FPGA calibration
+policy (arming, windows, deadlines, STOP) and three servos with the identified
+responses; `examples/hx_virtual_bench.rs` serves it on a pseudo-terminal so the
+real server and browser panel run without hardware.
+`web/tests/calibration-bench-e2e.mjs` drives the panel through select, jogs,
+tuning, all three control modes, sweep-all and stop against it. The servo
+firmware loops in the bench are generic stand-ins, not identified behaviour.
+
+Findings from the simulated bench and fixes (same night):
+- **Tuning could overshoot its travel budget.** A 50% step ran until it was
+  past ±200 counts, then coasted on (the real worm log shows 550–600-count
+  steps). Steps now end when position plus 0.15 s of coasting reaches the
+  budget, and tuning drives back to the start pose at a gentle duty before
+  stopping. The bench test asserts ≤240 counts of excursion and a return to
+  within 30 counts.
+- **Automatic sweeps crawled at 5 counts/s** until "Learn" had demonstrated
+  stops. For tuned motors the stopping envelope now uses the measured passive
+  braking (half of gain × moving friction ÷ lag) and no crawl gate. This is a
+  commissioning estimate; the taught poses and FPGA window remain hard limits.
+- **A braked sweep could stay latched** when friction stopped the part more
+  than 3 counts from the latch point; it now releases once the part is at rest
+  (hold tolerance), and a braked turn-around counts as a half cycle, so
+  sweep-all completes.
+- **Sweep-all could silently stall in the panel** when the page's heartbeat
+  reached the finished session before its status poll; the heartbeat now adopts
+  a session the server already ended instead of treating it as a failure.
+- FPGA v8 (servo modes) is loaded into SRAM with the motor supply off; see
+  `deployment-v8-2026-09-22.json`. Servo modes are untested on hardware.

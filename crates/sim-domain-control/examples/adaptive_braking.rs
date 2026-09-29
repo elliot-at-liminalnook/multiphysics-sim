@@ -13,6 +13,7 @@ fn main() -> Result<(), String> {
         minimum_stops: 3,
         braking_safety_factor: 0.5,
         trial_speed_growth: 1.25,
+        learning_start_fraction: 0.25,
         maximum_evidence_age_s: 120.,
     };
     let mut model = Model::default();

@@ -263,3 +263,139 @@ impl Simulation {
         self.frame()
     }
 }
+
+/// Shared gait playback (the same sampler the hardware host uses).
+#[wasm_bindgen]
+pub struct GaitPlayer {
+    gait: sim_runtime::gait_playback::Gait,
+    governed: sim_runtime::gait_playback::GovernedGait,
+}
+
+#[wasm_bindgen]
+impl GaitPlayer {
+    #[wasm_bindgen(constructor)]
+    pub fn new(compiled_json: &str, name: &str) -> Result<GaitPlayer, JsValue> {
+        let compiled: serde_json::Value = serde_json::from_str(compiled_json).map_err(error)?;
+        let gait = sim_runtime::gait_playback::Gait::from_compiled(&compiled, name).map_err(error)?;
+        Ok(Self { governed: sim_runtime::gait_playback::GovernedGait::new(gait.clone()), gait })
+    }
+    /// The gait as the simulation commands it: through its reference
+    /// governor, advancing `dt` s of wall time at gait time `t`.
+    pub fn governed(&mut self, t: f64, dt: f64, rate_scale: f64) -> Result<Vec<f64>, JsValue> {
+        Ok(self.governed.step(t, dt, rate_scale).map_err(error)?.into_iter().map(|(q, _)| q).collect())
+    }
+    pub fn reset(&mut self) {
+        self.governed = sim_runtime::gait_playback::GovernedGait::new(self.gait.clone());
+    }
+    pub fn info(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.gait.info).map_err(error)
+    }
+    /// Joint angles (rad) at gait time `t`, in `info().joints` order.
+    pub fn sample(&self, t: f64) -> Result<Vec<f64>, JsValue> {
+        self.gait.sample(t).map_err(error)
+    }
+}
+
+/// Suspended display pose from measured motor coordinates (geometry only).
+#[wasm_bindgen]
+pub struct KinematicMirror {
+    mirror: sim_runtime::kinematic_mirror::KinematicMirror,
+}
+
+#[wasm_bindgen]
+impl KinematicMirror {
+    #[wasm_bindgen(constructor)]
+    pub fn new(scene_json: &str, lift_m: f64) -> Result<KinematicMirror, JsValue> {
+        let scene: Scene = serde_json::from_str(scene_json).map_err(error)?;
+        Ok(Self { mirror: sim_runtime::kinematic_mirror::KinematicMirror::new(scene, lift_m).map_err(error)? })
+    }
+    pub fn coordinates(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.mirror.coordinates()).map_err(error)
+    }
+    pub fn pose(&mut self, coordinates: &[f64]) -> Result<String, JsValue> {
+        serde_json::to_string(&self.mirror.pose(coordinates).map_err(error)?).map_err(error)
+    }
+}
+
+/// A system file (`sim.system/1`) running in the browser on the shared
+/// runtime, in its detailed or realtime profile. Authored parts arrive as
+/// sources (`{"coreless_motor.part": "…"}`) and compile here exactly as they
+/// do natively. Hosts advance it in bounded chunks of simulated time.
+#[wasm_bindgen]
+pub struct SystemRun {
+    session: sim_runtime::system_session::SystemSession,
+    ids: Vec<String>,
+    labels: Vec<String>,
+    interval: f64,
+}
+
+#[wasm_bindgen]
+impl SystemRun {
+    #[wasm_bindgen(constructor)]
+    pub fn new(document_json: &str, parts_json: &str, profile: &str, observe_json: &str) -> Result<SystemRun, JsValue> {
+        let mut registry = sim_runtime::registry();
+        let parts: std::collections::BTreeMap<String, String> = serde_json::from_str(parts_json).map_err(error)?;
+        for (file, source) in &parts {
+            let def = sim_runtime::parts::parse(file, source).map_err(error)?;
+            sim_runtime::parts::register(&mut registry, def).map_err(error)?;
+        }
+        let mut document: sim_runtime::system::SystemDocument = serde_json::from_str(document_json).map_err(error)?;
+        match profile {
+            "detailed" => {}
+            "realtime" => document = sim_runtime::system::profile::realtime(&document, &registry).map_err(error)?,
+            other => return Err(error(format!("unknown profile `{other}` (detailed or realtime)"))),
+        }
+        let config = sim_runtime::system_builder::config_for(&document);
+        let compiled = sim_runtime::system_builder::compile(&document, &registry, config.clone()).map_err(error)?;
+        let source = sim_runtime::system_session::ModelSource {
+            model: compiled.flat.model.clone(),
+            registry: registry.clone(),
+            identities: compiled.flat.identities.clone(),
+            source_hash: compiled.flat.source_hash.clone(),
+            revision: document.revision.max(1),
+        };
+        let interval = config.interval;
+        let mut session = sim_runtime::system_session::SystemSession::new("browser".into(), config, move |c| source.build(c)).map_err(error)?;
+        let observe: Vec<String> = serde_json::from_str(observe_json).map_err(error)?;
+        let description = session.description().clone();
+        let mut ids = Vec::new();
+        for key in &observe {
+            let id = description.observables.keys().find(|id| sim_runtime::system_builder::observable_key(&description, id) == *key).ok_or_else(|| error(format!("no observable `{key}`")))?;
+            ids.push(id.clone());
+        }
+        session.subscribe(ids.clone()).map_err(error)?;
+        session.execute(sim_runtime::system_session::Command::Start).map_err(error)?;
+        Ok(SystemRun { session, ids, labels: observe, interval })
+    }
+    /// Advance by `seconds` of simulated time (at most 10 s per call).
+    pub fn advance(&mut self, seconds: f64) -> Result<f64, JsValue> {
+        if !(seconds > 0.0 && seconds <= 10.0) {
+            return Err(error("advance 0 < seconds ≤ 10"));
+        }
+        let target = self.session.status().time + seconds;
+        while self.session.status().time + 0.5 * self.interval < target {
+            // A session that is no longer running would never reach the target.
+            if self.session.tick().map_err(error)?.is_none() {
+                return Err(error("system session is not running"));
+            }
+        }
+        Ok(self.session.status().time)
+    }
+    pub fn time(&self) -> f64 {
+        self.session.status().time
+    }
+    pub fn step(&self) -> f64 {
+        self.interval
+    }
+    /// Current values of the observed quantities, in `labels` order.
+    pub fn values(&self) -> Vec<f64> {
+        self.ids.iter().map(|id| sim_inspect_scalar(self.session.latest(), id)).collect()
+    }
+    pub fn labels(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.labels).map_err(error)
+    }
+}
+
+fn sim_inspect_scalar(frame: &sim_runtime::inspect::SampleFrame, id: &str) -> f64 {
+    sim_runtime::inspect::animation::scalar(Some(frame), id).map(|v| v.value).unwrap_or(f64::NAN)
+}

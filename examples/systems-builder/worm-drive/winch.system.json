@@ -1,0 +1,1218 @@
+{
+  "schema": "sim.system/1",
+  "title": "Worm-drive winch",
+  "revision": 10,
+  "root": "root",
+  "definitions": {
+    "planetary_gearbox_30": {
+      "label": "Planetary gearbox 30:1",
+      "description": "Two planetary stages (≈ 5.5:1 each) lumped as one 30:1 gear at 94 % efficiency (≈ 97 % per stage). Coaxial, efficient, back-drivable.",
+      "interface": "gearbox.rotational",
+      "ports": {
+        "input": {
+          "label": "Sun shaft"
+        },
+        "output": {
+          "label": "Carrier shaft"
+        }
+      },
+      "instances": {
+        "coupling": {
+          "display_id": "0524f01d8d2bd6f350bda6e9",
+          "label": "Shaft coupling",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Small beam coupling, 5 mm bore: catalogue range 20–60 N·m/rad."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.016,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.005,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.25,
+              0.25,
+              0.27
+            ]
+          }
+        },
+        "stages": {
+          "display_id": "a5d19f5766267941880b6893",
+          "label": "Planetary stages",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.lossy_gear"
+          },
+          "parameters": {
+            "efficiency": {
+              "value": 0.94,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Two planetary stages at ≈ 97 % each (catalogue typical); not measured."
+              }
+            },
+            "ratio": {
+              "value": 30.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "sun": {
+          "display_id": "300cfa5a22194988fa380a02",
+          "label": "Sun gear and input",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 4e-8
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.006,
+              "length": 0.012
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "input shaft",
+          "terminals": [
+            {
+              "boundary": "input"
+            },
+            {
+              "instance": "coupling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "sun shaft",
+          "terminals": [
+            {
+              "instance": "coupling",
+              "port": "b"
+            },
+            {
+              "instance": "sun",
+              "port": "shaft"
+            },
+            {
+              "instance": "stages",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "label": "output shaft",
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "stages",
+              "port": "output"
+            }
+          ]
+        }
+      ]
+    },
+    "root": {
+      "label": "Worm-drive winch",
+      "description": "A 12 V brushed motor drives a 30:1 gearbox that winds a 2 kg load onto a Ø20 mm drum. The supply switches off at 1.2 s: a self-locking worm holds the load; swap the gearbox for the spur alternative to watch it back-drive the motor.",
+      "instances": {
+        "drum": {
+          "display_id": "a533410e2d5250885c2a0db8",
+          "label": "Wheel and drum",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00001,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Bronze wheel and Ø20 drum only; the 2 kg load is its own mass on the rope."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0185,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.70710677,
+              0.0,
+              0.0,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0115,
+              "length": 0.02
+            },
+            "color_srgb": [
+              0.72,
+              0.52,
+              0.24
+            ],
+            "model": "worm_wheel_drum"
+          }
+        },
+        "frame": {
+          "display_id": "5ec31ee6badceeb396cfdc7f",
+          "label": "Motor mount",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ground"
+          },
+          "placement": {
+            "position": [
+              -0.06,
+              0.012,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gearbox": {
+          "display_id": "1824c681a54bf8a6ea3a0e46",
+          "label": "Gearbox",
+          "kind": {
+            "kind": "subsystem",
+            "definition": "worm_gearbox_30"
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gnd": {
+          "display_id": "d659d40d8c8b02cf6862d0fa",
+          "label": "Ground",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.ground"
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "gravity": {
+          "display_id": "548932dc8e5ae8abff5d313f",
+          "label": "Weight of the load (m·g)",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.load_force"
+          },
+          "parameters": {
+            "force": {
+              "value": -19.6133,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "m·g = 2 kg × 9.80665 m/s², acting down the rope."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0115,
+              -0.44,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "sphere",
+              "radius": 0.0015
+            },
+            "color_srgb": [
+              0.55,
+              0.56,
+              0.58
+            ]
+          }
+        },
+        "load": {
+          "display_id": "51ee0785da0939c69c47d1fc",
+          "label": "2 kg load",
+          "kind": {
+            "kind": "element",
+            "component_type": "translational.mass"
+          },
+          "parameters": {
+            "mass": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The lifted mass."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0115,
+              -0.424,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.016,
+                0.016,
+                0.016
+              ]
+            },
+            "color_srgb": [
+              0.35,
+              0.36,
+              0.38
+            ]
+          }
+        },
+        "motor": {
+          "display_id": "cb8b12e4e945e611e742f8f2",
+          "label": "DC motor",
+          "kind": {
+            "kind": "element",
+            "component_type": "bridge.brushed_motor"
+          },
+          "parameters": {
+            "back_emf_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm. Not a measured part."
+              }
+            },
+            "inductance": {
+              "value": 0.0005,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm. Not a measured part."
+              }
+            },
+            "resistance": {
+              "value": 2.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm. Not a measured part."
+              }
+            },
+            "torque_constant": {
+              "value": 0.012,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.052,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          }
+        },
+        "rope": {
+          "display_id": "0cf51e9e946605ba72d86811",
+          "label": "Rope on the drum",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.rack_pinion"
+          },
+          "parameters": {
+            "radius": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Rope wound on the Ø20 drum: travel = r·θ, the same rolling constraint as a rack and pinion (rope stretch and layering ignored)."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0115,
+              0.0185,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "sphere",
+              "radius": 0.0012
+            },
+            "color_srgb": [
+              0.85,
+              0.8,
+              0.66
+            ]
+          }
+        },
+        "rotor": {
+          "display_id": "5a95e59ba8f5ed19da321880",
+          "label": "Motor rotor",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 3e-6,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Representative 12 V can motor (370 size): stall ≈ 0.07 N·m, no-load ≈ 9500 rpm. Not a measured part."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.03,
+              0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.002,
+              "length": 0.004
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        },
+        "stop": {
+          "display_id": "73660d162d759d8785035c70",
+          "label": "End stop at the drum",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.hard_stop_linear"
+          },
+          "parameters": {
+            "lower": {
+              "value": -1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Rope long enough not to run out in these runs."
+              }
+            },
+            "upper": {
+              "value": 0.42,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "The load block reaches the drum after 0.42 m of rope."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0115,
+              0.004,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.02,
+                0.002,
+                0.02
+              ]
+            },
+            "color_srgb": [
+              0.45,
+              0.47,
+              0.5
+            ]
+          }
+        },
+        "supply": {
+          "display_id": "f4dab463b4e1a755700d5cb9",
+          "label": "12 V supply",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.switched_voltage_source"
+          },
+          "parameters": {
+            "off_at": {
+              "value": 1.2
+            },
+            "voltage": {
+              "value": 12.0
+            }
+          },
+          "placement": {
+            "position": [
+              -0.07,
+              0.0,
+              0.04
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.066,
+                0.0185,
+                0.057
+              ]
+            },
+            "color_srgb": [
+              0.16,
+              0.36,
+              0.72
+            ],
+            "model": "battery_3s"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "p"
+            },
+            {
+              "instance": "motor",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "0 V",
+          "terminals": [
+            {
+              "instance": "supply",
+              "port": "n"
+            },
+            {
+              "instance": "motor",
+              "port": "n"
+            },
+            {
+              "instance": "gnd",
+              "port": "pin"
+            }
+          ]
+        },
+        {
+          "label": "motor case",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "case"
+            },
+            {
+              "instance": "frame",
+              "port": "flange"
+            }
+          ]
+        },
+        {
+          "label": "motor shaft",
+          "terminals": [
+            {
+              "instance": "motor",
+              "port": "shaft"
+            },
+            {
+              "instance": "rotor",
+              "port": "shaft"
+            },
+            {
+              "instance": "gearbox",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "label": "drum shaft",
+          "terminals": [
+            {
+              "instance": "gearbox",
+              "port": "output"
+            },
+            {
+              "instance": "drum",
+              "port": "shaft"
+            },
+            {
+              "instance": "rope",
+              "port": "pinion"
+            }
+          ]
+        },
+        {
+          "label": "rope",
+          "terminals": [
+            {
+              "instance": "rope",
+              "port": "rack"
+            },
+            {
+              "instance": "load",
+              "port": "axis"
+            },
+            {
+              "instance": "gravity",
+              "port": "axis"
+            },
+            {
+              "instance": "stop",
+              "port": "axis"
+            }
+          ]
+        }
+      ]
+    },
+    "spur_gearbox_30": {
+      "label": "Spur gearbox 30:1 (lossless)",
+      "description": "Two-stage spur reduction lumped as one ideal 30:1 gear with a small pinion inertia. Efficient and back-drivable: it cannot hold a load unpowered.",
+      "interface": "gearbox.rotational",
+      "ports": {
+        "input": {
+          "label": "Input shaft"
+        },
+        "output": {
+          "label": "Output shaft"
+        }
+      },
+      "instances": {
+        "coupling": {
+          "display_id": "f040dcf92004a9b494dfa997",
+          "label": "Shaft coupling",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Small beam coupling, 5 mm bore: catalogue range 20–60 N·m/rad."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.016,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.005,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.25,
+              0.25,
+              0.27
+            ]
+          }
+        },
+        "gear": {
+          "display_id": "d2bddd3af525f6fdb9823524",
+          "label": "Spur stages",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.ideal_gear"
+          },
+          "parameters": {
+            "ratio": {
+              "value": 30.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pinion": {
+          "display_id": "b2289d54220a3e969975daf6",
+          "label": "Input pinion",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 4e-8
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.004,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "input shaft",
+          "terminals": [
+            {
+              "boundary": "input"
+            },
+            {
+              "instance": "coupling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "pinion shaft",
+          "terminals": [
+            {
+              "instance": "coupling",
+              "port": "b"
+            },
+            {
+              "instance": "pinion",
+              "port": "shaft"
+            },
+            {
+              "instance": "gear",
+              "port": "input"
+            }
+          ]
+        },
+        {
+          "label": "output shaft",
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "gear",
+              "port": "output"
+            }
+          ]
+        }
+      ]
+    },
+    "worm_gearbox_30": {
+      "label": "Worm gearbox 30:1",
+      "description": "Single-start steel worm on a 30-tooth bronze wheel (module 0.5, worm pitch Ø8). Self-locking: the load cannot drive the worm. Forward efficiency ≈ 45 % at μ = 0.07.",
+      "interface": "gearbox.rotational",
+      "ports": {
+        "input": {
+          "label": "Worm shaft"
+        },
+        "output": {
+          "label": "Wheel shaft"
+        }
+      },
+      "instances": {
+        "coupling": {
+          "display_id": "5c40be43462805ca28ccac1b",
+          "label": "Shaft coupling",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.spring"
+          },
+          "parameters": {
+            "stiffness": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Small beam coupling, 5 mm bore: catalogue range 20–60 N·m/rad."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.016,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.005,
+              "length": 0.008
+            },
+            "color_srgb": [
+              0.25,
+              0.25,
+              0.27
+            ]
+          }
+        },
+        "mesh": {
+          "display_id": "bcd21586a9bf8e0bbb027eaf",
+          "label": "Worm-wheel mesh",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.worm_gear"
+          },
+          "parameters": {
+            "friction": {
+              "value": 0.07,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "lubricated steel on brass (material pair table) (from CAD examples/systems-builder/worm-drive/cad/worm-set.rcad)"
+              }
+            },
+            "module": {
+              "value": 0.0005000000000000008,
+              "provenance": {
+                "kind": "derived",
+                "rule": "m = (r_tip − r_root) / 2.25 (addendum m, dedendum 1.25 m) (CAD examples/systems-builder/worm-drive/cad/worm-set.rcad)",
+                "inputs_hash": "15e0d5d31b3cb946ab6df887923e901d38c38c8154614d3a8d70fbfe3eee4cd3"
+              }
+            },
+            "pressure_angle": {
+              "value": 0.3490658503988659,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "standard 20° normal pressure angle (not measurable from the simplified tooth bodies) (from CAD examples/systems-builder/worm-drive/cad/worm-set.rcad)"
+              }
+            },
+            "wheel_teeth": {
+              "value": 30.0,
+              "provenance": {
+                "kind": "derived",
+                "rule": "z₂ = number of wheel tooth bodies (CAD examples/systems-builder/worm-drive/cad/worm-set.rcad)",
+                "inputs_hash": "980907172ab2dca818687025f3ae70b6315b1ad684cd5bab6a0ad01832571a6c"
+              }
+            },
+            "worm_pitch_diameter": {
+              "value": 0.008000000000000002,
+              "provenance": {
+                "kind": "derived",
+                "rule": "d₁ = 2·(r_tip − m) (CAD examples/systems-builder/worm-drive/cad/worm-set.rcad)",
+                "inputs_hash": "aa8d39dc611b7b90f3f4e9178a3dac0b51b04c06f81fab118238ea465cfcdf9e"
+              }
+            },
+            "worm_starts": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "derived",
+                "rule": "z₁ = lead / (π·m), lead from the thread helix (CAD examples/systems-builder/worm-drive/cad/worm-set.rcad)",
+                "inputs_hash": "dab35a183c45d1c53c2e8953a6241237b0db30f9d8b90b5e1ad5e6831c22eb8a"
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              -0.03,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "worm": {
+          "display_id": "810ce0af62c29d7797ded17b",
+          "label": "Worm",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 4e-8,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "Steel cylinder Ø8 × 18 mm: ½·m·r² with m ≈ 7 g."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.0045,
+              "length": 0.026
+            },
+            "color_srgb": [
+              0.62,
+              0.64,
+              0.67
+            ],
+            "model": "worm"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "input shaft",
+          "terminals": [
+            {
+              "boundary": "input"
+            },
+            {
+              "instance": "coupling",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "label": "worm shaft",
+          "terminals": [
+            {
+              "instance": "coupling",
+              "port": "b"
+            },
+            {
+              "instance": "worm",
+              "port": "shaft"
+            },
+            {
+              "instance": "mesh",
+              "port": "worm"
+            }
+          ]
+        },
+        {
+          "label": "wheel shaft",
+          "terminals": [
+            {
+              "boundary": "output"
+            },
+            {
+              "instance": "mesh",
+              "port": "wheel"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "backward_euler",
+    "interval": 0.0005,
+    "rationale": "The supply switches off with a scheduled edge, and the self-locked worm is a stiff regularised-friction state; backward Euler is L-stable for both. 0.5 ms resolves the 0.04 s electrical-mechanical time constant; halving it changes speeds by < 0.5 % (tests)."
+  },
+  "studies": {
+    "gearboxes": {
+      "at": "",
+      "instance": "gearbox",
+      "kind": {
+        "kind": "compare",
+        "alternatives": [
+          {
+            "kind": "subsystem",
+            "definition": "spur_gearbox_30"
+          },
+          {
+            "kind": "subsystem",
+            "definition": "planetary_gearbox_30"
+          }
+        ]
+      },
+      "duration": 2.0,
+      "observe": [
+        "drum.shaft.speed",
+        "drum.shaft.angle",
+        "motor.p.current"
+      ],
+      "metrics": [
+        {
+          "label": "lift speed (drum)",
+          "observable": "drum.shaft.speed",
+          "reduce": "mean",
+          "window": [
+            0.8,
+            1.2
+          ]
+        },
+        {
+          "label": "motor current",
+          "observable": "motor.p.current",
+          "reduce": "mean",
+          "window": [
+            0.8,
+            1.2
+          ]
+        },
+        {
+          "label": "drum travel after power-off",
+          "observable": "drum.shaft.angle",
+          "reduce": "change",
+          "window": [
+            1.4,
+            2.0
+          ]
+        }
+      ]
+    },
+    "worm_starts": {
+      "at": "",
+      "instance": "gearbox",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "mesh/worm_starts",
+        "values": [
+          1.0,
+          2.0,
+          3.0,
+          4.0
+        ]
+      },
+      "duration": 2.0,
+      "observe": [
+        "drum.shaft.speed",
+        "drum.shaft.angle",
+        "motor.p.current"
+      ],
+      "metrics": [
+        {
+          "label": "lift speed (drum)",
+          "observable": "drum.shaft.speed",
+          "reduce": "mean",
+          "window": [
+            0.8,
+            1.2
+          ]
+        },
+        {
+          "label": "motor current",
+          "observable": "motor.p.current",
+          "reduce": "mean",
+          "window": [
+            0.8,
+            1.2
+          ]
+        },
+        {
+          "label": "drum travel after power-off",
+          "observable": "drum.shaft.angle",
+          "reduce": "change",
+          "window": [
+            1.4,
+            2.0
+          ]
+        }
+      ]
+    }
+  },
+  "realtime": {
+    "interval": 0.002,
+    "integrator": "backward_euler",
+    "observe": [
+      "drum.shaft.speed",
+      "drum.shaft.angle",
+      "motor.p.current"
+    ],
+    "duration": 2.0,
+    "bound": 0.05,
+    "bounds": {
+      "motor.p.current": 0.25
+    },
+    "notes": "Realtime models: the motor drops its winding inductance (current becomes algebraic), so the ~1 ms start-up current transient is not resolved: current error is bounded at 25 % of range (peak inrush), speeds and angles at 5 %. Worm friction smoothing 0.05 rad/s (more creep when locked); 2 ms step.",
+    "measured": {
+      "content_hash": "7f080c3a061d725c8ab63794db0b7f626b44b5411729e515800f6405c6f96a25",
+      "errors": {
+        "drum.shaft.angle": 0.0003438079634077844,
+        "drum.shaft.speed": 0.007185572051236804,
+        "motor.p.current": 0.20920831081548286
+      },
+      "detailed_speed": 3.8247832668394124,
+      "realtime_speed": 18.097378610091102,
+      "host": "x86_64 macos (release build)"
+    }
+  }
+}

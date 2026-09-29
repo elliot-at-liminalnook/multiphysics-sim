@@ -20,6 +20,10 @@ target/release/sim-spatial --system examples/systems-builder/motor-driver-board/
 `--schematic` opens the schematic in build mode on the same file. Edits in
 either window appear in the other within half a second.
 
+Second example, for learning the drivetrain library:
+[`worm-drive/`](worm-drive/README.md). A motor, a worm gearbox and a winch,
+with a lossless spur gearbox to swap in and compare.
+
 ## What you can do
 
 | Action | Physical viewer | Schematic | CLI / REST |
@@ -36,6 +40,9 @@ either window appear in the other within half a second.
 | Reference image | Drop a PNG/JPEG; Calibrate by two points | Import by path | `sim-system reference` |
 | Undo / redo | ⌘Z / ⇧⌘Z | Undo / Redo | `undo` / `redo` |
 | Run | R (background thread, paced to real time at most) | Run → live panel | `sim-system run` |
+| Learn about a part | Library → click: card with notes, equations, trade-offs, derived values, "pairs with" | – | `system_component` |
+| Snap a fitting part onto a port | Inspector → Snap on → click (or card → Attach to …) | – | `system_suggest`, `system_snap` |
+| Graph live quantities | Graphs (toolbar); Plot chips pin up to four | Live panel | `system_plot` |
 | Save a subsystem for reuse | Save to library | Save to library | `sim-system library save` |
 
 Editing inside a subsystem edits its **definition**, which every placement of
@@ -78,3 +85,5 @@ slower than real time; the averaged bridge is the real-time profile.
 The board records `backward_euler` in its run settings: the implicit midpoint
 rule leaves the endpoint values of algebraic quantities (such as the battery
 terminal voltage) alternating after every switching edge.
+
+See [display editing and discussions](DISPLAY-EDITING.md) for component icons, grid dragging, part/group comments and REST examples. **Placement is display-only; it does not change CAD geometry or simulated physical placement.**

@@ -1,0 +1,10 @@
+{
+  "diff": ["git", "diff", "--check"],
+  "system": ["cargo", "test", "--locked", "-p", "sim-system"],
+  "inspect": ["cargo", "test", "--locked", "-p", "sim-inspect"],
+  "diagram": ["cargo", "test", "--locked", "-p", "sim-diagram"],
+  "viewer": ["cargo", "check", "--locked", "-p", "sim-viewer"],
+  "spatial": ["cargo", "check", "--locked", "-p", "sim-spatial"],
+  "app": ["cargo", "check", "--locked", "-p", "sim-app"],
+  "runtime": ["cargo", "test", "--locked", "-p", "sim-runtime", "--lib"]
+}

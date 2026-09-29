@@ -593,8 +593,10 @@ pub struct Fastened {
     pub count: f64,
     #[serde(default)]
     pub preload: f64,
+    /// Whole bolt pattern (N/m), as the CAD export sums it over `count`.
     #[serde(default)]
     pub stiffness: f64,
+    /// Whole bolt pattern (N).
     #[serde(default)]
     pub shear_capacity: f64,
     #[serde(default)]
@@ -938,6 +940,15 @@ pub struct Quantization {
     pub angle: f64,
     #[serde(default)]
     pub accel: f64,
+    /// IMU angular-rate step (rad/s), as the CAD export writes it. Older
+    /// files carried the gyro step under `angle`, which remains the fallback.
+    #[serde(default)]
+    pub gyro: f64,
+}
+impl Quantization {
+    pub fn gyro_step(&self) -> f64 {
+        if self.gyro > 0.0 { self.gyro } else { self.angle }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]

@@ -1,0 +1,28 @@
+# A pin fitted into holes in two parts, along one sideways direction.
+part dowel_pin "Alignment (dowel) pin"
+category Mechanical
+summary "A pin fitted into holes in two parts: free across its clearance, then stiff as the pin bears on the hole walls."
+explain "The parts can shift sideways by the radial clearance c = (hole Ø − pin Ø)/2 either way before the pin touches the walls, so they can sit anywhere in a band 2c wide. Past it the pin bears on both holes: F = k·(|x| − c), pushing back. Each printed hole wall is a line contact along its engaged length L, roughly a spring E·L; the two holes act in series, so k ≈ E·L/2. A steel pin is dozens of times stiffer than a printed wall, so its own bending is neglected."
+tradeoffs "Pins locate parts repeatably and carry sideways load, so screws only need to clamp. Zero clearance (a press fit) removes the play but needs force to assemble and can split a thin printed wall. Printed holes usually come out 0.1–0.2 mm undersize: draw them oversize and check with a fit coupon. Two round pins in one part fight each other unless their holes are exactly as far apart as the pins; make one hole a slot."
+limits "One sideways direction; linear wall stiffness from an estimate (E·L/2), not a measurement; no friction from clamping; the pin and walls never yield."
+pairs translational.mass part.force_command translational.damper translational.ground
+port a translational
+port b translational
+param clearance m ~ 0.0001 "Radial clearance: (hole Ø − pin Ø)/2"
+param diameter m ~ 0.003 "Pin diameter"
+param engaged m ~ 0.006 "Engaged length in each part"
+param wall_modulus Pa ~ 3.5e9 "Young's modulus of the hole walls (printed PLA ≈ 3.5 GPa)"
+param damping N·s/m^2 = 3e8 "Contact damping per metre of contact (settles the contact)"
+let k = 0.5*wall_modulus*engaged
+let x = a.s - b.s
+let over = max(x - clearance, 0) - max(-x - clearance, 0)
+let force = k*over + damping*abs(over)*(a.v - b.v)
+flow a = force
+flow b = -force
+energy 0.5*k*over^2
+output load Force
+output bearing Pressure
+set load = k*over
+set bearing = k*abs(over)/(diameter*engaged)
+derive "pin stiffness (two walls in series)" = 0.5*wall_modulus*engaged N/m
+derive "play from side to side" = 2*clearance m

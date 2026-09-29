@@ -1,0 +1,153 @@
+{
+ "schema": "sim.cad-physics/1",
+ "cad": {
+  "path": "examples/camera-turntable/cad/turntable.rcad",
+  "sha256": "dce8a9fd2412a2b1333988f28366f2dbf63240fe051ebd96896a9005be9fbd12"
+ },
+ "component_type": "part.belt_drive",
+ "parameters": {
+  "radius_driver": {
+   "value": 0.009549296585513721,
+   "unit": "m",
+   "provenance": {
+    "kind": "derived",
+    "rule": "r = teeth \u00d7 pitch / 2\u03c0",
+    "inputs": {
+     "teeth": 30,
+     "pitch_mm": 2.0
+    }
+   }
+  },
+  "radius_driven": {
+   "value": 0.08912676813146139,
+   "unit": "m",
+   "provenance": {
+    "kind": "derived",
+    "rule": "r = teeth \u00d7 pitch / 2\u03c0",
+    "inputs": {
+     "teeth": 280,
+     "pitch_mm": 2.0
+    }
+   }
+  },
+  "stiffness": {
+   "value": 318640.19646330684,
+   "unit": "N/m",
+   "uncertainty": 159320.09823165342,
+   "provenance": {
+    "kind": "estimated",
+    "rule": "k = EA/L_run1 + EA/L_run2 (pretensioned runs in parallel; free spans in series; tooth compliance neglected)",
+    "inputs": {
+     "EA_N": 15000.0,
+     "EA_source": "estimated GT2 glass-cord value per mm width; measure the belt",
+     "run1_mm": 94.1500800369192,
+     "run2_mm": 94.1500800369192
+    }
+   }
+  },
+  "damping": {
+   "value": 63.72803929266137,
+   "unit": "N\u00b7s/m",
+   "provenance": {
+    "kind": "estimated",
+    "rule": "c = 2e-4 s \u00d7 k (light rubber damping); not measured"
+   }
+  },
+  "pretension": {
+   "value": 25.0,
+   "unit": "N",
+   "uncertainty": 12.5,
+   "provenance": {
+    "kind": "estimated",
+    "rule": "Typical static tension per run for a 6 mm GT2 belt, set by sliding the servo cradle; measure with a belt tension gauge or the pluck frequency"
+   }
+  }
+ },
+ "pulleys": [
+  {
+   "name": "Turntable disc with GT2 ring and bearing hub",
+   "id": "2c845b98ae94",
+   "center_mm": [
+    0.012365932516999578,
+    0.0
+   ],
+   "signed_pitch_radius_mm": 89.12676813146139,
+   "teeth": 280,
+   "role": "driven"
+  },
+  {
+   "name": "GT2 30T drive pulley",
+   "id": "0b0d06a260ca",
+   "center_mm": [
+    123.28771443579402,
+    0.0
+   ],
+   "signed_pitch_radius_mm": 9.549296585513721,
+   "teeth": 30,
+   "role": "driver"
+  }
+ ],
+ "belt": {
+  "pitch_length_mm": 609.981110655754,
+  "ratio": 9.333333333333332,
+  "driver_wrap_deg": 99.5897155810208,
+  "driver_teeth_in_mesh": 8.299142965085066,
+  "spans_mm": [
+   94.1500800369192,
+   94.1500800369192
+  ],
+  "wraps_deg": [
+   260.4102844189792,
+   99.5897155810208
+  ]
+ },
+ "checks": {
+  "Turntable disc with GT2 ring and bearing hub": {
+   "teeth": 280,
+   "pitch_radius_mm": 89.12676813146139,
+   "body_half_width_mm": 150.01242799527563,
+   "fits": true
+  },
+  "GT2 30T drive pulley": {
+   "teeth": 30,
+   "pitch_radius_mm": 9.549296585513721,
+   "body_half_width_mm": 11.319480782546357,
+   "fits": true
+  },
+  "driver_teeth_in_mesh_ok": true
+ },
+ "path": {
+  "spans": [
+   {
+    "from": 0,
+    "to": 1,
+    "start": [
+     57.54603297199899,
+     -68.06950825846552
+    ],
+    "end": [
+     129.45203590430995,
+     -7.293161599121306
+    ],
+    "length": 94.1500800369192
+   },
+   {
+    "from": 1,
+    "to": 0,
+    "start": [
+     129.45203590430995,
+     7.293161599121306
+    ],
+    "end": [
+     57.54603297199899,
+     68.06950825846552
+    ],
+    "length": 94.1500800369192
+   }
+  ],
+  "wraps_deg": [
+   260.4102844189792,
+   99.5897155810208
+  ]
+ }
+}

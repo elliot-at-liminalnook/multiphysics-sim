@@ -1,0 +1,34 @@
+# Brushless DC motor driven by an ESC, seen from the DC side as an equivalent DC motor.
+part bldc_motor "Brushless DC motor (with ESC)"
+category Actuators
+summary "A brushless motor and its ESC: electronic commutation, the same speed-torque line as a brushed motor, no brushes."
+explain "Permanent magnets spin with the rotor; the ESC switches the three phase windings in step with the rotor angle, so the pair behaves like a DC motor with no brushes to wear. Seen from the ESC's DC input: torque = k·i and back-EMF = k·ω with k = 1/Kv. Iron (eddy and hysteresis) and bearing losses appear as a no-load current I₀: a drag torque k·I₀ that heats the motor. Copper and iron losses both leave through the heat port."
+tradeoffs "Compared with a brushed motor: higher efficiency and power density, no brush wear or sparks, but it needs an ESC. Low-Kv motors (big, many poles) give torque for direct drive and legged robots; high-Kv motors spin fast and need gearing or a propeller. Outrunners (rotating can) give more torque, inrunners more speed."
+limits "Averaged commutation (no torque ripple, no six-step current waveforms); ESC switching losses and current limits are not modeled; constant resistance (couple a thermal model for heating effects)."
+pairs rotational.inertia part.propeller rotational.lossy_gear robot.battery robot.h_bridge rotational.ground thermal.capacitance thermal.conductance
+port p electrical
+port n electrical
+port shaft rotational
+port case rotational
+port heat thermal
+param kv rad/s/V ~ 96.3 "Speed constant Kv in rad/s per volt (rpm/V × 2π/60: 920 KV = 96.3)"
+param resistance Ω ~ 0.12 "Winding resistance seen from the ESC input"
+param no_load_current A = 0.5 "Current drawn at no load: iron and bearing losses"
+param loss_speed rad/s = 5 "Speed below which the loss torque is smoothed"
+param inductance H = 0.00003 "Equivalent winding inductance"
+realtime inductance = 0
+state i Current = 0
+let k = 1/kv
+let w = shaft.w - case.w
+let loss = k*no_load_current*tanh(w/loss_speed)
+eq inductance*der(i) = p.v - n.v - resistance*i - k*w
+flow p = i
+flow n = -i
+flow shaft = -k*i + loss
+flow case = k*i - loss
+flow heat = -(resistance*i^2 + loss*w)
+energy 0.5*inductance*i^2
+derive "torque constant" = 1/kv N·m/A
+derive "stall torque per volt" = 1/(kv*resistance) N·m/V
+derive "no-load speed per volt" = kv rad/s/V
+derive "no-load loss torque" = no_load_current/kv N·m

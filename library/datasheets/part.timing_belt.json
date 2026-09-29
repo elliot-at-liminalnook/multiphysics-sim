@@ -1,0 +1,65 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.timing_belt",
+  "label": "Timing belt drive (GT2)",
+  "kind": "linear",
+  "parameters": {
+    "damping": 50.0,
+    "radius": 0.00637,
+    "stiffness": 200000.0
+  },
+  "conditions": {
+    "drive torque (N·m)": 0.05
+  },
+  "values": [
+    {
+      "name": "ratio (measured)",
+      "value": 156.98587127159408,
+      "unit": "rad/m"
+    },
+    {
+      "name": "forward efficiency",
+      "value": 0.9999999999999472,
+      "unit": "1"
+    },
+    {
+      "name": "backdrive efficiency",
+      "value": 0.9999999999994938,
+      "unit": "1"
+    },
+    {
+      "name": "self-locking",
+      "value": 0.0,
+      "unit": "yes=1"
+    },
+    {
+      "name": "backdrive output speed",
+      "value": 3.1849999999987295,
+      "unit": "m/s"
+    },
+    {
+      "name": "audit energy change",
+      "value": -0.0009251306067885948,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "efficiency within (0, 1]",
+      "passed": true,
+      "detail": "forward 100.00 %"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.200e-2 J → change -9.251e-4 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 9.5e-15, 6.3e-15, 7.4e-15 (1 → 0.125 ms); observed order -0.2"
+    }
+  ],
+  "source_hash": "005d25aeb9f5369d037f69ec30c8f04214cbff0d940ac274d5c41bc3f84a51e2"
+}

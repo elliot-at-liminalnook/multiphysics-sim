@@ -1,0 +1,205 @@
+{
+  "schema": "sim.system/1",
+  "title": "Flywheel spin-up",
+  "revision": 1,
+  "root": "root",
+  "definitions": {
+    "root": {
+      "label": "Flywheel spin-up",
+      "description": "A known torque turns a flywheel for one second, then stops pushing. No friction: the flywheel keeps whatever speed it has.",
+      "instances": {
+        "drive": {
+          "display_id": "472d5bd49126d935a207e800",
+          "label": "Torque source (an ideal motor)",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.torque_source"
+          },
+          "placement": {
+            "position": [
+              -0.05,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.009,
+              "length": 0.03
+            },
+            "color_srgb": [
+              0.3,
+              0.31,
+              0.34
+            ]
+          }
+        },
+        "push": {
+          "display_id": "d5856729f2effc78a91eb512",
+          "label": "Torque command",
+          "kind": {
+            "kind": "element",
+            "component_type": "part.torque_command"
+          },
+          "parameters": {
+            "duration": {
+              "value": 1.0,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A steady push for one second: 13 mN·m, about a fifth of a small motor's stall torque."
+              }
+            },
+            "edge": {
+              "value": 0.01,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A steady push for one second: 13 mN·m, about a fifth of a small motor's stall torque."
+              }
+            },
+            "start": {
+              "value": 0.1,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A steady push for one second: 13 mN·m, about a fifth of a small motor's stall torque."
+              }
+            },
+            "step": {
+              "value": 0.013,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A steady push for one second: 13 mN·m, about a fifth of a small motor's stall torque."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              -0.1,
+              0.06,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "wheel": {
+          "display_id": "6e3429ab06fa03b5b09065c5",
+          "label": "Flywheel",
+          "kind": {
+            "kind": "element",
+            "component_type": "rotational.inertia"
+          },
+          "parameters": {
+            "inertia": {
+              "value": 0.00013,
+              "provenance": {
+                "kind": "estimated",
+                "explanation": "A turned aluminium disc, Ø80 × 12 mm (0.163 kg): J = ½·m·r² = 1.3e-4 kg·m²."
+              }
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.05,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              -0.70710677,
+              0.70710677
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "cylinder",
+              "radius": 0.04,
+              "length": 0.012
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.8
+            ],
+            "model": "flywheel"
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "command",
+          "terminals": [
+            {
+              "instance": "push",
+              "port": "torque"
+            },
+            {
+              "instance": "drive",
+              "port": "torque"
+            }
+          ]
+        },
+        {
+          "label": "shaft",
+          "terminals": [
+            {
+              "instance": "drive",
+              "port": "shaft"
+            },
+            {
+              "instance": "wheel",
+              "port": "shaft"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "run": {
+    "integrator": "implicit_midpoint",
+    "interval": 0.001,
+    "rationale": "Smooth and conservative: the implicit midpoint rule keeps the coasting speed exactly; 1 ms resolves the push's 10 ms edges."
+  },
+  "studies": {
+    "inertia": {
+      "at": "",
+      "instance": "wheel",
+      "kind": {
+        "kind": "sweep",
+        "parameter": "inertia",
+        "values": [
+          0.000065,
+          0.00013,
+          0.00026,
+          0.00052
+        ]
+      },
+      "duration": 1.2,
+      "observe": [
+        "wheel.shaft.speed"
+      ],
+      "metrics": [
+        {
+          "label": "speed after the push (rad/s)",
+          "observable": "wheel.shaft.speed",
+          "reduce": "final",
+          "window": [
+            0.0,
+            1.2
+          ]
+        }
+      ]
+    }
+  }
+}

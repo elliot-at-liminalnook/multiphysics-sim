@@ -13,4 +13,4 @@ def snapshot(workspace):
             "note": "Fresh measurement, not a guarantee a build fits. Assess anticipated growth; remeasure before deletion or building. No files were deleted by this preflight."}
 
 def context(workspace):
-    return "\n\nDISK-SPACE PREFLIGHT (fresh for this turn):\n" + json.dumps(snapshot(workspace)) + "\nAssess sufficiency for the planned task and record your decision in coordination_notes. Follow the disk-space policy in your role prompt."
+    return "\n\nDISK-SPACE PREFLIGHT (fresh for this turn):\n" + json.dumps(snapshot(workspace)) + "\nIf this is short for the planned builds, free regenerable build output first (see your role prompt). The coordinator pauses the run below the emergency floor."

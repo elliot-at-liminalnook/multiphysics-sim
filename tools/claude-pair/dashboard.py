@@ -189,7 +189,7 @@ def view(root):
             "mission": pair.Runner(root).prompt_file("mission.md"),
             "roles": {role: pair.Runner(root).prompt_file(f"{role}.md") for role in ("director", "orchestrator", "worker")},
             "outer_settings": pair.Runner(root).outer_settings(),
-            "limits": {k: config[k] for k in ("max_rounds", "max_hours", "budget_usd", "call_budget_usd", "turn_minutes", "max_turns")},
+            "limits": {k: config.get(k) for k in ("max_rounds", "max_hours", "budget_usd", "call_budget_usd", "turn_minutes", "max_turns")},
             "workspace": config["worktree"], "source": config["repo"], "steering": steering,
             "steering_pending": bool(steering and steering["updated_at"] != state.get("steering_seen")),
             "estimated_spent": max(0, state["cost_usd"] - inflight.get("reserved_usd", 0)),
@@ -304,7 +304,9 @@ class Handler(BaseHTTPRequestHandler):
                     config = pair.read_json(root / "config.json")
                     if state["status"] == "complete" and not pair.Runner(root).outer_settings()["enabled"]:
                         return self.send(409, {"error": "This mission is marked complete"})
-                    if state["rounds"] >= config["max_rounds"] or state["elapsed_seconds"] >= config["max_hours"] * 3600 or state["cost_usd"] >= config["budget_usd"]:
+                    reached = lambda value, cap: cap is not None and value >= cap
+                    if (reached(state["rounds"], config.get("max_rounds")) or reached(state["cost_usd"], config.get("budget_usd"))
+                            or reached(state["elapsed_seconds"], (config.get("max_hours") or math.inf) * 3600)):
                         return self.send(409, {"error": "A run limit is reached. Increase the limit below before continuing."})
                     if state.get("inflight") and not data.get("retry_interrupted"):
                         return self.send(409, {"error": "The last turn was interrupted. Review its work and confirm resume.", "interrupted": True})
@@ -328,13 +330,16 @@ class Handler(BaseHTTPRequestHandler):
                         return self.send(400, {"error": "Supply all six limits"})
                     for key in keys:
                         val = data[key]
+                        if val is None:
+                            continue  # no limit
                         if type(val) not in (int, float) or not math.isfinite(val) or val <= 0:
-                            return self.send(400, {"error": "Every limit must be a positive number"})
+                            return self.send(400, {"error": "Each limit must be a positive number, or empty for no limit"})
                         if key in ("max_rounds", "max_turns") and int(val) != val:
                             return self.send(400, {"error": "Turn counts must be whole numbers"})
                     config.update(data)
-                    config["max_rounds"] = int(config["max_rounds"])
-                    config["max_turns"] = int(config["max_turns"])
+                    for key in ("max_rounds", "max_turns"):
+                        if config[key] is not None:
+                            config[key] = int(config[key])
                     pair.write_json(root / "config.json", config)
                     return self.send(200, {"ok": True, "message": "Run limits saved."})
                 return self.send(404, {"error": "Not found"})

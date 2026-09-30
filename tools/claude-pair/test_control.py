@@ -1,4 +1,5 @@
 """Full-control sessions, fresh-session scoping, shell checks, before/after receipts and UI capture."""
+import argparse
 import copy
 import json
 import os
@@ -277,7 +278,7 @@ class UsageLimitTests(unittest.TestCase):
     def test_a_restarted_coordinator_waits_out_a_saved_reset(self):
         with tempfile.TemporaryDirectory() as tmp:
             runner = ControlTests().runner(tmp, limit_margin_seconds=0)
-            runner.state.update(status="waiting", resume_at=time.time() + 0.4)
+            runner.state.update(status="waiting", resume_at=time.time() + 2.0)
             runner.save()
             seen = []
 
@@ -288,9 +289,70 @@ class UsageLimitTests(unittest.TestCase):
             begun = time.time()
             with patch.object(pair.Runner, "call", fake_call):
                 pair.Runner(runner.root).run()
-            self.assertGreaterEqual(seen[0] - begun, 0.35)
-            self.assertLess(pair.read_json(runner.root / "state.json")["elapsed_seconds"], 0.3,
+            self.assertGreaterEqual(seen[0] - begun, 1.9)
+            self.assertLess(pair.read_json(runner.root / "state.json")["elapsed_seconds"], 1.0,
                             "waiting for a limit does not use the run's active hours")
+
+
+class NoLimitTests(unittest.TestCase):
+    def test_init_defaults_to_no_limits_and_a_director(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = fixtures.PairTests().setup_repo(Path(tmp).resolve())
+            args = argparse.Namespace(repo=str(repo), state=None, fresh=False, claude="python3", model=None, audit_only=False,
+                                      max_rounds=None, max_hours=None, turn_minutes=None, max_turns=None,
+                                      budget_usd=None, call_budget_usd=None, no_director=False)
+            pair.initialize(args)
+            root = repo / ".claude-pair"
+            config = pair.read_json(root / "config.json")
+            for key in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
+                self.assertIsNone(config[key], key)
+            self.assertEqual(pair.read_json(root / "outer-settings.json"), {"enabled": True, "max_batches": None})
+
+    def test_unlimited_calls_pass_no_caps_and_runs_do_not_stop_on_turns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, max_rounds=None, max_hours=None, turn_minutes=None, max_turns=None,
+                                           budget_usd=None, call_budget_usd=None)
+            calls = []
+            with patch.object(runner, "process", ControlTests().fake_process(runner, calls)):
+                runner.call("worker", "task", scope="assignment:1")
+            self.assertNotIn("--max-budget-usd", calls[0])
+            self.assertNotIn("--max-turns", calls[0])
+            self.assertAlmostEqual(runner.state["cost_usd"], .1)
+            reviews = iter(range(100))
+
+            def fake_call(runner_, role, prompt, scope=None):
+                runner_.state["calls"] += 1
+                if role == "worker":
+                    return copy.deepcopy(fixtures.REPORT)
+                n = next(reviews)
+                if n == 6:
+                    p = fixtures.plan("complete", "accept")
+                    p["checklist"][0].update(status="verified", evidence="done")
+                    return p
+                return fixtures.plan(review="accept" if n else "none")
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(state["rounds"], 6)
+            self.assertEqual(state["status"], "complete")
+
+    def test_weekly_limit_stops_the_run_instead_of_waiting_days(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            reset = time.time() + 3 * 86400
+
+            def fake_call(runner_, role, prompt, scope=None):
+                raise pair.UsageLimit(reset, "worker stopped", weekly=True)
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(state["status"], "paused")
+            self.assertEqual(state["weekly_reset_at"], reset)
+            self.assertIn("weekly", state["message"])
+            now = time.time()
+            self.assertTrue(pair.weekly_limit({"rateLimitType": "seven_day"}, "", now + 60, now))
+            self.assertTrue(pair.weekly_limit(None, "", now + 2 * 86400, now))
+            self.assertFalse(pair.weekly_limit({"rateLimitType": "five_hour", "unifiedWindows": {"seven_day": {"utilization": .4}}}, "", now + 3600, now))
 
 
 FAKE_VIEWER = r'''

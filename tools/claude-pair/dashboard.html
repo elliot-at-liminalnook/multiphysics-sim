@@ -124,7 +124,7 @@
           <div class="card-head"><h2>Automatic planning</h2></div>
           <div class="card-body">
             <label class="toggle"><span class="switch"><input type="checkbox" id="outer-enabled"><span></span></span>Let the Director pick the next batch when one is accepted</label>
-            <div class="field" style="margin-top:14px"><label for="max-batches">Stop after this many accepted batches</label><input class="input" type="number" id="max-batches" min="1" step="1" style="max-width:140px"></div>
+            <div class="field" style="margin-top:14px"><label for="max-batches">Stop after this many accepted batches (empty: no limit)</label><input class="input" type="number" id="max-batches" min="1" step="1" style="max-width:140px"></div>
             <div class="row-end"><span class="note">Shares the run's time, usage and turn limits.</span><button class="btn small" id="save-outer">Save</button></div>
           </div>
         </section>
@@ -158,7 +158,7 @@
             <div class="field"><label for="turn_minutes">Minutes per call</label><input class="input" id="turn_minutes" type="number" min="0.1" step="1"></div>
             <div class="field"><label for="max_turns">Model turns per call</label><input class="input" id="max_turns" type="number" min="1" step="1"></div>
           </div>
-          <div class="row-end"><span class="note">Usage is an API-price estimate, not a bill. Limits are cumulative across resumes.</span><button class="btn small" id="save-limits">Save limits</button></div>
+          <div class="row-end"><span class="note">Leave a field empty for no limit (the default): the run works until the weekly Claude limit is used up. Usage is an API-price estimate, not a bill.</span><button class="btn small" id="save-limits">Save limits</button></div>
         </div>
       </section>
       <div class="stack">

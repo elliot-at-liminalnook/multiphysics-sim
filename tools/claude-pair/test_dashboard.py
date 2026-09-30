@@ -75,6 +75,10 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(self.post("limits", limits)[0], 409)
         self.assertEqual(self.post("limits", limits)[0], 200)
         self.assertEqual(pair.read_json(self.root / "config.json")["max_rounds"], 4)
+        limits.update(max_rounds=None, budget_usd=None)
+        self.assertEqual(self.post("limits", limits)[0], 200)
+        self.assertIsNone(pair.read_json(self.root / "config.json")["max_rounds"])
+        self.assertEqual(self.post("outer", {"enabled": True, "max_batches": None})[0], 200)
 
     def test_start_uses_saved_runner_and_rejects_duplicate(self):
         with patch.object(dashboard.subprocess, "Popen") as popen:

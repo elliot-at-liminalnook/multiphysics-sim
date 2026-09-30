@@ -95,9 +95,18 @@ check_passed = outer_loop.check_passed
 
 class UsageLimit(Exception):
     """A Claude subscription or spend limit stopped a call; resume after reset_at."""
-    def __init__(self, reset_at, detail):
+    def __init__(self, reset_at, detail, weekly=False):
         super().__init__(detail)
-        self.reset_at, self.detail = reset_at, detail
+        self.reset_at, self.detail, self.weekly = reset_at, detail, weekly
+
+
+def weekly_limit(info, text, reset_at, now):
+    """The weekly allowance (not the 5-hour window) is what ran out."""
+    info = info or {}
+    windows = info.get("unifiedWindows") or {}
+    week = windows.get("seven_day") if isinstance(windows.get("seven_day"), dict) else {}
+    return ("seven_day" in str(info.get("rateLimitType", "")) or (week.get("utilization") or 0) >= 1
+            or bool(re.search(r"weekly", text or "", re.I)) or reset_at - now > 24 * 3600)
 
 
 LIMIT_TEXT = re.compile(r"usage limit|limit reached|hit your limit|weekly limit|spend limit|rate.?limit|limit resets|resets in", re.I)
@@ -294,7 +303,7 @@ class Runner:
 
     def outer_settings(self):
         path = self.root / "outer-settings.json"
-        return read_json(path) if path.exists() else {"enabled": False, "max_batches": 8}
+        return read_json(path) if path.exists() else {"enabled": False, "max_batches": None}
 
     def save(self):
         write_json(self.root / "state.json", self.state)
@@ -313,7 +322,8 @@ class Runner:
     def process(self, argv, prefix, stdin=None, cwd=None, env=None):
         """Persist output before interpretation; stop the process group on limits."""
         out, err = prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
-        timeout = min(self.config["turn_minutes"] * 60, self.deadline - time.monotonic())
+        minutes = self.config.get("turn_minutes")  # None: a call may run as long as it needs
+        timeout = min(minutes * 60 if minutes else math.inf, self.deadline - time.monotonic())
         if timeout <= 0 or (self.root / "STOP").exists():
             raise InterruptedError("Stop requested or run time exhausted")
         (self.root / "captures").mkdir(exist_ok=True)
@@ -392,9 +402,13 @@ class Runner:
         self.state["calls"] += 1
         prefix = self.root / "logs" / f"{self.state['calls']:04d}-{role}"
         prefix.with_suffix(".prompt.md").write_text(prompt)
-        reservation = min(self.config["call_budget_usd"], self.config["budget_usd"] - self.state["cost_usd"])
-        if reservation < 0.01:
+        # Optional dollar caps; None means the only ceiling is Claude's own usage limits.
+        budget, per_call = self.config.get("budget_usd"), self.config.get("call_budget_usd")
+        caps = [c for c in (per_call, None if budget is None else budget - self.state["cost_usd"]) if c is not None]
+        cap = min(caps) if caps else None
+        if cap is not None and cap < 0.01:
             raise InterruptedError("Estimated usage budget exhausted")
+        reservation = cap or 0.0
         # Reserve the entire cap before launch. Crashes cannot reset the ledger.
         self.state["cost_usd"] += reservation
         self.state["inflight"] = {"role": role, "session_id": sid, "prefix": str(prefix), "reserved_usd": reservation,
@@ -409,9 +423,12 @@ class Runner:
                 # user's personal settings, hooks and MCP servers do not.
                 "--setting-sources", "project",
                 "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--no-chrome",
-                "--max-budget-usd", str(reservation), "--max-turns", str(self.config["max_turns"]),
                 "--add-dir", str(self.root),
                 "--resume" if session else "--session-id", sid]
+        if cap is not None:
+            argv += ["--max-budget-usd", str(cap)]
+        if self.config.get("max_turns"):
+            argv += ["--max-turns", str(self.config["max_turns"])]
         if self.config["audit_only"]:
             argv += ["--permission-mode", "dontAsk", "--permission-prompts", "none",
                      "--tools", "Read,Glob,Grep", "--allowedTools", "Read,Glob,Grep"]
@@ -439,7 +456,8 @@ class Runner:
             if reset:
                 self.settle_limited_call(role, sid, reservation, result,
                                          any(e.get("type") == "assistant" for e in events))
-                raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a Claude usage limit")
+                raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a Claude usage limit",
+                                 weekly_limit(info, text, reset, time.time()))
         if result is None:
             raise RuntimeError("Claude stream has no final result; inspect logs before retrying")
         if result.get("session_id") != sid:
@@ -583,7 +601,8 @@ class Runner:
             raise RuntimeError("STOP is present. Use the resume command to clear it deliberately.")
         if self.state.get("run_started_at"):
             self.state["elapsed_seconds"] += max(0, time.time() - self.state.pop("run_started_at"))
-        remaining = self.config["max_hours"] * 3600 - self.state["elapsed_seconds"]
+        hours = self.config.get("max_hours")
+        remaining = hours * 3600 - self.state["elapsed_seconds"] if hours else math.inf
         self.deadline = time.monotonic() + remaining
         started = time.monotonic()
         self.waited = 0.0
@@ -617,9 +636,9 @@ class Runner:
                         if not settings["enabled"]:
                             raise InterruptedError("Batch finished; automatic next-batch planning is off")
                         completed = sum(not b.get("legacy") for b in self.state["outer"]["history"])
-                        if completed >= settings["max_batches"]:
+                        if settings.get("max_batches") and completed >= settings["max_batches"]:
                             raise InterruptedError("Completed-batch ceiling reached; increase it to continue")
-                        if self.state["rounds"] >= self.config["max_rounds"]:
+                        if self.config.get("max_rounds") and self.state["rounds"] >= self.config["max_rounds"]:
                             raise InterruptedError("Worker-turn ceiling reached before selecting another batch")
                         prompt = outer_loop.director_prompt(self)
                         if steering_path.exists():
@@ -686,7 +705,7 @@ class Runner:
                         else:
                             self.state["phase"] = "worker"
                     elif phase == "worker":
-                        if self.state["rounds"] >= self.config["max_rounds"]:
+                        if self.config.get("max_rounds") and self.state["rounds"] >= self.config["max_rounds"]:
                             raise InterruptedError("Worker-turn ceiling reached; reviewed progress is saved")
                         plan = self.state["plan"]
                         prompt = plan["worker_prompt"] + "\n\nAcceptance criteria:\n" + json.dumps(plan["acceptance_criteria"])
@@ -708,7 +727,13 @@ class Runner:
                     if steps and count >= steps:
                         raise InterruptedError("Requested number of steps finished; ready to resume")
                 except UsageLimit as limit:
-                    self.wait_until(limit.reset_at, "Claude usage limit reached")
+                    if limit.weekly and not self.config.get("wait_for_weekly_limit"):
+                        # The run's only ceiling: stop here and continue after the reset.
+                        self.state["weekly_reset_at"] = limit.reset_at
+                        raise InterruptedError("The weekly Claude usage limit is used up. It resets "
+                                               + time.strftime("%a %d %b %H:%M", time.localtime(limit.reset_at))
+                                               + "; press Continue after that and the interrupted session picks up where it stopped.")
+                    self.wait_until(limit.reset_at, "Claude 5-hour usage limit reached")
         except InterruptedError as e:
             self.state.update(status="paused", message=str(e))
         except (Exception, KeyboardInterrupt) as e:
@@ -739,9 +764,9 @@ def initialize(args):
     if git(repo, "rev-parse", "--show-toplevel").decode().strip() != str(repo):
         raise ValueError("--repo must be the repository root")
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
-        value = getattr(args, name)
-        if not math.isfinite(value) or value <= 0:
-            raise ValueError(f"{name} must be positive and finite")
+        value = getattr(args, name, None)
+        if value is not None and (not math.isfinite(value) or value <= 0):
+            raise ValueError(f"{name} must be positive and finite (omit it for no limit)")
     claude = shutil.which(args.claude)
     if not claude:
         raise ValueError("Claude Code executable not found")
@@ -767,21 +792,24 @@ def initialize(args):
               "claude": claude, "model": args.model, "audit_only": args.audit_only,
               "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": True}
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
-        config[name] = getattr(args, name)
+        config[name] = getattr(args, name, None)
     config["checks"]["diff"] = ["git", "diff", "--check", config["baseline"]]
     write_json(root / "config.json", config)
     write_json(root / "state.json", {"version": 1, "status": "ready", "phase": "orchestrator",
         "calls": 0, "rounds": 0, "elapsed_seconds": 0, "cost_usd": 0,
         "sessions": {}, "session_costs": {}, "message": "Ready; no model calls yet."})
     Runner(root).save()
+    if not args.audit_only and not getattr(args, "no_director", False):
+        # Keep choosing worthwhile batches after the first; the Director may still stop with a reason.
+        write_json(root / "outer-settings.json", {"enabled": True, "max_batches": None})
     dirty = "" if head == baseline else " Uncommitted edits were recorded in the baseline, so reviews show only agent work."
     print(f"Ready: agents will work in {repo} on {config['branch'] or 'detached HEAD'}.{dirty}\n"
           f"State: {root}\nRun: python3 {HERE / 'pair.py'} run")
 
 
 def configure_outer(root, enabled, max_batches):
-    if type(enabled) is not bool or type(max_batches) is not int or max_batches < 1:
-        raise ValueError("Use a boolean enabled flag and a positive whole batch limit")
+    if type(enabled) is not bool or (max_batches is not None and (type(max_batches) is not int or max_batches < 1)):
+        raise ValueError("Use a boolean enabled flag and a positive whole batch limit (or none)")
     write_json(root / "outer-settings.json", {"enabled": enabled, "max_batches": max_batches})
     # This settings file is independent of the running coordinator's state.
     try:
@@ -834,17 +862,19 @@ def main():
     init.add_argument("--claude", default="claude")
     init.add_argument("--model", help="Omit to use Claude Code's default model")
     init.add_argument("--audit-only", action="store_true")
-    init.add_argument("--max-rounds", type=int, default=12)
-    init.add_argument("--max-hours", type=float, default=8)
-    init.add_argument("--turn-minutes", type=float, default=45)
-    init.add_argument("--max-turns", type=int, default=100)
-    init.add_argument("--budget-usd", type=float, default=100)
-    init.add_argument("--call-budget-usd", type=float, default=10)
+    # Every limit is off unless given: the run works until Claude's weekly limit is used up.
+    init.add_argument("--max-rounds", type=int, help="Stop after this many worker turns (default: no limit)")
+    init.add_argument("--max-hours", type=float, help="Stop after this many active hours (default: no limit)")
+    init.add_argument("--turn-minutes", type=float, help="Time limit for one agent call (default: none)")
+    init.add_argument("--max-turns", type=int, help="Model turns allowed in one call (default: no limit)")
+    init.add_argument("--budget-usd", type=float, help="Estimated-usage ceiling for the run (default: none)")
+    init.add_argument("--call-budget-usd", type=float, help="Estimated-usage ceiling per call (default: none)")
+    init.add_argument("--no-director", action="store_true", help="Stop when the mission is done instead of choosing more batches")
     for name in ("run", "resume", "status", "stop", "enable-outer", "watch-outer"):
         p = sub.add_parser(name)
         p.add_argument("--state", help="Run state directory (default: <repo>/.claude-pair)")
         if name == "enable-outer":
-            p.add_argument("--max-batches", type=int, default=8)
+            p.add_argument("--max-batches", type=int, help="Stop after this many accepted batches (default: no limit)")
         if name in ("run", "resume"):
             p.add_argument("--steps", type=int, default=0, help="Pause after N state transitions (0 = until limit)")
             p.add_argument("--retry-interrupted", action="store_true", help="After inspecting logs, resume an uncertain interrupted session")

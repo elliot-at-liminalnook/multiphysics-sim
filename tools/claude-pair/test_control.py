@@ -51,6 +51,7 @@ class ControlTests(unittest.TestCase):
             for flag in ("--safe-mode", "--tools", "--disable-slash-commands", "--permission-prompts"):
                 self.assertNotIn(flag, argv)
             self.assertEqual(argv[argv.index("--setting-sources") + 1], "project")
+            self.assertTrue(argv[argv.index("--agents") + 1].endswith("prompts/subagents.json"))
             instructions = argv[argv.index("--append-system-prompt") + 1]
             self.assertIn("# Project handbook", instructions)
             self.assertIn("Screenshots are OFF for this run", instructions)

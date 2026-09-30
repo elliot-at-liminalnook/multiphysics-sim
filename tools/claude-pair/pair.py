@@ -466,6 +466,10 @@ class Runner:
                 "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--no-chrome",
                 "--add-dir", str(self.root),
                 "--resume" if session else "--session-id", sid]
+        agents = self.root / "prompts" / "subagents.json"
+        agents = agents if agents.exists() else HERE / "prompts" / "subagents.json"
+        if agents.exists() and not self.config["audit_only"]:
+            argv += ["--agents", str(agents)]  # pair-implementer and pair-reviewer carry the run's rules
         fast = role in self.fast_roles()
         if fast:
             argv += ["--settings", json.dumps({"fastMode": True})]

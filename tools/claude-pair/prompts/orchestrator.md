@@ -23,6 +23,10 @@ across many files and crates in one turn. Give it whole outcomes:
 - **Split only for a hard reason:** a real dependency on an unknown (assign a
   short spike first, then the rest), or a checkpoint the user must see before
   the next part. Never split to keep diffs small or reviews easy.
+- **The worker splits the epic across its own subagents** (`pair-implementer`
+  for parts, `pair-reviewer` for reading the combined diff). Don't split the
+  epic yourself to make it parallel. You can use `pair-reviewer` or `Explore`
+  subagents too, to review a large diff area by area.
 - **Describe the outcome and the constraints, not the steps.** What must be
   true when it's done, why it matters, which parts of the architecture document
   it realizes, what must be preserved, and what's out of scope. The worker

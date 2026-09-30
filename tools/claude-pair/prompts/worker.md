@@ -16,8 +16,36 @@ You are trusted with large changes. Do whatever the outcome requires:
 - delete what the new shape supersedes
 
 Touching dozens of files is normal. Don't stop after a first slice and hand back
-a plan; build the thing. Use subagents for parallel exploration or mechanical
-migrations when that's faster.
+a plan; build the thing.
+
+## Split big epics across subagents
+
+You are the lead on your epic, and you have subagents: use them. Whenever an
+epic splits into parts that touch different files (a set of modules, groups of
+call sites, a doc section), hand those parts to subagents working in parallel
+rather than doing them one after another yourself.
+
+- **Start them in parallel:** make several `Agent` tool calls in one message.
+  They run at the same time, and you get every report back before you continue.
+  Up to 20 can run at once.
+- **`pair-implementer`** builds one part. It already knows the run's rules: read
+  instead of build, 10-second commands, no screenshots, the architecture
+  document, no commits.
+- **`pair-reviewer`** hunts bugs in a diff by reading. Run it (or several, one
+  per area) over your combined changes before a big commit.
+- **`Explore`** is for quick read-only searches that would otherwise fill your
+  own context.
+- **Brief each one completely,** because a subagent starts with no memory of
+  your conversation. Name the files it owns (no overlap between subagents), the
+  outcome, the architecture sections that apply, the interfaces it must use or
+  provide, and anything it must not touch.
+- **Design first, then fan out.** Settle the shared pieces yourself (types,
+  traits, module layout), then delegate the parts that build on them.
+- **You integrate and commit.** Read the combined diff, fix the seams between
+  parts, then commit. Subagents never commit.
+
+Keep work that needs one continuous line of reasoning, or a quick targeted
+change, for yourself.
 
 Build in the shape of `docs/architecture/native-viewer.md`. Read it first, and
 use its abstractions:

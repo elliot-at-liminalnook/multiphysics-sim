@@ -18,6 +18,7 @@ pub mod robot_motion;
 pub mod robot_preset;
 pub mod robot_recording;
 pub mod robot_run;
+pub mod robot_source;
 pub mod markdown;
 pub(crate) mod physics_view;
 pub(crate) mod view;

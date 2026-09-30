@@ -28,8 +28,12 @@ pub enum CadLinkStatus {
 
 /// Lowercase hex sha256 of a file's raw bytes.
 pub fn sha256_file(path: &Path) -> std::io::Result<String> {
-    let bytes = std::fs::read(path)?;
-    Ok(Sha256::digest(&bytes).iter().map(|b| format!("{b:02x}")).collect())
+    Ok(sha256_hex(&std::fs::read(path)?))
+}
+
+/// Lowercase hex sha256 of bytes already read.
+pub fn sha256_hex(bytes: &[u8]) -> String {
+    Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// The paths [`RESOLUTION_RULE`] tries, in order.

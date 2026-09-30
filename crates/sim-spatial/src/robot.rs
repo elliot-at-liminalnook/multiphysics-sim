@@ -6,6 +6,8 @@
 //! A preset (`--robot-preset ID`, REST `robot_preset`) opens the same way:
 //! its scene's `robot` goes through the same loader, and the run thread runs
 //! the preset's shared EmbeddedEnvironment/EmbeddedSession (`robot_preset`).
+//! A FILE is watched and reloaded on change or Reload (`robot_source`); a
+//! reload replaces the model and starts a fresh run context.
 use super::{ACCENT, INK, MUTED, PANEL};
 use crate::builder::ui::UiFonts;
 use bevy::{
@@ -27,6 +29,7 @@ use sim_domain_robot::cad_link::{self, CadLinkStatus};
 use crate::robot_preset::{Preset, PresetRun};
 use crate::robot_motion::{self, KEYS};
 use crate::robot_recording;
+use crate::robot_source::{self, SourceWatch, Trigger as ReloadTrigger};
 use crate::robot_gait::{self, GaitAction, GaitSource};
 use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, ReplayPhase, RunAction, RunController};
 use std::path::{Path, PathBuf};
@@ -83,9 +86,16 @@ pub struct FileNotes {
 /// (which hashes the CAD file); called on the worker thread (and by
 /// `--validate-only`). Errors name the path.
 pub fn load(path: &Path) -> Result<Loaded, String> {
+    let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    load_bytes(path, &bytes)
+}
+
+/// [`load`] on bytes already read from `path` (the reload worker hashes the
+/// same bytes it parses, `robot_source`).
+pub fn load_bytes(path: &Path, bytes: &[u8]) -> Result<Loaded, String> {
     let name = path.to_string_lossy();
     // PhysicalModel::load is read + parse; parse the same bytes for the notes.
-    let text = std::fs::read_to_string(path).map_err(|e| format!("{name}: {e}"))?;
+    let text = std::str::from_utf8(bytes).map_err(|e| format!("{name}: {e}"))?;
     let model = PhysicalModel::parse(&text).map_err(|e| format!("{name}: {e}"))?;
     let raw: Value = serde_json::from_str(&text).map_err(|e| format!("{name}: {e}"))?;
     Ok(loaded(model, &raw, path))
@@ -167,16 +177,18 @@ pub struct RobotView {
     panels_ready: bool,
     /// The graph dock (system_ui graphs:toggle, key G, the Graphs button).
     graphs_visible: bool,
+    /// `--robot FILE`: the file's hash, watch and reload state (None for a preset).
+    source: Option<SourceWatch>,
+    /// The last reload's result line (reason, run reset, selection), shown in the header.
+    notice: Option<String>,
 }
 impl RobotView {
     /// Starts the worker load; the window opens without waiting for it.
+    /// The first load goes through the same worker check as a reload (`robot_source`).
     pub fn open(path: PathBuf) -> Self {
-        let (tx, rx) = mpsc::channel();
-        let worker = path.clone();
-        std::thread::spawn(move || {
-            let _ = tx.send(load(&worker).map(|l| (l, None)));
-        });
-        Self::new(path, rx, None)
+        let mut view = Self::new(path.clone(), None, None);
+        view.source = Some(SourceWatch::open(path));
+        view
     }
     /// Opens preset `id` from `presets` (its paths resolved against the
     /// workspace root, `crate::workspace`): refused now, naming the id, when it
@@ -190,7 +202,7 @@ impl RobotView {
         std::thread::spawn(move || {
             let _ = tx.send(load_preset(worker, &dir).map(|(l, r)| (l, Some(r))));
         });
-        let mut view = Self::new(root.join(preset.scene.as_deref().unwrap_or_default()), rx, Some(preset));
+        let mut view = Self::new(root.join(preset.scene.as_deref().unwrap_or_default()), Some(rx), Some(preset));
         view.presets = Ok(presets.to_path_buf());
         Ok(view)
     }
@@ -202,7 +214,7 @@ impl RobotView {
         }
         self
     }
-    fn new(path: PathBuf, rx: mpsc::Receiver<Result<(Loaded, Option<PresetRun>), String>>, preset: Option<Preset>) -> Self {
+    fn new(path: PathBuf, rx: Option<mpsc::Receiver<Result<(Loaded, Option<PresetRun>), String>>>, preset: Option<Preset>) -> Self {
         Self {
             preset,
             presets: crate::robot_preset::default_file(),
@@ -218,13 +230,15 @@ impl RobotView {
             scroll: 0.0,
             scroll_max: 0.0,
             scroll_to: None,
-            rx: Some(Mutex::new(rx)),
+            rx: rx.map(Mutex::new),
             run: None,
             run_message: None,
             pose_dirty: false,
             ui_revision: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_micros() as u64,
             panels_ready: false,
             graphs_visible: false,
+            source: None,
+            notice: None,
         }
     }
     fn link_name(&self, i: usize) -> Option<&str> {
@@ -283,6 +297,7 @@ impl RobotView {
             "joints": joints, "motors": motors, "transmissions": m.map(|m| &m.transmissions), "battery": m.and_then(|m| m.battery.as_ref()),
             "actuator_profiles": profiles, "uncertainty": m.map(|_| &self.notes.uncertainty), "uncertainty_parsed": m.map(|m| &m.uncertainty), "identification": m.map(|m| &m.identification),
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
+            "source_file": self.source.as_ref().map_or_else(|| json!({"watching": false, "reason": "a preset is not watched (--robot FILE only)"}), |s| s.json(true)), "notice": self.notice,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
             "pose": if previewing { GAIT_POSE } else if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()),
@@ -356,6 +371,9 @@ enum RobotAction {
     ToggleGraphs,
     /// The kinematic gait preview: open, play, pause, seek, speed, stop, list (REST `robot_gait`).
     Gait { action: GaitAction },
+    /// Re-read `--robot FILE` on a worker (`robot_source`): the watch (a changed
+    /// stat), the Reload button, `system_ui` robot:reload and REST `robot_reload`.
+    Reload { trigger: ReloadTrigger },
 }
 /// The absolute target a jog action asks for (file validation happens in `check_jog`).
 fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
@@ -390,6 +408,7 @@ fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
         RobotAction::Replay { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_replay().map(|_| ()),
         RobotAction::CancelReplay => view.run.as_ref().ok_or("the robot has not loaded")?.check_cancel(),
         RobotAction::Gait { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check_gait(action),
+        RobotAction::Reload { .. } => view.source.as_ref().ok_or("a preset is not reloaded; reload is for --robot FILE")?.check_reload(),
         _ => Ok(()),
     }
 }
@@ -435,6 +454,8 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
         RobotAction::Fit => orbit.home = true,
         RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
+        // Checked above; applied in `receive` when the worker finishes.
+        RobotAction::Reload { trigger } => view.source.as_mut().ok_or("a preset is not reloaded; reload is for --robot FILE")?.start(trigger)?,
         RobotAction::Gait { action } => {
             let stop = action == GaitAction::Stop;
             view.run.as_mut().ok_or("the robot has not loaded")?.gait(action)?;
@@ -461,6 +482,9 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
         out.push(("inspector:scroll_down".into(), "Scroll inspector down".into(), RobotAction::ScrollInspector { delta: 400.0 }));
         out.push(("inspector:scroll_up".into(), "Scroll inspector up".into(), RobotAction::ScrollInspector { delta: -400.0 }));
         out.push(("fit".into(), "Fit".into(), RobotAction::Fit));
+        if view.source.is_some() {
+            out.push(("robot:reload".into(), "Reload file".into(), RobotAction::Reload { trigger: ReloadTrigger::Manual }));
+        }
         out.push(("graphs:toggle".into(), (if view.graphs_visible { "Hide graphs (G)" } else { "Show graphs (G)" }).into(), RobotAction::ToggleGraphs));
         for action in RunAction::ALL {
             out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
@@ -550,6 +574,7 @@ enum Request {
     RobotSaveRecording { path: Option<String>, note: Option<String> },
     RobotReplay { file: Option<String>, path: Option<String>, action: Option<String> },
     RobotGait { action: Option<String>, report: Option<String>, path: Option<String>, t: Option<f64>, scale: Option<f64> },
+    RobotReload,
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -633,6 +658,7 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
             }
             *orbit = RobotOrbit { focus: Vec3::from_array(focus), radius, yaw, pitch, home: false, ..*orbit };
         }
+        Request::RobotReload => dispatch(view, orbit, RobotAction::Reload { trigger: ReloadTrigger::Manual })?,
         Request::Fit => orbit.home = true,
     }
     Ok(view.state_json())
@@ -647,8 +673,8 @@ pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
 fn capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
-        c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, and run (null until loaded; phase idle with null time before any build; see robot_run). Nothing is written."),
-        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls, and for a preset the run, motion, recording, replay and gait preview controls (gait:open:<report>, gait:play, gait:pause, gait:stop, gait:seek:0 | - | + (±period/12 from the latest pose), gait:speed:0.25 | 0.5 | 1, gait:list: the same RobotAction::Gait as REST robot_gait) (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
+        c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim (the export's own `source`), source_file (--robot FILE's path, sha256, loaded_at, reload_count, watching, last_reload, run_reset; see robot_reload; watching=false for a preset), notice (the last reload's result), and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, and run (null until loaded; phase idle with null time before any build; see robot_run). Nothing is written."),
+        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls, robot:reload for --robot FILE (the same RobotAction::Reload as robot_reload), and for a preset the run, motion, recording, replay and gait preview controls (gait:open:<report>, gait:play, gait:pause, gait:stop, gait:seek:0 | - | + (±period/12 from the latest pose), gait:speed:0.25 | 0.5 | 1, gait:list: the same RobotAction::Gait as REST robot_gait) (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
         c("robot_jog", json!({"joint":"left axle","target":0.5}), &format!("Servo-target jog of one joint by its file name: {JOG_LABEL}. Give target (absolute; rad, or m on a prismatic joint) or delta (from the current requested target). The same handler as the jog +/− buttons and system_ui jog:<joint>:+/- controls (±{JOG_STEP_RAD} rad, ±{JOG_STEP_M} m prismatic; listed for the joints touching the selected link). Errors name the joint: unknown joint, no servo target (passive joint, firmware none, fixed, or a trajectory-mode file), non-finite target, or a target outside the file's limits (with the limit; never clamped); after a failed run, Reset first. {JOG_SEMANTICS} robot_state.jog reports control mode, label and, per joint, the limit (or no limit in file), requested target, and the target and measured value from the latest accepted frame.")),
         c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
         c("robot_presets", json!({}), &format!("List the robot presets declared in {} (its paths resolved against the workspace root, reported in workspace): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
@@ -657,6 +683,7 @@ fn capabilities() -> Vec<Value> {
         c("robot_save_recording", json!({"note":"after motion:w"}), &format!("Save the loaded preset run's recording: the same handler as the Save recording button and system_ui recording:save. The run thread snapshots the shared recording (EmbeddedEnvironment::episode_recording() for a preset with a task, EmbeddedSession::recording() without, as the browser's Download) in any phase with a built session, running, paused, ended or failed; a writer thread writes it, so the response returns at once with recording.pending set and robot_state.recording.last_saved {{path, meta_path, kind, version, completed_steps, replayable, not_replayable_reason, failure, saved_utc, bytes}} (or recording.error) once written. Optional path (relative to the root or absolute) and note (kept in the sidecar). {} {} {} Refused, naming the reason: --robot FILE, no built session (Run or Step first), a save still being written, a path under examples/, cad/ or web/, a name not ending in .json or ending in .meta.json, and an existing file (reported in recording.error).", robot_recording::LOCATION_RULE, robot_recording::FILE_RULE, robot_recording::REPLAYABLE_RULE)),
         c("robot_gait", json!({"report":"6216-Bayesian-009-472d11d4"}), &format!("Kinematic gait preview on the loaded preset: {}. Open a gait with report (a name in robot_state.gait_preview.reports: {}) or path (a compiled.json, relative to the workspace root or absolute); then {{\"action\":\"play\"}}, pause, stop, list, {{\"action\":\"seek\",\"t\":0.5}} (gait time, s) or {{\"action\":\"speed\",\"scale\":0.5}} (0 < scale <= 1). One worker reads the gait with sim_runtime::gait_playback::compiled_with_governor (governor from detailed.spec.json, else spec-identity.json, else none) and Gait::from_compiled, samples it ({}) and poses the scene with the shared KinematicMirror at lift {} m (web/viewer/calibration-mirror.mjs). Refused naming the reason: --robot FILE (no scene), a missing file (named), an unknown report, a gait joint that is not a coordinate of the preset's scene (named), a mirror that cannot serve the scene, a running physics run or a replay in progress; Run, Step and Replay are refused while a gait is loaded. Load errors after the command returns land in robot_state.gait_preview.error, with any previous preview kept. robot_state.gait_preview reports label, phase (idle | loading | playing | paused | failed), generation and frame_generation, report, compiled, governor_source, period_s, nominal_speed_m_s, report_speed_m_s, status and fidelity (the report's, verbatim), gait_time_s, speed_scale, desired_rad and commanded_rad by joint, drives, lift_m, authored_limit_violations and solve_ms. Nothing is simulated, written or sent to hardware.", robot_gait::LABEL, robot_gait::LISTING_RULE, robot_gait::SAMPLING_RULE, robot_gait::LIFT_M)),
         c("robot_replay", json!({"file":"20260930T060822.729Z.json"}), &format!("Replay a saved recording of the loaded preset: the same handler as the inspector Replay buttons and system_ui replay:<file>. Give file (a bare name listed in robot_state.recordings.files, in runs/robot-presets/<preset-id>/) or path (any readable recording .json, relative to the root or absolute; reading is not restricted). {{\"action\":\"cancel\"}} stops the replay between chunks (system_ui replay:cancel); {{\"action\":\"list\"}} lists the recordings again off the UI thread (system_ui replay:refresh). {} {} {} {} robot_state.replay reports path, phase (idle | replaying | cancelled | done | failed), completed/total with unit, completed_steps and recorded_completed_steps, verdict, error, measured, replaced and sidecar. Refused, naming the reason: --robot FILE, a replay already in progress, a running run (Pause first), a building session, a missing or non-.json file, a recording of the other kind, a runtime mismatch (the runtime's message) and a session identity mismatch (the viewer's labelled check).", robot_recording::REPLAY_RULE, robot_recording::VERDICT_RULE, robot_recording::IDENTITY_RULE, robot_recording::MEASURED_RULE)),
+        c("robot_reload", json!({}), &format!("Re-read the opened --robot FILE now: the same RobotAction::Reload as the watch, the header Reload button and system_ui robot:reload. {} Returns at once; the result lands in robot_state.source_file {{path, sha256 (of the displayed model's bytes), loaded_at (UTC), reload_count (successful reloads), unchanged_checks, watching, in_flight, last_reload {{trigger watch | manual, outcome loaded | unchanged | failed, error naming the path, at (UTC)}}, run_reset, showing_last_good, failing_error}} and robot_state.notice. A loaded reload replaces the model, meshes, link list, notes and cad_link, keeps the selected link by name (else clears it with a note), discards any run or jog and spawns a fresh idle run thread whose generation is the old one + 1 (robot_state.run.generation; graphs clear by the generation rule). Refused naming the reason: a preset, a load or reload already in flight. (robot_state.source is still the file's own export source block.)", robot_source::RULE)),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
@@ -726,6 +753,8 @@ struct GaitSeekButton(i8);
 #[derive(Component)]
 struct GraphDock;
 #[derive(Component)]
+struct ReloadButton;
+#[derive(Component)]
 struct ReplayText;
 /// The Replay buttons (one per recent saved recording), rebuilt when the list changes.
 #[derive(Component)]
@@ -760,7 +789,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             ..default()
         }))
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, (receive, poll_rest, motion_keys, graph_key, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain())
+        .add_systems(Update, (watch, receive, poll_rest, motion_keys, graph_key, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain())
         .run();
 }
 
@@ -792,7 +821,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     commands.spawn((
         Node { position_type: PositionType::Absolute, right: Val::Px(18.0), top: Val::Px(6.0), flex_direction: FlexDirection::Column, align_items: AlignItems::FlexEnd, row_gap: Val::Px(3.0), ..default() },
         children![
-            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset), graphs_button(&fonts)]),
+            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![reload_button(&fonts, view.source.is_some()), run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset), graphs_button(&fonts)]),
             (text("", 12.0, MUTED), RunText),
         ],
     ));
@@ -852,6 +881,20 @@ fn run_button(fonts: &UiFonts, action: RunAction) -> impl Bundle {
     )
 }
 
+/// The Reload button (FILE mode): the same `RobotAction::Reload` as the watch,
+/// `system_ui` robot:reload and REST robot_reload.
+fn reload_button(fonts: &UiFonts, shown: bool) -> impl Bundle {
+    (
+        Button,
+        RobotAction::Reload { trigger: ReloadTrigger::Manual },
+        ReloadButton,
+        Node { padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::right(Val::Px(8.0)), display: if shown { Display::Flex } else { Display::None }, ..default() },
+        BorderRadius::all(Val::Px(4.0)),
+        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
+        children![label(fonts, "Reload file", 13.0, INK)],
+    )
+}
+
 /// The Graphs button: the same `RobotAction::ToggleGraphs` as key G and `system_ui` graphs:toggle.
 fn graphs_button(fonts: &UiFonts) -> impl Bundle {
     (
@@ -868,7 +911,23 @@ fn label(fonts: &UiFonts, value: &str, size: f32, color: Color) -> (Text, TextFo
     (Text::new(value), TextFont { font: fonts.regular.clone(), font_size: size, ..default() }, TextColor(color), TextLayout::new_with_linebreak(bevy::text::LineBreak::WordOrCharacter))
 }
 
-/// Takes the worker's result; spawns meshes and the link list on success.
+/// UI thread, FILE mode: stats the opened file every `robot_source::POLL`;
+/// a changed stat dispatches the one Reload handler (trigger watch).
+fn watch(mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
+    let idle = view.rx.is_none();
+    let due = match view.source.as_mut() {
+        Some(s) if idle => s.poll(std::time::Instant::now()),
+        _ => false,
+    };
+    if due {
+        // A refusal (a check already in flight) is retried by the next poll.
+        let _ = dispatch(&mut view, &mut orbit, RobotAction::Reload { trigger: ReloadTrigger::Watch });
+    }
+}
+
+/// Takes the worker's result (a preset open, or a FILE open/reload from
+/// `robot_source`); spawns meshes and the link list on a model to apply.
+/// A failed or unchanged reload returns before anything is despawned.
 fn receive(
     mut commands: Commands,
     old: Query<Entity, Or<(With<LinkMesh>, With<LinkRow>)>>,
@@ -881,24 +940,53 @@ fn receive(
     mut redraw: EventWriter<bevy::window::RequestRedraw>,
     fonts: Res<UiFonts>,
 ) {
-    let result = match view.rx.as_ref().map(|rx| rx.lock().unwrap_or_else(|p| p.into_inner()).try_recv()) {
-        Some(Ok(result)) => result,
-        Some(Err(mpsc::TryRecvError::Empty)) => {
-            redraw.write(bevy::window::RequestRedraw);
-            return;
-        }
-        Some(Err(mpsc::TryRecvError::Disconnected)) => Err(format!("{}: the loader stopped without a result", view.path.display())),
-        None => return,
-    };
-    view.rx = None;
-    // A reopened robot (REST robot_preset) replaces the previous meshes and rows.
-    for entity in &old {
-        commands.entity(entity).despawn();
-    }
     let started = match view.status {
         Status::Loading(t) => t,
         _ => std::time::Instant::now(),
     };
+    // `reload`: the trigger and the worker's seconds when a FILE reload replaces a displayed model.
+    let (result, reload) = if let Some(rx) = view.rx.as_ref() {
+        let result = match rx.lock().unwrap_or_else(|p| p.into_inner()).try_recv() {
+            Ok(result) => result,
+            Err(mpsc::TryRecvError::Empty) => {
+                redraw.write(bevy::window::RequestRedraw);
+                return;
+            }
+            Err(mpsc::TryRecvError::Disconnected) => Err(format!("{}: the loader stopped without a result", view.path.display())),
+        };
+        view.rx = None;
+        (result, None)
+    } else {
+        let Some(source) = view.source.as_mut() else { return };
+        let Some((trigger, checked)) = source.take() else {
+            if source.busy().is_some() {
+                redraw.write(bevy::window::RequestRedraw);
+            }
+            return;
+        };
+        let seconds = checked.seconds;
+        let was_failing = source.failing.is_some();
+        let Some(loaded) = source.settle(trigger, checked, robot_source::now_utc()) else {
+            // Unchanged, or failed: the displayed model, meshes, run and selection stay.
+            let failing = source.failing.clone();
+            match (failing, view.model.is_some()) {
+                (Some(e), false) => view.status = Status::Error(e),
+                (Some(_), true) => view.notice = Some(format!("{} reload failed: showing the last good model (see header)", if trigger == ReloadTrigger::Watch { "watched" } else { "manual" })),
+                (None, _) if trigger == ReloadTrigger::Manual => view.notice = Some("manual reload: file unchanged (same sha256); nothing replaced".into()),
+                (None, _) if was_failing => view.notice = Some("the file on disk matches the displayed model again (same sha256); nothing replaced".into()),
+                // A watch that finds identical bytes (a touch, an atomic same-content rewrite) stays quiet.
+                (None, _) => {}
+            }
+            return;
+        };
+        // The first successful load (open, or a watch after a failed open) is not a reload.
+        let reload = view.model.is_some().then_some((trigger, seconds));
+        (Ok((*loaded, None)), reload)
+    };
+    // A reopened robot (REST robot_preset) or a reloaded file replaces the previous meshes and rows.
+    for entity in &old {
+        commands.entity(entity).despawn();
+    }
     let (loaded, preset) = match result {
         Ok(l) => l,
         Err(e) => {
@@ -929,10 +1017,13 @@ fn receive(
         commands.entity(*root).add_child(entity);
     }
     if lo.x.is_finite() {
-        orbit.focus = (lo + hi) / 2.0;
         orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
+        if reload.is_none() {
+            orbit.focus = (lo + hi) / 2.0;
+        }
     }
-    orbit.home = true;
+    // A reload keeps the user's camera.
+    orbit.home = reload.is_none();
     view.triangles = loaded.geometry.iter().map(|g| g.as_ref().map_or(0, |g| g.triangles())).collect();
     let rows: Vec<Entity> = loaded
         .model
@@ -955,14 +1046,39 @@ fn receive(
         })
         .collect();
     commands.entity(*list).add_children(&rows);
-    view.run = Some(match preset {
-        Some(run) => RunController::spawn_preset(std::sync::Arc::new(run)),
-        None => RunController::spawn(loaded.model.clone()),
-    });
+    // A file's previous run context is discarded (its thread stops) and the
+    // fresh one continues its generation; a preset opens a new view.
+    let previous = view.run.take();
+    let (run, run_reset) = match preset {
+        Some(run) => (RunController::spawn_preset(std::sync::Arc::new(run)), false),
+        None => RunController::replace(previous, loaded.model.clone()),
+    };
+    let generation = run.generation();
+    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
+    view.run = Some(run);
+    view.selected = kept.as_ref().and_then(|n| loaded.model.links.iter().position(|l| &l.name == n));
     view.model = Some(loaded.model);
     view.notes = loaded.notes;
     view.cad_link = Some(loaded.cad_link);
-    view.status = Status::Loaded { seconds: started.elapsed().as_secs_f64() };
+    view.pose_dirty = true;
+    view.run_message = None;
+    view.status = Status::Loaded { seconds: match reload {
+        Some((_, s)) => s,
+        None => started.elapsed().as_secs_f64(),
+    } };
+    if let Some((trigger, _)) = reload {
+        let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
+        let run = if run_reset { "run reset" } else { "no run to reset" };
+        let selection = match (&kept, view.selected) {
+            (Some(n), Some(_)) => format!("; selection kept: {n}"),
+            (Some(n), None) => format!("; selection cleared: link `{n}` is not in the new file"),
+            (None, _) => String::new(),
+        };
+        view.notice = Some(format!("reloaded: {reason}; {run}; generation {generation}{selection}"));
+        if let Some(s) = view.source.as_mut() {
+            s.run_reset = Some(run_reset);
+        }
+    }
     view.ui_revision += 1;
     view.panels_ready = true;
 }
@@ -1175,7 +1291,15 @@ fn panels(
     mut status: Single<&mut Text, (With<StatusText>, Without<Inspector>, Without<RunText>, Without<TitleText>)>,
     mut inspector: Single<&mut Text, (With<Inspector>, Without<StatusText>, Without<RunText>, Without<TitleText>)>,
     mut run_text: Single<&mut Text, (With<RunText>, Without<StatusText>, Without<Inspector>, Without<TitleText>)>,
+    mut reload: Query<&mut Node, With<ReloadButton>>,
 ) {
+    // A REST robot_preset replaces a FILE view: presets are not reloaded.
+    let display = if view.source.is_some() { Display::Flex } else { Display::None };
+    for mut node in &mut reload {
+        if node.display != display {
+            node.display = display;
+        }
+    }
     let heading = match &view.preset {
         Some(p) => format!("Robot preset — {} ({})  ·  files read-only", p.label, p.id),
         None => format!("Robot — {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()),
@@ -1216,7 +1340,14 @@ fn panels(
             let pose = if previewing { "kinematic gait preview pose (not physics)" } else if view.run.as_ref().and_then(|r| r.frame()).is_some() { "simulated pose" } else { "exported assembly pose" };
             match view.preset.as_ref() {
                 Some(p) => format!("{} links{missing} · loaded in {seconds:.2} s · {pose} · readiness: {}", m.links.len(), clip(p.readiness().unwrap_or("(none declared)"), 55)),
-                None => format!("{} · {} links{missing} · loaded in {seconds:.2} s · {pose}", view.path.display(), m.links.len()),
+                None => match view.source.as_ref().filter(|s| s.failing.is_some()) {
+                    // The header says the displayed model is the last good one; the full error is in Source.
+                    Some(s) => format!("SHOWING LAST GOOD MODEL (loaded {}) · reload failed: {} (full error in Source)", s.loaded_at.as_deref().unwrap_or("—"), clip(s.failing.as_deref().unwrap_or_default(), 70)),
+                    None => {
+                        let notice = view.notice.as_ref().map_or(String::new(), |n| format!("{} · ", clip(n, 90)));
+                        format!("{notice}{} · {} links{missing} · loaded in {seconds:.2} s · {pose}", view.path.display(), m.links.len())
+                    }
+                },
             }
         }
         (Status::Loaded { .. }, None) => String::new(),
@@ -1830,7 +1961,8 @@ fn drives_text(view: &RobotView, m: &PhysicalModel) -> String {
 fn source_text(view: &RobotView, m: &PhysicalModel) -> String {
     let src = &m.source;
     let field = |k: &str| src.get(k).map_or("not recorded".to_string(), verbatim);
-    let mut t = format!("SOURCE BLOCK (verbatim)\nfile: {}\nexported: {}\ncad_sha256: {}\ncollision_ray_backend: {}\n", field("file"), field("exported"), field("cad_sha256"), field("collision_ray_backend"));
+    let mut t = view.source.as_ref().map(file_watch_text).unwrap_or_default();
+    t += &format!("SOURCE BLOCK (verbatim)\nfile: {}\nexported: {}\ncad_sha256: {}\ncollision_ray_backend: {}\n", field("file"), field("exported"), field("cad_sha256"), field("collision_ray_backend"));
     t += "\nNOTES — benchmark_assumptions (verbatim)\n";
     match src.get("benchmark_assumptions") {
         None => t += "none recorded\n",
@@ -1877,6 +2009,19 @@ fn source_text(view: &RobotView, m: &PhysicalModel) -> String {
         t += &format!("• {k}: rms {:?} rad · fitted {} · log {}\n   {}\n", x.rms_error_rad, or_none(&x.fitted_at), or_none(&x.source_log), serde_json::to_string(x).unwrap_or_default());
     }
     t += &format!("\nPROVENANCE RULE\n{PROVENANCE_RULE}\n");
+    t
+}
+
+/// The opened file's identity and last reload (robot_state.source_file).
+fn file_watch_text(s: &SourceWatch) -> String {
+    let mut t = format!("FILE (watched every {:.1} s; Reload re-reads it)\n{}\nsha256 {}\nloaded at {} · {} reload(s)\n", robot_source::POLL.as_secs_f64(), s.path.display(), s.hash.as_deref().unwrap_or("—"), s.loaded_at.as_deref().unwrap_or("—"), s.reload_count);
+    if let Some(r) = &s.last {
+        t += &format!("last reload: {:?} · {} at {}\n", r.trigger, r.outcome, r.at).to_lowercase();
+    }
+    if let Some(e) = &s.failing {
+        t += &format!("SHOWING THE LAST GOOD MODEL — the file on disk does not load:\n{e}\n");
+    }
+    t.push('\n');
     t
 }
 

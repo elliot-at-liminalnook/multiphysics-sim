@@ -1754,11 +1754,15 @@ fn watch(time: Res<Time>, mut builder: ResMut<Builder>) {
 
 /// Typing into the open draft (input editing); Enter and Escape are the
 /// draft's submit and drop actions, applied by the builder's handler.
-fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Builder>, keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>) {
+/// Keys from the frame a draft opens are dropped: the key that opened it
+/// ("/" for the filter) was pressed before the draft existed.
+fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Builder>, keys: Res<ButtonInput<KeyCode>>, mode: Option<Res<State<ViewerMode>>>, mut was_open: Local<bool>, mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>) {
     let mut send = |action: BuildAction| {
         out.write(crate::app::actions::Act::ui(system_actions::SystemAction::Ui(action)));
     };
-    if builder.input.is_none() {
+    let opened_now = builder.input.is_some() && !*was_open;
+    *was_open = builder.input.is_some();
+    if builder.input.is_none() || opened_now {
         events.clear();
         return;
     }
@@ -1776,6 +1780,10 @@ fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Buil
             }
             Key::Escape => {
                 send(BuildAction::DropDraft);
+                // Escape also leaves Connect/Annotate, as build mode's Escape key does.
+                if builder.drag.is_none() && mode.is_some_and(|m| *m.get() == ViewerMode::Build) {
+                    send(BuildAction::SetMode(Mode::Select));
+                }
                 return;
             }
             Key::Backspace => {

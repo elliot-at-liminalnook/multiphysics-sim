@@ -159,18 +159,71 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `linked.rs`); also `examples/systems-viewer/run-linked.sh` and `run-live.sh`.
 - **Reusable layer:** `sim_inspect::{model, selection, spatial}`,
   `sim_diagram::{layout, projection}` (egui-bound drawing in `sim_diagram::lib`).
-- **Shell status:** *partial*. 3D is present. The schematic is a second
-  window and toolkit. systems-builder-progress "Remaining" says selection is
-  not linked between the two windows in build mode, and the build-mode spawn
-  passes no `--selection-link` (verified in `build_mode`).
+- **Shell status:** *partial: a read-only schematic pane is in the shell and
+  verified natively; sim-viewer is still needed for layout editing and plots.*
+  Build mode has a **Schematic** toolbar toggle (`system_ui` action
+  `toggle_schematic`) that opens a pane beside the 3D view in the same window
+  (`builder/schematic.rs`, commit 35e4bedd). The pane draws the current level
+  with the shared `sim_diagram` layer: `projection::project` (child subsystems
+  collapsed), then `layout::initial_state_cancellable` and `route_cancellable`,
+  with `style::port_domain`/`net_domain` colours. There is no new layout
+  algorithm. Layout runs on a worker thread, keyed by description id,
+  revision and level. A newer key drops, and so cancels, the old job. A layout
+  whose key is not current is dimmed under "Stale layout (not the current
+  system)", with its boxes disabled. There is one selection,
+  `Builder.selected`: each box is a `system_ui` control
+  (`{"schematic_select": "<instance>"}`) sharing the `Select` dispatch arm,
+  and the highlight comes from `Projection::selection_highlights`.
+  `system_state.schematic` reports visible, laid_out/current keys, pending,
+  stale, node/net/unrouted counts, layout_ms, ui_build_ms and per-node
+  highlight. The layout is never written to the system file. `--schematic`
+  still spawns sim-viewer unchanged.
+- **Verified (T8.2, `$PAIR_CAPTURES/T8-schematic/`, `capture.json` ok, 21
+  assertions):** driven through REST `system_ui` activations (the same
+  handlers as a click, not pointer gestures) on copies of motor-driver-board
+  and worm-drive:
+  - Node count equals the top-level instance count from the copied file:
+    board 8/8 (6 nets, 0 unrouted), winch 11/11 (0 unrouted).
+  - The Outline's `select` control (regulator) gives `selected == ["regulator"]`
+    and exactly one highlighted node (`select-3d.png`: the Outline row, 3D
+    part, schematic box and inspector all show the regulator).
+  - `schematic_select` battery gives `selected == ["battery"]`, and only that
+    node is highlighted. The inspector shows the battery's parameters
+    (`select-schematic.png`).
+  - A `set_parameter` edit (revision 1→2) was observed as pending and stale
+    (laid out rev 1, current rev 2, new description id) at 85 ms, then as
+    current at rev 2 at 108 ms. `system_open` of the winch gave a new
+    description id and the winch's instances (`schematic-winch.png`). The
+    intermediate state of the open was not caught by polling (it completes
+    within one poll). The recorded invariant is that no poll ever showed the
+    board layout as current for the winch.
+  - The edited copy differs from the example only in the edited value,
+    `revision` and the store's existing `display_id` stamps: no layout keys.
+  - Timing: board layout 14.6 ms on the worker, pane UI build 0.1 ms; winch
+    10.4 ms / 0.08 ms.
+- **Remaining limits:**
+  - The pane is read-only: there is no node dragging, pinning or saved layout
+    (`DiagramState` is not persisted).
+  - There are no plots, connection graphs or analysis overlays in the
+    schematic, and the pane has no pan or zoom (it fits the level).
+  - At nested levels, nets that cross the subsystem boundary are dropped.
+    Subsystem and long labels clip inside fixed boxes.
+  - Known bug, reported and not fixed in T8.2: an edit that bumps the
+    revision without changing `display::scene_hash` (a same-value parameter
+    edit, discussions, grid or icon) does not recompile. The pane then stays
+    "Stale… waiting for the compile" indefinitely (`noop-edit-stale.png`).
+    It is labelled stale, never shown as current, but it does not recover
+    until the next compiling edit.
+  - sim-viewer (`sim-spatial --schematic`) is still needed for layout
+    editing, plots and the `--experiments` review.
 - **Source owner:** Rust runtime (description and identities); display layout
   is presentation.
-- **Dependencies:** split `sim_diagram::layout/projection` (graphics-free)
-  from the egui painter, then draw the schematic as a Bevy view or tab over
-  the same `SystemDescription`.
+- **Dependencies (remaining):** layout editing and persistence of
+  `DiagramState`, and plots in the pane, before sim-viewer becomes optional.
 - **Acceptance evidence:** one window. `select` a component and take a
   screenshot showing it highlighted in both the 3D view and the schematic pane.
-  `state` returns one selection.
+  `state` returns one selection. This is met for read-only viewing by T8.2
+  (above).
 
 ### d. Library / parameters / typed connections
 - **Entry today:** sim-spatial Library tab and cards (`ui.rs:library_tab`,
@@ -503,8 +556,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   compatibility target afterwards. Hardware calibration and sync
   (`calibration-ui.mjs`, `hardware-sync.mjs`) stay in the browser. They are
   hardware paths and are not migrated in this effort.
-- **sim-viewer:** stays for the schematic and `--experiments` review until c,
-  i and j reach parity.
+- **sim-viewer:** stays for schematic layout editing, plots and the
+  `--experiments` review until c, i and j reach parity. Read-only schematic
+  viewing with shared selection is now in the sim-spatial shell (§2c).
 
 ## 4. Constraints check (risks found in current code)
 
@@ -611,9 +665,11 @@ unknown-id error).
    `system_gait_reports` over `sim_runtime::gait_lab::scan_results` on a
    worker (commits 8d0fc4cd, c4f25b0a; verified natively in T5.3, see §2i).
    Launching evaluations comes later.
-4. **Schematic pane in the shell** (c): a graphics-free `sim_diagram` layout
-   drawn in Bevy with shared selection. The sim-viewer window then becomes
-   optional.
+4. **Partial — schematic pane in the shell** (c): a read-only pane over the
+   shared `sim_diagram` layout, computed on a worker, sharing the one Builder
+   selection (commit 35e4bedd; verified natively in T8.2, see §2c). The
+   sim-viewer window is *not yet* optional: layout editing, saved layouts and
+   plots still need it.
 5. **simrobot live view on a worker** (b/g groundwork): port `sim-app --scene cad`
    into a sim-spatial mode through the `sim_phenomena::scenarios::cad_robot`
    worker. This is the prerequisite for native teleoperation and gait playback.

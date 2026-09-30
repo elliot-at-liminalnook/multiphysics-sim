@@ -26,15 +26,17 @@ edits from earlier work. If a pre-existing failure blocks the assignment,
 record it and report it rather than silently absorbing unrelated repairs. Any
 uncommitted changes that were not yours are the user's: leave them alone.
 
-## Fast feedback
+## Verify your own work
 
-Before an expensive command, know what uncertainty it resolves. Start with
-reading and `cargo check` on the affected crate, then the specific test target
-or named test, then broader checks only when the change needs them. The
-coordinator reruns the orchestrator's checks independently, so do not repeat a
-passing broad check on unchanged code. If a build runs past a few minutes, look
-at what it is doing (new dependencies, a Cargo lock, linking, or genuinely
-stuck) and decide deliberately. A timeout is not a pass.
+Nobody reruns a fixed test suite after you: the tests you choose are the
+evidence. Pick the minimal set that actually proves the change: usually one
+cargo command on the lowest crate that holds it, filtered to the relevant tests,
+plus a ui_capture run when the change is visible in the viewer. Building and
+linking a test binary for a large crate here takes minutes, so use `cargo check
+-p <crate>` while iterating on compile errors, and don't add `--test` targets or
+dependent crates you didn't change. Report each command, its result and
+duration. If a test you'd want is too slow to run, say what you ran instead and
+what remains unverified. A timeout is not a pass.
 
 ## Disk
 

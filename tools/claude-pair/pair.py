@@ -82,7 +82,9 @@ def check_argv(catalogue, name):
 
 
 def check_names(plan):
-    return list(dict.fromkeys(["diff", *(plan or {}).get("checks", [])]))
+    """Checks the orchestrator explicitly asked the coordinator to run. There is
+    no fixed suite: the worker verifies its own work with tests it chooses."""
+    return list(dict.fromkeys((plan or {}).get("checks", [])))
 
 
 def check_prefix(root, rounds, index, name):
@@ -550,35 +552,71 @@ class Runner:
                 "note": "diff_file compares the run's baseline with everything in the folder now, including new untracked files. Use the diffstat to choose what to read. View captures with Read.",
                 "worker_report": self.state.get("report"), "independent_checks": self.state.get("receipts", [])}
 
-    def run_checks(self, suffix=""):
-        rounds = self.state["rounds"]
-        for index, name in enumerate(check_names(self.state["plan"])):
-            if suffix and name == "diff":
-                continue  # nothing to compare before any edits
-            prefix = check_prefix(self.root, rounds, index, name)
-            argv = check_argv(self.config["checks"], name)
-            code, out, err = self.process(argv, prefix.with_name(prefix.name + suffix))
-            yield {"name": name, "command": argv, "exit_code": code, "stdout": str(out), "stderr": str(err)}
+    def ordered_checks(self):
+        """Plan order, but cheapest first by measured duration so a quick failure
+        short-circuits the slow builds; unmeasured checks run in the middle."""
+        timings = self.state.get("check_history", {})
+        names = check_names(self.state["plan"])
+        seconds = lambda n: (timings.get(n) or {}).get("seconds")
+        known = sorted(seconds(n) for n in names if seconds(n) is not None)
+        middle = known[len(known) // 2] if known else 0
+        cost = lambda n: -1 if n == "diff" else seconds(n) if seconds(n) is not None else middle
+        return sorted(enumerate(names), key=lambda item: (cost(item[1]), item[0]))
+
+    def run_check(self, index, name, suffix=""):
+        prefix = check_prefix(self.root, self.state["rounds"], index, name)
+        argv = check_argv(self.config["checks"], name)
+        started = time.monotonic()
+        code, out, err = self.process(argv, prefix.with_name(prefix.name + suffix))
+        return {"name": name, "command": argv, "exit_code": code, "stdout": str(out), "stderr": str(err),
+                "seconds": round(time.monotonic() - started, 1)}
 
     def precheck(self):
-        """Run a new assignment's checks before the worker edits anything, so a
-        later failure can be told apart from one that was already there."""
-        self.state["prechecks"] = {r["name"]: r for r in self.run_checks("-before")}
+        """Optional (config precheck): run a new assignment's checks before the
+        worker edits anything. Doubles check time; history usually suffices."""
+        self.state["prechecks"] = {name: self.run_check(i, name, "-before")
+                                   for i, name in self.ordered_checks() if name != "diff"}
+
+    def earlier_result(self, name):
+        """This check's result before the current assignment: a pre-run if one was
+        made, else its latest result from an earlier assignment."""
+        if name in self.state.get("prechecks", {}):
+            return self.state["prechecks"][name]
+        seen = self.state.get("check_history", {}).get(name)
+        if seen and seen.get("assignment", 0) < self.state.get("assignment", 0):
+            return seen
+        return None
 
     def verify(self):
-        before = self.state.get("prechecks", {})
-        receipts = []
-        for receipt in self.run_checks():
-            if receipt["exit_code"] != 0 and receipt["name"] in before:
-                receipt["before"] = before[receipt["name"]]
+        history = self.state.setdefault("check_history", {})
+        receipts, stop = [], None
+        for index, name in self.ordered_checks():
+            if stop:
+                receipts.append({"name": name, "command": check_argv(self.config["checks"], name), "exit_code": None,
+                                 "skipped": True, "stdout": "", "stderr": "", "seconds": 0,
+                                 "note": f"Skipped: {stop} failed first and the work needs changes anyway."})
+                continue
+            receipt = self.run_check(index, name)
+            before = self.earlier_result(name)
+            if receipt["exit_code"] != 0 and before:
+                receipt["before"] = {k: before.get(k) for k in ("exit_code", "stdout", "stderr", "assignment")}
+            if receipt["exit_code"] != 0 and not (before and before.get("exit_code")):
+                stop = name  # a new failure: the remaining checks can wait for the repair
+            history[name] = {"exit_code": receipt["exit_code"], "seconds": receipt["seconds"],
+                             "stdout": receipt["stdout"], "stderr": receipt["stderr"],
+                             "assignment": self.state.get("assignment", 0), "round": self.state["rounds"]}
             receipts.append(receipt)
-        self.state["receipts"] = receipts
+            self.save()
+        order = {n: i for i, n in enumerate(check_names(self.state["plan"]))}
+        self.state["receipts"] = receipts = sorted(receipts, key=lambda r: order[r["name"]])
 
         def verdict(r):
+            if r.get("skipped"):
+                return " skipped"
             if r["exit_code"] == 0:
-                return " passed"
+                return f" passed ({r['seconds']:.0f}s)"
             b = r.get("before")
-            return " failed" + ("" if not b else " (already failing before this assignment)" if b["exit_code"]
+            return f" failed ({r['seconds']:.0f}s)" + ("" if not b else " (already failing before this assignment)" if b["exit_code"]
                                 else " (passed before this assignment: new failure)")
         shared_notebook.append(self.root, {"id": f"checks-{self.state['rounds']:04d}-{self.state['calls']:04d}",
             "author": "coordinator", "kind": "Independent verification",
@@ -650,8 +688,13 @@ class Runner:
                             break
                     elif phase == "orchestrator":
                         prompt = ("Read the mission and inspect the repository. Maintain your checklist. "
-                                  "Checks may be names from this catalogue or any shell command, run from the workspace root:\n"
-                                  + json.dumps(self.config["checks"]))
+                                  "The worker chooses and runs the tests that verify its work. `checks` is optional and "
+                                  "normally []; list a command (or a name from this catalogue) only when you want the "
+                                  "coordinator to rerun something specific and cheap:\n" + json.dumps(self.config["checks"]))
+                        timings = {n: h["seconds"] for n, h in self.state.get("check_history", {}).items() if h.get("seconds") is not None}
+                        if timings:
+                            prompt += ("\nMeasured duration of each check's latest run, in seconds. The coordinator reruns "
+                                       "your checks after every worker turn, so this is a recurring cost:\n" + json.dumps(timings))
                         if self.state.get("plan"):
                             prompt += ("\nYour previous plan (you may be in a fresh session: carry its checklist IDs forward "
                                        "and treat it as your own earlier decision):\n" + json.dumps(self.state["plan"]))
@@ -700,7 +743,7 @@ class Runner:
                             self.state["status"] = plan["action"]
                             self.state["message"] = plan["summary"]
                             break
-                        elif new_assignment and self.config.get("precheck") and len(check_names(plan)) > 1:
+                        elif new_assignment and self.config.get("precheck") and check_names(plan):
                             self.state["phase"] = "precheck"
                         else:
                             self.state["phase"] = "worker"
@@ -711,7 +754,8 @@ class Runner:
                         prompt = plan["worker_prompt"] + "\n\nAcceptance criteria:\n" + json.dumps(plan["acceptance_criteria"])
                         self.state["report"] = self.call("worker", prompt, scope=f"assignment:{self.state.get('assignment', 0)}")
                         self.state["rounds"] += 1
-                        self.state["phase"] = "verify"
+                        # Coordinator checks only when the orchestrator asked for some.
+                        self.state["phase"] = "verify" if check_names(self.state["plan"]) else "orchestrator"
                         self.state["receipts"] = []
                         write_json(self.root / "logs" / f"worker-{self.state['rounds']:04d}.json", self.state["report"])
                     elif phase == "precheck":
@@ -790,7 +834,7 @@ def initialize(args):
     config = {"repo": str(repo), "worktree": str(repo), "in_place": True, "source_head": head,
               "baseline": baseline, "baseline_ref": ref, "branch": None if branch == "HEAD" else branch,
               "claude": claude, "model": args.model, "audit_only": args.audit_only,
-              "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": True}
+              "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": False}
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
         config[name] = getattr(args, name, None)
     config["checks"]["diff"] = ["git", "diff", "--check", config["baseline"]]

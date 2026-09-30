@@ -5,7 +5,7 @@ STEPS = [
     ('director', 'Choose a batch', 'Director', 'Compare opportunities and select worthwhile work.'),
     ('assign', 'Write the assignment', 'Orchestrator', 'Turn the selected batch into one specific worker prompt.'),
     ('worker', 'Implement', 'Worker', 'Edit the code and run focused development checks.'),
-    ('verify', 'Run checks', 'Coordinator', 'Run the agreed independent checks against the changed code.'),
+    ('verify', 'Reruns', 'Coordinator', 'Rerun any specific checks the orchestrator requested (usually none).'),
     ('review', 'Review the result', 'Orchestrator', 'Inspect evidence, request fixes, or accept the completed batch.'),
 ]
 

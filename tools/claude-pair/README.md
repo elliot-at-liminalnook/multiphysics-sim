@@ -154,19 +154,23 @@ session is also replaced after `max_session_calls` turns (default 8, in
 orchestrator's previous plan (included in its prompt) and the shared notebook.
 The usage ledger reconciles each session's cumulative total separately.
 
-### Checks and before/after receipts
+### Verification
 
-A check is a name from `checks.json` (an exact argument array) or any shell
-command, which runs with `bash -c` from the project root. Checks get
-`~/.cargo/bin` on `PATH` and `PAIR_STATE`, `PAIR_WORKSPACE`, `PAIR_SOURCE`,
-`PAIR_TOOLS`, `PAIR_CAPTURES` and `PAIR_BASELINE`. For each new assignment the
-coordinator runs its checks once **before** the worker starts (set
-`precheck: false` in `.claude-pair/config.json` to skip this). A check that fails
-afterwards carries that earlier receipt. Acceptance still requires every check to
-pass, except those the orchestrator lists in `waived_checks`. A waiver is
-accepted only for a check that was already failing before the assignment, so a
-pre-existing failure can't block unrelated work forever and a new failure can
-never be waived.
+There is no fixed test suite. The worker chooses the minimal tests that prove
+its change (usually one cargo command on the lowest crate that holds it, plus a
+`ui_capture.py` run for visible changes), runs them, and reports each command,
+result and duration. The orchestrator reviews that evidence with the diff and
+captures, and can rerun anything itself when it has a concrete doubt.
+
+The orchestrator may also list `checks` for the coordinator to rerun after the
+worker: a name from `checks.json` or any shell command, run with `bash -c` from
+the project root with `~/.cargo/bin` on `PATH` and the `PAIR_*` paths set. They
+are normally empty. When given, they run cheapest first by measured duration and
+stop at the first new failure (the rest are marked skipped), and their durations
+are shown to the orchestrator and Director. Acceptance then needs them to pass,
+except those listed in `waived_checks`; a waiver is accepted only for a check
+that was already failing in an earlier assignment. `precheck: true` in
+`config.json` additionally runs them before each assignment (doubling their cost).
 
 Review evidence includes a diffstat, commits with stats, untracked files and
 recent captures alongside the full diff file, so the orchestrator can read the
@@ -180,7 +184,7 @@ appear as deletions.
 port and runs a JSON script of REST commands (`system_ui` activates live
 controls through the same handlers as a click). It saves window screenshots
 exactly as drawn, writes `capture.json` and stops the viewer. It exits nonzero
-if any step fails, so it works as an independent check:
+if any step fails, so the worker can use it as proof (or the orchestrator as a rerun):
 
 ```sh
 python3 tools/claude-pair/ui_capture.py --out "$PAIR_CAPTURES/board" \
@@ -229,7 +233,7 @@ for reusable code, and address named recurring costs instead of cosmetic churn.
 This guides model judgment; it does not guarantee good product decisions.
 
 The inner pair executes only the selected batch. Completion requires an accepted
-worker report, passing independent checks, and evidence for every batch task and
+worker report, passing requested reruns (if any), and evidence for every batch task and
 outcome. Only then is the batch archived and the Director called again. It
 reconsiders the hopper against the current code instead of blindly draining an
 old queue. Failed checks, blocked work and interruptions do not refill it. The
@@ -264,7 +268,7 @@ cd tools/claude-pair
 python3 -m unittest -v test_pair.py test_dashboard.py test_outer.py test_notebook.py test_workflow.py test_control.py
 ```
 
-Tests exercise the in-place baseline (staged/unstaged/deleted/untracked files
+Tests exercise optional coordinator reruns, the in-place baseline (staged/unstaged/deleted/untracked files
 and links, with HEAD, index and files untouched), state exclusion, `--fresh`, prompt forwarding, resume, final review, run limits, rejected
 false completion, check gating, locking, stop handling and usage accounting.
 `test_control.py` covers the full-control flags, audit-only read-only mode,
@@ -337,7 +341,7 @@ The orchestrator favors small complete assignments with clear stopping points;
 the Director can refill the hopper later. Workers make small local commits after
 focused task checks pass, stage only their task changes, and report commit IDs and
 remaining edits. They do not push or rewrite history. These checkpoints remain
-subject to independent checks and orchestrator review against the run's baseline.
+subject to orchestrator review against the run's baseline.
 
 ## Prompt research
 

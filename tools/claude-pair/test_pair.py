@@ -12,13 +12,13 @@ import pair
 
 
 def plan(action="work", review="none"):
-    return {"coordination_notes": [], "action": action, "review": review, "summary": "Do one feature",
+    return {"decisions": [], "coordination_notes": [], "action": action, "review": review, "summary": "Do one feature",
             "worker_prompt": "Create proof.txt with the assigned exact content.",
             "acceptance_criteria": ["Proof exists with exact contents"], "checks": ["diff"], "waived_checks": [],
             "checklist": [{"id": "one", "workflow": "One native workflow", "status": "pending", "evidence": ""}]}
 
 
-REPORT = {"coordination_notes": [], "status": "done", "summary": "Created proof", "changed_files": ["proof.txt"],
+REPORT = {"decisions": [], "coordination_notes": [], "status": "done", "summary": "Created proof", "changed_files": ["proof.txt"],
           "checks": [], "evidence": ["proof.txt"], "blockers": []}
 
 
@@ -217,8 +217,13 @@ class PairTests(unittest.TestCase):
                     runner.call("worker", "test")
             self.assertAlmostEqual(runner.state["cost_usd"], 1.5)
             self.assertIn("inflight", pair.read_json(root / "state.json"))
-            with self.assertRaisesRegex(RuntimeError, "uncertain"):
+            # An interrupted turn now resumes its own session automatically.
+            with patch.object(pair.Runner, "call", side_effect=pair.CallFailed("still down")), \
+                 patch.object(pair.Runner, "wait_until", side_effect=InterruptedError("stop here")):
                 pair.Runner(root).run()
+            state = pair.read_json(root / "state.json")
+            self.assertNotIn("inflight", state)
+            self.assertEqual(state["retry_session"], state["sessions"]["worker"])
 
     def test_process_timeout_preserves_partial_logs_and_reaps_child(self):
         with tempfile.TemporaryDirectory() as tmp:

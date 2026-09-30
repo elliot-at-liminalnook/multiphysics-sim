@@ -120,7 +120,8 @@ def append(root, entry):
 
 
 def response(root, role, number, data, source, historical=False, at=None):
-    notes = data.get('coordination_notes', [])
+    notes = data.get('coordination_notes', []) + [
+        f"Decision: {d['decision']} (why: {d['why']}; revisit if: {d['revisit_if']})" for d in data.get('decisions', [])]
     append(root, {'id': f'call-{number:04d}-{role}', 'author': role,
                  'kind': 'Agent report / proposal', 'summary': data.get('summary', ''),
                  'notes': notes, 'source': str(source), 'historical': historical,

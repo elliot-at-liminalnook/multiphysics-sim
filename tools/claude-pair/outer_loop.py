@@ -17,8 +17,9 @@ TASK = obj({"id": TEXT, "title": TEXT, "brief": TEXT,
 BATCH = obj({"id": TEXT, "title": TEXT, "objective": TEXT,
              "outcomes": STRINGS, "out_of_scope": STRINGS,
              "tasks": {"type": "array", "items": TASK}})
+DECISIONS = {"type": "array", "items": obj({"decision": TEXT, "why": TEXT, "alternatives": TEXT, "revisit_if": TEXT})}
 DIRECTOR_SCHEMA = obj({
-    "coordination_notes": STRINGS, "action": {"enum": ["select", "stop"]}, "summary": TEXT,
+    "decisions": DECISIONS, "coordination_notes": STRINGS, "action": {"enum": ["select", "stop"]}, "summary": TEXT,
     "rationale": TEXT, "selected_id": TEXT,
     "candidates": {"type": "array", "items": obj({
         "id": TEXT, "title": TEXT, "category": CATEGORY, "problem": TEXT,
@@ -137,6 +138,10 @@ def director_prompt(runner):
     prompt += "\nLong-term roadmap (historical evidence, inspect freshness):\n" + json.dumps(outer["roadmap"])
     prompt += "\nPrevious hopper (reconsider deferred items; they are not automatic promises):\n" + json.dumps(outer["hopper"])
     prompt += "\nCompleted batch IDs:\n" + json.dumps([b["id"] for b in outer["history"]])
+    if outer.get("set_aside"):
+        prompt += ("\nBatches set aside because they were blocked (choose other work; reselect one only if you can "
+                   "show its blocker is resolved, and record that as a decision):\n"
+                   + json.dumps([{k: b.get(k) for k in ("id", "title", "reason", "blockers")} for b in outer["set_aside"]]))
     prompt += "\nRecent completed batches and evidence:\n" + json.dumps(outer["history"][-5:])
     prompt += "\nCurrent working changes:\n" + json.dumps(runner.evidence())
     return prompt
@@ -180,6 +185,26 @@ def finish_batch(runner, plan):
     runner.state["message"] = "Batch accepted. Director will review priorities and refill the hopper."
 
 
+def set_aside(runner, plan):
+    """The orchestrator found the batch blocked: record why, keep its progress in
+    the roadmap, and let the Director choose other work instead of stopping."""
+    outer = runner.state["outer"]
+    batch = outer["current_batch"]
+    blockers = (runner.state.get("report") or {}).get("blockers", [])
+    outer.setdefault("set_aside", []).append({**copy.deepcopy(batch), "reason": plan["summary"], "blockers": blockers,
+                                              "checklist": copy.deepcopy(plan["checklist"]), "set_aside_at": time.time()})
+    for item in outer["hopper"]:
+        if item["id"] == batch["id"]:
+            item["disposition"] = "set_aside"
+    outer["current_batch"] = None
+    runner.state["phase"] = "director"
+    runner.state["message"] = f"Batch {batch['id']} set aside as blocked; the Director will choose other work."
+    import shared_notebook
+    shared_notebook.append(runner.root, {"id": f"set-aside-{batch['id']}-{runner.state['calls']:04d}", "author": "coordinator",
+        "kind": "Batch set aside", "summary": f"{batch['title']} is blocked, so the Director will choose other work.",
+        "notes": [plan["summary"][:1200], *blockers[:4]], "source": str(runner.root / "state.json")})
+
+
 def contract_prompt(runner):
     batch = runner.state["outer"]["current_batch"]
     if not batch:
@@ -201,3 +226,8 @@ def guard_contract(runner, plan):
         raise ValueError("Orchestrator omitted required batch tasks or outcomes")
     # Task checks are suggestions for the worker, not a required suite: the worker
     # verifies its own work and the orchestrator judges that evidence.
+    if plan["action"] == "complete":
+        verified = {item["id"] for item in plan["checklist"] if item["status"] == "verified"}
+        missing = sorted(required - verified)
+        if missing:
+            raise ValueError("action=complete needs every batch task and outcome verified; not yet verified: " + ", ".join(missing))

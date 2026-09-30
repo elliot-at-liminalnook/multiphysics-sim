@@ -11,7 +11,7 @@ import test_pair as fixtures
 
 def decision(n=1):
     bid = f'batch-{n}'
-    return {'coordination_notes': [], 'action': 'select', 'summary': 'Make one workflow coherent',
+    return {'decisions': [], 'coordination_notes': [], 'action': 'select', 'summary': 'Make one workflow coherent',
             'rationale': 'This closes an observed workflow gap with a small reusable change.',
             'selected_id': bid, 'candidates': [
                 {'id': bid if i == 0 else f'deferred-{i}', 'title': f'Candidate {i}',

@@ -65,6 +65,22 @@ A few boundaries remain because they protect people, hardware and the user's wor
 - Do not edit the coordinator's state, config, logs or receipts. They are the
   independent record that makes review meaningful.
 
+## Decide, record, continue
+
+This run is unattended, so nobody is waiting to answer questions. When a choice
+would normally go to the user, make the best decision yourself and keep going.
+That covers an ambiguous requirement, a stale fixture or hash, two reasonable
+designs, or a gap just outside the current scope. Prefer the option that is
+most reversible, keeps CAD and measured values as the source of truth, and
+follows AGENTS.md.
+
+Record every such decision in the `decisions` field of your response: the
+decision, why, the alternatives you rejected, and what would make you revisit
+it. The user reviews this log instead of being asked. Decisions that change
+project behavior also go into the relevant repository document in the same
+commit. A hard boundary is not a decision to make: route around it by choosing
+other work, and record that. A blocked part of the work never stops the rest.
+
 Completion means the agreed inventory is verified end to end in the native
 viewer with recorded evidence, a clear launch path, and no hidden required
 Python/browser UI detours. Compilation, test exit codes and an attractive

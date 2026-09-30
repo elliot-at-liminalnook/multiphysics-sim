@@ -424,7 +424,7 @@ impl Section {
 
 mod actions;
 pub(crate) use actions::RobotAction;
-use actions::{check, overlay_toggle};
+use actions::{check, check_stress, overlay_toggle};
 /// The overlays: (system_ui id suffix, label, key). H (hotspots) for stress: S is the WASD jog key.
 const OVERLAYS: [(&str, &str, KeyCode); 4] =
     [("contacts", "Contacts", KeyCode::KeyC), ("joints", "Joint frames", KeyCode::KeyJ), ("deflections", "Deflections", KeyCode::KeyF), ("stress", "Stress", KeyCode::KeyH)];

@@ -22,7 +22,7 @@ pub(super) struct Editor {
 }
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
-pub(super) enum Action {
+pub(crate) enum Action {
     List,
     More,
     CommentMore(String),

@@ -104,6 +104,7 @@ struct RunShared {
 /// Simulated seconds of history kept for graphs.
 pub(super) const HISTORY_SECONDS: f64 = 20.0;
 const HISTORY_POINTS: usize = 4000;
+const RUNNING_STATUS: &str = "Running on the shared runtime (background thread, paced to real time at most).";
 
 enum RunControl {
     Start,
@@ -908,9 +909,9 @@ impl Builder {
             }
             (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.history.clone())
         };
-        // An edited detailed run ends on the current document; a realtime run
-        // on the realtime profile of the last edit it took (what it simulated).
-        let document = if run.edited && run.fidelity == Fidelity::Detailed { self.document.clone() } else { run.document.clone() };
+        // The model the run simulated last: every swap (edit or grab) goes
+        // through `hot_swap`, which keeps `run.document` equal to what it sent.
+        let document = run.document.clone();
         let description = self.last_description.clone();
         let series = history
             .into_iter()
@@ -1025,6 +1026,7 @@ impl Builder {
         if let Some(run) = &self.run {
             if run.description_id == scene.description.id {
                 let _ = run.control.send(RunControl::Start);
+                self.status = RUNNING_STATUS.into();
                 return;
             }
         }
@@ -1053,12 +1055,41 @@ impl Builder {
         let simulated = document.clone();
         std::thread::spawn(move || run_thread(document, registry, observed, source_id, commands, thread_shared));
         self.run = Some(LiveRun { control, shared, description_id, fidelity, document: simulated, edited: false });
-        self.status = "Running on the shared runtime (background thread, paced to real time at most).".into();
+        self.status = RUNNING_STATUS.into();
     }
 
     fn pause_run(&mut self) {
         if let Some(run) = &self.run {
             let _ = run.control.send(RunControl::Pause);
+            // No time: the last published snapshot may be a frame behind the pause.
+            self.status = "Paused (Step advances one timestep; Run resumes).".into();
+        }
+    }
+
+    /// Swap the live run onto `source` (a detailed document) through the run's
+    /// fidelity profile, so a realtime run never receives the detailed model.
+    /// `run.document` becomes exactly what was sent and the run counts as
+    /// edited. If the profile fails the run is stopped (kept up to the swap)
+    /// and the status says why; returns false then. Never touches
+    /// `self.document` or the file.
+    fn hot_swap(&mut self, source: &SystemDocument, description_id: String) -> bool {
+        let Some(fidelity) = self.run.as_ref().map(|r| r.fidelity) else { return false };
+        match fidelity.document(source, &self.registry) {
+            Ok(document) => {
+                let run = self.run.as_mut().expect("checked above");
+                let _ = run.control.send(RunControl::Swap(Box::new(document.clone()), description_id.clone()));
+                run.description_id = description_id;
+                run.document = document;
+                run.edited = true;
+                true
+            }
+            Err(e) => {
+                // Never continue a realtime run on the detailed model: stop it
+                // (kept up to the edit, on the model it ran) and say why.
+                self.stop_run();
+                self.status = format!("The {} run was stopped (kept up to the edit): the edited system has no valid {e}", fidelity.label());
+                false
+            }
         }
     }
 
@@ -2329,24 +2360,10 @@ fn rebuild_scene(
     // structural edits restart it at t = 0 (the session decides).
     let new_id = compiled.description.id.clone();
     // The run keeps its fidelity: a realtime run takes the edit's realtime profile.
-    if let Some(fidelity) = builder.run.as_ref().filter(|r| r.description_id != new_id).map(|r| r.fidelity) {
-        match fidelity.document(&builder.document, &builder.registry) {
-            Ok(document) => {
-                let run = builder.run.as_mut().expect("checked above");
-                let _ = run.control.send(RunControl::Swap(Box::new(document.clone()), new_id.clone()));
-                run.description_id = new_id;
-                run.document = document;
-                run.edited = true;
-                scene.live.snapshot = None;
-            }
-            Err(e) => {
-                // Never continue a realtime run on the detailed model: stop it
-                // (kept up to the edit, on the model it ran) and say why.
-                builder.stop_run();
-                scene.live.snapshot = None;
-                builder.status = format!("The {} run was stopped (kept up to the edit): the edited system has no valid {e}", fidelity.label());
-            }
-        }
+    if builder.run.as_ref().is_some_and(|r| r.description_id != new_id) {
+        let document = builder.document.clone();
+        builder.hot_swap(&document, new_id);
+        scene.live.snapshot = None;
     }
     builder.last_description = Some(compiled.description.clone());
     scene.replace(compiled.description, compiled.spatial, compiled.animation);
@@ -2565,8 +2582,9 @@ fn grab_push(buttons: Res<ButtonInput<MouseButton>>, keys: Res<ButtonInput<KeyCo
     if !buttons.pressed(MouseButton::Left) {
         // Let go: the load returns to the file's value.
         builder.grab = None;
-        swap_with(&mut builder, &grab.parameter, grab.original);
-        builder.status = "Released: the load is back to its value in the file.".into();
+        if swap_with(&mut builder, &grab.parameter, grab.original) {
+            builder.status = "Released: the load is back to its value in the file.".into();
+        }
         builder.panel_dirty = true;
         return;
     }
@@ -2575,9 +2593,13 @@ fn grab_push(buttons: Res<ButtonInput<MouseButton>>, keys: Res<ButtonInput<KeyCo
     if (value - grab.applied).abs() > 1e-12 && grab.sent.elapsed() > std::time::Duration::from_millis(120) {
         grab.applied = value;
         grab.sent = std::time::Instant::now();
-        swap_with(&mut builder, &grab.parameter, value);
-        builder.status = format!("Pushing: {} = {} (was {}). Let go to release.", grab.parameter, crate::builder::ui::num(value), crate::builder::ui::num(grab.original));
         builder.panel_dirty = true;
+        if !swap_with(&mut builder, &grab.parameter, value) {
+            // The run was stopped and the status says why; the gesture ends.
+            builder.grab = None;
+            return;
+        }
+        builder.status = format!("Pushing: {} = {} (was {}). Let go to release.", grab.parameter, crate::builder::ui::num(value), crate::builder::ui::num(grab.original));
     }
     builder.grab = Some(grab);
 }
@@ -2601,14 +2623,17 @@ fn load_for(scene: &SpatialScene, component: &str) -> Option<(String, f64)> {
     None
 }
 
-/// Swap the running model for the document with one parameter changed.
-fn swap_with(builder: &mut Builder, parameter: &str, value: f64) {
-    let Some(run) = &builder.run else { return };
+/// Swap the running model for the document with one parameter changed,
+/// through the run's fidelity (`Builder::hot_swap`); the file's document is
+/// untouched. False only when the swap stopped the run (status explains).
+fn swap_with(builder: &mut Builder, parameter: &str, value: f64) -> bool {
+    let Some(id) = builder.run.as_ref().map(|r| r.description_id.clone()) else { return true };
     let mut doc = builder.document.clone();
-    let Ok(command) = sim_runtime::lesson::set_command(parameter, value) else { return };
+    let Ok(command) = sim_runtime::lesson::set_command(parameter, value) else { return true };
     if sim_system::apply(&mut doc, &builder.registry, &[command]).is_ok() {
-        let _ = run.control.send(RunControl::Swap(Box::new(doc), run.description_id.clone()));
+        return builder.hot_swap(&doc, id);
     }
+    true
 }
 
 #[cfg(test)]
@@ -2765,6 +2790,72 @@ mod replay_tests {
         let o = wait(&mut b);
         assert_eq!((o.status, o.max_rel_diff), ("done", Some(0.)), "{o:?}");
         assert!(o.headline().starts_with("Reproduced exactly"), "{}", o.headline());
+        b.run = None;
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The Alt-drag grab swaps through `hot_swap` like an edit: a realtime run
+    /// gets the realtime profile of the pushed document (never the detailed
+    /// one), `run.document` is what was sent, the file's document is
+    /// untouched, and a save records the pushed model as edited. Release goes
+    /// back to the file value and the run stays edited. Pause says so.
+    #[test]
+    fn grab_swap_keeps_the_run_fidelity_and_marks_it_edited() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dir = std::env::temp_dir().join(format!("builder-grab-swap-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("winch.system.json");
+        std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &path).unwrap();
+        let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
+        let mut b = Builder::open(path.clone(), root.join("library/systems"), registry.clone()).unwrap();
+        let file = b.document.clone();
+        let profile = Fidelity::Realtime.document(&file, &registry).unwrap();
+        let compiled = system_builder::compile(&profile, &registry, system_builder::config_for(&profile)).unwrap();
+        let (parameter, original) = compiled.description.components.values().find_map(|c| match c.component_type.as_str() {
+            "rotational.load_torque" => Some((format!("{}.torque", c.id), c.parameters["torque"].value)),
+            "translational.load_force" => Some((format!("{}.force", c.id), c.parameters["force"].value)),
+            _ => None,
+        }).expect("the winch has a load the grab pushes on");
+        b.last_description = Some(compiled.description.clone());
+        let (control, commands) = mpsc::channel();
+        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
+        let (doc, reg, id, s) = (profile.clone(), registry.clone(), compiled.description.id.clone(), shared.clone());
+        std::thread::spawn(move || run_thread(doc, reg, Vec::new(), id, commands, s));
+        b.run = Some(LiveRun { control: control.clone(), shared: shared.clone(), description_id: compiled.description.id.clone(), fidelity: Fidelity::Realtime, document: profile.clone(), edited: false });
+        let time = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.);
+        let started = std::time::Instant::now();
+        while time() < 0.15 && started.elapsed().as_secs() < 60 {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        // Push: the same edit the gesture makes, on the detailed document.
+        let pushed = original * 0.5;
+        let mut detailed = file.clone();
+        sim_system::apply(&mut detailed, &registry, &[sim_runtime::lesson::set_command(&parameter, pushed).unwrap()]).unwrap();
+        let expected = Fidelity::Realtime.document(&detailed, &registry).unwrap();
+        assert_ne!(expected.content_hash(), detailed.content_hash());
+        assert!(swap_with(&mut b, &parameter, pushed));
+        let run = b.run.as_ref().unwrap();
+        assert_eq!(run.document.content_hash(), expected.content_hash(), "the realtime profile of the pushed document was sent");
+        assert_ne!(run.document.content_hash(), detailed.content_hash(), "never the detailed document");
+        assert_eq!((run.edited, run.fidelity, run.description_id.as_str()), (true, Fidelity::Realtime, compiled.description.id.as_str()));
+        assert_eq!(b.document.content_hash(), file.content_hash(), "the file's document is untouched");
+        // Pause is truthful and a save records the pushed model as edited.
+        b.run_pause();
+        assert!(b.status.starts_with("Paused"), "{}", b.status);
+        while shared.lock().unwrap().running && started.elapsed().as_secs() < 60 {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        assert_eq!(b.state_json()["live_run"]["phase"].as_str(), Some("paused"));
+        let record = sim_runtime::run_history::load(&b.save_run("grab").unwrap()).unwrap();
+        assert_eq!((record.fidelity, record.edited_while_running(), record.content_hash.clone()), (Some(Fidelity::Realtime), true, expected.content_hash()));
+        // Release: back to the file value, still edited.
+        assert!(swap_with(&mut b, &parameter, original));
+        let run = b.run.as_ref().unwrap();
+        let mut back = file.clone();
+        sim_system::apply(&mut back, &registry, &[sim_runtime::lesson::set_command(&parameter, original).unwrap()]).unwrap();
+        assert_eq!((run.document.content_hash(), run.edited), (Fidelity::Realtime.document(&back, &registry).unwrap().content_hash(), true));
+        assert_eq!(b.document.content_hash(), file.content_hash());
         b.run = None;
         std::fs::remove_dir_all(&dir).ok();
     }

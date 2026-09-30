@@ -217,6 +217,7 @@ function renderTabs() {
 /* The active (or latest) agent's last few actions, on every tab. */
 function renderRecent() {
   const call = data.calls.find(c => c.live) || data.calls.at(-1);
+  if (call?.subagents?.length) return renderTeam(call);
   const acts = (call?.activity || []).filter(e => e.kind !== 'session').slice(-4).reverse();
   $('recent').hidden = !acts.length;
   if (!acts.length) return;
@@ -227,6 +228,28 @@ function renderRecent() {
   renderRecent.acts = acts; renderRecent.call = call;
 }
 
+/* With subagents, the header shows one row per agent and what it's doing now. */
+function renderTeam(call) {
+  const all = lanes(call), shown = all.slice(0, 9);
+  $('recent').hidden = false;
+  const latest = l => l.items.at(-1);
+  html('recent', `<div class="recent-head">${esc(subagentSummary(call))} · what each agent is doing</div>` +
+    shown.map((l, i) => {
+      const e = latest(l);
+      return `<button class="recent-row lane" data-lane="${i}"><span class="ev-icon">${l.id ? '⇉' : esc(ROLES[call.role]?.letter || '·')}</span>` +
+        `<span class="recent-text"><b class="lane-name">${esc(l.label)}</b> <span class="faint">${e ? esc(summarize(e)) : 'starting…'}</span></span>` +
+        `<span class="ev-meta"><span>${l.total ?? l.items.length} actions</span>${l.id ? laneStatus(l) : (e ? statusHTML(e) : '')}${e?.at ? `<time class="ev-time">${esc(ago(e.at))}</time>` : ''}</span></button>`;
+    }).join('') + (all.length > shown.length ? `<div class="recent-head">…and ${all.length - shown.length} more in the Agents tab</div>` : ''), false);
+  renderRecent.lanes = all; renderRecent.call = call;
+  if (call.live) document.title = `${subagentSummary(call)} · ${ROLES[call.role]?.name || ''}`;
+}
+function openLane(call, lane) {
+  const brief = lane.prompt ? `<details><summary class="faint" style="cursor:pointer;font-size:12px">The brief it was given</summary>${pre(lane.prompt)}</details>` : '';
+  const report = lane.output ? `<div class="section-label">Its report</div>${pre(lane.output)}` : '';
+  modal(lane.label + (lane.type ? ` · ${lane.type}` : ''), `<div class="now-meta" style="margin:0 0 10px">${lane.id ? laneStatus(lane) : ''}<span>${lane.total ?? lane.items.length} actions</span></div>` +
+    brief + report + `<div class="section-label">Actions, oldest first</div>` + (lane.items.map((e, i) => eventHTML(e, call.role, `lane-${i}`)).join('') || '<div class="empty">No actions yet.</div>'));
+}
+
 /* ---------- overview ---------- */
 function renderOverview() {
   renderLive(); renderAssignment(); renderChecklist(); renderChecks(); renderShots(); renderCommits(); renderGuide();
@@ -234,6 +257,21 @@ function renderOverview() {
 
 const TOOL_ICON = { Bash: '$', Read: '◧', Edit: '✎', Write: '✎', MultiEdit: '✎', NotebookEdit: '✎', Grep: '⌕', Glob: '⌕', Task: '⇉', Agent: '⇉', WebFetch: '↗', WebSearch: '⌕', TodoWrite: '☐', Skill: '★' };
 const base = p => String(p || '').split('/').filter(Boolean).at(-1) || p || '';
+/* One lane per agent in a turn: the lead first, then each subagent in spawn order. */
+function lanes(call) {
+  if (!call) return [];
+  const acts = call.activity || [];
+  const lead = { id: null, label: `${ROLES[call.role]?.name || 'Agent'} (lead)`, role: call.role, status: call.live ? 'running' : 'done',
+                 items: acts.filter(a => !a.parent && a.kind !== 'session'), total: null };
+  return [lead, ...(call.subagents || []).map((s, i) => ({ id: s.id, index: i, label: s.description || s.type, type: s.type, status: s.status,
+    at: s.at, ended_at: s.ended_at, prompt: s.prompt, output: s.output, total: s.actions,
+    items: acts.filter(a => a.parent === s.id) }))];
+}
+function laneStatus(l) {
+  if (l.status === 'running') return `<span class="ev-status running"><span class="spin"></span>${l.at ? dur(data.now - l.at) : 'running'}</span>`;
+  const took = l.at && l.ended_at ? dur(l.ended_at - l.at) : '';
+  return l.status === 'error' ? `<span class="ev-status bad">✕ ${took}</span>` : `<span class="ev-status ok">✓ ${took}</span>`;
+}
 let subagentNames = {};  // Agent call id -> "pair-implementer: jobs module", for labelling a subagent's own actions
 function subagentSummary(call) {
   const subs = call?.subagents || [];
@@ -309,7 +347,9 @@ function resultHTML(r, role) {
 
 function renderLive() {
   const role = liveRole(), follow = !pinnedRole, isChecks = role === 'checks';
-  const tabs = isChecks ? [['activity', 'Output'], ['prompt', 'Plan']] : [['activity', 'Activity'], ['prompt', 'Prompt'], ['result', 'Result']];
+  const callForTabs = isChecks ? null : latest(role);
+  const tabs = isChecks ? [['activity', 'Output'], ['prompt', 'Plan']]
+    : [['activity', 'Activity'], ...(callForTabs?.subagents?.length ? [['agents', `Agents · ${callForTabs.subagents.length + 1}`]] : []), ['prompt', 'Prompt'], ['result', 'Result']];
   if (!tabs.some(t => t[0] === liveTab)) liveTab = 'activity';
   const shown = ['orchestrator', 'worker', 'checks'];
   if (data.outer_settings.enabled || data.state.outer || data.calls.some(c => c.role === 'director')) shown.unshift('director');
@@ -338,6 +378,10 @@ function renderLive() {
     subagentNames = Object.fromEntries((call?.subagents || []).map(s => [s.id, `${s.type}${s.description ? ': ' + s.description : ''}`]));
     if (!call) body = `<div class="empty">The ${esc(ROLES[role].name.toLowerCase())} hasn't run yet.</div>`;
     else if (liveTab === 'prompt') body = pre(call.prompt);
+    else if (liveTab === 'agents') body = `<div class="agent-grid">${lanes(call).map((l, i) => `<article class="agent-card ${l.status}">
+        <header><span class="ev-icon">${l.id ? '⇉' : esc(ROLES[call.role]?.letter || '·')}</span><div class="agent-title"><b>${esc(l.label)}</b><span class="faint">${esc(l.type || 'lead')} · ${l.total ?? l.items.length} actions</span></div>${l.id ? laneStatus(l) : ''}</header>
+        <div class="agent-acts">${l.items.slice(-6).reverse().map(e => `<div class="agent-act"><span class="ev-icon">${esc(e.kind === 'message' ? '“' : (TOOL_ICON[e.name] || '•'))}</span><span class="recent-text">${esc(summarize(e))}</span><span class="ev-meta">${statusHTML(e)}${e.at ? `<time class="ev-time">${esc(ago(e.at))}</time>` : ''}</span></div>`).join('') || '<div class="empty">Starting…</div>'}</div>
+        <button class="btn small" data-lane-open="${i}">All actions${l.prompt ? ' & brief' : ''} ↗</button></article>`).join('')}</div>`;
     else if (liveTab === 'result') body = call.result ? resultHTML(call.result, role) : `<div class="empty">${esc(call.error || (call.live ? 'Still working. The result appears when this turn finishes.' : 'This turn has no result.'))}</div>`;
     else body = call.activity?.length ? call.activity.map((e, i) => eventHTML(e, role, `${call.id}-${i}`)).join('') : `<div class="empty">${call.live ? 'Starting up. Activity appears as the agent reads, runs and writes.' : 'No activity recorded for this turn.'}</div>`;
     if (call) {
@@ -524,6 +568,10 @@ function setView(v) {
 document.addEventListener('click', e => {
   const sum = e.target.closest('summary[data-ev]');
   if (sum) { const id = sum.dataset.ev; openEvents.has(id) ? openEvents.delete(id) : openEvents.add(id); return; }
+  const ln = e.target.closest('[data-lane]');
+  if (ln) return openLane(renderRecent.call, renderRecent.lanes[Number(ln.dataset.lane)]);
+  const lo = e.target.closest('[data-lane-open]');
+  if (lo) { const c = latest(liveRole()); return openLane(c, lanes(c)[Number(lo.dataset.laneOpen)]); }
   const rec = e.target.closest('[data-recent]');
   if (rec) { const ev = renderRecent.acts[Number(rec.dataset.recent)]; return modal(summarize(ev), ev.kind === 'message' ? `<p class="prose">${esc(ev.text)}</p>` : detailsHTML(ev) || '<div class="empty">No details.</div>'); }
   const t = e.target.closest('[data-view]'); if (t) return setView(t.dataset.view);

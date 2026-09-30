@@ -82,8 +82,26 @@ def result_text(block):
     return str(content or "")
 
 
+_events_cache = {}
+
+
 def events(path):
-    raw = tail(path)
+    """Parsed activity for one call's stream, cached until the file changes."""
+    try:
+        stat = path.stat()
+        key = (stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return [], None
+    hit = _events_cache.get(str(path))
+    if hit and hit[0] == key:
+        return hit[1]
+    parsed = parse_events(path)
+    _events_cache[str(path)] = (key, parsed)
+    return parsed
+
+
+def parse_events(path):
+    raw = tail(path, 4_000_000)  # subagents write a lot; keep the Agent calls that started them in view
     if not raw.strip():
         return [], None
     try:
@@ -127,7 +145,21 @@ def events(path):
                                 output=output[-3000:] if item["name"] == "Bash" else clip_lines(output, 30, 3000))
         elif event.get("type") == "system" and event.get("subtype") == "init":
             activity.append({"kind": "session", "text": "Session started · " + event.get("model", "Claude"), "at": at})
-    return activity[-120:], result
+    # Keep recent actions per agent, so one busy subagent can't push the others
+    # (or the lead) off the page: the lead's last 80 and each subagent's last 25.
+    lanes = {}
+    for index, item in enumerate(activity):
+        lanes.setdefault(item.get("parent"), []).append(index)
+    for item in activity:
+        if item.get("name") in ("Agent", "Task"):
+            item["total_actions"] = len(lanes.get(item.get("id"), []))
+    keep = set()
+    for parent, indexes in lanes.items():
+        keep.update(indexes[-(80 if parent is None else 25):])
+    for item in activity:  # an agent's spawn call always stays, so its lane has a name
+        if item.get("name") in ("Agent", "Task"):
+            keep.add(activity.index(item))
+    return [activity[i] for i in sorted(keep)], result
 
 
 def subagents(activity):
@@ -135,7 +167,8 @@ def subagents(activity):
     spawned = [a for a in activity if a.get("kind") == "tool" and a.get("name") in ("Agent", "Task")]
     return [{"id": a["id"], "type": a["details"].get("subagent_type"), "description": a["details"].get("description"),
              "status": a["status"], "at": a.get("at"), "ended_at": a.get("ended_at"), "nested": bool(a.get("parent")),
-             "actions": sum(1 for x in activity if x.get("parent") == a["id"])} for a in spawned]
+             "prompt": a["details"].get("prompt"), "parent": a.get("parent"), "output": a.get("output"),
+             "actions": a.get("total_actions", sum(1 for x in activity if x.get("parent") == a["id"]))} for a in spawned]
 
 
 _git_cache = {}

@@ -79,6 +79,8 @@ pub fn server_for(port: u16, builder: bool, lessons: bool) -> std::io::Result<si
             c("system_where_used", json!({"definition":"dc_motor_12v"}), "System files under examples/ and next to this file that place a definition"),
             c("system_expose", json!({"instance":"winding","parameter":"resistance"}), "Expose an inner parameter as a parameter of the current level's definition"),
             c("system_save_run", json!({"note":"after the k edit"}), "Keep the current run (document, seed, settings, recorded history) in <system>.runs/"),
+            c("system_replay_run", json!({"id":"…"}), "Rerun a saved run headlessly from t = 0 on a background thread and compare it with its record at every recorded sample (same handler as the Studies-tab Replay button); progress and result in system_state.replay"),
+            c("system_replay_cancel", json!({}), "Stop the running replay between simulation steps (same handler as its Cancel button); it reports no result"),
             c("system_compare_runs", json!({"ids":["…","…"]}), "Overlay saved runs in the graph dock with a table of final values"),
             c("system_parts", json!({}), "Authored part files (library/parts/*.part): load results, errors with file:line; reloads changed files"),
             c("system_plot", json!({"pin":["drum.shaft.speed"],"visible":true}), "Pin observables (IDs or readable keys) to the graph dock, or clear with []"),
@@ -207,6 +209,10 @@ enum SystemRequest {
     SystemCompareRuns {
         ids: Vec<String>,
     },
+    SystemReplayRun {
+        id: String,
+    },
+    SystemReplayCancel,
     SystemSync,
     SystemWhereUsed {
         definition: String,
@@ -280,6 +286,11 @@ fn system_execute(builder: &mut builder::Builder, scene: &mut SpatialScene, came
         SystemRequest::SystemStudyResult => Ok(builder.study_json()),
         SystemRequest::SystemPublish { definition } => builder.publish(&definition).map(|p| json!(p)),
         SystemRequest::SystemSaveRun { note } => builder.save_run(&note).map(|p| json!({"path": p})),
+        SystemRequest::SystemReplayRun { id } => builder.replay_run(&id).map(|_| builder.replay_json()),
+        SystemRequest::SystemReplayCancel => {
+            let cancelled = builder.cancel_replay();
+            Ok(json!({"cancelled": cancelled, "replay": builder.replay_json()}))
+        }
         SystemRequest::SystemCompareRuns { ids } => builder.compare_runs(&ids).map(|_| builder.study_json()),
         SystemRequest::SystemLibraryUpdates => Ok(json!(builder.library_updates())),
         SystemRequest::SystemSync => builder.sync_library().map(|a| json!(a)),

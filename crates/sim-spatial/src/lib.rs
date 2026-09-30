@@ -9,6 +9,7 @@ pub mod lesson;
 mod linked;
 pub mod models;
 pub mod place_view;
+pub mod robot;
 pub mod markdown;
 pub(crate) mod physics_view;
 pub(crate) mod view;

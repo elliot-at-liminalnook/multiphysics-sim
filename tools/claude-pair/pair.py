@@ -366,6 +366,13 @@ class Runner:
                 self.save()
         return p.returncode, out, err
 
+    def fast_roles(self):
+        """Roles that run in fast mode, read fresh so a change applies at the next call."""
+        try:
+            return read_json(self.root / "config.json").get("fast_roles", [])
+        except (OSError, ValueError):
+            return self.config.get("fast_roles", [])
+
     def prompt_file(self, name):
         """Run-local prompt copy when present (edited while stopped), else the installed one."""
         local = self.root / "prompts" / name
@@ -445,6 +452,9 @@ class Runner:
                 "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--no-chrome",
                 "--add-dir", str(self.root),
                 "--resume" if session else "--session-id", sid]
+        fast = role in self.fast_roles()
+        if fast:
+            argv += ["--settings", json.dumps({"fastMode": True})]
         if cap is not None:
             argv += ["--max-budget-usd", str(cap)]
         if self.config.get("max_turns"):
@@ -458,7 +468,8 @@ class Runner:
             argv += ["--name", f"Pair {role} ({self.root.name})"]
         if self.config.get("model"):
             argv += ["--model", self.config["model"]]
-        print(f"{role}: call {self.state['calls']} ({prefix.name}{', resumed' if session else ', fresh session'})", flush=True)
+        print(f"{role}: call {self.state['calls']} ({prefix.name}{', resumed' if session else ', fresh session'}"
+              f"{', fast mode' if fast else ''})", flush=True)
         code, out, err = self.process(argv, prefix, prompt)
         raw = out.read_text()
         events = list(stream_events(raw))
@@ -484,6 +495,12 @@ class Runner:
         if result.get("session_id") != sid:
             self.fail_call(role, sid, reservation, False, "Claude returned an unexpected session ID")
         self.state["sessions"][role] = sid
+        if fast and result.get("fast_mode_state") != "on":
+            # Requested but refused (org setting, usage state): note it once per reason and carry on.
+            reason = result.get("fast_mode_disabled_reason") or result.get("fast_mode_state") or "unknown"
+            shared_notebook.append(self.root, {"id": f"fast-mode-off-{reason}", "author": "coordinator",
+                "kind": "Fast mode unavailable", "summary": f"Fast mode was requested for the {role} but Claude Code ran it "
+                f"at normal speed ({reason}). The run continues.", "notes": [], "source": str(out)})
         total = result.get("total_cost_usd")
         prior = self.state["session_costs"].get(sid, 0.0)
         spent = total - prior if isinstance(total, (float, int)) and math.isfinite(total) and total >= prior else 0.0
@@ -930,7 +947,8 @@ def initialize(args):
     config = {"repo": str(repo), "worktree": str(repo), "in_place": True, "source_head": head,
               "baseline": baseline, "baseline_ref": ref, "branch": None if branch == "HEAD" else branch,
               "claude": claude, "model": args.model, "audit_only": args.audit_only,
-              "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": False}
+              "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": False,
+              "fast_roles": list(args.fast_roles if getattr(args, "fast_roles", None) is not None else ["worker"])}
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
         config[name] = getattr(args, name, None)
     config["checks"]["diff"] = ["git", "diff", "--check", config["baseline"]]
@@ -1009,6 +1027,8 @@ def main():
     init.add_argument("--max-turns", type=int, help="Model turns allowed in one call (default: no limit)")
     init.add_argument("--budget-usd", type=float, help="Estimated-usage ceiling for the run (default: none)")
     init.add_argument("--call-budget-usd", type=float, help="Estimated-usage ceiling per call (default: none)")
+    init.add_argument("--fast-roles", nargs="*", choices=["worker", "orchestrator", "director"],
+                      help="Roles that run in Claude Code fast mode (default: worker)")
     init.add_argument("--no-director", action="store_true", help="Stop when the mission is done instead of choosing more batches")
     for name in ("run", "resume", "status", "stop", "enable-outer", "watch-outer"):
         p = sub.add_parser(name)

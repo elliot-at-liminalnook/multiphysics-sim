@@ -496,6 +496,24 @@ class ResilienceTests(unittest.TestCase):
                 test_outer.outer.guard_contract(runner, plan)
 
 
+class FastModeTests(unittest.TestCase):
+    def test_only_configured_roles_run_fast_and_changes_apply_at_the_next_call(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, fast_roles=["worker"])
+            calls = []
+            with patch.object(runner, "process", ControlTests().fake_process(runner, calls)):
+                runner.call("worker", "task", scope="assignment:1")
+                runner.call("orchestrator", "plan", scope="batch:mission")
+                config = pair.read_json(runner.root / "config.json")
+                config["fast_roles"] = []
+                pair.write_json(runner.root / "config.json", config)
+                runner.call("worker", "task", scope="assignment:1")
+            fast = lambda argv: "--settings" in argv and json.loads(argv[argv.index("--settings") + 1]).get("fastMode")
+            self.assertEqual([bool(fast(a)) for a in calls], [True, False, False])
+            refused = [e for e in __import__("shared_notebook").entries(runner.root) if e["kind"] == "Fast mode unavailable"]
+            self.assertEqual(len(refused), 1, "the fake result does not report fast mode on, so it is noted once")
+
+
 class NoLimitTests(unittest.TestCase):
     def test_init_defaults_to_no_limits_and_a_director(self):
         with tempfile.TemporaryDirectory() as tmp:

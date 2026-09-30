@@ -275,7 +275,7 @@ function renderLive() {
     else body = call.activity?.length ? call.activity.map(e => eventHTML(e, role)).join('') : `<div class="empty">${call.live ? 'Starting up. Activity appears as the agent reads, runs and writes.' : 'No activity recorded for this turn.'}</div>`;
     if (call) {
       foot.push(`<span>Turn <b>#${call.number}</b></span>`);
-      if (call.model) foot.push(`<span><b>${esc(call.model)}</b></span>`);
+      if (call.model) foot.push(`<span><b>${esc(call.model)}</b>${call.fast ? ' · <b>fast</b>' : ''}</span>`);
       foot.push(`<span>${call.live ? 'running' : 'took'} <b>${dur(call.elapsed_seconds)}</b></span>`);
       if (call.cost_usd != null) foot.push(`<span><b>${money(call.cost_usd)}</b></span>`);
       foot.push(`<span>updated <b>${esc(ago(call.last_activity_at))}</b></span>`);
@@ -413,7 +413,7 @@ function renderSettings() {
   $('save-limits').disabled = data.active || busy;
   text('limit-note', data.active ? 'Stop the run to change limits' : '');
   const sessions = Object.entries(data.state.sessions || {}).map(([r, id]) => `${r}: ${id}`).join('\n') || 'none yet';
-  html('run-info', [['Workspace', data.workspace], ['Branch', data.branch || 'detached HEAD'], ['Baseline', data.baseline], ['Run state', data.state_dir], ['Sessions', sessions]]
+  html('run-info', [['Workspace', data.workspace], ['Branch', data.branch || 'detached HEAD'], ['Baseline', data.baseline], ['Run state', data.state_dir], ['Fast mode', (data.fast_roles || []).join(', ') || 'off'], ['Sessions', sessions]]
     .map(([k, v]) => `<dt>${k}</dt><dd style="white-space:pre-wrap">${esc(v)}</dd>`).join(''));
 }
 

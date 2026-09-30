@@ -148,6 +148,7 @@ def view(root):
             cost = max(0.0, total - session_totals.get(session, 0.0))
             session_totals[session] = total
         records.append({"stage": workflow.call_stage(role, prompt_text), "cost_usd": cost,
+                        "fast": (result or {}).get("fast_mode_state") == "on",
                         "session_id": session, "num_turns": (result or {}).get("num_turns"),
                         "elapsed_seconds": seconds, "timing_complete": bool(result), "live": live,
                         "last_activity_at": updated,
@@ -198,7 +199,7 @@ def view(root):
             "estimated_spent": max(0, state["cost_usd"] - inflight.get("reserved_usd", 0)),
             "reserved": inflight.get("reserved_usd", 0), "elapsed_seconds": elapsed,
             "checks": checks, "stop_requested": (root / "STOP").exists(), "now": time.time(),
-            "branch": config.get("branch"), "baseline": config.get("baseline"), "state_dir": str(root),
+            "fast_roles": config.get("fast_roles", []), "branch": config.get("branch"), "baseline": config.get("baseline"), "state_dir": str(root),
             "git": git_summary(config), "captures": captures(root), "rate_limits": latest_rate_limits(root, state)}
 
 

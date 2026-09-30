@@ -119,7 +119,7 @@ class PairTests(unittest.TestCase):
 
     def initialize_fixture(self, root):
         repo = self.setup_repo(root)
-        args = argparse.Namespace(repo=str(repo), state=str(root / "run"), fresh=False, no_director=True, claude="python3",
+        args = argparse.Namespace(repo=str(repo), state=str(root / "run"), fresh=False, no_director=True, fast_roles=[], claude="python3",
              model=None, audit_only=False, max_rounds=1, max_hours=1, turn_minutes=1,
              max_turns=10, budget_usd=10, call_budget_usd=1)
         pair.initialize(args)

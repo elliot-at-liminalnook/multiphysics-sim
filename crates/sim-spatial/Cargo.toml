@@ -15,6 +15,7 @@ serde.workspace = true
 # Match the existing spatial host, without audio/gamepad/animation dependencies.
 bevy = { version = "=0.16.1", default-features = false, features = ["std", "async_executor", "multi_threaded", "bevy_asset", "bevy_log", "bevy_render", "bevy_pbr", "bevy_gizmos", "bevy_ui", "bevy_winit", "bevy_mesh_picking_backend", "bevy_ui_picking_backend", "default_font", "png", "jpeg", "x11"] }
 sim-inspect = { path = "../sim-inspect" }
+sim-diagram = { path = "../sim-diagram" }
 sim-core = { path = "../sim-core" }
 sim-compile = { path = "../sim-compile" }
 sim-runtime = { path = "../sim-runtime" }

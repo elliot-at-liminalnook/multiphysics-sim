@@ -241,6 +241,8 @@ impl Builder {
         // pieces (scene, annotations, models) are retargeted here.
         next.open = OpenState { shell: Some(shell.clone()), job: None, seq: self.open.seq, last: None, systems };
         next.tab = self.tab;
+        // The schematic pane stays open; its layout is the new system's (reset).
+        next.schematic.visible = self.schematic.visible;
         // The registry is not per-system: its inspector (and any pending load) stays.
         next.actuators = std::mem::take(&mut self.actuators);
         next.realtime = self.realtime && next.document.realtime.is_some();

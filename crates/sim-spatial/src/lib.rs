@@ -62,6 +62,8 @@ pub struct SpatialScene {
     pub builder_mode: bool,
     /// Height of the build-mode graph dock above the status bar (0 = hidden).
     pub builder_dock: f32,
+    /// Width of the build-mode schematic pane beside the inspector.
+    pub builder_side: f32,
     /// Learn mode: the 3D view is drawn inside a lesson's scene card.
     pub learn_view: Option<LearnView>,
     /// Display directives from lesson scripts and narration (spotlight,
@@ -139,6 +141,7 @@ impl SpatialScene {
             ghost: Default::default(),
             builder_mode: false,
             builder_dock: 0.,
+            builder_side: 0.,
             learn_view: None,
             directives: Default::default(),
             explode_t: 0.,
@@ -210,7 +213,7 @@ impl SpatialScene {
     }
     fn right(&self) -> f32 {
         if self.builder_mode {
-            return builder::RIGHT_WIDTH;
+            return builder::RIGHT_WIDTH + self.builder_side;
         }
         if self.compact { 260. } else { RIGHT }
     }

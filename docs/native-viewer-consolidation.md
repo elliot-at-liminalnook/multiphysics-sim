@@ -893,9 +893,10 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     - Heartbeat exhaustion.
   - *What still needs the browser:*
     - ~~Recording and input replay of a preset run~~: native since T12
-      (§2h). Saved overrides of a teleop run, and scrubbing/timeline playback
-      of recorded frames (`viewer.js` `timeline` → `replayAt`), are still
-      browser only.
+      (§2h). Timeline playback of the `recorded`-mode presets
+      (`robot-lift-5mm`, `-3mm`) is native since batch recorded-preset-scrub
+      (§2h). Saved overrides of a teleop run, and scrubbing of a live run's or
+      a replay's history, are still browser only.
     - ~~Live graphs~~ of motion request vs measured chassis motion and of
       servo target vs measured joint angle: native since T13 (below).
       Observation panels beyond these two charts, arbitrary channel picking or
@@ -1203,13 +1204,83 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     generation was 1, equal to the replay's and greater than the live 0.
     Reset returns to LIVE with a new generation. There is no scrub over the
     replayed history.
+- **Recorded presets (batch recorded-preset-scrub, T21.1 07e0b59b, T21.2
+  0364882b; verified natively in T21.3).**
+  - *What exists:* `sim-spatial --robot-preset robot-lift-5mm` (or
+    `robot-lift-3mm`, or REST `robot_preset {id}`) opens a `mode: recorded`
+    preset that declares a `scene` and a `capture`. The preset loader thread
+    parses the scene exactly as the embedded presets do and reads the
+    `*-execution.json` capture with the shared reader
+    `sim_runtime::embedded_capture` (beside `embedded.rs`, which writes that
+    format). The reader refuses a missing file, bad JSON, empty frames and
+    equal/non-monotonic `time_s`, naming the path. Every frame is mapped to
+    links by name through the same `robot_run::map_poses` as live preset
+    frames; unmatched names are reported (`unmatched_capture_links`, empty
+    for both presets). No physics is built or stepped.
+  - *Timeline:* one `RobotAction::Recorded` (inspector Recorded section:
+    Start, Step −1, Play, Pause, Step +1; `system_ui` `recorded:start`,
+    `recorded:step-`, `recorded:play`, `recorded:pause`, `recorded:step+`,
+    `recorded:speed:<scale>`; REST `robot_recorded {action, t?, delta?,
+    scale?}`, listed in capabilities). A playback worker thread (not the UI
+    thread) owns the frames, runs the clock and publishes generation-stamped
+    frames. Rules: the frame shown is the one **at or before** t
+    (`viewer.js` `replayAt`); seek outside [first, last] frame time is
+    **refused, not clamped**, and pauses; step is ±1 frame only, pauses, and
+    is refused at either end; play advances recorded time by wall time ×
+    speed and stops at the last frame (phase `ended`); play at the end
+    restarts from the first frame (as viewer.js); speed accepts exactly the
+    run scales ×0.125–×8 and is the same scale as the header −/×/+ and
+    `robot_speed`. `robot_state.recorded` reports the label "recorded
+    physics (played back, not simulated here)" (also in the header),
+    preset, scene/capture paths, frame_count, first/last_time_s,
+    duration_s, time_s, frame_index, frame_time_s, speed, phase,
+    generation, pending, description/readiness/evidence verbatim from
+    presets.json, the capture's metadata as read (source fidelity,
+    cad_sha256, completed, simulated_s, stepping_wall_s, …; absent fields
+    null and listed) and recorded_rate = simulated_s / stepping_wall_s.
+    Run, jog, motion requests, save recording, replay, gait preview and
+    overlays are refused naming the preset.
+  - *Load time (debug build, this Mac):* 37 MB 5 mm capture 0.11–0.41 s,
+    scene 0.27–0.8 s, frame mapping < 1 ms; window to loaded state about
+    1.1–1.3 s. The loader and the playback worker are off the UI thread.
+  - *Verified (T21.3, `.claude-pair/captures/T21-recorded-preset/drive.py`,
+    `capture.json` ok=true, 39/39 assertions, debug build):* on
+    robot-lift-5mm, frame_count 161, 0–1.6 s, fidelity, cad_sha256,
+    completed, simulated_s, stepping_wall_s and rate equal an independent
+    Python read, and the three texts equal presets.json; seeks to 0, 0.8,
+    1.6 and 0.8049 s give frame 0, 80, 160 and 80 (Python bisect
+    at-or-before), with five named link positions (chassis, −Y foot
+    crosshead, −Y foot crank, +X thigh gear, −Y connecting link) exactly
+    equal to the file (difference 0.0); play at ×0.5 through `system_ui`
+    advanced 1.004 s of recorded time in 2.009 s wall (0.4997; tolerance
+    ±0.1); `robot_run` start/step and `robot_jog` refused naming
+    robot-lift-5mm; `recorded:step+` / `recorded:step-` went 80 → 81 → 80
+    with positions equal to the file; a temp presets file with the capture
+    pointed at a nonexistent path is refused at launch (exit 1, the path
+    named), its `robot_presets` row is `openable: false` with the path in
+    `not_openable_reason`, and REST `robot_preset` on it is refused; on
+    robot-lift-3mm the metadata/texts and seeks 0.8 and 1.2345 s (frames 80
+    and 123) match its own file; sha256 of the four read `runs/` files is
+    unchanged. Screenshots: `recorded-start.png` (frame 0) and
+    `recorded-mid.png` (frame 57, where the −Y foot crank has moved 19.7 mm
+    from frame 0, the largest displacement in the file; the chassis shifts
+    up to 15.9 mm and the −Y foot crosshead rises up to 1.3 mm), same
+    camera: the leg visibly shifts; `recorded-playing.png` (playing, ×0.5,
+    frame 105). Activations were REST and `system_ui`, not pointer clicks.
+  - *Still browser only for recorded presets:* the contact-force arrows
+    drawn from each frame's `contacts` (`viewer.js` `showFrame`,
+    `force_world_n`) and the per-frame observation/servo readings
+    (`motor_readings`, `servo_states`, …) are not shown natively; there is
+    no pointer seek slider (seek is REST/`system_ui` only); no chart time
+    cursor.
   - *Is the browser still needed for preset recordings?* Not to save or
-    replay an embedded preset run. It is still needed for:
-    1. Scrubbing or timeline playback of recorded frames and `recorded`-mode
-       presets (`robot-lift-5mm`, `-3mm`).
-    2. Presets that run only in the browser: sim-web modes other than
-       `embedded` (`live`, `recorded`), and presets whose inputs live only
-       under ignored `runs/` when those files are absent (§2g).
+    replay an embedded preset run, nor to play back the `recorded`-mode
+    presets. It is still needed for:
+    1. Scrubbing of a live run's or a replay's history (recording-scrub),
+       and the contact overlays and readings of recorded presets (above).
+    2. Presets that run only in the browser: sim-web `live` mode
+       (`pendulum-live`), and presets whose inputs live only under ignored
+       `runs/` when those files are absent (§2g).
     3. Saved overrides.
     A browser-downloaded `<preset-id>.json` has the same format. It can be
     replayed natively by REST `robot_replay {path}`, or by copying it into
@@ -1825,6 +1896,22 @@ unknown-id error).
      fallback (§3); physical key and pointer input for the speed controls;
      a non-1 scale on preset and replay runs; a model fast enough to show ×4
      or ×8 achieved.
+12. **Done — recorded presets played back natively** (h/g; batch
+   recorded-preset-scrub, T21.1 07e0b59b, T21.2 0364882b, T21.3).
+   - *Done:* the shared capture reader `sim_runtime::embedded_capture`;
+     `mode: recorded` presets (robot-lift-5mm, robot-lift-3mm) open in
+     robot mode with scene meshes and frames mapped by name; one
+     `RobotAction::Recorded` timeline (play, pause, seek, step ±1, speed,
+     start) on a playback worker, from the inspector, `system_ui` and REST;
+     `robot_state.recorded` with verbatim text and file metadata; live-only
+     actions refused naming the preset.
+   - *Verified in T21.3* (`.claude-pair/captures/T21-recorded-preset/`,
+     capture.json ok=true, 39 assertions; details in §2h).
+   - *Still not done:* contact-force arrows and per-frame readings from the
+     capture; a pointer seek slider; scrubbing live/replay history
+     (recording-scrub). 07e0b59b touched sim-runtime, so the gait-lab
+     runtime fingerprint changed and gait qualification must be rerun
+     before evaluating gaits.
 
 ## 6. Launch path
 
@@ -1922,6 +2009,19 @@ window.
 `system_ui` lists the link, section, scroll, `run:*` and `jog:*` controls; REST
 `robot_run` and `robot_jog` use the same handlers.
 
+Recorded presets (§2h). `sim-spatial --robot-preset robot-lift-5mm` (or
+`robot-lift-3mm`) plays back a recorded capture; nothing is simulated. The
+header and `robot_state.recorded` say "recorded physics (played back, not
+simulated here)". Use the inspector's Recorded buttons, `system_ui`
+`recorded:play|pause|start|step+|step-|speed:<scale>`, or REST
+`robot_recorded {"action":"seek","t":0.8}` (also `play`, `pause`, `start`,
+`{"action":"step","delta":1}`, `{"action":"speed","scale":0.5}`); after a
+command, poll `robot_state` until `recorded.pending` is false. Seek is
+REST/`system_ui` only. With `--robot-presets FILE` the preset paths still
+resolve against the workspace root (§6 rules above; a file under /tmp falls
+back to the current directory's checkout), and a missing capture is refused
+by name at launch and in `robot_presets` (`openable: false`).
+
 Gait preview (§2i). On a preset, e.g.
 `sim-spatial --robot-preset robot-measured-400hz`, the **Gait preview** block
 sits at the top of the inspector's scrolling area: click a tracked report to
@@ -2015,8 +2115,8 @@ viewer reloads by itself.
 
 Separate apps are still needed for the schematic and experiments
 (`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-app`), CAD
-(`cad/run.sh`), and calibration, hardware sync, scrubbing of recorded
-frames, observation panels beyond the two robot-mode charts, and realtime walking
+(`cad/run.sh`), and calibration, hardware sync, scrubbing of live-run or
+replay history (recorded presets play back natively, §2h), observation panels beyond the two robot-mode charts, and realtime walking
 (browser, `web/README.md`; §2g lists what native preset runs lack). Gait
 evaluation and tuning stay in the `gait_lab` CLI; leg-driving gait playback
 stays in the calibration UI (hardware).

@@ -885,6 +885,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             }),
             ..default()
         }))
+        .insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
         .add_systems(Update, ((watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, buttons, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain(), (panels, overlay_panel, stress_panel, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain()).chain())
         .run();
@@ -2400,7 +2401,16 @@ fn graph_dock(
     }
 }
 
-fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, mut gizmos: Gizmos) {
+/// The run-thread overlays' gizmo group: drawn over the link meshes (contacts sit under the
+/// wheels and joint axes inside the links, so depth-tested lines were hidden), with wider lines.
+#[derive(Default, Reflect, GizmoConfigGroup)]
+struct OverlayGizmos;
+
+fn overlay_gizmo_config() -> GizmoConfig {
+    GizmoConfig { depth_bias: -1.0, line: GizmoLineConfig { width: 3.0, ..default() }, ..default() }
+}
+
+fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, mut gizmos: Gizmos, mut overlay: Gizmos<OverlayGizmos>) {
     let Some(model) = &view.model else { return };
     // Run-thread overlays (`--robot FILE`), only from an accepted frame of the current
     // generation, mapped model → display through RobotRoot like the link meshes.
@@ -2416,23 +2426,23 @@ fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, m
                     let p = point(&j.point);
                     for (k, a) in j.axes.iter().enumerate() {
                         let d = vector(a, robot_run::JOINT_AXIS_HALF_M);
-                        gizmos.line(p - d, p + d, AXES[k % 3]);
+                        overlay.line(p - d, p + d, AXES[k % 3]);
                     }
-                    gizmos.sphere(Isometry3d::from_translation(p), 0.003, Color::WHITE);
+                    overlay.sphere(Isometry3d::from_translation(p), 0.003, Color::WHITE);
                 }
             }
             if let Some(contacts) = f.overlays.contacts.as_ref().filter(|_| flags.contacts) {
                 for c in contacts {
                     let p = point(&c.point);
                     let color = if c.other == "ground" { Color::srgb(1.0, 0.2, 0.2) } else { Color::srgb(1.0, 0.4, 0.2) };
-                    gizmos.sphere(Isometry3d::from_translation(p), 0.003, color);
-                    gizmos.line(p, p + vector(&c.force, robot_run::FORCE_SCALE_M_PER_N), color);
+                    overlay.sphere(Isometry3d::from_translation(p), 0.003, color);
+                    overlay.line(p, p + vector(&c.force, robot_run::FORCE_SCALE_M_PER_N), color);
                 }
             }
             if let Some(deflections) = f.overlays.deflections.as_ref().filter(|_| flags.deflections) {
                 for d in deflections {
                     let p = point(&d.point);
-                    gizmos.line(p, p + vector(&d.displacement, robot_run::DEFLECTION_MAGNIFICATION), Color::srgb(0.6, 1.0, 0.6));
+                    overlay.line(p, p + vector(&d.displacement, robot_run::DEFLECTION_MAGNIFICATION), Color::srgb(0.6, 1.0, 0.6));
                 }
             }
         }

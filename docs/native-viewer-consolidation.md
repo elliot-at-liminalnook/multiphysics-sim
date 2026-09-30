@@ -43,7 +43,7 @@ Rejected candidates and their disposition:
 | App | Why not the shell | Disposition |
 |---|---|---|
 | `sim-viewer` (eframe/egui schematic, `crates/sim-viewer/src/main.rs`) | Good 2D schematic and experiment review. Its REST covers only a subset of system edits (`system`, `system_state`, `system_level`, `system_select`, `system_undo`, `system_redo`, `system_grid`, `system_move`; no `system_run`, studies or `system_ui`). It has no 3D view. A second GUI toolkit in the same window as Bevy would need a bridge. | Keep as legacy until parity. Its reusable parts are already libraries: `sim-diagram` (schematic layout/projection, `TimeGraph` plot) and `sim_runtime::{experiment_study, controller_refinement::*}`. Port views into Bevy rather than embedding egui. |
-| `sim-app` (Bevy, `crates/sim-app/src/main.rs`) | No REST API and no system files. Both scenes step physics inside a Bevy `Update` system on the UI thread (`cad_app.rs:advance`, line 176; `phenomena_app.rs:advance`, line 180). This conflicts with the off-UI-thread rule. | Keep as legacy. Migrate the `--scene cad` workflow (simrobot live view) and the phenomena gallery into sim-spatial on a worker thread, then retire it. |
+| `sim-app` (Bevy, `crates/sim-app/src/main.rs`) | No REST API and no system files. Both scenes step physics inside a Bevy `Update` system on the UI thread (`cad_app.rs:advance`, line 176; `phenomena_app.rs:advance`, line 180). This conflicts with the off-UI-thread rule. | Keep as legacy; not deleted. Its `--scene cad` window is now only the labelled fallback that RoboCAD's Simulate and `python -m robocad.simbridge` open when no sim-spatial binary is built (batch cad-simulate-native, §2b, §3). It is still the only viewer for planar v2 simrobot files, and it has +/- speed scaling. The phenomena gallery (`--scene phenomena`) is not migrated. Retire the cad scene after the remaining items in §3 are accepted. |
 | Browser (`web/viewer`, `web/system-builder`, `sim-web` WASM) | The native-first direction supersedes it as the primary surface. | Preserved: it is the AGENTS.md realtime browser-walking surface. It is kept until native parity is shown and stays as a compatibility target afterwards. |
 | RoboCAD (Python/OCCT/Qt, `cad/robocad/ui/app.py`) | CAD kernel and authoring. Rewriting OCCT is out of scope. | Remains the CAD service behind REST (§3). |
 
@@ -127,9 +127,11 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 
 ### b. CAD/geometry and physical properties
 - **Entry today:** RoboCAD (`cad/run.sh`; REST `cad/robocad/api.py`, port 8420
-  and up, one port per window, `ui/app.py:1784`). Also `sim-app --scene cad --model X.simrobot.json`
-  (`cad_app.rs`, which watches the file and rebuilds on save) and the `sim-cad`
-  CLI (cad/README).
+  and up, one port per window, `ui/app.py:1784`). RoboCAD's **Simulate**
+  (`SimLink`) and `python -m robocad.simbridge` now open
+  `sim-spatial --robot` (batch cad-simulate-native, below); the legacy
+  `sim-app --scene cad --model X.simrobot.json` (`cad_app.rs`) is only their
+  fallback when sim-spatial is not built. Also the `sim-cad` CLI (cad/README).
 - **Reusable layer:** `sim_phenomena::scenarios::cad_robot` / `cad_physical`
   (used by sim-app), `sim_domain_robot::PhysicalModel`,
   `sim_runtime::physical`, `sim_runtime::part_fit`, and the
@@ -374,6 +376,114 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     material colour is not material-dependent, so the images show the change
     only in the inspector numbers. In `after.png` the long reload notice in
     the header subtitle runs under the run status text (cosmetic).
+  **Met (batch cad-simulate-native, T18.1–T18.4): RoboCAD Simulate opens
+  sim-spatial, with the cad scene's live overlays and stress results.**
+  - *Run-thread overlays* (1c001bf9; on-top drawing fixed in T18.4). In
+    `--robot FILE` mode the run thread copies `PhysicalRobot::contacts()`
+    (link, other = link name or `ground`, point, force, penetration),
+    `joint_frames()` (name, point, axes) and `deflections()` (link, point,
+    displacement) into each published, generation-stamped frame. They are
+    drawn only from an accepted frame of the current generation, in the model
+    frame through `RobotRoot`'s transform like the link meshes. Scales are
+    sim-app's: force lines 0.005 m/N, joint axes ±0.02 m, deflections ×50.
+    Cost rule: each list is computed only while its overlay is on (one
+    articulation evaluation per 0.02 s chunk); a hidden overlay's list is
+    null, never stale. One `RobotAction::Overlay` serves keys C / J / F / H,
+    the inspector buttons, `system_ui` `overlay:contacts|joints|deflections|stress`
+    and REST `robot_overlay {contacts?, joints?, deflections?, stress?}`
+    (in capabilities). Defaults: contacts, joints and deflections on, stress
+    off (as sim-app). `robot_state.overlays` reports flags, frame_flags,
+    frame_generation/time, contacts {count, first 4 samples}, joints {count,
+    sample}, deflections {count, max_displacement_m} and scales. Presets are
+    refused with the reason: their session frames have no such accessors.
+    T18.4 moved these gizmos into their own group drawn over the meshes
+    (depth bias −1, 3 px lines). Depth-tested, the contacts under the wheels
+    and the axes inside the links were hidden (seen in the first T18.4
+    capture).
+  - *Stress results* (0ca8ece0). A read-only overlay of
+    `sim_runtime::physical::results_path(model)` (`<stem>.simresult.json`).
+    It is read on a worker with every open, watch or manual reload check, and
+    again when stress is switched on (a file written later is picked up by
+    toggling stress or Reload; the results file itself is not watched).
+    Links are coloured per vertex by the shared
+    `sim_domain_robot::stress_results` rule (nearest hotspot cell's peak /
+    yield, log scale over 3 decades, turbo map). It was moved verbatim out of
+    sim-app `cad_app.rs`, which now calls it. Links without cells keep their
+    colour. Status: `current` when the results' `provenance.physical_hash`
+    equals the loaded model's `source.physical_hash`; `stale` when both exist
+    and differ; `no recorded hash` when either is absent; `no results file` /
+    `invalid results file` name the path and colour nothing.
+    `robot_state.overlays.stress` gives status, path, mtime, both hashes,
+    peak_stress_pa per link, hotspot_links, painting, reading and
+    paint_seconds; the inspector shows status, path, mtime and peaks.
+  - *Launcher* (6f1a6cff, c8b258b9). `cad/robocad/simbridge.py`
+    `viewer_command(model_path)` is the one selection used by
+    `SimLink.launch` and `watch_and_run`: `target/release/sim-spatial`, else
+    `target/debug/sim-spatial`, with `--robot <abspath>`. The path is made
+    absolute because the viewer runs with cwd=ROOT while
+    `python -m robocad.simbridge` runs from `cad/`. Otherwise it launches
+    `target/release/sim-app --scene cad --model` with a status message naming
+    the fallback; with nothing built, nothing launches and the message names
+    `cargo build --release -p sim-spatial`. The viewer is not relaunched while
+    alive; its own watch reloads each export. A model not yet written at
+    launch loads when it appears. `cad/tests/test_simbridge.py` (10 passed)
+    covers release, debug, fallback, none, the absolute path and the argv
+    with a mocked Popen.
+  - *Verified in T18.4* (`.claude-pair/captures/T18-cad-simulate/`,
+    `drive.py`, capture.json ok=true, 33 of 33 assertions). This was the
+    **release** sim-spatial rebuilt from this source (the driver asserts the
+    binary is newer than the sim-spatial, sim-domain-robot and sim-runtime
+    sources), and release sim-cad was rebuilt too.
+    - Setup: headless RoboCAD on a copy of the wheeled robot under
+      `runs/cad-simulate/20260930T100931Z/`, with a `GET /physical?flex=1`
+      export (physical_hash `19c62536…`, 4 flexible links, 3 joints).
+    - Launch: `simbridge.viewer_command` was called from `cad/` with a
+      `cad/`-relative path. It returned
+      `[<root>/target/release/sim-spatial, --robot, <absolute copy>]` with no
+      fallback message. That argv was started as SimLink does (cwd=ROOT,
+      `_viewer_env()`), with the driver appending `--api-port <free>` (SimLink
+      itself uses the default 8421). `ps` showed that exact command line, and
+      robot_state reported the copy's path and its 4 links.
+    - Run (`system_ui` run:start) to t ≈ 2 s: 3 contacts, all against ground,
+      finite, with force z > 0 (e.g. left wheel 0.82 N, right wheel 1.08 N);
+      joint frames 3 = the file's joints; deflections 9 points, max 0.6 µm.
+    - Toggles: REST `joints:false` and `system_ui` overlay:deflections turned
+      them off, and their frame lists became null. `system_ui` overlay:joints
+      and REST `deflections:true` turned them back on, with the counts back.
+    - Stress: `sim-cad run <copy> --seconds 1` (1.9 s) wrote
+      `robot.simresult.json`. After `system_ui` overlay:stress the status was
+      `current` (recorded = model = `19c62536…`), peaks equal to the file's
+      (chassis 11074 Pa, left wheel 4854, right wheel 3875, passive wheel 815),
+      path and mtime present, all 4 links in hotspot_links, paint 2.1 ms.
+    - Stale: RoboCAD `PATCH` left wheel material → al and a re-export to the
+      same path. The watch reload (trigger watch, loaded) changed
+      model_physical_hash to `5eb15d14…`; the status became `stale`, with the
+      recorded hash and peaks still the old file's and the paint kept.
+    - Images:
+      - `contacts.png`: red contact spheres with short upward force ticks at
+        the three wheel bottoms, on the meshes, joints and deflections off.
+      - `frames-deflections.png`: adds white joint spheres with yellow axis
+        lines at both axles and the caster. The deflection lines (0.6 µm × 50
+        ≈ 30 µm) are too small to see, so only robot_state proves them.
+      - `stress.png`: all links painted uniform blue, the label reading
+        "Stress · current", path, mtime and peaks.
+      - `stress-stale.png`: "Stress · stale" after the reload; the run is
+        reset to idle at gen 1.
+  - *Limits:* all activations were REST and `system_ui` (the same handlers
+    as a click), not pointer clicks. **RoboCAD's Qt Simulate toggle
+    (`ui/app.py` `sim_link_toggle`) was not clicked or pointer-captured**;
+    the launch went through `viewer_command` and SimLink's Popen arguments,
+    not through the Qt button. The live SimLink exports with `flex=False`,
+    so in the Simulate loop there are no deflections and no hotspot cells
+    unless the user exports flexibly or runs sim-cad on a flexible export.
+    The wheeled robot's stresses (≤ 11 kPa) are far below 0.1 % of yield, so
+    the paint is uniform blue: a colour gradient was not demonstrated
+    natively (the shared rule's temp-file test covers the colour at a known
+    vertex). The inspector rounds peaks to 0.01 MPa, so they read "0.00 MPa";
+    robot_state has full precision. Force ticks at 0.005 m/N are only
+    4–5 mm on this 1 N robot. `cad/USER_GUIDE.md`, `cad/ARCHITECTURE.md` and
+    `cad/PHYSICAL_MODEL.md` still name sim-app as the live viewer (outside
+    this batch's cad scope).
 
 ### c. Schematic and spatial views
 - **Entry today:** spatial is sim-spatial (all modes). The schematic is a
@@ -1297,6 +1407,33 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   compatibility target afterwards. Hardware calibration and sync
   (`calibration-ui.mjs`, `hardware-sync.mjs`) stay in the browser. They are
   hardware paths and are not migrated in this effort.
+- **sim-app `--scene cad`: fallback only** (batch cad-simulate-native).
+  RoboCAD's Simulate (`SimLink`) and `python -m robocad.simbridge` open
+  `sim-spatial --robot` through `simbridge.viewer_command` (§2b, §6). sim-app
+  is launched only when no sim-spatial binary is built, with a status line
+  naming the fallback. Robot mode now covers the cad scene's live view on a
+  worker: link poses, contacts with force vectors, joint frames, flexible-link
+  deflections, the stress hotspot colouring (the same shared
+  `sim_domain_robot::stress_results` rule, plus a current/stale label sim-app
+  lacks), file watch and reload, and joint jogging (servo-target jog by REST,
+  `system_ui` and inspector buttons instead of sim-app's arrow keys).
+  What still needs sim-app, checked against `cad_app.rs`:
+  1. **Planar v2 simrobot files** (`export_sim_model(..., version=2)`).
+     sim-spatial robot mode does not load them: a v2 export of the wheeled
+     robot fails `--validate-only` with a serde error ("invalid type: map,
+     expected a string at line 594"), not a clear "v2 unsupported" message.
+     RoboCAD's Simulate never writes v2 (its default is the v3+ physical
+     export), so only hand-requested v2 files are affected.
+  2. **Speed scaling** (+/- in sim-app, ×0.125 to ×8). Robot mode is paced
+     at most to real time and has no speed control.
+  3. **The joint-select / move-target keys** (←/→, ↑/↓, Shift) are replaced
+     by robot mode's jog, not ported as keys.
+  Retirement would require: an accepted decision on v2 files (port them, or
+  have robot mode refuse them with a clear message and drop them), a speed
+  control or an explicit decision not to have one, a pointer-captured check
+  of RoboCAD's Qt Simulate toggle opening sim-spatial, and removing the
+  fallback branch from `viewer_command` together with its test. The
+  phenomena gallery (`--scene phenomena`) is a separate migration.
 - **sim-viewer:** stays for schematic layout editing, plots and the
   `--experiments` review until c, i and j reach parity. The shell now covers
   read-only review of measured identification archives (§2j), but
@@ -1521,6 +1658,20 @@ unknown-id error).
      CAD client), a `cad_sha256` in RoboCAD exports so `cad_link` can say
      current/stale, watching presets, and a pointer-click check of the
      button.
+10. **Done — RoboCAD Simulate opens sim-spatial** (b/g; batch
+   cad-simulate-native, T18.1–T18.4; commits 1c001bf9, 0ca8ece0, 6f1a6cff,
+   c8b258b9 and the T18.4 commit).
+   - *Done:* run-thread contacts, joint frames and deflections overlays;
+     the read-only stress overlay with one shared colouring rule and a
+     current/stale label; `simbridge.viewer_command` opening
+     `sim-spatial --robot <abspath>` with a labelled sim-app fallback (§2b).
+   - *Verified in T18.4* (`.claude-pair/captures/T18-cad-simulate/`,
+     capture.json ok=true, 33 assertions): launched through the simbridge
+     argv; contacts, joint frames and deflections against the file and frame;
+     stress current, then stale after a RoboCAD PATCH and re-export.
+   - *Still not done:* a pointer capture of the Qt Simulate toggle, planar v2
+     files in robot mode, speed scaling, a visible stress gradient on a
+     loaded model, and the cad/ docs that still name sim-app (§3).
 
 ## 6. Launch path
 
@@ -1655,6 +1806,19 @@ on `--robot FILE`; "not in frame" on presets). REST `robot_state.graphs` gives
 latest_time, samples, absent_reason}]}]`, plus the sampling and chassis
 rules. For presets, `robot_state.run.poses[i]` also carries the frame's
 `velocity_m_s` and `angular_velocity_rad_s`.
+
+RoboCAD Simulate (batch cad-simulate-native). RoboCAD's **Simulate** toggle
+(`ui/app.py` `sim_link_toggle`, `SimLink`) and `cd cad && python -m
+robocad.simbridge robot.rcad` now open `sim-spatial --robot
+<absolute path>/robot.simrobot.json` (release binary preferred, then debug;
+`simbridge.viewer_command`), with cwd at the repository root. The viewer
+watches the export, so later saves reload it in place and the viewer is not
+relaunched. If sim-spatial is not built, `sim-app --scene cad --model` opens
+and the status line says "sim-spatial not built; falling back to legacy
+sim-app cad scene (build: cargo build --release -p sim-spatial)". If nothing
+is built, nothing opens and the message names that build command. Build it
+first with `cargo build --release -p sim-spatial`; a release binary older
+than the source opens without newer features, because release is preferred.
 
 `sim-app --scene cad` is **no longer needed to run** a v3 simrobot file that
 builds with the default options, such as the wheeled baseline (verified in

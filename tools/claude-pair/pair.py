@@ -245,8 +245,10 @@ def guard_plan(plan, state, checks):
         if plan["review"] == "none":
             raise ValueError("Worker result requires an explicit review")
         if plan["review"] == "accept":
-            if state["report"]["status"] != "done" or state["report"]["blockers"]:
-                raise ValueError("Cannot accept a blocked worker")
+            # A "done" report may still list blockers for later work; the
+            # orchestrator judges those. Only a blocked assignment can't be accepted.
+            if state["report"]["status"] != "done":
+                raise ValueError("Cannot accept a worker report whose status is blocked; use review=revise or action=blocked")
             receipts = state.get("receipts", [])
             expected = set(check_names(previous))
             if {r["name"] for r in receipts} != expected:
@@ -486,6 +488,26 @@ class Runner:
         shared_notebook.response(self.root, role, self.state["calls"], data, out)
         return data
 
+    def call_checked(self, role, prompt, scope, guard):
+        """Call a planner and apply the coordinator's handoff rules. A rejected
+        response goes back to the same session with the reason, instead of
+        halting an unattended run on a fixable mistake."""
+        note = ""
+        for attempt in range(self.config.get("guard_retries", 2) + 1):
+            data = self.call(role, note + prompt, scope=scope)
+            try:
+                guard(data)
+                return data
+            except ValueError as error:
+                if attempt == self.config.get("guard_retries", 2):
+                    raise
+                shared_notebook.append(self.root, {"id": f"rejected-{self.state['calls']:04d}", "author": "coordinator",
+                    "kind": "Response rejected", "summary": f"The {role}'s response broke a handoff rule and was not applied: {error}",
+                    "notes": ["The same session was asked to correct it."], "source": str(self.root / "logs")})
+                self.state["retry_session"] = self.state["sessions"].get(role)
+                note = (f"THE COORDINATOR REJECTED YOUR LAST RESPONSE: {error}\n"
+                        "Nothing from it was applied. Return a corrected structured response for the same situation.\n\n")
+
     def settle_limited_call(self, role, sid, reservation, result, started):
         """Reconcile a call a usage limit cut short, and arrange for the same
         session to continue after the reset if it had already begun work."""
@@ -681,8 +703,8 @@ class Runner:
                         prompt = outer_loop.director_prompt(self)
                         if steering_path.exists():
                             prompt += "\nCURRENT OPERATOR GUIDANCE:\n" + read_json(steering_path)["text"]
-                        decision = self.call("director", prompt, scope="director")
-                        outer_loop.guard_decision(decision, self.state, self.config["checks"])
+                        decision = self.call_checked("director", prompt, "director",
+                            lambda d: outer_loop.guard_decision(d, self.state, self.config["checks"]))
                         write_json(self.root / "logs" / f"director-{self.state['calls']:04d}.json", decision)
                         if not outer_loop.dispatch(self, decision):
                             break
@@ -719,11 +741,12 @@ class Runner:
                         if self.state.get("outer", {}).get("current_batch"):
                             prompt += outer_loop.contract_prompt(self)
                         batch = (self.state.get("outer", {}).get("current_batch") or {}).get("id", "mission")
-                        plan = self.call("orchestrator", prompt, scope="batch:" + batch)
-                        guard_plan(plan, self.state, self.config["checks"])
-                        outer_loop.guard_contract(self, plan)
-                        if self.config["audit_only"] and set(plan["checks"]) - {"diff"}:
-                            raise ValueError("Audit-only run cannot request builds")
+                        def guard(plan):
+                            guard_plan(plan, self.state, self.config["checks"])
+                            outer_loop.guard_contract(self, plan)
+                            if self.config["audit_only"] and set(plan["checks"]) - {"diff"}:
+                                raise ValueError("Audit-only run cannot request builds")
+                        plan = self.call_checked("orchestrator", prompt, "batch:" + batch, guard)
                         shared_notebook.append(self.root, {"id": f"review-{self.state['calls']:04d}",
                             "author": "coordinator", "kind": "Validated handoff",
                             "summary": f"Orchestrator response passed the handoff guards: action={plan['action']}, review={plan['review']}.",

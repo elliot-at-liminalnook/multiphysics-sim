@@ -233,7 +233,7 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     is no recording, saving or replay of robot-mode runs, no graphs (since added:
     T12 recordings, T13 graphs, §2g/§2h), and no
     file watching or auto-rebuild on CAD save (sim-app watches the file;
-    reopen the viewer here). Controls were activated through REST
+    reopen the viewer here; since added: robot-cad-reload, below). Controls were activated through REST
     `system_ui`, not pointer clicks. The wheeled robot's motion is small on
     screen (its wheels are axisymmetric), so the numbers in capture.json, not
     the images, prove the motion. RoboCAD still owns
@@ -311,12 +311,20 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
         recordings, T13 graphs).
 - **Remaining gaps:**
   1. no way to trigger CAD edits or exports from the shell;
-  2. no RoboCAD REST reload round trip (edit → export → shell reload);
+  2. ~~no RoboCAD REST reload round trip~~ — met by robot-cad-reload (below).
+     What remains: the edit and the export are still driven from outside the
+     shell (gap 1), and the CAD link cannot say whether an export matches the
+     CAD document, because RoboCAD's `/physical` export records `source.file`
+     and `source.physical_hash` but no `source.cad_sha256`, so the viewer
+     reports `cad_link: no_recorded_hash`. Even with a recorded file hash,
+     unsaved in-memory CAD edits (a REST PATCH that is not saved) are not in
+     the `.rcad` on disk; `physical_hash` does change with them.
   3. `--robot FILE` still has no build path for actuator-profile (full-robot)
      exports, which need explicit PWM / driver control. The same robot runs
      natively through a preset whose scene declares that control
-     (`robot-measured-400hz`). There is no recording, replay or file
-     watching in robot mode.
+     (`robot-measured-400hz`). `--robot FILE` has no recording or replay
+     (presets do); it now watches and reloads its file (robot-cad-reload).
+     Presets are not watched.
 - **Source owner:** CAD (`.rcad` → `simrobot` v3 export). Display models are
   presentation only.
 - **Dependencies:** a CAD service client (§3). Simrobot stepping now runs on
@@ -326,9 +334,46 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   earlier expectation: current exports carry no measured/derived/estimated
   label on most values (mass, inertia, com, friction), so the inspector shows
   "no per-value provenance in export" plus the file's own notes rather than a
-  label. Still open: after a RoboCAD REST `PATCH /nodes/{id}` material change
-  and export, the shell reloads and the values change, with before and after
-  screenshots.
+  label. **Met (batch robot-cad-reload, T17.1–T17.2):** after a RoboCAD REST
+  `PATCH /nodes/{id}` material change and export, the shell reloads and the
+  values change, with before and after screenshots.
+  - *Implemented* (commit 0a1b8251): `--robot FILE` stats the file every
+    0.5 s on the UI thread; on a changed stat a worker reads, sha256-hashes and
+    parses it through `robot::load_bytes`, the same loader as the first open.
+    Identical bytes are `unchanged` (no reload). A model is applied only after
+    a full read and a successful parse, so a partial or invalid write keeps
+    the last good model with an error naming the path and retries on the next
+    change. One handler, `RobotAction::Reload`, serves the watch, the header
+    **Reload file** button, `system_ui` `robot:reload` and REST
+    `robot_reload`. A loaded reload rebuilds meshes, links, notes and
+    `cad_link`, keeps the selection by name, discards any run or jog and
+    spawns an idle run thread at generation + 1. State is in
+    `robot_state.source_file` (not `source`, which stays the export's own
+    block) and `robot_state.notice`.
+  - *Verified in T17.2* (`.claude-pair/captures/T17-cad-reload/`, capture.json
+    ok=true, 31 assertions; driver `drive.py`): headless RoboCAD
+    (`python -m robocad.api`, a free port, not 8420) on a copy of
+    `examples/wheeled-robot/baseline/robot.rcad` under
+    `runs/cad-reload/20260930T092318Z/`. The initial `GET /physical?flex=1`
+    export opened in the viewer; `PATCH /nodes/1d090f0c7227 {"material":"al"}`
+    (left wheel, PETG 1.27 → Aluminium 6061 2.7 g/cm³) and a re-export to the
+    same path were picked up by the watch: left wheel mass 0.043090 →
+    0.091609 kg, equal to the new file's value, ratio 2.12598 = 2.7/1.27;
+    sha256 equal to the file; generation 0 → 1; selection kept. A re-export
+    (brass) while a run was running reset it ("reloaded: file changed on disk;
+    run reset; generation 2; …"), idle, no old-generation frame. A truncated
+    write gave `failed` naming the path with the last good model (sha256, mass
+    0.288398 kg, generation 2) unchanged and the header "SHOWING LAST GOOD
+    MODEL (loaded …)"; a CAD re-export restored it. A manual `system_ui`
+    `robot:reload` was `unchanged`. Images: `before.png`, `after.png`,
+    `failed.png`.
+  - *Limits:* activations were REST and `system_ui`, not pointer clicks; the
+    CAD edit was a REST PATCH on headless RoboCAD, not a GUI gesture, and was
+    never saved (the copy's `.rcad` is byte-identical to the example).
+    `cad_link` was `no_recorded_hash` throughout (gap 2). The inspector's
+    material colour is not material-dependent, so the images show the change
+    only in the inspector numbers. In `after.png` the long reload notice in
+    the header subtitle runs under the run status text (cosmetic).
 
 ### c. Schematic and spatial views
 - **Entry today:** spatial is sim-spatial (all modes). The schematic is a
@@ -1225,9 +1270,25 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `PATCH`/`/ops/*` edits. The shell never writes CAD files itself. Edits go
   through the CAD command layer, so CAD undo and provenance stay intact. Long
   calls run on a worker with progress and cancel.
+- **What the headless round trip shows** (robot-cad-reload, §2b): with
+  RoboCAD as a headless REST service, the whole edit → export → native view
+  loop works without a Python or browser UI. The edit is a CAD command
+  (`PATCH /nodes/{id}`), the export is `GET /physical?path=` (RoboCAD writes
+  the simrobot with tmp + `os.replace`, so the viewer never sees a partial
+  CAD export), and the native viewer's watch reloads that file. The file is
+  the whole interface: sim-spatial has no CAD client and never writes CAD
+  data. A wheeled-robot `flex=1` export took 9.8–12.8 s headless; the
+  viewer's reload after it took about 0.05–0.3 s.
 - **Open questions:**
   1. Which RoboCAD endpoints are safe to call while a person is editing (unsaved
-     edits must be preserved; AGENTS.md).
+     edits must be preserved; AGENTS.md). Still open. T17.2 ran only the
+     headless service on a scratch copy, where `/physical` exports in the
+     request thread. In the GUI, `/physical` snapshots the document on the Qt
+     thread and derives in a child process (`export_worker`), which by code
+     reading does not save or modify the document, but that path was not
+     exercised here and no GUI session was involved. An export reflects
+     unsaved in-memory edits (the T17.2 export changed while the `.rcad` on
+     disk did not).
   2. How to map a system instance to a CAD node (the link is path + SHA-256 only,
      `system_link.py`).
 - **Browser:** preserved. AGENTS.md requires realtime browser walking. The
@@ -1398,7 +1459,8 @@ unknown-id error).
      clearing, and Reset clearing (§2g, §2h).
    - *Still not done:* observation panels beyond the two charts, channel
      picking, a chart time cursor/scrub, file watching, gait playback, and a
-     PWM build path for `--robot FILE` full-robot exports.
+     PWM build path for `--robot FILE` full-robot exports. (File watching since
+     added, item 9; gait playback, item 8.)
 6. **Partial — L0: one launch path** (batch launch-cwd, T14.1–T14.3).
    - *Done:* `sim-spatial FILE` opens a `*.system.json`, a `*.simrobot.json`,
      a lessons directory or a place directory in the mode its type selects
@@ -1445,6 +1507,20 @@ unknown-id error).
      capture.json ok=true, 30 assertions; §2i).
    - *Still not done:* launching evaluations or tuning, leg-driving playback
      (hardware, calibration UI), a path text field, speeds above 1×.
+9. **Done — robot file watch and CAD reload** (b; batch robot-cad-reload,
+   T17.1–T17.2; commit 0a1b8251 and the T17.2 doc commit).
+   - *Done:* `--robot FILE` watches its file (0.5 s stat, sha256 and parse on
+     a worker through the shared loader) and reloads through one
+     `RobotAction::Reload` (watch, Reload file button, `system_ui`
+     `robot:reload`, REST `robot_reload`), keeping the last good model on a bad
+     write and resetting any run at generation + 1 (§2b).
+   - *Verified in T17.2* (`.claude-pair/captures/T17-cad-reload/`,
+     capture.json ok=true, 31 assertions): a real headless RoboCAD PATCH +
+     export round trip on a `runs/cad-reload/` copy (§2b, §3).
+   - *Still not done:* triggering CAD edits or exports from the shell (a Rust
+     CAD client), a `cad_sha256` in RoboCAD exports so `cad_link` can say
+     current/stale, watching presets, and a pointer-click check of the
+     button.
 
 ## 6. Launch path
 
@@ -1586,13 +1662,33 @@ T10.3). It is not a way around the full-robot limitation: 29-link exports with
 actuator profiles fail to build in sim-spatial, and sim-app uses the same
 `BuildOptions::default()` (`cad_app.rs:104`), so it fails the same way
 (established by code reading, not captured). Neither viewer can run them yet.
-sim-app still offers what robot mode lacks: rebuilding on file save and
-arrow-key jogging. `sim-app --scene cad` and `cad_app.rs` were not changed by
+sim-app still offers arrow-key jogging, which robot mode lacks; robot mode
+now also reloads on file change (below). `sim-app --scene cad` and `cad_app.rs` were not changed by
 this batch; their only diff against the run baseline is the earlier accepted
 1562f60c (shared collision triangulation).
 
+Robot file reload (§2b). `sim-spatial --robot FILE.simrobot.json` (or the
+positional FILE) watches the file: it stats it every 0.5 s and, when the
+length or mtime changes, re-reads, hashes (sha256) and parses it on a worker.
+Identical bytes are reported `unchanged`; changed bytes replace the model at
+a new generation, keep the selected link by name and reset any run ("run
+reset" in the notice). A bad or partial write keeps the last good model; the
+header says SHOWING LAST GOOD MODEL with its load time and the error names
+the path. Re-read on demand with the header **Reload file** button, `system_ui`
+`robot:reload` or REST `robot_reload {}`. `robot_state.source_file` gives
+`path`, `sha256`, `loaded_at` (UTC), `reload_count`, `unchanged_checks`,
+`watching`, `poll_s`, `in_flight`, `last_reload {trigger watch|manual,
+outcome loaded|unchanged|failed, error, at}`, `run_reset`,
+`showing_last_good` and `failing_error`; `robot_state.notice` gives the last
+result and `robot_state.run.generation` the generation. `robot_state.source`
+is still the export's own source block. Presets (`--robot-preset`) are not
+watched (`source_file.watching=false`). A CAD round trip: run RoboCAD
+(`cad/run.sh`, or headless `python -m robocad.api model.rcad --port P` from
+`cad/`), edit, then export to the opened path (`GET /physical?path=FILE`); the
+viewer reloads by itself.
+
 Separate apps are still needed for the schematic and experiments
-(`sim-viewer`; the shell only reviews identification archives, §3), phenomena and file-watching robot view (`sim-app`), CAD
+(`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-app`), CAD
 (`cad/run.sh`), and calibration, hardware sync, scrubbing of recorded
 frames, observation panels beyond the two robot-mode charts, and realtime walking
 (browser, `web/README.md`; §2g lists what native preset runs lack). Gait

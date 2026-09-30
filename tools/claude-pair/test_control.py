@@ -53,8 +53,10 @@ class ControlTests(unittest.TestCase):
             self.assertEqual(argv[argv.index("--setting-sources") + 1], "project")
             instructions = argv[argv.index("--append-system-prompt") + 1]
             self.assertIn("# Project handbook", instructions)
-            self.assertIn("ui_capture.py", instructions)
-            self.assertIn(str(runner.root / "captures"), instructions)
+            self.assertIn("Screenshots are OFF for this run", instructions)
+            self.assertIn("**No screenshots**", instructions)
+            runner.config["screenshots"] = True
+            self.assertIn(str(runner.root / "captures"), runner.instructions("worker"))
             self.assertIn("Never drive physical hardware", instructions)
 
     def test_audit_only_stays_read_only(self):

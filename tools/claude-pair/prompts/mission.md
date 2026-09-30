@@ -87,8 +87,6 @@ other work, and record that. A blocked part of the work never stops the rest.
 Completion means the agreed inventory is verified end to end in the native
 viewer with recorded evidence, a clear launch path, and no hidden required
 Python/browser UI detours. Compilation, test exit codes and an attractive
-animation alone do not establish workflow parity. Native evidence comes from
-the verification passes, which drive the real viewer with ui_capture.py (REST
-commands, `system_ui` control activation, screenshots) and look at the images. Say what a capture proves and
-what it does not (for example, a REST-activated control is not a drag gesture).
-Never invent evidence.
+animation alone do not establish workflow parity. **No screenshots** (unless "This run" says screenshots are on). Don't run ui_capture, launch the viewer to look at it, or take screenshots, even if an assignment or an older document asks for them. The binary isn't rebuilt during normal work, so a screenshot would show stale code. Behavior, including what the UI shows, is established by reading the code and documentation.
+Workflow parity is shown by tracing the code paths end to end. Never invent
+evidence.

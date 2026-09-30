@@ -1208,7 +1208,7 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         body.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(6.), padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() })
             .with_children(|row| {
                 row.spawn((Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![
-                    k.text(format!("{} · rev {}", run.id, run.revision), 12., TEXT, 1),
+                    k.text(format!("{} · rev {} · {}", run.id, run.revision, run.fidelity), 12., TEXT, 1),
                     k.text(format!("{} s · seed {}{}", num(run.duration), run.seed, if run.note.is_empty() { String::new() } else { format!(" · {}", run.note) }), 11., SUBTLE, 0)
                 ]));
                 row.spawn(k.button(if picked { "✓" } else { "Pick" }, BuildAction::PickRun(run.id.clone()), Look::Chip(picked), true));
@@ -1227,7 +1227,7 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             };
             body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(color), k.text(o.headline(), 12., TEXT, 0)]));
             if o.status == "done" {
-                body.spawn(k.text(format!("Headless rerun from t = 0 with the recorded document and config (seed {}, {} s); a non-zero difference is a finding about this run.", o.seed, num(o.duration)), 11., FAINT, 0));
+                body.spawn(k.text(format!("Headless rerun from t = 0 with the recorded document and config ({}, seed {}, {} s); a non-zero difference is a finding about this run.", o.fidelity, o.seed, num(o.duration)), 11., FAINT, 0));
             }
             if o.edited_while_running {
                 body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text("The document was edited while this run recorded: the record keeps the final document, so the replay does not compare a clean run.", 11.5, WARN, 0)]));

@@ -1752,6 +1752,8 @@ enum BuildAction {
     CalibrationOutcome(calibration::OutcomeFilter),
     /// Page of the filtered trial list (0-based).
     CalibrationPage(usize),
+    /// Select a trial of the shown archive and chart it.
+    CalibrationTrial(String),
 }
 
 pub struct BuilderPlugin;
@@ -1759,7 +1761,7 @@ impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, (finish_actuators, finish_gait_reports, finish_calibration).chain(), rebuild_scene, sync_run, graphs::update.run_if(building), schematic::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
+            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building)).chain(), rebuild_scene, sync_run, graphs::update.run_if(building), schematic::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
         )
         .add_systems(Startup, ui::load_fonts)
         .add_systems(Update, placement::update.after(update_parts).run_if(building))
@@ -2124,6 +2126,10 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
         BuildAction::CalibrationSplit(f) => builder.set_calibration_filter(Some(f), None),
         BuildAction::CalibrationOutcome(f) => builder.set_calibration_filter(None, Some(f)),
         BuildAction::CalibrationPage(page) => builder.set_calibration_page(page),
+        BuildAction::CalibrationTrial(id) => {
+            let r = builder.select_calibration_trial(&id);
+            builder.report(r);
+        }
         BuildAction::GaitResultsPath => {
             let shown = builder.gait_lab.root.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
             builder.start_input(Purpose::GaitResults, shown);

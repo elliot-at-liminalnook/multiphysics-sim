@@ -39,7 +39,7 @@ class NotebookTests(unittest.TestCase):
             root=fixtures.PairTests().initialize_fixture(Path(tmp).resolve())
             runner=pair.Runner(root)
             calls=[]
-            def process(argv,prefix,stdin=None):
+            def process(argv,prefix,stdin=None,**_):
                 calls.append((argv,stdin))
                 role='orchestrator' if len(calls)==1 else 'worker'
                 data=fixtures.plan() if role=='orchestrator' else copy.deepcopy(fixtures.REPORT)

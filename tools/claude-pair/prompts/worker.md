@@ -66,9 +66,10 @@ under `~/.cargo/registry/src`) and docs, not by compiling.
 
 1. **No routine builds, tests or runs.** Don't compile or test as part of normal
    work, not even `cargo check`.
-2. **The 10-second rule.** When running something would really help, it must
-   finish within 10 seconds, so always run it as `within 10 <command>` (on your
-   PATH). If it stops at 10 s, that is not a failure: don't retry, move on. Almost
+2. **The 10-second rule is enforced.** Claude Code stops every shell command
+   after 10 seconds ("Command timed out after 10s", exit 143), and background
+   commands are turned off. Only run things that finish within that. A timeout is
+   not a failure: don't retry, move on. Almost
    every cargo command in this workspace takes longer, so in practice this means
    greps, quick scripts, `python3` one-liners, or an already-built small binary.
 3. **Fix the bugs you see.** When reading reveals a bug, in your code or in code

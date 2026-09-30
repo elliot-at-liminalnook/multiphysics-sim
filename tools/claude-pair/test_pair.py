@@ -199,7 +199,7 @@ class PairTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = self.initialize_fixture(Path(tmp).resolve())
             runner = pair.Runner(root)
-            def process(argv, prefix, stdin=None):
+            def process(argv, prefix, stdin=None, **_):
                 out = prefix.with_suffix(".stdout")
                 sid = argv[argv.index("--resume") + 1] if "--resume" in argv else argv[argv.index("--session-id") + 1]
                 previous = runner.state["session_costs"].get(sid, 0)

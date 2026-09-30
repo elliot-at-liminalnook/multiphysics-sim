@@ -366,6 +366,16 @@ class Runner:
                 self.save()
         return p.returncode, out, err
 
+    def shell_limits(self, role):
+        """Claude Code stops each shell command after `shell_seconds` (default 10),
+        with background commands disabled so a build can't outlive the cap.
+        Verification passes run without a cap."""
+        seconds = self.config.get("shell_seconds", 10)
+        if not seconds or (role == "worker" and self.state.get("verification")):
+            return {}
+        ms = str(int(seconds * 1000))
+        return {"BASH_DEFAULT_TIMEOUT_MS": ms, "BASH_MAX_TIMEOUT_MS": ms, "CLAUDE_CODE_DISABLE_BACKGROUND_TASKS": "1"}
+
     def fast_roles(self):
         """Roles that run in fast mode, read fresh so a change applies at the next call."""
         try:
@@ -470,7 +480,7 @@ class Runner:
             argv += ["--model", self.config["model"]]
         print(f"{role}: call {self.state['calls']} ({prefix.name}{', resumed' if session else ', fresh session'}"
               f"{', fast mode' if fast else ''})", flush=True)
-        code, out, err = self.process(argv, prefix, prompt)
+        code, out, err = self.process(argv, prefix, prompt, env=self.env(**self.shell_limits(role)))
         raw = out.read_text()
         events = list(stream_events(raw))
         try:

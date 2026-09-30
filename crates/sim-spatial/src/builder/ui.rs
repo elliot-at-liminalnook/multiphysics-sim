@@ -7,82 +7,13 @@
 //! └ status: message                                   revision · parts · nets · state ┘
 use super::*;
 
-pub const TOPBAR: f32 = 52.0;
-pub const STATUSBAR: f32 = 30.0;
-pub const LEFT_WIDTH: f32 = 300.0;
-pub const RIGHT_WIDTH: f32 = 330.0;
-
-// Theme: dark neutral surfaces, one accent, semantic warning/danger.
-pub(crate) const BAR: Color = Color::srgb(0.071, 0.086, 0.106);
-pub(crate) const SURFACE: Color = Color::srgb(0.094, 0.110, 0.137);
-pub(crate) const RAISED: Color = Color::srgb(0.129, 0.149, 0.180);
-pub(crate) const HOVER_BG: Color = Color::srgb(0.161, 0.184, 0.220);
-pub(crate) const BORDER: Color = Color::srgb(0.180, 0.208, 0.247);
-pub(crate) const TEXT: Color = Color::srgb(0.902, 0.922, 0.945);
-pub(crate) const SUBTLE: Color = Color::srgb(0.600, 0.651, 0.710);
-pub(crate) const FAINT: Color = Color::srgb(0.420, 0.463, 0.522);
-pub(crate) const ACCENT_BG: Color = Color::srgb(0.098, 0.251, 0.239);
-pub(crate) const ON_ACCENT: Color = Color::srgb(0.035, 0.090, 0.086);
-pub(crate) const WARN: Color = Color::srgb(0.949, 0.749, 0.388);
-pub(crate) const DANGER: Color = Color::srgb(0.937, 0.463, 0.435);
-pub(crate) const OK: Color = Color::srgb(0.435, 0.816, 0.557);
-
-#[derive(Resource, Clone)]
-pub(crate) struct UiFonts {
-    pub(crate) regular: Handle<Font>,
-    pub(crate) italic: Handle<Font>,
-    pub(crate) mono: Handle<Font>,
-    pub(crate) icons: BTreeMap<String, Handle<Image>>,
-    pub(crate) medium: Handle<Font>,
-    pub(crate) semibold: Handle<Font>,
-}
-
-impl UiFonts {
-    /// The interface fonts and icons, added to the asset stores once while
-    /// the app is built (`app::CorePlugin`): the first mode's OnEnter runs
-    /// before Startup and spawns text with them. Shared by every mode.
-    pub(crate) fn load(world: &mut World) -> Self {
-        let icons = {
-            let mut images = world.resource_mut::<Assets<Image>>();
-            sim_core::icons::NAMES.iter().map(|name| {
-                let image = Image::new(bevy::render::render_resource::Extent3d { width:48, height:48, depth_or_array_layers:1 }, bevy::render::render_resource::TextureDimension::D2, sim_core::icons::rgba(name,48), bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb, RenderAssetUsages::default());
-                (name.to_string(), images.add(image))
-            }).collect()
-        };
-        let mut fonts = world.resource_mut::<Assets<Font>>();
-        let mut load = |bytes: &[u8]| fonts.add(Font::from_bytes(bytes.to_vec()));
-        UiFonts { icons,
-            italic: load(include_bytes!("../../assets/fonts/IBMPlexSans-Italic.ttf")),
-            mono: load(include_bytes!("../../assets/fonts/IBMPlexMono-Regular.ttf")),
-            regular: load(include_bytes!("../../assets/fonts/IBMPlexSans-Regular.ttf")),
-            medium: load(include_bytes!("../../assets/fonts/IBMPlexSans-Medium.ttf")),
-            semibold: load(include_bytes!("../../assets/fonts/IBMPlexSans-SemiBold.ttf")),
-        }
-    }
-}
+// TEMPORARY (ui-kit T26.1, removed in T26.2): the kit owns these now.
+pub(crate) use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, DANGER, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, ON_ACCENT, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, TOPBAR, Tint, UiFonts, WARN, divider, wrap};
 
 #[derive(Component)]
 pub(super) enum Scroll {
     Left,
     Right,
-}
-
-/// Background colors for idle and hovered states of a clickable element.
-#[derive(Component, Clone, Copy)]
-pub(crate) struct Tint {
-    pub(crate) idle: Color,
-    pub(crate) hover: Color,
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub(crate) enum Look {
-    Primary,
-    Secondary,
-    Ghost,
-    Danger,
-    Tab(bool),
-    Chip(bool),
-    Segment(bool),
 }
 
 /// Library categories, in palette order.
@@ -152,130 +83,6 @@ fn domain_of(kind: &InstanceKind) -> &str {
     }
 }
 
-pub(crate) struct Kit<'a> {
-    pub(crate) f: &'a UiFonts,
-}
-
-impl Kit<'_> {
-    pub(crate) fn text(&self, value: impl Into<String>, size: f32, color: Color, weight: u8) -> (Text, TextFont, TextColor, TextLayout) {
-        let font = match weight {
-            0 => self.f.regular.clone(),
-            1 => self.f.medium.clone(),
-            _ => self.f.semibold.clone(),
-        };
-        (Text::new(value), TextFont { font: font.into(), font_size: FontSize::Px(size), ..default() }, TextColor(color), TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter))
-    }
-
-    pub(crate) fn button<A: Component>(&self, label: &str, action: A, look: Look, enabled: bool) -> impl Bundle + use<A> {
-        let (idle, hover, color, border, weight) = match look {
-            Look::Primary => (ACCENT, Color::srgb(0.40, 0.90, 0.82), ON_ACCENT, ACCENT, 2),
-            Look::Secondary => (RAISED, HOVER_BG, TEXT, BORDER, 1),
-            Look::Ghost => (Color::NONE, HOVER_BG, SUBTLE, Color::NONE, 1),
-            Look::Danger => (Color::NONE, Color::srgb(0.25, 0.12, 0.12), DANGER, Color::srgb(0.42, 0.20, 0.20), 1),
-            Look::Tab(on) => (Color::NONE, if on { Color::NONE } else { HOVER_BG }, if on { TEXT } else { SUBTLE }, Color::NONE, if on { 2 } else { 1 }),
-            Look::Chip(on) => (if on { ACCENT_BG } else { RAISED }, if on { ACCENT_BG } else { HOVER_BG }, if on { ACCENT } else { SUBTLE }, if on { ACCENT } else { BORDER }, 1),
-            Look::Segment(on) => (if on { ACCENT_BG } else { Color::NONE }, if on { ACCENT_BG } else { HOVER_BG }, if on { ACCENT } else { SUBTLE }, Color::NONE, 1),
-        };
-        let (idle, hover, color) = if enabled { (idle, hover, color) } else { (idle, idle, FAINT) };
-        let (pad_x, pad_y, size) = match look {
-            Look::Chip(_) => (9., 3., 11.5),
-            Look::Tab(_) => (3., 10., 11.5),
-            _ => (11., 5., 12.5),
-        };
-        let underline = matches!(look, Look::Tab(true));
-        (
-            Button,
-            action,
-            ui_api::Enabled(enabled),
-            Tint { idle, hover },
-            Node { border_radius: BorderRadius::all(Val::Px(if underline { 0. } else if matches!(look, Look::Chip(_)) { 10. } else { 5. })),
-                padding: UiRect::axes(Val::Px(pad_x), Val::Px(pad_y)),
-                border: if underline { UiRect::bottom(Val::Px(2.)) } else { UiRect::all(Val::Px(1.)) },
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                flex_shrink: 0.,
-                ..default()
-            },
-            BorderColor::all(if underline { ACCENT } else { border }),
-            BackgroundColor(idle),
-            children![self.text(label, size, color, weight)],
-        )
-    }
-
-    pub(crate) fn section(&self, title: &str) -> impl Bundle + use<> {
-        (
-            Node { margin: UiRect::top(Val::Px(14.)), padding: UiRect::bottom(Val::Px(6.)), border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() },
-            BorderColor::all(BORDER),
-            children![self.text(title.to_uppercase(), 10.5, FAINT, 2)],
-        )
-    }
-
-    /// A clickable two-line list row with a domain tag.
-    pub(crate) fn item<A: Component>(&self, icon: &str, title: &str, subtitle: &str, tag: &str, action: A, selected: bool) -> impl Bundle + use<A> {
-        let accent = tag_color(tag);
-        (
-            Button,
-            action,
-            Tint { idle: if selected { ACCENT_BG } else { Color::NONE }, hover: if selected { ACCENT_BG } else { HOVER_BG } },
-            Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(8.), Val::Px(6.)), column_gap: Val::Px(9.), align_items: AlignItems::Center, border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
-            BorderColor::all(if selected { ACCENT } else { Color::NONE }),
-            BackgroundColor(if selected { ACCENT_BG } else { Color::NONE }),
-            children![
-                (Node { width: Val::Px(28.), height: Val::Px(28.), flex_shrink: 0., ..default() }, ImageNode::new(self.f.icons.get(icon).unwrap_or(&self.f.icons["component"]).clone()).with_color(accent)),
-                (
-                    Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(1.), flex_grow: 1., min_width: Val::Px(0.), ..default() },
-                    children![self.text(title, 13., TEXT, 1), self.text(subtitle, 11., SUBTLE, 0)]
-                )
-            ],
-        )
-    }
-
-    /// Key on the left, value on the right; the value is clickable when it
-    /// has an action (for editing).
-    pub(crate) fn property<A: Component>(&self, parent: &mut ChildSpawnerCommands, key: &str, value: &str, unit: &str, action: Option<A>, editing: bool) {
-        let value_text = if unit.is_empty() { value.to_string() } else { format!("{value} {unit}") };
-        parent
-            .spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(10.), padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() })
-            .with_children(|row| {
-                row.spawn((self.text(key, 12.5, SUBTLE, 0), Node { flex_shrink: 1., ..default() }));
-                let body = self.text(value_text, 12.5, if editing { TEXT } else { Color::srgb(0.84, 0.87, 0.91) }, 1);
-                match action {
-                    Some(action) => {
-                        row.spawn((
-                            Button,
-                            action,
-                            Tint { idle: if editing { RAISED } else { Color::NONE }, hover: HOVER_BG },
-                            Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(7.), Val::Px(3.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-                            BorderColor::all(if editing { ACCENT } else { BORDER }),
-                            BackgroundColor(if editing { RAISED } else { Color::NONE }),
-                            children![body],
-                        ));
-                    }
-                    None => {
-                        row.spawn((Node { padding: UiRect::axes(Val::Px(7.), Val::Px(3.)), flex_shrink: 0., ..default() }, children![body]));
-                    }
-                }
-            });
-    }
-
-    pub(crate) fn input<A: Component>(&self, shown: &str, placeholder: &str, action: A, focused: bool) -> impl Bundle + use<A> {
-        let empty = shown.is_empty();
-        (
-            Button,
-            action,
-            Tint { idle: RAISED, hover: HOVER_BG },
-            Node { border_radius: BorderRadius::all(Val::Px(5.)), padding: UiRect::axes(Val::Px(10.), Val::Px(7.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-            BorderColor::all(if focused { ACCENT } else { BORDER }),
-            BackgroundColor(RAISED),
-            children![self.text(if empty && !focused { placeholder.to_string() } else if focused { format!("{shown}|") } else { shown.to_string() }, 12.5, if empty && !focused { FAINT } else { TEXT }, 0)],
-        )
-    }
-
-    pub(crate) fn dot(&self, color: Color) -> impl Bundle + use<> {
-        (Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Px(7.), height: Val::Px(7.), flex_shrink: 0., ..default() }, BackgroundColor(color))
-    }
-}
-
 /// Engineering-friendly number text: plain for everyday magnitudes, else
 /// scientific, never long runs of zeros.
 pub(crate) fn num(v: f64) -> String {
@@ -294,14 +101,6 @@ pub(crate) fn num(v: f64) -> String {
         let (m, e) = s.split_once('e').unwrap();
         format!("{}e{}", m.trim_end_matches('0').trim_end_matches('.'), e)
     }
-}
-
-pub(crate) fn wrap() -> Node {
-    Node { flex_wrap: FlexWrap::Wrap, column_gap: Val::Px(6.), row_gap: Val::Px(6.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }
-}
-
-pub(crate) fn divider() -> impl Bundle + use<> {
-    (Node { width: Val::Px(1.), height: Val::Px(22.), margin: UiRect::horizontal(Val::Px(8.)), ..default() }, BackgroundColor(BORDER))
 }
 
 fn kind_text(kind: &InstanceKind) -> String {
@@ -1508,15 +1307,6 @@ pub(super) fn scroll_panels(mut wheel: MessageReader<MouseWheel>, window: Single
         if inside {
             position.y = (position.y - delta).max(0.0);
         }
-    }
-}
-
-pub(crate) fn hover(mut buttons: Query<(&Interaction, &Tint, &mut BackgroundColor), Changed<Interaction>>) {
-    for (interaction, tint, mut bg) in &mut buttons {
-        bg.0 = match interaction {
-            Interaction::Hovered | Interaction::Pressed => tint.hover,
-            Interaction::None => tint.idle,
-        };
     }
 }
 

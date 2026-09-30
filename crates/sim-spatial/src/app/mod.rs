@@ -10,7 +10,7 @@
 //! - **One pipeline of sets** in `Update`: [`ViewerSet`] Input → Actions →
 //!   JobResults → SimSync → Present, configured once here.
 //! - **The core** ([`CorePlugin`]): window, winit, clear colour and light per
-//!   mode, fonts, mesh picking, occlusion, the scroll clamp, the REST wake,
+//!   mode, fonts, mesh picking, occlusion, the UI kit (`ui_kit::UiKitPlugin`), the REST wake,
 //!   the mode switcher and the one REST server (`rest::Rest`, bound once by
 //!   `rest::bind`).
 //! - **Actions** ([`actions`], native-viewer.md §3): every intent is a typed
@@ -276,8 +276,9 @@ fn constraints(min: Option<(f32, f32)>) -> WindowResizeConstraints {
     }
 }
 
-/// The window, winit, colours, fonts, picking, occlusion, the scroll clamp,
-/// the REST wake and the mode switcher: shared by every mode.
+/// The window, winit, colours, fonts, picking, occlusion, the UI kit's
+/// systems (repaint, labels, slider value, scroll clamp), the REST wake and
+/// the mode switcher: shared by every mode.
 pub struct CorePlugin {
     pub initial: ViewerMode,
     /// Inspect `--compact` (or `--schematic`): the smaller first window.
@@ -297,7 +298,7 @@ impl Plugin for CorePlugin {
         .insert_resource(bevy::picking::mesh_picking::MeshPickingSettings { require_markers: true, ..default() })
         .init_resource::<crate::rest::Occlusion>()
         .add_systems(PreUpdate, crate::rest::track_occlusion)
-        .add_systems(PostUpdate, crate::view::clamp_scroll_positions.after(bevy::ui::UiSystems::Layout))
+        .add_plugins(crate::ui_kit::UiKitPlugin)
         .add_systems(Startup, (crate::rest::wake_on_request, switcher::spawn_switcher))
         .add_systems(Update, switcher::switcher_clicks.in_set(ViewerSet::Input))
         .add_systems(Update, (switcher::update_switcher, switcher::publish).in_set(ViewerSet::Present));
@@ -306,7 +307,7 @@ impl Plugin for CorePlugin {
         }
         // The first mode's OnEnter runs before Startup, so the fonts it
         // spawns text with are loaded now, while the app is built.
-        let fonts = crate::builder::ui::UiFonts::load(app.world_mut());
+        let fonts = crate::ui_kit::UiFonts::load(app.world_mut());
         app.insert_resource(fonts);
     }
 }

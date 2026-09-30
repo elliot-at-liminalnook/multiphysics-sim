@@ -1700,7 +1700,7 @@ fn charts_with(run: &SceneRun, companion: Option<&SceneRun>, scene: &Scene, time
             let points: Vec<[f64; 2]> = s.times.iter().zip(&s.values).map(|(t, v)| [*t, *v]).collect();
             // The companion's curve first, in a faint purple, so this run's draws on top.
             let other: Vec<[f64; 2]> = companion.and_then(|c| c.series(key)).map(|c| c.times.iter().zip(&c.values).map(|(t, v)| [*t, *v]).collect()).unwrap_or_default();
-            let (pixels, range, window) = crate::builder::graphs::rasterize(&[(&other, [120, 96, 170]), (&points, colors[i % colors.len()])]);
+            let (pixels, range, window) = crate::chart::rasterize_span(&[(&other, [120, 96, 170]), (&points, colors[i % colors.len()])], Some(crate::builder::HISTORY_SECONDS));
             let (w, h) = crate::chart::RASTER;
             let image = Image::new(Extent3d { width: w, height: h, depth_or_array_layers: 1 }, TextureDimension::D2, pixels, TextureFormat::Rgba8UnormSrgb, RenderAssetUsages::default());
             Some(Chart { key: key.clone(), unit: s.unit.clone(), image: images.add(image), range, window })

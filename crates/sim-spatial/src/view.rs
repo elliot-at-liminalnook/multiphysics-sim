@@ -427,21 +427,6 @@ mod tests {
     }
 }
 
-/// Bevy 0.16's layout clamped `ScrollPosition` to the scrollable range (and
-/// zeroed axes that do not scroll) and wrote the result back; since 0.17 it
-/// only clamps a computed copy. Handlers here read and accumulate the stored
-/// value, so this restores the 0.16 write-back after layout.
-pub(crate) fn clamp_scroll_positions(mut nodes: Query<(&mut ScrollPosition, &Node, &ComputedNode)>) {
-    for (mut position, node, computed) in &mut nodes {
-        let scrolls = |axis: OverflowAxis| if axis == OverflowAxis::Scroll { 1.0 } else { 0.0 };
-        let max = (computed.content_size() - computed.size() + computed.scrollbar_size).max(Vec2::ZERO) * computed.inverse_scale_factor();
-        let clamped = (position.0 * Vec2::new(scrolls(node.overflow.x), scrolls(node.overflow.y))).clamp(Vec2::ZERO, max);
-        if clamped != position.0 {
-            position.0 = clamped;
-        }
-    }
-}
-
 /// The cursor as a fraction of the node, (0, 0) top-left to (1, 1)
 /// bottom-right: Bevy 0.16's `RelativeCursorPosition::normalized`. Since 0.17
 /// that field is centred on the node (corners at ±0.5).

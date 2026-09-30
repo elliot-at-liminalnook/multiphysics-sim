@@ -289,19 +289,82 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `system_study_result`). RoboCAD experiments (`cad/robocad/ui/experiments.py`,
   `experiment_worker.py`).
 - **Reusable layer:** `sim_runtime::{gait_lab, gait_playback, experiment_study, experiment_search, system_study, fidelity}`.
-- **Shell status:** *partial*. System compare/sweep studies are present. Gait
-  lab reports, gait playback, the leaderboard and experiment review are absent
-  from the shell.
+- **Shell status:** *partial*. System compare/sweep studies are present.
+  Gait-lab reports are *present (read-only)* in the build-mode **Gait lab**
+  tab. Gait playback, launching evaluations, the leaderboard and experiment
+  review are absent from the shell.
 - **Source owner:** example config (study configs, YAML gait files), with
-  results in `runs/` (preserved, never deleted).
-- **Dependencies:** a read-only report browser first (a gait report YAML with
-  its fidelity label and gates), then gait playback on the robot scene (needs g's
+  results in `runs/` or tracked results folders (preserved, never deleted).
+- **One path:** `Builder::gait_reports_request(dir?)`
+  (`crates/sim-spatial/src/builder/gait_lab.rs`, commit c4f25b0a) is called
+  by the results path field (`gait_results_path`, Enter reads), Reload
+  (`gait_reload`), Cancel (`cancel_gait_reports`, only while a read is
+  pending), the first visit to the tab (which reads the tracked
+  `examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results`,
+  found above the system file or the working directory), and REST
+  `system_gait_reports {"dir"?}` (listed in capabilities). A worker thread runs
+  `sim_runtime::gait_lab::scan_results` (commit 8d0fc4cd), the typed reader
+  that parses each `<root>/*/report.yaml` into `GaitReport`, `PoseReport` or
+  `ManeuverReport` by its `kind` and attaches the latest `journal.jsonl` line
+  whose `results` folder name matches. The UI thread only polls. A malformed
+  report is a per-entry error naming its path. Results are in
+  `system_state.gait_reports`, with full values. Row selection is
+  `gait_report_select`. Nothing is written.
+- **What it shows:** a fixed caveat; the root and whether `journal.jsonl`
+  exists; a compact list (name, kind, status coloured, speed); and a detail for
+  the selected entry. The detail holds the summary, the fidelity string
+  verbatim, speed, distance and simulated time (null shown as `none` or `not
+  simulated`, never 0), gates with value/limit/✓ ok, reasons, the top 5 joints
+  as a percent of the motor limit, the source files, and the journal UTC time,
+  `unix_s`, cached flag and line. Without a journal line it says "No journal
+  entry (no timestamp recorded)". Maneuvers show checked time, travel, turn and
+  overlaps. A bad path is an error naming it, and the last good listing stays
+  visible, labelled "Still showing the last good read: <root>".
+- **Evidence (T5.3):** `$PAIR_CAPTURES/T5-gait-reports/` (driver
+  `drive_gait_reports.py`, receipt `capture.json` ok=true, 63 assertions):
+  - `gait-reports.png`: the caveat, the root and 15 rows for `results/`.
+  - `gait-detail.png`, `gait-detail-2.png`, `gait-detail-3.png`:
+    6216-Bayesian-009, with the fast fidelity string, 0.199916 m/s, 3 gates ✓ ok,
+    joints, and journal 2026-09-27 15:28:09 UTC, `unix_s` 1790522889, line 16.
+  - `pose.png`, `pose-2.png`: stand-crouch, "No journal entry".
+  - `screened-out.png`, `screened-out-2.png`: results-legscreen 5014-CmaEs-088,
+    screened_out, speed and distance `none`, simulated `not simulated`,
+    fidelity "detailed model", and its reason.
+  - `maneuver-list.png`, `maneuver.png`: results-steer, the blocked
+    forward-start-stop with checked 14 s, turned 0°, overlaps and reason.
+  - `bad-path.png`: the error names the path, with results-steer still shown and
+    labelled.
+
+  In `capture.json`, the driver parses the files with PyYAML and asserts exact
+  equality between them and `system_state.gait_reports`:
+  - the entry counts per root (15, 2 and 7) equal the `*/report.yaml` on disk;
+  - for the passed gait and the screened_out gait: status, summary, speed,
+    distance and simulated time (null equals null), fidelity, reasons, every
+    gate's value, limit and ok, and joint percentages;
+  - for the maneuver: checked_s, turned_deg, travel, overlaps and reasons;
+  - the journal `unix_s` and line equal the latest matching `journal.jsonl`
+    line;
+  - REST `system_gait_reports` returns the same entries as `system_state`.
+- **Remaining limits:**
+  - No gait playback on the robot scene, no launching or cancelling
+    evaluations, and no leaderboard or experiment review.
+  - Reports do not record the runtime fingerprint, so whether a report is still
+    qualified against the current code is unknown. The tab says so. Follow-up:
+    add `runtime_fingerprint` and `unix_s` to the gait, pose and maneuver
+    reports.
+  - Poses and maneuvers have no journal lines, so they have no timestamp.
+  - The browser `lab_catalog`
+    (`crates/sim-runtime/examples/serve_actuator_calibration.rs`) is still a
+    separate untyped reader.
+  - On-screen numbers are rounded for display, and exact equality is checked
+    only in `system_state`.
+  - Controls were activated with REST `system_ui`, which uses the same handlers
+    as a click, and the sidebar was positioned with `system_ui scroll`. Pointer
+    clicks and wheel gestures were not tested.
+- **Dependencies (remaining):** gait playback on the robot scene (needs g's
   renderer), then launching evaluations as cancellable jobs (the gait lab
   already honours `OUT_DIR/STOP`). The runtime fingerprint means evaluations
   must be requalified after code edits (gait-lab README).
-- **Acceptance evidence:** open a gait-lab output directory. A screenshot shows
-  the report table with the fidelity (fast/detailed) and gate results exactly as
-  in `report.yaml`. A REST query returns the same numbers as the file.
 
 ### j. Measured actuator models and calibration inspection
 - **Entry today:** the build-mode **Actuators** sidebar tab in `sim-spatial`
@@ -402,9 +465,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   (`motion-commands.mjs` header). `sim-app` scenes use shared
   `sim_phenomena` scenarios rather than their own integrators.
 - **Fidelity labels:** the builder shows Detailed/Realtime and a staleness
-  note for realtime measurements (`ui.rs:645`). Gait-lab fidelity
-  (fast/detailed) and actuator measured/estimated status have no native
-  display yet. Migrations must carry them through, not drop them.
+  note for realtime measurements (`ui.rs:645`). Gait-lab fidelity strings
+  (Gait lab tab, §2i) and actuator measured/derived/estimated provenance
+  (Actuators tab, §2j) are now shown natively, verbatim. Migrations must carry them through, not drop them.
 - **Stale frames:** REST edits check `expected_revision` (`rest.rs:231,236`)
   and placement checks the scene hash. Saved runs note "edited while running"
   (`builder.rs:811`). Whether the graph dock marks samples from an
@@ -487,8 +550,10 @@ unknown-id error).
 2. **Done — actuator registry inspector** (j): read-only Actuators tab and
    REST `system_actuators` over `Registry::load`/`check_consumer` on a worker
    (commits 2800bf6e, d4c14f9f, 12c744b3; verified natively in T4.3, see §2j).
-3. **Gait-lab report browser** (i): read-only `report.yaml` and journal view
-   with fidelity and gate labels. Launching evaluations comes later.
+3. **Done — gait-lab report browser** (i): read-only Gait lab tab and REST
+   `system_gait_reports` over `sim_runtime::gait_lab::scan_results` on a
+   worker (commits 8d0fc4cd, c4f25b0a; verified natively in T5.3, see §2i).
+   Launching evaluations comes later.
 4. **Schematic pane in the shell** (c): a graphics-free `sim_diagram` layout
    drawn in Bevy with shared selection. The sim-viewer window then becomes
    optional.

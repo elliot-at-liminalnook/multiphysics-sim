@@ -26,6 +26,7 @@ use sim_domain_robot::PhysicalModel;
 use sim_domain_robot::cad_link::{self, CadLinkStatus};
 use crate::robot_preset::{Preset, PresetRun};
 use crate::robot_motion::{self, KEYS};
+use crate::robot_recording;
 use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, RunAction, RunController};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
@@ -270,7 +271,7 @@ impl RobotView {
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -325,6 +326,9 @@ enum RobotAction {
     /// A motion request through the preset's Rust controller (physical keys,
     /// the W/A/S/D/Stop buttons, `system_ui` motion:*, REST `robot_input`).
     Motion { request: MotionRequest },
+    /// Save the preset run's shared recording (the Save recording button,
+    /// `system_ui` recording:save, REST `robot_save_recording`).
+    SaveRecording { path: Option<String>, note: Option<String> },
 }
 /// The absolute target a jog action asks for (file validation happens in `check_jog`).
 fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
@@ -355,6 +359,7 @@ fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
         }
         RobotAction::JogTo { joint, target } => view.run.as_ref().ok_or("the robot has not loaded")?.check_jog(joint, *target).map(|_| ()),
         RobotAction::Motion { request } => view.run.as_ref().ok_or("the robot has not loaded")?.check_motion_request(request),
+        RobotAction::SaveRecording { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_save().map(|_| ()),
         _ => Ok(()),
     }
 }
@@ -363,9 +368,13 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
         // Validated (and a refusal recorded) inside the one motion handler.
         return view.run.as_mut().ok_or("the robot has not loaded")?.motion(request);
     }
+    if let RobotAction::SaveRecording { path, note } = action {
+        // Validated (and a refusal recorded) inside the one save handler.
+        return view.run.as_mut().ok_or("the robot has not loaded")?.save_recording(path.as_deref(), note.as_deref()).map(|_| ());
+    }
     check(view, &action)?;
     match action {
-        RobotAction::Motion { .. } => unreachable!("handled above"),
+        RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } => unreachable!("handled above"),
         RobotAction::Run { action } => {
             view.run.as_mut().ok_or("the robot has not loaded")?.act(action)?;
             if action == RunAction::Reset {
@@ -420,6 +429,7 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
             for (id, label, request) in motion_buttons() {
                 out.push((id.into(), label.into(), RobotAction::Motion { request }));
             }
+            out.push(("recording:save".into(), "Save recording".into(), RobotAction::SaveRecording { path: None, note: None }));
         }
     }
     out
@@ -452,6 +462,7 @@ enum Request {
     RobotPresets,
     RobotPreset { id: String },
     RobotInput { channels: Option<std::collections::BTreeMap<String, f64>>, key: Option<String> },
+    RobotSaveRecording { path: Option<String>, note: Option<String> },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -503,6 +514,7 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
             };
             dispatch(view, orbit, RobotAction::Motion { request })?;
         }
+        Request::RobotSaveRecording { path, note } => dispatch(view, orbit, RobotAction::SaveRecording { path, note })?,
         Request::Camera { focus, radius, yaw, pitch } => {
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
                 return Err("finite camera required; radius > 0 and pitch within ±1.5 radians".into());
@@ -528,6 +540,7 @@ fn capabilities() -> Vec<Value> {
         c("robot_presets", json!({}), &format!("List the robot presets declared in {} (resolved against the launch directory, the repository root): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
         c("robot_preset", json!({"id":"robot-measured-400hz"}), "Open a declared embedded preset by id in this window (replacing the current robot and stopping its run thread). Unknown ids, other modes and missing inputs are refused naming the id. The scene, config and task are parsed exactly as declared on a worker thread; scene.robot is drawn and inspected through the same loader as --robot FILE. Run/Pause/Step/Reset (robot_run) then drive the shared EmbeddedEnvironment (task) or EmbeddedSession (no task) on the run thread with seed 0 (recorded), one action interval or clamp(report_every, 1, 40) nominal steps per chunk. robot_state.preset reports id, label, paths, readiness and evidence verbatim, seed, step_s, chunk and step counts; run.phase `ended` with run.end reports a reached horizon or a terminated/truncated episode. Servo-target jog is not offered for presets."),
         c("robot_input", json!({"channels":{"command.forward_speed":0.001}}), &format!("Motion request for a running robot preset: {}. Give channels (values by motion channel name; the other motion channels keep their requested values) or key (w | a | s | d latches that key's request until stop, another key or a channel request; stop sets every motion channel to 0). The same handler as physical W/A/S/D (press/release) and X (stop), the W/A/S/D/Stop buttons and system_ui motion:w|a|s|d|stop. Motion channels come from the session's policy_contract.step_reference.config, else the preset's presets.json motion_commands (as web/viewer/motion-commands.mjs); key vectors from motion_key_vectors, else the channel bounds. Refused naming the channel and its bounds: an unknown channel, a session input that is not a motion channel, a non-finite value, or a value or summed key vector outside the channel's bounds ({}). Also refused, naming the reason: --robot FILE, a preset with no motion config, no built session (Run or Step builds it), a failed or ended run, an exhausted heartbeat. A declared motion_heartbeat is {} robot_state.motion reports source, channels with bounds, requested and held values, active keys, heartbeat, last refusal and the label.", robot_motion::LABEL, robot_motion::CLAMP_RULE, robot_motion::HEARTBEAT_RULE)),
+        c("robot_save_recording", json!({"note":"after motion:w"}), &format!("Save the loaded preset run's recording: the same handler as the Save recording button and system_ui recording:save. The run thread snapshots the shared recording (EmbeddedEnvironment::episode_recording() for a preset with a task, EmbeddedSession::recording() without, as the browser's Download) in any phase with a built session, running, paused, ended or failed; a writer thread writes it, so the response returns at once with recording.pending set and robot_state.recording.last_saved {{path, meta_path, kind, version, completed_steps, replayable, not_replayable_reason, failure, saved_utc, bytes}} (or recording.error) once written. Optional path (relative to the root or absolute) and note (kept in the sidecar). {} {} {} Refused, naming the reason: --robot FILE, no built session (Run or Step first), a save still being written, a path under examples/, cad/ or web/, a name not ending in .json or ending in .meta.json, and an existing file (reported in recording.error).", robot_recording::LOCATION_RULE, robot_recording::FILE_RULE, robot_recording::REPLAYABLE_RULE)),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
@@ -577,6 +590,8 @@ struct MotionRoot;
 struct MotionText;
 #[derive(Component)]
 struct MotionButton;
+#[derive(Component)]
+struct RecordingText;
 #[derive(Resource)]
 struct Materials {
     normal: Handle<StandardMaterial>,
@@ -1081,6 +1096,17 @@ fn preset_text(view: &RobotView) -> String {
     }
     t.push('\n');
     t.push_str(&motion);
+    if let Some(r) = view.run.as_ref() {
+        t += "RECORDING — the shared recording JSON, as the browser's Download, plus a .meta.json sidecar\n";
+        if let Some(s) = r.saved() {
+            t += &format!("last saved: {}\n  sidecar {}\n  {} v{} · {} steps · {}\n", s.path.display(), s.meta_path.display(), s.kind, s.version, s.completed_steps,
+                s.not_replayable_reason.as_deref().map_or("replayable".to_string(), |why| format!("not replayable: {why}")));
+        }
+        if let Some(e) = r.save_error() {
+            t += &format!("last save error: {e}\n");
+        }
+        t += &format!("{}\n\n", robot_recording::LOCATION_RULE);
+    }
     t
 }
 
@@ -1172,7 +1198,7 @@ fn motion_panel(
     fonts: Res<UiFonts>,
     root: Single<Entity, With<MotionRoot>>,
     mut shown: Local<bool>,
-    mut text: Query<&mut Text, With<MotionText>>,
+    mut text: Query<(&mut Text, Has<RecordingText>), Or<(With<MotionText>, With<RecordingText>)>>,
     mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<MotionButton>>,
 ) {
     if view.preset.is_some() && !*shown {
@@ -1183,13 +1209,20 @@ fn motion_panel(
             commands.entity(row).add_child(b);
         }
         let line = commands.spawn((label(&fonts, "", 11.5, INK), MotionText)).id();
-        commands.entity(*root).add_children(&[header, row, line]);
+        // Save recording: the same RobotAction::SaveRecording as system_ui recording:save and REST robot_save_recording.
+        let save_row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
+        let save = commands.spawn((Button, MotionButton, RobotAction::SaveRecording { path: None, note: None }, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, "Save recording", 12.0, INK)])).id();
+        let saved = commands.spawn((label(&fonts, "", 11.5, INK), RecordingText, Node { flex_shrink: 1.0, ..default() })).id();
+        commands.entity(save_row).add_children(&[save, saved]);
+        commands.entity(*root).add_children(&[header, row, line, save_row]);
         *shown = true;
     }
-    if let (Some(r), Ok(mut t)) = (view.run.as_ref(), text.single_mut()) {
-        let line = motion_line(r);
-        if t.0 != line {
-            t.0 = line;
+    if let Some(r) = view.run.as_ref() {
+        for (mut t, recording) in &mut text {
+            let line = if recording { recording_line(r) } else { motion_line(r) };
+            if t.0 != line {
+                t.0 = line;
+            }
         }
     }
     for (action, interaction, mut background) in &mut buttons {
@@ -1218,6 +1251,22 @@ fn motion_line(r: &RunController) -> String {
     let keys = m["active_keys"].as_array().filter(|k| !k.is_empty()).map_or("none".into(), |k| k.iter().filter_map(|k| k.as_str()).collect::<Vec<_>>().join("+"));
     let refused = m["last_refusal"].as_str().map_or(String::new(), |e| format!("\nrefused: {}", clip(e, 110)));
     format!("requested {} · keys {keys}{refused}", values.join(" · "))
+}
+
+/// The line beside Save recording: pending, the last pair written (path, steps, kind, replayable) or the last error.
+fn recording_line(r: &RunController) -> String {
+    let path = |p: &std::path::Path| p.strip_prefix(r.preset().map(|p| p.root.as_path()).unwrap_or(std::path::Path::new(""))).unwrap_or(p).display().to_string();
+    if let Some(p) = r.save_pending() {
+        return format!("saving {}…", path(p));
+    }
+    let mut t = match r.saved() {
+        Some(s) => format!("saved {} · {} steps · {}{}", path(&s.path), s.completed_steps, s.kind, if s.replayable { String::new() } else { " · diagnostic (not replayable)".into() }),
+        None => "no recording saved yet".into(),
+    };
+    if let Some(e) = r.save_error() {
+        t += &format!("\nsave refused/failed: {}", clip(e, 140));
+    }
+    t
 }
 
 /// The motion block of the inspector: source, channels with bounds, requested

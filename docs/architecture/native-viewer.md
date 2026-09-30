@@ -10,28 +10,88 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (measured 2026-09-30)
+## Where it is today (measured 2026-09-30, after the Bevy 0.19.1 upgrade)
 
-- **Bevy 0.16.1**, pinned in the workspace `Cargo.toml`. Only `sim-spatial` and
-  `sim-app` depend on Bevy.
+- **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
+  `crates/sim-spatial/Cargo.toml` (hand-picked features, see
+  [Bevy 0.19.1 migration](#bevy-0191-migration-2026-09-30)). Only
+  `sim-spatial` and `sim-app` depend on Bevy.
 - **Separate apps, not one viewer.** `sim-spatial/src/lib.rs` builds a separate
   `App` per launch mode (`run_builder`, `run_lessons`, `run_with_api`, …), and
   `main.rs` picks one from command-line flags. There is no switching modes in a
-  window.
+  window. Place mode (`place_view.rs`) has no REST API.
 - **Background work is hand-rolled:** 35 `thread::spawn` / `thread::Builder`
   call sites across 21 files, each with its own progress, cancellation and
   stale-result handling.
-- **Little Bevy structure:** 3 plugins, no `States`, no system sets.
-- **UI is hand-built** `Node` trees in 21 files. Headers, inspectors, tabs,
-  docks and charts are rebuilt per feature.
-- **Large files:** `builder.rs` (3,000 lines), `robot.rs` (2,650), `robot_run.rs`
-  (2,560) and `lesson/mod.rs` (2,340).
+- **Little Bevy structure:** 3 plugins, no `States`, no system sets. Buffered
+  input uses the 0.17+ names (16 `MessageReader`, 6 `MessageWriter` sites);
+  the 10 observers take `On<…>` (pointer picks, drags, screenshots).
+- **UI is hand-built** `Node` trees (18 files name `Node`). Headers,
+  inspectors, tabs, docks and charts are rebuilt per feature.
+- **Large files:** `builder.rs` (3,000 lines), `robot.rs` (2,750), `robot_run.rs`
+  (2,610) and `lesson/mod.rs` (2,340).
 - **What already works well, to keep:**
   - typed, validated handlers ("one handler per action")
   - generation-stamped frames
   - shared undo history
   - the `system_ui` control registry and REST adapter (`sim_api`)
   - worker-computed results kept off the UI thread
+
+## Bevy 0.19.1 migration (2026-09-30)
+
+Batch bevy-0-19-upgrade moved `sim-spatial` and `sim-app` from 0.16.1 to 0.19.1
+through the official 0.16→0.17→0.18→0.19 guides, with no intended feature change.
+
+- **Features.** `sim-spatial`'s `default-features = false` list was rebuilt from
+  0.19.1's cargo features: `bevy_camera`, `bevy_light`, `bevy_mesh`,
+  `bevy_shader`, `bevy_material`, `bevy_ui_render` and `bevy_gizmos_render` are
+  now separate; `mesh_picking` and `ui_picking` replace
+  `bevy_mesh_picking_backend` / `bevy_ui_picking_backend`; `keyboard` and
+  `mouse` are listed explicitly. The effective set matches 0.16: still no
+  `tonemapping_luts`, `smaa_luts`, `hdr`, `bevy_state`, scenes, glTF, audio or
+  gamepad. `sim-app` keeps Bevy's default features.
+- **Pins.** `bevy = "0.19.1"` (workspace) and `=0.19.1` (`sim-spatial`).
+  `image = "=0.25.10"` is unchanged (0.19.1 resolves to it). `objc2` 0.6 and
+  `raw-window-handle` 0.6 became direct macOS dependencies of `sim-spatial`
+  (already in the tree through winit/wgpu). No non-Bevy crate changed.
+- **Silent upstream changes kept at 0.16 behaviour** (the compiler does not
+  catch these):
+  - UI nodes use `UiTransform` / `UiGlobalTransform`, not `Transform`: lesson
+    block tracking, scroll-to, card viewports and narration overlays read
+    `UiGlobalTransform`; leader and overlay lines rotate through `UiTransform`.
+  - `RelativeCursorPosition::normalized` is centre-origin since 0.17;
+    `view::cursor_fraction` gives the old 0..1 value.
+  - Layout no longer writes the clamped `ScrollPosition` back;
+    `view::clamp_scroll_positions` (PostUpdate, after `UiSystems::Layout`) does.
+  - `system_ui` merges buttons that share an action and keeps the shortest
+    label; ties are now broken by text, so the label no longer depends on ECS
+    iteration order (restores "Detailed" for the Detailed/Realtime segment).
+- **Forced choice: hidden windows.** wgpu 29 (gfx-rs/wgpu#8309) skips drawing a
+  macOS window that is not visible: screen locked, minimized, fully covered or
+  on another Space. A user sees no difference, but the REST `screenshot` then
+  wrote an all-black PNG (0.16 kept drawing). `rest::Occlusion` reads the same
+  `NSWindow.occlusionState` (winit sends no event for a window created hidden)
+  and `screenshot` refuses with an error naming the cause. Unattended captures
+  need an unlocked, visible window. Alternatives rejected: patching wgpu, or an
+  offscreen render path for screenshots (new-feature work; revisit with the
+  0.18 screenshot/recording API).
+- **Accepted visual differences** (viewed side by side, baseline-016 vs
+  upgraded-019):
+  - text layout moved from Cosmic Text to Parley: line metrics differ by under a
+    pixel, so clipped schematic node labels show slightly more of their next
+    line, and the robot inspector's scroll range changed by ≤ 1 px
+    (1440.0→1439.0, 241.5→241.0). Glyphs, sizes and wrapping are unchanged.
+  - nothing else: panels, overlays (robot contact gizmos with the a5543970
+    depth bias), lighting, colours and fonts match in build+schematic, robot
+    FILE, embedded preset, recorded preset, lesson, place and `sim-app`
+    phenomena/cad (v4, v3, v2).
+- **Evidence.** `$PAIR_CAPTURES/bevy-019/`: `capture_modes.py` (one script for
+  both runs), `baseline-016/` (0.16.1, before the pin), `upgraded-019/`,
+  `compare.py` and `comparison.json` (ok: identical capabilities, `system_ui`
+  ids and labels, state structure, recorded seek pose, masses, run poses and
+  lesson ids). The sim-spatial lib tests are the same 65 (+1 ignored), passing.
+- **Gait-lab fingerprint.** This edit to crate sources invalidates the gait-lab
+  runtime fingerprint; requalification is deferred to its own batch.
 
 ## Target shape
 
@@ -150,7 +210,8 @@ on memory.
 
 The Director re-ranks with evidence, but this is the default:
 
-1. **Upgrade to Bevy 0.19.1.** One epic covering the whole workspace
+1. **Upgrade to Bevy 0.19.1.** *Done 2026-09-30 (batch bevy-0-19-upgrade; see
+   the migration section).* One epic covering the whole workspace
    (`sim-spatial` and `sim-app`):
    - follow the migration guides 0.16→0.17→0.18→0.19
    - make no feature changes

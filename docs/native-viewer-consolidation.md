@@ -230,7 +230,8 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     same way; that was not captured.
   - *Limits:* the wheeled robot runs; 29-link full-robot exports need a
     driver_control / PWM build path, which neither viewer provides yet. There
-    is no recording, saving or replay of robot-mode runs, no graphs, and no
+    is no recording, saving or replay of robot-mode runs, no graphs (since added:
+    T12 recordings, T13 graphs, §2g/§2h), and no
     file watching or auto-rebuild on CAD save (sim-app watches the file;
     reopen the viewer here). Controls were activated through REST
     `system_ui`, not pointer clicks. The wheeled robot's motion is small on
@@ -306,7 +307,8 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
       - Before the first request, the one-line motion summary shows 0 while
         robot_state `requested` is null.
       - There is no recording or input replay of preset runs (the browser saves
-        overrides and input replay) and no graphs.
+        overrides and input replay) and no graphs (both since added: T12
+        recordings, T13 graphs).
 - **Remaining gaps:**
   1. no way to trigger CAD edits or exports from the shell;
   2. no RoboCAD REST reload round trip (edit → export → shell reload);
@@ -604,7 +606,10 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
       (§2h). Saved overrides of a teleop run, and scrubbing/timeline playback
       of recorded frames (`viewer.js` `timeline` → `replayAt`), are still
       browser only.
-    - Live graphs and observation panels.
+    - ~~Live graphs~~ of motion request vs measured chassis motion and of
+      servo target vs measured joint angle: native since T13 (below).
+      Observation panels beyond these two charts, arbitrary channel picking or
+      pinning, and a time cursor/scrub on the charts are still browser only.
     - Hardware sync and mirroring (`hardware-sync.mjs`), which are never
       driven from here.
     - Calibration UI.
@@ -615,6 +620,64 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
       real time, the same order as the readiness text. The browser's
       realtime presets use their own declared fidelity profiles, which were
       not compared here.
+- **Robot-mode graphs (batch robot-mode-graphs, T13.1 fc1d9aa8; verified
+  natively in T13.2).**
+  - *What exists:* a graph dock under the robot viewport, toggled by the
+    **Graphs (G)** header button, key G, or `system_ui` `graphs:toggle`. It
+    has a fixed set of two charts, drawn with the same CPU raster as build
+    mode's graph dock (`crate::chart`; build mode keeps its own observable
+    selection, `builder/graphs.rs`):
+    - `motion` (only when the built preset has motion channels): each motion
+      channel's *request*, meaning the session input held in the frame
+      (`Frame.inputs` at the channel's index; a replay holds the recorded
+      action), against the chassis `|v_xy|` (m/s) and `ω_z` (rad/s). Both are
+      taken from the session frame's published world-frame `velocity_m_s` /
+      `angular_velocity_rad_s` and labelled "world frame, measured from frame
+      poses" with the link named. Nothing is differentiated or integrated in
+      the UI. Before a build it says "no built session yet".
+    - `joints`: servo target vs measured angle for the selected link's servo
+      joints (`--robot FILE`). It says "no servo joint on selected link" or
+      "select a link". On presets it says "not in frame": session frames
+      carry no named joint targets, so no trace is invented.
+    - *Chassis rule:* the loaded model's root link as the shared articulation
+      builds it. A ground root means pinned, so there are no measured traces.
+      When several links qualify, the viewer refuses to plot rather than
+      repeat the runtime's heaviest-link choice. On the full-robot presets
+      this is `Robot | Chassis and hip mounts`.
+    - *Sampling:* one sample per frame applied by `RunController::poll`
+      whose generation equals the controller's. A same-time frame replaces
+      the last sample, so a paused jog or request updates it. History is
+      bounded to 20 s of sim time and 2000 points per trace. It clears on
+      Reset, on replay start and on any generation change. The dock
+      re-rasters at most 10 Hz while running. Each chart shows a LIVE or
+      REPLAY badge with the generation.
+  - *Verified in T13.2* (`.claude-pair/captures/T13-robot-graphs/`, `capture.json` ok=true, 26 assertions
+    of which 23 gating, merged from per-phase receipts `capture-J/M/C.json`):
+    - `joint-chart.png` (debug, wheeled `--robot FILE`, `left wheel`
+      selected): 20 chunks at the file target 0, then `robot_jog left axle
+      0.3` and 30 more. The chart shows the target step mid-window and the
+      measured angle converging (0.2927 against 0.3, LIVE gen 0). Asserted:
+      the traces' latest values equal `robot_state.jog` target/measured and
+      `run.targets`/`joint_angles` at `latest_time == run.time`.
+    - `motion-chart.png` (release, `robot-measured-400hz`): 3 steps at
+      request 0, then `motion:w` and Run to t = 1.22 s. The
+      `command.forward_speed` request steps 0 → 0.1, plotted against the
+      measured traces. Asserted: chassis `|v_xy|` latest 0.18703 equals
+      `hypot(vx, vy)` of the chassis pose `velocity_m_s` in the same paused
+      response (≤ 1e-9, at the same frame time), `ω_z` latest 0.48727 equals
+      `angular_velocity_rad_s[2]`, and the sources say "world frame". The
+      joints chart says "not in frame". This is world-frame chassis speed,
+      not a walking-speed qualification.
+    - `replay-chart.png`: see §2h.
+    - `reset-chart.png`: after Reset, LIVE gen 2. The history holds only the
+      t = 0 rebuild frame (one sample per trace, 5 in total), not 0.
+    - `build-graphs.png` (release, motor-driver-board, Graphs + Run through
+      `system_ui`): build-mode charts still draw rising temperature traces
+      through the shared raster. This is a visual check, not a pixel diff.
+  - *Limits:* activations were REST/`system_ui` only; the G key and button
+    were not pressed physically. There is no time cursor, scrub or seek, and
+    no channel picker. Only the fixed charts exist. Controller-specific
+    quantities (e.g. travel heading) are not plotted.
 - *Before T11:* robot mode on `--robot FILE` offered **servo-target jogging
   only**, labelled "servo target (PD hold from the export), not
   walking-controller teleop". That jogging is unchanged:
@@ -830,6 +893,17 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     session failure returns `Err` with the recorded message, with no
     explicit "reproduced" signal; and there is no cheap replayability
     predicate (the viewer restates the rule in `REPLAYABLE_RULE`).
+  - *Charts on replays (T13):* with the graph dock open, a replay's start
+    clears the history, and the charts then plot the replayed frames under
+    the replay's generation with an orange **REPLAY · gen N** badge
+    (`robot_state.graphs.mode == "replay"`). The request trace shows the
+    recorded action. Verified in T13.2 (`.claude-pair/captures/T13-robot-graphs/replay-chart.png`,
+    400hz, taken at 20/61 actions). The first poll under the replay
+    generation had 0 samples (the live history had 310) and the window was
+    null. Samples grew from 115 at the screenshot to 310 at done. The graphs
+    generation was 1, equal to the replay's and greater than the live 0.
+    Reset returns to LIVE with a new generation. There is no scrub over the
+    replayed history.
   - *Is the browser still needed for preset recordings?* Not to save or
     replay an embedded preset run. It is still needed for:
     1. Scrubbing or timeline playback of recorded frames and `recorded`-mode
@@ -1165,6 +1239,16 @@ unknown-id error).
    - *Still not done:* scrubbing/timeline playback of recordings, and
      replay of build-mode runs (`run_history::replay`, the original slice
      above).
+   **Update (batch robot-mode-graphs, T13.1–T13.2):**
+   - *Done:* a robot-mode graph dock (motion request vs world-frame chassis
+     `|v_xy|`/`ω_z`, and servo target vs measured angle) drawn from
+     generation-stamped frames with the raster shared with build mode
+     (commit fc1d9aa8).
+   - *Verified in T13.2:* live joint and motion charts, replay labelling and
+     clearing, and Reset clearing (§2g, §2h).
+   - *Still not done:* observation panels beyond the two charts, channel
+     picking, a chart time cursor/scrub, file watching, gait playback, and a
+     PWM build path for `--robot FILE` full-robot exports.
 
 ## 6. Launch path
 
@@ -1217,6 +1301,18 @@ newest), `robot_state.recordings`, or `robot_replay {"action":"list"}` /
 replay** (`replay:cancel`, `{"action":"cancel"}`) stops it between chunks;
 Reset then starts a fresh run.
 
+Robot-mode graphs (§2g). Press **Graphs (G)** in the header, press G, or send
+`system_ui` `graphs:toggle`. The dock plots `motion` (preset request vs
+world-frame chassis `|v_xy|`/`ω_z`, once a preset with motion channels is
+built) and `joints` (target vs measured for the selected link's servo joints
+on `--robot FILE`; "not in frame" on presets). REST `robot_state.graphs` gives
+`visible`, `mode` (live|replay), `generation`, `frames_sampled`, `window`
+[t0, t1] in sim s, `window_s`, `max_samples`, and
+`charts[{id, title, absent_reason, traces[{name, source, unit, latest,
+latest_time, samples, absent_reason}]}]`, plus the sampling and chassis
+rules. For presets, `robot_state.run.poses[i]` also carries the frame's
+`velocity_m_s` and `angular_velocity_rad_s`.
+
 `sim-app --scene cad` is **no longer needed to run** a v3 simrobot file that
 builds with the default options, such as the wheeled baseline (verified in
 T10.3). It is not a way around the full-robot limitation: 29-link exports with
@@ -1231,8 +1327,8 @@ this batch; their only diff against the run baseline is the earlier accepted
 Separate apps are still needed for the schematic and experiments
 (`sim-viewer`), phenomena and file-watching robot view (`sim-app`), CAD
 (`cad/run.sh`), and calibration, hardware sync, scrubbing of recorded
-frames, graphs and realtime walking (browser, `web/README.md`; §2g lists what native
-preset runs lack).
+frames, observation panels beyond the two robot-mode charts, and realtime walking
+(browser, `web/README.md`; §2g lists what native preset runs lack).
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,
 where FILE may be a system, simrobot, lesson directory or gait-lab output, opened

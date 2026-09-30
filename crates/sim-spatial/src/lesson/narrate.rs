@@ -7,7 +7,7 @@
 //! The narration clock is the audio's own playback position when a section
 //! has audio; otherwise it runs on frame time with subtitles only.
 use super::*;
-use crate::builder::ui::{BORDER, FAINT, Kit, Look, RAISED, SUBTLE, TEXT, WARN};
+use crate::ui_kit::{ACCENT, BORDER, FAINT, Kit, LEFT_WIDTH, Look, OK, ON_ACCENT, RIGHT_WIDTH, STATUSBAR, SUBTLE, SliderLook, TEXT, TOPBAR, UiFonts, WARN};
 use sim_lesson::narration::{self as nar, Cue, Explainer, Manifest, MarkState, Target, Timing, TimingKind};
 
 #[derive(Component, Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -539,16 +539,16 @@ pub(crate) struct NarrationTime;
 #[derive(Component)]
 pub(crate) struct JobProgress;
 
-/// Input: pressing or dragging the narration bar seeks within the section
+/// Input: pressing or dragging the narration bar (a kit slider over the
+/// section's fraction) seeks within the section, every frame it is held
 /// (the same `Seek { time_s }` as REST `lesson_narration`).
-pub(super) fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<NarrationBar>>, learn: Res<Learn>, mut out: MessageWriter<Act<super::actions::LessonCommand>>) {
-    for (interaction, cursor) in &bars {
-        if *interaction != Interaction::Pressed {
+pub(super) fn seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>), With<NarrationBar>>, learn: Res<Learn>, mut out: MessageWriter<Act<super::actions::LessonCommand>>) {
+    for (value, pressed) in &bars {
+        if !pressed {
             continue;
         }
-        let Some(p) = crate::view::cursor_fraction(cursor) else { continue };
         let Some(n) = learn.narration.as_ref() else { continue };
-        let time_s = p.x.clamp(0., 1.) as f64 * n.duration();
+        let time_s = value.0.clamp(0., 1.) as f64 * n.duration();
         out.write(Act::ui(super::actions::LessonCommand::Ui(LessonAction::Narrate(NarrateAction::Seek { time_s }))));
     }
 }
@@ -564,7 +564,6 @@ pub(super) fn reserved(l: &Learn) -> f32 {
 
 /// The narration bar at the bottom of the reading column.
 pub(super) fn bar(commands: &mut Commands, k: &Kit, l: &Learn) {
-    use crate::builder::ui::{LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR};
     let Some(n) = &l.narration else { return };
     let started = n.playing || n.time > 0. || n.section > 0;
     commands
@@ -591,12 +590,12 @@ pub(super) fn bar(commands: &mut Commands, k: &Kit, l: &Learn) {
                 // A section whose text changed since its voice was made plays silently: say so plainly.
                 let silent = n.explainer.audio(&n.manifest, s).is_none() && n.explainer.sections.iter().any(|x| n.explainer.audio(&n.manifest, x).is_some());
                 let kind = if silent { "no voice for this section's current text · subtitles only" } else { kind };
-                r.spawn((Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![k.text(format!("{} / {} · {}", n.section + 1, n.explainer.sections.len(), s.title), 13., TEXT, 2), k.text(kind, 10.5, if silent { crate::builder::ui::WARN } else { FAINT }, if silent { 1 } else { 0 })]));
+                r.spawn((Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![k.text(format!("{} / {} · {}", n.section + 1, n.explainer.sections.len(), s.title), 13., TEXT, 2), k.text(kind, 10.5, if silent { WARN } else { FAINT }, if silent { 1 } else { 0 })]));
                 if silent && n.job.is_none() {
                     r.spawn(k.button("Make its voice", act(NarrateAction::Generate { section: Some(s.id.clone()) }), Look::Ghost, true));
                 }
                 if let Some(w) = &n.wait {
-                    r.spawn(k.text(match w { Wait::SceneStops => "waiting for the scene", Wait::SceneReady(_) => "waiting for the scene to load", Wait::Quiz(_) => "your turn: answer the question" }, 11., crate::ACCENT, 1));
+                    r.spawn(k.text(match w { Wait::SceneStops => "waiting for the scene", Wait::SceneReady(_) => "waiting for the scene to load", Wait::Quiz(_) => "your turn: answer the question" }, 11., ACCENT, 1));
                 }
                 r.spawn((k.text("", 11.5, SUBTLE, 0), NarrationTime));
                 r.spawn(k.button("Stop", act(NarrateAction::Stop), Look::Ghost, started));
@@ -604,13 +603,14 @@ pub(super) fn bar(commands: &mut Commands, k: &Kit, l: &Learn) {
             if started {
                 b.spawn((Node { flex_wrap: FlexWrap::Wrap, ..default() }, children![(Text::new(""), TextFont { font: k.f.medium.clone().into(), font_size: FontSize::Px(15.), ..default() }, TextColor(TEXT), TextLayout::linebreak(bevy::text::LineBreak::WordBoundary), Subtitle, children![(TextSpan::new(""), TextFont { font: k.f.regular.clone().into(), font_size: FontSize::Px(15.), ..default() }, TextColor(FAINT), SubtitleRest)])]));
                 if l.settings.transcript {
-                    b.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), max_height: Val::Px(110.), overflow: Overflow::scroll_y(), padding: UiRect::all(Val::Px(8.)), border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(BORDER))).with_children(|t| {
+                    b.spawn((k.scroll_area(Node { border_radius: BorderRadius::all(Val::Px(6.)), max_height: Val::Px(110.), padding: UiRect::all(Val::Px(8.)), border: UiRect::all(Val::Px(1.)), ..default() }, 0.), BorderColor::all(BORDER))).with_children(|t| {
                         t.spawn((Text::new(""), TextFont { font: k.f.regular.clone().into(), font_size: FontSize::Px(13.), ..default() }, TextColor(TEXT), TextLayout::linebreak(bevy::text::LineBreak::WordBoundary), Transcript, children![(TextSpan::new(""), TextFont { font: k.f.regular.clone().into(), font_size: FontSize::Px(13.), ..default() }, TextColor(FAINT), TranscriptRest)]));
                     });
                 }
-                b.spawn((Button, NarrationBar, bevy::ui::RelativeCursorPosition::default(), Node { border_radius: BorderRadius::all(Val::Px(3.)), height: Val::Px(6.), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(RAISED), BorderColor::all(BORDER)))
+                let at = (n.time / n.duration().max(1e-9)).clamp(0., 1.) as f32;
+                b.spawn(k.slider(SliderLook::Scrub, at, NarrationBar, "Narration position"))
                     .with_children(|bar| {
-                        bar.spawn((Node { border_radius: BorderRadius::all(Val::Px(3.)), width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(crate::ACCENT), NarrationFill, Pickable::IGNORE));
+                        bar.spawn((Node { border_radius: BorderRadius::all(Val::Px(3.)), width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(ACCENT), NarrationFill, Pickable::IGNORE));
                     });
             }
         });
@@ -627,7 +627,7 @@ pub(super) fn outline(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn) {
         col.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(4.), flex_shrink: 0., ..default() }).with_children(|r| {
             r.spawn((Node { flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![k.button(&format!("{}{}", if current { "▸ " } else { "" }, s.title), LessonAction::Narrate(NarrateAction::Section { index: i }), Look::Ghost, true)]));
             let (label, color) = match item.status {
-                sim_voice::Status::Current => ("voice", crate::builder::ui::OK),
+                sim_voice::Status::Current => ("voice", OK),
                 sim_voice::Status::Stale => ("changed", WARN),
                 sim_voice::Status::Missing => ("silent", FAINT),
             };
@@ -728,7 +728,7 @@ pub(super) fn overlay(
     mut commands: Commands,
     learn: Res<Learn>,
     scene: Res<SpatialScene>,
-    fonts: Option<Res<crate::builder::ui::UiFonts>>,
+    fonts: Option<Res<UiFonts>>,
     window: Single<&Window>,
     camera: Single<(&Camera, &GlobalTransform), With<Orbit>>,
     blocks: Query<(&super::ui::BlockNode, &ComputedNode, &UiGlobalTransform)>,
@@ -741,7 +741,7 @@ pub(super) fn overlay(
     let scale = window.scale_factor();
     let rect_of = |node: &ComputedNode, gt: &UiGlobalTransform| Rect::from_center_size(gt.translation / scale, node.size() / scale);
     let block_rect = |id: &str| blocks.iter().find(|(b, n, _)| b.0 == id && n.size().y > 0.).map(|(_, n, g)| rect_of(n, g));
-    let page = Rect::new(crate::builder::ui::LEFT_WIDTH, crate::builder::ui::TOPBAR, window.width() - crate::builder::ui::RIGHT_WIDTH, window.height() - crate::builder::ui::STATUSBAR);
+    let page = Rect::new(LEFT_WIDTH, TOPBAR, window.width() - RIGHT_WIDTH, window.height() - STATUSBAR);
     let mut items: Vec<(u8, Rect, String)> = Vec::new(); // 0 highlight, 1 box, 2 arrow
     if let (true, Some(n)) = (learn.active, &learn.narration) {
         let m = &n.marks;
@@ -813,7 +813,7 @@ pub(super) fn overlay(
     for e in &existing {
         commands.entity(e).despawn();
     }
-    let accent = crate::ACCENT;
+    let accent = ACCENT;
     let label = |commands: &mut Commands, text: &str, at: Vec2| {
         if text.is_empty() {
             return;
@@ -824,7 +824,7 @@ pub(super) fn overlay(
             BackgroundColor(accent),
             GlobalZIndex(31),
             Pickable::IGNORE,
-            children![(Text::new(text), TextFont { font: fonts.semibold.clone().into(), font_size: FontSize::Px(12.), ..default() }, TextColor(Color::srgb(0.03, 0.09, 0.09)))],
+            children![(Text::new(text), TextFont { font: fonts.semibold.clone().into(), font_size: FontSize::Px(12.), ..default() }, TextColor(ON_ACCENT))],
         ));
     };
     let line = |commands: &mut Commands, a: Vec2, b: Vec2, width: f32| {
@@ -877,5 +877,4 @@ pub(super) fn overlay(
             }
         }
     }
-    let _ = (SUBTLE, TEXT);
 }

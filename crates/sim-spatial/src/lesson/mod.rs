@@ -1716,8 +1716,8 @@ pub(crate) struct Timebar;
 /// a rewind). Nothing is sent while the scene is still recording.
 fn seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction), With<Timebar>>, learn: Res<Learn>, mut pressing: Local<bool>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     let mut pressed = false;
-    for (value, pressed, interaction) in &bars {
-        if !crate::ui_kit::slider_held(pressed, interaction) {
+    for (value, held, interaction) in &bars {
+        if !crate::ui_kit::slider_held(held, interaction) {
             continue;
         }
         pressed = true;

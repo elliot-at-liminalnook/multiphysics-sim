@@ -10,7 +10,8 @@
 //!   step through the calibration server (never driven from here);
 //! - time on screen, rewinds and narration skips per block, for authors.
 use super::*;
-use crate::builder::ui::{BORDER, FAINT, Kit, Look, OK, RAISED, SUBTLE, SURFACE, TEXT, WARN, num, wrap};
+use crate::builder::ui::num;
+use crate::ui_kit::{ACCENT, BORDER, FAINT, Kit, Look, OK, RAISED, SUBTLE, SURFACE, TEXT, WARN, wrap};
 use sim_lesson::blocks::{Equation, Lab, Measured, Task, TaskKind};
 use sim_runtime::lesson_lab::{self, LabPrediction};
 use sim_runtime::lesson_model::{self as lm, MeasuredReport, TaskResult};
@@ -273,9 +274,9 @@ pub(crate) struct EquationText(pub String);
 
 pub(super) fn equation_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_lesson::Block, e: &Equation) {
     col.spawn((frame(), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
-        c.spawn(badge(k, "Equation, live", crate::ACCENT));
+        c.spawn(badge(k, "Equation, live", ACCENT));
         let text = equation_text(l, e);
-        c.spawn((Text::new(text), TextFont { font: k.f.mono.clone().into(), font_size: FontSize::Px(15.), ..default() }, TextColor(TEXT), EquationText(e.id.clone())));
+        c.spawn((k.mono(text, 15., TEXT), EquationText(e.id.clone())));
         let symbols: Vec<String> = e.terms.values().map(|t| {
             let from = match (&t.param, &t.observe) {
                 (Some(p), _) => format!("from the model ({p})"),
@@ -341,7 +342,7 @@ pub(super) fn measured_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, 
             Some(Ok(r)) => {
                 c.spawn(k.text(format!("{} ({}) against {} · orange: measured · teal: simulated", if m.y.label.is_empty() { &m.y.field } else { &m.y.label }, m.y.unit, if m.x.label.is_empty() { &m.x.field } else { &m.x.label }), 11.5, SUBTLE, 1));
                 if let Some(image) = l.model.measured_images.get(&m.id) {
-                    c.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, ImageNode::new(image.clone())));
+                    c.spawn(k.chart_image(image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, false));
                 }
                 let (lo, hi) = r.points.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p.x), b.max(p.x)));
                 c.spawn(k.text(format!("{} {} … {}", m.x.field, num(lo), num(hi)), 10.5, FAINT, 0));
@@ -372,7 +373,7 @@ pub(super) fn measured_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, 
                     }
                     let color = match kind {
                         "measured" => OK,
-                        "derived" => crate::ACCENT,
+                        "derived" => ACCENT,
                         _ => MEASURED,
                     };
                     c.spawn(Node { column_gap: Val::Px(8.), align_items: AlignItems::FlexStart, flex_wrap: FlexWrap::Wrap, row_gap: Val::Px(4.), ..default() }).with_children(|row| {
@@ -417,7 +418,7 @@ pub(super) fn task_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
     col.spawn((frame_on(Color::NONE), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
         c.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|r| {
             r.spawn(k.text(if t.title.is_empty() { &t.id } else { &t.title }, 15., TEXT, 2));
-            r.spawn(badge(k, match (t.kind, solved) { (_, true) => "Solved", (TaskKind::Fault, _) => "Find the fault", (TaskKind::Design, _) => "Design task" }, if solved { OK } else { crate::ACCENT }));
+            r.spawn(badge(k, match (t.kind, solved) { (_, true) => "Solved", (TaskKind::Fault, _) => "Find the fault", (TaskKind::Design, _) => "Design task" }, if solved { OK } else { ACCENT }));
         });
         crate::markdown::render(c, &sim_markdown::parse(&t.goal), theme, |_| None::<LessonAction>);
         if !live {
@@ -502,9 +503,9 @@ pub(super) fn lab_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &s
                 c.spawn(k.text(format!("No model prediction: {e}"), 12., WARN, 0));
             }
             Some(Ok(p)) => {
-                c.spawn(k.text(format!("Model: {:.3} {} ({})", p.model, p.unit, p.fidelity), 12.5, TEXT, 0));
+                k.property(c, "Model", &format!("{:.3}", p.model), &format!("{} ({})", p.unit, p.fidelity), None::<LessonAction>, false);
                 if let Some(r) = p.registry {
-                    c.spawn(k.text(format!("Recorded measurement at this drive: {:.3} {}", r, p.unit), 12.5, TEXT, 0));
+                    k.property(c, "Recorded measurement at this drive", &format!("{r:.3}"), &p.unit, None::<LessonAction>, false);
                 }
             }
         }

@@ -160,6 +160,9 @@ pub fn render<A: Component + Clone>(
                                 .spawn((
                                     Button,
                                     action,
+                                    // Lit on hover like the kit's other clickable surfaces.
+                                    crate::ui_kit::Tint::new(theme.surface, crate::ui_kit::HOVER_BG),
+                                    bevy::ui::prelude::AccessibleLabel::new(link.label.as_str()),
                                     Node { border_radius: BorderRadius::all(Val::Px(5.)),
                                         max_width: Val::Percent(100.),
                                         min_width: Val::Px(0.),

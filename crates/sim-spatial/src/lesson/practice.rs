@@ -4,7 +4,8 @@
 //! spaced review across lessons, and figures (SVG rasterized off the UI
 //! thread, PNG/JPEG decoded there too, hot-reloaded when the file changes).
 use super::*;
-use crate::builder::ui::{BORDER, FAINT, HOVER_BG, Kit, Look, OK, RAISED, SUBTLE, SURFACE, TEXT, Tint, WARN, wrap};
+use crate::ui_kit::{ACCENT, BORDER, FAINT, HOVER_BG, Kit, Look, OK, RAISED, SUBTLE, SURFACE, TEXT, Tint, WARN, surface_point, wrap};
+use bevy::ui::prelude::AccessibleLabel;
 use sim_lesson::progress::Mode;
 use sim_lesson::quiz::{Answer, Quiz, QuizKind, Reflect, Verdict};
 
@@ -368,11 +369,11 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
     let passed = record.is_some_and(|r| r.passed() || (q.pretest && r.attempts > 0)) && !reviewing;
     let wrong_tries = record.map(|r| if r.correct { 0 } else { r.attempts }).unwrap_or(0);
     let (label, color) = match (q.kind, reviewing) {
-        (_, true) => ("Review · from memory", crate::ACCENT),
+        (_, true) => ("Review · from memory", ACCENT),
         (kind, _) if kind.predicts() => ("Predict first", Color::srgb(0.66, 0.55, 0.93)),
         _ if q.pretest => ("Before you read on: a guess", Color::srgb(0.66, 0.55, 0.93)),
-        (QuizKind::Steps, _) => ("Finish the worked example", crate::ACCENT),
-        _ => ("Check your understanding", crate::ACCENT),
+        (QuizKind::Steps, _) => ("Finish the worked example", ACCENT),
+        _ => ("Check your understanding", ACCENT),
     };
     // This attempt's numbers: varied values and the model's `given` values.
     let mut values = record.map(|r| r.values.clone()).unwrap_or_default();
@@ -406,9 +407,10 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
             for (i, o) in q.options.iter().enumerate() {
                 let picked = chosen == Some(i);
                 let judged = verdict.is_some() && picked;
-                let border = if show_answer && o.correct { OK } else if judged { if o.correct { OK } else { WARN } } else if picked { crate::ACCENT } else { BORDER };
-                c.spawn((Button, LessonAction::QuizPick(q.id.clone(), i), Tint { idle: if picked { HOVER_BG } else { SURFACE }, hover: HOVER_BG }, Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::axes(Val::Px(12.), Val::Px(9.)), border: UiRect::all(Val::Px(1.5)), column_gap: Val::Px(10.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, BackgroundColor(if picked { HOVER_BG } else { SURFACE }), BorderColor::all(border))).with_children(|row| {
-                    row.spawn(k.text(format!("{}", (b'A' + i as u8) as char), 12., if picked { crate::ACCENT } else { FAINT }, 2));
+                let border = if show_answer && o.correct { OK } else if judged { if o.correct { OK } else { WARN } } else if picked { ACCENT } else { BORDER };
+                let tint = if picked { Tint::new(HOVER_BG, HOVER_BG) } else { Tint::SURFACE };
+                c.spawn((Button, LessonAction::QuizPick(q.id.clone(), i), tint, AccessibleLabel::new(format!("{}: {}", (b'A' + i as u8) as char, o.text)), Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::axes(Val::Px(12.), Val::Px(9.)), border: UiRect::all(Val::Px(1.5)), column_gap: Val::Px(10.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, BackgroundColor(tint.idle), BorderColor::all(border))).with_children(|row| {
+                    row.spawn(k.text(format!("{}", (b'A' + i as u8) as char), 12., if picked { ACCENT } else { FAINT }, 2));
                     row.spawn((k.text(&o.text, 13.5, TEXT, 0), Node { flex_shrink: 1., min_width: Val::Px(0.), ..default() }));
                 });
             }
@@ -417,7 +419,7 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
         } else if q.kind == QuizKind::Steps {
             // The worked example: done steps shown, blanks to fill in order.
             for (i, st) in q.steps.iter().enumerate() {
-                c.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::axes(Val::Px(10.), Val::Px(6.)), border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() }).insert(BorderColor::all(if st.blank() { crate::ACCENT } else { BORDER })).with_children(|row| {
+                c.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::axes(Val::Px(10.), Val::Px(6.)), border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() }).insert(BorderColor::all(if st.blank() { ACCENT } else { BORDER })).with_children(|row| {
                     row.spawn(k.text(format!("Step {} · {}", i + 1, st.prompt), 12.5, SUBTLE, 1));
                     match &st.worked {
                         Some(w) => {
@@ -523,7 +525,7 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
             let played = l.scene.as_ref().filter(|a| Some(&a.id) == q.scene.as_ref()).is_some_and(|a| a.run.is_some() && a.time >= l.sketch_window(q)[1].min(a.duration()) - 1e-6);
             match (predicted.is_some(), l.sketch_results.get(&q.id).filter(|_| played)) {
                 (true, Some((image, gap, _))) => {
-                    c.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, ImageNode::new(image.clone())));
+                    c.spawn(k.chart_image(image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, false));
                     let close = *gap <= q.tolerance.map(|t| match t { sim_lesson::quiz::Tolerance::Absolute(v) | sim_lesson::quiz::Tolerance::Relative(v) => v }).unwrap_or(0.15);
                     c.spawn(k.text(format!("Purple: your sketch. Teal: the simulation. {} (typical gap {:.0} % of the axis).", if close { "Your curve has the right shape and size" } else { "Your curve differs from the simulation" }, gap * 100.), 13., if close { OK } else { WARN }, 1));
                     if !q.explain.is_empty() {
@@ -584,7 +586,7 @@ pub(super) fn reflect_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b
         c.spawn(badge(k, if recall { "Recall first" } else { "Explain it in your own words" }, Color::srgb(0.93, 0.76, 0.40)));
         crate::markdown::render(c, &sim_markdown::parse(&r.prompt), theme, |_| None::<LessonAction>);
         let text = if focused { l.input.as_ref().map(|i| i.buffer.clone()).unwrap_or_default() } else { saved.map(|s| s.text.clone()).unwrap_or_default() };
-        c.spawn((Button, LessonAction::ReflectInput(r.id.clone()), Tint { idle: SURFACE, hover: HOVER_BG }, Node { border_radius: BorderRadius::all(Val::Px(6.)), min_height: Val::Px(70.), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor::all(if focused { crate::ACCENT } else { BORDER }))).with_children(|f| {
+        c.spawn((Button, LessonAction::ReflectInput(r.id.clone()), Tint::SURFACE, AccessibleLabel::new(if text.is_empty() { "Write your explanation" } else { text.as_str() }), Node { border_radius: BorderRadius::all(Val::Px(6.)), min_height: Val::Px(70.), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor::all(if focused { ACCENT } else { BORDER }))).with_children(|f| {
             f.spawn(k.text(if focused { format!("{text}|") } else if text.is_empty() { "Click and write two or three sentences…".into() } else { text.clone() }, 13.5, if text.is_empty() && !focused { FAINT } else { TEXT }, 0));
         });
         c.spawn(wrap()).with_children(|row| {
@@ -654,7 +656,7 @@ pub(super) fn review_outline(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn)
         col.spawn(k.text("Questions from different lessons, interleaved: harder, and it sticks better.", 10.5, FAINT, 0));
     }
     if let Some((queue, at)) = &l.session {
-        col.spawn(k.text(format!("Mixed review: {} of {}", at + 1, queue.len()), 11.5, crate::ACCENT, 1));
+        col.spawn(k.text(format!("Mixed review: {} of {}", at + 1, queue.len()), 11.5, ACCENT, 1));
         col.spawn(k.button("End the review", LessonAction::ReviewEnd, Look::Ghost, true));
     }
     for (lesson, quiz) in due.iter().take(6) {
@@ -704,9 +706,10 @@ fn sketch_canvas(c: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, q: &Quiz, loc
         r.spawn(k.text(format!("{label} {}", if q.unit.is_empty() { String::new() } else { format!("({})", q.unit) }), 11.5, TEXT, 1));
         r.spawn(k.text(format!("{} … {}", crate::builder::ui::num(lo), crate::builder::ui::num(hi)), 10.5, FAINT, 0));
     });
+    // The sketch's drawing surface (a canvas coloured like the chart it predicts).
     let mut canvas = c.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(Color::srgb(0.07, 0.086, 0.106)), BorderColor::all(BORDER)));
     if !locked {
-        canvas.insert((Button, SketchCanvas(q.id.clone()), bevy::ui::RelativeCursorPosition::default()));
+        canvas.insert((k.pointer_surface(), SketchCanvas(q.id.clone())));
     }
     canvas.with_children(|cv| {
         for g in 1..4 {
@@ -723,7 +726,7 @@ fn sketch_canvas(c: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, q: &Quiz, loc
 pub(super) fn sketch_input(canvases: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &SketchCanvas)>, mut learn: ResMut<Learn>, mut last: Local<Option<(String, usize, f32)>>) {
     let mut drawing = false;
     for (interaction, cursor, canvas) in &canvases {
-        let (Interaction::Pressed, Some(p)) = (interaction, crate::view::cursor_fraction(cursor)) else { continue };
+        let (Interaction::Pressed, Some(p)) = (interaction, surface_point(cursor)) else { continue };
         drawing = true;
         let n = SKETCH_COLUMNS;
         let col = ((p.x.clamp(0., 0.9999)) * n as f32) as usize;

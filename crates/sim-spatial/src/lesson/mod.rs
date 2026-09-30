@@ -1708,22 +1708,21 @@ fn charts_with(run: &SceneRun, companion: Option<&SceneRun>, scene: &Scene, time
         .collect()
 }
 
-/// The timeline bar: press or drag to scrub.
+/// The timeline bar (a kit slider over the run's fraction): press or drag to scrub.
 #[derive(Component)]
 pub(crate) struct Timebar;
 /// Input: pressing or dragging the timebar seeks the live scene (a
-/// `SeekTo`; the press that starts a drag may count a rewind). Nothing is
-/// sent while the scene is still recording.
-fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<Timebar>>, learn: Res<Learn>, mut pressing: Local<bool>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
+/// `SeekTo` every frame it is held; the press that starts a drag may count
+/// a rewind). Nothing is sent while the scene is still recording.
+fn seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>), With<Timebar>>, learn: Res<Learn>, mut pressing: Local<bool>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     let mut pressed = false;
-    for (interaction, cursor) in &bars {
-        if *interaction != Interaction::Pressed {
+    for (value, held) in &bars {
+        if !held {
             continue;
         }
         pressed = true;
-        let Some(p) = crate::view::cursor_fraction(cursor) else { continue };
         let Some(a) = learn.scene.as_ref().filter(|a| a.run.is_some()) else { continue };
-        let time = (p.x.clamp(0.0, 1.0) as f64) * a.duration();
+        let time = (value.0.clamp(0.0, 1.0) as f64) * a.duration();
         out.write(Act::ui(actions::LessonCommand::Ui(LessonAction::SeekTo { time: Some(time), rewind: !*pressing })));
     }
     *pressing = pressed;
@@ -2098,7 +2097,7 @@ mod tests {
         let mut world = World::new();
         world.insert_resource(crate::tests::fixture());
         world.insert_resource(ButtonInput::<MouseButton>::default());
-        world.insert_resource(crate::builder::ui::UiFonts { regular: Handle::default(), italic: Handle::default(), mono: Handle::default(), icons: Default::default(), medium: Handle::default(), semibold: Handle::default() });
+        world.insert_resource(crate::ui_kit::UiFonts { regular: Handle::default(), italic: Handle::default(), mono: Handle::default(), icons: Default::default(), medium: Handle::default(), semibold: Handle::default() });
         let mut learn = Learn::new(dir.join("lessons"), root.join("library/systems"), sim_runtime::registry());
         learn.progress_path = dir.join("progress.json");
         learn.progress = sim_lesson::progress::Progress::default();
@@ -2211,7 +2210,8 @@ mod tests {
     }
 }
 
-/// A slider's track (the reader drags along it).
+/// A slider's track (a kit slider over the parameter's fraction of its
+/// range; the reader drags along it).
 #[derive(Component)]
 pub(crate) struct SliderTrack(pub String);
 #[derive(Component)]
@@ -2242,18 +2242,19 @@ impl ActiveScene {
 
 /// Input: dragging a slider moves its previewed value (`slider_drag`, kept
 /// here); letting go sends a `Slider` action, which sets it and re-records.
-fn sliders(tracks: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &SliderTrack)>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
+fn sliders(tracks: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &SliderTrack)>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     if !learn.active {
         return;
     }
     let Some(a) = learn.scene.as_ref() else { return };
     let mut dragging = None;
-    for (interaction, cursor, track) in &tracks {
-        if *interaction != Interaction::Pressed {
+    for (value, held, track) in &tracks {
+        if !held {
             continue;
         }
-        let (Some(p), Some(spec)) = (crate::view::cursor_fraction(cursor), a.scene.sliders.iter().find(|s| s.parameter == track.0)) else { continue };
-        dragging = Some((track.0.clone(), spec.snap(spec.min + p.x.clamp(0., 1.) as f64 * (spec.max - spec.min))));
+        let Some(spec) = a.scene.sliders.iter().find(|s| s.parameter == track.0) else { continue };
+        // The kit slider's value is the pointer's fraction of the track, 0..=1.
+        dragging = Some((track.0.clone(), spec.snap(spec.min + value.0.clamp(0., 1.) as f64 * (spec.max - spec.min))));
     }
     match (dragging, a.slider_drag.clone()) {
         (Some(d), previous) => {
@@ -2307,7 +2308,7 @@ fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPositio
     let mut clicked = false;
     for (interaction, cursor, chart, _) in &charts {
         if matches!(interaction, Interaction::Hovered | Interaction::Pressed) {
-            if let Some(p) = crate::view::cursor_fraction(cursor) {
+            if let Some(p) = crate::ui_kit::surface_point(cursor) {
                 hovered = Some((chart.0.clone(), chart.1 + p.x.clamp(0., 1.) as f64 * (chart.2 - chart.1)));
                 clicked |= *interaction == Interaction::Pressed;
             }
@@ -2355,7 +2356,7 @@ fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPositio
     let part = learn.hover_part.clone().or_else(|| pointed.0.clone()).or_else(|| learn.narration_part.clone());
     for (_, _, chart, mut border) in &mut charts {
         let on = part.as_deref().is_some_and(|p| part_of(&chart.0) == p || chart.0.starts_with(&format!("{p}/")));
-        let color = if on { crate::ACCENT } else { Color::NONE };
+        let color = if on { crate::ui_kit::ACCENT } else { Color::NONE };
         if border.top != color {
             *border = BorderColor::all(color);
         }

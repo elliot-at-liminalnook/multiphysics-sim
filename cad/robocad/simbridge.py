@@ -1,8 +1,8 @@
 """The CAD ↔ simulation loop.
 
-`export_sim_model` writes a `*.simrobot.json` the Rust side (`sim-app
---scene cad --model file`, `sim-cad` for headless runs) turns into a
-planar multibody model: every body carries its mass, centre of mass,
+`export_sim_model` writes a `*.simrobot.json` the Rust side (the native
+viewer `sim-spatial --robot file`, `sim-cad` for headless runs) turns into
+a multibody model: every body carries its mass, centre of mass,
 planar inertia and section outline computed from the solid and its
 material density; joints are declared in the document as revolute axes
 between two bodies (a `plane`-kind node named `joint:<child>` whose
@@ -11,6 +11,12 @@ cylindrical hole pair), and a body named `ground` (or with the tag) is
 fixed. `SimLink` watches the saved file: every save re-exports the model,
 and the running simulator viewer reloads it, so the loop is
 edit → Ctrl+S → watch it move.
+
+The live-loop viewer is sim-spatial robot mode (`viewer_command`): it
+watches the model file and reloads in place, and a model that does not
+exist yet (a first background export) loads when it appears. The legacy
+`sim-app --scene cad --model file` window is only a labelled fallback when
+sim-spatial is not built.
 """
 
 from __future__ import annotations
@@ -176,10 +182,38 @@ def sim_model_path(doc_path: str) -> str:
     return root + ".simrobot.json"
 
 
+VIEWER_BUILD = "cargo build --release -p sim-spatial"
+
+
+def viewer_command(model_path: str) -> tuple[Optional[list[str]], str]:
+    """The live-loop viewer for `model_path`: `(argv, message)`.
+
+    sim-spatial robot mode, release preferred over debug; else the legacy
+    sim-app cad scene with a message naming the fallback; else `(None, …)`
+    naming the build command. The message is empty for the normal case.
+    sim-spatial tolerates a model that is not written yet and loads it when
+    it appears, so callers need not wait for a background export."""
+    for profile in ("release", "debug"):
+        exe = os.path.join(ROOT, "target", profile, "sim-spatial")
+        if os.path.exists(exe):
+            return [exe, "--robot", model_path], ""
+    legacy = os.path.join(ROOT, "target", "release", "sim-app")
+    if os.path.exists(legacy):
+        return [legacy, "--scene", "cad", "--model", model_path], f"sim-spatial not built; falling back to legacy sim-app cad scene (build: {VIEWER_BUILD})"
+    return None, f"no simulator viewer built: {VIEWER_BUILD}"
+
+
+def _viewer_env() -> dict:
+    env = dict(os.environ)
+    env["PATH"] = os.path.expanduser("~/.cargo/bin") + os.pathsep + env.get("PATH", "")
+    return env
+
+
 class SimLink:
     """Watches the document file; on every save re-exports the sim model
-    and (re)starts the simulator viewer on it. The viewer itself watches
-    the model file's mtime, so it reloads in place."""
+    and starts the viewer (`viewer_command`: sim-spatial, else the labelled
+    sim-app fallback) when none is running. The viewer itself watches the
+    model file, so it reloads in place and is never relaunched per save."""
 
     def __init__(self, doc: Document, app=None):
         self.doc = doc
@@ -210,16 +244,14 @@ class SimLink:
             export_sim_model(self.doc, sim_model_path(self.doc.path), flex=False)
 
     def launch(self):
-        exe = os.path.join(ROOT, "target", "release", "sim-app")
-        if not os.path.exists(exe):
-            if self.app:
-                self.app.status("sim-app not built: cargo build --release -p sim-app")
-            return
         if self.process and self.process.poll() is None:
             return
-        env = dict(os.environ)
-        env["PATH"] = os.path.expanduser("~/.cargo/bin") + os.pathsep + env.get("PATH", "")
-        self.process = subprocess.Popen([exe, "--scene", "cad", "--model", sim_model_path(self.doc.path)], cwd=ROOT, env=env)
+        argv, message = viewer_command(sim_model_path(self.doc.path))
+        if message and self.app:
+            self.app.status(message)
+        if argv is None:
+            return
+        self.process = subprocess.Popen(argv, cwd=ROOT, env=_viewer_env())
 
     def stop(self):
         self._stop.set()
@@ -231,10 +263,10 @@ class SimLink:
 
 def watch_and_run(doc_path: str, interval: float = 1.0):
     """CLI: `python -m robocad.simbridge robot.rcad` — re-export the sim
-    model whenever the CAD file changes, and keep the viewer running."""
+    model whenever the CAD file changes, and keep the viewer running
+    (started only when none is alive: it reloads the file itself)."""
     last = 0.0
     proc = None
-    exe = os.path.join(ROOT, "target", "release", "sim-app")
     while True:
         try:
             m = os.path.getmtime(doc_path)
@@ -247,8 +279,11 @@ def watch_and_run(doc_path: str, interval: float = 1.0):
             export_sim_model(doc, sim_model_path(doc_path), flex=False)
             print(f"exported {sim_model_path(doc_path)}")
             if proc is None or proc.poll() is not None:
-                if os.path.exists(exe):
-                    proc = subprocess.Popen([exe, "--scene", "cad", "--model", sim_model_path(doc_path)], cwd=ROOT)
+                argv, message = viewer_command(sim_model_path(doc_path))
+                if message:
+                    print(message)
+                if argv is not None:
+                    proc = subprocess.Popen(argv, cwd=ROOT, env=_viewer_env())
         time.sleep(interval)
 
 

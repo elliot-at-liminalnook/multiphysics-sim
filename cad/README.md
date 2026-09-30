@@ -14,6 +14,15 @@ Read `ARCHITECTURE.md` for the design and `USER_GUIDE.md` for the
 workflow (Tab-to-type, live dimensions, planes, print helpers, export,
 the simulation loop). The Blender add-on is `blender_addon/robocad_link.py`.
 
+## Live simulation loop
+
+The Simulate link (and `python -m robocad.simbridge robot.rcad`) re-exports
+`robot.simrobot.json` on every save and opens the native viewer
+`target/{release,debug}/sim-spatial --robot robot.simrobot.json`, which
+reloads the file in place. Build it with `cargo build --release -p sim-spatial`.
+If only `target/release/sim-app` is built, the legacy `sim-app --scene cad`
+window opens instead, and the status line names that fallback.
+
 For the CI-enforced CAD → motor → controller → measured result workflow,
 see the [motorized pendulum acceptance example](../examples/motorized-pendulum/README.md).
 

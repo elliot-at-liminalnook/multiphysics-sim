@@ -109,7 +109,7 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(first["calls"][0]["elapsed_seconds"], second["calls"][0]["elapsed_seconds"])
         self.assertFalse(second["calls"][0]["live"])
         self.assertEqual(second["workflow"]["current"], "worker")
-        for asset in ("workflow.js", "workflow.css"):
+        for asset in ("dashboard.js", "dashboard.css"):
             with urlopen(self.url + "/" + asset) as response:
                 self.assertEqual(response.status, 200)
         runner.state.update(phase="verify", plan=plan(), rounds=1)
@@ -129,7 +129,7 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(view["notebook"]["entries"][-1]["notes"], ["Orchestrator: inspect the evidence"])
         with urlopen(self.url + "/api/journal") as response:
             self.assertIn("note-example", response.read().decode())
-        for asset in ("notebook.js", "notebook.css"):
+        for asset in ("dashboard.js", "dashboard.css"):
             with urlopen(self.url + "/" + asset) as response:
                 self.assertEqual(response.status, 200)
         self.assertEqual(before, (self.root / "shared/journal.jsonl").read_bytes())

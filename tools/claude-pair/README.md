@@ -58,20 +58,32 @@ overshoot by an in-flight model response; this is not a billing guarantee.
 
 ## Observe, stop and resume
 
-For a live control panel, run:
+Open the dashboard with:
 
 ```sh
-python3 tools/claude-pair/open_dashboard.py \
-  --open
+python3 tools/claude-pair/open_dashboard.py --open
 ```
 
-The local dashboard shows the mission, both exact prompts, live activity for new
-turns, decisions, results, migration checklist, saved conversations and check
-receipts. It includes stop/continue controls, adjustable limits, and operator
-guidance. New guidance reaches the next orchestrator turn. If a worker task is
-queued but hasn't started, the coordinator asks the orchestrator to reconsider
-that assignment first. Guidance does not interrupt a turn already in progress.
-The main mission and safety/source boundaries remain in force.
+The header always shows what is happening now in one sentence, where the run is
+in the five-stage loop (choose batch → assign → implement → check → review), and
+meters for the checklist, worker turns, active time, usage estimate, Claude's
+5-hour limit and the commits made so far. Below it:
+
+- **Overview:** a live feed that follows whichever agent is working (tool calls,
+  messages, prompt and structured result, with turn time and cost). Beside it
+  are the current assignment, the acceptance checklist, check results (tagged
+  *pre-existing* or *new failure*), screenshots from `ui_capture.py`, the run's
+  commits, and a box for guiding the next step.
+- **Timeline:** every agent turn, newest first, with duration, cost and status.
+  Click one for its prompt, result, activity and errors.
+- **Notebook:** the shared team journal, newest first.
+- **Director:** the current batch, the hopper of compared candidates, and the
+  automatic-planning switch.
+- **Settings:** run limits, run details and the exact instructions each role gets.
+
+It follows the system light/dark setting; the ◐ button overrides it. Guidance
+reaches the next orchestrator turn, and a queued worker assignment is reconsidered
+first. It does not interrupt a turn in progress.
 
 The server binds only to loopback and requires a same-origin control token for
 writes. It starts no agents until Continue/Start is clicked. Closing the browser
@@ -263,24 +275,23 @@ Implementation references: [Claude programmatic mode](https://code.claude.com/do
 and [CLI reference](https://code.claude.com/docs/en/cli-reference). Cost reports
 are cumulative per session, while `--max-budget-usd` applies to the current call.
 
-## Live workflow map
+## Claude usage limits
 
-The dashboard now opens with a five-step map: Director selection → assignment →
-implementation → independent checks → review. It follows the saved coordinator
-phase and distinguishes running, paused, blocked and historical activity.
+When a call is stopped by a Claude usage limit (the 5-hour window, the weekly
+limit, or a spend limit), the run does not fail. The coordinator reads the reset
+time from Claude Code's `rate_limit_event` stream data, falling back to the error
+text and then to a 15-minute retry (`limit_retry_minutes`). It marks the run
+**waiting**, sleeps until the reset plus a minute (`limit_margin_seconds`), then
+resumes the interrupted agent's session with a note to continue where it
+stopped. A call that hadn't started any work is simply rerun. Waiting time does
+not count against the run's active hours, the cut-short attempt is not counted
+as a worker turn, and its usage is reconciled from what Claude reported.
 
-Hover or keyboard-focus a step to preview it; click to pin its details. **Follow
-current** returns to automatic tracking. The detail panel shows the exact prompt,
-recent public messages/tool activity, call number, turn time, last log update,
-reported model when available, acceptance progress and overall usage estimate.
-The usage estimate excludes unresolved active/interrupted-call reservations;
-full budget accounting remains in the run state and existing usage display.
-
-Independent check output appears while verification is in progress and remains
-separate from completed pass/fail receipts. Paused turn timing stops at the last
-recorded output rather than continuing to count idle time. Live output refreshes
-with the dashboard every two seconds; absence of output does not prove a hang.
-Longer objective and Director sections are expandable below the map.
+Stop still works while waiting. If the coordinator process itself exits during
+the wait (terminal closed, crash), the resume time is saved: the next `run`
+waits out the remainder first, and an open dashboard relaunches the run once the
+reset has passed. Nothing restarts after a reboot unless the dashboard or `run`
+is started again, and the Mac must be awake for the run to continue.
 
 ## Shared team notebook
 

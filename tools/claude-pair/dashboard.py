@@ -11,7 +11,7 @@ import subprocess
 import sys
 import threading
 import time
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import pair
 import workflow
@@ -68,13 +68,65 @@ def events(path):
                     activity.append({"kind": "tool", "text": block.get("name", "Tool") + (": " + str(detail)[:350] if detail else "")})
         elif event.get("type") == "system" and event.get("subtype") == "init":
             activity.append({"kind": "session", "text": "Session started · " + event.get("model", "Claude")})
-    return activity[-35:], result
+    return activity[-80:], result
+
+
+_git_cache = {}
+
+
+def git_summary(config):
+    """Commits and uncommitted change counts since the run's baseline (cached briefly)."""
+    repo, base = Path(config["worktree"]), config["baseline"]
+    hit = _git_cache.get(str(repo))
+    if hit and time.monotonic() - hit[0] < 8:
+        return hit[1]
+    def run(*args):
+        try:
+            return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=10).stdout
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+    commits = []
+    for line in run("log", "--format=%h%x1f%s%x1f%ct", f"{base}..HEAD", "-n", "40").splitlines():
+        parts = line.split("\x1f")
+        if len(parts) == 3:
+            commits.append({"hash": parts[0], "subject": parts[1], "at": int(parts[2])})
+    stat = run("diff", "--shortstat", base).strip()
+    numbers = {k: 0 for k in ("files", "insertions", "deletions")}
+    for chunk in stat.split(","):
+        words = chunk.split()
+        if len(words) >= 2 and words[0].isdigit():
+            key = "files" if "file" in words[1] else "insertions" if "insert" in words[1] else "deletions"
+            numbers[key] = int(words[0])
+    status = run("status", "--porcelain")
+    summary = {"commits": commits, **numbers,
+               "untracked": sum(1 for l in status.splitlines() if l.startswith("??")),
+               "uncommitted": sum(1 for l in status.splitlines() if l and not l.startswith("??"))}
+    _git_cache[str(repo)] = (time.monotonic(), summary)
+    return summary
+
+
+def latest_rate_limits(root, state):
+    """Claude usage windows from the newest call's stream, else the last saved reading."""
+    for output in sorted((root / "logs").glob("*-*.stdout"), reverse=True)[:3]:
+        info = pair.rate_limit_info(tail(output, 400000))
+        if info:
+            return info
+    return state.get("rate_limits")
+
+
+def captures(root, limit=24):
+    base = root / "captures"
+    if not base.is_dir():
+        return []
+    files = sorted(base.glob("**/*.png"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
+    return [{"path": str(p.relative_to(base)), "at": p.stat().st_mtime, "bytes": p.stat().st_size} for p in files]
 
 
 def view(root):
     config = pair.read_json(root / "config.json")
     state = pair.read_json(root / "state.json")
     records = []
+    session_totals = {}
     active = running(root)
     now = time.time()
     for prompt in sorted((root / "logs").glob("*-*.prompt.md")):
@@ -89,7 +141,14 @@ def view(root):
         live = active and state.get("inflight", {}).get("prefix") == str(root / "logs" / stem)
         duration_ms = (result or {}).get("duration_ms")
         seconds = duration_ms / 1000 if isinstance(duration_ms, (int, float)) else max(0, (now if live else updated) - prompt.stat().st_mtime)
-        records.append({"stage": workflow.call_stage(role, prompt_text),
+        total = (result or {}).get("total_cost_usd")
+        session = (result or {}).get("session_id")
+        cost = None
+        if isinstance(total, (int, float)):
+            cost = max(0.0, total - session_totals.get(session, 0.0))
+            session_totals[session] = total
+        records.append({"stage": workflow.call_stage(role, prompt_text), "cost_usd": cost,
+                        "session_id": session, "num_turns": (result or {}).get("num_turns"),
                         "elapsed_seconds": seconds, "timing_complete": bool(result), "live": live,
                         "last_activity_at": updated,
 "id": stem, "number": int(number), "role": role,
@@ -115,9 +174,11 @@ def view(root):
     flow = workflow.describe(state, active, records, checks, now)
     verification = next(n for n in flow["nodes"] if n["id"] == "verify")
     verification["live_output"] = []
-    if state["phase"] == "verify":
+    if state["phase"] in ("verify", "precheck"):
+        suffix = "-before" if state["phase"] == "precheck" else ""
         for index, name in enumerate(pair.check_names(state.get("plan"))):
             prefix = pair.check_prefix(root, state["rounds"], index, name)
+            prefix = prefix.with_name(prefix.name + suffix)
             out, err = prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
             if out.exists() or err.exists():
                 verification["live_output"].append({"name": name, "command": pair.check_argv(config["checks"], name),
@@ -133,7 +194,9 @@ def view(root):
             "steering_pending": bool(steering and steering["updated_at"] != state.get("steering_seen")),
             "estimated_spent": max(0, state["cost_usd"] - inflight.get("reserved_usd", 0)),
             "reserved": inflight.get("reserved_usd", 0), "elapsed_seconds": elapsed,
-            "checks": checks, "stop_requested": (root / "STOP").exists(), "now": time.time()}
+            "checks": checks, "stop_requested": (root / "STOP").exists(), "now": time.time(),
+            "branch": config.get("branch"), "baseline": config.get("baseline"), "state_dir": str(root),
+            "git": git_summary(config), "captures": captures(root), "rate_limits": latest_rate_limits(root, state)}
 
 
 class Dashboard(ThreadingHTTPServer):
@@ -145,6 +208,32 @@ class Dashboard(ThreadingHTTPServer):
         self.control_lock = threading.Lock()
         self.child = None
         super().__init__(address, Handler)
+        threading.Thread(target=self.watch_limits, daemon=True).start()
+
+    def busy(self):
+        return running(self.root) or bool(self.child and self.child.poll() is None)
+
+    def launch(self, retry=False):
+        argv = [sys.executable, str(Path(__file__).parent / "pair.py"), "resume", "--state", str(self.root)]
+        if retry:
+            argv.append("--retry-interrupted")
+        with (self.root / "coordinator.log").open("ab") as log:
+            self.child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+
+    def watch_limits(self):
+        """If the coordinator exited while waiting out a usage limit (terminal
+        closed, crash), relaunch it once the limit has reset."""
+        while True:
+            time.sleep(15)
+            try:
+                state = pair.read_json(self.root / "state.json")
+                due = state.get("status") == "waiting" and time.time() >= state.get("resume_at", float("inf"))
+                if due and not (self.root / "STOP").exists():
+                    with self.control_lock:
+                        if not self.busy():
+                            self.launch(retry=bool(state.get("inflight")))
+            except Exception:
+                pass
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -152,9 +241,10 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def send(self, code, data, content_type="application/json"):
-        body = json.dumps(data).encode() if content_type == "application/json" else data.encode()
+        body = (data if isinstance(data, bytes) else
+                json.dumps(data).encode() if content_type == "application/json" else data.encode())
         self.send_response(code)
-        self.send_header("Content-Type", content_type + "; charset=utf-8")
+        self.send_header("Content-Type", content_type if content_type.startswith("image/") else content_type + "; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
@@ -176,9 +266,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, html, "text/html")
             if path == "/api/journal":
                 return self.send(200, shared_notebook.render(shared_notebook.entries(self.server.root)), "text/plain")
-            if path in ("/workflow.js", "/workflow.css", "/notebook.js", "/notebook.css"):
+            if path in ("/dashboard.js", "/dashboard.css"):
                 kind = "text/javascript" if path.endswith(".js") else "text/css"
                 return self.send(200, (Path(__file__).parent / path[1:]).read_text(), kind)
+            if path.startswith("/captures/"):
+                base = (self.server.root / "captures").resolve()
+                target = (base / unquote(path[len("/captures/"):])).resolve()
+                if target.suffix != ".png" or not target.is_relative_to(base) or not target.is_file():
+                    return self.send(404, {"error": "Not found"})
+                return self.send(200, target.read_bytes(), "image/png")
             if path == "/api/state":
                 return self.send(200, view(self.server.root))
             return self.send(404, {"error": "Not found"})
@@ -202,7 +298,7 @@ class Handler(BaseHTTPRequestHandler):
                     (root / "STOP").touch()
                     return self.send(200, {"ok": True, "message": "Stop requested; partial work will be preserved."})
                 if path == "/api/start":
-                    if running(root) or (self.server.child and self.server.child.poll() is None):
+                    if self.server.busy():
                         return self.send(409, {"error": "The pair is already running"})
                     state = pair.read_json(root / "state.json")
                     config = pair.read_json(root / "config.json")
@@ -212,11 +308,7 @@ class Handler(BaseHTTPRequestHandler):
                         return self.send(409, {"error": "A run limit is reached. Increase the limit below before continuing."})
                     if state.get("inflight") and not data.get("retry_interrupted"):
                         return self.send(409, {"error": "The last turn was interrupted. Review its work and confirm resume.", "interrupted": True})
-                    argv = [sys.executable, str(Path(__file__).parent / "pair.py"), "resume", "--state", str(root)]
-                    if state.get("inflight"):
-                        argv.append("--retry-interrupted")
-                    with (root / "coordinator.log").open("ab") as log:
-                        self.server.child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+                    self.server.launch(retry=bool(state.get("inflight")))
                     return self.send(200, {"ok": True, "message": "The pair is continuing from its saved handoff."})
                 if path == "/api/outer":
                     pair.configure_outer(root, data.get("enabled"), data.get("max_batches"))
@@ -254,10 +346,10 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--state", required=True)
+    p.add_argument("--state", help="Run state directory (default: <repo>/.claude-pair)")
     p.add_argument("--port", type=int, default=8766)
     args = p.parse_args()
-    root = Path(args.state).expanduser().resolve()
+    root = Path(args.state).expanduser().resolve() if args.state else pair.default_state()
     pair.read_json(root / "config.json")
     server = Dashboard(("127.0.0.1", args.port), root)
     url = f"http://127.0.0.1:{server.server_port}"

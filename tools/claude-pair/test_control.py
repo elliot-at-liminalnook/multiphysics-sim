@@ -208,6 +208,91 @@ class ControlTests(unittest.TestCase):
             self.assertEqual(evidence["recent_captures"], [str(runner.root / "captures/shot.png")])
 
 
+class UsageLimitTests(unittest.TestCase):
+    def test_reset_time_comes_from_the_stream_or_the_message(self):
+        now = 1_790_000_000.0
+        rejected = {"status": "rejected", "resetsAt": now + 3600, "rateLimitType": "five_hour"}
+        self.assertEqual(pair.limit_reset(rejected, "", now), now + 3600)
+        weekly = {"status": "allowed", "unifiedWindows": {"seven_day": {"utilization": 1.0, "resetsAt": now + 86400}}}
+        self.assertEqual(pair.limit_reset(weekly, "You have reached your weekly usage limit", now), now + 86400)
+        self.assertEqual(pair.limit_reset(None, "Claude AI usage limit reached|%d" % (now + 50), now), now + 50)
+        self.assertEqual(pair.limit_reset(None, "5-hour limit reached · resets in 2 hours", now), now + 7200)
+        self.assertEqual(pair.limit_reset(None, "usage limit reached", now, fallback_seconds=900), now + 900)
+        self.assertIsNone(pair.limit_reset({"status": "allowed", "resetsAt": now + 60}, "error[E0425]: cannot find value", now))
+
+    def stream(self, sid, status, cost, output=None, error=False):
+        events = [{"type": "system", "subtype": "init", "session_id": sid},
+                  {"type": "rate_limit_event", "rate_limit_info": {"status": status, "resetsAt": time.time() + 0.5}}]
+        if status == "allowed":
+            events.append({"type": "assistant", "message": {"content": [{"type": "text", "text": "working"}]}})
+        else:
+            events.append({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Read", "input": {"file_path": "a.rs"}}]}})
+        events.append({"type": "result", "subtype": "error_during_execution" if error else "success", "is_error": error,
+                       "result": "usage limit reached" if error else "", "session_id": sid, "total_cost_usd": cost,
+                       "structured_output": output})
+        return "\n".join(json.dumps(e) for e in events)
+
+    def test_limited_call_waits_then_resumes_the_same_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, limit_margin_seconds=0)
+            calls, reported, totals = [], [], {}
+
+            def process(argv, prefix, stdin=None, cwd=None, env=None):
+                if "--print" not in argv:  # a coordinator check
+                    prefix.with_suffix(".stdout").write_text("")
+                    prefix.with_suffix(".stderr").write_text("")
+                    return 0, prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
+                sid = argv[argv.index("--resume") + 1] if "--resume" in argv else argv[argv.index("--session-id") + 1]
+                calls.append((argv, stdin, sid))
+                out = prefix.with_suffix(".stdout")
+                role = prefix.name.split("-", 1)[1]
+                if role == "worker" and len([c for c in calls if "--resume" not in c[0] and c[1].startswith(fixtures.plan()["worker_prompt"])]) == 1 and "--resume" not in argv:
+                    out.write_text(self.stream(sid, "rejected", .05, error=True))
+                    return 1, out, prefix.with_suffix(".stderr")
+                if role == "worker":
+                    data = copy.deepcopy(fixtures.REPORT)
+                    reported.append(True)
+                elif reported:
+                    data = fixtures.plan("complete", "accept")
+                    data["checklist"][0].update(status="verified", evidence="checked")
+                else:
+                    data = fixtures.plan()
+                out.write_text(self.stream(sid, "allowed", totals.setdefault(sid, 0) + .1, data))
+                totals[sid] += .1
+                return 0, out, prefix.with_suffix(".stderr")
+            with patch.object(pair.Runner, "process", lambda self_, *a, **k: process(*a, **k)):
+                pair.Runner(runner.root).run()
+            workers = [(a, stdin, sid) for a, stdin, sid in calls if stdin.startswith(fixtures.plan()["worker_prompt"]) or stdin.startswith(pair.RESUME_NOTE)]
+            self.assertEqual(len(workers), 2)
+            self.assertNotIn("--resume", workers[0][0])
+            self.assertIn("--resume", workers[1][0])
+            self.assertEqual(workers[0][2], workers[1][2], "the interrupted session continues")
+            self.assertTrue(workers[1][1].startswith(pair.RESUME_NOTE))
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(state["status"], "complete")
+            self.assertNotIn("resume_at", state)
+            self.assertEqual(state["rounds"], 1, "the limited attempt is not a worker turn")
+            self.assertIn("Usage limit", [e["kind"] for e in __import__("shared_notebook").entries(runner.root)])
+
+    def test_a_restarted_coordinator_waits_out_a_saved_reset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, limit_margin_seconds=0)
+            runner.state.update(status="waiting", resume_at=time.time() + 0.4)
+            runner.save()
+            seen = []
+
+            def fake_call(runner_, role, prompt, scope=None):
+                seen.append(time.time())
+                runner_.state["calls"] += 1
+                return fixtures.plan("blocked")
+            begun = time.time()
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            self.assertGreaterEqual(seen[0] - begun, 0.35)
+            self.assertLess(pair.read_json(runner.root / "state.json")["elapsed_seconds"], 0.3,
+                            "waiting for a limit does not use the run's active hours")
+
+
 FAKE_VIEWER = r'''
 import http.server, json, sys, threading
 port = int(sys.argv[sys.argv.index("--api-port") + 1])

@@ -1294,7 +1294,7 @@ pub struct LearnPlugin;
 /// original order.
 impl Plugin for LearnPlugin {
     fn build(&self, app: &mut App) {
-        let open = || in_state(crate::app::ModeScope::Builder).and(resource_exists::<Learn>);
+        let open = || in_state(crate::app::ModeScope::Builder).and_then(resource_exists::<Learn>);
         app.add_systems(
             Update,
             (poll, keys, buttons, seek, narrate::seek, practice::sketch_input, sliders, slider_live, chart_hover, ui::rebuild, ui::scroll, viewport, narrate::tick, playback, ui::live_text, narrate::live, narrate::overlay, practice::sketch_dots)

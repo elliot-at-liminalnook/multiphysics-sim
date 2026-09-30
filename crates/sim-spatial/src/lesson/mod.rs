@@ -1306,13 +1306,16 @@ impl Learn {
                     }
                 }
                 LessonAction::EventStep(step) => {
+                    // A scrub, like SeekTo: the page is rebuilt only to show a pause.
+                    let mut was_playing = false;
                     if let Some(a) = self.scene.as_mut().filter(|a| a.run.is_some()) {
                         let events = event_times(a);
                         let now = a.time;
                         let target = if step > 0 { events.iter().copied().find(|t| *t > now + 1e-6).unwrap_or(a.duration()) } else { events.iter().rev().copied().find(|t| *t < now - 1e-3).unwrap_or(0.) };
                         a.seek(target);
-                        a.playing = false;
+                        was_playing = std::mem::replace(&mut a.playing, false);
                     }
+                    self.dirty = was_dirty || was_playing;
                 }
                 LessonAction::ClearPick => {
                     self.draft = None;

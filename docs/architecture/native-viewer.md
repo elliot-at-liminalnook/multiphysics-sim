@@ -290,7 +290,7 @@ result formats and state fields).
       (Dedicated; paid work is not cancelled mid-request); apply
       `narrate.rs:379`; the line is `GenJob::progress` `narrate.rs:48`
       ("Starting…" until the first message) and `lesson_state.narration.job`
-      (`lesson/rest.rs:438`). Unchanged text.
+      (`lesson/actions.rs` `narration_state`). Unchanged text.
     - Practice bench request: `lesson/extras.rs:207` (Dedicated), polled at
       `extras.rs:141`. Unchanged.
 - **What the build/test pass must run** (no screenshots):
@@ -405,8 +405,8 @@ Paths below are `crates/sim-spatial/src/`.
     new lesson that would replace a build-mode builder is also refused while
     that builder has a live run (`Builder::replace_blockers`: `system_open`
     saves a live run before replacing a builder, a mode switch cannot).
-    Build ↔ Lessons over an open lesson is the lesson screen's toggle and
-    is never blocked (as before).
+    Build → Lessons is refused on the builder's blockers and pauses a live
+    run (see *Build → Lessons* below); Lessons → Build is never blocked.
   - *The switcher.* A row of the robot header's buttons in the bottom-right
     corner of every mode, with the last outcome above it: every mode's top
     edge is full (toolbars, run controls). Not visually checked (screenshots
@@ -586,7 +586,7 @@ Paths are `crates/sim-spatial/src/`.
     the switcher, the builder's Lessons button (`builder/actions.rs`
     `buttons`), `system_ui` `mode:lessons`, `viewer_mode`, and
     `lesson_open` / `lesson_screen {learn: true}` in build mode, which wait
-    for the switch's answer (`lesson/actions.rs` `enter_lessons`;
+    for the switch's answer (`switch::ask_switch` / `awaited_switch`;
     `lesson_open` opens its lesson only once the switch is accepted). It is
     refused on `Builder::switch_blockers` (drafts, drag, study, replay,
     Codex answer, pending open; `switch.rs` `leaving_blockers`), or

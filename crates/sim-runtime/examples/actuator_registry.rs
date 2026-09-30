@@ -8,14 +8,9 @@
 //!     actuator_registry check REGISTRY FILE...      fail if any embedded robot is stale
 use serde_json::Value;
 use sim_domain_robot::{PhysicalModel, actuator_profile::Family};
-use sim_runtime::actuator_registry::{Registry, joint_limits};
+use sim_runtime::actuator_registry::{FileIssueKind, ModelStatus, Registry, joint_limits, robot_pointers};
 use std::path::Path;
 
-/// JSON pointers of robot models inside the supported documents.
-fn robot_pointers(doc: &Value) -> Vec<&'static str> {
-    let candidates = ["", "/robot", "/scene/robot", "/recipe/experiment/scene/robot", "/recipe/planning_scene/robot", "/experiment/scene/robot", "/planning_scene/robot"];
-    candidates.into_iter().filter(|p| doc.pointer(p).is_some_and(|r| r.get("motors").is_some() && r.get("actuator_profiles").is_some())).collect()
-}
 fn read(path: &str) -> Result<Value, String> {
     serde_json::from_slice(&std::fs::read(path).map_err(|e| format!("{path}: {e}"))?).map_err(|e| format!("{path}: {e}"))
 }
@@ -55,11 +50,17 @@ fn main() -> Result<(), String> {
             let registry = Registry::load(Path::new(&a[1]))?;
             let mut failures = Vec::new();
             for file in &a[2..] {
-                let doc = read(file)?;
-                for p in robot_pointers(&doc) {
-                    let model: PhysicalModel = serde_json::from_value(doc.pointer(p).unwrap().clone()).map_err(|e| e.to_string())?;
-                    if let Err(e) = registry.check(&model) {
-                        failures.push(format!("{file}{p}: {e}"));
+                let result = registry.check_consumer(Path::new(file));
+                match result.issue {
+                    // A file without an embedded robot has nothing to be stale.
+                    Some(issue) if issue.kind != FileIssueKind::NoRobot => return Err(issue.message),
+                    _ => {}
+                }
+                for m in result.models {
+                    match m.status {
+                        ModelStatus::Current => {}
+                        ModelStatus::Invalid if m.mismatch.is_none() => return Err(m.message.unwrap_or_default()),
+                        _ => failures.push(format!("{file}{}: {}", m.pointer, m.message.unwrap_or_default())),
                     }
                 }
             }

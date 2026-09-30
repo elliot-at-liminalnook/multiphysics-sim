@@ -67,6 +67,78 @@ pub struct JointLimit {
     pub source: String,
 }
 
+/// Why a consumer model fails `Registry::check`. Fields the check did not
+/// reach are `None` (e.g. no hash when the binding names a missing family).
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+pub struct Mismatch {
+    pub motor: Option<String>,
+    pub joint: Option<String>,
+    /// Family the consumer's binding uses.
+    pub family: Option<String>,
+    /// Family the registry accepts for the joint's role.
+    pub accepted_family: Option<String>,
+    /// Content hash of the family the consumer holds.
+    pub have_hash: Option<String>,
+    pub accepted_hash: Option<String>,
+    /// Exactly the `Registry::check` error.
+    pub message: String,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelStatus {
+    /// Every binding uses the accepted family and hash.
+    Current,
+    /// A binding uses another family or hash than the registry accepts.
+    Stale,
+    /// The model does not deserialize, or cannot be matched to the registry.
+    Invalid,
+}
+/// One embedded robot model of a consumer file.
+#[derive(Clone, Debug, Serialize)]
+pub struct ModelCheck {
+    /// JSON pointer of the model in the file ("" for a bare model).
+    pub pointer: String,
+    pub status: ModelStatus,
+    pub message: Option<String>,
+    pub mismatch: Option<Mismatch>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FileIssueKind {
+    Read,
+    Parse,
+    /// No supported pointer holds a model with motors and actuator profiles.
+    NoRobot,
+}
+#[derive(Clone, Debug, Serialize)]
+pub struct FileIssue {
+    pub kind: FileIssueKind,
+    /// Names the file.
+    pub message: String,
+}
+/// Staleness of one consumer file against the registry.
+#[derive(Clone, Debug, Serialize)]
+pub struct ConsumerCheck {
+    pub file: PathBuf,
+    pub issue: Option<FileIssue>,
+    pub models: Vec<ModelCheck>,
+}
+impl ConsumerCheck {
+    /// The file has robot models and all of them are current.
+    pub fn is_current(&self) -> bool {
+        self.issue.is_none() && self.models.iter().all(|m| m.status == ModelStatus::Current)
+    }
+}
+
+/// Where supported documents embed robot models, in search order: a bare
+/// model, a scene, a gait-comparison config's recipe, and a recipe.
+pub const ROBOT_POINTERS: [&str; 7] = ["", "/robot", "/scene/robot", "/recipe/experiment/scene/robot", "/recipe/planning_scene/robot", "/experiment/scene/robot", "/planning_scene/robot"];
+/// JSON pointers of the robot models (objects with `motors` and
+/// `actuator_profiles`) inside a consumer document.
+pub fn robot_pointers(doc: &Value) -> Vec<&'static str> {
+    ROBOT_POINTERS.into_iter().filter(|p| doc.pointer(p).is_some_and(|r| r.get("motors").is_some() && r.get("actuator_profiles").is_some())).collect()
+}
+
 impl Registry {
     pub fn load(path: &Path) -> R<Self> {
         let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -121,17 +193,71 @@ impl Registry {
     }
     /// Every binding uses exactly the accepted family for its joint role.
     pub fn check(&self, model: &PhysicalModel) -> R<()> {
-        let profiles = model.actuator_profiles.as_ref().ok_or("model has no actuator profiles")?;
+        match self.mismatch(model) {
+            Some(m) => Err(m.message),
+            None => Ok(()),
+        }
+    }
+    /// The first reason `check` fails, as data (`None` when the model is current).
+    pub fn mismatch(&self, model: &PhysicalModel) -> Option<Mismatch> {
+        let fail = |message: String| Some(Mismatch { message, ..Mismatch::default() });
+        let Some(profiles) = model.actuator_profiles.as_ref() else { return fail("model has no actuator profiles".into()) };
         for (id, binding) in &profiles.bindings {
-            let motor = model.motors.iter().find(|m| &m.id == id).ok_or(format!("binding {id} has no motor"))?;
+            let Some(motor) = model.motors.iter().find(|m| &m.id == id) else { return fail(format!("binding {id} has no motor")) };
             let joint = motor.joint.as_deref().unwrap_or_default();
-            let want = self.role_family(joint)?;
-            let have = profiles.families.get(&binding.family).ok_or(format!("binding {id} names a missing family"))?;
-            if binding.family != want || have.content_hash() != self.families[want].content_hash() {
-                return Err(format!("motor {id} ({joint}) uses {} ({}) but the registry accepts {want} ({}); apply the registry", binding.family, have.content_hash(), self.families[want].content_hash()));
+            let base = Mismatch { motor: Some(id.clone()), joint: Some(joint.to_string()), family: Some(binding.family.clone()), ..Mismatch::default() };
+            let want = match self.role_family(joint) {
+                Ok(want) => want,
+                Err(message) => return Some(Mismatch { message, ..base }),
+            };
+            let accepted_hash = self.families[want].content_hash();
+            let base = Mismatch { accepted_family: Some(want.to_string()), accepted_hash: Some(accepted_hash.clone()), ..base };
+            let Some(have) = profiles.families.get(&binding.family) else {
+                return Some(Mismatch { message: format!("binding {id} names a missing family"), ..base });
+            };
+            let have_hash = have.content_hash();
+            if binding.family != want || have_hash != accepted_hash {
+                let message = format!("motor {id} ({joint}) uses {} ({have_hash}) but the registry accepts {want} ({accepted_hash}); apply the registry", binding.family);
+                return Some(Mismatch { have_hash: Some(have_hash), message, ..base });
             }
         }
-        Ok(())
+        None
+    }
+    /// Check every embedded robot model of one consumer file (scene, model,
+    /// gait recipe or study). Unreadable files and missing robots are reported
+    /// in the result, never as an error for the whole call.
+    pub fn check_consumer(&self, path: &Path) -> ConsumerCheck {
+        let file = path.to_path_buf();
+        let issue = |kind, message| ConsumerCheck { file: file.clone(), issue: Some(FileIssue { kind, message }), models: Vec::new() };
+        let bytes = match std::fs::read(path) {
+            Ok(b) => b,
+            Err(e) => return issue(FileIssueKind::Read, format!("{}: {e}", path.display())),
+        };
+        let doc: Value = match serde_json::from_slice(&bytes) {
+            Ok(d) => d,
+            Err(e) => return issue(FileIssueKind::Parse, format!("{}: {e}", path.display())),
+        };
+        let models = self.check_document(&doc);
+        if models.is_empty() {
+            return issue(FileIssueKind::NoRobot, format!("{}: no robot model with actuator profiles", path.display()));
+        }
+        ConsumerCheck { file, issue: None, models }
+    }
+    /// Check each robot model found by `robot_pointers` in a parsed document.
+    pub fn check_document(&self, doc: &Value) -> Vec<ModelCheck> {
+        robot_pointers(doc)
+            .into_iter()
+            .map(|pointer| {
+                let (status, mismatch, message) = match serde_json::from_value::<PhysicalModel>(doc.pointer(pointer).unwrap().clone()) {
+                    Err(e) => (ModelStatus::Invalid, None, Some(e.to_string())),
+                    Ok(model) => match self.mismatch(&model) {
+                        None => (ModelStatus::Current, None, None),
+                        Some(m) => (if m.accepted_family.is_some() { ModelStatus::Stale } else { ModelStatus::Invalid }, Some(m.clone()), Some(m.message)),
+                    },
+                };
+                ModelCheck { pointer: pointer.to_string(), status, message, mismatch }
+            })
+            .collect()
     }
     /// Provenance record for consumers.
     pub fn identity(&self) -> Value {
@@ -188,4 +314,60 @@ pub fn family_limits(f: &Family, supply_v: f64) -> R<(f64, Option<f64>)> {
 /// Profiles helper: does this declaration carry exactly the registry's families?
 pub fn families_of(profiles: &Profiles) -> BTreeMap<String, String> {
     profiles.families.iter().map(|(n, f)| (n.clone(), f.content_hash())).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn consumer_check_reports_current_stale_and_missing_robots() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let registry = Registry::load(&root.join("examples/actuators/hx30hm/accepted/registry.json")).unwrap();
+        // A tracked scene, brought current in memory by applying the registry.
+        let mut doc: Value = serde_json::from_slice(&std::fs::read(root.join("examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json")).unwrap()).unwrap();
+        assert_eq!(robot_pointers(&doc), vec!["/robot"]);
+        let mut model: PhysicalModel = serde_json::from_value(doc["robot"].clone()).unwrap();
+        registry.apply(&mut model).unwrap();
+        doc["robot"]["actuator_profiles"] = serde_json::to_value(&model.actuator_profiles).unwrap();
+        let dir = std::env::temp_dir().join(format!("actuator-consumer-check-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let current = dir.join("current.json");
+        std::fs::write(&current, serde_json::to_vec(&doc).unwrap()).unwrap();
+        let result = registry.check_consumer(&current);
+        assert!(result.is_current(), "{result:?}");
+        assert_eq!(result.models.len(), 1);
+
+        // Tweak one held family: its hash no longer matches the accepted one.
+        let name = model.actuator_profiles.as_ref().unwrap().families.keys().next().unwrap().clone();
+        let family = &mut doc["robot"]["actuator_profiles"]["families"][&name];
+        let r = family["motor"]["resistance"]["value"].as_f64().unwrap();
+        family["motor"]["resistance"]["value"] = json!(r * 1.01);
+        let stale = dir.join("stale.json");
+        std::fs::write(&stale, serde_json::to_vec(&doc).unwrap()).unwrap();
+        let result = registry.check_consumer(&stale);
+        assert!(result.issue.is_none() && !result.is_current());
+        let m = &result.models[0];
+        assert_eq!((m.pointer.as_str(), m.status), ("/robot", ModelStatus::Stale));
+        let mismatch = m.mismatch.as_ref().unwrap();
+        let (have, accepted) = (mismatch.have_hash.as_deref().unwrap(), mismatch.accepted_hash.as_deref().unwrap());
+        assert_ne!(have, accepted);
+        assert_eq!(accepted, registry.families[&name].content_hash());
+        assert_eq!(mismatch.family.as_deref(), Some(name.as_str()));
+        let tweaked: PhysicalModel = serde_json::from_value(doc["robot"].clone()).unwrap();
+        assert_eq!(Some(registry.check(&tweaked).unwrap_err()), m.message);
+        assert!(m.message.as_deref().unwrap().contains(have) && m.message.as_deref().unwrap().contains(accepted));
+
+        // No embedded robot, and an unreadable file: data naming the file, not an error.
+        let plain = dir.join("plain.json");
+        std::fs::write(&plain, br#"{"scene": {"bodies": []}}"#).unwrap();
+        let result = registry.check_consumer(&plain);
+        let issue = result.issue.as_ref().unwrap();
+        assert_eq!(issue.kind, FileIssueKind::NoRobot);
+        assert!(issue.message.contains("no robot model with actuator profiles") && issue.message.contains("plain.json"));
+        let missing = registry.check_consumer(&dir.join("absent.json"));
+        assert_eq!(missing.issue.as_ref().unwrap().kind, FileIssueKind::Read);
+        serde_json::to_value(&result).unwrap();
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 }

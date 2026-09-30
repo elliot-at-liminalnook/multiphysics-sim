@@ -514,6 +514,77 @@ class FastModeTests(unittest.TestCase):
             self.assertEqual(len(refused), 1, "the fake result does not report fast mode on, so it is noted once")
 
 
+class VerificationPassTests(unittest.TestCase):
+    def commit(self, runner, n):
+        for _ in range(n):
+            i = len(list(runner.repo.glob("work-*.txt")))
+            (runner.repo / f"work-{i}.txt").write_text(str(i))
+            pair.git(runner.repo, "add", f"work-{i}.txt")
+            pair.git(runner.repo, "-c", "user.name=W", "-c", "user.email=w@x", "commit", "-q", "-m", f"step {i}")
+
+    def test_a_pass_runs_after_enough_commits_then_the_queued_assignment_continues(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, verify_every_commits=3, max_rounds=3)
+            prompts = []
+
+            def fake_call(runner_, role, prompt, scope=None):
+                prompts.append((role, prompt))
+                runner_.state["calls"] += 1
+                if role == "worker":
+                    self.commit(runner_, 3 if len(prompts) < 3 else 1)
+                    return copy.deepcopy(fixtures.REPORT)
+                p = fixtures.plan(review="accept" if runner_.state.get("report") else "none")
+                p["checks"] = []
+                p["worker_prompt"] = "Build the jobs module."
+                return p
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            workers = [prompt for role, prompt in prompts if role == "worker"]
+            self.assertTrue(workers[0].startswith("Build the jobs module."))
+            self.assertTrue(workers[1].startswith("VERIFICATION PASS"), "3 commits reached the threshold")
+            self.assertIn("step 0", workers[1])
+            reviews = [prompt for role, prompt in prompts if role == "orchestrator"]
+            self.assertIn("verification pass", reviews[2].lower(), "the review is told it was the pass")
+            self.assertIn("Build the jobs module.", reviews[2], "and gets the queued plan back")
+            self.assertTrue(workers[2].startswith("Build the jobs module."))
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(state["verified_at"], pair.git(runner.repo, "rev-parse", "HEAD~1").decode().strip())
+            self.assertNotIn("verification", state)
+
+    def test_an_epic_is_not_completed_before_its_commits_are_verified(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, verify_every_commits=20)
+            self.commit(runner, 2)
+            runner.state["report"] = copy.deepcopy(fixtures.REPORT)
+            done = fixtures.plan("complete", "accept")
+            passed = runner.maybe_verification_pass(done)
+            self.assertEqual(passed["action"], "work")
+            self.assertTrue(passed["worker_prompt"].startswith("VERIFICATION PASS"))
+            self.assertEqual(runner.state["verification"]["queued_plan"]["action"], "complete")
+            runner.state["verified_at"] = pair.git(runner.repo, "rev-parse", "HEAD").decode().strip()
+            runner.state.pop("verification")
+            self.assertIs(runner.maybe_verification_pass(done), done, "nothing left to verify")
+
+    def test_checks_stop_at_ten_seconds_and_a_timeout_is_not_a_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, check_seconds=0.5)
+            p = fixtures.plan()
+            p["checks"] = ["sleep 5", "echo quick"]
+            runner.state.update(plan=p, rounds=1)
+            runner.verify()
+            receipts = {r["name"]: r for r in runner.state["receipts"]}
+            self.assertTrue(receipts["sleep 5"]["timed_out"])
+            self.assertLess(receipts["sleep 5"]["seconds"], 4)
+            self.assertEqual(receipts["echo quick"]["exit_code"], 0, "a timeout does not stop the other checks")
+            pair.guard_plan(fixtures.plan(review="accept"), {"plan": p, "report": fixtures.REPORT, "receipts": runner.state["receipts"]}, {})
+
+    def test_agents_have_within_on_their_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            self.assertTrue(runner.env()["PATH"].startswith(str(HERE / "bin")))
+            self.assertTrue(os.access(HERE / "bin" / "within", os.X_OK))
+
+
 class NoLimitTests(unittest.TestCase):
     def test_init_defaults_to_no_limits_and_a_director(self):
         with tempfile.TemporaryDirectory() as tmp:

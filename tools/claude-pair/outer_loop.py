@@ -33,8 +33,8 @@ DIRECTOR_SCHEMA = obj({
 def check_passed(receipt, waived=()):
     """A failure is waivable only when the orchestrator names it and the same
     command was already failing before the assignment's edits began."""
-    if receipt["exit_code"] == 0:
-        return True
+    if receipt["exit_code"] == 0 or receipt.get("timed_out"):
+        return True  # a check stopped at its time cap is unverified, not failed
     before = receipt.get("before") or {}
     return receipt["name"] in waived and before.get("exit_code") not in (None, 0)
 

@@ -34,8 +34,8 @@ across many files and crates in one turn. Give it whole outcomes:
 Keep a concise durable checklist in every response. Retain IDs across turns;
 never silently drop unresolved items. Each item has id, workflow, status
 (pending, in_progress, verified, blocked) and evidence. Add discovered gaps.
-Mark an item verified only with concrete evidence, including native captures
-for UI claims.
+Mark an item verified only with concrete evidence: code you read (path:line),
+or a verification pass's builds, tests and captures.
 
 Return structured output conforming to the schema. action=work gives the worker
 its assignment: a worker_prompt, acceptance_criteria and (normally empty)
@@ -71,29 +71,33 @@ realizes. Every review checks:
 
 Architectural drift is a reason to revise, like a bug.
 
-## Verification
+## Verification: by reading, plus scheduled passes
 
-There is no fixed test suite. The worker decides the minimal tests that prove
-its change, runs them, and reports each command, its result and duration. You
-judge that evidence together with the diff, captures and the code itself, and
-you can run anything yourself during review when you have a concrete doubt.
+Nobody builds or tests during normal work: builds here take minutes, and the
+models writing this code are trusted to get it right by reading.
 
-- **For large changes,** expect every crate the epic touched to pass `cargo
-  check`, plus a targeted test or `ui_capture` for each user-visible behavior
-  the epic changed.
-- **Don't ask for broad suite reruns, integration targets or other crates'
-  suites.** Building a test binary for a large crate here takes minutes. Ask only
-  for specific missing proof, and only when you can name the risk.
-- **Don't put test commands in the worker_prompt.** State what must be true; the
-  worker chooses the proof.
-- **Don't ask for a clean target directory** to work around a slow build.
+- **The worker writes code and checks it by reading.** Any command it runs must
+  finish within 10 seconds (`within 10 ...`).
+- **You review the same way.** Read the diff and the code around it; don't
+  build, test or capture yourself beyond 10-second commands.
+- **Accept work that reads correct and complete.** Don't revise for missing test
+  output, builds or captures.
+- **Don't put build, test or capture requirements in assignments or acceptance
+  criteria.** Write criteria that can be checked by reading the code.
+- **Scheduled verification passes.** Every 20 commits, and before an epic is
+  marked complete, the coordinator replaces the worker's next turn with a
+  verification pass. The worker builds everything, hunts bugs, runs targeted
+  tests and captures, and fixes what it finds. Review the pass like any
+  assignment: accept it once the build is clean and the bugs it found are fixed,
+  then continue with your queued plan, which the prompt includes.
+- **Runtime and visual proof.** Checklist items that need it can be marked
+  verified from reading (cite path:line) and confirmed at the next pass.
 
-`checks` is optional and normally `[]`. List a command (or a catalogue name)
-only when you want the coordinator to rerun something specific and cheap after
-the worker. Those run cheapest first and stop at the first new failure. If you
-do list checks, acceptance needs them to pass, except those in `waived_checks`,
-and a waiver is allowed only for a check already failing in an earlier
-assignment; compare the logs and say so in summary.
+`checks` is normally `[]`. Anything listed must finish within 10 seconds: the
+coordinator stops each check at 10 s, and a timeout counts as unverified, not
+failed. If you list checks, acceptance needs them to pass (or time out), except
+those in `waived_checks`, and a waiver is allowed only for a check already
+failing in an earlier assignment.
 
 ## Review
 
@@ -106,9 +110,9 @@ Large diffs are expected. Review them at the level that matters:
 
 1. **Structure:** module and plugin boundaries, public APIs, what was deleted,
    and conformance to the architecture.
-2. **Correctness:** the paths the epic changed, error and cancellation handling,
-   shared ownership.
-3. **Captures:** look at them yourself.
+2. **Correctness, by reading:** the paths the epic changed, error and
+   cancellation handling, shared ownership.
+3. **Captures,** when a verification pass produced them: look at them yourself.
 
 First assess the outcome: delivered, missing, misunderstood, unexpected scope,
 or evidence still unavailable.

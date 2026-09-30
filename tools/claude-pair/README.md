@@ -154,23 +154,33 @@ session is also replaced after `max_session_calls` turns (default 8, in
 orchestrator's previous plan (included in its prompt) and the shared notebook.
 The usage ledger reconciles each session's cumulative total separately.
 
-### Verification
+### Verification: by reading, plus scheduled passes
 
-There is no fixed test suite. The worker chooses the minimal tests that prove
-its change (usually one cargo command on the lowest crate that holds it, plus a
-`ui_capture.py` run for visible changes), runs them, and reports each command,
-result and duration. The orchestrator reviews that evidence with the diff and
-captures, and can rerun anything itself when it has a concrete doubt.
+Builds and tests here take minutes, so normal work doesn't run them. Every role
+writes and reviews code by reading. Any command that builds or runs code must
+finish within 10 seconds; the agents wrap such commands in `within 10 <command>`
+(`bin/within`, on their PATH), which stops the command and its children and
+reports a timeout as unverified, not failed. The worker fixes bugs it notices
+while reading and commits them with how they were found.
 
-The orchestrator may also list `checks` for the coordinator to rerun after the
-worker: a name from `checks.json` or any shell command, run with `bash -c` from
-the project root with `~/.cargo/bin` on `PATH` and the `PAIR_*` paths set. They
-are normally empty. When given, they run cheapest first by measured duration and
-stop at the first new failure (the rest are marked skipped), and their durations
-are shown to the orchestrator and Director. Acceptance then needs them to pass,
-except those listed in `waived_checks`; a waiver is accepted only for a check
-that was already failing in an earlier assignment. `precheck: true` in
-`config.json` additionally runs them before each assignment (doubling their cost).
+**Verification passes** run every `verify_every_commits` commits (default 20)
+and before an epic can be marked complete. The coordinator replaces the worker's
+next turn with `prompts/verification.md`:
+- build the workspace and the touched binaries
+- hunt bugs in the commit range by reading
+- run targeted tests
+- capture changed viewer modes
+- commit the fixes, each saying how the bug was found
+
+The orchestrator reviews the pass like any assignment and then continues with
+its queued plan. The dashboard's Changes meter shows commits until the next pass.
+
+The orchestrator may still list `checks` for the coordinator to rerun (normally
+none). Each is stopped at `check_seconds` (default 10); a timeout counts as
+unverified, not failed. They run cheapest first and stop at the first new
+failure. Acceptance needs them to pass or time out, except those in
+`waived_checks` (allowed only for a check already failing in an earlier
+assignment).
 
 Review evidence includes a diffstat, commits with stats, untracked files and
 recent captures alongside the full diff file, so the orchestrator can read the

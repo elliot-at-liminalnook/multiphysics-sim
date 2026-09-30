@@ -305,7 +305,7 @@ class Runner:
 
     def env(self, **extra):
         """Environment for agents and checks: cargo on PATH and the run's paths."""
-        env = dict(os.environ, PATH=cargo_path(os.environ.get("PATH")), CARGO_TERM_COLOR="never",
+        env = dict(os.environ, PATH=str(HERE / "bin") + os.pathsep + cargo_path(os.environ.get("PATH")), CARGO_TERM_COLOR="never",
                    PAIR_STATE=str(self.root), PAIR_WORKSPACE=str(self.repo), PAIR_SOURCE=str(self.config["repo"]),
                    PAIR_TOOLS=str(HERE), PAIR_CAPTURES=str(self.root / "captures"),
                    PAIR_BASELINE=self.config["baseline"])
@@ -558,6 +558,44 @@ class Runner:
         (self.root / "shared").mkdir(exist_ok=True)
         shared_notebook.atomic_text(self.root / "shared" / "DECISIONS.md", "\n".join(lines))
 
+    def unverified_commits(self):
+        since = self.state.get("verified_at") or self.config["baseline"]
+        try:
+            return int(git(self.repo, "rev-list", "--count", f"{since}..HEAD").decode().strip())
+        except subprocess.CalledProcessError:
+            return 0
+
+    def maybe_verification_pass(self, plan):
+        """Normal work doesn't build. Every `verify_every_commits` commits, and
+        before an epic is marked complete, the worker's next turn is a pass that
+        builds everything, hunts bugs and fixes them; the orchestrator's own
+        assignment waits until that pass is accepted."""
+        every = self.config.get("verify_every_commits", 20)
+        if not every:
+            return plan
+        count = self.unverified_commits()
+        new_work = plan["action"] == "work" and plan["review"] != "revise"
+        if not ((new_work and count >= every) or (plan["action"] == "complete" and count > 0)):
+            return plan
+        since = self.state.get("verified_at") or self.config["baseline"]
+        head = git(self.repo, "rev-parse", "HEAD").decode().strip()
+        subjects = git(self.repo, "log", "--format=%h %s", f"{since}..HEAD").decode(errors="replace")
+        brief = (self.prompt_file("verification.md").replace("{every}", str(every)).replace("{count}", str(count))
+                 .replace("{since}", since[:12]).replace("{head}", head[:12]).replace("{subjects}", clip(subjects, 12000)))
+        self.state["verification"] = {"since": since, "head": head, "commits": count, "queued_plan": plan,
+                                      "reason": "before completing the epic" if plan["action"] == "complete" else f"{count} commits"}
+        shared_notebook.append(self.root, {"id": f"verification-{head[:12]}", "author": "coordinator",
+            "kind": "Verification pass scheduled",
+            "summary": f"{count} commits since the last verification pass. The worker's next turn builds, hunts bugs and fixes them; "
+                       "the orchestrator's assignment continues after the pass is accepted.",
+            "notes": [], "source": str(self.root / "state.json")})
+        return {**plan, "action": "work", "review": "accept" if self.state.get("report") else "none",
+                "summary": f"Coordinator-scheduled verification pass over {count} commits. Queued afterwards: {plan['summary']}",
+                "worker_prompt": brief, "checks": [], "waived_checks": [],
+                "acceptance_criteria": ["The workspace and the binaries these commits touched build cleanly",
+                                        "Bugs found by the build, tests, captures or reading are fixed and committed, each saying how it was found",
+                                        "The report lists every command with its duration and result, and anything still broken"]}
+
     def call_checked(self, role, prompt, scope, guard):
         """Call a planner and apply the coordinator's handoff rules. A rejected
         response goes back to the same session with the reason, instead of
@@ -659,10 +697,15 @@ class Runner:
     def run_check(self, index, name, suffix=""):
         prefix = check_prefix(self.root, self.state["rounds"], index, name)
         argv = check_argv(self.config["checks"], name)
+        limit = self.config.get("check_seconds", 10)
         started = time.monotonic()
-        code, out, err = self.process(argv, prefix.with_name(prefix.name + suffix))
-        return {"name": name, "command": argv, "exit_code": code, "stdout": str(out), "stderr": str(err),
-                "seconds": round(time.monotonic() - started, 1)}
+        code, out, err = self.process([str(HERE / "bin" / "within"), str(limit), *argv] if limit else argv,
+                                      prefix.with_name(prefix.name + suffix))
+        receipt = {"name": name, "command": argv, "exit_code": code, "stdout": str(out), "stderr": str(err),
+                   "seconds": round(time.monotonic() - started, 1)}
+        if limit and code == 124:
+            receipt["timed_out"] = True  # unverified, not failed
+        return receipt
 
     def precheck(self):
         """Optional (config precheck): run a new assignment's checks before the
@@ -693,7 +736,7 @@ class Runner:
             before = self.earlier_result(name)
             if receipt["exit_code"] != 0 and before:
                 receipt["before"] = {k: before.get(k) for k in ("exit_code", "stdout", "stderr", "assignment")}
-            if receipt["exit_code"] != 0 and not (before and before.get("exit_code")):
+            if receipt["exit_code"] != 0 and not receipt.get("timed_out") and not (before and before.get("exit_code")):
                 stop = name  # a new failure: the remaining checks can wait for the repair
             history[name] = {"exit_code": receipt["exit_code"], "seconds": receipt["seconds"],
                              "stdout": receipt["stdout"], "stderr": receipt["stderr"],
@@ -798,6 +841,11 @@ class Runner:
                         if self.state.get("plan"):
                             prompt += ("\nYour previous plan (you may be in a fresh session: carry its checklist IDs forward "
                                        "and treat it as your own earlier decision):\n" + json.dumps(self.state["plan"]))
+                        if self.state.get("report") and self.state.get("verification"):
+                            prompt += ("\nThe worker's last turn was the coordinator-scheduled verification pass. Review it like "
+                                       "any assignment: accept once the build is clean and the bugs it found are fixed, or revise. "
+                                       "When you accept, continue with your queued plan below, adjusted for anything the pass "
+                                       "changed:\n" + json.dumps(self.state["verification"]["queued_plan"]))
                         if self.state.get("report"):
                             prompt += "\nReview the worker using this evidence:\n" + json.dumps(self.evidence())
                         elif self.state.get("operator_replan"):
@@ -830,6 +878,14 @@ class Runner:
                             "summary": f"Orchestrator response passed the handoff guards: action={plan['action']}, review={plan['review']}.",
                             "notes": ["Evidence remains scoped to the reviewed assignment; this does not establish whole-project completion."],
                             "source": str(self.root / "logs" / f"plan-{self.state['calls']:04d}.json")})
+                        if self.state.get("verification") and plan["review"] == "accept":
+                            self.state["verified_at"] = git(self.repo, "rev-parse", "HEAD").decode().strip()
+                            done = self.state.pop("verification")
+                            shared_notebook.append(self.root, {"id": f"verified-{self.state['verified_at'][:12]}",
+                                "author": "coordinator", "kind": "Verification pass accepted",
+                                "summary": f"Verified through {self.state['verified_at'][:12]} ({done['commits']} commits); counting starts again.",
+                                "notes": [], "source": str(self.root / "state.json")})
+                        plan = self.maybe_verification_pass(plan)
                         new_assignment = plan["action"] == "work" and plan["review"] != "revise"
                         if new_assignment:
                             # A new assignment gets a fresh worker; repairs resume the same one.

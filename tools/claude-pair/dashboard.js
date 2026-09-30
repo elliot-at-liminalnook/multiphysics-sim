@@ -88,7 +88,8 @@ function now() {
   const doing = {
     director: ['director', 'Director is choosing the next batch', 'the Director chooses the next batch'],
     precheck: ['checks', 'Running checks before the worker starts', 'checks run before the worker starts'],
-    worker: ['worker', 'Worker is implementing', 'the worker implements the assignment'],
+    worker: s.verification ? ['worker', 'Worker is running a verification pass', 'the worker runs a verification pass (build, bug hunt, fixes)']
+                           : ['worker', 'Worker is implementing', 'the worker implements the assignment'],
     verify: ['checks', 'Running independent checks', 'independent checks run'],
   };
   let [role, active, next] = doing[phase] || (s.report
@@ -198,7 +199,9 @@ function renderNow() {
       'The run pauses when this is used up and resumes after the reset'),
     meter('Claude weekly', weekP === null ? '—' : `${Math.round(weekP)}%`, week ? `resets ${clock(week.resetsAt)}` : 'no reading yet', weekP ?? 0, tone(weekP ?? 0),
       'The run stops when this is used up: it is the only limit'),
-    meter('Changes', `${(g.commits || []).length}`, `${plural((g.commits || []).length, 'commit').replace(/^\d+ /, '')} · <span class="plusminus"><span class="plus">+${g.insertions || 0}</span> <span class="minus">−${g.deletions || 0}</span></span>`, 0, 'none'),
+    meter('Changes', `${(g.commits || []).length}`, `${plural((g.commits || []).length, 'commit').replace(/^\d+ /, '')} · <span class="plusminus"><span class="plus">+${g.insertions || 0}</span> <span class="minus">−${g.deletions || 0}</span></span>`,
+      data.verify_every ? pct(data.unverified_commits, data.verify_every) : 0, data.verify_every ? '' : 'none',
+      data.verify_every ? `${data.unverified_commits} of ${data.verify_every} commits until the next verification pass` : ''),
   ].join(''), false);
 }
 

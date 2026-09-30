@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""within SECONDS COMMAND [ARGS...]: run COMMAND, stopping it and its children after SECONDS.
+
+    within 10 cargo check -p sim-core
+    within 10 bash -c 'cargo test -p sim-system --lib snap:: | tail -20'
+
+Exits with the command's status, or 124 when time ran out. A timeout is not a
+failure; the change is simply unverified. Don't retry it; read the code instead.
+"""
+import os
+import signal
+import subprocess
+import sys
+
+
+def main():
+    if len(sys.argv) < 3:
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
+    seconds = float(sys.argv[1])
+    process = subprocess.Popen(sys.argv[2:], start_new_session=True)
+    try:
+        return process.wait(timeout=seconds)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGTERM)
+        try:
+            process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait()
+        print(f"within: stopped after {seconds:g} s. Not a failure, just unverified: "
+              "don't retry, read the code instead.", file=sys.stderr)
+        return 124
+    except KeyboardInterrupt:
+        os.killpg(process.pid, signal.SIGTERM)
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())

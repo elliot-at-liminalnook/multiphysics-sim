@@ -184,6 +184,16 @@ pub(crate) enum UiAction {
 }
 
 impl actions::Action for SystemAction {
+    /// The commands read loosely before (`args.get`) take non-object args
+    /// (`null`) as `{}`, as they did.
+    fn parse(command: &sim_api::Command) -> Result<Self, String> {
+        const LOOSE: [&str; 4] = ["system_open", "system_gait_reports", "system_calibration_review", "system_actuators"];
+        if !command.args.is_object() && LOOSE.contains(&command.command.as_str()) {
+            let empty = sim_api::Command { command: command.command.clone(), args: json!({}) };
+            return sim_api::decode::<Self>(&empty);
+        }
+        sim_api::decode::<Self>(command)
+    }
     fn commands() -> Vec<Spec> {
         fn c(name: &'static str, example: Value, description: &str) -> Spec {
             spec(name, actions::BUILDER, example, description)

@@ -41,6 +41,10 @@ pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) 
             mode.name(),
             needs[0].name()
         )),
+        // Inspect has no builder or lesson: an unknown `system*`/`lesson_*` name
+        // is answered as before (headless too).
+        None if mode == ViewerMode::Inspect && name.starts_with("lesson_") => Err("no lessons are open in this window: switch with viewer_mode {\"mode\":\"lessons\",\"path\":\"DIR\"}".into()),
+        None if mode == ViewerMode::Inspect && name.starts_with("system") => Err("start the viewer with --system FILE to edit systems".into()),
         _ => Ok(actions::feature_for(mode, name).unwrap_or_else(|| actions::fallback(mode, name))),
     }
 }

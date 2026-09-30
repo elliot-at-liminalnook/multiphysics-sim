@@ -647,7 +647,8 @@ pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, came
 }
 
 /// Input: the overlay bar's toggles, as the view's actions (the display state
-/// only, no refit; flipped from the current value when applied).
+/// only, no refit): each press carries the flip of the value shown now, which
+/// `inspect::apply` sets later in the same frame.
 pub(crate) fn overlay_clicks(toggles: Query<(&Interaction, &OverlayToggle), Changed<Interaction>>, views: Query<(&Interaction, &ViewToggle), Changed<Interaction>>, scene: Res<SpatialScene>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
     use crate::app::actions::Act;
     use crate::inspect::InspectAction;

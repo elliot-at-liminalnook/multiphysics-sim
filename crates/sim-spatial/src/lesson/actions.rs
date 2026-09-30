@@ -201,10 +201,13 @@ fn handle(learn: &mut Learn, scene: &mut SpatialScene, mode: ViewerMode, switch:
     // leaves the builder (and the lesson) as they were.
     if let Some(id) = call.continuation.get("switch").and_then(Value::as_u64) {
         let reply = Reply::from_id(id);
-        if call.cancelled {
-            call.replies.cancel(reply);
+        let answer = call.replies.take(reply);
+        if answer.is_none() && call.cancelled {
+            // The switch stops a load still in progress; its answer is not waited for.
+            call.replies.forget(reply);
+            return Outcome::Done(Err("cancelled".into()));
         }
-        return match call.replies.take(reply) {
+        return match answer {
             Some(Outcome::Done(Ok(_))) => match command {
                 LessonCommand::LessonOpen { slug } => Outcome::Done(learn.open(slug).map(|()| state(learn))),
                 _ => Outcome::Done(Ok(state(learn))),
@@ -236,7 +239,14 @@ fn handle(learn: &mut Learn, scene: &mut SpatialScene, mode: ViewerMode, switch:
             }
             frames::finish(learn).unwrap_or(Outcome::Pending)
         }
-        LessonCommand::LessonOpen { .. } if mode == ViewerMode::Build => enter_lessons(switch, call),
+        LessonCommand::LessonOpen { slug } if mode == ViewerMode::Build => {
+            // A lesson that does not load is refused before the window switches.
+            let path = learn.entries.iter().find(|e| e.slug == *slug).map(|e| e.path.clone()).unwrap_or_else(|| learn.dir.join(slug).join("lesson.md"));
+            if let Err(e) = sim_lesson::Lesson::load(&path) {
+                return Outcome::Done(Err(e.to_string()));
+            }
+            enter_lessons(switch, call)
+        }
         LessonCommand::LessonScreen { learn: true } if mode == ViewerMode::Build => enter_lessons(switch, call),
         other => Outcome::Done(execute(learn, scene, other.clone())),
     }
@@ -470,25 +480,9 @@ fn execute(learn: &mut Learn, scene: &mut SpatialScene, command: LessonCommand) 
                 "pause" => LessonAction::Pause,
                 "restart" => LessonAction::Restart,
                 "reset_sandbox" => LessonAction::ResetSandbox,
-                "seek" => {
-                    let a = learn.scene.as_mut().ok_or("no live scene")?;
-                    if a.run.is_none() {
-                        return Err("the scene has not finished recording".into());
-                    }
-                    a.seek(time.ok_or("seek needs time")?);
-                    a.playing = false;
-                    learn.dirty = true;
-                    return Ok(state(learn));
-                }
-                "slider" => {
-                    let (parameter, value) = (parameter.ok_or("slider needs parameter")?, value.ok_or("slider needs value")?);
-                    let a = learn.scene.as_mut().ok_or("no live scene")?;
-                    let spec = a.scene.sliders.iter().find(|s| s.parameter == parameter).ok_or_else(|| format!("the scene has no slider for `{parameter}`"))?;
-                    let v = spec.snap(value);
-                    a.overrides.insert(parameter, v);
-                    learn.rerecord();
-                    return Ok(state(learn));
-                }
+                // REST seeks never count as rewinds (only a reader's timebar press does).
+                "seek" => LessonAction::SeekTo { time, rewind: false },
+                "slider" => LessonAction::Slider { parameter: parameter.ok_or("slider needs parameter")?, value: value.ok_or("slider needs value")? },
                 "reset_sliders" => LessonAction::ResetSliders,
                 "explore" => LessonAction::Explore,
                 other => return Err(format!("unknown scene action `{other}` (activate, play, pause, restart, seek, slider, reset_sliders, explore, reset_sandbox)")),

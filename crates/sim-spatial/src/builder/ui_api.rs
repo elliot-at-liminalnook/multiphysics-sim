@@ -73,6 +73,12 @@ impl Builder {
                 if !c.enabled {
                     return Err(format!("control is disabled: {}", c.label));
                 }
+                // The "‹ lesson" button is a mode switch (`actions::buttons` writes
+                // `WindowAction::Switch`); `dispatch` has nothing to do for it, so an
+                // activation here would report success and do nothing.
+                if matches!(c.action, BuildAction::Lessons) {
+                    return Err(format!("{} switches the window to lessons mode: activate mode:lessons instead (the same validated mode switch)", c.label));
+                }
                 dispatch(self, scene, orbit, c.action);
             }
             UiAction::Tab { tab } => dispatch(self, scene, orbit, BuildAction::Tab(tab)),

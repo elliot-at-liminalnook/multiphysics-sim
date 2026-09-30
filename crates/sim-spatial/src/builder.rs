@@ -1752,7 +1752,12 @@ fn watch(time: Res<Time>, mut builder: ResMut<Builder>) {
     }
 }
 
-fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mut orbit: Single<&mut Orbit>, keys: Res<ButtonInput<KeyCode>>) {
+/// Typing into the open draft (input editing); Enter and Escape are the
+/// draft's submit and drop actions, applied by the builder's handler.
+fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Builder>, keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>) {
+    let mut send = |action: BuildAction| {
+        out.write(crate::app::actions::Act::ui(system_actions::SystemAction::Ui(action)));
+    };
     if builder.input.is_none() {
         events.clear();
         return;
@@ -1763,16 +1768,14 @@ fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Buil
         }
         match &e.logical_key {
             Key::Enter => {
-                if builder.input.as_ref().is_some_and(|i|matches!(i.purpose,Purpose::Comment|Purpose::ThreadTitle)) {
-                    if keys.pressed(KeyCode::ShiftLeft)||keys.pressed(KeyCode::ShiftRight){builder.input.as_mut().unwrap().buffer.push('\n');builder.panel_dirty=true;continue;}
-                    discussion::submit(&mut builder,&mut scene,&mut orbit);return;
+                if builder.input.as_ref().is_some_and(|i|matches!(i.purpose,Purpose::Comment|Purpose::ThreadTitle)) && (keys.pressed(KeyCode::ShiftLeft)||keys.pressed(KeyCode::ShiftRight)) {
+                    builder.input.as_mut().unwrap().buffer.push('\n');builder.panel_dirty=true;continue;
                 }
-                builder.commit_input();
+                send(BuildAction::SubmitDraft);
                 return;
             }
             Key::Escape => {
-                builder.input = None;
-                builder.panel_dirty = true;
+                send(BuildAction::DropDraft);
                 return;
             }
             Key::Backspace => {
@@ -1969,30 +1972,11 @@ fn rebuild_scene(
     }
 }
 
-fn pick_reference(click: On<Pointer<Click>>, quads: Query<&ReferenceQuad>, mut builder: ResMut<Builder>) {
+/// A click on a reference image, as the builder's `ReferencePoint` action.
+fn pick_reference(click: On<Pointer<Click>>, quads: Query<&ReferenceQuad>, mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>) {
     let Ok(quad) = quads.get(click.entity) else { return };
     let Some(position) = click.hit.position else { return };
-    let frame = builder.subsystems.get(&builder.level).copied().unwrap_or(sim_system::flatten::WorldPlacement::IDENTITY);
-    // Points are recorded in the level's frame, like the reference origin.
-    let inverse = Transform::from_translation(Vec3::from_array(frame.position)).with_rotation(Quat::from_array(frame.rotation_xyzw)).to_matrix().inverse();
-    let local = inverse.transform_point3(position).to_array();
-    let Some((id, points)) = builder.calibrating.as_mut() else {
-        builder.status = format!("Reference {} (click Calibrate to scale it from two points)", quad.0);
-        builder.panel_dirty = true;
-        return;
-    };
-    if *id != quad.0 {
-        return;
-    }
-    points.push(local);
-    if points.len() == 2 {
-        let (id, points) = builder.calibrating.take().unwrap();
-        builder.start_input(Purpose::Distance { id, first: points[0], second: points[1] }, String::new());
-        builder.status = "Type the real distance between the two points (m) and press Enter.".into();
-    } else {
-        builder.status = "Now click the second point.".into();
-    }
-    builder.panel_dirty = true;
+    out.write(crate::app::actions::Act::ui(system_actions::SystemAction::Ui(BuildAction::ReferencePoint { id: quad.0.clone(), world: position.to_array() })));
 }
 
 /// Part clicks select instances at the current level.

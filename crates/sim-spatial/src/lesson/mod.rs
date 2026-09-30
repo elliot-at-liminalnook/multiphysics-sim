@@ -12,6 +12,7 @@
 //!   back, and the scene re-records if the copy changed.
 //! - Lesson notes are `sim_annotate` threads anchored to quoted text or to
 //!   scene parts (`sim_lesson::LessonAnchor`), in `lesson.md.annotations.json`.
+use crate::app::actions::Act;
 use crate::builder::Builder;
 use crate::{Orbit, SpatialScene};
 use bevy::input::ButtonState;
@@ -87,8 +88,18 @@ pub(crate) enum LessonAction {
     Pause,
     Restart,
     Speed(f64),
-    /// Seek the active scene (fraction of the run is read from the pointer).
+    /// The timebar's marker: pressing it is read as [`LessonAction::SeekTo`]
+    /// by `seek` (the time comes from the pointer).
     Seek,
+    /// Seek the live scene to `time` (s) and pause. `rewind`: count a jump
+    /// back as a rewind (the press that starts a timebar drag; REST never
+    /// counts). `None`: "seek needs time", after the scene checks.
+    SeekTo { time: Option<f64>, rewind: bool },
+    /// A click on a part of the live scene (`pick_part`): a note draft on it in
+    /// Annotate mode, else the picked part.
+    Pick(String),
+    /// Set a slider (snapped to its step) and re-record, like letting go of it.
+    Slider { parameter: String, value: f64 },
     OpenBuilder,
     ResetSandbox,
     SaveSandbox,
@@ -969,7 +980,7 @@ impl Learn {
 
     /// The same handler, reporting failure to the caller (REST).
     pub(crate) fn try_act(&mut self, action: LessonAction, scene: &mut SpatialScene) -> Result<(), String> {
-        self.dirty = true;
+        let was_dirty = std::mem::replace(&mut self.dirty, true);
         {
             match action {
                 LessonAction::Open(slug) => self.open(&slug)?,
@@ -1029,6 +1040,38 @@ impl Learn {
                     }
                 }
                 LessonAction::Seek => {}
+                LessonAction::SeekTo { time, rewind } => {
+                    let a = self.scene.as_mut().ok_or("no live scene")?;
+                    if a.run.is_none() {
+                        return Err("the scene has not finished recording".into());
+                    }
+                    let time = time.ok_or("seek needs time")?;
+                    // A press that goes back in time is a rewind (for authors' reports).
+                    let rewound = (rewind && time < a.time - 0.01 * a.duration()).then(|| a.id.clone());
+                    let was_playing = a.playing;
+                    a.seek(time);
+                    a.playing = false;
+                    // Scrubbing follows in `ui::live_text` without a page rebuild
+                    // (a timebar drag seeks every frame); only pausing a playing
+                    // scene changes the page (its Play/Pause button).
+                    self.dirty = was_dirty || was_playing;
+                    if let (Some(scene), Some(slug)) = (rewound, self.slug().map(String::from)) {
+                        self.progress.block(&slug, &scene).rewinds += 1;
+                    }
+                }
+                LessonAction::Pick(component) => self.pick(scene, &component),
+                LessonAction::Slider { parameter, value } => {
+                    let a = self.scene.as_mut().ok_or("no live scene")?;
+                    // Letting go ends the drag even if the slider is gone, so
+                    // `sliders` does not send the release again next frame.
+                    if a.slider_drag.as_ref().is_some_and(|(p, _)| *p == parameter) {
+                        a.slider_drag = None;
+                    }
+                    let spec = a.scene.sliders.iter().find(|s| s.parameter == parameter).ok_or_else(|| format!("the scene has no slider for `{parameter}`"))?;
+                    let v = spec.snap(value);
+                    a.overrides.insert(parameter, v);
+                    self.rerecord();
+                }
                 LessonAction::OpenBuilder => {
                     let a = self.scene.as_ref().ok_or("show a scene first")?;
                     if !a.installed {
@@ -1177,7 +1220,15 @@ impl Learn {
                     self.status = "Asked Codex (read-only answer mode); the reply is posted to this note.".into();
                 }
                 LessonAction::AgentCancel(run) => self.agent.cancel(&run)?,
-                LessonAction::Narrate(a) => self.narrate(a)?,
+                LessonAction::Narrate(a) => {
+                    let seek = matches!(a, narrate::NarrateAction::Seek { .. });
+                    self.narrate(a)?;
+                    // A narration-bar drag seeks every frame and follows in
+                    // `narrate::live` without a page rebuild (as before).
+                    if seek {
+                        self.dirty = was_dirty;
+                    }
+                }
                 a @ (LessonAction::QuizPick(..) | LessonAction::QuizCheck(_) | LessonAction::QuizReveal(_) | LessonAction::QuizInput(_) | LessonAction::ReflectInput(_) | LessonAction::ReflectSave(_) | LessonAction::SketchClear(_) | LessonAction::Review(..) | LessonAction::HintMore(_) | LessonAction::Confidence(..) | LessonAction::StepInput(..) | LessonAction::RecallTick(..) | LessonAction::ReviewSession | LessonAction::ReviewNext | LessonAction::ReviewEnd) => self.practice(a)?,
                 LessonAction::ReflectFeedback(id) => {
                     // A note on the reflection, with the reader's text, answered by Codex.
@@ -1328,13 +1379,14 @@ impl Plugin for LearnPlugin {
     fn build(&self, app: &mut App) {
         let open = || in_state(crate::app::ModeScope::Builder).and_then(resource_exists::<Learn>);
         crate::app::actions::register::<actions::LessonCommand>(app);
-        // Keys and buttons write lesson actions; the one handler applies them and
-        // REST's (in build and lessons: without a lesson, REST is told so).
-        app.add_systems(Update, (actions::keys, actions::buttons).chain().after(crate::app::actions::serve).in_set(crate::app::ViewerSet::Input).run_if(open()))
+        // Keys, buttons, the timebars and slider releases write lesson actions;
+        // the one handler applies them and REST's (in build and lessons:
+        // without a lesson, REST is told so).
+        app.add_systems(Update, (actions::keys, actions::buttons, seek, narrate::seek, sliders).chain().after(crate::app::actions::serve).in_set(crate::app::ViewerSet::Input).run_if(open()))
             .add_systems(Update, actions::apply.in_set(crate::app::ViewerSet::Actions).run_if(in_state(crate::app::ModeScope::Builder)));
         app.add_systems(
             Update,
-            (poll, seek, narrate::seek, practice::sketch_input, sliders, slider_live, chart_hover, ui::rebuild, ui::scroll, viewport, narrate::tick, playback, ui::live_text, narrate::live, narrate::overlay, practice::sketch_dots)
+            (poll, practice::sketch_input, slider_live, chart_hover, ui::rebuild, ui::scroll, viewport, narrate::tick, playback, ui::live_text, narrate::live, narrate::overlay, practice::sketch_dots)
                 .chain()
                 .before(crate::camera_viewport)
                 .in_set(crate::app::ViewerSet::SimSync)
@@ -1644,7 +1696,10 @@ fn charts_with(run: &SceneRun, companion: Option<&SceneRun>, scene: &Scene, time
 /// The timeline bar: press or drag to scrub.
 #[derive(Component)]
 pub(crate) struct Timebar;
-fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<Timebar>>, mut learn: ResMut<Learn>, mut pressing: Local<bool>) {
+/// Input: pressing or dragging the timebar seeks the live scene (a
+/// `SeekTo`; the press that starts a drag may count a rewind). Nothing is
+/// sent while the scene is still recording.
+fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<Timebar>>, learn: Res<Learn>, mut pressing: Local<bool>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     let mut pressed = false;
     for (interaction, cursor) in &bars {
         if *interaction != Interaction::Pressed {
@@ -1652,22 +1707,9 @@ fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<Time
         }
         pressed = true;
         let Some(p) = crate::view::cursor_fraction(cursor) else { continue };
-        let mut rewound = None;
-        if let Some(a) = learn.scene.as_mut() {
-            if a.run.is_some() {
-                let d = a.duration();
-                let t = (p.x.clamp(0.0, 1.0) as f64) * d;
-                // A press that goes back in time is a rewind (for authors' reports).
-                if !*pressing && t < a.time - 0.01 * d {
-                    rewound = Some(a.id.clone());
-                }
-                a.seek(t);
-                a.playing = false;
-            }
-        }
-        if let (Some(scene), Some(slug)) = (rewound, learn.slug().map(String::from)) {
-            learn.progress.block(&slug, &scene).rewinds += 1;
-        }
+        let Some(a) = learn.scene.as_ref().filter(|a| a.run.is_some()) else { continue };
+        let time = (p.x.clamp(0.0, 1.0) as f64) * a.duration();
+        out.write(Act::ui(actions::LessonCommand::Ui(LessonAction::SeekTo { time: Some(time), rewind: !*pressing })));
     }
     *pressing = pressed;
 }
@@ -2183,8 +2225,9 @@ impl ActiveScene {
     }
 }
 
-/// Dragging a slider moves its value; letting go re-records the scene.
-fn sliders(tracks: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &SliderTrack)>, mut learn: ResMut<Learn>) {
+/// Input: dragging a slider moves its previewed value (`slider_drag`, kept
+/// here); letting go sends a `Slider` action, which sets it and re-records.
+fn sliders(tracks: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &SliderTrack)>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     if !learn.active {
         return;
     }
@@ -2204,10 +2247,7 @@ fn sliders(tracks: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &Slid
             }
         }
         (None, Some((parameter, value))) => {
-            let a = learn.scene.as_mut().unwrap();
-            a.slider_drag = None;
-            a.overrides.insert(parameter, value);
-            learn.rerecord();
+            out.write(Act::ui(actions::LessonCommand::Ui(LessonAction::Slider { parameter, value })));
         }
         (None, None) => {}
     }
@@ -2239,7 +2279,9 @@ pub(crate) struct ChartHover(pub String, pub f64, pub f64);
 
 /// Hovering a chart shows that moment in the scene (and the part it
 /// measures); clicking keeps it. Hovering a part lights up its charts.
-fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &ChartHover, &mut BorderColor)>, mut learn: ResMut<Learn>, pointed: Res<crate::view::PartHover>, mut preview: Local<Option<f64>>, mut lit: Local<Option<String>>) {
+/// The hover preview is local (restored when the pointer leaves); a click
+/// commits the moment as the timebar's seek action.
+fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &ChartHover, &mut BorderColor)>, mut learn: ResMut<Learn>, pointed: Res<crate::view::PartHover>, mut preview: Local<Option<f64>>, mut lit: Local<Option<String>>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     if !learn.active {
         return;
     }
@@ -2260,11 +2302,13 @@ fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPositio
             if preview.is_none() {
                 *preview = Some(a.time);
             }
-            if clicked {
-                *preview = Some(*t);
-            }
             if (a.time - t).abs() > 1e-9 {
                 a.seek(*t);
+            }
+            if clicked {
+                // Kept: nothing to restore on leaving.
+                *preview = None;
+                out.write(Act::ui(actions::LessonCommand::Ui(LessonAction::SeekTo { time: Some(*t), rewind: false })));
             }
             let part = part_of(key);
             if learn.hover_part.as_deref() != Some(part.as_str()) {

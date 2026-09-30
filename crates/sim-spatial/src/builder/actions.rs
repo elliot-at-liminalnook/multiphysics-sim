@@ -127,6 +127,19 @@ pub(crate) enum BuildAction {
     CalibrationTrial(String),
     /// Arrow keys and Page Up/Down: move the selection by a display-only step (metres).
     Nudge([f32; 3]),
+    /// A primary click on a rendered part (`pick_part` in lib.rs; no button
+    /// carries it, so it is not a `system_ui` control): in Annotate mode a
+    /// comment draft pinned at `world` (display metres) on part `index`, else
+    /// the same selection as `system_ui` `click_part` (`add`: shift held).
+    PickPart { index: usize, component: String, add: bool, world: Option<[f32; 3]> },
+    /// Enter in an open text draft (`text_input`): post a comment or thread
+    /// title, else commit the field. Not a button, so not a `system_ui` control.
+    SubmitDraft,
+    /// Escape in an open text draft: drop it.
+    DropDraft,
+    /// A click on reference image `id` at `world` (display metres; `pick_reference`):
+    /// a calibration point while calibrating it, else the hint to calibrate.
+    ReferencePoint { id: String, world: [f32; 3] },
 }
 
 /// The chrome's handler: one `BuildAction` (a button, key, marker, or a
@@ -529,6 +542,46 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
             builder.report(r);
         }
         BuildAction::Nudge(delta) => builder.nudge(delta),
+        BuildAction::PickPart { index, component, add, world } => {
+            if builder.mode == Mode::Annotate {
+                // The part index is the clicked mesh's in this frame's scene; checked in case the scene was rebuilt.
+                if let Some(world) = world.filter(|_| scene.spatial.parts.get(index).is_some_and(|p| p.component == component)) {
+                    discussion::begin_surface(builder, scene, index, Vec3::from_array(world));
+                }
+            } else {
+                click_part(builder, &component, add);
+            }
+        }
+        BuildAction::SubmitDraft => {
+            if builder.input.as_ref().is_some_and(|i| matches!(i.purpose, Purpose::Comment | Purpose::ThreadTitle)) {
+                discussion::submit(builder, scene, orbit);
+            } else if builder.input.is_some() {
+                builder.commit_input();
+            }
+        }
+        // The Cancel button's and REST cancel_input's handler (it also ends a comment edit).
+        BuildAction::DropDraft => discussion::act(builder, scene, orbit, discussion::Action::CancelDraft),
+        BuildAction::ReferencePoint { id: quad, world } => {
+            let frame = builder.subsystems.get(&builder.level).copied().unwrap_or(sim_system::flatten::WorldPlacement::IDENTITY);
+            // Points are recorded in the level's frame, like the reference origin.
+            let inverse = Transform::from_translation(Vec3::from_array(frame.position)).with_rotation(Quat::from_array(frame.rotation_xyzw)).to_matrix().inverse();
+            let local = inverse.transform_point3(Vec3::from_array(world)).to_array();
+            let Some((id, points)) = builder.calibrating.as_mut() else {
+                builder.status = format!("Reference {quad} (click Calibrate to scale it from two points)");
+                return;
+            };
+            if *id != quad {
+                return;
+            }
+            points.push(local);
+            if points.len() == 2 {
+                let (id, points) = builder.calibrating.take().expect("checked above");
+                builder.start_input(Purpose::Distance { id, first: points[0], second: points[1] }, String::new());
+                builder.status = "Type the real distance between the two points (m) and press Enter.".into();
+            } else {
+                builder.status = "Now click the second point.".into();
+            }
+        }
     }
 }
 

@@ -54,19 +54,19 @@ duplicates physics.
 - **Bevy structure:** 7 plugins (`CorePlugin`, `ModesPlugin`,
   `SpatialViewerPlugin`, `BuilderPlugin`, `LearnPlugin`, `RobotPlugin`,
   `PlacePlugin`), one `States` enum and two computed states, one set
-  enum, 6 action Message types (`Act<A>`). 14 `MessageReader` and 25
+  enum, 6 action Message types (`Act<A>`). 14 `MessageReader` and 35
   `MessageWriter` sites; 10 `On<…>` sites (pointer picks, drags,
   screenshots). `Interaction` is named 86 times in 16 files and `KeyCode`
-  135 times in 10 files; the press and key sites only map input to
-  actions.
+  133 times in 10 files; the press, key and pick sites only map input to
+  actions or style hover (swept 2026-09-30).
 - **UI is hand-built** `Node` trees (17 files name `Node`). Headers,
   inspectors, tabs, docks and charts are rebuilt per feature.
-- **Large files:** `robot_run.rs` (2,597 lines), `builder.rs` (2,458),
-  `lesson/mod.rs` (2,304) and `robot.rs` (2,275). The action modules are
-  under 700 lines each (`lesson/actions.rs` 676, `robot/actions.rs` 634,
-  `builder/actions.rs` 608, `app/actions.rs` 470, `inspect.rs` 408,
-  `builder/system_actions.rs` 385); `app/switch.rs` is 806, `app/tests.rs`
-  280, `app/route.rs` 75, `rest.rs` 140.
+- **Large files:** `robot_run.rs` (2,597 lines), `builder.rs` (2,442),
+  `lesson/mod.rs` (2,348) and `robot.rs` (2,275). The action modules are
+  under 700 lines each (`lesson/actions.rs` 670, `builder/actions.rs` 661,
+  `robot/actions.rs` 634, `app/actions.rs` 490, `inspect.rs` 412,
+  `builder/system_actions.rs` 395); `app/switch.rs` is 806, `app/tests.rs`
+  364, `app/route.rs` 75, `rest.rs` 140.
 - **What already works well, to keep:**
   - typed actions with one validated handler per action type
   - generation-stamped frames
@@ -519,11 +519,16 @@ Paths are `crates/sim-spatial/src/`.
     `app::switch::lesson_screen_requests`, `inspect::input`,
     `notes::clicks`, `physics_view::overlay_clicks`,
     `builder::actions::{buttons, keys}`, `lesson::actions::{buttons,
-    keys}`, `robot::actions::{buttons, motion_keys, graph_key,
-    overlay_keys, speed_keys}` and the `pick_link` observer,
-    `place_view::keys`. Continuous gestures stay where they were (orbit and
-    fly cameras, wheel scroll, drags, sliders, the scrub bar, text entry
-    into an open draft) because they are not discrete intents.
+    keys}`, the lesson timebar, slider and narration bar (`lesson::seek`,
+    `lesson::sliders`, `narrate::seek`), `robot::actions::{buttons,
+    motion_keys, graph_key, overlay_keys, speed_keys}`, `place_view::keys`,
+    and the pick observers (`lib.rs` `pick_part`, `linked::pick_net`,
+    `builder::pick_reference`, `robot::actions::pick_link`). The builder's
+    `text_input` (SimSync) edits the draft and writes its Enter/Escape as
+    `BuildAction::SubmitDraft`/`DropDraft`; `robot::watch` (SimSync) writes
+    the file watch's Reload. Continuous gestures stay where they were
+    (orbit and fly cameras, wheel scroll, placement drags, sketch strokes)
+    because they are navigation or input editing.
 - **Deleted.** `rest::capabilities`, `rest.rs` `Command`, `SystemRequest`,
   `system_execute`, `execute`, `tick` and `poll`; `route::capabilities`,
   `mode_ui_capability`, `Modes`, `rest_switch` and the capability-JSON
@@ -610,13 +615,66 @@ Paths are `crates/sim-spatial/src/`.
     (`link:<index>`, `control-<hash>`, …, matched by
     `actions::control_matches`); the tests check every listed id against
     them.
+- **Completion pass (same day).** Found by reading and fixed:
+  - the lesson timebar, sliders and narration bar mutated `Learn`
+    directly; they now write `SeekTo`/`Slider`/`Narrate(Seek)` and REST
+    `lesson_scene` seek/slider map to the same actions;
+  - `pick_part` (Build, Inspect, Lessons), `pick_net`, `pick_reference`
+    and the builder draft's Enter/Escape changed state in the observer or
+    SimSync; they now write `BuildAction::PickPart`/`ReferencePoint`/
+    `SubmitDraft`/`DropDraft`, `InspectAction::Select`/`Display`,
+    `LessonAction::Pick`;
+  - `system_ui` activate of the "‹ lesson" button answered success and did
+    nothing (as before 152e02de); it now refuses, pointing at
+    `mode:lessons`;
+  - `system_open`, `system_gait_reports`, `system_calibration_review` and
+    `system_actuators` with `args: null` were rejected ("args must be an
+    object") where they used to read `{}`; restored
+    (`SystemAction::parse`);
+  - a `render` left Pending across a scope change captured the new scene;
+    it now answers "render dropped";
+  - a cancelled `lesson_open`/`lesson_screen` waiting for the switch leaked
+    its nested reply slot;
+  - `serve` could leave a command Pending forever if the mode changed and
+    the same name belonged to another action type (latent); the
+    continuation now records the owning feature;
+  - `app/tests.rs` called `unwrap_err` on a `Result<&Feature, _>`
+    (`Feature` is not `Debug`);
+  - a lesson chart click committed a seek outside the action layer; it now
+    writes `SeekTo`;
+  - `lesson_open` in build mode switched to Lessons before checking the
+    lesson loads; a lesson that fails to load is now refused first, with
+    the loader's error, and the window stays in Build;
+  - an unknown `system*`/`lesson_*` command in inspect mode (and headless)
+    answered serde's unknown-variant list; it answers the old "start the
+    viewer with --system FILE…" / "no lessons are open…" again.
+  - Escape in a builder draft now goes through the Cancel button's handler
+    (`discussion::Action::CancelDraft`, also REST `cancel_input`), which also
+    ends a comment edit; before it only dropped the text, which could leave a
+    stale edit that refused a later thread-title rename.
+  - REST texts that still differ only in failures: a command's argument
+    error now comes before "no builder"/"no lessons are open"; non-object
+    args to `system_context`/`lesson_frames` read "args must be an object";
+    a `"command"` key inside the args of `screenshot`, inspect/place
+    `system_ui` or the loosely read `system_*` commands is refused ("args
+    cannot override command"); the unknown-variant lists name the merged
+    commands (`system_open`, …, `lesson_frames`); `lesson_open`/
+    `lesson_screen {learn: true}` in build mode now wait for the switch and
+    report its refusal.
+  - Capability audit against 7da1216e: 92 entries before and after, same
+    order, names, modes, examples and descriptions byte-identical except
+    the intended `viewer_mode` text; every merged enum keeps its serde
+    attributes.
+  - Left as found: `notes::update` calls `notes::sync` every frame, which
+    marks `SpatialScene` and `Orbit` changed every frame (pre-existing; some
+    systems may rely on it).
 - **Tests** (lib, no window): `app::tests::
   every_capability_parses_into_its_action_and_every_parsed_command_is_registered`,
   `every_mode_control_resolves_to_a_switch`,
   `rest_refuses_commands_of_another_mode_by_name` (now through the
   registry), `entering_lessons_from_build_refuses_on_a_draft_and_keeps_a_live_run`,
   `build_robot_build_tears_down_the_robot_and_keeps_shared_state` (on reply
-  tokens); `robot::actions::tests::every_listed_control_fits_a_registered_pattern`
+  tokens), `pending_actions_are_carried_until_they_answer_and_a_cancel_reaches_them`; `robot::actions::tests::every_listed_control_fits_a_registered_pattern`
   and `rest_argument_errors_are_unchanged`; `builder::ui_api::tests` checks
   the collected id against the builder's pattern; `inspect::tests` (moved
   from `rest::tests`).
@@ -635,7 +693,9 @@ Paths are `crates/sim-spatial/src/`.
     `robot_speed {action: up}` / the + button / key = →
     `robot::actions::apply`; Place `camera {station: 0}` / key 1 →
     `place_view::apply` (Place has no buttons).
-  - Bevy API spots to check first: `EntityWorldMut::observe` with
+  - Bevy API spots to check first: `Option<MessageWriter<…>>` params in the
+    `pick_part` observer; `MessageWriter` in the `pick_net` and
+    `pick_reference` observers; `EntityWorldMut::observe` with
     `save_to_disk` in `switch::screenshot`; `Messages::drain` from
     `ResMut<Messages<Act<A>>>`; `#[derive(Resource)]` on the generic
     `InFlight<A>`; `MessageWriter` in the `pick_link` observer;
@@ -696,8 +756,22 @@ Paths are `crates/sim-spatial/src/`.
   and its `Origin`, REST reply token, UI or quiet), written in
   `ViewerSet::Input` and drained once per frame by the action type's one
   apply system in `ViewerSet::Actions`. Observer triggers are kept for
-  pointer events on entities (picks, drags, screenshots). Undoable actions
-  go through the shared undo history.
+  pointer events on entities (picks, drags, screenshots); a pick observer
+  only writes its mode's action. Undoable actions go through the shared
+  undo history.
+- **Gestures.** A discrete intent from a pointer gesture commits as the
+  same action value REST produces: the lesson timebar writes
+  `LessonAction::SeekTo` per press or drag position (the REST
+  `lesson_scene` seek's action; `rewind` is true only for the press that
+  starts a drag, so REST never counts rewinds), a slider writes
+  `LessonAction::Slider` on release (the REST slider's), the narration bar
+  `NarrateAction::Seek` (REST `lesson_narration`'s), a click on a lesson
+  chart `SeekTo` (its hover preview stays local and is undone on leaving),
+  a part or net click the mode's selection or pick action. A drag may keep a local preview
+  (`slider_drag`). Freehand sketch strokes and typing into an open draft
+  are input editing (Enter and Escape are the draft's submit and drop
+  actions); orbit, pan, fly, wheel scroll and placement drags are
+  navigation and stay in SimSync.
 - REST answers through **reply tokens** (`app::actions::Replies`): the poll
   writes the action once with a token kept in the `sim_api` continuation
   and answers Pending until the handler writes the outcome; a handler that

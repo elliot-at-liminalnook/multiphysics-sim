@@ -126,13 +126,17 @@ fn delays_are_whole_samples() {
     // Pass the sensor straight through; the sensor is a constant 1.
     rt.attach(seam.behavior, Box::new(FnCoupler(|_t: f64, s: &[f64], a: &mut [f64]| a[0] = s[0]))).unwrap();
     let held = rt.state_id(seam.behavior, "act.y");
-    // Sample 0 at t=0 sees the input queue's initial zero and queues its
-    // command; the held output becomes 1 only after input_delay +
-    // output_delay = 3 more samples.
+    // Samples fire at t = n·0.01. Sample 0 at t=0 sees the input queue's
+    // initial zero and queues its command; the held output becomes 1 only
+    // after input_delay + output_delay = 3 more samples, at sample 3
+    // (t=0.03). A sample scheduled exactly at a chunk end fires in that
+    // chunk (a deadline at the requested endpoint fires there, as every
+    // on-grid sampler's does), so the value read after the chunk ending at
+    // 0.03 is already 1. One sample more or less of delay moves the switch.
     let mut seen = Vec::new();
     for _ in 0..5 {
         rt.advance(0.01, 0.005).unwrap();
         seen.push(rt.get(held));
     }
-    assert_eq!(seen, vec![0.0, 0.0, 0.0, 1.0, 1.0], "{seen:?}");
+    assert_eq!(seen, vec![0.0, 0.0, 1.0, 1.0, 1.0], "{seen:?}");
 }

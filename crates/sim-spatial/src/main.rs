@@ -60,6 +60,10 @@ struct Args {
     /// Walk through a scanned place (a `sim-place build` directory).
     #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons"])]
     place: Option<PathBuf>,
+    /// Robot mode: open a CAD-exported `.simrobot.json` read-only (links
+    /// drawn at the assembly pose; nothing is stepped or written).
+    #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic"])]
+    robot: Option<PathBuf>,
     /// Lesson to open first (slug); default: the first in reading order.
     #[arg(long, requires = "lessons")]
     lesson: Option<String>,
@@ -116,6 +120,18 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
     sim_spatial::run_lessons(scene, builder, learn, api, models);
     Ok(())
 }
+fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+    if args.validate_only {
+        let loaded = sim_spatial::robot::load(path)?;
+        let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
+        println!("Validated {} with {} links ({drawn} with collision geometry).", path.display(), loaded.model.links.len());
+        return Ok(());
+    }
+    let api = sim_spatial::robot::server(args.api_port)?;
+    eprintln!("Physical REST (robot mode): http://{}", api.address);
+    sim_spatial::robot::run_robot(sim_spatial::robot::RobotView::open(path.to_path_buf()), api);
+    Ok(())
+}
 fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
     let registry = sim_runtime::system_registry();
     let mut builder = sim_spatial::Builder::open(path.to_path_buf(), args.library.clone(), registry.clone())?;
@@ -163,6 +179,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     if let Some(dir) = args.place.clone() {
         return sim_spatial::place_view::run_place(dir).map_err(Into::into);
+    }
+    if let Some(path) = args.robot.clone() {
+        return robot_mode(&args, &path);
     }
     if let Some(dir) = args.lessons.clone() {
         return lessons_mode(&args, &dir);

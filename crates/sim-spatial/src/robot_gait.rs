@@ -302,6 +302,25 @@ impl GaitPreview {
     pub fn reports(&self) -> &[Listed] {
         &self.reports
     }
+    /// The loaded gait (None while idle, loading its first gait or after Stop).
+    pub fn loaded(&self) -> Option<&Loaded> {
+        self.state.loaded.as_deref()
+    }
+    /// The latest solved pose.
+    pub fn sample(&self) -> Option<&Sample> {
+        self.state.sample.as_ref()
+    }
+    /// The last load or solve error, as in `robot_state.gait_preview.error`.
+    pub fn error(&self) -> Option<&str> {
+        self.state.error.as_deref()
+    }
+    pub fn speed_scale(&self) -> f64 {
+        self.state.clock.speed_scale
+    }
+    /// Why the listing failed, if it did.
+    pub fn list_error(&self) -> Option<&str> {
+        self.list_error.as_deref()
+    }
 
     /// `robot_state.gait_preview`.
     pub fn json(&self, block: Option<String>) -> Value {

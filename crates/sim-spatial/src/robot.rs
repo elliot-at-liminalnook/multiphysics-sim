@@ -482,9 +482,42 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
             }
             out.push(("replay:cancel".into(), "Cancel replay".into(), RobotAction::CancelReplay));
             out.push(("replay:refresh".into(), "Refresh recordings".into(), RobotAction::RefreshRecordings));
+            for (id, label, action) in gait_controls(view) {
+                out.push((id, label, RobotAction::Gait { action }));
+            }
         }
     }
     out
+}
+/// The gait preview controls (system_ui id, label, action), all through `RobotAction::Gait`
+/// as the inspector's Gait preview buttons and REST `robot_gait`: one open per offered
+/// tracked report, then the transport. Seek steps are relative to the latest pose's gait
+/// time, resolved when listed or clicked.
+fn gait_controls(view: &RobotView) -> Vec<(String, String, GaitAction)> {
+    let Some(g) = view.run.as_ref().and_then(|r| r.gait_preview()) else { return Vec::new() };
+    let mut out: Vec<(String, String, GaitAction)> = g.reports().iter().map(|r| (format!("gait:open:{}", r.name), format!("Open gait {}", r.name), GaitAction::Open { source: GaitSource::Report(r.name.clone()) })).collect();
+    out.push(("gait:play".into(), "Play gait preview".into(), GaitAction::Play));
+    out.push(("gait:pause".into(), "Pause gait preview".into(), GaitAction::Pause));
+    out.push(("gait:stop".into(), "Stop gait preview (live frame again)".into(), GaitAction::Stop));
+    for (step, id, label) in GAIT_SEEK {
+        out.push((format!("gait:seek:{id}"), label.into(), gait_seek(view, step)));
+    }
+    for scale in GAIT_SCALES {
+        out.push((format!("gait:speed:{scale}"), format!("Gait speed ×{scale}"), GaitAction::Speed { scale }));
+    }
+    out.push(("gait:list".into(), "List gait reports again".into(), GaitAction::List));
+    out
+}
+/// Seek controls: (step in twelfths of the period, id suffix, label); step 0 seeks to t = 0.
+const GAIT_SEEK: [(i8, &str, &str); 3] = [(0, "0", "Seek gait to t = 0"), (-1, "-", "Seek gait −period/12"), (1, "+", "Seek gait +period/12")];
+/// Speed-scale buttons, all within the shared Clock's (0, 1].
+const GAIT_SCALES: [f64; 3] = [0.25, 0.5, 1.0];
+/// A seek by `step` twelfths of the period from the latest pose's gait time (wrapped into one period).
+fn gait_seek(view: &RobotView, step: i8) -> GaitAction {
+    let g = view.run.as_ref().and_then(|r| r.gait_preview());
+    let (t, period) = g.and_then(|g| Some((g.sample().map_or(0.0, |s| s.gait_time_s), g.loaded()?.period_s))).unwrap_or((0.0, 0.0));
+    let t = if step == 0 || period <= 0.0 { 0.0 } else { (t + f64::from(step) * period / 12.0).rem_euclid(period) };
+    GaitAction::Seek { t }
 }
 /// The motion controls (system_ui id, label, request): each key latches its request; Stop zeros.
 fn motion_buttons() -> [(&'static str, &'static str, MotionRequest); 5] {
@@ -615,7 +648,7 @@ fn capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
         c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, and run (null until loaded; phase idle with null time before any build; see robot_run). Nothing is written."),
-        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
+        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls, and for a preset the run, motion, recording, replay and gait preview controls (gait:open:<report>, gait:play, gait:pause, gait:stop, gait:seek:0 | - | + (±period/12 from the latest pose), gait:speed:0.25 | 0.5 | 1, gait:list: the same RobotAction::Gait as REST robot_gait) (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
         c("robot_jog", json!({"joint":"left axle","target":0.5}), &format!("Servo-target jog of one joint by its file name: {JOG_LABEL}. Give target (absolute; rad, or m on a prismatic joint) or delta (from the current requested target). The same handler as the jog +/− buttons and system_ui jog:<joint>:+/- controls (±{JOG_STEP_RAD} rad, ±{JOG_STEP_M} m prismatic; listed for the joints touching the selected link). Errors name the joint: unknown joint, no servo target (passive joint, firmware none, fixed, or a trajectory-mode file), non-finite target, or a target outside the file's limits (with the limit; never clamped); after a failed run, Reset first. {JOG_SEMANTICS} robot_state.jog reports control mode, label and, per joint, the limit (or no limit in file), requested target, and the target and measured value from the latest accepted frame.")),
         c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
         c("robot_presets", json!({}), &format!("List the robot presets declared in {} (its paths resolved against the workspace root, reported in workspace): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
@@ -675,6 +708,21 @@ struct MotionText;
 struct MotionButton;
 #[derive(Component)]
 struct RecordingText;
+/// The inspector's Gait preview block (a preset only; filled by `gait_panel`).
+#[derive(Component)]
+struct GaitRoot;
+#[derive(Component)]
+struct GaitText;
+#[derive(Component)]
+struct GaitError;
+/// The tracked report buttons, rebuilt when the listing changes.
+#[derive(Component)]
+struct GaitList;
+#[derive(Component)]
+struct GaitButton;
+/// A relative seek button: its action is re-resolved from the latest pose each frame.
+#[derive(Component)]
+struct GaitSeekButton(i8);
 #[derive(Component)]
 struct GraphDock;
 #[derive(Component)]
@@ -712,7 +760,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             ..default()
         }))
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, (receive, poll_rest, motion_keys, graph_key, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, motion_panel, graph_dock, draw).chain())
+        .add_systems(Update, (receive, poll_rest, motion_keys, graph_key, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain())
         .run();
 }
 
@@ -767,7 +815,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
                 Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, overflow: Overflow::scroll_y(), ..default() },
                 ScrollPosition::default(),
                 InspectorScroll,
-                children![(text("Select a link in the list or the 3D view.", 12.5, INK), Inspector)],
+                children![(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, GaitRoot), (text("Select a link in the list or the 3D view.", 12.5, INK), Inspector)],
             )
         ],
     ));
@@ -1404,6 +1452,136 @@ fn motion_panel(
     }
 }
 
+/// The inspector's Gait preview block for a preset: the tracked reports (name,
+/// report speed, status verbatim), the transport, and the truthful labels. Every
+/// button is the same `RobotAction::Gait` as `system_ui` gait:* and REST
+/// `robot_gait`, enabled per the handler's check. `--robot FILE` has no scene, so
+/// nothing is shown there. Robot mode has no text-field idiom, so an explicit
+/// compiled.json path is REST-only (`robot_gait {path}`), as a replay path is.
+fn gait_panel(
+    mut commands: Commands,
+    view: Res<RobotView>,
+    fonts: Res<UiFonts>,
+    root: Single<Entity, With<GaitRoot>>,
+    mut shown: Local<bool>,
+    mut listed: Local<Option<Vec<String>>>,
+    list: Query<Entity, With<GaitList>>,
+    mut text: Query<(&mut Text, Has<GaitError>), Or<(With<GaitText>, With<GaitError>)>>,
+    mut buttons: Query<(&mut RobotAction, &Interaction, &mut BackgroundColor, Option<&GaitSeekButton>), With<GaitButton>>,
+) {
+    let Some(g) = view.run.as_ref().and_then(|r| r.gait_preview()) else { return };
+    let button = |commands: &mut Commands, action: GaitAction, text: &str| commands.spawn((Button, GaitButton, RobotAction::Gait { action }, Node { padding: UiRect::axes(Val::Px(7.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+    if !*shown {
+        let header = commands.spawn(label(&fonts, &format!("Gait preview — {}", robot_gait::LABEL), 11.5, MUTED)).id();
+        let row = |commands: &mut Commands| commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).id();
+        let transport = row(&mut commands);
+        let play = button(&mut commands, GaitAction::Play, "Play");
+        let pause = button(&mut commands, GaitAction::Pause, "Pause");
+        let stop = button(&mut commands, GaitAction::Stop, "Stop");
+        let mut seek = Vec::new();
+        for (step, _, _) in GAIT_SEEK {
+            let b = button(&mut commands, GaitAction::Seek { t: 0.0 }, match step { 0 => "t = 0", -1 => "−P/12", _ => "+P/12" });
+            commands.entity(b).insert(GaitSeekButton(step));
+            seek.push(b);
+        }
+        commands.entity(transport).add_children(&[play, pause, stop]).add_children(&seek);
+        let speed = row(&mut commands);
+        let speed_label = commands.spawn(label(&fonts, "speed ×", 11.5, MUTED)).id();
+        commands.entity(speed).add_child(speed_label);
+        for scale in GAIT_SCALES {
+            let b = button(&mut commands, GaitAction::Speed { scale }, &format!("{scale}"));
+            commands.entity(speed).add_child(b);
+        }
+        let status = commands.spawn((label(&fonts, "", 11.5, INK), GaitText)).id();
+        let error = commands.spawn((label(&fonts, "", 11.5, crate::builder::ui::DANGER), GaitError)).id();
+        let list_header = commands.spawn(label(&fonts, "Tracked gait reports (report speed · status, verbatim) — click to open. A compiled.json path: REST robot_gait {path} (no path field here).", 11.0, MUTED)).id();
+        let reports = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }, GaitList)).id();
+        commands.entity(*root).add_children(&[header, status, error, transport, speed, list_header, reports]);
+        *shown = true;
+    }
+    if let Ok(list) = list.single() {
+        // Rebuilt only when the offered reports change.
+        let names: Vec<String> = g.reports().iter().map(|r| r.name.clone()).collect();
+        if listed.as_ref() != Some(&names) {
+            commands.entity(list).despawn_related::<Children>();
+            let mut rows = Vec::new();
+            for r in g.reports() {
+                let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
+                let b = button(&mut commands, GaitAction::Open { source: GaitSource::Report(r.name.clone()) }, &r.name);
+                let speed = r.speed_m_s.map_or("speed —".to_string(), |v| format!("{v:.3} m/s"));
+                let t = commands.spawn(label(&fonts, &format!("{speed} · {}", r.status), 11.0, INK)).id();
+                commands.entity(row).add_children(&[b, t]);
+                rows.push(row);
+            }
+            let note = match g.list_error() {
+                Some(e) => format!("listing failed: {e}"),
+                None if names.is_empty() => "no tracked gait report with an existing compiled gait (robot_state.gait_preview.reports_skipped says why)".into(),
+                None => String::new(),
+            };
+            if !note.is_empty() {
+                rows.push(commands.spawn(label(&fonts, &note, 11.0, MUTED)).id());
+            }
+            commands.entity(list).add_children(&rows);
+            *listed = Some(names);
+        }
+    }
+    let r = view.run.as_ref().expect("gait preview implies a run");
+    for (mut t, error) in &mut text {
+        let line = if error { g.error().map_or(String::new(), |e| format!("error: {e}")) } else { gait_line(r, g) };
+        if t.0 != line {
+            t.0 = line;
+        }
+    }
+    for (mut action, interaction, mut background, step) in &mut buttons {
+        if let Some(step) = step {
+            let next = RobotAction::Gait { action: gait_seek(&view, step.0) };
+            if *action != next {
+                *action = next;
+            }
+        }
+        let enabled = check(&view, &action).is_ok();
+        let color = match (enabled, interaction) {
+            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
+            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
+            (true, _) => Color::srgb(0.16, 0.20, 0.25),
+        };
+        if background.0 != color {
+            background.0 = color;
+        }
+    }
+}
+
+/// The Gait preview status lines (rounded, so they only change with the pose).
+fn gait_line(r: &RunController, g: &robot_gait::GaitPreview) -> String {
+    let phase = json!(g.phase());
+    let phase = phase.as_str().unwrap_or("");
+    let blocked = r.check_gait(&GaitAction::Play).err().filter(|e| e.starts_with("a physics") || e.starts_with("a replay")).map_or(String::new(), |e| format!("\nunavailable: {e}"));
+    let Some(l) = g.loaded() else {
+        return format!("phase {phase} · no gait open · lift {} m (browser calibration-mirror){blocked}", robot_gait::LIFT_M);
+    };
+    let source = json!(l.governor_source);
+    let (status, fidelity) = l.report.as_ref().map_or(("(opened by path: no report)", "(opened by path: no report)"), |x| (x.status.as_str(), x.fidelity.as_str()));
+    let mut t = format!(
+        "{} · governor {} · period {:.3} s\nphase {phase} · gait time {} · scale ×{}\nstatus (verbatim): {status}\nfidelity (verbatim): {fidelity}\nlift {} m (browser calibration-mirror)",
+        l.report.as_ref().map_or_else(|| l.compiled.display().to_string(), |x| x.name.clone()),
+        source.as_str().unwrap_or(""),
+        l.period_s,
+        g.sample().map_or("—".into(), |x| format!("{:.2} s", x.gait_time_s)),
+        g.speed_scale(),
+        robot_gait::LIFT_M,
+    );
+    match g.sample() {
+        Some(x) => {
+            t += &format!("\nauthored-limit violations: {}", if x.authored_limit_violations.is_empty() { "none".to_string() } else { x.authored_limit_violations.join(", ") });
+            let q = if x.drives == "commanded" { &x.commanded } else { &x.desired };
+            let joints: Vec<String> = l.joints.iter().zip(q).map(|(j, v)| format!("{j} {v:+.3}")).collect();
+            t += &format!("\ndrives {} (rad): {}", x.drives, joints.join(" · "));
+        }
+        None => t += "\nauthored-limit violations: — (no pose yet)",
+    }
+    t + blocked.as_str()
+}
+
 /// One line under the motion buttons: the requested values, or why motion is unavailable.
 fn motion_line(r: &RunController) -> String {
     let m = r.motion_json();
@@ -1732,7 +1910,8 @@ fn graph_dock(
         return;
     };
     let h = run.graphs();
-    let stamp = format!("{:?}|{}|{}|{}|{:?}|{:?}", view.selected, h.generation(), h.frames(), run.graphs_mode(), h.window(), run.frame().map(|f| (f.time, f.steps)));
+    let gait = run.gait_preview().is_some_and(|g| g.loaded().is_some());
+    let stamp = format!("{:?}|{}|{}|{}|{:?}|{:?}|{gait}", view.selected, h.generation(), h.frames(), run.graphs_mode(), h.window(), run.frame().map(|f| (f.time, f.steps)));
     let now = time.elapsed_secs_f64();
     match drawn.as_ref() {
         Some((s, _)) if *s == stamp => return,
@@ -1748,6 +1927,11 @@ fn graph_dock(
     let mode = run.graphs_mode();
     commands.entity(entity).despawn_related::<Children>();
     let text = |value: &str, size: f32, color: Color| label(&fonts, value, size, color);
+    if gait {
+        // The charts are physics frames only; preview samples are never plotted as traces.
+        let caption = commands.spawn((Node { width: Val::Px(150.0), flex_shrink: 0.0, ..default() }, children![text("Gait preview is kinematic and not charted: these charts are the physics run's frames only.", 11.0, crate::builder::ui::WARN)])).id();
+        commands.entity(entity).add_child(caption);
+    }
     let num = |x: f64| if x == 0.0 || (x.abs() >= 1e-3 && x.abs() < 1e4) { format!("{x:.4}") } else { format!("{x:.3e}") };
     for (slot, c) in charts.iter().enumerate() {
         while handles.len() <= slot {

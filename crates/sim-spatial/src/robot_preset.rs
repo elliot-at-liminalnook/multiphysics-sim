@@ -10,9 +10,14 @@ use sim_runtime::environment::Task;
 use sim_runtime::session::Scene;
 use std::path::{Path, PathBuf};
 
-/// Where the browser's preset list lives, relative to the launch directory
-/// (the repository root); the declared paths resolve against the same root.
+/// Where the browser's preset list lives, relative to the workspace root
+/// (`crate::workspace`); the declared paths resolve against the same root.
 pub const PRESETS: &str = "web/viewer/presets.json";
+/// [`PRESETS`] under the workspace root (`crate::workspace`), or the error
+/// naming what was searched.
+pub fn default_file() -> Result<std::path::PathBuf, String> {
+    crate::workspace::path(PRESETS)
+}
 /// The browser worker's default seed (`web/worker.js`: `data.seed ?? 0`); no preset declares one.
 pub const SEED: u64 = 0;
 pub const SEED_RULE: &str = "seed 0: the browser worker's default (web/worker.js `data.seed ?? 0`); no preset declares a seed. Reset rebuilds with the same seed.";

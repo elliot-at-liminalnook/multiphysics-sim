@@ -250,6 +250,12 @@ impl Server {
             false
         }
     }
+    /// Add a top-level field to GET /v1/capabilities (e.g. the host's resolved workspace).
+    pub fn describe(&self, key: &str, value: Value) {
+        if let Some(caps) = self.shared.lock().unwrap().resources.get_mut("/v1/capabilities") {
+            caps[key] = value;
+        }
+    }
     pub fn publish(&self, resource: &str, value: Value) {
         self.shared
             .lock()

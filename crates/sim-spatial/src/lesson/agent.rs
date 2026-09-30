@@ -17,9 +17,8 @@ pub(crate) struct LessonAgent {
 
 impl LessonAgent {
     pub fn open(slug: &str, registry: &sim_core::BehaviorRegistry) -> Self {
-        let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-        let cwd = cwd.ancestors().find(|p| p.join(".git").exists()).unwrap_or(&cwd).to_path_buf();
-        let state_path = PathBuf::from("runs/lessons/agents").join(slug).join("state.json");
+        let cwd = crate::workspace::agent_dir();
+        let state_path = cwd.join("runs/lessons/agents").join(slug).join("state.json");
         let registry = Arc::new(registry.clone());
         let service = Supervisor::open_with_context(
             sim_agent::Config::from_env(cwd, state_path),

@@ -1211,12 +1211,13 @@ fn systems_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         body.spawn(k.text(format!("Before opening: {}", blockers.join("; ")), 11.5, WARN, 0));
     }
     body.spawn(k.section(&format!("Systems  {}", b.open.systems.len())));
-    let cwd = std::env::current_dir().unwrap_or_default();
+    // Shown relative to the workspace root (absolute when outside it or unresolved).
+    let base = crate::workspace::root().ok();
     let open = std::path::absolute(b.path()).unwrap_or_else(|_| b.path().to_path_buf());
     for path in &b.open.systems {
         let current = *path == open;
         let name = path.file_name().map(|n| n.to_string_lossy().trim_end_matches(".system.json").to_string()).unwrap_or_default();
-        let shown = path.strip_prefix(&cwd).unwrap_or(path).display().to_string();
+        let shown = base.and_then(|b| path.strip_prefix(b).ok()).unwrap_or(path).display().to_string();
         body.spawn(k.item("", &name, &shown, if current { "Open" } else { "" }, BuildAction::OpenSystem(path.clone()), current));
     }
 }
@@ -1272,10 +1273,10 @@ fn actuators_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             r.spawn(k.button("Check again", BuildAction::ActuatorReload, Look::Secondary, a.pending().is_none()));
         });
     }
-    let cwd = std::env::current_dir().unwrap_or_default();
+    let base = crate::workspace::root().ok();
     for check in &view.checks {
         let current = check.is_current();
-        let file = check.file.strip_prefix(&cwd).unwrap_or(&check.file).display().to_string();
+        let file = base.and_then(|b| check.file.strip_prefix(b).ok()).unwrap_or(&check.file).display().to_string();
         body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(8.)), flex_shrink: 0., ..default() }, children![k.dot(if current { OK } else { WARN }), k.text(format!("{} · {file}", if current { "Current" } else if check.issue.is_some() { "Not checked" } else { "Stale" }), 12., TEXT, 1)]));
         if let Some(issue) = &check.issue {
             let kind = serde_json::to_value(issue.kind).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();

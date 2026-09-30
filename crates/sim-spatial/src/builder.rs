@@ -360,7 +360,7 @@ fn compile_now(document: SystemDocument, registry: BehaviorRegistry) -> CompileR
 impl Builder {
     pub fn open(path: PathBuf, library_dir: PathBuf, mut registry: BehaviorRegistry) -> Result<Self, String> {
         // Authored parts live next to the saved subsystems: library/parts.
-        let library_dir_parts = library_dir.parent().map(|p| p.join("parts")).unwrap_or_else(|| PathBuf::from("library/parts"));
+        let library_dir_parts = library_dir.parent().map(|p| p.join("parts")).unwrap_or_else(|| library_dir.join("parts"));
         // Load them before validating the document, which may place them.
         let mut first = sim_parts::PartLibrary::new(library_dir_parts.clone());
         first.refresh(&mut registry);
@@ -1230,9 +1230,10 @@ impl Builder {
         sim_system::Study { at: self.level.clone(), instance: name.to_string(), kind, duration, observe, metrics }
     }
 
-    /// Directory recorded library paths resolve against (where tools run).
-    fn base_dir(&self) -> PathBuf {
-        std::env::current_dir().unwrap_or_default()
+    /// Directory recorded library paths resolve against: the workspace root
+    /// (`crate::workspace`), or the error naming what was searched.
+    fn base_dir(&self) -> Result<PathBuf, String> {
+        crate::workspace::root().map(std::path::Path::to_path_buf)
     }
 
     /// Publish a definition (and what it places) as a new library version,
@@ -1250,21 +1251,22 @@ impl Builder {
 
     /// Imported definitions whose library file has changed.
     pub fn library_updates(&self) -> Vec<library::Stale> {
-        library::stale(&self.document, &self.base_dir())
+        // Without a workspace root no recorded library path resolves (reported in system_state.workspace).
+        self.base_dir().map(|base| library::stale(&self.document, &base)).unwrap_or_default()
     }
 
     /// Bring every stale import up to date as one undoable edit.
     pub fn sync_library(&mut self) -> Result<sim_system::store::Applied, String> {
-        let commands = library::sync(&self.document, &self.base_dir()).map_err(|e| e.to_string())?;
+        let commands = library::sync(&self.document, &self.base_dir()?).map_err(|e| e.to_string())?;
         if commands.is_empty() {
             return Err("Library imports are up to date".into());
         }
         self.apply("Update from library", commands)
     }
 
-    /// Where a definition is placed in the system files under the working directory.
+    /// Where a definition is placed in the system files under the workspace's examples/ and next to this file.
     pub fn where_used(&self, definition: &str) -> Vec<(String, usize)> {
-        let mut files = library::system_files(&self.base_dir().join("examples"));
+        let mut files = self.base_dir().map(|base| library::system_files(&base.join("examples"))).unwrap_or_default();
         if let Some(dir) = self.store.path.parent() {
             files.extend(library::system_files(dir));
         }
@@ -1385,6 +1387,7 @@ impl Builder {
     }
     pub fn state_json(&self) -> serde_json::Value {
         serde_json::json!({
+            "workspace":crate::workspace::json(),
             "reference":self.reference.json(),
             "agent":self.agent.state.public(),
             "ui":self.ui_state(),

@@ -51,6 +51,7 @@ pub mod session;
 pub mod support;
 pub mod tracking;
 pub mod validation;
+pub mod workspace;
 pub use physical::{BuildOptions, PhysicalRobot};
 /// Re-exported so browser and other hosts reach the system-builder stack
 /// through this one crate.
@@ -68,10 +69,25 @@ pub fn registry_with_parts(dir: &std::path::Path) -> (BehaviorRegistry, Vec<sim_
 }
 
 /// The registry every system-document tool uses: built-ins plus authored
-/// parts from `$SIM_PARTS_DIR` (default `library/parts`). Load errors are
-/// printed with file and line; the rest still load.
+/// parts from `$SIM_PARTS_DIR`, else `<workspace root>/library/parts` with the
+/// process's root ([`workspace::get`]: resolved at launch, else from
+/// `$SIM_WORKSPACE` and the current directory). Load errors are printed with
+/// file and line; the rest still load. With no root, a warning names the
+/// directories searched and only the built-ins load.
 pub fn system_registry() -> BehaviorRegistry {
-    let dir = std::env::var_os("SIM_PARTS_DIR").map(std::path::PathBuf::from).unwrap_or_else(|| std::path::PathBuf::from("library/parts"));
+    system_registry_in(workspace::get().as_ref())
+}
+
+/// [`system_registry`] against a given workspace resolution.
+pub fn system_registry_in(root: Result<&workspace::WorkspaceRoot, &workspace::WorkspaceError>) -> BehaviorRegistry {
+    let dir = match (std::env::var_os("SIM_PARTS_DIR"), root) {
+        (Some(dir), _) => std::path::PathBuf::from(dir),
+        (None, Ok(root)) => root.path.join("library/parts"),
+        (None, Err(e)) => {
+            eprintln!("authored parts not loaded (built-ins only): {e}");
+            return registry();
+        }
+    };
     let (registry, loaded) = registry_with_parts(&dir);
     for l in loaded.iter().filter(|l| l.error.is_some()) {
         eprintln!("part not loaded: {}", l.error.as_deref().unwrap_or_default());

@@ -24,12 +24,8 @@ impl Reference {
             return Ok(());
         }
         sim_markdown::source_location(&target)?;
-        let cwd = std::env::current_dir().map_err(|e| e.to_string())?;
-        let root = cwd
-            .ancestors()
-            .find(|p| p.join(".git").exists())
-            .unwrap_or(&cwd)
-            .to_path_buf();
+        // Source links resolve against the workspace root.
+        let root = crate::workspace::root()?.to_path_buf();
         let (tx, rx) = mpsc::channel();
         let source = target.clone();
         std::thread::spawn(move || {

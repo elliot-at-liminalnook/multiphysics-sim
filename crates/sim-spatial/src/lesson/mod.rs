@@ -196,7 +196,8 @@ impl Default for Settings {
 }
 impl Settings {
     pub fn path() -> PathBuf {
-        std::env::var_os("SIM_LESSON_SETTINGS").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("runs/lessons/settings.json"))
+        // SIM_LESSON_SETTINGS, else the workspace's runs/; with no root, the sandbox's parent (reported at launch).
+        std::env::var_os("SIM_LESSON_SETTINGS").map(PathBuf::from).unwrap_or_else(|| crate::workspace::path("runs/lessons/settings.json").unwrap_or_else(|_| sim_runtime::lesson::sandbox_root().with_file_name("settings.json")))
     }
     pub fn load(path: &std::path::Path) -> Self {
         std::fs::read(path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default()

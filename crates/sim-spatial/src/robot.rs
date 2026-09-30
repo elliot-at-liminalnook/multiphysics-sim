@@ -150,8 +150,10 @@ pub struct RobotView {
     /// The preset being opened or run (None for `--robot FILE`).
     preset: Option<Preset>,
     /// The preset list and the root its paths resolve against.
-    presets: PathBuf,
-    root: PathBuf,
+    /// The preset list (explicit --robot-presets, else `<root>/web/viewer/presets.json`).
+    presets: Result<PathBuf, String>,
+    /// The launch's workspace root (`crate::workspace`); preset inputs and recordings resolve against it.
+    root: Result<PathBuf, String>,
     /// The run thread, spawned idle once the model has loaded.
     run: Option<RunController>,
     /// The last refused run control from a click (REST gets the error directly).
@@ -173,11 +175,12 @@ impl RobotView {
         });
         Self::new(path, rx, None)
     }
-    /// Opens preset `id` from `presets` (paths resolved against the launch
-    /// directory): refused now, naming the id, when it is unknown, not
-    /// embedded or missing inputs; its files are parsed on a worker thread.
+    /// Opens preset `id` from `presets` (its paths resolved against the
+    /// workspace root, `crate::workspace`): refused now, naming the id, when it
+    /// is unknown, not embedded or missing inputs, or when no root was found;
+    /// its files are parsed on a worker thread.
     pub fn open_preset(presets: &Path, id: &str) -> Result<Self, String> {
-        let root = std::env::current_dir().map_err(|e| format!("launch directory: {e}"))?;
+        let root = crate::workspace::root().map_err(|e| format!("robot preset `{id}` resolves its inputs against the workspace root: {e}"))?.to_path_buf();
         let preset = crate::robot_preset::select(presets, &root, id)?;
         let (tx, rx) = mpsc::channel();
         let (worker, dir) = (preset.clone(), root.clone());
@@ -185,20 +188,22 @@ impl RobotView {
             let _ = tx.send(load_preset(worker, &dir).map(|(l, r)| (l, Some(r))));
         });
         let mut view = Self::new(root.join(preset.scene.as_deref().unwrap_or_default()), rx, Some(preset));
-        view.presets = presets.to_path_buf();
-        view.root = root;
+        view.presets = Ok(presets.to_path_buf());
         Ok(view)
     }
-    /// The preset list REST robot_presets/robot_preset read (default `robot_preset::PRESETS`).
-    pub fn with_presets(mut self, presets: PathBuf) -> Self {
-        self.presets = presets;
+    /// The preset list REST robot_presets/robot_preset read (None: the
+    /// default `<root>/web/viewer/presets.json`).
+    pub fn with_presets(mut self, presets: Option<PathBuf>) -> Self {
+        if let Some(p) = presets {
+            self.presets = Ok(p);
+        }
         self
     }
     fn new(path: PathBuf, rx: mpsc::Receiver<Result<(Loaded, Option<PresetRun>), String>>, preset: Option<Preset>) -> Self {
         Self {
             preset,
-            presets: PathBuf::from(crate::robot_preset::PRESETS),
-            root: std::env::current_dir().unwrap_or_default(),
+            presets: crate::robot_preset::default_file(),
+            root: crate::workspace::root().map(Path::to_path_buf),
             path,
             status: Status::Loading(std::time::Instant::now()),
             model: None,
@@ -269,7 +274,7 @@ impl RobotView {
             json!({"label": JOG_LABEL, "semantics": JOG_SEMANTICS, "control_mode": m.control.mode, "trajectory_keyframes": m.control.trajectory.len(),
                 "step_rad": JOG_STEP_RAD, "step_m": JOG_STEP_M, "selected_link_joints": selected, "joints": joints, "last_apply_error": r.jog_error()})
         });
-        json!({"file": self.path, "status": status, "error": error, "load_seconds": seconds,
+        json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds,
             "link_count": m.map(|m| m.links.len()), "links": links, "selected": selected,
             "joints": joints, "motors": motors, "transmissions": m.map(|m| &m.transmissions), "battery": m.and_then(|m| m.battery.as_ref()),
             "actuator_profiles": profiles, "uncertainty": m.map(|_| &self.notes.uncertainty), "uncertainty_parsed": m.map(|m| &m.uncertainty), "identification": m.map(|m| &m.identification),
@@ -501,14 +506,15 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
     match sim_api::decode::<Request>(command)? {
         Request::RobotState => {}
         Request::RobotPresets => {
-            let presets = crate::robot_preset::list(&view.presets)?;
-            let rows: Vec<Value> = presets.iter().map(|p| p.discovery(&view.root)).collect();
-            return Ok(json!({"presets_file": view.presets, "root": view.root, "count": rows.len(), "presets": rows,
+            let (file, root) = (view.presets.clone()?, view.root.clone()?);
+            let presets = crate::robot_preset::list(&file)?;
+            let rows: Vec<Value> = presets.iter().map(|p| p.discovery(&root)).collect();
+            return Ok(json!({"presets_file": file, "root": root, "workspace": crate::workspace::json(), "count": rows.len(), "presets": rows,
                 "current": view.preset.as_ref().map(|p| &p.id)}));
         }
         Request::RobotPreset { id } => {
             // Refused here (naming the id) before anything is replaced; the old run thread stops when its controller drops.
-            let mut next = RobotView::open_preset(&view.presets, &id)?;
+            let mut next = RobotView::open_preset(&view.presets.clone()?, &id)?;
             next.ui_revision = view.ui_revision + 1;
             *view = next;
         }
@@ -571,16 +577,18 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
 
 /// The loopback REST server for robot mode.
 pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
-    sim_api::Server::bind(port, "robot", capabilities())
+    let server = sim_api::Server::bind(port, "robot", capabilities())?;
+    server.describe("workspace", crate::workspace::json());
+    Ok(server)
 }
 fn capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
-        c("robot_state", json!({}), "Read-only robot mode: file, status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, and run (null until loaded; phase idle with null time before any build; see robot_run). Nothing is written."),
+        c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, and run (null until loaded; phase idle with null time before any build; see robot_run). Nothing is written."),
         c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
         c("robot_jog", json!({"joint":"left axle","target":0.5}), &format!("Servo-target jog of one joint by its file name: {JOG_LABEL}. Give target (absolute; rad, or m on a prismatic joint) or delta (from the current requested target). The same handler as the jog +/− buttons and system_ui jog:<joint>:+/- controls (±{JOG_STEP_RAD} rad, ±{JOG_STEP_M} m prismatic; listed for the joints touching the selected link). Errors name the joint: unknown joint, no servo target (passive joint, firmware none, fixed, or a trajectory-mode file), non-finite target, or a target outside the file's limits (with the limit; never clamped); after a failed run, Reset first. {JOG_SEMANTICS} robot_state.jog reports control mode, label and, per joint, the limit (or no limit in file), requested target, and the target and measured value from the latest accepted frame.")),
         c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
-        c("robot_presets", json!({}), &format!("List the robot presets declared in {} (resolved against the launch directory, the repository root): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
+        c("robot_presets", json!({}), &format!("List the robot presets declared in {} (its paths resolved against the workspace root, reported in workspace): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
         c("robot_preset", json!({"id":"robot-measured-400hz"}), "Open a declared embedded preset by id in this window (replacing the current robot and stopping its run thread). Unknown ids, other modes and missing inputs are refused naming the id. The scene, config and task are parsed exactly as declared on a worker thread; scene.robot is drawn and inspected through the same loader as --robot FILE. Run/Pause/Step/Reset (robot_run) then drive the shared EmbeddedEnvironment (task) or EmbeddedSession (no task) on the run thread with seed 0 (recorded), one action interval or clamp(report_every, 1, 40) nominal steps per chunk. robot_state.preset reports id, label, paths, readiness and evidence verbatim, seed, step_s, chunk and step counts; run.phase `ended` with run.end reports a reached horizon or a terminated/truncated episode. Servo-target jog is not offered for presets."),
         c("robot_input", json!({"channels":{"command.forward_speed":0.001}}), &format!("Motion request for a running robot preset: {}. Give channels (values by motion channel name; the other motion channels keep their requested values) or key (w | a | s | d latches that key's request until stop, another key or a channel request; stop sets every motion channel to 0). The same handler as physical W/A/S/D (press/release) and X (stop), the W/A/S/D/Stop buttons and system_ui motion:w|a|s|d|stop. Motion channels come from the session's policy_contract.step_reference.config, else the preset's presets.json motion_commands (as web/viewer/motion-commands.mjs); key vectors from motion_key_vectors, else the channel bounds. Refused naming the channel and its bounds: an unknown channel, a session input that is not a motion channel, a non-finite value, or a value or summed key vector outside the channel's bounds ({}). Also refused, naming the reason: --robot FILE, a preset with no motion config, no built session (Run or Step builds it), a failed or ended run, an exhausted heartbeat. A declared motion_heartbeat is {} robot_state.motion reports source, channels with bounds, requested and held values, active keys, heartbeat, last refusal and the label.", robot_motion::LABEL, robot_motion::CLAMP_RULE, robot_motion::HEARTBEAT_RULE)),
         c("robot_save_recording", json!({"note":"after motion:w"}), &format!("Save the loaded preset run's recording: the same handler as the Save recording button and system_ui recording:save. The run thread snapshots the shared recording (EmbeddedEnvironment::episode_recording() for a preset with a task, EmbeddedSession::recording() without, as the browser's Download) in any phase with a built session, running, paused, ended or failed; a writer thread writes it, so the response returns at once with recording.pending set and robot_state.recording.last_saved {{path, meta_path, kind, version, completed_steps, replayable, not_replayable_reason, failure, saved_utc, bytes}} (or recording.error) once written. Optional path (relative to the root or absolute) and note (kept in the sidecar). {} {} {} Refused, naming the reason: --robot FILE, no built session (Run or Step first), a save still being written, a path under examples/, cad/ or web/, a name not ending in .json or ending in .meta.json, and an existing file (reported in recording.error).", robot_recording::LOCATION_RULE, robot_recording::FILE_RULE, robot_recording::REPLAYABLE_RULE)),

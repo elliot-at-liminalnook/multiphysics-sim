@@ -97,7 +97,7 @@ class DashboardTests(unittest.TestCase):
         self.assertTrue(view["outer_settings"]["enabled"])
         self.assertEqual(view["outer_settings"]["max_batches"], 3)
         self.assertEqual(view["calls"][0]["role"], "director")
-        self.assertIn("concrete consumer", view["roles"]["director"])
+        self.assertIn("Choose epics, not tasks", view["roles"]["director"])
         self.assertEqual(view["state"]["phase"], "director")
 
     def test_workflow_paused_time_freezes_and_assets_are_served(self):

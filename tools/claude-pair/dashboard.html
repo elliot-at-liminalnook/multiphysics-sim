@@ -118,7 +118,7 @@
     <div class="dir-grid">
       <div class="stack">
         <section class="card">
-          <div class="card-head"><h2>Current batch</h2><span class="right" id="dir-chip"></span></div>
+          <div class="card-head"><h2>Current epic</h2><span class="right" id="dir-chip"></span></div>
           <div class="card-body" id="dir-batch"></div>
         </section>
         <section class="card">
@@ -130,8 +130,8 @@
         <section class="card">
           <div class="card-head"><h2>Automatic planning</h2></div>
           <div class="card-body">
-            <label class="toggle"><span class="switch"><input type="checkbox" id="outer-enabled"><span></span></span>Let the Director pick the next batch when one is accepted</label>
-            <div class="field" style="margin-top:14px"><label for="max-batches">Stop after this many accepted batches (empty: no limit)</label><input class="input" type="number" id="max-batches" min="1" step="1" style="max-width:140px"></div>
+            <label class="toggle"><span class="switch"><input type="checkbox" id="outer-enabled"><span></span></span>Let the Director pick the next epic when one is accepted</label>
+            <div class="field" style="margin-top:14px"><label for="max-batches">Stop after this many accepted epics (empty: no limit)</label><input class="input" type="number" id="max-batches" min="1" step="1" style="max-width:140px"></div>
             <div class="row-end"><span class="note">Shares the run's time, usage and turn limits.</span><button class="btn small" id="save-outer">Save</button></div>
           </div>
         </section>
@@ -140,7 +140,7 @@
           <div class="card-body" id="dir-aside"></div>
         </section>
         <section class="card">
-          <div class="card-head"><h2>Accepted batches</h2><span class="count" id="history-count"></span></div>
+          <div class="card-head"><h2>Accepted epics</h2><span class="count" id="history-count"></span></div>
           <div class="card-body" id="dir-history"></div>
         </section>
         <section class="card">

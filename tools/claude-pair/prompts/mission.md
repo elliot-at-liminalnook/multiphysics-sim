@@ -18,8 +18,9 @@ annotations and source links; robot teleoperation; recordings/replay;
 experiments/gait studies; measured actuator models and calibration inspection.
 For each record the current entry point, reusable Rust layer, native UI gap,
 source owner, migration dependencies, and observable acceptance evidence.
-Prioritize a small end-to-end native workflow. Choose and document the existing
-native app that becomes the shell; don't create another competing viewer.
+The shell is `sim-spatial`, and its target shape is
+`docs/architecture/native-viewer.md`: read it, build toward it, and keep it
+current. Don't create another competing viewer.
 
 The user's native-first direction supersedes the old requirement to make the
 browser the primary interaction surface. Preserve browser compatibility until

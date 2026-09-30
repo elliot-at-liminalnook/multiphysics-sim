@@ -7,7 +7,7 @@
 //! └ status: message                                   revision · parts · nets · state ┘
 use super::*;
 use bevy::input::mouse::MouseWheel;
-use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, Corner, DANGER, Dock, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, divider, size, wheel_delta, wrap};
+use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, Corner, DANGER, Dock, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, divider, size, wheel_delta, wrap};
 
 #[derive(Component)]
 pub(super) enum Scroll {
@@ -883,7 +883,7 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
             slot.spawn(k.dock(Dock::Under { left: 0., right: 0., height: graphs::DOCK }, Node { padding: UiRect::all(Val::Px(10.)), column_gap: Val::Px(10.), ..default() }))
             .with_children(|dock| {
                 if let Some(r) = &b.study.result {
-                    dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(SURFACE)))
+                    dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(BAR)))
                         .with_children(|legend| {
                             legend.spawn(k.text(format!("Study {}", r.name), size::DETAIL, TEXT, 2));
                             for (label, color) in b.graphs.charts.iter().find(|c| !c.legend.is_empty()).map(|c| c.legend.clone()).unwrap_or_default() {

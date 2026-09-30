@@ -280,6 +280,16 @@ Implementation references: [Claude programmatic mode](https://code.claude.com/do
 and [CLI reference](https://code.claude.com/docs/en/cli-reference). Cost reports
 are cumulative per session, while `--max-budget-usd` applies to the current call.
 
+## Fast mode
+
+The worker runs in Claude Code's fast mode by default (`fast_roles` in
+`.claude-pair/config.json`, or `init --fast-roles worker orchestrator ...`). The
+coordinator passes `--settings '{"fastMode": true}'` for those roles and reads
+the setting at every call, so edits apply at the next turn. Each turn's footer
+shows whether it ran fast. If Claude Code refuses fast mode (an organization
+setting or usage state), the turn runs at normal speed and the journal notes why.
+Fast mode is priced higher, so it uses the 5-hour and weekly allowances faster.
+
 ## Decisions instead of stops
 
 The run is meant to keep going unattended. Agents decide rather than wait: an

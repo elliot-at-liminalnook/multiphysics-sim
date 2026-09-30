@@ -304,27 +304,58 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   in `report.yaml`. A REST query returns the same numbers as the file.
 
 ### j. Measured actuator models and calibration inspection
-- **Entry today:** `actuator_registry` example CLI (`hash|limits|apply|check`,
-  `crates/sim-runtime/examples/actuator_registry.rs`) over
-  `examples/actuators/hx30hm/accepted/registry.json`. Calibration and FPGA
-  review in `sim-viewer --experiments` (`experiments_ui/{refinement, fpga_ui, motor_response_ui, power_ui}.rs`).
+- **Entry today:** the build-mode **Actuators** sidebar tab in `sim-spatial`
+  (read-only registry inspector, commit d4c14f9f, verified natively in T4.3),
+  plus the `actuator_registry` example CLI (`hash|limits|apply|check`,
+  `crates/sim-runtime/examples/actuator_registry.rs`). Calibration and FPGA
+  review remain in `sim-viewer --experiments` (`experiments_ui/{refinement, fpga_ui, motor_response_ui, power_ui}.rs`).
   Browser calibration panel (`web/viewer/calibration-ui.mjs`, token gated,
   talks to `serve_actuator_calibration.rs`, which drives hardware and is out of
   scope). `web/motor-bench/`. The sim-spatial lesson bench page only asks a
   calibration server named by `SIM_BENCH_URL` (`lesson/extras.rs:193,520`).
 - **Reusable layer:** `sim_runtime::{actuator_registry, part_fit, acquisition::calibration, controller_refinement::{calibration, calibration_data, evidence, fpga_review, motor_response}}`,
   `sim_domain_robot::actuator_profile`.
-- **Shell status:** *absent* for the registry and calibration review.
-- **Source owner:** actuator registry (single source of measured values),
-  bench data in examples and `runs/`.
-- **Dependencies:** read-only panels first. `Registry` load and `check`
-  staleness (family hash vs consumer) run on a worker, and
-  measured/derived/estimated labels come from the family file. No hardware I/O
-  in the shell.
-- **Acceptance evidence:** open the registry. A screenshot lists families with
-  hash, role and joint limits at the stated supply voltage. A stale consumer
-  file shows "stale" with both hashes, matching the `actuator_registry check`
-  CLI output.
+- **Shell status:** *present (read-only)* for the registry and consumer
+  staleness; *absent* for calibration and FPGA review.
+- **One path:** `Builder::actuators_request(registry?, check?)`
+  (`crates/sim-spatial/src/builder/actuators.rs`) is called by the registry
+  path field (`actuator_registry_path`, Enter loads), the consumer path field
+  (`actuator_consumer_path`, Enter checks that file), Reload/Check again
+  (`actuator_reload`), Cancel (`cancel_actuators`), the first visit to the tab
+  (which loads `examples/actuators/hx30hm/accepted/registry.json`), and REST
+  `system_actuators {"registry"?, "check"?: [paths]}` (listed in
+  capabilities). A worker thread runs `Registry::load` and
+  `Registry::check_consumer`, the same library code the CLI `check` uses
+  (`robot_pointers` discovery moved into the library, commit 2800bf6e); the UI
+  thread only polls. Results are in `system_state.actuators`.
+- **What it shows:** registry path and hash; per family the content hash
+  (short on screen, full in state), acceptance text, description, limitations
+  and every motor/driver/controller/envelope parameter with value, unit,
+  provenance label (measured/derived/estimated, coloured), uncertainty
+  (`± unknown` when null, never 0) and evidence key; the joint-role map; and
+  per consumer file and model pointer: current/stale/invalid with motor, joint,
+  family → accepted family and both hashes. Load errors (missing file, family
+  content-hash mismatch) name the path and both hashes, and the last good load
+  stays visible, labelled with its own path.
+- **Evidence (T4.3):** `$PAIR_CAPTURES/T4-actuators/` — `registry.png` (knee
+  family rows with provenance and `± unknown`), `registry-knee-header.png`,
+  `registry-knee-more.png` (controller and envelope), `current-check.png`,
+  `stale-check.png`, `bad-path.png`, `hash-mismatch.png`; `capture.json`
+  (ok=true) records the CLI stdout/stderr and exit codes (current 0, stale 1)
+  and asserts the CLI have/accepted hashes equal the native ones
+  (d1bdbbb6…8f09 / 1bd83048…4f3b), and native family hashes, acceptance text
+  and roles equal `registry.json`. Driver: `drive_actuators.py` there.
+- **Remaining limits:** read-only — no apply, promote or re-accept in the
+  shell (use the CLI and the promotion path); only the first mismatch per model
+  is reported (the library returns the first); calibration review and FPGA
+  review still live in `sim-viewer --experiments`; the hardware calibration
+  server (`serve_actuator_calibration.rs`, browser calibration panel) stays
+  external and is not migrated; joint limits for a checked consumer are not
+  shown. Controls were activated with REST `system_ui` (the same handlers as a
+  click) and the sidebar was positioned with `system_ui scroll` (commit
+  12c744b3; OS-injected wheel events did not reach the window), so pointer
+  clicks and wheel gestures are not captured. A long load error overflows the
+  status bar line.
 
 ## 3. External UI that remains
 
@@ -450,11 +481,12 @@ loosening the comparison.
 unknown-id error).
 
 **Next slices, in order:**
-1. **Open another system in-app** (a): `system_open` REST plus an Open control,
-   with draft preservation. This removes the relaunch.
-2. **Actuator registry inspector** (j): a read-only panel over
-   `actuator_registry::Registry` and `check`, with hashes, roles, limits and
-   measured/estimated labels, loaded on a worker.
+1. **Done — open another system in-app** (a): Systems tab, `system_ui` and
+   REST `system_open` share `Builder::open_system`, with draft preservation
+   (commits 6dab907a, 2ceb4f92; verified natively in T3.2).
+2. **Done — actuator registry inspector** (j): read-only Actuators tab and
+   REST `system_actuators` over `Registry::load`/`check_consumer` on a worker
+   (commits 2800bf6e, d4c14f9f, 12c744b3; verified natively in T4.3, see §2j).
 3. **Gait-lab report browser** (i): read-only `report.yaml` and journal view
    with fidelity and gate labels. Launching evaluations comes later.
 4. **Schematic pane in the shell** (c): a graphics-free `sim_diagram` layout

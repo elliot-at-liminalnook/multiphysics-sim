@@ -1,13 +1,16 @@
-//! Robot-mode run thread: one worker owns the shared
-//! `sim_runtime::physical::PhysicalRobot` (built from a clone of the loaded
-//! model with `sim_runtime::registry()` and `BuildOptions::default()`, as
-//! sim-app's cad scene does) and advances it in fixed sim-time chunks, paced
-//! at most to real time. The UI thread only sends commands and applies the
-//! published frames; it never builds, advances or locks the robot.
+//! Robot-mode run thread: one worker owns the simulation and advances it in
+//! fixed sim-time chunks, paced at most to real time. For `--robot FILE` it is
+//! the shared `sim_runtime::physical::PhysicalRobot` (built from a clone of the
+//! loaded model with `sim_runtime::registry()` and `BuildOptions::default()`,
+//! as sim-app's cad scene does); for a preset (`robot_preset`) it is the shared
+//! `EmbeddedEnvironment` (with a task) or `EmbeddedSession` built from the
+//! preset's files unchanged. The UI thread only sends commands and applies the
+//! published frames; it never builds, advances or locks the simulation.
 use bevy::math::{DMat3, DQuat};
 use serde::Serialize;
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
+use crate::robot_preset::PresetRun;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
@@ -101,6 +104,24 @@ pub enum Phase {
     Paused,
     /// A build or advance error stopped the run; Reset rebuilds.
     Failed,
+    /// A preset reached its horizon, or its episode terminated/truncated
+    /// (`run.end` says which and why); Reset rebuilds.
+    Ended,
+}
+
+/// What the run thread builds: the loaded file, or a preset's parsed inputs.
+#[derive(Clone)]
+pub enum Source {
+    Robot(PhysicalModel),
+    Preset(Arc<PresetRun>),
+}
+impl Source {
+    fn chunk_s(&self) -> f64 {
+        match self {
+            Source::Robot(_) => CHUNK_S,
+            Source::Preset(p) => p.chunk_s(),
+        }
+    }
 }
 
 /// One published state of the robot, stamped with its generation.
@@ -110,8 +131,14 @@ pub struct Frame {
     pub time: f64,
     /// Chunks of `CHUNK_S` advanced since the build.
     pub steps: u64,
-    /// Per link: position of the link frame (at its com) and orientation, model frame.
-    pub poses: Vec<([f64; 3], DQuat)>,
+    /// Nominal solver steps completed (presets; the session's own count).
+    pub completed_steps: Option<u64>,
+    /// Per link of the loaded model (by index): position of the link frame (at
+    /// its com) and orientation, model frame; None when the frame has no pose
+    /// of that name.
+    pub poses: Vec<Option<([f64; 3], DQuat)>>,
+    /// Link names in the simulation's frame that match no loaded link.
+    pub unmatched: Vec<String>,
     pub joint_names: Vec<String>,
     pub joint_angles: Vec<f64>,
     /// Snapshot of the robot's servo targets when the frame was taken.
@@ -136,6 +163,8 @@ struct Status {
     generation: u64,
     rtf: Option<f64>,
     error: Option<String>,
+    /// Why a preset run ended (phase `ended`).
+    end: Option<Value>,
 }
 
 /// What the worker publishes: its status and its latest frame.
@@ -204,21 +233,43 @@ pub struct RunController {
     /// Targets requested by jogs in this generation (cleared by Reset).
     jogged: std::collections::BTreeMap<String, f64>,
     jog_error: Option<String>,
+    /// The preset this controller runs (None for `--robot FILE`).
+    preset: Option<Arc<PresetRun>>,
+    chunk_s: f64,
 }
 
 impl RunController {
     /// Spawns the (idle) run thread with its own clone of the loaded model.
     pub fn spawn(model: PhysicalModel) -> Self {
+        Self::spawn_source(Source::Robot(model.clone()), model, None)
+    }
+    /// Spawns the (idle) run thread for a preset; `scene.robot` is the model
+    /// the links and inspector show. Nothing is built until Run or Step.
+    pub fn spawn_preset(run: Arc<PresetRun>) -> Self {
+        let model = run.scene.robot.clone();
+        Self::spawn_source(Source::Preset(run.clone()), model, Some(run))
+    }
+    fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>) -> Self {
         let (tx, rx) = mpsc::channel();
-        let status = Status { phase: Phase::Idle, generation: 0, rtf: None, error: None };
+        let status = Status { phase: Phase::Idle, generation: 0, rtf: None, error: None, end: None };
         let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None }));
         let out = shared.clone();
-        let own = model.clone();
+        let chunk_s = source.chunk_s();
+        let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
         std::thread::Builder::new()
             .name("robot-run".into())
-            .spawn(move || worker(own, rx, out))
+            .spawn(move || worker(source, links, rx, out))
             .expect("spawn robot run thread");
-        Self { tx, shared, generation: 0, running: false, frame: None, status, model, jogged: Default::default(), jog_error: None }
+        Self { tx, shared, generation: 0, running: false, frame: None, status, model, jogged: Default::default(), jog_error: None, preset, chunk_s }
+    }
+    pub fn preset(&self) -> Option<&Arc<PresetRun>> {
+        self.preset.as_ref()
+    }
+    pub fn chunk_s(&self) -> f64 {
+        self.chunk_s
+    }
+    pub fn end(&self) -> Option<&Value> {
+        self.status.end.as_ref()
     }
 
     /// The target a jog step starts from: this generation's last requested
@@ -231,6 +282,9 @@ impl RunController {
     /// (unknown joint, no servo target, non-finite, outside the file's
     /// limits), then run state. Works idle and after a failed build.
     pub fn check_jog(&self, joint: &str, target: f64) -> Result<Servo, String> {
+        if let Some(p) = &self.preset {
+            return Err(format!("joint `{joint}`: servo-target jog is for `--robot FILE`; preset `{}` is driven by its declared controller recipe ({}), so the viewer sets no joint target", p.preset.id, p.kind()));
+        }
         let servo = servo(&self.model, joint)?;
         check_target(&servo, target)?;
         if self.status.phase == Phase::Failed {
@@ -249,12 +303,16 @@ impl RunController {
     /// Why an action is unavailable now (`Ok` when it can be sent).
     pub fn check(&self, action: RunAction) -> Result<(), String> {
         let failed = self.status.phase == Phase::Failed;
+        let ended = self.status.phase == Phase::Ended;
+        let why = || self.status.end.as_ref().and_then(|e| e.get("message")).and_then(|m| m.as_str()).unwrap_or("the run ended").to_string();
         match action {
             RunAction::Start if failed => Err("the run failed; Reset rebuilds the robot before it can run again".into()),
+            RunAction::Start if ended => Err(format!("{}; Reset rebuilds at t = 0 before it can run again", why())),
             RunAction::Start if self.running => Err("already running".into()),
-            RunAction::Pause if !self.running || failed => Err("not running".into()),
+            RunAction::Pause if !self.running || failed || ended => Err("not running".into()),
             RunAction::Step if failed => Err("the run failed; Reset rebuilds the robot before it can step".into()),
-            RunAction::Step if self.running => Err(format!("step advances one {CHUNK_S} s chunk only while paused; the robot is running — pause first")),
+            RunAction::Step if ended => Err(format!("{}; Reset rebuilds at t = 0 before it can step", why())),
+            RunAction::Step if self.running => Err(format!("step advances one {} s chunk only while paused; the robot is running — pause first", self.chunk_s)),
             _ => Ok(()),
         }
     }
@@ -280,7 +338,7 @@ impl RunController {
                 // The rebuild starts from the file's control targets again.
                 self.jogged.clear();
                 self.jog_error = None;
-                self.status = Status { phase: Phase::Building, generation: self.generation, rtf: None, error: None };
+                self.status = Status { phase: Phase::Building, generation: self.generation, rtf: None, error: None, end: None };
                 Command::Reset { generation: self.generation }
             }
         };
@@ -294,11 +352,11 @@ impl RunController {
         if published.status.generation >= self.generation {
             self.status = published.status.clone();
             self.jog_error = published.jog_error.clone();
-            if self.status.phase == Phase::Failed {
+            if matches!(self.status.phase, Phase::Failed | Phase::Ended) {
                 self.running = false;
             }
         }
-        let fresh = published.frame.as_ref().filter(|f| accept(self.generation, f) && self.frame.as_ref().is_none_or(|old| old.generation != f.generation || old.steps != f.steps || old.targets != f.targets));
+        let fresh = published.frame.as_ref().filter(|f| accept(self.generation, f) && self.frame.as_ref().is_none_or(|old| old.generation != f.generation || old.steps != f.steps || old.targets != f.targets || old.completed_steps != f.completed_steps));
         match fresh {
             Some(f) => {
                 self.frame = Some(f.clone());
@@ -353,11 +411,24 @@ impl RunController {
     /// the current generation exists (idle before any run).
     pub fn state_json(&self, links: &[String]) -> Value {
         let f = self.frame.as_ref();
-        let poses: Option<Vec<Value>> = f.map(|f| f.poses.iter().enumerate().map(|(i, (p, q))| json!({"link": links.get(i), "position": p, "quat_xyzw": [q.x, q.y, q.z, q.w]})).collect());
-        json!({"phase": self.status.phase, "time": f.map(|f| f.time), "steps": f.map(|f| f.steps), "chunk_s": CHUNK_S,
-            "rtf": self.status.rtf, "generation": self.generation, "error": self.status.error, "frame_generation": f.map(|f| f.generation),
+        let poses: Option<Vec<Value>> = f.map(|f| {
+            f.poses.iter().enumerate().map(|(i, pose)| match pose {
+                Some((p, q)) => json!({"link": links.get(i), "position": p, "quat_xyzw": [q.x, q.y, q.z, q.w]}),
+                None => json!({"link": links.get(i), "position": null, "quat_xyzw": null}),
+            }).collect()
+        });
+        let build = match &self.preset {
+            None => "sim_runtime::physical::PhysicalRobot::build(model clone, sim_runtime::registry(), BuildOptions::default()) on the run thread".to_string(),
+            Some(p) if p.task.is_some() => format!("sim_runtime::environment::EmbeddedEnvironment::new(scene, config, task, seed {}) from the preset's files unchanged, on the run thread", p.seed),
+            Some(p) => format!("sim_runtime::embedded::EmbeddedSession::new(scene, config, seed {}, CaptureMode::Latest) from the preset's files unchanged, on the run thread", p.seed),
+        };
+        let without: Option<Vec<&String>> = f.map(|f| f.poses.iter().enumerate().filter(|(_, p)| p.is_none()).filter_map(|(i, _)| links.get(i)).collect());
+        json!({"phase": self.status.phase, "time": f.map(|f| f.time), "steps": f.map(|f| f.steps), "chunk_s": self.chunk_s,
+            "rtf": self.status.rtf, "generation": self.generation, "error": self.status.error, "end": self.status.end, "frame_generation": f.map(|f| f.generation),
+            "completed_steps": f.and_then(|f| f.completed_steps),
             "joints": f.map(|f| &f.joint_names), "joint_angles": f.map(|f| &f.joint_angles), "targets": f.map(|f| &f.targets), "poses": poses,
-            "build": "sim_runtime::physical::PhysicalRobot::build(model clone, sim_runtime::registry(), BuildOptions::default()) on the run thread",
+            "unmatched_frame_links": f.map(|f| &f.unmatched), "links_without_pose": without,
+            "build": build,
             "steps_unit": "chunks of chunk_s since the last build", "pacing": PACING, "poses_frame": "link frame at its com, model frame (Z up)"})
     }
 }
@@ -368,11 +439,115 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
         .iter()
         .map(|(r, p)| {
             let cols: [f64; 9] = std::array::from_fn(|i| r.as_slice()[i]);
-            ([p.x, p.y, p.z], DQuat::from_mat3(&DMat3::from_cols_array(&cols)).normalize())
+            Some(([p.x, p.y, p.z], DQuat::from_mat3(&DMat3::from_cols_array(&cols)).normalize()))
         })
         .collect();
     let targets = robot.targets.lock().unwrap_or_else(|p| p.into_inner()).clone();
-    Frame { generation, time: robot.time(), steps, poses, joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets }
+    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets }
+}
+
+/// A frame from a preset session's `interactive_frame()`: `poses[]` of
+/// `{name, position_m, rotation}` (rotation row-major, the same link frames
+/// `PhysicalRobot::poses` gives), mapped to the loaded links by name. Names
+/// that match no link are kept in `unmatched`, never dropped silently.
+fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64) -> Result<Frame, String> {
+    let completed = v.get("completed_steps").and_then(Value::as_u64).ok_or("session frame has no completed_steps")?;
+    let mut poses = vec![None; links.len()];
+    let mut unmatched = Vec::new();
+    for (k, pose) in v.get("poses").and_then(Value::as_array).ok_or("session frame has no poses")?.iter().enumerate() {
+        let name = pose.get("name").and_then(Value::as_str).ok_or_else(|| format!("session frame poses[{k}] has no name"))?;
+        let num = |x: &Value| x.as_f64().ok_or_else(|| format!("session frame pose `{name}`: non-numeric value"));
+        let p = pose.get("position_m").and_then(Value::as_array).filter(|a| a.len() == 3).ok_or_else(|| format!("session frame pose `{name}` has no position_m"))?;
+        let r = pose.get("rotation").and_then(Value::as_array).filter(|a| a.len() == 3).ok_or_else(|| format!("session frame pose `{name}` has no 3×3 rotation"))?;
+        let mut m = [[0.0; 3]; 3];
+        for (i, row) in r.iter().enumerate() {
+            let row = row.as_array().filter(|a| a.len() == 3).ok_or_else(|| format!("session frame pose `{name}`: rotation row {i} is not 3 numbers"))?;
+            for j in 0..3 {
+                m[i][j] = num(&row[j])?;
+            }
+        }
+        let cols = DMat3::from_cols([m[0][0], m[1][0], m[2][0]].into(), [m[0][1], m[1][1], m[2][1]].into(), [m[0][2], m[1][2], m[2][2]].into());
+        let pos = [num(&p[0])?, num(&p[1])?, num(&p[2])?];
+        match links.iter().position(|l| l == name) {
+            Some(i) => poses[i] = Some((pos, DQuat::from_mat3(&cols).normalize())),
+            None => unmatched.push(name.to_string()),
+        }
+    }
+    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new() })
+}
+
+/// The simulation the run thread owns.
+enum Sim {
+    Robot(sim_runtime::physical::PhysicalRobot),
+    /// The held action: the session's own input values (see `robot_preset`'s action_rule).
+    Environment { env: sim_runtime::environment::EmbeddedEnvironment, held: Vec<f64>, run: Arc<PresetRun> },
+    Session { session: sim_runtime::embedded::EmbeddedSession, run: Arc<PresetRun> },
+}
+impl Sim {
+    fn build(source: &Source, registry: &mut Option<sim_core::BehaviorRegistry>) -> Result<Sim, String> {
+        use sim_runtime::embedded::{CaptureMode, EmbeddedSession};
+        use sim_runtime::environment::EmbeddedEnvironment;
+        match source {
+            Source::Robot(model) => {
+                let registry = registry.get_or_insert_with(sim_runtime::registry);
+                sim_runtime::physical::PhysicalRobot::build(model.clone(), registry, &sim_runtime::physical::BuildOptions::default()).map(Sim::Robot)
+            }
+            Source::Preset(run) => match &run.task {
+                Some(task) => {
+                    let env = EmbeddedEnvironment::new(run.scene.clone(), run.config.clone(), task.clone(), run.seed)?;
+                    // Held at the session's reset values, as EmbeddedEnvironment::prepare_replay does.
+                    let held = env.inputs().iter().map(|c| c.initial).collect();
+                    Ok(Sim::Environment { env, held, run: run.clone() })
+                }
+                None => Ok(Sim::Session { session: EmbeddedSession::new(run.scene.clone(), run.config.clone(), run.seed, CaptureMode::Latest)?, run: run.clone() }),
+            },
+        }
+    }
+    fn time(&self) -> f64 {
+        match self {
+            Sim::Robot(r) => r.time(),
+            Sim::Environment { env, run, .. } => env.transition().completed_steps as f64 * run.config.step_s,
+            Sim::Session { session, run } => session.completed_steps() as f64 * run.config.step_s,
+        }
+    }
+    /// Advances exactly one chunk.
+    fn advance(&mut self) -> Result<(), String> {
+        match self {
+            Sim::Robot(r) => r.advance(CHUNK_S),
+            Sim::Environment { env, held, .. } => env.step(held).map(|_| ()),
+            Sim::Session { session, run } => session.advance(run.chunk_steps()),
+        }
+    }
+    /// Why the run cannot continue without a reset (horizon or episode end).
+    fn ended(&self) -> Option<Value> {
+        match self {
+            Sim::Robot(_) => None,
+            Sim::Environment { env, run, .. } => {
+                let t = env.transition();
+                (t.terminated || t.truncated).then(|| {
+                    let kind = if t.terminated { "terminated" } else { "horizon" };
+                    let message = if t.terminated {
+                        format!("episode terminated at t = {:.3} s: {}", t.completed_steps as f64 * run.config.step_s, t.termination_reasons.join("; "))
+                    } else {
+                        format!("horizon reached (episode truncated) at t = {:.3} s: {} of {} steps", t.completed_steps as f64 * run.config.step_s, t.completed_steps, run.config.steps)
+                    };
+                    json!({"kind": kind, "terminated": t.terminated, "truncated": t.truncated, "termination_reasons": t.termination_reasons, "completed_steps": t.completed_steps, "message": message})
+                })
+            }
+            Sim::Session { session, run } => (session.remaining_steps() == 0).then(|| {
+                let n = session.completed_steps();
+                json!({"kind": "horizon", "terminated": false, "truncated": true, "termination_reasons": [], "completed_steps": n,
+                    "message": format!("horizon reached at t = {:.3} s: {n} of {} steps", n as f64 * run.config.step_s, run.config.steps)})
+            }),
+        }
+    }
+    fn frame(&self, links: &[String], generation: u64, steps: u64) -> Result<Frame, String> {
+        match self {
+            Sim::Robot(r) => Ok(frame(r, generation, steps)),
+            Sim::Environment { env, run, .. } => preset_frame(&env.frame()?, links, generation, steps, run.config.step_s),
+            Sim::Session { session, run } => preset_frame(&session.interactive_frame()?, links, generation, steps, run.config.step_s),
+        }
+    }
 }
 
 /// Sets one servo target by the file's joint name. `set_target` ignores a bad
@@ -386,14 +561,15 @@ fn apply_jog(robot: &sim_runtime::physical::PhysicalRobot, joint: &str, target: 
     Ok(())
 }
 
-/// The run thread. The robot is built and advanced only here.
-fn worker(model: PhysicalModel, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Published>>) {
-    use sim_runtime::physical::{BuildOptions, PhysicalRobot};
-    let registry = sim_runtime::registry();
-    let mut robot: Option<PhysicalRobot> = None;
+/// The run thread. The simulation is built and advanced only here.
+fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Published>>) {
+    let chunk_s = source.chunk_s();
+    let mut registry = None;
+    let mut sim: Option<Sim> = None;
     let mut generation = 0;
     let mut steps = 0;
     let mut failed = false;
+    let mut ended = false;
     let mut running = false;
     // Pacing anchor (wall, sim) and the RTF window of (wall, sim) samples.
     let mut anchor = (Instant::now(), 0.0);
@@ -408,7 +584,21 @@ fn worker(model: PhysicalModel, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Publ
     let set_jog_error = |e: Option<String>| out.lock().unwrap_or_else(|p| p.into_inner()).jog_error = e;
     // Jogs received before the first build, applied right after it.
     let mut pending: Vec<(String, f64)> = Vec::new();
-    let status = |phase, generation, rtf, error: Option<String>| Status { phase, generation, rtf, error };
+    let status = |phase, generation, rtf, error: Option<String>| Status { phase, generation, rtf, error, end: None };
+    // A frame of the current state, or the failure it hit (the last good frame stays published).
+    let publish = |sim: &Sim, phase: Phase, generation: u64, steps: u64, rtf: Option<f64>| -> bool {
+        match sim.frame(&links, generation, steps) {
+            Ok(f) => {
+                let end = if phase == Phase::Ended { sim.ended() } else { None };
+                set(Status { end, ..status(phase, generation, rtf, None) }, Some(f));
+                true
+            }
+            Err(e) => {
+                set(status(Phase::Failed, generation, None, Some(format!("frame failed at t = {:.3} s: {e}", sim.time()))), None);
+                false
+            }
+        }
+    };
     loop {
         let command = if running {
             match rx.try_recv() {
@@ -422,21 +612,23 @@ fn worker(model: PhysicalModel, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Publ
                 Err(_) => return,
             }
         };
-        let build = |robot: &mut Option<PhysicalRobot>, generation: u64, pending: &mut Vec<(String, f64)>| -> bool {
-            if robot.is_some() {
+        let mut build = |sim: &mut Option<Sim>, generation: u64, pending: &mut Vec<(String, f64)>| -> bool {
+            if sim.is_some() {
                 return true;
             }
             set(status(Phase::Building, generation, None, None), None);
-            match PhysicalRobot::build(model.clone(), &registry, &BuildOptions::default()) {
-                Ok(r) => {
-                    for (joint, target) in pending.drain(..) {
-                        if let Err(e) = apply_jog(&r, &joint, target) {
-                            set_jog_error(Some(e));
+            match Sim::build(&source, &mut registry) {
+                Ok(s) => {
+                    if let Sim::Robot(r) = &s {
+                        for (joint, target) in pending.drain(..) {
+                            if let Err(e) = apply_jog(r, &joint, target) {
+                                set_jog_error(Some(e));
+                            }
                         }
                     }
-                    set(status(Phase::Paused, generation, None, None), Some(frame(&r, generation, 0)));
-                    *robot = Some(r);
-                    true
+                    let ok = publish(&s, Phase::Paused, generation, 0, None);
+                    *sim = Some(s);
+                    ok
                 }
                 Err(e) => {
                     set(status(Phase::Failed, generation, None, Some(format!("build failed: {e}"))), None);
@@ -447,18 +639,19 @@ fn worker(model: PhysicalModel, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Publ
         match command {
             Some(Command::Reset { generation: g }) => {
                 generation = g;
-                robot = None;
+                sim = None;
                 pending.clear();
                 set_jog_error(None);
                 steps = 0;
                 running = false;
-                failed = !build(&mut robot, generation, &mut pending);
+                ended = false;
+                failed = !build(&mut sim, generation, &mut pending);
             }
             Some(Command::Jog { joint, .. }) if failed => set_jog_error(Some(format!("joint `{joint}`: not applied; the run failed (Reset rebuilds)"))),
-            _ if failed => {}
-            Some(Command::Jog { joint, target }) => match robot.as_ref() {
+            _ if failed || ended => {}
+            Some(Command::Jog { joint, target }) => match sim.as_ref() {
                 None => pending.push((joint, target)),
-                Some(r) => match apply_jog(r, &joint, target) {
+                Some(Sim::Robot(r)) => match apply_jog(r, &joint, target) {
                     Ok(()) => {
                         set_jog_error(None);
                         let phase = if running { Phase::Running } else { Phase::Paused };
@@ -467,11 +660,12 @@ fn worker(model: PhysicalModel, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Publ
                     }
                     Err(e) => set_jog_error(Some(e)),
                 },
+                Some(_) => set_jog_error(Some(format!("joint `{joint}`: not applied; a preset is driven by its declared controller"))),
             },
             Some(Command::Start) => {
-                if build(&mut robot, generation, &mut pending) {
+                if build(&mut sim, generation, &mut pending) {
                     running = true;
-                    let t = robot.as_ref().map_or(0.0, |r| r.time());
+                    let t = sim.as_ref().map_or(0.0, Sim::time);
                     anchor = (Instant::now(), t);
                     window.clear();
                     window.push_back(anchor);
@@ -482,58 +676,66 @@ fn worker(model: PhysicalModel, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Publ
             }
             Some(Command::Pause) => {
                 running = false;
-                set(status(if robot.is_some() { Phase::Paused } else { Phase::Idle }, generation, None, None), None);
+                set(status(if sim.is_some() { Phase::Paused } else { Phase::Idle }, generation, None, None), None);
             }
             Some(Command::Step) => {
-                if !build(&mut robot, generation, &mut pending) {
+                if !build(&mut sim, generation, &mut pending) {
                     failed = true;
                     continue;
                 }
-                let r = robot.as_mut().unwrap();
-                match r.advance(CHUNK_S) {
+                let s = sim.as_mut().unwrap();
+                match s.advance() {
                     Ok(()) => {
                         steps += 1;
-                        set(status(Phase::Paused, generation, None, None), Some(frame(r, generation, steps)));
+                        ended = s.ended().is_some();
+                        failed = !publish(s, if ended { Phase::Ended } else { Phase::Paused }, generation, steps, None);
                     }
                     Err(e) => {
                         failed = true;
-                        set(status(Phase::Failed, generation, None, Some(format!("advance failed at t = {:.3} s: {e}", r.time()))), None);
+                        set(status(Phase::Failed, generation, None, Some(format!("advance failed at t = {:.3} s: {e}", s.time()))), None);
                     }
                 }
             }
             None => {}
         }
-        if !running || failed {
+        if !running || failed || ended {
             continue;
         }
-        let Some(r) = robot.as_mut() else { continue };
+        let Some(s) = sim.as_mut() else { continue };
         // Pace: never ahead of the wall clock; drop lag beyond one chunk.
         let wall = anchor.0.elapsed().as_secs_f64();
-        let sim = r.time() - anchor.1;
-        if sim > wall {
-            std::thread::sleep(Duration::from_secs_f64((sim - wall).min(0.005)));
+        let t = s.time() - anchor.1;
+        if t > wall {
+            std::thread::sleep(Duration::from_secs_f64((t - wall).min(0.005)));
             continue;
         }
-        if wall - sim > CHUNK_S {
-            anchor = (Instant::now() - Duration::from_secs_f64(CHUNK_S), r.time());
+        if wall - t > chunk_s {
+            anchor = (Instant::now() - Duration::from_secs_f64(chunk_s), s.time());
         }
-        match r.advance(CHUNK_S) {
+        match s.advance() {
             Ok(()) => {
                 steps += 1;
                 let now = Instant::now();
-                window.push_back((now, r.time()));
+                window.push_back((now, s.time()));
                 while window.len() > 2 && now.duration_since(window[1].0) >= RTF_WINDOW {
                     window.pop_front();
                 }
                 let (w0, s0) = window[0];
                 let dw = now.duration_since(w0).as_secs_f64();
-                let rtf = (dw > 0.0).then(|| (r.time() - s0) / dw);
-                set(status(Phase::Running, generation, rtf, None), Some(frame(r, generation, steps)));
+                let rtf = (dw > 0.0).then(|| (s.time() - s0) / dw);
+                ended = s.ended().is_some();
+                if ended {
+                    running = false;
+                }
+                failed = !publish(s, if ended { Phase::Ended } else { Phase::Running }, generation, steps, rtf);
+                if failed {
+                    running = false;
+                }
             }
             Err(e) => {
                 running = false;
                 failed = true;
-                set(status(Phase::Failed, generation, None, Some(format!("advance failed at t = {:.3} s: {e}", r.time()))), None);
+                set(status(Phase::Failed, generation, None, Some(format!("advance failed at t = {:.3} s: {e}", s.time()))), None);
             }
         }
     }
@@ -582,7 +784,8 @@ mod tests {
         wait(&mut c, "reset", |c| c.frame().is_some() && c.phase() == Phase::Paused);
         let f = c.frame().unwrap();
         assert_eq!((f.generation, f.steps, f.time), (1, 0, 0.0));
-        for ((p, q), com) in f.poses.iter().zip(&assembly) {
+        for (pose, com) in f.poses.iter().zip(&assembly) {
+            let (p, q) = pose.as_ref().expect("every wheeled link has a pose");
             assert!((0..3).all(|k| (p[k] - com[k]).abs() < 1e-9), "{p:?} vs {com:?}");
             assert!(q.angle_between(DQuat::IDENTITY) < 1e-9);
         }
@@ -635,5 +838,90 @@ mod tests {
         c.act(RunAction::Reset).unwrap();
         wait(&mut c, "reset", |c| c.frame().is_some() && c.phase() == Phase::Paused);
         assert_eq!(c.frame().unwrap().servo("left axle").unwrap().0, 0.0);
+    }
+
+    fn preset(id: &str) -> Result<(crate::robot::Loaded, PresetRun), String> {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let p = crate::robot_preset::select(&root.join(crate::robot_preset::PRESETS), &root, id)?;
+        crate::robot::load_preset(p, &root)
+    }
+
+    #[test]
+    fn preset_session_steps_one_chunk_ends_at_its_horizon_and_resets() {
+        // Refusals name the id (and the mode).
+        let e = preset("pendulum-live").err().unwrap();
+        assert!(e.contains("`pendulum-live`") && e.contains("mode `live`"), "{e}");
+        let e = preset("no-such-preset").err().unwrap();
+        assert!(e.contains("unknown robot preset `no-such-preset`"), "{e}");
+        // The smallest embedded preset: pendulum scene + embedded config, no task → EmbeddedSession.
+        let (loaded, run) = preset("pendulum-embedded").unwrap();
+        assert_eq!((run.kind(), run.seed), ("EmbeddedSession", 0));
+        assert!(loaded.geometry.iter().any(|g| g.is_some()));
+        let chunk = run.chunk_steps() as u64;
+        assert_eq!(chunk, run.config.report_every.clamp(1, 40) as u64);
+        let horizon = run.config.steps as u64 / chunk;
+        let mut c = RunController::spawn_preset(Arc::new(run));
+        assert!(c.jog("pivot", 0.0).unwrap_err().contains("declared controller recipe"));
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1));
+        let f = c.frame().unwrap();
+        let step_s = c.preset().unwrap().config.step_s;
+        assert_eq!(f.completed_steps, Some(chunk));
+        assert!((f.time - c.chunk_s()).abs() < 1e-12 && (f.time - chunk as f64 * step_s).abs() < 1e-12, "t = {}", f.time);
+        // Every frame link maps to a loaded link by name.
+        assert!(f.unmatched.is_empty(), "unmatched {:?}", f.unmatched);
+        assert!(f.poses.iter().all(Option::is_some));
+        // Run to the horizon: a distinct ended phase with its reason; Run is then refused naming Reset.
+        c.act(RunAction::Start).unwrap();
+        wait(&mut c, "horizon", |c| c.phase() == Phase::Ended);
+        let f = c.frame().unwrap();
+        assert_eq!((f.steps, f.completed_steps), (horizon, Some(horizon * chunk)));
+        let end = c.end().unwrap();
+        assert_eq!(end["kind"], "horizon");
+        assert!(end["message"].as_str().unwrap().contains("horizon reached"));
+        assert!(c.act(RunAction::Start).unwrap_err().contains("Reset"));
+        assert!(c.act(RunAction::Step).unwrap_err().contains("Reset"));
+        // Reset rebuilds from the same parsed files and seed: t = 0, generation + 1.
+        let old = c.frame().unwrap().clone();
+        c.act(RunAction::Reset).unwrap();
+        assert!(!accept(c.generation(), &old));
+        wait(&mut c, "reset", |c| c.frame().is_some() && c.phase() == Phase::Paused);
+        let f = c.frame().unwrap();
+        assert_eq!((f.generation, f.steps, f.completed_steps, f.time), (1, 0, Some(0), 0.0));
+        assert!(c.end().is_none());
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "step after reset", |c| c.frame().is_some_and(|f| f.steps == 1));
+        assert_eq!(c.frame().unwrap().completed_steps, Some(chunk));
+    }
+
+    /// Timing only (debug build): `ROBOT_PRESET=<id> cargo test -p sim-spatial --lib robot_run::tests::measure_full_robot_preset -- --ignored --nocapture`
+    /// (default robot-measured-400hz). Builds on this thread, as the run thread does.
+    #[test]
+    #[ignore]
+    fn measure_full_robot_preset() {
+        let id = std::env::var("ROBOT_PRESET").unwrap_or_else(|_| "robot-measured-400hz".into());
+        println!("preset {id}");
+        let t0 = Instant::now();
+        let (loaded, run) = preset(&id).unwrap();
+        let parse = t0.elapsed().as_secs_f64();
+        println!("parse+load: {parse:.2} s, {} links, {} chunk steps × {} s = {} s, {}", loaded.model.links.len(), run.chunk_steps(), run.config.step_s, run.chunk_s(), run.kind());
+        let run = Arc::new(run);
+        let t1 = Instant::now();
+        let mut sim = match Sim::build(&Source::Preset(run.clone()), &mut None) {
+            Ok(sim) => sim,
+            Err(e) => panic!("build failed after {:.2} s: {e}", t1.elapsed().as_secs_f64()),
+        };
+        println!("build: {:.2} s; inputs {:?}", t1.elapsed().as_secs_f64(), match &sim { Sim::Environment { env, held, .. } => (env.inputs().iter().map(|c| c.name.clone()).collect::<Vec<_>>(), held.clone()), _ => (vec![], vec![]) });
+        let links: Vec<String> = loaded.model.links.iter().map(|l| l.name.clone()).collect();
+        let f = sim.frame(&links, 0, 0).unwrap();
+        println!("frame: unmatched {:?}, links without pose {:?}", f.unmatched, f.poses.iter().zip(&links).filter(|(p, _)| p.is_none()).map(|(_, l)| l).collect::<Vec<_>>());
+        for k in 1..=5 {
+            let t = Instant::now();
+            sim.advance().unwrap();
+            let wall = t.elapsed().as_secs_f64();
+            let frame_t = Instant::now();
+            let f = sim.frame(&links, 0, k).unwrap();
+            println!("chunk {k}: advance {wall:.3} s, frame {:.3} s, sim t {:.4} s, rtf {:.4}, ended {:?}", frame_t.elapsed().as_secs_f64(), f.time, run.chunk_s() / wall, sim.ended());
+        }
     }
 }

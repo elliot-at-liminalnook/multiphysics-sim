@@ -64,6 +64,16 @@ struct Args {
     /// drawn at the assembly pose; nothing is stepped or written).
     #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic"])]
     robot: Option<PathBuf>,
+    /// Robot mode on a preset declared in `--robot-presets` (default
+    /// web/viewer/presets.json, resolved from the launch directory): its
+    /// scene, controller config and optional task run by the shared
+    /// EmbeddedEnvironment/EmbeddedSession. With --validate-only, lists the
+    /// presets and parses this one's inputs.
+    #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot"])]
+    robot_preset: Option<String>,
+    /// The preset list read by --robot-preset and REST robot_presets/robot_preset.
+    #[arg(long, default_value = sim_spatial::robot_preset::PRESETS)]
+    robot_presets: PathBuf,
     /// Lesson to open first (slug); default: the first in reading order.
     #[arg(long, requires = "lessons")]
     lesson: Option<String>,
@@ -129,7 +139,26 @@ fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     }
     let api = sim_spatial::robot::server(args.api_port)?;
     eprintln!("Physical REST (robot mode): http://{}", api.address);
-    sim_spatial::robot::run_robot(sim_spatial::robot::RobotView::open(path.to_path_buf()), api);
+    sim_spatial::robot::run_robot(sim_spatial::robot::RobotView::open(path.to_path_buf()).with_presets(args.robot_presets.clone()), api);
+    Ok(())
+}
+fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    if args.validate_only {
+        let root = std::env::current_dir()?;
+        for p in sim_spatial::robot_preset::list(&args.robot_presets)? {
+            let d = p.discovery(&root);
+            println!("{} · mode {} · inputs exist {} · {}", p.id, p.mode, d["inputs_exist"], d["not_openable_reason"].as_str().unwrap_or("openable (build not attempted)"));
+        }
+        let preset = sim_spatial::robot_preset::select(&args.robot_presets, &root, id)?;
+        let (loaded, run) = sim_spatial::robot::load_preset(preset, &root)?;
+        let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
+        println!("Validated preset {id}: {} with {} links ({drawn} with collision geometry); chunk {} steps × {} s; seed {}.", run.kind(), loaded.model.links.len(), run.chunk_steps(), run.config.step_s, run.seed);
+        return Ok(());
+    }
+    let view = sim_spatial::robot::RobotView::open_preset(&args.robot_presets, id)?;
+    let api = sim_spatial::robot::server(args.api_port)?;
+    eprintln!("Physical REST (robot mode, preset {id}): http://{}", api.address);
+    sim_spatial::robot::run_robot(view, api);
     Ok(())
 }
 fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
@@ -182,6 +211,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if let Some(path) = args.robot.clone() {
         return robot_mode(&args, &path);
+    }
+    if let Some(id) = args.robot_preset.clone() {
+        return robot_preset_mode(&args, &id);
     }
     if let Some(dir) = args.lessons.clone() {
         return lessons_mode(&args, &dir);

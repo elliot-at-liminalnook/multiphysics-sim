@@ -3,6 +3,9 @@
 //! link's collision geometry is drawn at the exported assembly pose until a
 //! run starts. Run/Pause/Step/Reset drive the shared `PhysicalRobot` on the
 //! run thread (`robot_run`); links follow its frames. Nothing is written.
+//! A preset (`--robot-preset ID`, REST `robot_preset`) opens the same way:
+//! its scene's `robot` goes through the same loader, and the run thread runs
+//! the preset's shared EmbeddedEnvironment/EmbeddedSession (`robot_preset`).
 use super::{ACCENT, INK, MUTED, PANEL};
 use crate::builder::ui::UiFonts;
 use bevy::{
@@ -21,6 +24,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use sim_domain_robot::cad_link::{self, CadLinkStatus};
+use crate::robot_preset::{Preset, PresetRun};
 use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, RunAction, RunController};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
@@ -77,6 +81,13 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
     let text = std::fs::read_to_string(path).map_err(|e| format!("{name}: {e}"))?;
     let model = PhysicalModel::parse(&text).map_err(|e| format!("{name}: {e}"))?;
     let raw: Value = serde_json::from_str(&text).map_err(|e| format!("{name}: {e}"))?;
+    Ok(loaded(model, &raw, path))
+}
+
+/// The loader's second half, shared by a `.simrobot.json` file and a preset
+/// scene's `robot` (`raw` is that robot's JSON as stored; `path` is the file
+/// the CAD link resolves against).
+pub fn loaded(model: PhysicalModel, raw: &Value, path: &Path) -> Loaded {
     let entry = |key: &str, i: usize, field: &str| raw[key].get(i).and_then(|v| v.get(field)).cloned().unwrap_or(Value::Null);
     let notes = FileNotes {
         links: (0..model.links.len()).map(|i| json!({"member_names": entry("links", i, "member_names"), "mass_sources": entry("links", i, "mass_sources")})).collect(),
@@ -99,7 +110,15 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
             (!g.positions.is_empty()).then_some(g)
         })
         .collect();
-    Ok(Loaded { model, geometry, notes, cad_link })
+    Loaded { model, geometry, notes, cad_link }
+}
+
+/// A preset opened on the loader thread: its parsed inputs (`robot_preset`)
+/// and its scene's `robot` through the same loader as a file.
+pub fn load_preset(preset: Preset, root: &Path) -> Result<(Loaded, PresetRun), String> {
+    let (run, robot) = PresetRun::load(preset, root)?;
+    let loaded = loaded(run.scene.robot.clone(), &robot, &run.scene_path);
+    Ok((loaded, run))
 }
 
 enum Status {
@@ -123,7 +142,12 @@ pub struct RobotView {
     scroll: f32,
     scroll_max: f32,
     scroll_to: Option<f32>,
-    rx: Option<Mutex<mpsc::Receiver<Result<Loaded, String>>>>,
+    rx: Option<Mutex<mpsc::Receiver<Result<(Loaded, Option<PresetRun>), String>>>>,
+    /// The preset being opened or run (None for `--robot FILE`).
+    preset: Option<Preset>,
+    /// The preset list and the root its paths resolve against.
+    presets: PathBuf,
+    root: PathBuf,
     /// The run thread, spawned idle once the model has loaded.
     run: Option<RunController>,
     /// The last refused run control from a click (REST gets the error directly).
@@ -139,9 +163,36 @@ impl RobotView {
         let (tx, rx) = mpsc::channel();
         let worker = path.clone();
         std::thread::spawn(move || {
-            let _ = tx.send(load(&worker));
+            let _ = tx.send(load(&worker).map(|l| (l, None)));
         });
+        Self::new(path, rx, None)
+    }
+    /// Opens preset `id` from `presets` (paths resolved against the launch
+    /// directory): refused now, naming the id, when it is unknown, not
+    /// embedded or missing inputs; its files are parsed on a worker thread.
+    pub fn open_preset(presets: &Path, id: &str) -> Result<Self, String> {
+        let root = std::env::current_dir().map_err(|e| format!("launch directory: {e}"))?;
+        let preset = crate::robot_preset::select(presets, &root, id)?;
+        let (tx, rx) = mpsc::channel();
+        let (worker, dir) = (preset.clone(), root.clone());
+        std::thread::spawn(move || {
+            let _ = tx.send(load_preset(worker, &dir).map(|(l, r)| (l, Some(r))));
+        });
+        let mut view = Self::new(root.join(preset.scene.as_deref().unwrap_or_default()), rx, Some(preset));
+        view.presets = presets.to_path_buf();
+        view.root = root;
+        Ok(view)
+    }
+    /// The preset list REST robot_presets/robot_preset read (default `robot_preset::PRESETS`).
+    pub fn with_presets(mut self, presets: PathBuf) -> Self {
+        self.presets = presets;
+        self
+    }
+    fn new(path: PathBuf, rx: mpsc::Receiver<Result<(Loaded, Option<PresetRun>), String>>, preset: Option<Preset>) -> Self {
         Self {
+            preset,
+            presets: PathBuf::from(crate::robot_preset::PRESETS),
+            root: std::env::current_dir().unwrap_or_default(),
             path,
             status: Status::Loading(std::time::Instant::now()),
             model: None,
@@ -195,9 +246,16 @@ impl RobotView {
         });
         let names: Vec<String> = m.iter().flat_map(|m| m.links.iter().map(|l| l.name.clone())).collect();
         let run = self.run.as_ref().map(|r| r.state_json(&names));
+        // The preset block: the parsed run once loaded, else the declared entry while loading.
+        let preset = match (self.run.as_ref().and_then(|r| r.preset()), &self.preset) {
+            (Some(p), _) => Some(p.state_json(self.run.as_ref().and_then(|r| r.frame()).and_then(|f| f.completed_steps))),
+            (None, Some(p)) => Some(json!({"id": p.id, "label": p.label, "mode": p.mode, "scene": p.scene, "config": p.config, "task": p.task,
+                "readiness": p.readiness(), "evidence": p.evidence(), "loaded": false})),
+            (None, None) => None,
+        };
         let stepped = self.run.as_ref().and_then(|r| r.frame()).is_some();
         let cad = self.cad_link.as_ref().map(|c| json!({"link": c, "rule": cad_link::RESOLUTION_RULE}));
-        let jog = self.run.as_ref().map(|r| {
+        let jog = self.run.as_ref().filter(|r| r.preset().is_none()).map(|r| {
             let m = r.model();
             let joints: Vec<Value> = m.joints.iter().filter(|j| j.kind != "fixed" && !j.is_loop()).map(|j| r.jog_json(&j.name)).collect();
             let selected: Vec<String> = jog_joints(self).into_iter().map(|(j, _)| j).collect();
@@ -211,7 +269,7 @@ impl RobotView {
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -275,6 +333,10 @@ fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, Strin
 /// selection state is needed. Joints without a servo target stay listed,
 /// disabled with the reason.
 fn jog_joints(view: &RobotView) -> Vec<(String, f64)> {
+    if view.preset.is_some() {
+        // A preset's joints are driven by its declared controller: no servo-target jog.
+        return Vec::new();
+    }
     let (Some(m), Some(i)) = (view.model.as_ref(), view.selected) else { return Vec::new() };
     let Some(l) = m.links.get(i) else { return Vec::new() };
     touching(m, &l.name).filter(|(_, j)| j.kind != "fixed" && !j.is_loop()).map(|(_, j)| (j.name.clone(), if j.kind == "prismatic" { JOG_STEP_M } else { JOG_STEP_RAD })).collect()
@@ -362,10 +424,24 @@ enum Request {
     Fit,
     RobotRun { action: String },
     RobotJog { joint: String, target: Option<f64>, delta: Option<f64> },
+    RobotPresets,
+    RobotPreset { id: String },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
         Request::RobotState => {}
+        Request::RobotPresets => {
+            let presets = crate::robot_preset::list(&view.presets)?;
+            let rows: Vec<Value> = presets.iter().map(|p| p.discovery(&view.root)).collect();
+            return Ok(json!({"presets_file": view.presets, "root": view.root, "count": rows.len(), "presets": rows,
+                "current": view.preset.as_ref().map(|p| &p.id)}));
+        }
+        Request::RobotPreset { id } => {
+            // Refused here (naming the id) before anything is replaced; the old run thread stops when its controller drops.
+            let mut next = RobotView::open_preset(&view.presets, &id)?;
+            next.ui_revision = view.ui_revision + 1;
+            *view = next;
+        }
         Request::SystemUi { action: UiRequest::Controls } => {
             let items: Vec<Value> = controls(view).into_iter().map(|(id, label, action)| json!({"id": id, "label": label, "enabled": check(view, &action).is_ok(), "disabled_reason": check(view, &action).err(), "action": action})).collect();
             return Ok(json!({"ui_revision": view.ui_revision, "ready": view.panels_ready, "controls": items, "state": view.state_json()}));
@@ -411,6 +487,8 @@ fn capabilities() -> Vec<Value> {
         c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
         c("robot_jog", json!({"joint":"left axle","target":0.5}), &format!("Servo-target jog of one joint by its file name: {JOG_LABEL}. Give target (absolute; rad, or m on a prismatic joint) or delta (from the current requested target). The same handler as the jog +/− buttons and system_ui jog:<joint>:+/- controls (±{JOG_STEP_RAD} rad, ±{JOG_STEP_M} m prismatic; listed for the joints touching the selected link). Errors name the joint: unknown joint, no servo target (passive joint, firmware none, fixed, or a trajectory-mode file), non-finite target, or a target outside the file's limits (with the limit; never clamped); after a failed run, Reset first. {JOG_SEMANTICS} robot_state.jog reports control mode, label and, per joint, the limit (or no limit in file), requested target, and the target and measured value from the latest accepted frame.")),
         c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
+        c("robot_presets", json!({}), &format!("List the robot presets declared in {} (resolved against the launch directory, the repository root): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
+        c("robot_preset", json!({"id":"robot-measured-400hz"}), "Open a declared embedded preset by id in this window (replacing the current robot and stopping its run thread). Unknown ids, other modes and missing inputs are refused naming the id. The scene, config and task are parsed exactly as declared on a worker thread; scene.robot is drawn and inspected through the same loader as --robot FILE. Run/Pause/Step/Reset (robot_run) then drive the shared EmbeddedEnvironment (task) or EmbeddedSession (no task) on the run thread with seed 0 (recorded), one action interval or clamp(report_every, 1, 40) nominal steps per chunk. robot_state.preset reports id, label, paths, readiness and evidence verbatim, seed, step_s, chunk and step counts; run.phase `ended` with run.end reports a reached horizon or a terminated/truncated episode. Servo-target jog is not offered for presets."),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
@@ -434,6 +512,8 @@ struct LinkMesh(usize);
 struct LinkRow(usize);
 #[derive(Component)]
 struct StatusText;
+#[derive(Component)]
+struct TitleText;
 #[derive(Component)]
 struct Inspector;
 #[derive(Component)]
@@ -506,7 +586,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     commands.spawn((
         Node { position_type: PositionType::Absolute, left: Val::Px(0.0), right: Val::Px(0.0), top: Val::Px(0.0), height: Val::Px(TOP), padding: UiRect::axes(Val::Px(18.0), Val::Px(8.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), ..default() },
         BackgroundColor(PANEL),
-        children![text(&format!("Robot — {file}  ·  file read-only"), 18.0, INK), (text("Loading…", 13.0, MUTED), StatusText)],
+        children![(text(&format!("Robot — {file}  ·  file read-only"), 18.0, INK), TitleText), (text("Loading…", 13.0, MUTED), StatusText)],
     ));
     // Run controls: the same handler as system_ui run:* and REST robot_run.
     commands.spawn((
@@ -570,6 +650,7 @@ fn label(fonts: &UiFonts, value: &str, size: f32, color: Color) -> (Text, TextFo
 /// Takes the worker's result; spawns meshes and the link list on success.
 fn receive(
     mut commands: Commands,
+    old: Query<Entity, Or<(With<LinkMesh>, With<LinkRow>)>>,
     mut view: ResMut<RobotView>,
     mut meshes: ResMut<Assets<Mesh>>,
     materials: Res<Materials>,
@@ -589,11 +670,15 @@ fn receive(
         None => return,
     };
     view.rx = None;
+    // A reopened robot (REST robot_preset) replaces the previous meshes and rows.
+    for entity in &old {
+        commands.entity(entity).despawn();
+    }
     let started = match view.status {
         Status::Loading(t) => t,
         _ => std::time::Instant::now(),
     };
-    let loaded = match result {
+    let (loaded, preset) = match result {
         Ok(l) => l,
         Err(e) => {
             view.status = Status::Error(e);
@@ -649,7 +734,10 @@ fn receive(
         })
         .collect();
     commands.entity(*list).add_children(&rows);
-    view.run = Some(RunController::spawn(loaded.model.clone()));
+    view.run = Some(match preset {
+        Some(run) => RunController::spawn_preset(std::sync::Arc::new(run)),
+        None => RunController::spawn(loaded.model.clone()),
+    });
     view.model = Some(loaded.model);
     view.notes = loaded.notes;
     view.cad_link = Some(loaded.cad_link);
@@ -721,7 +809,7 @@ fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut T
     let frame = view.run.as_ref().and_then(|r| r.frame());
     let Some(model) = view.model.as_ref() else { return };
     for (link, mut transform) in &mut links {
-        let (p, q) = match frame.and_then(|f| f.poses.get(link.0)) {
+        let (p, q) = match frame.and_then(|f| f.poses.get(link.0)).and_then(|p| p.as_ref()) {
             Some((p, q)) => (Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32), Quat::from_xyzw(q.x as f32, q.y as f32, q.z as f32, q.w as f32)),
             None => {
                 let c = model.links[link.0].com;
@@ -859,10 +947,18 @@ fn scroll(mut view: ResMut<RobotView>, mut wheel: EventReader<MouseWheel>, windo
 /// Status line and the sectioned inspector.
 fn panels(
     view: Res<RobotView>,
-    mut status: Single<&mut Text, (With<StatusText>, Without<Inspector>, Without<RunText>)>,
-    mut inspector: Single<&mut Text, (With<Inspector>, Without<StatusText>, Without<RunText>)>,
-    mut run_text: Single<&mut Text, (With<RunText>, Without<StatusText>, Without<Inspector>)>,
+    mut title: Single<&mut Text, (With<TitleText>, Without<StatusText>, Without<Inspector>, Without<RunText>)>,
+    mut status: Single<&mut Text, (With<StatusText>, Without<Inspector>, Without<RunText>, Without<TitleText>)>,
+    mut inspector: Single<&mut Text, (With<Inspector>, Without<StatusText>, Without<RunText>, Without<TitleText>)>,
+    mut run_text: Single<&mut Text, (With<RunText>, Without<StatusText>, Without<Inspector>, Without<TitleText>)>,
 ) {
+    let heading = match &view.preset {
+        Some(p) => format!("Robot preset — {} ({})  ·  files read-only", p.label, p.id),
+        None => format!("Robot — {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()),
+    };
+    if title.0 != heading {
+        title.0 = heading;
+    }
     let run_line = match &view.run {
         None => String::new(),
         Some(r) => {
@@ -870,9 +966,11 @@ fn panels(
             let rtf = r.rtf().map_or(String::new(), |x| format!(" · RTF {x:.2}"));
             // The header has one line beside the subtitle: long messages are cut here and shown in full in the inspector.
             let error = r.error().map_or(String::new(), |e| format!(" · {} (full error in the inspector)", clip(e, 40)));
+            let ended = r.end().and_then(|e| e["message"].as_str()).map_or(String::new(), |m| format!(" · {} (see the inspector)", clip(m, 40)));
+            let error = format!("{error}{ended}");
             let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {}", clip(m, 60)));
             let phase = serde_json::to_value(r.phase()).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
-            format!("{phase} · {time}{rtf} · gen {} · {} s chunks{error}{refused}", r.generation(), crate::robot_run::CHUNK_S)
+            format!("{phase} · {time}{rtf} · gen {} · {} s chunks{error}{refused}", r.generation(), r.chunk_s())
         }
     };
     if run_text.0 != run_line {
@@ -884,7 +982,11 @@ fn panels(
         (Status::Loaded { seconds }, Some(m)) => {
             let without = view.triangles.iter().filter(|t| **t == 0).count();
             let missing = if without > 0 { format!(" · {without} without collision geometry (listed, not drawn)") } else { String::new() };
-            format!("{} · {} links{missing} · loaded in {seconds:.2} s · {}", view.path.display(), m.links.len(), if view.run.as_ref().and_then(|r| r.frame()).is_some() { "simulated pose" } else { "exported assembly pose" })
+            let pose = if view.run.as_ref().and_then(|r| r.frame()).is_some() { "simulated pose" } else { "exported assembly pose" };
+            match view.preset.as_ref() {
+                Some(p) => format!("{} links{missing} · loaded in {seconds:.2} s · {pose} · readiness: {}", m.links.len(), clip(p.readiness().unwrap_or("(none declared)"), 55)),
+                None => format!("{} · {} links{missing} · loaded in {seconds:.2} s · {pose}", view.path.display(), m.links.len()),
+            }
         }
         (Status::Loaded { .. }, None) => String::new(),
     };
@@ -901,11 +1003,35 @@ fn panels(
         },
     };
     let failure = view.run.as_ref().and_then(|r| r.error().map(|e| format!("RUN FAILED: {e}\n\n")));
+    let ended = view.run.as_ref().and_then(|r| r.end()).map(|e| format!("RUN ENDED ({}): {}\n\n", e["kind"].as_str().unwrap_or(""), e["message"].as_str().unwrap_or("")));
+    let failure = Some(format!("{}{}{}", failure.unwrap_or_default(), ended.unwrap_or_default(), preset_text(&view)));
     let refused = view.run_message.as_ref().map(|m| format!("Refused: {m}\n\n"));
     let body = format!("{}{}{body}", failure.unwrap_or_default(), refused.unwrap_or_default());
     if inspector.0 != body {
         inspector.0 = body;
     }
+}
+
+/// The preset's identity and readiness (verbatim) atop every inspector
+/// section; its evidence text is added on the Source section.
+fn preset_text(view: &RobotView) -> String {
+    let Some(p) = &view.preset else { return String::new() };
+    let mut t = format!("PRESET {} ({})\nreadiness (verbatim): {}\n", p.label, p.id, p.readiness().unwrap_or("(none declared)"));
+    if let Some(run) = view.run.as_ref().and_then(|r| r.preset()) {
+        let f = view.run.as_ref().and_then(|r| r.frame());
+        t += &format!("{} · seed {} · step {} s · chunk {} steps ({} s) · {} / {} steps\n",
+            run.kind(), run.seed, run.config.step_s, run.chunk_steps(), run.chunk_s(), f.and_then(|f| f.completed_steps).map_or("—".into(), |n| n.to_string()), run.config.steps);
+        if let Some(f) = f.filter(|f| !f.unmatched.is_empty()) {
+            t += &format!("frame links matching no loaded link: {}\n", f.unmatched.join(", "));
+        }
+    }
+    for (k, path) in p.paths() {
+        t += &format!("{k}: {path}\n");
+    }
+    if view.section == Section::Source {
+        t += &format!("evidence (verbatim): {}\n", p.evidence().unwrap_or("(none declared)"));
+    }
+    t + "\n"
 }
 
 /// `s` cut to at most `n` characters, marked with an ellipsis when cut.

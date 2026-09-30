@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use crate::robot_motion::{self, Motion, MotionChannel};
 use crate::robot_preset::{PresetRun, RecordedRun};
+use crate::robot_playback::{RecordedAction, RecordedPlayback};
 use serde::Deserialize as _;
 use sim_runtime::embedded_capture::{CaptureFrame, CapturePose};
 use crate::robot_graphs;
@@ -490,6 +491,8 @@ pub struct RunController {
     preset: Option<Arc<PresetRun>>,
     /// A recorded preset played back (no run thread, nothing simulated).
     recorded: Option<Arc<RecordedRun>>,
+    /// Its timeline worker (robot_playback): the clock and the frame lookup, off the UI thread.
+    playback: Option<RecordedPlayback>,
     chunk_s: f64,
     drive: Option<Arc<Drive>>,
     /// The motion values last sent in this generation (cleared by Reset).
@@ -559,7 +562,7 @@ impl RunController {
         let mut graphs = robot_graphs::History::default();
         graphs.clear(generation);
         let frame = run.frames.first().cloned();
-        Self { tx, shared, generation, running: false, frame, status, jogged: Default::default(), jog_error: None, preset: None, recorded: Some(run), chunk_s: 0.0,
+        Self { tx, shared, generation, running: false, frame, status, jogged: Default::default(), jog_error: None, preset: None, recorded: Some(run.clone()), playback: Some(RecordedPlayback::spawn(run)), chunk_s: 0.0,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
@@ -567,6 +570,35 @@ impl RunController {
     }
     pub fn recorded(&self) -> Option<&Arc<RecordedRun>> {
         self.recorded.as_ref()
+    }
+    /// The recorded timeline worker, when a recorded preset is loaded.
+    pub fn playback(&self) -> Option<&RecordedPlayback> {
+        self.playback.as_ref()
+    }
+    /// Why a recorded timeline action is refused: not a recorded preset (named), else the timeline's rules.
+    pub fn check_recorded(&self, action: &RecordedAction) -> Result<(), String> {
+        let Some(p) = &self.playback else {
+            let what = match &self.preset {
+                Some(p) => format!("preset `{}` is an embedded preset run live by {}", p.preset.id, p.kind()),
+                None => "this is a --robot FILE view (a live PhysicalRobot run)".to_string(),
+            };
+            return Err(format!("recorded timeline `{}` is refused: {what}; the timeline is for recorded presets (mode `recorded`) only", action.name()));
+        };
+        p.check(action)
+    }
+    /// The one recorded timeline handler behind the inspector Recorded buttons,
+    /// `system_ui` recorded:* and REST `robot_recorded`. Speed goes through
+    /// [`Self::speed`], so the header −/×/+ buttons, keys and `robot_speed` set the same scale.
+    pub fn recorded_act(&mut self, action: RecordedAction) -> Result<(), String> {
+        self.check_recorded(&action)?;
+        if let RecordedAction::Speed { scale } = action {
+            return self.speed(SpeedRequest::Set { scale });
+        }
+        self.playback.as_mut().expect("checked above").act(action)
+    }
+    /// `robot_state.recorded` (None unless a recorded preset is loaded).
+    pub fn recorded_json(&self) -> Option<Value> {
+        Some(crate::robot_playback::state_json(self.recorded.as_ref()?, self.playback.as_ref()?))
     }
     /// The refusal of a live-only action (`what`) when a recorded preset is loaded.
     fn recorded_refusal(&self, what: &str) -> Result<(), String> {
@@ -588,7 +620,7 @@ impl RunController {
             .expect("spawn robot run thread");
         let mut graphs = robot_graphs::History::default();
         graphs.clear(generation);
-        Self { tx, shared, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, recorded: None, chunk_s,
+        Self { tx, shared, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, recorded: None, playback: None, chunk_s,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
@@ -1075,7 +1107,18 @@ impl RunController {
             self.refresh_recordings();
         }
         let preview = self.gait.as_mut().is_some_and(GaitPreview::poll);
-        changed || preview
+        // A recorded preset's frame comes from its playback worker (current generation only).
+        let recorded = match self.playback.as_mut() {
+            Some(p) => {
+                let fresh = p.poll();
+                if fresh {
+                    self.frame = Some(p.frame().clone());
+                }
+                fresh
+            }
+            None => false,
+        };
+        changed || preview || recorded
     }
 
     pub fn frame(&self) -> Option<&Frame> {
@@ -1165,9 +1208,10 @@ impl RunController {
     /// `robot_speed`: sets the requested scale in every phase (it applies on the next Run).
     pub fn speed(&mut self, request: SpeedRequest) -> Result<(), String> {
         let scale = self.check_speed(request)?;
-        // A recorded preset has no run thread: the scale is kept for playback pacing.
-        if self.recorded.is_none() {
-            self.tx.send(Command::Speed(scale)).map_err(|_| "the run thread has stopped".to_string())?;
+        // A recorded preset has no run thread: the scale paces its playback worker.
+        match self.playback.as_mut() {
+            Some(p) => p.act(RecordedAction::Speed { scale })?,
+            None => self.tx.send(Command::Speed(scale)).map_err(|_| "the run thread has stopped".to_string())?,
         }
         self.speed_scale = scale;
         Ok(())
@@ -1225,7 +1269,7 @@ impl RunController {
 
     /// Frames need drawing while the worker is building or running.
     pub fn active(&self) -> bool {
-        self.gait.as_ref().is_some_and(GaitPreview::active) || matches!(self.status.phase, Phase::Building | Phase::Running) || self.running || self.replay.phase == ReplayPhase::Replaying || self.saving.is_some() || self.list_done < self.list_requested
+        self.playback.as_ref().is_some_and(|p| p.playing() || p.pending()) || self.gait.as_ref().is_some_and(GaitPreview::active) || matches!(self.status.phase, Phase::Building | Phase::Running) || self.running || self.replay.phase == ReplayPhase::Replaying || self.saving.is_some() || self.list_done < self.list_requested
     }
 
     /// `robot_state.run`: phase, time, steps, chunk, rtf, generation, error
@@ -1277,17 +1321,20 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
 /// for live preset frames and recorded captures: `poses[]` of `{name,
 /// position_m, rotation}` (rotation row-major, the same link frames
 /// `PhysicalRobot::poses` gives), the shape `sim_runtime::embedded_capture` reads.
+/// A row-major 3×3 rotation (as frames and mirror poses publish it) as a unit quaternion.
+pub fn rotation_quat(m: &[[f64; 3]; 3]) -> DQuat {
+    let cols = DMat3::from_cols([m[0][0], m[1][0], m[2][0]].into(), [m[0][1], m[1][1], m[2][1]].into(), [m[0][2], m[1][2], m[2][2]].into());
+    DQuat::from_mat3(&cols).normalize()
+}
 type Mapped = (Vec<Option<([f64; 3], DQuat)>>, Vec<Option<([f64; 3], [f64; 3])>>, Vec<String>);
 pub fn map_poses(poses: &[CapturePose], links: &[String]) -> Mapped {
     let mut out = vec![None; links.len()];
     let mut velocities = vec![None; links.len()];
     let mut unmatched = Vec::new();
     for pose in poses {
-        let m = pose.rotation;
-        let cols = DMat3::from_cols([m[0][0], m[1][0], m[2][0]].into(), [m[0][1], m[1][1], m[2][1]].into(), [m[0][2], m[1][2], m[2][2]].into());
         match links.iter().position(|l| *l == pose.name) {
             Some(i) => {
-                out[i] = Some((pose.position_m, DQuat::from_mat3(&cols).normalize()));
+                out[i] = Some((pose.position_m, rotation_quat(&pose.rotation)));
                 // Published velocities, when the pose has both (never differentiated from positions here).
                 velocities[i] = pose.velocity_m_s.zip(pose.angular_velocity_rad_s);
             }

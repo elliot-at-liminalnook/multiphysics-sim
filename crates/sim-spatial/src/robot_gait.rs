@@ -9,7 +9,7 @@
 //! with `sim_runtime::gait_lab::scan_results`. The UI thread only sends
 //! commands and takes the latest generation-stamped state. Nothing is
 //! simulated, written or sent to hardware.
-use bevy::math::{DMat3, DQuat};
+use bevy::math::DQuat;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_runtime::gait_lab::{LabReport, scan_results};
@@ -366,10 +366,8 @@ pub fn map_poses(poses: &[LinkPose], links: &[String]) -> (Vec<Option<([f64; 3],
     let mut out = vec![None; links.len()];
     let mut unmatched = Vec::new();
     for p in poses {
-        let m = p.rotation;
-        let r = DMat3::from_cols([m[0][0], m[1][0], m[2][0]].into(), [m[0][1], m[1][1], m[2][1]].into(), [m[0][2], m[1][2], m[2][2]].into());
         match links.iter().position(|l| *l == p.name) {
-            Some(i) => out[i] = Some((p.position_m, DQuat::from_mat3(&r).normalize())),
+            Some(i) => out[i] = Some((p.position_m, crate::robot_run::rotation_quat(&p.rotation))),
             None => unmatched.push(p.name.clone()),
         }
     }

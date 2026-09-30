@@ -233,23 +233,41 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     its sample times were ≤ its duration.
   - The Realtime toggle turned `realtime` from false to true, and the next
     run reported fidelity "realtime".
+- **Pause status:** *verified natively* (T7.2, commit a7e743c6 binary).
+  Pause sets the status bar to "Paused (Step advances one timestep; Run
+  resumes)." and Resume sets "Running on the shared runtime (background
+  thread, paced to real time at most)." again. Evidence is in
+  `.claude-pair/captures/T7-live-truthfulness/` (`drive_pause.py`,
+  `capture.json` ok with 8 of 8 assertions, `paused.png`, `resumed.png`).
+  After Pause, the status bar, `live_run.phase` "paused" and the toolbar
+  (Resume, Step enabled) agree. After Resume they read running, phase
+  "running", and Pause with Step disabled. After a Step the status stays
+  "Paused…".
+- **Live-edit and grab swaps:** live edits and the grab/push load swap go
+  through one fidelity-aware `Builder::hot_swap`. It applies the run's
+  fidelity profile (a realtime run never receives the detailed document),
+  sets `run.document` to exactly the document sent, and marks the run
+  edited. If the profile fails, the run is stopped and kept with an
+  explanation. A grab changes only the running model, never the file;
+  release swaps back to the file value and the run stays edited. Saved runs
+  record `run.document`, the model last swapped in, so a save or a Reset
+  after a grab describes the model that was simulated.
 - **Remaining limits:**
   - There is no shared time cursor or scrub on the graphs, and no replay
     cursor.
   - Every control was activated through REST `system_ui`, which uses the same
     handlers as a click. Pointer gestures (clicks, drags) were not exercised.
-  - After Pause, the status bar still reads "Running on the shared runtime…"
-    until the next action. The toolbar (Resume) and `live_run.phase` are
-    correct.
-  - Pre-existing: a grab/drag load swap (`swap_with`) does not update the
-    run's document. A Reset during an active grab can rebuild the grabbed
-    model, and that model is not what a later save records.
+  - The grab/push load swap (Alt+left-drag) is a pointer gesture with no
+    REST route, so it was not exercised natively. It is verified only by the
+    unit test
+    `builder::replay_tests::grab_swap_keeps_the_run_fidelity_and_marks_it_edited`.
   - The viewer resolves the part registry from the working directory, so
     launch it from the repository root.
 - **Source owner:** Rust runtime.
 - **Acceptance evidence:** reproduce by running
-  `python3 .claude-pair/captures/T6-live-controls/drive_live.py` from the
-  repository root. It needs a current debug `sim-spatial` build.
+  `python3 .claude-pair/captures/T6-live-controls/drive_live.py` and
+  `python3 .claude-pair/captures/T7-live-truthfulness/drive_pause.py` from
+  the repository root. They need a current debug `sim-spatial` build.
 
 ### f. Annotations and source links
 - **Entry today:** sim-spatial Notes tab and pins (`builder/discussion.rs`,

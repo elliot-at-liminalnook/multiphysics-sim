@@ -30,6 +30,7 @@ pub(crate) mod view;
 mod notes;
 pub mod rest;
 pub mod workspace;
+pub(crate) mod ui_kit;
 use bevy::{
     core_pipeline::tonemapping::Tonemapping,
     input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},
@@ -52,10 +53,8 @@ const LEFT: f32 = 230.0;
 const RIGHT: f32 = 320.0;
 const TOP: f32 = 116.0;
 const BOTTOM: f32 = 66.0;
-const INK: Color = Color::srgb(0.87, 0.90, 0.94);
-const MUTED: Color = Color::srgb(0.56, 0.64, 0.72);
-const PANEL: Color = Color::srgb(0.075, 0.093, 0.12);
-const ACCENT: Color = Color::srgb(0.30, 0.83, 0.75);
+// TEMPORARY (ui-kit T26.1, removed in T26.2): inspect's colours are the kit's tokens.
+use ui_kit::{ACCENT, SUBTLE as MUTED, SURFACE as PANEL, TEXT as INK};
 
 #[derive(Resource)]
 pub struct SpatialScene {

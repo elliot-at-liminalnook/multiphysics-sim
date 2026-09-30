@@ -1663,7 +1663,7 @@ impl Plugin for BuilderPlugin {
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), ui::hover, clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
+            (frame_timing, watch, agent::tick, reference::tick, text_input.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
                 .before(update_parts)
                 .in_set(ViewerSet::SimSync)
@@ -2079,7 +2079,7 @@ pub mod actuators;
 pub mod gait_lab;
 pub mod calibration;
 pub(crate) mod schematic;
-pub use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
+pub(crate) use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
 
 /// Grab and push: with a run going, Alt-drag on a part changes the load
 /// acting on it (a load torque on its shaft, a load force on its slide) in

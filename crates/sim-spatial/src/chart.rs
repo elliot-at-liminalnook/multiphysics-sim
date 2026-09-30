@@ -109,4 +109,34 @@ mod tests {
         let red = px.chunks(4).filter(|c| c[0] == 255 && c[1] == 0).count();
         assert!(red > RASTER.0 as usize, "trace drawn ({red} pixels)");
     }
+
+    /// The builder's graph dock used to call its own `graphs::rasterize`,
+    /// which was `rasterize_span(traces, Some(HISTORY_SECONDS))`; its callers
+    /// now call this one rasterizer directly. The window is the only thing
+    /// it adds: traces inside the window draw exactly the whole-range
+    /// raster, and longer traces draw exactly the whole-range raster of the
+    /// points inside the window (same pixels, range and x window).
+    #[test]
+    fn a_time_window_draws_the_same_pixels_as_the_points_inside_it() {
+        let window = crate::builder::HISTORY_SECONDS;
+        let wave = |i: usize, phase: f64| [i as f64 * 0.5, (i as f64 * 0.21 + phase).sin() * 3.0 - 0.4];
+        // Inside the window (0 … 15 s): identical to the whole range.
+        let a: Vec<[f64; 2]> = (0..=30).map(|i| wave(i, 0.0)).collect();
+        let b: Vec<[f64; 2]> = (0..=30).map(|i| wave(i, 1.3)).collect();
+        let short = [(a.as_slice(), COLORS[0]), (b.as_slice(), COLORS[1])];
+        assert_eq!(rasterize_span(&short, Some(window)), rasterize_span(&short, None));
+        // 0 … 50 s against a 20 s window: the points from 30 s on (sample
+        // times are exact multiples of 0.5, so 30 s is one of them).
+        let a: Vec<[f64; 2]> = (0..=100).map(|i| wave(i, 0.0)).collect();
+        let b: Vec<[f64; 2]> = (0..=100).map(|i| wave(i, 1.3)).collect();
+        let inside = |p: &Vec<[f64; 2]>| p.iter().copied().filter(|q| q[0] >= 50.0 - window).collect::<Vec<_>>();
+        let (a_in, b_in) = (inside(&a), inside(&b));
+        assert_eq!(a_in.first().map(|p| p[0]), Some(30.0));
+        let windowed = rasterize_span(&[(a.as_slice(), COLORS[0]), (b.as_slice(), COLORS[1])], Some(window));
+        let trimmed = rasterize_span(&[(a_in.as_slice(), COLORS[0]), (b_in.as_slice(), COLORS[1])], None);
+        assert_eq!(windowed.1, trimmed.1);
+        assert_eq!(windowed.2, (30.0, 50.0));
+        assert_eq!(windowed.2, trimmed.2);
+        assert!(windowed.0 == trimmed.0, "the windowed raster differs from the raster of the points inside the window");
+    }
 }

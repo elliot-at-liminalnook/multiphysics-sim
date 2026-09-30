@@ -153,7 +153,7 @@ pub(super) fn update(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: R
         let history = builder.history(id);
         let color = COLORS[slot % COLORS.len()];
         ensure_image(&mut builder, slot, &mut images);
-        let (pixels, range, window) = rasterize(&[(&history, color)]);
+        let (pixels, range, window) = rasterize_span(&[(&history, color)], Some(HISTORY_SECONDS));
         if let Some(mut image) = images.get_mut(&builder.graphs.images[slot]) {
             image.data = Some(pixels);
         }
@@ -181,7 +181,8 @@ fn study_charts(builder: &mut Builder, result: &sim_runtime::system_study::Study
     if let (Some(parameter), Some(first)) = (&result.parameter, result.variants.first().and_then(|v| v.metrics.first()).map(|m| m.0.clone())) {
         let points: Vec<[f64; 2]> = result.variants.iter().filter_map(|v| Some([v.value?, v.metrics.iter().find(|m| m.0 == first)?.1])).filter(|p| p[1].is_finite()).collect();
         ensure_image(builder, slot, images);
-        let (pixels, range, window) = rasterize(&[(&points, COLORS[0])]);
+        // An x–y plot over the swept parameter: its whole range, not a time window.
+        let (pixels, range, window) = rasterize_span(&[(&points, COLORS[0])], None);
         if let Some(mut image) = images.get_mut(&builder.graphs.images[slot]) {
             image.data = Some(pixels);
         }
@@ -198,7 +199,7 @@ fn study_charts(builder: &mut Builder, result: &sim_runtime::system_study::Study
             .collect();
         ensure_image(builder, slot, images);
         let refs: Vec<(&[[f64; 2]], [u8; 3])> = traces.iter().map(|(p, c)| (p.as_slice(), *c)).collect();
-        let (pixels, range, window) = rasterize(&refs);
+        let (pixels, range, window) = rasterize_span(&refs, Some(HISTORY_SECONDS));
         if let Some(mut image) = images.get_mut(&builder.graphs.images[slot]) {
             image.data = Some(pixels);
         }
@@ -206,10 +207,4 @@ fn study_charts(builder: &mut Builder, result: &sim_runtime::system_study::Study
         slot += 1;
     }
     builder.graphs.charts = charts;
-}
-
-/// Draw traces on shared axes over the last `HISTORY_SECONDS` (the shared
-/// `crate::chart` raster); returns RGBA pixels, the y range and the x window.
-pub(crate) fn rasterize(traces: &[(&[[f64; 2]], [u8; 3])]) -> (Vec<u8>, (f64, f64), (f64, f64)) {
-    rasterize_span(traces, Some(HISTORY_SECONDS))
 }

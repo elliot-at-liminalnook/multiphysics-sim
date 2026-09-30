@@ -69,7 +69,7 @@ pub fn server_for(port: u16, builder: bool, lessons: bool) -> std::io::Result<si
             c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
             c("system_undo", json!({}), "Undo the last edit in the shared history"),
             c("system_redo", json!({}), "Redo in the shared history"),
-            c("system_run", json!({"action":"start"}), "Start or pause the background run on the shared runtime"),
+            c("system_run", json!({"action":"step"}), "Control the background run on the shared runtime: action start, pause, step (one timestep while paused) or reset (t = 0, paused; a run that reached 0.1 s is saved first). Same Builder methods as the Run/Pause/Step/Reset buttons"),
             c("system_import_image", json!({"path":"/abs/board.png"}), "Import a PNG/JPEG as a reference image at the current level"),
             c("system_suggest", json!({"instance":"motor"}), "What can snap onto each port of an instance at the current level (typed, curated first, conflicts explained)"),
             c("system_snap", json!({"instance":"motor","port":"shaft","kind":{"kind":"element","component_type":"rotational.worm_gear"}}), "Place a fitting part next to an instance and connect it to that port (one undoable edit)"),
@@ -259,7 +259,9 @@ fn system_execute(builder: &mut builder::Builder, scene: &mut SpatialScene, came
             match action.as_str() {
                 "start" => builder.run_start(scene),
                 "pause" => builder.run_pause(),
-                other => return Err(format!("unknown run action `{other}` (start or pause)")),
+                "step" => builder.run_step()?,
+                "reset" => builder.run_reset()?,
+                other => return Err(format!("unknown run action `{other}` (expected start, pause, step or reset)")),
             }
             Ok(builder.state_json())
         }

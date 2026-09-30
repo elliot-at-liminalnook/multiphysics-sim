@@ -783,7 +783,7 @@ pub(super) fn sketch_result(run: &sim_runtime::lesson::SceneRun, q: &Quiz, predi
     let simulated: Vec<[f64; 2]> = series.times.iter().zip(&series.values).filter(|(t, _)| **t >= window[0] && **t <= window[1]).map(|(t, v)| [*t, *v]).collect();
     // Pin the axes to the question's so both curves sit where the reader drew.
     let frame = [[window[0], range[0]], [window[1], range[1]]];
-    let (pixels, _, _) = crate::builder::graphs::rasterize_span(&[(&frame, [18, 22, 27]), (&simulated, [77, 212, 191]), (&sketch, [178, 148, 245])], None);
-    let (w, h) = crate::builder::graphs::RASTER;
+    let (pixels, _, _) = crate::chart::rasterize_span(&[(&frame, [18, 22, 27]), (&simulated, [77, 212, 191]), (&sketch, [178, 148, 245])], None);
+    let (w, h) = crate::chart::RASTER;
     Some((Image::new(Extent3d { width: w, height: h, depth_or_array_layers: 1 }, TextureDimension::D2, pixels, TextureFormat::Rgba8UnormSrgb, RenderAssetUsages::default()), gap))
 }

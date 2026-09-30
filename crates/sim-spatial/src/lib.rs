@@ -4,12 +4,14 @@
 //! background thread; it contains no physics of its own.
 mod animation;
 pub(crate) mod annotate;
+pub(crate) mod chart;
 pub mod builder;
 pub mod lesson;
 mod linked;
 pub mod models;
 pub mod place_view;
 pub mod robot;
+pub mod robot_graphs;
 pub mod robot_motion;
 pub mod robot_preset;
 pub mod robot_recording;

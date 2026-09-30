@@ -300,6 +300,23 @@ shows whether it ran fast. If Claude Code refuses fast mode (an organization
 setting or usage state), the turn runs at normal speed and the journal notes why.
 Fast mode is priced higher, so it uses the 5-hour and weekly allowances faster.
 
+## Subagents
+
+Every session gets two custom subagent types from `prompts/subagents.json`
+(passed with `--agents`, so they don't appear in your own Claude Code
+sessions):
+- `pair-implementer` builds one self-contained part of an epic.
+- `pair-reviewer` hunts bugs in a diff by reading.
+
+Both carry the run's rules: read instead of build, 10-second commands, no
+screenshots, the architecture document, and no commits. The worker is told to
+split epics across them by making several `Agent` calls in one message, which
+run in parallel. That was verified under the run's settings: background tasks
+are off, so subagents run in the foreground, but calls made together still
+overlap. It then reviews and commits the combined result. Subagents inherit the
+10-second shell cap. Claude Code allows 20 running at once and nesting 3 levels
+deep, and their usage counts toward the same Claude limits.
+
 ## Decisions instead of stops
 
 The run is meant to keep going unattended. Agents decide rather than wait: an

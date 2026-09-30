@@ -168,6 +168,15 @@ pub fn observable_key(description: &SystemDescription, id: &str) -> String {
 /// the selected observables. `select` matches observable IDs or labels by
 /// substring; empty selects everything available.
 pub fn simulate(document: &SystemDocument, registry: &BehaviorRegistry, duration: f64, config: SessionConfig, select: &[String]) -> Result<Vec<Series>, String> {
+    simulate_cancellable(document, registry, duration, config, select, None)
+}
+
+/// Error returned by [`simulate_cancellable`] when `cancel` was raised.
+pub const CANCELLED: &str = "cancelled";
+
+/// [`simulate`] that stops between steps once `cancel` is set, returning
+/// [`CANCELLED`].
+pub fn simulate_cancellable(document: &SystemDocument, registry: &BehaviorRegistry, duration: f64, config: SessionConfig, select: &[String], cancel: Option<&std::sync::atomic::AtomicBool>) -> Result<Vec<Series>, String> {
     let compiled = compile(document, registry, config.clone())?;
     let source = ModelSource {
         model: compiled.flat.model.clone(),
@@ -196,6 +205,9 @@ pub fn simulate(document: &SystemDocument, registry: &BehaviorRegistry, duration
     session.begin_recording(chosen.clone(), steps + 2)?;
     session.execute(crate::system_session::Command::Start)?;
     while session.status().time + 0.5 * config.interval < duration {
+        if cancel.is_some_and(|c| c.load(std::sync::atomic::Ordering::Relaxed)) {
+            return Err(CANCELLED.into());
+        }
         session.tick().map_err(|e| locate(&flat_for_errors, e))?;
         if session.status().phase == sim_inspect::live::Phase::Failed {
             return Err(session.status().message.clone().unwrap_or_else(|| "run failed".into()));

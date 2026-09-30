@@ -112,20 +112,78 @@ pub fn list(dir: &Path) -> Vec<(PathBuf, RunSummary)> {
     out
 }
 
+/// Note appended to a run whose document was edited while it was recording.
+/// Its record then holds the final document, not the one every sample came from.
+pub const EDITED_WHILE_RUNNING: &str = "edited while running";
+
+impl RunRecord {
+    /// The document changed mid-run, so no single document produced the series.
+    pub fn edited_while_running(&self) -> bool {
+        self.note.contains(EDITED_WHILE_RUNNING)
+    }
+}
+
+/// What a replay found.
+#[derive(Debug, Clone, Serialize)]
+pub struct ReplayReport {
+    /// Largest relative difference from the recorded series (0 when reproducible).
+    pub max_rel_diff: f64,
+    /// Recorded samples compared, over all series.
+    pub samples: usize,
+}
+
 /// Rerun a record from its own document and settings; the largest relative
 /// difference from the recorded series (0 when reproducible).
 pub fn replay(record: &RunRecord, registry: &BehaviorRegistry) -> Result<f64, String> {
+    replay_with_cancel(record, registry, None).map(|r| r.max_rel_diff)
+}
+
+/// [`replay`] that stops between simulation steps once `cancel` is set
+/// (error [`system_builder::CANCELLED`]). The rerun is headless, from time 0,
+/// with the record's document and config.
+pub fn replay_with_cancel(record: &RunRecord, registry: &BehaviorRegistry, cancel: Option<&std::sync::atomic::AtomicBool>) -> Result<ReplayReport, String> {
     let labels: Vec<String> = record.series.iter().map(|s| s.label.clone()).collect();
-    let again = RunRecord::new(&record.document, record.config.clone(), record.duration, system_builder::simulate(&record.document, registry, record.duration, record.config.clone(), &labels)?, "replay");
+    let again = system_builder::simulate_cancellable(&record.document, registry, record.duration, record.config.clone(), &labels, cancel)?;
+    compare_series(&record.series, &again)
+}
+
+/// Compare recorded series with a rerun at every recorded sample time. The
+/// rerun must have a sample at exactly each recorded time (runs saved from a
+/// live window keep fewer samples than a headless run records); any recorded
+/// sample it lacks is an error, never skipped.
+pub fn compare_series(recorded: &[Series], replayed: &[Series]) -> Result<ReplayReport, String> {
     let mut worst = 0f64;
-    for s in &record.series {
-        let Some(t) = again.series.iter().find(|x| x.label == s.label) else { return Err(format!("replay lacks {}", s.label)) };
-        let scale = s.values.iter().fold(1e-12f64, |m, v| m.max(v.abs()));
-        for (a, b) in s.values.iter().zip(&t.values) {
-            worst = worst.max((a - b).abs() / scale);
+    let mut samples = 0;
+    for s in recorded {
+        let Some(t) = replayed.iter().find(|x| x.label == s.label) else { return Err(format!("replay lacks {}", s.label)) };
+        if s.times.len() != s.values.len() {
+            return Err(format!("recorded {} has {} times but {} values", s.label, s.times.len(), s.values.len()));
         }
+        let scale = s.values.iter().fold(1e-12f64, |m, v| m.max(v.abs()));
+        let mut j = 0;
+        let mut matched = 0;
+        for (time, a) in s.times.iter().zip(&s.values) {
+            let near = |x: f64| (x - time).abs() <= 1e-9 * time.abs().max(1.);
+            while j < t.times.len() && t.times[j] < *time && !near(t.times[j]) {
+                j += 1;
+            }
+            if j < t.times.len() && near(t.times[j]) {
+                worst = worst.max((a - t.values[j]).abs() / scale);
+                matched += 1;
+            }
+        }
+        if matched != s.values.len() {
+            return Err(format!(
+                "replay of {} has {} samples ({} at the recorded times) but the record has {}",
+                s.label,
+                t.values.len(),
+                matched,
+                s.values.len()
+            ));
+        }
+        samples += matched;
     }
-    Ok(worst)
+    Ok(ReplayReport { max_rel_diff: worst, samples })
 }
 
 /// Several runs side by side, in the shape the study views use.
@@ -147,5 +205,36 @@ pub fn compare(records: &[RunRecord], metrics: &[sim_system::Metric]) -> crate::
                 wall_seconds: 0.,
             })
             .collect(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn series(label: &str, times: &[f64], values: &[f64]) -> Series {
+        Series { observable: label.into(), label: label.into(), unit: String::new(), times: times.to_vec(), values: values.to_vec() }
+    }
+
+    #[test]
+    fn replay_comparison_rejects_missing_samples_and_reports_differences() {
+        let recorded = [series("drum.speed", &[0.1, 0.2, 0.3], &[1., 2., 4.])];
+        // Identical rerun, recorded on a finer grid: reproduced exactly.
+        let same = [series("drum.speed", &[0.05, 0.1, 0.15, 0.2, 0.25, 0.3], &[0., 1., 0., 2., 0., 4.])];
+        let r = compare_series(&recorded, &same).unwrap();
+        assert_eq!((r.max_rel_diff, r.samples), (0., 3));
+        // Thinning may repeat the last recorded sample.
+        let repeated = [series("drum.speed", &[0.1, 0.2, 0.3, 0.3], &[1., 2., 4., 4.])];
+        assert_eq!(compare_series(&repeated, &same).unwrap().samples, 4);
+        // A shorter rerun is an error naming the label and both lengths, not a pass.
+        let short = [series("drum.speed", &[0.1, 0.2], &[1., 2.])];
+        let e = compare_series(&recorded, &short).unwrap_err();
+        assert!(e.contains("drum.speed") && e.contains("has 2 samples") && e.contains("record has 3"), "{e}");
+        // Samples at other times are not compared by position.
+        let shifted = [series("drum.speed", &[0.11, 0.21, 0.31], &[1., 2., 4.])];
+        assert!(compare_series(&recorded, &shifted).is_err());
+        // Differences are reported relative to the recorded magnitude.
+        let off = [series("drum.speed", &[0.1, 0.2, 0.3], &[1., 2., 5.])];
+        assert_eq!(compare_series(&recorded, &off).unwrap().max_rel_diff, 0.25);
+        assert!(compare_series(&recorded, &[]).unwrap_err().contains("replay lacks drum.speed"));
     }
 }

@@ -1212,7 +1212,27 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
                     k.text(format!("{} s · seed {}{}", num(run.duration), run.seed, if run.note.is_empty() { String::new() } else { format!(" · {}", run.note) }), 11., SUBTLE, 0)
                 ]));
                 row.spawn(k.button(if picked { "✓" } else { "Pick" }, BuildAction::PickRun(run.id.clone()), Look::Chip(picked), true));
+                if b.replay.outcomes.get(&run.id).is_some_and(|o| o.status == "running") {
+                    row.spawn(k.button("Cancel", BuildAction::CancelReplay, Look::Danger, true));
+                } else {
+                    row.spawn(k.button("Replay", BuildAction::ReplayRun(run.id.clone()), Look::Secondary, true));
+                }
             });
+        if let Some(o) = b.replay.outcomes.get(&run.id) {
+            let color = match (o.status, o.max_rel_diff) {
+                ("done", Some(d)) if d == 0. => OK,
+                ("done", _) => WARN,
+                ("error", _) => DANGER,
+                _ => SUBTLE,
+            };
+            body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(color), k.text(o.headline(), 12., TEXT, 0)]));
+            if o.status == "done" {
+                body.spawn(k.text(format!("Headless rerun from t = 0 with the recorded document and config (seed {}, {} s); a non-zero difference is a finding about this run.", o.seed, num(o.duration)), 11., FAINT, 0));
+            }
+            if o.edited_while_running {
+                body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text("The document was edited while this run recorded: the record keeps the final document, so the replay does not compare a clean run.", 11.5, WARN, 0)]));
+            }
+        }
     }
     if b.run_picks.len() >= 2 {
         body.spawn(wrap()).with_children(|r| {

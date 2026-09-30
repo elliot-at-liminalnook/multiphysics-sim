@@ -185,6 +185,8 @@ pub struct Builder {
     pub(super) updates: Vec<library::Stale>,
     pub(super) runs: Vec<(PathBuf, sim_runtime::run_history::RunSummary)>,
     pub(super) run_picks: BTreeSet<String>,
+    /// Background replay of a saved run and the outcome per run id.
+    pub(super) replay: ReplayState,
     /// Description of the last compiled scene (for labelling saved runs).
     last_description: Option<SystemDescription>,
     /// Frame-time measurement: (worst over the window, frames over 50 ms, window start).
@@ -212,6 +214,55 @@ struct StudyJob {
     progress: Arc<std::sync::atomic::AtomicUsize>,
     total: usize,
     cancel: Arc<std::sync::atomic::AtomicBool>,
+}
+
+#[derive(Default)]
+pub(super) struct ReplayState {
+    job: Option<ReplayJob>,
+    /// Latest outcome per run id (including the running one).
+    pub outcomes: BTreeMap<String, ReplayOutcome>,
+}
+
+struct ReplayJob {
+    id: String,
+    receiver: Mutex<mpsc::Receiver<Result<sim_runtime::run_history::ReplayReport, String>>>,
+    cancel: Arc<std::sync::atomic::AtomicBool>,
+    started: std::time::Instant,
+}
+
+/// One replay of a saved run: headless, from time 0, with the record's
+/// document and config, on the shared runtime.
+#[derive(Clone, Debug, serde::Serialize)]
+pub(super) struct ReplayOutcome {
+    pub id: String,
+    /// running, done, cancelled or error.
+    pub status: &'static str,
+    pub max_rel_diff: Option<f64>,
+    /// Recorded samples compared.
+    pub samples: Option<usize>,
+    pub error: Option<String>,
+    /// Wall-clock seconds the replay took (so far, while running).
+    pub wall_seconds: f64,
+    /// Simulated seconds the record covers.
+    pub duration: f64,
+    pub seed: u64,
+    /// The recorded document changed mid-run: the record holds the final
+    /// document, so no single document produced its series.
+    pub edited_while_running: bool,
+}
+
+impl ReplayOutcome {
+    /// One-line result for the Studies tab.
+    pub fn headline(&self) -> String {
+        match (self.status, self.max_rel_diff, &self.error) {
+            ("running", ..) => format!("Replaying… {:.1} s", self.wall_seconds),
+            ("cancelled", ..) => "Cancelled · replay stopped, no result".into(),
+            (_, Some(d), _) if d == 0. => format!("Reproduced exactly · max rel diff 0 · {} samples", self.samples.unwrap_or(0)),
+            (_, Some(d), _) => format!("Differs · max rel diff {d:.2e} · {} samples", self.samples.unwrap_or(0)),
+            (_, _, Some(e)) => format!("Replay failed: {e}"),
+            _ => String::new(),
+        }
+    }
 }
 
 /// Everything the scene needs from one compile, built off the UI thread.
@@ -321,6 +372,7 @@ impl Builder {
             used_in: None,
             runs: Vec::new(),
             run_picks: BTreeSet::new(),
+            replay: ReplayState::default(),
             last_description: None,
             frames: (0., 0, 0.),
             realtime: false,
@@ -809,7 +861,7 @@ impl Builder {
                 system_builder::Series { observable: id, label, unit, times: points.iter().map(|p| p[0]).collect(), values: points.iter().map(|p| p[1]).collect() }
             })
             .collect();
-        let note = if run.edited { format!("{note}{}edited while running", if note.is_empty() { "" } else { "; " }) } else { note.to_string() };
+        let note = if run.edited { format!("{note}{}{}", if note.is_empty() { "" } else { "; " }, sim_runtime::run_history::EDITED_WHILE_RUNNING) } else { note.to_string() };
         let record = sim_runtime::run_history::RunRecord::new(&document, system_builder::config_for(&document), duration, series, &note);
         let path = sim_runtime::run_history::save(&sim_runtime::run_history::dir_for(&self.store.path), &record)?;
         self.runs = sim_runtime::run_history::list(&sim_runtime::run_history::dir_for(&self.store.path));
@@ -831,6 +883,84 @@ impl Builder {
         self.tab = Tab::Studies;
         self.panel_dirty = true;
         Ok(())
+    }
+
+    /// Rerun saved run `id` headlessly on a worker thread and compare it with
+    /// its record; the outcome arrives in `poll_replay`. Replaces (and stops)
+    /// a replay already running.
+    pub fn replay_run(&mut self, id: &str) -> Result<(), String> {
+        let (path, summary) = self.runs.iter().find(|(_, s)| s.id == id).cloned().ok_or_else(|| format!("no saved run `{id}`"))?;
+        let record = sim_runtime::run_history::load(&path)?;
+        self.cancel_replay();
+        let (send, receive) = mpsc::channel();
+        let cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let (registry, c) = (self.registry.clone(), cancel.clone());
+        let edited = record.edited_while_running();
+        std::thread::spawn(move || {
+            let _ = send.send(sim_runtime::run_history::replay_with_cancel(&record, &registry, Some(&c)));
+        });
+        self.replay.outcomes.insert(
+            id.to_string(),
+            ReplayOutcome { id: id.to_string(), status: "running", max_rel_diff: None, samples: None, error: None, wall_seconds: 0., duration: summary.duration, seed: summary.seed, edited_while_running: edited },
+        );
+        self.replay.job = Some(ReplayJob { id: id.to_string(), receiver: Mutex::new(receive), cancel, started: std::time::Instant::now() });
+        self.tab = Tab::Studies;
+        self.status = format!("Replaying run {id} headlessly from t = 0 on the shared runtime (background).");
+        self.panel_dirty = true;
+        Ok(())
+    }
+
+    /// Stop the running replay between simulation steps; it reports no result.
+    pub fn cancel_replay(&mut self) -> bool {
+        let Some(job) = self.replay.job.take() else { return false };
+        job.cancel.store(true, std::sync::atomic::Ordering::Relaxed);
+        if let Some(o) = self.replay.outcomes.get_mut(&job.id) {
+            o.status = "cancelled";
+            o.wall_seconds = job.started.elapsed().as_secs_f64();
+        }
+        self.status = format!("Replay of {} cancelled.", job.id);
+        self.panel_dirty = true;
+        true
+    }
+
+    fn poll_replay(&mut self) {
+        let Some(job) = &self.replay.job else { return };
+        let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
+        let wall = job.started.elapsed().as_secs_f64();
+        let id = job.id.clone();
+        let Some(outcome) = self.replay.outcomes.get_mut(&id) else { return };
+        outcome.wall_seconds = wall;
+        let result = match polled {
+            Err(mpsc::TryRecvError::Empty) => return,
+            Err(mpsc::TryRecvError::Disconnected) => Err("replay thread ended without a result".to_string()),
+            Ok(r) => r,
+        };
+        match result {
+            Ok(report) => {
+                outcome.status = "done";
+                outcome.max_rel_diff = Some(report.max_rel_diff);
+                outcome.samples = Some(report.samples);
+            }
+            Err(e) => {
+                outcome.status = "error";
+                outcome.error = Some(e);
+            }
+        }
+        self.status = format!("Run {id}: {}", outcome.headline());
+        self.replay.job = None;
+        self.panel_dirty = true;
+    }
+
+    pub fn replay_json(&self) -> serde_json::Value {
+        serde_json::json!({
+            "running": self.replay.job.as_ref().map(|j| &j.id),
+            "method": "headless rerun from t = 0 with the record's document, seed and config on the shared runtime; compared at every recorded sample time",
+            "outcomes": self.replay.outcomes.values().map(|o| {
+                let mut v = serde_json::json!(o);
+                v["headline"] = serde_json::json!(o.headline());
+                v
+            }).collect::<Vec<_>>(),
+        })
     }
 
     fn start_run(&mut self, scene: &SpatialScene) {
@@ -1135,6 +1265,7 @@ impl Builder {
             "running": self.running(),
             "frame_ms": {"worst_in_window": 1e3 * self.frames.0, "over_50ms_in_window": self.frames.1},
             "runs": self.runs.iter().map(|(_, s)| s).collect::<Vec<_>>(),
+            "replay": self.replay_json(),
             "history": self.store.history(),
         })
     }
@@ -1346,6 +1477,8 @@ enum BuildAction {
     ToggleRealtime,
     PickRun(String),
     CompareRuns,
+    ReplayRun(String),
+    CancelReplay,
     Pin(String),
     Unpin(String),
 }
@@ -1642,6 +1775,13 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
             if !builder.run_picks.remove(&id) {
                 builder.run_picks.insert(id);
             }
+        }
+        BuildAction::ReplayRun(id) => {
+            let r = builder.replay_run(&id);
+            builder.report(r);
+        }
+        BuildAction::CancelReplay => {
+            builder.cancel_replay();
         }
         BuildAction::CompareRuns => {
             let ids: Vec<String> = builder.run_picks.iter().cloned().collect();
@@ -2073,7 +2213,8 @@ fn frame_timing(time: Res<Time>, mut builder: ResMut<Builder>) {
 
 fn sync_run(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>) {
     builder.poll_study();
-    if builder.study.job.is_some() && time.elapsed_secs_f64() - builder.live_refresh > 0.25 {
+    builder.poll_replay();
+    if (builder.study.job.is_some() || builder.replay.job.is_some()) && time.elapsed_secs_f64() - builder.live_refresh > 0.25 {
         builder.live_refresh = time.elapsed_secs_f64();
         builder.panel_dirty = true;
     }
@@ -2172,5 +2313,77 @@ fn swap_with(builder: &mut Builder, parameter: &str, value: f64) {
     let Ok(command) = sim_runtime::lesson::set_command(parameter, value) else { return };
     if sim_system::apply(&mut doc, &builder.registry, &[command]).is_ok() {
         let _ = run.control.send(RunControl::Swap(Box::new(doc), run.description_id.clone()));
+    }
+}
+
+#[cfg(test)]
+mod replay_tests {
+    use super::*;
+
+    fn wait(b: &mut Builder) -> ReplayOutcome {
+        let id = b.replay.job.as_ref().unwrap().id.clone();
+        for _ in 0..600 {
+            b.poll_replay();
+            if b.replay.job.is_none() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        b.replay.outcomes[&id].clone()
+    }
+
+    #[test]
+    fn saved_runs_replay_in_the_background_and_cancel() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dir = std::env::temp_dir().join(format!("builder-replay-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("winch.system.json");
+        std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &path).unwrap();
+        let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
+        let mut b = Builder::open(path.clone(), root.join("library/systems"), registry.clone()).unwrap();
+        let runs = sim_runtime::run_history::dir_for(&path);
+        let select = vec!["drum.shaft.speed".to_string()];
+        let clean = sim_runtime::run_history::record(&b.document, &registry, 0.5, system_builder::config_for(&b.document), &select, "clean").unwrap();
+        let mut edited = sim_runtime::run_history::record(&b.document, &registry, 0.5, system_builder::config_for(&b.document), &select, sim_runtime::run_history::EDITED_WHILE_RUNNING).unwrap();
+        edited.id.push_str("-edited");
+        let long = sim_runtime::run_history::record(&b.document, &registry, 30., system_builder::config_for(&b.document), &select, "long").unwrap();
+        let mut long = long;
+        long.id.push_str("-long");
+        for r in [&clean, &edited, &long] {
+            sim_runtime::run_history::save(&runs, r).unwrap();
+        }
+        b.runs = sim_runtime::run_history::list(&runs);
+
+        let e = b.replay_run("does-not-exist").unwrap_err();
+        assert!(e.contains("does-not-exist"), "{e}");
+        assert!(b.replay.job.is_none());
+
+        b.replay_run(&clean.id).unwrap();
+        assert_eq!(b.replay.outcomes[&clean.id].status, "running");
+        let o = wait(&mut b);
+        assert_eq!((o.status, o.max_rel_diff, o.edited_while_running), ("done", Some(0.), false), "{o:?}");
+        assert!(o.headline().starts_with("Reproduced exactly"), "{}", o.headline());
+        assert!(o.samples.unwrap() > 0);
+
+        b.replay_run(&edited.id).unwrap();
+        let o = wait(&mut b);
+        assert_eq!((o.status, o.max_rel_diff, o.edited_while_running), ("done", Some(0.), true));
+
+        // Cancel stops the worker between steps; it reports no result.
+        b.replay_run(&long.id).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        assert!(b.cancel_replay());
+        let o = b.replay.outcomes[&long.id].clone();
+        assert_eq!((o.status, o.max_rel_diff), ("cancelled", None));
+        assert!(!b.cancel_replay(), "nothing left to cancel");
+        // The shared replay really stops: a raised flag ends a 30 s rerun at once.
+        let started = std::time::Instant::now();
+        let stopped = sim_runtime::run_history::replay_with_cancel(&long, &registry, Some(&std::sync::atomic::AtomicBool::new(true)));
+        assert_eq!(stopped.unwrap_err(), system_builder::CANCELLED);
+        assert!(started.elapsed().as_secs_f64() < 2., "{:?}", started.elapsed());
+        let state = b.state_json();
+        assert_eq!(state["replay"]["outcomes"].as_array().unwrap().len(), 3);
+        std::fs::remove_dir_all(&dir).ok();
     }
 }

@@ -27,6 +27,7 @@ use sim_domain_robot::cad_link::{self, CadLinkStatus};
 use crate::robot_preset::{Preset, PresetRun};
 use crate::robot_motion::{self, KEYS};
 use crate::robot_recording;
+use crate::robot_gait::{self, GaitAction, GaitSource};
 use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, ReplayPhase, RunAction, RunController};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
@@ -43,6 +44,8 @@ pub const POSE: &str = "exported assembly pose: link frames at the stored com, a
 pub const PROVENANCE_RULE: &str = "typed provenance labels are shown only where the file carries one: joint physics.drive_backlash.provenance and actuator profile parameters. Free text the file carries (link mass_sources and member_names, joint physics.source, motor notes) is shown verbatim as the file's text, never mapped to a label. Every other value has no per-value provenance in the export; see the source block's notes.";
 /// Shown once a run frame (built or stepped) is displayed.
 pub const SIMULATED_POSE: &str = "simulated pose from the run thread's latest frame (see run.poses); the exported assembly pose is t = 0 of each generation";
+/// Shown while a gait preview poses the links (robot_gait).
+pub const GAIT_POSE: &str = "gait preview pose from the shared KinematicMirror at the sampled gait time (see gait_preview): kinematic preview (geometry only, suspended) — not a physics result; Stop shows the run's frame again";
 const UNLABELLED: &str = "no per-value provenance in export (see Source → notes)";
 
 /// One link's display triangles in its own frame (flat-shaded).
@@ -266,6 +269,7 @@ impl RobotView {
             (None, None) => None,
         };
         let stepped = self.run.as_ref().and_then(|r| r.frame()).is_some();
+        let previewing = self.run.as_ref().and_then(|r| r.gait_preview()).and_then(|g| g.poses()).is_some();
         let cad = self.cad_link.as_ref().map(|c| json!({"link": c, "rule": cad_link::RESOLUTION_RULE}));
         let jog = self.run.as_ref().filter(|r| r.preset().is_none()).map(|r| {
             let m = r.model();
@@ -281,8 +285,8 @@ impl RobotView {
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()),
-            "recordings": self.run.as_ref().map(|r| r.recordings_json()), "replay": self.run.as_ref().map(|r| r.replay_json()),
+            "pose": if previewing { GAIT_POSE } else if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()),
+            "recordings": self.run.as_ref().map(|r| r.recordings_json()), "replay": self.run.as_ref().map(|r| r.replay_json()), "gait_preview": self.run.as_ref().map(|r| r.gait_json()),
             "graphs": self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(self.selected, self.graphs_visible)), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
@@ -350,6 +354,8 @@ enum RobotAction {
     RefreshRecordings,
     /// Show or hide the graph dock (the Graphs button, key G, `system_ui` graphs:toggle).
     ToggleGraphs,
+    /// The kinematic gait preview: open, play, pause, seek, speed, stop, list (REST `robot_gait`).
+    Gait { action: GaitAction },
 }
 /// The absolute target a jog action asks for (file validation happens in `check_jog`).
 fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
@@ -383,6 +389,7 @@ fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
         RobotAction::SaveRecording { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_save().map(|_| ()),
         RobotAction::Replay { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_replay().map(|_| ()),
         RobotAction::CancelReplay => view.run.as_ref().ok_or("the robot has not loaded")?.check_cancel(),
+        RobotAction::Gait { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check_gait(action),
         _ => Ok(()),
     }
 }
@@ -428,6 +435,14 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
         RobotAction::Fit => orbit.home = true,
         RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
+        RobotAction::Gait { action } => {
+            let stop = action == GaitAction::Stop;
+            view.run.as_mut().ok_or("the robot has not loaded")?.gait(action)?;
+            if stop {
+                // The live frame (or the assembly pose) shows again at once.
+                view.pose_dirty = true;
+            }
+        }
     }
     Ok(())
 }
@@ -501,6 +516,7 @@ enum Request {
     RobotInput { channels: Option<std::collections::BTreeMap<String, f64>>, key: Option<String> },
     RobotSaveRecording { path: Option<String>, note: Option<String> },
     RobotReplay { file: Option<String>, path: Option<String>, action: Option<String> },
+    RobotGait { action: Option<String>, report: Option<String>, path: Option<String>, t: Option<f64>, scale: Option<f64> },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -564,6 +580,20 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
             };
             dispatch(view, orbit, action)?;
         }
+        Request::RobotGait { action, report, path, t, scale } => {
+            let action = match (action.as_deref(), report, path, t, scale) {
+                (None | Some("open"), Some(r), None, None, None) => GaitAction::Open { source: GaitSource::Report(r) },
+                (None | Some("open"), None, Some(p), None, None) => GaitAction::Open { source: GaitSource::Path(p) },
+                (Some("seek"), None, None, Some(t), None) => GaitAction::Seek { t },
+                (Some("speed"), None, None, None, Some(scale)) => GaitAction::Speed { scale },
+                (Some("play"), None, None, None, None) => GaitAction::Play,
+                (Some("pause"), None, None, None, None) => GaitAction::Pause,
+                (Some("stop"), None, None, None, None) => GaitAction::Stop,
+                (Some("list"), None, None, None, None) => GaitAction::List,
+                (a, ..) => return Err(format!("robot_gait {}: give exactly one of report or path (open, the default), or action seek with t, speed with scale, or play | pause | stop | list alone", a.map_or("open".into(), |a| format!("action `{a}`")))),
+            };
+            dispatch(view, orbit, RobotAction::Gait { action })?;
+        }
         Request::Camera { focus, radius, yaw, pitch } => {
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
                 return Err("finite camera required; radius > 0 and pitch within ±1.5 radians".into());
@@ -592,6 +622,7 @@ fn capabilities() -> Vec<Value> {
         c("robot_preset", json!({"id":"robot-measured-400hz"}), "Open a declared embedded preset by id in this window (replacing the current robot and stopping its run thread). Unknown ids, other modes and missing inputs are refused naming the id. The scene, config and task are parsed exactly as declared on a worker thread; scene.robot is drawn and inspected through the same loader as --robot FILE. Run/Pause/Step/Reset (robot_run) then drive the shared EmbeddedEnvironment (task) or EmbeddedSession (no task) on the run thread with seed 0 (recorded), one action interval or clamp(report_every, 1, 40) nominal steps per chunk. robot_state.preset reports id, label, paths, readiness and evidence verbatim, seed, step_s, chunk and step counts; run.phase `ended` with run.end reports a reached horizon or a terminated/truncated episode. Servo-target jog is not offered for presets."),
         c("robot_input", json!({"channels":{"command.forward_speed":0.001}}), &format!("Motion request for a running robot preset: {}. Give channels (values by motion channel name; the other motion channels keep their requested values) or key (w | a | s | d latches that key's request until stop, another key or a channel request; stop sets every motion channel to 0). The same handler as physical W/A/S/D (press/release) and X (stop), the W/A/S/D/Stop buttons and system_ui motion:w|a|s|d|stop. Motion channels come from the session's policy_contract.step_reference.config, else the preset's presets.json motion_commands (as web/viewer/motion-commands.mjs); key vectors from motion_key_vectors, else the channel bounds. Refused naming the channel and its bounds: an unknown channel, a session input that is not a motion channel, a non-finite value, or a value or summed key vector outside the channel's bounds ({}). Also refused, naming the reason: --robot FILE, a preset with no motion config, no built session (Run or Step builds it), a failed or ended run, an exhausted heartbeat. A declared motion_heartbeat is {} robot_state.motion reports source, channels with bounds, requested and held values, active keys, heartbeat, last refusal and the label.", robot_motion::LABEL, robot_motion::CLAMP_RULE, robot_motion::HEARTBEAT_RULE)),
         c("robot_save_recording", json!({"note":"after motion:w"}), &format!("Save the loaded preset run's recording: the same handler as the Save recording button and system_ui recording:save. The run thread snapshots the shared recording (EmbeddedEnvironment::episode_recording() for a preset with a task, EmbeddedSession::recording() without, as the browser's Download) in any phase with a built session, running, paused, ended or failed; a writer thread writes it, so the response returns at once with recording.pending set and robot_state.recording.last_saved {{path, meta_path, kind, version, completed_steps, replayable, not_replayable_reason, failure, saved_utc, bytes}} (or recording.error) once written. Optional path (relative to the root or absolute) and note (kept in the sidecar). {} {} {} Refused, naming the reason: --robot FILE, no built session (Run or Step first), a save still being written, a path under examples/, cad/ or web/, a name not ending in .json or ending in .meta.json, and an existing file (reported in recording.error).", robot_recording::LOCATION_RULE, robot_recording::FILE_RULE, robot_recording::REPLAYABLE_RULE)),
+        c("robot_gait", json!({"report":"6216-Bayesian-009-472d11d4"}), &format!("Kinematic gait preview on the loaded preset: {}. Open a gait with report (a name in robot_state.gait_preview.reports: {}) or path (a compiled.json, relative to the workspace root or absolute); then {{\"action\":\"play\"}}, pause, stop, list, {{\"action\":\"seek\",\"t\":0.5}} (gait time, s) or {{\"action\":\"speed\",\"scale\":0.5}} (0 < scale <= 1). One worker reads the gait with sim_runtime::gait_playback::compiled_with_governor (governor from detailed.spec.json, else spec-identity.json, else none) and Gait::from_compiled, samples it ({}) and poses the scene with the shared KinematicMirror at lift {} m (web/viewer/calibration-mirror.mjs). Refused naming the reason: --robot FILE (no scene), a missing file (named), an unknown report, a gait joint that is not a coordinate of the preset's scene (named), a mirror that cannot serve the scene, a running physics run or a replay in progress; Run, Step and Replay are refused while a gait is loaded. Load errors after the command returns land in robot_state.gait_preview.error, with any previous preview kept. robot_state.gait_preview reports label, phase (idle | loading | playing | paused | failed), generation and frame_generation, report, compiled, governor_source, period_s, nominal_speed_m_s, report_speed_m_s, status and fidelity (the report's, verbatim), gait_time_s, speed_scale, desired_rad and commanded_rad by joint, drives, lift_m, authored_limit_violations and solve_ms. Nothing is simulated, written or sent to hardware.", robot_gait::LABEL, robot_gait::LISTING_RULE, robot_gait::SAMPLING_RULE, robot_gait::LIFT_M)),
         c("robot_replay", json!({"file":"20260930T060822.729Z.json"}), &format!("Replay a saved recording of the loaded preset: the same handler as the inspector Replay buttons and system_ui replay:<file>. Give file (a bare name listed in robot_state.recordings.files, in runs/robot-presets/<preset-id>/) or path (any readable recording .json, relative to the root or absolute; reading is not restricted). {{\"action\":\"cancel\"}} stops the replay between chunks (system_ui replay:cancel); {{\"action\":\"list\"}} lists the recordings again off the UI thread (system_ui replay:refresh). {} {} {} {} robot_state.replay reports path, phase (idle | replaying | cancelled | done | failed), completed/total with unit, completed_steps and recorded_completed_steps, verdict, error, measured, replaced and sidecar. Refused, naming the reason: --robot FILE, a replay already in progress, a running run (Pause first), a building session, a missing or non-.json file, a recording of the other kind, a runtime mismatch (the runtime's message) and a session identity mismatch (the viewer's labelled check).", robot_recording::REPLAY_RULE, robot_recording::VERDICT_RULE, robot_recording::IDENTITY_RULE, robot_recording::MEASURED_RULE)),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
@@ -948,10 +979,11 @@ fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut T
         return;
     }
     view.pose_dirty = false;
-    let frame = view.run.as_ref().and_then(|r| r.frame());
+    // A loaded gait preview's pose, else the run's latest accepted frame.
+    let poses = view.run.as_ref().and_then(|r| r.display_poses());
     let Some(model) = view.model.as_ref() else { return };
     for (link, mut transform) in &mut links {
-        let (p, q) = match frame.and_then(|f| f.poses.get(link.0)).and_then(|p| p.as_ref()) {
+        let (p, q) = match poses.and_then(|f| f.get(link.0)).and_then(|p| p.as_ref()) {
             Some((p, q)) => (Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32), Quat::from_xyzw(q.x as f32, q.y as f32, q.z as f32, q.w as f32)),
             None => {
                 let c = model.links[link.0].com;

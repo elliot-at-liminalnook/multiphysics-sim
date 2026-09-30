@@ -13,6 +13,7 @@ use sim_domain_robot::PhysicalModel;
 use crate::robot_motion::{self, Motion, MotionChannel};
 use crate::robot_preset::PresetRun;
 use crate::robot_graphs;
+use crate::robot_gait::{GaitAction, GaitPreview};
 use crate::robot_recording::{self, Listed, Saved, Snapshot};
 use sim_runtime::session::InputChannel;
 use std::collections::VecDeque;
@@ -381,6 +382,8 @@ pub struct RunController {
     graphs: robot_graphs::History,
     /// The loaded model's chassis link (robot_graphs::CHASSIS_RULE), or why none.
     chassis: Result<usize, String>,
+    /// Presets: the kinematic gait preview (robot_gait), on its own worker.
+    gait: Option<GaitPreview>,
 }
 
 impl RunController {
@@ -392,7 +395,9 @@ impl RunController {
     /// the links and inspector show. Nothing is built until Run or Step.
     pub fn spawn_preset(run: Arc<PresetRun>) -> Self {
         let model = run.scene.robot.clone();
-        let mut c = Self::spawn_source(Source::Preset(run.clone()), model, Some(run));
+        let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
+        let mut c = Self::spawn_source(Source::Preset(run.clone()), model, Some(run.clone()));
+        c.gait = Some(GaitPreview::spawn(run, links));
         c.refresh_recordings();
         c
     }
@@ -411,7 +416,7 @@ impl RunController {
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, 0, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
-            graphs: robot_graphs::History::default(), chassis: robot_graphs::chassis(&model), model }
+            graphs: robot_graphs::History::default(), chassis: robot_graphs::chassis(&model), model, gait: None }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -661,6 +666,9 @@ impl RunController {
         if self.running {
             return Err(format!("preset `{id}`: the run is running; Pause before replaying (a replay replaces the current run)"));
         }
+        if let Some(why) = self.gait.as_ref().and_then(GaitPreview::holds) {
+            return Err(format!("preset `{id}`: {why}; Stop the gait preview before a replay"));
+        }
         Ok(p)
     }
     /// The one replay handler behind the inspector Replay buttons, `system_ui`
@@ -730,6 +738,11 @@ impl RunController {
                 return Err(why);
             }
         }
+        if matches!(action, RunAction::Start | RunAction::Step) {
+            if let Some(why) = self.gait.as_ref().and_then(GaitPreview::holds) {
+                return Err(format!("{why}; Stop the gait preview before a physics {}", action.label()));
+            }
+        }
         let failed = self.status.phase == Phase::Failed;
         let ended = self.status.phase == Phase::Ended;
         let why = || self.status.end.as_ref().and_then(|e| e.get("message")).and_then(|m| m.as_str()).unwrap_or("the run ended").to_string();
@@ -780,6 +793,40 @@ impl RunController {
             }
         };
         self.tx.send(command).map_err(|_| "the run thread has stopped".to_string())
+    }
+
+    /// Why a gait preview action is refused: no preset scene, a running physics
+    /// run or a replay in progress (for open, play and seek), then the preview's own checks.
+    pub fn check_gait(&self, action: &GaitAction) -> Result<(), String> {
+        let Some(g) = &self.gait else {
+            return Err("the gait preview poses a robot preset's scene with the shared KinematicMirror; a `--robot FILE` robot has no scene, so open a preset (robot_preset)".into());
+        };
+        if matches!(action, GaitAction::Open { .. } | GaitAction::Play | GaitAction::Seek { .. }) {
+            if self.running {
+                return Err("a physics run is running; Pause it before a gait preview (the preview would hide the simulated pose)".into());
+            }
+            if self.replay.phase == ReplayPhase::Replaying {
+                return Err(format!("a replay of {} is in progress ({}); Cancel or Reset it before a gait preview", self.replay.file(), self.replay.progress()));
+            }
+        }
+        g.check(action)
+    }
+    /// The one gait-preview handler (robot_gait): inspector, `system_ui` and REST `robot_gait`.
+    pub fn gait(&mut self, action: GaitAction) -> Result<(), String> {
+        self.check_gait(&action)?;
+        self.gait.as_mut().expect("checked").act(action)
+    }
+    /// `robot_state.gait_preview` (null for `--robot FILE`).
+    pub fn gait_json(&self) -> Value {
+        let block = self.check_gait(&GaitAction::Play).err().filter(|e| e.starts_with("a physics") || e.starts_with("a replay"));
+        self.gait.as_ref().map_or(Value::Null, |g| g.json(block))
+    }
+    pub fn gait_preview(&self) -> Option<&GaitPreview> {
+        self.gait.as_ref()
+    }
+    /// The link poses to draw: the gait preview's while a gait is loaded, else the latest accepted frame's.
+    pub fn display_poses(&self) -> Option<&[Option<([f64; 3], DQuat)>]> {
+        self.gait.as_ref().and_then(GaitPreview::poses).or_else(|| self.frame.as_ref().map(|f| f.poses.as_slice()))
     }
 
     /// Takes the worker's latest status and frame; returns true when the
@@ -842,7 +889,8 @@ impl RunController {
         if relist {
             self.refresh_recordings();
         }
-        changed
+        let preview = self.gait.as_mut().is_some_and(GaitPreview::poll);
+        changed || preview
     }
 
     pub fn frame(&self) -> Option<&Frame> {
@@ -905,7 +953,7 @@ impl RunController {
 
     /// Frames need drawing while the worker is building or running.
     pub fn active(&self) -> bool {
-        matches!(self.status.phase, Phase::Building | Phase::Running) || self.running || self.replay.phase == ReplayPhase::Replaying || self.saving.is_some() || self.list_done < self.list_requested
+        self.gait.as_ref().is_some_and(GaitPreview::active) || matches!(self.status.phase, Phase::Building | Phase::Running) || self.running || self.replay.phase == ReplayPhase::Replaying || self.saving.is_some() || self.list_done < self.list_requested
     }
 
     /// `robot_state.run`: phase, time, steps, chunk, rtf, generation, error

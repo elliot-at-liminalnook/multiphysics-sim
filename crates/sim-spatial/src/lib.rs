@@ -12,6 +12,7 @@ mod linked;
 pub mod models;
 pub mod place_view;
 pub mod robot;
+pub mod robot_gait;
 pub mod robot_graphs;
 pub mod robot_motion;
 pub mod robot_preset;

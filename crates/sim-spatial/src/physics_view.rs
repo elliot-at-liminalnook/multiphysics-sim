@@ -292,7 +292,7 @@ pub(crate) fn draw(scene: Res<SpatialScene>, time: Res<Time>, mut gizmos: Gizmos
             }
             if !text.is_empty() {
                 let top = part_transform(&scene, i).translation + Vec3::Y * reach * 0.05;
-                labels.0.push((top, format!("{} · {}", p.label, text.join(" · ")), Color::srgb(0.88, 0.92, 0.96)));
+                labels.0.push((top, format!("{} · {}", p.label, text.join(" · ")), crate::ui_kit::TEXT));
             }
         }
     }
@@ -514,7 +514,7 @@ const TEXT_REFRESH_S: f64 = 0.25;
 const EASE_S: f32 = 0.18;
 const SNAP_PX: f32 = 90.;
 
-pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<SpatialScene>, time: Res<Time>, window: Single<&Window>, camera: Single<(&Camera, &GlobalTransform), With<Orbit>>, inset: Query<&Camera, (With<crate::view::InsetCamera>, Without<Orbit>)>, fonts: Option<Res<crate::builder::ui::UiFonts>>, existing: Query<Entity, With<PhysicsLabel>>, mut steady: Local<Steady>) {
+pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<SpatialScene>, time: Res<Time>, window: Single<&Window>, camera: Single<(&Camera, &GlobalTransform), With<Orbit>>, inset: Query<&Camera, (With<crate::view::InsetCamera>, Without<Orbit>)>, fonts: Option<Res<crate::ui_kit::UiFonts>>, existing: Query<Entity, With<PhysicsLabel>>, mut steady: Local<Steady>) {
     for e in &existing {
         commands.entity(e).despawn();
     }
@@ -532,7 +532,8 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
     }
     let origin = viewport.physical_position.as_vec2() / scale;
     let size = viewport.physical_size.as_vec2() / scale;
-    let font = fonts.map(|f| f.semibold.clone()).unwrap_or_default();
+    let Some(fonts) = fonts else { return };
+    let k = crate::ui_kit::Kit::new(&fonts);
     // Keep clear of the hint line (and the builder's layer chips) along the top.
     let mut placed: Vec<Rect> = vec![Rect::new(0., 0., size.x, if scene.learn_view.is_some() { 22. } else { 60. })];
     // ...and the picture-in-picture close-up.
@@ -584,13 +585,14 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
         entry.dy = Some(dy);
         let r = rect(dy);
         placed.push(r);
+        // A label floats at its anchor over the 3D view, the scene showing through.
         commands.spawn((
             PhysicsLabel,
             Node { border_radius: BorderRadius::all(Val::Px(3.)), position_type: PositionType::Absolute, left: Val::Px(origin.x + r.min.x), top: Val::Px(origin.y + r.min.y), padding: UiRect::axes(Val::Px(5.), Val::Px(1.)), ..default() },
-            BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.72)),
+            BackgroundColor(crate::view::BACKDROP.with_alpha(0.72)),
             GlobalZIndex(24),
             Pickable::IGNORE,
-            children![(Text::new(text), TextFont { font: font.clone().into(), font_size: FontSize::Px(11.), ..default() }, TextColor(*color))],
+            children![(k.text(text, 11., *color, 2), Pickable::IGNORE)],
         ));
     }
 }
@@ -602,7 +604,9 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
 pub(crate) struct LayerChips;
 
 /// Keep every [`LayerChips`] slot filled with switches that match the view state.
-pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, camera: Single<&Camera, With<Orbit>>, window: Single<&Window>, fonts: Option<Res<crate::builder::ui::UiFonts>>, floating: Query<Entity, With<OverlayBar>>, slots: Query<Entity, With<LayerChips>>, added: Query<(), Added<LayerChips>>, mut last: Local<String>) {
+pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, camera: Single<&Camera, With<Orbit>>, window: Single<&Window>, fonts: Option<Res<crate::ui_kit::UiFonts>>, floating: Query<Entity, With<OverlayBar>>, slots: Query<Entity, With<LayerChips>>, added: Query<(), Added<LayerChips>>, mut last: Local<String>) {
+    // The fonts are loaded while the app is built (`app::CorePlugin`).
+    let Some(fonts) = fonts else { return };
     let scale = window.scale_factor();
     // The floating bar is for the builder only; lesson cards carry their own slot.
     let place = camera.viewport.as_ref().filter(|v| v.physical_size.x >= 320 && v.physical_size.y >= 120 && scene.animation.is_some() && scene.learn_view.is_none()).map(|v| {
@@ -620,27 +624,20 @@ pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, came
             commands.entity(e).despawn();
         }
         if let Some((right, top)) = place {
+            // Floats over the top-right of the 3D view (layout only; the chips are kit chips).
             commands.spawn((OverlayBar, LayerChips, Node { position_type: PositionType::Absolute, left: Val::Px(right - 560.), top: Val::Px(top + 30.), width: Val::Px(552.), justify_content: JustifyContent::FlexEnd, flex_wrap: FlexWrap::Wrap, column_gap: Val::Px(4.), row_gap: Val::Px(4.), ..default() }, GlobalZIndex(25)));
             // Filled on the next frame, when the new slot counts as added.
             return;
         }
     }
-    let font = fonts.map(|f| f.semibold.clone()).unwrap_or_default();
-    let chip = |on: bool, label: &str| {
-        (
-            Node { border_radius: BorderRadius::all(Val::Px(9.)), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), border: UiRect::all(Val::Px(1.)), ..default() },
-            BackgroundColor(if on { Color::srgba(0.12, 0.30, 0.28, 0.92) } else { Color::srgba(0.06, 0.08, 0.10, 0.85) }),
-            BorderColor::all(if on { ACCENT } else { Color::srgb(0.25, 0.29, 0.34) }),
-            children![(Text::new(label.to_string()), TextFont { font: font.clone().into(), font_size: FontSize::Px(11.), ..default() }, TextColor(if on { ACCENT } else { MUTED }), Pickable::IGNORE)],
-        )
-    };
+    let k = crate::ui_kit::Kit::new(&fonts);
     for slot in &slots {
         commands.entity(slot).despawn_related::<Children>().with_children(|bar| {
             for (toggle, label, on) in [(ViewToggle::Xray, "X-ray", scene.state.xray), (ViewToggle::Explode, "Explode", scene.state.exploded), (ViewToggle::Strobe, "Strobe", scene.state.strobe)] {
-                bar.spawn((Button, toggle, chip(on, label)));
+                bar.spawn(k.chip(label, toggle, on, true));
             }
             for layer in Overlay::ALL {
-                bar.spawn((Button, OverlayToggle(layer), chip(scene.state.overlays.contains(&layer), layer.label())));
+                bar.spawn(k.chip(layer.label(), OverlayToggle(layer), scene.state.overlays.contains(&layer), true));
             }
         });
     }

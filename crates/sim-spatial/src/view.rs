@@ -166,20 +166,11 @@ pub(crate) fn live_bounds(scene: &SpatialScene, path: &str) -> Option<(Vec3, f32
     Some((centre, radius))
 }
 
-/// The caption text on the inset and split views (spawned before the UI fonts load).
-#[derive(Component)]
-pub(crate) struct ViewCaption;
-
-/// Give view captions the interface's semibold face once it has loaded.
-pub(crate) fn caption_fonts(fonts: Option<Res<crate::builder::ui::UiFonts>>, mut captions: Query<&mut TextFont, With<ViewCaption>>) {
-    let Some(fonts) = fonts else { return };
-    for mut f in &mut captions {
-        let semibold = FontSource::from(fonts.semibold.clone());
-        if f.font != semibold {
-            f.font = semibold;
-        }
-    }
-}
+/// The translucent backdrop of captions floating over the 3D view (the
+/// inset and split captions): the scene shows through it.
+pub(crate) const BACKDROP: Color = Color::srgba(0.04, 0.06, 0.08, 0.8);
+/// The companion run's colour: its ghost outlines and its split caption.
+pub(crate) const COMPANION: Color = Color::srgb(0.72, 0.58, 1.0);
 
 /// 3D arrows with labels, anchored to parts (they follow the part and the camera).
 pub(crate) fn draw_pins(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut labels: ResMut<crate::physics_view::Labels>, camera: Single<(&GlobalTransform, &Orbit)>) {
@@ -300,7 +291,7 @@ pub(crate) fn split_offset(scene: &SpatialScene) -> Vec3 {
 pub(crate) fn draw_ghost(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut labels: ResMut<crate::physics_view::Labels>) {
     let Some(c) = scene.companion.as_ref().filter(|c| c.ghost) else { return };
     let Some(a) = &scene.animation else { return };
-    let color = Color::srgba(0.72, 0.58, 1.0, 0.8);
+    let color = COMPANION.with_alpha(0.8);
     let mut labelled = false;
     for (i, p) in scene.spatial.parts.iter().enumerate() {
         let moving = a.translations.iter().any(|t| t.part == p.id) || a.rotations.iter().any(|r| r.part == p.id);
@@ -425,11 +416,4 @@ mod tests {
         fresh.glide_to(to, 1.);
         assert_eq!(fresh.pose(), Pose { yaw: -3.0, ..to });
     }
-}
-
-/// The cursor as a fraction of the node, (0, 0) top-left to (1, 1)
-/// bottom-right: Bevy 0.16's `RelativeCursorPosition::normalized`. Since 0.17
-/// that field is centred on the node (corners at ±0.5).
-pub(crate) fn cursor_fraction(cursor: &bevy::ui::RelativeCursorPosition) -> Option<Vec2> {
-    cursor.normalized.map(|p| p + Vec2::splat(0.5))
 }

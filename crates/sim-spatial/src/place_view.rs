@@ -303,7 +303,7 @@ fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<PlaceView>, camera
     }
 }
 
-fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>, mut view: ResMut<PlaceView>, window: Option<Single<&mut Window, With<bevy::window::PrimaryWindow>>>) {
+fn setup(mut commands: Commands, fonts: Res<crate::ui_kit::UiFonts>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>, mut view: ResMut<PlaceView>, window: Option<Single<&mut Window, With<bevy::window::PrimaryWindow>>>) {
     if let Some(mut window) = window {
         window.title = format!("Place walkthrough — {}", view.dir.display());
     }
@@ -326,10 +326,10 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials
         commands.spawn((Mesh3d(post.clone()), MeshMaterial3d(blue.clone()), Transform::from_translation(*s + Vec3::Y * 0.1), PhotoMarker));
     }
     commands.spawn((Camera3d::default(), bevy::core_pipeline::tonemapping::Tonemapping::None, Projection::Perspective(PerspectiveProjection { fov: 75f32.to_radians(), near: 0.01, ..default() }), Transform::from_translation(info.start).looking_to(info.look, Vec3::Y), Fly { yaw: 0.0, pitch: -0.25, speed: 0.8 }));
+    // The help line floats over the top-left of the walkthrough (the whole window is the view).
+    let k = crate::ui_kit::Kit::new(&fonts);
     commands.spawn((
-        Text::new(format!("{}\nW/A/S/D move | Q/E down/up | Shift faster | drag to look | wheel: speed | 1-9: stations | P: photo markers | H: help", info.description)),
-        TextFont { font_size: FontSize::Px(14.0), ..default() },
-        TextColor(Color::srgb(0.9, 0.92, 0.95)),
+        k.text(format!("{}\nW/A/S/D move | Q/E down/up | Shift faster | drag to look | wheel: speed | 1-9: stations | P: photo markers | H: help", info.description), 14.0, crate::ui_kit::TEXT, 0),
         Node { position_type: PositionType::Absolute, left: Val::Px(12.0), top: Val::Px(10.0), ..default() },
         Help,
     ));

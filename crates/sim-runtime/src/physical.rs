@@ -506,6 +506,10 @@ impl PhysicalRobot {
         compose(&mut m, &robot)?;
         let mut runtime = Runtime::new(m, registry, integrator).map_err(|e| format!("the physical model does not compile: {e}"))?;
         for island in &mut runtime.islands { island.event_jacobian_reuse=opts.event_jacobian_reuse; }
+        // `advance` runs the islands in sample-interval slices; keep their
+        // clocks on the absolute step grid the sampled controllers schedule
+        // on, or slivers split off every deadline after a few seconds.
+        runtime.set_grid_clock(true);
         if opts.numerical_jacobian {
             for island in &mut runtime.islands { island.set_numerical_jacobian(true); }
         }

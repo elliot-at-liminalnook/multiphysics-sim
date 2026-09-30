@@ -148,7 +148,11 @@ impl Behavior for External {
         if let Some(schedule) = &self.schedule {
             states[clock] = schedule.get(self.samples as usize).copied().unwrap_or(view.time + 1e9);
         } else {
-            states[clock] += self.period;
+            // On the absolute grid `offset + n·period`: summing `+= period`
+            // drifts off it by roundoff, and a deadline off the solver's
+            // step grid splits a sliver step off it.
+            let n = ((states[clock] - self.offset) / self.period).round();
+            states[clock] = self.offset + (n + 1.0) * self.period;
         }
     }
     fn couple(&mut self, mut coupler: Box<dyn Coupler>, contract: Contract) -> Result<(), Box<dyn Coupler>> {

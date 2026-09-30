@@ -377,6 +377,14 @@ pub struct Simulation<S: System> {
     /// Snap the clock onto `start + k·h` in `run` when it differs only by
     /// roundoff (opt-in; off keeps the historical `t += h` clock exactly).
     pub snap_to_grid: bool,
+    /// Keep `run`'s clock on one absolute grid `origin + k·h` across calls
+    /// (opt-in). A caller advancing in many short `run` calls otherwise sums
+    /// `end = start + duration` per call; the sum drifts off the grid that
+    /// sampled controllers schedule on until every deadline misses the merge
+    /// window and splits a ~1e-13 s sliver step off a nominal one.
+    pub grid_clock: bool,
+    /// `(origin, h, k)`: the clock is `origin + k·h` after the last `run`.
+    grid: Option<(f64, f64, u64)>,
     halt_at_event: bool,
     /// Rate of the last accepted step, used as the predictor for implicit
     /// steps (a compiled DAE has no explicit derivative to predict from).
@@ -430,6 +438,8 @@ impl<S: System> Simulation<S> {
             event_tolerance: 1.0e-6,
             halt_at_event: false,
             snap_to_grid: false,
+            grid_clock: false,
+            grid: None,
             previous_rate: vec![0.0; dimension],
             guards_before: Vec::new(),
             guards_after: Vec::new(),
@@ -587,6 +597,11 @@ impl<S: System> Simulation<S> {
         self.time = snapshot.time;
         self.state.copy_from_slice(&snapshot.state);
         self.previous_rate.copy_from_slice(&snapshot.previous_rate);
+        // A snapshot taken on this run's grid resumes it at the same point.
+        self.grid = self.grid.and_then(|(origin, h, _)| {
+            let k = ((snapshot.time - origin) / h).round();
+            (k >= 0.0 && origin + k * h == snapshot.time).then_some((origin, h, k as u64))
+        });
         self.newton_cache = None;
         Ok(())
     }
@@ -743,8 +758,20 @@ impl<S: System> Simulation<S> {
 
     pub fn run(&mut self, duration: f64, h: f64) -> Result<(), DynamicsError> {
         let start = self.time;
-        let end = start + duration;
+        let mut end = start + duration;
         let count = (duration / h).round().max(1.0) as u64;
+        let near = |a: f64, b: f64| (a - b).abs() <= 1024.0 * f64::EPSILON * b.abs().max(h);
+        // With `grid_clock`, continue the previous call's grid when the clock
+        // is still exactly on it (same step, nothing else moved the clock),
+        // else start one here. A duration that is not a whole number of
+        // steps leaves the grid, and the next call starts a new one.
+        let grid = self.grid.take().filter(|(origin, step, k)| self.grid_clock && *step == h && origin + *k as f64 * h == start)
+            .map(|(origin, _, k)| (origin, k))
+            .or(self.grid_clock.then_some((start, 0)))
+            .filter(|(origin, k)| near(end, origin + (k + count) as f64 * h));
+        if let Some((origin, k)) = grid {
+            end = origin + (k + count) as f64 * h;
+        }
         for index in 0..count {
             let remaining = end - self.time;
             // A last step within rounding of `h` is taken as exactly `h`
@@ -760,12 +787,16 @@ impl<S: System> Simulation<S> {
             // step end by more than the merge window and splits off a
             // femtosecond step the implicit solve cannot condition. The step
             // sizes (and so the cached factorisation) are unchanged.
-            let target = start + (index + 1) as f64 * h;
-            if self.snap_to_grid && (self.time - target).abs() <= 1024.0 * f64::EPSILON * target.abs().max(h) {
+            let target = match grid {
+                Some((origin, k)) => origin + (k + index + 1) as f64 * h,
+                None => start + (index + 1) as f64 * h,
+            };
+            if (self.snap_to_grid || grid.is_some()) && near(self.time, target) {
                 self.time = target;
             }
         }
         self.time = end;
+        self.grid = grid.map(|(origin, k)| (origin, h, k + count));
         Ok(())
     }
 
@@ -1285,6 +1316,57 @@ mod adaptive_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Sampled loops scheduled on their own absolute grids `n·period`, as a
+    /// fixed-rate controller computes its deadlines.
+    struct GridClocks {
+        periods: [f64; 2],
+        ticks: [u64; 2],
+    }
+    impl System for GridClocks {
+        fn dimension(&self) -> usize { 1 }
+        fn residual(&self, _: f64, _: &[f64], rates: &[f64], out: &mut [f64]) {
+            out[0] = rates[0] - 1.0;
+        }
+        fn derivative(&self, _: f64, _: &[f64], out: &mut [f64]) -> bool {
+            out[0] = 1.0;
+            true
+        }
+        fn guards(&self, t: f64, _: &[f64], out: &mut Vec<f64>) {
+            out.extend((0..2).map(|k| self.ticks[k] as f64 * self.periods[k] - t));
+        }
+        fn scheduled_events(&self, _: f64, _: &[f64], out: &mut Vec<(usize, f64)>) {
+            out.extend((0..2).map(|k| (k, self.ticks[k] as f64 * self.periods[k])));
+        }
+        fn jump(&mut self, index: usize, _: f64, _: &mut [f64]) {
+            self.ticks[index] += 1;
+        }
+    }
+
+    #[test]
+    fn grid_clock_keeps_chunked_runs_free_of_sliver_steps() {
+        // 16 s in 0.02 s `run` calls (a live viewer's chunk) at h = 0.5 ms
+        // with 1 kHz and 200 Hz loops: the summed per-call clock drifts off
+        // the loops' grid and splits ~1e-13 s slivers off their deadlines.
+        let h = 5.0e-4;
+        let mut sim = Simulation::new(GridClocks { periods: [1.0e-3, 5.0e-3], ticks: [0; 2] }, Integrator::Rk4, vec![0.0]);
+        sim.record_every = 0;
+        sim.grid_clock = true;
+        for _ in 0..800 {
+            sim.run(0.02, h).unwrap();
+        }
+        assert_eq!(sim.stats.steps, 32_000, "every step is a nominal step");
+        assert_eq!(sim.time, 32_000.0 * h, "the clock stays on the absolute grid");
+        assert_eq!(sim.system.ticks, [16_001, 3_201], "both endpoints fire");
+        // A restored snapshot resumes the same grid.
+        let snapshot = sim.snapshot();
+        sim.run(0.02, h).unwrap();
+        let resumed = sim.time;
+        sim.restore(&snapshot).unwrap();
+        sim.run(0.02, h).unwrap();
+        assert_eq!(sim.time, resumed);
+        assert_eq!(sim.time, 32_040.0 * h);
+    }
 
     struct AlgebraicConstraints;
     impl System for AlgebraicConstraints {

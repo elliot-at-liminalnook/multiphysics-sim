@@ -284,6 +284,55 @@ pub struct Collision {
     pub sdf: Option<Sdf>,
 }
 
+impl Collision {
+    /// Display triangles in the link frame: the exported `triangles` when
+    /// present, otherwise a crude triangulation of the hull points. Indices
+    /// resolve against `vertices` first, then `hull`; unresolved faces are skipped.
+    /// Shared by the native viewers so they draw the same surface.
+    pub fn display_triangles(&self) -> Vec<[V3; 3]> {
+        let tris: Vec<[usize; 3]> = if self.triangles.is_empty() { hull_triangles(&self.hull) } else { self.triangles.clone() };
+        let at = |i: usize| self.vertices.get(i).or_else(|| self.hull.get(i)).copied();
+        tris.iter().filter_map(|t| Some([at(t[0])?, at(t[1])?, at(t[2])?])).collect()
+    }
+}
+
+/// Unit normal of a triangle (a, b, d) by the right-hand rule.
+pub fn triangle_normal([a, b, d]: [V3; 3]) -> V3 {
+    let e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    let e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
+    let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt().max(1e-12);
+    [n[0] / len, n[1] / len, n[2] / len]
+}
+
+/// A crude fan triangulation of a convex hull's points (for links exported
+/// without triangles): faces are made by gift-wrapping around the centroid.
+fn hull_triangles(hull: &[V3]) -> Vec<[usize; 3]> {
+    if hull.len() < 4 {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let n = hull.len();
+    let c = hull.iter().fold([0.0; 3], |acc, p| [acc[0] + p[0] / n as f64, acc[1] + p[1] / n as f64, acc[2] + p[2] / n as f64]);
+    for i in 0..n {
+        for j in i + 1..n {
+            for k in j + 1..n {
+                let (a, b, d) = (hull[i], hull[j], hull[k]);
+                let e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+                let e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
+                let nrm = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+                let side = |p: [f64; 3]| nrm[0] * (p[0] - a[0]) + nrm[1] * (p[1] - a[1]) + nrm[2] * (p[2] - a[2]);
+                let all_below = hull.iter().all(|p| side(*p) <= 1e-9);
+                let all_above = hull.iter().all(|p| side(*p) >= -1e-9);
+                if all_below || all_above {
+                    if side(c) > 0.0 { out.push([i, k, j]) } else { out.push([i, j, k]) }
+                }
+            }
+        }
+    }
+    out
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Softening {
     #[serde(default = "Softening::default_tg")]

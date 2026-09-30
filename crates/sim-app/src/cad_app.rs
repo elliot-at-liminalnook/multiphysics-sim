@@ -258,18 +258,10 @@ fn spawn_meshes(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut ma
         let mut positions: Vec<[f32; 3]> = Vec::new();
         let mut normals: Vec<[f32; 3]> = Vec::new();
         let mut colors: Vec<[f32; 4]> = Vec::new();
-        let tris: Vec<[usize; 3]> = if c.triangles.is_empty() { hull_triangles(&c.hull) } else { c.triangles.clone() };
-        for t in &tris {
-            let Some(a) = c.vertices.get(t[0]).or_else(|| c.hull.get(t[0])) else { continue };
-            let Some(b) = c.vertices.get(t[1]).or_else(|| c.hull.get(t[1])) else { continue };
-            let Some(d) = c.vertices.get(t[2]).or_else(|| c.hull.get(t[2])) else { continue };
-            let (a, b, d) = (*a, *b, *d);
-            let e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-            let e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
-            let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
-            let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt().max(1e-12);
-            let n = [(n[0] / len) as f32, (n[1] / len) as f32, (n[2] / len) as f32];
-            for p in [a, b, d] {
+        for tri in c.display_triangles() {
+            let n = sim_domain_robot::model::triangle_normal(tri);
+            let n = [n[0] as f32, n[1] as f32, n[2] as f32];
+            for p in tri {
                 positions.push([p[0] as f32, p[1] as f32, p[2] as f32]);
                 normals.push(n);
                 colors.push(color_at(p));
@@ -290,34 +282,6 @@ fn spawn_meshes(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut ma
         spawned.push(entity);
     }
     sim.links = spawned;
-}
-
-/// A crude fan triangulation of a convex hull's points (for links exported
-/// without triangles): faces are made by gift-wrapping around the centroid.
-fn hull_triangles(hull: &[[f64; 3]]) -> Vec<[usize; 3]> {
-    if hull.len() < 4 {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let n = hull.len();
-    let c = hull.iter().fold([0.0; 3], |acc, p| [acc[0] + p[0] / n as f64, acc[1] + p[1] / n as f64, acc[2] + p[2] / n as f64]);
-    for i in 0..n {
-        for j in i + 1..n {
-            for k in j + 1..n {
-                let (a, b, d) = (hull[i], hull[j], hull[k]);
-                let e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-                let e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]];
-                let nrm = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
-                let side = |p: [f64; 3]| nrm[0] * (p[0] - a[0]) + nrm[1] * (p[1] - a[1]) + nrm[2] * (p[2] - a[2]);
-                let all_below = hull.iter().all(|p| side(*p) <= 1e-9);
-                let all_above = hull.iter().all(|p| side(*p) >= -1e-9);
-                if all_below || all_above {
-                    if side(c) > 0.0 { out.push([i, k, j]) } else { out.push([i, j, k]) }
-                }
-            }
-        }
-    }
-    out
 }
 
 fn pose_links(sim: Res<CadSim>, mut query: Query<(&LinkMesh, &mut Transform)>, mut root: Query<&mut Transform, (With<RobotRoot>, Without<LinkMesh>)>) {

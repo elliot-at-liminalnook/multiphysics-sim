@@ -140,7 +140,7 @@ pub fn predict(
         serde_json::json!({"mode":if closed_loop{"own_feedback"}else{"recorded_pwm_replay"},
         "recording_blake3":recording.fingerprint(),"family":family,"setup":setup,"step_s":step,
         "runtime":crate::physics_context::RuntimeIdentity::current(),
-        "controller_ir_blake3":blake3::hash(include_bytes!("../../../sim-domain-control/src/fixed_pd.rs")).to_hex().to_string(),
+        "controller_ir_blake3":sim_domain_control::fixed_pd::implementation_identity(),
         "assumptions":"One shared Rust electrical circuit and separate mechanical shafts. Captured timing and initial temperature, quantized simulated feedback. Source, wire resistance, auxiliary load and current calibration remain hypotheses; no measured amp, watt or battery accuracy claim. Electrical samples omit switching peaks.",
         "predictions":predictions,"supply_samples_time_voltage_current_power":supply}),
     )

@@ -560,7 +560,7 @@ impl EmbeddedSession {
                 .map(|(m, dof)| {
                     if config.motors.as_ref().unwrap().controller.is_some() {
                         let profile = m.resolved_actuator.as_ref().ok_or("Every motor needs an explicit CAD fixed-PD profile binding")?;
-                        let actual = blake3::hash(include_bytes!("../../sim-domain-control/src/fixed_pd.rs")).to_hex().to_string();
+                        let actual = sim_domain_control::fixed_pd::implementation_identity();
                         if profile.controller.implementation_blake3 != actual {
                             return Err("CAD fixed-PD implementation identity differs from the shared FPGA controller".into());
                         }

@@ -20,6 +20,14 @@ impl SpatialScene {
             path,
         ));
     }
+    /// Another system was opened: its own sidecar, no leftover emphasis or navigation.
+    pub(crate) fn retarget_annotations(&mut self, path: std::path::PathBuf) {
+        self.note_navigation = 0;
+        self.note_hover = SelectionTarget::None;
+        self.note_pointer_hover = SelectionTarget::None;
+        self.note_error = None;
+        self.connect_annotations(path);
+    }
     pub(super) fn note_document(&self) -> notes::Document {
         self.annotations
             .as_ref()

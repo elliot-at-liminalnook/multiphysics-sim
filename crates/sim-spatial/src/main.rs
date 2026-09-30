@@ -118,7 +118,7 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
 }
 fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
     let registry = sim_runtime::system_registry();
-    let builder = sim_spatial::Builder::open(path.to_path_buf(), args.library.clone(), registry.clone())?;
+    let mut builder = sim_spatial::Builder::open(path.to_path_buf(), args.library.clone(), registry.clone())?;
     let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
     let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
     let mut scene = sim_spatial::SpatialScene::for_builder(compiled.description.clone(), spatial)?;
@@ -146,12 +146,15 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     }
     let api = sim_spatial::rest::server_with(args.api_port, true)?;
     eprintln!("Physical REST (build mode): http://{}", api.address);
-    let mut models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models")));
+    let models_dir = args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models"));
+    let mut models = sim_spatial::models::ModelLibrary::open(models_dir.clone());
     // A system's own display models (CAD exports next to the file) join the shared catalog.
     models.extend(&path.parent().unwrap_or(std::path::Path::new(".")).join("models"));
     if let Some(e) = &models.error {
         eprintln!("Display models unavailable ({e}); drawing bounding shapes.");
     }
+    // Opening another file in this window needs these launch facts.
+    builder.enable_open(sim_spatial::builder::open::Shell { launch: path.to_path_buf(), annotations: args.annotations.clone(), schematic: args.schematic.then(|| path.to_path_buf()), models: models_dir });
     sim_spatial::run_builder(scene, builder, api, models);
     Ok(())
 }

@@ -62,6 +62,7 @@ pub fn server_for(port: u16, builder: bool, lessons: bool) -> std::io::Result<si
             c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
                 "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI)"),
             c("system_state", json!({}), "System file, revision, build level, selection, findings and compile status"),
+            c("system_open", json!({"path":"examples/systems-builder/worm-drive/winch.system.json"}), "Open another system file in this window (same handler as the Systems tab). Refuses, naming the blocker, while a text/discussion draft, placement drag, study, replay or Codex answer is in progress; a live run is stopped and saved to the old file's runs. Loads, validates and compiles off the UI thread (poll the job); a missing or invalid file is an error naming the path and the current system stays open. Writes no runs or annotations. system_state.open reports the pending/last open, discovered systems, the annotations sidecar and whether a --schematic window still shows the old file."),
             c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
             c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
             c("system_undo", json!({}), "Undo the last edit in the shared history"),
@@ -412,6 +413,13 @@ fn tick(
                     Err(e) => sim_api::Outcome::Done(Err(e.to_string())),
                 },
                 None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to inspect systems".into())),
+            };
+        }
+        if command.command == "system_open" {
+            return match (builder.as_deref_mut(), command.args.get("path").and_then(|p| p.as_str())) {
+                (Some(b), Some(path)) => b.open_request(std::path::PathBuf::from(path), continuation, cancelled),
+                (Some(_), None) => sim_api::Outcome::Done(Err("system_open needs {\"path\": \"…/file.system.json\"}".into())),
+                (None, _) => sim_api::Outcome::Done(Err("start the viewer with --system FILE to open systems".into())),
             };
         }
         if command.command.starts_with("system") {

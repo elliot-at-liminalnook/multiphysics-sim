@@ -13,6 +13,7 @@ use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use sim_phenomena::scenarios::cad_physical::results_path;
+use sim_domain_robot::stress_results::{Hotspot, stress_colour};
 use sim_phenomena::scenarios::cad_robot::{AnyRobot, BuildOptions};
 use std::time::SystemTime;
 
@@ -200,15 +201,6 @@ fn advance(mut sim: ResMut<CadSim>, time: Res<Time>) {
     sim.wall_seconds += start.elapsed().as_secs_f64();
 }
 
-/// Turbo colour map for stress (0 → blue, 1 → red).
-fn colormap(t: f32) -> [f32; 4] {
-    let t = t.clamp(0.0, 1.0);
-    let r = (1.7 * t - 0.3).clamp(0.0, 1.0) * 0.95 + 0.05;
-    let g = (1.0 - (2.0 * t - 1.0).abs()).clamp(0.0, 1.0) * 0.85 + 0.1;
-    let b = (1.0 - 1.7 * t).clamp(0.0, 1.0) * 0.95 + 0.05;
-    [r, g, b, 1.0]
-}
-
 fn spawn_meshes(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>, mut sim: ResMut<CadSim>, root: Query<Entity, With<RobotRoot>>) {
     if !sim.needs_meshes {
         return;
@@ -226,32 +218,15 @@ fn spawn_meshes(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut ma
     for (li, link) in robot.model.links.iter().enumerate() {
         let c = &link.collision;
         let base = if link.ground { [0.55, 0.55, 0.6] } else { palette[li % palette.len()] };
-        // Stress hotspots: nearest cell's peak stress, normalised by yield.
-        let hotspot: Option<(Vec<[f64; 3]>, Vec<f64>, f64)> = if stress {
-            results.as_ref().and_then(|r| {
-                let l = &r["links"][&link.name];
-                let cells: Vec<[f64; 3]> = l["hotspot"]["cells"].as_array()?.iter().filter_map(|c| Some([c[0].as_f64()?, c[1].as_f64()?, c[2].as_f64()?])).collect();
-                let vals: Vec<f64> = l["hotspot"]["stress_pa"].as_array()?.iter().filter_map(|v| v.as_f64()).collect();
-                let yield_strength = robot.model.material_of(link).yield_strength;
-                if cells.is_empty() { None } else { Some((cells, vals, yield_strength)) }
-            })
+        // Stress hotspots: nearest cell's peak stress, normalised by yield (the shared rule).
+        let hotspot: Option<(Hotspot, f64)> = if stress {
+            results.as_ref().and_then(|r| Some((Hotspot::from_results(r, &link.name)?, robot.model.material_of(link).yield_strength)))
         } else {
             None
         };
         let color_at = |p: [f64; 3]| -> [f32; 4] {
             match &hotspot {
-                Some((cells, vals, yield_strength)) => {
-                    let mut best = (f64::INFINITY, 0.0);
-                    for (c, v) in cells.iter().zip(vals) {
-                        let d = (c[0] - p[0]).powi(2) + (c[1] - p[1]).powi(2) + (c[2] - p[2]).powi(2);
-                        if d < best.0 {
-                            best = (d, *v);
-                        }
-                    }
-                    // Scale so that yield is red; the scale is logarithmic over 3 decades.
-                    let ratio = (best.1 / yield_strength.max(1.0)).max(1e-6);
-                    colormap(((ratio.log10() + 3.0) / 3.0) as f32)
-                }
+                Some((hotspot, yield_strength)) => stress_colour(hotspot, *yield_strength, p),
                 None => [base[0], base[1], base[2], 1.0],
             }
         };

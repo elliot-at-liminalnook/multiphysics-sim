@@ -30,6 +30,7 @@ use crate::robot_preset::{Preset, PresetRun};
 use crate::robot_motion::{self, KEYS};
 use crate::robot_recording;
 use crate::robot_source::{self, SourceWatch, Trigger as ReloadTrigger};
+use crate::robot_stress::{self, StressOverlay};
 use crate::robot_gait::{self, GaitAction, GaitSource};
 use crate::robot_run::{self, JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, OverlayFlags, ReplayPhase, RunAction, RunController};
 use std::path::{Path, PathBuf};
@@ -181,6 +182,8 @@ pub struct RobotView {
     source: Option<SourceWatch>,
     /// The last reload's result line (reason, run reset, selection), shown in the header.
     notice: Option<String>,
+    /// `--robot FILE`: the read-only `.simresult.json` stress overlay (`robot_stress`).
+    stress: StressOverlay,
 }
 impl RobotView {
     /// Starts the worker load; the window opens without waiting for it.
@@ -239,6 +242,7 @@ impl RobotView {
             graphs_visible: false,
             source: None,
             notice: None,
+            stress: StressOverlay::default(),
         }
     }
     fn link_name(&self, i: usize) -> Option<&str> {
@@ -305,6 +309,13 @@ impl RobotView {
             "graphs": self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(self.selected, self.graphs_visible)), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
         // Run-thread overlays (robot_overlay); null until loaded.
         out["overlays"] = self.run.as_ref().map_or(Value::Null, RunController::overlays_json);
+        if let Some(o) = out["overlays"].as_object_mut() {
+            let stress = match &self.source {
+                Some(_) => self.stress.json(self.model.as_ref()),
+                None => json!({"available": false, "reason": STRESS_PRESET}),
+            };
+            o.insert("stress".into(), stress);
+        }
         out
     }
 }
@@ -377,27 +388,39 @@ enum RobotAction {
     /// Re-read `--robot FILE` on a worker (`robot_source`): the watch (a changed
     /// stat), the Reload button, `system_ui` robot:reload and REST `robot_reload`.
     Reload { trigger: ReloadTrigger },
-    /// Set the run-thread overlays (`--robot FILE`); a None flag keeps its value. Keys C/J/F, the
+    /// Set the overlays (`--robot FILE`); a None flag keeps its value. Keys C/J/F/H, the
     /// inspector overlay buttons and `system_ui` overlay:* send the flipped flag; REST `robot_overlay` sends values.
-    Overlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool> },
+    /// contacts, joints and deflections are run-thread overlays; stress colours the link meshes from the results file.
+    Overlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool>, stress: Option<bool> },
 }
-/// The overlays: (system_ui id suffix, label, key).
-const OVERLAYS: [(&str, &str, KeyCode); 3] = [("contacts", "Contacts", KeyCode::KeyC), ("joints", "Joint frames", KeyCode::KeyJ), ("deflections", "Deflections", KeyCode::KeyF)];
-fn overlay_on(flags: OverlayFlags, kind: &str) -> bool {
+/// The overlays: (system_ui id suffix, label, key). H (hotspots) for stress: S is the WASD jog key.
+const OVERLAYS: [(&str, &str, KeyCode); 4] =
+    [("contacts", "Contacts", KeyCode::KeyC), ("joints", "Joint frames", KeyCode::KeyJ), ("deflections", "Deflections", KeyCode::KeyF), ("stress", "Stress", KeyCode::KeyH)];
+const STRESS_PRESET: &str = "the stress overlay is not available for presets: it reads the .simresult.json beside a --robot FILE model (sim_runtime::physical::results_path); a preset scene has no results file";
+fn overlay_on(view: &RobotView, kind: &str) -> bool {
+    let flags = view.run.as_ref().map_or_else(OverlayFlags::default, RunController::overlays);
     match kind {
         "contacts" => flags.contacts,
         "joints" => flags.joints,
+        "stress" => view.stress.enabled,
         _ => flags.deflections,
     }
 }
 /// The action that flips one overlay from its current requested value.
 fn overlay_toggle(view: &RobotView, kind: &str) -> RobotAction {
-    let flip = Some(!overlay_on(view.run.as_ref().map_or_else(OverlayFlags::default, RunController::overlays), kind));
+    let flip = Some(!overlay_on(view, kind));
     match kind {
-        "contacts" => RobotAction::Overlay { contacts: flip, joints: None, deflections: None },
-        "joints" => RobotAction::Overlay { contacts: None, joints: flip, deflections: None },
-        _ => RobotAction::Overlay { contacts: None, joints: None, deflections: flip },
+        "contacts" => RobotAction::Overlay { contacts: flip, joints: None, deflections: None, stress: None },
+        "joints" => RobotAction::Overlay { contacts: None, joints: flip, deflections: None, stress: None },
+        "stress" => RobotAction::Overlay { contacts: None, joints: None, deflections: None, stress: flip },
+        _ => RobotAction::Overlay { contacts: None, joints: None, deflections: flip, stress: None },
     }
+}
+/// Why the stress overlay cannot be set now.
+fn check_stress(view: &RobotView) -> Result<(), String> {
+    view.source.as_ref().ok_or(STRESS_PRESET)?;
+    view.model.as_ref().ok_or("the robot has not loaded")?;
+    Ok(())
 }
 /// The absolute target a jog action asks for (file validation happens in `check_jog`).
 fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
@@ -433,7 +456,15 @@ fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
         RobotAction::CancelReplay => view.run.as_ref().ok_or("the robot has not loaded")?.check_cancel(),
         RobotAction::Gait { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check_gait(action),
         RobotAction::Reload { .. } => view.source.as_ref().ok_or("a preset is not reloaded; reload is for --robot FILE")?.check_reload(),
-        RobotAction::Overlay { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_overlays(),
+        RobotAction::Overlay { contacts, joints, deflections, stress } => {
+            if contacts.is_some() || joints.is_some() || deflections.is_some() {
+                view.run.as_ref().ok_or("the robot has not loaded")?.check_overlays()?;
+            }
+            if stress.is_some() {
+                check_stress(view)?;
+            }
+            Ok(())
+        }
         _ => Ok(()),
     }
 }
@@ -481,10 +512,21 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
         RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
         // Checked above; applied in `receive` when the worker finishes.
         RobotAction::Reload { trigger } => view.source.as_mut().ok_or("a preset is not reloaded; reload is for --robot FILE")?.start(trigger)?,
-        RobotAction::Overlay { contacts, joints, deflections } => {
-            let run = view.run.as_mut().ok_or("the robot has not loaded")?;
-            let f = run.overlays();
-            run.set_overlays(OverlayFlags { contacts: contacts.unwrap_or(f.contacts), joints: joints.unwrap_or(f.joints), deflections: deflections.unwrap_or(f.deflections) })?;
+        RobotAction::Overlay { contacts, joints, deflections, stress } => {
+            if contacts.is_some() || joints.is_some() || deflections.is_some() {
+                let run = view.run.as_mut().ok_or("the robot has not loaded")?;
+                let f = run.overlays();
+                run.set_overlays(OverlayFlags { contacts: contacts.unwrap_or(f.contacts), joints: joints.unwrap_or(f.joints), deflections: deflections.unwrap_or(f.deflections) })?;
+            }
+            if let Some(on) = stress {
+                if on && !view.stress.enabled {
+                    // Re-read the results file on a worker: one written since the model loaded is picked up.
+                    let path = view.path.clone();
+                    view.stress.refresh(&path);
+                }
+                view.stress.enabled = on;
+                view.stress.revision += 1;
+            }
         }
         RobotAction::Gait { action } => {
             let stop = action == GaitAction::Stop;
@@ -516,10 +558,9 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
             out.push(("robot:reload".into(), "Reload file".into(), RobotAction::Reload { trigger: ReloadTrigger::Manual }));
         }
         out.push(("graphs:toggle".into(), (if view.graphs_visible { "Hide graphs (G)" } else { "Show graphs (G)" }).into(), RobotAction::ToggleGraphs));
-        let flags = view.run.as_ref().map_or_else(OverlayFlags::default, RunController::overlays);
         for (kind, name, key) in OVERLAYS {
             let key = format!("{key:?}").trim_start_matches("Key").to_string();
-            out.push((format!("overlay:{kind}"), format!("{} {name} overlay ({key})", if overlay_on(flags, kind) { "Hide" } else { "Show" }), overlay_toggle(view, kind)));
+            out.push((format!("overlay:{kind}"), format!("{} {name} overlay ({key})", if overlay_on(view, kind) { "Hide" } else { "Show" }), overlay_toggle(view, kind)));
         }
         for action in RunAction::ALL {
             out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
@@ -610,7 +651,7 @@ enum Request {
     RobotReplay { file: Option<String>, path: Option<String>, action: Option<String> },
     RobotGait { action: Option<String>, report: Option<String>, path: Option<String>, t: Option<f64>, scale: Option<f64> },
     RobotReload,
-    RobotOverlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool> },
+    RobotOverlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool>, stress: Option<bool> },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -695,8 +736,8 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
             *orbit = RobotOrbit { focus: Vec3::from_array(focus), radius, yaw, pitch, home: false, ..*orbit };
         }
         Request::RobotReload => dispatch(view, orbit, RobotAction::Reload { trigger: ReloadTrigger::Manual })?,
-        Request::RobotOverlay { contacts: None, joints: None, deflections: None } => return Err("robot_overlay needs at least one of contacts, joints, deflections (true | false)".into()),
-        Request::RobotOverlay { contacts, joints, deflections } => dispatch(view, orbit, RobotAction::Overlay { contacts, joints, deflections })?,
+        Request::RobotOverlay { contacts: None, joints: None, deflections: None, stress: None } => return Err("robot_overlay needs at least one of contacts, joints, deflections, stress (true | false)".into()),
+        Request::RobotOverlay { contacts, joints, deflections, stress } => dispatch(view, orbit, RobotAction::Overlay { contacts, joints, deflections, stress })?,
         Request::Fit => orbit.home = true,
     }
     Ok(view.state_json())
@@ -711,8 +752,8 @@ pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
 fn capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
-        c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim (the export's own `source`), source_file (--robot FILE's path, sha256, loaded_at, reload_count, watching, last_reload, run_reset; see robot_reload; watching=false for a preset), notice (the last reload's result), and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, run (null until loaded; phase idle with null time before any build; see robot_run), and overlays (--robot FILE run-thread contacts, joint frames and deflections with flags, counts, samples and scales; available=false with the reason for presets; see robot_overlay). Nothing is written."),
-        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls, robot:reload and overlay:contacts | overlay:joints | overlay:deflections for --robot FILE (the same RobotAction::Reload as robot_reload and RobotAction::Overlay as robot_overlay; overlay controls are listed for presets but disabled with the reason), and for a preset the run, motion, recording, replay and gait preview controls (gait:open:<report>, gait:play, gait:pause, gait:stop, gait:seek:0 | - | + (±period/12 from the latest pose), gait:speed:0.25 | 0.5 | 1, gait:list: the same RobotAction::Gait as REST robot_gait) (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
+        c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim (the export's own `source`), source_file (--robot FILE's path, sha256, loaded_at, reload_count, watching, last_reload, run_reset; see robot_reload; watching=false for a preset), notice (the last reload's result), and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, run (null until loaded; phase idle with null time before any build; see robot_run), and overlays (--robot FILE run-thread contacts, joint frames and deflections with flags, counts, samples and scales, and overlays.stress for the read-only .simresult.json; available=false with the reason for presets; see robot_overlay). Nothing is written."),
+        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls, robot:reload and overlay:contacts | overlay:joints | overlay:deflections | overlay:stress for --robot FILE (the same RobotAction::Reload as robot_reload and RobotAction::Overlay as robot_overlay; overlay controls are listed for presets but disabled with the reason), and for a preset the run, motion, recording, replay and gait preview controls (gait:open:<report>, gait:play, gait:pause, gait:stop, gait:seek:0 | - | + (±period/12 from the latest pose), gait:speed:0.25 | 0.5 | 1, gait:list: the same RobotAction::Gait as REST robot_gait) (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
         c("robot_jog", json!({"joint":"left axle","target":0.5}), &format!("Servo-target jog of one joint by its file name: {JOG_LABEL}. Give target (absolute; rad, or m on a prismatic joint) or delta (from the current requested target). The same handler as the jog +/− buttons and system_ui jog:<joint>:+/- controls (±{JOG_STEP_RAD} rad, ±{JOG_STEP_M} m prismatic; listed for the joints touching the selected link). Errors name the joint: unknown joint, no servo target (passive joint, firmware none, fixed, or a trajectory-mode file), non-finite target, or a target outside the file's limits (with the limit; never clamped); after a failed run, Reset first. {JOG_SEMANTICS} robot_state.jog reports control mode, label and, per joint, the limit (or no limit in file), requested target, and the target and measured value from the latest accepted frame.")),
         c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
         c("robot_presets", json!({}), &format!("List the robot presets declared in {} (its paths resolved against the workspace root, reported in workspace): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
@@ -722,7 +763,7 @@ fn capabilities() -> Vec<Value> {
         c("robot_gait", json!({"report":"6216-Bayesian-009-472d11d4"}), &format!("Kinematic gait preview on the loaded preset: {}. Open a gait with report (a name in robot_state.gait_preview.reports: {}) or path (a compiled.json, relative to the workspace root or absolute); then {{\"action\":\"play\"}}, pause, stop, list, {{\"action\":\"seek\",\"t\":0.5}} (gait time, s) or {{\"action\":\"speed\",\"scale\":0.5}} (0 < scale <= 1). One worker reads the gait with sim_runtime::gait_playback::compiled_with_governor (governor from detailed.spec.json, else spec-identity.json, else none) and Gait::from_compiled, samples it ({}) and poses the scene with the shared KinematicMirror at lift {} m (web/viewer/calibration-mirror.mjs). Refused naming the reason: --robot FILE (no scene), a missing file (named), an unknown report, a gait joint that is not a coordinate of the preset's scene (named), a mirror that cannot serve the scene, a running physics run or a replay in progress; Run, Step and Replay are refused while a gait is loaded. Load errors after the command returns land in robot_state.gait_preview.error, with any previous preview kept. robot_state.gait_preview reports label, phase (idle | loading | playing | paused | failed), generation and frame_generation, report, compiled, governor_source, period_s, nominal_speed_m_s, report_speed_m_s, status and fidelity (the report's, verbatim), gait_time_s, speed_scale, desired_rad and commanded_rad by joint, drives, lift_m, authored_limit_violations and solve_ms. Nothing is simulated, written or sent to hardware.", robot_gait::LABEL, robot_gait::LISTING_RULE, robot_gait::SAMPLING_RULE, robot_gait::LIFT_M)),
         c("robot_replay", json!({"file":"20260930T060822.729Z.json"}), &format!("Replay a saved recording of the loaded preset: the same handler as the inspector Replay buttons and system_ui replay:<file>. Give file (a bare name listed in robot_state.recordings.files, in runs/robot-presets/<preset-id>/) or path (any readable recording .json, relative to the root or absolute; reading is not restricted). {{\"action\":\"cancel\"}} stops the replay between chunks (system_ui replay:cancel); {{\"action\":\"list\"}} lists the recordings again off the UI thread (system_ui replay:refresh). {} {} {} {} robot_state.replay reports path, phase (idle | replaying | cancelled | done | failed), completed/total with unit, completed_steps and recorded_completed_steps, verdict, error, measured, replaced and sidecar. Refused, naming the reason: --robot FILE, a replay already in progress, a running run (Pause first), a building session, a missing or non-.json file, a recording of the other kind, a runtime mismatch (the runtime's message) and a session identity mismatch (the viewer's labelled check).", robot_recording::REPLAY_RULE, robot_recording::VERDICT_RULE, robot_recording::IDENTITY_RULE, robot_recording::MEASURED_RULE)),
         c("robot_reload", json!({}), &format!("Re-read the opened --robot FILE now: the same RobotAction::Reload as the watch, the header Reload button and system_ui robot:reload. {} Returns at once; the result lands in robot_state.source_file {{path, sha256 (of the displayed model's bytes), loaded_at (UTC), reload_count (successful reloads), unchanged_checks, watching, in_flight, last_reload {{trigger watch | manual, outcome loaded | unchanged | failed, error naming the path, at (UTC)}}, run_reset, showing_last_good, failing_error}} and robot_state.notice. A loaded reload replaces the model, meshes, link list, notes and cad_link, keeps the selected link by name (else clears it with a note), discards any run or jog and spawns a fresh idle run thread whose generation is the old one + 1 (robot_state.run.generation; graphs clear by the generation rule). Refused naming the reason: a preset, a load or reload already in flight. (robot_state.source is still the file's own export source block.)", robot_source::RULE)),
-        c("robot_overlay", json!({"contacts":true,"joints":true,"deflections":false}), &format!("Show or hide the --robot FILE run-thread overlays: contacts (spheres at PhysicalRobot::contacts points with force lines at {} m/N; red on the ground, orange against another link), joints (PhysicalRobot::joint_frames: a white sphere and each axis drawn ±{} m in yellow, cyan, magenta) and deflections (PhysicalRobot::deflections: flexible-link boundary displacement lines magnified ×{}). Give any subset; the others keep their values. The same RobotAction::Overlay as keys C / J / F, the inspector overlay buttons and system_ui overlay:contacts | overlay:joints | overlay:deflections. Defaults: all on, as sim-app's cad scene draws them. {} Drawn in the model frame through RobotRoot's transform (the link meshes' parent), only from the latest accepted frame of the current generation. robot_state.overlays reports flags, frame_flags, frame_generation, frame_time, contacts {{count, sample: first {} of link, other (link name | ground), point, force, penetration}}, joints {{count, sample}}, deflections {{count, max_displacement_m}} and scales. Refused for presets (their session frames publish no contacts, joint frames or deflections).", robot_run::FORCE_SCALE_M_PER_N, robot_run::JOINT_AXIS_HALF_M, robot_run::DEFLECTION_MAGNIFICATION, robot_run::OVERLAY_COST_RULE, robot_run::OVERLAY_SAMPLE)),
+        c("robot_overlay", json!({"contacts":true,"joints":true,"deflections":false,"stress":true}), &format!("Show or hide the --robot FILE overlays. stress (key H, system_ui overlay:stress; default off, as sim-app's cad scene) colours the link meshes per vertex from the model's read-only .simresult.json through sim_domain_robot::stress_results ({}); robot_state.overlays.stress reports enabled, painting, path, mtime_unix_s and mtime_utc, status (current | stale | no recorded hash | no results file | invalid results file), recorded_physical_hash, model_physical_hash, peak_stress_pa per link, hotspot_links, error, absent and paint_seconds. {} Run-thread overlays: contacts (spheres at PhysicalRobot::contacts points with force lines at {} m/N; red on the ground, orange against another link), joints (PhysicalRobot::joint_frames: a white sphere and each axis drawn ±{} m in yellow, cyan, magenta) and deflections (PhysicalRobot::deflections: flexible-link boundary displacement lines magnified ×{}). Give any subset; the others keep their values. The same RobotAction::Overlay as keys C / J / F / H, the inspector overlay buttons and system_ui overlay:contacts | overlay:joints | overlay:deflections | overlay:stress. Run-thread defaults: all on, as sim-app's cad scene draws them. {} Drawn in the model frame through RobotRoot's transform (the link meshes' parent), only from the latest accepted frame of the current generation. robot_state.overlays reports flags, frame_flags, frame_generation, frame_time, contacts {{count, sample: first {} of link, other (link name | ground), point, force, penetration}}, joints {{count, sample}}, deflections {{count, max_displacement_m}} and scales. Refused for presets (their session frames publish no contacts, joint frames or deflections, and a preset has no results file).", sim_domain_robot::stress_results::SCALE, robot_stress::RULE, robot_run::FORCE_SCALE_M_PER_N, robot_run::JOINT_AXIS_HALF_M, robot_run::DEFLECTION_MAGNIFICATION, robot_run::OVERLAY_COST_RULE, robot_run::OVERLAY_SAMPLE)),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
@@ -800,6 +841,9 @@ struct OverlayButton(&'static str);
 struct OverlayLabel(&'static str);
 #[derive(Component)]
 struct OverlayText;
+/// The stress overlay's label: results path, mtime, status, peaks and scale.
+#[derive(Component)]
+struct StressText;
 #[derive(Component)]
 struct ReloadButton;
 #[derive(Component)]
@@ -813,7 +857,12 @@ const REPLAY_BUTTONS: usize = 5;
 struct Materials {
     normal: Handle<StandardMaterial>,
     selected: Handle<StandardMaterial>,
+    /// White bases for per-vertex stress colours (selection keeps its emissive tint).
+    stress: Handle<StandardMaterial>,
+    stress_selected: Handle<StandardMaterial>,
 }
+/// `Materials::normal`'s base colour: the vertex colour of a link without hotspot cells while stress is shown.
+const LINK_COLOUR: Color = Color::srgb(0.62, 0.68, 0.76);
 
 /// The window: worker load, posed link meshes, link list, inspector and REST.
 pub fn run_robot(view: RobotView, api: sim_api::Server) {
@@ -837,15 +886,17 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             ..default()
         }))
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, (watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, overlay_panel, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain())
+        .add_systems(Update, ((watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, buttons, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain(), (panels, overlay_panel, stress_panel, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain()).chain())
         .run();
 }
 
 fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>, view: Res<RobotView>, fonts: Res<UiFonts>) {
     let text = |value: &str, size: f32, color: Color| label(&fonts, value, size, color);
     commands.insert_resource(Materials {
-        normal: materials.add(StandardMaterial { base_color: Color::srgb(0.62, 0.68, 0.76), perceptual_roughness: 0.7, metallic: 0.05, cull_mode: None, ..default() }),
+        normal: materials.add(StandardMaterial { base_color: LINK_COLOUR, perceptual_roughness: 0.7, metallic: 0.05, cull_mode: None, ..default() }),
         selected: materials.add(StandardMaterial { base_color: Color::srgb(0.98, 0.62, 0.22), emissive: LinearRgba::rgb(0.35, 0.16, 0.02), perceptual_roughness: 0.6, cull_mode: None, ..default() }),
+        stress: materials.add(StandardMaterial { base_color: Color::WHITE, perceptual_roughness: 0.7, metallic: 0.05, cull_mode: None, ..default() }),
+        stress_selected: materials.add(StandardMaterial { base_color: Color::WHITE, emissive: LinearRgba::rgb(0.35, 0.16, 0.02), perceptual_roughness: 0.6, cull_mode: None, ..default() }),
     });
     commands.spawn((
         Camera3d::default(),
@@ -889,8 +940,12 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
                 Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() },
                 OverlayRoot,
                 children![
-                    (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![overlay_button(&fonts, 0), overlay_button(&fonts, 1), overlay_button(&fonts, 2)]),
+                    (
+                        Node { flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap, column_gap: Val::Px(4.0), row_gap: Val::Px(3.0), ..default() },
+                        children![overlay_button(&fonts, 0), overlay_button(&fonts, 1), overlay_button(&fonts, 2), overlay_button(&fonts, 3)]
+                    ),
                     (text("", 11.5, MUTED), OverlayText),
+                    (text("", 11.5, MUTED), StressText),
                 ],
             ),
             // Motion request buttons for a preset (spawned by `motion_panel`).
@@ -958,7 +1013,7 @@ fn overlay_button(fonts: &UiFonts, i: usize) -> impl Bundle {
     let (kind, name, _) = OVERLAYS[i];
     (
         Button,
-        RobotAction::Overlay { contacts: None, joints: None, deflections: None },
+        RobotAction::Overlay { contacts: None, joints: None, deflections: None, stress: None },
         OverlayButton(kind),
         Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() },
         BorderRadius::all(Val::Px(4.0)),
@@ -1030,15 +1085,22 @@ fn receive(
         (result, None)
     } else {
         let Some(source) = view.source.as_mut() else { return };
-        let Some((trigger, checked)) = source.take() else {
+        let Some((trigger, mut checked)) = source.take() else {
             if source.busy().is_some() {
                 redraw.write(bevy::window::RequestRedraw);
             }
             return;
         };
         let seconds = checked.seconds;
+        let results = checked.results.take();
         let was_failing = source.failing.is_some();
-        let Some(loaded) = source.settle(trigger, checked, robot_source::now_utc()) else {
+        let settled = source.settle(trigger, checked, robot_source::now_utc());
+        if let Some(r) = results {
+            // Read by the same worker; its status is always judged against the displayed model.
+            view.stress.set(r);
+        }
+        let Some(source) = view.source.as_mut() else { return };
+        let Some(loaded) = settled else {
             // Unchanged, or failed: the displayed model, meshes, run and selection stay.
             let failing = source.failing.clone();
             match (failing, view.model.is_some()) {
@@ -1097,6 +1159,8 @@ fn receive(
     // A reload keeps the user's camera.
     orbit.home = reload.is_none();
     view.triangles = loaded.geometry.iter().map(|g| g.as_ref().map_or(0, |g| g.triangles())).collect();
+    // New meshes are painted (or not) for the stress overlay by `stress_paint`.
+    view.stress.revision += 1;
     let rows: Vec<Entity> = loaded
         .model
         .links
@@ -1316,7 +1380,12 @@ fn highlight(
         }
     }
     for (link, mut material) in &mut meshes {
-        let want = if view.selected == Some(link.0) { &materials.selected } else { &materials.normal };
+        let want = match (view.selected == Some(link.0), view.stress.painting()) {
+            (true, false) => &materials.selected,
+            (false, false) => &materials.normal,
+            (true, true) => &materials.stress_selected,
+            (false, true) => &materials.stress,
+        };
         if material.0 != *want {
             material.0 = want.clone();
         }
@@ -2105,7 +2174,7 @@ fn graph_key(keys: Res<ButtonInput<KeyCode>>, mut view: ResMut<RobotView>, mut o
     }
 }
 
-/// Keys C / J / F: the same `RobotAction::Overlay` as the inspector buttons and `system_ui` overlay:*.
+/// Keys C / J / F / H: the same `RobotAction::Overlay` as the inspector buttons and `system_ui` overlay:*.
 fn overlay_keys(keys: Res<ButtonInput<KeyCode>>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
     for (kind, _, key) in OVERLAYS {
         if keys.just_pressed(key) {
@@ -2125,25 +2194,25 @@ fn overlay_panel(
 ) {
     let run = view.run.as_ref();
     let available = run.is_some_and(|r| r.check_overlays().is_ok());
-    let flags = run.map_or_else(OverlayFlags::default, RunController::overlays);
     for (b, mut action, mut color, mut node) in &mut buttons {
         let next = overlay_toggle(&view, b.0);
         if *action != next {
             *action = next;
         }
-        let on = overlay_on(flags, b.0);
+        let on = overlay_on(&view, b.0);
         let c = if on { Color::srgb(0.18, 0.36, 0.30) } else { Color::srgb(0.16, 0.20, 0.25) };
         if color.0 != c {
             color.0 = c;
         }
-        let display = if available { Display::Flex } else { Display::None };
+        let enabled = if b.0 == "stress" { check_stress(&view).is_ok() } else { available };
+        let display = if enabled { Display::Flex } else { Display::None };
         if node.display != display {
             node.display = display;
         }
     }
     for (l, mut text) in &mut labels {
         let (_, name, key) = OVERLAYS.iter().find(|o| o.0 == l.0).copied().unwrap_or(OVERLAYS[0]);
-        let t = format!("{name} {} ({})", if overlay_on(flags, l.0) { "on" } else { "off" }, format!("{key:?}").trim_start_matches("Key"));
+        let t = format!("{name} {} ({})", if overlay_on(&view, l.0) { "on" } else { "off" }, format!("{key:?}").trim_start_matches("Key"));
         if text.0 != t {
             text.0 = t;
         }
@@ -2164,6 +2233,69 @@ fn overlay_panel(
                 }
             },
         },
+    };
+    if line.0 != t {
+        line.0 = t;
+    }
+}
+
+/// The stress overlay's paint: when the overlay revision changed (toggle, new
+/// results, new meshes), each link mesh gets per-vertex colours through the
+/// shared rule (`robot_stress`, from already-parsed results; bounded by
+/// vertices × ≤200 hotspot cells per link, timed in `paint_seconds`) or
+/// loses them. Links without cells take the normal link colour.
+fn stress_paint(mut view: ResMut<RobotView>, links: Query<(&LinkMesh, &Mesh3d)>, mut meshes: ResMut<Assets<Mesh>>, mut redraw: EventWriter<bevy::window::RequestRedraw>) {
+    view.stress.take();
+    if view.stress.busy() {
+        // Keep polling the results-only read in the reactive window.
+        redraw.write(bevy::window::RequestRedraw);
+    }
+    if view.stress.painted.is_some_and(|(r, _)| r == view.stress.revision) {
+        return;
+    }
+    let started = std::time::Instant::now();
+    let paint = view.stress.painting();
+    let plain = LINK_COLOUR.to_linear().to_f32_array();
+    for (link, mesh) in &links {
+        let Some(mesh) = meshes.get_mut(&mesh.0) else { continue };
+        if !paint {
+            mesh.remove_attribute(Mesh::ATTRIBUTE_COLOR);
+            continue;
+        }
+        let Some(positions) = mesh.attribute(Mesh::ATTRIBUTE_POSITION).and_then(|a| a.as_float3()).map(<[[f32; 3]]>::to_vec) else { continue };
+        let colours = match (view.stress.results.as_ref(), view.model.as_ref()) {
+            (Some(r), Some(m)) => r.colours(m, link.0, &positions),
+            _ => None,
+        };
+        let colours = colours.unwrap_or_else(|| vec![plain; positions.len()]);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colours);
+    }
+    let revision = view.stress.revision;
+    view.stress.painted = Some((revision, started.elapsed().as_secs_f64()));
+}
+
+/// The stress label under the overlay buttons (`--robot FILE`): path, mtime,
+/// status against the loaded model, peak per link and the colour scale.
+fn stress_panel(view: Res<RobotView>, mut line: Single<&mut Text, With<StressText>>) {
+    let t = match (&view.source, view.model.as_ref()) {
+        (None, _) if view.run.is_some() => "Stress: not available for presets (no .simresult.json)".to_string(),
+        (None, _) | (_, None) => String::new(),
+        (Some(_), Some(m)) if view.stress.enabled => match view.stress.results.as_ref() {
+            None => "Stress: reading results…".into(),
+            Some(r) => {
+                let path = r.path.display();
+                match &r.contents {
+                    robot_stress::Contents::Missing => format!("Stress: no results file ({path}); run `sim-cad run <model>` to write one"),
+                    robot_stress::Contents::Invalid(e) => format!("Stress: results file not usable: {e}"),
+                    robot_stress::Contents::Parsed(v) => {
+                        let mtime = r.mtime_unix_s.map_or("mtime unknown".into(), |t| format!("mtime {}", robot_recording::iso((t * 1e3) as u128)));
+                        let peaks: Vec<String> = sim_domain_robot::stress_results::peaks(v).into_iter().map(|(k, p)| format!("{k} {}", p.map_or("—".into(), |p| format!("{:.2} MPa", p / 1e6)))).collect();
+                        format!("Stress · {} · {path} · {mtime}\npeak: {}\n{}", r.status(m), peaks.join(" · "), sim_domain_robot::stress_results::SCALE)
+                    }
+                }
+            }
+        },
+        (Some(_), Some(_)) => "Stress off (H): colours links from the model's .simresult.json".into(),
     };
     if line.0 != t {
         line.0 = t;

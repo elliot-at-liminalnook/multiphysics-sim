@@ -67,11 +67,14 @@ pub struct Checked {
     /// sha256 of the bytes read (None when the read failed).
     pub hash: Option<String>,
     pub outcome: Outcome,
+    /// The results file beside the model (`robot_stress`), read by the same worker.
+    pub results: Option<crate::robot_stress::StressResults>,
     pub seconds: f64,
 }
 
 /// Stat, read, hash, compare with `loaded_hash` and (only when different)
-/// parse through the shared loader. Called on a worker thread.
+/// parse through the shared loader; then read the results file beside it
+/// (`robot_stress::read`). Called on a worker thread.
 pub fn check(path: &Path, loaded_hash: Option<&str>) -> Checked {
     let started = Instant::now();
     let stat = stat(path);
@@ -90,7 +93,8 @@ pub fn check(path: &Path, loaded_hash: Option<&str>) -> Checked {
             (Some(hash), outcome)
         }
     };
-    Checked { stat, hash, outcome, seconds: started.elapsed().as_secs_f64() }
+    let results = Some(crate::robot_stress::read(path));
+    Checked { stat, hash, outcome, results, seconds: started.elapsed().as_secs_f64() }
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -174,7 +178,7 @@ impl SourceWatch {
             Ok(c) => c,
             Err(mpsc::TryRecvError::Empty) => return None,
             Err(mpsc::TryRecvError::Disconnected) => {
-                Checked { stat: None, hash: None, outcome: Outcome::Failed(format!("{}: the reload worker stopped without a result", self.path.display())), seconds: 0.0 }
+                Checked { stat: None, hash: None, outcome: Outcome::Failed(format!("{}: the reload worker stopped without a result", self.path.display())), results: None, seconds: 0.0 }
             }
         };
         let trigger = *trigger;

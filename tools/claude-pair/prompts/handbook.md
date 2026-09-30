@@ -13,9 +13,10 @@ code when something looks stale, and say so in coordination_notes.
   `cargo test -p <crate> --lib <filter>` for behavior. Build release only when
   you need the speed, such as long simulations.
 - Measured costs (warm cache): a `sim-runtime` or `sim-spatial` test binary
-  takes about 2 to 4 minutes to build and link, `cargo check -p sim-spatial`
-  about 2 minutes. Each separate `--test` target is another binary. Test the
-  lowest crate that holds the change, in one cargo invocation (`-p a -p b`).
+  takes about 2 to 4 minutes to build and link, and each separate `--test`
+  target is another binary. That is why testing in this loop is minimal:
+  `cargo check -p <crate>` plus at most one exact, in-scope test. Broad suites
+  belong to CI (`.github/workflows/`).
 - `cargo run --release -p sim-phenomena -- all` regenerates the full phenomena
   suite and takes about 50 minutes. Run single scenarios instead unless the
   whole suite is the point.

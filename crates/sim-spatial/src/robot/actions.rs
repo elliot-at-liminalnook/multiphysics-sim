@@ -312,7 +312,8 @@ fn handle(view: &mut RobotView, orbit: &mut RobotOrbit, action: &RobotAction) ->
             // Refused here (naming the id) before anything is replaced; the old run thread stops when its controller drops.
             let mut next = RobotView::open_preset(&view.presets.clone()?, id)?;
             next.ui_revision = view.ui_revision + 1;
-            *view = next;
+            // The old view's run and playback threads are joined off the UI thread, as leave_robot does.
+            crate::jobs::drop_off_thread(std::mem::replace(view, next), "the robot view");
             Ok(None)
         }
         RobotAction::Controls => {

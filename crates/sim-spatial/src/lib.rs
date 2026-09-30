@@ -333,7 +333,7 @@ impl Plugin for SpatialViewerPlugin {
             .add_systems(OnEnter(ModeScope::Inspect), (setup_scene, setup_ui))
             .add_systems(OnEnter(ModeScope::Builder), (setup_scene, setup_ui))
             // Buttons, keys, the notes panel and the overlay bar write the view's actions.
-            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).in_set(ViewerSet::Input).run_if(in_state(SpatialScreen)))
+            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).chain().after(app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(SpatialScreen)))
             .add_systems(Update, inspect::apply.in_set(ViewerSet::Actions).run_if(in_state(SpatialScreen)))
             .add_systems(
                 Update,

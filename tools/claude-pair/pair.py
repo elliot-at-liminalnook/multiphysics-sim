@@ -403,10 +403,15 @@ class Runner:
         scopes = self.state.setdefault("session_scopes", {})
         counts = self.state.setdefault("session_calls", {})
         session = self.state["sessions"].get(role)
-        retrying = session and self.state.pop("retry_session", None) == session
-        if retrying and self.state.pop("limit_resume", None) == session:
+        # Resume tokens belong to one session; another role's call must not use them up.
+        retrying = bool(session) and self.state.get("retry_session") == session
+        if retrying:
+            self.state.pop("retry_session")
+        if retrying and self.state.get("limit_resume") == session:
+            self.state.pop("limit_resume")
             prompt = RESUME_NOTE + prompt
-        failure = self.state.pop("retry_note", None)
+        failure = self.state.pop("retry_note", None) if retrying or self.state.get("retry_note_role") == role else None
+        self.state.pop("retry_note_role", None) if failure else None
         if failure:
             prompt = (f"(Your previous attempt ended with an error: {failure}. Anything you already did in this "
                       "conversation and in the project folder is intact. Continue, then return the structured result.)\n\n" + prompt)
@@ -513,6 +518,7 @@ class Runner:
             self.state["sessions"][role] = sid
             self.state["retry_session"] = sid
         self.state["retry_note"] = reason
+        self.state["retry_note_role"] = role
         self.save()
         raise CallFailed(f"{role} call {self.state['calls']}: {reason}")
 
@@ -703,10 +709,13 @@ class Runner:
             # A turn cut short by Stop, a crash or a closed terminal continues in
             # its own session; its edits in the folder are intact.
             interrupted = self.state.pop("inflight")
+            pending = git(self.repo, "status", "--short").decode(errors="replace").splitlines()
             shared_notebook.append(self.root, {"id": f"resume-{self.state['calls']:04d}-{int(time.time())}",
                 "author": "coordinator", "kind": "Resumed interrupted turn",
-                "summary": f"The {interrupted['role']} turn in {Path(interrupted['prefix']).name} was interrupted; its session continues.",
-                "notes": [], "source": interrupted["prefix"]})
+                "summary": f"The {interrupted['role']} turn in {Path(interrupted['prefix']).name} was interrupted; its session "
+                           "continues when that role runs next. Uncommitted changes listed here are most likely that turn's "
+                           "partial work, not the user's: check them against its log before treating them as the user's.",
+                "notes": pending[:40], "source": interrupted["prefix"]})
             self.state["sessions"][interrupted["role"]] = interrupted["session_id"]
             self.state["retry_session"] = interrupted["session_id"]
         if (self.root / "STOP").exists():

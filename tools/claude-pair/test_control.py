@@ -440,6 +440,20 @@ class ResilienceTests(unittest.TestCase):
             self.assertEqual(state["decisions"][0]["decision"], "Kept the old flag name")
             self.assertIn("Kept the old flag name", (runner.root / "shared/DECISIONS.md").read_text())
 
+    def test_one_roles_resume_token_is_not_used_by_another(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            calls = []
+            with patch.object(runner, "process", ControlTests().fake_process(runner, calls)):
+                runner.call("orchestrator", "plan", scope="batch:mission")
+                runner.call("worker", "work", scope="assignment:1")
+                runner.state["retry_session"] = runner.state["sessions"]["worker"]
+                runner.call("orchestrator", "replan", scope="batch:mission")
+                self.assertEqual(runner.state["retry_session"], runner.state["sessions"]["worker"], "still the worker's")
+                runner.call("worker", "continue", scope="assignment:2")
+            self.assertIn("--resume", calls[-1], "the worker continues its own session despite the new scope")
+            self.assertNotIn("retry_session", runner.state)
+
     def test_a_blocked_batch_is_set_aside_for_the_director(self):
         with tempfile.TemporaryDirectory() as tmp:
             runner = ControlTests().runner(tmp)

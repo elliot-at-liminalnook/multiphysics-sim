@@ -112,6 +112,8 @@ pub struct PresetRun {
     pub config: Config,
     pub task: Option<Task>,
     pub seed: u64,
+    /// The root the declared paths were resolved against (saved recordings go under it).
+    pub root: PathBuf,
 }
 impl PresetRun {
     /// Reads and parses the declared files (the scene's `robot` is also
@@ -134,7 +136,7 @@ impl PresetRun {
             None => None,
         };
         let robot = raw_scene.get_mut("robot").map(Value::take).unwrap_or(Value::Null);
-        Ok((Self { scene_path: root.join(&scene_rel), preset, scene, config, task, seed: SEED }, robot))
+        Ok((Self { scene_path: root.join(&scene_rel), preset, scene, config, task, seed: SEED, root: root.to_path_buf() }, robot))
     }
     /// Nominal steps per chunk: one whole action interval (task period ÷
     /// step) for an environment, as `EmbeddedEnvironment::step` advances;

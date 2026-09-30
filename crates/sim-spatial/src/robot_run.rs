@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use crate::robot_motion::{self, Motion, MotionChannel};
 use crate::robot_preset::PresetRun;
+use crate::robot_recording::{self, Saved, Snapshot};
 use sim_runtime::session::InputChannel;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, mpsc};
@@ -182,6 +183,8 @@ struct Published {
     drive: Option<Arc<Drive>>,
     /// Why the last motion request could not be applied on the run thread.
     motion_error: Option<String>,
+    /// The last finished save (its request number, and the pair written or why not).
+    save: Option<(u64, Result<Saved, String>)>,
 }
 
 /// A built preset's typed input channels (the session's `inputs()`), its
@@ -223,6 +226,8 @@ enum Command {
     Jog { joint: String, target: f64 },
     /// Validated motion values for the three motion channels (in `Motion::channels` order).
     Motion { values: [f64; 3] },
+    /// Snapshot the shared recording and write it (on a writer thread) to `target`.
+    SaveRecording { seq: u64, target: std::path::PathBuf, note: Option<String>, unix_ms: u128 },
 }
 
 /// Run actions shared by the buttons, `system_ui` and REST `robot_run`.
@@ -286,6 +291,12 @@ pub struct RunController {
     keys_physical: bool,
     motion_refusal: Option<String>,
     motion_error: Option<String>,
+    /// Saves requested and finished (request numbers), the pending target, the last pair written and the last save error.
+    save_requested: u64,
+    save_done: u64,
+    saving: Option<std::path::PathBuf>,
+    saved: Option<Saved>,
+    save_error: Option<String>,
 }
 
 impl RunController {
@@ -302,7 +313,7 @@ impl RunController {
     fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>) -> Self {
         let (tx, rx) = mpsc::channel();
         let status = Status { phase: Phase::Idle, generation: 0, rtf: None, error: None, end: None };
-        let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None }));
+        let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None }));
         let out = shared.clone();
         let chunk_s = source.chunk_s();
         let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
@@ -311,7 +322,8 @@ impl RunController {
             .spawn(move || worker(source, links, rx, out))
             .expect("spawn robot run thread");
         Self { tx, shared, generation: 0, running: false, frame: None, status, model, jogged: Default::default(), jog_error: None, preset, chunk_s,
-            drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None }
+            drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
+            save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -447,6 +459,65 @@ impl RunController {
             "values_rule": "requested: the values last sent this generation (null until a request; Reset clears them); held: the session's input value in the latest accepted frame. Non-motion channels keep their held values."})
     }
 
+    /// Why a save cannot be requested now (`Ok` when it would be sent).
+    /// Refusals name the reason; the target itself is checked by `save_recording`.
+    pub fn check_save(&self) -> Result<&Arc<PresetRun>, String> {
+        let Some(p) = &self.preset else {
+            return Err("recordings are for robot presets (the shared EmbeddedSession/EmbeddedEnvironment recording); `--robot FILE` runs PhysicalRobot, which keeps no recording".into());
+        };
+        let id = &p.preset.id;
+        match self.status.phase {
+            Phase::Idle => return Err(format!("preset `{id}`: no built session yet; Run or Step builds {} before a recording can be saved", p.kind())),
+            Phase::Building => return Err(format!("preset `{id}`: the session is building; save once it is built")),
+            _ => {}
+        }
+        if let Some(t) = &self.saving {
+            return Err(format!("preset `{id}`: a save is still being written ({}); wait for it", t.display()));
+        }
+        Ok(p)
+    }
+    /// The one save handler behind the Save recording button, `system_ui`
+    /// recording:save and REST `robot_save_recording`. The target is resolved
+    /// here without file-system access (robot_recording::target); the run
+    /// thread snapshots the shared recording and a writer thread writes the
+    /// pair, reported in `recording_json` once done.
+    pub fn save_recording(&mut self, path: Option<&str>, note: Option<&str>) -> Result<std::path::PathBuf, String> {
+        let result = self.check_save().and_then(|p| {
+            let unix_ms = robot_recording::now_ms();
+            robot_recording::target(&p.root, &p.preset.id, path, unix_ms).map(|t| (t, unix_ms))
+        });
+        let (target, unix_ms) = match result {
+            Ok(x) => x,
+            Err(e) => {
+                self.save_error = Some(e.clone());
+                return Err(e);
+            }
+        };
+        self.save_requested += 1;
+        self.tx.send(Command::SaveRecording { seq: self.save_requested, target: target.clone(), note: note.map(str::to_string), unix_ms }).map_err(|_| "the run thread has stopped".to_string())?;
+        self.saving = Some(target.clone());
+        self.save_error = None;
+        Ok(target)
+    }
+    /// `robot_state.recording`: availability, the pending target, the last pair written and the last error, with the rules.
+    pub fn recording_json(&self) -> Value {
+        let available = self.check_save().map(|_| ());
+        json!({"available": available.is_ok(), "unavailable_reason": available.err(), "pending": self.saving, "last_saved": self.saved, "error": self.save_error,
+            "saves_requested": self.save_requested, "saves_finished": self.save_done,
+            "root": self.preset.as_ref().map(|p| &p.root), "location_rule": robot_recording::LOCATION_RULE, "file_rule": robot_recording::FILE_RULE,
+            "replayable_rule": robot_recording::REPLAYABLE_RULE,
+            "kind_rule": "the browser's kind for the same preset (web/worker.js: a task → EnvironmentSimulation.recording() = EmbeddedEnvironment::episode_recording(), kind sampled_environment_recording; otherwise EmbeddedSimulation.recording() = EmbeddedSession::recording(), kind embedded_session)"})
+    }
+    pub fn saved(&self) -> Option<&Saved> {
+        self.saved.as_ref()
+    }
+    pub fn save_error(&self) -> Option<&str> {
+        self.save_error.as_deref()
+    }
+    pub fn save_pending(&self) -> Option<&std::path::Path> {
+        self.saving.as_deref()
+    }
+
     /// Why an action is unavailable now (`Ok` when it can be sent).
     pub fn check(&self, action: RunAction) -> Result<(), String> {
         let failed = self.status.phase == Phase::Failed;
@@ -502,6 +573,20 @@ impl RunController {
     /// displayed frame changed (a stale-generation frame is never accepted).
     pub fn poll(&mut self) -> bool {
         let published = self.shared.lock().unwrap_or_else(|p| p.into_inner());
+        // Saves are file results, kept across generations.
+        if let Some((seq, result)) = published.save.as_ref().filter(|(seq, _)| *seq > self.save_done) {
+            self.save_done = *seq;
+            if self.save_done >= self.save_requested {
+                self.saving = None;
+            }
+            match result {
+                Ok(saved) => {
+                    self.saved = Some(saved.clone());
+                    self.save_error = None;
+                }
+                Err(e) => self.save_error = Some(e.clone()),
+            }
+        }
         if published.status.generation >= self.generation {
             self.status = published.status.clone();
             self.jog_error = published.jog_error.clone();
@@ -631,6 +716,15 @@ fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s
     Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec() })
 }
 
+/// A frame's time, step count and link poses as JSON (the sidecar's final frame).
+fn frame_json(f: &Frame, links: &[String]) -> Value {
+    let poses: Vec<Value> = f.poses.iter().enumerate().map(|(i, pose)| match pose {
+        Some((p, q)) => json!({"link": links.get(i), "position": p, "quat_xyzw": [q.x, q.y, q.z, q.w]}),
+        None => json!({"link": links.get(i), "position": null, "quat_xyzw": null}),
+    }).collect();
+    json!({"time": f.time, "completed_steps": f.completed_steps, "chunks": f.steps, "generation": f.generation, "inputs": f.inputs, "poses": poses})
+}
+
 /// The simulation the run thread owns.
 enum Sim {
     Robot(sim_runtime::physical::PhysicalRobot),
@@ -710,6 +804,14 @@ impl Sim {
             Sim::Robot(_) => {}
         }
         Ok(())
+    }
+    /// The shared recording, as the browser saves it for this preset kind.
+    fn snapshot(&self) -> Result<(Snapshot, &Arc<PresetRun>), String> {
+        match self {
+            Sim::Robot(_) => Err("`--robot FILE` runs PhysicalRobot, which keeps no recording".into()),
+            Sim::Environment { env, run, .. } => Ok((Snapshot::Environment(env.episode_recording()), run)),
+            Sim::Session { session, run, .. } => Ok((Snapshot::Session(session.recording()), run)),
+        }
     }
     fn drive(&self) -> Option<Arc<Drive>> {
         match self {
@@ -853,6 +955,29 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
             }
             Some(Command::Jog { joint, .. }) if failed => set_jog_error(Some(format!("joint `{joint}`: not applied; the run failed (Reset rebuilds)"))),
             Some(Command::Motion { .. }) if failed || ended => set_motion_error(Some("motion request not applied: the run failed or ended (Reset rebuilds)".into())),
+            // Saved in every phase with a built simulation, failed and ended included (labelled by robot_recording::REPLAYABLE_RULE).
+            Some(Command::SaveRecording { seq, target, note, unix_ms }) => {
+                let result = sim.as_ref().ok_or_else(|| "no built session to record: the build failed or has not run (Reset rebuilds)".to_string()).and_then(|s| {
+                    let (snapshot, run) = s.snapshot()?;
+                    let last = s.frame(&links, generation, steps).ok().map(|f| frame_json(&f, &links));
+                    let meta = robot_recording::meta(&snapshot, run, &target, note.as_deref(), unix_ms, generation, steps, last);
+                    Ok((snapshot, meta, run.root.clone()))
+                });
+                match result {
+                    // Serialising and writing happen on a writer thread: a full-robot scene is megabytes.
+                    Ok((snapshot, meta, root)) => {
+                        let writer_out = out.clone();
+                        let spawned = std::thread::Builder::new().name("robot-recording-writer".into()).spawn(move || {
+                            let result = robot_recording::write(&root, &target, &snapshot, meta);
+                            writer_out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, result));
+                        });
+                        if let Err(e) = spawned {
+                            out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, Err(format!("could not start the recording writer: {e}"))));
+                        }
+                    }
+                    Err(e) => out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, Err(e))),
+                }
+            }
             _ if failed || ended => {}
             Some(Command::Jog { joint, target }) => match sim.as_ref() {
                 None => pending.push((joint, target)),
@@ -1162,6 +1287,82 @@ mod tests {
         let f = c.frame().unwrap();
         assert_eq!([f.inputs[fwd], f.inputs[lat], f.inputs[yaw]], [0.0; 3]);
         assert!(c.motion_json()["last_apply_error"].is_null());
+    }
+
+    /// Save through the one controller handler the button, system_ui and REST
+    /// use: the files re-read as the shared recording types with the run's
+    /// completed_steps; protected paths and existing files are refused.
+    #[test]
+    fn preset_recordings_save_the_shared_type_and_refuse_protected_paths_and_overwrites() {
+        use sim_runtime::embedded::EmbeddedRecording;
+        use sim_runtime::environment::EnvironmentRecording;
+        let dir = std::env::temp_dir().join(format!("robot-recording-{}-{}", std::process::id(), robot_recording::now_ms()));
+        let wait_save = |c: &mut RunController| wait(c, "save", |c| c.save_pending().is_none());
+        // --robot FILE keeps no recording.
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let model = crate::robot::load(&root.join("examples/wheeled-robot/baseline/robot.simrobot.json")).unwrap().model;
+        let e = RunController::spawn(model).save_recording(None, None).unwrap_err();
+        assert!(e.contains("`--robot FILE`"), "{e}");
+        // Environment preset (a task): EmbeddedEnvironment::episode_recording().
+        let (_, run) = preset("pendulum-environment").unwrap();
+        assert_eq!(run.kind(), "EmbeddedEnvironment");
+        let mut c = RunController::spawn_preset(Arc::new(run));
+        let e = c.save_recording(None, None).unwrap_err();
+        assert!(e.contains("no built session yet"), "{e}");
+        assert_eq!(c.recording_json()["error"], json!(e));
+        for n in 1..=3 {
+            c.act(RunAction::Step).unwrap();
+            wait(&mut c, "step", |c| c.frame().is_some_and(|f| f.steps == n));
+        }
+        let steps = c.frame().unwrap().completed_steps.unwrap();
+        assert!(steps > 0);
+        let path = dir.join("env.json");
+        assert_eq!(c.save_recording(Some(path.to_str().unwrap()), Some("three chunks")).unwrap(), path);
+        wait_save(&mut c);
+        let saved = c.saved().unwrap_or_else(|| panic!("not saved: {:?}", c.save_error())).clone();
+        assert_eq!((saved.kind.as_str(), saved.completed_steps, saved.replayable, &saved.path), ("sampled_environment_recording", steps as usize, true, &path));
+        let text = std::fs::read_to_string(&path).unwrap();
+        let record: EnvironmentRecording = serde_json::from_str(&text).unwrap();
+        assert_eq!((record.runtime.completed_steps, record.error.is_none()), (steps as usize, true));
+        // The file is the shared type exactly as serde_json writes it.
+        assert_eq!(serde_json::to_string(&record).unwrap(), text);
+        let meta: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("env.meta.json")).unwrap()).unwrap();
+        assert_eq!((meta["preset"]["id"].as_str(), meta["note"].as_str(), meta["completed_steps"].as_u64(), meta["seed"].as_u64()), (Some("pendulum-environment"), Some("three chunks"), Some(steps), Some(0)));
+        assert_eq!(meta["runtime_identity"], json!(record.runtime.runtime_identity));
+        let state = c.recording_json();
+        assert_eq!((state["last_saved"]["completed_steps"].as_u64(), state["last_saved"]["path"].as_str()), (Some(steps), path.to_str()));
+        // Never overwritten: the second save to the same path is refused by the writer and the file is unchanged.
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "step", |c| c.frame().is_some_and(|f| f.steps == 4));
+        c.save_recording(Some(path.to_str().unwrap()), None).unwrap();
+        wait_save(&mut c);
+        let e = c.save_error().unwrap();
+        assert!(e.contains("already exists") && e.contains("never overwritten"), "{e}");
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), text);
+        assert_eq!(c.saved().unwrap().completed_steps, steps as usize);
+        // Protected directories, relative or through `..`, are refused before anything is sent.
+        for p in ["examples/interactive/x.json", "runs/../cad/x.json", "web/x.json"] {
+            let e = c.save_recording(Some(p), None).unwrap_err();
+            assert!(e.contains("refused") && e.contains("never written under examples/, cad/ or web/"), "{p}: {e}");
+            assert!(!c.preset().unwrap().root.join(p).exists());
+        }
+        assert!(c.save_recording(Some(dir.join("x.meta.json").to_str().unwrap()), None).unwrap_err().contains(".meta.json"));
+        // The default location rule, without writing.
+        let t = robot_recording::target(&c.preset().unwrap().root, "pendulum-environment", None, 1_790_748_502_729).unwrap();
+        assert!(t.ends_with("runs/robot-presets/pendulum-environment/20260930T060822.729Z.json"), "{}", t.display());
+        // Session preset (no task): EmbeddedSession::recording().
+        let (_, run) = preset("pendulum-embedded").unwrap();
+        let mut c = RunController::spawn_preset(Arc::new(run));
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "step", |c| c.frame().is_some_and(|f| f.steps == 1));
+        let steps = c.frame().unwrap().completed_steps.unwrap() as usize;
+        let path = dir.join("session.json");
+        c.save_recording(Some(path.to_str().unwrap()), None).unwrap();
+        wait_save(&mut c);
+        let record: EmbeddedRecording = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!((record.kind.as_str(), record.version, record.completed_steps), ("embedded_session", 3, steps));
+        assert_eq!((c.saved().unwrap().kind.as_str(), c.saved().unwrap().replayable), ("embedded_session", true));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     /// Timing only (debug build): `ROBOT_PRESET=<id> cargo test -p sim-spatial --lib robot_run::tests::measure_full_robot_preset -- --ignored --nocapture`

@@ -600,7 +600,10 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     - A/D turning.
     - Heartbeat exhaustion.
   - *What still needs the browser:*
-    - Recording, input replay and saved overrides of a teleop run.
+    - ~~Recording and input replay of a preset run~~: native since T12
+      (§2h). Saved overrides of a teleop run, and scrubbing/timeline playback
+      of recorded frames (`viewer.js` `timeline` → `replayAt`), are still
+      browser only.
     - Live graphs and observation panels.
     - Hardware sync and mirroring (`hardware-sync.mjs`), which are never
       driven from here.
@@ -707,9 +710,139 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   (`run_history.rs:81–117`), `sim_runtime::session::Session::replay`,
   `sim_runtime::embedded::EmbeddedRecording`.
 - **Shell status:** *partial*. Save and compare are present. Gaps: no
-  **replay/verify** of a saved run (`run_history::replay` exists but sim-spatial
-  never calls it), no scrub cursor over a saved run, and robot `Recording`
-  replay is browser only.
+  **replay/verify** of a saved build-mode run (`run_history::replay` exists
+  but sim-spatial never calls it) and no scrub cursor over a saved run.
+  Robot-preset recording and replay are native since T12 (below).
+- **Robot preset recordings (batch preset-run-recording, T12.1 bd5819d4,
+  T12.2 9c5bfef3; verified natively in T12.3).**
+  - *What exists:* in robot mode with a preset loaded, **Save recording**
+    (inspector button, `system_ui` `recording:save`, REST
+    `robot_save_recording {path?, note?}`; one `RobotAction::SaveRecording`)
+    snapshots the shared recording on the run thread, and a writer thread
+    writes it. The type is the one the browser worker's Download uses:
+    `EmbeddedEnvironment::episode_recording()` (`sampled_environment_recording`)
+    for a preset with a task, `EmbeddedSession::recording()` (`embedded_session`)
+    without. **Replay** (inspector list of the 5 newest recordings,
+    `system_ui` `replay:<file>`, REST `robot_replay {file}|{path}`; Cancel via
+    `replay:cancel` / `{action:"cancel"}`; re-list via `replay:refresh` /
+    `{action:"list"}`) parses the file as the loaded preset's kind, builds it
+    only through the shared `EmbeddedEnvironment::prepare_replay` or
+    `EmbeddedSession::prepare_replay(record, CaptureMode::Latest)` on the run
+    thread, and advances it in paced chunks (one returned action per chunk
+    for an environment) under a new generation, with completed/total and
+    Cancel between chunks. `robot_state` carries `recording` (last_saved,
+    pending, error), `recordings` (the listing) and `replay` (path, phase
+    idle/replaying/cancelled/done/failed, completed/total, completed_steps,
+    verdict, error, measured, replaced, wall_s).
+  - *File rule:* `runs/robot-presets/<preset-id>/<UTC stamp>.json` under the
+    repository root (the directory the preset paths are resolved against).
+    `<stem>.json` is the shared recording exactly as `serde_json` writes it,
+    with no wrapper, so it goes straight into `prepare_replay`. The viewer's
+    metadata (preset id and paths, UTC time, seed, note, viewer version,
+    runtime identity, replayability, final frame) goes into a
+    `<stem>.meta.json` sidecar (schema `sim-spatial.robot-preset-recording-meta` v1).
+    Both files are created with `create_new`: nothing is overwritten. An
+    explicit path under `examples/`, `cad/` or `web/` is refused. A failed
+    environment episode is saved as a diagnostic (`replayable=false`, with
+    the runtime's reason), because the runtime's `prepare_replay` refuses it.
+  - *What the runtime verifies:* environment: record version/kind, no
+    recorded error, `completed_steps` within the horizon and a whole number
+    of action intervals ("only valid completed-transition environment
+    prefixes …"), task/scene/config fingerprints equal to the loaded
+    environment ("replay must match loaded robot, controller and task"), and
+    a valid action schedule. Then every returned action steps through
+    `EmbeddedEnvironment::step`. Session: version, kind, step count and event
+    order; re-applies each input event at its step and checks
+    `replay_expected` (an unrecorded failure or a recorded failure that does
+    not reproduce is an error). The viewer's `done` verdict says exactly
+    that, plus "completed_steps N (recorded N); states are not compared by
+    the runtime".
+  - *What it does not verify:* neither runtime compares replayed states,
+    observations, rewards or termination with the original run (they are
+    not in the record). `EmbeddedSession::prepare_replay` rebuilds from the
+    recording's own scene and does not compare it with the loaded preset,
+    so for session presets the viewer applies its own labelled identity
+    check (scene and config fingerprints, the same check sim-web makes). The
+    per-link final-position difference against the sidecar's final frame is
+    labelled "measured difference, not a pass criterion" and is never
+    thresholded.
+  - *State rules:* a replay needs a paused (not running) run. During it,
+    Run, Pause, Step, motion, Save and a second replay are refused naming
+    the replay; Cancel and Reset always work. After `done` the replayed
+    simulation is the current paused run (as in the browser). After
+    `cancelled` Run/Step/motion/Save are refused, naming the cancelled
+    partial replay, until Reset or another replay. Save's "already exists"
+    refusal is asynchronous (in `recording.error`); other refusals are
+    returned by the REST call.
+  - *Verified (T12.3, `.claude-pair/captures/T12-preset-recording/`,
+    `drive.py`, `capture.json` ok=true, 43 assertions, 39 gating):*
+    - pendulum-environment (debug build): Run to the horizon (phase ended, 1600 steps; an ended run is saveable), Save via
+      `recording:save` → a file in `runs/robot-presets/pendulum-environment/`
+      that parses as `sampled_environment_recording` v1, with
+      completed_steps equal in the file, `last_saved` and `robot_state.run`,
+      and a sidecar naming the preset. The file is listed in the recordings
+      and appears as control `replay:<file>` (`saved.png`). Replay via
+      `system_ui` → generation 0→1, frames stamped with it, phase done, 20/20
+      actions, replayed completed_steps equal to the recording's, the runtime
+      verdict above, and a measured difference of 0.0 m over 2 links
+      (`replayed.png`). The replay takes about 0.4 s wall, too fast to
+      screenshot or to refuse a request mid-replay, so `replaying.png` comes
+      from 400hz. Save before any built session and Save to
+      `examples/interactive/…` are refused by name; nothing is written there.
+    - Mismatch: a one-action (80-step) pendulum-environment recording,
+      opened by REST path while `robot-crawl-startup` is loaded (paused
+      after one step), is refused verbatim with "EmbeddedEnvironment::prepare_replay
+      refused it: replay must match loaded robot, controller and task". It
+      leaves replaced=false, and time, chunks and completed_steps are
+      unchanged (`mismatch.png`). The 1600-step recording on crawl is
+      refused earlier by the runtime's prefix check (it exceeds crawl's
+      830-step horizon). A pendulum-policy session recording opened in
+      pendulum-embedded is refused by the viewer identity check (config
+      differs), with replaced=false.
+    - robot-measured-400hz (release build): three Steps, `motion:w`, then
+      Run to 1.22 s sim (61 chunks, 7808 steps; 17.5 s wall), Pause, Save.
+      The recording has 61 input events (the heartbeat changes every
+      action). forward_speed is 0 for the first 3 and 0.1 from at_step 384.
+      Replay: during it, motion, Save and Pause were refused naming the
+      replay (`replaying.png`, 2/61). It finished done at 61/61, replayed
+      completed_steps 7808 = original = recording, wall_s 21.7 (paced).
+      Measured chassis position difference 0.0 m, max 0.0 m over 29 links (a
+      measurement, not a pass) (`400hz-replayed.png`, robot moved from its
+      start pose). A second replay cancelled via `replay:cancel` → cancelled
+      at 4/61 and never done. Run was then refused ("the run is a cancelled
+      partial replay …") (`cancelled.png`), and Reset returned the replay to idle.
+    - A copy of the recording re-serialised as the browser's Download does
+      (`JSON.stringify` of the parsed object: integral floats as integers),
+      opened by REST path, replayed to done (non-gating; a simulation of a
+      browser file, not an actual browser download).
+  - *Limits:* activations were REST/`system_ui` only; pointer clicks and
+    key presses were not exercised. The inspector lists only the 5 newest
+    recordings (the rest are in `robot_state.recordings` and `system_ui`).
+    There is no file-open dialog, so a file outside
+    `runs/robot-presets/<id>/` is opened only by REST path. There is no scrubbing,
+    timeline or frame playback of a recording. Cosmetic issues seen in the
+    captures: after a replay ends, the inspector still shows the last
+    "save refused … replay in progress" line (a stale `recording.error`
+    until the next save), and the "Save recording" button label wraps.
+  - *sim-runtime gaps (flagged, not changed):* `EmbeddedSession::prepare_replay`
+    has no "matches the loaded session" check (the viewer and sim-web each
+    do their own); neither runtime compares replayed states; a reproduced
+    session failure returns `Err` with the recorded message, with no
+    explicit "reproduced" signal; and there is no cheap replayability
+    predicate (the viewer restates the rule in `REPLAYABLE_RULE`).
+  - *Is the browser still needed for preset recordings?* Not to save or
+    replay an embedded preset run. It is still needed for:
+    1. Scrubbing or timeline playback of recorded frames and `recorded`-mode
+       presets (`robot-lift-5mm`, `-3mm`).
+    2. Presets that run only in the browser: sim-web modes other than
+       `embedded` (`live`, `recorded`), and presets whose inputs live only
+       under ignored `runs/` when those files are absent (§2g).
+    3. Saved overrides.
+    A browser-downloaded `<preset-id>.json` has the same format. It can be
+    replayed natively by REST `robot_replay {path}`, or by copying it into
+    `runs/robot-presets/<preset-id>/` and using Refresh list. The check
+    above used a browser-style re-serialisation, not a file from a real
+    browser session.
 - **Source owner:** Rust runtime. Records live in `<system>.runs/`, are
   outputs, and are never deleted.
 - **Dependencies:** a background job with progress and cancel. The pattern
@@ -1020,9 +1153,18 @@ unknown-id error).
      measured RTF of about 0.04–0.07. Also verified: pause, step, reset,
      Stop, the refusal, the `ended` phase and the unchanged `--robot FILE`
      (§2b, §2g).
-   - *Still not done:* recording and replay of preset runs, graphs, file
-     watching, gait playback, and a PWM build path for `--robot FILE`
-     full-robot exports.
+   - *Still not done:* graphs, file watching, gait playback, and a PWM
+     build path for `--robot FILE` full-robot exports.
+   **Update (batch preset-run-recording, T12.1–T12.3):**
+   - *Done:* Save and Replay of robot-preset runs through the shared
+     recording types and `prepare_replay` on the run thread (commits
+     bd5819d4, 9c5bfef3).
+   - *Verified in T12.3:* save, list, replay, verdict, cancel and mismatch
+     on pendulum-environment (debug) and a save/replay with `motion:w` on
+     `robot-measured-400hz` (release), §2h.
+   - *Still not done:* scrubbing/timeline playback of recordings, and
+     replay of build-mode runs (`run_history::replay`, the original slice
+     above).
 
 ## 6. Launch path
 
@@ -1060,6 +1202,21 @@ window.
 `system_ui` lists the link, section, scroll, `run:*` and `jog:*` controls; REST
 `robot_run` and `robot_jog` use the same handlers.
 
+Preset recordings (§2h). After Run or Step, **Save recording** (or
+`system_ui` `recording:save`, REST `robot_save_recording {"note": …}`)
+writes `runs/robot-presets/<preset-id>/<UTC stamp>.json` (the shared
+recording, as the browser's Download) plus `<stem>.meta.json` under the
+directory the viewer was launched from (the repository root). Nothing is
+overwritten; `robot_state.recording.last_saved` gives the path and step
+count. To list recordings, use the inspector's Replay section (the 5
+newest), `robot_state.recordings`, or `robot_replay {"action":"list"}` /
+`replay:refresh`. To replay, Pause, then press a **Replay** button,
+`system_ui` `replay:<file>` or REST `robot_replay {"file": …}` (or
+`{"path": …}` for any recording, such as a browser download). Poll
+`robot_state.replay` for phase, completed/total and verdict. **Cancel
+replay** (`replay:cancel`, `{"action":"cancel"}`) stops it between chunks;
+Reset then starts a fresh run.
+
 `sim-app --scene cad` is **no longer needed to run** a v3 simrobot file that
 builds with the default options, such as the wheeled baseline (verified in
 T10.3). It is not a way around the full-robot limitation: 29-link exports with
@@ -1073,8 +1230,8 @@ this batch; their only diff against the run baseline is the earlier accepted
 
 Separate apps are still needed for the schematic and experiments
 (`sim-viewer`), phenomena and file-watching robot view (`sim-app`), CAD
-(`cad/run.sh`), and calibration, hardware sync, recorded teleop replay,
-graphs and realtime walking (browser, `web/README.md`; §2g lists what native
+(`cad/run.sh`), and calibration, hardware sync, scrubbing of recorded
+frames, graphs and realtime walking (browser, `web/README.md`; §2g lists what native
 preset runs lack).
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,

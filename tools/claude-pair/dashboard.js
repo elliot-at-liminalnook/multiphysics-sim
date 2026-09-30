@@ -169,6 +169,7 @@ function renderNow() {
   const call = data.active && s.inflight ? data.calls.find(c => c.live) : null;
   const meta = [];
   if (call) meta.push(`<span>${esc(ROLES[call.role].name)} · turn <b>#${call.number}</b></span>`, `<span>running <b>${dur(call.elapsed_seconds)}</b></span>`, `<span>last output <b>${esc(ago(call.last_activity_at))}</b></span>`);
+  if (call?.subagents?.length) meta.push(`<span><b>${esc(subagentSummary(call))}</b></span>`);
   if (s.outer?.current_batch) meta.push(`<span>epic <b>${esc(s.outer.current_batch.id)}</b></span>`);
   if (s.assignment) meta.push(`<span>assignment <b>#${s.assignment}</b></span>`);
   html('now-meta', meta.join(''));
@@ -233,6 +234,13 @@ function renderOverview() {
 
 const TOOL_ICON = { Bash: '$', Read: '◧', Edit: '✎', Write: '✎', MultiEdit: '✎', NotebookEdit: '✎', Grep: '⌕', Glob: '⌕', Task: '⇉', Agent: '⇉', WebFetch: '↗', WebSearch: '⌕', TodoWrite: '☐', Skill: '★' };
 const base = p => String(p || '').split('/').filter(Boolean).at(-1) || p || '';
+let subagentNames = {};  // Agent call id -> "pair-implementer: jobs module", for labelling a subagent's own actions
+function subagentSummary(call) {
+  const subs = call?.subagents || [];
+  if (!subs.length) return '';
+  const running = subs.filter(s => s.status === 'running').length;
+  return `⇉ ${plural(subs.length, 'subagent')}${running ? ` · ${running} running` : ''}`;
+}
 const openEvents = new Set();
 /* One plain-language line per action: "Edited jobs.rs", "Ran cargo check", ... */
 function summarize(e) {
@@ -246,7 +254,7 @@ function summarize(e) {
     case 'Bash': return d.description ? d.description : 'Ran ' + String(d.command || '').replace(/\s+/g, ' ').replace(/^(cd \S+ *(&&|;) *)+/, '').slice(0, 100);
     case 'Grep': return 'Searched for ' + (d.pattern || '') + (d.path ? ' in ' + base(d.path) : '');
     case 'Glob': return 'Listed ' + (d.pattern || '');
-    case 'Task': case 'Agent': return 'Started a subagent: ' + (d.description || d.prompt || '').slice(0, 90);
+    case 'Task': case 'Agent': return `Started ${d.subagent_type || 'a subagent'}: ` + (d.description || d.prompt || '').slice(0, 90);
     case 'WebFetch': return 'Fetched ' + (d.url || '');
     case 'WebSearch': return 'Searched the web: ' + (d.query || '');
     default: return e.text;
@@ -271,12 +279,13 @@ function detailsHTML(e) {
 }
 function eventHTML(e, role, key) {
   const when = e.at ? `<time class="ev-time" title="${esc(new Date(e.at * 1000).toLocaleTimeString())}">${esc(ago(e.at))}</time>` : '';
+  const who = e.parent && subagentNames[e.parent] ? `<span class="ev-who">${esc(subagentNames[e.parent])}</span>` : '';
   if (e.kind === 'tool') {
     const id = e.id || key, open = openEvents.has(id) ? ' open' : '';
-    return `<details class="ev tool ${e.status || ''}"${open}><summary data-ev="${esc(id)}"><span class="ev-icon">${esc(TOOL_ICON[e.name] || '•')}</span><span class="ev-text"><b>${esc(e.name || '')}</b> ${esc(summarize(e).replace(/^(Read|Edited|Wrote|Ran|Searched for|Listed) ?/, m => ''))}</span><span class="ev-meta">${statusHTML(e)}${when}</span></summary><div class="ev-body">${detailsHTML(e)}</div></details>`;
+    return `<details class="ev tool ${e.status || ''} ${e.parent ? 'sub' : ''}"${open}><summary data-ev="${esc(id)}"><span class="ev-icon">${esc(TOOL_ICON[e.name] || '•')}</span><span class="ev-text">${who}<b>${esc(e.name || '')}</b> ${esc(summarize(e).replace(/^(Read|Edited|Wrote|Ran|Searched for|Listed) ?/, m => ''))}</span><span class="ev-meta">${statusHTML(e)}${when}</span></summary><div class="ev-body">${detailsHTML(e)}</div></details>`;
   }
   if (e.kind === 'session') return `<div class="ev session"><span class="ev-icon">○</span><div class="ev-text">${esc(e.text)}</div><span class="ev-meta">${when}</span></div>`;
-  return `<div class="ev message" style="--role:${ROLES[role]?.color}"><span class="ev-icon">${ROLES[role]?.letter || '·'}</span><div class="ev-text">${esc(e.text)}</div><span class="ev-meta">${when}</span></div>`;
+  return `<div class="ev message ${e.parent ? 'sub' : ''}" style="--role:${ROLES[role]?.color}"><span class="ev-icon">${e.parent ? '⇉' : ROLES[role]?.letter || '·'}</span><div class="ev-text">${who}${esc(e.text)}</div><span class="ev-meta">${when}</span></div>`;
 }
 
 function resultHTML(r, role) {
@@ -292,6 +301,7 @@ function resultHTML(r, role) {
     out += list('Acceptance criteria', r.acceptance_criteria) + list('Checks', r.checks, true);
   } else {
     out += `<div class="pills" style="margin-top:10px"><span class="chip small ${r.status === 'done' ? 'ok' : 'bad'}">${esc(r.status)}</span></div>`;
+    if (r.delegation) out += `<div class="section-label">How the work was split</div><p class="prose">${esc(r.delegation)}</p>`;
     out += list('Changed files', r.changed_files, true) + list('Checks the worker ran', r.checks, true) + list('Evidence', r.evidence) + list('Blockers', r.blockers);
   }
   return out + list('Notes for the team', r.coordination_notes);
@@ -325,6 +335,7 @@ function renderLive() {
     foot.push('<span>Checks run locally in the project folder, independent of the agents.</span>');
   } else {
     const call = latest(role);
+    subagentNames = Object.fromEntries((call?.subagents || []).map(s => [s.id, `${s.type}${s.description ? ': ' + s.description : ''}`]));
     if (!call) body = `<div class="empty">The ${esc(ROLES[role].name.toLowerCase())} hasn't run yet.</div>`;
     else if (liveTab === 'prompt') body = pre(call.prompt);
     else if (liveTab === 'result') body = call.result ? resultHTML(call.result, role) : `<div class="empty">${esc(call.error || (call.live ? 'Still working. The result appears when this turn finishes.' : 'This turn has no result.'))}</div>`;
@@ -334,6 +345,7 @@ function renderLive() {
       if (call.model) foot.push(`<span><b>${esc(call.model)}</b>${call.fast ? ' · <b>fast</b>' : ''}</span>`);
       foot.push(`<span>${call.live ? 'running' : 'took'} <b>${dur(call.elapsed_seconds)}</b></span>`);
       if (call.cost_usd != null) foot.push(`<span><b>${money(call.cost_usd)}</b></span>`);
+      if (call.subagents?.length) foot.push(`<span><b>${esc(subagentSummary(call))}</b></span>`);
       foot.push(`<span>updated <b>${esc(ago(call.last_activity_at))}</b></span>`);
       foot.push(`<span style="margin-left:auto">${call.live ? '<span class="chip small running"><span class="dot"></span>live</span>' : call.finished ? (call.subtype === 'success' ? '<span class="chip small ok">finished</span>' : '<span class="chip small bad">error</span>') : '<span class="chip small warn">interrupted</span>'}</span>`);
     }
@@ -414,7 +426,7 @@ function renderTimeline() {
   html('timeline', [...data.calls].reverse().map(c => {
     const role = ROLES[c.role], title = c.live ? ({ assign: 'Writing the assignment', review: 'Reviewing the result', worker: 'Implementing', director: 'Choosing the next batch' })[c.stage] : STAGE_DONE[c.stage] || role.name;
     const summary = c.result?.summary || c.error || c.prompt.split('\n').find(l => l.trim()) || '';
-    return `<button class="turn" data-call="${esc(c.id)}" style="--role:${role.color}"><span class="stripe"></span><span class="avatar">${role.letter}</span><span style="min-width:0"><span class="turn-title">${esc(title)} <span class="num">#${c.number} · ${esc(role.name)}</span></span><div class="turn-sum">${esc(summary)}</div></span><span class="turn-meta">${c.cost_usd != null ? `<span>${money(c.cost_usd)}</span>` : ''}<span>${dur(c.elapsed_seconds)}</span>${callStatus(c)}</span></button>`;
+    return `<button class="turn" data-call="${esc(c.id)}" style="--role:${role.color}"><span class="stripe"></span><span class="avatar">${role.letter}</span><span style="min-width:0"><span class="turn-title">${esc(title)} <span class="num">#${c.number} · ${esc(role.name)}</span></span><div class="turn-sum">${esc(summary)}</div></span><span class="turn-meta">${c.subagents?.length ? `<span title="subagents">⇉ ${c.subagents.length}</span>` : ''}${c.cost_usd != null ? `<span>${money(c.cost_usd)}</span>` : ''}<span>${dur(c.elapsed_seconds)}</span>${callStatus(c)}</span></button>`;
   }).join(''));
 }
 function openCall(id) {

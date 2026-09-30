@@ -84,6 +84,22 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("timed out", bash["output"])
         self.assertEqual(read["status"], "running", "no result yet: still running")
 
+    def test_subagents_and_their_actions_are_tracked(self):
+        (self.root / "logs/0001-worker.prompt.md").write_text("Epic")
+        events = [
+            {"type": "assistant", "timestamp": "2026-09-30T10:00:00Z", "message": {"content": [
+                {"type": "tool_use", "id": "a1", "name": "Agent", "input": {"subagent_type": "pair-implementer", "description": "jobs module", "prompt": "Own src/jobs/"}},
+                {"type": "tool_use", "id": "a2", "name": "Agent", "input": {"subagent_type": "pair-reviewer", "description": "review", "prompt": "Read the diff"}}]}},
+            {"type": "assistant", "parent_tool_use_id": "a1", "timestamp": "2026-09-30T10:00:05Z", "message": {"content": [
+                {"type": "tool_use", "id": "s1", "name": "Edit", "input": {"file_path": "src/jobs/mod.rs", "old_string": "", "new_string": "pub mod jobs;"}}]}},
+            {"type": "user", "timestamp": "2026-09-30T10:01:00Z", "message": {"content": [{"type": "tool_result", "tool_use_id": "a2", "content": "no findings"}]}}]
+        (self.root / "logs/0001-worker.stdout").write_text("\n".join(json.dumps(e) for e in events))
+        call = dashboard.view(self.root)["calls"][0]
+        implementer, reviewer = call["subagents"]
+        self.assertEqual((implementer["type"], implementer["status"], implementer["actions"]), ("pair-implementer", "running", 1))
+        self.assertEqual((reviewer["type"], reviewer["status"]), ("pair-reviewer", "done"))
+        self.assertEqual(call["activity"][2]["parent"], "a1")
+
     def test_limits_reject_invalid_values_and_active_edits(self):
         limits = dashboard.view(self.root)["limits"]
         limits["max_rounds"] = -1

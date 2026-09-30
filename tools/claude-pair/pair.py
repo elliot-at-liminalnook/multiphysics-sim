@@ -45,7 +45,7 @@ PLAN_SCHEMA = obj({
         "id": TEXT, "workflow": TEXT,
         "status": {"enum": ["pending", "in_progress", "verified", "blocked"]},
         "evidence": TEXT})}})
-REPORT_SCHEMA = obj({"decisions": DECISIONS, "coordination_notes": STRINGS, "status": {"enum": ["done", "blocked"]}, "summary": TEXT,
+REPORT_SCHEMA = obj({"decisions": DECISIONS, "delegation": TEXT, "coordination_notes": STRINGS, "status": {"enum": ["done", "blocked"]}, "summary": TEXT,
                      "changed_files": STRINGS, "checks": STRINGS,
                      "evidence": STRINGS, "blockers": STRINGS})
 
@@ -894,6 +894,11 @@ class Runner:
                         batch = (self.state.get("outer", {}).get("current_batch") or {}).get("id", "mission")
                         def guard(plan):
                             guard_plan(plan, self.state, self.config["checks"])
+                            if (plan["action"] == "work" and plan["review"] != "revise"
+                                    and "PARALLEL SPLIT" not in plan["worker_prompt"]):
+                                raise ValueError("A new assignment's worker_prompt must end with a PARALLEL SPLIT section: the "
+                                                 "parts subagents can build in parallel and the files each owns, or "
+                                                 "'PARALLEL SPLIT: none' with the reason")
                             outer_loop.guard_contract(self, plan)
                             if self.config["audit_only"] and set(plan["checks"]) - {"diff"}:
                                 raise ValueError("Audit-only run cannot request builds")

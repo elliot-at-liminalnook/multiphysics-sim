@@ -4,7 +4,7 @@ The {count} commits since the last pass ({since}..{head}) were written without b
 
 1. **Build.** Run `cargo check --workspace --all-targets` once; it compiles everything, including tests, without code generation. Then `cargo build` the binaries these commits touched (usually `-p sim-spatial`, sometimes `-p sim-app`). Run long builds in the background and read the full error output.
 2. **Fix every compile error and every new warning** these commits introduced. Rerun only the builds that failed.
-3. **Hunt for bugs by reading.** Go through `git diff {since}..{head}` crate by crate, looking for:
+3. **Hunt for bugs by reading,** split across `pair-reviewer` subagents started together in one message (one per crate or area). Go through `git diff {since}..{head}` crate by crate, looking for:
    - wrong units or signs, off-by-one errors
    - unhandled errors, broken invariants
    - callers left on an old path

@@ -23,10 +23,19 @@ across many files and crates in one turn. Give it whole outcomes:
 - **Split only for a hard reason:** a real dependency on an unknown (assign a
   short spike first, then the rest), or a checkpoint the user must see before
   the next part. Never split to keep diffs small or reviews easy.
-- **The worker splits the epic across its own subagents** (`pair-implementer`
-  for parts, `pair-reviewer` for reading the combined diff). Don't split the
-  epic yourself to make it parallel. You can use `pair-reviewer` or `Explore`
-  subagents too, to review a large diff area by area.
+- **End every new worker_prompt with a PARALLEL SPLIT section.** The
+  coordinator rejects an assignment without one. It lists:
+  1. the shared pieces the worker settles first (types, traits, module layout);
+  2. each part a `pair-implementer` subagent can build in parallel, with the
+     files it owns (no overlap between parts) and its outcome;
+  3. where `pair-reviewer` subagents should read the combined result.
+
+  An epic with three or more independent parts must be split. Only if the work
+  truly can't be parallelized, write `PARALLEL SPLIT: none` and the reason.
+- **The worker runs the split with its own subagents,** adjusting it if the code
+  shows a better one. Don't turn the parts into separate worker assignments. You
+  can use `pair-reviewer` or `Explore` subagents yourself, to review a large diff
+  area by area.
 - **Describe the outcome and the constraints, not the steps.** What must be
   true when it's done, why it matters, which parts of the architecture document
   it realizes, what must be preserved, and what's out of scope. The worker
@@ -119,7 +128,9 @@ Large diffs are expected. Review them at the level that matters:
    cancellation handling, shared ownership, and what the UI will show.
 
 First assess the outcome: delivered, missing, misunderstood, unexpected scope,
-or evidence still unavailable.
+or evidence still unavailable. Check the report's `delegation`. If an epic with
+independent parts was done one part at a time without a good reason, say so in
+your review, and make the next split more explicit.
 
 When revising, send every issue in one list, each with a path/line, or receipt
 and its impact, so one repair turn fixes them all. Keep optional polish

@@ -315,6 +315,7 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     }
     let note_scroll=if builder.discussion.reset_scroll {0.}else{scrolls.iter().find(|(_,s)|matches!(s,Scroll::Left)).map(|(p,_)|p.offset_y).unwrap_or(0.)};
     builder.discussion.reset_scroll=false;
+    let side_scroll = builder.sidebar_scroll.take().unwrap_or(0.);
     builder.panel_dirty = false;
     for e in &panels {
         commands.entity(e).despawn();
@@ -322,7 +323,7 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     let k = Kit { f: &fonts };
     let b = &*builder;
     toolbar(&mut commands, &k, b);
-    sidebar(&mut commands, &k, b, note_scroll);
+    sidebar(&mut commands, &k, b, note_scroll, side_scroll);
     inspector(&mut commands, &k, b, &scene);
     graph_dock(&mut commands, &k, b);
     status_bar(&mut commands, &k, b, &scene);
@@ -407,7 +408,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
         });
 }
 
-fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32) {
+fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_scroll: f32) {
     commands
         .spawn((
             Node {
@@ -444,7 +445,7 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32) {
             }
             side.spawn((
                 Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(14.)), overflow: Overflow::scroll_y(), flex_grow: 1., ..default() },
-                ScrollPosition::default(),
+                ScrollPosition { offset_y: side_scroll, ..default() },
                 Scroll::Left,
             ))
             .with_children(|body| match b.tab {

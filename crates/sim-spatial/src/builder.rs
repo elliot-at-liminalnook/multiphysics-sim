@@ -162,6 +162,8 @@ pub struct Builder {
     library_dir: PathBuf,
     scene_dirty: bool,
     panel_dirty: bool,
+    /// Sidebar scroll offset requested through system_ui, applied on the next rebuild.
+    sidebar_scroll: Option<f32>,
     run: Option<LiveRun>,
     compile_error: Option<String>,
     findings: Vec<sim_system::Finding>,
@@ -372,6 +374,7 @@ impl Builder {
             library_dir,
             scene_dirty: true,
             panel_dirty: true,
+            sidebar_scroll: None,
             run: None,
             compile_error: None,
             findings: Vec::new(),

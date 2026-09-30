@@ -68,6 +68,10 @@ pub(crate) enum Request {
     CancelInput {
         expected_text: String,
     },
+    /// Scroll the left sidebar to a pixel offset, as the mouse wheel would.
+    Scroll {
+        offset_y: f32,
+    },
 }
 fn hash(value: &impl Serialize) -> u64 {
     let mut h = std::hash::DefaultHasher::new();
@@ -184,6 +188,13 @@ impl Builder {
                     );
                 }
                 discussion::act(self, scene, orbit, discussion::Action::CancelDraft);
+            }
+            Request::Scroll { offset_y } => {
+                if !offset_y.is_finite() {
+                    return Err("offset_y must be a finite number of pixels".into());
+                }
+                self.sidebar_scroll = Some(offset_y.max(0.0));
+                self.panel_dirty = true;
             }
         }
         if let Some(e) = &self.action_error {

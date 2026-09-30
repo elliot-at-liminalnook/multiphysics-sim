@@ -33,8 +33,9 @@
 //! - `dock(Dock::{Top, Bottom, Left, Right, Under}, layout: Node)`: a docked panel
 //! - `scroll_area(layout: Node, offset: f32)`; `wheel_delta(&mut MessageReader<MouseWheel>, line_px) -> f32`
 //! - `slider(SliderLook::{Track, Timebar, Scrub}, value: f32, action, label)`: read
-//!   `(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>)` each frame
-//! - `pointer_surface()` with `surface_point(&RelativeCursorPosition) -> Option<Vec2>`
+//!   `(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction)` each
+//!   frame; it is held while both `Pressed` and `Interaction::Pressed` (`slider_held`)
+//! - `pointer_surface(label, block: bool)` with `surface_point(&RelativeCursorPosition) -> Option<Vec2>`
 //! - `chart_image(image, layout: Node, framed: bool)`, `chart_label(value, Corner)`
 //!
 //! Rules: widgets take their action as a component and never decide what
@@ -51,9 +52,9 @@ mod widgets;
 mod tests;
 
 pub(crate) use scroll::{WHEEL_LINE, clamp_scroll_positions, wheel_delta};
-pub(crate) use slider::{SliderLook, surface_point};
+pub(crate) use slider::{SliderLook, slider_held, surface_point};
 pub(crate) use theme::*;
-pub(crate) use widgets::{Corner, Dock, Kit, TextBundle, divider, wrap};
+pub(crate) use widgets::{Corner, Dock, Kit, divider, wrap};
 
 use bevy::prelude::*;
 
@@ -63,7 +64,7 @@ pub struct UiKitPlugin;
 impl Plugin for UiKitPlugin {
     fn build(&self, app: &mut App) {
         app.add_observer(bevy::ui_widgets::slider_self_update)
-            .add_systems(PostUpdate, (widgets::repaint_buttons, widgets::repaint_tints).before(bevy::ui::UiSystems::Prepare))
+            .add_systems(PostUpdate, (widgets::repaint_buttons, widgets::repaint_tints, widgets::follow_button_text).before(bevy::ui::UiSystems::Prepare))
             .add_systems(PostUpdate, clamp_scroll_positions.after(bevy::ui::UiSystems::Layout))
             .add_systems(PostUpdate, widgets::keep_labels.after(bevy::ui::UiSystems::PostLayout).before(bevy::a11y::AccessibilitySystems::Update));
     }

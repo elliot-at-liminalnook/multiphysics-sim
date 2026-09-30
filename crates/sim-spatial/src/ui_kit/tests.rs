@@ -131,3 +131,27 @@ fn looks_paint_the_builder_palette() {
     assert_eq!(Tint::selectable(true), Tint::new(ACCENT_BG, ACCENT_BG));
     assert_eq!(Tint::selectable(false), Tint::CLEAR);
 }
+
+/// Kit bundles spawn (a duplicate component in a bundle panics at spawn,
+/// which no compile step catches), and the slider starts where it is told.
+#[test]
+fn kit_bundles_spawn() {
+    #[derive(Component)]
+    struct Marker;
+    let fonts = UiFonts { regular: default(), italic: default(), mono: default(), icons: Default::default(), medium: default(), semibold: default() };
+    let k = Kit::new(&fonts);
+    let mut world = World::new();
+    let slider = world.spawn(k.slider(SliderLook::Timebar, 0.25, Marker, "Timeline")).id();
+    assert_eq!(world.get::<bevy::ui_widgets::SliderValue>(slider).map(|v| v.0), Some(0.25));
+    world.spawn(k.pointer_surface("Chart", false));
+    world.spawn(k.button("Run", Marker, Look::Primary, true));
+    world.spawn(k.chip("Parts", Marker, true, true));
+    world.spawn(k.list_item("missing-icon", ACCENT, "Title", "Subtitle", Marker, true));
+    world.spawn(k.input("", "Type", Marker, false));
+    world.spawn(k.section("Section"));
+    world.spawn(k.dock(Dock::Top { height: TOPBAR }, Node::default()));
+    world.spawn(k.scroll_area(Node::default(), 12.0));
+    world.spawn(k.chart_image(Handle::default(), Node::default(), true));
+    world.spawn(k.chart_label("1 s".to_string(), Corner::TopLeft));
+    assert!(!slider_held(true, &Interaction::Hovered) && slider_held(true, &Interaction::Pressed) && !slider_held(false, &Interaction::Pressed));
+}

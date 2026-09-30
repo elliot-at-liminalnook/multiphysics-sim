@@ -542,9 +542,9 @@ pub(crate) struct JobProgress;
 /// Input: pressing or dragging the narration bar (a kit slider over the
 /// section's fraction) seeks within the section, every frame it is held
 /// (the same `Seek { time_s }` as REST `lesson_narration`).
-pub(super) fn seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>), With<NarrationBar>>, learn: Res<Learn>, mut out: MessageWriter<Act<super::actions::LessonCommand>>) {
-    for (value, pressed) in &bars {
-        if !pressed {
+pub(super) fn seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction), With<NarrationBar>>, learn: Res<Learn>, mut out: MessageWriter<Act<super::actions::LessonCommand>>) {
+    for (value, pressed, interaction) in &bars {
+        if !crate::ui_kit::slider_held(pressed, interaction) {
             continue;
         }
         let Some(n) = learn.narration.as_ref() else { continue };

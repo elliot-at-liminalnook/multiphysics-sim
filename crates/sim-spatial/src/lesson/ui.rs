@@ -607,7 +607,7 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
                         // Clicking the name gives the slider the arrow keys.
                         let focused = l.focus_slider.as_deref() == Some(sl.parameter.as_str());
                         let name = if sl.label.is_empty() { &sl.parameter } else { &sl.label };
-                        r.spawn((Button, LessonAction::SliderFocus(sl.parameter.clone()), Tint::CLEAR, AccessibleLabel::new(name.as_str()), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Px(150.), padding: UiRect::axes(Val::Px(4.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(Color::NONE), BorderColor::all(if focused { ACCENT } else { Color::NONE }), children![k.text(name, 12., TEXT, 1)]));
+                        r.spawn((Button, LessonAction::SliderFocus(sl.parameter.clone()), AccessibleLabel::new(name.as_str()), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Px(150.), padding: UiRect::axes(Val::Px(4.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(Color::NONE), BorderColor::all(if focused { ACCENT } else { Color::NONE }), children![k.text(name, 12., TEXT, 1)]));
                         // The kit slider over the parameter's fraction of its range; `sliders` previews and sets it.
                         let at = a.slider_value(scene, &sl.parameter).map(|v| ((v - sl.min) / (sl.max - sl.min).max(1e-12)).clamp(0., 1.) as f32).unwrap_or(0.);
                         r.spawn(k.slider(SliderLook::Track, at, super::SliderTrack(sl.parameter.clone()), name))
@@ -664,7 +664,7 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
                 // so they draw over the curve.
                 // A pointer surface (hover previews the moment, `chart_hover`); its
                 // border lights when the chart's part is hovered.
-                body.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(Color::NONE), k.pointer_surface(), super::ChartHover(chart.key.clone(), chart.window.0, chart.window.1), narrate::ChartNode(chart.key.clone(), chart.window.0, chart.window.1))).with_children(|img| {
+                body.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(Color::NONE), k.pointer_surface(&format!("{} chart", chart.key), false), super::ChartHover(chart.key.clone(), chart.window.0, chart.window.1), narrate::ChartNode(chart.key.clone(), chart.window.0, chart.window.1))).with_children(|img| {
                     let window = chart.window;
                     img.spawn((k.chart_image(chart.image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, false), Pickable::IGNORE));
                     img.spawn((Node { position_type: PositionType::Absolute, top: Val::Px(0.), height: Val::Percent(100.), left: Val::Percent(0.), width: Val::Percent(100.), ..default() }, BackgroundColor(Color::srgba(0.07, 0.09, 0.11, 0.93)), ChartMask, ChartWindow(window.0, window.1), Pickable::IGNORE));

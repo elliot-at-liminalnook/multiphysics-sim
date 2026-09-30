@@ -5,7 +5,7 @@ use super::widgets::Kit;
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
-use bevy::ui_widgets::{Slider, SliderOrientation, SliderRange, SliderValue, TrackClick};
+use bevy::ui_widgets::{Slider, SliderOrientation, SliderRange, SliderStep, SliderValue, TrackClick};
 
 /// The three slider tracks the viewer draws.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -28,11 +28,10 @@ impl Kit<'_> {
     /// fraction across the track, clamped to 0..=1.
     ///
     /// Read it by polling, once per frame, like any held control:
-    /// `Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &YourMarker)>`.
-    /// `Pressed` is present from the press until the release (or the drag's
-    /// end); `SliderValue.0` is the fraction. The mode turns that into its
-    /// typed action; the slider holds no intent. Draw the fill and value as
-    /// children or siblings, as before.
+    /// `Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction, &YourMarker)>`
+    /// and [`slider_held`]; `SliderValue.0` is the fraction. The mode turns
+    /// that into its typed action; the slider holds no intent. Draw the fill
+    /// and value as children or siblings, as before.
     ///
     /// It keeps `Interaction` and `FocusPolicy::Block` so nodes under it do
     /// not also see the pointer (as the old button-based bars did).
@@ -46,6 +45,8 @@ impl Kit<'_> {
             Slider { track_click: TrackClick::Snap, orientation: SliderOrientation::Horizontal },
             SliderRange::new(0., 1.),
             SliderValue(value.clamp(0., 1.)),
+            // Keyboard / assistive-technology steps of 1 % (the default 1.0 is the whole range).
+            SliderStep(0.01),
             action,
             AccessibleLabel::new(label),
             Interaction::default(),
@@ -58,12 +59,21 @@ impl Kit<'_> {
 
     /// A surface that reads where the pointer is over it (not a slider:
     /// charts preview the hovered moment, sketch canvases draw). Read it with
-    /// `Interaction` and [`surface_point`]. Nodes under it do not also see
-    /// the pointer (`FocusPolicy::Block`, which is also what `bevy::ui`
-    /// assumes for an `Interaction` node without a policy).
-    pub(crate) fn pointer_surface(&self) -> impl Bundle + use<> {
-        (Interaction::default(), FocusPolicy::Block, bevy::ui::RelativeCursorPosition::default())
+    /// `Interaction` and [`surface_point`]. `block`: nodes under it do not
+    /// also see the pointer (a `Node` alone requires `FocusPolicy::Pass`).
+    pub(crate) fn pointer_surface(&self, label: &str, block: bool) -> impl Bundle + use<> {
+        (Interaction::default(), if block { FocusPolicy::Block } else { FocusPolicy::Pass }, bevy::ui::RelativeCursorPosition::default(), AccessibleLabel::new(label))
     }
+}
+
+/// Whether a kit slider is held: Bevy's slider has marked it `Pressed` (so
+/// `SliderValue` is this press's) and `bevy::ui` still has the left button
+/// down on it (`Interaction::Pressed`). The widget alone reacts to every
+/// mouse button and keeps `Pressed` when a still press is released off the
+/// bar; the old bars answered the left button only and let go on any
+/// release, and so does this.
+pub(crate) fn slider_held(pressed: bool, interaction: &Interaction) -> bool {
+    pressed && *interaction == Interaction::Pressed
 }
 
 /// The pointer over a [`Kit::pointer_surface`] as a fraction of the node,

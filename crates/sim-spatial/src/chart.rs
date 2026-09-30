@@ -111,16 +111,19 @@ mod tests {
     }
 
     /// The builder's graph dock used to call its own `graphs::rasterize`,
-    /// which was `rasterize_span(traces, Some(HISTORY_SECONDS))`; its callers
-    /// now call this one rasterizer directly. The window is the only thing
-    /// it adds: traces inside the window draw exactly the whole-range
-    /// raster, and longer traces draw exactly the whole-range raster of the
-    /// points inside the window (same pixels, range and x window).
+    /// which was `rasterize_span(traces, Some(HISTORY_SECONDS))`; its time
+    /// charts now call this one rasterizer with that window. The window is
+    /// the only thing it adds. For traces of more than 12 points: inside the
+    /// window they draw exactly the whole-range raster; longer traces with a
+    /// sample exactly at the window's start draw exactly the whole-range
+    /// raster of the points inside it (same pixels, range and x window).
+    /// (With 12 points or fewer every point is marked, in or out of the
+    /// window; otherwise the window starts between samples.)
     #[test]
     fn a_time_window_draws_the_same_pixels_as_the_points_inside_it() {
         let window = crate::builder::HISTORY_SECONDS;
         let wave = |i: usize, phase: f64| [i as f64 * 0.5, (i as f64 * 0.21 + phase).sin() * 3.0 - 0.4];
-        // Inside the window (0 … 15 s): identical to the whole range.
+        // Inside the window (0 … 15 s, 31 points): identical to the whole range.
         let a: Vec<[f64; 2]> = (0..=30).map(|i| wave(i, 0.0)).collect();
         let b: Vec<[f64; 2]> = (0..=30).map(|i| wave(i, 1.3)).collect();
         let short = [(a.as_slice(), COLORS[0]), (b.as_slice(), COLORS[1])];

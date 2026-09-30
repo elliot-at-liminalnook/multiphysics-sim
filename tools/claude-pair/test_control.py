@@ -355,6 +355,47 @@ class UsageLimitTests(unittest.TestCase):
                             "waiting for a limit does not use the run's active hours")
 
 
+class HandoffRuleTests(unittest.TestCase):
+    def test_a_done_report_with_blockers_for_later_work_can_be_accepted(self):
+        report = dict(fixtures.REPORT, blockers=["T11.2 needs a decision about the stored controller hash"])
+        state = {"plan": fixtures.plan(), "report": report, "receipts": [{"name": "diff", "exit_code": 0}]}
+        pair.guard_plan(fixtures.plan(review="accept"), state, {})
+        state["report"] = dict(report, status="blocked")
+        with self.assertRaisesRegex(ValueError, "blocked"):
+            pair.guard_plan(fixtures.plan(review="accept"), state, {})
+
+    def test_a_rejected_response_goes_back_to_the_same_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            calls, responses = [], iter([fixtures.plan(review="accept"), fixtures.plan()])
+
+            def process(argv, prefix, stdin=None, cwd=None, env=None):
+                sid = argv[argv.index("--resume") + 1] if "--resume" in argv else argv[argv.index("--session-id") + 1]
+                calls.append((argv, stdin, sid))
+                out = prefix.with_suffix(".stdout")
+                pair.write_json(out, {"session_id": sid, "total_cost_usd": .1 * len(calls), "subtype": "success",
+                                      "structured_output": next(responses)})
+                return 0, out, prefix.with_suffix(".stderr")
+            with patch.object(runner, "process", process):
+                plan = runner.call_checked("orchestrator", "Plan the work", "batch:mission",
+                                           lambda p: pair.guard_plan(p, runner.state, {}))
+            self.assertEqual(plan["review"], "none")
+            self.assertEqual(len(calls), 2)
+            self.assertIn("--resume", calls[1][0])
+            self.assertEqual(calls[0][2], calls[1][2])
+            self.assertTrue(calls[1][1].startswith("THE COORDINATOR REJECTED YOUR LAST RESPONSE: Cannot review"))
+            self.assertIn("Response rejected", [e["kind"] for e in __import__("shared_notebook").entries(runner.root)])
+
+    def test_repeated_violations_still_stop_the_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, guard_retries=1)
+            calls = []
+            with patch.object(runner, "process", ControlTests().fake_process(runner, calls, fixtures.plan(review="accept"))):
+                with self.assertRaisesRegex(ValueError, "Cannot review"):
+                    runner.call_checked("orchestrator", "Plan", "batch:mission", lambda p: pair.guard_plan(p, runner.state, {}))
+            self.assertEqual(len(calls), 2)
+
+
 class NoLimitTests(unittest.TestCase):
     def test_init_defaults_to_no_limits_and_a_director(self):
         with tempfile.TemporaryDirectory() as tmp:

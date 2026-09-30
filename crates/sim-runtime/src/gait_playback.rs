@@ -66,6 +66,44 @@ impl Gait {
     }
 }
 
+/// Where a compiled gait's `playback_governor` came from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GovernorSource {
+    /// `detailed.spec.json` next to the gait: `scene.controller.parameters.reference_governor`.
+    DetailedSpec,
+    /// `spec-identity.json` next to the gait: `reference_governor` (studies with minimal artifacts).
+    SpecIdentity,
+    /// Neither file holds a governor object: `playback_governor` is null.
+    None,
+}
+
+/// A trial's compiled gait (`compiled.json` at `path`) with the reference
+/// governor the simulation ran it through attached as `playback_governor`:
+/// the detailed spec's `scene.controller.parameters.reference_governor` if it
+/// is an object, else `spec-identity.json`'s `reference_governor` if it is an
+/// object, else null. A missing or unparsable spec file falls through to the
+/// next source. Errors reading or parsing the gait name its path.
+pub fn compiled_with_governor(path: &std::path::Path) -> R<(Value, GovernorSource)> {
+    let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut compiled: Value = serde_json::from_slice(&bytes).map_err(|e| format!("{}: {e}", path.display()))?;
+    let object = |file: &str, pointer: &str| {
+        std::fs::read(path.with_file_name(file)).ok()
+            .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+            .and_then(|v| v.pointer(pointer).cloned())
+            .filter(Value::is_object)
+    };
+    let (governor, source) = match object("detailed.spec.json", "/scene/controller/parameters/reference_governor") {
+        Some(g) => (g, GovernorSource::DetailedSpec),
+        None => match object("spec-identity.json", "/reference_governor") {
+            Some(g) => (g, GovernorSource::SpecIdentity),
+            None => (Value::Null, GovernorSource::None),
+        },
+    };
+    compiled["playback_governor"] = governor;
+    Ok((compiled, source))
+}
+
 /// The gait as commanded: each joint's sampled reference passed through the
 /// gait's reference governor (the same law the simulation runs), optionally
 /// tightened per joint (e.g. to a physical motor's limits) and clamped to a
@@ -212,6 +250,34 @@ pub fn peak_counts_per_s(gait: &Gait, bindings: &[LegBinding], speed_scale: f64)
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn governor_attach_prefers_the_detailed_spec_then_spec_identity_then_none() {
+        let root = std::env::temp_dir().join(format!("gait-governor-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let g = |speed: f64| serde_json::json!({"period_s": 0.02, "maximum_speed_rad_s": speed, "maximum_acceleration_rad_s2": 7.0, "response_rate_per_s": 10.});
+        let dir = |name: &str, detailed: Option<Value>, identity: Option<Value>| {
+            let d = root.join(name);
+            std::fs::create_dir_all(&d).unwrap();
+            std::fs::write(d.join("compiled.json"), r#"{"trajectory": {}}"#).unwrap();
+            if let Some(v) = detailed {
+                std::fs::write(d.join("detailed.spec.json"), serde_json::json!({"scene": {"controller": {"parameters": {"reference_governor": v}}}}).to_string()).unwrap();
+            }
+            if let Some(v) = identity {
+                std::fs::write(d.join("spec-identity.json"), serde_json::json!({"reference_governor": v}).to_string()).unwrap();
+            }
+            d.join("compiled.json")
+        };
+        let (c, s) = compiled_with_governor(&dir("both", Some(g(1.0)), Some(g(2.0)))).unwrap();
+        assert_eq!((s, c["playback_governor"]["maximum_speed_rad_s"].as_f64()), (GovernorSource::DetailedSpec, Some(1.0)));
+        let (c, s) = compiled_with_governor(&dir("identity", Some(Value::Null), Some(g(2.0)))).unwrap();
+        assert_eq!((s, c["playback_governor"]["maximum_speed_rad_s"].as_f64()), (GovernorSource::SpecIdentity, Some(2.0)));
+        let (c, s) = compiled_with_governor(&dir("none", None, Some(serde_json::json!("not an object")))).unwrap();
+        assert_eq!((s, &c["playback_governor"]), (GovernorSource::None, &Value::Null));
+        assert_eq!(serde_json::to_value(GovernorSource::SpecIdentity).unwrap(), "spec_identity");
+        let missing = root.join("absent/compiled.json");
+        assert!(compiled_with_governor(&missing).unwrap_err().contains(&missing.display().to_string()));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
     #[test]
     fn binding_round_trips_and_targets_follow_the_gait() {
         let b = LegBinding { id: 1, joint: "+X | Foot servo output".into(), polarity: -1., reference_counts: 3100., home_rad: -0.4 };

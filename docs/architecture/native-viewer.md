@@ -355,8 +355,9 @@ Paths below are `crates/sim-spatial/src/`.
     size is the initial mode's; a switch does not resize the window.
   - *The builder stays across modes.* Build ↔ Lessons keep it (and the
     lesson); leaving both for another mode keeps it too, paused (no physics
-    runs unseen), its scene parked in `Documents` and its chrome rebuilt on
-    return. Leaving Build/Lessons removes the lesson (its jobs cancel) and
+    runs unseen), its scene parked in `Documents`; on return its chrome is
+    rebuilt and its scene recompiled and respawned (reference images are
+    drawn only by `rebuild_scene`). Leaving Build/Lessons removes the lesson (its jobs cancel) and
     resets the lesson's text size (`UiScale`). A new lessons folder replaces
     the builder with the lesson's sandbox builder, as a lessons launch does
     (refused on the builder's blockers). `viewer_mode build {path}` while

@@ -9,17 +9,11 @@ code when something looks stale, and say so in coordination_notes.
 - Rust 2024 workspace, 45 crates under `crates/`. `cargo` is on PATH.
 - You share the user's `target/` build cache, which is usually warm. Never
   `cargo clean` it or change profiles or RUSTFLAGS just to retry a build.
-- Default loop: `cargo check -p <crate>` for compile questions,
-  `cargo test -p <crate> --lib <filter>` for behavior. Build release only when
-  you need the speed, such as long simulations.
-- Measured costs (warm cache): a `sim-runtime` or `sim-spatial` test binary
-  takes about 2 to 4 minutes to build and link, and each separate `--test`
-  target is another binary. That is why testing in this loop is minimal:
-  `cargo check -p <crate>` plus at most one exact, in-scope test. Broad suites
-  belong to CI (`.github/workflows/`).
-- `cargo run --release -p sim-phenomena -- all` regenerates the full phenomena
-  suite and takes about 50 minutes. Run single scenarios instead unless the
-  whole suite is the point.
+- **Don't build or test during normal work.** Cold or even incremental cargo
+  commands here take minutes (a `sim-runtime` or `sim-spatial` test binary
+  takes 2 to 4). Anything you do run must finish within 10 s: `within 10
+  <command>`. Builds, tests and captures happen in the coordinator's
+  verification passes (every 20 commits, and before an epic completes).
 - The gait-lab runtime fingerprint hashes every crate's source, so any code edit
   invalidates gait qualification (see the gait-lab README before evaluating gaits).
 
@@ -43,7 +37,8 @@ code when something looks stale, and say so in coordination_notes.
 - `ui_capture.py` (path in "This run" below) wraps all of that: it launches the
   viewer, runs a JSON script of commands, saves PNGs and a `capture.json`
   receipt, and exits nonzero on any failure. Use it for evidence and as a check.
-  Put captures under `$PAIR_CAPTURES/<task-id>/` and look at them with Read.
+  It is for verification passes. Put captures under `$PAIR_CAPTURES/<task-id>/`
+  and look at them with Read.
   A binary older than the source may lack newer commands. Rebuild it first
   (`target/debug/sim-spatial` was last built before the `screenshot` command existed).
 

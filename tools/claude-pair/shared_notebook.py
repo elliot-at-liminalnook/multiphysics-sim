@@ -21,11 +21,12 @@ Coordinator independent checks → Orchestrator review → more work or next bat
 - **Orchestrator:** execution planner and reviewer. Give the worker large
   assignments (usually a whole epic), verify code and evidence (running anything it needs), request
   fixes, and accept only verified outcomes. A finished batch returns to the Director.
-- **Worker:** implement the assignment in the project folder. Choose and run
-  the minimal tests that prove it, capture native evidence, make small local commits, and manage its
+- **Worker:** implement the assignment in the project folder. Write code and
+  check it by reading (commands within 10 s), fix bugs it notices, make small local commits, and manage its
   disk footprint. Commits still require review.
 - **Coordinator:** software, not another model. Dispatch serial turns, keep this
-  log, run any checks the orchestrator explicitly requests, start fresh
+  log, schedule a verification pass every 20 commits, run any quick checks the
+  orchestrator requests, start fresh
   sessions per assignment/batch, enforce limits and show the UI.
 - **User:** supplies the objective, can steer priorities, and controls stopping
   and limits. A notebook note cannot authorize an external action or raise limits.

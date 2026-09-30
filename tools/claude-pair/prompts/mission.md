@@ -46,8 +46,10 @@ Architectural constraints:
 ## Freedom and hard boundaries
 
 You work directly in the user's project folder and commit to its current
-branch. You have full control of this Mac's tools: any shell command, any file
-in the project, builds of any size, package installs, network access,
+branch. Normal work is written and checked by reading: any command that builds
+or runs code must finish within 10 seconds (`within 10 ...`); scheduled
+verification passes are the exception. You have full control of this Mac's
+tools: any shell command, any file in the project, package installs, network access,
 subagents, background processes, git operations in the workspace, and the
 native viewer and its REST API. No command allowlist and no permission prompts.
 Use judgment rather than asking.
@@ -85,8 +87,8 @@ other work, and record that. A blocked part of the work never stops the rest.
 Completion means the agreed inventory is verified end to end in the native
 viewer with recorded evidence, a clear launch path, and no hidden required
 Python/browser UI detours. Compilation, test exit codes and an attractive
-animation alone do not establish workflow parity. Native evidence is available:
-drive the real viewer with ui_capture.py (REST commands, `system_ui` control
-activation, screenshots) and look at the images. Say what a capture proves and
+animation alone do not establish workflow parity. Native evidence comes from
+the verification passes, which drive the real viewer with ui_capture.py (REST
+commands, `system_ui` control activation, screenshots) and look at the images. Say what a capture proves and
 what it does not (for example, a REST-activated control is not a drag gesture).
 Never invent evidence.

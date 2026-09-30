@@ -507,6 +507,51 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   (a REST-issued command is not a key press). `state` shows the controller's
   commanded velocity and increasing body x. Screenshots are taken before and
   after. Releasing produces a zero request.
+- **Fixed-PD implementation identity (T11.0, 2026-09-30, user decision).**
+  The only presets that declare motion commands, WASD key vectors and a
+  heartbeat (`robot-measured-400hz`, `-reuse`) failed to build with "CAD
+  fixed-PD implementation identity differs from the shared FPGA controller".
+  The guard hashed all of `fixed_pd.rs`, and commit 7ff9b794 added the unrelated
+  `step_differences` to that file.
+  - *Rule:* the identity is the blake3 of `crates/sim-domain-control/src/fixed_pd/law.rs`,
+    defined once as `sim_domain_control::fixed_pd::implementation_identity()`.
+    That file holds `Gains` and its validation, the integer expression graph
+    (`law()`, evaluation, RTL lowering), `step` (input bounds, `/256`
+    rounding, saturation) and `verilog()`. The law depends only on std integer
+    arithmetic; `Gains` parsing also depends on serde, which is not hashed.
+    `step_differences` stays outside the law file. It is used only by
+    `sampled_fixed_pd` with `multi_turn = 1`, which is labelled as not the
+    deployed single-turn RTL; the embedded CAD fixed-PD path runs `step`.
+  - *Users:* the `embedded.rs` guard (same error text), the
+    `actuator_profiles` test, and the `controller_ir(_blake3)` fields of the
+    records in `controller_refinement/{fpga,fpga_group,fpga_design,tracking,fpga_events}.rs`.
+    Those fields name the same controller IR and are only length-checked on read.
+    New records therefore carry the narrowed identity, and old records keep the
+    whole-file hash they were produced with.
+  - *Evidence:* the whole-file blake3 of `fixed_pd.rs` at ae6b0dd1 equals the
+    stored `bc7964115b…633e`. Its controller region (the file before `#[cfg(test)]`)
+    equals today's once `step_differences` is removed, and `law.rs` is that
+    region verbatim except for three `pub(super)` qualifiers. The new
+    identity is `f50894e2a6d8c86b64e08f65ae8739284ef486fc3c8a89eb6492e4b66e1eb26d`,
+    pinned in `fixed_pd::tests::implementation_identity_covers_the_law_only`.
+  - *Migrated:* only `examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json`,
+    the run input of both 400hz presets. The file is byte-identical except for
+    the three `families/hx30hm-fit-{10,11,12}-400hz/controller/implementation_blake3`
+    values. `robot-measured-400hz` now builds in 2.4 s and advances at a
+    debug RTF of 0.023–0.032 per 0.02 s chunk.
+  - *Not migrated:*
+    - historical records (capture, spec, qualification, comparison and search outputs);
+    - the browser-control-400hz `controller-identity.json`/`overrides.json` receipts;
+    - `realtime-control-2026-09-20/protocol.json`, and the build manifests that record
+      the scene's old sha256 `225ad4f0…`;
+    - the accepted actuator registry files `examples/actuators/hx30hm/accepted/hx30hm-{hip-measured,knee-measured,provisional}.json`,
+      because changing them changes the accepted family content hashes;
+    - `gait-generation/…/current-controller/profiles.json`, and gait-lab/gait-search study configs.
+
+    Scenes produced from the registry, and `browser-control-400hz/prepare.mjs`, still
+    use the old whole-file rule. prepare.mjs asserts the whole-file sha256
+    and already fails. Promoting the new identity into the registry is a
+    separate registry decision.
 
 ### h. Recordings / replay
 - **Entry today:** sim-spatial "Save run" (`ui.rs:398`, `Builder::save_run`

@@ -272,9 +272,7 @@ fn controlled_scene() -> (sim_runtime::session::Scene, sim_runtime::embedded::Co
     let mut p = profiles(&id);
     let c = &mut p.families.get_mut("family").unwrap().controller;
     c.implementation_blake3 =
-        blake3::hash(include_bytes!("../../sim-domain-control/src/fixed_pd.rs"))
-            .to_hex()
-            .to_string();
+        sim_domain_control::fixed_pd::implementation_identity();
     c.latency = parameter(0.004, "s");
     p.bindings.get_mut(&id).unwrap().feedback = Some(Feedback {
         encoder_zero: parameter(2048., "1"),

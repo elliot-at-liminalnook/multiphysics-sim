@@ -234,11 +234,7 @@ pub fn simulate(
         failures: vec![],
         cancelled: false,
         runtime: RuntimeIdentity::current(),
-        controller_ir_blake3: blake3::hash(include_bytes!(
-            "../../../sim-domain-control/src/fixed_pd.rs"
-        ))
-        .to_hex()
-        .to_string(),
+        controller_ir_blake3: sim_domain_control::fixed_pd::implementation_identity(),
     };
     for (index, &id) in r.plan.ids.iter().enumerate() {
         let outcome = fpga::simulate_cancellable(

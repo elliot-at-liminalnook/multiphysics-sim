@@ -455,11 +455,7 @@ pub fn recording_from_review(plan: &super::fpga::Plan, homes:[u16;9], review:Rev
                 ),
                 (
                     "controller_ir".into(),
-                    blake3::hash(include_bytes!(
-                        "../../../sim-domain-control/src/fixed_pd.rs"
-                    ))
-                    .to_hex()
-                    .to_string(),
+                    sim_domain_control::fixed_pd::implementation_identity(),
                 ),
             ]),
             initial: serde_json::json!({"timing":"Device-clock UART transaction windows; not internal sensor timestamps", "clock_hz":CLOCK_HZ,"run_id":review.run_id}),

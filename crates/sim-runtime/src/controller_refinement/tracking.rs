@@ -273,11 +273,7 @@ fn finish(
         simulation_only: true,
         experiment: experiment.clone(),
         runtime: crate::physics_context::RuntimeIdentity::current(),
-        controller_ir_blake3: blake3::hash(include_bytes!(
-            "../../../sim-domain-control/src/fixed_pd.rs"
-        ))
-        .to_hex()
-        .to_string(),
+        controller_ir_blake3: sim_domain_control::fixed_pd::implementation_identity(),
         samples,
         metrics,
         electrical,

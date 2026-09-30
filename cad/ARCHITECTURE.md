@@ -104,10 +104,15 @@ refreshes. *Web share*: a single HTML file with the tessellation embedded
 (three.js from a CDN); no B-rep leaves the machine. *Simulator*:
 `simbridge.py` writes `*.simrobot.json` (bodies with mass, COM, planar
 inertia, section outlines; joints from `joint:<child>[:<parent>]` planes;
-`ground`); the Rust side (`sim-phenomena::scenarios::cad_robot`) builds a
-planar multibody with PD-held servos on the seam, `sim-cad` runs it
-headless and `sim-app --scene cad --model file` draws it and rebuilds on
-every save.
+`ground`); the Rust side builds the model (`sim-domain-robot`'s
+`PhysicalModel` for v3+ physical exports; `sim-phenomena::scenarios::cad_robot`
+keeps the planar multibody with PD-held servos for v2 files), `sim-cad`
+runs it headless, and the live viewer is sim-spatial robot mode
+(`sim-spatial --robot file`, chosen by `simbridge.viewer_command`: release
+build, else debug), which runs the model on a worker thread and reloads on
+every save. `sim-app --scene cad --model file` is the labelled fallback
+when sim-spatial is not built, and the only viewer for planar v2 files,
+which `PhysicalModel::parse` refuses by name.
 
 ## Performance notes
 

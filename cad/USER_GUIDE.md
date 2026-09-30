@@ -301,11 +301,31 @@ viewer with the mesh embedded.
 Name a body `ground` to fix it, and add construction planes named
 `joint:<child>` (or `joint:<child>:<parent>`) whose origin is the pivot and
 whose normal is the revolute axis. *Simulation → export* writes
-`<name>.simrobot.json`; *Simulation → live link* keeps it in sync with
-every Ctrl+S and launches `sim-app --scene cad --model …`, which draws the
-bodies' section outlines in their simulated poses, holds every joint with
-a PD servo (arrow keys move the selected joint's target) and rebuilds the
-model when the file changes. `sim-cad model.simrobot.json 2` runs it
+`<name>.simrobot.json`; *Simulation → live link* (Simulate) keeps it in
+sync with every Ctrl+S and opens the native viewer's robot mode,
+`sim-spatial --robot <file>` (`simbridge.viewer_command` picks the release
+build, else the debug build). The viewer watches the file and reloads the
+model in place on every export, so it is started once and never relaunched
+per save. In the window: the header's Run / Pause / Step / Reset run the
+model on a worker thread; − / ×scale / + (keys `-` and `=`/`+`) set the run
+speed from ×0.125 to ×8, and the header reports the achieved real-time
+factor, adding "(compute-limited)" when the machine cannot keep up; keys
+C, J, F and H (or the overlay buttons) toggle contacts, joint frames,
+flexible-link deflections and the stress colouring from
+`<name>.simresult.json`; G toggles the graphs; the inspector's jog buttons
+move a joint's servo target. The mouse orbits, pans and zooms. The same
+controls are available over the viewer's REST API (`GET /v1/capabilities`
+on port 8421).
+
+If sim-spatial is not built, the live link falls back to the legacy
+`sim-app --scene cad --model …` window and the status line says so
+(build the native viewer with `cargo build --release -p sim-spatial`).
+sim-app is also the only viewer for **planar v2** files
+(`export_sim_model(..., version=2)`): it draws the bodies' section outlines
+in their simulated poses, holds every joint with a PD servo (arrow keys
+move the selected joint's target) and scales speed with +/-. sim-spatial
+refuses a v2 file with a message naming its version and
+`sim-app --scene cad`. `sim-cad model.simrobot.json 2` runs a model
 headless and prints the trajectory.
 
 ## The REST API (working alongside a script or an agent)
@@ -419,7 +439,9 @@ with geometric derivations, authored estimates and measurements:
 
 The file is `<name>.simrobot.json`, SI units, described key by key in
 `PHYSICAL_MODEL.md`. `sim-cad run model.simrobot.json` simulates it, and
-`sim-app --scene cad --model model.simrobot.json` shows it live.
+`sim-spatial --robot model.simrobot.json` shows it live (the Simulate
+viewer; `sim-app --scene cad --model …` is the fallback when sim-spatial
+is not built).
 
 ## Results back in CAD
 

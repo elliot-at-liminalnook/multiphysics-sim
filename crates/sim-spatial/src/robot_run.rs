@@ -1775,7 +1775,10 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                         // if this run or its controller is dropped meanwhile. It publishes
                         // its own result, so the handle is dropped here.
                         drop(crate::jobs::Job::spawn(crate::jobs::Pool::Io, seq, "the recording writer", move |_| {
-                            let result = robot_recording::write(&root, &target, &snapshot, meta);
+                            // The handle is gone, so a panic must be published here too, or
+                            // recording.pending would never clear.
+                            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| robot_recording::write(&root, &target, &snapshot, meta)))
+                                .unwrap_or_else(|_| Err(format!("the recording writer ended without a result (panic) writing {}", target.display())));
                             writer_out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, result));
                             Ok(())
                         }).complete_on_drop());

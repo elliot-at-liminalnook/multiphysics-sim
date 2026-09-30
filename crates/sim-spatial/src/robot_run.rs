@@ -11,7 +11,9 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use crate::robot_motion::{self, Motion, MotionChannel};
-use crate::robot_preset::PresetRun;
+use crate::robot_preset::{PresetRun, RecordedRun};
+use serde::Deserialize as _;
+use sim_runtime::embedded_capture::{CaptureFrame, CapturePose};
 use crate::robot_graphs;
 use crate::robot_gait::{GaitAction, GaitPreview};
 use crate::robot_recording::{self, Listed, Saved, Snapshot};
@@ -486,6 +488,8 @@ pub struct RunController {
     jog_error: Option<String>,
     /// The preset this controller runs (None for `--robot FILE`).
     preset: Option<Arc<PresetRun>>,
+    /// A recorded preset played back (no run thread, nothing simulated).
+    recorded: Option<Arc<RecordedRun>>,
     chunk_s: f64,
     drive: Option<Arc<Drive>>,
     /// The motion values last sent in this generation (cleared by Reset).
@@ -542,6 +546,35 @@ impl RunController {
         c.refresh_recordings();
         c
     }
+    /// A recorded preset: no run thread is spawned and nothing is built; the
+    /// capture's frame 0 (mapped on the loader thread) is shown. Every live-only
+    /// action is refused naming the preset ([`Self::recorded_refusal`]).
+    pub fn spawn_recorded(run: Arc<RecordedRun>) -> Self {
+        let model = run.scene.robot.clone();
+        // A channel with no run thread: nothing is ever sent (all sends are refused first).
+        let (tx, _) = mpsc::channel();
+        let generation = 0;
+        let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
+        let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None, listing: None }));
+        let mut graphs = robot_graphs::History::default();
+        graphs.clear(generation);
+        let frame = run.frames.first().cloned();
+        Self { tx, shared, generation, running: false, frame, status, jogged: Default::default(), jog_error: None, preset: None, recorded: Some(run), chunk_s: 0.0,
+            drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
+            save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
+            replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
+            graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
+    }
+    pub fn recorded(&self) -> Option<&Arc<RecordedRun>> {
+        self.recorded.as_ref()
+    }
+    /// The refusal of a live-only action (`what`) when a recorded preset is loaded.
+    fn recorded_refusal(&self, what: &str) -> Result<(), String> {
+        match &self.recorded {
+            Some(r) => Err(r.refusal(what)),
+            None => Ok(()),
+        }
+    }
     fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>, generation: u64) -> Self {
         let (tx, rx) = mpsc::channel();
         let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
@@ -555,7 +588,7 @@ impl RunController {
             .expect("spawn robot run thread");
         let mut graphs = robot_graphs::History::default();
         graphs.clear(generation);
-        Self { tx, shared, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, chunk_s,
+        Self { tx, shared, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, recorded: None, chunk_s,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
@@ -581,6 +614,7 @@ impl RunController {
     /// (unknown joint, no servo target, non-finite, outside the file's
     /// limits), then run state. Works idle and after a failed build.
     pub fn check_jog(&self, joint: &str, target: f64) -> Result<Servo, String> {
+        self.recorded_refusal(&format!("servo-target jog of `{joint}`"))?;
         if let Some(p) = &self.preset {
             return Err(format!("joint `{joint}`: servo-target jog is for `--robot FILE`; preset `{}` is driven by its declared controller recipe ({}), so the viewer sets no joint target", p.preset.id, p.kind()));
         }
@@ -617,6 +651,7 @@ impl RunController {
 
     /// Why a motion request cannot be sent now, else the built drive and its motion config.
     fn check_motion(&self) -> Result<(Arc<Drive>, &Motion), String> {
+        self.recorded_refusal("a motion request")?;
         let Some(p) = &self.preset else {
             return Err("motion requests are for robot presets (their declared Rust controller); `--robot FILE` has servo-target jog".into());
         };
@@ -679,6 +714,9 @@ impl RunController {
     /// `robot_state.motion`: source, channels with bounds, requested and held
     /// values, active keys, heartbeat, last refusal and the motion-request label.
     pub fn motion_json(&self) -> Value {
+        if let Some(r) = &self.recorded {
+            return json!({"label": robot_motion::LABEL, "available": false, "unavailable_reason": r.refusal("a motion request")});
+        }
         let Some(p) = &self.preset else { return Value::Null };
         let declared = json!({"motion_commands": p.preset.entry.get("motion_commands"), "motion_heartbeat": p.preset.entry.get("motion_heartbeat"), "motion_key_vectors": p.preset.entry.get("motion_key_vectors")});
         let available = self.check_motion().map(|_| ());
@@ -701,6 +739,7 @@ impl RunController {
     /// Why a save cannot be requested now (`Ok` when it would be sent).
     /// Refusals name the reason; the target itself is checked by `save_recording`.
     pub fn check_save(&self) -> Result<&Arc<PresetRun>, String> {
+        self.recorded_refusal("save recording")?;
         let Some(p) = &self.preset else {
             return Err("recordings are for robot presets (the shared EmbeddedSession/EmbeddedEnvironment recording); `--robot FILE` runs PhysicalRobot, which keeps no recording".into());
         };
@@ -796,6 +835,7 @@ impl RunController {
     }
     /// Why a replay cannot be started now (`Ok` when it would be sent).
     pub fn check_replay(&self) -> Result<&Arc<PresetRun>, String> {
+        self.recorded_refusal("replay")?;
         let Some(p) = &self.preset else {
             return Err("replay is for robot presets (the shared EmbeddedSession/EmbeddedEnvironment prepare_replay); `--robot FILE` runs PhysicalRobot, which has no recording or replay".into());
         };
@@ -876,6 +916,7 @@ impl RunController {
 
     /// Why an action is unavailable now (`Ok` when it can be sent).
     pub fn check(&self, action: RunAction) -> Result<(), String> {
+        self.recorded_refusal(&format!("run {}", action.name()))?;
         if action != RunAction::Reset {
             if let Some(why) = self.replay_block() {
                 return Err(why);
@@ -941,6 +982,7 @@ impl RunController {
     /// Why a gait preview action is refused: no preset scene, a running physics
     /// run or a replay in progress (for open, play and seek), then the preview's own checks.
     pub fn check_gait(&self, action: &GaitAction) -> Result<(), String> {
+        self.recorded_refusal("gait preview")?;
         let Some(g) = &self.gait else {
             return Err("the gait preview poses a robot preset's scene with the shared KinematicMirror; a `--robot FILE` robot has no scene, so open a preset (robot_preset)".into());
         };
@@ -1044,6 +1086,7 @@ impl RunController {
     }
     /// Why the overlays cannot be set (`Ok` for `--robot FILE`).
     pub fn check_overlays(&self) -> Result<(), String> {
+        self.recorded_refusal("overlays (contacts, joint frames, deflections)")?;
         match &self.preset {
             Some(p) => Err(format!("overlays are not available for presets: preset `{}` runs {}, whose frames publish link poses but no contacts, joint frames or deflections (those are PhysicalRobot accessors, `--robot FILE` only)", p.preset.id, p.kind())),
             None => Ok(()),
@@ -1122,7 +1165,10 @@ impl RunController {
     /// `robot_speed`: sets the requested scale in every phase (it applies on the next Run).
     pub fn speed(&mut self, request: SpeedRequest) -> Result<(), String> {
         let scale = self.check_speed(request)?;
-        self.tx.send(Command::Speed(scale)).map_err(|_| "the run thread has stopped".to_string())?;
+        // A recorded preset has no run thread: the scale is kept for playback pacing.
+        if self.recorded.is_none() {
+            self.tx.send(Command::Speed(scale)).map_err(|_| "the run thread has stopped".to_string())?;
+        }
         self.speed_scale = scale;
         Ok(())
     }
@@ -1197,6 +1243,7 @@ impl RunController {
             }).collect()
         });
         let build = match &self.preset {
+            None if self.recorded.is_some() => format!("nothing is built: {}", crate::robot_preset::RECORDED_RUNS_AS),
             None => "sim_runtime::physical::PhysicalRobot::build(model clone, sim_runtime::registry(), BuildOptions::default()) on the run thread".to_string(),
             Some(p) if p.task.is_some() => format!("sim_runtime::environment::EmbeddedEnvironment::new(scene, config, task, seed {}) from the preset's files unchanged, on the run thread", p.seed),
             Some(p) => format!("sim_runtime::embedded::EmbeddedSession::new(scene, config, seed {}, CaptureMode::Latest) from the preset's files unchanged, on the run thread", p.seed),
@@ -1225,47 +1272,46 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
     Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new(), overlays: overlays(robot, flags) }
 }
 
-/// A frame from a preset session's `interactive_frame()`: `poses[]` of
-/// `{name, position_m, rotation}` (rotation row-major, the same link frames
-/// `PhysicalRobot::poses` gives), mapped to the loaded links by name. Names
-/// that match no link are kept in `unmatched`, never dropped silently.
-fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64, inputs: &[f64]) -> Result<Frame, String> {
-    let completed = v.get("completed_steps").and_then(Value::as_u64).ok_or("session frame has no completed_steps")?;
-    let mut poses = vec![None; links.len()];
+/// Link poses by loaded-link index, their published velocities, and the pose
+/// names that match no loaded link (kept, never dropped silently). One mapping
+/// for live preset frames and recorded captures: `poses[]` of `{name,
+/// position_m, rotation}` (rotation row-major, the same link frames
+/// `PhysicalRobot::poses` gives), the shape `sim_runtime::embedded_capture` reads.
+type Mapped = (Vec<Option<([f64; 3], DQuat)>>, Vec<Option<([f64; 3], [f64; 3])>>, Vec<String>);
+pub fn map_poses(poses: &[CapturePose], links: &[String]) -> Mapped {
+    let mut out = vec![None; links.len()];
     let mut velocities = vec![None; links.len()];
     let mut unmatched = Vec::new();
-    for (k, pose) in v.get("poses").and_then(Value::as_array).ok_or("session frame has no poses")?.iter().enumerate() {
-        let name = pose.get("name").and_then(Value::as_str).ok_or_else(|| format!("session frame poses[{k}] has no name"))?;
-        let num = |x: &Value| x.as_f64().ok_or_else(|| format!("session frame pose `{name}`: non-numeric value"));
-        let p = pose.get("position_m").and_then(Value::as_array).filter(|a| a.len() == 3).ok_or_else(|| format!("session frame pose `{name}` has no position_m"))?;
-        let r = pose.get("rotation").and_then(Value::as_array).filter(|a| a.len() == 3).ok_or_else(|| format!("session frame pose `{name}` has no 3×3 rotation"))?;
-        let mut m = [[0.0; 3]; 3];
-        for (i, row) in r.iter().enumerate() {
-            let row = row.as_array().filter(|a| a.len() == 3).ok_or_else(|| format!("session frame pose `{name}`: rotation row {i} is not 3 numbers"))?;
-            for j in 0..3 {
-                m[i][j] = num(&row[j])?;
-            }
-        }
+    for pose in poses {
+        let m = pose.rotation;
         let cols = DMat3::from_cols([m[0][0], m[1][0], m[2][0]].into(), [m[0][1], m[1][1], m[2][1]].into(), [m[0][2], m[1][2], m[2][2]].into());
-        let pos = [num(&p[0])?, num(&p[1])?, num(&p[2])?];
-        // Published velocities, when the pose has both (never differentiated from positions here).
-        let vec3 = |key: &str| -> Result<Option<[f64; 3]>, String> {
-            match pose.get(key).and_then(Value::as_array) {
-                None => Ok(None),
-                Some(a) if a.len() == 3 => Ok(Some([num(&a[0])?, num(&a[1])?, num(&a[2])?])),
-                Some(_) => Err(format!("session frame pose `{name}`: {key} is not 3 numbers")),
-            }
-        };
-        let velocity = vec3("velocity_m_s")?.zip(vec3("angular_velocity_rad_s")?);
-        match links.iter().position(|l| l == name) {
+        match links.iter().position(|l| *l == pose.name) {
             Some(i) => {
-                poses[i] = Some((pos, DQuat::from_mat3(&cols).normalize()));
-                velocities[i] = velocity;
+                out[i] = Some((pose.position_m, DQuat::from_mat3(&cols).normalize()));
+                // Published velocities, when the pose has both (never differentiated from positions here).
+                velocities[i] = pose.velocity_m_s.zip(pose.angular_velocity_rad_s);
             }
-            None => unmatched.push(name.to_string()),
+            None => unmatched.push(pose.name.clone()),
         }
     }
+    (out, velocities, unmatched)
+}
+
+/// A frame from a preset session's `interactive_frame()`, its poses parsed as
+/// the shared [`CapturePose`] and mapped by [`map_poses`].
+fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64, inputs: &[f64]) -> Result<Frame, String> {
+    let completed = v.get("completed_steps").and_then(Value::as_u64).ok_or("session frame has no completed_steps")?;
+    let raw = v.get("poses").and_then(Value::as_array).ok_or("session frame has no poses")?;
+    let parsed = raw.iter().enumerate().map(|(k, pose)| CapturePose::deserialize(pose).map_err(|e| format!("session frame poses[{k}] ({}): {e}", pose.get("name").and_then(Value::as_str).unwrap_or("no name")))).collect::<Result<Vec<_>, _>>()?;
+    let (poses, velocities, unmatched) = map_poses(&parsed, links);
     Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec(), overlays: Overlays::default() })
+}
+
+/// A recorded capture frame mapped to the loaded links by [`map_poses`]:
+/// `time` is the frame's recorded time_s and `steps` its index in the capture.
+pub fn recorded_frame(f: &CaptureFrame, links: &[String], generation: u64, index: u64) -> Frame {
+    let (poses, velocities, unmatched) = map_poses(&f.poses, links);
+    Frame { generation, time: f.time_s, steps: index, completed_steps: None, poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: Vec::new(), overlays: Overlays::default() }
 }
 
 /// A frame's time, step count and link poses as JSON (the sidecar's final frame).

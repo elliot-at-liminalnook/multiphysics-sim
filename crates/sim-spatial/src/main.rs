@@ -6,6 +6,14 @@ use std::path::PathBuf;
     about = "Inspect a source-bound spatial assembly. Shared live observations; no physics stepping."
 )]
 struct Args {
+    /// Open FILE in the mode its type selects: a `*.system.json` file → build
+    /// mode (--system), a `*.simrobot.json` file → robot mode (--robot), a
+    /// directory holding `place.json` → place mode (--place), a directory with
+    /// `<slug>/lesson.md` entries → lessons mode (--lessons). Detected by name
+    /// or directory structure only; anything else is an error. Presets stay on
+    /// --robot-preset.
+    #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link"])]
+    file: Option<PathBuf>,
     /// Shared discussion and saved-view sidecar.
     #[arg(long)]
     annotations: Option<PathBuf>,
@@ -88,7 +96,8 @@ struct Args {
     #[arg(long)]
     robot_presets: Option<PathBuf>,
     /// Lesson to open first (slug); default: the first in reading order.
-    #[arg(long, requires = "lessons")]
+    /// Requires lessons mode (--lessons DIR or a lessons FILE).
+    #[arg(long)]
     lesson: Option<String>,
 }
 
@@ -242,11 +251,38 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = Args::parse();
+    let mut args = Args::parse();
+    // A positional FILE becomes the matching mode flag, so it takes exactly that flag's path.
+    if let Some(file) = args.file.take() {
+        use sim_spatial::launch::LaunchKind;
+        match sim_spatial::launch::classify(&file)? {
+            LaunchKind::System => args.system = Some(file),
+            LaunchKind::Robot if args.headless || args.schematic => {
+                return Err(format!("{}: robot mode does not support --headless or --schematic", file.display()).into());
+            }
+            LaunchKind::Robot => args.robot = Some(file),
+            LaunchKind::Place => args.place = Some(file),
+            LaunchKind::Lessons => args.lessons = Some(file),
+        }
+    }
+    if args.lesson.is_some() && args.lessons.is_none() {
+        return Err("--lesson requires lessons mode (--lessons DIR or a lessons directory as FILE)".into());
+    }
     // One workspace root for this launch, from --workspace/$SIM_WORKSPACE, the opened file or the current directory.
-    let opened = args.system.as_deref().or(args.robot.as_deref()).or(args.lessons.as_deref()).or(args.place.as_deref()).or(args.description.as_deref());
+    let opened = args
+        .system
+        .as_deref()
+        .or(args.robot.as_deref())
+        .or(args.lessons.as_deref())
+        .or(args.place.as_deref())
+        .or(args.description.as_deref())
+        .or(args.robot_presets.as_deref());
     sim_spatial::workspace::init(args.workspace.as_deref(), opened);
     if let Some(dir) = args.place.clone() {
+        if args.validate_only {
+            println!("{}", sim_spatial::place_view::validate_place(&dir)?);
+            return Ok(());
+        }
         return sim_spatial::place_view::run_place(dir).map_err(Into::into);
     }
     if let Some(path) = args.robot.clone() {

@@ -25,9 +25,13 @@ current. Don't create another competing viewer.
 The user's native-first direction supersedes the old requirement to make the
 browser the primary interaction surface. Preserve browser compatibility until
 the corresponding native workflow is demonstrated. This is a user-facing
-consolidation, not an instruction to rewrite every dependency: Python/OCCT may
-remain behind a clean CAD service boundary while its workflow is accessible in
-the native viewer. Explain any remaining external UI requirement honestly.
+consolidation that now extends to CAD and hardware (user decision
+2026-09-30): the browser's calibration and hardware pages move into the native
+viewer over the existing Rust hardware layer, and RoboCAD moves to Rust in the
+phases of the architecture document §8–§9, with exact feature parity proven by
+a parity harness against RoboCAD. Until a phase is proven, the Python and
+browser paths stay and remain the reference. Explain any remaining external UI
+requirement honestly.
 
 Architectural constraints:
 - CAD remains the physical source of truth. Display layout is not geometry or

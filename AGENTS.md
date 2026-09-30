@@ -8,10 +8,16 @@ robot design and eventual sim-to-real learning.
   the CAD model. Declare units, coordinate frames, provenance, and uncertainty;
   distinguish measured, derived, and estimated values. Geometry-to-physics
   derivations must be explicit.
-- **Rust owns simulation and environments; Python stays on the CAD side.** Use
-  Rust controllers or Rhai scripts backed by Rust library components. Existing
-  external-language integrations are compatibility surfaces, not the default
-  architecture for new work.
+- **Rust owns simulation, environments, the user interface and, over time,
+  CAD.** Use Rust controllers or Rhai scripts backed by Rust library
+  components. CAD is moving from Python (RoboCAD) to Rust: a CAD mode in the
+  native viewer, derivations ported to Rust, and the OpenCascade kernel called
+  from Rust. RoboCAD remains the reference and stays available until a parity
+  harness shows the Rust path matches it on real models; only then is the
+  Python path retired. Hardware calibration and driving UI also moves into the
+  native viewer, over the same Rust hardware layer. Other external-language
+  integrations are compatibility surfaces, not the default architecture for new
+  work.
 - **Contribute to the shared library first.** Reuse an existing component, extend
   it, or add a reusable component with a focused example. Keep robot-specific
   topology, parameters, and policies in configuration/examples. Do not introduce

@@ -10,6 +10,7 @@ mod linked;
 pub mod models;
 pub mod place_view;
 pub mod robot;
+pub mod robot_motion;
 pub mod robot_preset;
 pub mod robot_run;
 pub mod markdown;

@@ -25,7 +25,8 @@ use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use sim_domain_robot::cad_link::{self, CadLinkStatus};
 use crate::robot_preset::{Preset, PresetRun};
-use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, RunAction, RunController};
+use crate::robot_motion::{self, KEYS};
+use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, RunAction, RunController};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
 
@@ -269,7 +270,7 @@ impl RobotView {
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -321,6 +322,9 @@ enum RobotAction {
     Jog { joint: String, delta: f64 },
     /// Servo-target jog to an absolute target (REST `robot_jog`).
     JogTo { joint: String, target: f64 },
+    /// A motion request through the preset's Rust controller (physical keys,
+    /// the W/A/S/D/Stop buttons, `system_ui` motion:*, REST `robot_input`).
+    Motion { request: MotionRequest },
 }
 /// The absolute target a jog action asks for (file validation happens in `check_jog`).
 fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
@@ -350,12 +354,18 @@ fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
             run.check_jog(joint, jog_target(run, joint, *delta)?).map(|_| ())
         }
         RobotAction::JogTo { joint, target } => view.run.as_ref().ok_or("the robot has not loaded")?.check_jog(joint, *target).map(|_| ()),
+        RobotAction::Motion { request } => view.run.as_ref().ok_or("the robot has not loaded")?.check_motion_request(request),
         _ => Ok(()),
     }
 }
 fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -> Result<(), String> {
+    if let RobotAction::Motion { request } = action {
+        // Validated (and a refusal recorded) inside the one motion handler.
+        return view.run.as_mut().ok_or("the robot has not loaded")?.motion(request);
+    }
     check(view, &action)?;
     match action {
+        RobotAction::Motion { .. } => unreachable!("handled above"),
         RobotAction::Run { action } => {
             view.run.as_mut().ok_or("the robot has not loaded")?.act(action)?;
             if action == RunAction::Reset {
@@ -406,8 +416,23 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
             out.push((format!("jog:{joint}:-"), format!("Jog {joint} servo target −{step} {unit}"), RobotAction::Jog { joint: joint.clone(), delta: -step }));
             out.push((format!("jog:{joint}:+"), format!("Jog {joint} servo target +{step} {unit}"), RobotAction::Jog { joint, delta: step }));
         }
+        if view.preset.is_some() {
+            for (id, label, request) in motion_buttons() {
+                out.push((id.into(), label.into(), RobotAction::Motion { request }));
+            }
+        }
     }
     out
+}
+/// The motion controls (system_ui id, label, request): each key latches its request; Stop zeros.
+fn motion_buttons() -> [(&'static str, &'static str, MotionRequest); 5] {
+    [
+        ("motion:w", "W · Forward", MotionRequest::Key('w')),
+        ("motion:a", "A · Left", MotionRequest::Key('a')),
+        ("motion:s", "S · Back", MotionRequest::Key('s')),
+        ("motion:d", "D · Right", MotionRequest::Key('d')),
+        ("motion:stop", "Stop (X)", MotionRequest::Stop),
+    ]
 }
 #[derive(Deserialize)]
 #[serde(tag = "operation", rename_all = "snake_case", deny_unknown_fields)]
@@ -426,6 +451,7 @@ enum Request {
     RobotJog { joint: String, target: Option<f64>, delta: Option<f64> },
     RobotPresets,
     RobotPreset { id: String },
+    RobotInput { channels: Option<std::collections::BTreeMap<String, f64>>, key: Option<String> },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -465,6 +491,18 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
             };
             dispatch(view, orbit, action)?;
         }
+        Request::RobotInput { channels, key } => {
+            let request = match (channels, key.as_deref()) {
+                (Some(map), None) => MotionRequest::Channels(map),
+                (None, Some("stop")) => MotionRequest::Stop,
+                (None, Some(k)) => match k.chars().collect::<Vec<_>>()[..] {
+                    [c] if KEYS.contains(&c) => MotionRequest::Key(c),
+                    _ => return Err(format!("robot_input key `{k}` is not one of w, a, s, d, stop")),
+                },
+                _ => return Err("robot_input needs exactly one of channels ({\"<motion channel>\": value, …}) or key (w | a | s | d | stop)".into()),
+            };
+            dispatch(view, orbit, RobotAction::Motion { request })?;
+        }
         Request::Camera { focus, radius, yaw, pitch } => {
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
                 return Err("finite camera required; radius > 0 and pitch within ±1.5 radians".into());
@@ -489,6 +527,7 @@ fn capabilities() -> Vec<Value> {
         c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
         c("robot_presets", json!({}), &format!("List the robot presets declared in {} (resolved against the launch directory, the repository root): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
         c("robot_preset", json!({"id":"robot-measured-400hz"}), "Open a declared embedded preset by id in this window (replacing the current robot and stopping its run thread). Unknown ids, other modes and missing inputs are refused naming the id. The scene, config and task are parsed exactly as declared on a worker thread; scene.robot is drawn and inspected through the same loader as --robot FILE. Run/Pause/Step/Reset (robot_run) then drive the shared EmbeddedEnvironment (task) or EmbeddedSession (no task) on the run thread with seed 0 (recorded), one action interval or clamp(report_every, 1, 40) nominal steps per chunk. robot_state.preset reports id, label, paths, readiness and evidence verbatim, seed, step_s, chunk and step counts; run.phase `ended` with run.end reports a reached horizon or a terminated/truncated episode. Servo-target jog is not offered for presets."),
+        c("robot_input", json!({"channels":{"command.forward_speed":0.001}}), &format!("Motion request for a running robot preset: {}. Give channels (values by motion channel name; the other motion channels keep their requested values) or key (w | a | s | d latches that key's request until stop, another key or a channel request; stop sets every motion channel to 0). The same handler as physical W/A/S/D (press/release) and X (stop), the W/A/S/D/Stop buttons and system_ui motion:w|a|s|d|stop. Motion channels come from the session's policy_contract.step_reference.config, else the preset's presets.json motion_commands (as web/viewer/motion-commands.mjs); key vectors from motion_key_vectors, else the channel bounds. Refused naming the channel and its bounds: an unknown channel, a session input that is not a motion channel, a non-finite value, or a value or summed key vector outside the channel's bounds ({}). Also refused, naming the reason: --robot FILE, a preset with no motion config, no built session (Run or Step builds it), a failed or ended run, an exhausted heartbeat. A declared motion_heartbeat is {} robot_state.motion reports source, channels with bounds, requested and held values, active keys, heartbeat, last refusal and the label.", robot_motion::LABEL, robot_motion::CLAMP_RULE, robot_motion::HEARTBEAT_RULE)),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
@@ -532,6 +571,12 @@ struct JogRoot;
 struct JogText(String);
 #[derive(Component)]
 struct JogButton;
+#[derive(Component)]
+struct MotionRoot;
+#[derive(Component)]
+struct MotionText;
+#[derive(Component)]
+struct MotionButton;
 #[derive(Resource)]
 struct Materials {
     normal: Handle<StandardMaterial>,
@@ -560,7 +605,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             ..default()
         }))
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, (receive, poll_rest, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, draw).chain())
+        .add_systems(Update, (receive, poll_rest, motion_keys, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, motion_panel, draw).chain())
         .run();
 }
 
@@ -607,6 +652,8 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
         BackgroundColor(PANEL),
         children![
             (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), flex_shrink: 0.0, ..default() }, children![tab(&fonts, Section::Link), tab(&fonts, Section::Joints), tab(&fonts, Section::Drives), tab(&fonts, Section::Source)]),
+            // Motion request buttons for a preset (spawned by `motion_panel`).
+            (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, MotionRoot),
             // Servo-target jog rows for the selected link's joints (rebuilt by `jog_panel`).
             (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, JogRoot),
             (
@@ -1025,13 +1072,16 @@ fn preset_text(view: &RobotView) -> String {
             t += &format!("frame links matching no loaded link: {}\n", f.unmatched.join(", "));
         }
     }
+    let motion = view.run.as_ref().map(motion_text).unwrap_or_default();
     for (k, path) in p.paths() {
         t += &format!("{k}: {path}\n");
     }
     if view.section == Section::Source {
         t += &format!("evidence (verbatim): {}\n", p.evidence().unwrap_or("(none declared)"));
     }
-    t + "\n"
+    t.push('\n');
+    t.push_str(&motion);
+    t
 }
 
 /// `s` cut to at most `n` characters, marked with an ellipsis when cut.
@@ -1089,6 +1139,116 @@ fn jog_panel(
             background.0 = color;
         }
     }
+}
+
+/// Physical W/A/S/D (press/release) and X (Stop) while a built preset has a
+/// motion config: the same `RobotAction::Motion` handler as the buttons,
+/// `system_ui` motion:* and REST `robot_input`. Robot mode's camera is
+/// mouse-only, so these keys take no camera action. Bevy releases every key
+/// when the window loses keyboard focus, which requests zero, as the browser's blur.
+fn motion_keys(keys: Res<ButtonInput<KeyCode>>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
+    const MAP: [(KeyCode, char); 4] = [(KeyCode::KeyW, 'w'), (KeyCode::KeyA, 'a'), (KeyCode::KeyS, 's'), (KeyCode::KeyD, 'd')];
+    let Some(run) = view.run.as_ref().filter(|r| r.motion_keys_active()) else { return };
+    let request = if keys.just_pressed(KeyCode::KeyX) {
+        Some(MotionRequest::Stop)
+    } else if MAP.iter().any(|(c, _)| keys.just_pressed(*c) || keys.just_released(*c)) {
+        let held: Vec<char> = MAP.iter().filter(|(c, _)| keys.pressed(*c)).map(|(_, k)| *k).collect();
+        // A release with only a latched (system_ui/REST) key active leaves that key's request alone.
+        let pressed = MAP.iter().any(|(c, _)| keys.just_pressed(*c));
+        (pressed || run.keys_physical()).then_some(MotionRequest::HeldKeys(held))
+    } else {
+        None
+    };
+    if let Some(request) = request {
+        view.run_message = dispatch(&mut view, &mut orbit, RobotAction::Motion { request }).err();
+    }
+}
+
+/// W/A/S/D/Stop buttons and the requested values for a preset (the same
+/// `RobotAction::Motion` as `system_ui` motion:*), enabled per the handler's check.
+fn motion_panel(
+    mut commands: Commands,
+    view: Res<RobotView>,
+    fonts: Res<UiFonts>,
+    root: Single<Entity, With<MotionRoot>>,
+    mut shown: Local<bool>,
+    mut text: Query<&mut Text, With<MotionText>>,
+    mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<MotionButton>>,
+) {
+    if view.preset.is_some() && !*shown {
+        let header = commands.spawn(label(&fonts, &format!("Motion — {}", robot_motion::LABEL), 11.5, MUTED)).id();
+        let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }).id();
+        for (_, text, request) in motion_buttons() {
+            let b = commands.spawn((Button, MotionButton, RobotAction::Motion { request }, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+            commands.entity(row).add_child(b);
+        }
+        let line = commands.spawn((label(&fonts, "", 11.5, INK), MotionText)).id();
+        commands.entity(*root).add_children(&[header, row, line]);
+        *shown = true;
+    }
+    if let (Some(r), Ok(mut t)) = (view.run.as_ref(), text.single_mut()) {
+        let line = motion_line(r);
+        if t.0 != line {
+            t.0 = line;
+        }
+    }
+    for (action, interaction, mut background) in &mut buttons {
+        let enabled = check(&view, action).is_ok();
+        let color = match (enabled, interaction) {
+            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
+            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
+            (true, _) => Color::srgb(0.16, 0.20, 0.25),
+        };
+        if background.0 != color {
+            background.0 = color;
+        }
+    }
+}
+
+/// One line under the motion buttons: the requested values, or why motion is unavailable.
+fn motion_line(r: &RunController) -> String {
+    let m = r.motion_json();
+    if m["available"] != true {
+        return format!("unavailable: {}", clip(m["unavailable_reason"].as_str().unwrap_or(""), 120));
+    }
+    let values: Vec<String> = m["channels"].as_array().into_iter().flatten().map(|c| {
+        let short = c["name"].as_str().unwrap_or("").trim_start_matches("command.");
+        format!("{short} {}", c["requested"].as_f64().or(c["held"].as_f64()).map_or("—".into(), |x| format!("{x}")))
+    }).collect();
+    let keys = m["active_keys"].as_array().filter(|k| !k.is_empty()).map_or("none".into(), |k| k.iter().filter_map(|k| k.as_str()).collect::<Vec<_>>().join("+"));
+    let refused = m["last_refusal"].as_str().map_or(String::new(), |e| format!("\nrefused: {}", clip(e, 110)));
+    format!("requested {} · keys {keys}{refused}", values.join(" · "))
+}
+
+/// The motion block of the inspector: source, channels with bounds, requested
+/// and held values, keys, heartbeat and the last refusal (robot_state.motion).
+fn motion_text(r: &RunController) -> String {
+    let m = r.motion_json();
+    let mut t = format!("MOTION — {}\n", robot_motion::LABEL);
+    if m["available"] != true {
+        t += &format!("unavailable: {}\n", m["unavailable_reason"].as_str().unwrap_or(""));
+    }
+    if let Some(source) = m["source"].as_str() {
+        t += &format!("channels from: {source}\n");
+    }
+    for c in m["channels"].as_array().into_iter().flatten() {
+        let v = |k: &str| c[k].as_f64().map_or("—".into(), |x| format!("{x}"));
+        t += &format!("• {} [{}, {}] {} — requested {} · held {}\n", c["name"].as_str().unwrap_or(""), v("lower"), v("upper"), c["unit"].as_str().unwrap_or(""), v("requested"), v("held"));
+    }
+    if let Some(rule) = m["config"]["key_rule"].as_str() {
+        let keys = m["active_keys"].as_array().filter(|k| !k.is_empty()).map_or("none".into(), |k| k.iter().filter_map(|k| k.as_str()).collect::<Vec<_>>().join("+"));
+        t += &format!("keys: {keys}{} · {rule}\n", if m["keys_physical"] == true { " (held)" } else if keys != "none" { " (latched)" } else { "" });
+    }
+    if let Some(h) = m["heartbeat"].as_object() {
+        t += &format!("heartbeat {}: {} of {} (one per action packet)\n", h["channel"].as_str().unwrap_or(""), h["value"].as_f64().map_or("—".into(), |x| format!("{x}")), h["upper"]);
+    }
+    for (k, name) in [("last_refusal", "last refusal"), ("last_apply_error", "not applied")] {
+        if let Some(e) = m[k].as_str() {
+            t += &format!("{name}: {e}\n");
+        }
+    }
+    t.push_str(&format!("{}\n{}\n\n", robot_motion::KEY_SEMANTICS, robot_motion::CLAMP_RULE));
+    t
 }
 
 /// A typed provenance label spelled as the file stores it.

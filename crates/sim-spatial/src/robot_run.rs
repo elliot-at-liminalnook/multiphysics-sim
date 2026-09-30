@@ -10,7 +10,9 @@ use bevy::math::{DMat3, DQuat};
 use serde::Serialize;
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
+use crate::robot_motion::{self, Motion, MotionChannel};
 use crate::robot_preset::PresetRun;
+use sim_runtime::session::InputChannel;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
@@ -143,6 +145,9 @@ pub struct Frame {
     pub joint_angles: Vec<f64>,
     /// Snapshot of the robot's servo targets when the frame was taken.
     pub targets: Vec<f64>,
+    /// Presets: the held action (the session's input values, in `inputs()`
+    /// order) when the frame was taken; empty for `--robot FILE`.
+    pub inputs: Vec<f64>,
 }
 impl Frame {
     /// (target, measured angle) of a joint by its file name, if the robot has a target for it.
@@ -173,6 +178,41 @@ struct Published {
     frame: Option<Frame>,
     /// Why the last jog could not be applied on the run thread (cleared by the next applied jog or a reset).
     jog_error: Option<String>,
+    /// A preset's typed inputs and motion config, resolved at build (None before a build and after Reset).
+    drive: Option<Arc<Drive>>,
+    /// Why the last motion request could not be applied on the run thread.
+    motion_error: Option<String>,
+}
+
+/// A built preset's typed input channels (the session's `inputs()`), its
+/// motion config (`robot_motion::config`) and declared packet heartbeat.
+#[derive(Debug)]
+pub struct Drive {
+    pub inputs: Vec<InputChannel>,
+    pub motion: Option<Motion>,
+    pub heartbeat: Option<MotionChannel>,
+}
+impl Drive {
+    /// As the browser does on load: an invalid declaration fails the build, naming it.
+    fn resolve(run: &PresetRun, policy_contract: &Value, inputs: &[InputChannel]) -> Result<Self, String> {
+        let entry = &run.preset.entry;
+        Ok(Self { inputs: inputs.to_vec(), motion: robot_motion::config(entry, policy_contract, inputs)?, heartbeat: robot_motion::heartbeat(entry, inputs)? })
+    }
+}
+
+/// A motion request: the one handler behind physical W/A/S/D/X, the
+/// `system_ui` motion:* controls and inspector buttons, and REST `robot_input`.
+#[derive(Clone, Debug, Serialize, serde::Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum MotionRequest {
+    /// One key latched (system_ui / REST / inspector button) until Stop, another key or a channel request.
+    Key(char),
+    /// The physically held keys (press/release); empty requests zero.
+    HeldKeys(Vec<char>),
+    /// Every motion channel to zero.
+    Stop,
+    /// Explicit values by motion channel name, over the current request.
+    Channels(std::collections::BTreeMap<String, f64>),
 }
 
 enum Command {
@@ -181,6 +221,8 @@ enum Command {
     Step,
     Reset { generation: u64 },
     Jog { joint: String, target: f64 },
+    /// Validated motion values for the three motion channels (in `Motion::channels` order).
+    Motion { values: [f64; 3] },
 }
 
 /// Run actions shared by the buttons, `system_ui` and REST `robot_run`.
@@ -236,6 +278,14 @@ pub struct RunController {
     /// The preset this controller runs (None for `--robot FILE`).
     preset: Option<Arc<PresetRun>>,
     chunk_s: f64,
+    drive: Option<Arc<Drive>>,
+    /// The motion values last sent in this generation (cleared by Reset).
+    requested: Option<[f64; 3]>,
+    /// The keys behind `requested`, and whether they are physically held (press/release) or latched.
+    keys: Vec<char>,
+    keys_physical: bool,
+    motion_refusal: Option<String>,
+    motion_error: Option<String>,
 }
 
 impl RunController {
@@ -252,7 +302,7 @@ impl RunController {
     fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>) -> Self {
         let (tx, rx) = mpsc::channel();
         let status = Status { phase: Phase::Idle, generation: 0, rtf: None, error: None, end: None };
-        let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None }));
+        let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None }));
         let out = shared.clone();
         let chunk_s = source.chunk_s();
         let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
@@ -260,7 +310,8 @@ impl RunController {
             .name("robot-run".into())
             .spawn(move || worker(source, links, rx, out))
             .expect("spawn robot run thread");
-        Self { tx, shared, generation: 0, running: false, frame: None, status, model, jogged: Default::default(), jog_error: None, preset, chunk_s }
+        Self { tx, shared, generation: 0, running: false, frame: None, status, model, jogged: Default::default(), jog_error: None, preset, chunk_s,
+            drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -298,6 +349,102 @@ impl RunController {
         self.check_jog(joint, target)?;
         self.jogged.insert(joint.to_string(), target);
         self.tx.send(Command::Jog { joint: joint.to_string(), target }).map_err(|_| "the run thread has stopped".to_string())
+    }
+
+    /// The built preset's typed inputs and motion config (None before a build).
+    pub fn drive(&self) -> Option<&Arc<Drive>> {
+        self.drive.as_ref()
+    }
+    /// Whether physical motion keys are read: a built preset with a motion config.
+    pub fn motion_keys_active(&self) -> bool {
+        self.drive.as_ref().is_some_and(|d| d.motion.is_some()) && !matches!(self.status.phase, Phase::Failed | Phase::Ended)
+    }
+    pub fn keys_physical(&self) -> bool {
+        self.keys_physical
+    }
+    /// The held value of session input `index` in the latest accepted frame.
+    fn held(&self, index: usize) -> Option<f64> {
+        self.frame.as_ref().and_then(|f| f.inputs.get(index).copied())
+    }
+
+    /// Why a motion request cannot be sent now, else the built drive and its motion config.
+    fn check_motion(&self) -> Result<(Arc<Drive>, &Motion), String> {
+        let Some(p) = &self.preset else {
+            return Err("motion requests are for robot presets (their declared Rust controller); `--robot FILE` has servo-target jog".into());
+        };
+        let id = &p.preset.id;
+        match self.status.phase {
+            Phase::Failed => return Err(format!("preset `{id}`: the run failed; Reset rebuilds the session before motion requests")),
+            Phase::Ended => return Err(format!("preset `{id}`: {}; Reset rebuilds at t = 0 before motion requests", self.status.end.as_ref().and_then(|e| e["message"].as_str()).unwrap_or("the run ended"))),
+            _ => {}
+        }
+        let drive = self.drive.as_ref().ok_or_else(|| format!("preset `{id}`: no built session yet; Run or Step builds {} before motion requests", p.kind()))?;
+        let motion = drive.motion.as_ref().ok_or_else(|| format!("preset `{id}` has no motion config: its session's policy_contract has no step_reference and presets.json declares no motion_commands"))?;
+        if let Some(h) = &drive.heartbeat {
+            let x = self.held(h.index).unwrap_or(f64::NAN);
+            if !(x < h.upper) {
+                return Err(format!("preset `{id}`: motion packet sequence `{}` is exhausted at {x} (upper {}); reset the session", h.name, h.upper));
+            }
+        }
+        Ok((drive.clone(), motion))
+    }
+    /// Validates `request` against the session's typed channel bounds, without sending it.
+    fn motion_values(&self, request: &MotionRequest) -> Result<[f64; 3], String> {
+        let (drive, motion) = self.check_motion()?;
+        let current = self.requested.unwrap_or_else(|| std::array::from_fn(|i| self.held(motion.channels[i].index).unwrap_or(0.0)));
+        match request {
+            MotionRequest::Key(k) => motion.keys(&[*k]),
+            MotionRequest::HeldKeys(keys) => motion.keys(keys),
+            MotionRequest::Stop => motion.stop(),
+            MotionRequest::Channels(map) if map.is_empty() => Err("robot_input needs at least one channel value, a key, or stop".into()),
+            MotionRequest::Channels(map) => motion.values(current, &map.iter().map(|(k, v)| (k.clone(), *v)).collect::<Vec<_>>(), &drive.inputs),
+        }
+    }
+    /// Why a motion request is refused now (`Ok` when it would be sent).
+    pub fn check_motion_request(&self, request: &MotionRequest) -> Result<(), String> {
+        self.motion_values(request).map(|_| ())
+    }
+    /// The one motion handler behind physical keys, `system_ui` motion:*, the
+    /// inspector buttons and REST `robot_input`. Refusals name the channel and
+    /// its bounds and are kept for `robot_state.motion.last_refusal`.
+    pub fn motion(&mut self, request: MotionRequest) -> Result<(), String> {
+        let values = match self.motion_values(&request) {
+            Ok(v) => v,
+            Err(e) => {
+                self.motion_refusal = Some(e.clone());
+                return Err(e);
+            }
+        };
+        self.tx.send(Command::Motion { values }).map_err(|_| "the run thread has stopped".to_string())?;
+        self.motion_refusal = None;
+        self.requested = Some(values);
+        (self.keys, self.keys_physical) = match request {
+            MotionRequest::Key(k) => (vec![k], false),
+            MotionRequest::HeldKeys(keys) => (robot_motion::KEYS.into_iter().filter(|k| keys.contains(k)).collect(), true),
+            MotionRequest::Stop | MotionRequest::Channels(_) => (Vec::new(), false),
+        };
+        Ok(())
+    }
+    /// `robot_state.motion`: source, channels with bounds, requested and held
+    /// values, active keys, heartbeat, last refusal and the motion-request label.
+    pub fn motion_json(&self) -> Value {
+        let Some(p) = &self.preset else { return Value::Null };
+        let declared = json!({"motion_commands": p.preset.entry.get("motion_commands"), "motion_heartbeat": p.preset.entry.get("motion_heartbeat"), "motion_key_vectors": p.preset.entry.get("motion_key_vectors")});
+        let available = self.check_motion().map(|_| ());
+        let drive = self.drive.as_ref();
+        let motion = drive.and_then(|d| d.motion.as_ref());
+        let channels: Option<Vec<Value>> = motion.map(|m| {
+            m.channels.iter().enumerate().map(|(i, c)| json!({"name": c.name, "index": c.index, "kind": c.kind, "unit": c.unit, "lower": c.lower, "upper": c.upper,
+                "requested": self.requested.map(|r| r[i]), "held": self.held(c.index)})).collect()
+        });
+        let heartbeat = drive.and_then(|d| d.heartbeat.as_ref()).map(|h| json!({"channel": h.name, "index": h.index, "lower": h.lower, "upper": h.upper, "value": self.held(h.index), "rule": robot_motion::HEARTBEAT_RULE}));
+        json!({"label": robot_motion::LABEL, "available": available.is_ok(), "unavailable_reason": available.err(),
+            "source": motion.map(|m| m.source), "config": motion.map(Motion::json), "channels": channels,
+            "requested": self.requested, "active_keys": self.keys.iter().map(|k| k.to_string()).collect::<Vec<_>>(), "keys_physical": self.keys_physical,
+            "heartbeat": heartbeat, "last_refusal": self.motion_refusal, "last_apply_error": self.motion_error,
+            "session_inputs": drive.map(|d| d.inputs.iter().map(|c| json!({"name": c.name, "lower": c.lower, "upper": c.upper, "initial": c.initial})).collect::<Vec<_>>()),
+            "declared_in_presets_json": declared, "keys": robot_motion::KEY_SEMANTICS, "stop_key": robot_motion::STOP_KEY, "clamping": robot_motion::CLAMP_RULE,
+            "values_rule": "requested: the values last sent this generation (null until a request; Reset clears them); held: the session's input value in the latest accepted frame. Non-motion channels keep their held values."})
     }
 
     /// Why an action is unavailable now (`Ok` when it can be sent).
@@ -338,6 +485,12 @@ impl RunController {
                 // The rebuild starts from the file's control targets again.
                 self.jogged.clear();
                 self.jog_error = None;
+                // The rebuild starts from the session's initial inputs again.
+                self.drive = None;
+                self.requested = None;
+                self.keys.clear();
+                self.keys_physical = false;
+                self.motion_error = None;
                 self.status = Status { phase: Phase::Building, generation: self.generation, rtf: None, error: None, end: None };
                 Command::Reset { generation: self.generation }
             }
@@ -352,11 +505,13 @@ impl RunController {
         if published.status.generation >= self.generation {
             self.status = published.status.clone();
             self.jog_error = published.jog_error.clone();
+            self.drive = published.drive.clone();
+            self.motion_error = published.motion_error.clone();
             if matches!(self.status.phase, Phase::Failed | Phase::Ended) {
                 self.running = false;
             }
         }
-        let fresh = published.frame.as_ref().filter(|f| accept(self.generation, f) && self.frame.as_ref().is_none_or(|old| old.generation != f.generation || old.steps != f.steps || old.targets != f.targets || old.completed_steps != f.completed_steps));
+        let fresh = published.frame.as_ref().filter(|f| accept(self.generation, f) && self.frame.as_ref().is_none_or(|old| old.generation != f.generation || old.steps != f.steps || old.targets != f.targets || old.completed_steps != f.completed_steps || old.inputs != f.inputs));
         match fresh {
             Some(f) => {
                 self.frame = Some(f.clone());
@@ -443,14 +598,14 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
         })
         .collect();
     let targets = robot.targets.lock().unwrap_or_else(|p| p.into_inner()).clone();
-    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets }
+    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new() }
 }
 
 /// A frame from a preset session's `interactive_frame()`: `poses[]` of
 /// `{name, position_m, rotation}` (rotation row-major, the same link frames
 /// `PhysicalRobot::poses` gives), mapped to the loaded links by name. Names
 /// that match no link are kept in `unmatched`, never dropped silently.
-fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64) -> Result<Frame, String> {
+fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64, inputs: &[f64]) -> Result<Frame, String> {
     let completed = v.get("completed_steps").and_then(Value::as_u64).ok_or("session frame has no completed_steps")?;
     let mut poses = vec![None; links.len()];
     let mut unmatched = Vec::new();
@@ -473,15 +628,15 @@ fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s
             None => unmatched.push(name.to_string()),
         }
     }
-    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new() })
+    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec() })
 }
 
 /// The simulation the run thread owns.
 enum Sim {
     Robot(sim_runtime::physical::PhysicalRobot),
     /// The held action: the session's own input values (see `robot_preset`'s action_rule).
-    Environment { env: sim_runtime::environment::EmbeddedEnvironment, held: Vec<f64>, run: Arc<PresetRun> },
-    Session { session: sim_runtime::embedded::EmbeddedSession, run: Arc<PresetRun> },
+    Environment { env: sim_runtime::environment::EmbeddedEnvironment, held: Vec<f64>, run: Arc<PresetRun>, drive: Arc<Drive> },
+    Session { session: sim_runtime::embedded::EmbeddedSession, run: Arc<PresetRun>, drive: Arc<Drive> },
 }
 impl Sim {
     fn build(source: &Source, registry: &mut Option<sim_core::BehaviorRegistry>) -> Result<Sim, String> {
@@ -497,9 +652,14 @@ impl Sim {
                     let env = EmbeddedEnvironment::new(run.scene.clone(), run.config.clone(), task.clone(), run.seed)?;
                     // Held at the session's reset values, as EmbeddedEnvironment::prepare_replay does.
                     let held = env.inputs().iter().map(|c| c.initial).collect();
-                    Ok(Sim::Environment { env, held, run: run.clone() })
+                    let drive = Arc::new(Drive::resolve(run, &env.metadata()["policy_contract"], env.inputs())?);
+                    Ok(Sim::Environment { env, held, run: run.clone(), drive })
                 }
-                None => Ok(Sim::Session { session: EmbeddedSession::new(run.scene.clone(), run.config.clone(), run.seed, CaptureMode::Latest)?, run: run.clone() }),
+                None => {
+                    let session = EmbeddedSession::new(run.scene.clone(), run.config.clone(), run.seed, CaptureMode::Latest)?;
+                    let drive = Arc::new(Drive::resolve(run, &session.policy_metadata(), session.inputs())?);
+                    Ok(Sim::Session { session, run: run.clone(), drive })
+                }
             },
         }
     }
@@ -507,15 +667,54 @@ impl Sim {
         match self {
             Sim::Robot(r) => r.time(),
             Sim::Environment { env, run, .. } => env.transition().completed_steps as f64 * run.config.step_s,
-            Sim::Session { session, run } => session.completed_steps() as f64 * run.config.step_s,
+            Sim::Session { session, run, .. } => session.completed_steps() as f64 * run.config.step_s,
         }
     }
-    /// Advances exactly one chunk.
+    /// Advances exactly one chunk: one action packet for a preset, which
+    /// advances its declared heartbeat first (`robot_motion::next_packet`).
     fn advance(&mut self) -> Result<(), String> {
         match self {
             Sim::Robot(r) => r.advance(CHUNK_S),
-            Sim::Environment { env, held, .. } => env.step(held).map(|_| ()),
-            Sim::Session { session, run } => session.advance(run.chunk_steps()),
+            Sim::Environment { env, held, drive, .. } => {
+                robot_motion::next_packet(drive.heartbeat.as_ref(), held)?;
+                env.step(held).map(|_| ())
+            }
+            Sim::Session { session, run, drive } => {
+                if drive.heartbeat.is_some() {
+                    let mut action = session.input_values().to_vec();
+                    robot_motion::next_packet(drive.heartbeat.as_ref(), &mut action)?;
+                    session.set_inputs(&action)?;
+                }
+                session.advance(run.chunk_steps())
+            }
+        }
+    }
+    /// Sets the motion channels of the held action, through the session's own
+    /// validating `set_inputs` (at the next `EmbeddedEnvironment::step` for an
+    /// environment, now for a session). Other channels keep their held values.
+    fn set_motion(&mut self, values: [f64; 3]) -> Result<(), String> {
+        let (motion, current) = match self {
+            Sim::Robot(_) => return Err("motion requests are for presets".into()),
+            Sim::Environment { held, drive, .. } => (drive.motion.as_ref(), held.clone()),
+            Sim::Session { session, drive, .. } => (drive.motion.as_ref(), session.input_values().to_vec()),
+        };
+        let motion = motion.ok_or("the preset has no motion config")?;
+        let mut action = current;
+        for (c, x) in motion.channels.iter().zip(values) {
+            c.check(x, "requested value")?;
+            *action.get_mut(c.index).ok_or_else(|| format!("motion channel `{}` index {} is outside the action", c.name, c.index))? = x;
+        }
+        match self {
+            Sim::Environment { held, .. } => *held = action,
+            Sim::Session { session, .. } => session.set_inputs(&action)?,
+            Sim::Robot(_) => {}
+        }
+        Ok(())
+    }
+    fn drive(&self) -> Option<Arc<Drive>> {
+        match self {
+            Sim::Robot(_) => None,
+            Sim::Environment { drive, .. } | Sim::Session { drive, .. } => Some(drive.clone()),
         }
     }
     /// Why the run cannot continue without a reset (horizon or episode end).
@@ -534,7 +733,7 @@ impl Sim {
                     json!({"kind": kind, "terminated": t.terminated, "truncated": t.truncated, "termination_reasons": t.termination_reasons, "completed_steps": t.completed_steps, "message": message})
                 })
             }
-            Sim::Session { session, run } => (session.remaining_steps() == 0).then(|| {
+            Sim::Session { session, run, .. } => (session.remaining_steps() == 0).then(|| {
                 let n = session.completed_steps();
                 json!({"kind": "horizon", "terminated": false, "truncated": true, "termination_reasons": [], "completed_steps": n,
                     "message": format!("horizon reached at t = {:.3} s: {n} of {} steps", n as f64 * run.config.step_s, run.config.steps)})
@@ -544,8 +743,8 @@ impl Sim {
     fn frame(&self, links: &[String], generation: u64, steps: u64) -> Result<Frame, String> {
         match self {
             Sim::Robot(r) => Ok(frame(r, generation, steps)),
-            Sim::Environment { env, run, .. } => preset_frame(&env.frame()?, links, generation, steps, run.config.step_s),
-            Sim::Session { session, run } => preset_frame(&session.interactive_frame()?, links, generation, steps, run.config.step_s),
+            Sim::Environment { env, run, held, .. } => preset_frame(&env.frame()?, links, generation, steps, run.config.step_s, held),
+            Sim::Session { session, run, .. } => preset_frame(&session.interactive_frame()?, links, generation, steps, run.config.step_s, session.input_values()),
         }
     }
 }
@@ -582,6 +781,8 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
         }
     };
     let set_jog_error = |e: Option<String>| out.lock().unwrap_or_else(|p| p.into_inner()).jog_error = e;
+    let set_motion_error = |e: Option<String>| out.lock().unwrap_or_else(|p| p.into_inner()).motion_error = e;
+    let set_drive = |d: Option<Arc<Drive>>| out.lock().unwrap_or_else(|p| p.into_inner()).drive = d;
     // Jogs received before the first build, applied right after it.
     let mut pending: Vec<(String, f64)> = Vec::new();
     let status = |phase, generation, rtf, error: Option<String>| Status { phase, generation, rtf, error, end: None };
@@ -626,6 +827,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                             }
                         }
                     }
+                    set_drive(s.drive());
                     let ok = publish(&s, Phase::Paused, generation, 0, None);
                     *sim = Some(s);
                     ok
@@ -642,12 +844,15 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                 sim = None;
                 pending.clear();
                 set_jog_error(None);
+                set_drive(None);
+                set_motion_error(None);
                 steps = 0;
                 running = false;
                 ended = false;
                 failed = !build(&mut sim, generation, &mut pending);
             }
             Some(Command::Jog { joint, .. }) if failed => set_jog_error(Some(format!("joint `{joint}`: not applied; the run failed (Reset rebuilds)"))),
+            Some(Command::Motion { .. }) if failed || ended => set_motion_error(Some("motion request not applied: the run failed or ended (Reset rebuilds)".into())),
             _ if failed || ended => {}
             Some(Command::Jog { joint, target }) => match sim.as_ref() {
                 None => pending.push((joint, target)),
@@ -661,6 +866,20 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                     Err(e) => set_jog_error(Some(e)),
                 },
                 Some(_) => set_jog_error(Some(format!("joint `{joint}`: not applied; a preset is driven by its declared controller"))),
+            },
+            Some(Command::Motion { values }) => match sim.as_mut() {
+                None => set_motion_error(Some("motion request not applied: no built session".into())),
+                Some(s) => match s.set_motion(values) {
+                    Ok(()) => {
+                        set_motion_error(None);
+                        if !running {
+                            // Paused: republish so the held action shows the request now.
+                            let rtf = out.lock().unwrap_or_else(|p| p.into_inner()).status.rtf;
+                            failed = !publish(s, Phase::Paused, generation, steps, rtf);
+                        }
+                    }
+                    Err(e) => set_motion_error(Some(format!("motion request not applied: {e}"))),
+                },
             },
             Some(Command::Start) => {
                 if build(&mut sim, generation, &mut pending) {
@@ -892,6 +1111,57 @@ mod tests {
         c.act(RunAction::Step).unwrap();
         wait(&mut c, "step after reset", |c| c.frame().is_some_and(|f| f.steps == 1));
         assert_eq!(c.frame().unwrap().completed_steps, Some(chunk));
+    }
+
+    /// The one motion handler on the full-robot robot-measured-400hz preset
+    /// (motion_commands, key vectors and the packet heartbeat from presets.json):
+    /// accept, refuse by name, Stop, and one heartbeat increment per packet.
+    #[test]
+    fn preset_motion_requests_validate_against_session_bounds_and_advance_the_heartbeat() {
+        let (_, run) = preset("robot-measured-400hz").unwrap();
+        let mut c = RunController::spawn_preset(Arc::new(run));
+        let e = c.motion(MotionRequest::Key('w')).unwrap_err();
+        assert!(e.contains("no built session"), "{e}");
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1) && c.drive().is_some());
+        let drive = c.drive().unwrap().clone();
+        let m = drive.motion.as_ref().expect("400hz declares motion_commands");
+        assert_eq!(m.source, robot_motion::Source::Preset);
+        let [fwd, lat, yaw] = m.channels.each_ref().map(|ch| ch.index);
+        let hb = drive.heartbeat.as_ref().expect("400hz declares motion_heartbeat").index;
+        let initial = drive.inputs[hb].initial;
+        assert_eq!(c.frame().unwrap().inputs[hb], initial + 1.0, "one packet sent");
+        // W: the declared vector [0.1, 0, 0] becomes the held forward_speed (paused: republished without stepping).
+        c.motion(MotionRequest::Key('w')).unwrap();
+        wait(&mut c, "W held", |c| c.frame().is_some_and(|f| f.inputs[fwd] == 0.1));
+        let f = c.frame().unwrap();
+        assert_eq!((f.steps, f.inputs[lat], f.inputs[yaw]), (1, 0.0, 0.0));
+        assert_eq!(c.motion_json()["requested"], json!([0.1, 0.0, 0.0]));
+        // Refusals name the channel (and bounds); nothing is clamped or sent.
+        let f_ch = &m.channels[0];
+        let e = c.motion(MotionRequest::Channels([(f_ch.name.clone(), f_ch.upper + 1.0)].into())).unwrap_err();
+        assert!(e.contains("`command.forward_speed`") && e.contains(&f_ch.bounds()) && e.contains("not clamped"), "{e}");
+        let e = c.motion(MotionRequest::Channels([("command.jump".to_string(), 0.0)].into())).unwrap_err();
+        assert!(e.contains("unknown channel `command.jump`"), "{e}");
+        let other = drive.inputs.iter().enumerate().find(|(i, _)| ![fwd, lat, yaw, hb].contains(i)).map(|(_, ch)| ch.name.clone()).expect("a non-motion input");
+        let e = c.motion(MotionRequest::Channels([(other.clone(), 0.0)].into())).unwrap_err();
+        assert!(e.contains(&format!("`{other}`")) && e.contains("not a motion command channel"), "{e}");
+        let e = c.motion(MotionRequest::Channels([(f_ch.name.clone(), f64::NAN)].into())).unwrap_err();
+        assert!(e.contains("not finite"), "{e}");
+        assert_eq!(c.motion_json()["last_refusal"], json!(e));
+        assert_eq!(c.motion_json()["requested"], json!([0.1, 0.0, 0.0]));
+        // The heartbeat advances by one across one step; the request stays held.
+        let before = c.frame().unwrap().inputs[hb];
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "second step", |c| c.frame().is_some_and(|f| f.steps == 2));
+        let f = c.frame().unwrap();
+        assert_eq!((f.inputs[hb], f.inputs[fwd]), (before + 1.0, 0.1));
+        // Stop: every motion channel to zero.
+        c.motion(MotionRequest::Stop).unwrap();
+        wait(&mut c, "stop", |c| c.frame().is_some_and(|f| f.inputs[fwd] == 0.0));
+        let f = c.frame().unwrap();
+        assert_eq!([f.inputs[fwd], f.inputs[lat], f.inputs[yaw]], [0.0; 3]);
+        assert!(c.motion_json()["last_apply_error"].is_null());
     }
 
     /// Timing only (debug build): `ROBOT_PRESET=<id> cargo test -p sim-spatial --lib robot_run::tests::measure_full_robot_preset -- --ignored --nocapture`

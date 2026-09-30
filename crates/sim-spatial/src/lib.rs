@@ -6,6 +6,7 @@ mod animation;
 pub(crate) mod annotate;
 pub(crate) mod chart;
 pub mod builder;
+pub mod launch;
 pub mod lesson;
 mod linked;
 pub mod models;

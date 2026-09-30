@@ -75,7 +75,14 @@ fn read_mesh(path: &Path) -> Result<Mesh, String> {
         .with_inserted_indices(Indices::U32(indices)))
 }
 
-pub fn run_place(dir: PathBuf) -> Result<(), String> {
+/// Parse `dir/place.json` and its mesh as [`run_place`] does, without a
+/// window; a one-line summary or the error naming the path.
+pub fn validate_place(dir: &std::path::Path) -> Result<String, String> {
+    let (info, mesh) = load_place(dir)?;
+    Ok(format!("Validated place {} with {} stations, {} views and {} mesh vertices.", dir.display(), info.stations.len(), info.views.len(), mesh.count_vertices()))
+}
+
+fn load_place(dir: &std::path::Path) -> Result<(PlaceInfo, Mesh), String> {
     let text = std::fs::read_to_string(dir.join("place.json")).map_err(|e| format!("{}: {e}", dir.join("place.json").display()))?;
     let v: serde_json::Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
     if v["schema"] != "sim.place/1" {
@@ -93,6 +100,11 @@ pub fn run_place(dir: PathBuf) -> Result<(), String> {
     let start = stations.first().copied().unwrap_or(Vec3::ZERO) + Vec3::Y * (eye_height + 0.6) - Vec3::X * 0.8;
     let mesh = read_mesh(&dir.join(v["mesh_file"].as_str().unwrap_or("mesh.ply")))?;
     let info = PlaceInfo { stations, views, start, look: Vec3::X, description: v["description"].as_str().unwrap_or("").to_string() };
+    Ok((info, mesh))
+}
+
+pub fn run_place(dir: PathBuf) -> Result<(), String> {
+    let (info, mesh) = load_place(&dir)?;
     App::new()
         .insert_resource(ClearColor(Color::srgb(0.07, 0.08, 0.1)))
         .insert_resource(AmbientLight { color: Color::WHITE, brightness: 900.0, affects_lightmapped_meshes: true })

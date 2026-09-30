@@ -38,6 +38,7 @@
   <nav class="tabs" role="tablist" aria-label="Views">
     <button class="tab" role="tab" data-view="overview" aria-selected="true">Overview</button>
     <button class="tab" role="tab" data-view="timeline" aria-selected="false">Timeline <span class="badge" id="badge-timeline">0</span></button>
+    <button class="tab" role="tab" data-view="decisions" aria-selected="false">Decisions <span class="badge" id="badge-decisions">0</span></button>
     <button class="tab" role="tab" data-view="notebook" aria-selected="false">Notebook <span class="badge" id="badge-notebook">0</span></button>
     <button class="tab" role="tab" data-view="director" aria-selected="false">Director</button>
     <button class="tab" role="tab" data-view="settings" aria-selected="false">Settings</button>
@@ -95,6 +96,12 @@
     <div class="timeline" id="timeline"></div>
   </section>
 
+  <!-- Decisions -->
+  <section data-panel="decisions" hidden>
+    <p class="faint" style="font-size:13px;margin:0 0 12px">Choices the agents made on their own instead of stopping to ask, newest first. Revisit any of them with the guidance box.</p>
+    <div id="decisions"></div>
+  </section>
+
   <!-- Notebook -->
   <section data-panel="notebook" hidden>
     <div class="notes-tools">
@@ -127,6 +134,10 @@
             <div class="field" style="margin-top:14px"><label for="max-batches">Stop after this many accepted batches (empty: no limit)</label><input class="input" type="number" id="max-batches" min="1" step="1" style="max-width:140px"></div>
             <div class="row-end"><span class="note">Shares the run's time, usage and turn limits.</span><button class="btn small" id="save-outer">Save</button></div>
           </div>
+        </section>
+        <section class="card" id="aside-card" hidden>
+          <div class="card-head"><h2>Set aside as blocked</h2><span class="count" id="aside-count"></span></div>
+          <div class="card-body" id="dir-aside"></div>
         </section>
         <section class="card">
           <div class="card-head"><h2>Accepted batches</h2><span class="count" id="history-count"></span></div>

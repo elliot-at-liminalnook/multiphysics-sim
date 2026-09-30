@@ -12,6 +12,11 @@ evidence for interaction claims: drive the viewer with ui_capture.py, look at
 the screenshots, and cite their paths. Distinguish implemented, tested,
 visually verified and unverified. Never manufacture screenshots or receipts.
 
+Make small decisions yourself (defaults, naming, which of two reasonable
+approaches) and record them in `decisions`. Use status=blocked only when nothing
+in the assignment can be done; otherwise finish what can be done and list the
+rest as blockers.
+
 Return the structured report: status (done or blocked), summary, changed_files,
 checks (exact commands, outcomes, approximate durations), evidence (paths and
 observed behavior) and blockers. done means this assignment only, not the

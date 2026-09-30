@@ -280,6 +280,31 @@ Implementation references: [Claude programmatic mode](https://code.claude.com/do
 and [CLI reference](https://code.claude.com/docs/en/cli-reference). Cost reports
 are cumulative per session, while `--max-budget-usd` applies to the current call.
 
+## Decisions instead of stops
+
+The run is meant to keep going unattended. Agents decide rather than wait: an
+ambiguous requirement, a stale fixture or two reasonable designs are settled by
+the agent. Each such choice is recorded in its response's `decisions` field
+(decision, why, alternatives, revisit-if). The coordinator collects them in the
+dashboard's **Decisions** tab and `.claude-pair/shared/DECISIONS.md`, and adds
+them to the journal. Revisit any of them with the guidance box.
+
+The coordinator also avoids stopping on problems it can handle:
+- **A blocked batch** is set aside with its blockers, and the Director chooses
+  other work (it reselects a set-aside batch only once the blocker is resolved).
+  Without a Director, a blocked orchestrator still ends the run.
+- **A failed call** (an API error, a crash, a result that doesn't match the
+  schema) is retried in the same session after a backoff of 30 s, doubling up to
+  30 min, and the run continues. It stops after 8 consecutive failures
+  (`failure_retries`, `failure_backoff_seconds`).
+- **A response that breaks a handoff rule** is sent back to the same session to
+  correct (`guard_retries`, default 2).
+- **An interrupted turn** (Stop, a crash, a closed terminal) resumes its own
+  session automatically on the next start.
+
+What still stops it: your Stop, the weekly usage limit, the Director deciding
+nothing worthwhile remains, less than 2 GiB of free disk, and a coordinator bug.
+
 ## Claude usage limits
 
 When a call is stopped by a Claude usage limit, the run does not fail. **The

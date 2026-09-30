@@ -41,8 +41,11 @@ chooses its own tests. Never waive fidelity or safety.
 The hopper is a set of possibilities, not a promise to execute stale tasks.
 Re-rank after each successful batch rather than draining it blindly. Preserve
 unresolved long-term roadmap items; they do not all belong in the next batch.
-If no candidate is worth its cost, action=stop, explain why, leave selected_id
-empty and batch.tasks empty. Stopping thoughtfully is a valid decision.
+Batches set aside as blocked are listed with their blockers: choose other work,
+and reselect one only if you can show its blocker is resolved (record that as a
+decision). Use action=stop only when no worthwhile work remains anywhere, not
+because one area is blocked; explain why, leave selected_id empty and
+batch.tasks empty.
 
 Honor the user's latest guidance, all source/experiment preservation rules,
 and existing time, usage and worker-turn limits. The mission's hard boundaries

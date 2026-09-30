@@ -77,7 +77,7 @@ const liveRole = () => pinnedRole || followRole();
 function status() {
   const s = data.state;
   if (data.active && data.stop_requested) return { label: 'Stopping', cls: 'warn' };
-  if (s.status === 'waiting') return { label: 'Waiting for usage limit', cls: 'warn' };
+  if (s.status === 'waiting') return { label: s.wait_kind === 'retry' ? 'Retrying' : 'Waiting for usage limit', cls: 'warn' };
   if (data.active) return { label: 'Running', cls: 'running' };
   return ({ ready: { label: 'Ready', cls: '' }, paused: { label: 'Paused', cls: 'paused' }, blocked: { label: 'Needs attention', cls: 'blocked' },
     complete: { label: 'Complete', cls: 'complete' }, running: { label: 'Stopped', cls: 'paused' } })[s.status] || { label: s.status, cls: '' };
@@ -96,7 +96,10 @@ function now() {
     : ['orchestrator', 'Orchestrator is writing the next assignment', 'the orchestrator writes the next assignment']);
   let eyebrow = live ? 'Now' : 'Next', headline = live ? active : 'Paused · ' + next[0].toUpperCase() + next.slice(1);
   let subline = s.plan?.summary || (batch ? batch.title + ' — ' + batch.objective : '');
-  if (s.status === 'waiting' && s.resume_at) {
+  if (s.status === 'waiting' && s.resume_at && s.wait_kind === 'retry') {
+    eyebrow = 'Retrying'; headline = 'Retrying after a failed call';
+    subline = `Continues the same session at ${clock(s.resume_at)} (in ${dur(s.resume_at - data.now)}).`;
+  } else if (s.status === 'waiting' && s.resume_at) {
     eyebrow = 'Usage limit'; headline = `Waiting for Claude usage to reset`;
     subline = `Resumes automatically at ${clock(s.resume_at)} (in ${dur(s.resume_at - data.now)}), continuing the interrupted ${ROLES[role]?.name.toLowerCase() || 'agent'} session where it left off.`;
   } else if (!data.calls.length && !live) {
@@ -127,6 +130,7 @@ function render() {
   if (view === 'overview') renderOverview();
   if (view === 'timeline') renderTimeline();
   if (view === 'notebook') renderNotebook();
+  if (view === 'decisions') renderDecisions();
   if (view === 'director') renderDirector();
   if (view === 'settings') renderSettings();
 }
@@ -134,7 +138,10 @@ function render() {
 function renderBanner() {
   const s = data.state, b = $('banner'), action = $('banner-action');
   let kind = '', message = '', act = '';
-  if (s.status === 'waiting' && s.resume_at) {
+  if (s.status === 'waiting' && s.resume_at && s.wait_kind === 'retry') {
+    kind = 'warn';
+    message = `<strong>Retrying after a failed call</strong>${esc(s.message)} (in ${esc(dur(s.resume_at - data.now))}).`;
+  } else if (s.status === 'waiting' && s.resume_at) {
     kind = 'warn';
     message = `<strong>Claude usage limit reached</strong>Resuming automatically at ${esc(clock(s.resume_at))} · in ${esc(dur(s.resume_at - data.now))}. Nothing is lost; the interrupted session continues where it stopped.`;
   } else if (!data.active && s.status === 'paused' && s.weekly_reset_at) {
@@ -198,6 +205,7 @@ function renderNow() {
 function renderTabs() {
   text('badge-timeline', String(data.calls.length));
   text('badge-notebook', String(data.notebook.total));
+  text('badge-decisions', String((data.state.decisions || []).length));
 }
 
 /* ---------- overview ---------- */
@@ -371,6 +379,16 @@ function renderNotebook() {
   }).join(''));
 }
 
+/* ---------- decisions ---------- */
+function renderDecisions() {
+  const log = data.state.decisions || [];
+  if (!log.length) return html('decisions', '<div class="card card-body empty">No decisions yet. When an agent makes a call you would otherwise be asked about, it appears here with its reasons.</div>');
+  html('decisions', [...log].reverse().map(d => {
+    const role = ROLES[d.role] || ROLES.coordinator;
+    return `<article class="entry" style="--role:${role.color}"><div class="entry-head"><span class="author">${esc(role.name)}</span><span>call ${d.call}${d.batch ? ' · batch ' + esc(d.batch) : ''}</span><time title="${esc(new Date(d.at * 1000).toLocaleString())}">${esc(ago(d.at))}</time></div><p><strong>${esc(d.decision)}</strong></p><ul><li><b>Why:</b> ${esc(d.why)}</li><li><b>Alternatives:</b> ${esc(d.alternatives)}</li><li><b>Revisit if:</b> ${esc(d.revisit_if)}</li></ul></article>`;
+  }).join(''));
+}
+
 /* ---------- director ---------- */
 function renderDirector() {
   const outer = data.state.outer, settings = data.outer_settings, batch = outer?.current_batch;
@@ -380,6 +398,9 @@ function renderDirector() {
   html('dir-batch', batch ? `<h3 style="margin:0 0 4px;font-size:16px">${esc(batch.title)}</h3><p class="prose">${esc(batch.objective)}</p><div class="section-label">Tasks</div><ol class="tasks">${batch.tasks.map(t => `<li><div><strong>${esc(t.title)}</strong><div>${esc(t.brief)}</div></div></li>`).join('')}</ol>` + (batch.outcomes?.length ? `<div class="section-label">Outcomes</div><ul class="bullets">${batch.outcomes.map(o => `<li>${esc(o)}</li>`).join('')}</ul>` : '')
     : `<div class="empty">${settings.enabled ? 'The Director selects a batch after the current work is accepted.' : 'Turn on automatic planning to let the Director choose each next batch. Without it, the orchestrator works through the mission directly.'}</div>`);
   html('hopper', outer?.hopper?.length ? outer.hopper.map(c => `<article class="cand ${c.disposition}"><div class="pills"><span class="chip small ${c.disposition === 'select' ? 'accent' : c.disposition === 'completed' ? 'ok' : ''}">${esc(c.disposition)}</span><span class="chip small">${esc(c.category.replace('_', ' '))}</span><span class="chip small">${esc(c.effort)}</span></div><h3>${esc(c.title)}</h3><p>${esc(c.benefit)}</p><details><summary>Why, evidence and risk</summary><p>${esc(c.reason)}</p><p>${esc(c.problem)}</p><p>Risk: ${esc(c.risk)}</p><ul class="bullets">${c.evidence.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details></article>`).join('') : '<div class="empty">No candidates yet.</div>');
+  const aside = outer?.set_aside || [];
+  $('aside-card').hidden = !aside.length; text('aside-count', aside.length ? String(aside.length) : '');
+  html('dir-aside', aside.map(b => `<div style="padding:6px 0"><strong style="font-size:13px">${esc(b.title)}</strong><div class="faint" style="font-size:12px">${esc(b.reason)}</div></div>`).join(''));
   const history = (outer?.history || []).filter(b => !b.legacy);
   text('history-count', history.length ? String(history.length) : '');
   html('dir-history', history.length ? history.map((b, i) => `<button class="btn ghost small" data-batch="${i}" style="display:flex;width:100%;justify-content:space-between">${esc(b.title)}<span class="faint">${esc(ago(b.completed_at))} ↗</span></button>`).join('') : '<div class="empty">None yet.</div>');

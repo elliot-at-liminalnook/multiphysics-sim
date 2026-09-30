@@ -34,7 +34,9 @@ def obj(properties):
             "required": list(properties), "additionalProperties": False}
 
 
+DECISIONS = {"type": "array", "items": obj({"decision": TEXT, "why": TEXT, "alternatives": TEXT, "revisit_if": TEXT})}
 PLAN_SCHEMA = obj({
+    "decisions": DECISIONS,
     "action": {"enum": ["work", "complete", "blocked"]},
     "review": {"enum": ["none", "accept", "revise"]},
     "coordination_notes": STRINGS, "summary": TEXT, "worker_prompt": TEXT, "acceptance_criteria": STRINGS,
@@ -43,7 +45,7 @@ PLAN_SCHEMA = obj({
         "id": TEXT, "workflow": TEXT,
         "status": {"enum": ["pending", "in_progress", "verified", "blocked"]},
         "evidence": TEXT})}})
-REPORT_SCHEMA = obj({"coordination_notes": STRINGS, "status": {"enum": ["done", "blocked"]}, "summary": TEXT,
+REPORT_SCHEMA = obj({"decisions": DECISIONS, "coordination_notes": STRINGS, "status": {"enum": ["done", "blocked"]}, "summary": TEXT,
                      "changed_files": STRINGS, "checks": STRINGS,
                      "evidence": STRINGS, "blockers": STRINGS})
 
@@ -93,6 +95,11 @@ def check_prefix(root, rounds, index, name):
 
 
 check_passed = outer_loop.check_passed
+
+
+class CallFailed(RuntimeError):
+    """An agent call failed in a way worth retrying (API error, crash, malformed
+    result). The run backs off and continues the same session."""
 
 
 class UsageLimit(Exception):
@@ -399,6 +406,10 @@ class Runner:
         retrying = session and self.state.pop("retry_session", None) == session
         if retrying and self.state.pop("limit_resume", None) == session:
             prompt = RESUME_NOTE + prompt
+        failure = self.state.pop("retry_note", None)
+        if failure:
+            prompt = (f"(Your previous attempt ended with an error: {failure}. Anything you already did in this "
+                      "conversation and in the project folder is intact. Continue, then return the structured result.)\n\n" + prompt)
         if session and not retrying and (role == "director" or scopes.get(role) != scope or
                                          counts.get(session, 0) >= self.config.get("max_session_calls", 8)):
             session = None
@@ -462,21 +473,23 @@ class Runner:
                                          any(e.get("type") == "assistant" for e in events))
                 raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a Claude usage limit",
                                  weekly_limit(info, text, reset, time.time()))
+        started = any(e.get("type") == "assistant" for e in events)
         if result is None:
-            raise RuntimeError("Claude stream has no final result; inspect logs before retrying")
+            self.fail_call(role, sid, reservation, started, "Claude's output ended without a final result (crash or cut-off)")
         if result.get("session_id") != sid:
-            raise RuntimeError("Claude returned an unexpected session ID")
+            self.fail_call(role, sid, reservation, False, "Claude returned an unexpected session ID")
         self.state["sessions"][role] = sid
         total = result.get("total_cost_usd")
         prior = self.state["session_costs"].get(sid, 0.0)
-        if not isinstance(total, (float, int)) or not math.isfinite(total) or total < prior:
-            raise RuntimeError("Missing or regressed cumulative usage; reserved cap retained")
-        self.state["cost_usd"] += total - prior - reservation
-        self.state["session_costs"][sid] = total
+        spent = total - prior if isinstance(total, (float, int)) and math.isfinite(total) and total >= prior else 0.0
+        self.state["cost_usd"] += spent - reservation
+        if spent:
+            self.state["session_costs"][sid] = total
         self.state.pop("inflight")
         self.save()
         if code or result.get("is_error") or result.get("subtype") != "success":
-            raise RuntimeError(f"Claude did not finish successfully; see {out} and {err}")
+            self.fail_call(role, sid, 0.0, started, f"Claude reported {result.get('subtype') or 'an error'}: "
+                           + str(result.get("result") or "")[:300])
         if result.get("permission_denials"):
             # Not a boundary any more (agents run without permission prompts);
             # recorded so a refused interactive tool is visible in the journal.
@@ -484,9 +497,43 @@ class Runner:
                 "kind": "Permission denials", "summary": f"{role} had {len(result['permission_denials'])} tool call(s) refused.",
                 "notes": [json.dumps(d)[:600] for d in result["permission_denials"][:8]], "source": str(out)})
         data = result.get("structured_output")
-        validate(data, schema)
+        try:
+            validate(data, schema)
+        except ValueError as error:
+            self.fail_call(role, sid, 0.0, True, f"The structured response did not match the schema ({error})")
+        self.record_decisions(role, data)
         shared_notebook.response(self.root, role, self.state["calls"], data, out)
         return data
+
+    def fail_call(self, role, sid, reserved, started, reason):
+        """Settle a failed call and arrange a retry that continues its session."""
+        self.state["cost_usd"] -= reserved
+        self.state.pop("inflight", None)
+        if started:
+            self.state["sessions"][role] = sid
+            self.state["retry_session"] = sid
+        self.state["retry_note"] = reason
+        self.save()
+        raise CallFailed(f"{role} call {self.state['calls']}: {reason}")
+
+    def record_decisions(self, role, data):
+        """Keep every decision an agent made on the user's behalf in one log."""
+        made = data.get("decisions") or []
+        if not made:
+            return
+        log = self.state.setdefault("decisions", [])
+        context = {"role": role, "call": self.state["calls"], "at": time.time(),
+                   "batch": (self.state.get("outer", {}).get("current_batch") or {}).get("id"),
+                   "assignment": self.state.get("assignment")}
+        log.extend({**context, **d} for d in made)
+        lines = ["# Decisions the agents made", "", "Newest last. Each was made instead of stopping to ask; revisit any of them.", ""]
+        for d in log:
+            lines += [f"## {d['decision']}", "",
+                      f"{time.strftime('%Y-%m-%d %H:%M', time.localtime(d['at']))} · {d['role']} · call {d['call']}"
+                      + (f" · batch {d['batch']}" if d.get("batch") else ""), "",
+                      f"- **Why:** {d['why']}", f"- **Alternatives:** {d['alternatives']}", f"- **Revisit if:** {d['revisit_if']}", ""]
+        (self.root / "shared").mkdir(exist_ok=True)
+        shared_notebook.atomic_text(self.root / "shared" / "DECISIONS.md", "\n".join(lines))
 
     def call_checked(self, role, prompt, scope, guard):
         """Call a planner and apply the coordinator's handoff rules. A rejected
@@ -524,16 +571,16 @@ class Runner:
             self.state["limit_resume"] = sid
         self.save()
 
-    def wait_until(self, reset_at, reason):
+    def wait_until(self, reset_at, reason, kind="limit"):
         """Sleep through a usage-limit window without counting it as active time.
         STOP still works; the saved resume time survives a coordinator restart."""
         resume_at = reset_at + self.config.get("limit_margin_seconds", 60)
         clock = time.strftime("%a %H:%M", time.localtime(resume_at))
-        self.state.update(status="waiting", resume_at=resume_at,
+        self.state.update(status="waiting", resume_at=resume_at, wait_kind=kind,
                           message=f"{reason}. Resuming automatically at {clock}.")
         self.save()
         shared_notebook.append(self.root, {"id": f"limit-{self.state['calls']:04d}-{int(resume_at)}",
-            "author": "coordinator", "kind": "Usage limit",
+            "author": "coordinator", "kind": "Usage limit" if kind == "limit" else "Retry after a failed call",
             "summary": f"{reason}. The run waits and resumes at {clock}, continuing the interrupted session.",
             "notes": [], "source": str(self.root / "state.json")})
         print(f"waiting: {reason}; resuming at {clock}", flush=True)
@@ -549,7 +596,8 @@ class Runner:
             self.deadline += waited
             self.waited += waited
         self.state.pop("resume_at", None)
-        self.state.update(status="running", message="Usage limit reset; continuing where the run left off.")
+        self.state.pop("wait_kind", None)
+        self.state.update(status="running", message="Continuing where the run left off.")
         self.save()
 
     def evidence(self):
@@ -651,10 +699,14 @@ class Runner:
         if self.state["status"] == "complete":
             print("Mission already complete")
             return
-        if self.state.get("inflight") and not retry:
-            raise RuntimeError("Interrupted/uncertain call. Inspect its logs and the project folder, then use --retry-interrupted. The reserved usage cap remains charged.")
-        if retry and self.state.get("inflight"):
+        if self.state.get("inflight"):
+            # A turn cut short by Stop, a crash or a closed terminal continues in
+            # its own session; its edits in the folder are intact.
             interrupted = self.state.pop("inflight")
+            shared_notebook.append(self.root, {"id": f"resume-{self.state['calls']:04d}-{int(time.time())}",
+                "author": "coordinator", "kind": "Resumed interrupted turn",
+                "summary": f"The {interrupted['role']} turn in {Path(interrupted['prefix']).name} was interrupted; its session continues.",
+                "notes": [], "source": interrupted["prefix"]})
             self.state["sessions"][interrupted["role"]] = interrupted["session_id"]
             self.state["retry_session"] = interrupted["session_id"]
         if (self.root / "STOP").exists():
@@ -762,6 +814,8 @@ class Runner:
                         write_json(self.root / "logs" / f"plan-{self.state['calls']:04d}.json", plan)
                         if plan["action"] == "complete" and self.state.get("outer", {}).get("current_batch"):
                             outer_loop.finish_batch(self, plan)
+                        elif plan["action"] == "blocked" and self.state.get("outer", {}).get("current_batch"):
+                            outer_loop.set_aside(self, plan)
                         elif plan["action"] != "work":
                             self.state["status"] = plan["action"]
                             self.state["message"] = plan["summary"]
@@ -793,6 +847,16 @@ class Runner:
                     count += 1
                     if steps and count >= steps:
                         raise InterruptedError("Requested number of steps finished; ready to resume")
+                    self.state.pop("consecutive_failures", None)
+                except CallFailed as failure:
+                    count = self.state.get("consecutive_failures", 0) + 1
+                    self.state["consecutive_failures"] = count
+                    if count > self.config.get("failure_retries", 8):
+                        raise RuntimeError(f"{failure} (failed {count} times in a row)")
+                    delay = min(30 * 60, self.config.get("failure_backoff_seconds", 30) * 2 ** (count - 1))
+                    self.wait_until(time.time() + delay - self.config.get("limit_margin_seconds", 60),
+                                    f"An agent call failed ({failure}); retry {count}", kind="retry")
+                    continue
                 except UsageLimit as limit:
                     if limit.weekly and not self.config.get("wait_for_weekly_limit"):
                         # The run's only ceiling: stop here and continue after the reset.

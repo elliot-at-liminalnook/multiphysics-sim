@@ -396,6 +396,92 @@ class HandoffRuleTests(unittest.TestCase):
             self.assertEqual(len(calls), 2)
 
 
+class ResilienceTests(unittest.TestCase):
+    def test_a_failed_call_retries_the_same_session_and_the_run_continues(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, failure_backoff_seconds=0.05, limit_margin_seconds=0)
+            calls, reported = [], []
+
+            def process(argv, prefix, stdin=None, cwd=None, env=None):
+                if "--print" not in argv:  # a coordinator check
+                    for suffix in (".stdout", ".stderr"):
+                        prefix.with_suffix(suffix).write_text("")
+                    return 0, prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
+                sid = argv[argv.index("--resume") + 1] if "--resume" in argv else argv[argv.index("--session-id") + 1]
+                calls.append((argv, stdin, sid))
+                out = prefix.with_suffix(".stdout")
+                role = prefix.name.split("-", 1)[1]
+                if role == "worker" and not reported:
+                    reported.append("failed once")
+                    out.write_text(json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "editing"}]}}) + "\n"
+                                   + json.dumps({"type": "result", "subtype": "error_during_execution", "is_error": True,
+                                                 "result": "API Error: 529 overloaded", "session_id": sid, "total_cost_usd": .05}))
+                    return 1, out, prefix.with_suffix(".stderr")
+                data = copy.deepcopy(fixtures.REPORT) if role == "worker" else fixtures.plan(
+                    "complete" if len(reported) > 1 else "work", "accept" if len(reported) > 1 else "none")
+                if role == "worker":
+                    reported.append("done")
+                    data["decisions"] = [{"decision": "Kept the old flag name", "why": "Two callers use it",
+                                          "alternatives": "Rename both", "revisit_if": "A third caller appears"}]
+                elif len(reported) > 1:
+                    data["checklist"][0].update(status="verified", evidence="worker proof")
+                pair.write_json(out, {"session_id": sid, "total_cost_usd": .1, "subtype": "success", "structured_output": data})
+                return 0, out, prefix.with_suffix(".stderr")
+            with patch.object(pair.Runner, "process", lambda self_, *a, **k: process(*a, **k)):
+                pair.Runner(runner.root).run()
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(state["status"], "complete")
+            workers = [c for c in calls if c[1].startswith("(Your previous attempt") or c[1].startswith(fixtures.plan()["worker_prompt"])]
+            self.assertEqual(len(workers), 2)
+            self.assertIn("--resume", workers[1][0])
+            self.assertEqual(workers[0][2], workers[1][2])
+            self.assertIn("529 overloaded", workers[1][1])
+            self.assertNotIn("consecutive_failures", state)
+            self.assertEqual(state["decisions"][0]["decision"], "Kept the old flag name")
+            self.assertIn("Kept the old flag name", (runner.root / "shared/DECISIONS.md").read_text())
+
+    def test_a_blocked_batch_is_set_aside_for_the_director(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            pair.configure_outer(runner.root, True, None)
+            import test_outer
+            seen = []
+
+            def fake_call(runner_, role, prompt, scope=None):
+                seen.append(role)
+                runner_.state["calls"] += 1
+                if role == "director":
+                    if seen.count("director") == 1:
+                        return test_outer.decision(1)
+                    d = test_outer.decision(2)
+                    d.update(action="stop", selected_id="", batch={**d["batch"], "tasks": []})
+                    for c in d["candidates"]:
+                        c["disposition"] = "defer"
+                    self.assertIn("set aside because they were blocked", prompt)
+                    return d
+                p = fixtures.plan("blocked", "none")
+                p["summary"] = "Needs a hardware measurement we cannot take"
+                p["checklist"] = test_outer.outer.batch_checklist(runner_.state["outer"]["current_batch"])
+                return p
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(seen, ["director", "orchestrator", "director"])
+            self.assertEqual(state["outer"]["set_aside"][0]["id"], "batch-1")
+            self.assertIn("hardware", state["outer"]["set_aside"][0]["reason"])
+            self.assertEqual(state["status"], "paused", "only the Director's own stop ends it")
+
+    def test_completing_a_batch_early_is_sent_back_not_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            import test_outer
+            runner.state["outer"] = {"current_batch": test_outer.decision(1)["batch"], "history": [], "hopper": []}
+            plan = fixtures.plan("complete", "accept")
+            plan["checklist"] = test_outer.outer.batch_checklist(runner.state["outer"]["current_batch"])
+            with self.assertRaisesRegex(ValueError, "not yet verified: batch-1:outcome-1, batch-1:task-proof"):
+                test_outer.outer.guard_contract(runner, plan)
+
+
 class NoLimitTests(unittest.TestCase):
     def test_init_defaults_to_no_limits_and_a_director(self):
         with tempfile.TemporaryDirectory() as tmp:

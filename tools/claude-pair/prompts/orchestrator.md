@@ -23,7 +23,10 @@ bounded task with a specific worker_prompt, acceptance_criteria and checks. On
 the initial assignment, review=none. After a worker result, use review=accept or
 review=revise with a specific explanation in summary. review=revise resumes the
 same worker session for repairs; a new assignment starts a fresh worker.
-Use action=blocked when external input prevents useful progress. Use
+Decide rather than wait: re-scope, choose between designs, or assign the
+unblocked part, and record the decision. Use action=blocked only when nothing
+useful in the current batch can proceed. It sets the batch aside with its
+blockers and hands control to the Director to choose other work. Use
 action=complete only when every checklist item is verified and the mission (or
 batch) is satisfied. Never complete merely because a run limit is near.
 

@@ -21,6 +21,7 @@ pub(crate) mod physics_view;
 pub(crate) mod view;
 mod notes;
 pub mod rest;
+pub mod workspace;
 use bevy::{
     core_pipeline::tonemapping::Tonemapping,
     input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},

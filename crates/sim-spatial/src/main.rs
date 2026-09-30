@@ -43,11 +43,21 @@ struct Args {
     /// Build mode: edit and run this `sim.system/1` file.
     #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link"])]
     system: Option<PathBuf>,
-    /// Saved subsystem definitions offered in the palette (build mode).
-    #[arg(long, default_value = "library/systems")]
-    library: PathBuf,
+    /// Saved subsystem definitions offered in the palette (build and lesson
+    /// modes; authored parts load from `parts` next to it). Default:
+    /// `<workspace>/library/systems`. An explicit path is relative to the
+    /// current directory.
+    #[arg(long)]
+    library: Option<PathBuf>,
+    /// Workspace root for repository data (part registry, library, models,
+    /// web/viewer/presets.json, runs/ outputs). Default: $SIM_WORKSPACE, else
+    /// the nearest ancestor of the opened file, else of the current directory,
+    /// holding a Cargo.toml with a [workspace] table next to a library/
+    /// directory. `$SIM_PARTS_DIR` still overrides the parts directory.
+    #[arg(long)]
+    workspace: Option<PathBuf>,
     /// Display-model catalog (CAD-exported OBJ). Defaults to `models` next to
-    /// the library directory.
+    /// the library directory (`<workspace>/library/models`).
     #[arg(long)]
     models: Option<PathBuf>,
     /// Validate inputs without opening a window.
@@ -65,23 +75,48 @@ struct Args {
     #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic"])]
     robot: Option<PathBuf>,
     /// Robot mode on a preset declared in `--robot-presets` (default
-    /// web/viewer/presets.json, resolved from the launch directory): its
-    /// scene, controller config and optional task run by the shared
+    /// `<workspace>/web/viewer/presets.json`; the preset's paths and its
+    /// recordings under runs/robot-presets resolve against the workspace
+    /// root): its scene, controller config and optional task run by the shared
     /// EmbeddedEnvironment/EmbeddedSession. With --validate-only, lists the
     /// presets and parses this one's inputs.
     #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot"])]
     robot_preset: Option<String>,
     /// The preset list read by --robot-preset and REST robot_presets/robot_preset.
-    #[arg(long, default_value = sim_spatial::robot_preset::PRESETS)]
-    robot_presets: PathBuf,
+    /// Default: `<workspace>/web/viewer/presets.json`. An explicit path is
+    /// relative to the current directory.
+    #[arg(long)]
+    robot_presets: Option<PathBuf>,
     /// Lesson to open first (slug); default: the first in reading order.
     #[arg(long, requires = "lessons")]
     lesson: Option<String>,
 }
 
+/// The palette library: explicit --library, else `<workspace>/library/systems`
+/// (an error naming the searched directories when no root was found).
+fn library(args: &Args) -> Result<PathBuf, String> {
+    match &args.library {
+        Some(dir) => Ok(dir.clone()),
+        None => sim_spatial::workspace::path("library/systems").map_err(|e| format!("{e} (or pass --library DIR)")),
+    }
+}
+/// The display-model catalog: explicit --models, else `models` next to the library.
+fn models_dir(args: &Args, library: &std::path::Path) -> PathBuf {
+    args.models.clone().unwrap_or_else(|| library.parent().unwrap_or(std::path::Path::new(".")).join("models"))
+}
+/// Parts from $SIM_PARTS_DIR, else `<workspace>/library/parts`.
+fn registry() -> sim_core::BehaviorRegistry {
+    sim_runtime::system_registry_in(sim_spatial::workspace::get().as_ref())
+}
+/// The preset list: explicit --robot-presets, else `<workspace>/web/viewer/presets.json`.
+fn presets(args: &Args) -> Result<PathBuf, String> {
+    args.robot_presets.clone().map(Ok).unwrap_or_else(sim_spatial::robot_preset::default_file)
+}
+
 fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
-    let registry = sim_runtime::system_registry();
-    let mut learn = sim_spatial::lesson::Learn::new(dir.to_path_buf(), args.library.clone(), registry.clone());
+    let registry = registry();
+    let library = library(args)?;
+    let mut learn = sim_spatial::lesson::Learn::new(dir.to_path_buf(), library.clone(), registry.clone());
     if args.validate_only {
         for e in &learn.entries {
             match &e.error {
@@ -109,7 +144,7 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
             p
         }
     };
-    let builder = sim_spatial::Builder::open(initial, args.library.clone(), registry.clone())?;
+    let builder = sim_spatial::Builder::open(initial, library.clone(), registry.clone())?;
     let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
     let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
     let mut scene = sim_spatial::SpatialScene::for_builder(compiled.description.clone(), spatial)?;
@@ -123,7 +158,7 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
     }
     let api = sim_spatial::rest::server_for(args.api_port, true, true)?;
     eprintln!("Physical REST (lessons): http://{}", api.address);
-    let models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models")));
+    let models = sim_spatial::models::ModelLibrary::open(models_dir(args, &library));
     if let Some(e) = &models.error {
         eprintln!("Display models unavailable ({e}); drawing bounding shapes.");
     }
@@ -144,26 +179,28 @@ fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
 }
 fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Error>> {
     if args.validate_only {
-        let root = std::env::current_dir()?;
-        for p in sim_spatial::robot_preset::list(&args.robot_presets)? {
+        let root = sim_spatial::workspace::root()?;
+        let presets = presets(args)?;
+        for p in sim_spatial::robot_preset::list(&presets)? {
             let d = p.discovery(&root);
             println!("{} · mode {} · inputs exist {} · {}", p.id, p.mode, d["inputs_exist"], d["not_openable_reason"].as_str().unwrap_or("openable (build not attempted)"));
         }
-        let preset = sim_spatial::robot_preset::select(&args.robot_presets, &root, id)?;
-        let (loaded, run) = sim_spatial::robot::load_preset(preset, &root)?;
+        let preset = sim_spatial::robot_preset::select(&presets, root, id)?;
+        let (loaded, run) = sim_spatial::robot::load_preset(preset, root)?;
         let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
         println!("Validated preset {id}: {} with {} links ({drawn} with collision geometry); chunk {} steps × {} s; seed {}.", run.kind(), loaded.model.links.len(), run.chunk_steps(), run.config.step_s, run.seed);
         return Ok(());
     }
-    let view = sim_spatial::robot::RobotView::open_preset(&args.robot_presets, id)?;
+    let view = sim_spatial::robot::RobotView::open_preset(&presets(args)?, id)?;
     let api = sim_spatial::robot::server(args.api_port)?;
     eprintln!("Physical REST (robot mode, preset {id}): http://{}", api.address);
     sim_spatial::robot::run_robot(view, api);
     Ok(())
 }
 fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
-    let registry = sim_runtime::system_registry();
-    let mut builder = sim_spatial::Builder::open(path.to_path_buf(), args.library.clone(), registry.clone())?;
+    let registry = registry();
+    let library = library(args)?;
+    let mut builder = sim_spatial::Builder::open(path.to_path_buf(), library.clone(), registry.clone())?;
     let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
     let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
     let mut scene = sim_spatial::SpatialScene::for_builder(compiled.description.clone(), spatial)?;
@@ -191,7 +228,7 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     }
     let api = sim_spatial::rest::server_with(args.api_port, true)?;
     eprintln!("Physical REST (build mode): http://{}", api.address);
-    let models_dir = args.models.clone().unwrap_or_else(|| args.library.parent().unwrap_or(std::path::Path::new(".")).join("models"));
+    let models_dir = models_dir(args, &library);
     let mut models = sim_spatial::models::ModelLibrary::open(models_dir.clone());
     // A system's own display models (CAD exports next to the file) join the shared catalog.
     models.extend(&path.parent().unwrap_or(std::path::Path::new(".")).join("models"));
@@ -206,6 +243,9 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+    // One workspace root for this launch, from --workspace/$SIM_WORKSPACE, the opened file or the current directory.
+    let opened = args.system.as_deref().or(args.robot.as_deref()).or(args.lessons.as_deref()).or(args.place.as_deref()).or(args.description.as_deref());
+    sim_spatial::workspace::init(args.workspace.as_deref(), opened);
     if let Some(dir) = args.place.clone() {
         return sim_spatial::place_view::run_place(dir).map_err(Into::into);
     }
@@ -324,7 +364,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.headless {
         sim_spatial::rest::headless(scene, link, api);
     }
-    let models = sim_spatial::models::ModelLibrary::open(args.models.clone().unwrap_or_else(|| PathBuf::from("library/models")));
+    let models = match args.models.clone().map(Ok).unwrap_or_else(|| sim_spatial::workspace::path("library/models")) {
+        Ok(dir) => sim_spatial::models::ModelLibrary::open(dir),
+        Err(e) => {
+            let mut none = sim_spatial::models::ModelLibrary::default();
+            none.error = Some(e);
+            none
+        }
+    };
     sim_spatial::run_with_api(scene, link, Some(api), models.error.is_none().then_some(models));
     Ok(())
 }

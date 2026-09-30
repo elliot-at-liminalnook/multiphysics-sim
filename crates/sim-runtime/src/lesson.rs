@@ -983,9 +983,21 @@ pub fn check_path(path: &Path, registry: &BehaviorRegistry, options: CheckOption
 }
 
 /// Where "open in builder" copies of lesson systems live
-/// (`runs/lessons/sandbox/<lesson>/<scene>/`; override with `SIM_LESSON_SANDBOX`).
+/// (`<workspace root>/runs/lessons/sandbox/<lesson>/<scene>/`, see [`crate::workspace`];
+/// override with `SIM_LESSON_SANDBOX`).
 pub fn sandbox_root() -> PathBuf {
-    std::env::var_os("SIM_LESSON_SANDBOX").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("runs/lessons/sandbox"))
+    if let Some(dir) = std::env::var_os("SIM_LESSON_SANDBOX") {
+        return PathBuf::from(dir);
+    }
+    match crate::workspace::get() {
+        Ok(root) => root.path.join("runs/lessons/sandbox"),
+        Err(e) => {
+            // Scratch copies only: never written into an unrelated launch directory.
+            let dir = std::env::temp_dir().join("sim-lessons-sandbox");
+            eprintln!("lesson sandboxes go to {} ({e})", dir.display());
+            dir
+        }
+    }
 }
 
 /// A learner's copy of a scene's system: the authored system with the

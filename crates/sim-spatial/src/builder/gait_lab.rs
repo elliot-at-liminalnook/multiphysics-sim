@@ -26,12 +26,13 @@ pub struct Scan {
 }
 
 /// The default results root: `DEFAULT_RESULTS` under the nearest ancestor of
-/// the open system file, else of the working directory, that has it.
+/// the open system file, else the workspace root (`crate::workspace`) if it has it.
 pub fn default_results(system: &Path) -> Result<PathBuf, String> {
     let system = std::path::absolute(system).unwrap_or_else(|_| system.to_path_buf());
-    let cwd = std::env::current_dir().unwrap_or_default();
-    system.ancestors().skip(1).chain(cwd.ancestors()).map(|d| d.join(DEFAULT_RESULTS)).find(|p| p.is_dir()).ok_or_else(|| {
-        format!("No gait-lab results found: {DEFAULT_RESULTS} is not under any folder above {} or {}. Type a results folder.", system.display(), cwd.display())
+    let root = crate::workspace::root();
+    system.ancestors().skip(1).chain(root.iter().copied()).map(|d| d.join(DEFAULT_RESULTS)).find(|p| p.is_dir()).ok_or_else(|| {
+        let root = root.map(|r| r.display().to_string()).unwrap_or_else(|e| format!("no workspace root ({e})"));
+        format!("No gait-lab results found: {DEFAULT_RESULTS} is not under any folder above {} or the workspace root {root}. Type a results folder.", system.display())
     })
 }
 

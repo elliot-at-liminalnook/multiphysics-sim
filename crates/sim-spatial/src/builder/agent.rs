@@ -16,12 +16,7 @@ pub(super) struct Agent {
 }
 impl Agent {
     pub fn open(path: &std::path::Path, registry: &BehaviorRegistry) -> Self {
-        let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-        let cwd = cwd
-            .ancestors()
-            .find(|p| p.join(".git").exists())
-            .unwrap_or(&cwd)
-            .to_path_buf();
+        let cwd = crate::workspace::agent_dir();
         let state_path = path.with_file_name(format!(
             ".{}.agents/state.json",
             path.file_name().unwrap_or_default().to_string_lossy()

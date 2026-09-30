@@ -77,10 +77,9 @@ impl OpenState {
     }
 }
 
-/// `*.system.json` under the examples, the library and the current file's folder.
+/// `*.system.json` under the workspace's examples/systems-builder, the library and the current file's folder.
 pub(super) fn discover(current: &std::path::Path, library_dir: &std::path::Path) -> Vec<PathBuf> {
-    let cwd = std::env::current_dir().unwrap_or_default();
-    let mut files = library::system_files(&cwd.join("examples/systems-builder"));
+    let mut files = crate::workspace::path("examples/systems-builder").map(|d| library::system_files(&d)).unwrap_or_default();
     files.extend(library::system_files(library_dir));
     if let Some(dir) = current.parent() {
         files.extend(library::system_files(if dir.as_os_str().is_empty() { std::path::Path::new(".") } else { dir }));

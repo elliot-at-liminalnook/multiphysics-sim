@@ -495,12 +495,16 @@ impl Builder {
     /// Stop any interactive run and leave no pending input or drag, before a
     /// lesson takes over the view (the lesson plays its own recorded runs).
     /// Leaving Build and Lessons for another mode: the builder stays in the
-    /// window, paused (no physics runs unseen); its chrome is rebuilt on return.
+    /// window, paused (no physics runs unseen). On return its chrome is
+    /// rebuilt and its scene recompiled and respawned (parts, nets and the
+    /// reference images only `rebuild_scene` draws; the scope's entities
+    /// were despawned on exit).
     pub(crate) fn leave_scope(&mut self) {
         if self.running() {
             self.run_pause();
         }
         self.panel_dirty = true;
+        self.scene_dirty = true;
     }
 
     pub(crate) fn stop_for_learn(&mut self) {

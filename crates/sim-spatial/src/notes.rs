@@ -470,7 +470,10 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .insert_resource(scene)
-            .add_systems(Update, update);
+            .init_resource::<crate::app::actions::Replies>()
+            // A press is an `annotations` action, applied by the view's one handler.
+            .add_systems(Update, (update, clicks, crate::inspect::apply).chain());
+        crate::app::actions::register::<crate::inspect::InspectAction>(&mut app);
         app.world_mut().spawn(Orbit {
             focus: Vec3::ZERO,
             radius: 1.,

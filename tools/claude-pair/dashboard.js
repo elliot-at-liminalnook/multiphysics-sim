@@ -139,11 +139,12 @@ function render() {
 function renderBanner() {
   const s = data.state, b = $('banner'), action = $('banner-action');
   let kind = '', message = '', act = '';
+  bannerAction = 'resume';
   if (s.status === 'waiting' && s.resume_at && s.wait_kind === 'retry') {
-    kind = 'warn';
+    kind = 'warn'; act = 'Retry now'; bannerAction = 'retry-now';
     message = `<strong>Retrying after a failed call</strong>${esc(s.message)} (in ${esc(dur(s.resume_at - data.now))}).`;
   } else if (s.status === 'waiting' && s.resume_at) {
-    kind = 'warn';
+    kind = 'warn'; act = 'Try now'; bannerAction = 'retry-now';
     message = `<strong>Claude usage limit reached</strong>Resuming automatically at ${esc(clock(s.resume_at))} · in ${esc(dur(s.resume_at - data.now))}. Nothing is lost; the interrupted session continues where it stopped.`;
   } else if (!data.active && s.status === 'paused' && s.weekly_reset_at) {
     kind = 'warn';
@@ -473,7 +474,8 @@ document.addEventListener('click', e => {
 $('follow').onclick = () => { pinnedRole = null; rendered.feedInit = false; render(); };
 $('start').onclick = () => act('start');
 $('stop').onclick = () => act('stop');
-$('banner-action').onclick = () => act('start', { retry_interrupted: true });
+let bannerAction = 'resume';
+$('banner-action').onclick = () => bannerAction === 'retry-now' ? act('retry-now') : act('start', { retry_interrupted: true });
 $('modal-close').onclick = closeModal;
 $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });

@@ -605,6 +605,54 @@ class VerificationPassTests(unittest.TestCase):
             self.assertTrue(os.access(HERE / "bin" / "within", os.X_OK))
 
 
+class RetryNowTests(unittest.TestCase):
+    def test_retry_now_ends_a_wait_early(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, limit_margin_seconds=0)
+            runner.deadline, runner.waited = time.monotonic() + 60, 0.0
+            (runner.root / "RETRY_NOW").touch()
+            began = time.time()
+            runner.wait_until(time.time() + 600, "Network down", kind="retry")
+            self.assertLess(time.time() - began, 2)
+            self.assertFalse((runner.root / "RETRY_NOW").exists())
+            self.assertEqual(runner.state["status"], "running")
+
+    def test_a_network_outage_never_stops_the_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, failure_retries=1, failure_backoff_seconds=0.01, limit_margin_seconds=0)
+            attempts = []
+
+            def fake_call(runner_, role, prompt, scope=None):
+                attempts.append(role)
+                if len(attempts) <= 5:
+                    raise pair.CallFailed("orchestrator call 1: API Error: Can't reach the API server (ENOTFOUND)")
+                runner_.state["calls"] += 1
+                return fixtures.plan("blocked")
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(len(attempts), 6, "five outages in a row, well past failure_retries=1")
+            self.assertEqual(state["status"], "blocked", "the run went on to the orchestrator's own decision")
+            self.assertNotIn("failed", state["message"])
+
+    def test_dashboard_retry_now_wakes_the_coordinator(self):
+        import dashboard, threading
+        from urllib.request import Request, urlopen
+        with tempfile.TemporaryDirectory() as tmp:
+            root = fixtures.PairTests().initialize_fixture(Path(tmp).resolve())
+            server = dashboard.Dashboard(("127.0.0.1", 0), root)
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            try:
+                with patch.object(dashboard.Dashboard, "busy", return_value=True):
+                    request = Request(f"http://127.0.0.1:{server.server_port}/api/retry-now", data=b"{}",
+                                      headers={"Content-Type": "application/json", "X-Pair-Token": server.token})
+                    with urlopen(request) as response:
+                        self.assertEqual(json.load(response)["message"], "Retrying now.")
+                self.assertTrue((root / "RETRY_NOW").exists())
+            finally:
+                server.shutdown(); server.server_close()
+
+
 class NoLimitTests(unittest.TestCase):
     def test_init_defaults_to_no_limits_and_a_director(self):
         with tempfile.TemporaryDirectory() as tmp:

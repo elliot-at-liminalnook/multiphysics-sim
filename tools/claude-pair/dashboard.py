@@ -317,6 +317,15 @@ class Handler(BaseHTTPRequestHandler):
                         return self.send(409, {"error": "The last turn was interrupted. Review its work and confirm resume.", "interrupted": True})
                     self.server.launch(retry=bool(state.get("inflight")))
                     return self.send(200, {"ok": True, "message": "The pair is continuing from its saved handoff."})
+                if path == "/api/retry-now":
+                    state = pair.read_json(root / "state.json")
+                    (root / "RETRY_NOW").touch()
+                    if self.server.busy():
+                        return self.send(200, {"ok": True, "message": "Retrying now."})
+                    if (root / "STOP").exists():
+                        return self.send(409, {"error": "The run is stopped. Use Continue."})
+                    self.server.launch(retry=bool(state.get("inflight")))
+                    return self.send(200, {"ok": True, "message": "Restarting the run and retrying now."})
                 if path == "/api/outer":
                     pair.configure_outer(root, data.get("enabled"), data.get("max_batches"))
                     return self.send(200, {"ok": True, "message": "Director settings saved. Active work will finish before any upgrade."})

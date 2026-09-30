@@ -118,6 +118,8 @@ def weekly_limit(info, text, reset_at, now):
             or bool(re.search(r"weekly", text or "", re.I)) or reset_at - now > 24 * 3600)
 
 
+NETWORK_ERROR = re.compile(r"ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|Can't reach the API|"
+                           r"network|getaddrinfo|socket hang up|fetch failed", re.I)
 LIMIT_TEXT = re.compile(r"usage limit|limit reached|hit your limit|weekly limit|spend limit|rate.?limit|limit resets|resets in", re.I)
 RESUME_NOTE = ("(The coordinator resumed this session after a Claude usage-limit pause. Your earlier "
                "progress in this conversation and in the project folder is intact: continue where you "
@@ -661,6 +663,13 @@ class Runner:
                 if (self.root / "STOP").exists():
                     self.state.pop("resume_at", None)
                     raise InterruptedError("Stopped while waiting for the Claude usage limit to reset")
+                if (self.root / "RETRY_NOW").exists():
+                    # The dashboard's Retry now button: end the wait early.
+                    (self.root / "RETRY_NOW").unlink(missing_ok=True)
+                    shared_notebook.append(self.root, {"id": f"retry-now-{int(time.time())}", "author": "user",
+                        "kind": "Retried early", "summary": "The user ended the wait with Retry now.", "notes": [],
+                        "source": str(self.root / "state.json")})
+                    break
                 time.sleep(max(0.01, min(5, resume_at - time.time())))
         finally:
             waited = time.monotonic() - started
@@ -940,14 +949,24 @@ class Runner:
                     if steps and count >= steps:
                         raise InterruptedError("Requested number of steps finished; ready to resume")
                     self.state.pop("consecutive_failures", None)
+                    self.state.pop("network_failures", None)
                 except CallFailed as failure:
-                    count = self.state.get("consecutive_failures", 0) + 1
-                    self.state["consecutive_failures"] = count
-                    if count > self.config.get("failure_retries", 8):
-                        raise RuntimeError(f"{failure} (failed {count} times in a row)")
-                    delay = min(30 * 60, self.config.get("failure_backoff_seconds", 30) * 2 ** (count - 1))
-                    self.wait_until(time.time() + delay - self.config.get("limit_margin_seconds", 60),
-                                    f"An agent call failed ({failure}); retry {count}", kind="retry")
+                    base = self.config.get("failure_backoff_seconds", 30)
+                    if NETWORK_ERROR.search(str(failure)):
+                        # An outage isn't the agents' fault: retry every couple of
+                        # minutes for as long as it lasts, without counting toward a stop.
+                        count = self.state.get("network_failures", 0) + 1
+                        self.state["network_failures"] = count
+                        delay = min(self.config.get("network_retry_seconds", 120), base * 2 ** (count - 1))
+                        reason = f"Can't reach Claude's API (network); retry {count}"
+                    else:
+                        count = self.state.get("consecutive_failures", 0) + 1
+                        self.state["consecutive_failures"] = count
+                        if count > self.config.get("failure_retries", 8):
+                            raise RuntimeError(f"{failure} (failed {count} times in a row)")
+                        delay = min(30 * 60, base * 2 ** (count - 1))
+                        reason = f"An agent call failed ({failure}); retry {count}"
+                    self.wait_until(time.time() + delay - self.config.get("limit_margin_seconds", 60), reason, kind="retry")
                     continue
                 except UsageLimit as limit:
                     if limit.weekly and not self.config.get("wait_for_weekly_limit"):

@@ -12,6 +12,7 @@ use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::input::ButtonState;
 use sim_core::BehaviorRegistry;
+use sim_runtime::run_history::Fidelity;
 use sim_runtime::system_builder;
 use sim_system::library::{self, Alternative};
 use sim_system::{Command as SystemCommand, InstanceKind, InstanceSpec, ReferenceView, Resolver, SystemDocument, SystemStore, Terminal};
@@ -112,7 +113,10 @@ struct LiveRun {
     control: mpsc::Sender<RunControl>,
     shared: Arc<Mutex<RunShared>>,
     description_id: String,
-    /// Document and settings the run started with, and whether it was edited live.
+    /// Fidelity chosen when the run started (the toggle may change mid-run).
+    fidelity: Fidelity,
+    /// Document the run simulates (the realtime profile for realtime runs),
+    /// and whether it was edited live.
     document: SystemDocument,
     edited: bool,
 }
@@ -246,6 +250,8 @@ pub(super) struct ReplayOutcome {
     /// Simulated seconds the record covers.
     pub duration: f64,
     pub seed: u64,
+    /// Fidelity of the recorded run ("detailed", "realtime", or not recorded for sim.run/1).
+    pub fidelity: String,
     /// The recorded document changed mid-run: the record holds the final
     /// document, so no single document produced its series.
     pub edited_while_running: bool,
@@ -257,8 +263,8 @@ impl ReplayOutcome {
         match (self.status, self.max_rel_diff, &self.error) {
             ("running", ..) => format!("Replaying… {:.1} s", self.wall_seconds),
             ("cancelled", ..) => "Cancelled · replay stopped, no result".into(),
-            (_, Some(d), _) if d == 0. => format!("Reproduced exactly · max rel diff 0 · {} samples", self.samples.unwrap_or(0)),
-            (_, Some(d), _) => format!("Differs · max rel diff {d:.2e} · {} samples", self.samples.unwrap_or(0)),
+            (_, Some(d), _) if d == 0. => format!("Reproduced exactly · max rel diff 0 · {} samples · {}", self.samples.unwrap_or(0), self.fidelity),
+            (_, Some(d), _) => format!("Differs · max rel diff {d:.2e} · {} samples · {}", self.samples.unwrap_or(0), self.fidelity),
             (_, _, Some(e)) => format!("Replay failed: {e}"),
             _ => String::new(),
         }
@@ -852,7 +858,9 @@ impl Builder {
             let s = run.shared.lock().map_err(|_| "run state unavailable")?;
             (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.history.clone())
         };
-        let document = if run.edited { self.document.clone() } else { run.document.clone() };
+        // An edited detailed run ends on the current document; a realtime run
+        // on the realtime profile of the last edit it took (what it simulated).
+        let document = if run.edited && run.fidelity == Fidelity::Detailed { self.document.clone() } else { run.document.clone() };
         let description = self.last_description.clone();
         let series = history
             .into_iter()
@@ -862,7 +870,7 @@ impl Builder {
             })
             .collect();
         let note = if run.edited { format!("{note}{}{}", if note.is_empty() { "" } else { "; " }, sim_runtime::run_history::EDITED_WHILE_RUNNING) } else { note.to_string() };
-        let record = sim_runtime::run_history::RunRecord::new(&document, system_builder::config_for(&document), duration, series, &note);
+        let record = sim_runtime::run_history::RunRecord::new(&document, system_builder::config_for(&document), duration, series, &note).with_provenance(run.fidelity, run.edited);
         let path = sim_runtime::run_history::save(&sim_runtime::run_history::dir_for(&self.store.path), &record)?;
         self.runs = sim_runtime::run_history::list(&sim_runtime::run_history::dir_for(&self.store.path));
         self.status = format!("Saved run {} ({:.2} s)", record.id, duration);
@@ -895,13 +903,13 @@ impl Builder {
         let (send, receive) = mpsc::channel();
         let cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let (registry, c) = (self.registry.clone(), cancel.clone());
-        let edited = record.edited_while_running();
+        let (edited, fidelity) = (record.edited_while_running(), record.fidelity_label());
         std::thread::spawn(move || {
             let _ = send.send(sim_runtime::run_history::replay_with_cancel(&record, &registry, Some(&c)));
         });
         self.replay.outcomes.insert(
             id.to_string(),
-            ReplayOutcome { id: id.to_string(), status: "running", max_rel_diff: None, samples: None, error: None, wall_seconds: 0., duration: summary.duration, seed: summary.seed, edited_while_running: edited },
+            ReplayOutcome { id: id.to_string(), status: "running", max_rel_diff: None, samples: None, error: None, wall_seconds: 0., duration: summary.duration, seed: summary.seed, fidelity, edited_while_running: edited },
         );
         self.replay.job = Some(ReplayJob { id: id.to_string(), receiver: Mutex::new(receive), cancel, started: std::time::Instant::now() });
         self.tab = Tab::Studies;
@@ -970,16 +978,13 @@ impl Builder {
                 return;
             }
         }
-        let document = if self.realtime {
-            match sim_system::profile::realtime(&self.document, &self.registry) {
-                Ok(d) => d,
-                Err(e) => {
-                    self.status = format!("Realtime profile: {e}");
-                    return;
-                }
+        let fidelity = if self.realtime { Fidelity::Realtime } else { Fidelity::Detailed };
+        let document = match fidelity.document(&self.document, &self.registry) {
+            Ok(d) => d,
+            Err(e) => {
+                self.status = format!("Realtime profile: {}", e.trim_start_matches("realtime profile: "));
+                return;
             }
-        } else {
-            self.document.clone()
         };
         let registry = self.registry.clone();
         let mut observed: Vec<String> = scene
@@ -995,8 +1000,9 @@ impl Builder {
         let thread_shared = shared.clone();
         let description_id = scene.description.id.clone();
         let source_id = description_id.clone();
+        let simulated = document.clone();
         std::thread::spawn(move || run_thread(document, registry, observed, source_id, commands, thread_shared));
-        self.run = Some(LiveRun { control, shared, description_id, document: self.document.clone(), edited: false });
+        self.run = Some(LiveRun { control, shared, description_id, fidelity, document: simulated, edited: false });
         self.status = "Running on the shared runtime (background thread, paced to real time at most).".into();
     }
 
@@ -2049,12 +2055,25 @@ fn rebuild_scene(
     // A running system takes the edit live: parameters keep its state,
     // structural edits restart it at t = 0 (the session decides).
     let new_id = compiled.description.id.clone();
-    let document = builder.document.clone();
-    if let Some(run) = builder.run.as_mut().filter(|r| r.description_id != new_id) {
-        let _ = run.control.send(RunControl::Swap(Box::new(document), new_id.clone()));
-        run.description_id = new_id;
-        run.edited = true;
-        scene.live.snapshot = None;
+    // The run keeps its fidelity: a realtime run takes the edit's realtime profile.
+    if let Some(fidelity) = builder.run.as_ref().filter(|r| r.description_id != new_id).map(|r| r.fidelity) {
+        match fidelity.document(&builder.document, &builder.registry) {
+            Ok(document) => {
+                let run = builder.run.as_mut().expect("checked above");
+                let _ = run.control.send(RunControl::Swap(Box::new(document.clone()), new_id.clone()));
+                run.description_id = new_id;
+                run.document = document;
+                run.edited = true;
+                scene.live.snapshot = None;
+            }
+            Err(e) => {
+                // Never continue a realtime run on the detailed model: stop it
+                // (kept up to the edit, on the model it ran) and say why.
+                builder.stop_run();
+                scene.live.snapshot = None;
+                builder.status = format!("The {} run was stopped (kept up to the edit): the edited system has no valid {e}", fidelity.label());
+            }
+        }
     }
     builder.last_description = Some(compiled.description.clone());
     scene.replace(compiled.description, compiled.spatial, compiled.animation);
@@ -2345,7 +2364,7 @@ mod replay_tests {
         let runs = sim_runtime::run_history::dir_for(&path);
         let select = vec!["drum.shaft.speed".to_string()];
         let clean = sim_runtime::run_history::record(&b.document, &registry, 0.5, system_builder::config_for(&b.document), &select, "clean").unwrap();
-        let mut edited = sim_runtime::run_history::record(&b.document, &registry, 0.5, system_builder::config_for(&b.document), &select, sim_runtime::run_history::EDITED_WHILE_RUNNING).unwrap();
+        let mut edited = sim_runtime::run_history::record(&b.document, &registry, 0.5, system_builder::config_for(&b.document), &select, sim_runtime::run_history::EDITED_WHILE_RUNNING).unwrap().with_provenance(Fidelity::Detailed, true);
         edited.id.push_str("-edited");
         let long = sim_runtime::run_history::record(&b.document, &registry, 30., system_builder::config_for(&b.document), &select, "long").unwrap();
         let mut long = long;
@@ -2384,6 +2403,67 @@ mod replay_tests {
         assert!(started.elapsed().as_secs_f64() < 2., "{:?}", started.elapsed());
         let state = b.state_json();
         assert_eq!(state["replay"]["outcomes"].as_array().unwrap().len(), 3);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A run started with Realtime on is saved with the realtime profile it
+    /// simulated (document, config, fidelity) and replays exactly. Drives the
+    /// real live thread and `save_run`; the Bevy system that hot-swaps edits
+    /// is not exercised here.
+    #[test]
+    fn realtime_runs_save_the_profile_they_ran_and_replay_exactly() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dir = std::env::temp_dir().join(format!("builder-realtime-run-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("winch.system.json");
+        std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &path).unwrap();
+        let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
+        let mut b = Builder::open(path.clone(), root.join("library/systems"), registry.clone()).unwrap();
+        let profile = Fidelity::Realtime.document(&b.document, &registry).unwrap();
+        assert_ne!(profile.content_hash(), b.document.content_hash(), "the winch has a realtime profile");
+        let compiled = system_builder::compile(&profile, &registry, system_builder::config_for(&profile)).unwrap();
+        let observed: Vec<String> = compiled.description.observables.keys().filter(|id| system_builder::observable_key(&compiled.description, id).contains("drum.shaft.speed")).cloned().collect();
+        assert!(!observed.is_empty());
+        b.last_description = Some(compiled.description.clone());
+        // What start_run launches with Realtime on.
+        b.realtime = true;
+        let (control, commands) = mpsc::channel();
+        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new() }));
+        let (doc, reg, id, s) = (profile.clone(), registry.clone(), compiled.description.id.clone(), shared.clone());
+        std::thread::spawn(move || run_thread(doc, reg, observed, id, commands, s));
+        b.run = Some(LiveRun { control: control.clone(), shared: shared.clone(), description_id: compiled.description.id.clone(), fidelity: Fidelity::Realtime, document: profile.clone(), edited: false });
+        let time = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.);
+        let started = std::time::Instant::now();
+        while time() < 0.3 && started.elapsed().as_secs() < 60 {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        control.send(RunControl::Pause).unwrap();
+        while shared.lock().unwrap().running && started.elapsed().as_secs() < 60 {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        assert!(time() >= 0.3, "run advanced to {}", time());
+        // Turning the toggle off mid-run does not relabel the run.
+        b.realtime = false;
+        let saved = b.save_run("rt").unwrap();
+        let record = sim_runtime::run_history::load(&saved).unwrap();
+        assert_eq!((record.schema.as_str(), record.fidelity, record.edited_while_running()), (sim_runtime::run_history::SCHEMA, Some(Fidelity::Realtime), false));
+        assert_eq!(record.content_hash, profile.content_hash());
+        assert_eq!(serde_json::to_value(&record.config).unwrap(), serde_json::to_value(system_builder::config_for(&profile)).unwrap());
+        assert_eq!(b.runs[0].1.fidelity, "realtime");
+        b.replay_run(&record.id).unwrap();
+        let o = wait(&mut b);
+        assert_eq!((o.status, o.max_rel_diff, o.fidelity.as_str()), ("done", Some(0.), "realtime"), "{o:?}");
+        assert!(o.headline().starts_with("Reproduced exactly") && o.headline().ends_with("realtime"), "{}", o.headline());
+        let state = b.state_json();
+        assert_eq!(state["replay"]["outcomes"][0]["fidelity"], "realtime");
+        // The detailed document (what was recorded before) does not reproduce it.
+        let mut detailed = record.clone();
+        detailed.config = system_builder::config_for(&b.document);
+        detailed.document = b.document.clone();
+        let wrong = sim_runtime::run_history::replay(&detailed, &registry);
+        assert!(wrong.as_ref().map(|d| *d > 0.).unwrap_or(true), "{wrong:?}");
+        b.run = None;
         std::fs::remove_dir_all(&dir).ok();
     }
 }

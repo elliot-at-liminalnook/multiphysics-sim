@@ -9,9 +9,37 @@ use sim_core::BehaviorRegistry;
 use sim_system::SystemDocument;
 use std::path::{Path, PathBuf};
 
-pub const SCHEMA: &str = "sim.run/1";
+pub const SCHEMA: &str = "sim.run/2";
+/// The previous schema: no structured provenance. Still loaded, never rewritten.
+pub const SCHEMA_V1: &str = "sim.run/1";
 /// Points kept per series in a record.
 const POINTS: usize = 2000;
+
+/// Which model of the system a run simulated.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Fidelity {
+    /// The document as written.
+    Detailed,
+    /// Its realtime profile ([`sim_system::profile::realtime`]).
+    Realtime,
+}
+
+impl Fidelity {
+    pub fn label(self) -> &'static str {
+        match self {
+            Fidelity::Detailed => "detailed",
+            Fidelity::Realtime => "realtime",
+        }
+    }
+    /// The document this fidelity simulates for `document`.
+    pub fn document(self, document: &SystemDocument, registry: &BehaviorRegistry) -> Result<SystemDocument, String> {
+        match self {
+            Fidelity::Detailed => Ok(document.clone()),
+            Fidelity::Realtime => sim_system::profile::realtime(document, registry).map_err(|e| format!("realtime profile: {e}")),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RunRecord {
@@ -20,6 +48,15 @@ pub struct RunRecord {
     /// Seconds since the Unix epoch.
     pub created: u64,
     pub note: String,
+    /// Model the series came from; `document` is that model. `None` only in
+    /// sim.run/1 records, which did not say.
+    #[serde(default)]
+    pub fidelity: Option<Fidelity>,
+    /// The document changed mid-run, so `document` is the final one and no
+    /// single document produced every sample. `None` only in sim.run/1
+    /// records, where it is inferred from the note.
+    #[serde(default)]
+    pub edited_while_running: Option<bool>,
     /// Content hash of `document` (revision-independent).
     pub content_hash: String,
     pub document: SystemDocument,
@@ -33,6 +70,10 @@ pub struct RunSummary {
     pub id: String,
     pub created: u64,
     pub note: String,
+    pub schema: String,
+    /// "detailed", "realtime", or for sim.run/1 records a statement that it was not recorded.
+    pub fidelity: String,
+    pub edited_while_running: bool,
     pub revision: u64,
     pub content_hash: String,
     pub duration: f64,
@@ -57,17 +98,34 @@ fn thin(mut s: Series) -> Series {
 }
 
 impl RunRecord {
+    /// A detailed, unedited run of `document`; see [`RunRecord::with_provenance`].
     pub fn new(document: &SystemDocument, config: SessionConfig, duration: f64, series: Vec<Series>, note: &str) -> Self {
         let created = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
         let content_hash = document.content_hash();
         let id = format!("{created}-{}", &content_hash[..8]);
-        Self { schema: SCHEMA.into(), id, created, note: note.into(), content_hash, document: document.clone(), config, duration, series: series.into_iter().map(thin).collect() }
+        Self { schema: SCHEMA.into(), id, created, note: note.into(), fidelity: Some(Fidelity::Detailed), edited_while_running: Some(false), content_hash, document: document.clone(), config, duration, series: series.into_iter().map(thin).collect() }
+    }
+    /// State which model `document` is and whether it was edited mid-run.
+    pub fn with_provenance(mut self, fidelity: Fidelity, edited_while_running: bool) -> Self {
+        self.fidelity = Some(fidelity);
+        self.edited_while_running = Some(edited_while_running);
+        self
+    }
+    /// Fidelity as shown to people; sim.run/1 records did not record it.
+    pub fn fidelity_label(&self) -> String {
+        match self.fidelity {
+            Some(f) => f.label().into(),
+            None => "fidelity not recorded (sim.run/1)".into(),
+        }
     }
     pub fn summary(&self) -> RunSummary {
         RunSummary {
             id: self.id.clone(),
             created: self.created,
             note: self.note.clone(),
+            schema: self.schema.clone(),
+            fidelity: self.fidelity_label(),
+            edited_while_running: self.edited_while_running(),
             revision: self.document.revision,
             content_hash: self.content_hash.clone(),
             duration: self.duration,
@@ -77,7 +135,8 @@ impl RunRecord {
     }
 }
 
-/// Run headlessly through the shared session and keep the record.
+/// Run headlessly through the shared session and keep the record (as a
+/// detailed run; use [`RunRecord::with_provenance`] when `document` is a profile).
 pub fn record(document: &SystemDocument, registry: &BehaviorRegistry, duration: f64, config: SessionConfig, select: &[String], note: &str) -> Result<RunRecord, String> {
     let series = system_builder::simulate(document, registry, duration, config.clone(), select)?;
     Ok(RunRecord::new(document, config, duration, series, note))
@@ -97,10 +156,17 @@ pub fn save(dir: &Path, record: &RunRecord) -> Result<PathBuf, String> {
 
 pub fn load(path: &Path) -> Result<RunRecord, String> {
     let record: RunRecord = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-    if record.schema != SCHEMA {
-        return Err(format!("{} is not a {SCHEMA} record", path.display()));
-    }
+    check_schema(&record).map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(record)
+}
+
+/// sim.run/2 must carry its provenance; sim.run/1 had none.
+fn check_schema(record: &RunRecord) -> Result<(), String> {
+    match record.schema.as_str() {
+        SCHEMA if record.fidelity.is_none() || record.edited_while_running.is_none() => Err(format!("{SCHEMA} record lacks fidelity or edited_while_running")),
+        SCHEMA | SCHEMA_V1 => Ok(()),
+        other => Err(format!("schema {other} is not {SCHEMA} or {SCHEMA_V1}")),
+    }
 }
 
 /// Saved runs, newest first.
@@ -112,14 +178,15 @@ pub fn list(dir: &Path) -> Vec<(PathBuf, RunSummary)> {
     out
 }
 
-/// Note appended to a run whose document was edited while it was recording.
-/// Its record then holds the final document, not the one every sample came from.
+/// Note appended to a run whose document was edited while it was recording,
+/// for people reading it. sim.run/1 records are only flagged by this text;
+/// sim.run/2 records carry `edited_while_running` and ignore the note.
 pub const EDITED_WHILE_RUNNING: &str = "edited while running";
 
 impl RunRecord {
     /// The document changed mid-run, so no single document produced the series.
     pub fn edited_while_running(&self) -> bool {
-        self.note.contains(EDITED_WHILE_RUNNING)
+        self.edited_while_running.unwrap_or_else(|| self.schema == SCHEMA_V1 && self.note.contains(EDITED_WHILE_RUNNING))
     }
 }
 
@@ -196,7 +263,7 @@ pub fn compare(records: &[RunRecord], metrics: &[sim_system::Metric]) -> crate::
         variants: records
             .iter()
             .map(|r| crate::system_study::VariantResult {
-                label: format!("{} · rev {}{}", r.id, r.document.revision, if r.note.is_empty() { String::new() } else { format!(" · {}", r.note) }),
+                label: format!("{} · rev {} · {}{}", r.id, r.document.revision, r.fidelity_label(), if r.note.is_empty() { String::new() } else { format!(" · {}", r.note) }),
                 value: None,
                 metrics: metrics.iter().map(|m| (m.label.clone(), r.series.iter().find(|s| s.label == m.observable).and_then(|s| crate::system_study::reduce(s, m)).unwrap_or(f64::NAN))).collect(),
                 series: r.series.clone(),
@@ -236,5 +303,48 @@ mod tests {
         let off = [series("drum.speed", &[0.1, 0.2, 0.3], &[1., 2., 5.])];
         assert_eq!(compare_series(&recorded, &off).unwrap().max_rel_diff, 0.25);
         assert!(compare_series(&recorded, &[]).unwrap_err().contains("replay lacks drum.speed"));
+    }
+
+    #[test]
+    fn provenance_is_structural_in_v2_and_inferred_only_for_v1() {
+        let dir = std::env::temp_dir().join(format!("run-history-schema-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let doc = SystemDocument::new("t");
+        let s = vec![series("x", &[0.1], &[1.])];
+        // v2 round trip keeps the structured fields.
+        let rt = RunRecord::new(&doc, system_builder::default_config(), 0.1, s.clone(), "rt").with_provenance(Fidelity::Realtime, true);
+        let loaded = load(&save(&dir, &rt).unwrap()).unwrap();
+        assert_eq!((loaded.schema.as_str(), loaded.fidelity, loaded.edited_while_running()), (SCHEMA, Some(Fidelity::Realtime), true));
+        assert_eq!(loaded.summary().fidelity, "realtime");
+        // Under v2 the note text never sets the flag.
+        let noted = RunRecord::new(&doc, system_builder::default_config(), 0.1, s, &format!("user wrote: {EDITED_WHILE_RUNNING}"));
+        let loaded = load(&save(&dir, &noted).unwrap()).unwrap();
+        assert!(!loaded.edited_while_running());
+        assert_eq!(loaded.summary().fidelity, "detailed");
+        // A v1 file (no provenance fields) still loads; its flag comes from the note
+        // and its fidelity is stated as not recorded.
+        for (note, edited) in [(EDITED_WHILE_RUNNING, true), ("clean", false)] {
+            let mut v = serde_json::to_value(&noted).unwrap();
+            let o = v.as_object_mut().unwrap();
+            o.remove("fidelity");
+            o.remove("edited_while_running");
+            o.insert("schema".into(), SCHEMA_V1.into());
+            o.insert("note".into(), note.into());
+            let path = dir.join(format!("v1-{edited}.json"));
+            std::fs::write(&path, serde_json::to_vec(&v).unwrap()).unwrap();
+            let old = load(&path).unwrap();
+            assert_eq!((old.schema.as_str(), old.fidelity, old.edited_while_running()), (SCHEMA_V1, None, edited));
+            assert!(old.summary().fidelity.contains("not recorded"), "{}", old.summary().fidelity);
+        }
+        assert_eq!(list(&dir).len(), 4);
+        // v2 without provenance, or an unknown schema, is refused.
+        let mut v = serde_json::to_value(&noted).unwrap();
+        v.as_object_mut().unwrap().remove("fidelity");
+        std::fs::write(dir.join("bad.json"), serde_json::to_vec(&v).unwrap()).unwrap();
+        assert!(load(&dir.join("bad.json")).unwrap_err().contains("lacks fidelity"));
+        v["schema"] = "sim.run/9".into();
+        std::fs::write(dir.join("bad.json"), serde_json::to_vec(&v).unwrap()).unwrap();
+        assert!(load(&dir.join("bad.json")).is_err());
+        std::fs::remove_dir_all(&dir).ok();
     }
 }

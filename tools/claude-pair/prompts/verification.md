@@ -1,6 +1,6 @@
 VERIFICATION PASS, scheduled by the coordinator every {every} commits and before an epic is completed.
 
-The {count} commits since the last pass ({since}..{head}) were written without builds or tests. This turn is the exception to the 10-second rule: build, find what's broken, and fix it. No time limit applies to the commands below. Add no features.
+The {count} commits since the last pass ({since}..{head}) were written without builds or tests. This turn is the exception to the 10-second rule: build, find what's broken, and fix it. Shell commands have no 10-second cap in this pass, and background commands work again. Add no features.
 
 1. **Build.** Run `cargo check --workspace --all-targets` once; it compiles everything, including tests, without code generation. Then `cargo build` the binaries these commits touched (usually `-p sim-spatial`, sometimes `-p sim-app`). Run long builds in the background and read the full error output.
 2. **Fix every compile error and every new warning** these commits introduced. Rerun only the builds that failed.

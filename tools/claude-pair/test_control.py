@@ -578,6 +578,26 @@ class VerificationPassTests(unittest.TestCase):
             self.assertEqual(receipts["echo quick"]["exit_code"], 0, "a timeout does not stop the other checks")
             pair.guard_plan(fixtures.plan(review="accept"), {"plan": p, "report": fixtures.REPORT, "receipts": runner.state["receipts"]}, {})
 
+    def test_shell_commands_are_capped_except_in_verification_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            envs = []
+
+            def process(argv, prefix, stdin=None, cwd=None, env=None):
+                envs.append(env or {})
+                out = prefix.with_suffix(".stdout")
+                sid = argv[argv.index("--session-id") + 1] if "--session-id" in argv else argv[argv.index("--resume") + 1]
+                pair.write_json(out, {"session_id": sid, "total_cost_usd": .1, "subtype": "success",
+                                      "structured_output": copy.deepcopy(fixtures.REPORT)})
+                return 0, out, prefix.with_suffix(".stderr")
+            with patch.object(runner, "process", process):
+                runner.call("worker", "task", scope="a:1")
+                runner.state["verification"] = {"queued_plan": fixtures.plan()}
+                runner.call("worker", "pass", scope="a:2")
+            self.assertEqual(envs[0].get("BASH_MAX_TIMEOUT_MS"), "10000")
+            self.assertEqual(envs[0].get("CLAUDE_CODE_DISABLE_BACKGROUND_TASKS"), "1")
+            self.assertNotIn("BASH_MAX_TIMEOUT_MS", envs[1], "verification passes are uncapped")
+
     def test_agents_have_within_on_their_path(self):
         with tempfile.TemporaryDirectory() as tmp:
             runner = ControlTests().runner(tmp)

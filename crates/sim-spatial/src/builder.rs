@@ -492,8 +492,6 @@ impl Builder {
     pub(crate) fn registry(&self) -> &BehaviorRegistry {
         &self.registry
     }
-    /// Stop any interactive run and leave no pending input or drag, before a
-    /// lesson takes over the view (the lesson plays its own recorded runs).
     /// Leaving Build and Lessons for another mode: the builder stays in the
     /// window, paused (no physics runs unseen). On return its chrome is
     /// rebuilt and its scene recompiled and respawned (parts, nets and the
@@ -507,6 +505,8 @@ impl Builder {
         self.scene_dirty = true;
     }
 
+    /// Stop any interactive run and leave no pending input or drag, before a
+    /// lesson takes over the view (the lesson plays its own recorded runs).
     pub(crate) fn stop_for_learn(&mut self) {
         self.run = None;
         self.input = None;

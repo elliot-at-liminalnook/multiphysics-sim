@@ -632,9 +632,16 @@ fn leave_place(world: &mut World) {
     }
 }
 
-/// OnEnter(Lessons): the lesson screen is shown (its own bookkeeping).
-fn show_lessons(learn: Option<ResMut<Learn>>) {
+/// OnEnter(Lessons): the lesson screen is shown (its own bookkeeping), and
+/// the builder under it is stopped as the builder's Lessons button always
+/// did (`Builder::stop_for_learn`): whichever entry point switched, no
+/// builder draft keeps reading keys and no builder run or drag stays live
+/// under the lesson screen.
+fn show_lessons(learn: Option<ResMut<Learn>>, builder: Option<ResMut<Builder>>) {
     if let Some(mut learn) = learn {
+        if let Some(mut builder) = builder {
+            builder.stop_for_learn();
+        }
         learn.show(true);
     }
 }

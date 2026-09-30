@@ -178,7 +178,7 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   stale, node/net/unrouted counts, layout_ms, ui_build_ms and per-node
   highlight. The layout is never written to the system file. `--schematic`
   still spawns sim-viewer unchanged.
-- **Verified (T8.2, `$PAIR_CAPTURES/T8-schematic/`, `capture.json` ok, 21
+- **Verified (T8.2, `$PAIR_CAPTURES/T8-schematic/`, `capture.json` ok, 22
   assertions):** driven through REST `system_ui` activations (the same
   handlers as a click, not pointer gestures) on copies of motor-driver-board
   and worm-drive:
@@ -197,6 +197,16 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     intermediate state of the open was not caught by polling (it completes
     within one poll). The recorded invariant is that no poll ever showed the
     board layout as current for the winch.
+  - A scene-neutral edit (the same value again, revision 2→3) leaves
+    `display::scene_hash` unchanged, so it triggers no compile. Before commit 8ce86fdb, the pane
+    stayed "Stale… waiting for the compile" indefinitely
+    (`noop-edit-stale.png`, kept as history). `Builder::reload` now carries the
+    schematic's compiled source to the new revision when no compile is
+    queued or running (`Schematic::advance_revision`), and the keyed worker
+    lays it out again. The capture asserts stale=false and pending=false at
+    revision 3 within 3 s (it was current at the first poll, 77 ms), shown in
+    `noop-edit-current.png`. The stale→current step itself is covered by the
+    lib test `schematic_lays_out_levels_shares_selection_and_goes_stale_on_edit`.
   - The edited copy differs from the example only in the edited value,
     `revision` and the store's existing `display_id` stamps: no layout keys.
   - Timing: board layout 14.6 ms on the worker, pane UI build 0.1 ms; winch
@@ -208,12 +218,6 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     schematic, and the pane has no pan or zoom (it fits the level).
   - At nested levels, nets that cross the subsystem boundary are dropped.
     Subsystem and long labels clip inside fixed boxes.
-  - Known bug, reported and not fixed in T8.2: an edit that bumps the
-    revision without changing `display::scene_hash` (a same-value parameter
-    edit, discussions, grid or icon) does not recompile. The pane then stays
-    "Stale… waiting for the compile" indefinitely (`noop-edit-stale.png`).
-    It is labelled stale, never shown as current, but it does not recover
-    until the next compiling edit.
   - sim-viewer (`sim-spatial --schematic`) is still needed for layout
     editing, plots and the `--experiments` review.
 - **Source owner:** Rust runtime (description and identities); display layout

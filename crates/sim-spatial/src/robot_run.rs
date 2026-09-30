@@ -389,34 +389,43 @@ pub struct RunController {
 impl RunController {
     /// Spawns the (idle) run thread with its own clone of the loaded model.
     pub fn spawn(model: PhysicalModel) -> Self {
-        Self::spawn_source(Source::Robot(model.clone()), model, None)
+        Self::spawn_source(Source::Robot(model.clone()), model, None, 0)
+    }
+    /// A fresh run context for a reloaded file (`robot_source`): the same idle
+    /// run thread as [`Self::spawn`], starting at `generation` so it continues
+    /// strictly after the replaced controller's and no older frame is accepted.
+    /// FILE mode never records or replays, so this generation is never stored.
+    pub fn spawn_at(model: PhysicalModel, generation: u64) -> Self {
+        Self::spawn_source(Source::Robot(model.clone()), model, None, generation)
     }
     /// Spawns the (idle) run thread for a preset; `scene.robot` is the model
     /// the links and inspector show. Nothing is built until Run or Step.
     pub fn spawn_preset(run: Arc<PresetRun>) -> Self {
         let model = run.scene.robot.clone();
         let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
-        let mut c = Self::spawn_source(Source::Preset(run.clone()), model, Some(run.clone()));
+        let mut c = Self::spawn_source(Source::Preset(run.clone()), model, Some(run.clone()), 0);
         c.gait = Some(GaitPreview::spawn(run, links));
         c.refresh_recordings();
         c
     }
-    fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>) -> Self {
+    fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>, generation: u64) -> Self {
         let (tx, rx) = mpsc::channel();
-        let status = Status { phase: Phase::Idle, generation: 0, rtf: None, error: None, end: None };
+        let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
         let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None, listing: None }));
         let out = shared.clone();
         let chunk_s = source.chunk_s();
         let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
         std::thread::Builder::new()
             .name("robot-run".into())
-            .spawn(move || worker(source, links, rx, out))
+            .spawn(move || worker(source, links, rx, out, generation))
             .expect("spawn robot run thread");
-        Self { tx, shared, generation: 0, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, chunk_s,
+        let mut graphs = robot_graphs::History::default();
+        graphs.clear(generation);
+        Self { tx, shared, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, chunk_s,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
-            replay: ReplayState::new(0, 0, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
-            graphs: robot_graphs::History::default(), chassis: robot_graphs::chassis(&model), model, gait: None }
+            replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
+            graphs, chassis: robot_graphs::chassis(&model), model, gait: None }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -899,6 +908,21 @@ impl RunController {
     pub fn generation(&self) -> u64 {
         self.generation
     }
+    /// The fresh run context for a reloaded file: `previous` (if any) is
+    /// dropped, which closes its channel and stops its run thread with any
+    /// run, jog or replay state; the new idle controller starts at the next
+    /// generation. Returns it and whether run or jog state was discarded.
+    pub fn replace(previous: Option<RunController>, model: PhysicalModel) -> (Self, bool) {
+        let reset = previous.as_ref().is_some_and(Self::has_run_state);
+        let generation = previous.as_ref().map_or(0, |r| r.generation + 1);
+        drop(previous);
+        (Self::spawn_at(model, generation), reset)
+    }
+    /// Whether discarding this controller loses run or jog state: anything
+    /// built, running, failed or ended, or a jog requested this generation.
+    pub fn has_run_state(&self) -> bool {
+        self.running || self.frame.is_some() || !self.jogged.is_empty() || self.status.phase != Phase::Idle
+    }
     pub fn phase(&self) -> Phase {
         self.status.phase
     }
@@ -1353,11 +1377,11 @@ fn apply_jog(robot: &sim_runtime::physical::PhysicalRobot, joint: &str, target: 
 }
 
 /// The run thread. The simulation is built and advanced only here.
-fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Published>>) {
+fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: Arc<Mutex<Published>>, start_generation: u64) {
     let chunk_s = source.chunk_s();
     let mut registry = None;
     let mut sim: Option<Sim> = None;
-    let mut generation = 0;
+    let mut generation = start_generation;
     let mut steps = 0;
     let mut failed = false;
     let mut ended = false;

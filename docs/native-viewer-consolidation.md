@@ -64,17 +64,66 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 - **Reusable layer:** `sim_system::{document, commands, store, resolve, flatten, library, snap}`;
   `sim_runtime::system_builder::compile`.
 - **Shell status:** *partial*. Editing, levels, group/swap, undo/redo and
-  snapping are present. Gap: the file is fixed at launch. There is no in-app
-  open, recent-file or new-system action, and no REST `system_open`. Switching
-  systems means relaunching.
+  snapping are present. **Opening another system in the same window is present**
+  (commit 6dab907a, verified natively in T3.2). New-system creation and recent
+  files are absent.
+- **Open path (one function):** `Builder::open_system(path)`
+  (`crates/sim-spatial/src/builder/open.rs`) is called by three surfaces:
+  - the build-mode **Systems** sidebar tab. It has a path field (Enter opens)
+    and a list of `*.system.json` files found under `examples/systems-builder`,
+    the library, and the current file's folder;
+  - `system_ui`: the tab `{"tab":"systems"}`, the rows `{"open_system": "<abs path>"}`,
+    the path field `"open_system_path"` (then `input … submit: true`) and
+    `"cancel_open"`;
+  - REST `system_open {"path"}`, listed in `/v1/capabilities` with an example.
+    It returns a pending job; poll it.
+
+  The file is loaded, validated and compiled on a worker thread. The measured
+  load plus compile time was 0.043 s for the winch and 0.074 s for the board
+  (debug build). `Builder::finish_open` is the only place the builder is
+  replaced. The document, path, runs (`<name>.runs/`), replay, study, graphs,
+  selection and level all come from the new file. It also swaps the 3D scene,
+  retargets annotations to `<new>.annotations.json` and rebuilds the model
+  catalog. `system_state.open` reports `pending`, `last` (path, title, revision,
+  runs, annotations, notes, load_seconds, or the error), the discovered
+  `systems`, the `annotations` sidecar and the `schematic` link.
+- **Guards** are checked when the open is requested and again just before the
+  new system is installed:
+
+  | In progress | Handling |
+  |---|---|
+  | Text-field or discussion draft, comment edit | Refused: "Not opening X: a text field draft is open ("open_system"): submit or cancel it. Y stays open." |
+  | Placement drag | Refused, naming the drag |
+  | Running study | Refused, naming the study and its progress |
+  | Running replay | Refused, naming the run id |
+  | Codex answering a discussion | Refused |
+  | Live run | Stopped and saved to the **old** file's `.runs/` with the note "stopped to open another system". The status line and `open.last.notes` name the saved file. A run under 0.1 s is not kept, and the note says so. If the save fails, the open is refused. |
+  | `--schematic` window | Detached, not retargeted. The note says it still shows the old file. |
+
+  A missing file is refused at once ("Could not open P: no such file."). A file
+  that fails to load, validate or compile is an error on the worker that names
+  the path, and the current system stays open and unchanged. The open itself
+  writes no runs or annotations. An explicit `--annotations FILE` stays with
+  the launch file; other systems use their own sidecar, and reopening the
+  launch file restores it.
+- **Remaining limits:**
+  - There is no OS file picker (only the path field plus the discovered list),
+    no recent files and no new-system action.
+  - The `--schematic` sim-viewer window is not retargeted.
+  - A file that does not compile cannot be opened in-app (as at launch).
+  - Opening a file creates its hidden `.<file>.agents/` Codex lock dir, as a
+    launch does.
+  - Lesson mode keeps its own sandbox flow.
+  - The native proof activates controls through REST `system_ui`, not pointer
+    gestures.
 - **Source owner:** system file `*.system.json` (`sim.system/1`); topology
   lives in examples/library.
-- **Dependencies:** `Builder::open` has to be callable at runtime. Dirty-state
-  and draft preservation (discussion drafts, placement) must hold across a switch.
-- **Acceptance evidence:** launch with the board, then `system_ui` activates an
-  Open control (or REST `system_open` with the winch path). `system_state` shows
-  the new path and revision, and screenshots are taken before and after. An
-  unsaved draft is either kept or refused with a message.
+- **Verified evidence (T3.2):** `.claude-pair/captures/T3-open-system/`
+  (`drive_open.py`, `capture.json` with ok=true). The run launched on a board
+  copy, opened the winch copy through the system_ui Systems row, and got the
+  REST missing-path error with the winch kept. A path-field draft refused the
+  switch, as the screen shows. A 0.57 s live winch run was saved to
+  `work/winch.runs/` while the board reopened with its own empty runs list.
 
 ### b. CAD/geometry and physical properties
 - **Entry today:** RoboCAD (`cad/run.sh`; REST `cad/robocad/api.py`, port 8420
@@ -422,7 +471,9 @@ Today (build mode, the shell):
 ```
 cargo run -p sim-spatial -- --system examples/systems-builder/motor-driver-board/board.system.json
 ```
-Other modes today are `--lessons lessons`, `--place DIR`, and `--description/--spatial`.
+Once it is running, open another system from the **Systems** sidebar tab (a
+discovered row, or a path in the field and Enter), or send REST
+`system_open {"path": …}`. There is no relaunch. Other modes today are `--lessons lessons`, `--place DIR`, and `--description/--spatial`.
 Separate apps are still needed for the schematic and experiments (`sim-viewer`),
 simrobot and phenomena (`sim-app`), CAD (`cad/run.sh`), and walking and
 calibration (browser, `web/README.md`).

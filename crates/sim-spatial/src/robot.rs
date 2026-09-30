@@ -27,7 +27,7 @@ use sim_domain_robot::cad_link::{self, CadLinkStatus};
 use crate::robot_preset::{Preset, PresetRun};
 use crate::robot_motion::{self, KEYS};
 use crate::robot_recording;
-use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, RunAction, RunController};
+use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, ReplayPhase, RunAction, RunController};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
 
@@ -271,7 +271,8 @@ impl RobotView {
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()),
+            "recordings": self.run.as_ref().map(|r| r.recordings_json()), "replay": self.run.as_ref().map(|r| r.replay_json()), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -329,6 +330,13 @@ enum RobotAction {
     /// Save the preset run's shared recording (the Save recording button,
     /// `system_ui` recording:save, REST `robot_save_recording`).
     SaveRecording { path: Option<String>, note: Option<String> },
+    /// Replay a saved recording through the shared prepare_replay (the inspector
+    /// Replay buttons, `system_ui` replay:<file>, REST `robot_replay`).
+    Replay { file: Option<String>, path: Option<String> },
+    /// Cancel the replay between chunks (Cancel button, `system_ui` replay:cancel, REST `robot_replay {action: cancel}`).
+    CancelReplay,
+    /// List the preset's saved recordings again (off the UI thread).
+    RefreshRecordings,
 }
 /// The absolute target a jog action asks for (file validation happens in `check_jog`).
 fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
@@ -360,6 +368,8 @@ fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
         RobotAction::JogTo { joint, target } => view.run.as_ref().ok_or("the robot has not loaded")?.check_jog(joint, *target).map(|_| ()),
         RobotAction::Motion { request } => view.run.as_ref().ok_or("the robot has not loaded")?.check_motion_request(request),
         RobotAction::SaveRecording { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_save().map(|_| ()),
+        RobotAction::Replay { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_replay().map(|_| ()),
+        RobotAction::CancelReplay => view.run.as_ref().ok_or("the robot has not loaded")?.check_cancel(),
         _ => Ok(()),
     }
 }
@@ -375,6 +385,11 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
     check(view, &action)?;
     match action {
         RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } => unreachable!("handled above"),
+        RobotAction::Replay { file, path } => {
+            view.run.as_mut().ok_or("the robot has not loaded")?.replay(file.as_deref(), path.as_deref())?;
+        }
+        RobotAction::CancelReplay => view.run.as_mut().ok_or("the robot has not loaded")?.cancel_replay()?,
+        RobotAction::RefreshRecordings => view.run.as_mut().ok_or("the robot has not loaded")?.refresh_recordings(),
         RobotAction::Run { action } => {
             view.run.as_mut().ok_or("the robot has not loaded")?.act(action)?;
             if action == RunAction::Reset {
@@ -430,6 +445,13 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
                 out.push((id.into(), label.into(), RobotAction::Motion { request }));
             }
             out.push(("recording:save".into(), "Save recording".into(), RobotAction::SaveRecording { path: None, note: None }));
+            if let Some(r) = view.run.as_ref() {
+                for l in r.recordings() {
+                    out.push((format!("replay:{}", l.file), format!("Replay {}", l.file), RobotAction::Replay { file: Some(l.file.clone()), path: None }));
+                }
+            }
+            out.push(("replay:cancel".into(), "Cancel replay".into(), RobotAction::CancelReplay));
+            out.push(("replay:refresh".into(), "Refresh recordings".into(), RobotAction::RefreshRecordings));
         }
     }
     out
@@ -463,6 +485,7 @@ enum Request {
     RobotPreset { id: String },
     RobotInput { channels: Option<std::collections::BTreeMap<String, f64>>, key: Option<String> },
     RobotSaveRecording { path: Option<String>, note: Option<String> },
+    RobotReplay { file: Option<String>, path: Option<String>, action: Option<String> },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -515,6 +538,16 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
             dispatch(view, orbit, RobotAction::Motion { request })?;
         }
         Request::RobotSaveRecording { path, note } => dispatch(view, orbit, RobotAction::SaveRecording { path, note })?,
+        Request::RobotReplay { file, path, action } => {
+            let action = match (action.as_deref(), file.is_some() || path.is_some()) {
+                (None | Some("start"), _) => RobotAction::Replay { file, path },
+                (Some("cancel"), false) => RobotAction::CancelReplay,
+                (Some("list"), false) => RobotAction::RefreshRecordings,
+                (Some(a @ ("cancel" | "list")), true) => return Err(format!("robot_replay action `{a}` takes no file or path")),
+                (Some(a), _) => return Err(format!("unknown robot_replay action `{a}`; valid actions: start (default, with file or path), cancel, list")),
+            };
+            dispatch(view, orbit, action)?;
+        }
         Request::Camera { focus, radius, yaw, pitch } => {
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
                 return Err("finite camera required; radius > 0 and pitch within ±1.5 radians".into());
@@ -541,6 +574,7 @@ fn capabilities() -> Vec<Value> {
         c("robot_preset", json!({"id":"robot-measured-400hz"}), "Open a declared embedded preset by id in this window (replacing the current robot and stopping its run thread). Unknown ids, other modes and missing inputs are refused naming the id. The scene, config and task are parsed exactly as declared on a worker thread; scene.robot is drawn and inspected through the same loader as --robot FILE. Run/Pause/Step/Reset (robot_run) then drive the shared EmbeddedEnvironment (task) or EmbeddedSession (no task) on the run thread with seed 0 (recorded), one action interval or clamp(report_every, 1, 40) nominal steps per chunk. robot_state.preset reports id, label, paths, readiness and evidence verbatim, seed, step_s, chunk and step counts; run.phase `ended` with run.end reports a reached horizon or a terminated/truncated episode. Servo-target jog is not offered for presets."),
         c("robot_input", json!({"channels":{"command.forward_speed":0.001}}), &format!("Motion request for a running robot preset: {}. Give channels (values by motion channel name; the other motion channels keep their requested values) or key (w | a | s | d latches that key's request until stop, another key or a channel request; stop sets every motion channel to 0). The same handler as physical W/A/S/D (press/release) and X (stop), the W/A/S/D/Stop buttons and system_ui motion:w|a|s|d|stop. Motion channels come from the session's policy_contract.step_reference.config, else the preset's presets.json motion_commands (as web/viewer/motion-commands.mjs); key vectors from motion_key_vectors, else the channel bounds. Refused naming the channel and its bounds: an unknown channel, a session input that is not a motion channel, a non-finite value, or a value or summed key vector outside the channel's bounds ({}). Also refused, naming the reason: --robot FILE, a preset with no motion config, no built session (Run or Step builds it), a failed or ended run, an exhausted heartbeat. A declared motion_heartbeat is {} robot_state.motion reports source, channels with bounds, requested and held values, active keys, heartbeat, last refusal and the label.", robot_motion::LABEL, robot_motion::CLAMP_RULE, robot_motion::HEARTBEAT_RULE)),
         c("robot_save_recording", json!({"note":"after motion:w"}), &format!("Save the loaded preset run's recording: the same handler as the Save recording button and system_ui recording:save. The run thread snapshots the shared recording (EmbeddedEnvironment::episode_recording() for a preset with a task, EmbeddedSession::recording() without, as the browser's Download) in any phase with a built session, running, paused, ended or failed; a writer thread writes it, so the response returns at once with recording.pending set and robot_state.recording.last_saved {{path, meta_path, kind, version, completed_steps, replayable, not_replayable_reason, failure, saved_utc, bytes}} (or recording.error) once written. Optional path (relative to the root or absolute) and note (kept in the sidecar). {} {} {} Refused, naming the reason: --robot FILE, no built session (Run or Step first), a save still being written, a path under examples/, cad/ or web/, a name not ending in .json or ending in .meta.json, and an existing file (reported in recording.error).", robot_recording::LOCATION_RULE, robot_recording::FILE_RULE, robot_recording::REPLAYABLE_RULE)),
+        c("robot_replay", json!({"file":"20260930T060822.729Z.json"}), &format!("Replay a saved recording of the loaded preset: the same handler as the inspector Replay buttons and system_ui replay:<file>. Give file (a bare name listed in robot_state.recordings.files, in runs/robot-presets/<preset-id>/) or path (any readable recording .json, relative to the root or absolute; reading is not restricted). {{\"action\":\"cancel\"}} stops the replay between chunks (system_ui replay:cancel); {{\"action\":\"list\"}} lists the recordings again off the UI thread (system_ui replay:refresh). {} {} {} {} robot_state.replay reports path, phase (idle | replaying | cancelled | done | failed), completed/total with unit, completed_steps and recorded_completed_steps, verdict, error, measured, replaced and sidecar. Refused, naming the reason: --robot FILE, a replay already in progress, a running run (Pause first), a building session, a missing or non-.json file, a recording of the other kind, a runtime mismatch (the runtime's message) and a session identity mismatch (the viewer's labelled check).", robot_recording::REPLAY_RULE, robot_recording::VERDICT_RULE, robot_recording::IDENTITY_RULE, robot_recording::MEASURED_RULE)),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
@@ -592,6 +626,13 @@ struct MotionText;
 struct MotionButton;
 #[derive(Component)]
 struct RecordingText;
+#[derive(Component)]
+struct ReplayText;
+/// The Replay buttons (one per recent saved recording), rebuilt when the list changes.
+#[derive(Component)]
+struct ReplayList;
+/// Replay buttons shown in the inspector (the rest are in system_ui and REST).
+const REPLAY_BUTTONS: usize = 5;
 #[derive(Resource)]
 struct Materials {
     normal: Handle<StandardMaterial>,
@@ -1032,7 +1073,12 @@ fn panels(
             let error = format!("{error}{ended}");
             let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {}", clip(m, 60)));
             let phase = serde_json::to_value(r.phase()).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
-            format!("{phase} · {time}{rtf} · gen {} · {} s chunks{error}{refused}", r.generation(), r.chunk_s())
+            let replay = r.replay_state();
+            let replay = match replay.phase {
+                ReplayPhase::Idle => String::new(),
+                phase => format!(" · replay {} {}/{}", format!("{phase:?}").to_lowercase(), replay.completed, replay.total.map_or("?".into(), |t| t.to_string())),
+            };
+            format!("{phase} · {time}{rtf} · gen {} · {} s chunks{replay}{error}{refused}", r.generation(), r.chunk_s())
         }
     };
     if run_text.0 != run_line {
@@ -1106,6 +1152,19 @@ fn preset_text(view: &RobotView) -> String {
             t += &format!("last save error: {e}\n");
         }
         t += &format!("{}\n\n", robot_recording::LOCATION_RULE);
+        let s = r.replay_state();
+        t += "REPLAY — the shared prepare_replay on the run thread; the verdict is the runtime's\n";
+        t += &format!("{} saved recording(s) for this preset\n", r.recordings().len());
+        if s.phase != ReplayPhase::Idle {
+            t += &format!("{}\n", replay_line(r));
+            if let Some(v) = &s.verdict {
+                t += &format!("full verdict: {v}\n");
+            }
+            if let Some(e) = &s.error {
+                t += &format!("full error: {e}\n");
+            }
+        }
+        t += &format!("{}\n\n", robot_recording::VERDICT_RULE);
     }
     t
 }
@@ -1198,9 +1257,12 @@ fn motion_panel(
     fonts: Res<UiFonts>,
     root: Single<Entity, With<MotionRoot>>,
     mut shown: Local<bool>,
-    mut text: Query<(&mut Text, Has<RecordingText>), Or<(With<MotionText>, With<RecordingText>)>>,
+    mut listed: Local<Option<Vec<String>>>,
+    replay_list: Query<Entity, With<ReplayList>>,
+    mut text: Query<(&mut Text, Has<RecordingText>, Has<ReplayText>), Or<(With<MotionText>, With<RecordingText>, With<ReplayText>)>>,
     mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<MotionButton>>,
 ) {
+    let button = |commands: &mut Commands, action: RobotAction, text: &str| commands.spawn((Button, MotionButton, action, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
     if view.preset.is_some() && !*shown {
         let header = commands.spawn(label(&fonts, &format!("Motion — {}", robot_motion::LABEL), 11.5, MUTED)).id();
         let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }).id();
@@ -1214,12 +1276,43 @@ fn motion_panel(
         let save = commands.spawn((Button, MotionButton, RobotAction::SaveRecording { path: None, note: None }, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, "Save recording", 12.0, INK)])).id();
         let saved = commands.spawn((label(&fonts, "", 11.5, INK), RecordingText, Node { flex_shrink: 1.0, ..default() })).id();
         commands.entity(save_row).add_children(&[save, saved]);
-        commands.entity(*root).add_children(&[header, row, line, save_row]);
+        // Replay: the same RobotAction::Replay / CancelReplay as system_ui replay:<file> / replay:cancel and REST robot_replay.
+        let replay_header = commands.spawn(label(&fonts, "Replay — re-executed through the shared prepare_replay on the run thread", 11.5, MUTED)).id();
+        let list = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }, ReplayList)).id();
+        let replay_row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
+        let cancel = button(&mut commands, RobotAction::CancelReplay, "Cancel replay");
+        let refresh = button(&mut commands, RobotAction::RefreshRecordings, "Refresh list");
+        let replay_line = commands.spawn((label(&fonts, "", 11.5, INK), ReplayText, Node { flex_shrink: 1.0, ..default() })).id();
+        commands.entity(replay_row).add_children(&[cancel, refresh]);
+        commands.entity(*root).add_children(&[header, row, line, save_row, replay_header, list, replay_row, replay_line]);
         *shown = true;
     }
+    if let (Some(r), Ok(list)) = (view.run.as_ref(), replay_list.single()) {
+        // The most recent recordings first; rebuilt only when the listed files change.
+        let files: Vec<String> = r.recordings().iter().rev().take(REPLAY_BUTTONS).map(|l| l.file.clone()).collect();
+        if listed.as_ref() != Some(&files) {
+            commands.entity(list).despawn_related::<Children>();
+            let mut rows = Vec::new();
+            for l in r.recordings().iter().rev().take(REPLAY_BUTTONS) {
+                let summary = l.meta.as_ref().map_or("no sidecar".to_string(), |m| format!("{} steps{}{}", m["completed_steps"], if m["replayable"] == false { " · diagnostic" } else { "" }, m["note"].as_str().map_or(String::new(), |n| format!(" · {}", clip(n, 30)))));
+                let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
+                let b = button(&mut commands, RobotAction::Replay { file: Some(l.file.clone()), path: None }, "Replay");
+                let t = commands.spawn(label(&fonts, &format!("{} · {summary}", l.file), 11.0, INK)).id();
+                commands.entity(row).add_children(&[b, t]);
+                rows.push(row);
+            }
+            let more = r.recordings().len().saturating_sub(REPLAY_BUTTONS);
+            let note = if r.recordings().is_empty() { "no saved recordings for this preset yet".to_string() } else if more > 0 { format!("{more} older in robot_state.recordings (system_ui replay:<file>, REST robot_replay)") } else { String::new() };
+            if !note.is_empty() {
+                rows.push(commands.spawn(label(&fonts, &note, 11.0, MUTED)).id());
+            }
+            commands.entity(list).add_children(&rows);
+            *listed = Some(files);
+        }
+    }
     if let Some(r) = view.run.as_ref() {
-        for (mut t, recording) in &mut text {
-            let line = if recording { recording_line(r) } else { motion_line(r) };
+        for (mut t, recording, replay) in &mut text {
+            let line = if replay { replay_line(r) } else if recording { recording_line(r) } else { motion_line(r) };
             if t.0 != line {
                 t.0 = line;
             }
@@ -1265,6 +1358,25 @@ fn recording_line(r: &RunController) -> String {
     };
     if let Some(e) = r.save_error() {
         t += &format!("\nsave refused/failed: {}", clip(e, 140));
+    }
+    t
+}
+
+/// The line under the replay controls: phase, progress, verdict and error, and the measured difference labelled as such.
+fn replay_line(r: &RunController) -> String {
+    let s = r.replay_state();
+    let mut t = match s.phase {
+        ReplayPhase::Idle => "no replay".to_string(),
+        phase => format!("{} {} · {}", format!("{phase:?}").to_lowercase(), s.path.as_ref().and_then(|p| p.file_name()).map_or(String::new(), |n| n.to_string_lossy().into_owned()), format_args!("{}/{} {}", s.completed, s.total.map_or("?".into(), |n| n.to_string()), s.unit.unwrap_or(""))),
+    };
+    if let Some(v) = &s.verdict {
+        t += &format!("\nverdict: {}", clip(v, 150));
+    }
+    if let Some(e) = &s.error {
+        t += &format!("\nerror: {}", clip(e, 150));
+    }
+    if let Some(m) = &s.measured {
+        t += &format!("\nmeasured difference, not a pass criterion: max |Δp| {:.3e} m ({}); {} {:.3e} m", m["max_position_diff_m"].as_f64().unwrap_or(f64::NAN), m["max_link"].as_str().unwrap_or(""), m["first_link"].as_str().unwrap_or(""), m["first_link_position_diff_m"].as_f64().unwrap_or(f64::NAN));
     }
     t
 }

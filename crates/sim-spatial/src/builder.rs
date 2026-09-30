@@ -34,6 +34,8 @@ pub enum Tab {
     Systems,
     /// Read-only accepted actuator registry and consumer staleness checks.
     Actuators,
+    /// Read-only gait-lab results browser (reports and journal times).
+    GaitLab,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -75,6 +77,8 @@ enum Purpose {
     ActuatorRegistry,
     /// Path of a consumer file to check against the registry.
     ActuatorConsumer,
+    /// Path of a gait-lab results folder to read (read-only).
+    GaitResults,
 }
 
 #[derive(Clone, Debug)]
@@ -219,6 +223,8 @@ pub struct Builder {
     open: open::OpenState,
     /// Read-only actuator registry inspector (Actuators tab).
     actuators: actuators::ActuatorState,
+    /// Read-only gait-lab results browser (Gait lab tab).
+    gait_lab: gait_lab::GaitLabState,
 }
 
 #[derive(Default)]
@@ -408,6 +414,7 @@ impl Builder {
             grab: None,
             open: Default::default(),
             actuators: Default::default(),
+            gait_lab: Default::default(),
         };
         builder.runs = sim_runtime::run_history::list(&sim_runtime::run_history::dir_for(&builder.store.path));
         builder.updates = builder.library_updates();
@@ -828,6 +835,8 @@ impl Builder {
             Purpose::ActuatorRegistry => self.actuators_request(Some(PathBuf::from(text)), None).map(|_| ()),
             Purpose::ActuatorConsumer if text.is_empty() => Err("Type the path of a file that embeds a robot model".into()),
             Purpose::ActuatorConsumer => self.actuators_request(None, Some(vec![PathBuf::from(text)])).map(|_| ()),
+            Purpose::GaitResults if text.is_empty() => Err("Type the path of a gait-lab results folder".into()),
+            Purpose::GaitResults => self.gait_reports_request(Some(PathBuf::from(text))).map(|_| ()),
             Purpose::Distance { id, first, second } => match text.parse::<f32>() {
                 Ok(d) => self.apply("Calibrate reference", vec![SystemCommand::CalibrateReference { at: self.level.clone(), id, first, second, distance: d }]).map(|_| ()),
                 Err(_) => Err("Enter the real distance between the two points in meters".into()),
@@ -1303,6 +1312,7 @@ impl Builder {
             "replay": self.replay_json(),
             "open": self.open_json(),
             "actuators": self.actuators_json(),
+            "gait_reports": self.gait_reports_json(),
             "history": self.store.history(),
         })
     }
@@ -1530,6 +1540,13 @@ enum BuildAction {
     /// Reload the registry and recheck the previous consumer files.
     ActuatorReload,
     CancelActuators,
+    /// Type a gait-lab results folder (Gait lab tab).
+    GaitResultsPath,
+    /// Reread the current results folder.
+    GaitReload,
+    CancelGaitReports,
+    /// Show this results entry (directory name) in detail.
+    GaitReportSelect(String),
 }
 
 pub struct BuilderPlugin;
@@ -1537,7 +1554,7 @@ impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, finish_actuators, rebuild_scene, sync_run, graphs::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
+            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, finish_actuators, finish_gait_reports, rebuild_scene, sync_run, graphs::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
         )
         .add_systems(Startup, ui::load_fonts)
         .add_systems(Update, placement::update.after(update_parts).run_if(building))
@@ -1579,6 +1596,13 @@ fn open_system(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mo
 fn finish_actuators(mut builder: ResMut<Builder>) {
     if builder.actuators.pending().is_some() {
         builder.finish_actuators();
+    }
+}
+
+/// Install a finished gait-lab results scan.
+fn finish_gait_reports(mut builder: ResMut<Builder>) {
+    if builder.gait_lab.pending().is_some() {
+        builder.finish_gait_reports();
     }
 }
 
@@ -1714,6 +1738,11 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
             // First visit: load the default registry (off the UI thread).
             if tab == Tab::Actuators && builder.actuators.shown.is_none() && builder.actuators.error.is_none() && builder.actuators.pending().is_none() {
                 let r = builder.actuators_request(None, None);
+                builder.report(r);
+            }
+            // First visit: read the default results folder (off the UI thread).
+            if tab == Tab::GaitLab && builder.gait_lab.shown.is_none() && builder.gait_lab.error.is_none() && builder.gait_lab.pending().is_none() {
+                let r = builder.gait_reports_request(None);
                 builder.report(r);
             }
             builder.tab = tab;
@@ -1854,6 +1883,21 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
         }
         BuildAction::CancelActuators => {
             builder.cancel_actuators();
+        }
+        BuildAction::GaitResultsPath => {
+            let shown = builder.gait_lab.root.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
+            builder.start_input(Purpose::GaitResults, shown);
+        }
+        BuildAction::GaitReload => {
+            let r = builder.gait_reports_request(None);
+            builder.report(r);
+        }
+        BuildAction::CancelGaitReports => {
+            builder.cancel_gait_reports();
+        }
+        BuildAction::GaitReportSelect(name) => {
+            let r = builder.select_gait_report(name);
+            builder.report(r);
         }
         BuildAction::ToggleRealtime => {
             builder.realtime = !builder.realtime;
@@ -2351,6 +2395,7 @@ pub(crate) mod discussion;
 pub(crate) mod ui;
 pub mod open;
 pub mod actuators;
+pub mod gait_lab;
 pub use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
 
 /// Grab and push: with a run going, Alt-drag on a part changes the load

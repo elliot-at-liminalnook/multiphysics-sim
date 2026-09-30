@@ -241,6 +241,8 @@ impl Builder {
         // pieces (scene, annotations, models) are retargeted here.
         next.open = OpenState { shell: Some(shell.clone()), job: None, seq: self.open.seq, last: None, systems };
         next.tab = self.tab;
+        // The registry is not per-system: its inspector (and any pending load) stays.
+        next.actuators = std::mem::take(&mut self.actuators);
         next.realtime = self.realtime && next.document.realtime.is_some();
         if let Ok(c) = &compiled.result {
             scene.replace(c.description.clone(), c.spatial.clone(), c.animation.clone());

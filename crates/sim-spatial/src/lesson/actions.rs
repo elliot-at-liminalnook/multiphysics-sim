@@ -230,6 +230,7 @@ fn handle(learn: &mut Learn, scene: &mut SpatialScene, mode: ViewerMode, switch:
             }
             frames::finish(learn).unwrap_or(Outcome::Pending)
         }
+        LessonCommand::LessonOpen { .. } | LessonCommand::LessonScreen { learn: true } if mode == ViewerMode::Build && call.cancelled => Outcome::Done(Err("cancelled".into())),
         LessonCommand::LessonOpen { slug } if mode == ViewerMode::Build => {
             // A lesson that does not load is refused before the window switches.
             let path = learn.entries.iter().find(|e| e.slug == *slug).map(|e| e.path.clone()).unwrap_or_else(|| learn.dir.join(slug).join("lesson.md"));

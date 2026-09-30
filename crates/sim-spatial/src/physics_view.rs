@@ -592,7 +592,8 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
             BackgroundColor(crate::view::BACKDROP.with_alpha(0.72)),
             GlobalZIndex(24),
             Pickable::IGNORE,
-            children![(k.text(text, 11., *color, 2), Pickable::IGNORE)],
+            // Word wrapping as before (the kit's text also breaks inside words).
+            children![({ let mut label = k.text(text, 11., *color, 2); label.3 = TextLayout::default(); label }, Pickable::IGNORE)],
         ));
     }
 }

@@ -692,11 +692,10 @@ pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene, fonts: &ui
         .spawn((k.dock(Dock::Left { top: TOP, bottom: BOTTOM, width: scene.left() }, parts_layout), PartsPanel, UiRoot))
         .with_children(|column| {
             column.spawn(k.section("Components"));
-            column.spawn(ui_kit::wrap()).with_children(|list| {
-                for (i, (id, label)) in scene.representatives().iter().enumerate() {
-                    list.spawn(action_button(&k, scene, &format!("{}  {}", i + 1, label), A::Display { action: SpatialCommand::Select { component: id.clone() } }));
-                }
-            });
+            // Full-width rows in the column, so long names wrap inside the panel.
+            for (i, (id, label)) in scene.representatives().iter().enumerate() {
+                column.spawn(action_button(&k, scene, &format!("{}  {}", i + 1, label), A::Display { action: SpatialCommand::Select { component: id.clone() } }));
+            }
             // A gap above the hint (layout only).
             column.spawn((k.caption("Select a part in the assembly or here.\n\nGold marks the selection.\nLive temperature colors retain their scale when selected."), Node { margin: UiRect::top(Val::Px(16.0)), ..default() }));
         });
@@ -712,12 +711,11 @@ pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene, fonts: &ui
                 // Readouts keep their height in the scrolling column (layout only).
                 column.spawn((k.text("", 13.0, TEXT, 0), animation::LiveReadouts, Node { flex_shrink: 0.0, ..default() }));
                 column.spawn(k.caption("Select a connection:"));
-                column.spawn(ui_kit::wrap()).with_children(|list| {
-                    for (i, id) in scene.description.nets.keys().enumerate() {
-                        let members = scene.description.nets[id].ports.iter().map(|p| scene.description.components[&scene.description.ports[p].component].label.as_str()).collect::<Vec<_>>().join(" / ");
-                        list.spawn(action_button(&k, scene, &format!("{} {}", i + 1, members), A::Select { target: SelectionTarget::net(id.clone()) }));
-                    }
-                });
+                // Full-width rows in the column, so long connection names wrap.
+                for (i, id) in scene.description.nets.keys().enumerate() {
+                    let members = scene.description.nets[id].ports.iter().map(|p| scene.description.components[&scene.description.ports[p].component].label.as_str()).collect::<Vec<_>>().join(" / ");
+                    column.spawn(action_button(&k, scene, &format!("{} {}", i + 1, members), A::Select { target: SelectionTarget::net(id.clone()) }));
+                }
                 column.spawn((k.text("", 14.0, TEXT, 0), Inspector, Node { flex_shrink: 0.0, ..default() }));
             });
         });

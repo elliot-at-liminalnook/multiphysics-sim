@@ -693,6 +693,7 @@ fn trial_row(body: &mut ChildSpawnerCommands, k: &Kit, t: &Trial, selected: bool
     body.spawn((
         Button,
         BuildAction::CalibrationTrial(t.id.clone()),
+        bevy::ui::prelude::AccessibleLabel::new(format!("Trial {}", t.id)),
         Tint::selectable(selected),
         Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_direction: FlexDirection::Column, padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), margin: UiRect::top(Val::Px(3.)), border: UiRect::left(Val::Px(if selected { 3. } else { 2. })), flex_shrink: 0., ..default() },
         BorderColor::all(if selected { ACCENT } else if held { HELD_OUT } else { Color::NONE }),

@@ -322,6 +322,7 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         body.spawn((
             Button,
             BuildAction::GaitReportSelect(e.name.clone()),
+            bevy::ui::prelude::AccessibleLabel::new(format!("Report {}", e.name)),
             Tint::selectable(selected),
             Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(8.), Val::Px(4.)), column_gap: Val::Px(8.), align_items: AlignItems::Center, border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
             BorderColor::all(if selected { ACCENT } else { Color::NONE }),

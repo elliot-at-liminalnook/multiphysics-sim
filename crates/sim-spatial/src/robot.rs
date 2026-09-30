@@ -868,8 +868,9 @@ fn panels(
         Some(r) => {
             let time = r.frame().map_or("t —".to_string(), |f| format!("t {:.2} s · {} chunks", f.time, f.steps));
             let rtf = r.rtf().map_or(String::new(), |x| format!(" · RTF {x:.2}"));
-            let error = r.error().map_or(String::new(), |e| format!(" · {e}"));
-            let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {m}"));
+            // The header has one line beside the subtitle: long messages are cut here and shown in full in the inspector.
+            let error = r.error().map_or(String::new(), |e| format!(" · {} (full error in the inspector)", clip(e, 40)));
+            let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {}", clip(m, 60)));
             let phase = serde_json::to_value(r.phase()).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
             format!("{phase} · {time}{rtf} · gen {} · {} s chunks{error}{refused}", r.generation(), crate::robot_run::CHUNK_S)
         }
@@ -899,9 +900,17 @@ fn panels(
             Section::Source => source_text(&view, m),
         },
     };
+    let failure = view.run.as_ref().and_then(|r| r.error().map(|e| format!("RUN FAILED: {e}\n\n")));
+    let refused = view.run_message.as_ref().map(|m| format!("Refused: {m}\n\n"));
+    let body = format!("{}{}{body}", failure.unwrap_or_default(), refused.unwrap_or_default());
     if inspector.0 != body {
         inspector.0 = body;
     }
+}
+
+/// `s` cut to at most `n` characters, marked with an ellipsis when cut.
+fn clip(s: &str, n: usize) -> String {
+    if s.chars().count() <= n { s.to_string() } else { format!("{}…", s.chars().take(n).collect::<String>()) }
 }
 
 /// Jog rows for the joints touching the selected link: the joint's servo

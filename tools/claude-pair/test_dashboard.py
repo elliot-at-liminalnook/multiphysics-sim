@@ -66,6 +66,24 @@ class DashboardTests(unittest.TestCase):
         self.assertTrue(view["steering_pending"])
         self.assertEqual(view["steering"]["text"], "Prioritize the builder")
 
+    def test_activity_has_times_results_and_edit_details(self):
+        (self.root / "logs/0001-worker.prompt.md").write_text("Edit things")
+        events = [
+            {"type": "assistant", "timestamp": "2026-09-30T10:00:00.000Z", "message": {"content": [
+                {"type": "tool_use", "id": "t1", "name": "Edit", "input": {"file_path": "src/jobs.rs", "old_string": "a\nb", "new_string": "c"}},
+                {"type": "tool_use", "id": "t2", "name": "Bash", "input": {"command": "cd /x && grep -rn spawn .", "description": "Find spawns"}},
+                {"type": "tool_use", "id": "t3", "name": "Read", "input": {"file_path": "src/lib.rs"}}]}},
+            {"type": "user", "timestamp": "2026-09-30T10:00:02.500Z", "message": {"content": [
+                {"type": "tool_result", "tool_use_id": "t1", "content": "ok", "is_error": False},
+                {"type": "tool_result", "tool_use_id": "t2", "content": "Command timed out after 10s", "is_error": True}]}}]
+        (self.root / "logs/0001-worker.stdout").write_text("\n".join(json.dumps(e) for e in events))
+        edit, bash, read = dashboard.view(self.root)["calls"][0]["activity"]
+        self.assertEqual(edit["details"]["edits"][0], {"old": "a\nb", "new": "c"})
+        self.assertEqual((edit["status"], edit["ended_at"] - edit["at"]), ("done", 2.5))
+        self.assertEqual(bash["status"], "error")
+        self.assertIn("timed out", bash["output"])
+        self.assertEqual(read["status"], "running", "no result yet: still running")
+
     def test_limits_reject_invalid_values_and_active_edits(self):
         limits = dashboard.view(self.root)["limits"]
         limits["max_rounds"] = -1

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local-only control panel for the saved Claude pair. Standard library only."""
 import argparse
+import datetime
 import fcntl
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -38,6 +39,46 @@ def tail(path, limit=180000):
         return f.read().decode(errors="replace")
 
 
+def event_time(event):
+    """ISO timestamp on stream events -> epoch seconds (None when absent)."""
+    stamp = event.get("timestamp")
+    if not isinstance(stamp, str):
+        return None
+    try:
+        return datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
+def clip_lines(text, lines=60, chars=6000):
+    text = str(text or "")
+    kept = text.splitlines()[:lines]
+    out = "\n".join(kept)[:chars]
+    return out + ("\n…" if len(out) < len(text) else "")
+
+
+def tool_details(name, args):
+    """What a reader needs to see of a tool call, trimmed for the page."""
+    if name in ("Edit", "MultiEdit"):
+        edits = args.get("edits") or [{"old_string": args.get("old_string"), "new_string": args.get("new_string")}]
+        return {"file": args.get("file_path"), "edits": [{"old": clip_lines(e.get("old_string"), 40), "new": clip_lines(e.get("new_string"), 40)}
+                                                         for e in edits[:4]]}
+    if name == "Write":
+        return {"file": args.get("file_path"), "content": clip_lines(args.get("content"), 40),
+                "lines": len(str(args.get("content") or "").splitlines())}
+    if name == "Bash":
+        return {"command": str(args.get("command") or "")[:4000], "description": args.get("description")}
+    keep = {k: (v if isinstance(v, (int, float, bool)) else str(v)[:600]) for k, v in args.items() if k != "content"}
+    return keep
+
+
+def result_text(block):
+    content = block.get("content")
+    if isinstance(content, list):
+        content = "\n".join(c.get("text", "") for c in content if isinstance(c, dict))
+    return str(content or "")
+
+
 def events(path):
     raw = tail(path)
     if not raw.strip():
@@ -48,7 +89,7 @@ def events(path):
             return [], whole
     except json.JSONDecodeError:
         pass
-    activity, result = [], None
+    activity, result, tools = [], None, {}
     for line in raw.splitlines():
         try:
             event = json.loads(line)
@@ -56,18 +97,31 @@ def events(path):
             continue
         if not isinstance(event, dict):
             continue
+        at = event_time(event)
         if event.get("type") == "result":
             result = event
         elif event.get("type") == "assistant":
             for block in event.get("message", {}).get("content", []):
                 if block.get("type") == "text":
-                    activity.append({"kind": "message", "text": block.get("text", "")[:6000]})
+                    activity.append({"kind": "message", "text": block.get("text", "")[:6000], "at": at})
                 elif block.get("type") == "tool_use":
-                    args = block.get("input", {})
-                    detail = args.get("file_path") or args.get("path") or args.get("command") or args.get("pattern") or ""
-                    activity.append({"kind": "tool", "text": block.get("name", "Tool") + (": " + str(detail)[:350] if detail else "")})
+                    args = block.get("input", {}) or {}
+                    name = block.get("name", "Tool")
+                    detail = args.get("file_path") or args.get("path") or args.get("command") or args.get("pattern") or args.get("description") or ""
+                    item = {"kind": "tool", "text": name + (": " + str(detail)[:350] if detail else ""), "at": at,
+                            "id": block.get("id"), "name": name, "details": tool_details(name, args), "status": "running"}
+                    tools[block.get("id")] = item
+                    activity.append(item)
+        elif event.get("type") == "user":
+            for block in event.get("message", {}).get("content", []):
+                if isinstance(block, dict) and block.get("type") == "tool_result" and block.get("tool_use_id") in tools:
+                    item = tools[block["tool_use_id"]]
+                    error = block.get("is_error") in (True, "True", "true")
+                    output = result_text(block)
+                    item.update(status="error" if error else "done", ended_at=at,
+                                output=output[-3000:] if item["name"] == "Bash" else clip_lines(output, 30, 3000))
         elif event.get("type") == "system" and event.get("subtype") == "init":
-            activity.append({"kind": "session", "text": "Session started · " + event.get("model", "Claude")})
+            activity.append({"kind": "session", "text": "Session started · " + event.get("model", "Claude"), "at": at})
     return activity[-80:], result
 
 

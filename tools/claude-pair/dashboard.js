@@ -126,7 +126,7 @@ function render() {
   $('start').disabled = data.active || busy || (s.status === 'complete' && !data.outer_settings.enabled);
   $('stop').disabled = !data.active || data.stop_requested || busy;
   text('start', data.calls.length ? 'Continue' : 'Start');
-  document.title = `${st.label} · Claude Pair`;
+  if (!data.active) document.title = `${st.label} · Claude Pair`;
   renderBanner(); renderNow(); renderTabs();
   if (view === 'overview') renderOverview();
   if (view === 'timeline') renderTimeline();
@@ -172,6 +172,7 @@ function renderNow() {
   if (s.outer?.current_batch) meta.push(`<span>epic <b>${esc(s.outer.current_batch.id)}</b></span>`);
   if (s.assignment) meta.push(`<span>assignment <b>#${s.assignment}</b></span>`);
   html('now-meta', meta.join(''));
+  renderRecent();
 
   const current = data.workflow.current, order = STAGES.map(x => x.id), at = order.indexOf(current);
   const directorOff = !data.outer_settings.enabled && !s.outer;
@@ -212,19 +213,70 @@ function renderTabs() {
   text('badge-decisions', String((data.state.decisions || []).length));
 }
 
+/* The active (or latest) agent's last few actions, on every tab. */
+function renderRecent() {
+  const call = data.calls.find(c => c.live) || data.calls.at(-1);
+  const acts = (call?.activity || []).filter(e => e.kind !== 'session').slice(-4).reverse();
+  $('recent').hidden = !acts.length;
+  if (!acts.length) return;
+  const running = acts.find(e => e.status === 'running');
+  if (call?.live) document.title = `${summarize(acts[0]).slice(0, 60)} · ${ROLES[call.role]?.name || ''}`;
+  html('recent', `<div class="recent-head">${esc(ROLES[call.role]?.name || '')} · latest actions${running ? ` · <b>running ${esc(dur(data.now - running.at))}</b>` : ''}</div>` +
+    acts.map((e, i) => `<button class="recent-row ${e.status || e.kind}" data-recent="${i}"><span class="ev-icon">${esc(e.kind === 'message' ? ROLES[call.role]?.letter : (TOOL_ICON[e.name] || '•'))}</span><span class="recent-text">${esc(summarize(e))}</span><span class="ev-meta">${statusHTML(e)}${e.at ? `<time class="ev-time">${esc(ago(e.at))}</time>` : ''}</span></button>`).join(''), false);
+  renderRecent.acts = acts; renderRecent.call = call;
+}
+
 /* ---------- overview ---------- */
 function renderOverview() {
   renderLive(); renderAssignment(); renderChecklist(); renderChecks(); renderShots(); renderCommits(); renderGuide();
 }
 
 const TOOL_ICON = { Bash: '$', Read: '◧', Edit: '✎', Write: '✎', MultiEdit: '✎', NotebookEdit: '✎', Grep: '⌕', Glob: '⌕', Task: '⇉', Agent: '⇉', WebFetch: '↗', WebSearch: '⌕', TodoWrite: '☐', Skill: '★' };
-function eventHTML(e, role) {
-  if (e.kind === 'tool') {
-    const i = e.text.indexOf(':'), name = i > 0 ? e.text.slice(0, i) : e.text, detail = i > 0 ? e.text.slice(i + 1) : '';
-    return `<div class="ev tool"><span class="ev-icon">${esc(TOOL_ICON[name] || '•')}</span><div class="ev-text"><b>${esc(name)}</b>${esc(detail)}</div></div>`;
+const base = p => String(p || '').split('/').filter(Boolean).at(-1) || p || '';
+const openEvents = new Set();
+/* One plain-language line per action: "Edited jobs.rs", "Ran cargo check", ... */
+function summarize(e) {
+  if (e.kind === 'message') return 'Said: ' + e.text.replace(/\s+/g, ' ').slice(0, 110);
+  if (e.kind === 'session') return e.text;
+  const d = e.details || {}, name = e.name || e.text.split(':')[0];
+  switch (name) {
+    case 'Read': return 'Read ' + base(d.file_path || d.path) + (d.offset ? ` from line ${d.offset}` : '');
+    case 'Edit': case 'MultiEdit': return 'Edited ' + base(d.file);
+    case 'Write': return `Wrote ${base(d.file)}${d.lines ? ` (${d.lines} lines)` : ''}`;
+    case 'Bash': return d.description ? d.description : 'Ran ' + String(d.command || '').replace(/\s+/g, ' ').replace(/^(cd \S+ *(&&|;) *)+/, '').slice(0, 100);
+    case 'Grep': return 'Searched for ' + (d.pattern || '') + (d.path ? ' in ' + base(d.path) : '');
+    case 'Glob': return 'Listed ' + (d.pattern || '');
+    case 'Task': case 'Agent': return 'Started a subagent: ' + (d.description || d.prompt || '').slice(0, 90);
+    case 'WebFetch': return 'Fetched ' + (d.url || '');
+    case 'WebSearch': return 'Searched the web: ' + (d.query || '');
+    default: return e.text;
   }
-  if (e.kind === 'session') return `<div class="ev session"><span class="ev-icon">○</span><div class="ev-text">${esc(e.text)}</div></div>`;
-  return `<div class="ev message" style="--role:${ROLES[role]?.color}"><span class="ev-icon">${ROLES[role]?.letter || '·'}</span><div class="ev-text">${esc(e.text)}</div></div>`;
+}
+function statusHTML(e) {
+  if (e.kind !== 'tool') return '';
+  if (e.status === 'running') return `<span class="ev-status running"><span class="spin"></span>${e.at ? dur(data.now - e.at) : 'running'}</span>`;
+  const took = e.at && e.ended_at ? dur(Math.max(0, e.ended_at - e.at)) : '';
+  return e.status === 'error' ? `<span class="ev-status bad">✕ ${took}</span>` : `<span class="ev-status ok">✓ ${took}</span>`;
+}
+function detailsHTML(e) {
+  const d = e.details || {};
+  let out = '';
+  if (d.edits) out = d.edits.map(x => `<pre class="diff">${esc(x.old).split('\n').map(l => `<span class="del">- ${l}</span>`).join('\n')}\n${esc(x.new).split('\n').map(l => `<span class="add">+ ${l}</span>`).join('\n')}</pre>`).join('');
+  else if (d.content !== undefined) out = pre(d.content);
+  else if (d.command !== undefined) out = pre('$ ' + d.command);
+  else if (Object.keys(d).length) out = pre(JSON.stringify(d, null, 2));
+  if (d.file) out = `<div class="mono faint" style="margin:4px 0">${esc(d.file)}</div>` + out;
+  if (e.output) out += `<div class="section-label">${e.status === 'error' ? 'Error' : 'Output'}</div>${pre(e.output)}`;
+  return out;
+}
+function eventHTML(e, role, key) {
+  const when = e.at ? `<time class="ev-time" title="${esc(new Date(e.at * 1000).toLocaleTimeString())}">${esc(ago(e.at))}</time>` : '';
+  if (e.kind === 'tool') {
+    const id = e.id || key, open = openEvents.has(id) ? ' open' : '';
+    return `<details class="ev tool ${e.status || ''}"${open}><summary data-ev="${esc(id)}"><span class="ev-icon">${esc(TOOL_ICON[e.name] || '•')}</span><span class="ev-text"><b>${esc(e.name || '')}</b> ${esc(summarize(e).replace(/^(Read|Edited|Wrote|Ran|Searched for|Listed) ?/, m => ''))}</span><span class="ev-meta">${statusHTML(e)}${when}</span></summary><div class="ev-body">${detailsHTML(e)}</div></details>`;
+  }
+  if (e.kind === 'session') return `<div class="ev session"><span class="ev-icon">○</span><div class="ev-text">${esc(e.text)}</div><span class="ev-meta">${when}</span></div>`;
+  return `<div class="ev message" style="--role:${ROLES[role]?.color}"><span class="ev-icon">${ROLES[role]?.letter || '·'}</span><div class="ev-text">${esc(e.text)}</div><span class="ev-meta">${when}</span></div>`;
 }
 
 function resultHTML(r, role) {
@@ -276,7 +328,7 @@ function renderLive() {
     if (!call) body = `<div class="empty">The ${esc(ROLES[role].name.toLowerCase())} hasn't run yet.</div>`;
     else if (liveTab === 'prompt') body = pre(call.prompt);
     else if (liveTab === 'result') body = call.result ? resultHTML(call.result, role) : `<div class="empty">${esc(call.error || (call.live ? 'Still working. The result appears when this turn finishes.' : 'This turn has no result.'))}</div>`;
-    else body = call.activity?.length ? call.activity.map(e => eventHTML(e, role)).join('') : `<div class="empty">${call.live ? 'Starting up. Activity appears as the agent reads, runs and writes.' : 'No activity recorded for this turn.'}</div>`;
+    else body = call.activity?.length ? call.activity.map((e, i) => eventHTML(e, role, `${call.id}-${i}`)).join('') : `<div class="empty">${call.live ? 'Starting up. Activity appears as the agent reads, runs and writes.' : 'No activity recorded for this turn.'}</div>`;
     if (call) {
       foot.push(`<span>Turn <b>#${call.number}</b></span>`);
       if (call.model) foot.push(`<span><b>${esc(call.model)}</b>${call.fast ? ' · <b>fast</b>' : ''}</span>`);
@@ -458,6 +510,10 @@ function setView(v) {
   if (data) render();
 }
 document.addEventListener('click', e => {
+  const sum = e.target.closest('summary[data-ev]');
+  if (sum) { const id = sum.dataset.ev; openEvents.has(id) ? openEvents.delete(id) : openEvents.add(id); return; }
+  const rec = e.target.closest('[data-recent]');
+  if (rec) { const ev = renderRecent.acts[Number(rec.dataset.recent)]; return modal(summarize(ev), ev.kind === 'message' ? `<p class="prose">${esc(ev.text)}</p>` : detailsHTML(ev) || '<div class="empty">No details.</div>'); }
   const t = e.target.closest('[data-view]'); if (t) return setView(t.dataset.view);
   const r = e.target.closest('[data-role]'); if (r) { pinnedRole = r.dataset.role === followRole() ? null : r.dataset.role; rendered.feedInit = false; return render(); }
   const lt = e.target.closest('[data-live-tab]'); if (lt) { liveTab = lt.dataset.liveTab; rendered.feedInit = false; return render(); }

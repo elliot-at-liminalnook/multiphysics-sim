@@ -1360,7 +1360,16 @@ fn poll(
     let label = learn.lesson.as_ref().map(|l| l.meta.title.clone());
     let mut builder = builder;
     let Some(a) = learn.scene.as_mut() else { return };
-    let stage = a.jobs.as_ref().and_then(crate::jobs::Job::next_update);
+    let stage = match a.jobs.as_ref().and_then(crate::jobs::Job::next_update) {
+        Some(stage) => Some(stage),
+        // Every stage is queued before the job's result and the closures only
+        // return Ok, so an error with nothing queued is a panic: show it as the
+        // run's error instead of leaving the scene "recording" forever.
+        None => match a.jobs.as_ref().and_then(crate::jobs::Job::poll) {
+            Some(Err(e)) => Some(Stage::Run(Err(e))),
+            _ => None,
+        },
+    };
     let mut parts = None;
     let mut judged: Option<Arc<SceneRun>> = None;
     let mut changed = stage.is_some();

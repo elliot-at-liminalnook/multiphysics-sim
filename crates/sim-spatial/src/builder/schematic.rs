@@ -136,6 +136,17 @@ impl Schematic {
         self.source = Some((Arc::new(description.clone()), revision));
     }
 
+    /// An edit moved the document `from` → `to` without changing the scene
+    /// hash, so no compile follows: the compiled description is still the
+    /// one for `to`. Only a source compiled at `from` is carried forward.
+    pub(crate) fn advance_revision(&mut self, from: u64, to: u64) {
+        if let Some((_, compiled)) = &mut self.source {
+            if *compiled == from {
+                *compiled = to;
+            }
+        }
+    }
+
     /// The key the pane should show now: the compiled description's id at
     /// the document's revision and level. None before the first compile.
     pub(crate) fn current(&self, revision: u64, level: &str) -> Option<Key> {
@@ -317,7 +328,7 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
         (_, _, _, Some(e)) => (format!("Layout failed: {e}"), WARN),
         (None, _, _, None) if b.compile_error.is_some() => ("Waiting for a compiling system".into(), WARN),
         (None, _, _, None) => ("Laying out…".into(), WARN),
-        (Some(l), pending, true, None) => (format!("Stale: showing revision {}{} · {}", l.key.revision, if l.key.level != level { format!(" of {}", if l.key.level.is_empty() { "the top level" } else { &l.key.level }) } else { String::new() }, if pending { "laying out the current one…" } else if b.compile_error.is_some() { "the current revision does not compile" } else { "waiting for the compile…" }), WARN),
+        (Some(l), pending, true, None) => (format!("Stale: showing revision {}{} · {}", l.key.revision, if l.key.level != level { format!(" of {}", if l.key.level.is_empty() { "the top level" } else { &l.key.level }) } else { String::new() }, if pending { "laying out the current one…" } else if b.compile_error.is_some() { "the current revision does not compile" } else if b.job.is_some() || b.scene_dirty { "waiting for the compile…" } else { "laying out the current one…" }), WARN),
         (Some(l), _, false, None) => (format!("Revision {} · {} nodes · {} unrouted · {:.0} ms", l.key.revision, l.layout.nodes.len(), l.layout.unrouted.len(), l.layout_ms), SUBTLE),
     };
     let highlighted = s.highlighted(&b.selected);
@@ -535,6 +546,28 @@ mod tests {
         assert!(!b.schematic.stale(rev2, ""));
         assert_eq!(b.schematic.laid().unwrap().key, Key { description_id: compiled2.description.id.clone(), revision: rev2, level: String::new() });
         assert!(!b.document.definitions.values().any(|d| serde_json::to_string(d).unwrap().contains("diagram")), "no layout in the document");
+
+        // A scene-neutral edit (same value) bumps the revision but compiles nothing:
+        // stale at once, then current at the new revision through the keyed worker.
+        b.scene_dirty = false; // the rev2 compile has landed (set_source above stands in for rebuild_scene)
+        b.apply("Same value", vec![SystemCommand::SetParameter { at: String::new(), name: "load".into(), parameter: "mass".into(), binding: Some(sim_system::ParameterBinding::value(2.5)) }]).unwrap();
+        let rev3 = b.document.revision;
+        assert!(rev3 > rev2 && !b.scene_dirty && b.job.is_none(), "no compile is queued for a scene-neutral edit");
+        assert!(b.schematic.stale(rev3, ""), "the rev2 layout is not presented as current");
+        tick(&mut b);
+        assert!(b.schematic.pending(), "a layout for the new revision starts without a compile");
+        settle(&mut b);
+        assert!(!b.schematic.stale(rev3, "") && !b.schematic.pending());
+        assert_eq!(b.schematic.laid().unwrap().key, Key { description_id: compiled2.description.id.clone(), revision: rev3, level: String::new() });
+        // With a compile queued the source is not carried forward: the compile sets it.
+        b.scene_dirty = true;
+        b.apply("Same value again", vec![SystemCommand::SetParameter { at: String::new(), name: "load".into(), parameter: "mass".into(), binding: Some(sim_system::ParameterBinding::value(2.5)) }]).unwrap();
+        let rev4 = b.document.revision;
+        tick(&mut b);
+        assert!(b.schematic.stale(rev4, "") && !b.schematic.pending(), "waits for the queued compile");
+        b.schematic.set_source(&compiled2.description, rev4);
+        settle(&mut b);
+        assert!(!b.schematic.stale(rev4, ""));
 
         // Drilling into a subsystem lays out that level: its instances only.
         b.set_level("gearbox").unwrap();

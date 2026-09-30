@@ -560,6 +560,7 @@ impl Builder {
         match self.store.load_valid(&self.registry) {
             Ok(document) => {
                 let needs_scene=sim_system::display::scene_hash(&document)!=sim_system::display::scene_hash(&self.document);
+                let previous = self.document.revision;
                 self.document = document;
                 if self.input.is_none() && self.discussion.selected.as_ref().is_some_and(|id|!self.document.discussions.threads.contains_key(id)){self.discussion.selected=None;}
                 self.stamp = self.store.stamp();
@@ -573,6 +574,8 @@ impl Builder {
                 self.updates = self.library_updates();
                 self.used_in = None;
                 self.scene_dirty |= needs_scene;
+                // No compile follows a scene-neutral edit: carry the schematic's compiled source forward.
+                if !self.scene_dirty && self.job.is_none() { self.schematic.advance_revision(previous, self.document.revision); }
                 self.panel_dirty = true;
             }
             Err(e) => self.status = format!("Could not load the system: {e}"),

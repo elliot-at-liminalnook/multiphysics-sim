@@ -62,6 +62,7 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
         body.spawn((
             Button,
             host.open(&t.id),
+            bevy::ui::prelude::AccessibleLabel::new(t.title.clone()),
             if selected { Tint::new(ACCENT_BG, HOVER_BG) } else { Tint::RAISED },
             Node { border_radius: BorderRadius::all(Val::Px(7.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(7.), padding: UiRect::all(Val::Px(12.)), flex_shrink: 0., border: UiRect::left(Val::Px(if selected { 2. } else { 0. })), ..default() },
             BackgroundColor(if selected { ACCENT_BG } else { RAISED }),

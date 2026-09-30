@@ -523,6 +523,7 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
             col.spawn((
                 Button,
                 BuildAction::Terminal(t.clone()),
+                bevy::ui::prelude::AccessibleLabel::new(format!("Port {port}")),
                 if armed { Tint::new(ACCENT_BG, HOVER_BG) } else { Tint::CLEAR },
                 Node { border_radius: BorderRadius::all(Val::Px(4.)), column_gap: Val::Px(8.), align_items: AlignItems::Center, padding: UiRect::axes(Val::Px(6.), Val::Px(4.)), flex_shrink: 0., ..default() },
                 BackgroundColor(if armed { ACCENT_BG } else { Color::NONE }),

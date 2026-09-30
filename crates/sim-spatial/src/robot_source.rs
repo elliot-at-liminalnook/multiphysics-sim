@@ -165,6 +165,16 @@ impl SourceWatch {
         self.next_poll = now + POLL;
         stat(&self.path) != self.stat
     }
+    /// The first load's outcome without consuming it (a mode switch waits
+    /// for it): None while in flight; a success stays queued for `take`.
+    pub fn opened(&mut self) -> Option<Result<(), String>> {
+        let (trigger, checked) = self.take()?;
+        if let Outcome::Failed(e) = &checked.outcome {
+            return Some(Err(e.clone()));
+        }
+        self.in_flight = Some((trigger, crate::jobs::Job::finished(0, Ok(checked))));
+        Some(Ok(()))
+    }
     /// The finished check, if any (never blocks).
     pub fn take(&mut self) -> Option<(Trigger, Checked)> {
         let (trigger, job) = self.in_flight.as_ref()?;

@@ -35,7 +35,7 @@ impl Shell {
     }
 }
 
-fn same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
+pub(crate) fn same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
     match (std::fs::canonicalize(a), std::fs::canonicalize(b)) {
         (Ok(a), Ok(b)) => a == b,
         _ => a == b,
@@ -94,6 +94,34 @@ impl Builder {
     pub fn enable_open(&mut self, shell: Shell) {
         self.open.systems = discover(&self.store.path, &self.library_dir);
         self.open.shell = Some(shell);
+    }
+
+    /// Opening another system is enabled (build mode's builder; a lesson's
+    /// sandbox builder has no shell).
+    pub(crate) fn can_open(&self) -> bool {
+        self.open.shell.is_some()
+    }
+
+    /// What leaving Build/Lessons for another mode (or replacing this
+    /// builder) would lose: the `system_open` blockers below, and an open
+    /// still loading. The mode switch (`app::switch`) refuses on these.
+    pub(crate) fn switch_blockers(&self) -> Vec<String> {
+        let mut blockers = self.open_blockers();
+        if let Some(pending) = self.open.pending() {
+            blockers.push(format!("{} is still opening: wait or cancel it", pending.display()));
+        }
+        blockers
+    }
+
+    /// What replacing this builder with a new lesson's sandbox builder would
+    /// lose: the switch blockers, and a live run of the system file (which
+    /// `finish_open` would save; a replacement cannot, so it is refused).
+    pub(crate) fn replace_blockers(&self) -> Vec<String> {
+        let mut blockers = self.switch_blockers();
+        if self.run.is_some() && self.can_open() {
+            blockers.push(format!("a live run of {} is open: save it (Save run) or reset it first", self.store.path.display()));
+        }
+        blockers
     }
 
     /// What would be lost by switching now, if anything. A live run is not
@@ -299,6 +327,21 @@ impl Builder {
             "schematic": shell.and_then(|s| s.schematic.as_ref()).map(|p| serde_json::json!({"file": p, "shows_this_system": same_file(p, &self.store.path)})),
         })
     }
+}
+
+/// A build-mode builder for `path` with Open enabled, its compiled scene
+/// (annotations connected to `shell`'s sidecar for it) and the display
+/// models (the shared catalog plus the system's own `models/`). The launch's
+/// loaders, for a switch to build mode in a window that has no builder yet
+/// (called on a worker).
+pub(crate) fn open_build(path: PathBuf, library_dir: PathBuf, registry: BehaviorRegistry, shell: Shell) -> Result<(Builder, SpatialScene, crate::models::ModelLibrary), String> {
+    let mut builder = Builder::open(path.clone(), library_dir, registry)?;
+    let mut scene = compiled_scene(&builder).map_err(|e| format!("{}: does not compile: {e}", path.display()))?;
+    scene.connect_annotations(shell.annotations_for(&path));
+    let mut models = crate::models::ModelLibrary::open(shell.models.clone());
+    models.extend(&path.parent().unwrap_or(std::path::Path::new(".")).join("models"));
+    builder.enable_open(shell);
+    Ok((builder, scene, models))
 }
 
 /// Worker thread: the same load, validation and compile as the launch.

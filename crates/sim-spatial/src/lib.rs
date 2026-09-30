@@ -4,6 +4,7 @@
 //! background thread; it contains no physics of its own.
 mod animation;
 pub(crate) mod annotate;
+pub mod app;
 pub(crate) mod chart;
 pub mod builder;
 pub mod jobs;
@@ -31,11 +32,12 @@ pub mod workspace;
 use bevy::{
     core_pipeline::tonemapping::Tonemapping,
     input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},
-    picking::mesh_picking::{MeshPickingCamera, MeshPickingSettings},
+    picking::mesh_picking::MeshPickingCamera,
     prelude::*,
     camera::Viewport,
-    winit::{UpdateMode, WinitSettings},
 };
+pub use app::{Launch, ViewerMode};
+use app::{ModeScope, SpatialScreen, ViewerSet};
 pub use builder::{Builder, BuilderPlugin};
 pub use linked::SelectionLink;
 use sim_inspect::selection::{SelectionDetails, SelectionTarget};
@@ -125,6 +127,13 @@ impl SpatialScene {
         let mut scene = Self::unchecked(description, spatial);
         scene.builder_mode = true;
         Ok(scene)
+    }
+    /// Inspect `--compact` (and `--schematic`): the smaller inspector, with the parts list hidden.
+    pub fn set_compact(&mut self, compact: bool) {
+        self.compact = compact;
+        if compact {
+            self.parts_visible = false;
+        }
     }
     /// Swap in a recompiled system, keeping display preferences.
     pub fn replace(&mut self, description: SystemDescription, spatial: SpatialDescription, animation: Option<sim_inspect::animation::AnimationDescription>) {
@@ -314,20 +323,18 @@ impl SpatialScene {
     }
 }
 
+/// The spatial assembly view: Inspect's whole screen, and the 3D scene the
+/// builder (Build) and the lesson pages (Lessons) draw into. Its entities are
+/// spawned on entering the Inspect or Builder scope (and despawned on leaving
+/// it, `app::scope_new_entities`); its systems run while `SpatialScreen` is
+/// active, in their original order.
 pub struct SpatialViewerPlugin;
 impl Plugin for SpatialViewerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MeshPickingPlugin)
-            .insert_resource(MeshPickingSettings {
-                require_markers: true,
-                ..default()
-            })
-            .init_resource::<physics_view::Labels>()
+        app.init_resource::<physics_view::Labels>()
             .init_resource::<view::PartHover>()
-            .add_systems(Startup, (setup_scene, setup_ui, rest::wake_on_request))
-            .add_systems(PostUpdate, view::clamp_scroll_positions.after(bevy::ui::UiSystems::Layout))
-            .init_resource::<rest::Occlusion>()
-            .add_systems(PreUpdate, rest::track_occlusion)
+            .add_systems(OnEnter(ModeScope::Inspect), (setup_scene, setup_ui))
+            .add_systems(OnEnter(ModeScope::Builder), (setup_scene, setup_ui))
             .add_systems(
                 Update,
                 (
@@ -348,126 +355,49 @@ impl Plugin for SpatialViewerPlugin {
                     notes::guides,
                     animation::draw_markers,
                 )
-                    .chain(),
+                    .chain()
+                    .in_set(ViewerSet::SimSync)
+                    .run_if(in_state(SpatialScreen)),
             )
             .add_systems(
                 Update,
                 (view::animate, physics_view::overlay_clicks, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, view::caption_fonts)
                     .chain()
-                    .after(animation::draw_markers),
+                    .after(animation::draw_markers)
+                    .in_set(ViewerSet::Present)
+                    .run_if(in_state(SpatialScreen)),
             );
     }
 }
 
-/// Build mode: the physical assembly plus the system builder panel.
-pub fn run_builder(scene: SpatialScene, builder: builder::Builder, api: sim_api::Server, models: models::ModelLibrary) {
-    let mut app = App::new();
-    app.insert_resource(models).insert_resource(rest::Rest(api, None))
-        .insert_resource(builder)
-        .insert_resource(scene)
-        .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(GlobalAmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
-        .insert_resource(WinitSettings {
-            focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
-            unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
-        })
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Systems — Physical assembly (build)".into(),
-                resolution: (1500_u32, 940_u32).into(),
-                resize_constraints: bevy::window::WindowResizeConstraints { min_width: 980.0, min_height: 720.0, ..default() },
-                ..default()
-            }),
-            ..default()
-        }))
-        .add_plugins(SpatialViewerPlugin)
-        .add_plugins(builder::BuilderPlugin)
-        .run();
+/// The example assembly inspect mode shows when given no files.
+pub fn default_inspect_paths() -> (std::path::PathBuf, std::path::PathBuf) {
+    let base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/systems-viewer/spatial");
+    (base.join("motor-thermal.description.json"), base.join("motor-thermal.spatial.json"))
 }
 
-/// Lesson mode: lessons around the builder's scene (Learn screen first).
-pub fn run_lessons(scene: SpatialScene, builder: builder::Builder, learn: lesson::Learn, api: sim_api::Server, models: models::ModelLibrary) {
-    let mut app = App::new();
-    app.insert_resource(models).insert_resource(rest::Rest(api, None))
-        .insert_resource(builder)
-        .insert_resource(scene)
-        .insert_resource(learn)
-        .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(GlobalAmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
-        .insert_resource(WinitSettings {
-            focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
-            unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
-        })
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Systems — Lessons".into(),
-                resolution: (1560_u32, 980_u32).into(),
-                resize_constraints: bevy::window::WindowResizeConstraints { min_width: 1100.0, min_height: 720.0, ..default() },
-                ..default()
-            }),
-            ..default()
-        }))
-        .add_plugins(SpatialViewerPlugin)
-        .add_plugins(builder::BuilderPlugin)
-        .add_plugins(lesson::LearnPlugin)
-        .run();
+/// Inspect mode's document when switching: a `*.description.json` and the
+/// `*.spatial.json` beside it.
+pub fn inspect_pair(description: &std::path::Path) -> Result<(std::path::PathBuf, std::path::PathBuf), String> {
+    let name = description.file_name().and_then(|n| n.to_str()).unwrap_or_default();
+    let stem = name.strip_suffix(".description.json").ok_or_else(|| format!("{}: inspect mode opens a *.description.json (with its *.spatial.json beside it)", description.display()))?;
+    let spatial = description.with_file_name(format!("{stem}.spatial.json"));
+    if !description.is_file() {
+        return Err(format!("{}: no such file", description.display()));
+    }
+    if !spatial.is_file() {
+        return Err(format!("{}: no {} beside it", description.display(), spatial.display()));
+    }
+    Ok((description.to_path_buf(), spatial))
 }
 
-pub fn run(scene: SpatialScene, link: Option<SelectionLink>) {
-    run_with_api(scene, link, None, None);
-}
-pub fn run_with_api(
-    mut scene: SpatialScene,
-    link: Option<SelectionLink>,
-    api: Option<sim_api::Server>,
-    models: Option<models::ModelLibrary>,
-) {
-    let compact = scene.compact;
-    if compact {
-        scene.parts_visible = false;
-    }
-    let mut app = App::new();
-    if let Some(api) = api {
-        app.insert_resource(rest::Rest(api, None));
-    }
-    if let Some(models) = models {
-        app.insert_resource(models);
-    }
-    if let Some(link) = link {
-        app.insert_resource(link);
-    }
-    app.insert_resource(scene)
-        .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(GlobalAmbientLight {
-            color: Color::srgb(0.85, 0.90, 1.0),
-            brightness: 420.0,
-            affects_lightmapped_meshes: true,
-        })
-        .insert_resource(WinitSettings {
-            // Pipelined rendering needs a follow-up update after input. Long
-            // desktop-app sleeps leave the inspector one frame behind a click.
-            focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
-            unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
-        })
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Systems — Physical assembly".into(),
-                resolution: if compact {
-                    (880_u32, 850_u32).into()
-                } else {
-                    (1440_u32, 900_u32).into()
-                },
-                resize_constraints: bevy::window::WindowResizeConstraints {
-                    min_width: 780.0,
-                    min_height: 720.0,
-                    ..default()
-                },
-                ..default()
-            }),
-            ..default()
-        }))
-        .add_plugins(SpatialViewerPlugin)
-        .run();
+/// Read and validate an assembly for inspect mode (the launch and a switch
+/// share it). Errors name the file.
+pub fn load_inspect(description: &std::path::Path, spatial: &std::path::Path) -> Result<SpatialScene, String> {
+    let read = |p: &std::path::Path| std::fs::read(p).map_err(|e| format!("{}: {e}", p.display()));
+    let parsed: SystemDescription = serde_json::from_slice(&read(description)?).map_err(|e| format!("{}: {e}", description.display()))?;
+    let geometry: SpatialDescription = serde_json::from_slice(&read(spatial)?).map_err(|e| format!("{}: {e}", spatial.display()))?;
+    SpatialScene::new(parsed, geometry).map_err(|e| format!("{}: {e}", spatial.display()))
 }
 
 #[derive(Component)]
@@ -511,11 +441,16 @@ struct ActionLabel;
 
 fn setup_scene(
     mut commands: Commands,
-    scene: Res<SpatialScene>,
+    scene: Option<Res<SpatialScene>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut models: Option<ResMut<models::ModelLibrary>>,
 ) {
+    // A mode switch installs the scene before this runs (`app::switch::arrive`).
+    let Some(scene) = scene else {
+        error!("the spatial view was entered without a scene");
+        return;
+    };
     let (focus, radius) = scene.bounds();
     commands.spawn((
         Camera3d::default(),
@@ -665,17 +600,21 @@ fn pick_part(
     keys: Option<Res<ButtonInput<KeyCode>>>,
     builder: Option<ResMut<builder::Builder>>,
     learn: Option<ResMut<lesson::Learn>>,
+    mode: Option<Res<State<ViewerMode>>>,
 ) {
     if click.button != bevy::picking::pointer::PointerButton::Primary {
         return;
     }
     if let Ok(part) = parts.get(click.entity) {
         let id = scene.spatial.parts[part.index].component.clone();
-        if let Some(mut learn) = learn.filter(|l| l.active) {
+        let mode = mode.map(|m| *m.get());
+        if let Some(mut learn) = learn.filter(|_| mode == Some(ViewerMode::Lessons)) {
             learn.pick(&mut scene, &id);
             return;
         }
-        if let Some(mut builder) = builder {
+        // The builder stays in the window in other modes: it takes picks in Build only
+        // (without states, as in tests, a builder means build mode, as before).
+        if let Some(mut builder) = builder.filter(|_| mode.is_none_or(|m| m == ViewerMode::Build)) {
             if builder.mode == builder::Mode::Annotate {
                 if let Some(world)=click.hit.position {builder::discussion::begin_surface(&mut builder,&scene,part.index,world);}
                 return;
@@ -730,8 +669,10 @@ fn action_button(label: &str, action: Action) -> impl Bundle {
         children![(text(label, 14.0, INK), ActionLabel)],
     )
 }
-fn setup_ui(mut commands: Commands, scene: Res<SpatialScene>) {
-    spawn_ui(&mut commands, &scene);
+fn setup_ui(mut commands: Commands, scene: Option<Res<SpatialScene>>) {
+    if let Some(scene) = scene {
+        spawn_ui(&mut commands, &scene);
+    }
 }
 pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene) {
     if scene.builder_mode {
@@ -964,9 +905,10 @@ fn keyboard(
     mut camera: Single<&mut Orbit>,
     window: Option<Single<&Window>>,
     builder: Option<Res<builder::Builder>>,
-    learn: Option<Res<lesson::Learn>>,
+    mode: Option<Res<State<ViewerMode>>>,
 ) {
-    if builder.as_ref().is_some_and(|b| b.typing()) || learn.as_ref().is_some_and(|l| l.active) {
+    // The lesson screen has its own keys.
+    if builder.as_ref().is_some_and(|b| b.typing()) || mode.is_some_and(|m| *m.get() == ViewerMode::Lessons) {
         return;
     }
     // F: fly to the selected part (the whole system when nothing is selected).

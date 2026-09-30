@@ -178,7 +178,7 @@ pub fn state(learn: &Learn) -> Value {
             "presentation": {"caption": a.timeline.state_at(a.time).caption, "highlight": a.timeline.state_at(a.time).highlight}})
     });
     json!({
-        "screen": if learn.active { "lesson" } else { "builder" }, "mode": learn.mode, "dir": learn.dir, "lesson": lesson, "lesson_error": learn.lesson_error,
+        "screen": if learn.screen_lesson() { "lesson" } else { "builder" }, "mode": learn.mode, "dir": learn.dir, "lesson": lesson, "lesson_error": learn.lesson_error,
         "scene": scene, "status": learn.status, "notes_revision": learn.notes_doc.revision, "notes": learn.notes_doc.threads.len(),
         "compares": learn.compares.iter().map(|(id, s)| (id.clone(), json!({"running": s.job.is_some(), "result": s.result.as_ref().map(|r| r.as_ref().map(|c| json!({"table": c.table, "variants": c.variants})).map_err(|e| e.clone()))}))).collect::<BTreeMap<_, _>>(),
         "ui_revision": learn.ui_revision, "agent": learn.agent.public(), "narration": narration_state(learn),
@@ -214,7 +214,7 @@ pub fn execute(learn: &mut Learn, scene: &mut SpatialScene, command: &sim_api::C
         Request::LessonState => Ok(state(learn)),
         Request::LessonOpen { slug } => {
             learn.open(&slug)?;
-            learn.show(true);
+            learn.request_screen(true);
             Ok(state(learn))
         }
         Request::LessonScreen { learn: show } => {
@@ -222,7 +222,7 @@ pub fn execute(learn: &mut Learn, scene: &mut SpatialScene, command: &sim_api::C
                 learn.try_act(LessonAction::OpenBuilder, scene)?;
                 return Ok(state(learn));
             }
-            learn.show(true);
+            learn.request_screen(true);
             Ok(state(learn))
         }
         Request::LessonGoto { block } => {

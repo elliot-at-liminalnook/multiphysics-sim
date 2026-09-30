@@ -373,6 +373,11 @@ pub struct Learn {
     scanned: f64,
     /// Show this panel set next frame (screen switch).
     pub(crate) switched: bool,
+    /// The lesson screen (true) or the builder (false) was asked for: a
+    /// mode switch to Lessons or Build (`app::switch`), whose OnEnter/OnExit
+    /// call `show`. `active` is written only by `show`, so it always matches
+    /// the mode.
+    screen_request: Option<bool>,
     pub(crate) ui_revision: u64,
     /// The lesson's narrated explainer, when it has `explainer.md`.
     pub narration: Option<narrate::Narration>,
@@ -420,6 +425,37 @@ pub struct Learn {
     pub(crate) frames: Option<frames::FrameJob>,
 }
 
+/// Lessons in `dir` as a lessons launch opens them: the builder on the
+/// first scene's sandbox (or an empty system), its compiled scene, and
+/// `slug` (default: the first readable lesson) opened, its scene activating
+/// off the UI thread. The launch and a switch to lessons mode share it; the
+/// last value is a lesson that did not open ("Lesson {slug}: {error}").
+pub fn open_lessons(dir: PathBuf, slug: Option<String>, library: PathBuf, registry: sim_core::BehaviorRegistry) -> Result<(Learn, Builder, SpatialScene, Option<String>), String> {
+    let mut learn = Learn::new(dir.clone(), library.clone(), registry.clone());
+    let slug = slug.or_else(|| learn.entries.iter().find(|e| e.error.is_none()).map(|e| e.slug.clone()));
+    // The builder starts on the first scene's sandbox (or an empty system);
+    // opening the lesson then activates that scene off the UI thread.
+    let first = slug.as_ref().and_then(|s| {
+        let lesson = Lesson::load(&dir.join(s).join("lesson.md")).ok()?;
+        let scene = lesson.scenes().next().map(|(_, sc)| sc.clone())?;
+        runtime::sandbox(&lesson, &scene, &registry, false).ok().map(|sb| sb.path)
+    });
+    let initial = match first {
+        Some(p) => p,
+        None => {
+            let p = runtime::sandbox_root().join("_empty").join("empty.system.json");
+            if !p.exists() {
+                sim_system::SystemStore::create(&p, &sim_system::SystemDocument::new("Lesson")).map_err(|e| format!("{}: {e}", p.display()))?;
+            }
+            p
+        }
+    };
+    let builder = Builder::open(initial, library, registry)?;
+    let scene = crate::builder::compiled_scene(&builder)?;
+    let warning = slug.as_ref().and_then(|s| learn.open(s).err().map(|e| format!("Lesson {s}: {e}")));
+    Ok((learn, builder, scene, warning))
+}
+
 fn lesson_stamp(path: &std::path::Path) -> Option<std::time::SystemTime> {
     std::fs::metadata(path).and_then(|m| m.modified()).ok()
 }
@@ -464,6 +500,7 @@ impl Learn {
             checked: 0.,
             scanned: 0.,
             switched: true,
+            screen_request: None,
             ui_revision: 0,
             narration: None,
             narration_part: None,
@@ -542,7 +579,35 @@ impl Learn {
         self.lesson.as_ref().map(|l| l.slug.as_str())
     }
 
-    /// Show the lesson screen (true) or the builder (false).
+    /// Ask for the lesson screen (true) or the builder (false): a switch to
+    /// Lessons or Build mode through the one mode-switch handler.
+    pub fn request_screen(&mut self, learn: bool) {
+        self.screen_request = Some(learn);
+    }
+    pub(crate) fn screen_request(&self) -> Option<bool> {
+        self.screen_request
+    }
+    pub(crate) fn take_screen_request(&mut self) -> Option<bool> {
+        self.screen_request.take()
+    }
+    /// The screen shown, or asked for and not switched to yet.
+    pub fn screen_lesson(&self) -> bool {
+        self.screen_request.unwrap_or(self.active)
+    }
+    /// What leaving the lessons (for a mode other than Build) would lose.
+    pub(crate) fn switch_blockers(&self) -> Vec<String> {
+        let mut blockers = Vec::new();
+        if self.input.is_some() {
+            blockers.push("a lesson text draft is open: submit or cancel it".to_string());
+        }
+        if self.frames.is_some() {
+            blockers.push("a lesson_frames contact sheet is being captured: wait for it".to_string());
+        }
+        blockers
+    }
+
+    /// Show the lesson screen (true) or the builder (false): the lesson's
+    /// own bookkeeping, run by the Lessons mode's OnEnter/OnExit.
     pub fn show(&mut self, learn: bool) {
         if self.active == learn {
             return;
@@ -964,7 +1029,7 @@ impl Learn {
                         return Err("the scene is still loading".into());
                     }
                     self.returning = Some(Return { scroll: self.scroll });
-                    self.show(false);
+                    self.request_screen(false);
                 }
                 LessonAction::ResetSandbox => self.reset_sandbox(),
                 LessonAction::SaveSandbox => {
@@ -1222,15 +1287,23 @@ fn open_url(url: &str) -> Result<(), String> {
 }
 
 pub struct LearnPlugin;
+/// Lessons: the lesson screen over the builder. Its systems run while a
+/// lesson is open in the Builder scope (Lessons, and Build while the builder
+/// is shown over the lesson: recordings, narration and the lesson model keep
+/// going, and the page hides itself when `active` is false), in their
+/// original order.
 impl Plugin for LearnPlugin {
     fn build(&self, app: &mut App) {
+        let open = || in_state(crate::app::ModeScope::Builder).and(resource_exists::<Learn>);
         app.add_systems(
             Update,
             (poll, keys, buttons, seek, narrate::seek, practice::sketch_input, sliders, slider_live, chart_hover, ui::rebuild, ui::scroll, viewport, narrate::tick, playback, ui::live_text, narrate::live, narrate::overlay, practice::sketch_dots)
                 .chain()
-                .before(crate::camera_viewport),
+                .before(crate::camera_viewport)
+                .in_set(crate::app::ViewerSet::SimSync)
+                .run_if(open()),
         );
-        app.add_systems(Update, (extras::live_equations, extras::track_blocks, apply_settings, frames::step).after(ui::rebuild));
+        app.add_systems(Update, (extras::live_equations, extras::track_blocks, apply_settings, frames::step).after(ui::rebuild).in_set(crate::app::ViewerSet::SimSync).run_if(open()));
     }
 }
 

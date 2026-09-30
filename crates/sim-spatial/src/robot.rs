@@ -8,9 +8,10 @@
 //! the preset's shared EmbeddedEnvironment/EmbeddedSession (`robot_preset`).
 //! A FILE is watched and reloaded on change or Reload (`robot_source`); a
 //! reload replaces the model and starts a fresh run context.
-use super::{ACCENT, INK, MUTED, PANEL};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
-use crate::builder::ui::UiFonts;
+use crate::builder::ui_api::Enabled;
+use crate::ui_kit::{ACCENT, Corner, DANGER, Dock, Kit, Look, SUBTLE, TEXT, Tint, UiFonts, WARN, size, wheel_delta, wrap};
+use bevy::ui::prelude::AccessibleLabel;
 use bevy::{
     asset::RenderAssetUsages,
     core_pipeline::tonemapping::Tonemapping,
@@ -556,6 +557,7 @@ struct GraphDock;
 struct OverlayRoot;
 #[derive(Component)]
 struct OverlayButton(&'static str);
+/// On an overlay chip: its label (the kit button's text child) shows this overlay's on/off state and key.
 #[derive(Component)]
 struct OverlayLabel(&'static str);
 #[derive(Component)]
@@ -567,7 +569,7 @@ struct StressText;
 struct ReloadButton;
 #[derive(Component)]
 struct SpeedButton;
-/// A speed button's label; true on the middle (×scale) one.
+/// On a speed button: whether its label (the kit button's text child) shows the requested ×scale (the middle one).
 #[derive(Component)]
 struct SpeedLabel(bool);
 #[derive(Component)]
@@ -617,7 +619,7 @@ impl Plugin for RobotPlugin {
 }
 
 fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>, view: Res<RobotView>, fonts: Res<UiFonts>) {
-    let text = |value: &str, size: f32, color: Color| label(&fonts, value, size, color);
+    let k = Kit { f: &fonts };
     commands.insert_resource(Materials {
         normal: materials.add(StandardMaterial { base_color: LINK_COLOUR, perceptual_roughness: 0.7, metallic: 0.05, cull_mode: None, ..default() }),
         selected: materials.add(StandardMaterial { base_color: Color::srgb(0.98, 0.62, 0.22), emissive: LinearRgba::rgb(0.35, 0.16, 0.02), perceptual_roughness: 0.6, cull_mode: None, ..default() }),
@@ -637,147 +639,102 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     // Z-up model frame shown in Bevy's Y-up frame (as sim-app does).
     commands.spawn((Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)), Visibility::default(), RobotRoot));
     let file = view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
+    // The header: title and status line (both rewritten by `panels`).
     commands.spawn((
-        Node { position_type: PositionType::Absolute, left: Val::Px(0.0), right: Val::Px(0.0), top: Val::Px(0.0), height: Val::Px(TOP), padding: UiRect::axes(Val::Px(18.0), Val::Px(8.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), ..default() },
-        BackgroundColor(PANEL),
-        children![(text(&format!("Robot — {file}  ·  file read-only"), 18.0, INK), TitleText), (text("Loading…", 13.0, MUTED), StatusText)],
+        k.dock(Dock::Top { height: TOP }, Node { padding: UiRect::axes(Val::Px(18.0), Val::Px(8.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), ..default() }),
+        children![(k.title(format!("Robot — {file}  ·  file read-only")), TitleText), (k.caption("Loading…"), StatusText)],
     ));
     // Run controls: the same handler as system_ui run:* and REST robot_run.
+    // The Reload button (FILE mode) is the same `RobotAction::Reload` as the watch,
+    // `system_ui` robot:reload and REST robot_reload; `panels` hides it for a preset.
+    let reload = commands.spawn((k.button("Reload file", RobotAction::Reload { trigger: ReloadTrigger::Manual }, Look::Secondary, true), ReloadButton)).id();
+    let shown = view.source.is_some();
+    commands.entity(reload).entry::<Node>().and_modify(move |mut node| {
+        node.margin = UiRect::right(Val::Px(8.0));
+        node.display = if shown { Display::Flex } else { Display::None };
+    });
+    let mut row = vec![reload];
+    for action in [RunAction::Start, RunAction::Pause, RunAction::Step, RunAction::Reset] {
+        // Enabled per the run thread's check (`highlight`). Not `Look::Primary` for Start: a
+        // disabled Primary keeps its accent fill, which would read as active while running.
+        row.push(commands.spawn((k.button(action.label(), RobotAction::Run { action }, Look::Secondary, false), RunButton(action))).id());
+    }
+    for speed in [SpeedRequest::Down, SpeedRequest::Set { scale: 1.0 }, SpeedRequest::Up] {
+        row.push(commands.spawn(speed_button(&k, &view, speed)).id());
+    }
+    // The Graphs button: the same `RobotAction::ToggleGraphs` as key G and `system_ui` graphs:toggle.
+    let graphs = commands.spawn(k.button("Graphs (G)", RobotAction::ToggleGraphs, Look::Secondary, true)).id();
+    commands.entity(graphs).entry::<Node>().and_modify(|mut node| node.margin = UiRect::left(Val::Px(8.0)));
+    row.push(graphs);
+    let buttons = commands.spawn(Node { flex_direction: FlexDirection::Row, align_items: AlignItems::Center, column_gap: Val::Px(4.0), ..default() }).add_children(&row).id();
+    let run_text = commands.spawn((k.caption(""), RunText)).id();
+    // Over the header dock: sibling roots are stacked in query order, not spawn order.
+    commands
+        .spawn((Node { position_type: PositionType::Absolute, right: Val::Px(18.0), top: Val::Px(6.0), flex_direction: FlexDirection::Column, align_items: AlignItems::FlexEnd, row_gap: Val::Px(3.0), ..default() }, ZIndex(1)))
+        .add_children(&[buttons, run_text]);
     commands.spawn((
-        Node { position_type: PositionType::Absolute, right: Val::Px(18.0), top: Val::Px(6.0), flex_direction: FlexDirection::Column, align_items: AlignItems::FlexEnd, row_gap: Val::Px(3.0), ..default() },
-        children![
-            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![reload_button(&fonts, view.source.is_some()), run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset), speed_button(&fonts, SpeedRequest::Down), speed_button(&fonts, SpeedRequest::Set { scale: 1.0 }), speed_button(&fonts, SpeedRequest::Up), graphs_button(&fonts)]),
-            (text("", 12.0, MUTED), RunText),
-        ],
-    ));
-    commands.spawn((
-        Node { position_type: PositionType::Absolute, left: Val::Px(0.0), top: Val::Px(TOP), bottom: Val::Px(0.0), width: Val::Px(LEFT), padding: UiRect::all(Val::Px(14.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), overflow: Overflow::clip_y(), ..default() },
-        BackgroundColor(PANEL),
+        k.dock(Dock::Left { top: TOP, bottom: 0.0, width: LEFT }, Node { padding: UiRect::all(Val::Px(14.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), overflow: Overflow::clip_y(), ..default() }),
         ListRoot,
-        children![text("Links", 15.0, INK)],
+        children![k.title("Links")],
     ));
-    commands.spawn((
-        Node { position_type: PositionType::Absolute, right: Val::Px(0.0), top: Val::Px(TOP), bottom: Val::Px(0.0), width: Val::Px(RIGHT), padding: UiRect::all(Val::Px(16.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.0), ..default() },
-        BackgroundColor(PANEL),
-        children![
-            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), flex_shrink: 0.0, ..default() }, children![tab(&fonts, Section::Link), tab(&fonts, Section::Joints), tab(&fonts, Section::Drives), tab(&fonts, Section::Source)]),
-            // Run-thread overlay toggles and counts (`overlay_panel`).
-            (
-                Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() },
-                OverlayRoot,
-                children![
-                    (
-                        Node { flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap, column_gap: Val::Px(4.0), row_gap: Val::Px(3.0), ..default() },
-                        children![overlay_button(&fonts, 0), overlay_button(&fonts, 1), overlay_button(&fonts, 2), overlay_button(&fonts, 3)]
-                    ),
-                    (text("", 11.5, MUTED), OverlayText),
-                    (text("", 11.5, MUTED), StressText),
-                ],
-            ),
-            // Motion request buttons for a preset (spawned by `motion_panel`).
-            (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, MotionRoot),
-            // The recorded timeline for a recorded preset (spawned by `recorded_panel`).
-            (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, RecordedRoot),
-            // Servo-target jog rows for the selected link's joints (rebuilt by `jog_panel`).
-            (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, JogRoot),
-            (
-                Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, overflow: Overflow::scroll_y(), ..default() },
-                ScrollPosition::default(),
-                InspectorScroll,
-                children![(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, GaitRoot), (text("Select a link in the list or the 3D view.", 12.5, INK), Inspector)],
-            )
-        ],
-    ));
+    let tabs = Section::ALL.map(|section| commands.spawn((k.tab(section.label(), RobotAction::ShowSection { section }, view.section == section), TabButton(section))).id());
+    let tab_strip = commands.spawn(k.tab_strip()).add_children(&tabs).id();
+    // Run-thread overlay toggles (each shows its on/off state) and counts (`overlay_panel`).
+    let overlays: Vec<Entity> = (0..OVERLAYS.len()).map(|i| commands.spawn(overlay_button(&k, i)).id()).collect();
+    let overlay_row = commands.spawn(wrap()).add_children(&overlays).id();
+    let overlay_root = commands
+        .spawn((
+            Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() },
+            OverlayRoot,
+            children![(k.text("", size::CAPTION, SUBTLE, 0), OverlayText), (k.text("", size::CAPTION, SUBTLE, 0), StressText)],
+        ))
+        .insert_children(0, &[overlay_row])
+        .id();
+    commands
+        .spawn((
+            k.dock(Dock::Right { top: TOP, bottom: 0.0, width: RIGHT }, Node { padding: UiRect::all(Val::Px(16.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.0), ..default() }),
+            children![
+                // Motion request buttons for a preset (spawned by `motion_panel`).
+                (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, MotionRoot),
+                // The recorded timeline for a recorded preset (spawned by `recorded_panel`).
+                (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, RecordedRoot),
+                // Servo-target jog rows for the selected link's joints (rebuilt by `jog_panel`).
+                (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, JogRoot),
+                (
+                    k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0),
+                    InspectorScroll,
+                    children![(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, GaitRoot), (k.text("Select a link in the list or the 3D view.", size::BODY, TEXT, 0), Inspector)],
+                )
+            ],
+        ))
+        // Tabs first, then the overlay block, above the blocks spawned with the dock.
+        .insert_children(0, &[tab_strip, overlay_root]);
     // Graph dock under the 3D view (filled by `graph_dock`).
     commands.spawn((
-        Node { position_type: PositionType::Absolute, left: Val::Px(LEFT), right: Val::Px(RIGHT), bottom: Val::Px(0.0), height: Val::Px(DOCK), padding: UiRect::all(Val::Px(10.0)), column_gap: Val::Px(10.0), display: Display::None, border: UiRect::top(Val::Px(1.0)), ..default() },
-        BackgroundColor(PANEL),
-        BorderColor::all(Color::srgb(0.2, 0.24, 0.29)),
+        k.dock(Dock::Under { left: LEFT, right: RIGHT, height: DOCK }, Node { padding: UiRect::all(Val::Px(10.0)), column_gap: Val::Px(10.0), display: Display::None, ..default() }),
         GraphDock,
     ));
-}
-
-fn tab(fonts: &UiFonts, section: Section) -> impl Bundle {
-    (
-        Button,
-        RobotAction::ShowSection { section },
-        TabButton(section),
-        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(10.0), Val::Px(4.0)), ..default() },
-        BackgroundColor(Color::NONE),
-        children![label(fonts, section.label(), 14.0, INK)],
-    )
-}
-
-fn run_button(fonts: &UiFonts, action: RunAction) -> impl Bundle {
-    (
-        Button,
-        RobotAction::Run { action },
-        RunButton(action),
-        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), ..default() },
-        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
-        children![label(fonts, action.label(), 13.0, INK)],
-    )
 }
 
 /// A run speed button: the same `RobotAction::Speed` as keys =/+ and −, `system_ui`
 /// run:speed_* and REST robot_speed. The middle one shows the requested ×scale
 /// (updated by `speed_panel`) and resets to ×1.
-fn speed_button(fonts: &UiFonts, speed: SpeedRequest) -> impl Bundle {
+fn speed_button(k: &Kit<'_>, view: &RobotView, speed: SpeedRequest) -> impl Bundle + use<> {
     let name = match speed {
         SpeedRequest::Down => "−",
         SpeedRequest::Up => "+",
         SpeedRequest::Set { .. } => "×1",
     };
-    (
-        Button,
-        RobotAction::Speed { speed },
-        SpeedButton,
-        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(3.0)), ..default() },
-        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
-        children![(label(fonts, name, 13.0, INK), SpeedLabel(matches!(speed, SpeedRequest::Set { .. })))],
-    )
+    let action = RobotAction::Speed { speed };
+    let enabled = check(view, &action).is_ok();
+    (k.button(name, action, Look::Secondary, enabled), SpeedButton, SpeedLabel(matches!(speed, SpeedRequest::Set { .. })))
 }
 
-/// The Reload button (FILE mode): the same `RobotAction::Reload` as the watch,
-/// `system_ui` robot:reload and REST robot_reload.
-fn reload_button(fonts: &UiFonts, shown: bool) -> impl Bundle {
-    (
-        Button,
-        RobotAction::Reload { trigger: ReloadTrigger::Manual },
-        ReloadButton,
-        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::right(Val::Px(8.0)), display: if shown { Display::Flex } else { Display::None }, ..default() },
-        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
-        children![label(fonts, "Reload file", 13.0, INK)],
-    )
-}
-
-/// An overlay toggle: the same `RobotAction::Overlay` as its key and `system_ui` overlay:*
-/// (the flipped value is re-resolved each frame by `overlay_panel`).
-fn overlay_button(fonts: &UiFonts, i: usize) -> impl Bundle {
+/// An overlay toggle chip: the same `RobotAction::Overlay` as its key and `system_ui` overlay:*
+/// (the flipped value, the chip's on state and its label are re-resolved each frame by `overlay_panel`).
+fn overlay_button(k: &Kit<'_>, i: usize) -> impl Bundle + use<> {
     let (kind, name, _) = OVERLAYS[i];
-    (
-        Button,
-        RobotAction::Overlay { contacts: None, joints: None, deflections: None, stress: None },
-        OverlayButton(kind),
-        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() },
-        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
-        children![(label(fonts, name, 12.0, INK), OverlayLabel(kind))],
-    )
-}
-
-/// The Graphs button: the same `RobotAction::ToggleGraphs` as key G and `system_ui` graphs:toggle.
-fn graphs_button(fonts: &UiFonts) -> impl Bundle {
-    (
-        Button,
-        RobotAction::ToggleGraphs,
-        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::left(Val::Px(8.0)), ..default() },
-        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
-        children![label(fonts, "Graphs (G)", 13.0, INK)],
-    )
-}
-
-pub(crate) fn label(fonts: &UiFonts, value: &str, size: f32, color: Color) -> (Text, TextFont, TextColor, TextLayout) {
-    (Text::new(value), TextFont { font: fonts.regular.clone().into(), font_size: FontSize::Px(size), ..default() }, TextColor(color), TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter))
+    (k.chip(name, RobotAction::Overlay { contacts: None, joints: None, deflections: None, stress: None }, false, true), OverlayButton(kind), OverlayLabel(kind))
 }
 
 /// UI thread, FILE mode: stats the opened file every `robot_source::POLL`;
@@ -899,6 +856,7 @@ fn receive(
     view.triangles = loaded.geometry.iter().map(|g| g.as_ref().map_or(0, |g| g.triangles())).collect();
     // New meshes are painted (or not) for the stress overlay by `stress_paint`.
     view.stress.revision += 1;
+    let k = Kit { f: &fonts };
     let rows: Vec<Entity> = loaded
         .model
         .links
@@ -906,14 +864,18 @@ fn receive(
         .enumerate()
         .map(|(i, l)| {
             let name = if view.triangles[i] > 0 { l.name.clone() } else { format!("{}  (no collision geometry)", l.name) };
+            // A one-line selectable row; `highlight` sets its `Tint` from the selection
+            // (`view.selected` still indexes the previous model here).
             commands
                 .spawn((
                     Button,
                     RobotAction::SelectLink { index: i, name: l.name.clone() },
                     LinkRow(i),
+                    Tint::selectable(false),
+                    AccessibleLabel::new(name.as_str()),
                     Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)), flex_shrink: 0.0, ..default() },
                     BackgroundColor(Color::NONE),
-                    children![label(&fonts, &name, 13.0, INK)],
+                    children![k.text(name.as_str(), size::ITEM, TEXT, 0)],
                 ))
                 .id()
         })
@@ -1039,37 +1001,22 @@ fn viewport(window: Single<&Window>, view: Res<RobotView>, mut camera: Single<&m
     }
 }
 
-/// The one selection, shown in 3D and in the list.
+/// The one selection, shown in 3D and in the list (a selectable `Tint`);
+/// the current section's tab and the run buttons' enabled state (their
+/// `Look`s are painted by `ui_kit::repaint_buttons`).
 fn highlight(
     view: Res<RobotView>,
     materials: Res<Materials>,
     mut meshes: Query<(&LinkMesh, &mut MeshMaterial3d<StandardMaterial>)>,
-    mut rows: Query<(&LinkRow, &Interaction, &mut BackgroundColor), (Without<TabButton>, Without<RunButton>)>,
-    mut tabs: Query<(&TabButton, &Interaction, &mut BackgroundColor), (Without<LinkRow>, Without<RunButton>)>,
-    mut runs: Query<(&RunButton, &Interaction, &mut BackgroundColor), (Without<LinkRow>, Without<TabButton>)>,
+    mut rows: Query<(&LinkRow, &mut Tint)>,
+    mut tabs: Query<(&TabButton, &mut Look)>,
+    mut runs: Query<(&RunButton, &mut Enabled)>,
 ) {
-    for (button, interaction, mut background) in &mut runs {
-        let enabled = view.run.as_ref().is_some_and(|r| r.check(button.0).is_ok());
-        let color = match (enabled, interaction) {
-            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
-            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
-            (true, _) => Color::srgb(0.16, 0.20, 0.25),
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
+    for (button, enabled) in &mut runs {
+        enable(enabled, view.run.as_ref().is_some_and(|r| r.check(button.0).is_ok()));
     }
-    for (tab, interaction, mut background) in &mut tabs {
-        let color = if view.section == tab.0 {
-            ACCENT.with_alpha(0.28)
-        } else if *interaction == Interaction::Hovered {
-            Color::srgb(0.13, 0.17, 0.21)
-        } else {
-            Color::NONE
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
+    for (tab, mut look) in &mut tabs {
+        look.set_if_neq(Look::Tab(view.section == tab.0));
     }
     for (link, mut material) in &mut meshes {
         let want = match (view.selected == Some(link.0), view.stress.painting()) {
@@ -1082,17 +1029,15 @@ fn highlight(
             material.0 = want.clone();
         }
     }
-    for (row, interaction, mut background) in &mut rows {
-        let color = if view.selected == Some(row.0) {
-            ACCENT.with_alpha(0.28)
-        } else if *interaction == Interaction::Hovered {
-            Color::srgb(0.13, 0.17, 0.21)
-        } else {
-            Color::NONE
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
+    for (row, mut tint) in &mut rows {
+        tint.set_if_neq(Tint::selectable(view.selected == Some(row.0)));
+    }
+}
+
+/// A kit button's `Enabled` flag (dims it and drops its hover), written only on a change.
+fn enable(mut flag: Mut<Enabled>, on: bool) {
+    if flag.0 != on {
+        flag.0 = on;
     }
 }
 
@@ -1100,10 +1045,7 @@ fn highlight(
 /// section changes); reports the laid-out offset and its maximum back to REST.
 fn scroll(mut view: ResMut<RobotView>, mut wheel: MessageReader<MouseWheel>, window: Single<&Window>, panel: Single<(&mut ScrollPosition, &ComputedNode), With<InspectorScroll>>) {
     let (mut position, node) = panel.into_inner();
-    let delta = wheel.read().fold(0.0, |sum, e| sum + match e.unit {
-        MouseScrollUnit::Line => e.y * 24.0,
-        MouseScrollUnit::Pixel => e.y,
-    });
+    let delta = wheel_delta(&mut wheel, 24.0);
     let max = ((node.content_size().y - node.size().y) * node.inverse_scale_factor()).max(0.0);
     if delta != 0.0 && window.cursor_position().is_some_and(|p| p.x >= window.width() - RIGHT && p.y > TOP) {
         view.scroll_to = Some((position.y - delta).clamp(0.0, max));
@@ -1310,21 +1252,29 @@ fn jog_panel(
     root: Single<Entity, With<JogRoot>>,
     mut shown: Local<Option<Vec<String>>>,
     mut texts: Query<(&JogText, &mut Text)>,
-    mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<JogButton>>,
+    mut buttons: Query<(&RobotAction, &mut Enabled), With<JogButton>>,
 ) {
+    let k = Kit { f: &fonts };
     let joints = jog_joints(&view);
     let names: Vec<String> = joints.iter().map(|(j, _)| j.clone()).collect();
     if shown.as_ref() != Some(&names) {
         commands.entity(*root).despawn_related::<Children>();
-        let header = if joints.is_empty() { String::new() } else { format!("Jog — {JOG_LABEL}") };
-        let mut rows = vec![commands.spawn(label(&fonts, &header, 11.5, MUTED)).id()];
+        let mut rows = Vec::new();
+        if !joints.is_empty() {
+            rows.push(commands.spawn(k.section("Jog")).id());
+            rows.push(commands.spawn(k.text(JOG_LABEL, size::CAPTION, SUBTLE, 0)).id());
+        }
         for (joint, step) in &joints {
-            let button = |sign: f64, text: &str| (Button, JogButton, RobotAction::Jog { joint: joint.clone(), delta: sign * step }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(9.0), Val::Px(1.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 13.0, INK)]);
+            let button = |sign: f64, text: &str| {
+                let action = RobotAction::Jog { joint: joint.clone(), delta: sign * step };
+                let enabled = check(&view, &action).is_ok();
+                (k.button(text, action, Look::Secondary, enabled), JogButton)
+            };
             rows.push(
                 commands
                     .spawn((
                         Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, ..default() },
-                        children![button(-1.0, "−"), button(1.0, "+"), (label(&fonts, joint, 11.5, INK), JogText(joint.clone()))],
+                        children![button(-1.0, "−"), button(1.0, "+"), (k.text(joint.as_str(), size::CAPTION, TEXT, 0), JogText(joint.clone()))],
                     ))
                     .id(),
             );
@@ -1340,16 +1290,8 @@ fn jog_panel(
             }
         }
     }
-    for (action, interaction, mut background) in &mut buttons {
-        let enabled = check(&view, action).is_ok();
-        let color = match (enabled, interaction) {
-            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
-            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
-            (true, _) => Color::srgb(0.16, 0.20, 0.25),
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
+    for (action, enabled) in &mut buttons {
+        enable(enabled, check(&view, action).is_ok());
     }
 }
 
@@ -1364,31 +1306,37 @@ fn motion_panel(
     mut listed: Local<Option<Vec<String>>>,
     replay_list: Query<Entity, With<ReplayList>>,
     mut text: Query<(&mut Text, Has<RecordingText>, Has<ReplayText>), Or<(With<MotionText>, With<RecordingText>, With<ReplayText>)>>,
-    mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<MotionButton>>,
+    mut buttons: Query<(&RobotAction, &mut Enabled), With<MotionButton>>,
 ) {
-    let button = |commands: &mut Commands, action: RobotAction, text: &str| commands.spawn((Button, MotionButton, action, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+    let k = Kit { f: &fonts };
+    let button = |commands: &mut Commands, action: RobotAction, text: &str| {
+        let enabled = check(&view, &action).is_ok();
+        commands.spawn((k.button(text, action, Look::Secondary, enabled), MotionButton)).id()
+    };
     if view.preset.as_ref().is_some_and(|p| !p.is_recorded()) && !*shown {
-        let header = commands.spawn(label(&fonts, &format!("Motion — {}", robot_motion::LABEL), 11.5, MUTED)).id();
-        let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }).id();
+        let header = commands.spawn(k.section("Motion")).id();
+        let label = commands.spawn(k.text(robot_motion::LABEL, size::CAPTION, SUBTLE, 0)).id();
+        let row = commands.spawn(wrap()).id();
         for (_, text, request) in motion_buttons() {
-            let b = commands.spawn((Button, MotionButton, RobotAction::Motion { request }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+            let b = button(&mut commands, RobotAction::Motion { request }, text);
             commands.entity(row).add_child(b);
         }
-        let line = commands.spawn((label(&fonts, "", 11.5, INK), MotionText)).id();
+        let line = commands.spawn((k.text("", size::CAPTION, TEXT, 0), MotionText)).id();
         // Save recording: the same RobotAction::SaveRecording as system_ui recording:save and REST robot_save_recording.
         let save_row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
-        let save = commands.spawn((Button, MotionButton, RobotAction::SaveRecording { path: None, note: None }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, "Save recording", 12.0, INK)])).id();
-        let saved = commands.spawn((label(&fonts, "", 11.5, INK), RecordingText, Node { flex_shrink: 1.0, ..default() })).id();
+        let save = button(&mut commands, RobotAction::SaveRecording { path: None, note: None }, "Save recording");
+        let saved = commands.spawn((k.text("", size::CAPTION, TEXT, 0), RecordingText, Node { flex_shrink: 1.0, ..default() })).id();
         commands.entity(save_row).add_children(&[save, saved]);
         // Replay: the same RobotAction::Replay / CancelReplay as system_ui replay:<file> / replay:cancel and REST robot_replay.
-        let replay_header = commands.spawn(label(&fonts, "Replay — re-executed through the shared prepare_replay on the run thread", 11.5, MUTED)).id();
+        let replay_header = commands.spawn(k.section("Replay")).id();
+        let replay_label = commands.spawn(k.text("re-executed through the shared prepare_replay on the run thread", size::CAPTION, SUBTLE, 0)).id();
         let list = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }, ReplayList)).id();
         let replay_row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
         let cancel = button(&mut commands, RobotAction::CancelReplay, "Cancel replay");
         let refresh = button(&mut commands, RobotAction::RefreshRecordings, "Refresh list");
-        let replay_line = commands.spawn((label(&fonts, "", 11.5, INK), ReplayText, Node { flex_shrink: 1.0, ..default() })).id();
+        let replay_line = commands.spawn((k.text("", size::CAPTION, TEXT, 0), ReplayText, Node { flex_shrink: 1.0, ..default() })).id();
         commands.entity(replay_row).add_children(&[cancel, refresh]);
-        commands.entity(*root).add_children(&[header, row, line, save_row, replay_header, list, replay_row, replay_line]);
+        commands.entity(*root).add_children(&[header, label, row, line, save_row, replay_header, replay_label, list, replay_row, replay_line]);
         *shown = true;
     }
     if let (Some(r), Ok(list)) = (view.run.as_ref(), replay_list.single()) {
@@ -1401,14 +1349,14 @@ fn motion_panel(
                 let summary = l.meta.as_ref().map_or("no sidecar".to_string(), |m| format!("{} steps{}{}", m["completed_steps"], if m["replayable"] == false { " · diagnostic" } else { "" }, m["note"].as_str().map_or(String::new(), |n| format!(" · {}", clip(n, 30)))));
                 let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
                 let b = button(&mut commands, RobotAction::Replay { file: Some(l.file.clone()), path: None }, "Replay");
-                let t = commands.spawn(label(&fonts, &format!("{} · {summary}", l.file), 11.0, INK)).id();
+                let t = commands.spawn(k.text(format!("{} · {summary}", l.file), size::DETAIL, TEXT, 0)).id();
                 commands.entity(row).add_children(&[b, t]);
                 rows.push(row);
             }
             let more = r.recordings().len().saturating_sub(REPLAY_BUTTONS);
             let note = if r.recordings().is_empty() { "no saved recordings for this preset yet".to_string() } else if more > 0 { format!("{more} older in robot_state.recordings (system_ui replay:<file>, REST robot_replay)") } else { String::new() };
             if !note.is_empty() {
-                rows.push(commands.spawn(label(&fonts, &note, 11.0, MUTED)).id());
+                rows.push(commands.spawn(k.text(note, size::DETAIL, SUBTLE, 0)).id());
             }
             commands.entity(list).add_children(&rows);
             *listed = Some(files);
@@ -1422,16 +1370,8 @@ fn motion_panel(
             }
         }
     }
-    for (action, interaction, mut background) in &mut buttons {
-        let enabled = check(&view, action).is_ok();
-        let color = match (enabled, interaction) {
-            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
-            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
-            (true, _) => Color::srgb(0.16, 0.20, 0.25),
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
+    for (action, enabled) in &mut buttons {
+        enable(enabled, check(&view, action).is_ok());
     }
 }
 
@@ -1447,7 +1387,7 @@ fn recorded_panel(
     root: Single<Entity, With<RecordedRoot>>,
     mut shown: Local<bool>,
     mut text: Query<&mut Text, With<RecordedText>>,
-    mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<RecordedButton>>,
+    mut buttons: Query<(&RobotAction, &mut Enabled), With<RecordedButton>>,
 ) {
     let Some(p) = view.run.as_ref().and_then(|r| r.playback()) else {
         // Switched to a view without a recorded timeline (an embedded preset):
@@ -1459,14 +1399,18 @@ fn recorded_panel(
         return;
     };
     if !*shown {
-        let header = commands.spawn(label(&fonts, &format!("Recorded — {} · speed: header −/×/+ · seek: REST robot_recorded", crate::robot_preset::RECORDED_LABEL), 11.5, MUTED)).id();
-        let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).id();
+        let k = Kit { f: &fonts };
+        let header = commands.spawn(k.section("Recorded")).id();
+        let label = commands.spawn(k.text(format!("{} · speed: header −/×/+ · seek: REST robot_recorded", crate::robot_preset::RECORDED_LABEL), size::CAPTION, SUBTLE, 0)).id();
+        let row = commands.spawn(wrap()).id();
         for (_, name, action) in RECORDED_TRANSPORT {
-            let b = commands.spawn((Button, RecordedButton, RobotAction::Recorded { action }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, name, 12.0, INK)])).id();
+            let action = RobotAction::Recorded { action };
+            let enabled = check(&view, &action).is_ok();
+            let b = commands.spawn((k.button(name, action, Look::Secondary, enabled), RecordedButton)).id();
             commands.entity(row).add_child(b);
         }
-        let line = commands.spawn((label(&fonts, "", 11.5, INK), RecordedText)).id();
-        commands.entity(*root).add_children(&[header, row, line]);
+        let line = commands.spawn((k.text("", size::CAPTION, TEXT, 0), RecordedText)).id();
+        commands.entity(*root).add_children(&[header, label, row, line]);
         *shown = true;
     }
     let want = recorded_line(p);
@@ -1475,16 +1419,8 @@ fn recorded_panel(
             t.0 = want.clone();
         }
     }
-    for (action, interaction, mut background) in &mut buttons {
-        let enabled = check(&view, action).is_ok();
-        let color = match (enabled, interaction) {
-            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
-            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
-            (true, _) => Color::srgb(0.16, 0.20, 0.25),
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
+    for (action, enabled) in &mut buttons {
+        enable(enabled, check(&view, action).is_ok());
     }
 }
 
@@ -1503,13 +1439,19 @@ fn gait_panel(
     mut listed: Local<Option<Vec<String>>>,
     list: Query<Entity, With<GaitList>>,
     mut text: Query<(&mut Text, Has<GaitError>), Or<(With<GaitText>, With<GaitError>)>>,
-    mut buttons: Query<(&mut RobotAction, &Interaction, &mut BackgroundColor, Option<&GaitSeekButton>), With<GaitButton>>,
+    mut buttons: Query<(&mut RobotAction, &mut Enabled, Option<&GaitSeekButton>), With<GaitButton>>,
 ) {
     let Some(g) = view.run.as_ref().and_then(|r| r.gait_preview()) else { return };
-    let button = |commands: &mut Commands, action: GaitAction, text: &str| commands.spawn((Button, GaitButton, RobotAction::Gait { action }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(7.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+    let k = Kit { f: &fonts };
+    let button = |commands: &mut Commands, action: GaitAction, text: &str| {
+        let action = RobotAction::Gait { action };
+        let enabled = check(&view, &action).is_ok();
+        commands.spawn((k.button(text, action, Look::Secondary, enabled), GaitButton)).id()
+    };
     if !*shown {
-        let header = commands.spawn(label(&fonts, &format!("Gait preview — {}", robot_gait::LABEL), 11.5, MUTED)).id();
-        let row = |commands: &mut Commands| commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).id();
+        let header = commands.spawn(k.section("Gait preview")).id();
+        let label = commands.spawn(k.text(robot_gait::LABEL, size::CAPTION, SUBTLE, 0)).id();
+        let row = |commands: &mut Commands| commands.spawn(wrap()).id();
         let transport = row(&mut commands);
         let play = button(&mut commands, GaitAction::Play, "Play");
         let pause = button(&mut commands, GaitAction::Pause, "Pause");
@@ -1522,17 +1464,17 @@ fn gait_panel(
         }
         commands.entity(transport).add_children(&[play, pause, stop]).add_children(&seek);
         let speed = row(&mut commands);
-        let speed_label = commands.spawn(label(&fonts, "speed ×", 11.5, MUTED)).id();
+        let speed_label = commands.spawn(k.text("speed ×", size::CAPTION, SUBTLE, 0)).id();
         commands.entity(speed).add_child(speed_label);
         for scale in GAIT_SCALES {
             let b = button(&mut commands, GaitAction::Speed { scale }, &format!("{scale}"));
             commands.entity(speed).add_child(b);
         }
-        let status = commands.spawn((label(&fonts, "", 11.5, INK), GaitText)).id();
-        let error = commands.spawn((label(&fonts, "", 11.5, crate::builder::ui::DANGER), GaitError)).id();
-        let list_header = commands.spawn(label(&fonts, "Tracked gait reports (report speed · status, verbatim) — click to open. A compiled.json path: REST robot_gait {path} (no path field here).", 11.0, MUTED)).id();
+        let status = commands.spawn((k.text("", size::CAPTION, TEXT, 0), GaitText)).id();
+        let error = commands.spawn((k.text("", size::CAPTION, DANGER, 0), GaitError)).id();
+        let list_header = commands.spawn(k.text("Tracked gait reports (report speed · status, verbatim) — click to open. A compiled.json path: REST robot_gait {path} (no path field here).", size::DETAIL, SUBTLE, 0)).id();
         let reports = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }, GaitList)).id();
-        commands.entity(*root).add_children(&[header, status, error, transport, speed, list_header, reports]);
+        commands.entity(*root).add_children(&[header, label, status, error, transport, speed, list_header, reports]);
         *shown = true;
     }
     if let Ok(list) = list.single() {
@@ -1545,7 +1487,7 @@ fn gait_panel(
                 let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
                 let b = button(&mut commands, GaitAction::Open { source: GaitSource::Report(r.name.clone()) }, &r.name);
                 let speed = r.speed_m_s.map_or("speed —".to_string(), |v| format!("{v:.3} m/s"));
-                let t = commands.spawn(label(&fonts, &format!("{speed} · {}", r.status), 11.0, INK)).id();
+                let t = commands.spawn(k.text(format!("{speed} · {}", r.status), size::DETAIL, TEXT, 0)).id();
                 commands.entity(row).add_children(&[b, t]);
                 rows.push(row);
             }
@@ -1555,7 +1497,7 @@ fn gait_panel(
                 None => String::new(),
             };
             if !note.is_empty() {
-                rows.push(commands.spawn(label(&fonts, &note, 11.0, MUTED)).id());
+                rows.push(commands.spawn(k.text(note, size::DETAIL, SUBTLE, 0)).id());
             }
             commands.entity(list).add_children(&rows);
             *listed = Some(names);
@@ -1568,22 +1510,14 @@ fn gait_panel(
             t.0 = line;
         }
     }
-    for (mut action, interaction, mut background, step) in &mut buttons {
+    for (mut action, enabled, step) in &mut buttons {
         if let Some(step) = step {
             let next = RobotAction::Gait { action: gait_seek(&view, step.0) };
             if *action != next {
                 *action = next;
             }
         }
-        let enabled = check(&view, &action).is_ok();
-        let color = match (enabled, interaction) {
-            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
-            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
-            (true, _) => Color::srgb(0.16, 0.20, 0.25),
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
+        enable(enabled, check(&view, &action).is_ok());
     }
 }
 
@@ -1929,24 +1863,20 @@ fn file_watch_text(s: &SourceWatch) -> String {
 }
 
 /// The speed buttons: dimmed when refused (at a limit, or no robot), the middle one shows ×scale.
-fn speed_panel(view: Res<RobotView>, mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<SpeedButton>>, mut labels: Query<(&SpeedLabel, &mut Text)>) {
-    for (action, interaction, mut background) in &mut buttons {
-        let enabled = check(&view, action).is_ok();
-        let color = match (enabled, interaction) {
-            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
-            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
-            (true, _) => Color::srgb(0.16, 0.20, 0.25),
-        };
-        if background.0 != color {
-            background.0 = color;
-        }
-    }
+fn speed_panel(view: Res<RobotView>, mut buttons: Query<(&RobotAction, &mut Enabled, &SpeedLabel, &Children), With<SpeedButton>>, mut labels: Query<&mut Text>) {
     let scale = view.run.as_ref().map_or(1.0, RunController::speed_scale);
-    for (label, mut text) in &mut labels {
-        if label.0 {
-            let want = format!("×{scale}");
-            if text.0 != want {
-                text.0 = want;
+    for (action, enabled, shows_scale, children) in &mut buttons {
+        enable(enabled, check(&view, action).is_ok());
+        if !shows_scale.0 {
+            continue;
+        }
+        // The kit button's label is its text child.
+        let want = format!("×{scale}");
+        for child in children.iter() {
+            if let Ok(mut text) = labels.get_mut(child) {
+                if text.0 != want {
+                    text.0 = want.clone();
+                }
             }
         }
     }
@@ -1956,33 +1886,33 @@ fn speed_panel(view: Res<RobotView>, mut buttons: Query<(&RobotAction, &Interact
 /// shows on/off; the line under it gives the accepted frame's counts and the scales.
 fn overlay_panel(
     view: Res<RobotView>,
-    mut buttons: Query<(&OverlayButton, &mut RobotAction, &mut BackgroundColor, &mut Node)>,
-    mut labels: Query<(&OverlayLabel, &mut Text), Without<OverlayText>>,
+    mut buttons: Query<(&OverlayButton, &OverlayLabel, &mut RobotAction, &mut Look, &mut Node, &Children)>,
+    mut labels: Query<&mut Text, Without<OverlayText>>,
     mut line: Single<&mut Text, With<OverlayText>>,
 ) {
     let run = view.run.as_ref();
     let available = run.is_some_and(|r| r.check_overlays().is_ok());
-    for (b, mut action, mut color, mut node) in &mut buttons {
+    for (b, l, mut action, mut look, mut node, children) in &mut buttons {
         let next = overlay_toggle(&view, b.0);
         if *action != next {
             *action = next;
         }
         let on = overlay_on(&view, b.0);
-        let c = if on { Color::srgb(0.18, 0.36, 0.30) } else { Color::srgb(0.16, 0.20, 0.25) };
-        if color.0 != c {
-            color.0 = c;
-        }
+        look.set_if_neq(Look::Chip(on));
         let enabled = if b.0 == "stress" { check_stress(&view).is_ok() } else { available };
         let display = if enabled { Display::Flex } else { Display::None };
         if node.display != display {
             node.display = display;
         }
-    }
-    for (l, mut text) in &mut labels {
+        // The chip's label (its text child): name, on/off and key.
         let (_, name, key) = OVERLAYS.iter().find(|o| o.0 == l.0).copied().unwrap_or(OVERLAYS[0]);
         let t = format!("{name} {} ({})", if overlay_on(&view, l.0) { "on" } else { "off" }, format!("{key:?}").trim_start_matches("Key"));
-        if text.0 != t {
-            text.0 = t;
+        for child in children.iter() {
+            if let Ok(mut text) = labels.get_mut(child) {
+                if text.0 != t {
+                    text.0 = t.clone();
+                }
+            }
         }
     }
     let t = match run {
@@ -2134,10 +2064,10 @@ fn graph_dock(
     let charts = run.graph_charts(view.selected);
     let mode = run.graphs_mode();
     commands.entity(entity).despawn_related::<Children>();
-    let text = |value: &str, size: f32, color: Color| label(&fonts, value, size, color);
+    let k = Kit { f: &fonts };
     if gait {
         // The charts are physics frames only; preview samples are never plotted as traces.
-        let caption = commands.spawn((Node { width: Val::Px(150.0), flex_shrink: 0.0, ..default() }, children![text("Gait preview is kinematic and not charted: these charts are the physics run's frames only.", 11.0, crate::builder::ui::WARN)])).id();
+        let caption = commands.spawn((Node { width: Val::Px(150.0), flex_shrink: 0.0, ..default() }, children![k.text("Gait preview is kinematic and not charted: these charts are the physics run's frames only.", size::DETAIL, WARN, 0)])).id();
         commands.entity(entity).add_child(caption);
     }
     let num = |x: f64| if x == 0.0 || (x.abs() >= 1e-3 && x.abs() < 1e4) { format!("{x:.4}") } else { format!("{x:.3e}") };
@@ -2155,21 +2085,21 @@ fn graph_dock(
         let unit = if units.len() == 1 { units.into_iter().next().unwrap_or_default().to_string() } else { String::new() };
         let card = commands.spawn(Node { flex_direction: FlexDirection::Column, flex_grow: 1.0, flex_basis: Val::Px(0.0), min_width: Val::Px(0.0), row_gap: Val::Px(3.0), ..default() }).id();
         let head = commands.spawn(Node { flex_direction: FlexDirection::Row, justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(6.0), flex_shrink: 0.0, ..default() }).id();
-        let title = commands.spawn(text(&c.title, 11.5, INK)).id();
-        let badge = commands.spawn(text(&format!("{} · gen {}", mode.to_uppercase(), h.generation()), 11.0, if mode == "replay" { Color::srgb(0.98, 0.62, 0.22) } else { ACCENT })).id();
+        let title = commands.spawn(k.text(c.title.as_str(), size::CAPTION, TEXT, 1)).id();
+        let badge = commands.spawn(k.text(format!("{} · gen {}", mode.to_uppercase(), h.generation()), size::DETAIL, if mode == "replay" { WARN } else { ACCENT }, 0)).id();
         commands.entity(head).add_children(&[title, badge]);
         commands.entity(card).add_child(head);
         if let Some(why) = &c.absent_reason {
-            let t = commands.spawn(text(why, 11.0, MUTED)).id();
+            let t = commands.spawn(k.text(why.as_str(), size::DETAIL, SUBTLE, 0)).id();
             commands.entity(card).add_child(t);
         }
         if !c.traces.is_empty() {
-            let plot = commands.spawn((Node { flex_grow: 1.0, min_height: Val::Px(60.0), border: UiRect::all(Val::Px(1.0)), ..default() }, BorderColor::all(Color::srgb(0.2, 0.24, 0.29)), ImageNode::new(handles[slot].clone()))).id();
+            let plot = commands.spawn(k.chart_image(handles[slot].clone(), Node { flex_grow: 1.0, min_height: Val::Px(60.0), ..default() }, true)).id();
             if drawable {
                 let with_unit = |v: f64| if unit.is_empty() { num(v) } else { format!("{} {unit}", num(v)) };
-                let top = commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(4.0), top: Val::Px(2.0), ..default() }, children![text(&with_unit(range.1), 10.0, MUTED)])).id();
-                let bottom = commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(4.0), bottom: Val::Px(2.0), ..default() }, children![text(&with_unit(range.0), 10.0, MUTED)])).id();
-                let x = commands.spawn((Node { position_type: PositionType::Absolute, right: Val::Px(4.0), bottom: Val::Px(2.0), ..default() }, children![text(&format!("{:.2} – {:.2} s sim time", window.0, window.1), 10.0, MUTED)])).id();
+                let top = commands.spawn(k.chart_label(with_unit(range.1), Corner::TopLeft)).id();
+                let bottom = commands.spawn(k.chart_label(with_unit(range.0), Corner::BottomLeft)).id();
+                let x = commands.spawn(k.chart_label(format!("{:.2} – {:.2} s sim time", window.0, window.1), Corner::BottomRight)).id();
                 commands.entity(plot).add_children(&[top, bottom, x]);
             }
             commands.entity(card).add_child(plot);
@@ -2183,7 +2113,7 @@ fn graph_dock(
                 let source = if t.source.starts_with("request") { "request (held input in frame)" } else if t.source.starts_with(crate::robot_graphs::WORLD_FRAME) { crate::robot_graphs::WORLD_FRAME } else { t.source.split(" (").next().unwrap_or(&t.source) };
                 let color = Color::srgb_u8(r, g, b);
                 let swatch = commands.spawn((Node { border_radius: BorderRadius::all(Val::Px(2.0)), width: Val::Px(9.0), height: Val::Px(9.0), flex_shrink: 0.0, ..default() }, BackgroundColor(color))).id();
-                let line = commands.spawn(text(&format!("{}: {value}  ·  {source}", t.name), 10.5, color)).id();
+                let line = commands.spawn(k.text(format!("{}: {value}  ·  {source}", t.name), size::SECTION, color, 0)).id();
                 let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(5.0), align_items: AlignItems::Center, ..default() }).add_children(&[swatch, line]).id();
                 commands.entity(card).add_child(row);
             }

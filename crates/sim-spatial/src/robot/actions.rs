@@ -85,7 +85,7 @@ pub(super) fn overlay_toggle(view: &RobotView, kind: &str) -> RobotAction {
     }
 }
 /// Why the stress overlay cannot be set now.
-fn check_stress(view: &RobotView) -> Result<(), String> {
+pub(super) fn check_stress(view: &RobotView) -> Result<(), String> {
     view.source.as_ref().ok_or(STRESS_PRESET)?;
     view.model.as_ref().ok_or("the robot has not loaded")?;
     Ok(())

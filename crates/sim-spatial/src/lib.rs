@@ -53,8 +53,6 @@ const LEFT: f32 = 230.0;
 const RIGHT: f32 = 320.0;
 const TOP: f32 = 116.0;
 const BOTTOM: f32 = 66.0;
-// TEMPORARY (ui-kit T26.1, removed in T26.2): inspect's colours are the kit's tokens.
-use ui_kit::{ACCENT, SUBTLE as MUTED, SURFACE as PANEL, TEXT as INK};
 
 #[derive(Resource)]
 pub struct SpatialScene {
@@ -226,7 +224,7 @@ impl SpatialScene {
     }
     fn left(&self) -> f32 {
         if self.builder_mode {
-            return builder::LEFT_WIDTH;
+            return ui_kit::LEFT_WIDTH;
         }
         if self.parts_visible {
             if self.compact { 180. } else { LEFT }
@@ -236,15 +234,15 @@ impl SpatialScene {
     }
     fn right(&self) -> f32 {
         if self.builder_mode {
-            return builder::RIGHT_WIDTH + self.builder_side;
+            return ui_kit::RIGHT_WIDTH + self.builder_side;
         }
         if self.compact { 260. } else { RIGHT }
     }
     fn top(&self) -> f32 {
-        if self.builder_mode { builder::TOPBAR } else { TOP }
+        if self.builder_mode { ui_kit::TOPBAR } else { TOP }
     }
     fn bottom(&self) -> f32 {
-        if self.builder_mode { builder::STATUSBAR + self.builder_dock } else { BOTTOM }
+        if self.builder_mode { ui_kit::STATUSBAR + self.builder_dock } else { BOTTOM }
     }
     fn representatives(&self) -> Vec<(String, String)> {
         let mut seen = std::collections::BTreeSet::new();
@@ -358,7 +356,7 @@ impl Plugin for SpatialViewerPlugin {
             )
             .add_systems(
                 Update,
-                (view::animate, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, view::caption_fonts, inspect::publish)
+                (view::animate, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, inspect::publish)
                     .chain()
                     .after(animation::draw_markers)
                     .in_set(ViewerSet::Present)
@@ -421,16 +419,16 @@ struct Inspector;
 struct InspectorScroll;
 #[derive(Component)]
 struct Status;
-#[derive(Component)]
-struct ActionLabel;
 
 fn setup_scene(
     mut commands: Commands,
     scene: Option<Res<SpatialScene>>,
+    fonts: Res<ui_kit::UiFonts>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut models: Option<ResMut<models::ModelLibrary>>,
 ) {
+    let k = ui_kit::Kit::new(&fonts);
     // A mode switch installs the scene before this runs (`app::switch::arrive`).
     let Some(scene) = scene else {
         error!("the spatial view was entered without a scene");
@@ -464,15 +462,16 @@ fn setup_scene(
         Transform::default(),
         view::SplitCamera,
     ));
+    // The split view's captions: floating over the 3D view (placed by `view::split`).
     for right in [false, true] {
         commands.spawn((
             view::SplitLabel(right),
             Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), ..default() },
-            BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.8)),
+            BackgroundColor(view::BACKDROP),
             Visibility::Hidden,
             GlobalZIndex(23),
             Pickable::IGNORE,
-            children![(Text::new(""), TextFont { font_size: FontSize::Px(12.), ..default() }, TextColor(if right { Color::srgb(0.72, 0.58, 1.0) } else { ACCENT }), view::ViewCaption, Pickable::IGNORE)],
+            children![(k.text("", 12., if right { view::COMPANION } else { ui_kit::ACCENT }, 2), Pickable::IGNORE)],
         ));
     }
     // Picture-in-picture close-up: drawn after the main view, before the UI.
@@ -484,14 +483,15 @@ fn setup_scene(
         Transform::default(),
         view::InsetCamera,
     ));
+    // The close-up's frame over the 3D view (placed by `view::inset`) and its caption.
     commands.spawn((
         view::InsetFrame,
         Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, border: UiRect::all(Val::Px(2.)), justify_content: JustifyContent::FlexStart, align_items: AlignItems::FlexStart, ..default() },
-        BorderColor::all(ACCENT),
+        BorderColor::all(ui_kit::ACCENT),
         Visibility::Hidden,
         GlobalZIndex(22),
         Pickable::IGNORE,
-        children![(Text::new(""), TextFont { font_size: FontSize::Px(11.), ..default() }, TextColor(ACCENT), BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.8)), Node { padding: UiRect::axes(Val::Px(6.), Val::Px(2.)), ..default() }, view::ViewCaption, Pickable::IGNORE)],
+        children![(k.text("", 11., ui_kit::ACCENT, 2), BackgroundColor(view::BACKDROP), Node { padding: UiRect::axes(Val::Px(6.), Val::Px(2.)), ..default() }, Pickable::IGNORE)],
     ));
     commands.spawn((
         Camera2d,
@@ -632,220 +632,111 @@ fn pick_part(
     }
 }
 
-fn text(value: impl Into<String>, size: f32, color: Color) -> impl Bundle {
-    (
-        Text::new(value),
-        TextFont {
-            font_size: FontSize::Px(size),
-            ..default()
-        },
-        TextColor(color),
-        TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter),
-    )
-}
-fn action_button(label: &str, action: inspect::InspectAction) -> impl Bundle {
-    (
-        Button,
-        action,
-        Node { border_radius: BorderRadius::all(Val::Px(5.0)),
-            padding: UiRect::axes(Val::Px(12.0), Val::Px(9.0)),
-            flex_shrink: 0.0,
-            border: UiRect::all(Val::Px(1.0)),
-            ..default()
-        },
-        BorderColor::all(Color::srgb(0.21, 0.27, 0.33)),
-        BackgroundColor(Color::srgb(0.115, 0.15, 0.19)),
-        children![(text(label, 14.0, INK), ActionLabel)],
-    )
-}
-fn setup_ui(mut commands: Commands, scene: Option<Res<SpatialScene>>) {
-    if let Some(scene) = scene {
-        spawn_ui(&mut commands, &scene);
+/// Whether an inspect button's selection or switch is on now (`None`: the
+/// button is an ordinary action, not a toggle). Toggles are kit chips, lit
+/// while on; the others are secondary buttons.
+fn toggled(scene: &SpatialScene, action: &inspect::InspectAction) -> Option<bool> {
+    use inspect::{InspectAction as A, Toggle};
+    match action {
+        A::Display { action: SpatialCommand::Select { component } } => Some(scene.details.components.contains(component)),
+        A::Select { target: SelectionTarget::Nets { ids } } => Some(matches!(&scene.selection, SelectionTarget::Nets { ids: selected } if ids.iter().all(|id| selected.contains(id)))),
+        A::Toggle(Toggle::Parts) => Some(scene.parts_visible),
+        A::Toggle(Toggle::Exploded) => Some(scene.state.exploded),
+        A::Toggle(Toggle::Connections) => Some(scene.state.connections),
+        _ => None,
     }
 }
-pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene) {
+/// An inspect button: a kit button with its action, a chip for a toggle.
+fn action_button(k: &ui_kit::Kit<'_>, scene: &SpatialScene, label: &str, action: inspect::InspectAction) -> impl Bundle + use<> {
+    let look = match toggled(scene, &action) {
+        Some(on) => ui_kit::Look::Chip(on),
+        None => ui_kit::Look::Secondary,
+    };
+    k.button(label, action, look, true)
+}
+fn setup_ui(mut commands: Commands, scene: Option<Res<SpatialScene>>, fonts: Res<ui_kit::UiFonts>) {
+    if let Some(scene) = scene {
+        spawn_ui(&mut commands, &scene, &fonts);
+    }
+}
+pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene, fonts: &ui_kit::UiFonts) {
+    use inspect::{InspectAction as A, Toggle};
+    use ui_kit::{ACCENT, Dock, TEXT};
     if scene.builder_mode {
         return; // Build mode draws its own chrome.
     }
+    let k = ui_kit::Kit::new(fonts);
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(0.0),
-                right: Val::Px(0.0),
-                top: Val::Px(0.0),
-                height: Val::Px(TOP),
-                flex_direction: FlexDirection::Column,
-                padding: UiRect::axes(Val::Px(22.0), Val::Px(14.0)),
-                row_gap: Val::Px(13.0),
-                ..default()
-            },
-            BackgroundColor(PANEL),
-            UiRoot,
-        ))
+        .spawn((k.dock(Dock::Top { height: TOP }, Node { flex_direction: FlexDirection::Column, padding: UiRect::axes(Val::Px(22.0), Val::Px(14.0)), row_gap: Val::Px(13.0), ..default() }), UiRoot))
         .with_children(|root| {
+            // The title row: the assembly's name, and the link status at the right.
             root.spawn((
-                Node {
-                    justify_content: JustifyContent::SpaceBetween,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
+                Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() },
                 children![
-                    text(
-                        format!("ASSEMBLY / {}", scene.spatial.title),
-                        if scene.compact { 18. } else { 24. },
-                        INK
-                    ),
-                    (
-                        text("Standalone assembly", 13.0, ACCENT),
-                        linked::LinkStatus
-                    )
+                    k.text(format!("ASSEMBLY / {}", scene.spatial.title), if scene.compact { 18. } else { 24. }, TEXT, 2),
+                    (k.text("Standalone assembly", 13.0, ACCENT, 1), linked::LinkStatus)
                 ],
             ));
-            root.spawn(Node {
-                column_gap: Val::Px(6.0),
-                flex_wrap: FlexWrap::Wrap,
-                align_items: AlignItems::Center,
-                ..default()
-            })
-            .with_children(|row| {
-                use inspect::{InspectAction as A, Toggle};
-                row.spawn(action_button("Parts", A::Toggle(Toggle::Parts)));
-                row.spawn(action_button("Clear", A::Select { target: SelectionTarget::None }));
-                row.spawn(action_button("Explode", A::Toggle(Toggle::Exploded)));
-                row.spawn(action_button("Connections", A::Toggle(Toggle::Connections)));
-                row.spawn(action_button("Fit view", A::Fit));
-                row.spawn(action_button("Hide selected", A::Display { action: SpatialCommand::HideSelected }));
-                row.spawn(action_button("Show all", A::Display { action: SpatialCommand::ShowAll }));
+            root.spawn(ui_kit::wrap()).with_children(|row| {
+                row.spawn(action_button(&k, scene, "Parts", A::Toggle(Toggle::Parts)));
+                row.spawn(action_button(&k, scene, "Clear", A::Select { target: SelectionTarget::None }));
+                row.spawn(action_button(&k, scene, "Explode", A::Toggle(Toggle::Exploded)));
+                row.spawn(action_button(&k, scene, "Connections", A::Toggle(Toggle::Connections)));
+                row.spawn(action_button(&k, scene, "Fit view", A::Fit));
+                row.spawn(action_button(&k, scene, "Hide selected", A::Display { action: SpatialCommand::HideSelected }));
+                row.spawn(action_button(&k, scene, "Show all", A::Display { action: SpatialCommand::ShowAll }));
             });
         });
-    commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(0.0), top: Val::Px(TOP), bottom: Val::Px(BOTTOM), width: Val::Px(scene.left()), display: if scene.parts_visible && !scene.builder_mode { Display::Flex } else { Display::None }, padding: UiRect::all(Val::Px(18.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(9.0), ..default() }, BackgroundColor(PANEL), PartsPanel, UiRoot))
+    let parts_layout = Node { display: if scene.parts_visible { Display::Flex } else { Display::None }, padding: UiRect::all(Val::Px(18.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(9.0), ..default() };
+    commands
+        .spawn((k.dock(Dock::Left { top: TOP, bottom: BOTTOM, width: scene.left() }, parts_layout), PartsPanel, UiRoot))
         .with_children(|column| {
-            column.spawn(text("COMPONENTS", 12.0, MUTED));
-            for (i, (id, label)) in scene.representatives().iter().enumerate() {
-                column.spawn(action_button(&format!("{}  {}", i+1, label), inspect::InspectAction::Display { action: SpatialCommand::Select { component: id.clone() } }));
-            }
-            column.spawn((text("Select a part in the assembly or here.\n\nGold marks the selection.\nLive temperature colors retain their scale when selected.", 13.0, MUTED), Node { margin: UiRect::top(Val::Px(16.0)), ..default() }));
+            column.spawn(k.section("Components"));
+            column.spawn(ui_kit::wrap()).with_children(|list| {
+                for (i, (id, label)) in scene.representatives().iter().enumerate() {
+                    list.spawn(action_button(&k, scene, &format!("{}  {}", i + 1, label), A::Display { action: SpatialCommand::Select { component: id.clone() } }));
+                }
+            });
+            // A gap above the hint (layout only).
+            column.spawn((k.caption("Select a part in the assembly or here.\n\nGold marks the selection.\nLive temperature colors retain their scale when selected."), Node { margin: UiRect::top(Val::Px(16.0)), ..default() }));
         });
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                right: Val::Px(0.0),
-                top: Val::Px(TOP),
-                bottom: Val::Px(BOTTOM),
-                width: Val::Px(scene.right()),
-                padding: UiRect::all(Val::Px(20.0)),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(14.0),
-                overflow: Overflow::scroll_y(),
-                ..default()
-            },
-            BackgroundColor(PANEL),
-            InspectorScroll,
-            UiRoot,
-        ))
-        .with_children(|column| {
-            column.spawn((
-                notes::NotesPanel,
-                Node {
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(8.),
-                    flex_shrink: 0.,
-                    ..default()
-                },
-            ));
-            column.spawn(text("INSPECTOR", 12.0, ACCENT));
-            column.spawn((
-                text("", 13.0, INK),
-                animation::LiveReadouts,
-                Node {
-                    flex_shrink: 0.0,
-                    ..default()
-                },
-            ));
-            column.spawn(text("Select a connection:", 12.0, MUTED));
-            for (i, id) in scene.description.nets.keys().enumerate() {
-                column.spawn(action_button(
-                    &format!(
-                        "{} {}",
-                        i + 1,
-                        scene.description.nets[id]
-                            .ports
-                            .iter()
-                            .map(|p| scene.description.components
-                                [&scene.description.ports[p].component]
-                                .label
-                                .as_str())
-                            .collect::<Vec<_>>()
-                            .join(" / ")
-                    ),
-                    inspect::InspectAction::Select { target: SelectionTarget::net(id.clone()) },
-                ));
-            }
-            column.spawn((
-                text("", 14.0, INK),
-                Inspector,
-                Node {
-                    flex_shrink: 0.0,
-                    ..default()
-                },
-            ));
+        .spawn((k.dock(Dock::Right { top: TOP, bottom: BOTTOM, width: scene.right() }, Node { flex_direction: FlexDirection::Column, ..default() }), UiRoot))
+        .with_children(|dock| {
+            // The column scrolls inside the dock (`scroll_inspector`).
+            let layout = Node { flex_grow: 1.0, min_height: Val::Px(0.0), padding: UiRect::all(Val::Px(20.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(14.0), ..default() };
+            dock.spawn((k.scroll_area(layout, 0.0), InspectorScroll)).with_children(|column| {
+                // The notes panel's slot (filled by `notes::update`).
+                column.spawn((notes::NotesPanel, Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), flex_shrink: 0., ..default() }));
+                column.spawn(k.section("Inspector"));
+                // Readouts keep their height in the scrolling column (layout only).
+                column.spawn((k.text("", 13.0, TEXT, 0), animation::LiveReadouts, Node { flex_shrink: 0.0, ..default() }));
+                column.spawn(k.caption("Select a connection:"));
+                column.spawn(ui_kit::wrap()).with_children(|list| {
+                    for (i, id) in scene.description.nets.keys().enumerate() {
+                        let members = scene.description.nets[id].ports.iter().map(|p| scene.description.components[&scene.description.ports[p].component].label.as_str()).collect::<Vec<_>>().join(" / ");
+                        list.spawn(action_button(&k, scene, &format!("{} {}", i + 1, members), A::Select { target: SelectionTarget::net(id.clone()) }));
+                    }
+                });
+                column.spawn((k.text("", 14.0, TEXT, 0), Inspector, Node { flex_shrink: 0.0, ..default() }));
+            });
         });
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(0.0),
-                right: Val::Px(0.0),
-                bottom: Val::Px(0.0),
-                height: Val::Px(BOTTOM),
-                padding: UiRect::axes(Val::Px(22.0), Val::Px(10.0)),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(5.0),
-                ..default()
-            },
-            BackgroundColor(PANEL),
-            UiRoot,
-        ))
+        .spawn((k.dock(Dock::Bottom { height: BOTTOM }, Node { padding: UiRect::axes(Val::Px(22.0), Val::Px(10.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(5.0), ..default() }), UiRoot))
         .with_children(|column| {
-            column.spawn(text(
-                format!(
-                    "Right-drag: orbit | Shift-drag: pan | Scroll: zoom | F: fit | 1-{}: select",
-                    scene.representatives().len().min(9)
-                ),
-                13.0,
-                INK,
-            ));
-            column.spawn((text("", 12.0, MUTED), Status));
+            column.spawn(k.text(format!("Right-drag: orbit | Shift-drag: pan | Scroll: zoom | F: fit | 1-{}: select", scene.representatives().len().min(9)), 13.0, TEXT, 0));
+            column.spawn((k.caption(""), Status));
         });
 }
 
-/// The toolbar, parts and connection buttons: lit while what they select or
-/// switch on is (their presses are actions, `inspect::input`).
-fn buttons(
-    mut interactions: Query<(&Interaction, &inspect::InspectAction, &mut BackgroundColor), With<Button>>,
-    scene: Res<SpatialScene>,
-) {
-    use inspect::{InspectAction as A, Toggle};
-    for (interaction, action, mut bg) in &mut interactions {
-        let active = match action {
-            A::Display { action: SpatialCommand::Select { component } } => scene.details.components.contains(component),
-            A::Select { target: SelectionTarget::Nets { ids } } => {
-                matches!(&scene.selection, SelectionTarget::Nets { ids: selected } if ids.iter().all(|id| selected.contains(id)))
-            }
-            A::Toggle(Toggle::Parts) => scene.parts_visible,
-            A::Toggle(Toggle::Exploded) => scene.state.exploded,
-            A::Toggle(Toggle::Connections) => scene.state.connections,
-            _ => false,
-        };
-        bg.0 = if active {
-            Color::srgb(0.12, 0.32, 0.31)
-        } else if *interaction == Interaction::Hovered {
-            Color::srgb(0.20, 0.26, 0.32)
-        } else {
-            Color::srgb(0.115, 0.15, 0.19)
-        };
+/// The toggles (toolbar switches, parts and connection chips): lit while
+/// what they select or switch on is. Their presses are actions
+/// (`inspect::input`); the kit paints the look and the hover.
+fn buttons(mut looks: Query<(&inspect::InspectAction, &mut ui_kit::Look), With<Button>>, scene: Res<SpatialScene>) {
+    for (action, mut look) in &mut looks {
+        if let (ui_kit::Look::Chip(_), Some(on)) = (*look, toggled(&scene, action)) {
+            look.set_if_neq(ui_kit::Look::Chip(on));
+        }
     }
 }
 
@@ -1048,12 +939,7 @@ fn scroll_inspector(
     window: Single<&Window>,
     mut panel: Single<&mut ScrollPosition, With<InspectorScroll>>,
 ) {
-    let delta = wheel.read().fold(0.0, |sum, e| {
-        sum + match e.unit {
-            MouseScrollUnit::Line => e.y * 24.0,
-            MouseScrollUnit::Pixel => e.y,
-        }
-    });
+    let delta = ui_kit::wheel_delta(&mut wheel, 24.0);
     if window.cursor_position().is_some_and(|p| {
         p.x >= window.width() - scene.right() && p.y > TOP && p.y < window.height() - BOTTOM
     }) {

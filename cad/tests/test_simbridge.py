@@ -67,6 +67,13 @@ def test_viewer_prefers_release_sim_spatial():
     assert message == ""
 
 
+def test_viewer_passes_an_absolute_model_path(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)  # a relative path from the caller's cwd, not the viewer's cwd=ROOT
+    with _built("release/sim-spatial"):
+        argv, _ = viewer_command("robot.simrobot.json")
+    assert argv[1:] == ["--robot", str(tmp_path / "robot.simrobot.json")]
+
+
 def test_viewer_debug_when_no_release():
     with _built("debug/sim-spatial", "release/sim-app"):
         argv, message = viewer_command("/m/robot.simrobot.json")

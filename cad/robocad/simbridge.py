@@ -192,7 +192,10 @@ def viewer_command(model_path: str) -> tuple[Optional[list[str]], str]:
     sim-app cad scene with a message naming the fallback; else `(None, …)`
     naming the build command. The message is empty for the normal case.
     sim-spatial tolerates a model that is not written yet and loads it when
-    it appears, so callers need not wait for a background export."""
+    it appears, so callers need not wait for a background export. The path
+    is made absolute here because the viewer runs with cwd=ROOT while
+    `python -m robocad.simbridge robot.rcad` is run from cad/."""
+    model_path = os.path.abspath(model_path)
     for profile in ("release", "debug"):
         exe = os.path.join(ROOT, "target", profile, "sim-spatial")
         if os.path.exists(exe):

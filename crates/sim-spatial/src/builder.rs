@@ -94,6 +94,11 @@ struct RunShared {
     speed: f64,
     /// Recent (time, value) samples per subscribed observable, for graphs.
     history: BTreeMap<String, std::collections::VecDeque<[f64; 2]>>,
+    /// Set by `Builder::run_reset` (with `history` cleared) and cleared by the
+    /// run thread once `Command::Reset` has run. While set, the thread drops
+    /// pre-reset samples instead of flushing them and `save_run` refuses, so
+    /// nothing from before the reset reaches the graphs or a saved run.
+    reset_pending: bool,
 }
 
 /// Simulated seconds of history kept for graphs.
@@ -108,6 +113,10 @@ enum RunControl {
     /// The document changed: swap the running model (state kept when the
     /// structure is the same). Carries the description id the viewer shows.
     Swap(Box<SystemDocument>, String),
+    /// Advance one timestep (`Command::Step`; the session must be paused).
+    Step,
+    /// Rebuild at t = 0, paused (`Command::Reset`); clears the history.
+    Reset,
 }
 
 /// A hand pushing on a running system through one of its load elements.
@@ -894,6 +903,9 @@ impl Builder {
         let run = self.run.as_ref().ok_or("nothing is running")?;
         let (duration, history) = {
             let s = run.shared.lock().map_err(|_| "run state unavailable")?;
+            if s.reset_pending {
+                return Err("reset in progress; save again in a moment".into());
+            }
             (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.history.clone())
         };
         // An edited detailed run ends on the current document; a realtime run
@@ -1034,7 +1046,7 @@ impl Builder {
         observed.sort();
         observed.dedup();
         let (control, commands) = mpsc::channel();
-        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new() }));
+        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
         let thread_shared = shared.clone();
         let description_id = scene.description.id.clone();
         let source_id = description_id.clone();
@@ -1274,6 +1286,61 @@ impl Builder {
         self.pause_run();
         self.panel_dirty = true;
     }
+
+    /// Advance a paused run by exactly one timestep on its run thread
+    /// (`Command::Step`). Refused, never ignored, without a paused run.
+    pub fn run_step(&mut self) -> Result<(), String> {
+        let run = self.run.as_ref().ok_or("nothing is running: start a run, pause it, then step")?;
+        {
+            let s = run.shared.lock().map_err(|_| "run state unavailable")?;
+            if s.reset_pending {
+                return Err("reset in progress; step again in a moment".into());
+            }
+            if s.running {
+                return Err("pause the run before stepping".into());
+            }
+        }
+        run.control.send(RunControl::Step).map_err(|_| "the run has ended; start a new run".to_string())?;
+        self.panel_dirty = true;
+        Ok(())
+    }
+
+    /// Return the live run to t = 0, paused (`Command::Reset` on its run
+    /// thread, which rebuilds the model it currently simulates).
+    ///
+    /// Recorded work is kept, not lost: a run that reached t >= 0.1 s is saved
+    /// first (the `stop_run` rule) and its id is named in the status. After the
+    /// reset the run simulates `run.document` (the last model swapped in) from
+    /// t = 0 with no live edit, so `edited` becomes false; the fidelity is kept.
+    /// The graphs are cleared at once and stay closed to pre-reset samples.
+    pub fn run_reset(&mut self) -> Result<(), String> {
+        let run = self.run.as_ref().ok_or("nothing is running")?;
+        if run.shared.lock().map_err(|_| "run state unavailable")?.reset_pending {
+            return Err("reset in progress".into());
+        }
+        let reached = run.shared.lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.);
+        let kept = if reached >= 0.1 { Some(self.save_run("")?) } else { None };
+        let run = self.run.as_mut().expect("checked above");
+        {
+            let mut s = run.shared.lock().map_err(|_| "run state unavailable")?;
+            s.reset_pending = true;
+            s.history.clear();
+        }
+        if run.control.send(RunControl::Reset).is_err() {
+            if let Ok(mut s) = run.shared.lock() {
+                s.reset_pending = false;
+            }
+            return Err("the run has ended; start a new run".into());
+        }
+        run.edited = false;
+        let kept = kept.and_then(|p| self.runs.iter().find(|(q, _)| *q == p).map(|(_, s)| s.id.clone()));
+        self.status = match kept {
+            Some(id) => format!("Reset to t = 0 (paused); kept the previous run as {id}."),
+            None => "Reset to t = 0 (paused); the previous run was under 0.1 s and was not kept.".into(),
+        };
+        self.panel_dirty = true;
+        Ok(())
+    }
     pub fn select(&mut self, names: Vec<String>) {
         self.selected = names.into_iter().collect();
         self.alternatives = None;
@@ -1307,6 +1374,8 @@ impl Builder {
             "compile_error": self.compile_error,
             "compiling": self.job.is_some() || self.scene_dirty,
             "running": self.running(),
+            "realtime": self.realtime,
+            "live_run": self.live_run_json(),
             "frame_ms": {"worst_in_window": 1e3 * self.frames.0, "over_50ms_in_window": self.frames.1},
             "runs": self.runs.iter().map(|(_, s)| s).collect::<Vec<_>>(),
             "replay": self.replay_json(),
@@ -1314,6 +1383,24 @@ impl Builder {
             "actuators": self.actuators_json(),
             "gait_reports": self.gait_reports_json(),
             "history": self.store.history(),
+        })
+    }
+
+    /// Latest run-thread status: null without a run.
+    fn live_run_json(&self) -> serde_json::Value {
+        let Some(run) = &self.run else { return serde_json::Value::Null };
+        let s = run.shared.lock().ok();
+        let status = s.as_ref().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.clone()));
+        serde_json::json!({
+            "time": status.as_ref().map(|x| x.time),
+            "phase": status.as_ref().map(|x| x.phase),
+            "step": status.as_ref().map(|x| x.step),
+            "generation": status.as_ref().map(|x| x.generation),
+            "interval": system_builder::config_for(&run.document).interval,
+            "reset_pending": s.as_ref().is_some_and(|s| s.reset_pending),
+            "error": s.as_ref().and_then(|s| s.snapshot.as_ref().and_then(|x| x.error.clone())),
+            "fidelity": run.fidelity.label(),
+            "edited": run.edited,
         })
     }
 
@@ -1356,9 +1443,36 @@ fn run_thread(document: SystemDocument, registry: BehaviorRegistry, observed: Ve
     let mut wall = std::time::Instant::now();
     let mut sim_at_wall = 0.0;
     let mut last_publish = std::time::Instant::now() - std::time::Duration::from_secs(1);
+    // A refused step stays visible until the next command.
+    let mut step_error: Option<String> = None;
+    let sample = |frame: &sim_inspect::SampleFrame| -> (f64, Vec<(String, f64)>) {
+        (frame.time, frame.values.keys().filter_map(|id| sim_inspect::animation::scalar(Some(frame), id).map(|v| (id.clone(), v.value))).collect())
+    };
+    let flush = |pending: &mut Vec<(f64, Vec<(String, f64)>)>| {
+        if let Ok(mut s) = shared.lock() {
+            if s.reset_pending {
+                // Samples from before a requested reset never reach the graphs.
+                pending.clear();
+                return;
+            }
+            for (t, values) in pending.drain(..) {
+                for (id, v) in values {
+                    let h = s.history.entry(id).or_default();
+                    h.push_back([t, v]);
+                    while h.len() > HISTORY_POINTS || h.front().is_some_and(|f| f[0] < t - HISTORY_SECONDS) {
+                        h.pop_front();
+                    }
+                }
+            }
+        }
+    };
     loop {
         loop {
-            match commands.try_recv() {
+            let command = commands.try_recv();
+            if matches!(command, Ok(RunControl::Start | RunControl::Pause | RunControl::Step | RunControl::Reset)) {
+                step_error = None;
+            }
+            match command {
                 Ok(RunControl::Start) => {
                     running = true;
                     let _ = session.execute(sim_runtime::system_session::Command::Start);
@@ -1403,6 +1517,36 @@ fn run_thread(document: SystemDocument, registry: BehaviorRegistry, observed: Ve
                         Err(e) => publish(Some(session.status().clone()), Some(session.latest().clone()), Some(e), running),
                     }
                 }
+                Ok(RunControl::Step) => match session.execute(sim_runtime::system_session::Command::Step) {
+                    Ok(_) => {
+                        // The stepped point joins the trace like a tick sample.
+                        let frame = session.latest();
+                        last_sample = frame.time;
+                        pending.push(sample(frame));
+                        flush(&mut pending);
+                        publish(Some(session.status().clone()), Some(session.latest().clone()), None, running);
+                    }
+                    Err(e) => {
+                        step_error = Some(format!("step refused: {e}"));
+                        publish(Some(session.status().clone()), Some(session.latest().clone()), step_error.clone(), running);
+                    }
+                },
+                Ok(RunControl::Reset) => {
+                    let result = session.execute(sim_runtime::system_session::Command::Reset);
+                    // Paused at t = 0 (the runtime's reset); later Resume paces from here.
+                    running = false;
+                    pending.clear();
+                    last_sample = f64::NEG_INFINITY;
+                    wall = std::time::Instant::now();
+                    sim_at_wall = session.status().time;
+                    if let Ok(mut s) = shared.lock() {
+                        s.history.clear();
+                        s.reset_pending = false;
+                    }
+                    let error = result.err().map(|e| format!("reset failed: {e}"));
+                    step_error = error.clone();
+                    publish(Some(session.status().clone()), Some(session.latest().clone()), error, false);
+                }
                 Ok(RunControl::Observe(ids)) => {
                     if let Err(e) = session.subscribe(ids) {
                         publish(Some(session.status().clone()), Some(session.latest().clone()), Some(e), running);
@@ -1425,8 +1569,7 @@ fn run_thread(document: SystemDocument, registry: BehaviorRegistry, observed: Ve
                 // About 1500 points across the kept window.
                 if frame.time - last_sample >= HISTORY_SECONDS / 1500. {
                     last_sample = frame.time;
-                    let values = frame.values.keys().filter_map(|id| sim_inspect::animation::scalar(Some(frame), id).map(|v| (id.clone(), v.value))).collect();
-                    pending.push((frame.time, values));
+                    pending.push(sample(frame));
                 }
             }
         } else {
@@ -1434,19 +1577,11 @@ fn run_thread(document: SystemDocument, registry: BehaviorRegistry, observed: Ve
         }
         if last_publish.elapsed().as_millis() >= 33 {
             let speed = if wall.elapsed().as_secs_f64() > 0. { (session.status().time - sim_at_wall) / wall.elapsed().as_secs_f64() } else { 0. };
-            publish(Some(session.status().clone()), Some(session.latest().clone()), None, running);
+            publish(Some(session.status().clone()), Some(session.latest().clone()), step_error.clone(), running);
             if let Ok(mut s) = shared.lock() {
                 s.speed = speed;
-                for (t, values) in pending.drain(..) {
-                    for (id, v) in values {
-                        let h = s.history.entry(id).or_default();
-                        h.push_back([t, v]);
-                        while h.len() > HISTORY_POINTS || h.front().is_some_and(|f| f[0] < t - HISTORY_SECONDS) {
-                            h.pop_front();
-                        }
-                    }
-                }
             }
+            flush(&mut pending);
             last_publish = std::time::Instant::now();
         }
     }
@@ -1471,7 +1606,10 @@ enum BuildAction {
     Tab(Tab),
     Category(Option<&'static str>),
     SetMode(Mode),
+    /// Live run back to t = 0, paused (`Builder::run_reset`).
     Reset,
+    /// Advance the paused live run one timestep (`Builder::run_step`).
+    Step,
     Up,
     Level(String),
     Select(String),
@@ -1765,8 +1903,12 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
             }
         }
         BuildAction::Reset => {
-            builder.stop_run();
-            builder.start_run(scene);
+            let r = builder.run_reset();
+            builder.report(r);
+        }
+        BuildAction::Step => {
+            let r = builder.run_step();
+            builder.report(r);
         }
         BuildAction::Up => {
             let parent = builder.level.rsplit_once('/').map(|(p, _)| p.to_string()).unwrap_or_default();
@@ -2540,6 +2682,93 @@ mod replay_tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
+    /// Step and Reset on a live run go through `run_step`/`run_reset` (the
+    /// buttons' and REST's path) to `Command::Step`/`Command::Reset` on the
+    /// real run thread: one step is exactly one interval, stepping a running
+    /// run is refused, reset keeps the old run and clears the history, and a
+    /// run saved after the reset holds only post-reset samples and replays
+    /// exactly. Starting/resuming uses the control channel (no Bevy scene).
+    #[test]
+    fn live_run_step_and_reset_share_the_session_and_keep_work() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dir = std::env::temp_dir().join(format!("builder-step-reset-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("winch.system.json");
+        std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &path).unwrap();
+        let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
+        let mut b = Builder::open(path.clone(), root.join("library/systems"), registry.clone()).unwrap();
+        let document = b.document.clone();
+        let interval = system_builder::config_for(&document).interval;
+        let compiled = system_builder::compile(&document, &registry, system_builder::config_for(&document)).unwrap();
+        let observed: Vec<String> = compiled.description.observables.keys().filter(|id| system_builder::observable_key(&compiled.description, id).contains("drum.shaft.speed")).cloned().collect();
+        let key = observed[0].clone();
+        b.last_description = Some(compiled.description.clone());
+        assert!(b.run_step().is_err() && b.run_reset().is_err(), "no run: refused");
+        assert_eq!(b.state_json()["live_run"], serde_json::Value::Null);
+        let (control, commands) = mpsc::channel();
+        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
+        let (doc, reg, id, s) = (document.clone(), registry.clone(), compiled.description.id.clone(), shared.clone());
+        std::thread::spawn(move || run_thread(doc, reg, observed, id, commands, s));
+        b.run = Some(LiveRun { control: control.clone(), shared: shared.clone(), description_id: compiled.description.id.clone(), fidelity: Fidelity::Detailed, document: document.clone(), edited: false });
+        let status = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.clone());
+        let time = || status().map(|x| x.time).unwrap_or(0.);
+        let started = std::time::Instant::now();
+        let until = |done: &dyn Fn() -> bool| {
+            while !done() && started.elapsed().as_secs() < 60 {
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            assert!(done(), "timed out");
+        };
+        // Stepping a running run is refused, never ignored.
+        assert!(shared.lock().unwrap().running);
+        assert_eq!(b.run_step(), Err("pause the run before stepping".to_string()));
+        until(&|| time() >= 0.3);
+        b.run_pause();
+        until(&|| !shared.lock().unwrap().running && status().is_some_and(|x| x.phase == sim_inspect::live::Phase::Paused));
+        let before = status().unwrap();
+        b.run_step().unwrap();
+        until(&|| status().is_some_and(|x| x.step == before.step + 1));
+        let after = status().unwrap();
+        assert!((after.time - before.time - interval).abs() < 1e-9, "{} -> {} with dt {interval}", before.time, after.time);
+        assert_eq!(b.history(&key).last().map(|p| p[0]), Some(after.time), "the stepped point is on the trace");
+        let state = b.state_json();
+        assert_eq!((state["realtime"].as_bool(), state["live_run"]["step"].as_u64(), state["live_run"]["phase"].as_str(), state["live_run"]["fidelity"].as_str()), (Some(false), Some(after.step), Some("paused"), Some("detailed")));
+        // Reset keeps the run so far, then returns to t = 0 with no history.
+        let runs = b.runs.len();
+        b.run_reset().unwrap();
+        assert_eq!(b.runs.len(), runs + 1, "{}", b.status);
+        assert!(b.status.contains(&format!("kept the previous run as {}", b.runs[0].1.id)), "{}", b.status);
+        assert!(b.runs[0].1.duration >= 0.3);
+        assert!(b.history(&key).is_empty());
+        until(&|| !shared.lock().unwrap().reset_pending);
+        let reset = status().unwrap();
+        assert_eq!((reset.time, reset.step, reset.phase, reset.generation), (0., 0, sim_inspect::live::Phase::Paused, before.generation + 1));
+        assert!(b.history(&key).is_empty());
+        assert_eq!(b.state_json()["live_run"]["time"].as_f64(), Some(0.));
+        // Step once from t = 0, resume briefly, pause and save.
+        b.run_step().unwrap();
+        until(&|| status().is_some_and(|x| x.step == 1));
+        control.send(RunControl::Start).unwrap();
+        until(&|| time() >= 0.12);
+        b.run_pause();
+        until(&|| !shared.lock().unwrap().running);
+        let duration = time();
+        assert!(duration < 0.3);
+        let saved = b.save_run("after reset").unwrap();
+        let record = sim_runtime::run_history::load(&saved).unwrap();
+        assert_eq!((record.duration, record.fidelity, record.edited_while_running()), (duration, Some(Fidelity::Detailed), false));
+        let times = &record.series.iter().find(|s| s.observable == key).unwrap().times;
+        assert_eq!(times.first().copied(), Some(interval), "starts at the post-reset step");
+        assert!(times.windows(2).all(|w| w[0] < w[1]) && times.iter().all(|t| *t <= duration), "only post-reset samples: {times:?}");
+        b.replay_run(&record.id).unwrap();
+        let o = wait(&mut b);
+        assert_eq!((o.status, o.max_rel_diff), ("done", Some(0.)), "{o:?}");
+        assert!(o.headline().starts_with("Reproduced exactly"), "{}", o.headline());
+        b.run = None;
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
     /// A run started with Realtime on is saved with the realtime profile it
     /// simulated (document, config, fidelity) and replays exactly. Drives the
     /// real live thread and `save_run`; the Bevy system that hot-swaps edits
@@ -2563,7 +2792,7 @@ mod replay_tests {
         // What start_run launches with Realtime on.
         b.realtime = true;
         let (control, commands) = mpsc::channel();
-        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new() }));
+        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
         let (doc, reg, id, s) = (profile.clone(), registry.clone(), compiled.description.id.clone(), shared.clone());
         std::thread::spawn(move || run_thread(doc, reg, observed, id, commands, s));
         b.run = Some(LiveRun { control: control.clone(), shared: shared.clone(), description_id: compiled.description.id.clone(), fidelity: Fidelity::Realtime, document: profile.clone(), edited: false });

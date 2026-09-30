@@ -397,7 +397,8 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
                 if b.run.is_some() {
                     right.spawn(k.text(format!("t = {time:.3} s   {speed:.2}x real time"), 12., SUBTLE, 0));
                     right.spawn(k.button("Save run", BuildAction::SaveRun, Look::Ghost, true));
-                    right.spawn(k.button("Restart", BuildAction::Reset, Look::Ghost, true));
+                    right.spawn(k.button("Reset", BuildAction::Reset, Look::Ghost, true));
+                    right.spawn(k.button("Step", BuildAction::Step, Look::Ghost, !running));
                 }
                 if running {
                     right.spawn(k.button("Pause", BuildAction::Pause, Look::Secondary, true));

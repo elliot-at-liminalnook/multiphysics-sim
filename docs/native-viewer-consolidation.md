@@ -135,21 +135,86 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `sim_runtime::physical`, `sim_runtime::part_fit`, and the
   `sim-runtime cad-params` CLI (per builder-roadmap M7; *unverified* here).
 - **Shell status:** *partial*. sim-spatial draws CAD-exported OBJ display
-  models (`models.rs`, `library/models`, a system's own `models/`). Gaps:
-  1. no view or inspection of a `.simrobot.json` physical model (mass,
-     inertia, joints, provenance);
-  2. no way to trigger CAD edits or exports from the shell;
-  3. the CAD link status (path and SHA-256, `cad/robocad/system_link.py`) is
-     not shown in the shell.
+  models (`models.rs`, `library/models`, a system's own `models/`), and since
+  batch simrobot-inspect it has a **read-only robot mode**:
+  `sim-spatial --robot FILE.simrobot.json` (`crates/sim-spatial/src/robot.rs`,
+  commits 1562f60c, 07b94d6a, 5bad56fb, 255b2d15).
+  - *Loading:* a `std::thread` worker reads the file once, parses it with the
+    shared `sim_domain_robot::PhysicalModel::parse`, triangulates each link's
+    collision hull with the shared `Collision::display_triangles` (sim-app's
+    cad view calls the same function), and computes the CAD link status. The
+    window shows "Loading …" meanwhile; a bad or unparseable file shows an
+    error naming the path and the window stays up. `--validate-only --robot
+    FILE` prints the link count or exits 1 with the path-naming error.
+  - *View:* one mesh per link at the stored `com` with identity rotation
+    (model Z-up turned to Bevy Y-up). One selection is shared by the link
+    list, 3D picking and `system_ui` (`select_link` controls); the selected
+    link is highlighted.
+  - *Inspector* (tabs Link / Joints / Drives / Source, all `system_ui`
+    controls, plus `inspector:scroll_*`): link mass, com, full inertia,
+    material and density from the file's materials map; the joints touching
+    the link with type, parent/child, axis, origin, limits, friction,
+    clearance, backlash, damping and `drive_backlash` with its typed
+    provenance; motors, transmissions, battery, actuator profiles with family
+    content hashes; `uncertainty` as stored; identification entries; the
+    `source` block and `benchmark_assumptions` verbatim. REST `robot_state`
+    carries the same values at full precision.
+  - *Provenance rule:* a measured/derived/estimated label is shown only where
+    the file carries a typed one (joint `physics.drive_backlash.provenance`,
+    actuator-profile parameters). Free text the file carries (link
+    `mass_sources`/`member_names`, joint `physics.source`, motor `notes`) is
+    shown verbatim as the file's text, never mapped to a label. Every other
+    value is marked "no per-value provenance in export" and points at the
+    source notes.
+  - *CAD link status* (`sim_domain_robot::cad_link`, hashed on the worker):
+    `current`, `stale` (both hashes), `missing` (every path tried),
+    `no_recorded_hash` (on-disk hash shown), `no_source_file`, `unreadable`.
+    Resolution rule: an absolute `source.file` is used as is; a relative one is
+    tried against the simrobot file's directory and then each ancestor, first
+    existing file wins. On the tracked examples the true states are: wheeled
+    baseline `missing` (`runs/shared-wheeled-cad-v1/robot.rcad` is not on
+    disk); full robot `no_recorded_hash` (the export has no `cad_sha256`).
+    `current` and `stale` are covered only by the lib test with temp files,
+    not by a native capture.
+  - *Verified evidence (T9.3):* `.claude-pair/captures/T9-simrobot/`
+    (`drive_t93.py`, `capture.json` ok=true, 31 assertions): robot-wheeled.png,
+    robot-link-selected.png, robot-full.png (29 links), cad-link-wheeled.png,
+    cad-link-full.png, bad-path.png. capture.json asserts against values the
+    driver parses from each file: link count and names, the selected link's
+    mass/com/inertia exactly, density from the materials map, the source block
+    and notes verbatim, the CAD link status against an independent hashlib and
+    path check, link provenance null versus the full robot's typed backlash
+    label (`unmeasured`), the bad-path error naming the path, and no file under
+    `examples/` changed (size and mtime of every file, sha256 of the opened
+    files). Activations are REST `system_ui` (the click handler), not pointer
+    gestures.
+  - *Limits:* read-only — nothing is stepped, jogged, teleoperated or written.
+    Running a robot still needs `sim-app --scene cad`. RoboCAD still owns
+    authoring and export; the shell cannot trigger CAD edits. The pose is the
+    stored com with identity rotation; that it equals sim-app's t=0 pose is
+    established by reading the code (`articulated.rs`, `physical.rs`), not by
+    a side-by-side capture. REST motors, joints and transmissions are
+    loader-parsed structs, so fields absent in the file show loader defaults
+    (only `uncertainty`, `mass_sources`, `member_names` and motor notes are
+    raw). Mouse-wheel inspector scrolling and pointer picking were not
+    exercised natively. The link list clips rather than scrolls beyond about
+    29 rows. Small selected links (e.g. a 5.7 g pulley) are hard to see
+    highlighted in the full-robot view.
+- **Remaining gaps:**
+  1. no way to trigger CAD edits or exports from the shell;
+  2. no RoboCAD REST reload round trip (edit → export → shell reload);
+  3. no live stepping, jogging or teleoperation (deferred to simrobot-live-view).
 - **Source owner:** CAD (`.rcad` → `simrobot` v3 export). Display models are
   presentation only.
 - **Dependencies:** a CAD service client (§3). Move simrobot live stepping
   from the sim-app UI thread onto a worker (§4).
-- **Acceptance evidence:** open a simrobot file in the shell. The inspector
-  shows mass and inertia with measured/derived/estimated labels. After a
-  RoboCAD REST `PATCH /nodes/{id}` material change and export, the shell
-  reloads and the values change. Screenshots are taken before and after, and
-  the provenance label is visible.
+- **Acceptance evidence:** the read-only half is met (above). Correction to the
+  earlier expectation: current exports carry no measured/derived/estimated
+  label on most values (mass, inertia, com, friction), so the inspector shows
+  "no per-value provenance in export" plus the file's own notes rather than a
+  label. Still open: after a RoboCAD REST `PATCH /nodes/{id}` material change
+  and export, the shell reloads and the values change, with before and after
+  screenshots.
 
 ### c. Schematic and spatial views
 - **Entry today:** spatial is sim-spatial (all modes). The schematic is a
@@ -674,9 +739,13 @@ unknown-id error).
    selection (commit 35e4bedd; verified natively in T8.2, see §2c). The
    sim-viewer window is *not yet* optional: layout editing, saved layouts and
    plots still need it.
-5. **simrobot live view on a worker** (b/g groundwork): port `sim-app --scene cad`
-   into a sim-spatial mode through the `sim_phenomena::scenarios::cad_robot`
-   worker. This is the prerequisite for native teleoperation and gait playback.
+5. **Partial — simrobot live view on a worker** (b/g groundwork). Done: the
+   read-only inspect slice, `sim-spatial --robot FILE` (worker load, posed
+   collision meshes, one link selection, inspector, CAD link status; verified
+   natively in T9.3, see §2b). Deferred to simrobot-live-view: port
+   `sim-app --scene cad` stepping into this mode through the
+   `sim_phenomena::scenarios::cad_robot` worker, then joint jogging,
+   teleoperation and gait playback.
 
 ## 6. Launch path
 
@@ -688,8 +757,18 @@ cargo run -p sim-spatial -- --system examples/systems-builder/motor-driver-board
 Once it is running, open another system from the **Systems** sidebar tab (a
 discovered row, or a path in the field and Enter), or send REST
 `system_open {"path": …}`. There is no relaunch. Other modes today are `--lessons lessons`, `--place DIR`, and `--description/--spatial`.
+
+Read-only robot inspection (a CAD-exported simrobot file; nothing is stepped
+or written):
+
+```
+cargo run -p sim-spatial -- --robot examples/wheeled-robot/baseline/robot.simrobot.json
+cargo run -p sim-spatial -- --validate-only --robot FILE.simrobot.json
+```
+REST `robot_state` returns the loaded values; `system_ui` lists the link,
+section and scroll controls. Running the robot still needs `sim-app --scene cad`.
 Separate apps are still needed for the schematic and experiments (`sim-viewer`),
-simrobot and phenomena (`sim-app`), CAD (`cad/run.sh`), and walking and
+simrobot stepping and phenomena (`sim-app`), CAD (`cad/run.sh`), and walking and
 calibration (browser, `web/README.md`).
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,

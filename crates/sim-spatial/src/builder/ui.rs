@@ -1231,6 +1231,17 @@ fn short_hash(h: &str) -> String {
 /// acceptance notes, limitations and every parameter's provenance and
 /// uncertainty, the joint roles, and consumer-file staleness checks.
 fn actuators_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
+    body.spawn(Node { margin: UiRect::bottom(Val::Px(6.)), ..wrap() }).with_children(|chips| {
+        chips.spawn(k.button("Registry", BuildAction::ActuatorView(calibration::ActuatorView::Registry), Look::Chip(b.actuator_view == calibration::ActuatorView::Registry), true));
+        chips.spawn(k.button("Measured evidence", BuildAction::ActuatorView(calibration::ActuatorView::Evidence), Look::Chip(b.actuator_view == calibration::ActuatorView::Evidence), true));
+    });
+    match b.actuator_view {
+        calibration::ActuatorView::Registry => registry_view(body, k, b),
+        calibration::ActuatorView::Evidence => calibration::section(body, k, b),
+    }
+}
+
+fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     let a = &b.actuators;
     body.spawn(k.text("The accepted actuator registry: the single source of measured motor values. Read-only here; families change only by promoting new evidence.", 12., SUBTLE, 0));
     body.spawn(k.section("Registry"));

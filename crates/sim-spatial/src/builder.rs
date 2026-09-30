@@ -30,6 +30,8 @@ pub enum Tab {
     Studies,
     Outline,
     References,
+    /// Open another system file (build mode).
+    Systems,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -65,6 +67,8 @@ enum Purpose {
     ReferenceWidth(String),
     /// "from to count" for a sweep of (instance, parameter).
     Sweep { name: String, parameter: String, observe: Vec<String> },
+    /// Path of a system file to open in this window.
+    OpenSystem,
 }
 
 #[derive(Clone, Debug)]
@@ -203,6 +207,8 @@ pub struct Builder {
     pub(crate) lesson: Option<String>,
     /// Alt-drag on a running system: the load being pushed and its own value.
     pub(crate) grab: Option<Grab>,
+    /// Opening another system file (build mode only).
+    open: open::OpenState,
 }
 
 #[derive(Default)]
@@ -290,32 +296,37 @@ struct CompileOutput {
 fn compile_job(document: SystemDocument, registry: BehaviorRegistry) -> mpsc::Receiver<CompileResult> {
     let (send, receive) = mpsc::channel();
     std::thread::spawn(move || {
-        let config = system_builder::config_for(&document);
-        let result = system_builder::compile(&document, &registry, config.clone()).map(|compiled| {
-            let runtime_error = sim_compile::Runtime::new(compiled.flat.model.clone(), &registry, config.integrator).err().map(|e| system_builder::locate(&compiled.flat, e.to_string()));
-            CompileOutput {
-                spatial: compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &document.title)),
-                description: compiled.description,
-                animation: compiled.animation,
-                findings: compiled.flat.findings.clone(),
-                subsystems: compiled.flat.subsystems.clone(),
-                runtime_error,
-            }
-        });
-        // A system that is still being wired fails to compile on its first
-        // loose port; say which ports are loose instead of the solver's id.
-        let findings = if result.is_err() { sim_system::Resolver::new(&document, &registry).findings() } else { Vec::new() };
-        let loose: Vec<&str> = findings.iter().filter(|f| f.code == "unconnected_port").map(|f| f.message.trim_end_matches(" is not connected")).collect();
-        let result = result.map_err(|e| {
-            if loose.is_empty() || !e.contains("is not connected") {
-                e
-            } else {
-                format!("{} unconnected port{}: {}{}", loose.len(), if loose.len() == 1 { "" } else { "s" }, loose.iter().take(4).copied().collect::<Vec<_>>().join(", "), if loose.len() > 4 { ", …" } else { "" })
-            }
-        });
-        let _ = send.send(CompileResult { revision: document.revision, result, findings });
+        let _ = send.send(compile_now(document, registry));
     });
     receive
+}
+
+/// One compile of `document` for the scene (call off the UI thread).
+fn compile_now(document: SystemDocument, registry: BehaviorRegistry) -> CompileResult {
+    let config = system_builder::config_for(&document);
+    let result = system_builder::compile(&document, &registry, config.clone()).map(|compiled| {
+        let runtime_error = sim_compile::Runtime::new(compiled.flat.model.clone(), &registry, config.integrator).err().map(|e| system_builder::locate(&compiled.flat, e.to_string()));
+        CompileOutput {
+            spatial: compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &document.title)),
+            description: compiled.description,
+            animation: compiled.animation,
+            findings: compiled.flat.findings.clone(),
+            subsystems: compiled.flat.subsystems.clone(),
+            runtime_error,
+        }
+    });
+    // A system that is still being wired fails to compile on its first
+    // loose port; say which ports are loose instead of the solver's id.
+    let findings = if result.is_err() { sim_system::Resolver::new(&document, &registry).findings() } else { Vec::new() };
+    let loose: Vec<&str> = findings.iter().filter(|f| f.code == "unconnected_port").map(|f| f.message.trim_end_matches(" is not connected")).collect();
+    let result = result.map_err(|e| {
+        if loose.is_empty() || !e.contains("is not connected") {
+            e
+        } else {
+            format!("{} unconnected port{}: {}{}", loose.len(), if loose.len() == 1 { "" } else { "s" }, loose.iter().take(4).copied().collect::<Vec<_>>().join(", "), if loose.len() > 4 { ", …" } else { "" })
+        }
+    });
+    CompileResult { revision: document.revision, result, findings }
 }
 
 impl Builder {
@@ -384,6 +395,7 @@ impl Builder {
             realtime: false,
             lesson: None,
             grab: None,
+            open: Default::default(),
         };
         builder.runs = sim_runtime::run_history::list(&sim_runtime::run_history::dir_for(&builder.store.path));
         builder.updates = builder.library_updates();
@@ -799,6 +811,7 @@ impl Builder {
                 r
             }
             Purpose::ImportImage => self.import_image(PathBuf::from(text)),
+            Purpose::OpenSystem => self.open_system(PathBuf::from(text)).map(|_| ()),
             Purpose::Distance { id, first, second } => match text.parse::<f32>() {
                 Ok(d) => self.apply("Calibrate reference", vec![SystemCommand::CalibrateReference { at: self.level.clone(), id, first, second, distance: d }]).map(|_| ()),
                 Err(_) => Err("Enter the real distance between the two points in meters".into()),
@@ -1272,6 +1285,7 @@ impl Builder {
             "frame_ms": {"worst_in_window": 1e3 * self.frames.0, "over_50ms_in_window": self.frames.1},
             "runs": self.runs.iter().map(|(_, s)| s).collect::<Vec<_>>(),
             "replay": self.replay_json(),
+            "open": self.open_json(),
             "history": self.store.history(),
         })
     }
@@ -1487,6 +1501,11 @@ enum BuildAction {
     CancelReplay,
     Pin(String),
     Unpin(String),
+    /// Open this system file in the window (Systems tab list).
+    OpenSystem(PathBuf),
+    /// Type a system file path to open.
+    OpenSystemPath,
+    CancelOpen,
 }
 
 pub struct BuilderPlugin;
@@ -1494,7 +1513,7 @@ impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), rebuild_scene, sync_run, graphs::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
+            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, rebuild_scene, sync_run, graphs::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
         )
         .add_systems(Startup, ui::load_fonts)
         .add_systems(Update, placement::update.after(update_parts).run_if(building))
@@ -1522,6 +1541,13 @@ fn clear_for_learn(mut commands: Commands, mut builder: ResMut<Builder>, chrome:
     }
     if builder.drag.is_some() {
         builder.drag = None;
+    }
+}
+
+/// Install a system opened in the background (scene, annotations, models follow it).
+fn open_system(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, models: Option<ResMut<crate::models::ModelLibrary>>) {
+    if builder.open.job.is_some() {
+        builder.finish_open(&mut scene, models.map(|m| m.into_inner()));
     }
 }
 
@@ -1650,7 +1676,12 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
         BuildAction::GridSpacing=>builder.start_input(Purpose::GridSpacing,builder.grid().spacing_m.to_string()),
         BuildAction::GridOrigin=>builder.start_input(Purpose::GridOrigin,builder.grid().origin_m.iter().map(|v|v.to_string()).collect::<Vec<_>>().join(" ")),
         BuildAction::Position=>{if let Some(s)=builder.selected.iter().next().and_then(|n|builder.spec(n)){builder.start_input(Purpose::Position,s.placement.position.iter().map(|v|v.to_string()).collect::<Vec<_>>().join(" "));}},
-        BuildAction::Tab(tab) => builder.tab = tab,
+        BuildAction::Tab(tab) => {
+            if tab == Tab::Systems && builder.open.shell.is_some() {
+                builder.open.systems = open::discover(&builder.store.path, &builder.library_dir);
+            }
+            builder.tab = tab;
+        }
         BuildAction::Category(category) => {
             builder.category = category;
             builder.page = 0;
@@ -1768,6 +1799,14 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
             }
         }
         BuildAction::ClearStudy => builder.study.result = None,
+        BuildAction::OpenSystem(path) => {
+            let result = builder.open_system(path);
+            builder.report(result);
+        }
+        BuildAction::OpenSystemPath => builder.start_input(Purpose::OpenSystem, String::new()),
+        BuildAction::CancelOpen => {
+            builder.cancel_open();
+        }
         BuildAction::ToggleRealtime => {
             builder.realtime = !builder.realtime;
             builder.stop_run();
@@ -2262,6 +2301,7 @@ pub(crate) mod placement;
 mod placement_worker;
 pub(crate) mod discussion;
 pub(crate) mod ui;
+pub mod open;
 pub use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
 
 /// Grab and push: with a run going, Alt-drag on a part changes the load

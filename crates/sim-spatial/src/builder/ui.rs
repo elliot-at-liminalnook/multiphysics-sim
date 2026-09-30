@@ -427,7 +427,10 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32) {
         .with_children(|side| {
             side.spawn((Node { padding: UiRect::horizontal(Val::Px(10.)), column_gap: Val::Px(6.), flex_wrap: FlexWrap::Wrap, border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(BORDER)))
                 .with_children(|tabs| {
-                    for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions)] {
+                    for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems)] {
+                        if tab == Tab::Systems && b.open.shell.is_none() {
+                            continue;
+                        }
                         tabs.spawn(k.button(label, BuildAction::Tab(tab), Look::Tab(b.tab == tab), true));
                     }
                 });
@@ -449,6 +452,7 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32) {
                 Tab::Outline => outline_tab(body, k, b),
                 Tab::References => references_tab(body, k, b),
                 Tab::Studies => studies_tab(body, k, b),
+                Tab::Systems => systems_tab(body, k, b),
                 Tab::Discussions => {},
             });
         });
@@ -1169,6 +1173,43 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
 }
 
 /// Saved studies, the running one, and the latest result's trade-off table.
+/// Open another system file in this window: a path field and the system
+/// files found under examples/systems-builder, the library and this file's folder.
+fn systems_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
+    body.spawn(k.text("Open another system in this window. Its runs, notes and studies come with it; edits are already saved to this file.", 12., SUBTLE, 0));
+    body.spawn(k.section("Open"));
+    body.spawn(k.text(&b.document.title, 13., TEXT, 1));
+    body.spawn(k.text(b.path().display().to_string(), 11., FAINT, 0));
+    let focused = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::OpenSystem);
+    let shown = b.input.as_ref().filter(|_| focused).map(|i| i.buffer.clone()).unwrap_or_default();
+    body.spawn(Node { margin: UiRect::top(Val::Px(8.)), flex_direction: FlexDirection::Column, flex_shrink: 0., ..default() })
+        .with_children(|c| {
+            c.spawn(k.input(&shown, "Path to a .system.json file · Enter to open", BuildAction::OpenSystemPath, focused));
+        });
+    if let Some(pending) = b.open.pending() {
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Opening {}…", pending.display()), 12., TEXT, 0)]));
+        body.spawn(wrap()).with_children(|r| {
+            r.spawn(k.button("Cancel", BuildAction::CancelOpen, Look::Danger, true));
+        });
+    }
+    if let Some(e) = b.action_error.as_ref().filter(|e| e.contains("open")) {
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, 12., DANGER, 0)]));
+    }
+    let blockers = b.open_blockers();
+    if !blockers.is_empty() {
+        body.spawn(k.text(format!("Before opening: {}", blockers.join("; ")), 11.5, WARN, 0));
+    }
+    body.spawn(k.section(&format!("Systems  {}", b.open.systems.len())));
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let open = std::path::absolute(b.path()).unwrap_or_else(|_| b.path().to_path_buf());
+    for path in &b.open.systems {
+        let current = *path == open;
+        let name = path.file_name().map(|n| n.to_string_lossy().trim_end_matches(".system.json").to_string()).unwrap_or_default();
+        let shown = path.strip_prefix(&cwd).unwrap_or(path).display().to_string();
+        body.spawn(k.item("", &name, &shown, if current { "Open" } else { "" }, BuildAction::OpenSystem(path.clone()), current));
+    }
+}
+
 fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     body.spawn(k.text("Run the same system several ways: compare alternatives for a part, or sweep one parameter. Studies are saved in the system file and rerun identically.", 12., SUBTLE, 0));
     body.spawn(k.text("Start one from a part's inspector: Compare alternatives, or Sweep under Parameters.", 11., FAINT, 0));
@@ -1266,7 +1307,9 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
 }
 
 fn status_bar(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene) {
-    let (state, color) = if b.job.is_some() {
+    let (state, color) = if b.open.pending().is_some() {
+        ("Opening", ACCENT)
+    } else if b.job.is_some() {
         ("Compiling", SUBTLE)
     } else if b.compile_error.as_deref().is_some_and(|e| e.contains("unconnected port")) {
         ("Unfinished wiring", WARN)

@@ -1,6 +1,7 @@
 //! CAD-style, constant-size viewport pins. Keyed entities survive panel rebuilds.
 use super::*;
 use bevy::ui::FocusPolicy;
+use crate::ui_kit::UiFonts;
 
 #[derive(Clone, serde::Serialize)]
 pub(super) struct MarkerInfo {
@@ -65,7 +66,7 @@ pub(super) fn sync(
     scene: Res<SpatialScene>,
     window: Single<&Window>,
     camera: Single<(&Camera, &GlobalTransform), With<Orbit>>,
-    fonts: Option<Res<ui::UiFonts>>,
+    fonts: Option<Res<UiFonts>>,
     mut markers: Query<
         (
             Entity,

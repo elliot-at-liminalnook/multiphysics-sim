@@ -6,9 +6,8 @@
 //! ├ sidebar (tabs) ┬──────── viewport ────────┬ inspector (selection) ┤
 //! └ status: message                                   revision · parts · nets · state ┘
 use super::*;
-
-// TEMPORARY (ui-kit T26.1, removed in T26.2): the kit owns these now.
-pub(crate) use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, DANGER, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, ON_ACCENT, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, TOPBAR, Tint, UiFonts, WARN, divider, wrap};
+use bevy::input::mouse::MouseWheel;
+use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, Corner, DANGER, Dock, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, divider, size, wheel_delta, wrap};
 
 #[derive(Component)]
 pub(super) enum Scroll {
@@ -61,7 +60,8 @@ pub(super) fn interface_category(interface: Option<&str>) -> &'static str {
 
 pub(crate) fn tag_color(category: &str) -> Color {
     match category {
-        "Subsystems" => Color::srgb(0.30, 0.83, 0.75),
+        // The accent's value (the source guard allows no literal equal to a token).
+        "Subsystems" => ACCENT,
         "Electrical" => Color::srgb(0.87, 0.58, 0.33),
         "Thermal" => Color::srgb(0.92, 0.43, 0.38),
         "Mechanical" => Color::srgb(0.64, 0.69, 0.75),
@@ -124,7 +124,7 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     for e in &panels {
         commands.entity(e).despawn();
     }
-    let k = Kit { f: &fonts };
+    let k = Kit::new(&fonts);
     let b = &*builder;
     toolbar(&mut commands, &k, b);
     sidebar(&mut commands, &k, b, note_scroll, side_scroll);
@@ -145,23 +145,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
     let running = b.running();
     let (time, speed) = b.run.as_ref().and_then(|r| r.worker.shared().lock().ok().map(|s| (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.speed))).unwrap_or((0., 0.));
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(0.),
-                right: Val::Px(0.),
-                top: Val::Px(0.),
-                height: Val::Px(TOPBAR),
-                padding: UiRect::axes(Val::Px(14.), Val::Px(0.)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::SpaceBetween,
-                border: UiRect::bottom(Val::Px(1.)),
-                ..default()
-            },
-            BackgroundColor(BAR),
-            BorderColor::all(BORDER),
-            BuilderPanel,
-        ))
+        .spawn((k.dock(Dock::Top { height: TOPBAR }, Node { padding: UiRect::axes(Val::Px(14.), Val::Px(0.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, ..default() }), BuilderPanel))
         .with_children(|bar| {
             // Left: product and where you are.
             bar.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(4.), ..default() }).with_children(|left| {
@@ -169,24 +153,23 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
                     left.spawn(k.button(&format!("‹ {title}"), BuildAction::Lessons, Look::Secondary, true));
                     left.spawn(divider());
                 }
-                left.spawn(k.text("System Builder", 14., TEXT, 2));
+                left.spawn(k.text("System Builder", size::PRODUCT, TEXT, 2));
                 left.spawn(divider());
                 left.spawn(k.button(&b.document.title, BuildAction::Level(String::new()), Look::Ghost, true));
                 let mut path = String::new();
                 for part in sim_system::split_path(&b.level) {
                     path = sim_system::join_path(&path, part);
-                    left.spawn(k.text("/", 13., FAINT, 0));
+                    left.spawn(k.text("/", size::ITEM, FAINT, 0));
                     left.spawn(k.button(part, BuildAction::Level(path.clone()), if path == b.level { Look::Secondary } else { Look::Ghost }, true));
                 }
             });
             // Center: tools.
             bar.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(6.), ..default() }).with_children(|mid| {
-                mid.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor::all(BORDER)))
-                    .with_children(|seg| {
-                        seg.spawn(k.button("Select", BuildAction::SetMode(Mode::Select), Look::Segment(b.mode == Mode::Select), true));
-                        seg.spawn(k.button("Annotate", BuildAction::SetMode(Mode::Annotate), Look::Segment(b.mode == Mode::Annotate), b.input.is_none()));
-                        seg.spawn(k.button("Connect", BuildAction::SetMode(Mode::Connect), Look::Segment(b.mode == Mode::Connect), true));
-                    });
+                mid.spawn(k.segments()).with_children(|seg| {
+                    seg.spawn(k.segment("Select", BuildAction::SetMode(Mode::Select), b.mode == Mode::Select, true));
+                    seg.spawn(k.segment("Annotate", BuildAction::SetMode(Mode::Annotate), b.mode == Mode::Annotate, b.input.is_none()));
+                    seg.spawn(k.segment("Connect", BuildAction::SetMode(Mode::Connect), b.mode == Mode::Connect, true));
+                });
                 mid.spawn(divider());
                 mid.spawn(k.button("Group", BuildAction::Group, Look::Secondary, !b.selected.is_empty()));
                 mid.spawn(k.button("Ungroup", BuildAction::Ungroup, Look::Secondary, subsystem));
@@ -197,16 +180,15 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
             });
             // Right: simulation.
             bar.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(8.), ..default() }).with_children(|right| {
-                right.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor::all(BORDER)))
-                    .with_children(|seg| {
-                        seg.spawn(k.button("Detailed", BuildAction::ToggleRealtime, Look::Segment(!b.realtime), b.realtime));
-                        seg.spawn(k.button("Realtime", BuildAction::ToggleRealtime, Look::Segment(b.realtime), !b.realtime && b.document.realtime.is_some()));
-                    });
-                right.spawn(k.button("Schematic", BuildAction::ToggleSchematic, Look::Segment(b.schematic.visible), true));
-                right.spawn(k.button("Graphs", BuildAction::ToggleGraphs, Look::Segment(b.graphs.visible), true));
+                right.spawn(k.segments()).with_children(|seg| {
+                    seg.spawn(k.segment("Detailed", BuildAction::ToggleRealtime, !b.realtime, b.realtime));
+                    seg.spawn(k.segment("Realtime", BuildAction::ToggleRealtime, b.realtime, !b.realtime && b.document.realtime.is_some()));
+                });
+                right.spawn(k.segment("Schematic", BuildAction::ToggleSchematic, b.schematic.visible, true));
+                right.spawn(k.segment("Graphs", BuildAction::ToggleGraphs, b.graphs.visible, true));
                 right.spawn(divider());
                 if b.run.is_some() {
-                    right.spawn(k.text(format!("t = {time:.3} s   {speed:.2}x real time"), 12., SUBTLE, 0));
+                    right.spawn(k.caption(format!("t = {time:.3} s   {speed:.2}x real time")));
                     right.spawn(k.button("Save run", BuildAction::SaveRun, Look::Ghost, true));
                     right.spawn(k.button("Reset", BuildAction::Reset, Look::Ghost, true));
                     right.spawn(k.button("Step", BuildAction::Step, Look::Ghost, !running));
@@ -222,42 +204,27 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
 
 fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_scroll: f32) {
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(0.),
-                top: Val::Px(TOPBAR),
-                bottom: Val::Px(STATUSBAR),
-                width: Val::Px(LEFT_WIDTH),
-                flex_direction: FlexDirection::Column,
-                border: UiRect::right(Val::Px(1.)),
-                ..default()
-            },
-            BackgroundColor(SURFACE),
-            BorderColor::all(BORDER),
-            BuilderPanel,
-        ))
+        .spawn((k.dock(Dock::Left { top: TOPBAR, bottom: STATUSBAR, width: LEFT_WIDTH }, Node { flex_direction: FlexDirection::Column, ..default() }), BuilderPanel))
         .with_children(|side| {
-            side.spawn((Node { padding: UiRect::horizontal(Val::Px(10.)), column_gap: Val::Px(6.), flex_wrap: FlexWrap::Wrap, border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor::all(BORDER)))
-                .with_children(|tabs| {
-                    for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems), ("Actuators", Tab::Actuators), ("Gait lab", Tab::GaitLab)] {
-                        if matches!(tab, Tab::Systems | Tab::Actuators | Tab::GaitLab) && b.open.shell.is_none() {
-                            continue;
-                        }
-                        tabs.spawn(k.button(label, BuildAction::Tab(tab), Look::Tab(b.tab == tab), true));
+            side.spawn(k.tab_strip()).with_children(|tabs| {
+                for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems), ("Actuators", Tab::Actuators), ("Gait lab", Tab::GaitLab)] {
+                    if matches!(tab, Tab::Systems | Tab::Actuators | Tab::GaitLab) && b.open.shell.is_none() {
+                        continue;
                     }
-                });
+                    tabs.spawn(k.tab(label, BuildAction::Tab(tab), b.tab == tab));
+                }
+            });
             if b.tab==Tab::Discussions {
                 side.spawn(Node{padding:UiRect::all(Val::Px(16.)),row_gap:Val::Px(10.),flex_direction:FlexDirection::Column,flex_shrink:0.,..default()}).with_children(|header|discussion_header(header,k,b));
-                side.spawn((Node{padding:UiRect::axes(Val::Px(16.),Val::Px(8.)),row_gap:Val::Px(14.),flex_direction:FlexDirection::Column,overflow:Overflow::scroll_y(),flex_grow:1.,min_height:Val::Px(0.),..default()},ScrollPosition(Vec2::new(0.0, note_scroll)),Scroll::Left)).with_children(|body|discussion_content(body,k,b));
+                side.spawn((k.scroll_area(Node{padding:UiRect::axes(Val::Px(16.),Val::Px(8.)),row_gap:Val::Px(14.),flex_direction:FlexDirection::Column,flex_grow:1.,min_height:Val::Px(0.),..default()}, note_scroll),Scroll::Left)).with_children(|body|discussion_content(body,k,b));
                 if b.discussion.selected.is_some()||b.input.as_ref().is_some_and(|i|matches!(i.purpose,Purpose::Comment|Purpose::CommentAuthor|Purpose::ThreadTitle)) {
+                    // A footer pinned under the scrolling messages (no kit widget for an in-flow footer).
                     side.spawn((Node{padding:UiRect::all(Val::Px(14.)),row_gap:Val::Px(8.),flex_direction:FlexDirection::Column,flex_shrink:0.,border:UiRect::top(Val::Px(1.)),..default()},BorderColor::all(BORDER),BackgroundColor(BAR))).with_children(|footer|discussion_composer(footer,k,b));
                 }
                 return;
             }
             side.spawn((
-                Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(14.)), overflow: Overflow::scroll_y(), flex_grow: 1., ..default() },
-                ScrollPosition(Vec2::new(0.0, side_scroll)),
+                k.scroll_area(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(14.)), flex_grow: 1., ..default() }, side_scroll),
                 Scroll::Left,
             ))
             .with_children(|body| match b.tab {
@@ -277,27 +244,27 @@ fn library_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     let focused = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::Filter);
     let shown = b.input.as_ref().filter(|_| focused).map(|i| i.buffer.clone()).unwrap_or_else(|| b.filter.clone());
     body.spawn(k.input(&shown, "Search components and subsystems   ( / )", BuildAction::Filter, focused));
-    body.spawn(Node { margin: UiRect::vertical(Val::Px(8.)), flex_wrap: FlexWrap::Wrap, column_gap: Val::Px(5.), row_gap: Val::Px(5.), flex_shrink: 0., ..default() })
+    body.spawn(Node { margin: UiRect::vertical(Val::Px(8.)), column_gap: Val::Px(5.), row_gap: Val::Px(5.), align_items: AlignItems::Default, ..wrap() })
         .with_children(|chips| {
-            chips.spawn(k.button("All", BuildAction::Category(None), Look::Chip(b.category.is_none()), true));
+            chips.spawn(k.chip("All", BuildAction::Category(None), b.category.is_none(), true));
             for c in CATEGORIES {
                 if b.palette.iter().any(|p| category(&p.domain) == c || (c == "Subsystems" && matches!(p.kind, InstanceKind::Subsystem { .. }))) {
-                    chips.spawn(k.button(c, BuildAction::Category(Some(c)), Look::Chip(b.category == Some(c)), true));
+                    chips.spawn(k.chip(c, BuildAction::Category(Some(c)), b.category == Some(c), true));
                 }
             }
         });
     let grid=b.grid();
     body.spawn(wrap()).with_children(|r| {
-        r.spawn(k.button("Grid",BuildAction::GridVisible,Look::Chip(grid.visible),true));
-        r.spawn(k.button("Snap",BuildAction::GridSnap,Look::Chip(grid.snap),true));
+        r.spawn(k.chip("Grid",BuildAction::GridVisible,grid.visible,true));
+        r.spawn(k.chip("Snap",BuildAction::GridSnap,grid.snap,true));
         r.spawn(k.button(&format!("{:?}",grid.plane),BuildAction::GridPlane,Look::Secondary,true));
         r.spawn(k.button(&format!("{} mm",grid.spacing_m*1000.),BuildAction::GridSpacing,Look::Secondary,true));
         r.spawn(k.button("Origin",BuildAction::GridOrigin,Look::Secondary,true));
     });
     for purpose in [Purpose::GridSpacing,Purpose::GridOrigin] {if let Some(i)=b.input.as_ref().filter(|i|i.purpose==purpose){body.spawn(k.input(&i.buffer,"Metres · Enter to save",BuildAction::GridSpacing,true));}}
-    body.spawn(k.text("Display layout only · drag a component into the grid",11.,FAINT,0));
+    body.spawn(k.text("Display layout only · drag a component into the grid", size::DETAIL, FAINT, 0));
     let items = b.filtered();
-    body.spawn(k.text(format!("{} result{}  ·  click for details, then place or snap", items.len(), if items.len() == 1 { "" } else { "s" }), 11., FAINT, 0));
+    body.spawn(k.text(format!("{} result{}  ·  click for details, then place or snap", items.len(), if items.len() == 1 { "" } else { "s" }), size::DETAIL, FAINT, 0));
     for (i, item) in items.iter().enumerate().take(PALETTE_ROWS) {
         let subtitle = match &item.kind {
             InstanceKind::Element { component_type } => component_type.clone(),
@@ -307,7 +274,7 @@ fn library_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         body.spawn(k.item(&b.icon(&item.kind), &item.label, &subtitle, category(&item.domain), BuildAction::Preview(i), shown)).observe(placement::start_palette);
     }
     if items.len() > PALETTE_ROWS {
-        body.spawn(k.text(format!("{} more. Refine the search.", items.len() - PALETTE_ROWS), 11.5, FAINT, 0));
+        body.spawn(k.note(format!("{} more. Refine the search.", items.len() - PALETTE_ROWS)));
     }
 }
 
@@ -316,7 +283,7 @@ fn outline_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     let Some(d) = b.document.definitions.get(&definition_id) else { return };
     let shared = Resolver::new(&b.document, &b.registry).placements(&definition_id);
     body.spawn(k.text(&d.label, 15., TEXT, 2));
-    body.spawn(k.text(format!("{definition_id}{}", if shared > 1 { format!("  ·  shared by {shared} placements") } else { String::new() }), 11.5, SUBTLE, 0));
+    body.spawn(k.text(format!("{definition_id}{}", if shared > 1 { format!("  ·  shared by {shared} placements") } else { String::new() }), size::CAPTION, SUBTLE, 0));
     if !b.level.is_empty() {
         body.spawn(Node { margin: UiRect::top(Val::Px(6.)), ..wrap() }).with_children(|r| {
             r.spawn(k.button("Up one level", BuildAction::Up, Look::Secondary, true));
@@ -324,7 +291,7 @@ fn outline_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     }
     body.spawn(k.section(&format!("Contents  {}", d.instances.len())));
     if d.instances.is_empty() {
-        body.spawn(k.text("Empty. Place components from the Library tab.", 12.5, SUBTLE, 0));
+        body.spawn(k.text("Empty. Place components from the Library tab.", size::BODY, SUBTLE, 0));
     }
     for (name, spec) in &d.instances {
         let title = if spec.label.is_empty() { name.clone() } else { format!("{}  ", spec.label) };
@@ -345,17 +312,17 @@ fn outline_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             let label = if net.label.is_empty() { "net".to_string() } else { net.label.clone() };
             body.spawn((
                 Node { flex_direction: FlexDirection::Column, padding: UiRect::vertical(Val::Px(3.)), flex_shrink: 0., ..default() },
-                children![k.text(label, 12., TEXT, 1), k.text(net.terminals.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("  ·  "), 11., SUBTLE, 0)],
+                children![k.text(label, size::SMALL, TEXT, 1), k.text(net.terminals.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("  ·  "), size::DETAIL, SUBTLE, 0)],
             ));
         }
     }
 }
 
 fn references_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
-    body.spawn(k.text("Reference images sit on a plane in this level. They are presentation only and never affect physics.", 12., SUBTLE, 0));
+    body.spawn(k.caption("Reference images sit on a plane in this level. They are presentation only and never affect physics."));
     let focused = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::ImportImage);
     let shown = b.input.as_ref().filter(|_| focused).map(|i| i.buffer.clone()).unwrap_or_default();
-    body.spawn((Node { margin: UiRect::top(Val::Px(10.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), flex_shrink: 0., ..default() }, children![k.input(&shown, "Paste an image path, then Enter", BuildAction::ImportImage, focused), k.text("Or drop a PNG or JPEG onto the viewport.", 11., FAINT, 0)]));
+    body.spawn((Node { margin: UiRect::top(Val::Px(10.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), flex_shrink: 0., ..default() }, children![k.input(&shown, "Paste an image path, then Enter", BuildAction::ImportImage, focused), k.text("Or drop a PNG or JPEG onto the viewport.", size::DETAIL, FAINT, 0)]));
     let Some(d) = b.definition() else { return };
     let refs: Vec<_> = d.references.iter().filter(|(_, r)| r.view == ReferenceView::Spatial).collect();
     body.spawn(k.section(&format!("On this level  {}", refs.len())));
@@ -367,7 +334,7 @@ fn references_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             BackgroundColor(RAISED),
         ))
         .with_children(|card| {
-            card.spawn(k.text(&r.label, 13., TEXT, 1));
+            card.spawn(k.text(&r.label, size::ITEM, TEXT, 1));
             let width_focus = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::ReferenceWidth(id.clone()));
             let width = b.input.as_ref().filter(|_| width_focus).map(|i| format!("{}|", i.buffer)).unwrap_or_else(|| format!("{:.3}", r.width));
             k.property(card, "Width", &width, "m", Some(BuildAction::Width(id.clone())), width_focus);
@@ -388,23 +355,11 @@ fn references_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
 }
 
 fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene) {
+    // The dock is itself the scroll area: its layout scrolls vertically (the
+    // kit's `scroll_area` makes a node of its own, and a dock is one node).
     commands
         .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                right: Val::Px(0.),
-                top: Val::Px(TOPBAR),
-                bottom: Val::Px(STATUSBAR),
-                width: Val::Px(RIGHT_WIDTH),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(4.),
-                padding: UiRect::all(Val::Px(16.)),
-                overflow: Overflow::scroll_y(),
-                border: UiRect::left(Val::Px(1.)),
-                ..default()
-            },
-            BackgroundColor(SURFACE),
-            BorderColor::all(BORDER),
+            k.dock(Dock::Right { top: TOPBAR, bottom: STATUSBAR, width: RIGHT_WIDTH }, Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(16.)), overflow: Overflow::scroll_y(), ..default() }),
             ScrollPosition::default(),
             Scroll::Right,
             BuilderPanel,
@@ -420,13 +375,12 @@ fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene
                 (0, _) => level_summary(col, k, b, definition.as_ref()),
                 (1, Some(name)) => instance_inspector(col, k, b, &name, definition.as_ref()),
                 (n, _) => {
-                    col.spawn(k.text(format!("{n} selected"), 16., TEXT, 2));
-                    col.spawn(k.text(b.selected.iter().cloned().collect::<Vec<_>>().join(", "), 12., SUBTLE, 0));
+                    k.header(col, &format!("{n} selected"), &b.selected.iter().cloned().collect::<Vec<_>>().join(", "));
                     col.spawn(Node { margin: UiRect::top(Val::Px(10.)), ..wrap() }).with_children(|r| {
                         r.spawn(k.button("Group into subsystem", BuildAction::Group, Look::Primary, true));
                         r.spawn(k.button("Delete", BuildAction::Delete, Look::Danger, true));
                     });
-                    col.spawn(k.text("Nets that cross the selection become boundary ports of the new subsystem.", 11.5, FAINT, 0));
+                    col.spawn(k.note("Nets that cross the selection become boundary ports of the new subsystem."));
                 }
             }
             live_section(col, k, b, scene);
@@ -435,8 +389,7 @@ fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene
 
 fn level_summary(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, definition: Option<&sim_system::Definition>) {
     let Some(d) = definition else { return };
-    col.spawn(k.text("Nothing selected", 16., TEXT, 2));
-    col.spawn(k.text("Click a part in the viewport or the Outline. Shift-click to select several.", 12., SUBTLE, 0));
+    k.header(col, "Nothing selected", "Click a part in the viewport or the Outline. Shift-click to select several.");
     col.spawn(k.section("This level"));
     k.property(col, "Definition", &d.label, "", None::<BuildAction>, false);
     k.property(col, "Instances", &d.instances.len().to_string(), "", None::<BuildAction>, false);
@@ -460,17 +413,17 @@ fn level_summary(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, definitio
             k.property(col, key, &format!("{measured}≤ {:.1} %", 100. * bound), "", None::<BuildAction>, false);
         }
         if let Some(m) = &p.measured {
-            col.spawn(k.text(format!("Measured on {}: detailed {:.1}×, realtime {:.1}× realtime{}", m.host, m.detailed_speed, m.realtime_speed, if m.content_hash == sim_runtime::realtime_fidelity::measured_hash(&b.document) { "" } else { " — the model changed since; remeasure (sim-system realtime FILE --publish)" }), 11., FAINT, 0));
+            col.spawn(k.text(format!("Measured on {}: detailed {:.1}×, realtime {:.1}× realtime{}", m.host, m.detailed_speed, m.realtime_speed, if m.content_hash == sim_runtime::realtime_fidelity::measured_hash(&b.document) { "" } else { " — the model changed since; remeasure (sim-system realtime FILE --publish)" }), size::DETAIL, FAINT, 0));
         }
         if !p.notes.is_empty() {
-            col.spawn(k.text(&p.notes, 11., FAINT, 0));
+            col.spawn(k.text(&p.notes, size::DETAIL, FAINT, 0));
         }
     }
     let updates = &b.updates;
     if !updates.is_empty() {
         col.spawn(k.section("Library updates"));
         for u in updates {
-            col.spawn(k.text(format!("{}: {} → {}", u.id, u.imported_version.map(|v| format!("v{v}")).unwrap_or_else(|| "imported".into()), u.current_version.map(|v| format!("v{v}")).unwrap_or_else(|| "changed".into())), 12., WARN, 0));
+            col.spawn(k.text(format!("{}: {} → {}", u.id, u.imported_version.map(|v| format!("v{v}")).unwrap_or_else(|| "imported".into()), u.current_version.map(|v| format!("v{v}")).unwrap_or_else(|| "changed".into())), size::SMALL, WARN, 0));
         }
         col.spawn(wrap()).with_children(|r| {
             r.spawn(k.button("Update from library", BuildAction::SyncLibrary, Look::Primary, true));
@@ -478,22 +431,22 @@ fn level_summary(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, definitio
     }
     col.spawn(k.section(&format!("Review  {}", b.findings.len())));
     if let Some(e) = &b.compile_error {
-        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, 12., DANGER, 0)]));
+        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, size::SMALL, DANGER, 0)]));
     }
     if b.findings.is_empty() && b.compile_error.is_none() {
-        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(OK), k.text("Complete and compiles", 12.5, SUBTLE, 0)]));
+        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(OK), k.text("Complete and compiles", size::BODY, SUBTLE, 0)]));
     }
     for f in b.findings.iter().take(24) {
-        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text(&f.message, 12., SUBTLE, 0)]));
+        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }, children![k.dot(WARN), k.caption(&f.message)]));
     }
 }
 
 fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str, definition: Option<&sim_system::Definition>) {
     let Some(spec) = b.spec(name) else { return };
     let cat = category(domain_of(&spec.kind));
-    col.spawn((ImageNode::new(k.f.icons.get(&b.icon(&spec.kind)).unwrap_or(&k.f.icons["component"]).clone()),Node{width:Val::Px(36.),height:Val::Px(36.),..default()}));
-    col.spawn(k.text(if spec.label.is_empty() { name.to_string() } else { spec.label.clone() }, 16., TEXT, 2));
-    col.spawn((Node { column_gap: Val::Px(7.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(tag_color(cat)), k.text(format!("{cat}  ·  {}", kind_text(&spec.kind)), 11.5, SUBTLE, 0)]));
+    col.spawn((ImageNode::new(k.icon(&b.icon(&spec.kind))),Node{width:Val::Px(36.),height:Val::Px(36.),..default()}));
+    col.spawn(k.title(if spec.label.is_empty() { name.to_string() } else { spec.label.clone() }));
+    col.spawn((Node { column_gap: Val::Px(7.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(tag_color(cat)), k.text(format!("{cat}  ·  {}", kind_text(&spec.kind)), size::CAPTION, SUBTLE, 0)]));
     let rename_focus = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::Rename(name.to_string()));
     let shown_name = b.input.as_ref().filter(|_| rename_focus).map(|i| format!("{}|", i.buffer)).unwrap_or_else(|| name.to_string());
     col.spawn(k.section("Identity"));
@@ -538,26 +491,26 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
         }
         if !b.level.is_empty() {
             col.spawn(wrap()).with_children(|r| {
-                r.spawn(k.text("Expose to the level:", 11., FAINT, 0));
+                r.spawn(k.text("Expose to the level:", size::DETAIL, FAINT, 0));
                 for (parameter, _, _) in &sweepable {
                     let exposed = matches!(spec.parameters.get(parameter), Some(sim_system::ParameterBinding::Parameter { .. }));
-                    r.spawn(k.button(&parameter.replace('_', " "), BuildAction::Expose(name.to_string(), parameter.clone()), Look::Chip(exposed), !exposed));
+                    r.spawn(k.chip(&parameter.replace('_', " "), BuildAction::Expose(name.to_string(), parameter.clone()), exposed, !exposed));
                 }
             });
         }
         col.spawn(wrap()).with_children(|r| {
-            r.spawn(k.text("Sweep:", 11., FAINT, 0));
+            r.spawn(k.text("Sweep:", size::DETAIL, FAINT, 0));
             for (parameter, _, _) in &sweepable {
-                r.spawn(k.button(&parameter.replace('_', " "), BuildAction::SweepParameter(name.to_string(), parameter.clone()), Look::Chip(false), true));
+                r.spawn(k.chip(&parameter.replace('_', " "), BuildAction::SweepParameter(name.to_string(), parameter.clone()), false, true));
             }
         });
-        col.spawn(k.text("Click a value to edit. Type $name to inherit a level parameter. Sweep runs one variant per value.", 11., FAINT, 0));
+        col.spawn(k.text("Click a value to edit. Type $name to inherit a level parameter. Sweep runs one variant per value.", size::DETAIL, FAINT, 0));
     }
 
     col.spawn(k.section("Display position · metres"));
     col.spawn(k.button(&format!("{:.3}, {:.3}, {:.3}",spec.placement.position[0],spec.placement.position[1],spec.placement.position[2]), BuildAction::Position,Look::Secondary,true));
     if let Some(input)=b.input.as_ref().filter(|i|i.purpose==Purpose::Position){col.spawn(k.input(&input.buffer,"x y z in metres",BuildAction::Position,true));}
-    col.spawn(k.text("Drag to arrange; X/Y/Z constrain, Alt bypasses snap. Display only.",11.,FAINT,0));
+    col.spawn(k.text("Drag to arrange; X/Y/Z constrain, Alt bypasses snap. Display only.", size::DETAIL, FAINT, 0));
     // Ports.
     col.spawn(k.section("Ports"));
     if let Ok(ports) = Resolver::new(&b.document, &b.registry).instance_ports(&spec) {
@@ -570,26 +523,26 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
             col.spawn((
                 Button,
                 BuildAction::Terminal(t.clone()),
-                Tint { idle: if armed { ACCENT_BG } else { Color::NONE }, hover: HOVER_BG },
+                if armed { Tint::new(ACCENT_BG, HOVER_BG) } else { Tint::CLEAR },
                 Node { border_radius: BorderRadius::all(Val::Px(4.)), column_gap: Val::Px(8.), align_items: AlignItems::Center, padding: UiRect::axes(Val::Px(6.), Val::Px(4.)), flex_shrink: 0., ..default() },
                 BackgroundColor(if armed { ACCENT_BG } else { Color::NONE }),
             ))
             .with_children(|row| {
                 row.spawn(k.dot(if is_connected { OK } else { FAINT }));
-                row.spawn((Node { flex_grow: 1., flex_direction: FlexDirection::Column, ..default() }, children![k.text(port, 12.5, TEXT, 1), k.text(schema.as_ref().map(sim_system::commands::describe).unwrap_or_else(|| "untyped".into()), 11., SUBTLE, 0)]));
+                row.spawn((Node { flex_grow: 1., flex_direction: FlexDirection::Column, ..default() }, children![k.text(port, size::BODY, TEXT, 1), k.text(schema.as_ref().map(sim_system::commands::describe).unwrap_or_else(|| "untyped".into()), size::DETAIL, SUBTLE, 0)]));
                 if is_connected && connected.contains(&t) {
                     row.spawn(k.button("Disconnect", BuildAction::Disconnect(t.clone()), Look::Ghost, true));
                 }
             });
         }
         let hint = if b.connect_from.is_some() { "Now pick the other terminal (select another part if needed)." } else { "Click a port to start a connection." };
-        col.spawn(k.text(hint, 11., FAINT, 0));
+        col.spawn(k.text(hint, size::DETAIL, FAINT, 0));
         if let Some(d) = definition {
             if !d.ports.is_empty() && b.connect_from.is_some() {
                 col.spawn(wrap()).with_children(|r| {
-                    r.spawn(k.text("Level ports:", 11.5, SUBTLE, 0));
+                    r.spawn(k.text("Level ports:", size::CAPTION, SUBTLE, 0));
                     for port in d.ports.keys() {
-                        r.spawn(k.button(port, BuildAction::Terminal(Terminal::boundary(port)), Look::Chip(false), true));
+                        r.spawn(k.chip(port, BuildAction::Terminal(Terminal::boundary(port)), false, true));
                     }
                 });
             }
@@ -607,7 +560,7 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
     match &b.alternatives {
         Some((n, list)) if n == name => {
             if list.is_empty() {
-                col.spawn(k.text("No other implementation fits the connected ports.", 12., SUBTLE, 0));
+                col.spawn(k.caption("No other implementation fits the connected ports."));
             }
             for (i, alt) in list.iter().enumerate().take(24) {
                 let tag = match &alt.kind {
@@ -623,7 +576,7 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
                 r.spawn(k.button("Show alternatives", BuildAction::Swap, Look::Secondary, true));
                 r.spawn(k.button("Compare alternatives", BuildAction::CompareSelected, Look::Primary, true));
             });
-            col.spawn(k.text("Compare runs this system once per same-interface alternative and overlays the results.", 11., FAINT, 0));
+            col.spawn(k.text("Compare runs this system once per same-interface alternative and overlays the results.", size::DETAIL, FAINT, 0));
         }
     }
 
@@ -642,12 +595,12 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
         let d = b.document.definitions.get(definition);
         let version = d.and_then(|d| d.version).map(|v| format!("v{v}")).unwrap_or_else(|| "unpublished".into());
         let source = d.and_then(|d| d.source.as_ref()).map(|s| format!(" · from {}", s.path)).unwrap_or_default();
-        col.spawn(k.text(format!("{definition} · {version}{source}"), 11., FAINT, 0));
+        col.spawn(k.text(format!("{definition} · {version}{source}"), size::DETAIL, FAINT, 0));
         let here = Resolver::new(&b.document, &b.registry).placements(definition);
         let files = b.used_in.as_ref().filter(|(d, _)| d == definition).map(|(_, f)| f.clone()).unwrap_or_default();
-        col.spawn(k.text(format!("Used {here}× in this file{}", if files.is_empty() { String::new() } else { format!("; in files: {}", files.iter().map(|(f, n)| format!("{} ({n})", std::path::Path::new(f).file_name().map(|x| x.to_string_lossy().to_string()).unwrap_or_default())).collect::<Vec<_>>().join(", ")) }), 11., FAINT, 0));
+        col.spawn(k.text(format!("Used {here}× in this file{}", if files.is_empty() { String::new() } else { format!("; in files: {}", files.iter().map(|(f, n)| format!("{} ({n})", std::path::Path::new(f).file_name().map(|x| x.to_string_lossy().to_string()).unwrap_or_default())).collect::<Vec<_>>().join(", ")) }), size::DETAIL, FAINT, 0));
     }
-    col.spawn(k.text("Arrow keys move 5 mm (Shift: 1 mm). Page Up/Down lift.", 11., FAINT, 0));
+    col.spawn(k.text("Arrow keys move 5 mm (Shift: 1 mm). Page Up/Down lift.", size::DETAIL, FAINT, 0));
 }
 
 fn live_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, scene: &SpatialScene) {
@@ -658,10 +611,10 @@ fn live_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, scene: &Sp
             col.spawn(wrap()).with_children(|r| {
                 for (id, title) in found.iter().take(16) {
                     let pinned = b.graphs.pinned.contains(id);
-                    r.spawn(k.button(title, if pinned { BuildAction::Unpin(id.clone()) } else { BuildAction::Pin(id.clone()) }, Look::Chip(pinned), true));
+                    r.spawn(k.chip(title, if pinned { BuildAction::Unpin(id.clone()) } else { BuildAction::Pin(id.clone()) }, pinned, true));
                 }
             });
-            col.spawn(k.text("Pinned quantities stay in the graph dock (up to 4). With none pinned it follows the selection.", 11., FAINT, 0));
+            col.spawn(k.text("Pinned quantities stay in the graph dock (up to 4). With none pinned it follows the selection.", size::DETAIL, FAINT, 0));
         }
     }
     let Some(animation) = &scene.animation else { return };
@@ -697,7 +650,7 @@ pub(crate) fn paragraph(col: &mut ChildSpawnerCommands, k: &Kit, title: &str, bo
         return;
     }
     col.spawn(k.section(title));
-    col.spawn(k.text(body, 12., Color::srgb(0.80, 0.83, 0.87), 0));
+    col.spawn(k.text(body, size::SMALL, Color::srgb(0.80, 0.83, 0.87), 0));
 }
 
 pub(crate) fn equations(col: &mut ChildSpawnerCommands, k: &Kit, lines: &[&str]) {
@@ -712,7 +665,7 @@ pub(crate) fn equations(col: &mut ChildSpawnerCommands, k: &Kit, lines: &[&str])
     ))
     .with_children(|box_| {
         for line in lines {
-            box_.spawn(k.text(*line, 12., Color::srgb(0.86, 0.90, 0.80), 0));
+            box_.spawn(k.text(*line, size::SMALL, Color::srgb(0.86, 0.90, 0.80), 0));
         }
     });
 }
@@ -724,7 +677,7 @@ fn about_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, spec: &In
         InstanceKind::Element { component_type } => {
             let Some(notes) = b.registry.get(&component_type.as_str().into()).ok().and_then(|d| d.notes) else { return };
             col.spawn(k.section("About"));
-            col.spawn(k.text(notes.summary, 12.5, TEXT, 1));
+            col.spawn(k.text(notes.summary, size::BODY, TEXT, 1));
             if notes.has_derived() {
                 let values = library::effective_parameters(&b.registry, component_type, &explicit_values(spec));
                 derived_rows(col, k, &notes.derive(&values));
@@ -743,7 +696,7 @@ fn about_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, spec: &In
             let Some(d) = b.document.definitions.get(definition) else { return };
             if !d.description.is_empty() {
                 col.spawn(k.section("About"));
-                col.spawn(k.text(&d.description, 12., Color::srgb(0.80, 0.83, 0.87), 0));
+                col.spawn(k.text(&d.description, size::SMALL, Color::srgb(0.80, 0.83, 0.87), 0));
             }
         }
     }
@@ -753,10 +706,10 @@ fn about_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, spec: &In
 fn snap_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str) {
     col.spawn(k.section("Snap on"));
     let Some(ports) = b.cached_suggestions(name) else {
-        col.spawn(k.text("Working out what fits…", 12., SUBTLE, 0));
+        col.spawn(k.caption("Working out what fits…"));
         return;
     };
-    col.spawn(k.text("Parts whose ports fit. Click one to add it next to this part and connect it in one undoable step.", 11., FAINT, 0));
+    col.spawn(k.text("Parts whose ports fit. Click one to add it next to this part and connect it in one undoable step.", size::DETAIL, FAINT, 0));
     for p in ports {
         let expanded = b.snap_expanded.contains(&p.port);
         col.spawn((
@@ -767,11 +720,11 @@ fn snap_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str
         .with_children(|card| {
             card.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![
                 k.dot(if p.connected_to.is_empty() { FAINT } else { OK }),
-                k.text(&p.port, 12.5, TEXT, 2),
-                k.text(&p.schema, 11., SUBTLE, 0),
+                k.text(&p.port, size::BODY, TEXT, 2),
+                k.text(&p.schema, size::DETAIL, SUBTLE, 0),
             ]));
             if !p.connected_to.is_empty() {
-                card.spawn(k.text(format!("on: {}", p.connected_to.join(", ")), 11., FAINT, 0));
+                card.spawn(k.text(format!("on: {}", p.connected_to.join(", ")), size::DETAIL, FAINT, 0));
             }
             let shown: Vec<(usize, &sim_system::snap::Candidate)> = p.candidates.iter().enumerate().filter(|(_, c)| expanded || c.recommended).take(if expanded { 40 } else { 6 }).collect();
             card.spawn(wrap()).with_children(|r| {
@@ -782,7 +735,7 @@ fn snap_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str
             });
             if expanded {
                 if let Some((_, c)) = shown.iter().find(|(_, c)| c.conflict.is_some()) {
-                    card.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text(c.conflict.as_deref().unwrap_or(""), 11., SUBTLE, 0)]));
+                    card.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text(c.conflict.as_deref().unwrap_or(""), size::DETAIL, SUBTLE, 0)]));
                 }
             }
             let more = p.candidates.len().saturating_sub(shown.len());
@@ -799,7 +752,7 @@ fn snap_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str
 fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &PaletteItem) {
     let cat = category(&item.domain);
     col.spawn(k.text(&item.label, 17., TEXT, 2));
-    col.spawn((Node { column_gap: Val::Px(7.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(tag_color(cat)), k.text(format!("{cat}  ·  {}", kind_text(&item.kind)), 11.5, SUBTLE, 0)]));
+    col.spawn((Node { column_gap: Val::Px(7.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(tag_color(cat)), k.text(format!("{cat}  ·  {}", kind_text(&item.kind)), size::CAPTION, SUBTLE, 0)]));
     col.spawn(Node { margin: UiRect::vertical(Val::Px(8.)), ..wrap() }).with_children(|r| {
         r.spawn(k.button("Place on this level", BuildAction::PlacePreview, Look::Primary, true));
         r.spawn(k.button("Close", BuildAction::ClosePreview, Look::Ghost, true));
@@ -810,14 +763,14 @@ fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &Pal
             let fits: Vec<(&str, &sim_system::snap::Candidate)> = ports.iter().filter_map(|p| p.candidates.iter().find(|c| c.kind == item.kind).map(|c| (p.port.as_str(), c))).collect();
             col.spawn(k.section(&format!("Attach to {name}")));
             if fits.is_empty() {
-                col.spawn(k.text(format!("No port of {name} fits this part."), 12., SUBTLE, 0));
+                col.spawn(k.caption(format!("No port of {name} fits this part.")));
             }
             for (port, c) in fits {
                 col.spawn(wrap()).with_children(|r| {
                     r.spawn(k.button(&format!("{name}.{port}  ←  {}", c.port), BuildAction::AttachPreview(port.to_string()), if c.conflict.is_some() { Look::Ghost } else { Look::Secondary }, c.conflict.is_none()));
                 });
                 if let Some(conflict) = &c.conflict {
-                    col.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text(conflict, 11., SUBTLE, 0)]));
+                    col.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text(conflict, size::DETAIL, SUBTLE, 0)]));
                 }
             }
         }
@@ -828,14 +781,14 @@ fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &Pal
             let notes = b.registry.get(&component_type.as_str().into()).ok().and_then(|d| d.notes);
             match notes {
                 Some(n) => {
-                    col.spawn(k.text(n.summary, 13., TEXT, 1));
+                    col.spawn(k.text(n.summary, size::ITEM, TEXT, 1));
                     paragraph(col, k, "How it works", n.explanation);
                     equations(col, k, n.equations);
                     paragraph(col, k, "Trade-offs", n.tradeoffs);
                     paragraph(col, k, "Model limits", n.limits);
                 }
                 None => {
-                    col.spawn(k.text("No notes yet for this component: ports and parameters below come straight from the registry.", 12., SUBTLE, 0));
+                    col.spawn(k.caption("No notes yet for this component: ports and parameters below come straight from the registry."));
                 }
             }
             if let Some(e) = entry {
@@ -869,7 +822,7 @@ fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &Pal
                 datasheet_section(col, k, sheet);
             } else {
                 col.spawn(k.section("Datasheet"));
-                col.spawn(k.text("No datasheet yet. Generate one: sim-system datasheet TYPE --write library/datasheets", 11.5, FAINT, 0));
+                col.spawn(k.note("No datasheet yet. Generate one: sim-system datasheet TYPE --write library/datasheets"));
             }
             if let Some(n) = notes.filter(|n| !n.pairs_with.is_empty()) {
                 col.spawn(k.section("Pairs with"));
@@ -877,14 +830,14 @@ fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &Pal
                     for t in n.pairs_with {
                         let kind = InstanceKind::Element { component_type: t.to_string() };
                         let label = b.element_entry(t).map(|e| e.display_name.clone()).unwrap_or_else(|| t.to_string());
-                        r.spawn(k.button(&label, BuildAction::PreviewKind(kind), Look::Chip(false), true));
+                        r.spawn(k.chip(&label, BuildAction::PreviewKind(kind), false, true));
                     }
                 });
             }
         }
         InstanceKind::Subsystem { definition } => {
             let description = b.document.definitions.get(definition).map(|d| d.description.clone()).filter(|d| !d.is_empty()).unwrap_or_else(|| item.detail.clone());
-            col.spawn(k.text(description, 12.5, Color::srgb(0.80, 0.83, 0.87), 0));
+            col.spawn(k.text(description, size::BODY, Color::srgb(0.80, 0.83, 0.87), 0));
         }
     }
 }
@@ -893,7 +846,7 @@ fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &Pal
 fn datasheet_section(col: &mut ChildSpawnerCommands, k: &Kit, sheet: &sim_runtime::bench::Datasheet) {
     col.spawn(k.section(&format!("Datasheet · {} bench", sheet.kind)));
     for c in &sheet.checks {
-        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }, children![k.dot(if c.passed { OK } else { DANGER }), k.text(format!("{}: {}", c.name, c.detail), 11.5, SUBTLE, 0)]));
+        col.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }, children![k.dot(if c.passed { OK } else { DANGER }), k.text(format!("{}: {}", c.name, c.detail), size::CAPTION, SUBTLE, 0)]));
     }
     for (name, value) in &sheet.conditions {
         k.property(col, name, &num(*value), "", None::<BuildAction>, false);
@@ -909,7 +862,7 @@ fn datasheet_section(col: &mut ChildSpawnerCommands, k: &Kit, sheet: &sim_runtim
     }
     for c in sheet.curves.iter().take(3) {
         let sample: Vec<String> = c.points.iter().step_by((c.points.len() / 5).max(1)).map(|p| format!("{} → {}", num(p[0]), num(p[1]))).collect();
-        col.spawn(k.text(format!("{} ({} vs {}): {}", c.name, c.y_label, c.x_label, sample.join(", ")), 11., FAINT, 0));
+        col.spawn(k.text(format!("{} ({} vs {}): {}", c.name, c.y_label, c.x_label, sample.join(", ")), size::DETAIL, FAINT, 0));
     }
 }
 
@@ -918,68 +871,56 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
     if !b.graphs.visible {
         return;
     }
+    // `Dock::Under` sits on the bottom of its parent, so a layout-only
+    // parent places it above the status bar, between the side columns.
     commands
         .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(LEFT_WIDTH),
-                right: Val::Px(RIGHT_WIDTH),
-                bottom: Val::Px(STATUSBAR),
-                height: Val::Px(graphs::DOCK),
-                padding: UiRect::all(Val::Px(10.)),
-                column_gap: Val::Px(10.),
-                border: UiRect::top(Val::Px(1.)),
-                ..default()
-            },
-            BackgroundColor(BAR),
-            BorderColor::all(BORDER),
+            Node { position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH), right: Val::Px(RIGHT_WIDTH), bottom: Val::Px(STATUSBAR), height: Val::Px(graphs::DOCK), ..default() },
             BuilderPanel,
         ))
-        .with_children(|dock| {
-            if let Some(r) = &b.study.result {
-                dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(BAR)))
-                    .with_children(|legend| {
-                        legend.spawn(k.text(format!("Study {}", r.name), 11., TEXT, 2));
-                        for (label, color) in b.graphs.charts.iter().find(|c| !c.legend.is_empty()).map(|c| c.legend.clone()).unwrap_or_default() {
-                            legend.spawn((Node { column_gap: Val::Px(5.), align_items: AlignItems::Center, ..default() }, children![k.dot(Color::srgb_u8(color[0], color[1], color[2])), k.text(label, 11., SUBTLE, 0)]));
-                        }
-                        legend.spawn(k.button("Back to live", BuildAction::ClearStudy, Look::Ghost, true));
-                    });
-            }
-            if b.graphs.charts.is_empty() {
-                dock.spawn(k.text(if b.run.is_none() { "Press Run (R) to record. Select a part to plot its speed, current or torque, or pin quantities from the inspector." } else { "Nothing plottable yet: select a part." }, 12., SUBTLE, 0));
-            }
-            for (i, c) in b.graphs.charts.iter().enumerate() {
-                let [r, g, bl] = c.color;
-                let color = Color::srgb_u8(r, g, bl);
-                dock.spawn((
-                    Node { flex_direction: FlexDirection::Column, flex_grow: 1., flex_basis: Val::Px(0.), min_width: Val::Px(0.), row_gap: Val::Px(3.), ..default() },
-                ))
-                .with_children(|card| {
-                    card.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(6.), flex_shrink: 0., ..default() }).with_children(|head| {
-                        head.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Center, min_width: Val::Px(0.), overflow: Overflow::clip(), ..default() }, children![k.dot(color), k.text(&c.title, 11.5, TEXT, 1)]));
-                        let latest = c.latest.map(|v| format!("{} {}", num(v), c.unit)).unwrap_or_else(|| "–".into());
-                        head.spawn(k.text(latest, 11.5, color, 2));
-                        if c.pinned {
-                            head.spawn(k.button("×", BuildAction::Unpin(c.id.clone()), Look::Ghost, true));
-                        }
-                    });
-                    if let Some(image) = b.graphs.images.get(i) {
-                        card.spawn((
-                            Node { flex_grow: 1., border: UiRect::all(Val::Px(1.)), ..default() },
-                            BorderColor::all(BORDER),
-                            ImageNode::new(image.clone()),
-                        ))
-                        .with_children(|plot| {
-                            let label = |v: f64| format!("{} {}", num(v), c.unit);
-                            plot.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(4.), top: Val::Px(2.), ..default() }, children![k.text(label(c.range.1), 10., FAINT, 0)]));
-                            plot.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(4.), bottom: Val::Px(2.), ..default() }, children![k.text(label(c.range.0), 10., FAINT, 0)]));
-                            let x = if c.x_label == "s" { format!("{:.2} – {:.2} s", c.window.0, c.window.1) } else { format!("{} {} – {}", c.x_label, num(c.window.0), num(c.window.1)) };
-                            plot.spawn((Node { position_type: PositionType::Absolute, right: Val::Px(4.), bottom: Val::Px(2.), ..default() }, children![k.text(x, 10., FAINT, 0)]));
+        .with_children(|slot| {
+            slot.spawn(k.dock(Dock::Under { left: 0., right: 0., height: graphs::DOCK }, Node { padding: UiRect::all(Val::Px(10.)), column_gap: Val::Px(10.), ..default() }))
+            .with_children(|dock| {
+                if let Some(r) = &b.study.result {
+                    dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(SURFACE)))
+                        .with_children(|legend| {
+                            legend.spawn(k.text(format!("Study {}", r.name), size::DETAIL, TEXT, 2));
+                            for (label, color) in b.graphs.charts.iter().find(|c| !c.legend.is_empty()).map(|c| c.legend.clone()).unwrap_or_default() {
+                                legend.spawn((Node { column_gap: Val::Px(5.), align_items: AlignItems::Center, ..default() }, children![k.dot(Color::srgb_u8(color[0], color[1], color[2])), k.text(label, size::DETAIL, SUBTLE, 0)]));
+                            }
+                            legend.spawn(k.button("Back to live", BuildAction::ClearStudy, Look::Ghost, true));
                         });
-                    }
-                });
-            }
+                }
+                if b.graphs.charts.is_empty() {
+                    dock.spawn(k.caption(if b.run.is_none() { "Press Run (R) to record. Select a part to plot its speed, current or torque, or pin quantities from the inspector." } else { "Nothing plottable yet: select a part." }));
+                }
+                for (i, c) in b.graphs.charts.iter().enumerate() {
+                    let [r, g, bl] = c.color;
+                    let color = Color::srgb_u8(r, g, bl);
+                    dock.spawn((
+                        Node { flex_direction: FlexDirection::Column, flex_grow: 1., flex_basis: Val::Px(0.), min_width: Val::Px(0.), row_gap: Val::Px(3.), ..default() },
+                    ))
+                    .with_children(|card| {
+                        card.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(6.), flex_shrink: 0., ..default() }).with_children(|head| {
+                            head.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Center, min_width: Val::Px(0.), overflow: Overflow::clip(), ..default() }, children![k.dot(color), k.text(&c.title, size::CAPTION, TEXT, 1)]));
+                            let latest = c.latest.map(|v| format!("{} {}", num(v), c.unit)).unwrap_or_else(|| "–".into());
+                            head.spawn(k.text(latest, size::CAPTION, color, 2));
+                            if c.pinned {
+                                head.spawn(k.button("×", BuildAction::Unpin(c.id.clone()), Look::Ghost, true));
+                            }
+                        });
+                        if let Some(image) = b.graphs.images.get(i) {
+                            card.spawn(k.chart_image(image.clone(), Node { flex_grow: 1., ..default() }, true)).with_children(|plot| {
+                                let label = |v: f64| format!("{} {}", num(v), c.unit);
+                                plot.spawn(k.chart_label(label(c.range.1), Corner::TopLeft));
+                                plot.spawn(k.chart_label(label(c.range.0), Corner::BottomLeft));
+                                let x = if c.x_label == "s" { format!("{:.2} – {:.2} s", c.window.0, c.window.1) } else { format!("{} {} – {}", c.x_label, num(c.window.0), num(c.window.1)) };
+                                plot.spawn(k.chart_label(x, Corner::BottomRight));
+                            });
+                        }
+                    });
+                }
+            });
         });
 }
 
@@ -987,10 +928,10 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
 /// Open another system file in this window: a path field and the system
 /// files found under examples/systems-builder, the library and this file's folder.
 fn systems_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
-    body.spawn(k.text("Open another system in this window. Its runs, notes and studies come with it; edits are already saved to this file.", 12., SUBTLE, 0));
+    body.spawn(k.caption("Open another system in this window. Its runs, notes and studies come with it; edits are already saved to this file."));
     body.spawn(k.section("Open"));
-    body.spawn(k.text(&b.document.title, 13., TEXT, 1));
-    body.spawn(k.text(b.path().display().to_string(), 11., FAINT, 0));
+    body.spawn(k.text(&b.document.title, size::ITEM, TEXT, 1));
+    body.spawn(k.text(b.path().display().to_string(), size::DETAIL, FAINT, 0));
     let focused = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::OpenSystem);
     let shown = b.input.as_ref().filter(|_| focused).map(|i| i.buffer.clone()).unwrap_or_default();
     body.spawn(Node { margin: UiRect::top(Val::Px(8.)), flex_direction: FlexDirection::Column, flex_shrink: 0., ..default() })
@@ -998,17 +939,17 @@ fn systems_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             c.spawn(k.input(&shown, "Path to a .system.json file · Enter to open", BuildAction::OpenSystemPath, focused));
         });
     if let Some(pending) = b.open.pending() {
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Opening {}…", pending.display()), 12., TEXT, 0)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Opening {}…", pending.display()), size::SMALL, TEXT, 0)]));
         body.spawn(wrap()).with_children(|r| {
             r.spawn(k.button("Cancel", BuildAction::CancelOpen, Look::Danger, true));
         });
     }
     if let Some(e) = b.action_error.as_ref().filter(|e| e.contains("open")) {
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, 12., DANGER, 0)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, size::SMALL, DANGER, 0)]));
     }
     let blockers = b.open_blockers();
     if !blockers.is_empty() {
-        body.spawn(k.text(format!("Before opening: {}", blockers.join("; ")), 11.5, WARN, 0));
+        body.spawn(k.text(format!("Before opening: {}", blockers.join("; ")), size::CAPTION, WARN, 0));
     }
     body.spawn(k.section(&format!("Systems  {}", b.open.systems.len())));
     // Shown relative to the workspace root (absolute when outside it or unresolved).
@@ -1032,8 +973,8 @@ fn short_hash(h: &str) -> String {
 /// uncertainty, the joint roles, and consumer-file staleness checks.
 fn actuators_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     body.spawn(Node { margin: UiRect::bottom(Val::Px(6.)), ..wrap() }).with_children(|chips| {
-        chips.spawn(k.button("Registry", BuildAction::ActuatorView(calibration::ActuatorView::Registry), Look::Chip(b.actuator_view == calibration::ActuatorView::Registry), true));
-        chips.spawn(k.button("Measured evidence", BuildAction::ActuatorView(calibration::ActuatorView::Evidence), Look::Chip(b.actuator_view == calibration::ActuatorView::Evidence), true));
+        chips.spawn(k.chip("Registry", BuildAction::ActuatorView(calibration::ActuatorView::Registry), b.actuator_view == calibration::ActuatorView::Registry, true));
+        chips.spawn(k.chip("Measured evidence", BuildAction::ActuatorView(calibration::ActuatorView::Evidence), b.actuator_view == calibration::ActuatorView::Evidence, true));
     });
     match b.actuator_view {
         calibration::ActuatorView::Registry => registry_view(body, k, b),
@@ -1043,7 +984,7 @@ fn actuators_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
 
 fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     let a = &b.actuators;
-    body.spawn(k.text("The accepted actuator registry: the single source of measured motor values. Read-only here; families change only by promoting new evidence.", 12., SUBTLE, 0));
+    body.spawn(k.caption("The accepted actuator registry: the single source of measured motor values. Read-only here; families change only by promoting new evidence."));
     body.spawn(k.section("Registry"));
     let focused = |p: Purpose| b.input.as_ref().is_some_and(|i| i.purpose == p);
     let registry_focused = focused(Purpose::ActuatorRegistry);
@@ -1056,22 +997,22 @@ fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         }
     });
     if let Some(pending) = a.pending() {
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Loading {}…", pending.display()), 12., TEXT, 0)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Loading {}…", pending.display()), size::SMALL, TEXT, 0)]));
     }
     if let Some(e) = &a.error {
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, 12., DANGER, 0)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, size::SMALL, DANGER, 0)]));
     }
     let Some(view) = &a.shown else {
         if a.pending().is_none() && a.error.is_none() {
-            body.spawn(k.text("Not loaded yet.", 12., SUBTLE, 0));
+            body.spawn(k.caption("Not loaded yet."));
         }
         return;
     };
     let r = &view.registry;
     if a.error.is_some() {
-        body.spawn(k.text(format!("Still showing the last good load: {}", r.path.display()), 11.5, WARN, 1));
+        body.spawn(k.text(format!("Still showing the last good load: {}", r.path.display()), size::CAPTION, WARN, 1));
     }
-    body.spawn(k.text(format!("Showing {}", r.path.display()), 11., FAINT, 0));
+    body.spawn(k.text(format!("Showing {}", r.path.display()), size::DETAIL, FAINT, 0));
     k.property(body, "Registry hash", &short_hash(&r.registry_hash), "", None::<BuildAction>, false);
     k.property(body, "Families", &r.families.len().to_string(), "", None::<BuildAction>, false);
 
@@ -1088,23 +1029,23 @@ fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     for check in &view.checks {
         let current = check.is_current();
         let file = base.and_then(|b| check.file.strip_prefix(b).ok()).unwrap_or(&check.file).display().to_string();
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(8.)), flex_shrink: 0., ..default() }, children![k.dot(if current { OK } else { WARN }), k.text(format!("{} · {file}", if current { "Current" } else if check.issue.is_some() { "Not checked" } else { "Stale" }), 12., TEXT, 1)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(8.)), flex_shrink: 0., ..default() }, children![k.dot(if current { OK } else { WARN }), k.text(format!("{} · {file}", if current { "Current" } else if check.issue.is_some() { "Not checked" } else { "Stale" }), size::SMALL, TEXT, 1)]));
         if let Some(issue) = &check.issue {
             let kind = serde_json::to_value(issue.kind).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
-            body.spawn(k.text(format!("{kind}: {}", issue.message), 11.5, if kind == "no_robot" { SUBTLE } else { DANGER }, 0));
+            body.spawn(k.text(format!("{kind}: {}", issue.message), size::CAPTION, if kind == "no_robot" { SUBTLE } else { DANGER }, 0));
         }
         for m in &check.models {
             let status = serde_json::to_value(m.status).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
             let pointer = if m.pointer.is_empty() { "(whole file)" } else { m.pointer.as_str() };
-            body.spawn(k.text(format!("{pointer}: {status}"), 11.5, if status == "current" { SUBTLE } else { WARN }, 1));
+            body.spawn(k.text(format!("{pointer}: {status}"), size::CAPTION, if status == "current" { SUBTLE } else { WARN }, 1));
             if let Some(x) = &m.mismatch {
                 let or_none = |v: &Option<String>| v.clone().unwrap_or_else(|| "none".into());
-                body.spawn(k.text(format!("motor {} · joint {}", or_none(&x.motor), or_none(&x.joint)), 11., SUBTLE, 0));
-                body.spawn(k.text(format!("family {} → accepted {}", or_none(&x.family), or_none(&x.accepted_family)), 11., SUBTLE, 0));
-                body.spawn(k.text(format!("have     {}", x.have_hash.as_deref().map(short_hash).unwrap_or_else(|| "none".into())), 11., WARN, 0));
-                body.spawn(k.text(format!("accepted {}", x.accepted_hash.as_deref().map(short_hash).unwrap_or_else(|| "none".into())), 11., OK, 0));
+                body.spawn(k.text(format!("motor {} · joint {}", or_none(&x.motor), or_none(&x.joint)), size::DETAIL, SUBTLE, 0));
+                body.spawn(k.text(format!("family {} → accepted {}", or_none(&x.family), or_none(&x.accepted_family)), size::DETAIL, SUBTLE, 0));
+                body.spawn(k.text(format!("have     {}", x.have_hash.as_deref().map(short_hash).unwrap_or_else(|| "none".into())), size::DETAIL, WARN, 0));
+                body.spawn(k.text(format!("accepted {}", x.accepted_hash.as_deref().map(short_hash).unwrap_or_else(|| "none".into())), size::DETAIL, OK, 0));
             } else if let Some(message) = &m.message {
-                body.spawn(k.text(message, 11., SUBTLE, 0));
+                body.spawn(k.text(message, size::DETAIL, SUBTLE, 0));
             }
         }
     }
@@ -1116,16 +1057,16 @@ fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     for f in &r.families {
         body.spawn(k.section(&format!("Family  {}", f.name)));
         k.property(body, "Content hash", &short_hash(&f.content_hash), "", None::<BuildAction>, false);
-        body.spawn(k.text(format!("Accepted: {}", f.accepted), 11.5, TEXT, 0));
-        body.spawn(k.text(&f.description, 11., SUBTLE, 0));
+        body.spawn(k.text(format!("Accepted: {}", f.accepted), size::CAPTION, TEXT, 0));
+        body.spawn(k.text(&f.description, size::DETAIL, SUBTLE, 0));
         if !f.limitations.is_empty() {
-            body.spawn(k.text("Limitations", 11., FAINT, 2));
+            body.spawn(k.text("Limitations", size::DETAIL, FAINT, 2));
             for l in &f.limitations {
-                body.spawn(k.text(format!("· {l}"), 11., WARN, 0));
+                body.spawn(k.text(format!("· {l}"), size::DETAIL, WARN, 0));
             }
         }
         if !f.has_envelope {
-            body.spawn(k.text("No measured envelope.", 11., FAINT, 0));
+            body.spawn(k.text("No measured envelope.", size::DETAIL, FAINT, 0));
         }
         let mut group = "";
         for p in &f.parameters {
@@ -1137,8 +1078,8 @@ fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             let color = match p.provenance.as_str() { "measured" => OK, "derived" => ACCENT, _ => WARN };
             body.spawn(Node { flex_direction: FlexDirection::Column, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }).with_children(|row| {
                 row.spawn(Node { justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(8.), ..default() }).with_children(|top| {
-                    top.spawn(k.text(&p.name, 12., TEXT, 1));
-                    top.spawn(k.text(format!("{} {}", num(p.value), p.unit), 12., TEXT, 0));
+                    top.spawn(k.text(&p.name, size::SMALL, TEXT, 1));
+                    top.spawn(k.text(format!("{} {}", num(p.value), p.unit), size::SMALL, TEXT, 0));
                 });
                 row.spawn(Node { column_gap: Val::Px(6.), ..default() }).with_children(|bottom| {
                     bottom.spawn(k.text(&p.provenance, 10.5, color, 2));
@@ -1150,11 +1091,11 @@ fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
 }
 
 fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
-    body.spawn(k.text("Run the same system several ways: compare alternatives for a part, or sweep one parameter. Studies are saved in the system file and rerun identically.", 12., SUBTLE, 0));
-    body.spawn(k.text("Start one from a part's inspector: Compare alternatives, or Sweep under Parameters.", 11., FAINT, 0));
+    body.spawn(k.caption("Run the same system several ways: compare alternatives for a part, or sweep one parameter. Studies are saved in the system file and rerun identically."));
+    body.spawn(k.text("Start one from a part's inspector: Compare alternatives, or Sweep under Parameters.", size::DETAIL, FAINT, 0));
     if let Some((name, done, total)) = b.study_progress() {
         body.spawn(k.section("Running"));
-        body.spawn(k.text(format!("{name}: {done} of {total} variants"), 12.5, TEXT, 1));
+        body.spawn(k.text(format!("{name}: {done} of {total} variants"), size::BODY, TEXT, 1));
         body.spawn((Node { border_radius: BorderRadius::all(Val::Px(3.)), height: Val::Px(6.), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), children![(Node { border_radius: BorderRadius::all(Val::Px(3.)), width: Val::Percent(100. * done as f32 / total.max(1) as f32), ..default() }, BackgroundColor(ACCENT))]));
         body.spawn(wrap()).with_children(|r| {
             r.spawn(k.button("Cancel", BuildAction::CancelStudy, Look::Danger, true));
@@ -1162,7 +1103,7 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     }
     body.spawn(k.section(&format!("Saved  {}", b.document.studies.len())));
     if b.document.studies.is_empty() {
-        body.spawn(k.text("None yet.", 12., SUBTLE, 0));
+        body.spawn(k.caption("None yet."));
     }
     for (name, study) in &b.document.studies {
         let what = match &study.kind {
@@ -1171,27 +1112,27 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         };
         body.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(6.), padding: UiRect::vertical(Val::Px(3.)), flex_shrink: 0., ..default() })
             .with_children(|row| {
-                row.spawn((Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![k.text(name, 12.5, TEXT, 1), k.text(format!("{what} · {} s", num(study.duration)), 11., SUBTLE, 0)]));
+                row.spawn((Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![k.text(name, size::BODY, TEXT, 1), k.text(format!("{what} · {} s", num(study.duration)), size::DETAIL, SUBTLE, 0)]));
                 row.spawn(k.button("Run", BuildAction::RunStudy(name.clone()), Look::Secondary, b.study.job.is_none()));
                 row.spawn(k.button("×", BuildAction::RemoveStudy(name.clone()), Look::Ghost, true));
             });
     }
     if let Some(e) = &b.study.error {
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, 12., DANGER, 0)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, size::SMALL, DANGER, 0)]));
     }
     body.spawn(k.section(&format!("Runs  {}", b.runs.len())));
     if b.runs.is_empty() {
-        body.spawn(k.text("Runs are kept automatically when you restart or edit structure, or with Save run.", 11.5, FAINT, 0));
+        body.spawn(k.note("Runs are kept automatically when you restart or edit structure, or with Save run."));
     }
     for (_, run) in b.runs.iter().take(20) {
         let picked = b.run_picks.contains(&run.id);
         body.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(6.), padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() })
             .with_children(|row| {
                 row.spawn((Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![
-                    k.text(format!("{} · rev {} · {}", run.id, run.revision, run.fidelity), 12., TEXT, 1),
-                    k.text(format!("{} s · seed {}{}", num(run.duration), run.seed, if run.note.is_empty() { String::new() } else { format!(" · {}", run.note) }), 11., SUBTLE, 0)
+                    k.text(format!("{} · rev {} · {}", run.id, run.revision, run.fidelity), size::SMALL, TEXT, 1),
+                    k.text(format!("{} s · seed {}{}", num(run.duration), run.seed, if run.note.is_empty() { String::new() } else { format!(" · {}", run.note) }), size::DETAIL, SUBTLE, 0)
                 ]));
-                row.spawn(k.button(if picked { "✓" } else { "Pick" }, BuildAction::PickRun(run.id.clone()), Look::Chip(picked), true));
+                row.spawn(k.chip(if picked { "✓" } else { "Pick" }, BuildAction::PickRun(run.id.clone()), picked, true));
                 if b.replay.outcomes.get(&run.id).is_some_and(|o| o.status == "running") {
                     row.spawn(k.button("Cancel", BuildAction::CancelReplay, Look::Danger, true));
                 } else {
@@ -1205,12 +1146,12 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
                 ("error", _) => DANGER,
                 _ => SUBTLE,
             };
-            body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(color), k.text(o.headline(), 12., TEXT, 0)]));
+            body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(color), k.text(o.headline(), size::SMALL, TEXT, 0)]));
             if o.status == "done" {
-                body.spawn(k.text(format!("Headless rerun from t = 0 with the recorded document and config ({}, seed {}, {} s); a non-zero difference is a finding about this run.", o.fidelity, o.seed, num(o.duration)), 11., FAINT, 0));
+                body.spawn(k.text(format!("Headless rerun from t = 0 with the recorded document and config ({}, seed {}, {} s); a non-zero difference is a finding about this run.", o.fidelity, o.seed, num(o.duration)), size::DETAIL, FAINT, 0));
             }
             if o.edited_while_running {
-                body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text("The document was edited while this run recorded: the record keeps the final document, so the replay does not compare a clean run.", 11.5, WARN, 0)]));
+                body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, flex_shrink: 0., ..default() }, children![k.dot(WARN), k.text("The document was edited while this run recorded: the record keeps the final document, so the replay does not compare a clean run.", size::CAPTION, WARN, 0)]));
             }
         }
     }
@@ -1228,9 +1169,9 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             BackgroundColor(RAISED),
         ))
         .with_children(|card| {
-            card.spawn(k.text(&v.label, 12.5, TEXT, 2));
+            card.spawn(k.text(&v.label, size::BODY, TEXT, 2));
             if let Some(e) = &v.error {
-                card.spawn(k.text(e, 11., DANGER, 0));
+                card.spawn(k.text(e, size::DETAIL, DANGER, 0));
             }
             for (m, x) in &v.metrics {
                 k.property(card, m, &num(*x), "", None::<BuildAction>, false);
@@ -1259,42 +1200,20 @@ fn status_bar(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScen
         ("Ready", OK)
     };
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(0.),
-                right: Val::Px(0.),
-                bottom: Val::Px(0.),
-                height: Val::Px(STATUSBAR),
-                padding: UiRect::horizontal(Val::Px(14.)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::SpaceBetween,
-                column_gap: Val::Px(16.),
-                border: UiRect::top(Val::Px(1.)),
-                ..default()
-            },
-            BackgroundColor(BAR),
-            BorderColor::all(BORDER),
-            BuilderPanel,
-        ))
+        .spawn((k.dock(Dock::Bottom { height: STATUSBAR }, Node { padding: UiRect::horizontal(Val::Px(14.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(16.), ..default() }), BuilderPanel))
         .with_children(|bar| {
-            bar.spawn((Node { flex_shrink: 1., overflow: Overflow::clip(), ..default() }, children![k.text(&b.status, 12., SUBTLE, 0)]));
+            bar.spawn((Node { flex_shrink: 1., overflow: Overflow::clip(), ..default() }, children![k.caption(&b.status)]));
             bar.spawn(Node { column_gap: Val::Px(14.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }).with_children(|right| {
-                right.spawn(k.text(format!("Revision {}", b.document.revision), 11.5, FAINT, 0));
-                right.spawn(k.text(format!("{} parts", scene.spatial.parts.len()), 11.5, FAINT, 0));
-                right.spawn(k.text(format!("{} nets", scene.description.nets.len()), 11.5, FAINT, 0));
-                right.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Center, ..default() }, children![k.dot(color), k.text(state, 11.5, SUBTLE, 1)]));
+                right.spawn(k.note(format!("Revision {}", b.document.revision)));
+                right.spawn(k.note(format!("{} parts", scene.spatial.parts.len())));
+                right.spawn(k.note(format!("{} nets", scene.description.nets.len())));
+                right.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Center, ..default() }, children![k.dot(color), k.text(state, size::CAPTION, SUBTLE, 1)]));
             });
         });
 }
 
 pub(super) fn scroll_panels(mut wheel: MessageReader<MouseWheel>, window: Single<&Window>, mut panels: Query<(&mut ScrollPosition, &Scroll)>) {
-    let delta = wheel.read().fold(0.0, |sum, e| {
-        sum + match e.unit {
-            MouseScrollUnit::Line => e.y * 28.0,
-            MouseScrollUnit::Pixel => e.y,
-        }
-    });
+    let delta = wheel_delta(&mut wheel, WHEEL_LINE);
     let Some(p) = window.cursor_position() else { return };
     if p.y < TOPBAR || p.y > window.height() - STATUSBAR {
         return;
@@ -1321,13 +1240,13 @@ fn discussion_header(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
         body.spawn(k.text(&t.title,19.,TEXT,2));
         body.spawn(wrap()).with_children(|r|{
             for target in &t.targets {
-                if target.missing {r.spawn(k.text(format!("{} · missing",target.label),11.,WARN,0));}
+                if target.missing {r.spawn(k.text(format!("{} · missing",target.label), size::DETAIL, WARN, 0));}
                 else {r.spawn(action(&format!("↗ {}",target.path),A::Target(target.path.clone()),Look::Chip(false)));}
             }
         });
         body.spawn(wrap()).with_children(|r|{
             r.spawn(action("Show on model",A::Show("context".into()),Look::Ghost));
-            if t.resolved{r.spawn(k.text("Resolved",11.,OK,1));}
+            if t.resolved{r.spawn(k.text("Resolved", size::DETAIL, OK, 1));}
             if b.discussion.prior.is_some(){r.spawn(action("Restore view",A::Back,Look::Ghost));}
         });
         agent_card(body,k,b,&t.id);
@@ -1344,7 +1263,7 @@ fn discussion_header(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
             if !draft{r.spawn(k.button("+ Add note",BuildAction::SetMode(Mode::Annotate),Look::Primary,true));}
         });
         if draft {
-            body.spawn(k.text("Attached to",11.,SUBTLE,0));
+            body.spawn(k.text("Attached to", size::DETAIL, SUBTLE, 0));
             body.spawn(wrap()).with_children(|r|{for path in &b.discussion.draft_targets{r.spawn(action(&format!("↗ {path}"),A::Target(path.clone()),Look::Chip(false)));}});
         } else {
             body.spawn(Node{justify_content:JustifyContent::SpaceBetween,align_items:AlignItems::Center,..default()}).with_children(|r|{
@@ -1356,9 +1275,9 @@ fn discussion_header(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
                 body.spawn(action(if b.discussion.selected_only{"Show all parts"}else{"Only selected parts"},A::SelectedOnly,Look::Ghost));
                 body.spawn(k.button("Import existing notes",BuildAction::ImportNotes,Look::Ghost,true));
             }
-            body.spawn(k.button(if b.agent.state.auto_answer {"Auto-answer: on"} else {"Auto-answer: off"},BuildAction::Agent(agent::Request::Configure{auto_answer:!b.agent.state.auto_answer}),Look::Chip(b.agent.state.auto_answer),b.agent.state.ready));
-            if let Some(e)=&b.agent.state.error{body.spawn(k.text(e,11.,WARN,0));}
-            body.spawn(k.text(if b.mode==Mode::Annotate{"Click a surface on the model to start a note."}else{"Click a pin on the model to join its conversation."},12.,SUBTLE,0));
+            body.spawn(k.chip(if b.agent.state.auto_answer {"Auto-answer: on"} else {"Auto-answer: off"}, BuildAction::Agent(agent::Request::Configure{auto_answer:!b.agent.state.auto_answer}), b.agent.state.auto_answer, b.agent.state.ready));
+            if let Some(e)=&b.agent.state.error{body.spawn(k.text(e, size::DETAIL, WARN, 0));}
+            body.spawn(k.caption(if b.mode==Mode::Annotate{"Click a surface on the model to start a note."}else{"Click a pin on the model to join its conversation."}));
         }
     }
 }
@@ -1391,7 +1310,7 @@ fn discussion_content(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
         let paths:Vec<_>=b.selected.iter().map(|n|b.full_path(n)).collect();
         let shown=b.document.discussions.threads.values().filter(|t|(!b.discussion.open_only||!t.resolved)&&(!b.discussion.selected_only||t.targets.iter().any(|r|paths.iter().any(|p|p==&r.path||r.path.starts_with(&format!("{p}/"))))));
         let count=crate::annotate::list(body,k,&host,shown);
-        if count==0{body.spawn(k.text("No notes here yet",16.,TEXT,1));body.spawn(k.text("Add a note, then click the part you want to talk about.",13.,SUBTLE,0));}
+        if count==0{body.spawn(k.text("No notes here yet", size::TITLE, TEXT, 1));body.spawn(k.text("Add a note, then click the part you want to talk about.", size::ITEM, SUBTLE, 0));}
     }
 }
 
@@ -1402,9 +1321,10 @@ fn discussion_composer(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
     let special=input.is_some_and(|i|i.purpose!=Purpose::Comment);
     let shown=input.map(|i|i.buffer.as_str()).unwrap_or("");
     let label=if input.is_some_and(|i|i.purpose==Purpose::CommentAuthor){"Your name"}else if input.is_some_and(|i|i.purpose==Purpose::ThreadTitle){"Note title"}else if b.discussion.editing.is_some(){"Edit message"}else if b.discussion.selected.is_none(){"Write a note"}else{"Reply"};
-    body.spawn(k.text(label,12.,SUBTLE,1));
+    body.spawn(k.text(label, size::SMALL, SUBTLE, 1));
     // A persistent footer keeps the reply field in reach while messages scroll.
-    body.spawn((Button,BuildAction::Discussion(A::Reply),Tint{idle:RAISED,hover:HOVER_BG},Node{ border_radius: BorderRadius::all(Val::Px(7.)),min_height:Val::Px(if special{36.}else{76.}),max_height:Val::Px(180.),overflow:Overflow::clip(),padding:UiRect::all(Val::Px(10.)),border:UiRect::all(Val::Px(1.)),..default()},BackgroundColor(RAISED),BorderColor::all(if focused{ACCENT}else{BORDER}))).with_children(|field|{
+    // A multi-line text area (taller, 14 px), not the kit's one-line `input`.
+    body.spawn((Button,BuildAction::Discussion(A::Reply),Tint::RAISED,Node{ border_radius: BorderRadius::all(Val::Px(7.)),min_height:Val::Px(if special{36.}else{76.}),max_height:Val::Px(180.),overflow:Overflow::clip(),padding:UiRect::all(Val::Px(10.)),border:UiRect::all(Val::Px(1.)),..default()},BackgroundColor(RAISED),BorderColor::all(if focused{ACCENT}else{BORDER}))).with_children(|field|{
         field.spawn(k.text(if focused{format!("{shown}|")}else{"Write a reply…".into()},14.,if focused{TEXT}else{FAINT},0));
     });
     body.spawn(Node{justify_content:JustifyContent::SpaceBetween,align_items:AlignItems::Center,..default()}).with_children(|r|{
@@ -1412,8 +1332,8 @@ fn discussion_composer(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
         else{r.spawn(k.button(&b.discussion.author,BuildAction::Discussion(A::Author),Look::Ghost,true));}
         if focused{r.spawn(k.button(if special||b.discussion.editing.is_some(){"Save"}else if b.discussion.selected.is_none(){"Post note"}else{"Post reply"},BuildAction::Discussion(A::Submit),Look::Primary,!shown.trim().is_empty()));}
     });
-    if let Some(error)=&b.discussion.error{body.spawn(k.text(error,11.,WARN,0));}
-    if focused{body.spawn(k.text("Enter to post · Shift+Enter for a new line",10.5,FAINT,0));}
+    if let Some(error)=&b.discussion.error{body.spawn(k.text(error, size::DETAIL, WARN, 0));}
+    if focused{body.spawn(k.text("Enter to post · Shift+Enter for a new line", 10.5, FAINT, 0));}
 }
 
 fn agent_card(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder,id:&str){
@@ -1423,34 +1343,34 @@ fn agent_card(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder,id:&str){
     let run=b.agent.state.latest(id);
     body.spawn((Node{ border_radius: BorderRadius::all(Val::Px(6.)),flex_direction:FlexDirection::Column,row_gap:Val::Px(5.),padding:UiRect::all(Val::Px(9.)),flex_shrink:0.,min_width:Val::Px(0.),max_width:Val::Percent(100.),overflow:Overflow::clip(),..default()},BackgroundColor(RAISED))).with_children(|card|{
         card.spawn(Node{justify_content:JustifyContent::SpaceBetween,align_items:AlignItems::Center,..default()}).with_children(|row|{
-            row.spawn(k.text("Codex · Astra / High",12.,TEXT,1));
+            row.spawn(k.text("Codex · Astra / High", size::SMALL, TEXT, 1));
             if let Some(r)=run.filter(|r|r.status.active()) {
                 row.spawn(button("Stop",A::Cancel{run:r.id.clone()}));
             }else{
                 row.spawn(button("Ask Codex",A::Ask{discussion:id.into(),question:None,request_id:None}));
             }
         });
-        if let Some(error)=&b.agent.state.error{card.spawn(k.text(error,11.,WARN,0));}
+        if let Some(error)=&b.agent.state.error{card.spawn(k.text(error, size::DETAIL, WARN, 0));}
         if let Some(r)=run{
-            card.spawn(k.text(if r.status.active(){format!("{} · {}s",r.activity,sim_agent::now().saturating_sub(r.created_at))}else{r.activity.clone()},11.5,if r.status==Status::Failed{WARN}else{SUBTLE},0));
-            if let Some(error)=&r.error{card.spawn(k.text(error,11.,WARN,0));}
+            card.spawn(k.text(if r.status.active(){format!("{} · {}s",r.activity,sim_agent::now().saturating_sub(r.created_at))}else{r.activity.clone()}, size::CAPTION, if r.status==Status::Failed{WARN}else{SUBTLE}, 0));
+            if let Some(error)=&r.error{card.spawn(k.text(error, size::DETAIL, WARN, 0));}
             card.spawn(wrap()).with_children(|row|{
                 row.spawn(button(if b.agent.expanded{"Hide activity"}else{"Show activity"},A::Activity));
                 if matches!(r.status,Status::Failed|Status::Cancelled){row.spawn(button("Retry",A::Retry{run:r.id.clone()}));}
             });
             if let Some(count)=r.input.context["context_summary"]["scope"]["included_instances"].as_u64(){
                 let resolved=r.input.context["context_summary"]["resolved"].as_bool().unwrap_or(false);
-                card.spawn(k.text(format!("Context: {count} parts & groups · {}",if resolved{"model resolved"}else{"source only; model has errors"}),10.5,SUBTLE,0));
+                card.spawn(k.text(format!("Context: {count} parts & groups · {}",if resolved{"model resolved"}else{"source only; model has errors"}), 10.5, SUBTLE, 0));
             }
             if b.agent.expanded{
                 card.spawn(k.text(format!("Source revision {} · started {}",r.input.revision,sim_system::display::relative_time(&r.created_at.to_string())),10.,FAINT,0));
                 for e in b.agent.state.events.iter().filter(|e|e.run==r.id).rev().take(3){
                     let mut message=e.message.chars().take(150).collect::<String>();if e.message.chars().count()>150{message.push('…');}
-                    let mut text=k.text(message,11.,SUBTLE,0);text.3=TextLayout::linebreak(bevy::text::LineBreak::AnyCharacter);
+                    let mut text=k.text(message, size::DETAIL, SUBTLE, 0);text.3=TextLayout::linebreak(bevy::text::LineBreak::AnyCharacter);
                     card.spawn((text,Node{min_width:Val::Px(0.),max_width:Val::Percent(100.),..default()}));
                 }
             }
-        }else{card.spawn(k.text("Ask about this note and its linked parts.",11.5,SUBTLE,0));}
+        }else{card.spawn(k.text("Ask about this note and its linked parts.", size::CAPTION, SUBTLE, 0));}
     });
 }
 
@@ -1459,14 +1379,14 @@ fn source_preview(col:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
     col.spawn(k.button("‹ Back to inspector",BuildAction::CloseReference,Look::Ghost,true));
     col.spawn(k.text("Source reference",17.,TEXT,2));
     match &b.reference.result{
-        None=>{col.spawn(k.text("Reading source…",12.,SUBTLE,0));},
-        Some(Err(e))=>{col.spawn(k.text(e,12.,WARN,0));},
+        None=>{col.spawn(k.caption("Reading source…"));},
+        Some(Err(e))=>{col.spawn(k.text(e, size::SMALL, WARN, 0));},
         Some(Ok(source))=>{
-            col.spawn(k.text(format!("{}:{}",source.path,source.line),12.,ACCENT,1));
-            col.spawn(k.text("Read-only · current file",10.5,FAINT,0));
+            col.spawn(k.text(format!("{}:{}",source.path,source.line), size::SMALL, ACCENT, 1));
+            col.spawn(k.text("Read-only · current file", 10.5, FAINT, 0));
             for line in &source.lines{
                 col.spawn((Node{width:Val::Percent(100.),min_width:Val::Px(0.),padding:UiRect::axes(Val::Px(5.),Val::Px(3.)),flex_shrink:0.,overflow:Overflow::clip(),..default()},BackgroundColor(if line.focused{RAISED}else{Color::NONE}))).with_children(|row|{
-                    row.spawn((Text::new(format!("{:>3}  {}",line.number,line.text)),TextFont{font:k.f.mono.clone().into(),font_size:FontSize::Px(11.),..default()},TextColor(if line.focused{ACCENT}else{SUBTLE}),TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter),Node{width:Val::Percent(100.),min_width:Val::Px(0.),..default()}));
+                    row.spawn((k.mono(format!("{:>3}  {}",line.number,line.text),11.,if line.focused{ACCENT}else{SUBTLE}),Node{width:Val::Percent(100.),min_width:Val::Px(0.),..default()}));
                 });
             }
         }

@@ -1,4 +1,5 @@
 use super::*;
+use crate::ui_kit::{DANGER, Kit, Look, RAISED, TEXT, Tint, UiFonts, size, wrap};
 use serde_json::{Value, json};
 use sim_inspect::annotations as notes;
 #[derive(Component)]
@@ -214,6 +215,7 @@ pub(super) fn update(
     mut commands: Commands,
     mut scene: ResMut<SpatialScene>,
     mut camera: Single<&mut Orbit>,
+    fonts: Option<Res<UiFonts>>,
     panels: Query<Entity, With<NotesPanel>>,
     actions: Query<(Ref<Interaction>, &NoteAction)>,
     mut revision: Local<Option<String>>,
@@ -244,6 +246,9 @@ pub(super) fn update(
             }
         }
     }
+    // Draw once the interface fonts exist (the revision stamp waits for them).
+    let Some(fonts) = fonts else { return };
+    let k = Kit::new(&fonts);
     let error = scene
         .note_error
         .clone()
@@ -256,104 +261,69 @@ pub(super) fn update(
     for panel in &panels {
         commands.entity(panel).despawn_related::<Children>();
         commands.entity(panel).with_children(|column| {
-            column.spawn(text("DISCUSSION", 12., ACCENT));
+            column.spawn(k.section("Discussion"));
             if let Some(error) = &error {
-                column.spawn(text(error, 13., Color::srgb(1., 0.6, 0.4)));
+                column.spawn(k.text(error, size::ITEM, DANGER, 0));
             }
-            for (label, action) in [
-                ("Annotate selected parts", NoteAction::New),
-                ("Save this inspection angle", NoteAction::SaveView),
-            ] {
-                column
-                    .spawn((
-                        Button,
-                        action,
-                        Node {
-                            padding: UiRect::all(Val::Px(8.)),
-                            ..default()
-                        },
-                        BackgroundColor(Color::srgb(0.10, 0.17, 0.20)),
-                    ))
-                    .with_children(|b| {
-                        b.spawn(text(label, 13., ACCENT));
-                    });
-            }
+            column.spawn(k.button("Annotate selected parts", NoteAction::New, Look::Secondary, true));
+            column.spawn(k.button("Save this inspection angle", NoteAction::SaveView, Look::Secondary, true));
             for (enabled, label, action) in [
                 (!doc.undo.is_empty(), "Undo discussion", NoteAction::Undo),
                 (!doc.redo.is_empty(), "Redo discussion", NoteAction::Redo),
             ] {
                 if enabled {
-                    column
-                        .spawn((
-                            Button,
-                            action,
-                            Node {
-                                padding: UiRect::all(Val::Px(6.)),
-                                ..default()
-                            },
-                        ))
-                        .with_children(|b| {
-                            b.spawn(text(label, 13., ACCENT));
-                        });
+                    column.spawn(k.button(label, action, Look::Ghost, true));
                 }
             }
             for note in doc.notes.values() {
                 let color = Color::srgb_u8(note.color[0], note.color[1], note.color[2]);
+                // A card framed in the note's own colour (no kit card widget).
                 column
                     .spawn((
                         Node {
+                            border_radius: BorderRadius::all(Val::Px(6.)),
                             flex_direction: FlexDirection::Column,
                             padding: UiRect::all(Val::Px(10.)),
                             row_gap: Val::Px(5.),
                             border: UiRect::all(Val::Px(1.)),
+                            flex_shrink: 0.,
                             ..default()
                         },
                         BorderColor::all(color),
-                        BackgroundColor(Color::srgb(0.07, 0.12, 0.15)),
+                        BackgroundColor(RAISED),
                     ))
                     .with_children(|card| {
+                        // The title keeps the note's colour, so it is a
+                        // tinted row rather than a kit button (whose label
+                        // colour comes from its look).
                         card.spawn((
                             Button,
                             NoteAction::Select(note.id.clone()),
-                            Node { ..default() },
+                            Tint::CLEAR,
+                            bevy::ui::prelude::AccessibleLabel::new(note.label.as_str()),
+                            Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(4.), Val::Px(2.)), ..default() },
+                            BackgroundColor(Color::NONE),
                         ))
                         .with_children(|b| {
-                            b.spawn(text(&note.label, 15., color));
+                            b.spawn(k.text(&note.label, 15., color, 2));
                         });
                         if !note.text.is_empty() {
-                            card.spawn(text(&note.text, 13., INK));
+                            card.spawn(k.text(&note.text, size::ITEM, TEXT, 0));
                         }
-                        for (index, link) in note.links.iter().enumerate() {
-                            card.spawn((
-                                Button,
-                                NoteAction::Link(note.id.clone(), index),
-                                Node {
-                                    padding: UiRect::vertical(Val::Px(4.)),
-                                    ..default()
-                                },
-                            ))
-                            .with_children(|b| {
-                                b.spawn(text(&format!("↗ {}", link.label), 13., ACCENT));
+                        if !note.links.is_empty() {
+                            card.spawn(wrap()).with_children(|links| {
+                                for (index, link) in note.links.iter().enumerate() {
+                                    links.spawn(k.chip(&format!("↗ {}", link.label), NoteAction::Link(note.id.clone(), index), false, true));
+                                }
                             });
                         }
                     });
             }
             if !doc.views.is_empty() {
-                column.spawn(text("SAVED VIEWS", 12., ACCENT));
+                column.spawn(k.section("Saved views"));
             }
             for view in doc.views.values() {
-                column
-                    .spawn((
-                        Button,
-                        NoteAction::Restore(view.id.clone()),
-                        Node {
-                            padding: UiRect::all(Val::Px(6.)),
-                            ..default()
-                        },
-                    ))
-                    .with_children(|b| {
-                        b.spawn(text(&view.label, 13., ACCENT));
-                    });
+                column.spawn(k.button(&view.label, NoteAction::Restore(view.id.clone()), Look::Ghost, true));
             }
         });
     }
@@ -470,6 +440,8 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .insert_resource(scene)
+            // The panel draws with the kit's fonts (placeholder handles here).
+            .insert_resource(UiFonts { regular: Handle::default(), italic: Handle::default(), mono: Handle::default(), icons: Default::default(), medium: Handle::default(), semibold: Handle::default() })
             .init_resource::<crate::app::actions::Replies>()
             // A press is an `annotations` action, applied by the view's one handler.
             .add_systems(Update, (update, clicks, crate::inspect::apply).chain());

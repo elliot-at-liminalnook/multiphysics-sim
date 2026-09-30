@@ -10,8 +10,8 @@
 //! Layouts are keyed by (description id, revision, level). A newer key
 //! cancels the pending job, and a layout for an old key is only ever shown
 //! dimmed under a "Stale" label with its boxes disabled.
-use super::ui::{BORDER, Kit, SUBTLE, TEXT, Tint, WARN};
 use super::*;
+use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, TEXT, TOPBAR, Tint, WARN, size};
 use sim_diagram::{Layout, layout as diagram_layout, projection, style};
 use std::sync::atomic::AtomicBool;
 
@@ -317,6 +317,8 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
         (Some(l), _, false, None) => (format!("Revision {} · {} nodes · {} unrouted · {:.0} ms", l.key.revision, l.layout.nodes.len(), l.layout.unrouted.len(), l.layout_ms), SUBTLE),
     };
     let highlighted = s.highlighted(&b.selected);
+    // A pane beside the inspector (right of the viewport, under the toolbar):
+    // no kit dock sits inset from the window edge, so it is placed here.
     commands
         .spawn((
             Node {
@@ -329,15 +331,15 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
                 border: UiRect::left(Val::Px(1.)),
                 ..default()
             },
-            BackgroundColor(super::ui::BAR),
+            BackgroundColor(BAR),
             BorderColor::all(BORDER),
             BuilderPanel,
         ))
         .with_children(|pane| {
             pane.spawn(Node { height: Val::Px(HEAD), padding: UiRect::axes(Val::Px(PAD), Val::Px(0.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(8.), flex_shrink: 0., overflow: Overflow::clip(), ..default() })
                 .with_children(|head| {
-                    head.spawn(k.text(format!("Schematic · {place}"), 12., TEXT, 2));
-                    head.spawn(k.text(status.0.clone(), 11., status.1, 0));
+                    head.spawn(k.text(format!("Schematic · {place}"), size::SMALL, TEXT, 2));
+                    head.spawn(k.text(status.0.clone(), size::DETAIL, status.1, 0));
                 });
             pane.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_grow: 1., margin: UiRect { left: Val::Px(6.), right: Val::Px(6.), top: Val::Px(0.), bottom: Val::Px(6.) }, overflow: Overflow::clip(), ..default() }, BackgroundColor(CANVAS)))
                 .with_children(|canvas| {
@@ -346,7 +348,7 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
                     if stale {
                         canvas.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(0.), right: Val::Px(0.), top: Val::Px(0.), bottom: Val::Px(0.), justify_content: JustifyContent::Center, align_items: AlignItems::Center, ..default() }, BackgroundColor(Color::srgba(0.07, 0.086, 0.106, 0.62))))
                             .with_children(|o| {
-                                o.spawn(k.text("Stale layout (not the current system)", 13., WARN, 2));
+                                o.spawn(k.text("Stale layout (not the current system)", size::ITEM, WARN, 2));
                             });
                     }
                 });
@@ -409,10 +411,10 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
             BorderColor::all(if on { PICK } else { EDGE }),
         ));
         if let Some(name) = instance {
-            e.insert((Button, BuildAction::SchematicSelect(name), ui_api::Enabled(enabled), Tint { idle: fill, hover }));
+            e.insert((Button, BuildAction::SchematicSelect(name), ui_api::Enabled(enabled), Tint::new(fill, hover)));
         }
         e.with_children(|card| {
-            card.spawn(k.text(label, 11.5, INK, 2));
+            card.spawn(k.text(label, size::CAPTION, INK, 2));
             if diagram_layout::HEADER * scale >= 34. {
                 card.spawn(k.text(kind, 10., MUTED, 0));
             }

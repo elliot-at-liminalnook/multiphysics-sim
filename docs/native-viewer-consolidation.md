@@ -43,7 +43,7 @@ Rejected candidates and their disposition:
 | App | Why not the shell | Disposition |
 |---|---|---|
 | `sim-viewer` (eframe/egui schematic, `crates/sim-viewer/src/main.rs`) | Good 2D schematic and experiment review. Its REST covers only a subset of system edits (`system`, `system_state`, `system_level`, `system_select`, `system_undo`, `system_redo`, `system_grid`, `system_move`; no `system_run`, studies or `system_ui`). It has no 3D view. A second GUI toolkit in the same window as Bevy would need a bridge. | Keep as legacy until parity. Its reusable parts are already libraries: `sim-diagram` (schematic layout/projection, `TimeGraph` plot) and `sim_runtime::{experiment_study, controller_refinement::*}`. Port views into Bevy rather than embedding egui. |
-| `sim-app` (Bevy, `crates/sim-app/src/main.rs`) | No REST API and no system files. Both scenes step physics inside a Bevy `Update` system on the UI thread (`cad_app.rs:advance`, line 176; `phenomena_app.rs:advance`, line 180). This conflicts with the off-UI-thread rule. | Keep as legacy; not deleted. Its `--scene cad` window is now only the labelled fallback that RoboCAD's Simulate and `python -m robocad.simbridge` open when no sim-spatial binary is built (batch cad-simulate-native, §2b, §3). It is still the only viewer for planar v2 simrobot files, and it has +/- speed scaling. The phenomena gallery (`--scene phenomena`) is not migrated. Retire the cad scene after the remaining items in §3 are accepted. |
+| `sim-app` (Bevy, `crates/sim-app/src/main.rs`) | No REST API and no system files. Both scenes step physics inside a Bevy `Update` system on the UI thread (`cad_app.rs:advance`, line 176; `phenomena_app.rs:advance`, line 180). This conflicts with the off-UI-thread rule. | Keep as legacy; not deleted. Its `--scene cad` window is now only the labelled fallback that RoboCAD's Simulate and `python -m robocad.simbridge` open when no sim-spatial binary is built (batch cad-simulate-native, §2b, §3). It is still the only viewer for planar v2 simrobot files (sim-spatial refuses them by name since batch cad-scene-parity); robot mode now has its own ×0.125–×8 speed scale. The phenomena gallery (`--scene phenomena`) is not migrated. Retire the cad scene after the remaining items in §3 are accepted. |
 | Browser (`web/viewer`, `web/system-builder`, `sim-web` WASM) | The native-first direction supersedes it as the primary surface. | Preserved: it is the AGENTS.md realtime browser-walking surface. It is kept until native parity is shown and stays as a compatibility target afterwards. |
 | RoboCAD (Python/OCCT/Qt, `cad/robocad/ui/app.py`) | CAD kernel and authoring. Rewriting OCCT is out of scope. | Remains the CAD service behind REST (§3). |
 
@@ -479,11 +479,75 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     The wheeled robot's stresses (≤ 11 kPa) are far below 0.1 % of yield, so
     the paint is uniform blue: a colour gradient was not demonstrated
     natively (the shared rule's temp-file test covers the colour at a known
-    vertex). The inspector rounds peaks to 0.01 MPa, so they read "0.00 MPa";
-    robot_state has full precision. Force ticks at 0.005 m/N are only
-    4–5 mm on this 1 N robot. `cad/USER_GUIDE.md`, `cad/ARCHITECTURE.md` and
-    `cad/PHYSICAL_MODEL.md` still name sim-app as the live viewer (outside
-    this batch's cad scope).
+    vertex). At T18.4 the inspector rounded peaks to 0.01 MPa, so they read
+    "0.00 MPa" (fixed in batch cad-scene-parity, below). Force ticks at
+    0.005 m/N are only 4–5 mm on this 1 N robot. The cad/ docs were updated
+    in batch cad-scene-parity (below).
+
+  **Met (batch cad-scene-parity, T19.1–T19.3): the remaining cad-scene gaps
+  in robot mode.**
+  - *Named v2 refusal* (ad69fd7c). `PhysicalModel::parse` (sim-domain-robot)
+    reads `version` first, using the one shared rule `simrobot_version` /
+    `FIRST_PHYSICAL_VERSION` (absent = 2, as sim-app has always read it).
+    Below 3 it refuses with: "simrobot file has version 2: this is the planar
+    (v2) simrobot format, and the physical model (sim-spatial robot mode,
+    sim-cad, sim-runtime) needs version >= 3. Open it with `sim-app --scene
+    cad --model FILE`, or re-export it from RoboCAD, whose physical export
+    writes version 3 or later", prefixed by the path. sim-app's `AnyRobot::load`
+    uses the same rule to send v2 files to its planar `CadModel::load`, so they
+    never reach parse; that path is unchanged by construction but was not
+    launched in this batch.
+  - *Run speed scale* (8e05947e). ×0.125–×8 in powers of two, through one
+    `RobotAction::Speed`: keys `=`/`+` and `-` (numpad too), the header
+    buttons − / ×scale / + (the middle one resets to ×1), `system_ui`
+    `run:speed_up`, `run:speed_down` and `run:speed:<x>`, and REST
+    `robot_speed {scale}` or `{action: up|down}` (in capabilities). Off-list
+    values and Up/Down at a limit are refused naming the allowed set. One pure
+    rule, `robot_run::pace`, paces the single run loop (FILE, preset and
+    replay runs): a chunk is due when wall × scale has caught up with sim time,
+    lag beyond one 0.02 s chunk is dropped, and a scale change re-anchors.
+    dt and the physics step are unchanged. `robot_state.run` reports
+    `speed_scale`, `speed_scales`, `rtf`, `compute_limited` (rtf < 0.9 ×
+    scale while running) and its rule; the header adds "(compute-limited)".
+  - *Stress precision* (T19.3 commit). Peaks are shown in three significant
+    figures with an automatic Pa/kPa/MPa unit (`robot::stress_label`, with a
+    focused test). Display only: `robot_state` and the `.simresult.json` keep
+    the full values.
+  - *Verified in T19.3* (`.claude-pair/captures/T19-cad-parity/`, `drive.py`,
+    capture.json ok=true, 35 of 35 assertions, **release** build newer than
+    its sources; copies under `runs/cad-parity/20260930T104828Z/`):
+    - `--validate-only --robot runs/cad-simulate/v2-probe/robot.simrobot.json`
+      exits 1 with the message above (stderr saved). The windowed load reports
+      `status: error` with the same text in `robot_state.error`. The probe's
+      sha256 was the same before and after (`0457e1c4…`).
+      `v2-refused.png` shows "Could not open the robot: … has version 2: …
+      planar (v2) … Open it with `sim-app --scene cad --model FILE` …" under
+      the header, with an empty link list and viewport.
+    - Wheeled-robot copy, release: ×1 rtf 1.00 at t = 3.7 s (not
+      compute-limited). ×0.25 by `system_ui run:speed:0.25`: rtf 0.250;
+      by REST `robot_speed {scale: 0.25}`: 0.251 (tolerance ±10 %). ×4 by
+      REST: rtf 0.65, and by `system_ui run:speed:4`: 0.63, both reported
+      `compute_limited: true`. ×1 later in the same run (t = 13.2 s) was also
+      compute-limited at 0.59, so ×4 was held back by compute, not by pacing
+      (the per-step cost of this model grows as the run continues). ×4 was
+      **not** reached on this machine. `speed-slow.png` shows the header
+      "running · … RTF 0.25 · ×0.25"; `speed-fast.png` shows "RTF 0.65 · ×4
+      (compute-limited)". Up/down via `system_ui run:speed_down` and REST
+      `{action: up}` stepped ×4 → ×2 → ×4; `{scale: 3}` was refused.
+    - `stress-precision.png` (a copy of the T18.4 export and its result):
+      "peak: chassis 11.1 kPa · left wheel 4.85 kPa · passive wheel 815 Pa ·
+      right wheel 3.88 kPa", status current; `robot_state` peaks equal the
+      file's exactly (11074.33… Pa etc.).
+  - *Limits:* all activations were REST or `system_ui` (the same
+    `RobotAction` handlers as keys and buttons), not physical key presses or
+    pointer clicks. A non-1 scale was exercised only on a FILE run; preset and
+    replay runs share the loop but were not run at a non-1 scale. The real
+    sim-app fallback launch (v2 file, or no sim-spatial built) was not
+    exercised. A ×4 or ×8 rtf was never achieved with this model.
+  - `cad/USER_GUIDE.md`, `cad/ARCHITECTURE.md` and `cad/PHYSICAL_MODEL.md` now
+    name `sim-spatial --robot` (via `simbridge.viewer_command`) as the live
+    viewer with its actual controls, and sim-app `--scene cad` as the labelled
+    fallback and the only viewer for planar v2 files.
 
 ### c. Schematic and spatial views
 - **Entry today:** spatial is sim-spatial (all modes). The schematic is a
@@ -1417,23 +1481,26 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `sim_domain_robot::stress_results` rule, plus a current/stale label sim-app
   lacks), file watch and reload, and joint jogging (servo-target jog by REST,
   `system_ui` and inspector buttons instead of sim-app's arrow keys).
-  What still needs sim-app, checked against `cad_app.rs`:
+  What still needs sim-app, checked against `cad_app.rs` after batch
+  cad-scene-parity:
   1. **Planar v2 simrobot files** (`export_sim_model(..., version=2)`).
-     sim-spatial robot mode does not load them: a v2 export of the wheeled
-     robot fails `--validate-only` with a serde error ("invalid type: map,
-     expected a string at line 594"), not a clear "v2 unsupported" message.
-     RoboCAD's Simulate never writes v2 (its default is the v3+ physical
-     export), so only hand-requested v2 files are affected.
-  2. **Speed scaling** (+/- in sim-app, ×0.125 to ×8). Robot mode is paced
-     at most to real time and has no speed control.
-  3. **The joint-select / move-target keys** (←/→, ↑/↓, Shift) are replaced
-     by robot mode's jog, not ported as keys.
-  Retirement would require: an accepted decision on v2 files (port them, or
-  have robot mode refuse them with a clear message and drop them), a speed
-  control or an explicit decision not to have one, a pointer-captured check
-  of RoboCAD's Qt Simulate toggle opening sim-spatial, and removing the
-  fallback branch from `viewer_command` together with its test. The
-  phenomena gallery (`--scene phenomena`) is a separate migration.
+     sim-spatial now refuses them through the shared `PhysicalModel::parse`
+     with a message naming the version, the planar format and
+     `sim-app --scene cad --model FILE` (§2b). sim-app is the only viewer
+     that runs them. RoboCAD's Simulate never writes v2 (its default is the
+     v3+ physical export), so only hand-requested v2 files are affected.
+  2. **simbridge's fallback** when no sim-spatial binary is built.
+  No longer needing sim-app: speed scaling (robot mode has ×0.125–×8 through
+  one `RobotAction::Speed`, §2b; ×4 was compute-limited for the wheeled robot
+  on this machine; sim-app's achieved speed on the same model was not measured), and
+  the joint keys (←/→, ↑/↓, Shift), which robot mode replaces with its jog
+  buttons, `system_ui` and REST rather than porting them as keys.
+  Retirement now requires, none of it in batch cad-scene-parity: an accepted
+  decision on v2 files (convert them to v3, re-export them from RoboCAD, or
+  drop them, since porting planar v2 to sim-spatial is out of scope); a
+  pointer-captured check of RoboCAD's Qt Simulate toggle opening sim-spatial;
+  and removing the fallback branch from `viewer_command` together with its
+  test. The phenomena gallery (`--scene phenomena`) is a separate migration.
 - **sim-viewer:** stays for schematic layout editing, plots and the
   `--experiments` review until c, i and j reach parity. The shell now covers
   read-only review of measured identification archives (§2j), but
@@ -1671,7 +1738,26 @@ unknown-id error).
      stress current, then stale after a RoboCAD PATCH and re-export.
    - *Still not done:* a pointer capture of the Qt Simulate toggle, planar v2
      files in robot mode, speed scaling, a visible stress gradient on a
-     loaded model, and the cad/ docs that still name sim-app (§3).
+     loaded model, and the cad/ docs that still name sim-app (§3). Speed
+     scaling, the v2 message and the cad/ docs were done in item 11.
+11. **Done — the remaining cad-scene gaps in robot mode** (b; batch
+   cad-scene-parity, T19.1–T19.3; commits ad69fd7c, 8e05947e and the T19.3
+   commits).
+   - *Done:* a shared, named refusal of planar v2 files in
+     `PhysicalModel::parse`; a ×0.125–×8 run speed scale through one
+     `RobotAction::Speed` (keys, header buttons, `system_ui`, REST
+     `robot_speed`) and one pure pacing rule, with `speed_scale` next to the
+     achieved `rtf` and an honest `compute_limited`; stress peaks in three
+     significant figures; the three cad/ docs pointing at sim-spatial.
+   - *Verified in T19.3* (`.claude-pair/captures/T19-cad-parity/`,
+     capture.json ok=true, 35 assertions, release): the v2 refusal in
+     `--validate-only` and in the window; ×0.25 reached (rtf 0.250/0.251);
+     ×4 compute-limited (rtf 0.65/0.63, ×1 later in the run 0.59); stress
+     peaks shown as kPa/Pa, stored values unchanged.
+   - *Still not done:* a decision on v2 files and removal of the sim-app
+     fallback (§3); physical key and pointer input for the speed controls;
+     a non-1 scale on preset and replay runs; a model fast enough to show ×4
+     or ×8 achieved.
 
 ## 6. Launch path
 
@@ -1819,6 +1905,15 @@ sim-app cad scene (build: cargo build --release -p sim-spatial)". If nothing
 is built, nothing opens and the message names that build command. Build it
 first with `cargo build --release -p sim-spatial`; a release binary older
 than the source opens without newer features, because release is preferred.
+
+Run speed and v2 files (batch cad-scene-parity). In robot mode, `-` and
+`=`/`+` (or the header − / + buttons, `system_ui` `run:speed_*`, REST
+`robot_speed {"scale": 4}`) set the run speed from ×0.125 to ×8; the header
+shows ×scale beside the achieved RTF and says "(compute-limited)" when the
+machine cannot keep up. A planar v2 simrobot does not open in sim-spatial:
+`--validate-only` exits 1, and the window shows the refusal naming the
+version and `sim-app --scene cad --model FILE`, which is the viewer to use
+for it.
 
 `sim-app --scene cad` is **no longer needed to run** a v3 simrobot file that
 builds with the default options, such as the wheeled baseline (verified in

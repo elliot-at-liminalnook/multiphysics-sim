@@ -8,6 +8,7 @@
 use super::*;
 use super::actions::{BuildAction, dispatch};
 use crate::app::actions::{self, Act, Call, InFlight, Replies, Spec, spec};
+use crate::app::switch::{WindowAction, ask_switch, awaited_switch};
 use bevy::ecs::message::Messages;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -258,7 +259,9 @@ fn no_builder(action: &SystemAction) -> String {
 /// The builder's REST commands (a `Ui` action goes to `dispatch`). Loads,
 /// scans and context builds answer Pending and are applied again each
 /// frame with their continuation until done; `call.cancelled` stops them.
-fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, action: &SystemAction, call: &mut Call) -> Outcome {
+/// `lessons`: a lesson is open in the window (the "‹ lesson" control's switch
+/// needs one); `switch` writes the mode switch.
+fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, lessons: bool, switch: &mut MessageWriter<Act<WindowAction>>, action: &SystemAction, call: &mut Call) -> Outcome {
     let object = |args: &serde_json::Map<String, Value>| Value::Object(args.clone());
     let result = match action {
         SystemAction::Ui(action) => {
@@ -281,7 +284,19 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
         SystemAction::SystemCalibrationReview(args) => return builder.calibration_rest(&object(args), &mut *call.continuation, call.cancelled),
         SystemAction::SystemActuators(args) => return builder.actuators_rest(&object(args), &mut *call.continuation, call.cancelled),
         SystemAction::SystemAgent { action } => builder.agent_request(action.clone()),
-        SystemAction::SystemUi { action, expected_revision } => builder.ui_request(action.clone(), *expected_revision, scene, camera),
+        SystemAction::SystemUi { action, expected_revision } => {
+            // The "‹ lesson" control: the same mode switch its button writes; the
+            // result is the switch's (a refusal names the blocker).
+            if let Some(outcome) = awaited_switch(call) {
+                return outcome;
+            }
+            match builder.activates_lessons(action, *expected_revision) {
+                Ok(true) if lessons => return ask_switch(switch, call, ViewerMode::Lessons),
+                Ok(true) => Err("the ‹ lesson control needs a lesson open in this window".into()),
+                Ok(false) => builder.ui_request(action.clone(), *expected_revision, scene, camera),
+                Err(e) => Err(e),
+            }
+        }
         SystemAction::SystemDiscussions { action, expected_revision } => builder.discussion_request(action.clone(), *expected_revision, scene, camera),
         SystemAction::System { label, commands, expected_revision } => (|| -> sim_api::Result {
             if expected_revision.is_some_and(|r| r != builder.document.revision) {
@@ -366,6 +381,7 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
 /// Actions: the builder's one apply system (build and lessons). Buttons,
 /// keys and markers go to `dispatch` (a refusal is the status line); REST
 /// commands answer their caller.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<SystemAction>>>,
     mut in_flight: ResMut<InFlight<SystemAction>>,
@@ -374,6 +390,8 @@ pub(super) fn apply(
     scene: Option<ResMut<SpatialScene>>,
     orbit: Option<Single<&mut Orbit>>,
     rest: Option<Res<crate::rest::Rest>>,
+    learn: Option<Res<crate::lesson::Learn>>,
+    mut switch: MessageWriter<Act<WindowAction>>,
 ) {
     let (Some(mut builder), Some(mut scene), Some(mut orbit)) = (builder, scene, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| Outcome::Done(Err(no_builder(action))));
@@ -390,6 +408,7 @@ pub(super) fn apply(
     if messages.is_empty() && in_flight.is_empty() {
         return;
     }
-    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| execute(&mut builder, &mut scene, &mut orbit, action, call));
+    let lessons = learn.is_some();
+    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| execute(&mut builder, &mut scene, &mut orbit, lessons, &mut switch, action, call));
 }
 

@@ -43,6 +43,30 @@ impl Builder {
     pub(super) fn ui_state(&self) -> serde_json::Value {
         serde_json::json!({"tab":self.tab,"mode":self.mode,"controls_revision":self.ui_api.revision,"controls_ready":!self.panel_dirty&&!self.ui_api.items.is_empty(),"draft":self.input.as_ref().map(|i|serde_json::json!({"purpose":i.purpose,"text":i.buffer})),"last_error":self.action_error})
     }
+    /// The control `system_ui` activate names, checked as a click would be:
+    /// the listed controls must be current (`ui_revision`), and it must exist
+    /// and be enabled.
+    fn activated(&self, id: &str, ui_revision: u64) -> Result<Control, String> {
+        if self.panel_dirty || ui_revision != self.ui_api.revision {
+            return Err("UI changed; request controls again before activating".into());
+        }
+        let c = self.ui_api.items.get(id).ok_or("unknown control; request controls")?.clone();
+        if !c.enabled {
+            return Err(format!("control is disabled: {}", c.label));
+        }
+        Ok(c)
+    }
+    /// Whether `request` activates the "‹ lesson" control, whose button writes
+    /// the mode switch to Lessons (`actions::buttons`) rather than a builder
+    /// action: its activation goes to the same switch (`system_actions`).
+    /// Errors are `ui_request`'s for the same request.
+    pub(crate) fn activates_lessons(&self, request: &UiAction, expected_revision: Option<u64>) -> Result<bool, String> {
+        let UiAction::Activate { id, ui_revision } = request else { return Ok(false) };
+        if expected_revision.is_some_and(|r| r != self.document.revision) {
+            return Err("stale system revision; read system_state".into());
+        }
+        Ok(matches!(self.activated(id, *ui_revision)?.action, BuildAction::Lessons))
+    }
     pub(crate) fn ui_request(
         &mut self,
         request: UiAction,
@@ -61,24 +85,9 @@ impl Builder {
                 );
             }
             UiAction::Activate { id, ui_revision } => {
-                if self.panel_dirty || ui_revision != self.ui_api.revision {
-                    return Err("UI changed; request controls again before activating".into());
-                }
-                let c = self
-                    .ui_api
-                    .items
-                    .get(&id)
-                    .ok_or("unknown control; request controls")?
-                    .clone();
-                if !c.enabled {
-                    return Err(format!("control is disabled: {}", c.label));
-                }
-                // The "‹ lesson" button is a mode switch (`actions::buttons` writes
-                // `WindowAction::Switch`); `dispatch` has nothing to do for it, so an
-                // activation here would report success and do nothing.
-                if matches!(c.action, BuildAction::Lessons) {
-                    return Err(format!("{} switches the window to lessons mode: activate mode:lessons instead (the same validated mode switch)", c.label));
-                }
+                // The "‹ lesson" control never gets here: `system_actions` sends it
+                // to the mode switch, as its button does (`activates_lessons`).
+                let c = self.activated(&id, ui_revision)?;
                 dispatch(self, scene, orbit, c.action);
             }
             UiAction::Tab { tab } => dispatch(self, scene, orbit, BuildAction::Tab(tab)),

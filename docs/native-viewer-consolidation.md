@@ -1027,8 +1027,11 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 - **Entry today:** the build-mode **Actuators** sidebar tab in `sim-spatial`
   (read-only registry inspector, commit d4c14f9f, verified natively in T4.3),
   plus the `actuator_registry` example CLI (`hash|limits|apply|check`,
-  `crates/sim-runtime/examples/actuator_registry.rs`). Calibration and FPGA
-  review remain in `sim-viewer --experiments` (`experiments_ui/{refinement, fpga_ui, motor_response_ui, power_ui}.rs`).
+  `crates/sim-runtime/examples/actuator_registry.rs`). The same tab's
+  **Measured evidence** view (commits 178c36f0, 4ee19e52; verified natively in
+  T15.3) reviews an HX identification archive read-only. Evaluation,
+  refinement, FPGA, power and motor-response review remain in
+  `sim-viewer --experiments` (`experiments_ui/{refinement, fpga_ui, motor_response_ui, power_ui}.rs`).
   Browser calibration panel (`web/viewer/calibration-ui.mjs`, token gated,
   talks to `serve_actuator_calibration.rs`, which drives hardware and is out of
   scope). `web/motor-bench/`. The sim-spatial lesson bench page only asks a
@@ -1036,7 +1039,10 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 - **Reusable layer:** `sim_runtime::{actuator_registry, part_fit, acquisition::calibration, controller_refinement::{calibration, calibration_data, evidence, fpga_review, motor_response}}`,
   `sim_domain_robot::actuator_profile`.
 - **Shell status:** *present (read-only)* for the registry and consumer
-  staleness; *absent* for calibration and FPGA review.
+  staleness; *present (read-only review only)* for measured identification
+  archives (measured vs predicted, the archive's own pass/fail); *absent* for
+  evaluation/re-simulation, candidate editing and refinement, FPGA, power and
+  motor-response review, sweep.csv review, saving studies and HTML export.
 - **One path:** `Builder::actuators_request(registry?, check?)`
   (`crates/sim-spatial/src/builder/actuators.rs`) is called by the registry
   path field (`actuator_registry_path`, Enter loads), the consumer path field
@@ -1077,6 +1083,63 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   clicks and wheel gestures are not captured. A long load error overflows the
   status bar line.
 
+**Measured identification review (batch calibration-review, T15.1–T15.3).**
+- **One path:** `Builder::calibration_request(path?)`
+  (`crates/sim-spatial/src/builder/calibration.rs`) is called by the archive
+  path field (Enter loads), the first visit to Actuators → **Measured
+  evidence** (`system_ui` action `{"actuator_view":"evidence"}`, which loads
+  `<workspace root>/examples/actuators/hx30hm/pwm-full-range-identification`),
+  Reload and Cancel (`system_ui`), and REST `system_calibration_review
+  {"path"?, "trial"?}` (listed in capabilities with an example). A worker
+  thread runs the shared `sim_runtime::experiment_comparison::hx_archive::load(dir,
+  workspace_root)`, the call sim-viewer makes; the UI thread only polls.
+  Selection goes through `Builder::select_calibration_trial(id)` from a trial
+  row button, `system_ui` `{"calibration_trial": id}` or REST `trial`.
+  Filters are `system_ui` `{"calibration_split": all|train|held_out}`,
+  `{"calibration_outcome": all|pass|fail}` and `{"calibration_page": N}`.
+- **What it shows:** label, interpretation and split policy verbatim; the full
+  observations.json/results.json blake3 hashes, verified inputs `N of M`
+  against the workspace root and integrity issues; split × outcome counts
+  taken only from each trial's `comparison.passes`; a paged trial list (20
+  rows) with id, run, device, stage, kind, drive, duration, split (held-out
+  rows purple and tagged "held-out (validation)"), voltage and temperature
+  ranges, and RMSE/final error against their limits; for the selected trial,
+  a chart on the shared `crate::chart` raster of `measured (hardware
+  archive)` against `predicted (fitted model, archive)` in rad against time
+  [s], with the split role (HELD-OUT (validation data) / TRAIN (fitting
+  data)). `system_state.calibration_review` carries phase, path, requested,
+  error, hashes, counts, filters, visible ids, the page, `selected` (metrics,
+  limits, true sample counts, first/last samples) and the chart axes. Errors
+  name the path and reason; the last good archive stays, labelled "Still
+  showing the last good load: <path>".
+- **Evidence (T15.3):** `.claude-pair/captures/T15-calibration-review/`
+  (`drive.py`, `capture.json` ok=true, 53 assertions). Independent of REST:
+  the hashes equal a pure-Python BLAKE3 of observations.json and results.json
+  (0c60030e…d081, c6a9ac95…881c; the implementation is self-checked against
+  the empty-input vector and results.json `input_blake3`); 216 trials equal
+  observations.json; held-out 81/162 pass and train 38/54 equal a count from
+  results.json `evaluations[].metrics` under the predeclared criteria (RMSE ≤ 3
+  and |final| ≤ 5 counts). **81/162 agrees with the README claim.** The passing
+  held-out trial `pwm-individual-full-range/4/1` (selected by `system_ui` row
+  action) and failing `…/4/5` (REST `trial`) match results.json metrics
+  (counts × 2π/4096 rad), the 3/5-count limits, 23 samples each, measured
+  endpoints from observations.json and predicted endpoints from
+  predictions.csv. A nonexistent path over REST failed naming the path, phase
+  `failed`, `requested` = that path, while path, hashes and 216 trials stayed
+  those of the tracked archive. PNGs: `review-loaded.png`,
+  `heldout-filter.png`, `trial-pass.png`, `trial-fail.png`, `bad-path.png`.
+- **Remaining limits:** read-only review of `hx_archive` directories only; a
+  file (e.g. a study) or a `sweep.csv` directory is refused as not supported
+  yet. Nothing is evaluated, re-simulated, refitted, saved or exported, and no
+  value is promoted (use `sim-viewer --experiments` and the promotion path).
+  The empty-trace "not in archive" rendering is verified by code reading only
+  (no trial in the tracked archive has an empty trace). The load took ~14 ms,
+  so the capture never observed the `loading` phase or exercised Cancel on a
+  live load. Activations were REST `system_ui` and REST commands (the same
+  handlers as a click) and the sidebar was positioned with `system_ui scroll`;
+  no pointer gestures were captured. The chart's top value label can be
+  overdrawn by a flat trace (seen on `trial-pass.png`).
+
 ## 3. External UI that remains
 
 - **RoboCAD (Python/OCCT/Qt) stays** for geometry authoring: sketching,
@@ -1104,7 +1167,13 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   (`calibration-ui.mjs`, `hardware-sync.mjs`) stay in the browser. They are
   hardware paths and are not migrated in this effort.
 - **sim-viewer:** stays for schematic layout editing, plots and the
-  `--experiments` review until c, i and j reach parity. Read-only schematic
+  `--experiments` review until c, i and j reach parity. The shell now covers
+  read-only review of measured identification archives (§2j), but
+  `sim-viewer --experiments` is still needed for evaluation and
+  re-simulation (`experiment_study::evaluate`), candidate model editing and
+  refinement, FPGA, power and motor-response review, `sweep.csv` review,
+  saving studies and HTML export. sim-viewer stays unchanged until those
+  reach parity. Read-only schematic
   viewing with shared selection is now in the sim-spatial shell (§2c).
 
 ## 4. Constraints check (risks found in current code)
@@ -1280,6 +1349,21 @@ unknown-id error).
      or `SIM_WORKSPACE`); gait-lab output is not a FILE type; lessons and
      place launches from outside the repository were not captured (they use
      the same resolver and dispatch).
+7. **Partial — measured identification review** (j; batch
+   calibration-review, T15.1–T15.3).
+   - *Done:* Actuators → Measured evidence loads an HX identification archive
+     on a worker through the shared `hx_archive::load`, lists and filters its
+     trials by split and outcome, and charts a selected trial's measured
+     against predicted trace on the shared raster (commits 178c36f0,
+     4ee19e52). REST `system_calibration_review`.
+   - *Verified in T15.3* (`.claude-pair/captures/T15-calibration-review/`,
+     capture.json ok=true): hashes, trial count, held-out 81/162 (agrees with
+     the README) and pass/fail trial metrics and endpoints against independent
+     reads of the archive files; bad path keeps the last good archive (§2j).
+   - *Still not done:* everything else `sim-viewer --experiments` does
+     (evaluation/re-simulation, candidate editing and refinement,
+     FPGA/power/motor-response review, sweep.csv review, saving studies, HTML
+     export).
 
 ## 6. Launch path
 
@@ -1339,6 +1423,15 @@ sim-spatial examples/systems-builder/motor-driver-board/board.system.json
 Once it is running, open another system from the **Systems** sidebar tab (a
 discovered row, or a path in the field and Enter), or send REST
 `system_open {"path": …}`. There is no relaunch. Other modes today are `--lessons lessons`, `--place DIR`, and `--description/--spatial`.
+
+Measured identification review (§2j), in build mode with any system: open the
+**Actuators** sidebar tab and choose **Measured evidence** (or `system_ui`
+`{"operation":"tab","tab":"actuators"}`, then activate the control with action
+`{"actuator_view":"evidence"}`). The first visit loads
+`examples/actuators/hx30hm/pwm-full-range-identification` from the workspace
+root; type another archive directory in the path field and press Enter, or
+send REST `system_calibration_review {"path": DIR, "trial": ID}` (both
+optional). Read `system_state.calibration_review`.
 
 Robot inspection and live run (a CAD-exported simrobot file; nothing is
 written to it):
@@ -1407,7 +1500,7 @@ this batch; their only diff against the run baseline is the earlier accepted
 1562f60c (shared collision triangulation).
 
 Separate apps are still needed for the schematic and experiments
-(`sim-viewer`), phenomena and file-watching robot view (`sim-app`), CAD
+(`sim-viewer`; the shell only reviews identification archives, §3), phenomena and file-watching robot view (`sim-app`), CAD
 (`cad/run.sh`), and calibration, hardware sync, scrubbing of recorded
 frames, observation panels beyond the two robot-mode charts, and realtime walking
 (browser, `web/README.md`; §2g lists what native preset runs lack).

@@ -326,7 +326,13 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     sidebar(&mut commands, &k, b, note_scroll, side_scroll);
     inspector(&mut commands, &k, b, &scene);
     graph_dock(&mut commands, &k, b);
+    let started = std::time::Instant::now();
+    schematic::pane(&mut commands, &k, b);
+    let schematic_ms = started.elapsed().as_secs_f64() * 1e3;
     status_bar(&mut commands, &k, b, &scene);
+    if builder.schematic.visible {
+        builder.schematic.build_ms = schematic_ms;
+    }
 }
 
 fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
@@ -392,6 +398,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
                         seg.spawn(k.button("Detailed", BuildAction::ToggleRealtime, Look::Segment(!b.realtime), b.realtime));
                         seg.spawn(k.button("Realtime", BuildAction::ToggleRealtime, Look::Segment(b.realtime), !b.realtime && b.document.realtime.is_some()));
                     });
+                right.spawn(k.button("Schematic", BuildAction::ToggleSchematic, Look::Segment(b.schematic.visible), true));
                 right.spawn(k.button("Graphs", BuildAction::ToggleGraphs, Look::Segment(b.graphs.visible), true));
                 right.spawn(divider());
                 if b.run.is_some() {

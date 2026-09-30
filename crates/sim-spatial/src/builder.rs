@@ -235,6 +235,8 @@ pub struct Builder {
     actuators: actuators::ActuatorState,
     /// Read-only gait-lab results browser (Gait lab tab).
     gait_lab: gait_lab::GaitLabState,
+    /// Read-only schematic pane of the current level (presentation only).
+    pub(crate) schematic: schematic::Schematic,
 }
 
 #[derive(Default)]
@@ -425,6 +427,7 @@ impl Builder {
             open: Default::default(),
             actuators: Default::default(),
             gait_lab: Default::default(),
+            schematic: Default::default(),
         };
         builder.runs = sim_runtime::run_history::list(&sim_runtime::run_history::dir_for(&builder.store.path));
         builder.updates = builder.library_updates();
@@ -625,8 +628,7 @@ impl Builder {
 
     /// The instance at this level containing a flattened component path.
     pub fn instance_for_component(&self, component: &str) -> Option<String> {
-        let rest = if self.level.is_empty() { component } else { component.strip_prefix(&format!("{}/", self.level))? };
-        rest.split('/').next().map(str::to_string)
+        schematic::instance_at(&self.level, component)
     }
 
     fn unique_name(&self, base: &str) -> String {
@@ -1413,6 +1415,7 @@ impl Builder {
             "open": self.open_json(),
             "actuators": self.actuators_json(),
             "gait_reports": self.gait_reports_json(),
+            "schematic": self.schematic.json(self.document.revision, &self.level, &self.selected),
             "history": self.store.history(),
         })
     }
@@ -1644,6 +1647,10 @@ enum BuildAction {
     Up,
     Level(String),
     Select(String),
+    /// A schematic box: the same selection path as `Select` (the Outline).
+    SchematicSelect(String),
+    /// Show or hide the schematic pane.
+    ToggleSchematic,
     Open(String),
     Filter,
     Group,
@@ -1723,7 +1730,7 @@ impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, finish_actuators, finish_gait_reports, rebuild_scene, sync_run, graphs::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
+            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, finish_actuators, finish_gait_reports, rebuild_scene, sync_run, graphs::update.run_if(building), schematic::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
         )
         .add_systems(Startup, ui::load_fonts)
         .add_systems(Update, placement::update.after(update_parts).run_if(building))
@@ -1956,7 +1963,7 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
             orbit.home = true;
             builder.report(r);
         }
-        BuildAction::Select(name) => {
+        BuildAction::Select(name) | BuildAction::SchematicSelect(name) => {
             let _ = builder.suggestions(&name);
             builder.selected = BTreeSet::from([name]);
             builder.alternatives = None;
@@ -2099,6 +2106,7 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
             builder.report(r);
         }
         BuildAction::ToggleGraphs => builder.graphs.visible = !builder.graphs.visible,
+        BuildAction::ToggleSchematic => builder.schematic.visible = !builder.schematic.visible,
         BuildAction::Pin(id) => {
             if !builder.graphs.pinned.contains(&id) {
                 builder.graphs.pinned.push(id);
@@ -2366,6 +2374,7 @@ fn rebuild_scene(
         scene.live.snapshot = None;
     }
     builder.last_description = Some(compiled.description.clone());
+    builder.schematic.set_source(&compiled.description, finished.revision);
     scene.replace(compiled.description, compiled.spatial, compiled.animation);
     let level = builder.level.clone();
     scene.ghost = scene
@@ -2555,6 +2564,7 @@ pub(crate) mod ui;
 pub mod open;
 pub mod actuators;
 pub mod gait_lab;
+pub(crate) mod schematic;
 pub use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
 
 /// Grab and push: with a run going, Alt-drag on a part changes the load

@@ -34,6 +34,8 @@ use std::sync::{Mutex, mpsc};
 const LEFT: f32 = 280.0;
 const RIGHT: f32 = 390.0;
 const TOP: f32 = 64.0;
+/// Height of the graph dock above the bottom edge, when shown.
+const DOCK: f32 = 262.0;
 /// Exported link frames: origin at the stored `com`, axes aligned with the
 /// model frame (the solver's zero-angle pose, `articulated.rs` `com0`).
 pub const POSE: &str = "exported assembly pose: link frames at the stored com, axes aligned with the model frame (Z up); no joint motion, not stepped";
@@ -158,6 +160,8 @@ pub struct RobotView {
     pose_dirty: bool,
     ui_revision: u64,
     panels_ready: bool,
+    /// The graph dock (system_ui graphs:toggle, key G, the Graphs button).
+    graphs_visible: bool,
 }
 impl RobotView {
     /// Starts the worker load; the window opens without waiting for it.
@@ -212,6 +216,7 @@ impl RobotView {
             pose_dirty: false,
             ui_revision: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_micros() as u64,
             panels_ready: false,
+            graphs_visible: false,
         }
     }
     fn link_name(&self, i: usize) -> Option<&str> {
@@ -272,7 +277,8 @@ impl RobotView {
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
             "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()),
-            "recordings": self.run.as_ref().map(|r| r.recordings_json()), "replay": self.run.as_ref().map(|r| r.replay_json()), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "recordings": self.run.as_ref().map(|r| r.recordings_json()), "replay": self.run.as_ref().map(|r| r.replay_json()),
+            "graphs": self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(self.selected, self.graphs_visible)), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -337,6 +343,8 @@ enum RobotAction {
     CancelReplay,
     /// List the preset's saved recordings again (off the UI thread).
     RefreshRecordings,
+    /// Show or hide the graph dock (the Graphs button, key G, `system_ui` graphs:toggle).
+    ToggleGraphs,
 }
 /// The absolute target a jog action asks for (file validation happens in `check_jog`).
 fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
@@ -414,6 +422,7 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
         }
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
         RobotAction::Fit => orbit.home = true,
+        RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
     }
     Ok(())
 }
@@ -432,6 +441,7 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
         out.push(("inspector:scroll_down".into(), "Scroll inspector down".into(), RobotAction::ScrollInspector { delta: 400.0 }));
         out.push(("inspector:scroll_up".into(), "Scroll inspector up".into(), RobotAction::ScrollInspector { delta: -400.0 }));
         out.push(("fit".into(), "Fit".into(), RobotAction::Fit));
+        out.push(("graphs:toggle".into(), (if view.graphs_visible { "Hide graphs (G)" } else { "Show graphs (G)" }).into(), RobotAction::ToggleGraphs));
         for action in RunAction::ALL {
             out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
         }
@@ -627,6 +637,8 @@ struct MotionButton;
 #[derive(Component)]
 struct RecordingText;
 #[derive(Component)]
+struct GraphDock;
+#[derive(Component)]
 struct ReplayText;
 /// The Replay buttons (one per recent saved recording), rebuilt when the list changes.
 #[derive(Component)]
@@ -661,7 +673,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             ..default()
         }))
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, (receive, poll_rest, motion_keys, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, motion_panel, draw).chain())
+        .add_systems(Update, (receive, poll_rest, motion_keys, graph_key, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, motion_panel, graph_dock, draw).chain())
         .run();
 }
 
@@ -693,7 +705,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     commands.spawn((
         Node { position_type: PositionType::Absolute, right: Val::Px(18.0), top: Val::Px(6.0), flex_direction: FlexDirection::Column, align_items: AlignItems::FlexEnd, row_gap: Val::Px(3.0), ..default() },
         children![
-            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset)]),
+            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset), graphs_button(&fonts)]),
             (text("", 12.0, MUTED), RunText),
         ],
     ));
@@ -720,6 +732,13 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
             )
         ],
     ));
+    // Graph dock under the 3D view (filled by `graph_dock`).
+    commands.spawn((
+        Node { position_type: PositionType::Absolute, left: Val::Px(LEFT), right: Val::Px(RIGHT), bottom: Val::Px(0.0), height: Val::Px(DOCK), padding: UiRect::all(Val::Px(10.0)), column_gap: Val::Px(10.0), display: Display::None, border: UiRect::top(Val::Px(1.0)), ..default() },
+        BackgroundColor(PANEL),
+        BorderColor(Color::srgb(0.2, 0.24, 0.29)),
+        GraphDock,
+    ));
 }
 
 fn tab(fonts: &UiFonts, section: Section) -> impl Bundle {
@@ -743,6 +762,18 @@ fn run_button(fonts: &UiFonts, action: RunAction) -> impl Bundle {
         BorderRadius::all(Val::Px(4.0)),
         BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
         children![label(fonts, action.label(), 13.0, INK)],
+    )
+}
+
+/// The Graphs button: the same `RobotAction::ToggleGraphs` as key G and `system_ui` graphs:toggle.
+fn graphs_button(fonts: &UiFonts) -> impl Bundle {
+    (
+        Button,
+        RobotAction::ToggleGraphs,
+        Node { padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::left(Val::Px(8.0)), ..default() },
+        BorderRadius::all(Val::Px(4.0)),
+        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
+        children![label(fonts, "Graphs (G)", 13.0, INK)],
     )
 }
 
@@ -933,6 +964,7 @@ fn orbit(
     mut wheel: EventReader<MouseWheel>,
     window: Single<&Window>,
     camera: Single<(&mut Transform, &mut RobotOrbit)>,
+    view: Res<RobotView>,
 ) {
     let drag = motion.read().fold(Vec2::ZERO, |sum, e| sum + e.delta);
     let zoom = wheel.read().fold(0.0, |sum, e| sum + match e.unit {
@@ -944,7 +976,8 @@ fn orbit(
         orbit.radius = orbit.extent * 3.2;
         orbit.home = false;
     }
-    let in_scene = window.cursor_position().is_some_and(|p| p.x > LEFT && p.x < window.width() - RIGHT && p.y > TOP);
+    let dock = if view.graphs_visible { DOCK } else { 0.0 };
+    let in_scene = window.cursor_position().is_some_and(|p| p.x > LEFT && p.x < window.width() - RIGHT && p.y > TOP && p.y < window.height() - dock);
     if in_scene {
         let pan = buttons.pressed(MouseButton::Middle) || (buttons.pressed(MouseButton::Right) && (keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight)));
         if pan {
@@ -964,10 +997,10 @@ fn orbit(
     }
 }
 
-fn viewport(window: Single<&Window>, mut camera: Single<&mut Camera, With<RobotOrbit>>) {
+fn viewport(window: Single<&Window>, view: Res<RobotView>, mut camera: Single<&mut Camera, With<RobotOrbit>>) {
     let scale = window.scale_factor();
     let width = (window.width() - LEFT - RIGHT).max(1.0);
-    let height = (window.height() - TOP).max(1.0);
+    let height = (window.height() - TOP - if view.graphs_visible { DOCK } else { 0.0 }).max(1.0);
     let viewport = Viewport { physical_position: UVec2::new((LEFT * scale) as u32, (TOP * scale) as u32), physical_size: UVec2::new((width * scale) as u32, (height * scale) as u32), ..default() };
     if camera.viewport.as_ref().is_none_or(|old| old.physical_size != viewport.physical_size || old.physical_position != viewport.physical_position) {
         camera.viewport = Some(viewport);
@@ -1628,6 +1661,105 @@ fn source_text(view: &RobotView, m: &PhysicalModel) -> String {
 }
 
 /// Floor grid and the selected link's centre of mass.
+/// Key G: the same `RobotAction::ToggleGraphs` as the Graphs button and `system_ui` graphs:toggle.
+fn graph_key(keys: Res<ButtonInput<KeyCode>>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
+    if keys.just_pressed(KeyCode::KeyG) {
+        view.run_message = dispatch(&mut view, &mut orbit, RobotAction::ToggleGraphs).err();
+    }
+}
+
+/// The graph dock: the fixed chart set (`robot_graphs::charts`) drawn with the
+/// shared `crate::chart` raster, redrawn at most ten times a second and only
+/// when the sampled history, selection, mode or visibility changed.
+fn graph_dock(
+    mut commands: Commands,
+    view: Res<RobotView>,
+    fonts: Res<UiFonts>,
+    time: Res<Time>,
+    mut images: ResMut<Assets<Image>>,
+    dock: Single<(Entity, &mut Node), With<GraphDock>>,
+    mut handles: Local<Vec<Handle<Image>>>,
+    mut drawn: Local<Option<(String, f64)>>,
+    mut redraw: EventWriter<bevy::window::RequestRedraw>,
+) {
+    let (entity, mut node) = dock.into_inner();
+    let display = if view.graphs_visible { Display::Flex } else { Display::None };
+    if node.display != display {
+        node.display = display;
+    }
+    let Some(run) = view.run.as_ref().filter(|_| view.graphs_visible) else {
+        *drawn = None;
+        return;
+    };
+    let h = run.graphs();
+    let stamp = format!("{:?}|{}|{}|{}|{:?}|{:?}", view.selected, h.generation(), h.frames(), run.graphs_mode(), h.window(), run.frame().map(|f| (f.time, f.steps)));
+    let now = time.elapsed_secs_f64();
+    match drawn.as_ref() {
+        Some((s, _)) if *s == stamp => return,
+        // Bounded refresh while frames stream in: come back once the interval has passed.
+        Some((_, at)) if now - at < 0.1 && run.active() => {
+            redraw.write(bevy::window::RequestRedraw);
+            return;
+        }
+        _ => {}
+    }
+    *drawn = Some((stamp, now));
+    let charts = run.graph_charts(view.selected);
+    let mode = run.graphs_mode();
+    commands.entity(entity).despawn_related::<Children>();
+    let text = |value: &str, size: f32, color: Color| label(&fonts, value, size, color);
+    let num = |x: f64| if x == 0.0 || (x.abs() >= 1e-3 && x.abs() < 1e4) { format!("{x:.4}") } else { format!("{x:.3e}") };
+    for (slot, c) in charts.iter().enumerate() {
+        while handles.len() <= slot {
+            handles.push(images.add(crate::chart::blank_image()));
+        }
+        let traces: Vec<(&[[f64; 2]], [u8; 3])> = c.traces.iter().enumerate().map(|(i, t)| (t.points.as_slice(), crate::chart::COLORS[i % crate::chart::COLORS.len()])).collect();
+        let (pixels, range, window) = crate::chart::rasterize_span(&traces, Some(crate::robot_graphs::WINDOW_S));
+        let drawable = c.traces.iter().map(|t| t.points.len()).sum::<usize>() >= 2;
+        if let Some(image) = images.get_mut(&handles[slot]) {
+            image.data = Some(pixels);
+        }
+        let units: std::collections::BTreeSet<&str> = c.traces.iter().map(|t| t.unit.as_str()).collect();
+        let unit = if units.len() == 1 { units.into_iter().next().unwrap_or_default().to_string() } else { String::new() };
+        let card = commands.spawn(Node { flex_direction: FlexDirection::Column, flex_grow: 1.0, flex_basis: Val::Px(0.0), min_width: Val::Px(0.0), row_gap: Val::Px(3.0), ..default() }).id();
+        let head = commands.spawn(Node { flex_direction: FlexDirection::Row, justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(6.0), flex_shrink: 0.0, ..default() }).id();
+        let title = commands.spawn(text(&c.title, 11.5, INK)).id();
+        let badge = commands.spawn(text(&format!("{} · gen {}", mode.to_uppercase(), h.generation()), 11.0, if mode == "replay" { Color::srgb(0.98, 0.62, 0.22) } else { ACCENT })).id();
+        commands.entity(head).add_children(&[title, badge]);
+        commands.entity(card).add_child(head);
+        if let Some(why) = &c.absent_reason {
+            let t = commands.spawn(text(why, 11.0, MUTED)).id();
+            commands.entity(card).add_child(t);
+        }
+        if !c.traces.is_empty() {
+            let plot = commands.spawn((Node { flex_grow: 1.0, min_height: Val::Px(60.0), border: UiRect::all(Val::Px(1.0)), ..default() }, BorderColor(Color::srgb(0.2, 0.24, 0.29)), ImageNode::new(handles[slot].clone()))).id();
+            if drawable {
+                let with_unit = |v: f64| if unit.is_empty() { num(v) } else { format!("{} {unit}", num(v)) };
+                let top = commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(4.0), top: Val::Px(2.0), ..default() }, children![text(&with_unit(range.1), 10.0, MUTED)])).id();
+                let bottom = commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(4.0), bottom: Val::Px(2.0), ..default() }, children![text(&with_unit(range.0), 10.0, MUTED)])).id();
+                let x = commands.spawn((Node { position_type: PositionType::Absolute, right: Val::Px(4.0), bottom: Val::Px(2.0), ..default() }, children![text(&format!("{:.2} – {:.2} s sim time", window.0, window.1), 10.0, MUTED)])).id();
+                commands.entity(plot).add_children(&[top, bottom, x]);
+            }
+            commands.entity(card).add_child(plot);
+            for (i, t) in c.traces.iter().enumerate() {
+                let [r, g, b] = crate::chart::COLORS[i % crate::chart::COLORS.len()];
+                let value = match (t.points.last(), &t.absent_reason) {
+                    (Some(p), _) => format!("{} {}", num(p[1]), t.unit),
+                    (None, Some(why)) => why.clone(),
+                    (None, None) => "–".into(),
+                };
+                let source = if t.source.starts_with("request") { "request (held input in frame)" } else if t.source.starts_with(crate::robot_graphs::WORLD_FRAME) { crate::robot_graphs::WORLD_FRAME } else { t.source.split(" (").next().unwrap_or(&t.source) };
+                let color = Color::srgb_u8(r, g, b);
+                let swatch = commands.spawn((Node { width: Val::Px(9.0), height: Val::Px(9.0), flex_shrink: 0.0, ..default() }, BackgroundColor(color), BorderRadius::all(Val::Px(2.0)))).id();
+                let line = commands.spawn(text(&format!("{}: {value}  ·  {source}", t.name), 10.5, color)).id();
+                let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(5.0), align_items: AlignItems::Center, ..default() }).add_children(&[swatch, line]).id();
+                commands.entity(card).add_child(row);
+            }
+        }
+        commands.entity(entity).add_child(card);
+    }
+}
+
 fn draw(view: Res<RobotView>, mut gizmos: Gizmos) {
     let Some(model) = &view.model else { return };
     let floor = model.world.floor_z as f32;

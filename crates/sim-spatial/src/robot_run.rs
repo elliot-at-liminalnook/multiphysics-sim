@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use crate::robot_motion::{self, Motion, MotionChannel};
 use crate::robot_preset::PresetRun;
+use crate::robot_graphs;
 use crate::robot_recording::{self, Listed, Saved, Snapshot};
 use sim_runtime::session::InputChannel;
 use std::collections::VecDeque;
@@ -93,7 +94,7 @@ pub fn check_target(servo: &Servo, target: f64) -> Result<(), String> {
 }
 
 /// Short joint name of a robot port (`joint.hip` → `hip`), as physical.rs strips it.
-fn short(port: &str) -> &str {
+pub(crate) fn short(port: &str) -> &str {
     port.trim_start_matches("joint.").trim_start_matches("slide.")
 }
 
@@ -140,6 +141,11 @@ pub struct Frame {
     /// its com) and orientation, model frame; None when the frame has no pose
     /// of that name.
     pub poses: Vec<Option<([f64; 3], DQuat)>>,
+    /// Presets: per loaded link (by index), the published world-frame linear
+    /// velocity of the link frame (m/s) and angular velocity (rad/s) from the
+    /// session frame's `velocity_m_s` / `angular_velocity_rad_s`; None when the
+    /// pose has none. Empty for `--robot FILE` (PhysicalRobot::poses has none).
+    pub velocities: Vec<Option<([f64; 3], [f64; 3])>>,
     /// Link names in the simulation's frame that match no loaded link.
     pub unmatched: Vec<String>,
     pub joint_names: Vec<String>,
@@ -371,6 +377,10 @@ pub struct RunController {
     list_done: u64,
     recordings: Vec<Listed>,
     list_error: Option<String>,
+    /// Time histories of the applied frames of the current generation (robot_graphs).
+    graphs: robot_graphs::History,
+    /// The loaded model's chassis link (robot_graphs::CHASSIS_RULE), or why none.
+    chassis: Result<usize, String>,
 }
 
 impl RunController {
@@ -397,10 +407,11 @@ impl RunController {
             .name("robot-run".into())
             .spawn(move || worker(source, links, rx, out))
             .expect("spawn robot run thread");
-        Self { tx, shared, generation: 0, running: false, frame: None, status, model, jogged: Default::default(), jog_error: None, preset, chunk_s,
+        Self { tx, shared, generation: 0, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, chunk_s,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
-            replay: ReplayState::new(0, 0, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None }
+            replay: ReplayState::new(0, 0, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
+            graphs: robot_graphs::History::default(), chassis: robot_graphs::chassis(&model), model }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -668,6 +679,7 @@ impl RunController {
         self.motion_refusal = None;
         self.motion_error = None;
         self.replay = ReplayState::new(self.replay.seq + 1, self.generation, Some(source.clone()), ReplayPhase::Replaying);
+        self.graphs.clear(self.generation);
         self.tx.send(Command::Replay { generation: self.generation, seq: self.replay.seq, path: source.clone() }).map_err(|_| "the run thread has stopped".to_string())?;
         Ok(source)
     }
@@ -762,6 +774,7 @@ impl RunController {
                 self.motion_error = None;
                 // Reset ends any replay: a fresh run.
                 self.replay = ReplayState::new(self.replay.seq, self.generation, None, ReplayPhase::Idle);
+                self.graphs.clear(self.generation);
                 self.status = Status { phase: Phase::Building, generation: self.generation, rtf: None, error: None, end: None };
                 Command::Reset { generation: self.generation }
             }
@@ -818,6 +831,9 @@ impl RunController {
         let changed = match fresh {
             Some(f) => {
                 self.frame = Some(f.clone());
+                // One graph sample per applied frame, only of the current generation.
+                let motion = self.drive.as_ref().and_then(|d| d.motion.as_ref());
+                self.graphs.sample(self.generation, f, motion, self.chassis.as_ref().ok().copied());
                 true
             }
             None => false,
@@ -864,6 +880,29 @@ impl RunController {
             }
         }
     }
+    /// `live`, or `replay` while the current generation is a replay's run.
+    pub fn graphs_mode(&self) -> &'static str {
+        let r = &self.replay;
+        if r.generation == self.generation && (r.phase == ReplayPhase::Replaying || r.replaced) { "replay" } else { "live" }
+    }
+    /// The fixed chart set for the selected link (by index into the loaded model).
+    pub fn graph_charts(&self, selected: Option<usize>) -> Vec<robot_graphs::ChartView> {
+        let links: Vec<String> = self.model.links.iter().map(|l| l.name.clone()).collect();
+        let selected = selected.and_then(|i| self.model.links.get(i)).map(|l| {
+            let joints: Vec<(String, &'static str)> = self.model.joints.iter().filter(|j| j.child == l.name || j.parent.as_deref() == Some(l.name.as_str())).filter_map(|j| servo(&self.model, &j.name).ok()).map(|s| (s.joint, s.unit)).collect();
+            (l.name.as_str(), if joints.is_empty() { Err("no servo joint on selected link".to_string()) } else { Ok(joints) })
+        });
+        let cx = robot_graphs::Context { preset: self.preset.is_some(), motion: self.drive.as_ref().map(|d| d.motion.as_ref()), chassis: &self.chassis, links: &links, selected };
+        robot_graphs::charts(&self.graphs, &cx)
+    }
+    /// `robot_state.graphs`: visible, mode, generation, window and the charts with their traces.
+    pub fn graphs_json(&self, selected: Option<usize>, visible: bool) -> Value {
+        robot_graphs::json(&self.graphs, &self.graph_charts(selected), visible, self.graphs_mode())
+    }
+    pub fn graphs(&self) -> &robot_graphs::History {
+        &self.graphs
+    }
+
     /// Frames need drawing while the worker is building or running.
     pub fn active(&self) -> bool {
         matches!(self.status.phase, Phase::Building | Phase::Running) || self.running || self.replay.phase == ReplayPhase::Replaying || self.saving.is_some() || self.list_done < self.list_requested
@@ -875,9 +914,12 @@ impl RunController {
     pub fn state_json(&self, links: &[String]) -> Value {
         let f = self.frame.as_ref();
         let poses: Option<Vec<Value>> = f.map(|f| {
-            f.poses.iter().enumerate().map(|(i, pose)| match pose {
-                Some((p, q)) => json!({"link": links.get(i), "position": p, "quat_xyzw": [q.x, q.y, q.z, q.w]}),
-                None => json!({"link": links.get(i), "position": null, "quat_xyzw": null}),
+            f.poses.iter().enumerate().map(|(i, pose)| {
+                let (v, w) = f.velocities.get(i).copied().flatten().unzip();
+                match pose {
+                    Some((p, q)) => json!({"link": links.get(i), "position": p, "quat_xyzw": [q.x, q.y, q.z, q.w], "velocity_m_s": v, "angular_velocity_rad_s": w}),
+                    None => json!({"link": links.get(i), "position": null, "quat_xyzw": null, "velocity_m_s": v, "angular_velocity_rad_s": w}),
+                }
             }).collect()
         });
         let build = match &self.preset {
@@ -892,7 +934,7 @@ impl RunController {
             "joints": f.map(|f| &f.joint_names), "joint_angles": f.map(|f| &f.joint_angles), "targets": f.map(|f| &f.targets), "poses": poses,
             "unmatched_frame_links": f.map(|f| &f.unmatched), "links_without_pose": without,
             "build": build,
-            "steps_unit": "chunks of chunk_s since the last build", "pacing": PACING, "poses_frame": "link frame at its com, model frame (Z up)"})
+            "steps_unit": "chunks of chunk_s since the last build", "pacing": PACING, "poses_frame": "link frame at its com, model frame (Z up); velocity_m_s / angular_velocity_rad_s are the session frame's published world-frame velocities (null for --robot FILE, which publishes none)"})
     }
 }
 
@@ -906,7 +948,7 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
         })
         .collect();
     let targets = robot.targets.lock().unwrap_or_else(|p| p.into_inner()).clone();
-    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new() }
+    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new() }
 }
 
 /// A frame from a preset session's `interactive_frame()`: `poses[]` of
@@ -916,6 +958,7 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
 fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64, inputs: &[f64]) -> Result<Frame, String> {
     let completed = v.get("completed_steps").and_then(Value::as_u64).ok_or("session frame has no completed_steps")?;
     let mut poses = vec![None; links.len()];
+    let mut velocities = vec![None; links.len()];
     let mut unmatched = Vec::new();
     for (k, pose) in v.get("poses").and_then(Value::as_array).ok_or("session frame has no poses")?.iter().enumerate() {
         let name = pose.get("name").and_then(Value::as_str).ok_or_else(|| format!("session frame poses[{k}] has no name"))?;
@@ -931,12 +974,24 @@ fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s
         }
         let cols = DMat3::from_cols([m[0][0], m[1][0], m[2][0]].into(), [m[0][1], m[1][1], m[2][1]].into(), [m[0][2], m[1][2], m[2][2]].into());
         let pos = [num(&p[0])?, num(&p[1])?, num(&p[2])?];
+        // Published velocities, when the pose has both (never differentiated from positions here).
+        let vec3 = |key: &str| -> Result<Option<[f64; 3]>, String> {
+            match pose.get(key).and_then(Value::as_array) {
+                None => Ok(None),
+                Some(a) if a.len() == 3 => Ok(Some([num(&a[0])?, num(&a[1])?, num(&a[2])?])),
+                Some(_) => Err(format!("session frame pose `{name}`: {key} is not 3 numbers")),
+            }
+        };
+        let velocity = vec3("velocity_m_s")?.zip(vec3("angular_velocity_rad_s")?);
         match links.iter().position(|l| l == name) {
-            Some(i) => poses[i] = Some((pos, DQuat::from_mat3(&cols).normalize())),
+            Some(i) => {
+                poses[i] = Some((pos, DQuat::from_mat3(&cols).normalize()));
+                velocities[i] = velocity;
+            }
             None => unmatched.push(name.to_string()),
         }
     }
-    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec() })
+    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec() })
 }
 
 /// A frame's time, step count and link poses as JSON (the sidecar's final frame).
@@ -1686,6 +1741,50 @@ mod tests {
         c.act(RunAction::Reset).unwrap();
         wait(&mut c, "reset", |c| c.frame().is_some() && c.phase() == Phase::Paused);
         assert_eq!(c.frame().unwrap().servo("left axle").unwrap().0, 0.0);
+    }
+
+    #[test]
+    fn graphs_sample_current_generation_frames_clear_on_reset_and_ignore_stale_frames() {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let model = crate::robot::load(&root.join("examples/wheeled-robot/baseline/robot.simrobot.json")).unwrap().model;
+        let axle = model.joints.iter().find(|j| j.name == "left axle").unwrap().child.clone();
+        let link = model.links.iter().position(|l| l.name == axle).unwrap();
+        let mut c = RunController::spawn(model);
+        let joint_traces = |c: &RunController| -> Vec<Value> {
+            let g = c.graphs_json(Some(link), true);
+            assert_eq!(g["charts"].as_array().unwrap().iter().map(|c| c["id"].as_str().unwrap()).collect::<Vec<_>>(), ["joints"], "--robot FILE has no motion chart");
+            g["charts"][0]["traces"].as_array().unwrap().clone()
+        };
+        let samples = |c: &RunController| joint_traces(c).iter().find(|t| t["name"] == "left axle target").unwrap()["samples"].as_u64().unwrap();
+        c.jog("left axle", 0.2).unwrap();
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1));
+        let first = samples(&c);
+        assert!(first >= 1);
+        for n in 2..=6 {
+            c.act(RunAction::Step).unwrap();
+            wait(&mut c, "steps", |c| c.frame().is_some_and(|f| f.steps == n));
+            // One sample per applied chunk, recorded under the current generation.
+            assert_eq!(samples(&c), first + n - 1);
+            assert_eq!(c.graphs().generation(), 0);
+            let (target, angle) = c.frame().unwrap().servo("left axle").unwrap();
+            let traces = joint_traces(&c);
+            let latest = |name: &str| traces.iter().find(|t| t["name"] == name).unwrap()["latest"].as_f64().unwrap();
+            assert_eq!((latest("left axle target"), latest("left axle measured")), (target, angle));
+        }
+        assert_eq!(c.graphs_json(Some(link), true)["mode"], "live");
+        // Reset clears every trace at once, before the rebuild publishes.
+        let old = c.frame().unwrap().clone();
+        c.act(RunAction::Reset).unwrap();
+        assert_eq!((c.graphs().frames(), samples(&c), c.graphs().generation()), (0, 0, 1));
+        wait(&mut c, "reset", |c| c.frame().is_some() && c.phase() == Phase::Paused);
+        let after = (c.graphs().frames(), samples(&c));
+        assert_eq!(after, (1, 1), "the t = 0 frame of generation 1");
+        // A stale-generation frame reaching poll adds no sample (the run thread is paused, so nothing races it).
+        c.shared.lock().unwrap().frame = Some(old);
+        assert!(!c.poll());
+        assert_eq!((c.graphs().frames(), samples(&c)), after);
+        assert_eq!(c.frame().unwrap().generation, 1);
     }
 
     fn preset(id: &str) -> Result<(crate::robot::Loaded, PresetRun), String> {

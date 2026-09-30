@@ -247,8 +247,8 @@ fn measured_image(r: &MeasuredReport) -> Image {
     let measured: Vec<Vec<[f64; 2]>> = r.points.iter().map(|p| vec![[p.x, p.measured]]).collect();
     let mut traces: Vec<(&[[f64; 2]], [u8; 3])> = vec![(&sim, [77, 212, 191])];
     traces.extend(measured.iter().map(|m| (m.as_slice(), [240, 150, 60])));
-    let (pixels, _, _) = crate::builder::graphs::rasterize_span(&traces, None);
-    let (w, h) = crate::builder::graphs::RASTER;
+    let (pixels, _, _) = crate::chart::rasterize_span(&traces, None);
+    let (w, h) = crate::chart::RASTER;
     Image::new(Extent3d { width: w, height: h, depth_or_array_layers: 1 }, TextureDimension::D2, pixels, TextureFormat::Rgba8UnormSrgb, RenderAssetUsages::default())
 }
 

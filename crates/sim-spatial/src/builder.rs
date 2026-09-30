@@ -515,6 +515,10 @@ impl Builder {
         if self.running() {
             self.run_pause();
         }
+        // A drag begun after the switch was validated (the state changes a
+        // frame later) ends here, as it did before. A draft is kept: its keys
+        // stop (text_input runs in build mode only) until build mode returns.
+        self.drag = None;
         self.connect_from = None;
         self.mode = Mode::Select;
         self.panel_dirty = true;
@@ -1659,7 +1663,7 @@ impl Plugin for BuilderPlugin {
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), ui::hover, clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
+            (frame_timing, watch, agent::tick, reference::tick, text_input.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), ui::hover, clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
                 .before(update_parts)
                 .in_set(ViewerSet::SimSync)

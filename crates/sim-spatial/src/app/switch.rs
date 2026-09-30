@@ -355,6 +355,12 @@ pub(crate) fn handle(world: &mut World) {
         for Act { action, origin } in acts {
             if let Origin::Rest(reply) = origin {
                 world.resource_mut::<Replies>().pick(reply);
+                // Cancelled before it was applied (a command waiting on an
+                // `ask_switch` that its caller cancelled): nothing happens.
+                if world.resource::<Replies>().cancelled(reply) {
+                    answer(world, origin, Err("cancelled".into()));
+                    continue;
+                }
             }
             let request = match action {
                 WindowAction::Switch(request) => Ok(request),
@@ -774,9 +780,10 @@ fn leave_place(world: &mut World) {
 
 /// OnEnter(Lessons): the lesson screen is shown (its own bookkeeping), and
 /// the builder under it is paused (`Builder::pause_for_learn`): a live run is
-/// paused and kept, not dropped (Run resumes it in build mode). No builder
-/// draft or drag can be open: every entry to Lessons from Build goes through
-/// [`handle`], which refuses on them (`leaving_blockers`).
+/// paused and kept, not dropped (Run resumes it in build mode). Every entry
+/// to Lessons from Build goes through [`handle`], which refuses on a draft
+/// or drag (`leaving_blockers`); one begun in the frame between that check
+/// and this state change is ended (a drag) or kept without keys (a draft).
 fn show_lessons(learn: Option<ResMut<Learn>>, builder: Option<ResMut<Builder>>) {
     if let Some(mut learn) = learn {
         if let Some(mut builder) = builder {
@@ -806,17 +813,21 @@ pub(crate) fn ask_switch(out: &mut MessageWriter<Act<WindowAction>>, call: &mut 
 /// For a command waiting on [`ask_switch`]: None when it is not waiting;
 /// Pending until the switch has answered; then the switch's result (its
 /// summary, or the refusal naming the blocker). A cancel before the answer
-/// releases the nested reply (the switch then drops a load still in
-/// progress: its caller is gone) and answers "cancelled".
+/// is passed on to the switch, which answers "cancelled" if it had not yet
+/// been applied or was still loading (its load is dropped); a switch already
+/// accepted completes and says so, so the caller is not told "cancelled"
+/// about a mode change that happened.
 pub(crate) fn awaited_switch(call: &mut actions::Call) -> Option<Outcome> {
     let reply = actions::Reply::from_id(call.continuation.get("switch").and_then(Value::as_u64)?);
     let answer = call.replies.take(reply);
     Some(match answer {
-        None if call.cancelled => {
-            call.replies.forget(reply);
-            Outcome::Done(Err("cancelled".into()))
+        None if call.cancelled && !call.replies.waiting(reply) => Outcome::Done(Err("cancelled".into())),
+        None => {
+            if call.cancelled {
+                call.replies.cancel(reply);
+            }
+            Outcome::Pending
         }
-        None => Outcome::Pending,
         Some(Outcome::Done(result)) => Outcome::Done(result),
         Some(_) => Outcome::Done(Err("the mode switch gave no answer".into())),
     })

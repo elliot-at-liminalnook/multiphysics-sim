@@ -1264,22 +1264,10 @@ fn lab_catalog(base: &std::path::Path) -> Vec<Value> {
     gaits.into_iter().chain(poses).collect()
 }
 /// A trial's compiled gait with the reference governor the simulation ran it
-/// through attached (`playback_governor`, from the trial's detailed spec).
+/// through attached (`playback_governor`; the rule is the shared
+/// `gait_playback::compiled_with_governor`).
 fn gait_with_governor(rel: &str) -> R<Value> {
-    let file = gait_file(rel)?;
-    let mut compiled: Value = serde_json::from_slice(&fs::read(&file).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-    let spec = file.with_file_name("detailed.spec.json");
-    let governor = fs::read(&spec).ok()
-        .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-        .map(|v| v["scene"]["controller"]["parameters"]["reference_governor"].clone())
-        .filter(|g| g.is_object())
-        // Studies with minimal artifacts record the governor with the spec hashes.
-        .or_else(|| fs::read(file.with_file_name("spec-identity.json")).ok()
-            .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-            .map(|v| v["reference_governor"].clone())
-            .filter(|g| g.is_object()));
-    compiled["playback_governor"] = governor.unwrap_or(Value::Null);
-    Ok(compiled)
+    Ok(sim_runtime::gait_playback::compiled_with_governor(&gait_file(rel)?)?.0)
 }
 /// Per-motor statistics of one leg gait run.
 fn gait_statistics(rows: &[Value], ids: &[u8], roles: &std::collections::BTreeMap<u8, String>, predicted: &std::collections::BTreeMap<u8, f64>, pwm_ceiling: f64) -> Value {

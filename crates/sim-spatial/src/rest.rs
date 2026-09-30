@@ -63,6 +63,7 @@ pub fn server_for(port: u16, builder: bool, lessons: bool) -> std::io::Result<si
                 "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI)"),
             c("system_state", json!({}), "System file, revision, build level, selection, findings and compile status"),
             c("system_open", json!({"path":"examples/systems-builder/worm-drive/winch.system.json"}), "Open another system file in this window (same handler as the Systems tab). Refuses, naming the blocker, while a text/discussion draft, placement drag, study, replay or Codex answer is in progress; a live run is stopped and saved to the old file's runs. Loads, validates and compiles off the UI thread (poll the job); a missing or invalid file is an error naming the path and the current system stays open. Writes no runs or annotations. system_state.open reports the pending/last open, discovered systems, the annotations sidecar and whether a --schematic window still shows the old file."),
+            c("system_actuators", json!({"registry":"examples/actuators/hx30hm/accepted/registry.json","check":["examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json"]}), "Read-only accepted actuator registry inspector (same handler as the Actuators tab). Loads the registry (default: examples/actuators/hx30hm/accepted/registry.json under the nearest ancestor of the system file or working directory; omitted = the current one) and checks each consumer file with sim_runtime::actuator_registry (omitted check = recheck the previous files, [] = none), off the UI thread (poll the job). Refused while a load is pending. A missing registry or family hash mismatch is an error naming the path; the last good load stays in system_state.actuators with its own path. Result and system_state.actuators: families (content hash, acceptance, limitations, parameters with value/unit/provenance/uncertainty (null = unknown)/evidence), roles, per-file checks (current/stale/invalid, have and accepted hashes). Writes nothing."),
             c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
             c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
             c("system_undo", json!({}), "Undo the last edit in the shared history"),
@@ -420,6 +421,12 @@ fn tick(
                 (Some(b), Some(path)) => b.open_request(std::path::PathBuf::from(path), continuation, cancelled),
                 (Some(_), None) => sim_api::Outcome::Done(Err("system_open needs {\"path\": \"…/file.system.json\"}".into())),
                 (None, _) => sim_api::Outcome::Done(Err("start the viewer with --system FILE to open systems".into())),
+            };
+        }
+        if command.command == "system_actuators" {
+            return match builder.as_deref_mut() {
+                Some(b) => b.actuators_rest(&command.args, continuation, cancelled),
+                None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to inspect actuators".into())),
             };
         }
         if command.command.starts_with("system") {

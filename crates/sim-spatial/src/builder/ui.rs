@@ -427,8 +427,8 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32) {
         .with_children(|side| {
             side.spawn((Node { padding: UiRect::horizontal(Val::Px(10.)), column_gap: Val::Px(6.), flex_wrap: FlexWrap::Wrap, border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(BORDER)))
                 .with_children(|tabs| {
-                    for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems)] {
-                        if tab == Tab::Systems && b.open.shell.is_none() {
+                    for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems), ("Actuators", Tab::Actuators)] {
+                        if matches!(tab, Tab::Systems | Tab::Actuators) && b.open.shell.is_none() {
                             continue;
                         }
                         tabs.spawn(k.button(label, BuildAction::Tab(tab), Look::Tab(b.tab == tab), true));
@@ -453,6 +453,7 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32) {
                 Tab::References => references_tab(body, k, b),
                 Tab::Studies => studies_tab(body, k, b),
                 Tab::Systems => systems_tab(body, k, b),
+                Tab::Actuators => actuators_tab(body, k, b),
                 Tab::Discussions => {},
             });
         });
@@ -1207,6 +1208,122 @@ fn systems_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         let name = path.file_name().map(|n| n.to_string_lossy().trim_end_matches(".system.json").to_string()).unwrap_or_default();
         let shown = path.strip_prefix(&cwd).unwrap_or(path).display().to_string();
         body.spawn(k.item("", &name, &shown, if current { "Open" } else { "" }, BuildAction::OpenSystem(path.clone()), current));
+    }
+}
+
+/// First and last characters of a hash (the full value is in system_state).
+fn short_hash(h: &str) -> String {
+    if h.len() > 16 { format!("{}…{}", &h[..10], &h[h.len() - 4..]) } else { h.to_string() }
+}
+
+/// The accepted actuator registry, read-only: families with their hashes,
+/// acceptance notes, limitations and every parameter's provenance and
+/// uncertainty, the joint roles, and consumer-file staleness checks.
+fn actuators_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
+    let a = &b.actuators;
+    body.spawn(k.text("The accepted actuator registry: the single source of measured motor values. Read-only here; families change only by promoting new evidence.", 12., SUBTLE, 0));
+    body.spawn(k.section("Registry"));
+    let focused = |p: Purpose| b.input.as_ref().is_some_and(|i| i.purpose == p);
+    let registry_focused = focused(Purpose::ActuatorRegistry);
+    let shown = if registry_focused { b.input.as_ref().map(|i| i.buffer.clone()).unwrap_or_default() } else { a.registry.as_ref().map(|p| p.display().to_string()).unwrap_or_default() };
+    body.spawn(k.input(&shown, "Path to an actuator registry.json · Enter to load", BuildAction::ActuatorRegistryPath, registry_focused));
+    body.spawn(Node { margin: UiRect::top(Val::Px(6.)), ..wrap() }).with_children(|r| {
+        r.spawn(k.button("Reload", BuildAction::ActuatorReload, Look::Secondary, a.pending().is_none()));
+        if a.pending().is_some() {
+            r.spawn(k.button("Cancel", BuildAction::CancelActuators, Look::Danger, true));
+        }
+    });
+    if let Some(pending) = a.pending() {
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Loading {}…", pending.display()), 12., TEXT, 0)]));
+    }
+    if let Some(e) = &a.error {
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, 12., DANGER, 0)]));
+    }
+    let Some(view) = &a.shown else {
+        if a.pending().is_none() && a.error.is_none() {
+            body.spawn(k.text("Not loaded yet.", 12., SUBTLE, 0));
+        }
+        return;
+    };
+    let r = &view.registry;
+    if a.error.is_some() {
+        body.spawn(k.text(format!("Still showing the last good load: {}", r.path.display()), 11.5, WARN, 1));
+    }
+    body.spawn(k.text(format!("Showing {}", r.path.display()), 11., FAINT, 0));
+    k.property(body, "Registry hash", &short_hash(&r.registry_hash), "", None::<BuildAction>, false);
+    k.property(body, "Families", &r.families.len().to_string(), "", None::<BuildAction>, false);
+
+    body.spawn(k.section("Consumer check"));
+    let consumer_focused = focused(Purpose::ActuatorConsumer);
+    let typed = if consumer_focused { b.input.as_ref().map(|i| i.buffer.clone()).unwrap_or_default() } else { String::new() };
+    body.spawn(k.input(&typed, "File embedding a robot model · Enter to check", BuildAction::ActuatorConsumerPath, consumer_focused));
+    if !a.check.is_empty() {
+        body.spawn(Node { margin: UiRect::top(Val::Px(6.)), ..wrap() }).with_children(|r| {
+            r.spawn(k.button("Check again", BuildAction::ActuatorReload, Look::Secondary, a.pending().is_none()));
+        });
+    }
+    let cwd = std::env::current_dir().unwrap_or_default();
+    for check in &view.checks {
+        let current = check.is_current();
+        let file = check.file.strip_prefix(&cwd).unwrap_or(&check.file).display().to_string();
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(8.)), flex_shrink: 0., ..default() }, children![k.dot(if current { OK } else { WARN }), k.text(format!("{} · {file}", if current { "Current" } else if check.issue.is_some() { "Not checked" } else { "Stale" }), 12., TEXT, 1)]));
+        if let Some(issue) = &check.issue {
+            let kind = serde_json::to_value(issue.kind).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
+            body.spawn(k.text(format!("{kind}: {}", issue.message), 11.5, if kind == "no_robot" { SUBTLE } else { DANGER }, 0));
+        }
+        for m in &check.models {
+            let status = serde_json::to_value(m.status).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
+            let pointer = if m.pointer.is_empty() { "(whole file)" } else { m.pointer.as_str() };
+            body.spawn(k.text(format!("{pointer}: {status}"), 11.5, if status == "current" { SUBTLE } else { WARN }, 1));
+            if let Some(x) = &m.mismatch {
+                let or_none = |v: &Option<String>| v.clone().unwrap_or_else(|| "none".into());
+                body.spawn(k.text(format!("motor {} · joint {}", or_none(&x.motor), or_none(&x.joint)), 11., SUBTLE, 0));
+                body.spawn(k.text(format!("family {} → accepted {}", or_none(&x.family), or_none(&x.accepted_family)), 11., SUBTLE, 0));
+                body.spawn(k.text(format!("have     {}", x.have_hash.as_deref().map(short_hash).unwrap_or_else(|| "none".into())), 11., WARN, 0));
+                body.spawn(k.text(format!("accepted {}", x.accepted_hash.as_deref().map(short_hash).unwrap_or_else(|| "none".into())), 11., OK, 0));
+            } else if let Some(message) = &m.message {
+                body.spawn(k.text(message, 11., SUBTLE, 0));
+            }
+        }
+    }
+
+    body.spawn(k.section("Roles"));
+    for (suffix, family) in &r.roles {
+        k.property(body, suffix, family, "", None::<BuildAction>, false);
+    }
+    for f in &r.families {
+        body.spawn(k.section(&format!("Family  {}", f.name)));
+        k.property(body, "Content hash", &short_hash(&f.content_hash), "", None::<BuildAction>, false);
+        body.spawn(k.text(format!("Accepted: {}", f.accepted), 11.5, TEXT, 0));
+        body.spawn(k.text(&f.description, 11., SUBTLE, 0));
+        if !f.limitations.is_empty() {
+            body.spawn(k.text("Limitations", 11., FAINT, 2));
+            for l in &f.limitations {
+                body.spawn(k.text(format!("· {l}"), 11., WARN, 0));
+            }
+        }
+        if !f.has_envelope {
+            body.spawn(k.text("No measured envelope.", 11., FAINT, 0));
+        }
+        let mut group = "";
+        for p in &f.parameters {
+            if p.group != group {
+                group = p.group;
+                body.spawn((k.text(group.to_uppercase(), 10., FAINT, 2), Node { margin: UiRect::top(Val::Px(6.)), ..default() }));
+            }
+            let uncertainty = p.uncertainty.map(|u| format!("± {}", num(u))).unwrap_or_else(|| "± unknown".into());
+            let color = match p.provenance.as_str() { "measured" => OK, "derived" => ACCENT, _ => WARN };
+            body.spawn(Node { flex_direction: FlexDirection::Column, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }).with_children(|row| {
+                row.spawn(Node { justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(8.), ..default() }).with_children(|top| {
+                    top.spawn(k.text(&p.name, 12., TEXT, 1));
+                    top.spawn(k.text(format!("{} {}", num(p.value), p.unit), 12., TEXT, 0));
+                });
+                row.spawn(Node { column_gap: Val::Px(6.), ..default() }).with_children(|bottom| {
+                    bottom.spawn(k.text(&p.provenance, 10.5, color, 2));
+                    bottom.spawn(k.text(format!("{uncertainty} · {}", p.evidence), 10.5, SUBTLE, 0));
+                });
+            });
+        }
     }
 }
 

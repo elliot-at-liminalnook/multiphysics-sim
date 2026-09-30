@@ -26,17 +26,32 @@ edits from earlier work. If a pre-existing failure blocks the assignment,
 record it and report it rather than silently absorbing unrelated repairs. Any
 uncommitted changes that were not yours are the user's: leave them alone.
 
-## Verify your own work
+## Verify your own work: minimal and in scope
 
-Nobody reruns a fixed test suite after you: the tests you choose are the
-evidence. Pick the minimal set that actually proves the change: usually one
-cargo command on the lowest crate that holds it, filtered to the relevant tests,
-plus a ui_capture run when the change is visible in the viewer. Building and
-linking a test binary for a large crate here takes minutes, so use `cargo check
--p <crate>` while iterating on compile errors, and don't add `--test` targets or
-dependent crates you didn't change. Report each command, its result and
-duration. If a test you'd want is too slow to run, say what you ran instead and
-what remains unverified. A timeout is not a pass.
+Testing must cost less time than the change. Here, building a test binary for a
+large crate takes minutes while most edits take seconds, so the default is
+almost no test time:
+
+1. **Default proof: `cargo check -p <the crate you edited>` plus reading your own
+   diff.** For a small, local change whose effect is evident from the code, stop
+   there.
+2. **Run a test only if it directly exercises the lines you changed**, by exact
+   name: `cargo test -p <crate> --lib <module::exact_test>`. Never a crate's whole
+   suite, never `--test` integration targets, never tests of other crates, never
+   the workspace, never release builds.
+3. **Don't build something only to test it.** If the covering test binary or the
+   viewer isn't already built for your change, don't start a multi-minute build
+   just for verification. Say what is unverified instead.
+4. **Screenshots only when the acceptance criteria require visible proof**: one
+   capture, of the one thing that changed.
+5. **Test once, at the end**, not after every edit, and never rerun a command
+   that already passed on unchanged code.
+6. **If the assignment lists broader tests, run only the minimal subset** that
+   proves your change, and name what you skipped and why. The orchestrator can
+   ask for more if it has a specific doubt.
+
+Report each command you ran, its result and duration, and what remains
+unverified. A timeout is not a pass.
 
 ## Disk
 

@@ -33,8 +33,12 @@ There is no fixed test suite. The worker decides the minimal tests that prove
 its change, runs them, and reports each command, its result and duration. You
 judge that evidence together with the diff, captures and the code itself, and
 you can run anything yourself during review when you have a concrete doubt.
-Building a test binary for a large crate here takes minutes, so don't ask for
-broad reruns: ask for the specific proof that is missing.
+Testing is deliberately minimal: the worker's default proof for a small change
+is `cargo check` on the crate plus its own diff, with at most one exact,
+in-scope test. Accept that for small, local changes. Building a test binary for
+a large crate here takes minutes, so never ask for broad reruns, integration
+targets or other crates' suites. Ask only for the specific proof that is missing,
+and only when you can name the risk.
 
 `checks` is optional and normally `[]`. List a command (or a catalogue name)
 only when you want the coordinator to rerun something specific and cheap after
@@ -45,9 +49,10 @@ assignment; compare the logs and say so in summary.
 
 ## Fast feedback
 
-Don't prescribe a test list. State what must be proven, and let the worker
-choose the smallest tests that prove it (usually one cargo command on the
-lowest crate that holds the change, filtered to the relevant tests). Do not ask for a clean target or a fresh target directory to work around a
+Don't put test commands in the worker_prompt or acceptance criteria. State what
+must be true, and let the worker choose the minimal proof. Write acceptance
+criteria that `cargo check`, a read of the diff, or one targeted test can
+establish; save visible-proof criteria for changes the user will actually see. Do not ask for a clean target or a fresh target directory to work around a
 slow build.
 
 ## Small, complete tasks

@@ -413,6 +413,11 @@ pub(crate) fn serve(world: &mut World) {
         let server = &mut rest.0;
         server.poll(|command, continuation, cancelled| {
             let waiting = continuation.get(REPLY).and_then(Value::as_u64).map(Reply);
+            // Already answered (the handler ran before the mode changed): the
+            // answer stands, whatever mode the window is in now.
+            if let Some(outcome) = waiting.and_then(|r| world.resource_mut::<Replies>().take(r)) {
+                return super::route::annotate(mode, command, outcome);
+            }
             let outcome = match super::route::route(mode, true, command) {
                 // A command left waiting by another action type: the mode
                 // changed to one where its name is another type's command

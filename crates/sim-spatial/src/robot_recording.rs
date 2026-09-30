@@ -206,3 +206,87 @@ pub fn meta(snapshot: &Snapshot, run: &crate::robot_preset::PresetRun, recording
         "run": {"generation": generation, "chunks": chunks},
         "final_frame": final_frame, "final_frame_note": "measured at save from the session's interactive_frame(): link frames at their com, model frame; a reference for comparison, not part of the recording or of any replay verdict"})
 }
+
+pub const REPLAY_RULE: &str = "replay re-executes a saved recording through the shared runtime on the run thread: the file is parsed as the shared type of the loaded preset's kind (a kind mismatch is refused naming both), prepared with EmbeddedEnvironment::prepare_replay (task) or EmbeddedSession::prepare_replay(record, CaptureMode::Latest) (no task), then advanced in bounded chunks (one returned action per chunk for an environment, the preset's chunk of nominal steps for a session), paced at most to real time like a run, publishing a new generation's frames and completed/total after every chunk; Cancel is checked between chunks. A replay needs a paused (or idle, ended or failed) run and replaces it; a refused replay leaves the current run as it was. During a replay Run, Pause, Step, motion requests, Save and a second replay are refused naming the replay; Cancel and Reset always work. After done the replayed simulation is the current paused run (Run, Step, Save and motion work again, as in the browser); after cancelled it is a partial replay, so Run, Step, motion and Save are refused until Reset (a fresh run) or another replay; after failed the run is failed as the runtime latched it (Reset).";
+pub const VERDICT_RULE: &str = "the verdict is what the shared runtime establishes, nothing more. Environment (EmbeddedEnvironment::prepare_replay): it verifies the record's version/kind, that it holds no error or runtime failure, that completed_steps is within the horizon and a whole number of action intervals, that task, scene and config fingerprints equal the loaded environment's (else \"replay must match loaded robot, controller and task\", shown verbatim), and that the recorded input schedule is valid for the loaded input channels; it then rebuilds from the recording's seed and the host steps every returned action through EmbeddedEnvironment::step, whose errors are reported verbatim. done = every returned action stepped without error, error() is None afterwards and the replayed transition's completed_steps equals the recording's. It does NOT compare the replayed states, observations, rewards or termination with the original episode (they are not in the record). Session (EmbeddedSession::prepare_replay): it verifies version, kind, step count and input-event order, rebuilds from the recording's own scene/config/seed and sets replay_expected, so advance re-applies each recorded input event at its step and errors \"replay failure mismatch …\" if a failure occurs that was not recorded (or at another step or with another message) and \"recorded failure did not reproduce\" if a recorded one does not. done = the returned steps were all advanced with no runtime error (or, for a recorded failure, the runtime returned exactly the recorded failure at the recorded step) and completed_steps equals the recording's. It does NOT compare states; and it does not compare the recording with the loaded preset, so the viewer does (IDENTITY_RULE). failed = the runtime's error verbatim.";
+pub const IDENTITY_RULE: &str = "viewer identity check (session presets only, the same check sim-web's EmbeddedSimulation.prepare_replay makes): the recording's scene and config must equal the loaded preset's, compared by sim_runtime::physics_context::fingerprint of their JSON values; EmbeddedSession::prepare_replay itself rebuilds from the recording's own scene and does not compare it with the loaded one, so without this check a recording of another preset would replay a different robot in this window. Environment presets need no viewer check: prepare_replay compares task, scene and config itself.";
+pub const MEASURED_RULE: &str = "measured difference, not a pass criterion: when the sidecar holds final_frame (link poses at save), the replayed final frame's link positions are compared by link name (|Δp| in m, per link, max and the first link); never thresholded and never part of the verdict.";
+
+/// A saved recording found for a preset, with a summary of its sidecar.
+#[derive(Clone, Debug, serde::Serialize)]
+pub struct Listed {
+    pub file: String,
+    pub path: PathBuf,
+    pub bytes: u64,
+    /// kind, completed_steps, replayable, saved_utc, note (null without a readable sidecar).
+    pub meta: Option<Value>,
+    pub meta_error: Option<String>,
+}
+
+/// The recordings in `<root>/runs/robot-presets/<preset-id>/` (`*.json` but not `*.meta.json`), by file name (oldest first). Blocking: call off the UI thread.
+pub fn list(root: &Path, preset_id: &str) -> Result<Vec<Listed>, String> {
+    let dir = root.join(DIR).join(preset_id);
+    let entries = match std::fs::read_dir(&dir) {
+        Ok(e) => e,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(e) => return Err(format!("{}: {e}", dir.display())),
+    };
+    let mut out = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("{}: {e}", dir.display()))?;
+        let file = entry.file_name().to_string_lossy().into_owned();
+        if !file.ends_with(".json") || file.ends_with(".meta.json") || !entry.file_type().is_ok_and(|t| t.is_file()) {
+            continue;
+        }
+        let path = entry.path();
+        let (meta, meta_error) = match std::fs::read_to_string(meta_path(&path)) {
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => (None, Some("no sidecar".into())),
+            Err(e) => (None, Some(format!("{}: {e}", meta_path(&path).display()))),
+            Ok(text) => match serde_json::from_str::<Value>(&text) {
+                Ok(m) => (Some(json!({"kind": m["recording_kind"], "completed_steps": m["completed_steps"], "replayable": m["replayable"], "saved_utc": m["saved_utc"], "note": m["note"], "preset_id": m["preset"]["id"]})), None),
+                Err(e) => (None, Some(format!("{}: {e}", meta_path(&path).display()))),
+            },
+        };
+        out.push(Listed { file, bytes: entry.metadata().map(|m| m.len()).unwrap_or(0), path, meta, meta_error });
+    }
+    out.sort_by(|a, b| a.file.cmp(&b.file));
+    Ok(out)
+}
+
+/// The recording a replay request names: `file` in the preset's directory (a bare file name) or an explicit `path` (relative to the root or absolute; reading is allowed anywhere). No file-system access.
+pub fn replay_source(root: &Path, preset_id: &str, file: Option<&str>, path: Option<&str>) -> Result<PathBuf, String> {
+    let p = match (file, path) {
+        (Some(f), None) => {
+            if f.is_empty() || f.contains(['/', '\\']) || f == "." || f == ".." {
+                return Err(format!("replay file `{f}` must be a bare file name in {DIR}/{preset_id}/ (use path for another location)"));
+            }
+            root.join(DIR).join(preset_id).join(f)
+        }
+        (None, Some(p)) if !p.trim().is_empty() => lexical(root, Path::new(p)),
+        _ => return Err("replay needs exactly one of file (a saved recording of this preset) or path (any readable recording .json)".into()),
+    };
+    let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    if !name.ends_with(".json") || name.ends_with(".meta.json") {
+        return Err(format!("{} is not a recording: it must end in .json (a .meta.json is the viewer's sidecar)", p.display()));
+    }
+    Ok(p)
+}
+
+/// MEASURED_RULE: per-link position differences between two final frames (`frame_json` shape), by link name.
+pub fn measured(recorded: &Value, replayed: &Value) -> Option<Value> {
+    let positions = |f: &Value| -> Vec<(String, [f64; 3])> {
+        f["poses"].as_array().into_iter().flatten().filter_map(|p| {
+            let a = p["position"].as_array()?;
+            Some((p["link"].as_str()?.to_string(), [a.first()?.as_f64()?, a.get(1)?.as_f64()?, a.get(2)?.as_f64()?]))
+        }).collect()
+    };
+    let old = positions(recorded);
+    let new = positions(replayed);
+    let per: Vec<(String, f64)> = new.iter().filter_map(|(l, p)| old.iter().find(|(o, _)| o == l).map(|(_, q)| (l.clone(), ((p[0] - q[0]).powi(2) + (p[1] - q[1]).powi(2) + (p[2] - q[2]).powi(2)).sqrt()))).collect();
+    let first = per.first()?.clone();
+    let max = per.iter().cloned().fold(first.clone(), |m, x| if x.1 > m.1 { x } else { m });
+    Some(json!({"label": "measured difference, not a pass criterion", "rule": MEASURED_RULE, "links_compared": per.len(),
+        "max_position_diff_m": max.1, "max_link": max.0, "first_link": first.0, "first_link_position_diff_m": first.1,
+        "recorded_completed_steps": recorded["completed_steps"], "replayed_completed_steps": replayed["completed_steps"],
+        "per_link_m": per.iter().map(|(l, d)| json!({"link": l, "diff_m": d})).collect::<Vec<_>>()}))
+}

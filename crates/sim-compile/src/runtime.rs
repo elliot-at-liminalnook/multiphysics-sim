@@ -58,6 +58,15 @@ impl Runtime {
             island.snap_to_grid = on;
         }
     }
+    /// Opt into keeping each island's `run` clock on one absolute step grid
+    /// across `advance` calls (see `Simulation::grid_clock`). Callers that
+    /// advance in many short chunks with sampled controllers need it; off by
+    /// default so other runs stay bit-identical to their recorded results.
+    pub fn set_grid_clock(&mut self, on: bool) {
+        for island in &mut self.islands {
+            island.grid_clock = on;
+        }
+    }
     pub fn grid_snapping(&self) -> bool {
         self.islands.first().is_some_and(|i| i.snap_to_grid)
     }

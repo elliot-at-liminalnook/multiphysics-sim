@@ -194,6 +194,16 @@ pub struct ImuC {
     pub stream: u64,
 }
 
+impl ImuC {
+    /// The sample instant after `next`, on the absolute grid
+    /// `latency + n·period`: summing `+= period` drifts off the grid by
+    /// roundoff, and a deadline off the solver's step grid splits a sliver
+    /// step off it.
+    fn sample_after(&self, next: f64) -> f64 {
+        self.latency + (((next - self.latency) / self.period).round() + 1.0) * self.period
+    }
+}
+
 /// Held output of the authored sampled IMU, in its own sensor axes.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ImuReading {
@@ -1580,7 +1590,7 @@ impl Articulated {
         let imu = self.imus.get(index).ok_or("invalid IMU schedule index")?;
         let mut states = g.states.clone();
         self.imu_sample_generalized(imu, g, &mut states);
-        states[imu.state + 15] += imu.period;
+        states[imu.state + 15] = imu.sample_after(states[imu.state + 15]);
         if states[imu.state..imu.state+16].iter().any(|v| !v.is_finite()) {
             return Err("nonfinite IMU sample".into());
         }
@@ -1869,7 +1879,7 @@ impl Behavior for Articulated {
         if let Some(imu) = self.imus.get(index) {
             let imu = imu.clone();
             self.imu_sample(&imu, view, states);
-            states[imu.state + 15] += imu.period;
+            states[imu.state + 15] = imu.sample_after(states[imu.state + 15]);
         }
     }
 

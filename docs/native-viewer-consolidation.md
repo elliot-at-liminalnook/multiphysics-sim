@@ -620,7 +620,12 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     - Hardware sync and mirroring (`hardware-sync.mjs`), which are never
       driven from here.
     - Calibration UI.
-    - Gait playback.
+    - ~~Gait playback~~ as a *kinematic preview* on a preset's scene: native
+      since T16 (§2i). Still browser or CLI only: evaluating and tuning gaits
+      (`gait_lab evaluate|tune`, the leaderboard), and **leg-driving gait
+      playback**, which is hardware (`serve_actuator_calibration` bindings,
+      server gait start). That stays in the calibration UI and is never
+      driven from the native viewer.
     - Presets in `sim-web` modes other than `embedded`, and presets whose
       inputs live only under ignored `runs/`.
     - Realtime walking. Native detailed physics runs at about 0.04–0.07×
@@ -948,8 +953,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 - **Reusable layer:** `sim_runtime::{gait_lab, gait_playback, experiment_study, experiment_search, system_study, fidelity}`.
 - **Shell status:** *partial*. System compare/sweep studies are present.
   Gait-lab reports are *present (read-only)* in the build-mode **Gait lab**
-  tab. Gait playback, launching evaluations, the leaderboard and experiment
-  review are absent from the shell.
+  tab. A **kinematic gait preview** on a robot preset's scene is *present*
+  in robot mode (T16, below). Launching evaluations, the leaderboard and
+  experiment review are absent from the shell.
 - **Source owner:** example config (study configs, YAML gait files), with
   results in `runs/` or tracked results folders (preserved, never deleted).
 - **One path:** `Builder::gait_reports_request(dir?)`
@@ -1003,8 +1009,8 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     line;
   - REST `system_gait_reports` returns the same entries as `system_state`.
 - **Remaining limits:**
-  - No gait playback on the robot scene, no launching or cancelling
-    evaluations, and no leaderboard or experiment review.
+  - No launching or cancelling evaluations, and no leaderboard or experiment
+    review. Gait playback on the robot scene is kinematic only (below).
   - Reports do not record the runtime fingerprint, so whether a report is still
     qualified against the current code is unknown. The tab says so. Follow-up:
     add `runtime_fingerprint` and `unix_s` to the gait, pose and maneuver
@@ -1018,10 +1024,74 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   - Controls were activated with REST `system_ui`, which uses the same handlers
     as a click, and the sidebar was positioned with `system_ui scroll`. Pointer
     clicks and wheel gestures were not tested.
-- **Dependencies (remaining):** gait playback on the robot scene (needs g's
-  renderer), then launching evaluations as cancellable jobs (the gait lab
-  already honours `OUT_DIR/STOP`). The runtime fingerprint means evaluations
-  must be requalified after code edits (gait-lab README).
+- **Dependencies (remaining):** launching evaluations as cancellable jobs
+  (the gait lab already honours `OUT_DIR/STOP`). The runtime fingerprint means
+  evaluations must be requalified after code edits (gait-lab README).
+- **Native gait preview (batch native-gait-preview, T16.1–T16.3; commits
+  a6ab3c76, 74cf313b, af44519c and the T16.3 header-label commit):**
+  - *What it is:* in robot mode on a preset (`--robot-preset ID`), the
+    inspector's **Gait preview** block (top of the scrolling inspector),
+    `system_ui` `gait:open:<report>`, `gait:play|pause|stop|list`,
+    `gait:seek:0|-|+`, `gait:speed:0.25|0.5|1`, and REST
+    `robot_gait {report|path, action: play|pause|seek|speed|stop|list, t?, scale?}`
+    all go through one `RobotAction::Gait`. A `robot-gait` worker thread
+    loads, samples and solves; the UI thread only polls.
+  - *Shared path:* the compiled gait is read with
+    `sim_runtime::gait_playback::compiled_with_governor` (the one
+    governor-attach rule: `detailed.spec.json`
+    `scene.controller.parameters.reference_governor`, else
+    `spec-identity.json` `reference_governor`, else none; also used by
+    `serve_actuator_calibration`), then `Gait::from_compiled`. Poses come from
+    `KinematicMirror::new(scene, 0.25)` on the preset's own scene. The gait's
+    joints are validated by name against the mirror's coordinates.
+  - *Labels:* `robot_state.gait_preview` and the block carry the label
+    "kinematic preview (geometry only, suspended) — not a physics result",
+    the report's status and fidelity verbatim, the governor source, lift,
+    authored-limit violations and whether the drives are desired or
+    commanded. The window header reads "kinematic gait preview pose (not
+    physics)" while a preview poses the robot, and `robot_state.pose` is
+    `GAIT_POSE`.
+  - *Limits:*
+    - **Kinematic only**, suspended at lift **0.25 m** (the browser's
+      `web/viewer/calibration-mirror.mjs:4` `LIFT_M`). No contact, no
+      dynamics, no physics result.
+    - **No evaluation launch**, and no physics replay of a gait: gait-lab
+      stores no frames, so there is nothing to replay. Evaluate/tune stay in
+      the `gait_lab` CLI.
+    - An explicit `compiled.json` path is **REST only** (`robot_gait
+      {path}`); robot mode has no text-field widget.
+    - Speed scale is limited to **(0, 1]×** (the shared playback clock).
+    - **Seek shows the raw sampler** (`Gait::sample(t)`, drives = desired;
+      seek resets the governor). **Play shows the governed command**
+      (`GovernedGait::step`, drives = commanded), as the browser's
+      calibration-mirror `sampleGait` does.
+    - The listing (`gait_lab::scan_results` on
+      `gait-lab-2026-09-25/results`) offers gait-kind reports whose
+      `compiled.json` exists **on local disk**. Those `compiled.json` files
+      are not in git (only the reports are), so a fresh checkout lists
+      nothing until they are regenerated or copied in.
+    - A preview and a physics run or replay exclude each other; each refusal
+      names the other.
+    - **Fingerprint:** a6ab3c76 edited `sim-runtime` lib source
+      (`gait_playback.rs`), which invalidates the gait-lab runtime
+      fingerprint. Requalify gaits before evaluating them again.
+  - *Verified in T16.3* (`.claude-pair/captures/T16-gait-preview/`, driver
+    `drive.py`, capture.json ok=true, 30/30 assertions) on
+    `robot-measured-400hz` with 6216-Bayesian-009-472d11d4:
+    - the listing equals an independent scan (13 reports);
+    - governor source `spec_identity` and the governor object equal the
+      files;
+    - status, fidelity and label verbatim;
+    - desired angles at t = 0, P/3 and 2P/3 equal an independent Python
+      reimplementation of the periodic cubic B-spline sampler (max error 0);
+    - playing at ×0.5 advances gait time 0.55 s over 1.06 s wall (±0.08 s),
+      drives commanded;
+    - Run and Replay refused naming the preview; Stop restores the assembly
+      pose and Run is accepted again;
+    - a bad path and a renamed joint are refused by name.
+    Screenshots: `gait-t0.png` and `gait-t1.png` (different poses),
+    `gait-playing.png`, `gait-refused.png` (red joint error). Activations were
+    REST and `system_ui`, not pointer clicks.
 
 ### j. Measured actuator models and calibration inspection
 - **Entry today:** the build-mode **Actuators** sidebar tab in `sim-spatial`
@@ -1364,6 +1434,17 @@ unknown-id error).
      (evaluation/re-simulation, candidate editing and refinement,
      FPGA/power/motor-response review, sweep.csv review, saving studies, HTML
      export).
+8. **Done (kinematic) — native gait preview** (i; batch native-gait-preview,
+   T16.1–T16.3; commits a6ab3c76, 74cf313b, af44519c and the T16.3
+   header-label commit).
+   - *Done:* robot mode opens a tracked gait-lab report or a compiled.json
+     path and poses the preset's scene through the shared `Gait`,
+     `GovernedGait` and `KinematicMirror` on a worker, with play, pause,
+     seek, speed (≤1×) and stop through one `RobotAction::Gait` (§2i).
+   - *Verified in T16.3* (`.claude-pair/captures/T16-gait-preview/`,
+     capture.json ok=true, 30 assertions; §2i).
+   - *Still not done:* launching evaluations or tuning, leg-driving playback
+     (hardware, calibration UI), a path text field, speeds above 1×.
 
 ## 6. Launch path
 
@@ -1461,6 +1542,17 @@ window.
 `system_ui` lists the link, section, scroll, `run:*` and `jog:*` controls; REST
 `robot_run` and `robot_jog` use the same handlers.
 
+Gait preview (§2i). On a preset, e.g.
+`sim-spatial --robot-preset robot-measured-400hz`, the **Gait preview** block
+sits at the top of the inspector's scrolling area: click a tracked report to
+open it, then Play/Pause/Stop, seek (t = 0, ±P/12) and speed (×0.25, ×0.5,
+×1). The same actions are `system_ui` `gait:open:<report>`, `gait:play`, … and
+REST `robot_gait {"report": "6216-Bayesian-009-472d11d4"}`,
+`{"path": "…/compiled.json"}` (REST only), `{"action": "seek", "t": 0.5}`,
+`{"action": "speed", "scale": 0.5}`, `{"action": "stop"}`. Poll
+`robot_state.gait_preview` until `applied_generation == generation`. It is a
+kinematic preview only; Stop it before Run or Replay.
+
 Preset recordings (§2h). After Run or Step, **Save recording** (or
 `system_ui` `recording:save`, REST `robot_save_recording {"note": …}`)
 writes `runs/robot-presets/<preset-id>/<UTC stamp>.json` (the shared
@@ -1503,7 +1595,9 @@ Separate apps are still needed for the schematic and experiments
 (`sim-viewer`; the shell only reviews identification archives, §3), phenomena and file-watching robot view (`sim-app`), CAD
 (`cad/run.sh`), and calibration, hardware sync, scrubbing of recorded
 frames, observation panels beyond the two robot-mode charts, and realtime walking
-(browser, `web/README.md`; §2g lists what native preset runs lack).
+(browser, `web/README.md`; §2g lists what native preset runs lack). Gait
+evaluation and tuning stay in the `gait_lab` CLI; leg-driving gait playback
+stays in the calibration UI (hardware).
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,
 where FILE may be a system, simrobot, lesson directory or gait-lab output, opened

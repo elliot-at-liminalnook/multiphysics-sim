@@ -1211,7 +1211,9 @@ fn panels(
         (Status::Loaded { seconds }, Some(m)) => {
             let without = view.triangles.iter().filter(|t| **t == 0).count();
             let missing = if without > 0 { format!(" · {without} without collision geometry (listed, not drawn)") } else { String::new() };
-            let pose = if view.run.as_ref().and_then(|r| r.frame()).is_some() { "simulated pose" } else { "exported assembly pose" };
+            // Same pose-state rule as robot_state.pose (GAIT_POSE, SIMULATED_POSE, POSE), short form.
+            let previewing = view.run.as_ref().and_then(|r| r.gait_preview()).and_then(|g| g.poses()).is_some();
+            let pose = if previewing { "kinematic gait preview pose (not physics)" } else if view.run.as_ref().and_then(|r| r.frame()).is_some() { "simulated pose" } else { "exported assembly pose" };
             match view.preset.as_ref() {
                 Some(p) => format!("{} links{missing} · loaded in {seconds:.2} s · {pose} · readiness: {}", m.links.len(), clip(p.readiness().unwrap_or("(none declared)"), 55)),
                 None => format!("{} · {} links{missing} · loaded in {seconds:.2} s · {pose}", view.path.display(), m.links.len()),

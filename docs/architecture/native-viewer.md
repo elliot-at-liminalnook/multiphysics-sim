@@ -142,26 +142,137 @@ result formats and state fields).
   worker; the source guard. The placement validator tests now use
   `RunThread` (latest position wins; drop returns promptly and starts no
   queued work).
-- **Parity checklist for the verification pass** (build, lib tests, then
-  `ui_capture` against the upgraded-019 captures with
-  `$PAIR_CAPTURES/bevy-019/capture_modes.py`):
-  - every mode's REST state and capabilities (`system_state`, `robot_state`,
-    lesson state, `GET /v1/capabilities`, `system_ui` ids) identical;
-  - build mode: the schematic re-layout after an edit and a level change
-    (stale label, then the new layout), Open system (the previous system
-    dropped off the UI thread), a live run start/pause/step/reset and a run
-    replay, a study's progress, the Actuators, Measured evidence and Gait lab
-    tabs loading;
-  - placement drag: preview while dragging and the commit on release
-    (a REST-activated control is not a drag gesture; say which was used);
-  - lessons: scene recording progress and install, a comparison's
-    "Running n/m…", figures, model values; narration progress **without**
-    triggering paid generation (read `lesson` state `narration.job` only if a
-    job is already running, or verify by reading);
-  - robot: preset open, recording save, list and replay, reset and reload of
-    a `--robot FILE` (the old run thread stops, no stale frame), preset
-    switch, gait preview open/play/stop, recorded preset seek/play;
-  - no warning "did not stop within" in the log during these.
+- **Parity, traced by reading** (screenshots are off for this run; the
+  verification pass builds and tests). "Unchanged" means the poll/apply code
+  and the state field are the same as before 44a08bd8; only the thread start,
+  channel and cancel/generation plumbing moved into `jobs`. Paths are
+  `crates/sim-spatial/src/`, lines as of the jobs-module follow-up.
+  - *Build mode*
+    - Schematic re-layout: start `builder/schematic.rs:204` (Compute, stamped
+      with the key's revision, cancel token passed to `lay_out`); apply
+      `SchematicState::tick` `schematic.rs:166`, called every frame from
+      `schematic.rs:255`. A newer revision or level drops the job
+      (cancel on drop, `superseded += 1`). Feeds `system_state.schematic`
+      (`laid_out`, `pending`, `stale`, `error`) and the panel status.
+      Unchanged.
+    - Compile (feeds the schematic and the scene): start `builder.rs:341`
+      (Compute); apply `builder.rs:2386`. Changed only on a panic, which now
+      sets `compile_error` and the status (it used to wait forever).
+    - Open system: start `builder/open.rs:164` (Compute, generation = open
+      seq); apply `finish_open` `open.rs:181` from the `open_system` system
+      `builder.rs:1779`. The previous builder is dropped by
+      `jobs::drop_off_thread` at `open.rs:264`, so its run thread and agent
+      are joined off the UI thread. Feeds `system_state.open.last` and the
+      status line. Unchanged.
+    - Live run start/pause/step/reset: `LiveRun::spawn` `builder.rs:156`
+      (RunThread "builder-run"), started from `start_run` `builder.rs:1063`.
+      Commands `builder.rs:1041` (Start), 1069 (Pause), 1334 (Step) and 1360
+      (Reset); the loop at `builder.rs:1447` is unchanged. Read by
+      `live_run_json` `builder.rs:1425` and `running()` from the shared
+      snapshot. A replaced run drops its RunThread (bounded 200 ms join).
+    - Run replay: start `builder.rs:977` (Dedicated, `replay_with_cancel`
+      given the job's cancel flag); apply `poll_replay` `builder.rs:1002`
+      (called at `builder.rs:2584`); cancel `builder.rs:990`. Feeds
+      `system_state.replay` via `replay_json` `builder.rs:1026`. Unchanged.
+    - Study progress and cancel: start `builder.rs:1132` (Dedicated, steps
+      progress); apply `poll_study` `builder.rs:1161` (at `builder.rs:2583`);
+      progress `study_progress` `builder.rs:1157` into
+      `system_study_result.running` and `study_json`; Cancel
+      `builder.rs:2066` calls `Job::cancel` (fixed in 4b74edc6; it used the
+      removed flag and did not compile).
+    - Actuators tab: start `builder/actuators.rs:178` (Io, generation = seq);
+      apply `finish_actuators` `actuators.rs:194` (system at
+      `builder.rs:1788`). Measured evidence: start `builder/calibration.rs:350`
+      (Io); apply `finish_calibration` `calibration.rs:366`
+      (`builder.rs:1795`). Gait lab: start `builder/gait_lab.rs:146` (Io);
+      apply `finish_gait_reports` `gait_lab.rs:165` (`builder.rs:1802`).
+      They feed `system_state.actuators`, `calibration_review` and
+      `gait_reports` (`last` = `(seq, result)`). Unchanged.
+    - Source preview and agent context: `builder/reference.rs:31` (Io; a
+      web link's `open` process is reaped with `jobs::reap_child`,
+      `reference.rs:24`) and `builder/agent.rs:159` (Compute, polled at
+      `agent.rs:172`). Unchanged apart from the reaping.
+  - *Placement*
+    - Drag validator: `builder/placement_worker.rs:15` (RunThread
+      "placement-validator", join bound 0). Pointer moves `submit` at
+      `builder/placement.rs:533`; the result is taken at `placement.rs:536`.
+      The worker drains the channel and validates only the newest position
+      (the condvar became channel commands; latest-wins is kept, and a
+      closed channel starts nothing). Changed in mechanism only.
+    - Commit on release: `placement.rs:593` (Io, `complete_on_drop`); apply
+      `poll_drop` `placement.rs:600` (at `placement.rs:503`). Unchanged.
+  - *Robot*
+    - Preset open and preset switch: `RobotView::open_preset` `robot.rs:216`
+      starts the loader at `robot.rs:222` (Compute); apply `receive`
+      `robot.rs:1183` (`load.poll()` at `robot.rs:1201`). A switch
+      (`Request::RobotPreset`, `robot.rs:736`) replaces the whole view, so
+      the old run, gait and playback RunThreads drop with a bounded join.
+      Feeds `robot_state.status`, `preset` and `load_seconds`. Unchanged.
+    - Recording save: command `robot_run.rs:802`; the run thread snapshots
+      and hands the write to `robot_run.rs:1777` (Io, `complete_on_drop`,
+      publishes `Published.save`); apply `RunController::poll`
+      `robot_run.rs:1035`. Feeds `robot_state.recording.pending/last_saved`.
+      Changed: a writer panic is now published as the save error (before
+      and after the migration it was lost and `pending` never cleared).
+    - Recording list: `Latest` at `robot_run.rs:831` (Io; a newer list
+      supersedes); apply `robot_run.rs:1054`. Feeds `robot_state.recordings`.
+      Unchanged.
+    - Replay: runs on the robot-run RunThread (`Command::Replay`, loop from
+      `robot_run.rs:1789`), published as `Published.replay` and accepted in
+      `poll` only for the current generation and seq. Unchanged.
+    - `--robot FILE` reload: `robot_source.rs:155` (Compute, sha256 and
+      parse); taken by `receive` via `SourceWatch::take` (`robot.rs:1209`); a
+      loaded reload replaces the run with generation + 1. Unchanged.
+    - Gait preview: RunThread "robot-gait" `robot_gait.rs:171`; apply `poll`
+      `robot_gait.rs:269` (the listing is `Shared.listing` with its seq).
+      Recorded seek and play: RunThread "robot-recorded"
+      `robot_playback.rs:166`; apply `poll` `robot_playback.rs:182` via
+      `RunThread::latest(generation)`. Feed `robot_state.gait_preview` and
+      `recorded`. Unchanged loops.
+    - Stress results reader: `robot_stress.rs:108` (Io), polled at
+      `robot_stress.rs:115`. Unchanged.
+    - `sim-viewer` children: `main.rs:241` and `main.rs:392` use
+      `jobs::reap_child`.
+  - *Lessons*
+    - Figures: `lesson/practice.rs:26` (Compute); apply `poll_figures`
+      `practice.rs:56` (at `lesson/mod.rs:1325`). Unchanged.
+    - Model: `lesson/extras.rs:67` (Dedicated, streamed values); apply
+      `poll_model` `extras.rs:97` (at `lesson/mod.rs:1342`). Feeds
+      `lesson_state.model`. A panic now shows under `model.errors`.
+    - Comparisons: `lesson/mod.rs:1194` (Dedicated, steps progress); apply
+      `lesson/mod.rs:1331`; "Running n/m…" from `lesson/ui.rs:773`. Feeds
+      `lesson_state.compares`. Unchanged.
+    - Scene recordings: `lesson/mod.rs:665` (first) and `mod.rs:722`
+      (re-record), both Dedicated and streaming `Stage`s; apply from
+      `lesson/mod.rs:1363`; progress `ActiveScene::progress` `mod.rs:303`
+      into `lesson_state.scene.recording` and the "Recording on the shared
+      runtime… n %" line (`lesson/ui.rs:1130`). Changed: a panic in the job
+      now ends the recording with its error instead of leaving the scene
+      "recording".
+    - Narration progress (never run generation here): `lesson/narrate.rs:261`
+      (Dedicated; paid work is not cancelled mid-request); apply
+      `narrate.rs:379`; the line is `GenJob::progress` `narrate.rs:48`
+      ("Starting…" until the first message) and `lesson_state.narration.job`
+      (`lesson/rest.rs:438`). Unchanged text.
+    - Practice bench request: `lesson/extras.rs:207` (Dedicated), polled at
+      `extras.rs:141`. Unchanged.
+- **What the build/test pass must run** (no screenshots):
+  - `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
+    warnings (an unused `mpsc`/`Mutex`/`Arc`/`AtomicBool` import would show
+    here);
+  - `cargo check -p sim-app`;
+  - `cargo test -p sim-spatial --lib`, in particular `jobs::tests::*`
+    (including `threads_are_started_only_in_jobs`),
+    `builder::placement_worker::tests`, `builder::placement::tests`,
+    `builder::replay_tests` (the run, step/reset, grab swap and realtime
+    runs on `LiveRun::spawn`), `builder::open::tests`,
+    `builder::calibration::tests`, `builder::schematic::tests` and
+    `robot_run::tests`.
+- **Verification so far.** An earlier pass on 4b74edc6 built sim-spatial
+  (debug), passed `cargo check -p sim-app`, and passed `cargo test -p
+  sim-spatial --lib` (75 passed, 1 ignored: the existing
+  `measure_full_robot_preset` benchmark). The follow-up edits (19e9fab3 and
+  the recording-panic fixes) are not yet built and tested.
 
 ## Target shape
 

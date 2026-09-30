@@ -13,8 +13,9 @@ The {count} commits since the last pass ({since}..{head}) were written without b
 
    Fix what you find.
 4. **Run tests once** for the crates whose logic changed substantively, filtered to the relevant modules (`cargo test -p <crate> --lib <module::>`). Fix the failures.
-5. **Capture each viewer mode these commits changed** once with ui_capture, and look at the images. Fix what's visibly wrong.
-6. **Commit the fixes in logical groups.** Each message says how the bug was found (compiler, test, capture or reading) and what it broke.
+5. **Commit the fixes in logical groups.** Each message says how the bug was found (compiler, test or reading) and what it broke.
+
+No screenshots in this pass either (unless "This run" says screenshots are on): don't run ui_capture or the viewer.
 
 In your report, list:
 - every command, with its duration and result

@@ -334,7 +334,7 @@ function captureURL(c) { return '/captures/' + c.path.split('/').map(encodeURICo
 function renderShots() {
   const shots = data.captures || [];
   text('shots-count', shots.length ? String(shots.length) : '');
-  if (!shots.length) return html('shots', '<div class="empty">Native viewer captures appear here when an agent runs ui_capture.py.</div>');
+  if (!shots.length) return html('shots', '<div class="empty">Screenshots are off for this run; agents verify by reading the code.</div>');
   html('shots', `<div class="shots">${shots.slice(0, 9).map((c, i) => `<button class="shot" data-shot="${i}" title="${esc(c.path)}"><img loading="lazy" alt="${esc(c.path)}" src="${captureURL(c)}"><span>${esc(c.path)}</span></button>`).join('')}</div>`);
 }
 

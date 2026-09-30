@@ -12,7 +12,7 @@ code when something looks stale, and say so in coordination_notes.
 - **Don't build or test during normal work.** Cold or even incremental cargo
   commands here take minutes (a `sim-runtime` or `sim-spatial` test binary
   takes 2 to 4). Claude Code stops every shell command after 10 s, and
-  background commands are off (except in verification passes). Builds, tests and captures happen in the coordinator's
+  background commands are off (except in verification passes). Builds and tests happen in the coordinator's
   verification passes (every 20 commits, and before an epic completes).
 - The gait-lab runtime fingerprint hashes every crate's source, so any code edit
   invalidates gait qualification (see the gait-lab README before evaluating gaits).
@@ -34,13 +34,10 @@ code when something looks stale, and say so in coordination_notes.
   Useful commands: `system_ui` (discover and activate live controls through the
   same handlers as a click), `system_state`, `state`, `display`, `camera`,
   `fit`, `screenshot` (the window exactly as drawn).
-- `ui_capture.py` (path in "This run" below) wraps all of that: it launches the
-  viewer, runs a JSON script of commands, saves PNGs and a `capture.json`
-  receipt, and exits nonzero on any failure. Use it for evidence and as a check.
-  It is for verification passes. Put captures under `$PAIR_CAPTURES/<task-id>/`
-  and look at them with Read.
-  A binary older than the source may lack newer commands. Rebuild it first
-  (`target/debug/sim-spatial` was last built before the `screenshot` command existed).
+- **Screenshots are off** (unless "This run" says they're on). `ui_capture.py`
+  can drive the viewer and save screenshots, but don't run it: the binary isn't
+  rebuilt during normal work, so screenshots would show stale code. Read the
+  code instead.
 
 ## Other surfaces
 

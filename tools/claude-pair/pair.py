@@ -397,8 +397,10 @@ class Runner:
                  f"- Workspace: {self.repo}. This is the user's own project folder and your working "
                  f"directory. Edit here and commit to the current branch ({self.config.get('branch') or 'detached HEAD'}).\n"
                  f"- Run state, logs and receipts: {self.root} (git-ignored; do not edit)\n"
-                 f"- Screenshots and UI captures: {self.root / 'captures'} (view PNGs with the Read tool)\n"
-                 f"- Native UI capture: python3 {HERE / 'ui_capture.py'} --help\n"
+                 + (f"- Screenshots are ON for this run: python3 {HERE / 'ui_capture.py'} --help; save them under "
+                    f"{self.root / 'captures'} and view them with Read.\n" if self.config.get("screenshots")
+                    else "- Screenshots are OFF for this run: don't run ui_capture, launch the viewer to look at it, "
+                         "or take screenshots.\n") +
                  f"- Baseline (the folder as it was when the run started, including the user's "
                  f"uncommitted edits): {self.config['baseline']}, pinned as {self.config.get('baseline_ref', 'no ref')}\n"
                  "- Your shell and every check get PAIR_STATE, PAIR_WORKSPACE, PAIR_SOURCE, PAIR_TOOLS, "

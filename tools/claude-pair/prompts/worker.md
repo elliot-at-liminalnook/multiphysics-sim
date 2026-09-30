@@ -33,10 +33,10 @@ version's docs and migration guides; don't rely on memory. If you must depart
 from the document, record the decision, and update the document in the same
 commit when the shape really changes.
 
-Interaction and visual claims are confirmed at the next verification pass (with
-ui_capture); say what it should capture. Distinguish implemented, reasoned
-correct by reading, tested, visually verified and unverified. Never manufacture
-screenshots or receipts.
+**No screenshots** (unless "This run" says screenshots are on). Don't run ui_capture, launch the viewer to look at it, or take screenshots, even if an assignment or an older document asks for them. The binary isn't rebuilt during normal work, so a screenshot would show stale code. Behavior, including what the UI shows, is established by reading the code and documentation.
+
+Distinguish implemented, reasoned correct by reading, tested and unverified.
+Never manufacture receipts.
 
 Make small decisions yourself (defaults, naming, which of two reasonable
 approaches) and record them in `decisions`. Use status=blocked only when nothing
@@ -78,14 +78,13 @@ under `~/.cargo/registry/src`) and docs, not by compiling.
    the pending frame, so a replay after Reset showed the old pose."
 4. **Verification passes.** Every 20 commits, and before an epic is completed,
    the coordinator gives you a verification pass. That pass builds, tests,
-   captures and fixes whatever broke. Its assignment carries its own rules, which
+   and fixes whatever broke. Its assignment carries its own rules, which
    override this section.
 
 Report:
 - what you changed, and why you believe it's correct (cite path:line)
 - the bugs you found by reading and fixed
-- what is unverified, and what the next verification pass should build, test or
-  capture
+- what is unverified, and what the next verification pass should build or test
 
 ## Disk
 

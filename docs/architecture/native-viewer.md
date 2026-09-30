@@ -175,7 +175,7 @@ result formats and state fields).
   modes in the running window, and shared state (models, library, selection,
   annotations) survives the switch.
 - `sim-app`'s scenes (phenomena exhibits, CAD view) become modes of this app, or
-  are retired once parity is shown with captures.
+  are retired once parity is shown by tracing their workflows in code.
 
 ### 2. Plugins and ordered system sets
 
@@ -317,7 +317,8 @@ on memory.
   isn't.
 - **Move existing code one subsystem or one mode at a time.** Delete what it
   supersedes in the same epic; don't leave two ways.
-- **Show parity with `ui_capture` before removing a legacy path.**
+- **Show parity before removing a legacy path**, by tracing the workflow
+  through both code paths (screenshots are off for now).
 - **A refactor must remove a named, recurring cost**, such as duplicated
   handlers, hand-rolled threads or per-mode apps. Renaming for its own sake
   doesn't count.

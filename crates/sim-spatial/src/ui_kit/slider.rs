@@ -58,10 +58,11 @@ impl Kit<'_> {
 
     /// A surface that reads where the pointer is over it (not a slider:
     /// charts preview the hovered moment, sketch canvases draw). Read it with
-    /// `Interaction` and [`surface_point`]. `block`: nodes under it do not
-    /// also see the pointer.
-    pub(crate) fn pointer_surface(&self, block: bool) -> impl Bundle + use<> {
-        (Interaction::default(), if block { FocusPolicy::Block } else { FocusPolicy::Pass }, bevy::ui::RelativeCursorPosition::default())
+    /// `Interaction` and [`surface_point`]. Nodes under it do not also see
+    /// the pointer (`FocusPolicy::Block`, which is also what `bevy::ui`
+    /// assumes for an `Interaction` node without a policy).
+    pub(crate) fn pointer_surface(&self) -> impl Bundle + use<> {
+        (Interaction::default(), FocusPolicy::Block, bevy::ui::RelativeCursorPosition::default())
     }
 }
 

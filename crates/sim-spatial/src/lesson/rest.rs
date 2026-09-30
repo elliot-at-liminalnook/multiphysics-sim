@@ -435,7 +435,7 @@ pub fn narration_state(learn: &Learn) -> Value {
     json!({
         "explainer": n.explainer.path, "playing": n.playing, "section": n.section, "time": n.time, "waiting": n.wait.as_ref().map(|w| format!("{w:?}")),
         "audio": learn.player.as_ref().map(|p| { let st = p.state(); json!({"loaded": st.loaded, "position": st.position, "playing": st.playing, "finished": st.finished, "error": st.error}) }), "loaded": n.loaded,
-        "marks": n.marks, "subtitle": n.subtitle(), "job": n.job.as_ref().map(|j| j.progress.lock().map(|p| p.clone()).unwrap_or_default()), "last_report": n.last_report,
+        "marks": n.marks, "subtitle": n.subtitle(), "job": n.job.as_ref().map(|j| j.progress()), "last_report": n.last_report,
         "sections": n.explainer.sections.iter().enumerate().map(|(i, s)| json!({"id": s.id, "title": s.title, "status": plan[i].status, "estimated_usd": plan[i].estimated_usd, "timing": n.timings[i].kind, "duration_s": n.timings[i].duration_s, "cues": s.cues.iter().zip(&n.times[i]).map(|(c, t)| json!({"at_s": t, "cue": c.cue})).collect::<Vec<_>>()})).collect::<Vec<_>>(),
     })
 }

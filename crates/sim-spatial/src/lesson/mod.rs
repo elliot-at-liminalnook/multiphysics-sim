@@ -24,8 +24,7 @@ use sim_runtime::lesson::{self as runtime, CompareRun, Sandbox, SceneRun};
 use sim_script::presentation::{CameraSpec, Timeline};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, mpsc};
+use std::sync::{Arc, Mutex};
 
 mod agent;
 pub(crate) mod extras;
@@ -263,9 +262,9 @@ pub struct ActiveScene {
     pub user_speed: f64,
     /// The builder for this scene's sandbox is installed.
     pub installed: bool,
-    jobs: Option<Mutex<mpsc::Receiver<Stage>>>,
-    progress: Arc<AtomicU32>,
-    cancel: Arc<AtomicBool>,
+    /// The scene's preparation and recordings, streamed as stages (progress:
+    /// the recording's fraction). Dropping or replacing it cancels the run.
+    jobs: Option<crate::jobs::Job<(), Stage>>,
     recording: bool,
     framed: bool,
     /// The view's aspect ratio when it was framed: a large change (the card
@@ -301,7 +300,7 @@ impl ActiveScene {
         self.run.as_ref().map(|r| r.frames.last().map(|f| f.time).unwrap_or(r.duration_s).max(1e-9)).unwrap_or(self.scene.run.duration_s)
     }
     pub fn progress(&self) -> Option<f64> {
-        self.recording.then(|| self.progress.load(Ordering::Relaxed) as f64 / 1000.0)
+        self.recording.then(|| self.jobs.as_ref().and_then(|j| j.progress().fraction).unwrap_or(0.))
     }
     /// Show simulated time `t` (a caption there is held again for reading).
     pub fn seek(&mut self, t: f64) {
@@ -325,16 +324,11 @@ impl ActiveScene {
         self.plan.pace_at(self.wall)
     }
 }
-impl Drop for ActiveScene {
-    fn drop(&mut self) {
-        self.cancel.store(true, Ordering::Relaxed);
-    }
-}
 
 #[derive(Default)]
 pub(crate) struct CompareState {
-    job: Option<Mutex<mpsc::Receiver<Result<CompareRun, String>>>>,
-    pub progress: Arc<(AtomicU32, AtomicU32)>,
+    /// The comparison run (progress: variants done of total).
+    job: Option<crate::jobs::Job<CompareRun>>,
     pub result: Option<Result<CompareRun, String>>,
 }
 
@@ -665,23 +659,22 @@ impl Learn {
                 Timeline::default()
             }
         };
-        let progress = Arc::new(AtomicU32::new(0));
-        let cancel = Arc::new(AtomicBool::new(false));
-        let (tx, rx) = mpsc::channel();
         let (registry, library) = (self.registry.clone(), self.library.clone());
-        let (p, c, sc, l) = (progress.clone(), cancel.clone(), scene.clone(), lesson.clone());
-        std::thread::spawn(move || {
+        let (sc, l) = (scene.clone(), lesson.clone());
+        // Recordings can take a while: a dedicated thread.
+        let jobs = crate::jobs::Job::streaming(crate::jobs::Pool::Dedicated, 0, "the scene recording", move |ctx| {
             let prepared = runtime::sandbox(&l, &sc, &registry, false).and_then(|sb| Builder::open(sb.path.clone(), library, registry.clone()).map(|b| (sb, Box::new(b))));
             let ok = prepared.is_ok();
-            if tx.send(Stage::Builder(prepared)).is_err() || !ok {
-                return;
+            if !ctx.emit(Stage::Builder(prepared)) || !ok {
+                return Ok(());
             }
-            if tx.send(Stage::Run(record(&l, &sc, &BTreeMap::new(), &registry, &p, &c))).is_err() {
-                return;
+            if !ctx.emit(Stage::Run(record(&l, &sc, &BTreeMap::new(), &registry, ctx))) {
+                return Ok(());
             }
             if let Some(companion) = &sc.companion {
-                let _ = tx.send(Stage::Companion(record(&l, &sc, &companion.set, &registry, &p, &c)));
+                ctx.emit(Stage::Companion(record(&l, &sc, &companion.set, &registry, ctx)));
             }
+            Ok(())
         });
         self.scene = Some(ActiveScene {
             id: id.into(),
@@ -696,9 +689,7 @@ impl Learn {
             playing: false,
             user_speed: 1.0,
             installed: false,
-            jobs: Some(Mutex::new(rx)),
-            progress,
-            cancel,
+            jobs: Some(jobs),
             recording: true,
             framed: false,
             framed_aspect: 0.,
@@ -726,15 +717,12 @@ impl Learn {
     pub(crate) fn rerecord(&mut self) {
         let Some(lesson) = self.lesson.clone() else { return };
         let Some(a) = self.scene.as_mut() else { return };
-        a.cancel.store(true, Ordering::Relaxed);
-        a.progress = Arc::new(AtomicU32::new(0));
-        a.cancel = Arc::new(AtomicBool::new(false));
-        let (tx, rx) = mpsc::channel();
-        let (registry, scene, p, c, overrides) = (self.registry.clone(), a.scene.clone(), a.progress.clone(), a.cancel.clone(), a.overrides.clone());
-        std::thread::spawn(move || {
-            let _ = tx.send(Stage::Run(record(&lesson, &scene, &overrides, &registry, &p, &c)));
-        });
-        a.jobs = Some(Mutex::new(rx));
+        let (registry, scene, overrides) = (self.registry.clone(), a.scene.clone(), a.overrides.clone());
+        // Replacing the job cancels a recording still running.
+        a.jobs = Some(crate::jobs::Job::streaming(crate::jobs::Pool::Dedicated, 0, "the scene recording", move |ctx| {
+            ctx.emit(Stage::Run(record(&lesson, &scene, &overrides, &registry, ctx)));
+            Ok(())
+        }));
         a.recording = true;
         self.dirty = true;
     }
@@ -1202,19 +1190,10 @@ impl Learn {
         if state.job.is_some() {
             return Ok(());
         }
-        let progress = Arc::new((AtomicU32::new(0), AtomicU32::new(0)));
-        state.progress = progress.clone();
-        let (tx, rx) = mpsc::channel();
-        std::thread::spawn(move || {
-            let result = runtime::load_system(&lesson.system_path(&compare.system), &registry).and_then(|doc| {
-                runtime::compare_run(&doc, &registry, &compare, true, None, &|done, total| {
-                    progress.0.store(done as u32, Ordering::Relaxed);
-                    progress.1.store(total as u32, Ordering::Relaxed);
-                })
-            });
-            let _ = tx.send(result);
-        });
-        state.job = Some(Mutex::new(rx));
+        // A study of variants: a dedicated thread.
+        state.job = Some(crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, "the comparison", move |ctx| {
+            runtime::load_system(&lesson.system_path(&compare.system), &registry).and_then(|doc| runtime::compare_run(&doc, &registry, &compare, true, None, &|done, total| ctx.steps(done as u64, total as u64)))
+        }));
         state.result = None;
         Ok(())
     }
@@ -1223,14 +1202,15 @@ impl Learn {
 /// Record a scene from its sandbox (the learner's copy), cached by hash.
 /// Record a scene from its sandbox, with `extra` parameter values on top
 /// (the reader's sliders, or a companion run's `set`).
-fn record(lesson: &Lesson, scene: &Scene, extra: &BTreeMap<String, f64>, registry: &sim_core::BehaviorRegistry, progress: &AtomicU32, cancel: &AtomicBool) -> Result<SceneRun, String> {
+fn record(lesson: &Lesson, scene: &Scene, extra: &BTreeMap<String, f64>, registry: &sim_core::BehaviorRegistry, ctx: &crate::jobs::Ctx<Stage>) -> Result<SceneRun, String> {
     let sb = runtime::sandbox(lesson, scene, registry, false)?;
     let doc = runtime::load_system(&sb.path, registry)?;
     let mut sc = runtime::sandbox_scene(scene);
     sc.set.extend(extra.iter().map(|(k, v)| (k.clone(), *v)));
     let doc = runtime::scene_document(&doc, registry, &sc)?;
     let timeline = lesson.timeline(scene)?;
-    runtime::scene_run(&doc, registry, &sc, &timeline, true, Some(cancel), &|f| progress.store((f * 1000.) as u32, Ordering::Relaxed))
+    // Reported in thousandths, as before.
+    runtime::scene_run(&doc, registry, &sc, &timeline, true, Some(ctx.cancel_flag()), &|f| ctx.fraction(((f * 1000.) as u32) as f64 / 1000.0))
 }
 
 fn open_url(url: &str) -> Result<(), String> {
@@ -1348,7 +1328,7 @@ fn poll(
     // Comparisons.
     let mut finished = false;
     for state in learn.compares.values_mut() {
-        let received = state.job.as_ref().and_then(|j| j.lock().ok().and_then(|r| r.try_recv().ok()));
+        let received = state.job.as_ref().and_then(crate::jobs::Job::poll);
         if let Some(result) = received {
             state.result = Some(result);
             state.job = None;
@@ -1380,7 +1360,7 @@ fn poll(
     let label = learn.lesson.as_ref().map(|l| l.meta.title.clone());
     let mut builder = builder;
     let Some(a) = learn.scene.as_mut() else { return };
-    let stage = a.jobs.as_ref().and_then(|j| j.lock().ok().and_then(|r| r.try_recv().ok()));
+    let stage = a.jobs.as_ref().and_then(crate::jobs::Job::next_update);
     let mut parts = None;
     let mut judged: Option<Arc<SceneRun>> = None;
     let mut changed = stage.is_some();

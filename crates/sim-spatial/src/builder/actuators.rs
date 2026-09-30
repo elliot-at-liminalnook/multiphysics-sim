@@ -116,10 +116,10 @@ pub fn default_registry(system: &Path) -> Result<PathBuf, String> {
     })
 }
 
+/// A load in progress (its generation is the request's `seq`).
 struct Job {
-    seq: u64,
     registry: PathBuf,
-    receiver: Mutex<mpsc::Receiver<Result<Inspection, String>>>,
+    work: crate::jobs::Job<Inspection>,
 }
 
 #[derive(Default)]
@@ -172,13 +172,11 @@ impl Builder {
         let check: Vec<PathBuf> = check.map(|c| c.into_iter().map(absolute).collect()).unwrap_or_else(|| self.actuators.check.clone());
         self.actuators.registry = Some(registry.clone());
         self.actuators.check = check.clone();
-        let (send, receive) = mpsc::channel();
         let worker = registry.clone();
-        std::thread::spawn(move || {
-            let _ = send.send(inspect(&worker, &check));
-        });
         self.actuators.seq += 1;
-        self.actuators.job = Some(Job { seq: self.actuators.seq, registry: registry.clone(), receiver: Mutex::new(receive) });
+        let lost = format!("Could not load actuator registry {}: the loader", registry.display());
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Io, self.actuators.seq, lost, move |_| inspect(&worker, &check));
+        self.actuators.job = Some(Job { registry: registry.clone(), work });
         self.status = format!("Loading actuator registry {} in the background…", registry.display());
         Ok(self.actuators.seq)
     }
@@ -187,7 +185,7 @@ impl Builder {
     pub fn cancel_actuators(&mut self) -> bool {
         let Some(job) = self.actuators.job.take() else { return false };
         self.status = format!("Loading actuator registry {} cancelled.", job.registry.display());
-        self.actuators.last = Some((job.seq, Err(self.status.clone())));
+        self.actuators.last = Some((job.work.generation(), Err(self.status.clone())));
         self.panel_dirty = true;
         true
     }
@@ -195,13 +193,8 @@ impl Builder {
     /// Install a finished load. Returns true when one finished.
     pub(crate) fn finish_actuators(&mut self) -> bool {
         let Some(job) = &self.actuators.job else { return false };
-        let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
-        let result = match polled {
-            Err(mpsc::TryRecvError::Empty) => return false,
-            Err(mpsc::TryRecvError::Disconnected) => Err(format!("Could not load actuator registry {}: the loader ended without a result.", job.registry.display())),
-            Ok(r) => r,
-        };
-        let job = self.actuators.job.take().expect("polled above");
+        let Some(result) = job.work.poll() else { return false };
+        let seq = self.actuators.job.take().expect("polled above").work.generation();
         self.panel_dirty = true;
         match result {
             Ok(inspection) => {
@@ -215,13 +208,13 @@ impl Builder {
                 let value = serde_json::to_value(&inspection).unwrap_or_default();
                 self.actuators.shown = Some(inspection);
                 self.actuators.error = None;
-                self.actuators.last = Some((job.seq, Ok(value)));
+                self.actuators.last = Some((seq, Ok(value)));
             }
             Err(e) => {
                 self.action_error = Some(e.clone());
                 self.status = e.clone();
                 self.actuators.error = Some(e.clone());
-                self.actuators.last = Some((job.seq, Err(e)));
+                self.actuators.last = Some((seq, Err(e)));
             }
         }
         true
@@ -253,11 +246,11 @@ impl Builder {
         };
         match &self.actuators.last {
             Some((s, result)) if *s == seq => sim_api::Outcome::Done(result.clone()),
-            _ if cancelled && self.actuators.job.as_ref().is_some_and(|j| j.seq == seq) => {
+            _ if cancelled && self.actuators.job.as_ref().is_some_and(|j| j.work.generation() == seq) => {
                 self.cancel_actuators();
                 sim_api::Outcome::Done(Err("cancelled".into()))
             }
-            _ if self.actuators.job.as_ref().is_none_or(|j| j.seq != seq) => sim_api::Outcome::Done(Err("the actuator request was superseded".into())),
+            _ if self.actuators.job.as_ref().is_none_or(|j| j.work.generation() != seq) => sim_api::Outcome::Done(Err("the actuator request was superseded".into())),
             _ => sim_api::Outcome::Pending,
         }
     }

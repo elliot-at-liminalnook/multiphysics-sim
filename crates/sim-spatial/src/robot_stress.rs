@@ -9,7 +9,6 @@ use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use sim_domain_robot::stress_results::{self, Hotspot};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, mpsc};
 use std::time::UNIX_EPOCH;
 
 pub const RULE: &str = "read-only: <stem>.simresult.json beside the opened .simrobot.json (sim_runtime::physical::results_path), read on a worker with every open, watched or manual reload check of the model file and when the stress overlay is switched on (a results file written later is picked up by toggling stress or Reload). Status: current when the results' provenance.physical_hash equals the loaded model's source.physical_hash, stale when both exist and differ, no recorded hash when either is absent. Each vertex of a link with hotspot cells takes the nearest cell's peak stress normalised by the link material's yield (sim_domain_robot::stress_results::stress_colour, the rule sim-app's cad scene uses); links without cells keep the normal colour. A missing or invalid file colours nothing.";
@@ -96,7 +95,7 @@ pub struct StressOverlay {
     pub enabled: bool,
     pub results: Option<StressResults>,
     /// A results-only read started by switching the overlay on.
-    pending: Option<Mutex<mpsc::Receiver<StressResults>>>,
+    pending: Option<crate::jobs::Job<StressResults>>,
     /// Bumped whenever the mesh colours must be recomputed (toggle, new results, new meshes).
     pub revision: u64,
     /// The revision the link meshes were last painted for, and the seconds that took.
@@ -105,34 +104,25 @@ pub struct StressOverlay {
 impl StressOverlay {
     /// Starts a results-only read of the file beside `model_path` on a worker.
     pub fn refresh(&mut self, model_path: &Path) {
-        let (tx, rx) = mpsc::channel();
         let path = model_path.to_path_buf();
-        std::thread::Builder::new()
-            .name("robot-stress".into())
-            .spawn(move || {
-                let _ = tx.send(read(&path));
-            })
-            .expect("spawn robot stress thread");
-        self.pending = Some(Mutex::new(rx));
+        self.pending = Some(crate::jobs::Job::spawn(crate::jobs::Pool::Io, 0, "the stress results reader", move |_| Ok(read(&path))));
     }
     pub fn busy(&self) -> bool {
         self.pending.is_some()
     }
     /// Takes a finished results-only read (never blocks); true when applied.
     pub fn take(&mut self) -> bool {
-        let Some(rx) = self.pending.as_ref() else { return false };
-        let got = match rx.lock().unwrap_or_else(|p| p.into_inner()).try_recv() {
-            Ok(r) => Some(r),
-            Err(mpsc::TryRecvError::Empty) => return false,
-            Err(mpsc::TryRecvError::Disconnected) => None,
-        };
+        let Some(got) = self.pending.as_ref().and_then(crate::jobs::Job::poll) else { return false };
         self.pending = None;
         match got {
-            Some(r) => {
+            Ok(r) => {
                 self.set(r);
                 true
             }
-            None => false,
+            Err(e) => {
+                bevy::log::warn!("{e}");
+                false
+            }
         }
     }
     pub fn set(&mut self, results: StressResults) {

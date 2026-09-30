@@ -136,8 +136,9 @@ pub(crate) struct Grab {
 }
 
 struct LiveRun {
-    control: mpsc::Sender<RunControl>,
-    shared: Arc<Mutex<RunShared>>,
+    /// The run session: `run_thread` on its own thread; dropping it stops
+    /// the session (closed channel) and joins within `jobs::JOIN_BOUND`.
+    worker: crate::jobs::RunThread<RunControl, RunShared>,
     description_id: String,
     /// Fidelity chosen when the run started (the toggle may change mid-run).
     fidelity: Fidelity,
@@ -145,6 +146,16 @@ struct LiveRun {
     /// and whether it was edited live.
     document: SystemDocument,
     edited: bool,
+}
+
+impl LiveRun {
+    /// The one way a run session starts: `run_thread` on a `RunThread`.
+    fn spawn(document: SystemDocument, registry: BehaviorRegistry, observed: Vec<String>, description_id: String, fidelity: Fidelity) -> Self {
+        let initial = RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false };
+        let (simulated, source_id) = (document.clone(), description_id.clone());
+        let worker = crate::jobs::RunThread::spawn("builder-run", initial, move |commands, shared| run_thread(simulated, registry, observed, source_id, commands, shared));
+        Self { worker, description_id, fidelity, document, edited: false }
+    }
 }
 
 #[derive(Resource)]
@@ -188,8 +199,8 @@ pub struct Builder {
     textures: BTreeMap<String, Handle<Image>>,
     /// Registry elements never change while running; computed once.
     elements: Vec<library::ElementEntry>,
-    /// Background compile of the latest document.
-    job: Option<Mutex<mpsc::Receiver<CompileResult>>>,
+    /// Background compile of the latest document (generation: its revision).
+    job: Option<crate::jobs::Job<CompileResult>>,
     tab: Tab,
     category: Option<&'static str>,
     pub(super) mode: Mode,
@@ -252,12 +263,11 @@ pub(super) struct StudyState {
     pub error: Option<String>,
 }
 
+/// A study in progress (progress: variants done); dropping it cancels the run.
 struct StudyJob {
     name: String,
-    receiver: Mutex<mpsc::Receiver<Result<sim_runtime::system_study::StudyResult, String>>>,
-    progress: Arc<std::sync::atomic::AtomicUsize>,
+    work: crate::jobs::Job<sim_runtime::system_study::StudyResult>,
     total: usize,
-    cancel: Arc<std::sync::atomic::AtomicBool>,
 }
 
 #[derive(Default)]
@@ -267,10 +277,10 @@ pub(super) struct ReplayState {
     pub outcomes: BTreeMap<String, ReplayOutcome>,
 }
 
+/// A replay in progress; dropping it stops the rerun between steps.
 struct ReplayJob {
     id: String,
-    receiver: Mutex<mpsc::Receiver<Result<sim_runtime::run_history::ReplayReport, String>>>,
-    cancel: Arc<std::sync::atomic::AtomicBool>,
+    work: crate::jobs::Job<sim_runtime::run_history::ReplayReport>,
     started: std::time::Instant,
 }
 
@@ -327,12 +337,8 @@ struct CompileOutput {
     runtime_error: Option<String>,
 }
 
-fn compile_job(document: SystemDocument, registry: BehaviorRegistry) -> mpsc::Receiver<CompileResult> {
-    let (send, receive) = mpsc::channel();
-    std::thread::spawn(move || {
-        let _ = send.send(compile_now(document, registry));
-    });
-    receive
+fn compile_job(document: SystemDocument, registry: BehaviorRegistry) -> crate::jobs::Job<CompileResult> {
+    crate::jobs::Job::spawn(crate::jobs::Pool::Compute, document.revision, "the compile", move |_| Ok(compile_now(document, registry)))
 }
 
 /// One compile of `document` for the scene (call off the UI thread).
@@ -908,7 +914,7 @@ impl Builder {
 
     fn stop_run(&mut self) {
         // Keep every run that got anywhere.
-        if self.run.as_ref().is_some_and(|r| r.shared.lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.) >= 0.1) {
+        if self.run.as_ref().is_some_and(|r| r.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.) >= 0.1) {
             let _ = self.save_run("");
         }
         self.run = None;
@@ -918,7 +924,7 @@ impl Builder {
     pub fn save_run(&mut self, note: &str) -> Result<PathBuf, String> {
         let run = self.run.as_ref().ok_or("nothing is running")?;
         let (duration, history) = {
-            let s = run.shared.lock().map_err(|_| "run state unavailable")?;
+            let s = run.worker.shared().lock().map_err(|_| "run state unavailable")?;
             if s.reset_pending {
                 return Err("reset in progress; save again in a moment".into());
             }
@@ -966,18 +972,14 @@ impl Builder {
         let (path, summary) = self.runs.iter().find(|(_, s)| s.id == id).cloned().ok_or_else(|| format!("no saved run `{id}`"))?;
         let record = sim_runtime::run_history::load(&path)?;
         self.cancel_replay();
-        let (send, receive) = mpsc::channel();
-        let cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let (registry, c) = (self.registry.clone(), cancel.clone());
+        let registry = self.registry.clone();
         let (edited, fidelity) = (record.edited_while_running(), record.fidelity_label());
-        std::thread::spawn(move || {
-            let _ = send.send(sim_runtime::run_history::replay_with_cancel(&record, &registry, Some(&c)));
-        });
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, "replay thread", move |ctx| sim_runtime::run_history::replay_with_cancel(&record, &registry, Some(ctx.cancel_flag())));
         self.replay.outcomes.insert(
             id.to_string(),
             ReplayOutcome { id: id.to_string(), status: "running", max_rel_diff: None, samples: None, error: None, wall_seconds: 0., duration: summary.duration, seed: summary.seed, fidelity, edited_while_running: edited },
         );
-        self.replay.job = Some(ReplayJob { id: id.to_string(), receiver: Mutex::new(receive), cancel, started: std::time::Instant::now() });
+        self.replay.job = Some(ReplayJob { id: id.to_string(), work, started: std::time::Instant::now() });
         self.tab = Tab::Studies;
         self.status = format!("Replaying run {id} headlessly from t = 0 on the shared runtime (background).");
         self.panel_dirty = true;
@@ -986,8 +988,8 @@ impl Builder {
 
     /// Stop the running replay between simulation steps; it reports no result.
     pub fn cancel_replay(&mut self) -> bool {
+        // Dropping the job at the end of this function stops the rerun.
         let Some(job) = self.replay.job.take() else { return false };
-        job.cancel.store(true, std::sync::atomic::Ordering::Relaxed);
         if let Some(o) = self.replay.outcomes.get_mut(&job.id) {
             o.status = "cancelled";
             o.wall_seconds = job.started.elapsed().as_secs_f64();
@@ -999,16 +1001,12 @@ impl Builder {
 
     fn poll_replay(&mut self) {
         let Some(job) = &self.replay.job else { return };
-        let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
+        let polled = job.work.poll();
         let wall = job.started.elapsed().as_secs_f64();
         let id = job.id.clone();
         let Some(outcome) = self.replay.outcomes.get_mut(&id) else { return };
         outcome.wall_seconds = wall;
-        let result = match polled {
-            Err(mpsc::TryRecvError::Empty) => return,
-            Err(mpsc::TryRecvError::Disconnected) => Err("replay thread ended without a result".to_string()),
-            Ok(r) => r,
-        };
+        let Some(result) = polled else { return };
         match result {
             Ok(report) => {
                 outcome.status = "done";
@@ -1040,7 +1038,7 @@ impl Builder {
     fn start_run(&mut self, scene: &SpatialScene) {
         if let Some(run) = &self.run {
             if run.description_id == scene.description.id {
-                let _ = run.control.send(RunControl::Start);
+                let _ = run.worker.send(RunControl::Start);
                 self.status = RUNNING_STATUS.into();
                 return;
             }
@@ -1062,20 +1060,13 @@ impl Builder {
         observed.extend(graphs::recordable(scene, &self.graphs.pinned));
         observed.sort();
         observed.dedup();
-        let (control, commands) = mpsc::channel();
-        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
-        let thread_shared = shared.clone();
-        let description_id = scene.description.id.clone();
-        let source_id = description_id.clone();
-        let simulated = document.clone();
-        std::thread::spawn(move || run_thread(document, registry, observed, source_id, commands, thread_shared));
-        self.run = Some(LiveRun { control, shared, description_id, fidelity, document: simulated, edited: false });
+        self.run = Some(LiveRun::spawn(document, registry, observed, scene.description.id.clone(), fidelity));
         self.status = RUNNING_STATUS.into();
     }
 
     fn pause_run(&mut self) {
         if let Some(run) = &self.run {
-            let _ = run.control.send(RunControl::Pause);
+            let _ = run.worker.send(RunControl::Pause);
             // No time: the last published snapshot may be a frame behind the pause.
             self.status = "Paused (Step advances one timestep; Run resumes).".into();
         }
@@ -1092,7 +1083,7 @@ impl Builder {
         match fidelity.document(source, &self.registry) {
             Ok(document) => {
                 let run = self.run.as_mut().expect("checked above");
-                let _ = run.control.send(RunControl::Swap(Box::new(document.clone()), description_id.clone()));
+                let _ = run.worker.send(RunControl::Swap(Box::new(document.clone()), description_id.clone()));
                 run.description_id = description_id;
                 run.document = document;
                 run.edited = true;
@@ -1117,13 +1108,13 @@ impl Builder {
             }
             ids.sort();
             ids.dedup();
-            let _ = run.control.send(RunControl::Observe(ids));
+            let _ = run.worker.send(RunControl::Observe(ids));
         }
     }
 
     /// Recorded history of one observable (empty when not running).
     pub(super) fn history(&self, id: &str) -> Vec<[f64; 2]> {
-        self.run.as_ref().and_then(|r| r.shared.lock().ok().and_then(|s| s.history.get(id).map(|h| h.iter().copied().collect()))).unwrap_or_default()
+        self.run.as_ref().and_then(|r| r.worker.shared().lock().ok().and_then(|s| s.history.get(id).map(|h| h.iter().copied().collect()))).unwrap_or_default()
     }
 
     /// Save a study (shared command, undoable) and start running it.
@@ -1135,20 +1126,14 @@ impl Builder {
     /// Run a saved study on worker threads; results arrive in `poll_study`.
     pub fn run_study(&mut self, name: &str) -> Result<(), String> {
         let study = self.document.studies.get(name).cloned().ok_or_else(|| format!("no study `{name}`"))?;
-        if let Some(job) = &self.study.job {
-            job.cancel.store(true, std::sync::atomic::Ordering::Relaxed);
-        }
-        let (send, receive) = mpsc::channel();
-        let progress = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let (document, registry, n, p, c) = (self.document.clone(), self.registry.clone(), name.to_string(), progress.clone(), cancel.clone());
+        // Replacing the job below cancels a study already running.
+        let (document, registry, n) = (self.document.clone(), self.registry.clone(), name.to_string());
         let total = sim_runtime::system_study::variant_count(&study);
-        std::thread::spawn(move || {
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, format!("study {name}"), move |ctx| {
             let threads = std::thread::available_parallelism().map(|n| n.get().saturating_sub(1).max(1)).unwrap_or(2);
-            let r = sim_runtime::system_study::run(&document, &registry, &n, &study, threads, Some(&c), &|done, _| p.store(done, std::sync::atomic::Ordering::Relaxed));
-            let _ = send.send(r);
+            sim_runtime::system_study::run(&document, &registry, &n, &study, threads, Some(ctx.cancel_flag()), &|done, total| ctx.steps(done as u64, total as u64))
         });
-        self.study.job = Some(StudyJob { name: name.to_string(), receiver: Mutex::new(receive), progress, total, cancel });
+        self.study.job = Some(StudyJob { name: name.to_string(), work, total });
         self.study.error = None;
         self.tab = Tab::Studies;
         self.graphs.visible = true;
@@ -1170,16 +1155,14 @@ impl Builder {
     }
 
     pub(super) fn study_progress(&self) -> Option<(String, usize, usize)> {
-        self.study.job.as_ref().map(|j| (j.name.clone(), j.progress.load(std::sync::atomic::Ordering::Relaxed), j.total))
+        self.study.job.as_ref().map(|j| (j.name.clone(), j.work.progress().steps.map_or(0, |(done, _)| done as usize), j.total))
     }
 
     fn poll_study(&mut self) {
         let Some(job) = &self.study.job else { return };
-        let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
-        match polled {
-            Err(mpsc::TryRecvError::Empty) => {}
-            Err(mpsc::TryRecvError::Disconnected) => self.study.job = None,
-            Ok(result) => {
+        match job.work.poll() {
+            None => {}
+            Some(result) => {
                 self.study.job = None;
                 match result {
                     Ok(r) => {
@@ -1340,7 +1323,7 @@ impl Builder {
     pub fn run_step(&mut self) -> Result<(), String> {
         let run = self.run.as_ref().ok_or("nothing is running: start a run, pause it, then step")?;
         {
-            let s = run.shared.lock().map_err(|_| "run state unavailable")?;
+            let s = run.worker.shared().lock().map_err(|_| "run state unavailable")?;
             if s.reset_pending {
                 return Err("reset in progress; step again in a moment".into());
             }
@@ -1348,7 +1331,7 @@ impl Builder {
                 return Err("pause the run before stepping".into());
             }
         }
-        run.control.send(RunControl::Step).map_err(|_| "the run has ended; start a new run".to_string())?;
+        run.worker.send(RunControl::Step).map_err(|_| "the run has ended; start a new run".to_string())?;
         self.panel_dirty = true;
         Ok(())
     }
@@ -1363,19 +1346,19 @@ impl Builder {
     /// The graphs are cleared at once and stay closed to pre-reset samples.
     pub fn run_reset(&mut self) -> Result<(), String> {
         let run = self.run.as_ref().ok_or("nothing is running")?;
-        if run.shared.lock().map_err(|_| "run state unavailable")?.reset_pending {
+        if run.worker.shared().lock().map_err(|_| "run state unavailable")?.reset_pending {
             return Err("reset in progress".into());
         }
-        let reached = run.shared.lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.);
+        let reached = run.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.);
         let kept = if reached >= 0.1 { Some(self.save_run("")?) } else { None };
         let run = self.run.as_mut().expect("checked above");
         {
-            let mut s = run.shared.lock().map_err(|_| "run state unavailable")?;
+            let mut s = run.worker.shared().lock().map_err(|_| "run state unavailable")?;
             s.reset_pending = true;
             s.history.clear();
         }
-        if run.control.send(RunControl::Reset).is_err() {
-            if let Ok(mut s) = run.shared.lock() {
+        if run.worker.send(RunControl::Reset).is_err() {
+            if let Ok(mut s) = run.worker.shared().lock() {
                 s.reset_pending = false;
             }
             return Err("the run has ended; start a new run".into());
@@ -1441,7 +1424,7 @@ impl Builder {
     /// Latest run-thread status: null without a run.
     fn live_run_json(&self) -> serde_json::Value {
         let Some(run) = &self.run else { return serde_json::Value::Null };
-        let s = run.shared.lock().ok();
+        let s = run.worker.shared().lock().ok();
         let status = s.as_ref().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.clone()));
         serde_json::json!({
             "time": status.as_ref().map(|x| x.time),
@@ -1457,7 +1440,7 @@ impl Builder {
     }
 
     fn running(&self) -> bool {
-        self.run.as_ref().is_some_and(|r| r.shared.lock().map(|s| s.running).unwrap_or(false))
+        self.run.as_ref().is_some_and(|r| r.worker.shared().lock().map(|s| s.running).unwrap_or(false))
     }
 }
 
@@ -2398,19 +2381,20 @@ fn rebuild_scene(
     // Compile off the UI thread; apply the newest finished result.
     if builder.scene_dirty && builder.job.is_none() {
         builder.scene_dirty = false;
-        builder.job = Some(Mutex::new(compile_job(builder.document.clone(), builder.registry.clone())));
+        builder.job = Some(compile_job(builder.document.clone(), builder.registry.clone()));
     }
-    let Some(job) = &builder.job else { return };
-    let polled = job.lock().map(|j| j.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
+    let Some(polled) = builder.job.as_ref().and_then(crate::jobs::Job::poll) else { return };
+    builder.job = None;
     let finished = match polled {
         Ok(r) => r,
-        Err(mpsc::TryRecvError::Empty) => return,
-        Err(mpsc::TryRecvError::Disconnected) => {
-            builder.job = None;
+        Err(e) => {
+            // The compile panicked: say so instead of leaving the scene silently stale.
+            builder.compile_error = Some(e.clone());
+            builder.status = e;
+            builder.panel_dirty = true;
             return;
         }
     };
-    builder.job = None;
     if finished.revision != builder.document.revision {
         // An edit arrived while compiling; compile again before redrawing.
         builder.scene_dirty = true;
@@ -2607,7 +2591,7 @@ fn sync_run(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<Spa
         builder.panel_dirty = true;
     }
     let Some(run) = &builder.run else { return };
-    let Ok(shared) = run.shared.lock() else { return };
+    let Ok(shared) = run.worker.shared().lock() else { return };
     if let Some(snapshot) = &shared.snapshot {
         if snapshot.source_description_id == scene.description.id {
             let changed = scene.live.snapshot.as_ref().is_none_or(|s| s.frame != snapshot.frame || s.status != snapshot.status || s.error != snapshot.error);
@@ -2808,11 +2792,8 @@ mod replay_tests {
         b.last_description = Some(compiled.description.clone());
         assert!(b.run_step().is_err() && b.run_reset().is_err(), "no run: refused");
         assert_eq!(b.state_json()["live_run"], serde_json::Value::Null);
-        let (control, commands) = mpsc::channel();
-        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
-        let (doc, reg, id, s) = (document.clone(), registry.clone(), compiled.description.id.clone(), shared.clone());
-        std::thread::spawn(move || run_thread(doc, reg, observed, id, commands, s));
-        b.run = Some(LiveRun { control: control.clone(), shared: shared.clone(), description_id: compiled.description.id.clone(), fidelity: Fidelity::Detailed, document: document.clone(), edited: false });
+        b.run = Some(LiveRun::spawn(document.clone(), registry.clone(), observed, compiled.description.id.clone(), Fidelity::Detailed));
+        let shared = b.run.as_ref().unwrap().worker.shared().clone();
         let status = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.clone());
         let time = || status().map(|x| x.time).unwrap_or(0.);
         let started = std::time::Instant::now();
@@ -2851,7 +2832,7 @@ mod replay_tests {
         // Step once from t = 0, resume briefly, pause and save.
         b.run_step().unwrap();
         until(&|| status().is_some_and(|x| x.step == 1));
-        control.send(RunControl::Start).unwrap();
+        b.run.as_ref().unwrap().worker.send(RunControl::Start).unwrap();
         until(&|| time() >= 0.12);
         b.run_pause();
         until(&|| !shared.lock().unwrap().running);
@@ -2895,11 +2876,8 @@ mod replay_tests {
             _ => None,
         }).expect("the winch has a load the grab pushes on");
         b.last_description = Some(compiled.description.clone());
-        let (control, commands) = mpsc::channel();
-        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
-        let (doc, reg, id, s) = (profile.clone(), registry.clone(), compiled.description.id.clone(), shared.clone());
-        std::thread::spawn(move || run_thread(doc, reg, Vec::new(), id, commands, s));
-        b.run = Some(LiveRun { control: control.clone(), shared: shared.clone(), description_id: compiled.description.id.clone(), fidelity: Fidelity::Realtime, document: profile.clone(), edited: false });
+        b.run = Some(LiveRun::spawn(profile.clone(), registry.clone(), Vec::new(), compiled.description.id.clone(), Fidelity::Realtime));
+        let shared = b.run.as_ref().unwrap().worker.shared().clone();
         let time = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.);
         let started = std::time::Instant::now();
         while time() < 0.15 && started.elapsed().as_secs() < 60 {
@@ -2959,17 +2937,14 @@ mod replay_tests {
         b.last_description = Some(compiled.description.clone());
         // What start_run launches with Realtime on.
         b.realtime = true;
-        let (control, commands) = mpsc::channel();
-        let shared = Arc::new(Mutex::new(RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false }));
-        let (doc, reg, id, s) = (profile.clone(), registry.clone(), compiled.description.id.clone(), shared.clone());
-        std::thread::spawn(move || run_thread(doc, reg, observed, id, commands, s));
-        b.run = Some(LiveRun { control: control.clone(), shared: shared.clone(), description_id: compiled.description.id.clone(), fidelity: Fidelity::Realtime, document: profile.clone(), edited: false });
+        b.run = Some(LiveRun::spawn(profile.clone(), registry.clone(), observed, compiled.description.id.clone(), Fidelity::Realtime));
+        let shared = b.run.as_ref().unwrap().worker.shared().clone();
         let time = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.);
         let started = std::time::Instant::now();
         while time() < 0.3 && started.elapsed().as_secs() < 60 {
             std::thread::sleep(std::time::Duration::from_millis(20));
         }
-        control.send(RunControl::Pause).unwrap();
+        b.run.as_ref().unwrap().worker.send(RunControl::Pause).unwrap();
         while shared.lock().unwrap().running && started.elapsed().as_secs() < 60 {
             std::thread::sleep(std::time::Duration::from_millis(20));
         }

@@ -323,8 +323,6 @@ struct Published {
     save: Option<(u64, Result<Saved, String>)>,
     /// The latest replay state (stamped with its request number and generation).
     replay: Option<ReplayState>,
-    /// The last finished listing of saved recordings (its request number, and the list or why not).
-    listing: Option<(u64, Result<Vec<Listed>, String>)>,
 }
 
 #[derive(Clone, Copy, Serialize, Debug, PartialEq, Eq)]
@@ -474,8 +472,9 @@ impl RunAction {
 
 /// The UI side of the run thread: sends commands, accepts frames.
 pub struct RunController {
-    tx: mpsc::Sender<Command>,
-    shared: Arc<Mutex<Published>>,
+    /// The `robot-run` worker (idle, with no thread, for a recorded preset);
+    /// dropping it (reload, preset switch) stops and joins it within a bound.
+    thread: crate::jobs::RunThread<Command, Published>,
     /// Generation the UI expects; frames from older generations are discarded.
     generation: u64,
     /// Whether the UI last asked the robot to run (commands are ordered).
@@ -510,9 +509,8 @@ pub struct RunController {
     save_error: Option<String>,
     /// The latest replay state (local until the run thread publishes a newer one).
     replay: ReplayState,
-    /// Recording listings requested and finished, and the last list or why not.
-    list_requested: u64,
-    list_done: u64,
+    /// The recording listing in flight (a newer one replaces it), and the last list or why not.
+    listing: crate::jobs::Latest<Vec<Listed>>,
     recordings: Vec<Listed>,
     list_error: Option<String>,
     /// Time histories of the applied frames of the current generation (robot_graphs).
@@ -554,18 +552,17 @@ impl RunController {
     /// action is refused naming the preset ([`Self::recorded_refusal`]).
     pub fn spawn_recorded(run: Arc<RecordedRun>) -> Self {
         let model = run.scene.robot.clone();
-        // A channel with no run thread: nothing is ever sent (all sends are refused first).
-        let (tx, _) = mpsc::channel();
+        // No run thread: nothing is ever sent (all sends are refused first).
         let generation = 0;
         let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
-        let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None, listing: None }));
+        let thread = crate::jobs::RunThread::idle("robot-run", Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None });
         let mut graphs = robot_graphs::History::default();
         graphs.clear(generation);
         let frame = run.frames.first().cloned();
-        Self { tx, shared, generation, running: false, frame, status, jogged: Default::default(), jog_error: None, preset: None, recorded: Some(run.clone()), playback: Some(RecordedPlayback::spawn(run)), chunk_s: 0.0,
+        Self { thread, generation, running: false, frame, status, jogged: Default::default(), jog_error: None, preset: None, recorded: Some(run.clone()), playback: Some(RecordedPlayback::spawn(run)), chunk_s: 0.0,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
-            replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
+            replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
             graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
     }
     pub fn recorded(&self) -> Option<&Arc<RecordedRun>> {
@@ -608,22 +605,17 @@ impl RunController {
         }
     }
     fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>, generation: u64) -> Self {
-        let (tx, rx) = mpsc::channel();
         let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
-        let shared = Arc::new(Mutex::new(Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None, listing: None }));
-        let out = shared.clone();
+        let published = Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None };
         let chunk_s = source.chunk_s();
         let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
-        std::thread::Builder::new()
-            .name("robot-run".into())
-            .spawn(move || worker(source, links, rx, out, generation))
-            .expect("spawn robot run thread");
+        let thread = crate::jobs::RunThread::spawn("robot-run", published, move |rx, out| worker(source, links, rx, out, generation));
         let mut graphs = robot_graphs::History::default();
         graphs.clear(generation);
-        Self { tx, shared, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, recorded: None, playback: None, chunk_s,
+        Self { thread, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, recorded: None, playback: None, chunk_s,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
-            replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
+            replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
             graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
@@ -662,7 +654,7 @@ impl RunController {
     pub fn jog(&mut self, joint: &str, target: f64) -> Result<(), String> {
         self.check_jog(joint, target)?;
         self.jogged.insert(joint.to_string(), target);
-        self.tx.send(Command::Jog { joint: joint.to_string(), target }).map_err(|_| "the run thread has stopped".to_string())
+        self.thread.send(Command::Jog { joint: joint.to_string(), target }).map_err(|_| "the run thread has stopped".to_string())
     }
 
     /// The built preset's typed inputs and motion config (None before a build).
@@ -733,7 +725,7 @@ impl RunController {
                 return Err(e);
             }
         };
-        self.tx.send(Command::Motion { values }).map_err(|_| "the run thread has stopped".to_string())?;
+        self.thread.send(Command::Motion { values }).map_err(|_| "the run thread has stopped".to_string())?;
         self.motion_refusal = None;
         self.requested = Some(values);
         (self.keys, self.keys_physical) = match request {
@@ -807,7 +799,7 @@ impl RunController {
             }
         };
         self.save_requested += 1;
-        self.tx.send(Command::SaveRecording { seq: self.save_requested, target: target.clone(), note: note.map(str::to_string), unix_ms }).map_err(|_| "the run thread has stopped".to_string())?;
+        self.thread.send(Command::SaveRecording { seq: self.save_requested, target: target.clone(), note: note.map(str::to_string), unix_ms }).map_err(|_| "the run thread has stopped".to_string())?;
         self.saving = Some(target.clone());
         self.save_error = None;
         Ok(target)
@@ -831,20 +823,12 @@ impl RunController {
         self.saving.as_deref()
     }
 
-    /// Lists the saved recordings of the loaded preset on a lister thread (at
-    /// open, after each finished save and on request); `recordings_json` once done.
+    /// Lists the saved recordings of the loaded preset off the UI thread (at
+    /// open, after each finished save and on request; a newer listing replaces
+    /// an older one); `recordings_json` once done.
     pub fn refresh_recordings(&mut self) {
         let Some(p) = self.preset.clone() else { return };
-        self.list_requested += 1;
-        let (seq, out) = (self.list_requested, self.shared.clone());
-        let spawned = std::thread::Builder::new().name("robot-recording-list".into()).spawn(move || {
-            let result = robot_recording::list(&p.root, &p.preset.id);
-            out.lock().unwrap_or_else(|p| p.into_inner()).listing = Some((seq, result));
-        });
-        if let Err(e) = spawned {
-            self.list_done = self.list_requested;
-            self.list_error = Some(format!("could not start the recording lister: {e}"));
-        }
+        self.listing.start(crate::jobs::Pool::Io, "the recording lister", move |_| robot_recording::list(&p.root, &p.preset.id));
     }
     pub fn recordings(&self) -> &[Listed] {
         &self.recordings
@@ -852,7 +836,7 @@ impl RunController {
     /// `robot_state.recordings`: the saved recordings of the loaded preset (null for `--robot FILE`).
     pub fn recordings_json(&self) -> Value {
         let Some(p) = &self.preset else { return Value::Null };
-        json!({"dir": p.root.join(robot_recording::DIR).join(&p.preset.id), "files": self.recordings, "pending": self.list_done < self.list_requested, "error": self.list_error,
+        json!({"dir": p.root.join(robot_recording::DIR).join(&p.preset.id), "files": self.recordings, "pending": self.listing.pending().is_some(), "error": self.list_error,
             "rule": "*.json (not *.meta.json) in runs/robot-presets/<preset-id>/ under the root, by file name (UTC stamp, oldest first); meta summarises the sidecar when it exists; listed off the UI thread at open, after each save and on robot_replay {action: \"list\"}"})
     }
 
@@ -903,13 +887,13 @@ impl RunController {
         self.motion_error = None;
         self.replay = ReplayState::new(self.replay.seq + 1, self.generation, Some(source.clone()), ReplayPhase::Replaying);
         self.graphs.clear(self.generation);
-        self.tx.send(Command::Replay { generation: self.generation, seq: self.replay.seq, path: source.clone() }).map_err(|_| "the run thread has stopped".to_string())?;
+        self.thread.send(Command::Replay { generation: self.generation, seq: self.replay.seq, path: source.clone() }).map_err(|_| "the run thread has stopped".to_string())?;
         Ok(source)
     }
     /// Cancel: the run thread stops between chunks (phase cancelled, never done).
     pub fn cancel_replay(&mut self) -> Result<(), String> {
         self.check_cancel()?;
-        self.tx.send(Command::CancelReplay).map_err(|_| "the run thread has stopped".to_string())?;
+        self.thread.send(Command::CancelReplay).map_err(|_| "the run thread has stopped".to_string())?;
         self.replay.cancel_requested = true;
         Ok(())
     }
@@ -943,7 +927,7 @@ impl RunController {
     /// Tests only: the whole held action through the motion handler's setter.
     #[cfg(test)]
     fn set_inputs(&self, values: Vec<f64>) {
-        self.tx.send(Command::SetInputs(values)).unwrap();
+        self.thread.send(Command::SetInputs(values)).unwrap();
     }
 
     /// Why an action is unavailable now (`Ok` when it can be sent).
@@ -1008,7 +992,7 @@ impl RunController {
                 Command::Reset { generation: self.generation }
             }
         };
-        self.tx.send(command).map_err(|_| "the run thread has stopped".to_string())
+        self.thread.send(command).map_err(|_| "the run thread has stopped".to_string())
     }
 
     /// Why a gait preview action is refused: no preset scene, a running physics
@@ -1049,7 +1033,7 @@ impl RunController {
     /// Takes the worker's latest status and frame; returns true when the
     /// displayed frame changed (a stale-generation frame is never accepted).
     pub fn poll(&mut self) -> bool {
-        let shared = self.shared.clone();
+        let shared = self.thread.shared().clone();
         let published = shared.lock().unwrap_or_else(|p| p.into_inner());
         let mut relist = false;
         // Saves are file results, kept across generations.
@@ -1067,14 +1051,13 @@ impl RunController {
                 Err(e) => self.save_error = Some(e.clone()),
             }
         }
-        if let Some((seq, result)) = published.listing.as_ref().filter(|(seq, _)| *seq > self.list_done) {
-            self.list_done = *seq;
+        if let Some((_, result)) = self.listing.poll() {
             match result {
                 Ok(list) => {
-                    self.recordings = list.clone();
+                    self.recordings = list;
                     self.list_error = None;
                 }
-                Err(e) => self.list_error = Some(e.clone()),
+                Err(e) => self.list_error = Some(e),
             }
         }
         if let Some(r) = published.replay.as_ref().filter(|r| r.generation >= self.generation && r.seq >= self.replay.seq) {
@@ -1138,7 +1121,7 @@ impl RunController {
     /// The one overlay handler behind keys C/J/F, the inspector buttons, `system_ui` overlay:* and REST `robot_overlay`.
     pub fn set_overlays(&mut self, flags: OverlayFlags) -> Result<(), String> {
         self.check_overlays()?;
-        self.tx.send(Command::Overlays(flags)).map_err(|_| "the run thread has stopped".to_string())?;
+        self.thread.send(Command::Overlays(flags)).map_err(|_| "the run thread has stopped".to_string())?;
         self.overlays = flags;
         Ok(())
     }
@@ -1166,8 +1149,9 @@ impl RunController {
         self.generation
     }
     /// The fresh run context for a reloaded file: `previous` (if any) is
-    /// dropped, which closes its channel and stops its run thread with any
-    /// run, jog or replay state; the new idle controller starts at the next
+    /// dropped, which closes its channel and stops its run thread (joined
+    /// within `jobs::JOIN_BOUND`) with any run, jog or replay state; its
+    /// frames can never be applied: the new idle controller starts at the next
     /// generation. Returns it and whether run or jog state was discarded.
     pub fn replace(previous: Option<RunController>, model: PhysicalModel) -> (Self, bool) {
         let reset = previous.as_ref().is_some_and(Self::has_run_state);
@@ -1211,7 +1195,7 @@ impl RunController {
         // A recorded preset has no run thread: the scale paces its playback worker.
         match self.playback.as_mut() {
             Some(p) => p.act(RecordedAction::Speed { scale })?,
-            None => self.tx.send(Command::Speed(scale)).map_err(|_| "the run thread has stopped".to_string())?,
+            None => self.thread.send(Command::Speed(scale)).map_err(|_| "the run thread has stopped".to_string())?,
         }
         self.speed_scale = scale;
         Ok(())
@@ -1269,7 +1253,7 @@ impl RunController {
 
     /// Frames need drawing while the worker is building or running.
     pub fn active(&self) -> bool {
-        self.playback.as_ref().is_some_and(|p| p.playing() || p.pending()) || self.gait.as_ref().is_some_and(GaitPreview::active) || matches!(self.status.phase, Phase::Building | Phase::Running) || self.running || self.replay.phase == ReplayPhase::Replaying || self.saving.is_some() || self.list_done < self.list_requested
+        self.playback.as_ref().is_some_and(|p| p.playing() || p.pending()) || self.gait.as_ref().is_some_and(GaitPreview::active) || matches!(self.status.phase, Phase::Building | Phase::Running) || self.running || self.replay.phase == ReplayPhase::Replaying || self.saving.is_some() || self.listing.pending().is_some()
     }
 
     /// `robot_state.run`: phase, time, steps, chunk, rtf, generation, error
@@ -1787,13 +1771,14 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                     // Serialising and writing happen on a writer thread: a full-robot scene is megabytes.
                     Ok((snapshot, meta, root)) => {
                         let writer_out = out.clone();
-                        let spawned = std::thread::Builder::new().name("robot-recording-writer".into()).spawn(move || {
+                        // A save: detached (complete on drop), so the file is finished even
+                        // if this run or its controller is dropped meanwhile. It publishes
+                        // its own result, so the handle is dropped here.
+                        drop(crate::jobs::Job::spawn(crate::jobs::Pool::Io, seq, "the recording writer", move |_| {
                             let result = robot_recording::write(&root, &target, &snapshot, meta);
                             writer_out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, result));
-                        });
-                        if let Err(e) = spawned {
-                            out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, Err(format!("could not start the recording writer: {e}"))));
-                        }
+                            Ok(())
+                        }).complete_on_drop());
                     }
                     Err(e) => out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, Err(e))),
                 }
@@ -2261,7 +2246,7 @@ mod tests {
         let after = (c.graphs().frames(), samples(&c));
         assert_eq!(after, (1, 1), "the t = 0 frame of generation 1");
         // A stale-generation frame reaching poll adds no sample (the run thread is paused, so nothing races it).
-        c.shared.lock().unwrap().frame = Some(old);
+        c.thread.lock().frame = Some(old);
         assert!(!c.poll());
         assert_eq!((c.graphs().frames(), samples(&c)), after);
         assert_eq!(c.frame().unwrap().generation, 1);

@@ -21,7 +21,8 @@ pub(super) struct DragState {
         super::placement_worker::Latest<Vec3, Result<sim_system::display_overlap::Report, String>>,
     submitted: Option<Vec3>,
     work: Arc<Work>,
-    committing: Option<Mutex<mpsc::Receiver<Result<sim_system::store::Applied, String>>>>,
+    /// The commit (a save): completes even if the drag state is dropped.
+    committing: Option<crate::jobs::Job<sim_system::store::Applied>>,
     committed_revision: Option<u64>,
 }
 struct Work {
@@ -589,11 +590,7 @@ pub(super) fn update(
         drag.validator.take();
         let work = drag.work.clone();
         let target = drag.target;
-        let (tx, rx) = mpsc::channel();
-        std::thread::spawn(move || {
-            let _ = tx.send(work.commit(target));
-        });
-        drag.committing = Some(Mutex::new(rx));
+        drag.committing = Some(crate::jobs::Job::spawn(crate::jobs::Pool::Io, 0, "Placement worker", move |_| work.commit(target)).complete_on_drop());
         b.status = "Checking and saving placement…".into();
         b.panel_dirty = true;
     }
@@ -601,10 +598,9 @@ pub(super) fn update(
 }
 
 fn poll_drop(b: &mut Builder, scene: &SpatialScene, drag: &mut DragState) -> Option<bool> {
-    if let Some(rx) = &drag.committing {
-        let result = rx.lock().unwrap().try_recv();
-        match result {
-            Ok(Ok(applied)) => {
+    if let Some(job) = &drag.committing {
+        match job.poll() {
+            Some(Ok(applied)) => {
                 drag.committing = None;
                 drag.committed_revision = Some(applied.revision);
                 b.reload();
@@ -613,20 +609,14 @@ fn poll_drop(b: &mut Builder, scene: &SpatialScene, drag: &mut DragState) -> Opt
                 }
                 b.status = "Placement saved.".into();
             }
-            Ok(Err(e)) => {
+            Some(Err(e)) => {
                 b.reload();
                 b.status = e.clone();
                 b.action_error = Some(e);
                 b.panel_dirty = true;
                 return Some(false);
             }
-            Err(mpsc::TryRecvError::Disconnected) => {
-                b.status = "Placement worker stopped; inspect the current document.".into();
-                b.reload();
-                b.panel_dirty = true;
-                return Some(false);
-            }
-            Err(mpsc::TryRecvError::Empty) => {}
+            None => {}
         }
         return Some(true);
     }
@@ -941,12 +931,20 @@ mod tests {
                     .unwrap()
                     .position,
             ) + Vec3::Z * 0.1;
-            let (tx, rx) = mpsc::channel();
-            d.committing = Some(Mutex::new(rx));
+            let (release, gate) = mpsc::channel::<()>();
+            let (work, target) = (d.work.clone(), d.target);
+            d.committing = Some(crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, "test commit", move |_| {
+                let _ = gate.recv();
+                work.commit(target)
+            }));
             assert_eq!(poll_drop(&mut b, &s, &mut d), Some(true));
             assert!(!d.awaiting_scene());
-            tx.send(d.work.commit(d.target)).unwrap();
-            assert_eq!(poll_drop(&mut b, &s, &mut d), Some(true));
+            release.send(()).unwrap();
+            let started = std::time::Instant::now();
+            while !d.awaiting_scene() && started.elapsed() < std::time::Duration::from_secs(10) {
+                assert_eq!(poll_drop(&mut b, &s, &mut d), Some(true));
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
             assert!(d.awaiting_scene());
             assert_eq!(poll_drop(&mut b, &s, &mut d), Some(true));
             b.drag = Some(d);
@@ -1130,9 +1128,7 @@ mod tests {
         fixture(|mut b, s| {
             let before = b.document.clone();
             let mut d = drag(&b, &["a"]);
-            let (tx, rx) = mpsc::channel();
-            d.committing = Some(Mutex::new(rx));
-            tx.send(d.work.commit(Vec3::new(0.5, 0.02, 0.))).unwrap();
+            d.committing = Some(crate::jobs::Job::finished(0, d.work.commit(Vec3::new(0.5, 0.02, 0.))));
             assert_eq!(poll_drop(&mut b, &s, &mut d), Some(false));
             assert_eq!(b.document, before);
             assert!(b.action_error.as_ref().unwrap().contains("overlap"));

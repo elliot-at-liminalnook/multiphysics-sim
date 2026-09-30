@@ -2063,7 +2063,7 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
         }
         BuildAction::CancelStudy => {
             if let Some(job) = builder.study.job.take() {
-                job.cancel.store(true, std::sync::atomic::Ordering::Relaxed);
+                job.work.cancel();
                 builder.status = "Study cancelled.".into();
             }
         }

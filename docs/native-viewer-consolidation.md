@@ -188,8 +188,54 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     `examples/` changed (size and mtime of every file, sha256 of the opened
     files). Activations are REST `system_ui` (the click handler), not pointer
     gestures.
-  - *Limits:* read-only — nothing is stepped, jogged, teleoperated or written.
-    Running a robot still needs `sim-app --scene cad`. RoboCAD still owns
+  - *Live run (batch simrobot-live-view; commits 37a48029, 12c8614e,
+    39a07162; `crates/sim-spatial/src/robot_run.rs`):* a `robot-run` thread
+    owns the shared `sim_runtime::physical::PhysicalRobot`, built from the
+    already-loaded model with `sim_runtime::registry()` and
+    `BuildOptions::default()` (the options `sim-app --scene cad` uses,
+    `cad_app.rs:104`). The UI never builds or advances it; it only applies
+    frames. Run / Pause / Step / Reset are header buttons, `system_ui`
+    `run:start|pause|step|reset` and REST `robot_run {action}`, all through one
+    handler. The robot advances in fixed 0.02 s sim-time chunks, paced at most
+    to real time (lag beyond one chunk is dropped, not made up). Step advances
+    exactly one chunk and is refused while running; Reset rebuilds, bumps the
+    generation and leaves it paused at t = 0. Frames carry (generation, time,
+    steps, poses, joint angles, targets); the UI drops frames from an older
+    generation and shows the assembly pose until the rebuild publishes t = 0.
+    `robot_state.run` reports phase (idle | building | running | paused |
+    failed), time, steps, chunk_s, measured RTF (sim s over wall s, last ~1 s
+    of running), generation, frame_generation and error. A build or advance
+    error sets `failed` with the message (full text in the inspector, clipped
+    in the header), keeps the last good frame, refuses Run/Step naming Reset,
+    and does not panic. Nothing is written to the file.
+  - *Verified evidence (T10.3):* `.claude-pair/captures/T10-robot-live/`
+    (`drive.py`, `capture.json` ok=true, 21 named assertions; debug build).
+    Wheeled baseline: time increasing while running (0.12 → 0.48 → 1.34 s),
+    **measured RTF 0.70** in the recorded capture (0.72–0.73 in two earlier runs of the same driver; debug build, paced; release not measured),
+    pause freezing time and steps across two polls, one step = +0.02 s (within
+    1e-9) and +1 step, reset to t = 0, steps 0, generation 0 → 1 with
+    frame_generation 1 and every link pose equal to the pre-run assembly pose
+    (com, identity rotation; max error 0.0), and `robot_run {action:"jump"}`
+    erroring with the name. Screenshots robot-running.png, robot-jog.png,
+    robot-reset.png. 29-link full robot
+    (`cad-profiles/robot-provisional.simrobot.json`): **it does not run.** The
+    build fails in ~0.02 s with "CAD actuator profiles require explicit PWM
+    control; catalog servo firmware cannot substitute for the declared
+    fixed-PD controller" (`physical.rs:200`, because the default options have
+    `driver_control` false). The capture asserts phase failed with that text,
+    no panic, a responsive window (robot_state and system_ui answered in
+    0.04 s), the static assembly pose still shown, and Run refused naming
+    Reset (robot-full-running.png shows the failed state). `sim-app --scene
+    cad` loads with the same default options, so by code reading it fails the
+    same way; that was not captured.
+  - *Limits:* the wheeled robot runs; 29-link full-robot exports need a
+    driver_control / PWM build path, which neither viewer provides yet. There
+    is no recording, saving or replay of robot-mode runs, no graphs, and no
+    file watching or auto-rebuild on CAD save (sim-app watches the file;
+    reopen the viewer here). Controls were activated through REST
+    `system_ui`, not pointer clicks. The wheeled robot's motion is small on
+    screen (its wheels are axisymmetric), so the numbers in capture.json, not
+    the images, prove the motion. RoboCAD still owns
     authoring and export; the shell cannot trigger CAD edits. The pose is the
     stored com with identity rotation; that it equals sim-app's t=0 pose is
     established by reading the code (`articulated.rs`, `physical.rs`), not by
@@ -203,11 +249,14 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 - **Remaining gaps:**
   1. no way to trigger CAD edits or exports from the shell;
   2. no RoboCAD REST reload round trip (edit → export → shell reload);
-  3. no live stepping, jogging or teleoperation (deferred to simrobot-live-view).
+  3. no build path for actuator-profile (full-robot) exports, which need
+     explicit PWM / driver control; no recording, replay or file watching in
+     robot mode; no walking-controller teleoperation (see §2g).
 - **Source owner:** CAD (`.rcad` → `simrobot` v3 export). Display models are
   presentation only.
-- **Dependencies:** a CAD service client (§3). Move simrobot live stepping
-  from the sim-app UI thread onto a worker (§4).
+- **Dependencies:** a CAD service client (§3). Simrobot stepping now runs on
+  a worker in sim-spatial; sim-app's cad scene still steps on its UI thread
+  (§4) and is unchanged.
 - **Acceptance evidence:** the read-only half is met (above). Correction to the
   earlier expectation: current exports carry no measured/derived/estimated
   label on most values (mass, inertia, com, friction), so the inspector shows
@@ -421,8 +470,32 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   jogging, not motion requests through a walking controller.
 - **Reusable layer:** `sim_runtime::{session, embedded, environment, walking_task, steered_reference}`,
   `sim_domain_control::motion_clock`.
-- **Shell status:** *absent*. sim-spatial's WASD is camera fly-through in
-  place mode only (`place_view.rs` header).
+- **Shell status:** *absent* for teleoperation. sim-spatial's WASD is camera
+  fly-through in place mode only (`place_view.rs` header). Robot mode
+  (`--robot FILE`, §2b) offers **servo-target jogging only**, labelled
+  "servo target (PD hold from the export), not walking-controller teleop".
+  It is not teleoperation: no motion request goes through a controller.
+  - *Controls:* −/+ buttons and `system_ui` `jog:<joint>:+|-` (0.05 rad,
+    0.005 m prismatic) for the non-fixed joints touching the selected link;
+    REST `robot_jog {joint, target|delta}` for any joint by its file name. One
+    handler; the run thread calls `PhysicalRobot::set_target`.
+  - *Validation:* a target outside the file's joint limits is refused with a
+    message naming the joint and the limit, "not clamped". Unknown joints,
+    passive joints and non-finite targets are also refused by name.
+    Continuous joints show "no limit in file". A jog while paused sets the
+    target, which takes effect when running or stepping; Reset restores the
+    file's targets. `robot_state.jog` and the Joints section show the
+    requested target and the target and measured angle from the latest frame.
+  - *Verified (T10.3, `.claude-pair/captures/T10-robot-live/`):* on the
+    wheeled baseline, six `jog:left axle:+` activations set the target from
+    0.0 to 0.3 rad while paused. After ~1.5 s of running, the measured angle
+    went from 0.0006 to 0.297 rad (|target − measured| 0.299 → 0.003;
+    robot-jog.png). Both drive axles report "no limit in file". On the full
+    robot, `robot_jog {"+X | Foot servo output", 1.0}` is refused naming the
+    joint, `[-2.5743606466916362, 0.07853981633974483]` and "not clamped",
+    and a within-limit −0.5 is accepted (queued; that robot cannot build, see
+    §2b). A refusal in trajectory mode is covered only by code reading
+    (`physical.rs:560`); no example uses that mode.
 - **Source owner:** example config (preset scene and controller recipe,
   `web/viewer/presets.json`) and the Rust runtime.
 - **Dependencies:** a native host for `EmbeddedSession`/environment on a
@@ -742,10 +815,14 @@ unknown-id error).
 5. **Partial — simrobot live view on a worker** (b/g groundwork). Done: the
    read-only inspect slice, `sim-spatial --robot FILE` (worker load, posed
    collision meshes, one link selection, inspector, CAD link status; verified
-   natively in T9.3, see §2b). Deferred to simrobot-live-view: port
-   `sim-app --scene cad` stepping into this mode through the
-   `sim_phenomena::scenarios::cad_robot` worker, then joint jogging,
-   teleoperation and gait playback.
+   natively in T9.3). Also done: a worker-owned `PhysicalRobot` with Run /
+   Pause / Step / Reset, generation-stamped frames and servo-target jogging
+   with file-limit validation (commits 37a48029, 12c8614e, 39a07162; verified
+   natively in T10.3 on the wheeled baseline, measured RTF ~0.7 in a debug
+   build; see §2b and §2g). Not done: full-robot exports fail to build with
+   the default options (they need a driver_control / PWM path, and sim-app
+   has the same failure). Recording and replay, file watching, walking
+   teleoperation and gait playback are also not done.
 
 ## 6. Launch path
 
@@ -758,18 +835,31 @@ Once it is running, open another system from the **Systems** sidebar tab (a
 discovered row, or a path in the field and Enter), or send REST
 `system_open {"path": …}`. There is no relaunch. Other modes today are `--lessons lessons`, `--place DIR`, and `--description/--spatial`.
 
-Read-only robot inspection (a CAD-exported simrobot file; nothing is stepped
-or written):
+Robot inspection and live run (a CAD-exported simrobot file; nothing is
+written to it):
 
 ```
 cargo run -p sim-spatial -- --robot examples/wheeled-robot/baseline/robot.simrobot.json
 cargo run -p sim-spatial -- --validate-only --robot FILE.simrobot.json
 ```
-REST `robot_state` returns the loaded values; `system_ui` lists the link,
-section and scroll controls. Running the robot still needs `sim-app --scene cad`.
-Separate apps are still needed for the schematic and experiments (`sim-viewer`),
-simrobot stepping and phenomena (`sim-app`), CAD (`cad/run.sh`), and walking and
-calibration (browser, `web/README.md`).
+REST `robot_state` returns the loaded values and the run and jog state.
+`system_ui` lists the link, section, scroll, `run:*` and `jog:*` controls; REST
+`robot_run` and `robot_jog` use the same handlers.
+
+`sim-app --scene cad` is **no longer needed to run** a v3 simrobot file that
+builds with the default options, such as the wheeled baseline (verified in
+T10.3). It is not a way around the full-robot limitation: 29-link exports with
+actuator profiles fail to build in sim-spatial, and sim-app uses the same
+`BuildOptions::default()` (`cad_app.rs:104`), so it fails the same way
+(established by code reading, not captured). Neither viewer can run them yet.
+sim-app still offers what robot mode lacks: rebuilding on file save and
+arrow-key jogging. `sim-app --scene cad` and `cad_app.rs` were not changed by
+this batch; their only diff against the run baseline is the earlier accepted
+1562f60c (shared collision triangulation).
+
+Separate apps are still needed for the schematic and experiments
+(`sim-viewer`), phenomena and file-watching robot view (`sim-app`), CAD
+(`cad/run.sh`), and walking and calibration (browser, `web/README.md`).
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,
 where FILE may be a system, simrobot, lesson directory or gait-lab output, opened

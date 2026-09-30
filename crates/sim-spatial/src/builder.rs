@@ -79,6 +79,8 @@ enum Purpose {
     ActuatorConsumer,
     /// Path of a gait-lab results folder to read (read-only).
     GaitResults,
+    /// Path of an identification archive folder to review (read-only).
+    CalibrationArchive,
 }
 
 #[derive(Clone, Debug)]
@@ -235,6 +237,10 @@ pub struct Builder {
     actuators: actuators::ActuatorState,
     /// Read-only gait-lab results browser (Gait lab tab).
     gait_lab: gait_lab::GaitLabState,
+    /// Read-only identification archive review (Actuators tab → Measured evidence).
+    calibration: calibration::CalibrationState,
+    /// Which part of the Actuators tab is shown.
+    actuator_view: calibration::ActuatorView,
     /// Read-only schematic pane of the current level (presentation only).
     pub(crate) schematic: schematic::Schematic,
 }
@@ -427,6 +433,8 @@ impl Builder {
             open: Default::default(),
             actuators: Default::default(),
             gait_lab: Default::default(),
+            calibration: Default::default(),
+            actuator_view: Default::default(),
             schematic: Default::default(),
         };
         builder.runs = sim_runtime::run_history::list(&sim_runtime::run_history::dir_for(&builder.store.path));
@@ -852,6 +860,8 @@ impl Builder {
             Purpose::ActuatorConsumer => self.actuators_request(None, Some(vec![PathBuf::from(text)])).map(|_| ()),
             Purpose::GaitResults if text.is_empty() => Err("Type the path of a gait-lab results folder".into()),
             Purpose::GaitResults => self.gait_reports_request(Some(PathBuf::from(text))).map(|_| ()),
+            Purpose::CalibrationArchive if text.is_empty() => Err("Type the path of an identification archive folder".into()),
+            Purpose::CalibrationArchive => self.calibration_request(Some(PathBuf::from(text))).map(|_| ()),
             Purpose::Distance { id, first, second } => match text.parse::<f32>() {
                 Ok(d) => self.apply("Calibrate reference", vec![SystemCommand::CalibrateReference { at: self.level.clone(), id, first, second, distance: d }]).map(|_| ()),
                 Err(_) => Err("Enter the real distance between the two points in meters".into()),
@@ -1421,6 +1431,8 @@ impl Builder {
             "open": self.open_json(),
             "actuators": self.actuators_json(),
             "gait_reports": self.gait_reports_json(),
+            "actuator_view": self.actuator_view,
+            "calibration_review": self.calibration_json(),
             "schematic": self.schematic.json(self.document.revision, &self.level, &self.selected),
             "history": self.store.history(),
         })
@@ -1729,6 +1741,17 @@ enum BuildAction {
     CancelGaitReports,
     /// Show this results entry (directory name) in detail.
     GaitReportSelect(String),
+    /// Registry or Measured evidence part of the Actuators tab.
+    ActuatorView(calibration::ActuatorView),
+    /// Type an identification archive folder (Measured evidence).
+    CalibrationPath,
+    /// Reload the current identification archive.
+    CalibrationReload,
+    CancelCalibration,
+    CalibrationSplit(calibration::SplitFilter),
+    CalibrationOutcome(calibration::OutcomeFilter),
+    /// Page of the filtered trial list (0-based).
+    CalibrationPage(usize),
 }
 
 pub struct BuilderPlugin;
@@ -1736,7 +1759,7 @@ impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, finish_actuators, finish_gait_reports, rebuild_scene, sync_run, graphs::update.run_if(building), schematic::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
+            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, (finish_actuators, finish_gait_reports, finish_calibration).chain(), rebuild_scene, sync_run, graphs::update.run_if(building), schematic::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
         )
         .add_systems(Startup, ui::load_fonts)
         .add_systems(Update, placement::update.after(update_parts).run_if(building))
@@ -1778,6 +1801,13 @@ fn open_system(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mo
 fn finish_actuators(mut builder: ResMut<Builder>) {
     if builder.actuators.pending().is_some() {
         builder.finish_actuators();
+    }
+}
+
+/// Install a finished identification archive load.
+fn finish_calibration(mut builder: ResMut<Builder>) {
+    if builder.calibration.pending().is_some() {
+        builder.finish_calibration();
     }
 }
 
@@ -1921,6 +1951,9 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
             if tab == Tab::Actuators && builder.actuators.shown.is_none() && builder.actuators.error.is_none() && builder.actuators.pending().is_none() {
                 let r = builder.actuators_request(None, None);
                 builder.report(r);
+            }
+            if tab == Tab::Actuators && builder.actuator_view == calibration::ActuatorView::Evidence {
+                builder.calibration_first_visit();
             }
             // First visit: read the default results folder (off the UI thread).
             if tab == Tab::GaitLab && builder.gait_lab.shown.is_none() && builder.gait_lab.error.is_none() && builder.gait_lab.pending().is_none() {
@@ -2070,6 +2103,27 @@ fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, 
         BuildAction::CancelActuators => {
             builder.cancel_actuators();
         }
+        BuildAction::ActuatorView(view) => {
+            builder.actuator_view = view;
+            // First visit: load the tracked archive (off the UI thread).
+            if view == calibration::ActuatorView::Evidence {
+                builder.calibration_first_visit();
+            }
+        }
+        BuildAction::CalibrationPath => {
+            let shown = builder.calibration.path.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
+            builder.start_input(Purpose::CalibrationArchive, shown);
+        }
+        BuildAction::CalibrationReload => {
+            let r = builder.calibration_request(None);
+            builder.report(r);
+        }
+        BuildAction::CancelCalibration => {
+            builder.cancel_calibration();
+        }
+        BuildAction::CalibrationSplit(f) => builder.set_calibration_filter(Some(f), None),
+        BuildAction::CalibrationOutcome(f) => builder.set_calibration_filter(None, Some(f)),
+        BuildAction::CalibrationPage(page) => builder.set_calibration_page(page),
         BuildAction::GaitResultsPath => {
             let shown = builder.gait_lab.root.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
             builder.start_input(Purpose::GaitResults, shown);
@@ -2570,6 +2624,7 @@ pub(crate) mod ui;
 pub mod open;
 pub mod actuators;
 pub mod gait_lab;
+pub mod calibration;
 pub(crate) mod schematic;
 pub use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
 

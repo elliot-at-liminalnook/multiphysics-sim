@@ -75,12 +75,12 @@ pub(super) fn spawn_nets(
             .observe(pick_net);
     }
 }
-fn pick_net(click: On<Pointer<Click>>, nets: Query<&NetHub>, mut scene: ResMut<SpatialScene>) {
+/// A click on a net hub selects the net: the connection buttons' action
+/// (a refusal is logged by `inspect::apply`, as before).
+fn pick_net(click: On<Pointer<Click>>, nets: Query<&NetHub>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
     if click.button == bevy::picking::pointer::PointerButton::Primary {
         if let Ok(net) = nets.get(click.entity) {
-            if let Err(e) = scene.set_selection(SelectionTarget::net(net.0.clone())) {
-                error!("{e}");
-            }
+            out.write(crate::app::actions::Act::ui(crate::inspect::InspectAction::Select { target: SelectionTarget::net(net.0.clone()) }));
         }
     }
 }

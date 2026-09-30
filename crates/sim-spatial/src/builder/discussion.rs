@@ -666,7 +666,12 @@ pub(super) fn hover(
             _ => vec![],
         })
         .collect::<Vec<_>>();
-    scene.note_pointer_hover = selection(&scene, &paths);
+    // Written only on a change: an unconditional write marks the scene changed every
+    // frame, and the scene systems that skip an unchanged scene would then run each frame.
+    let hover = selection(&scene, &paths);
+    if scene.note_pointer_hover != hover {
+        scene.note_pointer_hover = hover;
+    }
 }
 
 /// Start a local draft at the actual clicked surface, expressed in its part frame.

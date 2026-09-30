@@ -539,15 +539,17 @@ pub(crate) struct NarrationTime;
 #[derive(Component)]
 pub(crate) struct JobProgress;
 
-pub(super) fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<NarrationBar>>, mut learn: ResMut<Learn>) {
+/// Input: pressing or dragging the narration bar seeks within the section
+/// (the same `Seek { time_s }` as REST `lesson_narration`).
+pub(super) fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<NarrationBar>>, learn: Res<Learn>, mut out: MessageWriter<Act<super::actions::LessonCommand>>) {
     for (interaction, cursor) in &bars {
         if *interaction != Interaction::Pressed {
             continue;
         }
         let Some(p) = crate::view::cursor_fraction(cursor) else { continue };
-        let Some(n) = learn.narration.as_mut() else { continue };
-        let (s, d) = (n.section, n.duration());
-        n.jump(s, p.x.clamp(0., 1.) as f64 * d);
+        let Some(n) = learn.narration.as_ref() else { continue };
+        let time_s = p.x.clamp(0., 1.) as f64 * n.duration();
+        out.write(Act::ui(super::actions::LessonCommand::Ui(LessonAction::Narrate(NarrateAction::Seek { time_s }))));
     }
 }
 

@@ -2,7 +2,8 @@
 //! StatesPlugin): the one switch handler, the teardown on exit, what
 //! survives a switch, the Build → Lessons refusal, and the action registry
 //! cross-checked against what the action types parse.
-use super::actions::{self, Act, Origin, Replies, Reply};
+use super::actions::{self, Act, Call, Origin, Replies, Reply};
+use bevy::ecs::message::Messages;
 use super::switch::{Document, Documents, ModeSwitch, WindowAction};
 use super::*;
 use crate::builder::Builder;
@@ -206,8 +207,8 @@ fn rest_refuses_commands_of_another_mode_by_name() {
     for (mode, name, feature) in [(ViewerMode::Robot, "robot_state", "robot"), (ViewerMode::Build, "system_state", "build"), (ViewerMode::Lessons, "lesson_state", "lessons"), (ViewerMode::Place, "camera", "place"), (ViewerMode::Inspect, "state", "inspect"), (ViewerMode::Lessons, "state", "inspect"), (ViewerMode::Robot, "system_ui", "robot"), (ViewerMode::Place, "system_ui", "switcher"), (ViewerMode::Build, "viewer_mode", "window")] {
         assert_eq!(route::route(mode, true, &command(name)).map(|f| f.name), Ok(feature), "{name} in {mode:?}");
     }
-    // The headless server has no window to switch.
-    assert!(route::route(ViewerMode::Inspect, false, &command("viewer_mode")).unwrap_err().contains("headless"));
+    // The headless server has no window to switch. (`Feature` is not Debug, so no `unwrap_err`.)
+    assert!(route::route(ViewerMode::Inspect, false, &command("viewer_mode")).err().is_some_and(|e| e.contains("headless")));
     // Every capability names its modes; screenshot and viewer_mode apply to all.
     let caps = actions::capabilities();
     assert!(caps.iter().all(|c| c["modes"].as_array().is_some_and(|m| !m.is_empty())));
@@ -277,4 +278,87 @@ fn every_mode_control_resolves_to_a_switch() {
     let command = sim_api::Command { command: "system_ui".into(), args: json!({"action": {"operation": "activate", "id": "mode:robot", "ui_revision": 3}}) };
     assert_eq!(route::route(ViewerMode::Build, true, &command).map(|f| f.name), Ok("window"));
     assert!(matches!(<WindowAction as actions::Action>::parse(&command), Ok(WindowAction::SystemUi(_))));
+}
+
+/// A REST poll's side of an action: parse and write it once (Pending, with
+/// its reply token in the continuation), then Pending until its handler answers.
+fn poll(replies: &mut Replies, messages: &mut Messages<Act<u32>>, continuation: &mut Value, cancelled: bool) -> sim_api::Outcome {
+    replies.submit(continuation, cancelled, || Ok(7u32), |act| {
+        messages.write(act);
+        true
+    })
+}
+
+/// A handler that answers Pending twice (a load), then the action; a cancel stops it.
+fn load(action: &u32, call: &mut Call) -> sim_api::Outcome {
+    if call.cancelled {
+        return sim_api::Outcome::Done(Err("cancelled".into()));
+    }
+    let n = call.continuation.as_u64().unwrap_or(0);
+    if n < 2 {
+        *call.continuation = json!(n + 1);
+        return sim_api::Outcome::Pending;
+    }
+    sim_api::Outcome::Done(Ok(json!(*action)))
+}
+
+fn done(outcome: sim_api::Outcome) -> Result<Value, String> {
+    match outcome {
+        sim_api::Outcome::Done(result) => result,
+        sim_api::Outcome::Pending => panic!("still pending"),
+        sim_api::Outcome::Image(_) => panic!("an image"),
+    }
+}
+
+/// The reply mechanism without a window: a Pending handler is re-applied
+/// with its own continuation until it answers; a REST cancel reaches it as
+/// `Call::cancelled`; an abandoned reply gets one cancelled application and
+/// is not carried; a click's Pending is not carried.
+#[test]
+fn pending_actions_are_carried_until_they_answer_and_a_cancel_reaches_them() {
+    let mut replies = Replies::default();
+    let mut messages = Messages::<Act<u32>>::default();
+    let mut in_flight = actions::InFlight::<u32>::default();
+    let pending = |o: &sim_api::Outcome| matches!(o, sim_api::Outcome::Pending);
+
+    // Answered after two Pending applications; the caller waits meanwhile.
+    let mut c = Value::Null;
+    assert!(pending(&poll(&mut replies, &mut messages, &mut c, false)));
+    assert!(c["reply"].is_u64());
+    actions::apply(&mut messages, &mut in_flight, &mut replies, load);
+    assert!(!in_flight.is_empty());
+    assert!(pending(&poll(&mut replies, &mut messages, &mut c, false)));
+    assert!(messages.is_empty(), "written once, on the first poll");
+    actions::apply(&mut messages, &mut in_flight, &mut replies, load);
+    actions::apply(&mut messages, &mut in_flight, &mut replies, load);
+    assert!(in_flight.is_empty());
+    assert_eq!(done(poll(&mut replies, &mut messages, &mut c, false)), Ok(json!(7)));
+
+    // A cancel while the handler works: it is told, and its answer settles the command.
+    let mut c = Value::Null;
+    poll(&mut replies, &mut messages, &mut c, false);
+    actions::apply(&mut messages, &mut in_flight, &mut replies, load);
+    assert!(pending(&poll(&mut replies, &mut messages, &mut c, true)));
+    actions::apply(&mut messages, &mut in_flight, &mut replies, load);
+    assert!(in_flight.is_empty());
+    assert_eq!(done(poll(&mut replies, &mut messages, &mut c, true)), Err("cancelled".to_string()));
+
+    // Abandoned (the mode changed and the poll forgot the reply): one cancelled application, not carried.
+    let mut c = Value::Null;
+    poll(&mut replies, &mut messages, &mut c, false);
+    actions::apply(&mut messages, &mut in_flight, &mut replies, load);
+    replies.forget(Reply::from_id(c["reply"].as_u64().unwrap()));
+    let mut calls = 0;
+    actions::apply(&mut messages, &mut in_flight, &mut replies, |_, call| {
+        calls += 1;
+        assert!(call.cancelled);
+        sim_api::Outcome::Pending
+    });
+    assert_eq!(calls, 1);
+    assert!(in_flight.is_empty());
+
+    // A click's Pending is not carried (its work continues in the feature's own jobs).
+    messages.write(Act::ui(3));
+    actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| sim_api::Outcome::Pending);
+    assert!(in_flight.is_empty() && messages.is_empty());
 }

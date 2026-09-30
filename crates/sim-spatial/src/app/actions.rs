@@ -159,6 +159,8 @@ pub struct Replies {
 }
 /// The continuation key the REST poll keeps a token under.
 const REPLY: &str = "reply";
+/// And the action type ([`Feature::name`]) that holds it.
+const FEATURE: &str = "feature";
 
 impl Replies {
     /// A new slot.
@@ -410,15 +412,33 @@ pub(crate) fn serve(world: &mut World) {
     world.resource_scope(|world, mut rest: Mut<crate::rest::Rest>| {
         let server = &mut rest.0;
         server.poll(|command, continuation, cancelled| {
+            let waiting = continuation.get(REPLY).and_then(Value::as_u64).map(Reply);
             let outcome = match super::route::route(mode, true, command) {
-                Ok(feature) => (feature.submit)(world, command, continuation, cancelled),
-                Err(e) => {
-                    // A command left waiting by a mode that is no longer active.
-                    if let Some(token) = continuation.get(REPLY).and_then(Value::as_u64) {
-                        world.resource_mut::<Replies>().forget(Reply(token));
-                    }
-                    Outcome::Done(Err(e))
+                // A command left waiting by another action type: the mode
+                // changed to one where its name is another type's command
+                // (`state`, `camera`, `system_ui`), whose handler never saw
+                // it. Its own handler no longer runs, so its reply would
+                // never come (and the server runs one command at a time).
+                Ok(feature) if waiting.is_some() && continuation.get(FEATURE).and_then(Value::as_str).is_some_and(|f| f != feature.action) => {
+                    world.resource_mut::<Replies>().forget(waiting.unwrap());
+                    Outcome::Done(Err(format!("`{}` was left unfinished: the mode changed to {} while it waited", command.command, mode.name())))
                 }
+                Ok(feature) => {
+                    let outcome = (feature.submit)(world, command, continuation, cancelled);
+                    // Remember which action type holds the reply.
+                    if let Some(c) = continuation.as_object_mut().filter(|c| c.contains_key(REPLY)) {
+                        c.entry(FEATURE).or_insert_with(|| json!(feature.action));
+                    }
+                    outcome
+                }
+                Err(e) => match waiting {
+                    // A command left waiting by a mode that is no longer active.
+                    Some(reply) => {
+                        world.resource_mut::<Replies>().forget(reply);
+                        Outcome::Done(Err(format!("{e} (it was accepted in the previous mode and left unfinished when the mode changed)")))
+                    }
+                    None => Outcome::Done(Err(e)),
+                },
             };
             super::route::annotate(mode, command, outcome)
         });

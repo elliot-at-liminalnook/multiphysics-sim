@@ -247,11 +247,6 @@ impl SpatialScene {
     fn bottom(&self) -> f32 {
         if self.builder_mode { builder::STATUSBAR + self.builder_dock } else { BOTTOM }
     }
-    fn select(&mut self, component: String) {
-        if let Err(e) = self.apply(SpatialCommand::Select { component }) {
-            error!("{e}");
-        }
-    }
     fn representatives(&self) -> Vec<(String, String)> {
         let mut seen = std::collections::BTreeSet::new();
         self.spatial
@@ -584,53 +579,57 @@ pub(crate) fn spawn_parts(
     physics_view::spawn_internals(commands, scene, meshes, materials);
 }
 
+/// A primary click on a part, as its mode's action (applied in
+/// `ViewerSet::Actions` the same frame): the builder's `PickPart` in Build,
+/// the spatial view's selection in Inspect, the lesson page's `Pick` in Lessons.
+#[allow(clippy::too_many_arguments)]
 fn pick_part(
     click: On<Pointer<Click>>,
     parts: Query<&Part>,
-    mut scene: ResMut<SpatialScene>,
+    scene: Res<SpatialScene>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
-    builder: Option<ResMut<builder::Builder>>,
-    learn: Option<ResMut<lesson::Learn>>,
+    builder: Option<Res<builder::Builder>>,
+    learn: Option<Res<lesson::Learn>>,
     mode: Option<Res<State<ViewerMode>>>,
+    lesson_out: Option<MessageWriter<app::actions::Act<lesson::actions::LessonCommand>>>,
+    inspect_out: Option<MessageWriter<app::actions::Act<inspect::InspectAction>>>,
+    build_out: Option<MessageWriter<app::actions::Act<builder::system_actions::SystemAction>>>,
 ) {
+    use app::actions::Act;
     if click.button != bevy::picking::pointer::PointerButton::Primary {
         return;
     }
-    if let Ok(part) = parts.get(click.entity) {
-        let id = scene.spatial.parts[part.index].component.clone();
-        let mode = mode.map(|m| *m.get());
-        if let Some(mut learn) = learn.filter(|_| mode == Some(ViewerMode::Lessons)) {
-            learn.pick(&mut scene, &id);
-            return;
+    let Ok(part) = parts.get(click.entity) else { return };
+    let id = scene.spatial.parts[part.index].component.clone();
+    let mode = mode.map(|m| *m.get());
+    if learn.is_some() && mode == Some(ViewerMode::Lessons) {
+        if let Some(mut out) = lesson_out {
+            out.write(Act::ui(lesson::actions::LessonCommand::Ui(lesson::LessonAction::Pick(id))));
         }
-        // The builder stays in the window in other modes: it takes picks in Build only
-        // (without states, as in tests, a builder means build mode, as before).
-        if let Some(mut builder) = builder.filter(|_| mode.is_none_or(|m| m == ViewerMode::Build)) {
-            if builder.mode == builder::Mode::Annotate {
-                if let Some(world)=click.hit.position {builder::discussion::begin_surface(&mut builder,&scene,part.index,world);}
-                return;
-            }
-            let shift = keys.as_ref().is_some_and(|k| k.pressed(KeyCode::ShiftLeft) || k.pressed(KeyCode::ShiftRight));
-            builder::click_part(&mut builder, &id, shift);
-            return;
+        return;
+    }
+    let shift = keys.as_ref().is_some_and(|k| k.pressed(KeyCode::ShiftLeft) || k.pressed(KeyCode::ShiftRight));
+    // The builder stays in the window in other modes: it takes picks in Build only
+    // (without states, as in tests, a builder means build mode, as before).
+    if builder.is_some() && mode.is_none_or(|m| m == ViewerMode::Build) {
+        if let Some(mut out) = build_out {
+            let action = builder::BuildAction::PickPart { index: part.index, component: id, add: shift, world: click.hit.position.map(|p| p.to_array()) };
+            out.write(Act::ui(builder::system_actions::SystemAction::Ui(action)));
         }
-        if keys
-            .as_ref()
-            .is_some_and(|k| k.pressed(KeyCode::ShiftLeft) || k.pressed(KeyCode::ShiftRight))
-        {
-            let mut ids = scene.details.components.clone();
-            if !ids.remove(&id) {
-                ids.insert(id);
-            }
-            let target = if ids.is_empty() {
-                SelectionTarget::None
-            } else {
-                SelectionTarget::Components { ids }
-            };
-            let _ = scene.set_selection(target);
-        } else {
-            scene.select(id);
+        return;
+    }
+    let Some(mut out) = inspect_out else { return };
+    if shift {
+        // Toggles the part in the current selection (a refusal is dropped, as before).
+        let mut ids = scene.details.components.clone();
+        if !ids.remove(&id) {
+            ids.insert(id);
         }
+        let target = if ids.is_empty() { SelectionTarget::None } else { SelectionTarget::Components { ids } };
+        out.write(Act::quiet(inspect::InspectAction::Select { target }));
+    } else {
+        // The parts list's select (a refusal is logged, as before).
+        out.write(Act::ui(inspect::InspectAction::Display { action: SpatialCommand::Select { component: id } }));
     }
 }
 

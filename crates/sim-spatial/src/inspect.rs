@@ -99,6 +99,10 @@ pub(crate) fn handle(scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Op
     match action {
         InspectAction::Annotations { action } => notes::api(scene, camera, action.clone(), &mut *call.continuation),
         InspectAction::Render { options } => {
+            // Its render was dropped with the scene it was capturing (the scope was left).
+            if !call.continuation.is_null() && task.is_none() {
+                return Outcome::Done(Err("render dropped: the scene it was capturing was left".into()));
+            }
             if task.is_none() {
                 let snapshot = match capture(scene, camera, options) {
                     Ok(s) => s,

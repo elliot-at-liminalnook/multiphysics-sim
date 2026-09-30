@@ -39,8 +39,16 @@ pub(crate) enum Wait {
 
 pub(crate) struct GenJob {
     pub label: String,
-    pub progress: Arc<Mutex<String>>,
-    rx: Mutex<mpsc::Receiver<Result<sim_voice::Report, String>>>,
+    /// Paid voice generation: runs to its end (nothing in `sim_voice::generate`
+    /// checks a token); progress lines arrive as the job's progress message.
+    work: crate::jobs::Job<sim_voice::Report>,
+}
+impl GenJob {
+    /// The latest progress line ("Starting…" until the first one).
+    pub fn progress(&self) -> String {
+        let p = self.work.progress().message;
+        if p.is_empty() { "Starting…".into() } else { p }
+    }
 }
 
 pub struct Narration {
@@ -249,20 +257,13 @@ impl Learn {
                     Some(s) => format!("Generating narration for `{s}`"),
                     None => "Generating missing narration".into(),
                 };
-                let progress = Arc::new(Mutex::new(String::from("Starting…")));
-                let p = progress.clone();
-                let (tx, rx) = mpsc::channel();
-                std::thread::spawn(move || {
-                    let result = sim_voice::api_key().and_then(|k| sim_voice::Voice::new(&k)).and_then(|voice| {
-                        sim_voice::generate(&explainer, &voice, &sim_voice::Request { sections: &sections, force: false, budget_usd: sim_voice::DEFAULT_BUDGET_USD }, &|m| {
-                            if let Ok(mut g) = p.lock() {
-                                *g = m.to_string();
-                            }
-                        })
-                    });
-                    let _ = tx.send(result);
+                // Network requests for minutes: a dedicated thread.
+                let work = crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, "narration generation", move |ctx| {
+                    sim_voice::api_key().and_then(|k| sim_voice::Voice::new(&k)).and_then(|voice| {
+                        sim_voice::generate(&explainer, &voice, &sim_voice::Request { sections: &sections, force: false, budget_usd: sim_voice::DEFAULT_BUDGET_USD }, &|m| ctx.message(m))
+                    })
                 });
-                n.job = Some(GenJob { label, progress, rx: Mutex::new(rx) });
+                n.job = Some(GenJob { label, work });
             }
         }
         Ok(())
@@ -375,7 +376,7 @@ pub(super) fn tick(time: Res<Time>, mut learn: ResMut<Learn>, mut scene: ResMut<
             n.jump(section, t);
             l.dirty = true;
         }
-        let finished = n.job.as_ref().and_then(|j| j.rx.lock().ok().and_then(|r| r.try_recv().ok()));
+        let finished = n.job.as_ref().and_then(|j| j.work.poll());
         if let Some(result) = finished {
             n.last_report = Some(match &result {
                 Ok(r) => format!("Generated {} section(s), {:.1} s of audio · estimated ${:.4}{}{}", r.generated.len(), r.audio_seconds, r.estimated_usd, r.measured_usd.map(|m| format!(" · measured ${m:.4}")).unwrap_or_default(), if r.warnings.is_empty() { String::new() } else { format!(" · {}", r.warnings.join("; ")) }),
@@ -694,7 +695,7 @@ pub(super) fn live(
         }
     }
     if let Some(j) = &n.job {
-        let p = j.progress.lock().map(|g| g.clone()).unwrap_or_default();
+        let p = j.progress();
         for mut t in &mut progress {
             if t.0 != p {
                 t.0 = p.clone();

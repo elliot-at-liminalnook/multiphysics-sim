@@ -14,7 +14,6 @@ use crate::robot::{Loaded, load_bytes};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, mpsc};
 use std::time::{Duration, Instant, SystemTime};
 
 /// How often the UI thread stats the opened file.
@@ -124,7 +123,7 @@ pub struct SourceWatch {
     pub failing: Option<String>,
     stat: Option<Stat>,
     next_poll: Instant,
-    in_flight: Option<(Trigger, Mutex<mpsc::Receiver<Checked>>)>,
+    in_flight: Option<(Trigger, crate::jobs::Job<Checked>)>,
 }
 impl SourceWatch {
     /// Starts the first load (trigger `open`) on a worker.
@@ -151,15 +150,10 @@ impl SourceWatch {
         Ok(())
     }
     fn spawn(&mut self, trigger: Trigger) {
-        let (tx, rx) = mpsc::channel();
         let (path, hash) = (self.path.clone(), self.hash.clone());
-        std::thread::Builder::new()
-            .name("robot-source".into())
-            .spawn(move || {
-                let _ = tx.send(check(&path, hash.as_deref()));
-            })
-            .expect("spawn robot source thread");
-        self.in_flight = Some((trigger, Mutex::new(rx)));
+        // Read, hash, parse and triangulate: CPU work.
+        let job = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, 0, format!("{}: the reload worker", self.path.display()), move |_| Ok(check(&path, hash.as_deref())));
+        self.in_flight = Some((trigger, job));
     }
     /// The UI thread's poll: at most every [`POLL`], a metadata stat.
     /// Returns whether it changed since the last check (the caller then
@@ -173,13 +167,10 @@ impl SourceWatch {
     }
     /// The finished check, if any (never blocks).
     pub fn take(&mut self) -> Option<(Trigger, Checked)> {
-        let (trigger, rx) = self.in_flight.as_ref()?;
-        let checked = match rx.lock().unwrap_or_else(|p| p.into_inner()).try_recv() {
+        let (trigger, job) = self.in_flight.as_ref()?;
+        let checked = match job.poll()? {
             Ok(c) => c,
-            Err(mpsc::TryRecvError::Empty) => return None,
-            Err(mpsc::TryRecvError::Disconnected) => {
-                Checked { stat: None, hash: None, outcome: Outcome::Failed(format!("{}: the reload worker stopped without a result", self.path.display())), results: None, seconds: 0.0 }
-            }
+            Err(e) => Checked { stat: None, hash: None, outcome: Outcome::Failed(e), results: None, seconds: 0.0 },
         };
         let trigger = *trigger;
         self.in_flight = None;

@@ -147,8 +147,8 @@ enum Command {
 
 /// The UI side of the gait worker.
 pub struct GaitPreview {
-    tx: mpsc::Sender<Command>,
-    shared: Arc<Mutex<Shared>>,
+    /// The `robot-gait` worker; dropping it stops and joins it (bounded).
+    thread: crate::jobs::RunThread<Command, Shared>,
     preset: String,
     root: PathBuf,
     /// Generation the UI expects; every command bumps it and older states are stale.
@@ -166,13 +166,10 @@ pub struct GaitPreview {
 impl GaitPreview {
     /// Spawns the idle worker for a preset and lists the tracked reports.
     pub fn spawn(run: Arc<PresetRun>, links: Vec<String>) -> Self {
-        let (tx, rx) = mpsc::channel();
         let state = State { generation: 0, phase: GaitPhase::Idle, error: None, loaded: None, clock: idle_clock(), sample: None, mirror: None };
-        let shared = Arc::new(Mutex::new(Shared { state: state.clone(), listing: None }));
-        let out = shared.clone();
         let (preset, root) = (run.preset.id.clone(), run.root.clone());
-        std::thread::Builder::new().name("robot-gait".into()).spawn(move || worker(run, links, rx, out)).expect("spawn gait preview thread");
-        let mut g = Self { tx, shared, preset, root, generation: 0, state, opening: None, list_requested: 0, list_done: 0, reports: Vec::new(), skipped: Vec::new(), list_error: None };
+        let thread = crate::jobs::RunThread::spawn("robot-gait", Shared { state: state.clone(), listing: None }, move |rx, out| worker(run, links, rx, out));
+        let mut g = Self { thread, preset, root, generation: 0, state, opening: None, list_requested: 0, list_done: 0, reports: Vec::new(), skipped: Vec::new(), list_error: None };
         let _ = g.act(GaitAction::List);
         g
     }
@@ -237,10 +234,10 @@ impl GaitPreview {
     /// The one handler (after the caller's run/replay exclusion check).
     pub fn act(&mut self, action: GaitAction) -> Result<(), String> {
         self.check(&action)?;
-        let send = |tx: &mpsc::Sender<Command>, c| tx.send(c).map_err(|_| "the gait preview thread has stopped".to_string());
+        let send = |thread: &crate::jobs::RunThread<Command, Shared>, c| thread.send(c).map_err(|_| "the gait preview thread has stopped".to_string());
         if let GaitAction::List = action {
             self.list_requested += 1;
-            return send(&self.tx, Command::List { seq: self.list_requested });
+            return send(&self.thread, Command::List { seq: self.list_requested });
         }
         self.generation += 1;
         let generation = self.generation;
@@ -265,12 +262,12 @@ impl GaitPreview {
             }
             GaitAction::List => unreachable!("handled above"),
         };
-        send(&self.tx, command)
+        send(&self.thread, command)
     }
 
     /// Takes the worker's latest state; true when the displayed pose changed.
     pub fn poll(&mut self) -> bool {
-        let shared = self.shared.clone();
+        let shared = self.thread.shared().clone();
         let s = shared.lock().unwrap_or_else(|p| p.into_inner());
         if let Some((seq, result)) = s.listing.as_ref().filter(|(seq, _)| *seq > self.list_done) {
             self.list_done = *seq;

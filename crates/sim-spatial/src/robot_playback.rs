@@ -140,6 +140,11 @@ pub struct PlaybackState {
     pub timeline: Timeline,
     pub frame: Frame,
 }
+impl crate::jobs::Stamped for PlaybackState {
+    fn generation(&self) -> u64 {
+        self.generation
+    }
+}
 
 enum Command {
     Act { generation: u64, action: RecordedAction },
@@ -147,8 +152,8 @@ enum Command {
 
 /// The UI side of the playback worker.
 pub struct RecordedPlayback {
-    tx: mpsc::Sender<Command>,
-    shared: Arc<Mutex<PlaybackState>>,
+    /// The `robot-recorded` worker; dropping it stops and joins it (bounded).
+    thread: crate::jobs::RunThread<Command, PlaybackState>,
     /// Generation the UI expects; every command bumps it and older states are stale.
     generation: u64,
     state: PlaybackState,
@@ -158,11 +163,8 @@ impl RecordedPlayback {
     pub fn spawn(run: Arc<RecordedRun>) -> Self {
         let timeline = Timeline::new(run.capture.frames.iter().map(|f| f.time_s).collect());
         let state = PlaybackState { generation: 0, timeline, frame: stamped(&run, 0, 0) };
-        let shared = Arc::new(Mutex::new(state.clone()));
-        let (tx, rx) = mpsc::channel();
-        let out = shared.clone();
-        std::thread::Builder::new().name("robot-recorded".into()).spawn(move || worker(run, rx, out)).expect("spawn recorded playback thread");
-        Self { tx, shared, generation: 0, state }
+        let thread = crate::jobs::RunThread::spawn("robot-recorded", state.clone(), move |rx, out| worker(run, rx, out));
+        Self { thread, generation: 0, state }
     }
     pub fn check(&self, action: &RecordedAction) -> Result<(), String> {
         self.state.timeline.check(action)
@@ -171,19 +173,17 @@ impl RecordedPlayback {
     pub fn act(&mut self, action: RecordedAction) -> Result<(), String> {
         self.check(&action)?;
         self.generation += 1;
-        self.tx.send(Command::Act { generation: self.generation, action }).map_err(|_| "the recorded playback thread has stopped".to_string())?;
+        self.thread.send(Command::Act { generation: self.generation, action }).map_err(|_| "the recorded playback thread has stopped".to_string())?;
         // The UI's own view of what it asked for; the worker's state replaces it once published.
         self.state.timeline.apply(action);
         Ok(())
     }
     /// Takes the worker's latest state of the current generation; true when the shown frame changed.
     pub fn poll(&mut self) -> bool {
-        let s = self.shared.lock().unwrap_or_else(|p| p.into_inner());
-        if s.generation < self.generation {
-            return false;
-        }
+        // An older generation's state is stale and never applied.
+        let Some(s) = self.thread.latest(self.generation) else { return false };
         let before = (self.state.frame.generation, self.state.frame.steps);
-        self.state = s.clone();
+        self.state = s;
         before != (self.state.frame.generation, self.state.frame.steps)
     }
     pub fn frame(&self) -> &Frame {

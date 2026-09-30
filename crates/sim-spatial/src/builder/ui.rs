@@ -335,7 +335,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
     let single = b.only_selected();
     let subsystem = single.as_ref().is_some_and(|n| matches!(b.spec(n).map(|s| s.kind), Some(InstanceKind::Subsystem { .. })));
     let running = b.running();
-    let (time, speed) = b.run.as_ref().and_then(|r| r.shared.lock().ok().map(|s| (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.speed))).unwrap_or((0., 0.));
+    let (time, speed) = b.run.as_ref().and_then(|r| r.worker.shared().lock().ok().map(|s| (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.speed))).unwrap_or((0., 0.));
     commands
         .spawn((
             Node {

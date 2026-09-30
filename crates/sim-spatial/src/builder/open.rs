@@ -42,11 +42,10 @@ fn same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
     }
 }
 
-/// A load in progress.
+/// A load in progress (its generation is the open's `seq`).
 pub(super) struct OpenJob {
-    seq: u64,
     path: PathBuf,
-    receiver: Mutex<mpsc::Receiver<Result<Box<Opened>, String>>>,
+    work: crate::jobs::Job<Box<Opened>>,
     started: std::time::Instant,
 }
 
@@ -159,13 +158,11 @@ impl Builder {
         }
         let shell = self.open.shell.clone().expect("checked above");
         let (library_dir, registry) = (self.library_dir.clone(), self.registry.clone());
-        let (send, receive) = mpsc::channel();
         let worker_path = path.clone();
-        std::thread::spawn(move || {
-            let _ = send.send(load(worker_path, library_dir, registry, &shell));
-        });
         self.open.seq += 1;
-        self.open.job = Some(OpenJob { seq: self.open.seq, path: path.clone(), receiver: Mutex::new(receive), started: std::time::Instant::now() });
+        let lost = format!("Could not open {}: the loader", path.display());
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, self.open.seq, lost, move |_| load(worker_path, library_dir, registry, &shell));
+        self.open.job = Some(OpenJob { path: path.clone(), work, started: std::time::Instant::now() });
         self.status = format!("Opening {}: loading and validating in the background…", path.display());
         Ok(self.open.seq)
     }
@@ -174,7 +171,7 @@ impl Builder {
     pub fn cancel_open(&mut self) -> bool {
         let Some(job) = self.open.job.take() else { return false };
         self.status = format!("Open of {} cancelled; {} stays open.", job.path.display(), self.store.path.display());
-        self.open.last = Some((job.seq, Err(self.status.clone())));
+        self.open.last = Some((job.work.generation(), Err(self.status.clone())));
         self.panel_dirty = true;
         true
     }
@@ -183,18 +180,14 @@ impl Builder {
     /// Returns true when a load finished (installed or refused).
     pub(crate) fn finish_open(&mut self, scene: &mut SpatialScene, models: Option<&mut crate::models::ModelLibrary>) -> bool {
         let Some(job) = &self.open.job else { return false };
-        let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
-        let loaded = match polled {
-            Err(mpsc::TryRecvError::Empty) => return false,
-            Err(mpsc::TryRecvError::Disconnected) => Err(format!("Could not open {}: the loader ended without a result.", job.path.display())),
-            Ok(r) => r,
-        };
+        let Some(loaded) = job.work.poll() else { return false };
         let job = self.open.job.take().expect("polled above");
+        let seq = job.work.generation();
         self.panel_dirty = true;
         let refuse = |b: &mut Builder, e: String| {
             b.action_error = Some(e.clone());
             b.status = e.clone();
-            b.open.last = Some((job.seq, Err(e)));
+            b.open.last = Some((seq, Err(e)));
             true
         };
         let opened = match loaded {
@@ -214,7 +207,7 @@ impl Builder {
         let mut notes = Vec::new();
         // A live run is kept, not dropped: saved to the old file's runs.
         if self.run.is_some() {
-            let time = self.run.as_ref().and_then(|r| r.shared.lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time))).unwrap_or(0.);
+            let time = self.run.as_ref().and_then(|r| r.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time))).unwrap_or(0.);
             if time >= 0.1 {
                 match self.save_run("stopped to open another system") {
                     Ok(saved) => notes.push(format!("the live run was stopped and saved as {}", saved.display())),
@@ -255,9 +248,7 @@ impl Builder {
             *models = next_models;
         }
         // The compile already ran with the load; rebuild_scene draws and fits it.
-        let (send, receive) = mpsc::channel();
-        let _ = send.send(compiled);
-        next.job = Some(Mutex::new(receive));
+        next.job = Some(crate::jobs::Job::finished(next.document.revision, Ok(compiled)));
         next.scene_dirty = false;
         next.fitted = false;
         let summary = serde_json::json!({
@@ -266,11 +257,11 @@ impl Builder {
             "notes": notes, "load_seconds": job.started.elapsed().as_secs_f64(),
         });
         next.status = format!("Opened {} ({}, revision {}){}", next.store.path.display(), next.document.title, next.document.revision, if notes.is_empty() { String::new() } else { format!("; {}", notes.join("; ")) });
-        next.open.last = Some((job.seq, Ok(summary)));
+        next.open.last = Some((seq, Ok(summary)));
         next.panel_dirty = true;
         // Dropping the old builder joins its agent worker: not on the UI thread.
         let previous = std::mem::replace(self, next);
-        std::thread::spawn(move || drop(previous));
+        crate::jobs::drop_off_thread(previous, "the previous system");
         true
     }
 
@@ -288,11 +279,11 @@ impl Builder {
         };
         match &self.open.last {
             Some((s, result)) if *s == seq => sim_api::Outcome::Done(result.clone()),
-            _ if cancelled && self.open.job.as_ref().is_some_and(|j| j.seq == seq) => {
+            _ if cancelled && self.open.job.as_ref().is_some_and(|j| j.work.generation() == seq) => {
                 self.cancel_open();
                 sim_api::Outcome::Done(Err("cancelled".into()))
             }
-            _ if self.open.job.as_ref().is_none_or(|j| j.seq != seq) => sim_api::Outcome::Done(Err("the open was superseded".into())),
+            _ if self.open.job.as_ref().is_none_or(|j| j.work.generation() != seq) => sim_api::Outcome::Done(Err("the open was superseded".into())),
             _ => sim_api::Outcome::Pending,
         }
     }
@@ -407,7 +398,7 @@ mod tests {
         assert!(b.runs.is_empty() && b.selected.is_empty() && b.level.is_empty() && b.replay.outcomes.is_empty());
         assert!(b.study.result.is_none() && b.study.job.is_none() && !b.fitted && b.job.is_some());
         assert_eq!(summary["annotations"], serde_json::json!(format!("{}.annotations.json", winch.display())));
-        assert_eq!(scene.description.id, b.job.as_ref().unwrap().lock().unwrap().try_recv().unwrap().result.unwrap().description.id);
+        assert_eq!(scene.description.id, b.job.as_ref().unwrap().poll().unwrap().unwrap().result.unwrap().description.id);
         let state = b.state_json();
         assert_eq!((state["path"].clone(), state["title"].clone()), (serde_json::json!(winch), serde_json::json!(b.document.title)));
         // Opening wrote nothing: no runs directory or annotations file for the winch.

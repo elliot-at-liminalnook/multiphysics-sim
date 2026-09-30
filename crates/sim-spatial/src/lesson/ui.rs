@@ -770,7 +770,7 @@ fn compare_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_less
             });
             let running = state.is_some_and(|s| s.job.is_some());
             if running {
-                let (done, total) = state.map(|s| (s.progress.0.load(Ordering::Relaxed), s.progress.1.load(Ordering::Relaxed))).unwrap_or((0, 0));
+                let (done, total) = state.and_then(|s| s.job.as_ref()?.progress().steps).unwrap_or((0, 0));
                 h.spawn(k.text(format!("Running {done}/{total}…"), 12., SUBTLE, 0));
             } else {
                 h.spawn(k.button(if state.is_some_and(|s| s.result.is_some()) { "Run again" } else { "Run comparison" }, LessonAction::RunCompare(c.id.clone()), Look::Primary, true));

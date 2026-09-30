@@ -9,7 +9,7 @@ use sim_lesson::progress::Mode;
 use sim_lesson::quiz::{Answer, Quiz, QuizKind, Reflect, Verdict};
 
 pub(crate) enum FigureState {
-    Loading(Mutex<mpsc::Receiver<Result<(Image, (f32, f32)), String>>>),
+    Loading(crate::jobs::Job<(Image, (f32, f32))>),
     Ready { image: Handle<Image>, aspect: f32, units: (f32, f32) },
     Failed(String),
 }
@@ -18,13 +18,13 @@ pub(crate) struct CachedFigure {
     stamp: Option<std::time::SystemTime>,
 }
 
-fn figure_job(path: PathBuf) -> mpsc::Receiver<Result<(Image, (f32, f32)), String>> {
+fn figure_job(path: PathBuf) -> crate::jobs::Job<(Image, (f32, f32))> {
     use bevy::asset::RenderAssetUsages;
     use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
     use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
-    let (tx, rx) = mpsc::channel();
-    std::thread::spawn(move || {
-        let result = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display())).and_then(|bytes| {
+    // Read and decode or rasterise: CPU work.
+    crate::jobs::Job::spawn(crate::jobs::Pool::Compute, 0, "the figure loader", move |_| {
+        std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display())).and_then(|bytes| {
             let ext = path.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
             if ext == "svg" {
                 let r = sim_lesson::figure::rasterize_svg(&bytes, 1600)?;
@@ -35,10 +35,8 @@ fn figure_job(path: PathBuf) -> mpsc::Receiver<Result<(Image, (f32, f32)), Strin
                 let size = image.size_f32();
                 Ok((image, (size.x, size.y)))
             }
-        });
-        let _ = tx.send(result);
-    });
-    rx
+        })
+    })
 }
 
 impl Learn {
@@ -50,7 +48,7 @@ impl Learn {
             let stamp = std::fs::metadata(&path).and_then(|m| m.modified()).ok();
             let fresh = self.figures.get(&path).is_some_and(|c| c.stamp == stamp);
             if !fresh {
-                self.figures.insert(path.clone(), CachedFigure { state: FigureState::Loading(Mutex::new(figure_job(path))), stamp });
+                self.figures.insert(path.clone(), CachedFigure { state: FigureState::Loading(figure_job(path)), stamp });
             }
         }
     }
@@ -58,8 +56,8 @@ impl Learn {
     pub(crate) fn poll_figures(&mut self, images: &mut Assets<Image>) -> bool {
         let mut changed = false;
         for c in self.figures.values_mut() {
-            let FigureState::Loading(rx) = &c.state else { continue };
-            let Some(result) = rx.lock().ok().and_then(|r| r.try_recv().ok()) else { continue };
+            let FigureState::Loading(job) = &c.state else { continue };
+            let Some(result) = job.poll() else { continue };
             c.state = match result {
                 Ok((image, units)) => {
                     let aspect = image.width() as f32 / image.height().max(1) as f32;

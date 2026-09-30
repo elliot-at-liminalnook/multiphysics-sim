@@ -21,7 +21,6 @@ enum ModelUpdate {
     Given(String, Result<BTreeMap<String, f64>, String>),
     Measured(String, Result<MeasuredReport, String>),
     Lab(String, Result<LabPrediction, String>),
-    Done,
 }
 
 /// What the model says about the open lesson (filled in as it arrives).
@@ -37,7 +36,8 @@ pub(crate) struct ModelState {
     pub measured: BTreeMap<String, Result<MeasuredReport, String>>,
     pub measured_images: BTreeMap<String, Handle<Image>>,
     pub labs: BTreeMap<String, Result<LabPrediction, String>>,
-    job: Option<Mutex<mpsc::Receiver<ModelUpdate>>>,
+    /// Streams values as they resolve; dropping it (a new lesson) stops it.
+    job: Option<crate::jobs::Job<(), ModelUpdate>>,
     pub loading: bool,
 }
 
@@ -53,7 +53,7 @@ pub(crate) struct TaskState {
 pub(crate) struct LabState {
     pub ticks: [bool; 4],
     pub prediction: String,
-    job: Option<Mutex<mpsc::Receiver<Result<serde_json::Value, String>>>>,
+    job: Option<crate::jobs::Job<serde_json::Value>>,
     pub running: bool,
     pub result: Option<Result<serde_json::Value, String>>,
 }
@@ -63,42 +63,43 @@ impl Learn {
     pub(crate) fn start_model(&mut self) {
         let Some(lesson) = self.lesson.clone() else { return };
         let registry = self.registry.clone();
-        let (tx, rx) = mpsc::channel();
-        std::thread::spawn(move || {
+        // Model runs may take a while (cached after the first): a dedicated thread.
+        let job = crate::jobs::Job::streaming(crate::jobs::Pool::Dedicated, 0, "the lesson model", move |ctx| {
             let model = lm::Model::new(&lesson, &registry, true);
             for (_, r) in lesson.inline_refs() {
-                if tx.send(ModelUpdate::Value(r.key(), model.value(&r.source))).is_err() {
-                    return;
+                if !ctx.emit(ModelUpdate::Value(r.key(), model.value(&r.source))) {
+                    return Ok(());
                 }
             }
             for (_, q) in lesson.quizzes().filter(|(_, q)| !q.given.is_empty()) {
-                let _ = tx.send(ModelUpdate::Given(q.id.clone(), model.given(q)));
+                ctx.emit(ModelUpdate::Given(q.id.clone(), model.given(q)));
             }
             for (_, e) in lesson.equations() {
-                let _ = tx.send(ModelUpdate::Constants(e.id.clone(), model.equation_constants(e)));
+                ctx.emit(ModelUpdate::Constants(e.id.clone(), model.equation_constants(e)));
             }
             for b in &lesson.blocks {
                 match &b.kind {
                     BlockKind::Measured(m) => {
-                        let _ = tx.send(ModelUpdate::Measured(m.id.clone(), lm::measured(&model, m)));
+                        ctx.emit(ModelUpdate::Measured(m.id.clone(), lm::measured(&model, m)));
                     }
                     BlockKind::Lab(l) if l.compare.is_some() => {
-                        let _ = tx.send(ModelUpdate::Lab(l.id.clone(), lesson_lab::prediction(&model, l)));
+                        ctx.emit(ModelUpdate::Lab(l.id.clone(), lesson_lab::prediction(&model, l)));
                     }
                     _ => {}
                 }
             }
-            let _ = tx.send(ModelUpdate::Done);
+            Ok(())
         });
-        self.model = ModelState { job: Some(Mutex::new(rx)), loading: true, ..Default::default() };
+        self.model = ModelState { job: Some(job), loading: true, ..Default::default() };
     }
 
     /// Collect model results; true when something changed.
     pub(crate) fn poll_model(&mut self, images: &mut Assets<Image>) -> bool {
         let mut changed = false;
-        loop {
-            let update = self.model.job.as_ref().and_then(|j| j.lock().ok().and_then(|r| r.try_recv().ok()));
-            let Some(update) = update else { break };
+        // The result is taken before the updates: every update of a finished job is then drained with it.
+        let finished = self.model.job.as_ref().and_then(crate::jobs::Job::poll);
+        let updates = self.model.job.as_ref().map(crate::jobs::Job::updates).unwrap_or_default();
+        for update in updates {
             changed = true;
             match update {
                 ModelUpdate::Value(k, Ok(v)) => {
@@ -125,15 +126,19 @@ impl Learn {
                 ModelUpdate::Lab(id, r) => {
                     self.model.labs.insert(id, r);
                 }
-                ModelUpdate::Done => {
-                    self.model.job = None;
-                    self.model.loading = false;
-                }
             }
+        }
+        if let Some(result) = finished {
+            if let Err(e) = result {
+                self.model.errors.insert("model".into(), e);
+            }
+            self.model.job = None;
+            self.model.loading = false;
+            changed = true;
         }
         // Lab steps in progress on the bench.
         for state in self.labs.values_mut() {
-            let got = state.job.as_ref().and_then(|j| j.lock().ok().and_then(|r| r.try_recv().ok()));
+            let got = state.job.as_ref().and_then(crate::jobs::Job::poll);
             if let Some(r) = got {
                 state.job = None;
                 state.running = false;
@@ -198,9 +203,9 @@ impl Learn {
         if !state.ticks.iter().all(|t| *t) {
             return Err("tick every item of the checklist first".into());
         }
-        let (tx, rx) = mpsc::channel();
-        std::thread::spawn(move || {
-            let result = lesson_lab::bench_start(&base, &lab, true).and_then(|_| {
+        // Network requests to the bench, up to a minute: a dedicated thread.
+        let job = crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, "the bench request", move |_| {
+            lesson_lab::bench_start(&base, &lab, true).and_then(|_| {
                 let started = std::time::Instant::now();
                 loop {
                     std::thread::sleep(std::time::Duration::from_millis(300));
@@ -212,10 +217,9 @@ impl Learn {
                         return Err("the bench did not finish within a minute".into());
                     }
                 }
-            });
-            let _ = tx.send(result);
+            })
         });
-        state.job = Some(Mutex::new(rx));
+        state.job = Some(job);
         state.running = true;
         state.result = None;
         Ok(())

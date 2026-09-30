@@ -240,10 +240,10 @@ pub fn review(dir: &Path, repository: &Path) -> Result<Review, String> {
     Ok(Review { path: dir.to_path_buf(), repository: repository.to_path_buf(), archive, seconds: started.elapsed().as_secs_f64() })
 }
 
+/// A load in progress (its generation is the request's `seq`).
 struct Job {
-    seq: u64,
     path: PathBuf,
-    receiver: Mutex<mpsc::Receiver<Result<Review, String>>>,
+    work: crate::jobs::Job<Review>,
 }
 
 #[derive(Default)]
@@ -344,13 +344,11 @@ impl Builder {
             None => repository.join(DEFAULT_ARCHIVE),
         };
         self.calibration.path = Some(dir.clone());
-        let (send, receive) = mpsc::channel();
         let worker = dir.clone();
-        std::thread::spawn(move || {
-            let _ = send.send(review(&worker, &repository));
-        });
         self.calibration.seq += 1;
-        self.calibration.job = Some(Job { seq: self.calibration.seq, path: dir.clone(), receiver: Mutex::new(receive) });
+        let lost = format!("Could not load identification archive {}: the loader", dir.display());
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Io, self.calibration.seq, lost, move |_| review(&worker, &repository));
+        self.calibration.job = Some(Job { path: dir.clone(), work });
         self.status = format!("Loading identification archive {} in the background…", dir.display());
         Ok(self.calibration.seq)
     }
@@ -359,7 +357,7 @@ impl Builder {
     pub fn cancel_calibration(&mut self) -> bool {
         let Some(job) = self.calibration.job.take() else { return false };
         self.status = format!("Loading identification archive {} cancelled.", job.path.display());
-        self.calibration.last = Some((job.seq, Err(self.status.clone())));
+        self.calibration.last = Some((job.work.generation(), Err(self.status.clone())));
         self.panel_dirty = true;
         true
     }
@@ -367,13 +365,8 @@ impl Builder {
     /// Install a finished load. Returns true when one finished.
     pub(crate) fn finish_calibration(&mut self) -> bool {
         let Some(job) = &self.calibration.job else { return false };
-        let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
-        let result = match polled {
-            Err(mpsc::TryRecvError::Empty) => return false,
-            Err(mpsc::TryRecvError::Disconnected) => Err(format!("Could not load identification archive {}: the loader ended without a result.", job.path.display())),
-            Ok(r) => r,
-        };
-        let job = self.calibration.job.take().expect("polled above");
+        let Some(result) = job.work.poll() else { return false };
+        let seq = self.calibration.job.take().expect("polled above").work.generation();
         self.panel_dirty = true;
         match result {
             Ok(review) => {
@@ -401,14 +394,14 @@ impl Builder {
                         Err(e) => result = Err(e),
                     }
                 }
-                self.calibration.last = Some((job.seq, result));
+                self.calibration.last = Some((seq, result));
             }
             Err(e) => {
                 self.calibration.want = None;
                 self.action_error = Some(e.clone());
                 self.status = e.clone();
                 self.calibration.error = Some(e.clone());
-                self.calibration.last = Some((job.seq, Err(e)));
+                self.calibration.last = Some((seq, Err(e)));
             }
         }
         true
@@ -485,11 +478,11 @@ impl Builder {
         };
         match &self.calibration.last {
             Some((s, result)) if *s == seq => sim_api::Outcome::Done(result.clone()),
-            _ if cancelled && self.calibration.job.as_ref().is_some_and(|j| j.seq == seq) => {
+            _ if cancelled && self.calibration.job.as_ref().is_some_and(|j| j.work.generation() == seq) => {
                 self.cancel_calibration();
                 sim_api::Outcome::Done(Err("cancelled".into()))
             }
-            _ if self.calibration.job.as_ref().is_none_or(|j| j.seq != seq) => sim_api::Outcome::Done(Err("the calibration review request was superseded".into())),
+            _ if self.calibration.job.as_ref().is_none_or(|j| j.work.generation() != seq) => sim_api::Outcome::Done(Err("the calibration review request was superseded".into())),
             _ => sim_api::Outcome::Pending,
         }
     }
@@ -823,9 +816,7 @@ mod tests {
         // A reload that no longer contains the selection clears it (drop it from a copy).
         let mut shown = b.calibration.shown.clone().unwrap();
         shown.archive.trials.retain(|t| t.id != train.id);
-        let (send, receive) = mpsc::channel();
-        send.send(Ok(shown)).unwrap();
-        b.calibration.job = Some(Job { seq: 99, path: dir.clone(), receiver: Mutex::new(receive) });
+        b.calibration.job = Some(Job { path: dir.clone(), work: crate::jobs::Job::finished(99, Ok(shown)) });
         assert!(b.finish_calibration());
         assert!(b.calibration.selected.is_none() && b.calibration_json()["selected"].is_null());
     }

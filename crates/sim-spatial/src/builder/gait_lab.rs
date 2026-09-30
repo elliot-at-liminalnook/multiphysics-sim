@@ -88,10 +88,10 @@ pub fn utc(unix_s: u64) -> String {
     format!("{year:04}-{month:02}-{day:02} {:02}:{:02}:{:02} UTC", secs / 3600, secs / 60 % 60, secs % 60)
 }
 
+/// A scan in progress (its generation is the request's `seq`).
 struct Job {
-    seq: u64,
     root: PathBuf,
-    receiver: Mutex<mpsc::Receiver<Result<Scan, String>>>,
+    work: crate::jobs::Job<Scan>,
 }
 
 #[derive(Default)]
@@ -140,14 +140,14 @@ impl Builder {
             None => default_results(&self.store.path)?,
         };
         self.gait_lab.root = Some(root.clone());
-        let (send, receive) = mpsc::channel();
         let worker = root.clone();
-        std::thread::spawn(move || {
-            let started = std::time::Instant::now();
-            let _ = send.send(scan_results(&worker).map(|listing| Scan { listing, seconds: started.elapsed().as_secs_f64() }).map_err(|e| format!("Could not read gait-lab results: {e}")));
-        });
         self.gait_lab.seq += 1;
-        self.gait_lab.job = Some(Job { seq: self.gait_lab.seq, root: root.clone(), receiver: Mutex::new(receive) });
+        let lost = format!("Could not read gait-lab results {}: the reader", root.display());
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Io, self.gait_lab.seq, lost, move |_| {
+            let started = std::time::Instant::now();
+            scan_results(&worker).map(|listing| Scan { listing, seconds: started.elapsed().as_secs_f64() }).map_err(|e| format!("Could not read gait-lab results: {e}"))
+        });
+        self.gait_lab.job = Some(Job { root: root.clone(), work });
         self.status = format!("Reading gait-lab results {} in the background…", root.display());
         Ok(self.gait_lab.seq)
     }
@@ -156,7 +156,7 @@ impl Builder {
     pub fn cancel_gait_reports(&mut self) -> bool {
         let Some(job) = self.gait_lab.job.take() else { return false };
         self.status = format!("Reading gait-lab results {} cancelled.", job.root.display());
-        self.gait_lab.last = Some((job.seq, Err(self.status.clone())));
+        self.gait_lab.last = Some((job.work.generation(), Err(self.status.clone())));
         self.panel_dirty = true;
         true
     }
@@ -164,13 +164,8 @@ impl Builder {
     /// Install a finished scan. Returns true when one finished.
     pub(crate) fn finish_gait_reports(&mut self) -> bool {
         let Some(job) = &self.gait_lab.job else { return false };
-        let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
-        let result = match polled {
-            Err(mpsc::TryRecvError::Empty) => return false,
-            Err(mpsc::TryRecvError::Disconnected) => Err(format!("Could not read gait-lab results {}: the reader ended without a result.", job.root.display())),
-            Ok(r) => r,
-        };
-        let job = self.gait_lab.job.take().expect("polled above");
+        let Some(result) = job.work.poll() else { return false };
+        let seq = self.gait_lab.job.take().expect("polled above").work.generation();
         self.panel_dirty = true;
         match result {
             Ok(scan) => {
@@ -183,13 +178,13 @@ impl Builder {
                 let value = listing_json(&scan);
                 self.gait_lab.shown = Some(scan);
                 self.gait_lab.error = None;
-                self.gait_lab.last = Some((job.seq, Ok(value)));
+                self.gait_lab.last = Some((seq, Ok(value)));
             }
             Err(e) => {
                 self.action_error = Some(e.clone());
                 self.status = e.clone();
                 self.gait_lab.error = Some(e.clone());
-                self.gait_lab.last = Some((job.seq, Err(e)));
+                self.gait_lab.last = Some((seq, Err(e)));
             }
         }
         true
@@ -225,11 +220,11 @@ impl Builder {
         };
         match &self.gait_lab.last {
             Some((s, result)) if *s == seq => sim_api::Outcome::Done(result.clone()),
-            _ if cancelled && self.gait_lab.job.as_ref().is_some_and(|j| j.seq == seq) => {
+            _ if cancelled && self.gait_lab.job.as_ref().is_some_and(|j| j.work.generation() == seq) => {
                 self.cancel_gait_reports();
                 sim_api::Outcome::Done(Err("cancelled".into()))
             }
-            _ if self.gait_lab.job.as_ref().is_none_or(|j| j.seq != seq) => sim_api::Outcome::Done(Err("the gait report request was superseded".into())),
+            _ if self.gait_lab.job.as_ref().is_none_or(|j| j.work.generation() != seq) => sim_api::Outcome::Done(Err("the gait report request was superseded".into())),
             _ => sim_api::Outcome::Pending,
         }
     }

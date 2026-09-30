@@ -13,7 +13,7 @@
 use super::ui::{BORDER, Kit, SUBTLE, TEXT, Tint, WARN};
 use super::*;
 use sim_diagram::{Layout, layout as diagram_layout, projection, style};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 
 /// What a layout was computed for.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
@@ -34,16 +34,10 @@ pub(crate) struct Laid {
     pub layout_ms: f64,
 }
 
+/// A layout in progress; dropping it cancels the worker (`lay_out` checks the token).
 struct Job {
     key: Key,
-    cancel: Arc<AtomicBool>,
-    receiver: Mutex<mpsc::Receiver<Option<Laid>>>,
-}
-
-impl Drop for Job {
-    fn drop(&mut self) {
-        self.cancel.store(true, Ordering::Relaxed);
-    }
+    work: crate::jobs::Job<Option<Laid>>,
 }
 
 #[derive(Default)]
@@ -170,22 +164,20 @@ impl Schematic {
     /// Poll the worker, cancel a job for an old key and start one for the
     /// current key. Cheap; called every frame. Never blocks.
     pub(crate) fn tick(&mut self, revision: u64, level: &str) {
-        if let Some(job) = &self.job {
-            let key = job.key.clone();
-            let polled = job.receiver.lock().map(|r| r.try_recv()).unwrap_or(Err(mpsc::TryRecvError::Disconnected));
-            match polled {
-                Ok(Some(laid)) => {
+        if let Some(job) = self.job.as_mut() {
+            match job.work.poll() {
+                Some(Ok(Some(laid))) => {
                     self.laid = Some(laid);
                     self.error = None;
                     self.job = None;
                 }
-                Ok(None) => self.job = None,
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    self.error = Some("the layout worker stopped without a result".into());
-                    self.failed = Some(key);
+                Some(Ok(None)) => self.job = None,
+                Some(Err(e)) => {
+                    self.error = Some(e);
+                    self.failed = Some(job.key.clone());
                     self.job = None;
                 }
-                Err(mpsc::TryRecvError::Empty) => {}
+                None => {}
             }
         }
         let current = self.current(revision, level);
@@ -208,17 +200,10 @@ impl Schematic {
     }
 
     fn start(&mut self, description: Arc<SystemDescription>, key: Key) {
-        let cancel = Arc::new(AtomicBool::new(false));
-        let (send, receive) = mpsc::channel();
-        let (token, job_key) = (cancel.clone(), key.clone());
-        std::thread::spawn(move || {
-            let laid = lay_out(&description, job_key, &token);
-            if !token.load(Ordering::Relaxed) {
-                let _ = send.send(laid);
-            }
-        });
+        let job_key = key.clone();
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, key.revision, "the layout worker", move |ctx| Ok(lay_out(&description, job_key, ctx.cancel_flag())));
         self.error = None;
-        self.job = Some(Job { key, cancel, receiver: Mutex::new(receive) });
+        self.job = Some(Job { key, work });
     }
 
     /// Diagram nodes highlighted for the one Builder selection, projected

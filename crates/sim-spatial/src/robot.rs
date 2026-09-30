@@ -35,7 +35,6 @@ use crate::robot_gait::{self, GaitAction, GaitSource};
 use crate::robot_playback::{self, RecordedAction};
 use crate::robot_run::{self, JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, OverlayFlags, ReplayPhase, RunAction, RunController, SPEED_SCALES, SpeedRequest};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, mpsc};
 
 const LEFT: f32 = 280.0;
 const RIGHT: f32 = 390.0;
@@ -176,7 +175,8 @@ pub struct RobotView {
     scroll: f32,
     scroll_max: f32,
     scroll_to: Option<f32>,
-    rx: Option<Mutex<mpsc::Receiver<Result<(Loaded, Option<Opened>), String>>>>,
+    /// The preset's load in progress (a `--robot FILE` load goes through `source`).
+    load: Option<crate::jobs::Job<(Loaded, Option<Opened>)>>,
     /// The preset being opened or run (None for `--robot FILE`).
     preset: Option<Preset>,
     /// The preset list and the root its paths resolve against.
@@ -216,17 +216,17 @@ impl RobotView {
     pub fn open_preset(presets: &Path, id: &str) -> Result<Self, String> {
         let root = crate::workspace::root().map_err(|e| format!("robot preset `{id}` resolves its inputs against the workspace root: {e}"))?.to_path_buf();
         let preset = crate::robot_preset::select(presets, &root, id)?;
-        let (tx, rx) = mpsc::channel();
         let (worker, dir) = (preset.clone(), root.clone());
-        std::thread::spawn(move || {
-            let opened = if worker.is_recorded() {
+        let path = root.join(preset.scene.as_deref().unwrap_or_default());
+        // Parse and triangulate: CPU work.
+        let load = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, 0, format!("{}: the loader", path.display()), move |_| {
+            if worker.is_recorded() {
                 load_recorded(worker, &dir).map(|(l, r)| (l, Some(Opened::Recorded(r))))
             } else {
                 load_preset(worker, &dir).map(|(l, r)| (l, Some(Opened::Preset(r))))
-            };
-            let _ = tx.send(opened);
+            }
         });
-        let mut view = Self::new(root.join(preset.scene.as_deref().unwrap_or_default()), Some(rx), Some(preset));
+        let mut view = Self::new(path, Some(load), Some(preset));
         view.presets = Ok(presets.to_path_buf());
         Ok(view)
     }
@@ -238,7 +238,7 @@ impl RobotView {
         }
         self
     }
-    fn new(path: PathBuf, rx: Option<mpsc::Receiver<Result<(Loaded, Option<Opened>), String>>>, preset: Option<Preset>) -> Self {
+    fn new(path: PathBuf, load: Option<crate::jobs::Job<(Loaded, Option<Opened>)>>, preset: Option<Preset>) -> Self {
         Self {
             preset,
             presets: crate::robot_preset::default_file(),
@@ -254,7 +254,7 @@ impl RobotView {
             scroll: 0.0,
             scroll_max: 0.0,
             scroll_to: None,
-            rx: rx.map(Mutex::new),
+            load,
             run: None,
             run_message: None,
             pose_dirty: false,
@@ -1166,7 +1166,7 @@ fn label(fonts: &UiFonts, value: &str, size: f32, color: Color) -> (Text, TextFo
 /// UI thread, FILE mode: stats the opened file every `robot_source::POLL`;
 /// a changed stat dispatches the one Reload handler (trigger watch).
 fn watch(mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
-    let idle = view.rx.is_none();
+    let idle = view.load.is_none();
     let due = match view.source.as_mut() {
         Some(s) if idle => s.poll(std::time::Instant::now()),
         _ => false,
@@ -1197,16 +1197,12 @@ fn receive(
         _ => std::time::Instant::now(),
     };
     // `reload`: the trigger and the worker's seconds when a FILE reload replaces a displayed model.
-    let (result, reload) = if let Some(rx) = view.rx.as_ref() {
-        let result = match rx.lock().unwrap_or_else(|p| p.into_inner()).try_recv() {
-            Ok(result) => result,
-            Err(mpsc::TryRecvError::Empty) => {
-                redraw.write(bevy::window::RequestRedraw);
-                return;
-            }
-            Err(mpsc::TryRecvError::Disconnected) => Err(format!("{}: the loader stopped without a result", view.path.display())),
+    let (result, reload) = if let Some(load) = view.load.as_ref() {
+        let Some(result) = load.poll() else {
+            redraw.write(bevy::window::RequestRedraw);
+            return;
         };
-        view.rx = None;
+        view.load = None;
         (result, None)
     } else {
         let Some(source) = view.source.as_mut() else { return };

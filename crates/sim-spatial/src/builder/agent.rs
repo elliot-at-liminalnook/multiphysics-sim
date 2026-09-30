@@ -12,7 +12,7 @@ pub(super) struct Agent {
     revision: Option<u64>,
     pub endpoint: Option<String>,
     registry: Arc<Mutex<BehaviorRegistry>>,
-    context_task: Option<Mutex<mpsc::Receiver<Result<Value, String>>>>,
+    context_task: Option<crate::jobs::Job<Value>>,
 }
 impl Agent {
     pub fn open(path: &std::path::Path, registry: &BehaviorRegistry) -> Self {
@@ -156,34 +156,25 @@ impl Builder {
                 .path
                 .canonicalize()
                 .unwrap_or(self.store.path.clone());
-            let (tx, rx) = mpsc::channel();
-            std::thread::spawn(move || {
-                let result = sim_model_context::build(&doc, &registry, &request).map(|mut v| {
+            self.agent.context_task = Some(crate::jobs::Job::spawn(crate::jobs::Pool::Compute, 0, "model context worker", move |_| {
+                sim_model_context::build(&doc, &registry, &request).map(|mut v| {
                     v["viewer_status"] = status;
                     v["part_library"] = parts;
                     v["system_file"] = json!(file);
                     v
-                });
-                let _ = tx.send(result);
-            });
-            self.agent.context_task = Some(Mutex::new(rx));
+                })
+            }));
             *continuation = json!(true);
         }
-        let result = self
-            .agent
-            .context_task
-            .as_ref()
-            .map(|rx| rx.lock().unwrap().try_recv());
-        match result {
-            Some(Ok(result)) => {
+        let Some(task) = &self.agent.context_task else {
+            return sim_api::Outcome::Done(Err("model context worker stopped".into()));
+        };
+        match task.poll() {
+            Some(result) => {
                 self.agent.context_task = None;
                 sim_api::Outcome::Done(result)
             }
-            Some(Err(mpsc::TryRecvError::Empty)) => sim_api::Outcome::Pending,
-            _ => {
-                self.agent.context_task = None;
-                sim_api::Outcome::Done(Err("model context worker stopped".into()))
-            }
+            None => sim_api::Outcome::Pending,
         }
     }
     pub(crate) fn agent_request(&mut self, request: Request) -> Result<Value, String> {

@@ -195,6 +195,13 @@ fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Er
             println!("{} · mode {} · inputs exist {} · {}", p.id, p.mode, d["inputs_exist"], d["not_openable_reason"].as_str().unwrap_or("openable (build not attempted)"));
         }
         let preset = sim_spatial::robot_preset::select(&presets, root, id)?;
+        if preset.is_recorded() {
+            let (loaded, run) = sim_spatial::robot::load_recorded(preset, root)?;
+            let c = &run.capture;
+            println!("Validated recorded preset {id}: {} links; {} frames over {} s from {}; unmatched capture links: [{}]; loaded scene {:.2} s, capture {:.2} s, mapping {:.3} s (this build). No physics is built.",
+                loaded.model.links.len(), c.frames.len(), c.duration_s(), run.capture_path.display(), run.unmatched.join(", "), run.scene_load_s, run.capture_load_s, run.map_s);
+            return Ok(());
+        }
         let (loaded, run) = sim_spatial::robot::load_preset(preset, root)?;
         let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
         println!("Validated preset {id}: {} with {} links ({drawn} with collision geometry); chunk {} steps × {} s; seed {}.", run.kind(), loaded.model.links.len(), run.chunk_steps(), run.config.step_s, run.seed);

@@ -25,7 +25,60 @@ use std::time::{Duration, Instant};
 pub const CHUNK_S: f64 = 0.02;
 /// Wall-clock window over which the real-time factor is measured.
 const RTF_WINDOW: Duration = Duration::from_secs(1);
-pub const PACING: &str = "paced at most to real time: a chunk starts only when wall time since Run has caught up with sim time (lag beyond one chunk is dropped, never made up faster than real time); rtf = sim seconds / wall seconds over the last ~1 s of running, including pacing sleeps; null when not running";
+pub const PACING: &str = "paced at most to speed_scale × real time (pace()): a chunk starts only when (wall time since the anchor) × speed_scale has caught up with sim time since the anchor; the anchor is (wall, sim) at Run, at a replay start and at every speed change, so a mid-run change causes no burst and no stall; lag beyond one chunk is dropped (re-anchored), never made up faster than speed_scale × real time. The scale changes pacing only: dt, chunk_s and the physics step are unchanged. FILE runs, preset runs and replays share this one rule. rtf = sim seconds / wall seconds over the last ~1 s of running (restarted at a speed change), including pacing sleeps; null when not running";
+/// Run speed scales (× real time), powers of two as sim-app's cad scene.
+pub const SPEED_SCALES: [f64; 7] = [0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0];
+/// Achieved rtf below this fraction of speed_scale while running is reported as compute-limited.
+pub const COMPUTE_LIMITED_FRACTION: f64 = 0.9;
+pub const COMPUTE_LIMITED_RULE: &str = "compute_limited = running and rtf (measured over ~1 s) is known and below 0.9 × speed_scale: the simulation could not keep up with the requested scale, so speed_scale was not reached; null when not running or rtf is not yet measured. speed_scale is the requested pace, never a claim that it was achieved";
+
+/// The run thread's pacing decision for one loop turn.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Pace {
+    /// Sim time is ahead of scaled wall time: sleep (capped so commands stay responsive).
+    Sleep(Duration),
+    /// A chunk is due.
+    Advance,
+    /// A chunk is due and the lag exceeds one chunk: re-anchor so the lag is dropped.
+    AdvanceAndReanchor,
+}
+/// The pacing rule (PACING): `wall_s` and `sim_s` are measured since the anchor.
+/// A chunk is due when `wall_s × scale ≥ sim_s`; lag beyond one chunk is dropped.
+pub fn pace(wall_s: f64, sim_s: f64, scale: f64, chunk_s: f64) -> Pace {
+    let due = wall_s * scale;
+    if sim_s > due {
+        Pace::Sleep(Duration::from_secs_f64(((sim_s - due) / scale).min(0.005)))
+    } else if due - sim_s > chunk_s {
+        Pace::AdvanceAndReanchor
+    } else {
+        Pace::Advance
+    }
+}
+
+/// A run speed request, shared by keys, buttons, `system_ui` and REST `robot_speed`.
+#[derive(Clone, Copy, Serialize, serde::Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum SpeedRequest {
+    /// The next faster scale (refused at ×8).
+    Up,
+    /// The next slower scale (refused at ×0.125).
+    Down,
+    /// An exact scale from SPEED_SCALES (anything else is refused, never clamped).
+    Set { scale: f64 },
+}
+fn allowed_scales() -> String {
+    SPEED_SCALES.iter().map(|s| format!("{s}")).collect::<Vec<_>>().join(", ")
+}
+/// The scale a request resolves to from `current`, or why it is refused.
+pub fn speed_target(current: f64, request: SpeedRequest) -> Result<f64, String> {
+    let i = SPEED_SCALES.iter().position(|s| *s == current).unwrap_or(3);
+    match request {
+        SpeedRequest::Up => SPEED_SCALES.get(i + 1).copied().ok_or_else(|| format!("already at the fastest run speed ×{current} (allowed: {})", allowed_scales())),
+        SpeedRequest::Down => i.checked_sub(1).map(|j| SPEED_SCALES[j]).ok_or_else(|| format!("already at the slowest run speed ×{current} (allowed: {})", allowed_scales())),
+        SpeedRequest::Set { scale } if SPEED_SCALES.contains(&scale) => Ok(scale),
+        SpeedRequest::Set { scale } => Err(format!("run speed scale {scale} is not allowed; allowed (× real time, powers of two): {}", allowed_scales())),
+    }
+}
 
 /// One +/− jog press: rad on a revolute/continuous joint, m on a prismatic one.
 pub const JOG_STEP_RAD: f64 = 0.05;
@@ -374,6 +427,8 @@ enum Command {
     CancelReplay,
     /// Which overlay data `--robot FILE` frames carry from now on (republished at once while paused).
     Overlays(OverlayFlags),
+    /// The run speed scale (validated against SPEED_SCALES); re-anchors pacing.
+    Speed(f64),
     /// Tests only: set the whole held action through `Sim::set_action` (the motion handler's setter), for presets without a motion config.
     #[cfg(test)]
     SetInputs(Vec<f64>),
@@ -461,6 +516,8 @@ pub struct RunController {
     gait: Option<GaitPreview>,
     /// The overlays requested of the run thread (`--robot FILE`).
     overlays: OverlayFlags,
+    /// The requested run speed scale (SPEED_SCALES; pacing only).
+    speed_scale: f64,
 }
 
 impl RunController {
@@ -502,7 +559,7 @@ impl RunController {
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
-            graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default() }
+            graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -1031,10 +1088,15 @@ impl RunController {
         let generation = previous.as_ref().map_or(0, |r| r.generation + 1);
         // The user's overlay choice survives a reload.
         let overlays = previous.as_ref().map(|r| r.overlays);
+        // So does the run speed scale.
+        let speed = previous.as_ref().map(|r| r.speed_scale);
         drop(previous);
         let mut next = Self::spawn_at(model, generation);
         if let Some(flags) = overlays.filter(|f| *f != next.overlays) {
             let _ = next.set_overlays(flags);
+        }
+        if let Some(scale) = speed.filter(|s| *s != next.speed_scale) {
+            let _ = next.speed(SpeedRequest::Set { scale });
         }
         (next, reset)
     }
@@ -1048,6 +1110,26 @@ impl RunController {
     }
     pub fn rtf(&self) -> Option<f64> {
         self.status.rtf
+    }
+    pub fn speed_scale(&self) -> f64 {
+        self.speed_scale
+    }
+    /// The scale a speed request resolves to, or why it is refused.
+    pub fn check_speed(&self, request: SpeedRequest) -> Result<f64, String> {
+        speed_target(self.speed_scale, request)
+    }
+    /// The one handler behind the speed keys, buttons, `system_ui` run:speed_* and REST
+    /// `robot_speed`: sets the requested scale in every phase (it applies on the next Run).
+    pub fn speed(&mut self, request: SpeedRequest) -> Result<(), String> {
+        let scale = self.check_speed(request)?;
+        self.tx.send(Command::Speed(scale)).map_err(|_| "the run thread has stopped".to_string())?;
+        self.speed_scale = scale;
+        Ok(())
+    }
+    /// compute_limited (COMPUTE_LIMITED_RULE): None unless running with a measured rtf.
+    pub fn compute_limited(&self) -> Option<bool> {
+        let running = self.status.phase == Phase::Running && self.running;
+        self.status.rtf.filter(|_| running).map(|rtf| rtf < COMPUTE_LIMITED_FRACTION * self.speed_scale)
     }
     pub fn error(&self) -> Option<&str> {
         self.status.error.as_deref()
@@ -1121,7 +1203,7 @@ impl RunController {
         };
         let without: Option<Vec<&String>> = f.map(|f| f.poses.iter().enumerate().filter(|(_, p)| p.is_none()).filter_map(|(i, _)| links.get(i)).collect());
         json!({"phase": self.status.phase, "time": f.map(|f| f.time), "steps": f.map(|f| f.steps), "chunk_s": self.chunk_s,
-            "rtf": self.status.rtf, "generation": self.generation, "error": self.status.error, "end": self.status.end, "frame_generation": f.map(|f| f.generation),
+            "rtf": self.status.rtf, "speed_scale": self.speed_scale, "speed_scales": SPEED_SCALES, "compute_limited": self.compute_limited(), "compute_limited_rule": COMPUTE_LIMITED_RULE, "generation": self.generation, "error": self.status.error, "end": self.status.end, "frame_generation": f.map(|f| f.generation),
             "completed_steps": f.and_then(|f| f.completed_steps),
             "joints": f.map(|f| &f.joint_names), "joint_angles": f.map(|f| &f.joint_angles), "targets": f.map(|f| &f.targets), "poses": poses,
             "unmatched_frame_links": f.map(|f| &f.unmatched), "links_without_pose": without,
@@ -1509,6 +1591,8 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
     // Pacing anchor (wall, sim) and the RTF window of (wall, sim) samples.
     let mut anchor = (Instant::now(), 0.0);
     let mut window: VecDeque<(Instant, f64)> = VecDeque::new();
+    // The requested run speed scale (Command::Speed; pacing only).
+    let mut scale = 1.0;
     // The overlays whose data frames carry (OVERLAY_COST_RULE); set by Command::Overlays.
     let flags = std::cell::Cell::new(OverlayFlags::default());
     let set = |status: Status, frame: Option<Frame>| {
@@ -1682,6 +1766,15 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                     set_replay(&r.state);
                 }
             }
+            Some(Command::Speed(x)) => {
+                scale = x;
+                // Re-anchor at the current (wall, sim): no burst, no stall; the rtf window restarts.
+                if let Some(s) = sim.as_ref() {
+                    anchor = (Instant::now(), s.time());
+                    window.clear();
+                    window.push_back(anchor);
+                }
+            }
             Some(Command::Motion { .. }) if replay.is_some() => set_motion_error(Some("motion request not applied: a replay is in progress".into())),
             Some(Command::Overlays(f)) => {
                 flags.set(f);
@@ -1767,15 +1860,15 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
             continue;
         }
         let Some(s) = sim.as_mut() else { continue };
-        // Pace: never ahead of the wall clock; drop lag beyond one chunk.
-        let wall = anchor.0.elapsed().as_secs_f64();
-        let t = s.time() - anchor.1;
-        if t > wall {
-            std::thread::sleep(Duration::from_secs_f64((t - wall).min(0.005)));
-            continue;
-        }
-        if wall - t > chunk_s {
-            anchor = (Instant::now() - Duration::from_secs_f64(chunk_s), s.time());
+        // Pace (PACING): never ahead of scale × wall time; drop lag beyond one chunk.
+        match pace(anchor.0.elapsed().as_secs_f64(), s.time() - anchor.1, scale, chunk_s) {
+            Pace::Sleep(d) => {
+                std::thread::sleep(d);
+                continue;
+            }
+            // Keep exactly one chunk of (scaled) lag, so this chunk is due and the next one waits.
+            Pace::AdvanceAndReanchor => anchor = (Instant::now() - Duration::from_secs_f64(chunk_s / scale), s.time()),
+            Pace::Advance => {}
         }
         let advanced = match replay.as_mut() {
             Some(r) => s.advance_replay(&mut r.work).map(|n| r.state.completed += n),
@@ -1857,6 +1950,42 @@ mod tests {
             c.poll();
         }
     }
+    #[test]
+    fn pace_is_due_when_scaled_wall_catches_up_and_drops_lag() {
+        let c = CHUNK_S;
+        // ×0.25: one chunk of sim time is due after chunk / 0.25 = 0.08 s of wall time.
+        assert!(matches!(pace(0.079, c, 0.25, c), Pace::Sleep(_)));
+        assert_eq!(pace(0.08, c, 0.25, c), Pace::Advance);
+        // ×4: due after 0.005 s of wall time.
+        assert!(matches!(pace(0.0049, c, 4.0, c), Pace::Sleep(_)));
+        assert_eq!(pace(0.005, c, 4.0, c), Pace::Advance);
+        // Sleeps are in wall time ((sim - wall × scale) / scale), capped at 5 ms.
+        assert_eq!(pace(0.07, c, 0.25, c), Pace::Sleep(Duration::from_secs_f64(0.005)));
+        let Pace::Sleep(d) = pace(0.004, c, 4.0, c) else { panic!("not due yet") };
+        assert!((d.as_secs_f64() - 0.001).abs() < 1e-9);
+        // Lag beyond one chunk is dropped (re-anchor), not made up: at ×4, 1 s of wall
+        // time owes 4 s of sim time, but only one chunk is advanced before re-anchoring.
+        assert_eq!(pace(1.0, 0.0, 4.0, c), Pace::AdvanceAndReanchor);
+        assert_eq!(pace(0.08, 0.0, 0.25, c), Pace::Advance);
+        assert_eq!(pace(0.09, 0.0, 0.25, c), Pace::AdvanceAndReanchor);
+        // After the worker's re-anchor (one chunk of lag kept: wall = chunk / scale), that one
+        // chunk may be made up, but the chunk after it waits for scaled wall time again.
+        for scale in SPEED_SCALES {
+            assert_eq!(pace(c / scale, 0.0, scale, c), Pace::Advance);
+            assert_eq!(pace(c / scale, c, scale, c), Pace::Advance);
+            assert!(matches!(pace(c / scale, 2.0 * c, scale, c), Pace::Sleep(_)));
+        }
+        // Speed requests: powers of two only, refused (never clamped) at the ends and off the list.
+        assert_eq!(speed_target(1.0, SpeedRequest::Up), Ok(2.0));
+        assert_eq!(speed_target(0.25, SpeedRequest::Down), Ok(0.125));
+        assert!(speed_target(8.0, SpeedRequest::Up).unwrap_err().contains("fastest"));
+        assert!(speed_target(0.125, SpeedRequest::Down).unwrap_err().contains("slowest"));
+        assert_eq!(speed_target(1.0, SpeedRequest::Set { scale: 4.0 }), Ok(4.0));
+        for bad in [3.0, 16.0, 0.0, -1.0, f64::NAN] {
+            assert!(speed_target(1.0, SpeedRequest::Set { scale: bad }).unwrap_err().contains("0.125, 0.25, 0.5, 1, 2, 4, 8"));
+        }
+    }
+
     #[test]
     fn run_thread_steps_one_chunk_resets_generation_and_rejects_stale_frames() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");

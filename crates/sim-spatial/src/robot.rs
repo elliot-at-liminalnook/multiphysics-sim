@@ -32,7 +32,7 @@ use crate::robot_recording;
 use crate::robot_source::{self, SourceWatch, Trigger as ReloadTrigger};
 use crate::robot_stress::{self, StressOverlay};
 use crate::robot_gait::{self, GaitAction, GaitSource};
-use crate::robot_run::{self, JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, OverlayFlags, ReplayPhase, RunAction, RunController};
+use crate::robot_run::{self, JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, OverlayFlags, ReplayPhase, RunAction, RunController, SPEED_SCALES, SpeedRequest};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
 
@@ -392,6 +392,9 @@ enum RobotAction {
     /// inspector overlay buttons and `system_ui` overlay:* send the flipped flag; REST `robot_overlay` sends values.
     /// contacts, joints and deflections are run-thread overlays; stress colours the link meshes from the results file.
     Overlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool>, stress: Option<bool> },
+    /// The run speed scale (robot_run::PACING; pacing only): keys =/+ and −, the header
+    /// −/×scale/+ buttons, `system_ui` run:speed_* and REST `robot_speed`.
+    Speed { speed: SpeedRequest },
 }
 /// The overlays: (system_ui id suffix, label, key). H (hotspots) for stress: S is the WASD jog key.
 const OVERLAYS: [(&str, &str, KeyCode); 4] =
@@ -455,6 +458,7 @@ fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
         RobotAction::Replay { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_replay().map(|_| ()),
         RobotAction::CancelReplay => view.run.as_ref().ok_or("the robot has not loaded")?.check_cancel(),
         RobotAction::Gait { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check_gait(action),
+        RobotAction::Speed { speed } => view.run.as_ref().ok_or("the robot has not loaded")?.check_speed(*speed).map(|_| ()),
         RobotAction::Reload { .. } => view.source.as_ref().ok_or("a preset is not reloaded; reload is for --robot FILE")?.check_reload(),
         RobotAction::Overlay { contacts, joints, deflections, stress } => {
             if contacts.is_some() || joints.is_some() || deflections.is_some() {
@@ -510,6 +514,7 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
         RobotAction::Fit => orbit.home = true,
         RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
+        RobotAction::Speed { speed } => view.run.as_mut().ok_or("the robot has not loaded")?.speed(speed)?,
         // Checked above; applied in `receive` when the worker finishes.
         RobotAction::Reload { trigger } => view.source.as_mut().ok_or("a preset is not reloaded; reload is for --robot FILE")?.start(trigger)?,
         RobotAction::Overlay { contacts, joints, deflections, stress } => {
@@ -564,6 +569,11 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
         }
         for action in RunAction::ALL {
             out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
+        }
+        out.push(("run:speed_down".into(), "Run speed down (−)".into(), RobotAction::Speed { speed: SpeedRequest::Down }));
+        out.push(("run:speed_up".into(), "Run speed up (=/+)".into(), RobotAction::Speed { speed: SpeedRequest::Up }));
+        for scale in SPEED_SCALES {
+            out.push((format!("run:speed:{scale}"), format!("Run speed ×{scale}"), RobotAction::Speed { speed: SpeedRequest::Set { scale } }));
         }
         for (joint, step) in jog_joints(view) {
             let unit = if step == JOG_STEP_M { "m" } else { "rad" };
@@ -652,6 +662,7 @@ enum Request {
     RobotGait { action: Option<String>, report: Option<String>, path: Option<String>, t: Option<f64>, scale: Option<f64> },
     RobotReload,
     RobotOverlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool>, stress: Option<bool> },
+    RobotSpeed { action: Option<String>, scale: Option<f64> },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -738,6 +749,15 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
         Request::RobotReload => dispatch(view, orbit, RobotAction::Reload { trigger: ReloadTrigger::Manual })?,
         Request::RobotOverlay { contacts: None, joints: None, deflections: None, stress: None } => return Err("robot_overlay needs at least one of contacts, joints, deflections, stress (true | false)".into()),
         Request::RobotOverlay { contacts, joints, deflections, stress } => dispatch(view, orbit, RobotAction::Overlay { contacts, joints, deflections, stress })?,
+        Request::RobotSpeed { action, scale } => {
+            let speed = match (action.as_deref(), scale) {
+                (None | Some("set"), Some(scale)) => SpeedRequest::Set { scale },
+                (Some("up"), None) => SpeedRequest::Up,
+                (Some("down"), None) => SpeedRequest::Down,
+                (a, _) => return Err(format!("robot_speed {}: give scale (one of {}) or action up | down alone", a.map_or("without scale".into(), |a| format!("action `{a}`")), SPEED_SCALES.map(|s| s.to_string()).join(", "))),
+            };
+            dispatch(view, orbit, RobotAction::Speed { speed })?;
+        }
         Request::Fit => orbit.home = true,
     }
     Ok(view.state_json())
@@ -753,9 +773,10 @@ fn capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
         c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim (the export's own `source`), source_file (--robot FILE's path, sha256, loaded_at, reload_count, watching, last_reload, run_reset; see robot_reload; watching=false for a preset), notice (the last reload's result), and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, run (null until loaded; phase idle with null time before any build; see robot_run), and overlays (--robot FILE run-thread contacts, joint frames and deflections with flags, counts, samples and scales, and overlays.stress for the read-only .simresult.json; available=false with the reason for presets; see robot_overlay). Nothing is written."),
-        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls, robot:reload and overlay:contacts | overlay:joints | overlay:deflections | overlay:stress for --robot FILE (the same RobotAction::Reload as robot_reload and RobotAction::Overlay as robot_overlay; overlay controls are listed for presets but disabled with the reason), and for a preset the run, motion, recording, replay and gait preview controls (gait:open:<report>, gait:play, gait:pause, gait:stop, gait:seek:0 | - | + (±period/12 from the latest pose), gait:speed:0.25 | 0.5 | 1, gait:list: the same RobotAction::Gait as REST robot_gait) (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
+        c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls, the run controls (run:start | pause | step | reset, and run:speed_down | run:speed_up | run:speed:<scale>: the same RobotAction::Speed as robot_speed), robot:reload and overlay:contacts | overlay:joints | overlay:deflections | overlay:stress for --robot FILE (the same RobotAction::Reload as robot_reload and RobotAction::Overlay as robot_overlay; overlay controls are listed for presets but disabled with the reason), and for a preset the run, motion, recording, replay and gait preview controls (gait:open:<report>, gait:play, gait:pause, gait:stop, gait:seek:0 | - | + (±period/12 from the latest pose), gait:speed:0.25 | 0.5 | 1, gait:list: the same RobotAction::Gait as REST robot_gait) (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
         c("robot_jog", json!({"joint":"left axle","target":0.5}), &format!("Servo-target jog of one joint by its file name: {JOG_LABEL}. Give target (absolute; rad, or m on a prismatic joint) or delta (from the current requested target). The same handler as the jog +/− buttons and system_ui jog:<joint>:+/- controls (±{JOG_STEP_RAD} rad, ±{JOG_STEP_M} m prismatic; listed for the joints touching the selected link). Errors name the joint: unknown joint, no servo target (passive joint, firmware none, fixed, or a trajectory-mode file), non-finite target, or a target outside the file's limits (with the limit; never clamped); after a failed run, Reset first. {JOG_SEMANTICS} robot_state.jog reports control mode, label and, per joint, the limit (or no limit in file), requested target, and the target and measured value from the latest accepted frame.")),
-        c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
+        c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to speed_scale × real time (robot_speed; default ×1); pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, speed_scale (requested) and compute_limited, generation, error and the latest accepted frame. Nothing is written."),
+        c("robot_speed", json!({"scale":4}), &format!("Set the run speed scale (× real time) for --robot FILE runs, preset runs and replays alike: scale one of {} (powers of two, as sim-app's cad scene; anything else is refused naming the allowed values, never clamped), or action up | down alone (refused at ×8 / ×0.125, naming the limit). The same RobotAction::Speed as keys =/+ and − (numpad too), the header −/×scale/+ buttons (×scale resets to ×1) and system_ui run:speed_up | run:speed_down | run:speed:<scale>. Allowed in every phase; it applies from the next chunk (or the next Run) and survives Reset and a file reload. Pacing only: dt, chunk_s and the physics step are unchanged. {} robot_state.run reports speed_scale (requested), rtf (achieved) and compute_limited: {}.", SPEED_SCALES.map(|s| s.to_string()).join(", "), robot_run::PACING, robot_run::COMPUTE_LIMITED_RULE)),
         c("robot_presets", json!({}), &format!("List the robot presets declared in {} (its paths resolved against the workspace root, reported in workspace): id, label, mode, scene/config/task paths, inputs_exist and missing, under_ignored_runs, runs_as (EmbeddedEnvironment with a task, else EmbeddedSession) and openable with the reason when not (the build itself is not attempted). Only mode `embedded` runs natively.", crate::robot_preset::PRESETS)),
         c("robot_preset", json!({"id":"robot-measured-400hz"}), "Open a declared embedded preset by id in this window (replacing the current robot and stopping its run thread). Unknown ids, other modes and missing inputs are refused naming the id. The scene, config and task are parsed exactly as declared on a worker thread; scene.robot is drawn and inspected through the same loader as --robot FILE. Run/Pause/Step/Reset (robot_run) then drive the shared EmbeddedEnvironment (task) or EmbeddedSession (no task) on the run thread with seed 0 (recorded), one action interval or clamp(report_every, 1, 40) nominal steps per chunk. robot_state.preset reports id, label, paths, readiness and evidence verbatim, seed, step_s, chunk and step counts; run.phase `ended` with run.end reports a reached horizon or a terminated/truncated episode. Servo-target jog is not offered for presets."),
         c("robot_input", json!({"channels":{"command.forward_speed":0.001}}), &format!("Motion request for a running robot preset: {}. Give channels (values by motion channel name; the other motion channels keep their requested values) or key (w | a | s | d latches that key's request until stop, another key or a channel request; stop sets every motion channel to 0). The same handler as physical W/A/S/D (press/release) and X (stop), the W/A/S/D/Stop buttons and system_ui motion:w|a|s|d|stop. Motion channels come from the session's policy_contract.step_reference.config, else the preset's presets.json motion_commands (as web/viewer/motion-commands.mjs); key vectors from motion_key_vectors, else the channel bounds. Refused naming the channel and its bounds: an unknown channel, a session input that is not a motion channel, a non-finite value, or a value or summed key vector outside the channel's bounds ({}). Also refused, naming the reason: --robot FILE, a preset with no motion config, no built session (Run or Step builds it), a failed or ended run, an exhausted heartbeat. A declared motion_heartbeat is {} robot_state.motion reports source, channels with bounds, requested and held values, active keys, heartbeat, last refusal and the label.", robot_motion::LABEL, robot_motion::CLAMP_RULE, robot_motion::HEARTBEAT_RULE)),
@@ -847,6 +868,11 @@ struct StressText;
 #[derive(Component)]
 struct ReloadButton;
 #[derive(Component)]
+struct SpeedButton;
+/// A speed button's label; true on the middle (×scale) one.
+#[derive(Component)]
+struct SpeedLabel(bool);
+#[derive(Component)]
 struct ReplayText;
 /// The Replay buttons (one per recent saved recording), rebuilt when the list changes.
 #[derive(Component)]
@@ -887,7 +913,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
         }))
         .insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, ((watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, buttons, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain(), (panels, overlay_panel, stress_panel, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain()).chain())
+        .add_systems(Update, ((watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, speed_keys, buttons, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain(), (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, gait_panel, graph_dock, draw).chain()).chain())
         .run();
 }
 
@@ -921,7 +947,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     commands.spawn((
         Node { position_type: PositionType::Absolute, right: Val::Px(18.0), top: Val::Px(6.0), flex_direction: FlexDirection::Column, align_items: AlignItems::FlexEnd, row_gap: Val::Px(3.0), ..default() },
         children![
-            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![reload_button(&fonts, view.source.is_some()), run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset), graphs_button(&fonts)]),
+            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![reload_button(&fonts, view.source.is_some()), run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset), speed_button(&fonts, SpeedRequest::Down), speed_button(&fonts, SpeedRequest::Set { scale: 1.0 }), speed_button(&fonts, SpeedRequest::Up), graphs_button(&fonts)]),
             (text("", 12.0, MUTED), RunText),
         ],
     ));
@@ -991,6 +1017,26 @@ fn run_button(fonts: &UiFonts, action: RunAction) -> impl Bundle {
         BorderRadius::all(Val::Px(4.0)),
         BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
         children![label(fonts, action.label(), 13.0, INK)],
+    )
+}
+
+/// A run speed button: the same `RobotAction::Speed` as keys =/+ and −, `system_ui`
+/// run:speed_* and REST robot_speed. The middle one shows the requested ×scale
+/// (updated by `speed_panel`) and resets to ×1.
+fn speed_button(fonts: &UiFonts, speed: SpeedRequest) -> impl Bundle {
+    let name = match speed {
+        SpeedRequest::Down => "−",
+        SpeedRequest::Up => "+",
+        SpeedRequest::Set { .. } => "×1",
+    };
+    (
+        Button,
+        RobotAction::Speed { speed },
+        SpeedButton,
+        Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(3.0)), ..default() },
+        BorderRadius::all(Val::Px(4.0)),
+        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
+        children![(label(fonts, name, 13.0, INK), SpeedLabel(matches!(speed, SpeedRequest::Set { .. })))],
     )
 }
 
@@ -1454,6 +1500,11 @@ fn panels(
         Some(r) => {
             let time = r.frame().map_or("t —".to_string(), |f| format!("t {:.2} s · {} chunks", f.time, f.steps));
             let rtf = r.rtf().map_or(String::new(), |x| format!(" · RTF {x:.2}"));
+            // The requested scale while running or paused, and whether compute kept it from being reached.
+            let speed = match r.phase() {
+                robot_run::Phase::Running | robot_run::Phase::Paused => format!(" · ×{}{}", r.speed_scale(), if r.compute_limited() == Some(true) { " (compute-limited)" } else { "" }),
+                _ => String::new(),
+            };
             // The header has one line beside the subtitle: long messages are cut here and shown in full in the inspector.
             let error = r.error().map_or(String::new(), |e| format!(" · {} (full error in the inspector)", clip(e, 40)));
             let ended = r.end().and_then(|e| e["message"].as_str()).map_or(String::new(), |m| format!(" · {} (see the inspector)", clip(m, 40)));
@@ -1465,7 +1516,7 @@ fn panels(
                 ReplayPhase::Idle => String::new(),
                 phase => format!(" · replay {} {}/{}", format!("{phase:?}").to_lowercase(), replay.completed, replay.total.map_or("?".into(), |t| t.to_string())),
             };
-            format!("{phase} · {time}{rtf} · gen {} · {} s chunks{replay}{error}{refused}", r.generation(), r.chunk_s())
+            format!("{phase} · {time}{rtf}{speed} · gen {} · {} s chunks{replay}{error}{refused}", r.generation(), r.chunk_s())
         }
     };
     if run_text.0 != run_line {
@@ -2172,6 +2223,43 @@ fn file_watch_text(s: &SourceWatch) -> String {
 fn graph_key(keys: Res<ButtonInput<KeyCode>>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
     if keys.just_pressed(KeyCode::KeyG) {
         view.run_message = dispatch(&mut view, &mut orbit, RobotAction::ToggleGraphs).err();
+    }
+}
+
+/// Keys =/+ and − (main row and numpad): the same `RobotAction::Speed` as the header
+/// −/+ buttons, `system_ui` run:speed_* and REST robot_speed. A refusal at ×8 / ×0.125 shows in the header.
+fn speed_keys(keys: Res<ButtonInput<KeyCode>>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
+    let speed = if keys.any_just_pressed([KeyCode::Equal, KeyCode::NumpadAdd]) {
+        SpeedRequest::Up
+    } else if keys.any_just_pressed([KeyCode::Minus, KeyCode::NumpadSubtract]) {
+        SpeedRequest::Down
+    } else {
+        return;
+    };
+    view.run_message = dispatch(&mut view, &mut orbit, RobotAction::Speed { speed }).err();
+}
+
+/// The speed buttons: dimmed when refused (at a limit, or no robot), the middle one shows ×scale.
+fn speed_panel(view: Res<RobotView>, mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<SpeedButton>>, mut labels: Query<(&SpeedLabel, &mut Text)>) {
+    for (action, interaction, mut background) in &mut buttons {
+        let enabled = check(&view, action).is_ok();
+        let color = match (enabled, interaction) {
+            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
+            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
+            (true, _) => Color::srgb(0.16, 0.20, 0.25),
+        };
+        if background.0 != color {
+            background.0 = color;
+        }
+    }
+    let scale = view.run.as_ref().map_or(1.0, RunController::speed_scale);
+    for (label, mut text) in &mut labels {
+        if label.0 {
+            let want = format!("×{scale}");
+            if text.0 != want {
+                text.0 = want;
+            }
+        }
     }
 }
 

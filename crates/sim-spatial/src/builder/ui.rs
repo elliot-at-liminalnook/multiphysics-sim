@@ -428,8 +428,8 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_
         .with_children(|side| {
             side.spawn((Node { padding: UiRect::horizontal(Val::Px(10.)), column_gap: Val::Px(6.), flex_wrap: FlexWrap::Wrap, border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(BORDER)))
                 .with_children(|tabs| {
-                    for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems), ("Actuators", Tab::Actuators)] {
-                        if matches!(tab, Tab::Systems | Tab::Actuators) && b.open.shell.is_none() {
+                    for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems), ("Actuators", Tab::Actuators), ("Gait lab", Tab::GaitLab)] {
+                        if matches!(tab, Tab::Systems | Tab::Actuators | Tab::GaitLab) && b.open.shell.is_none() {
                             continue;
                         }
                         tabs.spawn(k.button(label, BuildAction::Tab(tab), Look::Tab(b.tab == tab), true));
@@ -455,6 +455,7 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_
                 Tab::Studies => studies_tab(body, k, b),
                 Tab::Systems => systems_tab(body, k, b),
                 Tab::Actuators => actuators_tab(body, k, b),
+                Tab::GaitLab => gait_lab::tab(body, k, b),
                 Tab::Discussions => {},
             });
         });

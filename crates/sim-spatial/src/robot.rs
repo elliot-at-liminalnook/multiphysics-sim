@@ -1,7 +1,8 @@
 //! Robot mode (`--robot FILE`): a CAD-exported `.simrobot.json` opened
 //! read-only. The shared `PhysicalModel` loader runs on a worker thread; each
-//! link's collision geometry is drawn at the exported assembly pose. Nothing
-//! is stepped, edited or written; running a robot still needs sim-app.
+//! link's collision geometry is drawn at the exported assembly pose until a
+//! run starts. Run/Pause/Step/Reset drive the shared `PhysicalRobot` on the
+//! run thread (`robot_run`); links follow its frames. Nothing is written.
 use super::{ACCENT, INK, MUTED, PANEL};
 use crate::builder::ui::UiFonts;
 use bevy::{
@@ -20,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use sim_domain_robot::cad_link::{self, CadLinkStatus};
+use crate::robot_run::{RunAction, RunController};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
 
@@ -31,6 +33,8 @@ const TOP: f32 = 64.0;
 pub const POSE: &str = "exported assembly pose: link frames at the stored com, axes aligned with the model frame (Z up); no joint motion, not stepped";
 /// Which values carry a measured/derived/estimated label, stated in the UI and REST.
 pub const PROVENANCE_RULE: &str = "typed provenance labels are shown only where the file carries one: joint physics.drive_backlash.provenance and actuator profile parameters. Free text the file carries (link mass_sources and member_names, joint physics.source, motor notes) is shown verbatim as the file's text, never mapped to a label. Every other value has no per-value provenance in the export; see the source block's notes.";
+/// Shown once a run frame (built or stepped) is displayed.
+pub const SIMULATED_POSE: &str = "simulated pose from the run thread's latest frame (see run.poses); the exported assembly pose is t = 0 of each generation";
 const UNLABELLED: &str = "no per-value provenance in export (see Source → notes)";
 
 /// One link's display triangles in its own frame (flat-shaded).
@@ -120,6 +124,12 @@ pub struct RobotView {
     scroll_max: f32,
     scroll_to: Option<f32>,
     rx: Option<Mutex<mpsc::Receiver<Result<Loaded, String>>>>,
+    /// The run thread, spawned idle once the model has loaded.
+    run: Option<RunController>,
+    /// The last refused run control from a click (REST gets the error directly).
+    run_message: Option<String>,
+    /// LinkMesh transforms need re-applying (new frame, or reset to the assembly pose).
+    pose_dirty: bool,
     ui_revision: u64,
     panels_ready: bool,
 }
@@ -144,6 +154,9 @@ impl RobotView {
             scroll_max: 0.0,
             scroll_to: None,
             rx: Some(Mutex::new(rx)),
+            run: None,
+            run_message: None,
+            pose_dirty: false,
             ui_revision: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_micros() as u64,
             panels_ready: false,
         }
@@ -180,6 +193,9 @@ impl RobotView {
             let hashes: serde_json::Map<String, Value> = p.families.iter().map(|(k, f)| (k.clone(), json!(f.content_hash()))).collect();
             json!({"content_hashes": hashes, "profiles": p, "provenance": "per parameter, typed in the file (measured | derived | estimated)"})
         });
+        let names: Vec<String> = m.iter().flat_map(|m| m.links.iter().map(|l| l.name.clone())).collect();
+        let run = self.run.as_ref().map(|r| r.state_json(&names));
+        let stepped = self.run.as_ref().and_then(|r| r.frame()).is_some();
         let cad = self.cad_link.as_ref().map(|c| json!({"link": c, "rule": cad_link::RESOLUTION_RULE}));
         json!({"file": self.path, "status": status, "error": error, "load_seconds": seconds,
             "link_count": m.map(|m| m.links.len()), "links": links, "selected": selected,
@@ -188,7 +204,7 @@ impl RobotView {
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": POSE, "read_only": true, "stepped": false, "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -234,9 +250,26 @@ enum RobotAction {
     /// Scroll the inspector by logical pixels (positive is down).
     ScrollInspector { delta: f32 },
     Fit,
+    /// Run/Pause/Step/Reset on the run thread.
+    Run { action: RunAction },
 }
-fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) {
+/// Why a control is unavailable now (`Ok` when enabled).
+fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
     match action {
+        RobotAction::Run { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check(*action),
+        _ => Ok(()),
+    }
+}
+fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -> Result<(), String> {
+    check(view, &action)?;
+    match action {
+        RobotAction::Run { action } => {
+            view.run.as_mut().ok_or("the robot has not loaded")?.act(action)?;
+            if action == RunAction::Reset {
+                // Old-generation frames are stale: show the assembly pose until the rebuild publishes t = 0.
+                view.pose_dirty = true;
+            }
+        }
         RobotAction::SelectLink { index, .. } => {
             view.selected = Some(index);
             view.scroll_to = Some(0.0);
@@ -249,6 +282,7 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) {
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
         RobotAction::Fit => orbit.home = true,
     }
+    Ok(())
 }
 fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
     let mut out: Vec<(String, String, RobotAction)> = view
@@ -265,6 +299,9 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
         out.push(("inspector:scroll_down".into(), "Scroll inspector down".into(), RobotAction::ScrollInspector { delta: 400.0 }));
         out.push(("inspector:scroll_up".into(), "Scroll inspector up".into(), RobotAction::ScrollInspector { delta: -400.0 }));
         out.push(("fit".into(), "Fit".into(), RobotAction::Fit));
+        for action in RunAction::ALL {
+            out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
+        }
     }
     out
 }
@@ -281,12 +318,13 @@ enum Request {
     SystemUi { action: UiRequest },
     Camera { focus: [f32; 3], radius: f32, yaw: f32, pitch: f32 },
     Fit,
+    RobotRun { action: String },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
         Request::RobotState => {}
         Request::SystemUi { action: UiRequest::Controls } => {
-            let items: Vec<Value> = controls(view).into_iter().map(|(id, label, action)| json!({"id": id, "label": label, "enabled": true, "action": action})).collect();
+            let items: Vec<Value> = controls(view).into_iter().map(|(id, label, action)| json!({"id": id, "label": label, "enabled": check(view, &action).is_ok(), "disabled_reason": check(view, &action).err(), "action": action})).collect();
             return Ok(json!({"ui_revision": view.ui_revision, "ready": view.panels_ready, "controls": items, "state": view.state_json()}));
         }
         Request::SystemUi { action: UiRequest::Activate { id, ui_revision } } => {
@@ -294,7 +332,11 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
                 return Err("UI changed; request controls again before activating".into());
             }
             let (_, _, action) = controls(view).into_iter().find(|(i, _, _)| *i == id).ok_or("unknown control; request controls")?;
-            dispatch(view, orbit, action);
+            dispatch(view, orbit, action)?;
+        }
+        Request::RobotRun { action } => {
+            let action = RunAction::parse(&action)?;
+            dispatch(view, orbit, RobotAction::Run { action })?;
         }
         Request::Camera { focus, radius, yaw, pitch } => {
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
@@ -314,8 +356,9 @@ pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
 fn capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
-        c("robot_state", json!({}), "Read-only robot mode: file, status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll. Nothing is stepped or written."),
+        c("robot_state", json!({}), "Read-only robot mode: file, status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, and run (null until loaded; phase idle with null time before any build; see robot_run). Nothing is written."),
         c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
+        c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
@@ -347,6 +390,10 @@ struct ListRoot;
 struct InspectorScroll;
 #[derive(Component)]
 struct TabButton(Section);
+#[derive(Component)]
+struct RunButton(RunAction);
+#[derive(Component)]
+struct RunText;
 #[derive(Resource)]
 struct Materials {
     normal: Handle<StandardMaterial>,
@@ -367,7 +414,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
         })
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                title: "Systems — Robot (read-only)".into(),
+                title: "Systems — Robot (file read-only)".into(),
                 resolution: (1500.0_f32, 940.0_f32).into(),
                 resize_constraints: bevy::window::WindowResizeConstraints { min_width: 980.0, min_height: 720.0, ..default() },
                 ..default()
@@ -375,7 +422,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             ..default()
         }))
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, (receive, poll_rest, buttons, scroll, orbit, viewport, highlight, panels, draw).chain())
+        .add_systems(Update, (receive, poll_rest, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, draw).chain())
         .run();
 }
 
@@ -401,7 +448,15 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     commands.spawn((
         Node { position_type: PositionType::Absolute, left: Val::Px(0.0), right: Val::Px(0.0), top: Val::Px(0.0), height: Val::Px(TOP), padding: UiRect::axes(Val::Px(18.0), Val::Px(8.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), ..default() },
         BackgroundColor(PANEL),
-        children![text(&format!("Robot — {file}  ·  read-only, not stepped"), 18.0, INK), (text("Loading…", 13.0, MUTED), StatusText)],
+        children![text(&format!("Robot — {file}  ·  file read-only"), 18.0, INK), (text("Loading…", 13.0, MUTED), StatusText)],
+    ));
+    // Run controls: the same handler as system_ui run:* and REST robot_run.
+    commands.spawn((
+        Node { position_type: PositionType::Absolute, right: Val::Px(18.0), top: Val::Px(6.0), flex_direction: FlexDirection::Column, align_items: AlignItems::FlexEnd, row_gap: Val::Px(3.0), ..default() },
+        children![
+            (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }, children![run_button(&fonts, RunAction::Start), run_button(&fonts, RunAction::Pause), run_button(&fonts, RunAction::Step), run_button(&fonts, RunAction::Reset)]),
+            (text("", 12.0, MUTED), RunText),
+        ],
     ));
     commands.spawn((
         Node { position_type: PositionType::Absolute, left: Val::Px(0.0), top: Val::Px(TOP), bottom: Val::Px(0.0), width: Val::Px(LEFT), padding: UiRect::all(Val::Px(14.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), overflow: Overflow::clip_y(), ..default() },
@@ -433,6 +488,18 @@ fn tab(fonts: &UiFonts, section: Section) -> impl Bundle {
         BorderRadius::all(Val::Px(4.0)),
         BackgroundColor(Color::NONE),
         children![label(fonts, section.label(), 14.0, INK)],
+    )
+}
+
+fn run_button(fonts: &UiFonts, action: RunAction) -> impl Bundle {
+    (
+        Button,
+        RobotAction::Run { action },
+        RunButton(action),
+        Node { padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), ..default() },
+        BorderRadius::all(Val::Px(4.0)),
+        BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
+        children![label(fonts, action.label(), 13.0, INK)],
     )
 }
 
@@ -522,6 +589,7 @@ fn receive(
         })
         .collect();
     commands.entity(*list).add_children(&rows);
+    view.run = Some(RunController::spawn(loaded.model.clone()));
     view.model = Some(loaded.model);
     view.notes = loaded.notes;
     view.cad_link = Some(loaded.cad_link);
@@ -536,14 +604,14 @@ fn pick_link(click: Trigger<Pointer<Click>>, links: Query<&LinkMesh>, mut view: 
     }
     if let Ok(link) = links.get(click.target()) {
         let name = view.link_name(link.0).unwrap_or_default().to_string();
-        dispatch(&mut view, &mut orbit, RobotAction::SelectLink { index: link.0, name });
+        let _ = dispatch(&mut view, &mut orbit, RobotAction::SelectLink { index: link.0, name });
     }
 }
 
 fn buttons(clicks: Query<(&Interaction, &RobotAction), Changed<Interaction>>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
     for (interaction, action) in &clicks {
         if *interaction == Interaction::Pressed {
-            dispatch(&mut view, &mut orbit, action.clone());
+            view.run_message = dispatch(&mut view, &mut orbit, action.clone()).err();
         }
     }
 }
@@ -573,6 +641,37 @@ fn poll_rest(mut commands: Commands, mut redraw: EventWriter<bevy::window::Reque
     for path in shots {
         use bevy::render::view::screenshot::{Screenshot, save_to_disk};
         commands.spawn(Screenshot::primary_window()).observe(save_to_disk(path));
+    }
+}
+
+/// Takes the run thread's latest frame (stale generations are discarded in
+/// `RunController::poll`) and poses the link meshes from it; with no frame of
+/// the current generation the static assembly pose is shown.
+fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut Transform)>, mut redraw: EventWriter<bevy::window::RequestRedraw>) {
+    let Some(run) = view.run.as_mut() else { return };
+    let changed = run.poll();
+    let active = run.active();
+    if active {
+        redraw.write(bevy::window::RequestRedraw);
+    }
+    if !changed && !view.pose_dirty {
+        return;
+    }
+    view.pose_dirty = false;
+    let frame = view.run.as_ref().and_then(|r| r.frame());
+    let Some(model) = view.model.as_ref() else { return };
+    for (link, mut transform) in &mut links {
+        let (p, q) = match frame.and_then(|f| f.poses.get(link.0)) {
+            Some((p, q)) => (Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32), Quat::from_xyzw(q.x as f32, q.y as f32, q.z as f32, q.w as f32)),
+            None => {
+                let c = model.links[link.0].com;
+                (Vec3::new(c[0] as f32, c[1] as f32, c[2] as f32), Quat::IDENTITY)
+            }
+        };
+        if transform.translation != p || transform.rotation != q {
+            transform.translation = p;
+            transform.rotation = q;
+        }
     }
 }
 
@@ -629,9 +728,21 @@ fn highlight(
     view: Res<RobotView>,
     materials: Res<Materials>,
     mut meshes: Query<(&LinkMesh, &mut MeshMaterial3d<StandardMaterial>)>,
-    mut rows: Query<(&LinkRow, &Interaction, &mut BackgroundColor), Without<TabButton>>,
-    mut tabs: Query<(&TabButton, &Interaction, &mut BackgroundColor), Without<LinkRow>>,
+    mut rows: Query<(&LinkRow, &Interaction, &mut BackgroundColor), (Without<TabButton>, Without<RunButton>)>,
+    mut tabs: Query<(&TabButton, &Interaction, &mut BackgroundColor), (Without<LinkRow>, Without<RunButton>)>,
+    mut runs: Query<(&RunButton, &Interaction, &mut BackgroundColor), (Without<LinkRow>, Without<TabButton>)>,
 ) {
+    for (button, interaction, mut background) in &mut runs {
+        let enabled = view.run.as_ref().is_some_and(|r| r.check(button.0).is_ok());
+        let color = match (enabled, interaction) {
+            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
+            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
+            (true, _) => Color::srgb(0.16, 0.20, 0.25),
+        };
+        if background.0 != color {
+            background.0 = color;
+        }
+    }
     for (tab, interaction, mut background) in &mut tabs {
         let color = if view.section == tab.0 {
             ACCENT.with_alpha(0.28)
@@ -686,14 +797,33 @@ fn scroll(mut view: ResMut<RobotView>, mut wheel: EventReader<MouseWheel>, windo
 }
 
 /// Status line and the sectioned inspector.
-fn panels(view: Res<RobotView>, mut status: Single<&mut Text, (With<StatusText>, Without<Inspector>)>, mut inspector: Single<&mut Text, (With<Inspector>, Without<StatusText>)>) {
+fn panels(
+    view: Res<RobotView>,
+    mut status: Single<&mut Text, (With<StatusText>, Without<Inspector>, Without<RunText>)>,
+    mut inspector: Single<&mut Text, (With<Inspector>, Without<StatusText>, Without<RunText>)>,
+    mut run_text: Single<&mut Text, (With<RunText>, Without<StatusText>, Without<Inspector>)>,
+) {
+    let run_line = match &view.run {
+        None => String::new(),
+        Some(r) => {
+            let time = r.frame().map_or("t —".to_string(), |f| format!("t {:.2} s · {} chunks", f.time, f.steps));
+            let rtf = r.rtf().map_or(String::new(), |x| format!(" · RTF {x:.2}"));
+            let error = r.error().map_or(String::new(), |e| format!(" · {e}"));
+            let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {m}"));
+            let phase = serde_json::to_value(r.phase()).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
+            format!("{phase} · {time}{rtf} · gen {} · {} s chunks{error}{refused}", r.generation(), crate::robot_run::CHUNK_S)
+        }
+    };
+    if run_text.0 != run_line {
+        run_text.0 = run_line;
+    }
     let line = match (&view.status, &view.model) {
         (Status::Loading(t), _) => format!("Loading {} on a worker thread… {:.1} s", view.path.display(), t.elapsed().as_secs_f64()),
         (Status::Error(e), _) => format!("Could not open the robot: {e}"),
         (Status::Loaded { seconds }, Some(m)) => {
             let without = view.triangles.iter().filter(|t| **t == 0).count();
             let missing = if without > 0 { format!(" · {without} without collision geometry (listed, not drawn)") } else { String::new() };
-            format!("{} · {} links{missing} · loaded in {seconds:.2} s · {}", view.path.display(), m.links.len(), "exported assembly pose")
+            format!("{} · {} links{missing} · loaded in {seconds:.2} s · {}", view.path.display(), m.links.len(), if view.run.as_ref().and_then(|r| r.frame()).is_some() { "simulated pose" } else { "exported assembly pose" })
         }
         (Status::Loaded { .. }, None) => String::new(),
     };

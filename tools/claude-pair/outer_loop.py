@@ -125,11 +125,11 @@ def prepare(runner):
 
 def director_prompt(runner):
     s, outer = runner.state, runner.state["outer"]
-    prompt = ("Review the project after the last accepted batch and choose what is most worth doing next. "
-              "Inspect current source and the saved inventory, not only reports. Compare 3–6 concrete candidates "
-              "across cohesion, feature gaps, shared-library improvements and technical debt. "
-              "Choose ONE cohesive batch with 1–4 ordered tasks, or explain why stopping is wiser. "
-              "Do not dispatch a task already completed, and do not invent success or GUI evidence.\n")
+    prompt = ("Review the project after the last accepted epic and choose what is most worth doing next. "
+              "Read docs/architecture/native-viewer.md and inspect current source, not only reports. Compare 3–6 "
+              "concrete candidates across cohesion, feature gaps, shared-library improvements and technical debt. "
+              "Choose ONE epic (the `batch`) with 1–4 substantial milestones (its `tasks`), or explain why stopping "
+              "is wiser. Do not dispatch an epic already completed, and do not invent success or GUI evidence.\n")
     prompt += ("\nIndependent checks may be names from this catalogue or any shell command "
                "(run from the workspace root):\n" + json.dumps(runner.config["checks"]))
     timings = {n: h["seconds"] for n, h in s.get("check_history", {}).items() if h.get("seconds") is not None}

@@ -13,13 +13,13 @@ The mission and the user's latest guidance set the direction. These notes are
 context, not authority to override the mission's hard boundaries, budgets or
 verification. Every role has full tool access; roles differ by responsibility.
 
-Director → bounded batch → Orchestrator assignment → Worker implementation →
+Director → epic → Orchestrator assignment (usually the whole epic) → Worker implementation →
 Coordinator independent checks → Orchestrator review → more work or next batch.
 
-- **Director:** product/architecture planner. Compare cohesion, feature gaps,
-  library improvements and technical debt; select one worthwhile batch.
-- **Orchestrator:** execution planner and reviewer. Write one bounded worker
-  assignment, verify code and evidence (running anything it needs), request
+- **Director:** product/architecture lead. Holds the system to
+  docs/architecture/native-viewer.md; selects one worthwhile epic at a time.
+- **Orchestrator:** execution planner and reviewer. Give the worker large
+  assignments (usually a whole epic), verify code and evidence (running anything it needs), request
   fixes, and accept only verified outcomes. A finished batch returns to the Director.
 - **Worker:** implement the assignment in the project folder. Choose and run
   the minimal tests that prove it, capture native evidence, make small local commits, and manage its

@@ -167,7 +167,7 @@ function renderNow() {
   const call = data.active && s.inflight ? data.calls.find(c => c.live) : null;
   const meta = [];
   if (call) meta.push(`<span>${esc(ROLES[call.role].name)} · turn <b>#${call.number}</b></span>`, `<span>running <b>${dur(call.elapsed_seconds)}</b></span>`, `<span>last output <b>${esc(ago(call.last_activity_at))}</b></span>`);
-  if (s.outer?.current_batch) meta.push(`<span>batch <b>${esc(s.outer.current_batch.id)}</b></span>`);
+  if (s.outer?.current_batch) meta.push(`<span>epic <b>${esc(s.outer.current_batch.id)}</b></span>`);
   if (s.assignment) meta.push(`<span>assignment <b>#${s.assignment}</b></span>`);
   html('now-meta', meta.join(''));
 
@@ -395,8 +395,8 @@ function renderDirector() {
   const active = data.active && data.state.inflight?.role === 'director';
   const chip = active ? ['running', 'Choosing now'] : !settings.enabled ? ['', 'Automatic planning off'] : batch ? ['accent', 'In progress'] : outer?.last_decision?.action === 'stop' ? ['warn', 'Stopped with a reason'] : ['', 'Ready'];
   html('dir-chip', `<span class="chip small ${chip[0]}">${chip[1]}</span>`);
-  html('dir-batch', batch ? `<h3 style="margin:0 0 4px;font-size:16px">${esc(batch.title)}</h3><p class="prose">${esc(batch.objective)}</p><div class="section-label">Tasks</div><ol class="tasks">${batch.tasks.map(t => `<li><div><strong>${esc(t.title)}</strong><div>${esc(t.brief)}</div></div></li>`).join('')}</ol>` + (batch.outcomes?.length ? `<div class="section-label">Outcomes</div><ul class="bullets">${batch.outcomes.map(o => `<li>${esc(o)}</li>`).join('')}</ul>` : '')
-    : `<div class="empty">${settings.enabled ? 'The Director selects a batch after the current work is accepted.' : 'Turn on automatic planning to let the Director choose each next batch. Without it, the orchestrator works through the mission directly.'}</div>`);
+  html('dir-batch', batch ? `<h3 style="margin:0 0 4px;font-size:16px">${esc(batch.title)}</h3><p class="prose">${esc(batch.objective)}</p><div class="section-label">Milestones</div><ol class="tasks">${batch.tasks.map(t => `<li><div><strong>${esc(t.title)}</strong><div>${esc(t.brief)}</div></div></li>`).join('')}</ol>` + (batch.outcomes?.length ? `<div class="section-label">Outcomes</div><ul class="bullets">${batch.outcomes.map(o => `<li>${esc(o)}</li>`).join('')}</ul>` : '')
+    : `<div class="empty">${settings.enabled ? 'The Director selects an epic after the current work is accepted.' : 'Turn on automatic planning to let the Director choose each next epic. Without it, the orchestrator works through the mission directly.'}</div>`);
   html('hopper', outer?.hopper?.length ? outer.hopper.map(c => `<article class="cand ${c.disposition}"><div class="pills"><span class="chip small ${c.disposition === 'select' ? 'accent' : c.disposition === 'completed' ? 'ok' : ''}">${esc(c.disposition)}</span><span class="chip small">${esc(c.category.replace('_', ' '))}</span><span class="chip small">${esc(c.effort)}</span></div><h3>${esc(c.title)}</h3><p>${esc(c.benefit)}</p><details><summary>Why, evidence and risk</summary><p>${esc(c.reason)}</p><p>${esc(c.problem)}</p><p>Risk: ${esc(c.risk)}</p><ul class="bullets">${c.evidence.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details></article>`).join('') : '<div class="empty">No candidates yet.</div>');
   const aside = outer?.set_aside || [];
   $('aside-card').hidden = !aside.length; text('aside-count', aside.length ? String(aside.length) : '');

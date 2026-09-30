@@ -47,10 +47,10 @@ duplicates physics.
   drags, screenshots).
 - **UI is hand-built** `Node` trees (17 files name `Node`). Headers,
   inspectors, tabs, docks and charts are rebuilt per feature.
-- **Large files:** `builder.rs` (3,010 lines), `robot.rs` (2,790),
-  `robot_run.rs` (2,600) and `lesson/mod.rs` (2,400). The new `app/` files
-  are under 700 lines each (`switch.rs` 650, `mod.rs` 320, `route.rs` 200,
-  `switcher.rs` 105).
+- **Large files:** `builder.rs` (3,013 lines), `robot.rs` (2,794),
+  `robot_run.rs` (2,597) and `lesson/mod.rs` (2,397). The new `app/` files
+  are under 700 lines each (`switch.rs` 659, `mod.rs` 319, `route.rs` 201,
+  `switcher.rs` 105, `tests.rs` 141).
 - **What already works well, to keep:**
   - typed, validated handlers ("one handler per action")
   - generation-stamped frames

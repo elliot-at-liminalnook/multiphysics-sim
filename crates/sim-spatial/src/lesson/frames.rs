@@ -312,7 +312,7 @@ fn sheet(job: &FrameJob) -> Result<(Vec<u8>, serde_json::Value), String> {
 use image::ImageEncoder;
 
 /// Advance the capture by one frame.
-pub(super) fn step(mut commands: Commands, time: Res<Time>, mut learn: ResMut<Learn>, scene: Res<SpatialScene>, window: Single<&Window>, blocks: Query<(&super::ui::BlockNode, &ComputedNode, &GlobalTransform)>, orbit: Single<&crate::Orbit>) {
+pub(super) fn step(mut commands: Commands, time: Res<Time>, mut learn: ResMut<Learn>, scene: Res<SpatialScene>, window: Single<&Window>, blocks: Query<(&super::ui::BlockNode, &ComputedNode, &UiGlobalTransform)>, orbit: Single<&crate::Orbit>) {
     let Some(mut job) = learn.frames.take() else { return };
     if job.done || job.error.is_some() {
         learn.frames = Some(job);
@@ -331,9 +331,9 @@ pub(super) fn step(mut commands: Commands, time: Res<Time>, mut learn: ResMut<Le
         let shoot = |commands: &mut Commands| {
             let slot = Arc::new(Mutex::new(None));
             let s = slot.clone();
-            commands.spawn(Screenshot::primary_window()).observe(move |trigger: Trigger<ScreenshotCaptured>| {
+            commands.spawn(Screenshot::primary_window()).observe(move |trigger: On<ScreenshotCaptured>| {
                 if let Ok(mut g) = s.lock() {
-                    *g = Some(trigger.event().0.clone());
+                    *g = Some(trigger.event().image.clone());
                 }
             });
             slot
@@ -426,7 +426,7 @@ pub(super) fn step(mut commands: Commands, time: Res<Time>, mut learn: ResMut<Le
                     Region::Window => URect::new(0, 0, ww, wh),
                     Region::View => scene.learn_view.map(|v| URect::from_corners(v.visible.min.max(Vec2::ZERO).as_uvec2(), v.visible.max.as_uvec2())).unwrap_or(URect::new(0, 0, ww, wh)),
                     Region::Card => blocks.iter().find(|(b, ..)| b.0 == job.scene).map(|(_, node, gt)| {
-                        let c = gt.translation().truncate();
+                        let c = gt.translation;
                         let half = node.size() * 0.5;
                         URect::from_corners((c - half).max(Vec2::ZERO).as_uvec2(), (c + half).as_uvec2())
                     }).filter(|r| r.width() > 16 && r.height() > 16).ok_or("the scene's card is not on screen")?,

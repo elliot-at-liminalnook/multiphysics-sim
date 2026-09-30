@@ -345,7 +345,7 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
                 ..default()
             },
             BackgroundColor(super::ui::BAR),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             BuilderPanel,
         ))
         .with_children(|pane| {
@@ -354,7 +354,7 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
                     head.spawn(k.text(format!("Schematic · {place}"), 12., TEXT, 2));
                     head.spawn(k.text(status.0.clone(), 11., status.1, 0));
                 });
-            pane.spawn((Node { flex_grow: 1., margin: UiRect { left: Val::Px(6.), right: Val::Px(6.), top: Val::Px(0.), bottom: Val::Px(6.) }, overflow: Overflow::clip(), ..default() }, BackgroundColor(CANVAS), BorderRadius::all(Val::Px(4.))))
+            pane.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_grow: 1., margin: UiRect { left: Val::Px(6.), right: Val::Px(6.), top: Val::Px(0.), bottom: Val::Px(6.) }, overflow: Overflow::clip(), ..default() }, BackgroundColor(CANVAS)))
                 .with_children(|canvas| {
                     let Some(l) = &s.laid else { return };
                     draw(canvas, k, b, l, &highlighted, [w - 12., h - HEAD - 6.], stale);
@@ -404,7 +404,7 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
         }
         for j in &net.junctions {
             let p = at(*j);
-            canvas.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(p.x - 3.), top: Val::Px(p.y - 3.), width: Val::Px(6.), height: Val::Px(6.), ..default() }, BackgroundColor(color), BorderRadius::all(Val::Px(3.))));
+            canvas.spawn((Node { border_radius: BorderRadius::all(Val::Px(3.)), position_type: PositionType::Absolute, left: Val::Px(p.x - 3.), top: Val::Px(p.y - 3.), width: Val::Px(6.), height: Val::Px(6.), ..default() }, BackgroundColor(color)));
         }
     }
     let row = diagram_layout::ROW * scale;
@@ -419,10 +419,9 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
         let enabled = !stale && instance.as_ref().is_some_and(|i| instances.contains(i));
         let (fill, hover) = if on { (Color::srgb(0.878, 0.922, 0.992), Color::srgb(0.835, 0.894, 0.988)) } else { (Color::WHITE, Color::srgb(0.965, 0.973, 0.988)) };
         let mut e = canvas.spawn((
-            Node { position_type: PositionType::Absolute, left: Val::Px(p.x), top: Val::Px(p.y), width: Val::Px(bw), height: Val::Px(bh), flex_direction: FlexDirection::Column, padding: UiRect::axes(Val::Px(7.), Val::Px(4.)), border: UiRect::all(Val::Px(if on { 2. } else { 1. })), overflow: Overflow::clip(), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(5.)), position_type: PositionType::Absolute, left: Val::Px(p.x), top: Val::Px(p.y), width: Val::Px(bw), height: Val::Px(bh), flex_direction: FlexDirection::Column, padding: UiRect::axes(Val::Px(7.), Val::Px(4.)), border: UiRect::all(Val::Px(if on { 2. } else { 1. })), overflow: Overflow::clip(), ..default() },
             BackgroundColor(fill),
-            BorderColor(if on { PICK } else { EDGE }),
-            BorderRadius::all(Val::Px(5.)),
+            BorderColor::all(if on { PICK } else { EDGE }),
         ));
         if let Some(name) = instance {
             e.insert((Button, BuildAction::SchematicSelect(name), ui_api::Enabled(enabled), Tint { idle: fill, hover }));
@@ -440,7 +439,7 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
         let color = rgb!(style::port_domain(view, &port.schema).color);
         let c = at(*point);
         let physical = matches!(port.schema, sim_inspect::PortKind::Physical { .. });
-        canvas.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(c.x - 4.), top: Val::Px(c.y - 4.), width: Val::Px(8.), height: Val::Px(8.), ..default() }, BackgroundColor(color), BorderRadius::all(Val::Px(if physical { 4. } else { 1. }))));
+        canvas.spawn((Node { border_radius: BorderRadius::all(Val::Px(if physical { 4. } else { 1. })), position_type: PositionType::Absolute, left: Val::Px(c.x - 4.), top: Val::Px(c.y - 4.), width: Val::Px(8.), height: Val::Px(8.), ..default() }, BackgroundColor(color)));
         if row >= 11. {
             let left = l.layout.sides.get(id).is_none_or(|s| *s == diagram_layout::Side::Left);
             let width = (diagram_layout::WIDTH * scale * 0.5 - 12.).max(0.);

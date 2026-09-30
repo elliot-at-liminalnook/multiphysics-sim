@@ -81,9 +81,9 @@ pub(super) fn rebuild(
     }
     for (p, which) in &scrolls {
         match which {
-            LearnScroll::Page => learn.scroll = p.offset_y,
-            LearnScroll::Outline => kept[0] = p.offset_y,
-            LearnScroll::Margin => kept[1] = p.offset_y,
+            LearnScroll::Page => learn.scroll = p.y,
+            LearnScroll::Outline => kept[0] = p.y,
+            LearnScroll::Margin => kept[1] = p.y,
         }
     }
     for e in &panels {
@@ -107,7 +107,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, l: &Learn) {
         .spawn((
             Node { position_type: PositionType::Absolute, left: Val::Px(0.), right: Val::Px(0.), top: Val::Px(0.), height: Val::Px(TOPBAR), padding: UiRect::axes(Val::Px(14.), Val::Px(0.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, border: UiRect::bottom(Val::Px(1.)), ..default() },
             BackgroundColor(BAR),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             LearnPanel,
         ))
         .with_children(|bar| {
@@ -122,7 +122,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, l: &Learn) {
                 }
             });
             bar.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(6.), ..default() }).with_children(|mid| {
-                mid.spawn((Node { padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor(BORDER), BorderRadius::all(Val::Px(6.)))).with_children(|seg| {
+                mid.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor::all(BORDER))).with_children(|seg| {
                     for (label, mode) in [("Read", PageMode::Read), ("Annotate", PageMode::Annotate), ("Edit", PageMode::Edit)] {
                         seg.spawn(k.button(label, LessonAction::Mode(mode), Look::Segment(l.mode == mode), l.lesson.is_some()));
                     }
@@ -146,9 +146,9 @@ fn outline(commands: &mut Commands, k: &Kit, l: &Learn, offset: f32) {
     commands
         .spawn((
             Node { position_type: PositionType::Absolute, left: Val::Px(0.), top: Val::Px(TOPBAR), bottom: Val::Px(STATUSBAR), width: Val::Px(LEFT_WIDTH), flex_direction: FlexDirection::Column, padding: UiRect::all(Val::Px(14.)), row_gap: Val::Px(4.), overflow: Overflow::scroll_y(), border: UiRect::right(Val::Px(1.)), ..default() },
-            ScrollPosition { offset_y: offset, ..default() },
+            ScrollPosition(Vec2::new(0.0, offset)),
             BackgroundColor(SURFACE),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             LearnScroll::Outline,
             LearnPanel,
         ))
@@ -166,8 +166,7 @@ fn outline(commands: &mut Commands, k: &Kit, l: &Learn, offset: f32) {
                     Button,
                     LessonAction::ToggleCategory(g.category.id.clone()),
                     Tint { idle: Color::NONE, hover: HOVER_BG },
-                    Node { flex_direction: FlexDirection::Row, justify_content: JustifyContent::SpaceBetween, padding: UiRect { left: Val::Px(6.), right: Val::Px(6.), top: Val::Px(8.), bottom: Val::Px(4.) }, flex_shrink: 0., ..default() },
-                    BorderRadius::all(Val::Px(4.)),
+                    Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_direction: FlexDirection::Row, justify_content: JustifyContent::SpaceBetween, padding: UiRect { left: Val::Px(6.), right: Val::Px(6.), top: Val::Px(8.), bottom: Val::Px(4.) }, flex_shrink: 0., ..default() },
                     BackgroundColor(Color::NONE),
                 ))
                 .with_children(|row| {
@@ -187,9 +186,8 @@ fn outline(commands: &mut Commands, k: &Kit, l: &Learn, offset: f32) {
                         Button,
                         LessonAction::Open(e.slug.clone()),
                         Tint { idle: if current { ACCENT_BG } else { Color::NONE }, hover: if current { ACCENT_BG } else { HOVER_BG } },
-                        Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.), padding: UiRect::axes(Val::Px(9.), Val::Px(7.)), border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
-                        BorderColor(if current { ACCENT } else { Color::NONE }),
-                        BorderRadius::all(Val::Px(4.)),
+                        Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(2.), padding: UiRect::axes(Val::Px(9.), Val::Px(7.)), border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
+                        BorderColor::all(if current { ACCENT } else { Color::NONE }),
                         BackgroundColor(if current { ACCENT_BG } else { Color::NONE }),
                     ))
                     .with_children(|row| {
@@ -213,8 +211,7 @@ fn outline(commands: &mut Commands, k: &Kit, l: &Learn, offset: f32) {
                         Button,
                         LessonAction::Goto(b.id.clone()),
                         Tint { idle: Color::NONE, hover: HOVER_BG },
-                        Node { padding: UiRect { left: Val::Px(8. + 12. * (level.saturating_sub(1)) as f32), right: Val::Px(6.), top: Val::Px(4.), bottom: Val::Px(4.) }, flex_shrink: 0., ..default() },
-                        BorderRadius::all(Val::Px(4.)),
+                        Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect { left: Val::Px(8. + 12. * (level.saturating_sub(1)) as f32), right: Val::Px(6.), top: Val::Px(4.), bottom: Val::Px(4.) }, flex_shrink: 0., ..default() },
                         BackgroundColor(Color::NONE),
                         children![k.text(text, if level <= 1 { 13. } else { 12.5 }, if level <= 1 { TEXT } else { SUBTLE }, if level <= 1 { 1 } else { 0 })],
                     ));
@@ -256,7 +253,7 @@ fn concepts_outline(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn) {
     for m in shown.into_iter().filter(|m| m.questions > 0) {
         let color = if m.level >= sim_lesson::concepts::MASTERED { OK } else if m.level > 0. { ACCENT } else { BORDER };
         let target = m.taught_by.first().cloned();
-        let mut row = col.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.), padding: UiRect::axes(Val::Px(6.), Val::Px(4.)), flex_shrink: 0., ..default() }, BorderRadius::all(Val::Px(4.))));
+        let mut row = col.spawn(Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(3.), padding: UiRect::axes(Val::Px(6.), Val::Px(4.)), flex_shrink: 0., ..default() });
         if let Some(t) = &target {
             row.insert((Button, LessonAction::Open(t.clone()), Tint { idle: Color::NONE, hover: HOVER_BG }, BackgroundColor(Color::NONE)));
         }
@@ -265,8 +262,8 @@ fn concepts_outline(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn) {
                 t.spawn(k.text(&m.title, 12., TEXT, 0));
                 t.spawn(k.text(format!("{}/{}", m.solid, m.questions), 10.5, FAINT, 0));
             });
-            r.spawn((Node { width: Val::Percent(100.), height: Val::Px(4.), ..default() }, BackgroundColor(Color::srgb(0.16, 0.19, 0.23)), BorderRadius::all(Val::Px(2.)), Pickable::IGNORE)).with_children(|bar| {
-                bar.spawn((Node { width: Val::Percent((m.level * 100.) as f32), height: Val::Percent(100.), ..default() }, BackgroundColor(color), BorderRadius::all(Val::Px(2.)), Pickable::IGNORE));
+            r.spawn((Node { border_radius: BorderRadius::all(Val::Px(2.)), width: Val::Percent(100.), height: Val::Px(4.), ..default() }, BackgroundColor(Color::srgb(0.16, 0.19, 0.23)), Pickable::IGNORE)).with_children(|bar| {
+                bar.spawn((Node { border_radius: BorderRadius::all(Val::Px(2.)), width: Val::Percent((m.level * 100.) as f32), height: Val::Percent(100.), ..default() }, BackgroundColor(color), Pickable::IGNORE));
             });
         });
     }
@@ -309,7 +306,7 @@ fn page(commands: &mut Commands, k: &Kit, l: &Learn, builder: Option<&Builder>, 
     commands
         .spawn((
             Node { position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH), right: Val::Px(RIGHT_WIDTH), top: Val::Px(TOPBAR), bottom: Val::Px(STATUSBAR + narrate::reserved(l)), flex_direction: FlexDirection::Column, align_items: AlignItems::Center, overflow: Overflow::scroll_y(), ..default() },
-            ScrollPosition { offset_y: l.scroll, ..default() },
+            ScrollPosition(Vec2::new(0.0, l.scroll)),
             LearnScroll::Page,
             LearnPanel,
         ))
@@ -340,7 +337,7 @@ fn page(commands: &mut Commands, k: &Kit, l: &Learn, builder: Option<&Builder>, 
                         col.spawn(k.text(meta.join(" · "), 11.5, FAINT, 0));
                     }
                     if let Some(e) = &l.lesson_error {
-                        col.spawn((Node { padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(WARN), BorderRadius::all(Val::Px(6.)), children![k.text(e, 12., WARN, 0)]));
+                        col.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor::all(WARN), children![k.text(e, 12., WARN, 0)]));
                     }
                     let threads = l.threads();
                     let mut by_block: BTreeMap<String, Vec<String>> = BTreeMap::new();
@@ -446,7 +443,7 @@ fn page_theme(k: &Kit) -> crate::markdown::Theme {
 /// A block with its note badges and (in Edit mode) block controls.
 fn block_row(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_lesson::Block, notes: Option<&Vec<String>>, content: impl FnOnce(&mut ChildSpawnerCommands)) {
     let annotate = l.mode == PageMode::Annotate;
-    let mut row = col.spawn((Node { column_gap: Val::Px(10.), align_items: AlignItems::FlexStart, flex_shrink: 0., padding: UiRect::axes(Val::Px(6.), Val::Px(3.)), margin: UiRect::left(Val::Px(-6.)), ..default() }, BorderRadius::all(Val::Px(5.)), BlockNode(b.id.clone())));
+    let mut row = col.spawn((Node { border_radius: BorderRadius::all(Val::Px(5.)), column_gap: Val::Px(10.), align_items: AlignItems::FlexStart, flex_shrink: 0., padding: UiRect::axes(Val::Px(6.), Val::Px(3.)), margin: UiRect::left(Val::Px(-6.)), ..default() }, BlockNode(b.id.clone())));
     if annotate {
         row.insert((Button, LessonAction::AnnotateBlock(b.id.clone()), Tint { idle: Color::NONE, hover: HOVER_BG }, BackgroundColor(Color::NONE)));
     }
@@ -466,9 +463,9 @@ fn block_row(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_lesson:
 }
 
 fn editor_box(col: &mut ChildSpawnerCommands, k: &Kit, title: &str, text: &str) {
-    col.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::all(Val::Px(12.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(ACCENT), BorderRadius::all(Val::Px(7.)), BackgroundColor(RAISED))).with_children(|c| {
+    col.spawn((Node { border_radius: BorderRadius::all(Val::Px(7.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::all(Val::Px(12.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor::all(ACCENT), BackgroundColor(RAISED))).with_children(|c| {
         c.spawn(k.text(title, 11.5, SUBTLE, 1));
-        c.spawn((Text::new(format!("{text}|")), TextFont { font: k.f.mono.clone(), font_size: 12.5, ..default() }, TextColor(TEXT), TextLayout::new_with_linebreak(bevy::text::LineBreak::WordOrCharacter), Node { min_height: Val::Px(40.), ..default() }));
+        c.spawn((Text::new(format!("{text}|")), TextFont { font: k.f.mono.clone().into(), font_size: FontSize::Px(12.5), ..default() }, TextColor(TEXT), TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter), Node { min_height: Val::Px(40.), ..default() }));
         c.spawn(Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, ..default() }).with_children(|r| {
             r.spawn(k.button("Save", LessonAction::SaveEdit, Look::Primary, true));
             r.spawn(k.button("Cancel", LessonAction::CancelEdit, Look::Ghost, true));
@@ -497,7 +494,7 @@ fn new_block_editor(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, after: O
 }
 
 fn card_frame() -> impl Bundle {
-    (Node { flex_direction: FlexDirection::Column, width: Val::Percent(100.), border: UiRect::all(Val::Px(1.)), margin: UiRect::vertical(Val::Px(6.)), flex_shrink: 0., overflow: Overflow::clip(), ..default() }, BorderColor(BORDER), BorderRadius::all(Val::Px(8.)))
+    (Node { border_radius: BorderRadius::all(Val::Px(8.)), flex_direction: FlexDirection::Column, width: Val::Percent(100.), border: UiRect::all(Val::Px(1.)), margin: UiRect::vertical(Val::Px(6.)), flex_shrink: 0., overflow: Overflow::clip(), ..default() }, BorderColor::all(BORDER))
 }
 
 pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_lesson::Block, s: &Scene, notes: usize, scene: &SpatialScene) {
@@ -562,9 +559,9 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
                 }
                 Some(a) => {
                     if a.run.is_none() || a.recording {
-                        v.spawn((k.text("Recording…", 12., TEXT, 1), Progress, Node { position_type: PositionType::Absolute, top: Val::Px(10.), right: Val::Px(12.), padding: UiRect::axes(Val::Px(8.), Val::Px(4.)), ..default() }, BackgroundColor(Color::srgba(0.06, 0.09, 0.12, 0.85)), BorderRadius::all(Val::Px(4.))));
+                        v.spawn((k.text("Recording…", 12., TEXT, 1), Progress, Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, top: Val::Px(10.), right: Val::Px(12.), padding: UiRect::axes(Val::Px(8.), Val::Px(4.)), ..default() }, BackgroundColor(Color::srgba(0.06, 0.09, 0.12, 0.85))));
                     }
-                    v.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(12.), bottom: Val::Px(12.), max_width: Val::Percent(80.), padding: UiRect::axes(Val::Px(10.), Val::Px(6.)), display: Display::None, ..default() }, BackgroundColor(Color::srgba(0.06, 0.09, 0.12, 0.88)), BorderRadius::all(Val::Px(5.)), CaptionBox))
+                    v.spawn((Node { border_radius: BorderRadius::all(Val::Px(5.)), position_type: PositionType::Absolute, left: Val::Px(12.), bottom: Val::Px(12.), max_width: Val::Percent(80.), padding: UiRect::axes(Val::Px(10.), Val::Px(6.)), display: Display::None, ..default() }, BackgroundColor(Color::srgba(0.06, 0.09, 0.12, 0.88)), CaptionBox))
                         .with_children(|c| {
                             c.spawn((k.text("", 13., TEXT, 1), CaptionText));
                         });
@@ -578,9 +575,9 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
             card.spawn((Node { align_items: AlignItems::Center, column_gap: Val::Px(8.), padding: UiRect::axes(Val::Px(12.), Val::Px(8.)), ..default() }, BackgroundColor(RAISED))).with_children(|c| {
                 c.spawn(k.button(if a.playing { "Pause" } else { "Play" }, if a.playing { LessonAction::Pause } else { LessonAction::Play }, Look::Primary, true));
                 c.spawn(k.button("Restart", LessonAction::Restart, Look::Ghost, true));
-                c.spawn((Button, Timebar, bevy::ui::RelativeCursorPosition::default(), LessonAction::Seek, Node { flex_grow: 1., height: Val::Px(10.), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(SURFACE), BorderColor(BORDER), BorderRadius::all(Val::Px(5.))))
+                c.spawn((Button, Timebar, bevy::ui::RelativeCursorPosition::default(), LessonAction::Seek, Node { border_radius: BorderRadius::all(Val::Px(5.)), flex_grow: 1., height: Val::Px(10.), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(SURFACE), BorderColor::all(BORDER)))
                     .with_children(|bar| {
-                        bar.spawn((Node { width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(ACCENT), BorderRadius::all(Val::Px(5.)), TimeFill, Pickable::IGNORE));
+                        bar.spawn((Node { border_radius: BorderRadius::all(Val::Px(5.)), width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(ACCENT), TimeFill, Pickable::IGNORE));
                         // Event marks: captions, parameter changes and pauses (←/→ jump between them).
                         let d = a.duration().max(1e-9);
                         for t in super::event_times(a) {
@@ -610,10 +607,10 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
                     c.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(10.), ..default() }).with_children(|r| {
                         // Clicking the name gives the slider the arrow keys.
                         let focused = l.focus_slider.as_deref() == Some(sl.parameter.as_str());
-                        r.spawn((Button, LessonAction::SliderFocus(sl.parameter.clone()), Node { width: Val::Px(150.), padding: UiRect::axes(Val::Px(4.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor(if focused { ACCENT } else { Color::NONE }), BorderRadius::all(Val::Px(4.)), children![k.text(if sl.label.is_empty() { &sl.parameter } else { &sl.label }, 12., TEXT, 1)]));
-                        r.spawn((Button, super::SliderTrack(sl.parameter.clone()), bevy::ui::RelativeCursorPosition::default(), Node { flex_grow: 1., height: Val::Px(12.), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(SURFACE), BorderColor(BORDER), BorderRadius::all(Val::Px(6.))))
+                        r.spawn((Button, LessonAction::SliderFocus(sl.parameter.clone()), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Px(150.), padding: UiRect::axes(Val::Px(4.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(if focused { ACCENT } else { Color::NONE }), children![k.text(if sl.label.is_empty() { &sl.parameter } else { &sl.label }, 12., TEXT, 1)]));
+                        r.spawn((Button, super::SliderTrack(sl.parameter.clone()), bevy::ui::RelativeCursorPosition::default(), Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_grow: 1., height: Val::Px(12.), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(SURFACE), BorderColor::all(BORDER)))
                             .with_children(|t| {
-                                t.spawn((Node { width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(ACCENT), BorderRadius::all(Val::Px(6.)), super::SliderFill(sl.parameter.clone()), Pickable::IGNORE));
+                                t.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(ACCENT), super::SliderFill(sl.parameter.clone()), Pickable::IGNORE));
                             });
                         r.spawn((k.text("", 12., TEXT, 1), super::SliderValue(sl.parameter.clone()), Node { width: Val::Px(90.), ..default() }));
                     });
@@ -625,7 +622,7 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
             card.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect { left: Val::Px(12.), right: Val::Px(12.), top: Val::Px(10.), bottom: Val::Px(0.) }, ..default() }).with_children(|body| {
             // A goal to reach with the sliders, judged on each run.
             if let Some(ch) = &a.scene.challenge {
-                body.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(12.)), border: UiRect::left(Val::Px(3.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor(ACCENT), BorderRadius::all(Val::Px(6.)))).with_children(|c| {
+                body.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(12.)), border: UiRect::left(Val::Px(3.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor::all(ACCENT))).with_children(|c| {
                     let met = a.challenge.as_ref().is_some_and(|r| r.iter().all(|x| x.passed)) && !a.overrides.is_empty();
                     c.spawn(k.text(if met { "Challenge met" } else { "Challenge" }, 12., if met { OK } else { ACCENT }, 2));
                     crate::markdown::render(c, &sim_markdown::parse(&ch.goal), &crate::builder::ui::markdown_theme(k), |_| None::<LessonAction>);
@@ -663,9 +660,9 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
                 });
                 // Image, then the reveal mask and playhead as later siblings,
                 // so they draw over the curve.
-                body.spawn((Node { width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor(Color::NONE), BorderRadius::all(Val::Px(4.)), Interaction::default(), bevy::ui::RelativeCursorPosition::default(), super::ChartHover(chart.key.clone(), chart.window.0, chart.window.1), narrate::ChartNode(chart.key.clone(), chart.window.0, chart.window.1))).with_children(|img| {
+                body.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(Color::NONE), Interaction::default(), bevy::ui::RelativeCursorPosition::default(), super::ChartHover(chart.key.clone(), chart.window.0, chart.window.1), narrate::ChartNode(chart.key.clone(), chart.window.0, chart.window.1))).with_children(|img| {
                     let window = chart.window;
-                    img.spawn((Node { position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, ImageNode::new(chart.image.clone()), BorderRadius::all(Val::Px(4.)), Pickable::IGNORE));
+                    img.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, ImageNode::new(chart.image.clone()), Pickable::IGNORE));
                     img.spawn((Node { position_type: PositionType::Absolute, top: Val::Px(0.), height: Val::Percent(100.), left: Val::Percent(0.), width: Val::Percent(100.), ..default() }, BackgroundColor(Color::srgba(0.07, 0.09, 0.11, 0.93)), ChartMask, ChartWindow(window.0, window.1), Pickable::IGNORE));
                     img.spawn((Node { position_type: PositionType::Absolute, top: Val::Px(0.), bottom: Val::Px(0.), width: Val::Px(2.), left: Val::Percent(0.), ..default() }, BackgroundColor(Color::srgba(1., 1., 1., 0.7)), Playhead, ChartWindow(window.0, window.1), Pickable::IGNORE));
                 });
@@ -676,8 +673,8 @@ pub(super) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: 
                     r.spawn(k.text(format!("x: {} {} … {} ({})", chart.x.0, num(chart.window.0), num(chart.window.1), chart.x.1), 10.5, FAINT, 0));
                 });
                 body.spawn((Node { width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, narrate::ChartNode(chart.ids.1.clone(), chart.window.0, chart.window.1))).with_children(|img| {
-                    img.spawn((Node { position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, ImageNode::new(chart.image.clone()), BorderRadius::all(Val::Px(4.)), Pickable::IGNORE));
-                    img.spawn((Node { position_type: PositionType::Absolute, width: Val::Px(12.), height: Val::Px(12.), margin: UiRect { left: Val::Px(-6.), top: Val::Px(-6.), ..default() }, border: UiRect::all(Val::Px(2.)), ..default() }, BackgroundColor(ACCENT), BorderColor(Color::WHITE), BorderRadius::all(Val::Px(6.)), PhaseDot { ids: chart.ids.clone(), window: chart.window, range: chart.range }, Pickable::IGNORE));
+                    img.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, ImageNode::new(chart.image.clone()), Pickable::IGNORE));
+                    img.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), position_type: PositionType::Absolute, width: Val::Px(12.), height: Val::Px(12.), margin: UiRect { left: Val::Px(-6.), top: Val::Px(-6.), ..default() }, border: UiRect::all(Val::Px(2.)), ..default() }, BackgroundColor(ACCENT), BorderColor::all(Color::WHITE), PhaseDot { ids: chart.ids.clone(), window: chart.window, range: chart.range }, Pickable::IGNORE));
                 });
                 body.spawn(k.text(format!("y: {} {} … {} ({}) · the dot is the operating point now; the line is the whole run", chart.y.0, num(chart.range.0), num(chart.range.1), chart.y.1), 10.5, FAINT, 0));
             }
@@ -728,10 +725,10 @@ fn component_card(col: &mut ChildSpawnerCommands, k: &Kit, _l: &Learn, b: &sim_l
     let entry = builder.and_then(|b| b.element_entry(&card.component));
     let category = entry.and_then(|e| e.notes.as_ref().map(|n| n.category.clone())).unwrap_or_default();
     let tag = crate::builder::ui::tag_color(crate::builder::ui::category(if category.is_empty() { entry.map(|e| e.domain.as_str()).unwrap_or("") } else { &category }));
-    col.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(14.)), border: UiRect::left(Val::Px(3.)), margin: UiRect::vertical(Val::Px(4.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderColor(tag), BorderRadius::all(Val::Px(7.)), BlockNode(b.id.clone()))).with_children(|c| {
+    col.spawn((Node { border_radius: BorderRadius::all(Val::Px(7.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(14.)), border: UiRect::left(Val::Px(3.)), margin: UiRect::vertical(Val::Px(4.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderColor::all(tag), BlockNode(b.id.clone()))).with_children(|c| {
         c.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|r| {
             r.spawn(k.text(entry.map(|e| e.display_name.clone()).unwrap_or_else(|| card.component.clone()), 16., TEXT, 2));
-            r.spawn((Text::new(&card.component), TextFont { font: k.f.mono.clone(), font_size: 11., ..default() }, TextColor(FAINT)));
+            r.spawn((Text::new(&card.component), TextFont { font: k.f.mono.clone().into(), font_size: FontSize::Px(11.), ..default() }, TextColor(FAINT)));
         });
         let Some(e) = entry else {
             c.spawn(k.text("This component is not in the registry (see sim-lesson check).", 12., WARN, 0));
@@ -872,17 +869,17 @@ fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Option<&Builder>
         .spawn((
             Node { position_type: PositionType::Absolute, right: Val::Px(0.), top: Val::Px(TOPBAR), bottom: Val::Px(STATUSBAR), width: Val::Px(RIGHT_WIDTH), flex_direction: FlexDirection::Column, border: UiRect::left(Val::Px(1.)), ..default() },
             BackgroundColor(SURFACE),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             LearnPanel,
         ))
         .with_children(|panel| {
             panel
-                .spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), flex_grow: 1., overflow: Overflow::scroll_y(), ..default() }, ScrollPosition { offset_y: offset, ..default() }, LearnScroll::Margin))
+                .spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), flex_grow: 1., overflow: Overflow::scroll_y(), ..default() }, ScrollPosition(Vec2::new(0.0, offset)), LearnScroll::Margin))
                 .with_children(|body| {
                     if let Some(part) = &l.picked {
                         let component = scene.description.components.get(part);
                         let entry = component.and_then(|c| builder.and_then(|b| b.element_entry(&c.component_type)));
-                        body.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(12.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderRadius::all(Val::Px(7.)))).with_children(|c| {
+                        body.spawn((Node { border_radius: BorderRadius::all(Val::Px(7.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(12.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED))).with_children(|c| {
                             c.spawn(k.text("SELECTED PART", 10.5, FAINT, 2));
                             c.spawn(k.text(part, 14., TEXT, 2));
                             if let Some(comp) = component {
@@ -934,7 +931,7 @@ fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Option<&Builder>
                 });
             let composing = l.thread.is_some() || l.draft.is_some() || matches!(l.input.as_ref().map(|i| &i.purpose), Some(Purpose::Author));
             if composing {
-                panel.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(12.)), border: UiRect::top(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(BORDER))).with_children(|f| {
+                panel.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(12.)), border: UiRect::top(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor::all(BORDER))).with_children(|f| {
                     let draft = l.input.as_ref().filter(|i| matches!(i.purpose, Purpose::Comment | Purpose::Author | Purpose::EditComment(_))).map(|i| i.buffer.as_str());
                     let (label, submit) = match l.input.as_ref().map(|i| &i.purpose) {
                         Some(Purpose::Author) => ("Your name", "Save"),
@@ -950,7 +947,7 @@ fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Option<&Builder>
 
 fn agent_card(body: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, thread: &str) {
     let run = l.agent.latest(thread);
-    body.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(5.), padding: UiRect::all(Val::Px(9.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderRadius::all(Val::Px(6.)))).with_children(|card| {
+    body.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(5.), padding: UiRect::all(Val::Px(9.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED))).with_children(|card| {
         card.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|row| {
             row.spawn(k.text("Ask Codex", 12., TEXT, 1));
             match run.filter(|r| r.status.active()) {
@@ -984,7 +981,7 @@ fn status(commands: &mut Commands, k: &Kit, l: &Learn) {
         .spawn((
             Node { position_type: PositionType::Absolute, left: Val::Px(0.), right: Val::Px(0.), bottom: Val::Px(0.), height: Val::Px(STATUSBAR), padding: UiRect::axes(Val::Px(14.), Val::Px(0.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, border: UiRect::top(Val::Px(1.)), ..default() },
             BackgroundColor(BAR),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             LearnPanel,
         ))
         .with_children(|bar| {
@@ -1001,13 +998,13 @@ fn status(commands: &mut Commands, k: &Kit, l: &Learn) {
 
 /// Wheel scrolling for the three columns; scroll-to-block requests.
 pub(super) fn scroll(
-    mut wheel: EventReader<MouseWheel>,
+    mut wheel: MessageReader<MouseWheel>,
     window: Single<&Window>,
     keys: Res<ButtonInput<KeyCode>>,
     mut learn: ResMut<Learn>,
     scene: Res<SpatialScene>,
-    mut panels: Query<(&mut ScrollPosition, &LearnScroll, &ComputedNode, &GlobalTransform)>,
-    blocks: Query<(&BlockNode, &ComputedNode, &GlobalTransform)>,
+    mut panels: Query<(&mut ScrollPosition, &LearnScroll, &ComputedNode, &UiGlobalTransform)>,
+    blocks: Query<(&BlockNode, &ComputedNode, &UiGlobalTransform)>,
 ) {
     let delta = wheel.read().fold(0.0, |sum, e| {
         sum + match e.unit {
@@ -1032,7 +1029,7 @@ pub(super) fn scroll(
                 };
                 for (mut position, side, _, _) in &mut panels {
                     if *side == which {
-                        position.offset_y = (position.offset_y - delta).max(0.0);
+                        position.y = (position.y - delta).max(0.0);
                     }
                 }
             }
@@ -1045,9 +1042,9 @@ pub(super) fn scroll(
                 if *side != LearnScroll::Page {
                     continue;
                 }
-                let top = transform.translation().y - node.size().y / 2.0;
-                let panel_top = ptransform.translation().y - pnode.size().y / 2.0;
-                position.offset_y = (position.offset_y + (top - panel_top) / scale - 18.0).max(0.0);
+                let top = transform.translation.y - node.size().y / 2.0;
+                let panel_top = ptransform.translation.y - pnode.size().y / 2.0;
+                position.y = (position.y + (top - panel_top) / scale - 18.0).max(0.0);
             }
             learn.scroll_to = None;
         } else if !blocks.iter().any(|(b, ..)| b.0 == target) && !learn.dirty {
@@ -1055,8 +1052,8 @@ pub(super) fn scroll(
         }
     }
     for (position, side, _, _) in &panels {
-        if *side == LearnScroll::Page && (position.offset_y - learn.scroll).abs() > 0.5 {
-            learn.bypass_change_detection().scroll = position.offset_y;
+        if *side == LearnScroll::Page && (position.y - learn.scroll).abs() > 0.5 {
+            learn.bypass_change_detection().scroll = position.y;
         }
     }
 }

@@ -356,7 +356,7 @@ impl Learn {
 }
 
 fn badge(k: &Kit, text: &str, color: Color) -> impl Bundle {
-    (Node { padding: UiRect::axes(Val::Px(8.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor(color), BorderRadius::all(Val::Px(10.)), children![k.text(text, 10.5, color, 2)])
+    (Node { border_radius: BorderRadius::all(Val::Px(10.)), padding: UiRect::axes(Val::Px(8.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(color), children![k.text(text, 10.5, color, 2)])
 }
 
 /// A question card.
@@ -379,7 +379,7 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
     // This attempt's numbers: varied values and the model's `given` values.
     let mut values = record.map(|r| r.values.clone()).unwrap_or_default();
     values.extend(l.model.given.get(&q.id).cloned().unwrap_or_default());
-    col.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), border: UiRect::all(Val::Px(1.)), margin: UiRect::vertical(Val::Px(8.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderColor(if passed { OK.with_alpha(0.6) } else { color.with_alpha(0.6) }), BorderRadius::all(Val::Px(9.)), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
+    col.spawn((Node { border_radius: BorderRadius::all(Val::Px(9.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), border: UiRect::all(Val::Px(1.)), margin: UiRect::vertical(Val::Px(8.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderColor::all(if passed { OK.with_alpha(0.6) } else { color.with_alpha(0.6) }), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
         c.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|r| {
             r.spawn(badge(k, label, color));
             let state = if passed {
@@ -409,7 +409,7 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
                 let picked = chosen == Some(i);
                 let judged = verdict.is_some() && picked;
                 let border = if show_answer && o.correct { OK } else if judged { if o.correct { OK } else { WARN } } else if picked { crate::ACCENT } else { BORDER };
-                c.spawn((Button, LessonAction::QuizPick(q.id.clone(), i), Tint { idle: if picked { HOVER_BG } else { SURFACE }, hover: HOVER_BG }, Node { padding: UiRect::axes(Val::Px(12.), Val::Px(9.)), border: UiRect::all(Val::Px(1.5)), column_gap: Val::Px(10.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, BackgroundColor(if picked { HOVER_BG } else { SURFACE }), BorderColor(border), BorderRadius::all(Val::Px(6.)))).with_children(|row| {
+                c.spawn((Button, LessonAction::QuizPick(q.id.clone(), i), Tint { idle: if picked { HOVER_BG } else { SURFACE }, hover: HOVER_BG }, Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::axes(Val::Px(12.), Val::Px(9.)), border: UiRect::all(Val::Px(1.5)), column_gap: Val::Px(10.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, BackgroundColor(if picked { HOVER_BG } else { SURFACE }), BorderColor::all(border))).with_children(|row| {
                     row.spawn(k.text(format!("{}", (b'A' + i as u8) as char), 12., if picked { crate::ACCENT } else { FAINT }, 2));
                     row.spawn((k.text(&o.text, 13.5, TEXT, 0), Node { flex_shrink: 1., min_width: Val::Px(0.), ..default() }));
                 });
@@ -419,7 +419,7 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
         } else if q.kind == QuizKind::Steps {
             // The worked example: done steps shown, blanks to fill in order.
             for (i, st) in q.steps.iter().enumerate() {
-                c.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::axes(Val::Px(10.), Val::Px(6.)), border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() }).insert(BorderColor(if st.blank() { crate::ACCENT } else { BORDER })).with_children(|row| {
+                c.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::axes(Val::Px(10.), Val::Px(6.)), border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() }).insert(BorderColor::all(if st.blank() { crate::ACCENT } else { BORDER })).with_children(|row| {
                     row.spawn(k.text(format!("Step {} · {}", i + 1, st.prompt), 12.5, SUBTLE, 1));
                     match &st.worked {
                         Some(w) => {
@@ -525,7 +525,7 @@ pub(super) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
             let played = l.scene.as_ref().filter(|a| Some(&a.id) == q.scene.as_ref()).is_some_and(|a| a.run.is_some() && a.time >= l.sketch_window(q)[1].min(a.duration()) - 1e-6);
             match (predicted.is_some(), l.sketch_results.get(&q.id).filter(|_| played)) {
                 (true, Some((image, gap, _))) => {
-                    c.spawn((Node { width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, ImageNode::new(image.clone()), BorderRadius::all(Val::Px(4.))));
+                    c.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, ImageNode::new(image.clone())));
                     let close = *gap <= q.tolerance.map(|t| match t { sim_lesson::quiz::Tolerance::Absolute(v) | sim_lesson::quiz::Tolerance::Relative(v) => v }).unwrap_or(0.15);
                     c.spawn(k.text(format!("Purple: your sketch. Teal: the simulation. {} (typical gap {:.0} % of the axis).", if close { "Your curve has the right shape and size" } else { "Your curve differs from the simulation" }, gap * 100.), 13., if close { OK } else { WARN }, 1));
                     if !q.explain.is_empty() {
@@ -581,12 +581,12 @@ pub(super) fn reflect_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b
     let slug = l.slug().unwrap_or_default();
     let saved = l.progress.lessons.get(slug).and_then(|p| p.reflections.get(&r.id));
     let focused = l.input.as_ref().is_some_and(|i| i.purpose == Purpose::Reflection(r.id.clone()));
-    col.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), border: UiRect::left(Val::Px(3.)), margin: UiRect::vertical(Val::Px(8.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderColor(Color::srgb(0.93, 0.76, 0.40)), BorderRadius::all(Val::Px(7.)), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
+    col.spawn((Node { border_radius: BorderRadius::all(Val::Px(7.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), border: UiRect::left(Val::Px(3.)), margin: UiRect::vertical(Val::Px(8.)), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderColor::all(Color::srgb(0.93, 0.76, 0.40)), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
         let recall = r.kind == sim_lesson::quiz::ReflectKind::Recall;
         c.spawn(badge(k, if recall { "Recall first" } else { "Explain it in your own words" }, Color::srgb(0.93, 0.76, 0.40)));
         crate::markdown::render(c, &sim_markdown::parse(&r.prompt), theme, |_| None::<LessonAction>);
         let text = if focused { l.input.as_ref().map(|i| i.buffer.clone()).unwrap_or_default() } else { saved.map(|s| s.text.clone()).unwrap_or_default() };
-        c.spawn((Button, LessonAction::ReflectInput(r.id.clone()), Tint { idle: SURFACE, hover: HOVER_BG }, Node { min_height: Val::Px(70.), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor(if focused { crate::ACCENT } else { BORDER }), BorderRadius::all(Val::Px(6.)))).with_children(|f| {
+        c.spawn((Button, LessonAction::ReflectInput(r.id.clone()), Tint { idle: SURFACE, hover: HOVER_BG }, Node { border_radius: BorderRadius::all(Val::Px(6.)), min_height: Val::Px(70.), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor::all(if focused { crate::ACCENT } else { BORDER }))).with_children(|f| {
             f.spawn(k.text(if focused { format!("{text}|") } else if text.is_empty() { "Click and write two or three sentences…".into() } else { text.clone() }, 13.5, if text.is_empty() && !focused { FAINT } else { TEXT }, 0));
         });
         c.spawn(wrap()).with_children(|row| {
@@ -637,7 +637,7 @@ pub(super) fn reflect_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b
 
 /// What stands in for the locked rest of the lesson.
 pub(super) fn locked(col: &mut ChildSpawnerCommands, k: &Kit, hidden: usize) {
-    col.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(18.)), border: UiRect::all(Val::Px(1.)), align_items: AlignItems::Center, margin: UiRect::vertical(Val::Px(10.)), flex_shrink: 0., ..default() }, BorderColor(BORDER), BorderRadius::all(Val::Px(9.)))).with_children(|c| {
+    col.spawn((Node { border_radius: BorderRadius::all(Val::Px(9.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(18.)), border: UiRect::all(Val::Px(1.)), align_items: AlignItems::Center, margin: UiRect::vertical(Val::Px(10.)), flex_shrink: 0., ..default() }, BorderColor::all(BORDER))).with_children(|c| {
         c.spawn(k.text("The next part unlocks when you answer the question above", 14., TEXT, 2));
         c.spawn(k.text(format!("{hidden} more block{} below. Take your time: working it out is what makes it stick.", if hidden == 1 { "" } else { "s" }), 12., SUBTLE, 0));
     });
@@ -673,17 +673,17 @@ pub(super) fn figure(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, src: &s
     col.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), align_items: AlignItems::Center, margin: UiRect::vertical(Val::Px(8.)), width: Val::Percent(100.), flex_shrink: 0., ..default() }, super::ui::BlockNode(format!("figure:{id}")))).with_children(|c| {
         match l.figures.get(&path).map(|f| &f.state) {
             Some(FigureState::Ready { image, aspect, units }) => {
-                c.spawn((Node { width: Val::Percent(100.), max_width: Val::Px(760.), aspect_ratio: Some(*aspect), ..default() }, ImageNode::new(image.clone()), BorderRadius::all(Val::Px(6.)), super::narrate::FigureNode(id.clone(), units.0, units.1)));
+                c.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), width: Val::Percent(100.), max_width: Val::Px(760.), aspect_ratio: Some(*aspect), ..default() }, ImageNode::new(image.clone()), super::narrate::FigureNode(id.clone(), units.0, units.1)));
             }
             Some(FigureState::Failed(e)) => {
                 c.spawn(k.text(format!("Figure {src}: {e}"), 12., WARN, 0));
             }
             _ => {
-                c.spawn((Node { width: Val::Percent(100.), height: Val::Px(160.), justify_content: JustifyContent::Center, align_items: AlignItems::Center, ..default() }, BackgroundColor(SURFACE), BorderRadius::all(Val::Px(6.)), children![k.text("Drawing figure…", 12., FAINT, 0)]));
+                c.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), width: Val::Percent(100.), height: Val::Px(160.), justify_content: JustifyContent::Center, align_items: AlignItems::Center, ..default() }, BackgroundColor(SURFACE), children![k.text("Drawing figure…", 12., FAINT, 0)]));
             }
         }
         if !caption.is_empty() {
-            c.spawn((Text::new(caption), TextFont { font: k.f.italic.clone(), font_size: 12.5, ..default() }, TextColor(SUBTLE), TextLayout::new(JustifyText::Center, bevy::text::LineBreak::WordBoundary), Node { max_width: Val::Px(680.), ..default() }));
+            c.spawn((Text::new(caption), TextFont { font: k.f.italic.clone().into(), font_size: FontSize::Px(12.5), ..default() }, TextColor(SUBTLE), TextLayout::new(Justify::Center, bevy::text::LineBreak::WordBoundary), Node { max_width: Val::Px(680.), ..default() }));
         }
     });
 }
@@ -706,7 +706,7 @@ fn sketch_canvas(c: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, q: &Quiz, loc
         r.spawn(k.text(format!("{label} {}", if q.unit.is_empty() { String::new() } else { format!("({})", q.unit) }), 11.5, TEXT, 1));
         r.spawn(k.text(format!("{} … {}", crate::builder::ui::num(lo), crate::builder::ui::num(hi)), 10.5, FAINT, 0));
     });
-    let mut canvas = c.spawn((Node { width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(Color::srgb(0.07, 0.086, 0.106)), BorderColor(BORDER), BorderRadius::all(Val::Px(4.))));
+    let mut canvas = c.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(Color::srgb(0.07, 0.086, 0.106)), BorderColor::all(BORDER)));
     if !locked {
         canvas.insert((Button, SketchCanvas(q.id.clone()), bevy::ui::RelativeCursorPosition::default()));
     }
@@ -715,7 +715,7 @@ fn sketch_canvas(c: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, q: &Quiz, loc
             cv.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(0.), right: Val::Px(0.), top: Val::Percent(25. * g as f32), height: Val::Px(1.), ..default() }, BackgroundColor(Color::srgb(0.16, 0.19, 0.23)), Pickable::IGNORE));
         }
         for i in 0..SKETCH_COLUMNS {
-            cv.spawn((Node { position_type: PositionType::Absolute, width: Val::Px(5.), height: Val::Px(5.), margin: UiRect { left: Val::Px(-2.5), top: Val::Px(-2.5), ..default() }, display: Display::None, ..default() }, BackgroundColor(Color::srgb(0.70, 0.58, 0.96)), BorderRadius::all(Val::Px(2.5)), SketchDot(q.id.clone(), i), Pickable::IGNORE));
+            cv.spawn((Node { border_radius: BorderRadius::all(Val::Px(2.5)), position_type: PositionType::Absolute, width: Val::Px(5.), height: Val::Px(5.), margin: UiRect { left: Val::Px(-2.5), top: Val::Px(-2.5), ..default() }, display: Display::None, ..default() }, BackgroundColor(Color::srgb(0.70, 0.58, 0.96)), SketchDot(q.id.clone(), i), Pickable::IGNORE));
         }
     });
     c.spawn(k.text(format!("time {} … {} s", crate::builder::ui::num(t0), crate::builder::ui::num(t1)), 10.5, FAINT, 0));
@@ -725,7 +725,7 @@ fn sketch_canvas(c: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, q: &Quiz, loc
 pub(super) fn sketch_input(canvases: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &SketchCanvas)>, mut learn: ResMut<Learn>, mut last: Local<Option<(String, usize, f32)>>) {
     let mut drawing = false;
     for (interaction, cursor, canvas) in &canvases {
-        let (Interaction::Pressed, Some(p)) = (interaction, cursor.normalized) else { continue };
+        let (Interaction::Pressed, Some(p)) = (interaction, crate::view::cursor_fraction(cursor)) else { continue };
         drawing = true;
         let n = SKETCH_COLUMNS;
         let col = ((p.x.clamp(0., 0.9999)) * n as f32) as usize;

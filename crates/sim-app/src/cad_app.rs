@@ -80,8 +80,8 @@ pub fn run(model: String) {
             sim_seconds: 0.0,
             wall_seconds: 0.0,
         })
-        .insert_resource(AmbientLight { color: Color::srgb(0.85, 0.88, 0.95), brightness: 400.0, affects_lightmapped_meshes: true })
-        .add_plugins(DefaultPlugins.set(WindowPlugin { primary_window: Some(Window { title: "robocad → simulation".to_owned(), resolution: (1280.0_f32, 800.0_f32).into(), ..default() }), ..default() }))
+        .insert_resource(GlobalAmbientLight { color: Color::srgb(0.85, 0.88, 0.95), brightness: 400.0, affects_lightmapped_meshes: true })
+        .add_plugins(DefaultPlugins.set(WindowPlugin { primary_window: Some(Window { title: "robocad → simulation".to_owned(), resolution: (1280_u32, 800_u32).into(), ..default() }), ..default() }))
         .add_systems(Startup, setup)
         .add_systems(Update, (watch_file, keyboard, orbit_camera, advance, spawn_meshes, pose_links, draw, status).chain())
         .run();
@@ -92,9 +92,9 @@ fn setup(mut commands: Commands) {
     let position = Vec3::new(0.35, 0.3, 0.6);
     let offset = position - focus;
     commands.spawn((Camera3d::default(), Transform::from_translation(position).looking_at(focus, Vec3::Y), OrbitCamera { focus, radius: offset.length(), yaw: offset.x.atan2(offset.z), pitch: (offset.y / offset.length()).asin() }));
-    commands.spawn((DirectionalLight { illuminance: 9_000.0, shadows_enabled: false, ..default() }, Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.9, -0.5, 0.0))));
-    commands.spawn((DirectionalLight { illuminance: 2_500.0, shadows_enabled: false, ..default() }, Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.3, 2.4, 0.0))));
-    commands.spawn((Text::new(""), TextFont { font_size: 14.0, ..default() }, Node { position_type: PositionType::Absolute, left: Val::Px(12.0), top: Val::Px(10.0), ..default() }, StatusText));
+    commands.spawn((DirectionalLight { illuminance: 9_000.0, shadow_maps_enabled: false, ..default() }, Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.9, -0.5, 0.0))));
+    commands.spawn((DirectionalLight { illuminance: 2_500.0, shadow_maps_enabled: false, ..default() }, Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.3, 2.4, 0.0))));
+    commands.spawn((Text::new(""), TextFont { font_size: FontSize::Px(14.0), ..default() }, Node { position_type: PositionType::Absolute, left: Val::Px(12.0), top: Val::Px(10.0), ..default() }, StatusText));
     commands.spawn((RobotRoot, Transform::IDENTITY, Visibility::default()));
 }
 
@@ -370,7 +370,7 @@ fn status(sim: Res<CadSim>, mut query: Query<&mut Text, With<StatusText>>) {
     text.0 = lines.join("\n");
 }
 
-fn orbit_camera(mut query: Query<(&mut Transform, &mut OrbitCamera)>, mouse: Res<ButtonInput<MouseButton>>, mut motion: EventReader<bevy::input::mouse::MouseMotion>, mut wheel: EventReader<bevy::input::mouse::MouseWheel>) {
+fn orbit_camera(mut query: Query<(&mut Transform, &mut OrbitCamera)>, mouse: Res<ButtonInput<MouseButton>>, mut motion: MessageReader<bevy::input::mouse::MouseMotion>, mut wheel: MessageReader<bevy::input::mouse::MouseWheel>) {
     let Ok((mut transform, mut cam)) = query.single_mut() else { return };
     let mut delta = Vec2::ZERO;
     for m in motion.read() {

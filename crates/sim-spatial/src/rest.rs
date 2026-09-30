@@ -376,18 +376,15 @@ fn tick(
     mut builder: Option<&mut builder::Builder>,
     mut learn: Option<&mut crate::lesson::Learn>,
     shots: &mut Vec<std::path::PathBuf>,
+    occluded: bool,
 ) {
     if let Some(b)=builder.as_deref_mut(){b.agent_endpoint(format!("http://{}",server.address));}
     server.poll(|command, continuation, cancelled| {
         if command.command == "screenshot" {
-            let path = command.args.get("path").and_then(|p| p.as_str()).map(std::path::PathBuf::from);
-            return sim_api::Outcome::Done(match path.filter(|p| p.extension().is_some_and(|e| e == "png")) {
-                Some(p) => {
-                    shots.push(p.clone());
-                    Ok(json!({"path": p, "note": "saved once the next frame renders"}))
-                }
-                None => Err("screenshot needs {\"path\": \"…/file.png\"}".into()),
-            });
+            return sim_api::Outcome::Done(screenshot_path(&command.args, occluded).map(|p| {
+                shots.push(p.clone());
+                json!({"path": p, "note": "saved once the next frame renders"})
+            }));
         }
         if command.command == "lesson_frames" {
             let Some(l) = learn.as_deref_mut() else { return sim_api::Outcome::Done(Err("start the viewer with --lessons DIR to use lessons".into())) };
@@ -504,17 +501,18 @@ fn tick(
 }
 pub(super) fn poll(
     mut commands: Commands,
-    mut redraw: EventWriter<bevy::window::RequestRedraw>,
+    mut redraw: MessageWriter<bevy::window::RequestRedraw>,
     rest: Option<ResMut<Rest>>,
     mut scene: ResMut<SpatialScene>,
     mut camera: Single<&mut Orbit>,
     mut builder: Option<ResMut<builder::Builder>>,
     mut learn: Option<ResMut<crate::lesson::Learn>>,
+    occlusion: Res<Occlusion>,
 ) {
     if let Some(mut rest) = rest {
         let Rest(server, task) = &mut *rest;
         let mut shots = Vec::new();
-        tick(server, &mut scene, &mut camera, task, builder.as_deref_mut(), learn.as_deref_mut(), &mut shots);
+        tick(server, &mut scene, &mut camera, task, builder.as_deref_mut(), learn.as_deref_mut(), &mut shots, occlusion.0);
         // Keep frames coming while a job runs; an idle background window
         // otherwise steps only on its slow low-power timer.
         if server.busy() || !shots.is_empty() {
@@ -527,6 +525,56 @@ pub(super) fn poll(
         }
     }
 }
+/// Whether the primary window is hidden (screen locked, minimized, fully
+/// covered or on another Space). Since Bevy 0.19 (wgpu 29, gfx-rs/wgpu#8309)
+/// macOS draws nothing into a hidden window, so a screenshot then would be
+/// blank; `screenshot` refuses instead. On macOS this reads the same
+/// `NSWindow.occlusionState` wgpu checks (winit sends no event for a window
+/// created hidden); elsewhere it follows winit's occlusion events.
+#[derive(Resource, Default)]
+pub struct Occlusion(pub bool);
+
+#[cfg(target_os = "macos")]
+pub fn track_occlusion(window: Query<&bevy::window::RawHandleWrapper, With<bevy::window::PrimaryWindow>>, _main_thread: bevy::ecs::system::NonSendMarker, mut occlusion: ResMut<Occlusion>) {
+    use objc2::{msg_send, runtime::AnyObject};
+    let Ok(handle) = window.single() else { return };
+    let raw_window_handle::RawWindowHandle::AppKit(appkit) = handle.get_window_handle() else { return };
+    // NSWindowOcclusionStateVisible
+    const VISIBLE: usize = 1 << 1;
+    // SAFETY: the handle's NSView outlives the window entity (RawHandleWrapper
+    // holds the window), and NonSendMarker keeps this on the main thread.
+    let hidden = unsafe {
+        let view = appkit.ns_view.as_ptr() as *const AnyObject;
+        let ns_window: *const AnyObject = msg_send![&*view, window];
+        !ns_window.is_null() && {
+            let state: usize = msg_send![&*ns_window, occlusionState];
+            state & VISIBLE == 0
+        }
+    };
+    if occlusion.0 != hidden {
+        occlusion.0 = hidden;
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn track_occlusion(mut events: MessageReader<bevy::window::WindowOccluded>, primary: Query<(), With<bevy::window::PrimaryWindow>>, mut occlusion: ResMut<Occlusion>) {
+    for e in events.read() {
+        if primary.contains(e.window) && occlusion.0 != e.occluded {
+            occlusion.0 = e.occluded;
+        }
+    }
+}
+
+/// The `screenshot` command's shared validation: a `.png` path, and a visible window.
+pub fn screenshot_path(args: &serde_json::Value, occluded: bool) -> Result<std::path::PathBuf, String> {
+    let path = args.get("path").and_then(|p| p.as_str()).map(std::path::PathBuf::from).filter(|p| p.extension().is_some_and(|e| e == "png"));
+    let Some(path) = path else { return Err("screenshot needs {\"path\": \"…/file.png\"}".into()) };
+    if occluded {
+        return Err("screenshot refused: the window is not visible (screen locked, minimized, fully covered or on another Space); macOS draws nothing into a hidden window (Bevy 0.19 / wgpu 29), so the PNG would be blank. Show the window and retry.".into());
+    }
+    Ok(path)
+}
+
 /// macOS naps background apps: timers and wake-ups are delayed by seconds.
 /// A viewer with a REST server must answer promptly, so it declares a
 /// user-initiated, latency-critical activity for as long as it runs (the
@@ -545,13 +593,13 @@ fn keep_responsive() {
 
 /// Wake the event loop when a REST command arrives, so a background window
 /// answers promptly without drawing continuously.
-pub(super) fn wake_on_request(rest: Option<Res<Rest>>, proxy: Option<Res<bevy::winit::EventLoopProxyWrapper<bevy::winit::WakeUp>>>) {
+pub(super) fn wake_on_request(rest: Option<Res<Rest>>, proxy: Option<Res<bevy::winit::EventLoopProxyWrapper>>) {
     let (Some(rest), Some(proxy)) = (rest, proxy) else { return };
     keep_responsive();
     let proxy = std::sync::Mutex::new((**proxy).clone());
     rest.0.set_waker(move || {
         if let Ok(p) = proxy.lock() {
-            let _ = p.send_event(bevy::winit::WakeUp);
+            let _ = p.send_event(bevy::winit::WinitUserEvent::WakeUp);
         }
     });
 }
@@ -588,7 +636,7 @@ pub fn headless(
             camera.radius = radius * 2.9;
             camera.home = false;
         }
-        tick(&mut server, &mut scene, &mut camera, &mut image_task, None, None, &mut Vec::new());
+        tick(&mut server, &mut scene, &mut camera, &mut image_task, None, None, &mut Vec::new(), false);
         std::thread::sleep(std::time::Duration::from_millis(16));
     }
 }

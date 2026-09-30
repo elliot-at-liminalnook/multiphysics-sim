@@ -542,7 +542,7 @@ pub(super) fn update_chart(mut builder: ResMut<Builder>, mut images: ResMut<Asse
     let traces: Vec<(&[[f64; 2]], [u8; 3])> = [(measured.as_slice(), SERIES[0]), (predicted.as_slice(), SERIES[1])].into_iter().filter(|(p, _)| !p.is_empty()).collect();
     let (pixels, range, window) = crate::chart::rasterize_span(&traces, None);
     let handle = builder.calibration.chart.get_or_insert_with(|| images.add(crate::chart::blank_image())).clone();
-    if let Some(image) = images.get_mut(&handle) {
+    if let Some(mut image) = images.get_mut(&handle) {
         image.data = Some(pixels);
     }
     let c = &mut builder.calibration;
@@ -678,7 +678,7 @@ fn selected_block(body: &mut ChildSpawnerCommands, k: &Kit, c: &CalibrationState
     }
     let Some(image) = &c.chart else { return };
     let ((lo, hi), (t0, t1)) = c.axes;
-    body.spawn((Node { width: Val::Percent(100.), height: Val::Px(150.), margin: UiRect::top(Val::Px(4.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(BORDER), ImageNode::new(image.clone())))
+    body.spawn((Node { width: Val::Percent(100.), height: Val::Px(150.), margin: UiRect::top(Val::Px(4.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor::all(BORDER), ImageNode::new(image.clone())))
         .with_children(|plot| {
             if t.measured.samples.is_empty() && t.predicted.samples.is_empty() {
                 plot.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(8.), top: Val::Px(60.), ..default() }, children![k.text("No trace in the archive for this trial", 11., WARN, 1)]));
@@ -699,9 +699,8 @@ fn trial_row(body: &mut ChildSpawnerCommands, k: &Kit, t: &Trial, selected: bool
         Button,
         BuildAction::CalibrationTrial(t.id.clone()),
         ui::Tint { idle: if selected { ACCENT_BG } else { Color::NONE }, hover: if selected { ACCENT_BG } else { HOVER_BG } },
-        Node { flex_direction: FlexDirection::Column, padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), margin: UiRect::top(Val::Px(3.)), border: UiRect::left(Val::Px(if selected { 3. } else { 2. })), flex_shrink: 0., ..default() },
-        BorderColor(if selected { ACCENT } else if held { HELD_OUT } else { Color::NONE }),
-        BorderRadius::all(Val::Px(4.)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_direction: FlexDirection::Column, padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), margin: UiRect::top(Val::Px(3.)), border: UiRect::left(Val::Px(if selected { 3. } else { 2. })), flex_shrink: 0., ..default() },
+        BorderColor::all(if selected { ACCENT } else if held { HELD_OUT } else { Color::NONE }),
         BackgroundColor(if selected { ACCENT_BG } else { Color::NONE }),
     ))
     .with_children(|row| {

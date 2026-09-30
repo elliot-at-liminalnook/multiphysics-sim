@@ -1543,7 +1543,7 @@ fn charts_with(run: &SceneRun, companion: Option<&SceneRun>, scene: &Scene, time
 }
 
 /// Typing into drafts and block edits, plus playback keys.
-fn keys(mut events: EventReader<KeyboardInput>, keys: Res<ButtonInput<KeyCode>>, mut learn: ResMut<Learn>, mut scene: ResMut<SpatialScene>) {
+fn keys(mut events: MessageReader<KeyboardInput>, keys: Res<ButtonInput<KeyCode>>, mut learn: ResMut<Learn>, mut scene: ResMut<SpatialScene>) {
     if !learn.active {
         events.clear();
         return;
@@ -1682,7 +1682,7 @@ fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<Time
             continue;
         }
         pressed = true;
-        let Some(p) = cursor.normalized else { continue };
+        let Some(p) = crate::view::cursor_fraction(cursor) else { continue };
         let mut rewound = None;
         if let Some(a) = learn.scene.as_mut() {
             if a.run.is_some() {
@@ -1707,7 +1707,7 @@ fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition), With<Time
 #[derive(Component)]
 pub(crate) struct SceneViewport(pub String);
 
-fn viewport(learn: Res<Learn>, mut scene: ResMut<SpatialScene>, nodes: Query<(&SceneViewport, &ComputedNode, &GlobalTransform, Option<&bevy::ui::CalculatedClip>)>, window: Single<&Window>) {
+fn viewport(learn: Res<Learn>, mut scene: ResMut<SpatialScene>, nodes: Query<(&SceneViewport, &ComputedNode, &UiGlobalTransform, Option<&bevy::ui::CalculatedClip>)>, window: Single<&Window>) {
     let want = if !learn.active {
         None
     } else {
@@ -1715,7 +1715,7 @@ fn viewport(learn: Res<Learn>, mut scene: ResMut<SpatialScene>, nodes: Query<(&S
         let found = active.and_then(|id| nodes.iter().find(|(v, ..)| v.0 == id));
         Some(match found {
             Some((_, node, transform, clip)) => {
-                let center = transform.translation().truncate();
+                let center = transform.translation;
                 let full = Rect::from_center_size(center, node.size());
                 let window_rect = Rect::new(0., 0., window.physical_width() as f32, window.physical_height() as f32);
                 let mut visible = full.intersect(window_rect);
@@ -2225,7 +2225,7 @@ fn sliders(tracks: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &Slid
         if *interaction != Interaction::Pressed {
             continue;
         }
-        let (Some(p), Some(spec)) = (cursor.normalized, a.scene.sliders.iter().find(|s| s.parameter == track.0)) else { continue };
+        let (Some(p), Some(spec)) = (crate::view::cursor_fraction(cursor), a.scene.sliders.iter().find(|s| s.parameter == track.0)) else { continue };
         dragging = Some((track.0.clone(), spec.snap(spec.min + p.x.clamp(0., 1.) as f64 * (spec.max - spec.min))));
     }
     match (dragging, a.slider_drag.clone()) {
@@ -2278,7 +2278,7 @@ fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPositio
     let mut clicked = false;
     for (interaction, cursor, chart, _) in &charts {
         if matches!(interaction, Interaction::Hovered | Interaction::Pressed) {
-            if let Some(p) = cursor.normalized {
+            if let Some(p) = crate::view::cursor_fraction(cursor) {
                 hovered = Some((chart.0.clone(), chart.1 + p.x.clamp(0., 1.) as f64 * (chart.2 - chart.1)));
                 clicked |= *interaction == Interaction::Pressed;
             }
@@ -2319,8 +2319,8 @@ fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPositio
     for (_, _, chart, mut border) in &mut charts {
         let on = part.as_deref().is_some_and(|p| part_of(&chart.0) == p || chart.0.starts_with(&format!("{p}/")));
         let color = if on { crate::ACCENT } else { Color::NONE };
-        if border.0 != color {
-            border.0 = color;
+        if border.top != color {
+            *border = BorderColor::all(color);
         }
     }
 }

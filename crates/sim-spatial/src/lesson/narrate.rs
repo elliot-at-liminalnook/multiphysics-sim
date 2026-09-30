@@ -543,7 +543,7 @@ pub(super) fn seek(bars: Query<(&Interaction, &bevy::ui::RelativeCursorPosition)
         if *interaction != Interaction::Pressed {
             continue;
         }
-        let Some(p) = cursor.normalized else { continue };
+        let Some(p) = crate::view::cursor_fraction(cursor) else { continue };
         let Some(n) = learn.narration.as_mut() else { continue };
         let (s, d) = (n.section, n.duration());
         n.jump(s, p.x.clamp(0., 1.) as f64 * d);
@@ -566,10 +566,9 @@ pub(super) fn bar(commands: &mut Commands, k: &Kit, l: &Learn) {
     let started = n.playing || n.time > 0. || n.section > 0;
     commands
         .spawn((
-            Node { position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH + 24.), right: Val::Px(RIGHT_WIDTH + 24.), bottom: Val::Px(STATUSBAR + 10.), max_height: Val::Px(reserved(l) - 16.), overflow: Overflow::clip(), flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::axes(Val::Px(14.), Val::Px(10.)), border: UiRect::all(Val::Px(1.)), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(9.)), position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH + 24.), right: Val::Px(RIGHT_WIDTH + 24.), bottom: Val::Px(STATUSBAR + 10.), max_height: Val::Px(reserved(l) - 16.), overflow: Overflow::clip(), flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::axes(Val::Px(14.), Val::Px(10.)), border: UiRect::all(Val::Px(1.)), ..default() },
             BackgroundColor(Color::srgba(0.07, 0.086, 0.106, 0.96)),
-            BorderColor(BORDER),
-            BorderRadius::all(Val::Px(9.)),
+            BorderColor::all(BORDER),
             GlobalZIndex(20),
             super::ui::LearnPanel,
         ))
@@ -600,15 +599,15 @@ pub(super) fn bar(commands: &mut Commands, k: &Kit, l: &Learn) {
                 r.spawn(k.button("Stop", act(NarrateAction::Stop), Look::Ghost, started));
             });
             if started {
-                b.spawn((Node { flex_wrap: FlexWrap::Wrap, ..default() }, children![(Text::new(""), TextFont { font: k.f.medium.clone(), font_size: 15., ..default() }, TextColor(TEXT), TextLayout::new_with_linebreak(bevy::text::LineBreak::WordBoundary), Subtitle, children![(TextSpan::new(""), TextFont { font: k.f.regular.clone(), font_size: 15., ..default() }, TextColor(FAINT), SubtitleRest)])]));
+                b.spawn((Node { flex_wrap: FlexWrap::Wrap, ..default() }, children![(Text::new(""), TextFont { font: k.f.medium.clone().into(), font_size: FontSize::Px(15.), ..default() }, TextColor(TEXT), TextLayout::linebreak(bevy::text::LineBreak::WordBoundary), Subtitle, children![(TextSpan::new(""), TextFont { font: k.f.regular.clone().into(), font_size: FontSize::Px(15.), ..default() }, TextColor(FAINT), SubtitleRest)])]));
                 if l.settings.transcript {
-                    b.spawn((Node { max_height: Val::Px(110.), overflow: Overflow::scroll_y(), padding: UiRect::all(Val::Px(8.)), border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor(BORDER), BorderRadius::all(Val::Px(6.)))).with_children(|t| {
-                        t.spawn((Text::new(""), TextFont { font: k.f.regular.clone(), font_size: 13., ..default() }, TextColor(TEXT), TextLayout::new_with_linebreak(bevy::text::LineBreak::WordBoundary), Transcript, children![(TextSpan::new(""), TextFont { font: k.f.regular.clone(), font_size: 13., ..default() }, TextColor(FAINT), TranscriptRest)]));
+                    b.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), max_height: Val::Px(110.), overflow: Overflow::scroll_y(), padding: UiRect::all(Val::Px(8.)), border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(BORDER))).with_children(|t| {
+                        t.spawn((Text::new(""), TextFont { font: k.f.regular.clone().into(), font_size: FontSize::Px(13.), ..default() }, TextColor(TEXT), TextLayout::linebreak(bevy::text::LineBreak::WordBoundary), Transcript, children![(TextSpan::new(""), TextFont { font: k.f.regular.clone().into(), font_size: FontSize::Px(13.), ..default() }, TextColor(FAINT), TranscriptRest)]));
                     });
                 }
-                b.spawn((Button, NarrationBar, bevy::ui::RelativeCursorPosition::default(), Node { height: Val::Px(6.), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(RAISED), BorderColor(BORDER), BorderRadius::all(Val::Px(3.))))
+                b.spawn((Button, NarrationBar, bevy::ui::RelativeCursorPosition::default(), Node { border_radius: BorderRadius::all(Val::Px(3.)), height: Val::Px(6.), border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(RAISED), BorderColor::all(BORDER)))
                     .with_children(|bar| {
-                        bar.spawn((Node { width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(crate::ACCENT), BorderRadius::all(Val::Px(3.)), NarrationFill, Pickable::IGNORE));
+                        bar.spawn((Node { border_radius: BorderRadius::all(Val::Px(3.)), width: Val::Percent(0.), height: Val::Percent(100.), ..default() }, BackgroundColor(crate::ACCENT), NarrationFill, Pickable::IGNORE));
                     });
             }
         });
@@ -729,15 +728,15 @@ pub(super) fn overlay(
     fonts: Option<Res<crate::builder::ui::UiFonts>>,
     window: Single<&Window>,
     camera: Single<(&Camera, &GlobalTransform), With<Orbit>>,
-    blocks: Query<(&super::ui::BlockNode, &ComputedNode, &GlobalTransform)>,
-    charts: Query<(&ChartNode, &ComputedNode, &GlobalTransform)>,
-    figures: Query<(&FigureNode, &ComputedNode, &GlobalTransform)>,
+    blocks: Query<(&super::ui::BlockNode, &ComputedNode, &UiGlobalTransform)>,
+    charts: Query<(&ChartNode, &ComputedNode, &UiGlobalTransform)>,
+    figures: Query<(&FigureNode, &ComputedNode, &UiGlobalTransform)>,
     existing: Query<Entity, With<Overlay>>,
     mut signature: Local<String>,
 ) {
     let Some(fonts) = fonts else { return };
     let scale = window.scale_factor();
-    let rect_of = |node: &ComputedNode, gt: &GlobalTransform| Rect::from_center_size(gt.translation().truncate() / scale, node.size() / scale);
+    let rect_of = |node: &ComputedNode, gt: &UiGlobalTransform| Rect::from_center_size(gt.translation / scale, node.size() / scale);
     let block_rect = |id: &str| blocks.iter().find(|(b, n, _)| b.0 == id && n.size().y > 0.).map(|(_, n, g)| rect_of(n, g));
     let page = Rect::new(crate::builder::ui::LEFT_WIDTH, crate::builder::ui::TOPBAR, window.width() - crate::builder::ui::RIGHT_WIDTH, window.height() - crate::builder::ui::STATUSBAR);
     let mut items: Vec<(u8, Rect, String)> = Vec::new(); // 0 highlight, 1 box, 2 arrow
@@ -818,22 +817,20 @@ pub(super) fn overlay(
         }
         commands.spawn((
             Overlay,
-            Node { position_type: PositionType::Absolute, left: Val::Px(at.x), top: Val::Px(at.y), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, left: Val::Px(at.x), top: Val::Px(at.y), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), ..default() },
             BackgroundColor(accent),
-            BorderRadius::all(Val::Px(4.)),
             GlobalZIndex(31),
             Pickable::IGNORE,
-            children![(Text::new(text), TextFont { font: fonts.semibold.clone(), font_size: 12., ..default() }, TextColor(Color::srgb(0.03, 0.09, 0.09)))],
+            children![(Text::new(text), TextFont { font: fonts.semibold.clone().into(), font_size: FontSize::Px(12.), ..default() }, TextColor(Color::srgb(0.03, 0.09, 0.09)))],
         ));
     };
     let line = |commands: &mut Commands, a: Vec2, b: Vec2, width: f32| {
         let d = b - a;
         commands.spawn((
             Overlay,
-            Node { position_type: PositionType::Absolute, left: Val::Px((a.x + b.x - d.length()) * 0.5), top: Val::Px((a.y + b.y) * 0.5 - width * 0.5), width: Val::Px(d.length()), height: Val::Px(width), ..default() },
-            Transform::from_rotation(Quat::from_rotation_z(d.y.atan2(d.x))),
+            Node { border_radius: BorderRadius::all(Val::Px(width * 0.5)), position_type: PositionType::Absolute, left: Val::Px((a.x + b.x - d.length()) * 0.5), top: Val::Px((a.y + b.y) * 0.5 - width * 0.5), width: Val::Px(d.length()), height: Val::Px(width), ..default() },
+            UiTransform::from_rotation(Rot2::radians(d.y.atan2(d.x))),
             BackgroundColor(accent),
-            BorderRadius::all(Val::Px(width * 0.5)),
             GlobalZIndex(30),
             Pickable::IGNORE,
         ));
@@ -842,11 +839,11 @@ pub(super) fn overlay(
         match kind {
             0 => {
                 let r = Rect::new(r.min.x - 6., r.min.y - 3., r.max.x + 6., r.max.y + 3.);
-                commands.spawn((Overlay, Node { position_type: PositionType::Absolute, left: Val::Px(r.min.x), top: Val::Px(r.min.y), width: Val::Px(r.width()), height: Val::Px(r.height()), border: UiRect::left(Val::Px(3.)), ..default() }, BackgroundColor(accent.with_alpha(0.10)), BorderColor(accent), BorderRadius::all(Val::Px(4.)), GlobalZIndex(29), Pickable::IGNORE));
+                commands.spawn((Overlay, Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, left: Val::Px(r.min.x), top: Val::Px(r.min.y), width: Val::Px(r.width()), height: Val::Px(r.height()), border: UiRect::left(Val::Px(3.)), ..default() }, BackgroundColor(accent.with_alpha(0.10)), BorderColor::all(accent), GlobalZIndex(29), Pickable::IGNORE));
             }
             1 => {
                 let r = Rect::new(r.min.x - 5., r.min.y - 5., r.max.x + 5., r.max.y + 5.);
-                commands.spawn((Overlay, Node { position_type: PositionType::Absolute, left: Val::Px(r.min.x), top: Val::Px(r.min.y), width: Val::Px(r.width()), height: Val::Px(r.height()), border: UiRect::all(Val::Px(2.5)), ..default() }, BorderColor(accent), BorderRadius::all(Val::Px(7.)), GlobalZIndex(30), Pickable::IGNORE));
+                commands.spawn((Overlay, Node { border_radius: BorderRadius::all(Val::Px(7.)), position_type: PositionType::Absolute, left: Val::Px(r.min.x), top: Val::Px(r.min.y), width: Val::Px(r.width()), height: Val::Px(r.height()), border: UiRect::all(Val::Px(2.5)), ..default() }, BorderColor::all(accent), GlobalZIndex(30), Pickable::IGNORE));
                 label(&mut commands, text, Vec2::new(r.min.x, (r.min.y - 24.).max(page.min.y + 4.)));
             }
             _ => {

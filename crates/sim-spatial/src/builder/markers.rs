@@ -81,7 +81,7 @@ pub(super) fn sync(
             Entity,
             &Leader,
             &mut Node,
-            &mut Transform,
+            &mut UiTransform,
             &mut BackgroundColor,
         ),
         Without<Marker>,
@@ -216,7 +216,7 @@ pub(super) fn sync(
         node.left = Val::Px((a.x + c.x - delta.length()) * 0.5);
         node.top = Val::Px((a.y + c.y) * 0.5 - 1.);
         node.width = Val::Px(delta.length());
-        tr.rotation = Quat::from_rotation_z(delta.y.atan2(delta.x));
+        tr.rotation = Rot2::radians(delta.y.atan2(delta.x));
         bg.0 = if hovered.contains(&line.key) {
             Color::srgb(1., 0.78, 0.3)
         } else {
@@ -244,7 +244,7 @@ pub(super) fn sync(
             .spawn((
                 Marker { key: key.clone() },
                 Button,
-                Node {
+                Node { border_radius: BorderRadius::MAX,
                     position_type: PositionType::Absolute,
                     left: Val::Px(info.center_px[0] - 15.),
                     top: Val::Px(info.center_px[1] - 15.),
@@ -256,8 +256,7 @@ pub(super) fn sync(
                     ..default()
                 },
                 GlobalZIndex(20),
-                BorderRadius::MAX,
-                BorderColor(Color::srgb(0.45, 0.80, 0.95)),
+                BorderColor::all(Color::srgb(0.45, 0.80, 0.95)),
                 BackgroundColor(Color::srgb(0.07, 0.25, 0.32)),
             ))
             .id();
@@ -276,8 +275,8 @@ pub(super) fn sync(
                 },
                 Text::new(&info.number),
                 TextFont {
-                    font: fonts.semibold.clone(),
-                    font_size: 14.,
+                    font: fonts.semibold.clone().into(),
+                    font_size: FontSize::Px(14.),
                     ..default()
                 },
                 TextColor(Color::WHITE),
@@ -299,8 +298,8 @@ pub(super) fn sync(
                 },
                 Text::new(title),
                 TextFont {
-                    font: fonts.semibold.clone(),
-                    font_size: 12.,
+                    font: fonts.semibold.clone().into(),
+                    font_size: FontSize::Px(12.),
                     ..default()
                 },
                 TextColor(Color::WHITE),

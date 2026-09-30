@@ -12,8 +12,11 @@ sim-markdown = { path = "../sim-markdown" }
 sim-render = { path = "../sim-render" }
 sim-api = { path = "../sim-api" }
 serde.workspace = true
-# Match the existing spatial host, without audio/gamepad/animation dependencies.
-bevy = { version = "=0.16.1", default-features = false, features = ["std", "async_executor", "multi_threaded", "bevy_asset", "bevy_log", "bevy_render", "bevy_pbr", "bevy_gizmos", "bevy_ui", "bevy_winit", "bevy_mesh_picking_backend", "bevy_ui_picking_backend", "default_font", "png", "jpeg", "x11"] }
+# Match the existing spatial host, without audio/gamepad/animation dependencies. Rebuilt from
+# bevy 0.19.1's cargo features (0.17 split camera/light/mesh/shader/ui_render/gizmos_render out of
+# render; picking backends are mesh_picking/ui_picking). Same effective set as the 0.16.1 list: no
+# tonemapping_luts, smaa_luts, hdr, state, scene, gltf, audio or gamepad.
+bevy = { version = "=0.19.1", default-features = false, features = ["std", "async_executor", "multi_threaded", "bevy_asset", "bevy_log", "bevy_window", "bevy_winit", "x11", "keyboard", "mouse", "bevy_render", "bevy_core_pipeline", "bevy_camera", "bevy_light", "bevy_mesh", "bevy_image", "bevy_color", "bevy_shader", "bevy_material", "bevy_pbr", "bevy_gizmos", "bevy_gizmos_render", "bevy_text", "bevy_ui", "bevy_ui_render", "bevy_picking", "mesh_picking", "ui_picking", "default_font", "png", "jpeg"] }
 sim-inspect = { path = "../sim-inspect" }
 sim-diagram = { path = "../sim-diagram" }
 sim-core = { path = "../sim-core" }
@@ -31,3 +34,7 @@ clap.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSProcessInfo", "NSString"] }
+# Window visibility for the REST screenshot (NSWindow.occlusionState via the
+# window's raw AppKit handle); both already in the tree through winit/wgpu.
+objc2 = "0.6"
+raw-window-handle = "0.6"

@@ -319,7 +319,7 @@ pub(super) fn update(
                             border: UiRect::all(Val::Px(1.)),
                             ..default()
                         },
-                        BorderColor(color),
+                        BorderColor::all(color),
                         BackgroundColor(Color::srgb(0.07, 0.12, 0.15)),
                     ))
                     .with_children(|card| {
@@ -413,7 +413,7 @@ pub(super) fn guides(scene: Res<SpatialScene>, mut gizmos: Gizmos) {
                 }
                 SpatialShape::Sphere { radius } => Vec3::splat(radius * 2.),
             };
-            gizmos.cuboid(
+            gizmos.cube(
                 Transform {
                     scale: dimensions * 1.025,
                     ..pose
@@ -426,7 +426,7 @@ pub(super) fn guides(scene: Res<SpatialScene>, mut gizmos: Gizmos) {
         }
         if lo.is_finite() && hi.is_finite() {
             let pad = (hi - lo).length() * 0.035;
-            gizmos.cuboid(
+            gizmos.cube(
                 Transform::from_translation((lo + hi) * 0.5).with_scale(hi - lo + Vec3::splat(pad)),
                 color,
             );

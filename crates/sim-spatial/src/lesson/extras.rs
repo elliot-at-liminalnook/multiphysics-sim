@@ -256,10 +256,10 @@ fn frame() -> impl Bundle {
     frame_on(RAISED)
 }
 fn frame_on(background: Color) -> impl Bundle {
-    (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), border: UiRect::all(Val::Px(1.)), margin: UiRect::vertical(Val::Px(8.)), flex_shrink: 0., ..default() }, BackgroundColor(background), BorderColor(BORDER), BorderRadius::all(Val::Px(9.)))
+    (Node { border_radius: BorderRadius::all(Val::Px(9.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(10.), padding: UiRect::all(Val::Px(16.)), border: UiRect::all(Val::Px(1.)), margin: UiRect::vertical(Val::Px(8.)), flex_shrink: 0., ..default() }, BackgroundColor(background), BorderColor::all(BORDER))
 }
 fn badge(k: &Kit, text: &str, color: Color) -> impl Bundle {
-    (Node { padding: UiRect::axes(Val::Px(8.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), align_self: AlignSelf::FlexStart, ..default() }, BorderColor(color), BorderRadius::all(Val::Px(10.)), children![k.text(text, 10.5, color, 2)])
+    (Node { border_radius: BorderRadius::all(Val::Px(10.)), padding: UiRect::axes(Val::Px(8.), Val::Px(2.)), border: UiRect::all(Val::Px(1.)), align_self: AlignSelf::FlexStart, ..default() }, BorderColor::all(color), children![k.text(text, 10.5, color, 2)])
 }
 const MEASURED: Color = Color::srgb(0.94, 0.59, 0.24);
 
@@ -271,7 +271,7 @@ pub(super) fn equation_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, 
     col.spawn((frame(), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
         c.spawn(badge(k, "Equation, live", crate::ACCENT));
         let text = equation_text(l, e);
-        c.spawn((Text::new(text), TextFont { font: k.f.mono.clone(), font_size: 15., ..default() }, TextColor(TEXT), EquationText(e.id.clone())));
+        c.spawn((Text::new(text), TextFont { font: k.f.mono.clone().into(), font_size: FontSize::Px(15.), ..default() }, TextColor(TEXT), EquationText(e.id.clone())));
         let symbols: Vec<String> = e.terms.values().map(|t| {
             let from = match (&t.param, &t.observe) {
                 (Some(p), _) => format!("from the model ({p})"),
@@ -337,7 +337,7 @@ pub(super) fn measured_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, 
             Some(Ok(r)) => {
                 c.spawn(k.text(format!("{} ({}) against {} · orange: measured · teal: simulated", if m.y.label.is_empty() { &m.y.field } else { &m.y.label }, m.y.unit, if m.x.label.is_empty() { &m.x.field } else { &m.x.label }), 11.5, SUBTLE, 1));
                 if let Some(image) = l.model.measured_images.get(&m.id) {
-                    c.spawn((Node { width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, ImageNode::new(image.clone()), BorderRadius::all(Val::Px(4.))));
+                    c.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, ImageNode::new(image.clone())));
                 }
                 let (lo, hi) = r.points.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p.x), b.max(p.x)));
                 c.spawn(k.text(format!("{} {} … {}", m.x.field, num(lo), num(hi)), 10.5, FAINT, 0));
@@ -356,7 +356,7 @@ pub(super) fn measured_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, 
                     c.spawn(k.text(format!("{} {}", if check.passed { "holds:" } else { "fails:" }, check.message), 11.5, if check.passed { OK } else { WARN }, 0));
                 }
                 if r.fitted_to_data {
-                    c.spawn((Node { padding: UiRect::all(Val::Px(10.)), border: UiRect::left(Val::Px(3.)), flex_shrink: 0., ..default() }, BorderColor(MEASURED), BackgroundColor(SURFACE), children![k.text("Some of the model's parameters were fitted to this very data. Agreement here shows the fit worked; it is not an independent test of the model.", 12., TEXT, 0)]));
+                    c.spawn((Node { padding: UiRect::all(Val::Px(10.)), border: UiRect::left(Val::Px(3.)), flex_shrink: 0., ..default() }, BorderColor::all(MEASURED), BackgroundColor(SURFACE), children![k.text("Some of the model's parameters were fitted to this very data. Agreement here shows the fit worked; it is not an independent test of the model.", 12., TEXT, 0)]));
                 }
                 c.spawn(k.text(format!("Data: {} · source {}{}", r.data.description, r.data.source_path, if r.data.source_hash.is_empty() { String::new() } else { format!(" ({}…)", &r.data.source_hash[..r.data.source_hash.len().min(12)]) }), 10.5, FAINT, 0));
                 // Where each number came from.
@@ -389,7 +389,7 @@ pub(super) fn measured_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, 
 /// A remedy, shown under the question whose wrong option pointed at it.
 pub(super) fn remedy_card(c: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, id: &str, theme: &crate::markdown::Theme) {
     let Some(r) = l.lesson.as_ref().and_then(|x| x.remedy(id)) else { return };
-    c.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::all(Val::Px(12.)), border: UiRect::left(Val::Px(3.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor(WARN), BorderRadius::all(Val::Px(6.)))).with_children(|c| {
+    c.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::all(Val::Px(12.)), border: UiRect::left(Val::Px(3.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor::all(WARN))).with_children(|c| {
         c.spawn(k.text(format!("A common idea that trips people up: {}", r.misconception), 12.5, WARN, 2));
         crate::markdown::render(c, &sim_markdown::parse(&r.body), theme, |_| None::<LessonAction>);
         c.spawn(wrap()).with_children(|row| {
@@ -567,7 +567,7 @@ pub(crate) struct Tracking {
     flushed: f64,
 }
 
-pub(super) fn track_blocks(time: Res<Time>, mut learn: ResMut<Learn>, blocks: Query<(&super::ui::BlockNode, &ComputedNode, &GlobalTransform, &InheritedVisibility)>, window: Single<&Window>) {
+pub(super) fn track_blocks(time: Res<Time>, mut learn: ResMut<Learn>, blocks: Query<(&super::ui::BlockNode, &ComputedNode, &UiGlobalTransform, &InheritedVisibility)>, window: Single<&Window>) {
     if !learn.active || learn.lesson.is_none() {
         return;
     }
@@ -578,7 +578,7 @@ pub(super) fn track_blocks(time: Res<Time>, mut learn: ResMut<Learn>, blocks: Qu
         if !vis.get() || computed.size().y <= 0. {
             continue;
         }
-        let (top, bottom) = (gt.translation().y - computed.size().y * 0.5, gt.translation().y + computed.size().y * 0.5);
+        let (top, bottom) = (gt.translation.y - computed.size().y * 0.5, gt.translation.y + computed.size().y * 0.5);
         // Counted when at least part of it is in the middle three-fifths of the window.
         if bottom > height * 0.2 && top < height * 0.8 {
             now_visible.insert(node.0.clone());

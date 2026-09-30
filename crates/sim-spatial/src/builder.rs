@@ -1843,7 +1843,7 @@ fn watch(time: Res<Time>, mut builder: ResMut<Builder>) {
     }
 }
 
-fn text_input(mut events: EventReader<KeyboardInput>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mut orbit: Single<&mut Orbit>, keys: Res<ButtonInput<KeyCode>>) {
+fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mut orbit: Single<&mut Orbit>, keys: Res<ButtonInput<KeyCode>>) {
     if builder.input.is_none() {
         events.clear();
         return;
@@ -1887,7 +1887,7 @@ fn text_input(mut events: EventReader<KeyboardInput>, mut builder: ResMut<Builde
     }
 }
 
-fn drops(mut events: EventReader<FileDragAndDrop>, mut builder: ResMut<Builder>) {
+fn drops(mut events: MessageReader<FileDragAndDrop>, mut builder: ResMut<Builder>) {
     for e in events.read() {
         if let FileDragAndDrop::DroppedFile { path_buf, .. } = e {
             let name = path_buf.to_string_lossy().to_lowercase();
@@ -2527,12 +2527,12 @@ fn rebuild_scene(
     }
 }
 
-fn pick_reference(click: Trigger<Pointer<Click>>, quads: Query<&ReferenceQuad>, mut builder: ResMut<Builder>) {
-    let Ok(quad) = quads.get(click.target()) else { return };
+fn pick_reference(click: On<Pointer<Click>>, quads: Query<&ReferenceQuad>, mut builder: ResMut<Builder>) {
+    let Ok(quad) = quads.get(click.entity) else { return };
     let Some(position) = click.hit.position else { return };
     let frame = builder.subsystems.get(&builder.level).copied().unwrap_or(sim_system::flatten::WorldPlacement::IDENTITY);
     // Points are recorded in the level's frame, like the reference origin.
-    let inverse = Transform::from_translation(Vec3::from_array(frame.position)).with_rotation(Quat::from_array(frame.rotation_xyzw)).compute_matrix().inverse();
+    let inverse = Transform::from_translation(Vec3::from_array(frame.position)).with_rotation(Quat::from_array(frame.rotation_xyzw)).to_matrix().inverse();
     let local = inverse.transform_point3(position).to_array();
     let Some((id, points)) = builder.calibrating.as_mut() else {
         builder.status = format!("Reference {} (click Calibrate to scale it from two points)", quad.0);
@@ -2637,7 +2637,7 @@ pub use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
 /// Grab and push: with a run going, Alt-drag on a part changes the load
 /// acting on it (a load torque on its shaft, a load force on its slide) in
 /// the running model only; letting go restores it. The file is untouched.
-fn grab_push(buttons: Res<ButtonInput<MouseButton>>, keys: Res<ButtonInput<KeyCode>>, mut motion: EventReader<bevy::input::mouse::MouseMotion>, pointed: Res<crate::view::PartHover>, scene: Res<SpatialScene>, mut builder: ResMut<Builder>) {
+fn grab_push(buttons: Res<ButtonInput<MouseButton>>, keys: Res<ButtonInput<KeyCode>>, mut motion: MessageReader<bevy::input::mouse::MouseMotion>, pointed: Res<crate::view::PartHover>, scene: Res<SpatialScene>, mut builder: ResMut<Builder>) {
     let drag: f32 = motion.read().map(|e| e.delta.x).sum();
     let alt = keys.pressed(KeyCode::AltLeft) || keys.pressed(KeyCode::AltRight);
     let running = builder.run.is_some();

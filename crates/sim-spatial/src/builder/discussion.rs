@@ -679,7 +679,7 @@ pub(crate) fn begin_surface(b: &mut Builder, scene: &SpatialScene, index: usize,
     let transform = animation::part_transform(scene, index);
     b.discussion.draft_pin = Some(
         transform
-            .compute_matrix()
+            .to_matrix()
             .inverse()
             .transform_point3(world)
             .to_array(),

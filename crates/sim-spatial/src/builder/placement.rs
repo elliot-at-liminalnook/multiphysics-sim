@@ -177,7 +177,7 @@ impl DragState {
         }
     }
     fn project(&mut self, origin: Vec3, direction: Vec3, grid: &Grid, snap: bool) {
-        let inverse = self.frame.compute_matrix().inverse();
+        let inverse = self.frame.to_matrix().inverse();
         let (_, _, n) = grid.plane.axes();
         let origin = inverse.transform_point3(origin);
         let dir = inverse.transform_vector3(direction);
@@ -363,7 +363,7 @@ impl Builder {
     }
 }
 pub(crate) fn start_part(
-    e: Trigger<Pointer<DragStart>>,
+    e: On<Pointer<DragStart>>,
     parts: Query<&Part>,
     scene: Res<SpatialScene>,
     builder: Option<ResMut<Builder>>,
@@ -384,7 +384,7 @@ pub(crate) fn start_part(
     {
         return;
     }
-    let Ok(p) = parts.get(e.target()) else { return };
+    let Ok(p) = parts.get(e.entity) else { return };
     let Some(name) = b.instance_for_component(&scene.spatial.parts[p.index].component) else {
         return;
     };
@@ -399,20 +399,20 @@ pub(crate) fn start_part(
     let hit = e
         .hit
         .position
-        .map(|p| b.frame().compute_matrix().inverse().transform_point3(p))
+        .map(|p| b.frame().to_matrix().inverse().transform_point3(p))
         .unwrap_or(start);
     b.drag = Some(DragState::new(&b, names, start, hit, None, None));
     b.panel_dirty = true;
 }
 pub(super) fn start_palette(
-    e: Trigger<Pointer<DragStart>>,
+    e: On<Pointer<DragStart>>,
     actions: Query<&BuildAction>,
     mut b: ResMut<Builder>,
 ) {
     if e.button != PointerButton::Primary {
         return;
     }
-    let Ok(BuildAction::Preview(index)) = actions.get(e.target()) else {
+    let Ok(BuildAction::Preview(index)) = actions.get(e.entity) else {
         return;
     };
     let Some(item) = b.filtered().get(*index).map(|p| (*p).clone()) else {
@@ -554,7 +554,7 @@ pub(super) fn update(
             for bounds in [&conflict.first, &conflict.second] {
                 let min = Vec3::from_array(bounds.min_m);
                 let max = Vec3::from_array(bounds.max_m);
-                gizmos.cuboid(
+                gizmos.cube(
                     Transform::from_translation((min + max) * 0.5).with_scale(max - min),
                     Color::srgb(1., 0.2, 0.18),
                 );
@@ -562,7 +562,7 @@ pub(super) fn update(
         }
     }
     if drag.item.is_some() {
-        gizmos.cuboid(
+        gizmos.cube(
             Transform::from_translation(point(drag.target))
                 .with_scale(Vec3::splat(grid.spacing_m * 2.)),
             if allowed {
@@ -643,7 +643,7 @@ fn poll_drop(b: &mut Builder, scene: &SpatialScene, drag: &mut DragState) -> Opt
     None
 }
 
-pub(super) fn end_drag(e: Trigger<Pointer<DragEnd>>, mut b: ResMut<Builder>) {
+pub(super) fn end_drag(e: On<Pointer<DragEnd>>, mut b: ResMut<Builder>) {
     if e.button == PointerButton::Primary {
         if let Some(d) = b.drag.as_mut() {
             d.released = true;
@@ -1145,7 +1145,7 @@ mod tests {
                 backend::HitData,
                 pointer::{Location, PointerId},
             };
-            use bevy::render::camera::{ManualTextureViewHandle, NormalizedRenderTarget};
+            use bevy::camera::{ManualTextureViewHandle, NormalizedRenderTarget};
             b.selected = BTreeSet::from(["a".into(), "assembly".into()]);
             let index = s
                 .spatial
@@ -1163,11 +1163,10 @@ mod tests {
                 target: NormalizedRenderTarget::TextureView(ManualTextureViewHandle(0)),
                 position: Vec2::ZERO,
             };
-            app.world_mut().trigger_targets(
+            app.world_mut().trigger(
                 Pointer::new(
                     PointerId::Mouse,
                     location.clone(),
-                    entity,
                     DragStart {
                         button: PointerButton::Primary,
                         hit: HitData::new(
@@ -1177,8 +1176,8 @@ mod tests {
                             None,
                         ),
                     },
+                    entity,
                 ),
-                entity,
             );
             assert_eq!(
                 app.world()
@@ -1189,17 +1188,16 @@ mod tests {
                     .names,
                 vec!["a", "assembly"]
             );
-            app.world_mut().trigger_targets(
+            app.world_mut().trigger(
                 Pointer::new(
                     PointerId::Mouse,
                     location,
-                    entity,
                     DragEnd {
                         button: PointerButton::Primary,
                         distance: Vec2::X * 10.,
                     },
+                    entity,
                 ),
-                entity,
             );
             assert!(
                 app.world()

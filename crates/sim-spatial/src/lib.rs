@@ -32,7 +32,7 @@ use bevy::{
     input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},
     picking::mesh_picking::{MeshPickingCamera, MeshPickingSettings},
     prelude::*,
-    render::camera::Viewport,
+    camera::Viewport,
     winit::{UpdateMode, WinitSettings},
 };
 pub use builder::{Builder, BuilderPlugin};
@@ -324,6 +324,9 @@ impl Plugin for SpatialViewerPlugin {
             .init_resource::<physics_view::Labels>()
             .init_resource::<view::PartHover>()
             .add_systems(Startup, (setup_scene, setup_ui, rest::wake_on_request))
+            .add_systems(PostUpdate, view::clamp_scroll_positions.after(bevy::ui::UiSystems::Layout))
+            .init_resource::<rest::Occlusion>()
+            .add_systems(PreUpdate, rest::track_occlusion)
             .add_systems(
                 Update,
                 (
@@ -362,7 +365,7 @@ pub fn run_builder(scene: SpatialScene, builder: builder::Builder, api: sim_api:
         .insert_resource(builder)
         .insert_resource(scene)
         .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(AmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
+        .insert_resource(GlobalAmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
         .insert_resource(WinitSettings {
             focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
             unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
@@ -370,7 +373,7 @@ pub fn run_builder(scene: SpatialScene, builder: builder::Builder, api: sim_api:
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Systems — Physical assembly (build)".into(),
-                resolution: (1500.0_f32, 940.0_f32).into(),
+                resolution: (1500_u32, 940_u32).into(),
                 resize_constraints: bevy::window::WindowResizeConstraints { min_width: 980.0, min_height: 720.0, ..default() },
                 ..default()
             }),
@@ -389,7 +392,7 @@ pub fn run_lessons(scene: SpatialScene, builder: builder::Builder, learn: lesson
         .insert_resource(scene)
         .insert_resource(learn)
         .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(AmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
+        .insert_resource(GlobalAmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
         .insert_resource(WinitSettings {
             focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
             unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
@@ -397,7 +400,7 @@ pub fn run_lessons(scene: SpatialScene, builder: builder::Builder, learn: lesson
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Systems — Lessons".into(),
-                resolution: (1560.0_f32, 980.0_f32).into(),
+                resolution: (1560_u32, 980_u32).into(),
                 resize_constraints: bevy::window::WindowResizeConstraints { min_width: 1100.0, min_height: 720.0, ..default() },
                 ..default()
             }),
@@ -434,7 +437,7 @@ pub fn run_with_api(
     }
     app.insert_resource(scene)
         .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(AmbientLight {
+        .insert_resource(GlobalAmbientLight {
             color: Color::srgb(0.85, 0.90, 1.0),
             brightness: 420.0,
             affects_lightmapped_meshes: true,
@@ -449,9 +452,9 @@ pub fn run_with_api(
             primary_window: Some(Window {
                 title: "Systems — Physical assembly".into(),
                 resolution: if compact {
-                    (880.0_f32, 850.0_f32).into()
+                    (880_u32, 850_u32).into()
                 } else {
-                    (1440.0_f32, 900.0_f32).into()
+                    (1440_u32, 900_u32).into()
                 },
                 resize_constraints: bevy::window::WindowResizeConstraints {
                     min_width: 780.0,
@@ -543,13 +546,12 @@ fn setup_scene(
     for right in [false, true] {
         commands.spawn((
             view::SplitLabel(right),
-            Node { position_type: PositionType::Absolute, padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), ..default() },
             BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.8)),
-            BorderRadius::all(Val::Px(4.)),
             Visibility::Hidden,
             GlobalZIndex(23),
             Pickable::IGNORE,
-            children![(Text::new(""), TextFont { font_size: 12., ..default() }, TextColor(if right { Color::srgb(0.72, 0.58, 1.0) } else { ACCENT }), view::ViewCaption, Pickable::IGNORE)],
+            children![(Text::new(""), TextFont { font_size: FontSize::Px(12.), ..default() }, TextColor(if right { Color::srgb(0.72, 0.58, 1.0) } else { ACCENT }), view::ViewCaption, Pickable::IGNORE)],
         ));
     }
     // Picture-in-picture close-up: drawn after the main view, before the UI.
@@ -563,13 +565,12 @@ fn setup_scene(
     ));
     commands.spawn((
         view::InsetFrame,
-        Node { position_type: PositionType::Absolute, border: UiRect::all(Val::Px(2.)), justify_content: JustifyContent::FlexStart, align_items: AlignItems::FlexStart, ..default() },
-        BorderColor(ACCENT),
-        BorderRadius::all(Val::Px(4.)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, border: UiRect::all(Val::Px(2.)), justify_content: JustifyContent::FlexStart, align_items: AlignItems::FlexStart, ..default() },
+        BorderColor::all(ACCENT),
         Visibility::Hidden,
         GlobalZIndex(22),
         Pickable::IGNORE,
-        children![(Text::new(""), TextFont { font_size: 11., ..default() }, TextColor(ACCENT), BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.8)), Node { padding: UiRect::axes(Val::Px(6.), Val::Px(2.)), ..default() }, view::ViewCaption, Pickable::IGNORE)],
+        children![(Text::new(""), TextFont { font_size: FontSize::Px(11.), ..default() }, TextColor(ACCENT), BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.8)), Node { padding: UiRect::axes(Val::Px(6.), Val::Px(2.)), ..default() }, view::ViewCaption, Pickable::IGNORE)],
     ));
     commands.spawn((
         Camera2d,
@@ -583,7 +584,7 @@ fn setup_scene(
     commands.spawn((
         DirectionalLight {
             illuminance: 5500.0,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             ..default()
         },
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.95, -0.7, 0.0)),
@@ -591,7 +592,7 @@ fn setup_scene(
     commands.spawn((
         DirectionalLight {
             illuminance: 2000.0,
-            shadows_enabled: false,
+            shadow_maps_enabled: false,
             ..default()
         },
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.4, 2.4, 0.0)),
@@ -657,7 +658,7 @@ pub(crate) fn spawn_parts(
 }
 
 fn pick_part(
-    click: Trigger<Pointer<Click>>,
+    click: On<Pointer<Click>>,
     parts: Query<&Part>,
     mut scene: ResMut<SpatialScene>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
@@ -667,7 +668,7 @@ fn pick_part(
     if click.button != bevy::picking::pointer::PointerButton::Primary {
         return;
     }
-    if let Ok(part) = parts.get(click.target()) {
+    if let Ok(part) = parts.get(click.entity) {
         let id = scene.spatial.parts[part.index].component.clone();
         if let Some(mut learn) = learn.filter(|l| l.active) {
             learn.pick(&mut scene, &id);
@@ -706,25 +707,24 @@ fn text(value: impl Into<String>, size: f32, color: Color) -> impl Bundle {
     (
         Text::new(value),
         TextFont {
-            font_size: size,
+            font_size: FontSize::Px(size),
             ..default()
         },
         TextColor(color),
-        TextLayout::new_with_linebreak(bevy::text::LineBreak::WordOrCharacter),
+        TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter),
     )
 }
 fn action_button(label: &str, action: Action) -> impl Bundle {
     (
         Button,
         action,
-        Node {
+        Node { border_radius: BorderRadius::all(Val::Px(5.0)),
             padding: UiRect::axes(Val::Px(12.0), Val::Px(9.0)),
             flex_shrink: 0.0,
             border: UiRect::all(Val::Px(1.0)),
             ..default()
         },
-        BorderColor(Color::srgb(0.21, 0.27, 0.33)),
-        BorderRadius::all(Val::Px(5.0)),
+        BorderColor::all(Color::srgb(0.21, 0.27, 0.33)),
         BackgroundColor(Color::srgb(0.115, 0.15, 0.19)),
         children![(text(label, 14.0, INK), ActionLabel)],
     )
@@ -1035,7 +1035,7 @@ fn camera_viewport(
         let (viewport, sub) = if view.visible.width() < 1.0 || view.visible.height() < 1.0 {
             (Viewport { physical_position: UVec2::ZERO, physical_size: UVec2::ONE, ..default() }, None)
         } else {
-            let sub = bevy::render::camera::SubCameraView {
+            let sub = bevy::camera::SubCameraView {
                 full_size: view.full.size().max(Vec2::ONE).as_uvec2(),
                 offset: view.visible.min - view.full.min,
                 size: view.visible.size().max(Vec2::ONE).as_uvec2(),
@@ -1072,8 +1072,8 @@ fn orbit(
     time: Res<Time>,
     buttons: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
-    mut motion: EventReader<MouseMotion>,
-    mut wheel: EventReader<MouseWheel>,
+    mut motion: MessageReader<MouseMotion>,
+    mut wheel: MessageReader<MouseWheel>,
     scene: Res<SpatialScene>,
     window: Single<&Window>,
     camera: Single<(&mut Transform, &mut Orbit)>,
@@ -1162,7 +1162,7 @@ fn update_parts(
         } else {
             Visibility::Inherited
         };
-        if let Some(material) = materials.get_mut(&handle.0) {
+        if let Some(mut material) = materials.get_mut(&handle.0) {
             let thermal = animation::part_color(&scene, part.index);
             let selected = scene.details.components.contains(&p.component);
             let [r, g, b] = thermal.unwrap_or(p.color_srgb);
@@ -1206,7 +1206,7 @@ fn update_parts(
 
 fn scroll_inspector(
     scene: Res<SpatialScene>,
-    mut wheel: EventReader<MouseWheel>,
+    mut wheel: MessageReader<MouseWheel>,
     window: Single<&Window>,
     mut panel: Single<&mut ScrollPosition, With<InspectorScroll>>,
 ) {
@@ -1219,7 +1219,7 @@ fn scroll_inspector(
     if window.cursor_position().is_some_and(|p| {
         p.x >= window.width() - scene.right() && p.y > TOP && p.y < window.height() - BOTTOM
     }) {
-        panel.offset_y = (panel.offset_y - delta).max(0.0);
+        panel.y = (panel.y - delta).max(0.0);
     }
 }
 
@@ -1408,7 +1408,7 @@ mod tests {
         backend::HitData,
         pointer::{Location, PointerButton, PointerId},
     };
-    use bevy::render::camera::RenderTarget;
+    use bevy::camera::RenderTarget;
 
     pub(super) fn fixture() -> SpatialScene {
         let base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -1514,14 +1514,15 @@ mod tests {
                     .unwrap(),
                 position: Vec2::ZERO,
             },
-            part,
             Click {
                 button: PointerButton::Primary,
                 hit: HitData::new(camera, 0.1, None, None),
                 duration: std::time::Duration::from_millis(50),
+                count: 1,
             },
+            part,
         );
-        app.world_mut().trigger_targets(click, part);
+        app.world_mut().trigger(click);
         app.update();
         assert_eq!(
             app.world()

@@ -107,12 +107,12 @@ pub fn run_place(dir: PathBuf) -> Result<(), String> {
     let (info, mesh) = load_place(&dir)?;
     App::new()
         .insert_resource(ClearColor(Color::srgb(0.07, 0.08, 0.1)))
-        .insert_resource(AmbientLight { color: Color::WHITE, brightness: 900.0, affects_lightmapped_meshes: true })
+        .insert_resource(GlobalAmbientLight { color: Color::WHITE, brightness: 900.0, affects_lightmapped_meshes: true })
         .insert_resource(WinitSettings { focused_mode: UpdateMode::Continuous, unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(100)) })
         .insert_resource(info)
         .insert_resource(MeshSource(Some(mesh)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window { title: format!("Place walkthrough — {}", dir.display()), resolution: (1440.0_f32, 900.0_f32).into(), ..default() }),
+            primary_window: Some(Window { title: format!("Place walkthrough — {}", dir.display()), resolution: (1440_u32, 900_u32).into(), ..default() }),
             ..default()
         }))
         .add_systems(Startup, setup)
@@ -129,7 +129,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials
         let material = materials.add(StandardMaterial { base_color: Color::WHITE, perceptual_roughness: 0.95, double_sided: true, cull_mode: None, ..default() });
         commands.spawn((Mesh3d(meshes.add(mesh)), MeshMaterial3d(material)));
     }
-    commands.spawn((DirectionalLight { illuminance: 2500.0, shadows_enabled: false, ..default() }, Transform::from_xyz(1.0, 3.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y)));
+    commands.spawn((DirectionalLight { illuminance: 2500.0, shadow_maps_enabled: false, ..default() }, Transform::from_xyz(1.0, 3.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y)));
     let dot = meshes.add(Sphere::new(0.005));
     let red = materials.add(StandardMaterial { base_color: Color::srgb(0.95, 0.15, 0.2), unlit: true, ..default() });
     let blue = materials.add(StandardMaterial { base_color: Color::srgb(0.2, 0.4, 0.95), unlit: true, ..default() });
@@ -145,14 +145,14 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials
     commands.spawn((Camera3d::default(), bevy::core_pipeline::tonemapping::Tonemapping::None, Projection::Perspective(PerspectiveProjection { fov: 75f32.to_radians(), near: 0.01, ..default() }), Transform::from_translation(info.start).looking_to(info.look, Vec3::Y), Fly { yaw: 0.0, pitch: -0.25, speed: 0.8 }));
     commands.spawn((
         Text::new(format!("{}\nW/A/S/D move | Q/E down/up | Shift faster | drag to look | wheel: speed | 1-9: stations | P: photo markers | H: help", info.description)),
-        TextFont { font_size: 14.0, ..default() },
+        TextFont { font_size: FontSize::Px(14.0), ..default() },
         TextColor(Color::srgb(0.9, 0.92, 0.95)),
         Node { position_type: PositionType::Absolute, left: Val::Px(12.0), top: Val::Px(10.0), ..default() },
         Help,
     ));
 }
 
-fn fly(time: Res<Time>, keys: Res<ButtonInput<KeyCode>>, buttons: Res<ButtonInput<MouseButton>>, mut motion: EventReader<MouseMotion>, mut wheel: EventReader<MouseWheel>, info: Res<PlaceInfo>, mut q: Query<(&mut Transform, &mut Fly)>) {
+fn fly(time: Res<Time>, keys: Res<ButtonInput<KeyCode>>, buttons: Res<ButtonInput<MouseButton>>, mut motion: MessageReader<MouseMotion>, mut wheel: MessageReader<MouseWheel>, info: Res<PlaceInfo>, mut q: Query<(&mut Transform, &mut Fly)>) {
     let Ok((mut t, mut fly)) = q.single_mut() else { return };
     if buttons.pressed(MouseButton::Right) || buttons.pressed(MouseButton::Left) {
         for m in motion.read() {

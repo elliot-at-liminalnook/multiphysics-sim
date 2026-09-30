@@ -1566,6 +1566,12 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 
 ## 3. External UI that remains
 
+> **Superseded direction (user decision, 2026-09-30).** RoboCAD and the
+> browser's calibration and hardware pages are no longer planned to stay
+> outside the native viewer. Both move to Rust with exact feature parity, as set
+> out in `docs/architecture/native-viewer.md` §8–§9. The notes below describe
+> today's state until those epics land.
+
 - **RoboCAD (Python/OCCT/Qt) stays** for geometry authoring: sketching,
   booleans, direct edits, print splitting, and physical property editing on
   B-reps. Rewriting OCCT in Rust is not planned. For now, geometry edits

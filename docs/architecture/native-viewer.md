@@ -1094,6 +1094,50 @@ started before the `App` (tests, `--validate-only`, headless) and
 - One selection model, and one annotations and discussions service. Every mode
   uses them.
 
+### 8. Hardware front end in the native viewer
+
+*Decided 2026-09-30.* The browser's calibration and hardware pages
+(`web/viewer/calibration-ui.mjs`, `hardware-sync.mjs`,
+`calibration-mirror.mjs`) move into a `sim-spatial` panel with exact feature
+parity.
+
+- **The hardware layer doesn't move.** It is already Rust
+  (`serve_actuator_calibration.rs`: serial bus, watchdog, playback lease,
+  encoder policy). The panel is a new front end over it, through a shared
+  client, not a second implementation.
+- **Safety stays underneath the UI.** The FPGA supervisor, taught travel
+  windows, watchdogs and STOP are unchanged and hold whatever the UI does. STOP
+  must be reachable from every screen of the panel.
+- **Agents never drive hardware.** They build and verify by reading, and each
+  hardware epic ends with a hardware checklist the user runs with the operator
+  present (jog, teach, STOP, watchdog trip, lease loss). The browser pages stay
+  until the user has run that checklist.
+
+### 9. CAD in Rust
+
+*Decided 2026-09-30.* RoboCAD (Python/OCCT/Qt, about 27,700 lines) moves to
+Rust with exact feature parity, in phases. RoboCAD is the reference throughout.
+
+1. **A CAD mode in `sim-spatial`.** It covers RoboCAD's workflows (sketch,
+   features, direct edits, physical properties, joints, print splitting,
+   export) as a client of RoboCAD's REST service, so the Python kernel still
+   does the work. Every edit goes through RoboCAD's command layer, so undo and
+   provenance stay intact.
+2. **A parity harness.** It runs the same operations through both paths on a
+   corpus of the user's real models and compares the results: mass properties,
+   joints, exports, derived physics, and B-rep topology with tessellation
+   within stated tolerances. Bit-identical output isn't the goal; tessellation
+   and floating-point order differ.
+3. **Derivations ported to Rust:** physical model, joint inference, flex
+   analysis, printing, belts. One at a time, each gated by the harness.
+4. **The OCCT kernel called from Rust** through bindings (not a pure-Rust
+   kernel rewrite), module by module under the harness.
+5. **The Python path is retired** only when the harness passes on the whole
+   corpus and the user agrees.
+
+The harness runs in verification passes. The `.rcad` format, undo, provenance
+and the REST surface stay compatible throughout.
+
 ## Bevy features to use
 
 These are verified in the official 0.17, 0.18 and 0.19 release notes. Before
@@ -1153,7 +1197,16 @@ The Director re-ranks with evidence, but this is the default:
 5. **UI kit.** *Done 2026-09-30, pending verification (batch ui-kit; see
    [UI kit](#ui-kit-2026-09-30)).* Build it on Bevy's widgets, then move
    headers, inspectors, tabs, docks and charts onto it.
-6. **Fold in `sim-app`.** Bring its scenes in as modes, or retire them.
+6. **Hardware front end** (§8). The calibration and hardware panel in
+   `sim-spatial`, over the existing Rust calibration layer, ending with the
+   user's hardware checklist.
+7. **CAD mode** (§9 phase 1). RoboCAD's workflows in `sim-spatial` over its
+   REST service. This may take several epics.
+8. **Parity harness** (§9 phase 2).
+9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
+   each.
+10. **OCCT from Rust** (§9 phase 4). Several epics, one kernel area each.
+11. **Fold in `sim-app`.** Bring its scenes in as modes, or retire them.
 
 After that, feature work resumes on the target shape. Split large files while
 they're being touched.
@@ -1162,5 +1215,7 @@ they're being touched.
 
 - Whether Bevy Remote Protocol should back the REST surface. Adopt it only if it
   removes code and keeps `sim_api`'s guarantees.
-- The CAD (Python/OCCT) boundary: which CAD controls move into the native
-  viewer, behind a clean service boundary.
+- ~~The CAD (Python/OCCT) boundary~~: resolved 2026-09-30. CAD moves to Rust
+  (§9).
+- Which Rust OCCT bindings to use or extend (for example `opencascade-sys`
+  through `cxx`), and how to keep the C++ build out of the fast path.

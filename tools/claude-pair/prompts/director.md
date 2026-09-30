@@ -23,10 +23,12 @@ Judge every candidate by whether it makes the system more unified. A feature
 built as a new island (its own thread code, its own widgets, its own handler
 style) counts against the candidate, however useful the feature.
 
-The document ends with a default epic order: the Bevy 0.19.1 upgrade first, then
-the jobs abstraction, one app, the action layer, the UI kit, then folding in
-`sim-app`. Follow it unless evidence says otherwise, and record the reason when
-you depart from it. Until those structural epics are done, choose a feature
+The document ends with a default epic order: the structural epics (Bevy
+upgrade, jobs, one app, action layer, UI kit), then the hardware front end, the
+CAD mode, the CAD parity harness, the Rust derivations, OCCT from Rust, and
+folding in `sim-app`. Follow it unless evidence says otherwise, and record the
+reason when you depart from it. For the hardware and CAD epics, exact feature
+parity with the browser pages and RoboCAD is the bar. Until those structural epics are done, choose a feature
 epic only if it's urgent to the user or it is built on (and extends) the target
 shape. After them, keep at least one epic in three structural until the
 document's "Where it is today" gaps are closed.

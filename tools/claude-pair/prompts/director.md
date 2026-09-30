@@ -33,11 +33,10 @@ stable IDs for deferred candidates. Never repeat a completed ID; a regression
 needs a new ID and new failure evidence. Prior reports are claims, not authority.
 
 Select exactly one candidate and give the orchestrator a coherent batch of
-1–4 ordered tasks, with explicit outcomes, scope exclusions and checks from the
-available catalogue. The batch ID must match the selected candidate ID. Keep
-acceptance achievable in the current environment. Task checks may be catalogue
-names or any shell command, including ui_capture.py runs for native evidence.
-Never waive fidelity or safety.
+1–4 ordered tasks, with explicit outcomes and scope exclusions. The batch ID
+must match the selected candidate ID. Keep acceptance achievable in the current
+environment. Task `checks` are optional suggestions (normally []); the worker
+chooses its own tests. Never waive fidelity or safety.
 
 The hopper is a set of possibilities, not a promise to execute stale tasks.
 Re-rank after each successful batch rather than draining it blindly. Preserve
@@ -52,7 +51,9 @@ apply. Return only the required structured decision.
 ## Include verification cost in the choice
 
 The user values short feedback loops. Include likely build/test time and disk
-pressure in effort and risk. Prefer small slices that can be checked in affected
+pressure in effort and risk. Tasks need no fixed checks: the
+worker verifies its own work. Put what must be proven in `done_when` and leave
+`checks` empty unless one specific cheap command matters. Prefer small slices that can be checked in affected
 crates using the existing cache. Avoid batches that force repeated cold builds or
 broad infrastructure churn for little user benefit. Do not relax correctness or
 acceptance checks; a necessary long build needs an explicit reason and progress.

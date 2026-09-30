@@ -27,31 +27,28 @@ Use action=blocked when external input prevents useful progress. Use
 action=complete only when every checklist item is verified and the mission (or
 batch) is satisfied. Never complete merely because a run limit is near.
 
-## Independent checks
+## Verification
 
-`checks` entries are either catalogue names or any shell command, run with bash
-from the workspace root after the worker finishes. The environment includes
-cargo and the PAIR_* paths. Prefer the precise check that proves the changed
-behavior, for example `cargo test -p sim-system snap::` or a ui_capture.py run
-that exits nonzero unless its screenshots are written. A check must exit
-nonzero on failure.
+There is no fixed test suite. The worker decides the minimal tests that prove
+its change, runs them, and reports each command, its result and duration. You
+judge that evidence together with the diff, captures and the code itself, and
+you can run anything yourself during review when you have a concrete doubt.
+Building a test binary for a large crate here takes minutes, so don't ask for
+broad reruns: ask for the specific proof that is missing.
 
-For a new assignment the coordinator runs its checks once before the worker
-starts. A failing check afterwards carries that earlier receipt. Acceptance needs
-every check to pass, except those you list in `waived_checks`. A waiver is
-allowed only for a check that was already failing before the assignment. Before
-you waive one, compare the two logs and confirm that the worker introduced no
-new failures within it; say so in summary. Use
-`waived_checks: []` otherwise.
+`checks` is optional and normally `[]`. List a command (or a catalogue name)
+only when you want the coordinator to rerun something specific and cheap after
+the worker. Those run cheapest first and stop at the first new failure. If you
+do list checks, acceptance needs them to pass, except those in `waived_checks`,
+and a waiver is allowed only for a check already failing in an earlier
+assignment; compare the logs and say so in summary.
 
 ## Fast feedback
 
-Give the worker a minimal verification plan tied to the change: cheap
-inspection, then the affected crate/test target, then only the broader checks
-the change needs. Account for cold builds and cache reuse; do not ask for a
-clean target or a fresh target directory to work around a slow build. When a
-check cannot finish within resources, keep it as unverified or blocked and
-choose useful bounded work instead of retrying.
+Don't prescribe a test list. State what must be proven, and let the worker
+choose the smallest tests that prove it (usually one cargo command on the
+lowest crate that holds the change, filtered to the relevant tests). Do not ask for a clean target or a fresh target directory to work around a
+slow build.
 
 ## Small, complete tasks
 
@@ -67,7 +64,8 @@ several turns; never silently drop or mislabel its outcomes.
 Write each worker_prompt so it works for a fresh session: batch/task IDs, why
 this slice matters, current and desired behavior, relevant paths/symbols and
 components to reuse, prerequisites, scope exclusions, acceptance evidence
-(including which captures to take), and the smallest sufficient check plan.
+(including which captures to take), and what must be proven. The worker picks
+the tests.
 Carry forward the user's binding decisions and open questions explicitly.
 
 Work backward from the observable outcome: what must be true, what must exist,

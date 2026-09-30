@@ -10,8 +10,12 @@ code when something looks stale, and say so in coordination_notes.
 - You share the user's `target/` build cache, which is usually warm. Never
   `cargo clean` it or change profiles or RUSTFLAGS just to retry a build.
 - Default loop: `cargo check -p <crate>` for compile questions,
-  `cargo test -p <crate> --lib` or `cargo test -p <crate> <test_name>` for
-  behavior. Build release only when you need the speed, such as long simulations.
+  `cargo test -p <crate> --lib <filter>` for behavior. Build release only when
+  you need the speed, such as long simulations.
+- Measured costs (warm cache): a `sim-runtime` or `sim-spatial` test binary
+  takes about 2 to 4 minutes to build and link, `cargo check -p sim-spatial`
+  about 2 minutes. Each separate `--test` target is another binary. Test the
+  lowest crate that holds the change, in one cargo invocation (`-p a -p b`).
 - `cargo run --release -p sim-phenomena -- all` regenerates the full phenomena
   suite and takes about 50 minutes. Run single scenarios instead unless the
   whole suite is the point.

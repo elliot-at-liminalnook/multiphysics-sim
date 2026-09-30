@@ -168,6 +168,9 @@ def view(root):
     for receipt in state.get("receipts", []):
         item = dict(receipt)
         for name in ("stdout", "stderr"):
+            if not receipt.get(name):
+                item[name + "_text"] = ""
+                continue
             p = Path(receipt[name]).resolve()
             item[name + "_text"] = tail(p, 10000) if p.is_relative_to(root) else ""
         checks.append(item)

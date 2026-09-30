@@ -175,9 +175,9 @@ class ControlTests(unittest.TestCase):
             pair.guard_plan(review, state, runner.config["checks"])
             self.assertFalse((runner.root / "baseline").exists(), "no second checkout")
 
-    def test_new_assignment_runs_prechecks_before_the_worker(self):
+    def test_new_assignment_runs_prechecks_before_the_worker_when_enabled(self):
         with tempfile.TemporaryDirectory() as tmp:
-            runner = self.runner(tmp)
+            runner = self.runner(tmp, precheck=True)
             order = []
 
             def fake_call(runner, role, prompt, scope=None):
@@ -193,6 +193,67 @@ class ControlTests(unittest.TestCase):
                 pair.Runner(runner.root).run()
             self.assertEqual(order[:3], ["orchestrator", "worker", "prechecks:true"])
             self.assertTrue(list((runner.root / "logs").glob("check-0000-true-before.stdout")))
+
+    def test_history_marks_preexisting_failures_without_rerunning_anything(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = self.runner(tmp)
+            old, new = "test -f never-existed.txt", "! grep -q bad tracked.txt"
+            p = fixtures.plan()
+            p["checks"] = [old, new]
+            runner.state.update(plan=p, rounds=1, assignment=1)
+            runner.verify()  # assignment 1: the old check already fails
+            self.assertNotIn("before", next(r for r in runner.state["receipts"] if r["name"] == old))
+            runner.state.update(rounds=2, assignment=2)
+            (runner.repo / "tracked.txt").write_text("bad\n")
+            runner.verify()
+            receipts = {r["name"]: r for r in runner.state["receipts"]}
+            self.assertEqual(receipts[old]["before"]["assignment"], 1)
+            self.assertNotEqual(receipts[old]["before"]["exit_code"], 0)
+            self.assertNotIn("before", receipts[new], "skipped in assignment 1, so there is no earlier result to excuse it")
+            self.assertFalse(list((runner.root / "logs").glob("*-before.*")), "no pre-runs by default")
+
+    def test_checks_run_fastest_first_and_stop_at_the_first_new_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = self.runner(tmp)
+            slow, fast, broken = "sleep 0.3; echo slow", "echo fast", "false"
+            runner.state["check_history"] = {slow: {"seconds": 240}, fast: {"seconds": 1}, broken: {"seconds": 5}}
+            p = fixtures.plan()
+            p["checks"] = [slow, broken, fast]
+            runner.state.update(plan=p, rounds=1)
+            runner.verify()
+            receipts = {r["name"]: r for r in runner.state["receipts"]}
+            self.assertEqual([r["name"] for r in runner.state["receipts"]], [slow, broken, fast], "plan order kept")
+            self.assertEqual(receipts[fast]["exit_code"], 0)
+            self.assertNotEqual(receipts[broken]["exit_code"], 0)
+            self.assertTrue(receipts[slow]["skipped"], "the slow check is skipped after the new failure")
+            self.assertIsNone(receipts[slow]["exit_code"])
+            self.assertIsInstance(receipts[fast]["seconds"], float)
+            review = fixtures.plan(review="accept")
+            with self.assertRaises(ValueError):
+                pair.guard_plan(review, {"plan": p, "report": fixtures.REPORT, "receipts": runner.state["receipts"]}, {})
+
+    def test_without_requested_checks_the_worker_result_goes_straight_to_review(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = self.runner(tmp)
+            phases = []
+
+            def fake_call(runner_, role, prompt, scope=None):
+                phases.append(runner_.state["phase"])
+                runner_.state["calls"] += 1
+                if role == "worker":
+                    return copy.deepcopy(fixtures.REPORT)
+                p = fixtures.plan("complete" if runner_.state.get("report") else "work",
+                                  "accept" if runner_.state.get("report") else "none")
+                p["checks"] = []
+                if runner_.state.get("report"):
+                    p["checklist"][0].update(status="verified", evidence="worker ran cargo test -p x")
+                return p
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            state = pair.read_json(runner.root / "state.json")
+            self.assertEqual(state["status"], "complete")
+            self.assertEqual(phases, ["orchestrator", "worker", "orchestrator"])
+            self.assertFalse(list((runner.root / "logs").glob("check-*")), "no coordinator checks ran")
 
     def test_baseline_is_pinned_and_evidence_summarizes_changes(self):
         with tempfile.TemporaryDirectory() as tmp:

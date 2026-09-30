@@ -131,6 +131,9 @@ def director_prompt(runner):
               "Do not dispatch a task already completed, and do not invent success or GUI evidence.\n")
     prompt += ("\nIndependent checks may be names from this catalogue or any shell command "
                "(run from the workspace root):\n" + json.dumps(runner.config["checks"]))
+    timings = {n: h["seconds"] for n, h in s.get("check_history", {}).items() if h.get("seconds") is not None}
+    if timings:
+        prompt += "\nMeasured duration of each check's latest run, in seconds (recurring cost per worker turn):\n" + json.dumps(timings)
     prompt += "\nLong-term roadmap (historical evidence, inspect freshness):\n" + json.dumps(outer["roadmap"])
     prompt += "\nPrevious hopper (reconsider deferred items; they are not automatic promises):\n" + json.dumps(outer["hopper"])
     prompt += "\nCompleted batch IDs:\n" + json.dumps([b["id"] for b in outer["history"]])
@@ -196,8 +199,5 @@ def guard_contract(runner, plan):
     required = {item["id"] for item in batch_checklist(batch)}
     if not required.issubset({item["id"] for item in plan["checklist"]}):
         raise ValueError("Orchestrator omitted required batch tasks or outcomes")
-    required_checks = {check for task in batch["tasks"] for check in task["checks"]}
-    if plan["action"] == "complete":
-        passed = {r["name"] for r in runner.state.get("receipts", []) if check_passed(r, plan["waived_checks"])}
-        if not required_checks.issubset(passed):
-            raise ValueError("Completion requires all Director-requested independent checks")
+    # Task checks are suggestions for the worker, not a required suite: the worker
+    # verifies its own work and the orchestrator judges that evidence.

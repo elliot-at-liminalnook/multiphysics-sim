@@ -15,7 +15,7 @@ const STAGES = [
   { id: 'director', label: 'Choose batch', owner: 'Director', role: 'director' },
   { id: 'assign', label: 'Assign', owner: 'Orchestrator', role: 'orchestrator' },
   { id: 'worker', label: 'Implement', owner: 'Worker', role: 'worker' },
-  { id: 'verify', label: 'Check', owner: 'Coordinator', role: 'coordinator' },
+  { id: 'verify', label: 'Reruns', owner: 'If requested', role: 'coordinator' },
   { id: 'review', label: 'Review', owner: 'Orchestrator', role: 'orchestrator' },
 ];
 const STAGE_DONE = { assign: 'Wrote the assignment', review: 'Reviewed the result', worker: 'Implemented', director: 'Chose the next batch' };
@@ -250,12 +250,13 @@ function renderLive() {
   if (isChecks) {
     const live = data.workflow.nodes.find(n => n.id === 'verify')?.live_output || [];
     if (liveTab === 'prompt') {
-      const names = [...new Set(['diff', ...(data.state.plan?.checks || [])])];
-      body = `<div class="section-label">Checks for this assignment</div><ul class="clean">${names.map(n => `<li class="mono">${esc(n)}</li>`).join('')}</ul><p class="prose faint" style="margin-top:12px">The coordinator runs these before the worker starts and again after it finishes. Acceptance needs each to pass, or to have been failing already before the assignment.</p>`;
+      const names = [...new Set(data.state.plan?.checks || [])];
+      body = (names.length ? `<div class="section-label">Reruns the orchestrator requested</div><ul class="clean">${names.map(n => `<li class="mono">${esc(n)}</li>`).join('')}</ul>` : '<div class="empty">No coordinator reruns requested.</div>') + `<p class="prose faint" style="margin-top:12px">There is no fixed test suite. The worker chooses and runs the minimal tests that prove its change; the orchestrator reviews that evidence and can request a specific cheap rerun here.</p>`;
     } else if (live.length) {
       body = live.map(c => `<div class="ev check"><span class="ev-icon pulse">…</span><div class="ev-text mono"><b>${esc(c.name)}</b> running${pre(c.text.slice(-4000) || 'No output yet.')}</div></div>`).join('');
     } else if (data.checks.length) {
-      body = data.checks.map(c => `<div class="ev check ${c.exit_code ? 'fail' : 'pass'}"><span class="ev-icon">${c.exit_code ? '✕' : '✓'}</span><div class="ev-text mono"><b>${esc(c.name)}</b> · exit ${c.exit_code}${pre((c.stderr_text || '') + (c.stdout_text || '') || 'No output')}</div></div>`).join('');
+      body = data.checks.map(c => c.skipped ? `<div class="ev check"><span class="ev-icon">–</span><div class="ev-text mono"><b>${esc(c.name)}</b> · skipped after an earlier failure</div></div>`
+        : `<div class="ev check ${c.exit_code ? 'fail' : 'pass'}"><span class="ev-icon">${c.exit_code ? '✕' : '✓'}</span><div class="ev-text mono"><b>${esc(c.name)}</b> · exit ${c.exit_code} · ${dur(c.seconds)}${pre((c.stderr_text || '') + (c.stdout_text || '') || 'No output')}</div></div>`).join('');
     } else body = '<div class="empty">No checks have run yet.</div>';
     foot.push('<span>Checks run locally in the project folder, independent of the agents.</span>');
   } else {
@@ -304,11 +305,14 @@ function renderChecklist() {
 function renderChecks() {
   const phase = data.state.phase, running = data.active && ['verify', 'precheck'].includes(phase);
   const waived = data.state.plan?.waived_checks || [];
-  const passed = data.checks.filter(c => !c.exit_code).length;
-  text('checks-count', running ? (phase === 'precheck' ? 'running before the worker…' : 'running…') : data.checks.length ? `${passed} of ${data.checks.length} passed` : '');
-  if (!data.checks.length) return html('checks', `<div class="empty">${running ? 'Checks are running. Results appear when they finish.' : 'No results yet.'}</div>`);
-  html('checks', data.checks.map((c, i) => {
-    let badge = '';
+  const passed = data.checks.filter(c => c.exit_code === 0).length;
+  text('checks-count', running ? 'reruns in progress…' : data.checks.length ? `${passed} of ${data.checks.length} reruns passed` : '');
+  const report = data.state.report || latest('worker')?.result;
+  const own = report?.checks?.length ? `<div class="section-label" style="margin-top:4px">Worker's verification</div><ul class="clean">${report.checks.map(c => `<li class="mono">${esc(c)}</li>`).join('')}</ul>` : '';
+  if (!data.checks.length) return html('checks', own || `<div class="empty">${running ? 'Requested checks are running.' : 'The worker verifies its own work with tests it chooses; its commands and results appear here.'}</div>`);
+  html('checks', own + '<div class="section-label">Coordinator reruns</div>' + data.checks.map((c, i) => {
+    let badge = c.seconds ? `<span class="faint" style="font-size:11px">${dur(c.seconds)}</span>` : '';
+    if (c.skipped) return `<button class="receipt" data-check="${i}"><span class="mark-skip">–</span><span class="cmd faint" title="${esc(c.name)}">${esc(c.name)}</span><span class="chip small">skipped</span></button>`;
     if (c.exit_code) badge = waived.includes(c.name) ? '<span class="chip small">waived</span>' : c.before ? (c.before.exit_code ? '<span class="chip small warn">pre-existing</span>' : '<span class="chip small bad">new failure</span>') : '<span class="chip small bad">failed</span>';
     return `<button class="receipt" data-check="${i}"><span class="${c.exit_code ? 'mark-bad' : 'mark-ok'}">${c.exit_code ? '✕' : '✓'}</span><span class="cmd" title="${esc(c.name)}">${esc(c.name)}</span>${badge}</button>`;
   }).join(''));
@@ -434,7 +438,7 @@ document.addEventListener('click', e => {
   const lt = e.target.closest('[data-live-tab]'); if (lt) { liveTab = lt.dataset.liveTab; rendered.feedInit = false; return render(); }
   const call = e.target.closest('[data-call]'); if (call) return openCall(call.dataset.call);
   const chk = e.target.closest('[data-check]');
-  if (chk) { const c = data.checks[Number(chk.dataset.check)]; return modal('Check · ' + c.name, `<div class="section-label">Command</div>${pre(c.command.join(' '))}<div class="section-label">Exit code ${c.exit_code}</div>${pre((c.stdout_text || '') + (c.stderr_text ? '\n' + c.stderr_text : '') || 'No output')}` + (c.before ? `<div class="section-label">Before the assignment · exit ${c.before.exit_code}</div><p class="prose faint">${c.before.exit_code ? 'This check was already failing before the worker started.' : 'This check passed before the worker started, so the failure is new.'}</p>` : '')); }
+  if (chk) { const c = data.checks[Number(chk.dataset.check)]; if (c.skipped) return modal('Check · ' + c.name, `<p class="prose">${esc(c.note)}</p>`); return modal('Check · ' + c.name, `<div class="section-label">Command</div>${pre(c.command.join(' '))}<div class="section-label">Exit code ${c.exit_code} · ${dur(c.seconds)}</div>${pre((c.stdout_text || '') + (c.stderr_text ? '\n' + c.stderr_text : '') || 'No output')}` + (c.before ? `<div class="section-label">Before the assignment · exit ${c.before.exit_code}</div><p class="prose faint">${c.before.exit_code ? 'This check was already failing before this assignment.' : 'This check passed before this assignment, so the failure is new.'}</p>` : '')); }
   const shot = e.target.closest('[data-shot]');
   if (shot) { const c = data.captures[Number(shot.dataset.shot)]; return modal(c.path, `<div class="lightbox"><img alt="${esc(c.path)}" src="${captureURL(c)}"></div><p class="faint" style="font-size:12px;text-align:center">${esc(new Date(c.at * 1000).toLocaleString())} · ${(c.bytes / 1024).toFixed(0)} KB</p>`); }
   const open = e.target.closest('[data-open]'); if (open) return modal('Worker prompt', pre(data.state.plan?.worker_prompt || ''));

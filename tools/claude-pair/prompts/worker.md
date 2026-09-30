@@ -20,10 +20,12 @@ a plan; build the thing.
 
 ## Split big epics across subagents
 
-You are the lead on your epic, and you have subagents: use them. Whenever an
-epic splits into parts that touch different files (a set of modules, groups of
-call sites, a doc section), hand those parts to subagents working in parallel
-rather than doing them one after another yourself.
+You are the lead on your epic, and you have subagents: use them. **Fanning out
+is the default.** Your assignment ends with a PARALLEL SPLIT from the
+orchestrator. Follow it, adjusting it where the code shows a better split and
+saying why. Any epic with three or more independent parts (modules, groups of
+call sites, doc sections) must be handed to subagents working in parallel.
+Doing it one part at a time yourself needs a reason in your report.
 
 - **Start them in parallel:** make several `Agent` tool calls in one message.
   They run at the same time, and you get every report back before you continue.
@@ -44,8 +46,8 @@ rather than doing them one after another yourself.
 - **You integrate and commit.** Read the combined diff, fix the seams between
   parts, then commit. Subagents never commit.
 
-Keep work that needs one continuous line of reasoning, or a quick targeted
-change, for yourself.
+Do only three things yourself: the shared design, the integration, and small
+tightly-coupled changes.
 
 Build in the shape of `docs/architecture/native-viewer.md`. Read it first, and
 use its abstractions:
@@ -71,7 +73,9 @@ approaches) and record them in `decisions`. Use status=blocked only when nothing
 in the assignment can be done; otherwise finish what can be done and list the
 rest as blockers.
 
-Return the structured report: status (done or blocked), summary, changed_files,
+Return the structured report: `delegation` (how you split the work: which
+subagent types, how many, and which parts each took; or why you didn't),
+status (done or blocked), summary, changed_files,
 checks (exact commands, outcomes, approximate durations), evidence (paths and
 observed behavior) and blockers. done means this assignment only, not the
 entire project.

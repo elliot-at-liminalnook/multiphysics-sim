@@ -13,12 +13,12 @@ import pair
 
 def plan(action="work", review="none"):
     return {"decisions": [], "coordination_notes": [], "action": action, "review": review, "summary": "Do one feature",
-            "worker_prompt": "Create proof.txt with the assigned exact content.",
+            "worker_prompt": "Create proof.txt with the assigned exact content.\n\nPARALLEL SPLIT: none (one small file).",
             "acceptance_criteria": ["Proof exists with exact contents"], "checks": ["diff"], "waived_checks": [],
             "checklist": [{"id": "one", "workflow": "One native workflow", "status": "pending", "evidence": ""}]}
 
 
-REPORT = {"decisions": [], "coordination_notes": [], "status": "done", "summary": "Created proof", "changed_files": ["proof.txt"],
+REPORT = {"decisions": [], "delegation": "", "coordination_notes": [], "status": "done", "summary": "Created proof", "changed_files": ["proof.txt"],
           "checks": [], "evidence": ["proof.txt"], "blockers": []}
 
 

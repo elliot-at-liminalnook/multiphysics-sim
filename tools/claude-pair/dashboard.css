@@ -418,3 +418,7 @@ details.ev.error .ev-icon { background: var(--bad-soft); color: var(--bad); }
 .diff { margin: 6px 0; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface-2); font: 11.5px/1.55 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow: auto; }
 .diff .del { color: var(--bad); background: color-mix(in srgb, var(--bad) 8%, transparent); display: inline-block; width: 100%; }
 .diff .add { color: var(--ok); background: color-mix(in srgb, var(--ok) 8%, transparent); display: inline-block; width: 100%; }
+
+/* Subagent actions, indented under the worker's own */
+.ev.sub, details.ev.sub { margin-left: 26px; padding-left: 10px; border-left: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.ev-who { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 5px; font: 600 11px/1.6 var(--mono); background: var(--accent-soft); color: var(--accent); max-width: 220px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }

@@ -127,7 +127,7 @@ class ControlTests(unittest.TestCase):
                 pair.Runner(runner.root).run()
             review_prompt = [p for r, p in prompts if r == "orchestrator"][1]
             self.assertIn("Your previous plan", review_prompt)
-            self.assertIn(fixtures.plan()["worker_prompt"], review_prompt)
+            self.assertIn("Create proof.txt with the assigned exact content.", review_prompt)
             self.assertIn("diffstat", review_prompt)
 
     def verify(self, runner, checks):
@@ -359,6 +359,23 @@ class UsageLimitTests(unittest.TestCase):
 
 
 class HandoffRuleTests(unittest.TestCase):
+    def test_a_new_assignment_without_a_parallel_split_goes_back(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp, max_rounds=1)
+            plans = iter([dict(fixtures.plan(), worker_prompt="Do the epic."), fixtures.plan()])
+            seen = []
+
+            def fake_call(runner_, role, prompt, scope=None):
+                seen.append((role, prompt))
+                runner_.state["calls"] += 1
+                if role == "worker":
+                    return copy.deepcopy(fixtures.REPORT)
+                return next(plans, fixtures.plan(review="accept"))
+            with patch.object(pair.Runner, "call", fake_call):
+                pair.Runner(runner.root).run()
+            self.assertIn("PARALLEL SPLIT", seen[1][1], "the rejection is sent back to the orchestrator")
+            self.assertEqual(seen[2][0], "worker")
+
     def test_a_done_report_with_blockers_for_later_work_can_be_accepted(self):
         report = dict(fixtures.REPORT, blockers=["T11.2 needs a decision about the stored controller hash"])
         state = {"plan": fixtures.plan(), "report": report, "receipts": [{"name": "diff", "exit_code": 0}]}
@@ -538,7 +555,7 @@ class VerificationPassTests(unittest.TestCase):
                     return copy.deepcopy(fixtures.REPORT)
                 p = fixtures.plan(review="accept" if runner_.state.get("report") else "none")
                 p["checks"] = []
-                p["worker_prompt"] = "Build the jobs module."
+                p["worker_prompt"] = "Build the jobs module.\n\nPARALLEL SPLIT: none (test)."
                 return p
             with patch.object(pair.Runner, "call", fake_call):
                 pair.Runner(runner.root).run()

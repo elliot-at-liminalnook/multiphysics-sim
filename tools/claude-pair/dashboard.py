@@ -68,6 +68,9 @@ def tool_details(name, args):
                 "lines": len(str(args.get("content") or "").splitlines())}
     if name == "Bash":
         return {"command": str(args.get("command") or "")[:4000], "description": args.get("description")}
+    if name in ("Agent", "Task"):
+        return {"subagent_type": args.get("subagent_type") or "general-purpose", "description": args.get("description"),
+                "prompt": clip_lines(args.get("prompt"), 80, 8000)}
     keep = {k: (v if isinstance(v, (int, float, bool)) else str(v)[:600]) for k, v in args.items() if k != "content"}
     return keep
 
@@ -98,18 +101,20 @@ def events(path):
         if not isinstance(event, dict):
             continue
         at = event_time(event)
+        parent = event.get("parent_tool_use_id")  # set on a subagent's own events
         if event.get("type") == "result":
             result = event
         elif event.get("type") == "assistant":
             for block in event.get("message", {}).get("content", []):
                 if block.get("type") == "text":
-                    activity.append({"kind": "message", "text": block.get("text", "")[:6000], "at": at})
+                    activity.append({"kind": "message", "text": block.get("text", "")[:6000], "at": at, "parent": parent})
                 elif block.get("type") == "tool_use":
                     args = block.get("input", {}) or {}
                     name = block.get("name", "Tool")
                     detail = args.get("file_path") or args.get("path") or args.get("command") or args.get("pattern") or args.get("description") or ""
                     item = {"kind": "tool", "text": name + (": " + str(detail)[:350] if detail else ""), "at": at,
-                            "id": block.get("id"), "name": name, "details": tool_details(name, args), "status": "running"}
+                            "id": block.get("id"), "name": name, "details": tool_details(name, args), "status": "running",
+                            "parent": parent}
                     tools[block.get("id")] = item
                     activity.append(item)
         elif event.get("type") == "user":
@@ -122,7 +127,15 @@ def events(path):
                                 output=output[-3000:] if item["name"] == "Bash" else clip_lines(output, 30, 3000))
         elif event.get("type") == "system" and event.get("subtype") == "init":
             activity.append({"kind": "session", "text": "Session started · " + event.get("model", "Claude"), "at": at})
-    return activity[-80:], result
+    return activity[-120:], result
+
+
+def subagents(activity):
+    """The Agent calls in a turn, with how far each has got."""
+    spawned = [a for a in activity if a.get("kind") == "tool" and a.get("name") in ("Agent", "Task")]
+    return [{"id": a["id"], "type": a["details"].get("subagent_type"), "description": a["details"].get("description"),
+             "status": a["status"], "at": a.get("at"), "ended_at": a.get("ended_at"), "nested": bool(a.get("parent")),
+             "actions": sum(1 for x in activity if x.get("parent") == a["id"])} for a in spawned]
 
 
 _git_cache = {}
@@ -201,7 +214,7 @@ def view(root):
         if isinstance(total, (int, float)):
             cost = max(0.0, total - session_totals.get(session, 0.0))
             session_totals[session] = total
-        records.append({"stage": workflow.call_stage(role, prompt_text), "cost_usd": cost,
+        records.append({"stage": workflow.call_stage(role, prompt_text), "cost_usd": cost, "subagents": subagents(activity),
                         "fast": (result or {}).get("fast_mode_state") == "on",
                         "session_id": session, "num_turns": (result or {}).get("num_turns"),
                         "elapsed_seconds": seconds, "timing_complete": bool(result), "live": live,

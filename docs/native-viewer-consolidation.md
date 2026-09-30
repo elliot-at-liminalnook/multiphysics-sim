@@ -529,8 +529,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
       REST: rtf 0.65, and by `system_ui run:speed:4`: 0.63, both reported
       `compute_limited: true`. ×1 later in the same run (t = 13.2 s) was also
       compute-limited at 0.59, so ×4 was held back by compute, not by pacing
-      (the per-step cost of this model grows as the run continues). ×4 was
-      **not** reached on this machine. `speed-slow.png` shows the header
+      (the per-step cost of this model grew as the run continued; cause and
+      fix under *Per-step cost growth* below). ×4 was **not** reached on this
+      machine. `speed-slow.png` shows the header
       "running · … RTF 0.25 · ×0.25"; `speed-fast.png` shows "RTF 0.65 · ×4
       (compute-limited)". Up/down via `system_ui run:speed_down` and REST
       `{action: up}` stepped ×4 → ×2 → ×4; `{scale: 3}` was refused.
@@ -544,6 +545,69 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     replay runs share the loop but were not run at a non-1 scale. The real
     sim-app fallback launch (v2 file, or no sim-spatial built) was not
     exercised. A ×4 or ×8 rtf was never achieved with this model.
+  - *Per-step cost growth* (batch physical-run-cost-growth, T20.1–T20.3;
+    evidence `runs/cost-growth/20260930T110939Z/` REPORT.md, curve/,
+    profile/, reference/, after/).
+    - *Cause (non-physical):* roundoff in accumulated clocks. The simulation
+      clock (`t += h` across `run()` calls) and the articulated IMU
+      (200 Hz) and `control.external` seam (50 Hz) deadlines
+      (`next += period`) drifted 1e-13–1e-12 s off the sampling grid, so
+      each deadline split a step into a normal step plus a ~1e-13 s sliver,
+      and every sliver missed the factorisation cache. Island steps per
+      simulated second rose from 2000 to 3200 after ~5 s. No state-dependent
+      work grew: contacts, flex and traces were not the cause (the growth
+      was the same with `--no-flex` and larger with `--no-contact`).
+    - *Fix* (7ab953ef): an opt-in `Simulation::grid_clock` in sim-dynamics
+      (`origin + k·h` across `run()` calls), `Runtime::set_grid_clock` in
+      sim-compile, enabled by `PhysicalRobot` (sim-runtime); IMU deadlines
+      at `latency + n·period` (sim-domain-robot articulated.rs) and seam
+      deadlines at `offset + n·period` (sim-domain-control external.rs).
+      dt, tolerances, contact parameters and the `.simresult.json` format are
+      unchanged. A focused test fails on the old path. 3fc9ec26 updates a
+      seam test (`delays_are_whole_samples`) whose expectation was already
+      stale before this batch (it failed identically at 7ab953ef^).
+    - *Headless before → after* (release harness, 4 s windows, late/early
+      wall per simulated second): default 1.79× → 0.93×, `--no-flex`
+      1.68× → 0.94×, `--no-contact` 2.16× → 1.02×; island steps now flat at
+      8000 per 4 s. `sim-cad run … --seconds 16`: 18.8 s → 11.3 s wall.
+    - *Results:* not bit-identical, because the old clock was already off
+      the grid from the first second (6.7e-16 s at 1 s), so step sizes and
+      IMU instants differ in the last bits from the start. All 24640 numeric
+      leaves of the `.simresult.json` (except `wall_s`) are within
+      |Δ| ≤ 1e-8·|x| + 1e-10, the backward-Euler Newton criterion the run
+      uses; the same three contact pairs and peaks, identical stress
+      hotspots, step count and warnings. Two runs of the fixed binary are
+      bit-identical apart from `wall_s`.
+    - *Native before → after* (release `sim-spatial --robot` on the runs/
+      copy, ×1): before (T19.3) rtf 1.00 at t = 3.7 s falling to 0.59
+      (compute-limited) at t = 13.2 s; after (T20.3,
+      `.claude-pair/captures/T20-cost-growth/`, `drive.py`, capture.json
+      ok=true) rtf 0.996 at t = 4.2 s and 1.000 at t = 16.4 s, every ×1
+      sample from 1.5 to 16.4 s between 0.92 and 1.02 and none
+      compute-limited. `rtf-early.png` and `rtf-late.png` show the header
+      "RTF 0.99 · ×1" and "RTF 1.00 · ×1".
+    - *Remaining limits:* the native ceiling on this machine (load average
+      10–14 during the capture, one run, so timing is noisy) is about
+      **1.2–1.26× real time**: ×2 (REST) 1.25, ×4 (`system_ui
+      run:speed:4`) 1.21, ×8 (REST) 1.26, all honestly `compute_limited`;
+      `rtf-fast.png` shows "RTF 1.26 · ×8 (compute-limited)". The highest
+      scale reached is ×1. Headless sim-cad reaches ~1.4× (16 s in 11.3 s).
+      The driver and viewer together used ~685 % CPU over the 31 s capture,
+      which may be the rayon spin reported in `jacobian_full` (a constant
+      overhead, not growth; not profiled or changed here). Viewer RSS: 150 MB loaded, 190 MB at t = 4 s, a one-off jump to
+      253 MB at the first screenshot, then 255 → 264 MB from t = 5 to 32 s
+      (~0.3 MB per simulated second, consistent with the unbounded result
+      traces; reported, not changed). The robot rests during this run, so the
+      captures prove pacing and the header readout, not motion. Speed changes
+      were REST/`system_ui` activations, not key presses.
+    - *Requalification needed, not run:* 7ab953ef changes the default IMU and
+      seam deadline arithmetic at roundoff level, so phenomena scenarios using
+      `control.external` or authored IMUs (leg_seam, quadruped_gait,
+      walk_the_plank, cruise_control, latency_instability, quantisation_hunt,
+      language_independence, cad_robot) and gait-lab qualification (whose
+      runtime fingerprint hashes the source anyway) must be requalified.
+      Sensor-chain and `SampledProportional` samplers still accumulate
+      `+= period` and can still drift off the grid in long runs.
   - `cad/USER_GUIDE.md`, `cad/ARCHITECTURE.md` and `cad/PHYSICAL_MODEL.md` now
     name `sim-spatial --robot` (via `simbridge.viewer_command`) as the live
     viewer with its actual controls, and sim-app `--scene cad` as the labelled
@@ -1491,8 +1555,10 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
      v3+ physical export), so only hand-requested v2 files are affected.
   2. **simbridge's fallback** when no sim-spatial binary is built.
   No longer needing sim-app: speed scaling (robot mode has ×0.125–×8 through
-  one `RobotAction::Speed`, §2b; ×4 was compute-limited for the wheeled robot
-  on this machine; sim-app's achieved speed on the same model was not measured), and
+  one `RobotAction::Speed`, §2b; after the per-step cost fix (7ab953ef) the
+  wheeled robot holds ×1 over 16 s, but ×2, ×4 and ×8 are still
+  compute-limited at about 1.2–1.26× real time on this machine; sim-app's
+  achieved speed on the same model was not measured), and
   the joint keys (←/→, ↑/↓, Shift), which robot mode replaces with its jog
   buttons, `system_ui` and REST rather than porting them as keys.
   Retirement now requires, none of it in batch cad-scene-parity: an accepted
@@ -1752,7 +1818,8 @@ unknown-id error).
    - *Verified in T19.3* (`.claude-pair/captures/T19-cad-parity/`,
      capture.json ok=true, 35 assertions, release): the v2 refusal in
      `--validate-only` and in the window; ×0.25 reached (rtf 0.250/0.251);
-     ×4 compute-limited (rtf 0.65/0.63, ×1 later in the run 0.59); stress
+     ×4 compute-limited (rtf 0.65/0.63, ×1 later in the run 0.59; after the
+     T20.2 fix ×1 holds 1.00 to t = 16.4 s and ×2–×8 reach ~1.2–1.26); stress
      peaks shown as kPa/Pa, stored values unchanged.
    - *Still not done:* a decision on v2 files and removal of the sim-app
      fallback (§3); physical key and pointer input for the speed controls;

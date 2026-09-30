@@ -7,6 +7,7 @@
 pub mod articulated;
 pub mod actuator_audit;
 pub mod actuator_profile;
+pub mod cad_link;
 pub mod power_profile;
 pub mod contract;
 pub mod math;

@@ -9,6 +9,8 @@ nalgebra.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 blake3 = "=1.8.7"
+# sha256 of the raw .rcad bytes, as RoboCAD records it in source.cad_sha256.
+sha2 = "0.10"
 sim-core = { path = "../sim-core" }
 sim-solve = { path = "../sim-solve" }
 sim-dynamics = { path = "../sim-dynamics" }

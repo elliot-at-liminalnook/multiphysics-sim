@@ -7,7 +7,7 @@ use super::system_actions::UiAction;
 use serde::Serialize;
 use std::hash::{Hash, Hasher};
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct Enabled(pub bool);
 #[derive(Clone, Serialize)]
 struct Control {

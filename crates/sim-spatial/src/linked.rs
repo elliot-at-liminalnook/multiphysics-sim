@@ -1,4 +1,5 @@
 use super::*;
+use crate::ui_kit::ACCENT;
 use sim_inspect::selection::native::SelectionClient;
 
 #[derive(Resource)]

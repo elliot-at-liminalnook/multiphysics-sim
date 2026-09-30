@@ -37,19 +37,28 @@ pub(crate) struct UiFonts {
     pub(crate) semibold: Handle<Font>,
 }
 
-pub(crate) fn load_fonts(mut commands: Commands, mut fonts: ResMut<Assets<Font>>, mut images: ResMut<Assets<Image>>) {
-    let load = |bytes: &[u8]| Font::from_bytes(bytes.to_vec());
-    let icons = sim_core::icons::NAMES.iter().map(|name| {
-        let image = Image::new(bevy::render::render_resource::Extent3d { width:48, height:48, depth_or_array_layers:1 }, bevy::render::render_resource::TextureDimension::D2, sim_core::icons::rgba(name,48), bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb, RenderAssetUsages::default());
-        (name.to_string(), images.add(image))
-    }).collect();
-    commands.insert_resource(UiFonts { icons,
-        italic: fonts.add(load(include_bytes!("../../assets/fonts/IBMPlexSans-Italic.ttf"))),
-        mono: fonts.add(load(include_bytes!("../../assets/fonts/IBMPlexMono-Regular.ttf"))),
-        regular: fonts.add(load(include_bytes!("../../assets/fonts/IBMPlexSans-Regular.ttf"))),
-        medium: fonts.add(load(include_bytes!("../../assets/fonts/IBMPlexSans-Medium.ttf"))),
-        semibold: fonts.add(load(include_bytes!("../../assets/fonts/IBMPlexSans-SemiBold.ttf"))),
-    });
+impl UiFonts {
+    /// The interface fonts and icons, added to the asset stores once while
+    /// the app is built (`app::CorePlugin`): the first mode's OnEnter runs
+    /// before Startup and spawns text with them. Shared by every mode.
+    pub(crate) fn load(world: &mut World) -> Self {
+        let icons = {
+            let mut images = world.resource_mut::<Assets<Image>>();
+            sim_core::icons::NAMES.iter().map(|name| {
+                let image = Image::new(bevy::render::render_resource::Extent3d { width:48, height:48, depth_or_array_layers:1 }, bevy::render::render_resource::TextureDimension::D2, sim_core::icons::rgba(name,48), bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb, RenderAssetUsages::default());
+                (name.to_string(), images.add(image))
+            }).collect()
+        };
+        let mut fonts = world.resource_mut::<Assets<Font>>();
+        let mut load = |bytes: &[u8]| fonts.add(Font::from_bytes(bytes.to_vec()));
+        UiFonts { icons,
+            italic: load(include_bytes!("../../assets/fonts/IBMPlexSans-Italic.ttf")),
+            mono: load(include_bytes!("../../assets/fonts/IBMPlexMono-Regular.ttf")),
+            regular: load(include_bytes!("../../assets/fonts/IBMPlexSans-Regular.ttf")),
+            medium: load(include_bytes!("../../assets/fonts/IBMPlexSans-Medium.ttf")),
+            semibold: load(include_bytes!("../../assets/fonts/IBMPlexSans-SemiBold.ttf")),
+        }
+    }
 }
 
 #[derive(Component)]

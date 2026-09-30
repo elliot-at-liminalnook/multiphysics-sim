@@ -494,6 +494,15 @@ impl Builder {
     }
     /// Stop any interactive run and leave no pending input or drag, before a
     /// lesson takes over the view (the lesson plays its own recorded runs).
+    /// Leaving Build and Lessons for another mode: the builder stays in the
+    /// window, paused (no physics runs unseen); its chrome is rebuilt on return.
+    pub(crate) fn leave_scope(&mut self) {
+        if self.running() {
+            self.run_pause();
+        }
+        self.panel_dirty = true;
+    }
+
     pub(crate) fn stop_for_learn(&mut self) {
         self.run = None;
         self.input = None;
@@ -1739,26 +1748,42 @@ enum BuildAction {
     CalibrationTrial(String),
 }
 
+/// The System Builder: Build mode, and the builder under the lesson screen
+/// (Lessons). Its systems run in the Builder scope (Build and Lessons), in
+/// their original order; those that draw or edit the builder's own chrome
+/// run in Build only (the lesson screen is shown over it in Lessons).
 pub struct BuilderPlugin;
 impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
+        let building = in_state(ViewerMode::Build);
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building), grab_push.run_if(building), builder_buttons, builder_keys.run_if(building), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building)).chain(), rebuild_scene, sync_run, graphs::update.run_if(building), schematic::update.run_if(building), ui::rebuild_panel.run_if(building), ui::scroll_panels.run_if(building), ui::hover, clear_for_learn.run_if(not(building))).chain().before(update_parts),
+            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building.clone()), grab_push.run_if(building.clone()), builder_buttons, builder_keys.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), ui::hover, clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
+                .chain()
+                .before(update_parts)
+                .in_set(ViewerSet::SimSync)
+                .run_if(in_state(ModeScope::Builder)),
         )
-        .add_systems(Startup, ui::load_fonts)
-        .add_systems(Update, placement::update.after(update_parts).run_if(building))
-        .add_systems(Update, (placement::apply_preview, placement::draw_handles).chain().after(placement::update).run_if(building))
-        .add_systems(Update, discussion::hover.after(notes::update).run_if(building))
-        .add_systems(Update, markers::sync.after(placement::apply_preview).after(discussion::hover).run_if(building))
-        .add_systems(Update, ui_api::collect.after(markers::sync).after(ui::rebuild_panel).run_if(building))
+        .add_systems(Update, placement::update.after(update_parts).in_set(ViewerSet::SimSync).run_if(building.clone()))
+        .add_systems(Update, (placement::apply_preview, placement::draw_handles).chain().after(placement::update).in_set(ViewerSet::SimSync).run_if(building.clone()))
+        .add_systems(Update, discussion::hover.after(notes::update).in_set(ViewerSet::SimSync).run_if(building.clone()))
+        .add_systems(Update, markers::sync.after(placement::apply_preview).after(discussion::hover).in_set(ViewerSet::SimSync).run_if(building.clone()))
+        .add_systems(Update, ui_api::collect.after(markers::sync).after(ui::rebuild_panel).in_set(ViewerSet::SimSync).run_if(building))
         .add_observer(placement::end_drag);
     }
 }
 
-/// Build mode is showing (no lesson screen over it).
-pub(crate) fn building(learn: Option<Res<crate::lesson::Learn>>) -> bool {
-    learn.is_none_or(|l| !l.active)
+/// Build mode's scene of `builder`'s document, compiled with the shared
+/// runtime: the launch, a lessons launch and a switch to build or lessons
+/// mode all start from it.
+pub fn compiled_scene(builder: &Builder) -> Result<SpatialScene, String> {
+    let compiled = system_builder::compile(&builder.document, builder.registry(), system_builder::config_for(&builder.document)).map_err(|e| e.to_string())?;
+    let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
+    let mut scene = SpatialScene::for_builder(compiled.description.clone(), spatial).map_err(|e| e.to_string())?;
+    if let Some(animation) = compiled.animation.clone() {
+        scene.set_animation(animation).map_err(|e| e.to_string())?;
+    }
+    Ok(scene)
 }
 
 /// While a lesson is shown, the builder's chrome and pins are removed; they
@@ -1903,7 +1928,8 @@ fn builder_buttons(
         if matches!(action, BuildAction::Lessons) {
             if let Some(learn) = learn.as_deref_mut() {
                 builder.stop_for_learn();
-                learn.show(true);
+                // A mode switch to Lessons (app::switch), not a flag flip.
+                learn.request_screen(true);
             }
             continue;
         }
@@ -2372,9 +2398,9 @@ fn rebuild_scene(
     mut images: ResMut<Assets<Image>>,
     mut orbit: Single<&mut Orbit>,
     mut models: Option<ResMut<crate::models::ModelLibrary>>,
-    learn: Option<Res<crate::lesson::Learn>>,
+    mode: Option<Res<State<ViewerMode>>>,
 ) {
-    let learning = learn.is_some_and(|l| l.active);
+    let learning = mode.is_some_and(|m| *m.get() == ViewerMode::Lessons);
     // Do not replace picked entities while a pointer owns them. A saved drop
     // explicitly allows the replacement while its preview remains visible.
     if builder.drag.as_ref().is_some_and(|d| !d.awaiting_scene()) { return; }
@@ -2695,6 +2721,18 @@ fn swap_with(builder: &mut Builder, parameter: &str, value: f64) -> bool {
         return builder.hot_swap(&doc, id);
     }
     true
+}
+
+/// Test hooks for code outside the builder (the mode-switch test).
+#[cfg(test)]
+impl Builder {
+    /// Open a text-field draft: one of the `system_open` blockers.
+    pub(crate) fn test_open_draft(&mut self, text: &str) {
+        self.start_input(Purpose::Filter, text.into());
+    }
+    pub(crate) fn test_drop_draft(&mut self) {
+        self.input = None;
+    }
 }
 
 #[cfg(test)]

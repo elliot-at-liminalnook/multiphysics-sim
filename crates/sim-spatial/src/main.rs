@@ -122,11 +122,59 @@ fn presets(args: &Args) -> Result<PathBuf, String> {
     args.robot_presets.clone().map(Ok).unwrap_or_else(sim_spatial::robot_preset::default_file)
 }
 
+/// The display-model catalog directory: explicit --models, else `models`
+/// next to the library (`<workspace>/library/models`).
+fn models_path(args: &Args) -> Result<PathBuf, String> {
+    match &args.models {
+        Some(dir) => Ok(dir.clone()),
+        None => library(args).map(|l| models_dir(args, &l)),
+    }
+}
+/// The shared display-model catalog every mode draws from.
+fn model_library(args: &Args) -> sim_spatial::models::ModelLibrary {
+    let library = match models_path(args) {
+        Ok(dir) => sim_spatial::models::ModelLibrary::open(dir),
+        Err(e) => {
+            let mut none = sim_spatial::models::ModelLibrary::default();
+            none.error = Some(e);
+            none
+        }
+    };
+    if let Some(e) = &library.error {
+        eprintln!("Display models unavailable ({e}); drawing bounding shapes.");
+    }
+    library
+}
+/// What a switch needs to open other modes' documents later: the launch facts.
+fn documents(args: &Args) -> sim_spatial::app::switch::Documents {
+    let mut documents = sim_spatial::app::switch::Documents::default();
+    documents.library = library(args);
+    if let Ok(models) = models_path(args) {
+        documents.models = models;
+    }
+    documents.presets = args.robot_presets.clone();
+    documents
+}
+
+/// Open the one window in `launch.mode`, with the one REST server.
+fn open_window(args: &Args, launch: impl FnOnce(sim_api::Server) -> sim_spatial::Launch) -> Result<(), Box<dyn std::error::Error>> {
+    let api = sim_spatial::rest::bind(args.api_port)?;
+    let address = api.address;
+    let launch = launch(api);
+    eprintln!("Physical REST ({} mode; every mode's commands): http://{address}", launch.mode.name());
+    sim_spatial::app::run(launch);
+    Ok(())
+}
+
+fn launch(mode: sim_spatial::ViewerMode, api: sim_api::Server, documents: sim_spatial::app::switch::Documents, models: sim_spatial::models::ModelLibrary) -> sim_spatial::Launch {
+    sim_spatial::Launch { mode, api, documents, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None }
+}
+
 fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
     let registry = registry();
     let library = library(args)?;
-    let mut learn = sim_spatial::lesson::Learn::new(dir.to_path_buf(), library.clone(), registry.clone());
     if args.validate_only {
+        let learn = sim_spatial::lesson::Learn::new(dir.to_path_buf(), library.clone(), registry.clone());
         for e in &learn.entries {
             match &e.error {
                 Some(err) => println!("{}: {err}", e.slug),
@@ -135,44 +183,14 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
         }
         return Ok(());
     }
-    let slug = args.lesson.clone().or_else(|| learn.entries.iter().find(|e| e.error.is_none()).map(|e| e.slug.clone()));
-    // The builder starts on the first scene's sandbox (or an empty system);
-    // opening the lesson then activates that scene off the UI thread.
-    let first = slug.as_ref().and_then(|s| {
-        let lesson = sim_lesson::Lesson::load(&dir.join(s).join("lesson.md")).ok()?;
-        let scene = lesson.scenes().next().map(|(_, sc)| sc.clone())?;
-        sim_runtime::lesson::sandbox(&lesson, &scene, &registry, false).ok().map(|sb| sb.path)
-    });
-    let initial = match first {
-        Some(p) => p,
-        None => {
-            let p = sim_runtime::lesson::sandbox_root().join("_empty").join("empty.system.json");
-            if !p.exists() {
-                sim_system::SystemStore::create(&p, &sim_system::SystemDocument::new("Lesson"))?;
-            }
-            p
-        }
-    };
-    let builder = sim_spatial::Builder::open(initial, library.clone(), registry.clone())?;
-    let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
-    let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
-    let mut scene = sim_spatial::SpatialScene::for_builder(compiled.description.clone(), spatial)?;
-    if let Some(animation) = compiled.animation.clone() {
-        scene.set_animation(animation)?;
+    let (learn, builder, scene, warning) = sim_spatial::lesson::open_lessons(dir.to_path_buf(), args.lesson.clone(), library, registry)?;
+    if let Some(w) = warning {
+        eprintln!("{w}");
     }
-    if let Some(slug) = &slug {
-        if let Err(e) = learn.open(slug) {
-            eprintln!("Lesson {slug}: {e}");
-        }
-    }
-    let api = sim_spatial::rest::server_for(args.api_port, true, true)?;
-    eprintln!("Physical REST (lessons): http://{}", api.address);
-    let models = sim_spatial::models::ModelLibrary::open(models_dir(args, &library));
-    if let Some(e) = &models.error {
-        eprintln!("Display models unavailable ({e}); drawing bounding shapes.");
-    }
-    sim_spatial::run_lessons(scene, builder, learn, api, models);
-    Ok(())
+    let mut documents = documents(args);
+    documents.lessons = Some((dir.to_path_buf(), learn.slug().map(str::to_string)));
+    let models = model_library(args);
+    open_window(args, |api| sim_spatial::Launch { learn: Some(learn), builder: Some(builder), scene: Some(scene), ..launch(sim_spatial::ViewerMode::Lessons, api, documents, models) })
 }
 fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
     if args.validate_only {
@@ -181,10 +199,11 @@ fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
         println!("Validated {} with {} links ({drawn} with collision geometry).", path.display(), loaded.model.links.len());
         return Ok(());
     }
-    let api = sim_spatial::robot::server(args.api_port)?;
-    eprintln!("Physical REST (robot mode): http://{}", api.address);
-    sim_spatial::robot::run_robot(sim_spatial::robot::RobotView::open(path.to_path_buf()).with_presets(args.robot_presets.clone()), api);
-    Ok(())
+    let view = sim_spatial::robot::RobotView::open(path.to_path_buf()).with_presets(args.robot_presets.clone());
+    let mut documents = documents(args);
+    documents.robot = Some(sim_spatial::app::switch::Document::Path(path.to_path_buf()));
+    let models = model_library(args);
+    open_window(args, |api| sim_spatial::Launch { robot: Some(view), ..launch(sim_spatial::ViewerMode::Robot, api, documents, models) })
 }
 fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Error>> {
     if args.validate_only {
@@ -208,21 +227,16 @@ fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Er
         return Ok(());
     }
     let view = sim_spatial::robot::RobotView::open_preset(&presets(args)?, id)?;
-    let api = sim_spatial::robot::server(args.api_port)?;
-    eprintln!("Physical REST (robot mode, preset {id}): http://{}", api.address);
-    sim_spatial::robot::run_robot(view, api);
-    Ok(())
+    let mut documents = documents(args);
+    documents.robot = Some(sim_spatial::app::switch::Document::Preset(id.to_string()));
+    let models = model_library(args);
+    open_window(args, |api| sim_spatial::Launch { robot: Some(view), ..launch(sim_spatial::ViewerMode::Robot, api, documents, models) })
 }
 fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
     let registry = registry();
     let library = library(args)?;
     let mut builder = sim_spatial::Builder::open(path.to_path_buf(), library.clone(), registry.clone())?;
-    let compiled = sim_runtime::system_builder::compile(&builder.document, &registry, sim_runtime::system_builder::config_for(&builder.document))?;
-    let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
-    let mut scene = sim_spatial::SpatialScene::for_builder(compiled.description.clone(), spatial)?;
-    if let Some(animation) = compiled.animation.clone() {
-        scene.set_animation(animation)?;
-    }
+    let mut scene = sim_spatial::builder::compiled_scene(&builder)?;
     if args.validate_only {
         println!("Validated {} with {} components.", path.display(), scene.description.components.len());
         return Ok(());
@@ -240,8 +254,6 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
             .map_err(|e| format!("Could not open the schematic: {e}. Build sim-viewer first."))?;
         sim_spatial::jobs::reap_child(child, "sim-viewer");
     }
-    let api = sim_spatial::rest::server_with(args.api_port, true)?;
-    eprintln!("Physical REST (build mode): http://{}", api.address);
     let models_dir = models_dir(args, &library);
     let mut models = sim_spatial::models::ModelLibrary::open(models_dir.clone());
     // A system's own display models (CAD exports next to the file) join the shared catalog.
@@ -251,8 +263,8 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     }
     // Opening another file in this window needs these launch facts.
     builder.enable_open(sim_spatial::builder::open::Shell { launch: path.to_path_buf(), annotations: args.annotations.clone(), schematic: args.schematic.then(|| path.to_path_buf()), models: models_dir });
-    sim_spatial::run_builder(scene, builder, api, models);
-    Ok(())
+    let documents = documents(args);
+    open_window(args, |api| sim_spatial::Launch { builder: Some(builder), scene: Some(scene), ..launch(sim_spatial::ViewerMode::Build, api, documents, models) })
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -288,7 +300,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", sim_spatial::place_view::validate_place(&dir)?);
             return Ok(());
         }
-        return sim_spatial::place_view::run_place(dir).map_err(Into::into);
+        let place = sim_spatial::place_view::PlaceView::open(dir.clone())?;
+        let mut documents = documents(&args);
+        documents.place = Some(dir);
+        let models = model_library(&args);
+        return open_window(&args, |api| sim_spatial::Launch { place: Some(place), ..launch(sim_spatial::ViewerMode::Place, api, documents, models) });
     }
     if let Some(path) = args.robot.clone() {
         return robot_mode(&args, &path);
@@ -312,23 +328,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.description.is_some() != args.spatial.is_some() {
         return Err("provide both --description and --spatial".into());
     }
-    let base =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/systems-viewer/spatial");
-    let description_path = args
-        .description
-        .unwrap_or_else(|| base.join("motor-thermal.description.json"));
-    let description: sim_inspect::SystemDescription =
-        serde_json::from_slice(&std::fs::read(&description_path)?)?;
-    let spatial_path = args
-        .spatial
-        .unwrap_or_else(|| base.join("motor-thermal.spatial.json"));
-    let spatial = serde_json::from_slice(&std::fs::read(&spatial_path)?)?;
-    let mut scene = sim_spatial::SpatialScene::new(description, spatial)?;
+    let (default_description, default_spatial) = sim_spatial::default_inspect_paths();
+    let description_path = args.description.clone().unwrap_or(default_description);
+    let spatial_path = args.spatial.clone().unwrap_or(default_spatial);
+    let mut scene = sim_spatial::load_inspect(&description_path, &spatial_path)?;
     if let Some(path) = &args.animation {
         scene.set_animation(serde_json::from_slice(&std::fs::read(path)?)?)?;
     }
     use sim_inspect::spatial::SpatialCommand;
-    if let Some(component) = args.select {
+    if let Some(component) = args.select.clone() {
         scene.apply(SpatialCommand::Select { component })?;
     }
     scene.apply(SpatialCommand::SetExploded {
@@ -350,14 +358,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PathBuf::from(format!("{}.annotations.json", description_path.display()))
     });
     scene.connect_annotations(annotation_path.clone());
-    scene.compact = args.compact || args.schematic;
+    scene.set_compact(args.compact || args.schematic);
     let session = if args.schematic {
         Some(sim_inspect::selection::native::create_session(
             &scene.description,
             scene.selection.clone(),
         )?)
     } else {
-        args.selection_link
+        args.selection_link.clone()
     };
     let link = if let Some(directory) = session {
         eprintln!("Selection session: {}", directory.display());
@@ -398,19 +406,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         None
     };
-    let api = sim_spatial::rest::server(args.api_port)?;
-    eprintln!("Physical REST: http://{}", api.address);
     if args.headless {
+        // No window: the same server and inspect handler, polled by a loop.
+        let api = sim_spatial::rest::bind(args.api_port)?;
+        eprintln!("Physical REST (headless, inspect mode): http://{}", api.address);
         sim_spatial::rest::headless(scene, link, api);
     }
-    let models = match args.models.clone().map(Ok).unwrap_or_else(|| sim_spatial::workspace::path("library/models")) {
-        Ok(dir) => sim_spatial::models::ModelLibrary::open(dir),
-        Err(e) => {
-            let mut none = sim_spatial::models::ModelLibrary::default();
-            none.error = Some(e);
-            none
-        }
-    };
-    sim_spatial::run_with_api(scene, link, Some(api), models.error.is_none().then_some(models));
-    Ok(())
+    let mut documents = documents(&args);
+    documents.inspect = Some((description_path, spatial_path));
+    let models = model_library(&args);
+    open_window(&args, |api| sim_spatial::Launch { scene: Some(scene), link, ..launch(sim_spatial::ViewerMode::Inspect, api, documents, models) })
 }

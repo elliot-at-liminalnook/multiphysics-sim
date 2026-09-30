@@ -9,18 +9,18 @@
 //! A FILE is watched and reloaded on change or Reload (`robot_source`); a
 //! reload replaces the model and starts a fresh run context.
 use super::{ACCENT, INK, MUTED, PANEL};
+use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui::UiFonts;
 use bevy::{
     asset::RenderAssetUsages,
     core_pipeline::tonemapping::Tonemapping,
     input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},
-    picking::mesh_picking::{MeshPickingCamera, MeshPickingSettings},
+    picking::mesh_picking::MeshPickingCamera,
     prelude::*,
     camera::Viewport,
     render::{
         mesh::{Indices, PrimitiveTopology},
     },
-    winit::{UpdateMode, WinitSettings},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -237,6 +237,49 @@ impl RobotView {
             self.presets = Ok(p);
         }
         self
+    }
+    /// A switch to robot mode waits for this before entering it, so a file
+    /// or preset that fails to load leaves the current mode: None while
+    /// loading, else whether the first load succeeded. A success stays
+    /// queued for `receive`, which installs it as at launch.
+    pub(crate) fn opened(&mut self) -> Option<Result<(), String>> {
+        if let Some(load) = &self.load {
+            let generation = load.generation();
+            let result = load.poll()?;
+            return Some(match result {
+                Ok(loaded) => {
+                    self.load = Some(crate::jobs::Job::finished(generation, Ok(loaded)));
+                    Ok(())
+                }
+                Err(e) => Err(e),
+            });
+        }
+        match self.source.as_mut() {
+            Some(source) => source.opened(),
+            None => Some(Ok(())),
+        }
+    }
+    /// What leaving robot mode would lose: a recording still being written
+    /// (its result would never be shown) or a replay in progress.
+    pub(crate) fn switch_blockers(&self) -> Vec<String> {
+        let mut blockers = Vec::new();
+        if let Some(run) = &self.run {
+            if let Some(path) = run.save_pending() {
+                blockers.push(format!("recording {} is being written: wait for robot_state.recording", path.display()));
+            }
+            let replay = run.replay_state();
+            if replay.phase == ReplayPhase::Replaying {
+                blockers.push(format!("{} is replaying: wait or cancel it (replay:cancel)", replay.path.as_ref().map(|p| p.display().to_string()).unwrap_or_else(|| "a recording".into())));
+            }
+        }
+        blockers
+    }
+    /// What robot mode reopens after a switch away: the preset or the file.
+    pub(crate) fn document(&self) -> crate::app::switch::Document {
+        match &self.preset {
+            Some(p) => crate::app::switch::Document::Preset(p.id.clone()),
+            None => crate::app::switch::Document::Path(self.path.clone()),
+        }
     }
     fn new(path: PathBuf, load: Option<crate::jobs::Job<(Loaded, Option<Opened>)>>, preset: Option<Preset>) -> Self {
         Self {
@@ -706,6 +749,7 @@ enum UiRequest {
 #[derive(Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 enum Request {
+    State,
     RobotState,
     SystemUi { action: UiRequest },
     Camera { focus: [f32; 3], radius: f32, yaw: f32, pitch: f32 },
@@ -725,6 +769,7 @@ enum Request {
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
+        Request::State => return Ok(json!({"robot_state": view.state_json()})),
         Request::RobotState => {}
         Request::RobotPresets => {
             let (file, root) = (view.presets.clone()?, view.root.clone()?);
@@ -834,13 +879,8 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
     Ok(view.state_json())
 }
 
-/// The loopback REST server for robot mode.
-pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
-    let server = sim_api::Server::bind(port, "robot", capabilities())?;
-    server.describe("workspace", crate::workspace::json());
-    Ok(server)
-}
-fn capabilities() -> Vec<Value> {
+/// Robot mode's commands (tagged `robot` in the one server's list, `rest::capabilities`).
+pub(crate) fn capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
         c("robot_state", json!({}), "Read-only robot mode: file, workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities), status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim (the export's own `source`), source_file (--robot FILE's path, sha256, loaded_at, reload_count, watching, last_reload, run_reset; see robot_reload; watching=false for a preset), notice (the last reload's result), and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, run (null until loaded; phase idle with null time before any build; see robot_run), and overlays (--robot FILE run-thread contacts, joint frames and deflections with flags, counts, samples and scales, and overlays.stress for the read-only .simresult.json; available=false with the reason for presets; see robot_overlay). Nothing is written."),
@@ -857,7 +897,7 @@ fn capabilities() -> Vec<Value> {
         c("robot_replay", json!({"file":"20260930T060822.729Z.json"}), &format!("Replay a saved recording of the loaded preset: the same handler as the inspector Replay buttons and system_ui replay:<file>. Give file (a bare name listed in robot_state.recordings.files, in runs/robot-presets/<preset-id>/) or path (any readable recording .json, relative to the root or absolute; reading is not restricted). {{\"action\":\"cancel\"}} stops the replay between chunks (system_ui replay:cancel); {{\"action\":\"list\"}} lists the recordings again off the UI thread (system_ui replay:refresh). {} {} {} {} robot_state.replay reports path, phase (idle | replaying | cancelled | done | failed), completed/total with unit, completed_steps and recorded_completed_steps, verdict, error, measured, replaced and sidecar. Refused, naming the reason: --robot FILE, a replay already in progress, a running run (Pause first), a building session, a missing or non-.json file, a recording of the other kind, a runtime mismatch (the runtime's message) and a session identity mismatch (the viewer's labelled check).", robot_recording::REPLAY_RULE, robot_recording::VERDICT_RULE, robot_recording::IDENTITY_RULE, robot_recording::MEASURED_RULE)),
         c("robot_reload", json!({}), &format!("Re-read the opened --robot FILE now: the same RobotAction::Reload as the watch, the header Reload button and system_ui robot:reload. {} Returns at once; the result lands in robot_state.source_file {{path, sha256 (of the displayed model's bytes), loaded_at (UTC), reload_count (successful reloads), unchanged_checks, watching, in_flight, last_reload {{trigger watch | manual, outcome loaded | unchanged | failed, error naming the path, at (UTC)}}, run_reset, showing_last_good, failing_error}} and robot_state.notice. A loaded reload replaces the model, meshes, link list, notes and cad_link, keeps the selected link by name (else clears it with a note), discards any run or jog and spawns a fresh idle run thread whose generation is the old one + 1 (robot_state.run.generation; graphs clear by the generation rule). Refused naming the reason: a preset, a load or reload already in flight. (robot_state.source is still the file's own export source block.)", robot_source::RULE)),
         c("robot_overlay", json!({"contacts":true,"joints":true,"deflections":false,"stress":true}), &format!("Show or hide the --robot FILE overlays. stress (key H, system_ui overlay:stress; default off, as sim-app's cad scene) colours the link meshes per vertex from the model's read-only .simresult.json through sim_domain_robot::stress_results ({}); robot_state.overlays.stress reports enabled, painting, path, mtime_unix_s and mtime_utc, status (current | stale | no recorded hash | no results file | invalid results file), recorded_physical_hash, model_physical_hash, peak_stress_pa per link, hotspot_links, error, absent and paint_seconds. {} Run-thread overlays: contacts (spheres at PhysicalRobot::contacts points with force lines at {} m/N; red on the ground, orange against another link), joints (PhysicalRobot::joint_frames: a white sphere and each axis drawn ±{} m in yellow, cyan, magenta) and deflections (PhysicalRobot::deflections: flexible-link boundary displacement lines magnified ×{}). Give any subset; the others keep their values. The same RobotAction::Overlay as keys C / J / F / H, the inspector overlay buttons and system_ui overlay:contacts | overlay:joints | overlay:deflections | overlay:stress. Run-thread defaults: all on, as sim-app's cad scene draws them. {} Drawn in the model frame through RobotRoot's transform (the link meshes' parent), only from the latest accepted frame of the current generation. robot_state.overlays reports flags, frame_flags, frame_generation, frame_time, contacts {{count, sample: first {} of link, other (link name | ground), point, force, penetration}}, joints {{count, sample}}, deflections {{count, max_displacement_m}} and scales. Refused for presets (their session frames publish no contacts, joint frames or deflections, and a preset has no results file).", sim_domain_robot::stress_results::SCALE, robot_stress::RULE, robot_run::FORCE_SCALE_M_PER_N, robot_run::JOINT_AXIS_HALF_M, robot_run::DEFLECTION_MAGNIFICATION, robot_run::OVERLAY_COST_RULE, robot_run::OVERLAY_SAMPLE)),
-        c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
+        c("state", json!({}), "Robot mode: {robot_state (as robot_state), viewer_mode}"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
         c("fit", json!({}), "Fit the robot"),
     ]
@@ -969,34 +1009,29 @@ struct Materials {
 /// `Materials::normal`'s base colour: the vertex colour of a link without hotspot cells while stress is shown.
 const LINK_COLOUR: Color = Color::srgb(0.62, 0.68, 0.76);
 
-/// The window: worker load, posed link meshes, link list, inspector and REST.
-pub fn run_robot(view: RobotView, api: sim_api::Server) {
-    App::new()
-        .insert_resource(crate::rest::Rest(api, None))
-        .insert_resource(view)
-        .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(GlobalAmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
-        .insert_resource(MeshPickingSettings { require_markers: true, ..default() })
-        .insert_resource(WinitSettings {
-            focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
-            unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(40)),
-        })
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Systems — Robot (file read-only)".into(),
-                resolution: (1500_u32, 940_u32).into(),
-                resize_constraints: bevy::window::WindowResizeConstraints { min_width: 980.0, min_height: 720.0, ..default() },
-                ..default()
-            }),
-            ..default()
-        }))
-        .insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
-        .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(PostUpdate, crate::view::clamp_scroll_positions.after(bevy::ui::UiSystems::Layout))
-        .init_resource::<crate::rest::Occlusion>()
-        .add_systems(PreUpdate, crate::rest::track_occlusion)
-        .add_systems(Update, ((watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, speed_keys, buttons, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain(), (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, graph_dock, draw).chain()).chain())
-        .run();
+/// Robot mode: worker load, posed link meshes, link list, inspector and
+/// REST. Its entities are spawned on entering the Robot scope; its two
+/// chains run in robot mode in their original order (the frame chain in
+/// SimSync, the panels in Present, one after the other as before). The
+/// view itself (`RobotView`) is removed on exit by `app::switch`.
+pub struct RobotPlugin;
+impl Plugin for RobotPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
+            .add_systems(OnEnter(ModeScope::Robot), setup)
+            .add_systems(OnExit(ModeScope::Robot), |mut commands: Commands| {
+                commands.remove_resource::<Materials>();
+            })
+            .add_systems(
+                Update,
+                (
+                    (watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, speed_keys, buttons, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain().in_set(ViewerSet::SimSync),
+                    (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, graph_dock, draw).chain().in_set(ViewerSet::Present),
+                )
+                    .chain()
+                    .run_if(in_state(ViewerMode::Robot)),
+            );
+    }
 }
 
 fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>, view: Res<RobotView>, fonts: Res<UiFonts>) {
@@ -1159,7 +1194,7 @@ fn graphs_button(fonts: &UiFonts) -> impl Bundle {
     )
 }
 
-fn label(fonts: &UiFonts, value: &str, size: f32, color: Color) -> (Text, TextFont, TextColor, TextLayout) {
+pub(crate) fn label(fonts: &UiFonts, value: &str, size: f32, color: Color) -> (Text, TextFont, TextColor, TextLayout) {
     (Text::new(value), TextFont { font: fonts.regular.clone().into(), font_size: FontSize::Px(size), ..default() }, TextColor(color), TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter))
 }
 
@@ -1358,17 +1393,23 @@ fn buttons(clicks: Query<(&Interaction, &RobotAction), Changed<Interaction>>, mu
     }
 }
 
-fn poll_rest(mut commands: Commands, mut redraw: MessageWriter<bevy::window::RequestRedraw>, mut rest: ResMut<crate::rest::Rest>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, occlusion: Res<crate::rest::Occlusion>) {
+fn poll_rest(mut commands: Commands, mut redraw: MessageWriter<bevy::window::RequestRedraw>, mut rest: ResMut<crate::rest::Rest>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, occlusion: Res<crate::rest::Occlusion>, mut modes: crate::app::route::Modes) {
     let server = &mut rest.0;
     let mut shots = Vec::new();
-    server.poll(|command, _, _| {
-        if command.command == "screenshot" {
-            return sim_api::Outcome::Done(crate::rest::screenshot_path(&command.args, occlusion.0).map(|p| {
+    server.poll(|command, continuation, cancelled| {
+        // The one dispatch: viewer_mode, mode:* controls and other modes' commands.
+        if let Some(outcome) = crate::app::route::route(ViewerMode::Robot, Some(modes.parts()), command, continuation, cancelled) {
+            return outcome;
+        }
+        let outcome = if command.command == "screenshot" {
+            sim_api::Outcome::Done(crate::rest::screenshot_path(&command.args, occlusion.0).map(|p| {
                 shots.push(p.clone());
                 json!({"path": p, "note": "saved once the next frame renders"})
-            }));
-        }
-        sim_api::Outcome::Done(execute(&mut view, &mut orbit, command))
+            }))
+        } else {
+            sim_api::Outcome::Done(execute(&mut view, &mut orbit, command))
+        };
+        crate::app::route::annotate(ViewerMode::Robot, command, outcome)
     });
     if server.snapshot_due() {
         server.publish("robot_state", view.state_json());

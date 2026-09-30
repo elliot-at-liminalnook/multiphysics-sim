@@ -368,9 +368,11 @@ pub(crate) fn start_part(
     parts: Query<&Part>,
     scene: Res<SpatialScene>,
     builder: Option<ResMut<Builder>>,
-    learn: Option<Res<crate::lesson::Learn>>,
+    mode: Option<Res<State<crate::ViewerMode>>>,
 ) {
-    if learn.is_some_and(|l| l.active) {
+    // Only Build places parts: not under the lesson screen, and not in the
+    // modes the builder waits through (inspect's parts are not the builder's).
+    if mode.is_some_and(|m| *m.get() != crate::ViewerMode::Build) {
         return;
     }
     let Some(mut b) = builder else { return };
@@ -633,7 +635,9 @@ fn poll_drop(b: &mut Builder, scene: &SpatialScene, drag: &mut DragState) -> Opt
     None
 }
 
-pub(super) fn end_drag(e: On<Pointer<DragEnd>>, mut b: ResMut<Builder>) {
+/// A global observer: it also sees drags in modes without a builder.
+pub(super) fn end_drag(e: On<Pointer<DragEnd>>, b: Option<ResMut<Builder>>) {
+    let Some(mut b) = b else { return };
     if e.button == PointerButton::Primary {
         if let Some(d) = b.drag.as_mut() {
             d.released = true;

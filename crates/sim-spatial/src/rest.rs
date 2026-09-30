@@ -35,66 +35,88 @@ enum Command {
         compact: bool,
     },
 }
+/// The window's one REST server (every mode) and the scene `render` in flight.
 #[derive(Resource)]
 pub struct Rest(pub sim_api::Server, pub Option<sim_api::ImageTask>);
-pub fn server(port: u16) -> std::io::Result<sim_api::Server> {
-    server_with(port, false)
-}
-/// Build mode adds the shared system-editing commands.
-pub fn server_with(port: u16, builder: bool) -> std::io::Result<sim_api::Server> {
-    server_for(port, builder, false)
-}
-/// Lesson mode adds the `lesson_*` commands to build mode's.
-pub fn server_for(port: u16, builder: bool, lessons: bool) -> std::io::Result<sim_api::Server> {
-    use sim_api::capability as c;
-    let mut capabilities = capabilities();
-    if lessons {
-        capabilities.extend(crate::lesson::rest::capabilities());
-    }
-    if builder {
-        capabilities.extend([
-            c("system_context",json!({"discussion":"thread-ID"}),"Read-only engineering context for an annotation or targets [instance/path]. Shared with Codex: inherited values, authored provenance, typed ports, complete nets, connected neighbors, registry explanations, model findings and display-only geometry. Resolved off the UI thread; no selection, model or undo changes. Empty args inspect the model. Poll the returned job URL."),
-            c("system_agent",json!({"action":{"operation":"status"}}),"Codex annotation service: status/configure(auto_answer)/ask(discussion,question?,request_id?)/cancel(run)/retry(run)/mark_read(discussion)/activity. Shared UI actions; model/effort from SIM_CODEX_MODEL/SIM_CODEX_EFFORT (default gpt-6-astra/high, reported in status), read-only answer mode. GET /v1/agent and /v1/events/agent provide live state."),
-            c("system_ui",json!({"action":{"operation":"controls"}}),"Discover live controls and activate them via the exact UI handlers. Also tab/mode/click_part/annotate/open_thread/input/cancel_input/scroll (scroll {offset_y: px} scrolls the left sidebar until the next panel rebuild). Activate requires control id and ui_revision; input uses expected_text to protect drafts. Physical placement remains display-only."),
-            c("system_discussions",json!({"action":{"operation":"list"}}),"CAD-style threads: list/get/create/reply/edit_comment/delete_comment/resolve/delete/link/pin/title/show/highlight/inspect_target/back/import_legacy. Persistent part/group links; shared undo; optional expected_revision. Drafts are never replaced by REST."),
-            c("system_grid",json!({}),"Read/set display-only grid (metres, Y up, enclosing definition frame). Never changes physics or CAD geometry. Optional expected_revision."),
-            c("system_move",json!({"names":["motor"],"position_m":[0.04,0,0.02],"snap":true,"preview":true}),"Display-only move: first named instance is the anchor, others keep their offsets. Shared mouse/REST snapping, overlap report (allowed=false for invalid preview; commit rejects), atomic undo, expected_revision. Does NOT change physics/CAD."),
-            c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
-                "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI)"),
-            c("system_state", json!({}), "System file, revision, build level, selection, findings and compile status; workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities)"),
-            c("system_open", json!({"path":"examples/systems-builder/worm-drive/winch.system.json"}), "Open another system file in this window (same handler as the Systems tab). Refuses, naming the blocker, while a text/discussion draft, placement drag, study, replay or Codex answer is in progress; a live run is stopped and saved to the old file's runs. Loads, validates and compiles off the UI thread (poll the job); a missing or invalid file is an error naming the path and the current system stays open. Writes no runs or annotations. system_state.open reports the pending/last open, discovered systems, the annotations sidecar and whether a --schematic window still shows the old file."),
-            c("system_gait_reports", json!({"dir":"examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results"}), "Read-only gait-lab results browser (same handler as the Gait lab tab's path field, Reload and first visit). Reads every <dir>/*/report.yaml (gait, pose_sequence or maneuver by kind) plus <dir>/journal.jsonl with sim_runtime::gait_lab::scan_results, off the UI thread (poll the job). Default dir: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one. Refused while a scan is pending. A missing dir is an error naming it; the last good listing stays in system_state.gait_reports with its own root. Result and system_state.gait_reports: root, journal, warnings, entries [{name, directory, kind, status, report (the report.yaml fields; null numbers mean not recorded/not simulated) | error (names the report.yaml), journal (unix_s, cached, line) or null}], plus pending, selected, error, caveat. Reports carry no runtime fingerprint, so qualification against the current code is unknown. Writes nothing and starts no evaluation."),
-            c("system_calibration_review", json!({"path":"examples/actuators/hx30hm/pwm-full-range-identification","trial":"<trial id, e.g. from trials[].id>"}), "Read-only review of a measured actuator identification archive (same handler as the Actuators tab's Measured evidence path field, Reload/Cancel and first visit). Loads <path>/observations.json and results.json with the shared sim_runtime::experiment_comparison::hx_archive::load, verifying the archive's input hashes against the workspace root (system_state.workspace), off the UI thread (poll the job). Default path: examples/actuators/hx30hm/pwm-full-range-identification under the workspace root; omitted = the current one. Refused while a load is pending. A file (e.g. a study) or a sweep.csv folder is refused as not supported yet; any error names the path and the reason, and the last good archive stays in system_state.calibration_review with its own path. Result: path, repository, label, interpretation, split_policy (verbatim), observation_blake3, model_blake3, verified_inputs, input_blake3, integrity_issues, trial_count, counts (by_split/train/held_out/all: total, pass, fail, counted from each trial's comparison.passes; held-out = every split other than train), trials [{id, run, device, stage, kind, drive, duration_s, split, held_out, voltage_range_v, temperature_range_c, unit, limits {rmse, final_abs_error}, comparison {passes, rmse, maximum_abs_error, final_error} (in unit, rad; the archive's limits are 3 and 5 encoder counts of 2π/4096 rad), samples {measured, predicted}}]. system_state.calibration_review adds phase (idle/loading/loaded/failed), pending, requested, error, filters (split all/train/held_out, outcome all/pass/fail; set with system_ui), visible (filtered trial ids) and the current page of rows. Optional trial (a trial id): selects that trial through the same path as a trial row click and the system_ui action {\"calibration_trial\": id}; with no path it selects within the shown archive without reloading (result {selected}); with a path it selects once that load finishes (result gains selected). An unknown id is an error naming it and the previous selection stays; a reload that no longer contains the selected id clears the selection. system_state.calibration_review.selected (null when none) carries id, run, device, stage, kind, drive, duration_s, split, held_out, role (held-out (validation data) / train (fitting data)), quantity, unit, limits, comparison {passes, rmse, maximum_abs_error, final_error} and measured/predicted {source ('measured (hardware archive)' / 'predicted (fitted model, archive)'), quantity, unit, count (true sample count), first, last ({time_s, value}, null when empty)}; chart gives the shared-raster axes as drawn. Writes nothing; evaluates nothing."),
-            c("system_actuators", json!({"registry":"examples/actuators/hx30hm/accepted/registry.json","check":["examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json"]}), "Read-only accepted actuator registry inspector (same handler as the Actuators tab). Loads the registry (default: examples/actuators/hx30hm/accepted/registry.json under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one) and checks each consumer file with sim_runtime::actuator_registry (omitted check = recheck the previous files, [] = none), off the UI thread (poll the job). Refused while a load is pending. A missing registry or family hash mismatch is an error naming the path; the last good load stays in system_state.actuators with its own path. Result and system_state.actuators: families (content hash, acceptance, limitations, parameters with value/unit/provenance/uncertainty (null = unknown)/evidence), roles, per-file checks (current/stale/invalid, have and accepted hashes). Writes nothing."),
-            c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
-            c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
-            c("system_undo", json!({}), "Undo the last edit in the shared history"),
-            c("system_redo", json!({}), "Redo in the shared history"),
-            c("system_run", json!({"action":"step"}), "Control the background run on the shared runtime: action start, pause, step (one timestep while paused) or reset (t = 0, paused; a run that reached 0.1 s is saved first). Same Builder methods as the Run/Pause/Step/Reset buttons"),
-            c("system_import_image", json!({"path":"/abs/board.png"}), "Import a PNG/JPEG as a reference image at the current level"),
-            c("system_suggest", json!({"instance":"motor"}), "What can snap onto each port of an instance at the current level (typed, curated first, conflicts explained)"),
-            c("system_snap", json!({"instance":"motor","port":"shaft","kind":{"kind":"element","component_type":"rotational.worm_gear"}}), "Place a fitting part next to an instance and connect it to that port (one undoable edit)"),
-            c("system_component", json!({"component_type":"rotational.worm_gear"}), "Library entry: ports, parameters, notes, equations, trade-offs and derived values"),
-            c("system_study", json!({"name":"gearboxes"}), "Run a saved comparison or sweep in the background (pass `study` to save it first); overlays results in the graph dock"),
-            c("system_study_result", json!({}), "Latest study result: variants, metrics, derived values, trade-off table; `running` while in progress"),
-            c("system_publish", json!({"definition":"dc_motor_12v"}), "Publish a definition to the library as a new version (refreshes files that bundle it)"),
-            c("system_library_updates", json!({}), "Imported definitions whose library file changed"),
-            c("system_sync", json!({}), "Update every stale import from the library (one undoable edit)"),
-            c("system_where_used", json!({"definition":"dc_motor_12v"}), "System files under examples/ and next to this file that place a definition"),
-            c("system_expose", json!({"instance":"winding","parameter":"resistance"}), "Expose an inner parameter as a parameter of the current level's definition"),
-            c("system_save_run", json!({"note":"after the k edit"}), "Keep the current run (document, seed, settings, recorded history) in <system>.runs/"),
-            c("system_replay_run", json!({"id":"…"}), "Rerun a saved run headlessly from t = 0 on a background thread and compare it with its record at every recorded sample (same handler as the Studies-tab Replay button); progress and result in system_state.replay"),
-            c("system_replay_cancel", json!({}), "Stop the running replay between simulation steps (same handler as its Cancel button); it reports no result"),
-            c("system_compare_runs", json!({"ids":["…","…"]}), "Overlay saved runs in the graph dock with a table of final values"),
-            c("system_parts", json!({}), "Authored part files (library/parts/*.part): load results, errors with file:line; reloads changed files"),
-            c("system_plot", json!({"pin":["drum.shaft.speed"],"visible":true}), "Pin observables (IDs or readable keys) to the graph dock, or clear with []"),
-        ]);
-    }
-    let server = sim_api::Server::bind(port, "physical-assembly", capabilities)?;
+
+/// The one server of the viewer, windowed or `--headless`: every mode's
+/// commands, each tagged with the modes it applies to (`capabilities`).
+/// The only `sim_api::Server::bind` in sim-spatial.
+pub fn bind(port: u16) -> std::io::Result<sim_api::Server> {
+    let server = sim_api::Server::bind(port, "sim-spatial", capabilities())?;
     server.describe("workspace", crate::workspace::json());
+    server.describe("modes", json!({
+        "all": crate::ViewerMode::ALL,
+        "rule": "each command lists the modes it applies to in `modes`; a command of another mode is refused naming the active mode. GET /v1/viewer_mode (or the command viewer_mode with {}) reports the active mode; viewer_mode {mode, path?, preset?} switches it. The headless server (--headless) serves inspect mode only.",
+    }));
     Ok(server)
 }
-fn capabilities() -> Vec<Value> {
+
+/// Every mode's commands, each with `modes`: the modes it applies to. Build
+/// and lessons share the builder (system_*); lesson_* apply in build mode
+/// only while the builder is shown over a lesson.
+pub fn capabilities() -> Vec<Value> {
+    use crate::ViewerMode::{self, Build, Inspect, Lessons, Place, Robot};
+    let mut all = Vec::new();
+    let mut tag = |list: Vec<Value>, modes: &[ViewerMode]| {
+        for mut c in list {
+            c["modes"] = json!(modes);
+            all.push(c);
+        }
+    };
+    tag(crate::app::route::capabilities(), &ViewerMode::ALL);
+    tag(scene_capabilities(), &[Inspect, Build, Lessons]);
+    tag(builder_capabilities(), &[Build, Lessons]);
+    tag(crate::lesson::rest::capabilities(), &[Lessons, Build]);
+    tag(crate::robot::capabilities(), &[Robot]);
+    tag(crate::place_view::capabilities(), &[Place]);
+    tag(vec![crate::app::route::mode_ui_capability()], &[Inspect, Place]);
+    all
+}
+
+/// Build mode's shared system-editing commands (build and lessons).
+fn builder_capabilities() -> Vec<Value> {
+    use sim_api::capability as c;
+    vec![
+        c("system_context",json!({"discussion":"thread-ID"}),"Read-only engineering context for an annotation or targets [instance/path]. Shared with Codex: inherited values, authored provenance, typed ports, complete nets, connected neighbors, registry explanations, model findings and display-only geometry. Resolved off the UI thread; no selection, model or undo changes. Empty args inspect the model. Poll the returned job URL."),
+        c("system_agent",json!({"action":{"operation":"status"}}),"Codex annotation service: status/configure(auto_answer)/ask(discussion,question?,request_id?)/cancel(run)/retry(run)/mark_read(discussion)/activity. Shared UI actions; model/effort from SIM_CODEX_MODEL/SIM_CODEX_EFFORT (default gpt-6-astra/high, reported in status), read-only answer mode. GET /v1/agent and /v1/events/agent provide live state."),
+        c("system_ui",json!({"action":{"operation":"controls"}}),"Discover live controls and activate them via the exact UI handlers. Also tab/mode/click_part/annotate/open_thread/input/cancel_input/scroll (scroll {offset_y: px} scrolls the left sidebar until the next panel rebuild). Activate requires control id and ui_revision; input uses expected_text to protect drafts. Physical placement remains display-only."),
+        c("system_discussions",json!({"action":{"operation":"list"}}),"CAD-style threads: list/get/create/reply/edit_comment/delete_comment/resolve/delete/link/pin/title/show/highlight/inspect_target/back/import_legacy. Persistent part/group links; shared undo; optional expected_revision. Drafts are never replaced by REST."),
+        c("system_grid",json!({}),"Read/set display-only grid (metres, Y up, enclosing definition frame). Never changes physics or CAD geometry. Optional expected_revision."),
+        c("system_move",json!({"names":["motor"],"position_m":[0.04,0,0.02],"snap":true,"preview":true}),"Display-only move: first named instance is the anchor, others keep their offsets. Shared mouse/REST snapping, overlap report (allowed=false for invalid preview; commit rejects), atomic undo, expected_revision. Does NOT change physics/CAD."),
+        c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
+            "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI)"),
+        c("system_state", json!({}), "System file, revision, build level, selection, findings and compile status; workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities)"),
+        c("system_open", json!({"path":"examples/systems-builder/worm-drive/winch.system.json"}), "Open another system file in this window (same handler as the Systems tab). Refuses, naming the blocker, while a text/discussion draft, placement drag, study, replay or Codex answer is in progress; a live run is stopped and saved to the old file's runs. Loads, validates and compiles off the UI thread (poll the job); a missing or invalid file is an error naming the path and the current system stays open. Writes no runs or annotations. system_state.open reports the pending/last open, discovered systems, the annotations sidecar and whether a --schematic window still shows the old file."),
+        c("system_gait_reports", json!({"dir":"examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results"}), "Read-only gait-lab results browser (same handler as the Gait lab tab's path field, Reload and first visit). Reads every <dir>/*/report.yaml (gait, pose_sequence or maneuver by kind) plus <dir>/journal.jsonl with sim_runtime::gait_lab::scan_results, off the UI thread (poll the job). Default dir: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one. Refused while a scan is pending. A missing dir is an error naming it; the last good listing stays in system_state.gait_reports with its own root. Result and system_state.gait_reports: root, journal, warnings, entries [{name, directory, kind, status, report (the report.yaml fields; null numbers mean not recorded/not simulated) | error (names the report.yaml), journal (unix_s, cached, line) or null}], plus pending, selected, error, caveat. Reports carry no runtime fingerprint, so qualification against the current code is unknown. Writes nothing and starts no evaluation."),
+        c("system_calibration_review", json!({"path":"examples/actuators/hx30hm/pwm-full-range-identification","trial":"<trial id, e.g. from trials[].id>"}), "Read-only review of a measured actuator identification archive (same handler as the Actuators tab's Measured evidence path field, Reload/Cancel and first visit). Loads <path>/observations.json and results.json with the shared sim_runtime::experiment_comparison::hx_archive::load, verifying the archive's input hashes against the workspace root (system_state.workspace), off the UI thread (poll the job). Default path: examples/actuators/hx30hm/pwm-full-range-identification under the workspace root; omitted = the current one. Refused while a load is pending. A file (e.g. a study) or a sweep.csv folder is refused as not supported yet; any error names the path and the reason, and the last good archive stays in system_state.calibration_review with its own path. Result: path, repository, label, interpretation, split_policy (verbatim), observation_blake3, model_blake3, verified_inputs, input_blake3, integrity_issues, trial_count, counts (by_split/train/held_out/all: total, pass, fail, counted from each trial's comparison.passes; held-out = every split other than train), trials [{id, run, device, stage, kind, drive, duration_s, split, held_out, voltage_range_v, temperature_range_c, unit, limits {rmse, final_abs_error}, comparison {passes, rmse, maximum_abs_error, final_error} (in unit, rad; the archive's limits are 3 and 5 encoder counts of 2π/4096 rad), samples {measured, predicted}}]. system_state.calibration_review adds phase (idle/loading/loaded/failed), pending, requested, error, filters (split all/train/held_out, outcome all/pass/fail; set with system_ui), visible (filtered trial ids) and the current page of rows. Optional trial (a trial id): selects that trial through the same path as a trial row click and the system_ui action {\"calibration_trial\": id}; with no path it selects within the shown archive without reloading (result {selected}); with a path it selects once that load finishes (result gains selected). An unknown id is an error naming it and the previous selection stays; a reload that no longer contains the selected id clears the selection. system_state.calibration_review.selected (null when none) carries id, run, device, stage, kind, drive, duration_s, split, held_out, role (held-out (validation data) / train (fitting data)), quantity, unit, limits, comparison {passes, rmse, maximum_abs_error, final_error} and measured/predicted {source ('measured (hardware archive)' / 'predicted (fitted model, archive)'), quantity, unit, count (true sample count), first, last ({time_s, value}, null when empty)}; chart gives the shared-raster axes as drawn. Writes nothing; evaluates nothing."),
+        c("system_actuators", json!({"registry":"examples/actuators/hx30hm/accepted/registry.json","check":["examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json"]}), "Read-only accepted actuator registry inspector (same handler as the Actuators tab). Loads the registry (default: examples/actuators/hx30hm/accepted/registry.json under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one) and checks each consumer file with sim_runtime::actuator_registry (omitted check = recheck the previous files, [] = none), off the UI thread (poll the job). Refused while a load is pending. A missing registry or family hash mismatch is an error naming the path; the last good load stays in system_state.actuators with its own path. Result and system_state.actuators: families (content hash, acceptance, limitations, parameters with value/unit/provenance/uncertainty (null = unknown)/evidence), roles, per-file checks (current/stale/invalid, have and accepted hashes). Writes nothing."),
+        c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
+        c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
+        c("system_undo", json!({}), "Undo the last edit in the shared history"),
+        c("system_redo", json!({}), "Redo in the shared history"),
+        c("system_run", json!({"action":"step"}), "Control the background run on the shared runtime: action start, pause, step (one timestep while paused) or reset (t = 0, paused; a run that reached 0.1 s is saved first). Same Builder methods as the Run/Pause/Step/Reset buttons"),
+        c("system_import_image", json!({"path":"/abs/board.png"}), "Import a PNG/JPEG as a reference image at the current level"),
+        c("system_suggest", json!({"instance":"motor"}), "What can snap onto each port of an instance at the current level (typed, curated first, conflicts explained)"),
+        c("system_snap", json!({"instance":"motor","port":"shaft","kind":{"kind":"element","component_type":"rotational.worm_gear"}}), "Place a fitting part next to an instance and connect it to that port (one undoable edit)"),
+        c("system_component", json!({"component_type":"rotational.worm_gear"}), "Library entry: ports, parameters, notes, equations, trade-offs and derived values"),
+        c("system_study", json!({"name":"gearboxes"}), "Run a saved comparison or sweep in the background (pass `study` to save it first); overlays results in the graph dock"),
+        c("system_study_result", json!({}), "Latest study result: variants, metrics, derived values, trade-off table; `running` while in progress"),
+        c("system_publish", json!({"definition":"dc_motor_12v"}), "Publish a definition to the library as a new version (refreshes files that bundle it)"),
+        c("system_library_updates", json!({}), "Imported definitions whose library file changed"),
+        c("system_sync", json!({}), "Update every stale import from the library (one undoable edit)"),
+        c("system_where_used", json!({"definition":"dc_motor_12v"}), "System files under examples/ and next to this file that place a definition"),
+        c("system_expose", json!({"instance":"winding","parameter":"resistance"}), "Expose an inner parameter as a parameter of the current level's definition"),
+        c("system_save_run", json!({"note":"after the k edit"}), "Keep the current run (document, seed, settings, recorded history) in <system>.runs/"),
+        c("system_replay_run", json!({"id":"…"}), "Rerun a saved run headlessly from t = 0 on a background thread and compare it with its record at every recorded sample (same handler as the Studies-tab Replay button); progress and result in system_state.replay"),
+        c("system_replay_cancel", json!({}), "Stop the running replay between simulation steps (same handler as its Cancel button); it reports no result"),
+        c("system_compare_runs", json!({"ids":["…","…"]}), "Overlay saved runs in the graph dock with a table of final values"),
+        c("system_parts", json!({}), "Authored part files (library/parts/*.part): load results, errors with file:line; reloads changed files"),
+        c("system_plot", json!({"pin":["drum.shaft.speed"],"visible":true}), "Pin observables (IDs or readable keys) to the graph dock, or clear with []"),
+    ]
+}
+/// Inspect mode's display commands (inspect, build and lessons: the spatial view).
+fn scene_capabilities() -> Vec<Value> {
     use sim_api::capability as c;
     vec![
             c(
@@ -106,11 +128,6 @@ fn capabilities() -> Vec<Value> {
                 "render",
                 json!({"options":{"view":"isometric","size":{"width":1280,"height":900},"section":null}}),
                 "Off-screen PNG of captured geometry; x/y/z sections use meters and do not change the viewport",
-            ),
-            c(
-                "screenshot",
-                json!({"path":"/tmp/view.png"}),
-                "Save the window exactly as drawn (UI, overlays, lesson pages) to a PNG after the next frame",
             ),
             c(
                 "state",
@@ -377,120 +394,131 @@ fn tick(
     mut learn: Option<&mut crate::lesson::Learn>,
     shots: &mut Vec<std::path::PathBuf>,
     occluded: bool,
+    mode: crate::ViewerMode,
+    mut modes: Option<(&mut crate::app::switch::Switcher, &crate::app::switch::Documents)>,
 ) {
     if let Some(b)=builder.as_deref_mut(){b.agent_endpoint(format!("http://{}",server.address));}
     server.poll(|command, continuation, cancelled| {
-        if command.command == "screenshot" {
-            return sim_api::Outcome::Done(screenshot_path(&command.args, occluded).map(|p| {
-                shots.push(p.clone());
-                json!({"path": p, "note": "saved once the next frame renders"})
-            }));
+        // The one dispatch: viewer_mode, mode:* controls and other modes' commands.
+        if let Some(outcome) = crate::app::route::route(mode, modes.as_mut().map(|(s, d)| (&mut **s, &**d)), command, continuation, cancelled) {
+            return outcome;
         }
-        if command.command == "lesson_frames" {
-            let Some(l) = learn.as_deref_mut() else { return sim_api::Outcome::Done(Err("start the viewer with --lessons DIR to use lessons".into())) };
-            if cancelled {
-                l.frames = None;
-                return sim_api::Outcome::Done(Err("cancelled".into()));
+        let mut body = || -> sim_api::Outcome {
+            if command.command == "screenshot" {
+                return sim_api::Outcome::Done(screenshot_path(&command.args, occluded).map(|p| {
+                    shots.push(p.clone());
+                    json!({"path": p, "note": "saved once the next frame renders"})
+                }));
             }
-            if continuation.is_null() {
-                let started = serde_json::from_value::<crate::lesson::frames::FramesRequest>(command.args.clone()).map_err(|e| e.to_string()).and_then(|req| l.start_frames(req));
-                return match started {
-                    Ok(()) => {
-                        *continuation = json!({"capturing": true});
-                        sim_api::Outcome::Pending
+            if command.command == "lesson_frames" {
+                let Some(l) = learn.as_deref_mut() else { return sim_api::Outcome::Done(Err("no lessons are open in this window: switch with viewer_mode {\"mode\":\"lessons\",\"path\":\"DIR\"}".into())) };
+                if cancelled {
+                    l.frames = None;
+                    return sim_api::Outcome::Done(Err("cancelled".into()));
+                }
+                if continuation.is_null() {
+                    let started = serde_json::from_value::<crate::lesson::frames::FramesRequest>(command.args.clone()).map_err(|e| e.to_string()).and_then(|req| l.start_frames(req));
+                    return match started {
+                        Ok(()) => {
+                            *continuation = json!({"capturing": true});
+                            sim_api::Outcome::Pending
+                        }
+                        Err(e) => sim_api::Outcome::Done(Err(e)),
+                    };
+                }
+                return crate::lesson::frames::finish(l).unwrap_or(sim_api::Outcome::Pending);
+            }
+            if command.command.starts_with("lesson_") {
+                return match learn.as_deref_mut() {
+                    Some(l) => crate::lesson::rest::execute(l, scene, command).into(),
+                    None => sim_api::Outcome::Done(Err("no lessons are open in this window: switch with viewer_mode {\"mode\":\"lessons\",\"path\":\"DIR\"}".into())),
+                };
+            }
+            if command.command == "system_context" {
+                return match builder.as_deref_mut() {
+                    Some(b) => match serde_json::from_value::<sim_model_context::Request>(command.args.clone()) {
+                        Ok(request) => b.context_request(request, continuation, cancelled),
+                        Err(e) => sim_api::Outcome::Done(Err(e.to_string())),
+                    },
+                    None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to inspect systems".into())),
+                };
+            }
+            if command.command == "system_open" {
+                return match (builder.as_deref_mut(), command.args.get("path").and_then(|p| p.as_str())) {
+                    (Some(b), Some(path)) => b.open_request(std::path::PathBuf::from(path), continuation, cancelled),
+                    (Some(_), None) => sim_api::Outcome::Done(Err("system_open needs {\"path\": \"…/file.system.json\"}".into())),
+                    (None, _) => sim_api::Outcome::Done(Err("start the viewer with --system FILE to open systems".into())),
+                };
+            }
+            if command.command == "system_gait_reports" {
+                return match builder.as_deref_mut() {
+                    Some(b) => b.gait_reports_rest(&command.args, continuation, cancelled),
+                    None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to browse gait-lab results".into())),
+                };
+            }
+            if command.command == "system_calibration_review" {
+                return match builder.as_deref_mut() {
+                    Some(b) => b.calibration_rest(&command.args, continuation, cancelled),
+                    None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to review identification archives".into())),
+                };
+            }
+            if command.command == "system_actuators" {
+                return match builder.as_deref_mut() {
+                    Some(b) => b.actuators_rest(&command.args, continuation, cancelled),
+                    None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to inspect actuators".into())),
+                };
+            }
+            if command.command.starts_with("system") {
+                return match builder.as_deref_mut() {
+                    Some(b) => system_execute(b, scene, camera, command).into(),
+                    None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to edit systems".into())),
+                };
+            }
+            if command.command == "annotations" {
+                return match sim_api::decode::<Command>(command) {
+                    Ok(Command::Annotations { action }) => {
+                        notes::api(scene, camera, action, continuation)
                     }
                     Err(e) => sim_api::Outcome::Done(Err(e)),
+                    _ => unreachable!(),
                 };
             }
-            return crate::lesson::frames::finish(l).unwrap_or(sim_api::Outcome::Pending);
-        }
-        if command.command.starts_with("lesson_") {
-            return match learn.as_deref_mut() {
-                Some(l) => crate::lesson::rest::execute(l, scene, command).into(),
-                None => sim_api::Outcome::Done(Err("start the viewer with --lessons DIR to use lessons".into())),
-            };
-        }
-        if command.command == "system_context" {
-            return match builder.as_deref_mut() {
-                Some(b) => match serde_json::from_value::<sim_model_context::Request>(command.args.clone()) {
-                    Ok(request) => b.context_request(request, continuation, cancelled),
-                    Err(e) => sim_api::Outcome::Done(Err(e.to_string())),
-                },
-                None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to inspect systems".into())),
-            };
-        }
-        if command.command == "system_open" {
-            return match (builder.as_deref_mut(), command.args.get("path").and_then(|p| p.as_str())) {
-                (Some(b), Some(path)) => b.open_request(std::path::PathBuf::from(path), continuation, cancelled),
-                (Some(_), None) => sim_api::Outcome::Done(Err("system_open needs {\"path\": \"…/file.system.json\"}".into())),
-                (None, _) => sim_api::Outcome::Done(Err("start the viewer with --system FILE to open systems".into())),
-            };
-        }
-        if command.command == "system_gait_reports" {
-            return match builder.as_deref_mut() {
-                Some(b) => b.gait_reports_rest(&command.args, continuation, cancelled),
-                None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to browse gait-lab results".into())),
-            };
-        }
-        if command.command == "system_calibration_review" {
-            return match builder.as_deref_mut() {
-                Some(b) => b.calibration_rest(&command.args, continuation, cancelled),
-                None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to review identification archives".into())),
-            };
-        }
-        if command.command == "system_actuators" {
-            return match builder.as_deref_mut() {
-                Some(b) => b.actuators_rest(&command.args, continuation, cancelled),
-                None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to inspect actuators".into())),
-            };
-        }
-        if command.command.starts_with("system") {
-            return match builder.as_deref_mut() {
-                Some(b) => system_execute(b, scene, camera, command).into(),
-                None => sim_api::Outcome::Done(Err("start the viewer with --system FILE to edit systems".into())),
-            };
-        }
-        if command.command == "annotations" {
-            return match sim_api::decode::<Command>(command) {
-                Ok(Command::Annotations { action }) => {
-                    notes::api(scene, camera, action, continuation)
+            if command.command == "render" {
+                if task.is_none() {
+                    let options = match sim_api::decode::<Command>(command) {
+                        Ok(Command::Render { options }) => options,
+                        Ok(_) => unreachable!(),
+                        Err(e) => return sim_api::Outcome::Done(Err(e)),
+                    };
+                    let snapshot = match capture(scene, camera, &options) {
+                        Ok(s) => s,
+                        Err(e) => return sim_api::Outcome::Done(Err(e)),
+                    };
+                    *task = Some(sim_api::ImageTask::spawn(move || {
+                        sim_render::physical::render(&snapshot, &options).map(|r| sim_api::Artifact {
+                            png: r.png,
+                            metadata: r.metadata,
+                        })
+                    }));
+                    *continuation = json!(true);
                 }
-                Err(e) => sim_api::Outcome::Done(Err(e)),
-                _ => unreachable!(),
-            };
-        }
-        if command.command == "render" {
-            if task.is_none() {
-                let options = match sim_api::decode::<Command>(command) {
-                    Ok(Command::Render { options }) => options,
-                    Ok(_) => unreachable!(),
-                    Err(e) => return sim_api::Outcome::Done(Err(e)),
-                };
-                let snapshot = match capture(scene, camera, &options) {
-                    Ok(s) => s,
-                    Err(e) => return sim_api::Outcome::Done(Err(e)),
-                };
-                *task = Some(sim_api::ImageTask::spawn(move || {
-                    sim_render::physical::render(&snapshot, &options).map(|r| sim_api::Artifact {
-                        png: r.png,
-                        metadata: r.metadata,
-                    })
-                }));
-                *continuation = json!(true);
+                let result = task.as_mut().unwrap().poll(cancelled);
+                if !matches!(result, sim_api::Outcome::Pending) {
+                    *task = None;
+                }
+                return result;
             }
-            let result = task.as_mut().unwrap().poll(cancelled);
-            if !matches!(result, sim_api::Outcome::Pending) {
-                *task = None;
-            }
-            return result;
-        }
-        execute(scene, camera, command).into()
+            execute(scene, camera, command).into()
+        };
+        crate::app::route::annotate(mode, command, body())
     });
     if server.snapshot_due() {
         if let Some(b)=builder.as_deref_mut(){server.publish("agent",b.agent_json());}
         if let Some(l)=learn.as_deref(){server.publish("lesson",crate::lesson::rest::state(l));}
 
-        server.publish("state", state(scene, camera));
+        let mut shown = state(scene, camera);
+        shown["viewer_mode"] = json!(mode.name());
+        server.publish("state", shown);
         server.publish("annotations", json!(scene.note_document()));
         server.publish_changed("description", &scene.description.id, || {
             json!(scene.description)
@@ -508,11 +536,15 @@ pub(super) fn poll(
     mut builder: Option<ResMut<builder::Builder>>,
     mut learn: Option<ResMut<crate::lesson::Learn>>,
     occlusion: Res<Occlusion>,
+    mut modes: crate::app::route::Modes,
 ) {
     if let Some(mut rest) = rest {
         let Rest(server, task) = &mut *rest;
         let mut shots = Vec::new();
-        tick(server, &mut scene, &mut camera, task, builder.as_deref_mut(), learn.as_deref_mut(), &mut shots, occlusion.0);
+        let mode = modes.active();
+        // The builder stays in the window in inspect mode, but inspect does not serve it.
+        let family = mode.builder_family();
+        tick(server, &mut scene, &mut camera, task, builder.as_deref_mut().filter(|_| family), learn.as_deref_mut().filter(|_| family), &mut shots, occlusion.0, mode, Some(modes.parts()));
         // Keep frames coming while a job runs; an idle background window
         // otherwise steps only on its slow low-power timer.
         if server.busy() || !shots.is_empty() {
@@ -636,7 +668,7 @@ pub fn headless(
             camera.radius = radius * 2.9;
             camera.home = false;
         }
-        tick(&mut server, &mut scene, &mut camera, &mut image_task, None, None, &mut Vec::new(), false);
+        tick(&mut server, &mut scene, &mut camera, &mut image_task, None, None, &mut Vec::new(), false, crate::ViewerMode::Inspect, None);
         std::thread::sleep(std::time::Duration::from_millis(16));
     }
 }

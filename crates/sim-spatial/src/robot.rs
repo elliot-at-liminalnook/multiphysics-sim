@@ -2363,6 +2363,30 @@ fn stress_paint(mut view: ResMut<RobotView>, links: Query<(&LinkMesh, &Mesh3d)>,
     view.stress.painted = Some((revision, started.elapsed().as_secs_f64()));
 }
 
+/// A stress peak for the label: three significant figures in Pa, kPa or MPa,
+/// chosen after rounding so 999.96 kPa reads "1.00 MPa". Display only; the
+/// stored `peak_stress_pa` is never rewritten. Rounding keeps the label steady.
+fn stress_label(pa: f64) -> String {
+    if !pa.is_finite() {
+        return "—".into();
+    }
+    if pa == 0.0 {
+        return "0 Pa".into();
+    }
+    let sig3 = |v: f64| match v.abs().log10().floor() as i32 - 2 {
+        k if k >= 0 => (v / 10f64.powi(k)).round() * 10f64.powi(k),
+        k => (v * 10f64.powi(-k)).round() / 10f64.powi(-k),
+    };
+    let r = sig3(pa);
+    let (v, unit) = match r.abs() {
+        a if a >= 1e6 => (r / 1e6, "MPa"),
+        a if a >= 1e3 => (r / 1e3, "kPa"),
+        _ => (r, "Pa"),
+    };
+    let decimals = (2 - v.abs().log10().floor() as i32).max(0) as usize;
+    format!("{v:.decimals$} {unit}")
+}
+
 /// The stress label under the overlay buttons (`--robot FILE`): path, mtime,
 /// status against the loaded model, peak per link and the colour scale.
 fn stress_panel(view: Res<RobotView>, mut line: Single<&mut Text, With<StressText>>) {
@@ -2378,7 +2402,7 @@ fn stress_panel(view: Res<RobotView>, mut line: Single<&mut Text, With<StressTex
                     robot_stress::Contents::Invalid(e) => format!("Stress: results file not usable: {e}"),
                     robot_stress::Contents::Parsed(v) => {
                         let mtime = r.mtime_unix_s.map_or("mtime unknown".into(), |t| format!("mtime {}", robot_recording::iso((t * 1e3) as u128)));
-                        let peaks: Vec<String> = sim_domain_robot::stress_results::peaks(v).into_iter().map(|(k, p)| format!("{k} {}", p.map_or("—".into(), |p| format!("{:.2} MPa", p / 1e6)))).collect();
+                        let peaks: Vec<String> = sim_domain_robot::stress_results::peaks(v).into_iter().map(|(k, p)| format!("{k} {}", p.map_or("—".into(), stress_label))).collect();
                         format!("Stress · {} · {path} · {mtime}\npeak: {}\n{}", r.status(m), peaks.join(" · "), sim_domain_robot::stress_results::SCALE)
                     }
                 }
@@ -2546,6 +2570,17 @@ fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, m
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn stress_label_keeps_three_significant_figures_across_units() {
+        assert_eq!(stress_label(0.0), "0 Pa");
+        assert_eq!(stress_label(12_345.0), "12.3 kPa");
+        assert_eq!(stress_label(4_560.0), "4.56 kPa");
+        assert_eq!(stress_label(999_960.0), "1.00 MPa");
+        assert_eq!(stress_label(23_456_789.0), "23.5 MPa");
+        assert_eq!(stress_label(250e6), "250 MPa");
+        assert_eq!(stress_label(7.25), "7.25 Pa");
+        assert_eq!(stress_label(f64::NAN), "—");
+    }
     #[test]
     fn robot_mode_loads_wheeled_baseline_and_names_bad_paths() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");

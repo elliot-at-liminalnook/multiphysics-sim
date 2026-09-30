@@ -34,7 +34,7 @@
 //! - `scroll_area(layout: Node, offset: f32)`; `wheel_delta(&mut MessageReader<MouseWheel>, line_px) -> f32`
 //! - `slider(SliderLook::{Track, Timebar, Scrub}, value: f32, action, label)`: read
 //!   `(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>)` each frame
-//! - `pointer_surface(block: bool)` with `surface_point(&RelativeCursorPosition) -> Option<Vec2>`
+//! - `pointer_surface()` with `surface_point(&RelativeCursorPosition) -> Option<Vec2>`
 //! - `chart_image(image, layout: Node, framed: bool)`, `chart_label(value, Corner)`
 //!
 //! Rules: widgets take their action as a component and never decide what

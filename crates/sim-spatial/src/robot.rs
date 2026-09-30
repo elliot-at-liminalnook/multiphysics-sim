@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use sim_domain_robot::cad_link::{self, CadLinkStatus};
-use crate::robot_run::{RunAction, RunController};
+use crate::robot_run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, RunAction, RunController};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
 
@@ -197,6 +197,13 @@ impl RobotView {
         let run = self.run.as_ref().map(|r| r.state_json(&names));
         let stepped = self.run.as_ref().and_then(|r| r.frame()).is_some();
         let cad = self.cad_link.as_ref().map(|c| json!({"link": c, "rule": cad_link::RESOLUTION_RULE}));
+        let jog = self.run.as_ref().map(|r| {
+            let m = r.model();
+            let joints: Vec<Value> = m.joints.iter().filter(|j| j.kind != "fixed" && !j.is_loop()).map(|j| r.jog_json(&j.name)).collect();
+            let selected: Vec<String> = jog_joints(self).into_iter().map(|(j, _)| j).collect();
+            json!({"label": JOG_LABEL, "semantics": JOG_SEMANTICS, "control_mode": m.control.mode, "trajectory_keyframes": m.control.trajectory.len(),
+                "step_rad": JOG_STEP_RAD, "step_m": JOG_STEP_M, "selected_link_joints": selected, "joints": joints, "last_apply_error": r.jog_error()})
+        });
         json!({"file": self.path, "status": status, "error": error, "load_seconds": seconds,
             "link_count": m.map(|m| m.links.len()), "links": links, "selected": selected,
             "joints": joints, "motors": motors, "transmissions": m.map(|m| &m.transmissions), "battery": m.and_then(|m| m.battery.as_ref()),
@@ -204,7 +211,7 @@ impl RobotView {
             "materials": m.map(|m| &m.materials), "source": m.map(|m| &m.source), "cad_link": cad,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "pose": if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -252,11 +259,35 @@ enum RobotAction {
     Fit,
     /// Run/Pause/Step/Reset on the run thread.
     Run { action: RunAction },
+    /// Servo-target jog by a step from the current requested target (the +/− buttons, `system_ui` jog:*).
+    Jog { joint: String, delta: f64 },
+    /// Servo-target jog to an absolute target (REST `robot_jog`).
+    JogTo { joint: String, target: f64 },
+}
+/// The absolute target a jog action asks for (file validation happens in `check_jog`).
+fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
+    let servo = crate::robot_run::servo(run.model(), joint)?;
+    Ok(run.requested_target(&servo) + delta)
+}
+/// Jog controls follow the one link selection: the non-fixed joints touching
+/// the selected link, the same joints the Joints section lists. A joint links
+/// two bodies, so selecting either one reaches it, and no second (joint)
+/// selection state is needed. Joints without a servo target stay listed,
+/// disabled with the reason.
+fn jog_joints(view: &RobotView) -> Vec<(String, f64)> {
+    let (Some(m), Some(i)) = (view.model.as_ref(), view.selected) else { return Vec::new() };
+    let Some(l) = m.links.get(i) else { return Vec::new() };
+    touching(m, &l.name).filter(|(_, j)| j.kind != "fixed" && !j.is_loop()).map(|(_, j)| (j.name.clone(), if j.kind == "prismatic" { JOG_STEP_M } else { JOG_STEP_RAD })).collect()
 }
 /// Why a control is unavailable now (`Ok` when enabled).
 fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
     match action {
         RobotAction::Run { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check(*action),
+        RobotAction::Jog { joint, delta } => {
+            let run = view.run.as_ref().ok_or("the robot has not loaded")?;
+            run.check_jog(joint, jog_target(run, joint, *delta)?).map(|_| ())
+        }
+        RobotAction::JogTo { joint, target } => view.run.as_ref().ok_or("the robot has not loaded")?.check_jog(joint, *target).map(|_| ()),
         _ => Ok(()),
     }
 }
@@ -270,6 +301,12 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
                 view.pose_dirty = true;
             }
         }
+        RobotAction::Jog { joint, delta } => {
+            let run = view.run.as_mut().ok_or("the robot has not loaded")?;
+            let target = jog_target(run, &joint, delta)?;
+            run.jog(&joint, target)?;
+        }
+        RobotAction::JogTo { joint, target } => view.run.as_mut().ok_or("the robot has not loaded")?.jog(&joint, target)?,
         RobotAction::SelectLink { index, .. } => {
             view.selected = Some(index);
             view.scroll_to = Some(0.0);
@@ -302,6 +339,11 @@ fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
         for action in RunAction::ALL {
             out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
         }
+        for (joint, step) in jog_joints(view) {
+            let unit = if step == JOG_STEP_M { "m" } else { "rad" };
+            out.push((format!("jog:{joint}:-"), format!("Jog {joint} servo target −{step} {unit}"), RobotAction::Jog { joint: joint.clone(), delta: -step }));
+            out.push((format!("jog:{joint}:+"), format!("Jog {joint} servo target +{step} {unit}"), RobotAction::Jog { joint, delta: step }));
+        }
     }
     out
 }
@@ -319,6 +361,7 @@ enum Request {
     Camera { focus: [f32; 3], radius: f32, yaw: f32, pitch: f32 },
     Fit,
     RobotRun { action: String },
+    RobotJog { joint: String, target: Option<f64>, delta: Option<f64> },
 }
 fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Command) -> sim_api::Result {
     match sim_api::decode::<Request>(command)? {
@@ -337,6 +380,14 @@ fn execute(view: &mut RobotView, orbit: &mut RobotOrbit, command: &sim_api::Comm
         Request::RobotRun { action } => {
             let action = RunAction::parse(&action)?;
             dispatch(view, orbit, RobotAction::Run { action })?;
+        }
+        Request::RobotJog { joint, target, delta } => {
+            let action = match (target, delta) {
+                (Some(target), None) => RobotAction::JogTo { joint, target },
+                (None, Some(delta)) => RobotAction::Jog { joint, delta },
+                _ => return Err("robot_jog needs exactly one of target (absolute, rad or m) or delta".into()),
+            };
+            dispatch(view, orbit, action)?;
         }
         Request::Camera { focus, radius, yaw, pitch } => {
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
@@ -358,6 +409,7 @@ fn capabilities() -> Vec<Value> {
     vec![
         c("robot_state", json!({}), "Read-only robot mode: file, status (loading | loaded | error, with the error naming the path), link_count, links, the selected link (mass, com, inertia, material and its density or material_in_file=false, file_notes), joints, motors, transmissions, battery, actuator_profiles (with content hashes), uncertainty, identification, the source block verbatim and cad_link (current | stale | missing | no_recorded_hash | no_source_file | unreadable, with the resolution rule and paths tried). Numbers are full-precision JSON; provenance is null unless the file carries a typed label (provenance_rule). Also the inspector section and scroll, and run (null until loaded; phase idle with null time before any build; see robot_run). Nothing is written."),
         c("system_ui", json!({"action":{"operation":"controls"}}), "Discover the link list, inspector sections (section:link | joints | drives | source), inspector scrolling and view controls (controls) and activate one by id with the current ui_revision (activate), through the same handler as a click. Selection is shared by the list, the 3D view and robot_state."),
+        c("robot_jog", json!({"joint":"left axle","target":0.5}), &format!("Servo-target jog of one joint by its file name: {JOG_LABEL}. Give target (absolute; rad, or m on a prismatic joint) or delta (from the current requested target). The same handler as the jog +/− buttons and system_ui jog:<joint>:+/- controls (±{JOG_STEP_RAD} rad, ±{JOG_STEP_M} m prismatic; listed for the joints touching the selected link). Errors name the joint: unknown joint, no servo target (passive joint, firmware none, fixed, or a trajectory-mode file), non-finite target, or a target outside the file's limits (with the limit; never clamped); after a failed run, Reset first. {JOG_SEMANTICS} robot_state.jog reports control mode, label and, per joint, the limit (or no limit in file), requested target, and the target and measured value from the latest accepted frame.")),
         c("robot_run", json!({"action":"start"}), "Run controls, the same handler as the Run/Pause/Step/Reset buttons and system_ui run:* controls. start runs the shared PhysicalRobot on the run thread (built from the loaded model with sim_runtime::registry() and BuildOptions::default()), paced at most to real time; pause stops it; step advances exactly one 0.02 s chunk and is refused while running; reset rebuilds at t = 0 (assembly pose), bumps the generation and leaves it paused (allowed after a failure). An unknown action is an error naming it and listing the valid ones. robot_state.run reports phase (idle | building | running | paused | failed), time, steps (chunks), chunk_s, measured rtf, generation, error and the latest accepted frame. Nothing is written."),
         c("screenshot", json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn to a PNG after the next frame"),
         c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),
@@ -394,6 +446,12 @@ struct TabButton(Section);
 struct RunButton(RunAction);
 #[derive(Component)]
 struct RunText;
+#[derive(Component)]
+struct JogRoot;
+#[derive(Component)]
+struct JogText(String);
+#[derive(Component)]
+struct JogButton;
 #[derive(Resource)]
 struct Materials {
     normal: Handle<StandardMaterial>,
@@ -422,7 +480,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
             ..default()
         }))
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
-        .add_systems(Update, (receive, poll_rest, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, draw).chain())
+        .add_systems(Update, (receive, poll_rest, buttons, apply_frames, scroll, orbit, viewport, highlight, panels, jog_panel, draw).chain())
         .run();
 }
 
@@ -469,6 +527,8 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
         BackgroundColor(PANEL),
         children![
             (Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), flex_shrink: 0.0, ..default() }, children![tab(&fonts, Section::Link), tab(&fonts, Section::Joints), tab(&fonts, Section::Drives), tab(&fonts, Section::Source)]),
+            // Servo-target jog rows for the selected link's joints (rebuilt by `jog_panel`).
+            (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, JogRoot),
             (
                 Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, overflow: Overflow::scroll_y(), ..default() },
                 ScrollPosition::default(),
@@ -844,6 +904,58 @@ fn panels(
     }
 }
 
+/// Jog rows for the joints touching the selected link: the joint's servo
+/// state and −/+ buttons (the same `RobotAction::Jog` as `system_ui` jog:*).
+fn jog_panel(
+    mut commands: Commands,
+    view: Res<RobotView>,
+    fonts: Res<UiFonts>,
+    root: Single<Entity, With<JogRoot>>,
+    mut shown: Local<Option<Vec<String>>>,
+    mut texts: Query<(&JogText, &mut Text)>,
+    mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<JogButton>>,
+) {
+    let joints = jog_joints(&view);
+    let names: Vec<String> = joints.iter().map(|(j, _)| j.clone()).collect();
+    if shown.as_ref() != Some(&names) {
+        commands.entity(*root).despawn_related::<Children>();
+        let header = if joints.is_empty() { String::new() } else { format!("Jog — {JOG_LABEL}") };
+        let mut rows = vec![commands.spawn(label(&fonts, &header, 11.5, MUTED)).id()];
+        for (joint, step) in &joints {
+            let button = |sign: f64, text: &str| (Button, JogButton, RobotAction::Jog { joint: joint.clone(), delta: sign * step }, Node { padding: UiRect::axes(Val::Px(9.0), Val::Px(1.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 13.0, INK)]);
+            rows.push(
+                commands
+                    .spawn((
+                        Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, ..default() },
+                        children![button(-1.0, "−"), button(1.0, "+"), (label(&fonts, joint, 11.5, INK), JogText(joint.clone()))],
+                    ))
+                    .id(),
+            );
+        }
+        commands.entity(*root).add_children(&rows);
+        *shown = Some(names);
+    }
+    if let Some(r) = &view.run {
+        for (joint, mut text) in &mut texts {
+            let line = format!("{} · {}", joint.0, jog_line(r, &joint.0));
+            if text.0 != line {
+                text.0 = line;
+            }
+        }
+    }
+    for (action, interaction, mut background) in &mut buttons {
+        let enabled = check(&view, action).is_ok();
+        let color = match (enabled, interaction) {
+            (false, _) => Color::srgba(0.16, 0.20, 0.25, 0.35),
+            (true, Interaction::Hovered | Interaction::Pressed) => ACCENT.with_alpha(0.45),
+            (true, _) => Color::srgb(0.16, 0.20, 0.25),
+        };
+        if background.0 != color {
+            background.0 = color;
+        }
+    }
+}
+
 /// A typed provenance label spelled as the file stores it.
 fn provenance_label(p: &impl Serialize) -> String {
     serde_json::to_value(p).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default()
@@ -911,6 +1023,12 @@ fn joints_text(view: &RobotView, m: &PhysicalModel) -> String {
         None => format!("All {} joints (select a link to filter)\n", m.joints.len()),
     };
     t += &format!("SI units, as stored. Values without a label: {UNLABELLED}.\n");
+    if let Some(r) = &view.run {
+        t += &format!("\nJOG — {JOG_LABEL}\ncontrol mode (file): {}\n{}\n", m.control.mode, JOG_NOTE);
+        if let Some(e) = r.jog_error() {
+            t += &format!("last jog not applied: {e}\n");
+        }
+    }
     for (_, j) in joints {
         let p = &j.physics;
         let f = &p.friction;
@@ -932,8 +1050,27 @@ fn joints_text(view: &RobotView, m: &PhysicalModel) -> String {
             None => "  drive_backlash: none stored\n".to_string(),
         };
         t += &format!("  physics.source (file's text): \"{}\"\n  motor: {}\n", or_none(&p.source), j.motor.as_deref().unwrap_or("none"));
+        if let Some(r) = &view.run {
+            t += &format!("  servo: {}\n", jog_line(r, &j.name));
+        }
     }
     t
+}
+
+const JOG_NOTE: &str = "Jogging while paused sets the target; it takes effect when running or stepping. Before the first build it is queued and applied after the build. Reset returns every target to the file's control targets. Nothing is written.";
+
+/// A joint's servo state from the latest accepted frame, or why it has none.
+fn jog_line(r: &RunController, joint: &str) -> String {
+    match crate::robot_run::servo(r.model(), joint) {
+        Err(e) => format!("none — {e}"),
+        Ok(s) => {
+            let latest = r.frame().and_then(|f| f.servo(joint));
+            let now = latest.map_or("target — · measured — (no frame yet)".to_string(), |(t, a)| format!("target {t:.3} · measured {a:.3} {}", s.unit));
+            let requested = r.requested_target(&s);
+            let pending = if latest.is_none_or(|(t, _)| t != requested) { format!(" · requested {requested:.3}") } else { String::new() };
+            format!("{now}{pending} · {}", s.limit_text())
+        }
+    }
 }
 
 /// Motors, transmissions, battery and actuator profiles.

@@ -156,6 +156,9 @@ pub struct Frame {
     /// Presets: the held action (the session's input values, in `inputs()`
     /// order) when the frame was taken; empty for `--robot FILE`.
     pub inputs: Vec<f64>,
+    /// `--robot FILE`: contacts, joint frames and deflections copied from the
+    /// PhysicalRobot on the run thread (each only while its overlay is on).
+    pub overlays: Overlays,
 }
 impl Frame {
     /// (target, measured angle) of a joint by its file name, if the robot has a target for it.
@@ -163,6 +166,76 @@ impl Frame {
         let i = self.joint_names.iter().position(|n| short(n) == joint)?;
         Some((*self.targets.get(i)?, *self.joint_angles.get(i)?))
     }
+}
+
+/// Force line length per newton of contact force (m/N), as sim-app's cad scene.
+pub const FORCE_SCALE_M_PER_N: f64 = 0.005;
+/// Deflection lines are drawn this many times their displacement, as sim-app's cad scene.
+pub const DEFLECTION_MAGNIFICATION: f64 = 50.0;
+/// Half-length of each drawn joint axis (m), as sim-app's cad scene.
+pub const JOINT_AXIS_HALF_M: f64 = 0.02;
+/// Contacts listed with their values in `robot_state.overlays` (all are counted).
+pub const OVERLAY_SAMPLE: usize = 4;
+pub const OVERLAY_COST_RULE: &str = "each overlay's data is computed on the run thread only while that overlay is on (PhysicalRobot::contacts, joint_frames and deflections each evaluate the articulation once per published frame, i.e. per 0.02 s chunk); a hidden overlay's list is null in the frame, never stale data";
+
+/// Which run-thread overlays are on (`robot_overlay`, `system_ui` overlay:*, keys C/J/F, the inspector buttons).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, serde::Deserialize)]
+pub struct OverlayFlags {
+    pub contacts: bool,
+    pub joints: bool,
+    pub deflections: bool,
+}
+impl Default for OverlayFlags {
+    /// sim-app's cad scene draws all three (contacts toggleable, on by default).
+    fn default() -> Self {
+        Self { contacts: true, joints: true, deflections: true }
+    }
+}
+/// One `PhysicalRobot::contacts()` entry: model frame, SI (m, N).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct OverlayContact {
+    pub link: String,
+    /// The other link's name, or "ground".
+    pub other: String,
+    pub point: [f64; 3],
+    pub force: [f64; 3],
+    pub penetration: f64,
+}
+/// One `PhysicalRobot::joint_frames()` entry: the joint point and its axes, model frame.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct OverlayJoint {
+    pub name: String,
+    pub point: [f64; 3],
+    pub axes: Vec<[f64; 3]>,
+}
+/// One `PhysicalRobot::deflections()` entry: a flexible link's boundary point and its displacement (m), model frame.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct OverlayDeflection {
+    pub link: usize,
+    pub point: [f64; 3],
+    pub displacement: [f64; 3],
+}
+/// A frame's overlay data; each list is None when its overlay was off (not computed) or for a preset.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Overlays {
+    /// The flags the run thread built this frame with.
+    pub flags: Option<OverlayFlags>,
+    pub contacts: Option<Vec<OverlayContact>>,
+    pub joints: Option<Vec<OverlayJoint>>,
+    pub deflections: Option<Vec<OverlayDeflection>>,
+}
+fn a3(v: &sim_domain_robot::math::V) -> [f64; 3] {
+    [v.x, v.y, v.z]
+}
+/// Copies the robot's own contacts, joint frames and deflections for the overlays that are on.
+pub fn overlays(robot: &sim_runtime::physical::PhysicalRobot, flags: OverlayFlags) -> Overlays {
+    let name = |i: usize| robot.art.links.get(i).map_or_else(|| format!("link {i}"), |l| l.name.clone());
+    let contacts = flags.contacts.then(|| {
+        robot.contacts().iter().map(|c| OverlayContact { link: name(c.link), other: c.other.map_or_else(|| "ground".to_string(), name), point: a3(&c.point), force: a3(&c.force), penetration: c.penetration }).collect()
+    });
+    let joints = flags.joints.then(|| robot.joint_frames().iter().map(|(n, p, axes)| OverlayJoint { name: n.clone(), point: a3(p), axes: axes.iter().map(a3).collect() }).collect());
+    let deflections = flags.deflections.then(|| robot.deflections().iter().map(|(l, p, u)| OverlayDeflection { link: *l, point: a3(p), displacement: a3(u) }).collect());
+    Overlays { flags: Some(flags), contacts, joints, deflections }
 }
 
 /// The UI keeps a frame only if it belongs to the current generation.
@@ -299,6 +372,8 @@ enum Command {
     Replay { generation: u64, seq: u64, path: std::path::PathBuf },
     /// Stop the replay between chunks.
     CancelReplay,
+    /// Which overlay data `--robot FILE` frames carry from now on (republished at once while paused).
+    Overlays(OverlayFlags),
     /// Tests only: set the whole held action through `Sim::set_action` (the motion handler's setter), for presets without a motion config.
     #[cfg(test)]
     SetInputs(Vec<f64>),
@@ -384,6 +459,8 @@ pub struct RunController {
     chassis: Result<usize, String>,
     /// Presets: the kinematic gait preview (robot_gait), on its own worker.
     gait: Option<GaitPreview>,
+    /// The overlays requested of the run thread (`--robot FILE`).
+    overlays: OverlayFlags,
 }
 
 impl RunController {
@@ -425,7 +502,7 @@ impl RunController {
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), list_requested: 0, list_done: 0, recordings: Vec::new(), list_error: None,
-            graphs, chassis: robot_graphs::chassis(&model), model, gait: None }
+            graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default() }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -883,7 +960,7 @@ impl RunController {
                 self.running = false;
             }
         }
-        let fresh = published.frame.as_ref().filter(|f| accept(self.generation, f) && self.frame.as_ref().is_none_or(|old| old.generation != f.generation || old.steps != f.steps || old.targets != f.targets || old.completed_steps != f.completed_steps || old.inputs != f.inputs));
+        let fresh = published.frame.as_ref().filter(|f| accept(self.generation, f) && self.frame.as_ref().is_none_or(|old| old.generation != f.generation || old.steps != f.steps || old.targets != f.targets || old.completed_steps != f.completed_steps || old.inputs != f.inputs || old.overlays.flags != f.overlays.flags));
         let changed = match fresh {
             Some(f) => {
                 self.frame = Some(f.clone());
@@ -905,6 +982,43 @@ impl RunController {
     pub fn frame(&self) -> Option<&Frame> {
         self.frame.as_ref()
     }
+    pub fn overlays(&self) -> OverlayFlags {
+        self.overlays
+    }
+    /// Why the overlays cannot be set (`Ok` for `--robot FILE`).
+    pub fn check_overlays(&self) -> Result<(), String> {
+        match &self.preset {
+            Some(p) => Err(format!("overlays are not available for presets: preset `{}` runs {}, whose frames publish link poses but no contacts, joint frames or deflections (those are PhysicalRobot accessors, `--robot FILE` only)", p.preset.id, p.kind())),
+            None => Ok(()),
+        }
+    }
+    /// The one overlay handler behind keys C/J/F, the inspector buttons, `system_ui` overlay:* and REST `robot_overlay`.
+    pub fn set_overlays(&mut self, flags: OverlayFlags) -> Result<(), String> {
+        self.check_overlays()?;
+        self.tx.send(Command::Overlays(flags)).map_err(|_| "the run thread has stopped".to_string())?;
+        self.overlays = flags;
+        Ok(())
+    }
+    /// `robot_state.overlays`: flags, the latest accepted frame's generation and time, counts, sample values and scales.
+    pub fn overlays_json(&self) -> Value {
+        let scales = json!({"force_m_per_n": FORCE_SCALE_M_PER_N, "deflection_magnification": DEFLECTION_MAGNIFICATION, "joint_axis_half_m": JOINT_AXIS_HALF_M});
+        if let Err(e) = self.check_overlays() {
+            return json!({"available": false, "reason": e, "flags": null, "scales": scales});
+        }
+        let f = self.frame.as_ref();
+        let o = f.map(|f| &f.overlays);
+        let contacts = o.and_then(|o| o.contacts.as_ref());
+        let deflections = o.and_then(|o| o.deflections.as_ref());
+        let max = deflections.map(|d| d.iter().map(|d| d.displacement.iter().map(|x| x * x).sum::<f64>().sqrt()).fold(0.0, f64::max));
+        json!({"available": true, "flags": self.overlays, "frame_flags": o.and_then(|o| o.flags),
+            "frame_generation": f.map(|f| f.generation), "frame_time": f.map(|f| f.time),
+            "contacts": {"count": contacts.map(Vec::len), "sample": contacts.map(|c| &c[..c.len().min(OVERLAY_SAMPLE)])},
+            "joints": {"count": o.and_then(|o| o.joints.as_ref()).map(Vec::len), "sample": o.and_then(|o| o.joints.as_ref()).and_then(|j| j.first())},
+            "deflections": {"count": deflections.map(Vec::len), "max_displacement_m": max},
+            "scales": scales, "frame": "model frame (Z up), SI: m, N; drawn through RobotRoot's transform like the link meshes",
+            "source": "PhysicalRobot::contacts / joint_frames / deflections, copied on the run thread into the published frame (other: the other link's name, or ground)",
+            "null_rule": "a count is null when there is no accepted frame, or when the frame was built with that overlay off (not computed)", "cost": OVERLAY_COST_RULE})
+    }
     pub fn generation(&self) -> u64 {
         self.generation
     }
@@ -915,8 +1029,14 @@ impl RunController {
     pub fn replace(previous: Option<RunController>, model: PhysicalModel) -> (Self, bool) {
         let reset = previous.as_ref().is_some_and(Self::has_run_state);
         let generation = previous.as_ref().map_or(0, |r| r.generation + 1);
+        // The user's overlay choice survives a reload.
+        let overlays = previous.as_ref().map(|r| r.overlays);
         drop(previous);
-        (Self::spawn_at(model, generation), reset)
+        let mut next = Self::spawn_at(model, generation);
+        if let Some(flags) = overlays.filter(|f| *f != next.overlays) {
+            let _ = next.set_overlays(flags);
+        }
+        (next, reset)
     }
     /// Whether discarding this controller loses run or jog state: anything
     /// built, running, failed or ended, or a jog requested this generation.
@@ -1010,7 +1130,7 @@ impl RunController {
     }
 }
 
-fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u64) -> Frame {
+fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u64, flags: OverlayFlags) -> Frame {
     let poses = robot
         .poses()
         .iter()
@@ -1020,7 +1140,7 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
         })
         .collect();
     let targets = robot.targets.lock().unwrap_or_else(|p| p.into_inner()).clone();
-    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new() }
+    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new(), overlays: overlays(robot, flags) }
 }
 
 /// A frame from a preset session's `interactive_frame()`: `poses[]` of
@@ -1063,7 +1183,7 @@ fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s
             None => unmatched.push(name.to_string()),
         }
     }
-    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec() })
+    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec(), overlays: Overlays::default() })
 }
 
 /// A frame's time, step count and link poses as JSON (the sidecar's final frame).
@@ -1237,9 +1357,9 @@ impl Sim {
             }),
         }
     }
-    fn frame(&self, links: &[String], generation: u64, steps: u64) -> Result<Frame, String> {
+    fn frame(&self, links: &[String], generation: u64, steps: u64, flags: OverlayFlags) -> Result<Frame, String> {
         match self {
-            Sim::Robot(r) => Ok(frame(r, generation, steps)),
+            Sim::Robot(r) => Ok(frame(r, generation, steps, flags)),
             Sim::Environment { env, run, held, .. } => preset_frame(&env.frame()?, links, generation, steps, run.config.step_s, held),
             Sim::Session { session, run, .. } => preset_frame(&session.interactive_frame()?, links, generation, steps, run.config.step_s, session.input_values()),
         }
@@ -1389,6 +1509,8 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
     // Pacing anchor (wall, sim) and the RTF window of (wall, sim) samples.
     let mut anchor = (Instant::now(), 0.0);
     let mut window: VecDeque<(Instant, f64)> = VecDeque::new();
+    // The overlays whose data frames carry (OVERLAY_COST_RULE); set by Command::Overlays.
+    let flags = std::cell::Cell::new(OverlayFlags::default());
     let set = |status: Status, frame: Option<Frame>| {
         let mut p = out.lock().unwrap_or_else(|p| p.into_inner());
         p.status = status;
@@ -1408,7 +1530,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
     let status = |phase, generation, rtf, error: Option<String>| Status { phase, generation, rtf, error, end: None };
     // A frame of the current state, or the failure it hit (the last good frame stays published).
     let publish = |sim: &Sim, phase: Phase, generation: u64, steps: u64, rtf: Option<f64>| -> bool {
-        match sim.frame(&links, generation, steps) {
+        match sim.frame(&links, generation, steps, flags.get()) {
             Ok(f) => {
                 let end = if phase == Phase::Ended { sim.ended() } else { None };
                 set(Status { end, ..status(phase, generation, rtf, None) }, Some(f));
@@ -1480,7 +1602,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
             Some(Command::SaveRecording { seq, target, note, unix_ms }) => {
                 let result = sim.as_ref().ok_or_else(|| "no built session to record: the build failed or has not run (Reset rebuilds)".to_string()).and_then(|s| {
                     let (snapshot, run) = s.snapshot()?;
-                    let last = s.frame(&links, generation, steps).ok().map(|f| frame_json(&f, &links));
+                    let last = s.frame(&links, generation, steps, flags.get()).ok().map(|f| frame_json(&f, &links));
                     let meta = robot_recording::meta(&snapshot, run, &target, note.as_deref(), unix_ms, generation, steps, last);
                     Ok((snapshot, meta, run.root.clone()))
                 });
@@ -1540,7 +1662,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                         state.verdict = Some("refused: not replayed; the current run is unchanged".into());
                         state.error = Some(e);
                         let previous = out.lock().unwrap_or_else(|p| p.into_inner()).status.clone();
-                        let frame = sim.as_ref().and_then(|s| s.frame(&links, generation, steps).ok());
+                        let frame = sim.as_ref().and_then(|s| s.frame(&links, generation, steps, flags.get()).ok());
                         set(Status { generation, rtf: None, ..previous }, frame);
                         set_replay(&state);
                     }
@@ -1561,6 +1683,14 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                 }
             }
             Some(Command::Motion { .. }) if replay.is_some() => set_motion_error(Some("motion request not applied: a replay is in progress".into())),
+            Some(Command::Overlays(f)) => {
+                flags.set(f);
+                // Paused with a built robot: republish so the change shows now (running publishes each chunk; a failed or ended run keeps its last frame).
+                if let Some(Sim::Robot(r)) = sim.as_ref().filter(|_| !running && !failed && !ended) {
+                    let previous = out.lock().unwrap_or_else(|p| p.into_inner()).status.clone();
+                    set(Status { generation, ..previous }, Some(frame(r, generation, steps, f)));
+                }
+            }
             #[cfg(test)]
             Some(Command::SetInputs(values)) => match sim.as_mut().map(|s| s.set_action(values)) {
                 Some(Ok(())) => {
@@ -1577,7 +1707,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                         set_jog_error(None);
                         let phase = if running { Phase::Running } else { Phase::Paused };
                         let rtf = out.lock().unwrap_or_else(|p| p.into_inner()).status.rtf;
-                        set(status(phase, generation, rtf, None), Some(frame(r, generation, steps)));
+                        set(status(phase, generation, rtf, None), Some(frame(r, generation, steps, flags.get())));
                     }
                     Err(e) => set_jog_error(Some(e)),
                 },
@@ -1673,7 +1803,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                     finish_replay(s, &mut r, None);
                     ended = s.ended().is_some();
                     failed = !publish(s, if ended { Phase::Ended } else { Phase::Paused }, generation, steps, None);
-                    if let (Some(recorded), Ok(f)) = (r.final_frame.as_ref(), s.frame(&links, generation, steps)) {
+                    if let (Some(recorded), Ok(f)) = (r.final_frame.as_ref(), s.frame(&links, generation, steps, flags.get())) {
                         r.state.measured = robot_recording::measured(recorded, &frame_json(&f, &links));
                     }
                     set_replay(&r.state);
@@ -1701,7 +1831,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                 failed = true;
                 let frame = if let Some(mut r) = replay.take() {
                     finish_replay(s, &mut r, Some(e.clone()));
-                    let f = s.frame(&links, generation, steps).ok();
+                    let f = s.frame(&links, generation, steps, flags.get()).ok();
                     if let (Some(recorded), Some(f)) = (r.final_frame.as_ref(), f.as_ref()) {
                         r.state.measured = robot_recording::measured(recorded, &frame_json(f, &links));
                     }
@@ -1813,6 +1943,62 @@ mod tests {
         c.act(RunAction::Reset).unwrap();
         wait(&mut c, "reset", |c| c.frame().is_some() && c.phase() == Phase::Paused);
         assert_eq!(c.frame().unwrap().servo("left axle").unwrap().0, 0.0);
+    }
+
+    #[test]
+    fn overlays_copy_physical_robot_accessors_follow_flags_and_reject_stale_frames() {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let model = crate::robot::load(&root.join("examples/wheeled-robot/baseline/robot.simrobot.json")).unwrap().model;
+        let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
+        // The run thread's own build, advance and frame path, on the ground.
+        let mut sim = Sim::build(&Source::Robot(model.clone()), &mut None).unwrap();
+        for _ in 0..25 {
+            sim.advance().unwrap();
+        }
+        let flags = OverlayFlags::default();
+        let t = Instant::now();
+        let f = sim.frame(&links, 3, 25, flags).unwrap();
+        println!("frame with all overlays: {:.2} ms", t.elapsed().as_secs_f64() * 1e3);
+        let Sim::Robot(r) = &sim else { panic!("FILE mode builds a PhysicalRobot") };
+        let contacts = f.overlays.contacts.as_ref().unwrap();
+        assert!(!contacts.is_empty(), "the wheeled robot rests on the ground after 0.5 s");
+        let expected = r.contacts();
+        assert_eq!(contacts.len(), expected.len());
+        for (c, e) in contacts.iter().zip(&expected) {
+            assert_eq!((c.point, c.force, c.penetration), ([e.point.x, e.point.y, e.point.z], [e.force.x, e.force.y, e.force.z], e.penetration));
+            assert_eq!(c.link, links[e.link]);
+            assert_eq!(c.other, e.other.map_or("ground".to_string(), |o| links[o].clone()));
+            assert!(c.force.iter().all(|x| x.is_finite()));
+        }
+        assert!(contacts.iter().any(|c| c.other == "ground" && c.force[2] > 0.0), "ground contacts push up: {contacts:?}");
+        let joints = f.overlays.joints.as_ref().unwrap();
+        assert_eq!(joints.len(), model.joints.len());
+        assert_eq!(joints.iter().map(|j| j.name.as_str()).collect::<Vec<_>>(), model.joints.iter().map(|j| j.name.as_str()).collect::<Vec<_>>());
+        assert_eq!(f.overlays.deflections.as_ref().unwrap().len(), r.deflections().len());
+        // A hidden overlay is not computed.
+        let off = sim.frame(&links, 3, 25, OverlayFlags { contacts: false, joints: false, deflections: false }).unwrap();
+        assert_eq!((off.overlays.contacts, off.overlays.joints, off.overlays.deflections), (None, None, None));
+        // An older generation's frame is never accepted.
+        assert!(accept(3, &f) && !accept(4, &f));
+
+        // Through the controller: a paused toggle republishes; Reset makes the old frame stale.
+        let mut c = RunController::spawn(model.clone());
+        c.act(RunAction::Step).unwrap();
+        wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1));
+        assert!(c.frame().unwrap().overlays.joints.is_some());
+        c.set_overlays(OverlayFlags { contacts: true, joints: false, deflections: false }).unwrap();
+        wait(&mut c, "republished frame", |c| c.frame().is_some_and(|f| f.overlays.flags == Some(c.overlays())));
+        assert!(c.frame().unwrap().overlays.joints.is_none());
+        let v = c.overlays_json();
+        assert_eq!((v["available"].as_bool(), v["flags"]["joints"].as_bool(), v["joints"]["count"].as_u64()), (Some(true), Some(false), None));
+        let old = c.frame().unwrap().clone();
+        c.act(RunAction::Reset).unwrap();
+        assert!(!accept(c.generation(), &old));
+        wait(&mut c, "reset", |c| c.frame().is_some() && c.phase() == Phase::Paused);
+        assert_eq!(c.overlays_json()["frame_generation"].as_u64(), Some(1));
+        // A reload keeps the overlay choice.
+        let (next, _) = RunController::replace(Some(c), model);
+        assert_eq!(next.overlays(), OverlayFlags { contacts: true, joints: false, deflections: false });
     }
 
     #[test]
@@ -2187,14 +2373,14 @@ mod tests {
         };
         println!("build: {:.2} s; inputs {:?}", t1.elapsed().as_secs_f64(), match &sim { Sim::Environment { env, held, .. } => (env.inputs().iter().map(|c| c.name.clone()).collect::<Vec<_>>(), held.clone()), _ => (vec![], vec![]) });
         let links: Vec<String> = loaded.model.links.iter().map(|l| l.name.clone()).collect();
-        let f = sim.frame(&links, 0, 0).unwrap();
+        let f = sim.frame(&links, 0, 0, OverlayFlags::default()).unwrap();
         println!("frame: unmatched {:?}, links without pose {:?}", f.unmatched, f.poses.iter().zip(&links).filter(|(p, _)| p.is_none()).map(|(_, l)| l).collect::<Vec<_>>());
         for k in 1..=5 {
             let t = Instant::now();
             sim.advance().unwrap();
             let wall = t.elapsed().as_secs_f64();
             let frame_t = Instant::now();
-            let f = sim.frame(&links, 0, k).unwrap();
+            let f = sim.frame(&links, 0, k, OverlayFlags::default()).unwrap();
             println!("chunk {k}: advance {wall:.3} s, frame {:.3} s, sim t {:.4} s, rtf {:.4}, ended {:?}", frame_t.elapsed().as_secs_f64(), f.time, run.chunk_s() / wall, sim.ended());
         }
     }

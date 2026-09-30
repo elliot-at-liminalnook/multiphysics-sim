@@ -246,12 +246,75 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     exercised natively. The link list clips rather than scrolls beyond about
     29 rows. Small selected links (e.g. a 5.7 g pulley) are hard to see
     highlighted in the full-robot view.
+  - *Robot presets (batch native-preset-run, T11.1–T11.3):* robot mode also
+    opens a preset declared in `web/viewer/presets.json`, either with
+    `--robot-preset ID` or with REST `robot_presets` / `robot_preset {id}`.
+    Only mode `embedded` is accepted. The run thread builds
+    `EmbeddedEnvironment::new(scene, config, task, seed 0)` from the declared
+    files unchanged, or `EmbeddedSession` when there is no task. Link meshes
+    and the inspector come from `scene.robot` through the T9 loader; poses come
+    from the session frame, mapped to links by name. Run/Pause/Step/Reset use the
+    `--robot FILE` dispatch. A chunk is one action interval for an environment
+    (0.02 s = 128 nominal steps on 400hz). `robot_state.preset` carries id,
+    label, paths, readiness and evidence verbatim, seed, step_s, the chunk
+    and completed/requested steps. The phase is `ended` at the horizon or at
+    episode termination, with the message, and Run/Step/motion are then
+    refused naming Reset. Nothing is written.
+    - *Which presets run:* `robot_presets` lists 44 entries with `openable`
+      (embedded, and every declared input exists). A build is attempted only on
+      Run/Step. Verified natively to build and advance: `robot-measured-400hz`
+      (29 links), `robot-crawl-startup` (T11.1), `pendulum-embedded`, and
+      `robot-heading-student`, which builds and resolves its motion channels
+      from `policy_contract.step_reference.config`. The other openable presets
+      were not each built natively. Presets whose inputs live only under
+      ignored `runs/` are listed with `missing` and are not openable.
+    - *Verified evidence (T11.3):* `.claude-pair/captures/T11-preset-run/`
+      (`drive.py`, `capture.json` ok=true, 36 of 36 assertions). **Release
+      build** of af2d291d, launched as `--robot-preset robot-measured-400hz`.
+      - Opens with 29 links, readiness, evidence and paths equal to presets.json,
+        EmbeddedEnvironment, seed 0, step_s 0.00015625 and phase idle.
+      - The first frame arrives 1.5 s after Run. Time then increases 0.02 →
+        0.32 → 0.96 s, with 48 chunks = 6144 nominal steps.
+      - **Measured RTF:** 0.11–0.12 over the first second. While walking under
+        the forward request it falls from 0.071 to 0.033 (12 samples, 5 s
+        apart; mostly 0.04–0.06). This matches the readiness text's "about
+        0.05× real time on this Mac". Wall time is ~20× sim time, so a
+        1-minute window covers about 3 s of sim time.
+      - Pause freezes time, chunks and heartbeat across two polls. Step is
+        exactly +0.02 s (within 1e-9), +1 chunk, +128 nominal steps, and
+        heartbeat +1.
+      - Reset returns to t = 0 with 0 chunks, generation 0 → 1, the heartbeat
+        back to its initial 0 and the requests cleared.
+      - `pendulum-embedded` (EmbeddedSession, 80 × 0.25 ms) reaches phase
+        `ended`: "horizon reached at t = 0.020 s: 80 of 80 steps". Run and
+        motion requests are then refused naming it and Reset.
+      - The wheeled `--robot FILE` is unchanged: no preset block, time
+        advancing at RTF 0.75 (release), a jog accepted, and `robot_input`
+        refused ("`--robot FILE` has servo-target jog").
+      - Images: `preset-open.png` (29-link assembly pose; label; readiness
+        verbatim in the inspector; the header subtitle is no longer clipped
+        under the run status), `preset-running.png`, `preset-forward.png` and
+        `preset-ended.png`.
+    - *Limits:*
+      - The header truncates the readiness text with "…"; the inspector shows
+        it in full.
+      - The camera does not follow the robot, which walks toward the edge of
+        the view.
+      - `preset-ended.png` shows RTF 1.06 for a 0.02 s run. That value comes
+        from a very short wall window, not from sustained faster-than-real-time
+        stepping.
+      - Before the first request, the one-line motion summary shows 0 while
+        robot_state `requested` is null.
+      - There is no recording or input replay of preset runs (the browser saves
+        overrides and input replay) and no graphs.
 - **Remaining gaps:**
   1. no way to trigger CAD edits or exports from the shell;
   2. no RoboCAD REST reload round trip (edit → export → shell reload);
-  3. no build path for actuator-profile (full-robot) exports, which need
-     explicit PWM / driver control; no recording, replay or file watching in
-     robot mode; no walking-controller teleoperation (see §2g).
+  3. `--robot FILE` still has no build path for actuator-profile (full-robot)
+     exports, which need explicit PWM / driver control. The same robot runs
+     natively through a preset whose scene declares that control
+     (`robot-measured-400hz`). There is no recording, replay or file
+     watching in robot mode.
 - **Source owner:** CAD (`.rcad` → `simrobot` v3 export). Display models are
   presentation only.
 - **Dependencies:** a CAD service client (§3). Simrobot stepping now runs on
@@ -470,11 +533,88 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   jogging, not motion requests through a walking controller.
 - **Reusable layer:** `sim_runtime::{session, embedded, environment, walking_task, steered_reference}`,
   `sim_domain_control::motion_clock`.
-- **Shell status:** *absent* for teleoperation. sim-spatial's WASD is camera
-  fly-through in place mode only (`place_view.rs` header). Robot mode
-  (`--robot FILE`, §2b) offers **servo-target jogging only**, labelled
-  "servo target (PD hold from the export), not walking-controller teleop".
-  It is not teleoperation: no motion request goes through a controller.
+- **Shell status:** *partial: native motion requests for embedded presets.*
+  Robot mode on a preset (`--robot-preset ID`, §2b) sends motion requests
+  through the preset's own Rust controller (T11.2, af2d291d; verified
+  natively in T11.3). These requests are labelled "motion request through the
+  preset's Rust controller (not joint control)".
+  - *One handler:* physical W/A/S/D (press/release) and X (Stop), the inspector
+    W/A/S/D/Stop buttons, `system_ui` `motion:w|a|s|d|stop` and REST
+    `robot_input {channels:{name: value}}` or `{key}` all go through
+    `RobotAction::Motion` to `Command::Motion` on the run thread. There the
+    request is written into the held action for the next
+    `EmbeddedEnvironment::step`, or passed through `set_inputs` for a session.
+  - *Where the motion channels come from:* the session's
+    `policy_contract.step_reference.config` first, then presets.json
+    `motion_commands`. Key vectors come from `motion_key_vectors`, else from
+    the channel bounds. This UI mapping was ported from `motion-commands.mjs`;
+    no controller logic was ported.
+  - *Semantics:*
+    - Physical keys follow press/release, as in the browser.
+    - A `system_ui` or REST key latches until Stop, another key or a channel
+      request.
+    - A value, key vector or summed key vector outside the session's typed
+      bounds is **refused, naming the channel and bounds**. The browser clamps
+      combined keys; the native viewer refuses them instead.
+    - The declared heartbeat (`command.packet_sequence`) is incremented once
+      per action packet (one chunk), as `nextMotionAction` does.
+  - *Verified (T11.3, release build, `.claude-pair/captures/T11-preset-run/`)
+    on `robot-measured-400hz`:*
+    - Channels and bounds come from the session inputs: forward_speed
+      [-0.8, 0.8] m/s, lateral_speed [0, 0] m/s, yaw_rate [-1, 1] rad/s.
+    - `motion:w` requests [0.1, 0, 0], and after one packet the session holds
+      forward_speed 0.1.
+    - `motion:stop` requests [0, 0, 0], and all three held values are 0 after
+      one packet.
+    - REST `{"command.forward_speed": 5}` is refused with "requested value 5
+      is outside its bounds [-0.8, 0.8] m/s; not clamped". The refusal is
+      recorded in `motion.last_refusal`, and the held and requested values are
+      unchanged.
+    - An unknown channel is refused, listing the motion channels and their
+      bounds.
+    - REST `{key:"w"}` is accepted and requests [0.1, 0, 0].
+    - The heartbeat equals the chunk count while running and increases by 1
+      per Step.
+  - **Measured body motion (from chassis poses in frames):**
+    - *Under forward_speed 0.1:* over 3.32 s of sim time (61.6 s wall time),
+      `Robot | Chassis and hip mounts` moved 0.504 m along the controller's
+      travel heading (chassis yaw + `travel_heading_offset_rad` 0.785, a
+      parameter of the scene's Rhai controller). That is an average of
+      **0.152 m/s against the 0.1 m/s request**. It moved 0.018 m across that
+      heading, with a yaw change of 0.023 rad and a height change of 4.5 mm.
+    - *Controls:* at zero request before W, the chassis moved under 1 mm over
+      1.16 s. In the 1.8 s after Stop it moved 0.028 m, which includes the
+      controller's deceleration.
+    - *What this does and does not establish:* the robot walks diagonally
+      (+X+Y in world), as the heading offset declares, and faster than
+      requested. This viewer does not establish why the achieved speed
+      exceeds the request, nor whether it would converge over a longer
+      window. A single ~3 s span is not a walking-speed qualification.
+    - *Visibility:* `preset-forward.png` shows the robot displaced toward the
+      edge of the view and the MOTION section with requested 0.1 / held 0.1
+      and the label.
+  - *Not exercised:*
+    - Physical key presses and pointer clicks. All activations were REST
+      `system_ui`, `robot_run` or `robot_input`; keys share the handler by
+      code (`robot.rs motion_keys`).
+    - A/D turning.
+    - Heartbeat exhaustion.
+  - *What still needs the browser:*
+    - Recording, input replay and saved overrides of a teleop run.
+    - Live graphs and observation panels.
+    - Hardware sync and mirroring (`hardware-sync.mjs`), which are never
+      driven from here.
+    - Calibration UI.
+    - Gait playback.
+    - Presets in `sim-web` modes other than `embedded`, and presets whose
+      inputs live only under ignored `runs/`.
+    - Realtime walking. Native detailed physics runs at about 0.04–0.07×
+      real time, the same order as the readiness text. The browser's
+      realtime presets use their own declared fidelity profiles, which were
+      not compared here.
+- *Before T11:* robot mode on `--robot FILE` offered **servo-target jogging
+  only**, labelled "servo target (PD hold from the export), not
+  walking-controller teleop". That jogging is unchanged:
   - *Controls:* −/+ buttons and `system_ui` `jog:<joint>:+|-` (0.05 rad,
     0.005 m prismatic) for the non-fixed joints touching the selected link;
     REST `robot_jog {joint, target|delta}` for any joint by its file name. One
@@ -506,7 +646,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 - **Acceptance evidence:** a REST motion-command equivalent of holding W
   (a REST-issued command is not a key press). `state` shows the controller's
   commanded velocity and increasing body x. Screenshots are taken before and
-  after. Releasing produces a zero request.
+  after. Releasing produces a zero request. *Met natively in T11.3* for a
+  system_ui/REST latched W on `robot-measured-400hz` (above). Physical
+  press/release was not exercised.
 - **Fixed-PD implementation identity (T11.0, 2026-09-30, user decision).**
   The only presets that declare motion commands, WASD key vectors and a
   heartbeat (`robot-measured-400hz`, `-reuse`) failed to build with "CAD
@@ -868,6 +1010,19 @@ unknown-id error).
    the default options (they need a driver_control / PWM path, and sim-app
    has the same failure). Recording and replay, file watching, walking
    teleoperation and gait playback are also not done.
+   **Update (batch native-preset-run, T11.1–T11.3):**
+   - *Done:* robot presets from `web/viewer/presets.json` run natively on the
+     shared `EmbeddedEnvironment`/`EmbeddedSession` (commits 4cb0e3e1,
+     d3bb70a4, af2d291d). Typed motion requests go through the preset's Rust
+     controller.
+   - *Verified in T11.3 (release build):* the 29-link `robot-measured-400hz`
+     walked 0.50 m in 3.3 s of sim time under a 0.1 m/s forward request, at a
+     measured RTF of about 0.04–0.07. Also verified: pause, step, reset,
+     Stop, the refusal, the `ended` phase and the unchanged `--robot FILE`
+     (§2b, §2g).
+   - *Still not done:* recording and replay of preset runs, graphs, file
+     watching, gait playback, and a PWM build path for `--robot FILE`
+     full-robot exports.
 
 ## 6. Launch path
 
@@ -888,6 +1043,20 @@ cargo run -p sim-spatial -- --robot examples/wheeled-robot/baseline/robot.simrob
 cargo run -p sim-spatial -- --validate-only --robot FILE.simrobot.json
 ```
 REST `robot_state` returns the loaded values and the run and jog state.
+
+Robot presets (the scene, controller config and task declared in
+`web/viewer/presets.json`, run on the shared Rust environment/session). Run
+from the repository root; use a release build for the full robot, where debug
+reaches only about 0.03× real time:
+
+```
+cargo run --release -p sim-spatial -- --robot-preset robot-measured-400hz
+```
+Press Run (or Step) to build. Then use W/A/S/D and X (Stop), the inspector
+buttons, `system_ui` `motion:*` or REST `robot_input` to send motion requests
+through the preset's controller. REST `robot_presets` lists every preset and
+whether it is openable. `robot_preset {id}` switches presets in the same
+window.
 `system_ui` lists the link, section, scroll, `run:*` and `jog:*` controls; REST
 `robot_run` and `robot_jog` use the same handlers.
 
@@ -904,7 +1073,9 @@ this batch; their only diff against the run baseline is the earlier accepted
 
 Separate apps are still needed for the schematic and experiments
 (`sim-viewer`), phenomena and file-watching robot view (`sim-app`), CAD
-(`cad/run.sh`), and walking and calibration (browser, `web/README.md`).
+(`cad/run.sh`), and calibration, hardware sync, recorded teleop replay,
+graphs and realtime walking (browser, `web/README.md`; §2g lists what native
+preset runs lack).
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,
 where FILE may be a system, simrobot, lesson directory or gait-lab output, opened

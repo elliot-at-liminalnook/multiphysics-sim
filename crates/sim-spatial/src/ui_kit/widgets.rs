@@ -29,8 +29,8 @@ pub(crate) enum Dock {
     Left { top: f32, bottom: f32, width: f32 },
     /// Right column. SURFACE, left border.
     Right { top: f32, bottom: f32, width: f32 },
-    /// A strip along the bottom of the middle view, between `left` and `right`.
-    /// SURFACE, top border.
+    /// A strip along the bottom of the middle view, between `left` and `right`
+    /// (the graph docks). BAR, top border.
     Under { left: f32, right: f32, height: f32 },
 }
 
@@ -145,7 +145,8 @@ impl Kit<'_> {
     }
 
     /// A clickable two-line list row: icon tinted with `accent`, title,
-    /// subtitle; `selected` draws the accent fill and left edge.
+    /// subtitle; `selected` draws the accent fill and left edge. The edge is
+    /// drawn at spawn only: rebuild the row to change its selection.
     pub(crate) fn list_item<A: Component>(&self, icon: &str, accent: Color, title: &str, subtitle: &str, action: A, selected: bool) -> impl Bundle + use<A> {
         (
             Button,
@@ -237,7 +238,7 @@ impl Kit<'_> {
             Dock::Bottom { height } => (Node { position_type: PositionType::Absolute, left: Val::Px(0.), right: Val::Px(0.), bottom: Val::Px(0.), height: Val::Px(height), border: UiRect::top(Val::Px(1.)), ..layout }, BAR),
             Dock::Left { top, bottom, width } => (Node { position_type: PositionType::Absolute, left: Val::Px(0.), top: Val::Px(top), bottom: Val::Px(bottom), width: Val::Px(width), border: UiRect::right(Val::Px(1.)), ..layout }, SURFACE),
             Dock::Right { top, bottom, width } => (Node { position_type: PositionType::Absolute, right: Val::Px(0.), top: Val::Px(top), bottom: Val::Px(bottom), width: Val::Px(width), border: UiRect::left(Val::Px(1.)), ..layout }, SURFACE),
-            Dock::Under { left, right, height } => (Node { position_type: PositionType::Absolute, left: Val::Px(left), right: Val::Px(right), bottom: Val::Px(0.), height: Val::Px(height), border: UiRect::top(Val::Px(1.)), ..layout }, SURFACE),
+            Dock::Under { left, right, height } => (Node { position_type: PositionType::Absolute, left: Val::Px(left), right: Val::Px(right), bottom: Val::Px(0.), height: Val::Px(height), border: UiRect::top(Val::Px(1.)), ..layout }, BAR),
         };
         (node, BackgroundColor(background), BorderColor::all(BORDER))
     }
@@ -250,7 +251,7 @@ impl Kit<'_> {
     }
 
     /// An axis label in a corner of a chart image (spawn it as the image's child).
-    pub(crate) fn chart_label(&self, value: impl Into<String>, corner: Corner) -> impl Bundle + use<> {
+    pub(crate) fn chart_label<S: Into<String>>(&self, value: S, corner: Corner) -> impl Bundle + use<S> {
         let node = match corner {
             Corner::TopLeft => Node { position_type: PositionType::Absolute, left: Val::Px(4.), top: Val::Px(2.), ..default() },
             Corner::BottomLeft => Node { position_type: PositionType::Absolute, left: Val::Px(4.), bottom: Val::Px(2.), ..default() },
@@ -317,6 +318,18 @@ pub(crate) fn repaint_tints(mut surfaces: Query<(&Interaction, &Tint, &mut Backg
             Interaction::None => tint.idle,
         };
         bg.set_if_neq(BackgroundColor(fill));
+    }
+}
+
+/// A kit button whose label text a mode rewrites (the robot's "×2" speed,
+/// an overlay chip's "on"/"off") keeps the same accessible label: follow
+/// the text child into the button's `AccessibleLabel`.
+pub(crate) fn follow_button_text(mut commands: Commands, texts: Query<(&Text, &ChildOf), Changed<Text>>, buttons: Query<&AccessibleLabel, With<Look>>) {
+    for (text, child_of) in &texts {
+        let button = child_of.parent();
+        if buttons.get(button).is_ok_and(|label| label.0 != text.0) {
+            commands.entity(button).insert(AccessibleLabel::new(text.0.clone()));
+        }
     }
 }
 

@@ -709,7 +709,7 @@ fn sketch_canvas(c: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, q: &Quiz, loc
     // The sketch's drawing surface (a canvas coloured like the chart it predicts).
     let mut canvas = c.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BackgroundColor(Color::srgb(0.07, 0.086, 0.106)), BorderColor::all(BORDER)));
     if !locked {
-        canvas.insert((k.pointer_surface(), SketchCanvas(q.id.clone())));
+        canvas.insert((k.pointer_surface("Sketch canvas", true), SketchCanvas(q.id.clone())));
     }
     canvas.with_children(|cv| {
         for g in 1..4 {

@@ -1714,10 +1714,10 @@ pub(crate) struct Timebar;
 /// Input: pressing or dragging the timebar seeks the live scene (a
 /// `SeekTo` every frame it is held; the press that starts a drag may count
 /// a rewind). Nothing is sent while the scene is still recording.
-fn seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>), With<Timebar>>, learn: Res<Learn>, mut pressing: Local<bool>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
+fn seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction), With<Timebar>>, learn: Res<Learn>, mut pressing: Local<bool>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     let mut pressed = false;
-    for (value, held) in &bars {
-        if !held {
+    for (value, pressed, interaction) in &bars {
+        if !crate::ui_kit::slider_held(pressed, interaction) {
             continue;
         }
         pressed = true;
@@ -2242,14 +2242,14 @@ impl ActiveScene {
 
 /// Input: dragging a slider moves its previewed value (`slider_drag`, kept
 /// here); letting go sends a `Slider` action, which sets it and re-records.
-fn sliders(tracks: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &SliderTrack)>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
+fn sliders(tracks: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction, &SliderTrack)>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     if !learn.active {
         return;
     }
     let Some(a) = learn.scene.as_ref() else { return };
     let mut dragging = None;
-    for (value, held, track) in &tracks {
-        if !held {
+    for (value, pressed, interaction, track) in &tracks {
+        if !crate::ui_kit::slider_held(pressed, interaction) {
             continue;
         }
         let Some(spec) = a.scene.sliders.iter().find(|s| s.parameter == track.0) else { continue };

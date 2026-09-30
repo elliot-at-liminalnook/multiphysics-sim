@@ -47,6 +47,8 @@ mod scroll;
 mod slider;
 mod theme;
 mod widgets;
+#[cfg(test)]
+mod tests;
 
 pub(crate) use scroll::{WHEEL_LINE, clamp_scroll_positions, wheel_delta};
 pub(crate) use slider::{SliderLook, surface_point};

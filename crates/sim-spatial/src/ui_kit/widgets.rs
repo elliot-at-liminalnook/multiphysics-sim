@@ -173,7 +173,7 @@ impl Kit<'_> {
 
     /// An icon by name (`sim_core::icons`), the generic component icon if unknown.
     pub(crate) fn icon(&self, name: &str) -> Handle<Image> {
-        self.f.icons.get(name).unwrap_or(&self.f.icons["component"]).clone()
+        self.f.icons.get(name).or_else(|| self.f.icons.get("component")).cloned().unwrap_or_default()
     }
 
     /// A property row: key on the left, value (and unit) on the right. With

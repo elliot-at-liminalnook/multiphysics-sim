@@ -137,6 +137,9 @@ function renderBanner() {
   if (s.status === 'waiting' && s.resume_at) {
     kind = 'warn';
     message = `<strong>Claude usage limit reached</strong>Resuming automatically at ${esc(clock(s.resume_at))} · in ${esc(dur(s.resume_at - data.now))}. Nothing is lost; the interrupted session continues where it stopped.`;
+  } else if (!data.active && s.status === 'paused' && s.weekly_reset_at) {
+    kind = 'warn';
+    message = `<strong>Weekly Claude limit used up</strong>It resets ${esc(clock(s.weekly_reset_at))}${s.weekly_reset_at > data.now ? ' · in ' + esc(dur(s.weekly_reset_at - data.now)) : ''}. Press Continue after that; the interrupted session picks up where it stopped.`;
   } else if (!data.active && s.status === 'blocked') {
     kind = 'bad'; message = `<strong>The run stopped with an error</strong>${esc(s.message)}`;
     if (s.inflight) act = 'Resume interrupted turn';
@@ -164,8 +167,9 @@ function renderNow() {
   const current = data.workflow.current, order = STAGES.map(x => x.id), at = order.indexOf(current);
   const directorOff = !data.outer_settings.enabled && !s.outer;
   html('pipeline', STAGES.map((st, i) => {
-    const cls = ['stage', i < at ? 'done' : '', st.id === current ? 'current' : '', st.id === current && live ? 'live' : '', st.id === 'director' && directorOff ? 'off' : ''].join(' ');
-    const mark = i < at ? '✓' : String(i + 1);
+    const off = st.id === 'director' && directorOff;
+    const cls = ['stage', i < at && !off ? 'done' : '', st.id === current ? 'current' : '', st.id === current && live ? 'live' : '', st.id === 'director' && directorOff ? 'off' : ''].join(' ');
+    const mark = i < at && !off ? '✓' : String(i + 1);
     return `<div class="${cls}" style="--stage-color:${ROLES[st.role].color}" title="${esc(st.owner)}"><span class="node">${mark}</span><span class="stage-label">${esc(st.label)}</span><span class="stage-owner">${esc(st.id === 'director' && directorOff ? 'off' : st.owner)}</span></div>`;
   }).join(''), false);
 
@@ -175,15 +179,19 @@ function renderNow() {
   const meter = (label, value, small, width, cls, hint = '') =>
     `<div title="${esc(hint)}"><div class="meter-label"><span>${label}</span></div><div class="meter-value">${value}${small ? ` <small>${small}</small>` : ''}</div><div class="bar ${cls}"><span style="width:${width}%"></span></div></div>`;
   const tone = p => p >= 90 ? 'bad' : p >= 70 ? 'warn' : '';
-  const fiveP = five ? five.utilization * 100 : null;
+  const fiveP = five ? five.utilization * 100 : null, weekP = week ? week.utilization * 100 : null;
+  const capped = (value, cap) => cap ? [pct(value, cap), tone(pct(value, cap))] : [0, 'none'];
+  const [turnW, turnT] = capped(s.rounds, L.max_rounds), [costW, costT] = capped(spent, L.budget_usd);
   html('meters', [
     meter('Checklist', items.length ? `${verified}` : '—', items.length ? `of ${items.length} verified` : 'no checklist yet', pct(verified, items.length), 'ok'),
-    meter('Worker turns', `${s.rounds}`, `of ${L.max_rounds}`, pct(s.rounds, L.max_rounds), tone(pct(s.rounds, L.max_rounds))),
-    meter('Active time', dur(data.elapsed_seconds), `of ${L.max_hours}h`, pct(data.elapsed_seconds, L.max_hours * 3600), tone(pct(data.elapsed_seconds, L.max_hours * 3600))),
-    meter('Usage estimate', money(spent), `of ${money(L.budget_usd)}`, pct(spent, L.budget_usd), tone(pct(spent, L.budget_usd)), 'API-price estimate, not a bill'),
-    meter('Claude 5-hour limit', fiveP === null ? '—' : `${Math.round(fiveP)}%`, five ? `resets ${clock(five.resetsAt)}` : 'no reading yet', fiveP ?? 0, tone(fiveP ?? 0),
-      week ? `Weekly: ${Math.round(week.utilization * 100)}%, resets ${clock(week.resetsAt)}` : 'Reported by Claude Code during each call'),
-    meter('Changes', `${(g.commits || []).length}`, `${plural((g.commits || []).length, 'commit').replace(/^\d+ /, '')} · <span class="plusminus"><span class="plus">+${g.insertions || 0}</span> <span class="minus">−${g.deletions || 0}</span></span>`, 0, ''),
+    meter('Worker turns', `${s.rounds}`, L.max_rounds ? `of ${L.max_rounds}` : `${dur(data.elapsed_seconds)} active`, turnW, turnT,
+      L.max_hours ? `Active time limit: ${L.max_hours}h` : 'No turn or time limit'),
+    meter('Usage estimate', money(spent), L.budget_usd ? `of ${money(L.budget_usd)}` : 'no ceiling', costW, costT, 'API-price estimate of the subscription usage, not a bill'),
+    meter('Claude 5-hour', fiveP === null ? '—' : `${Math.round(fiveP)}%`, five ? `resets ${clock(five.resetsAt)}` : 'no reading yet', fiveP ?? 0, tone(fiveP ?? 0),
+      'The run pauses when this is used up and resumes after the reset'),
+    meter('Claude weekly', weekP === null ? '—' : `${Math.round(weekP)}%`, week ? `resets ${clock(week.resetsAt)}` : 'no reading yet', weekP ?? 0, tone(weekP ?? 0),
+      'The run stops when this is used up: it is the only limit'),
+    meter('Changes', `${(g.commits || []).length}`, `${plural((g.commits || []).length, 'commit').replace(/^\d+ /, '')} · <span class="plusminus"><span class="plus">+${g.insertions || 0}</span> <span class="minus">−${g.deletions || 0}</span></span>`, 0, 'none'),
   ].join(''), false);
 }
 
@@ -371,12 +379,12 @@ function renderDirector() {
   const history = (outer?.history || []).filter(b => !b.legacy);
   text('history-count', history.length ? String(history.length) : '');
   html('dir-history', history.length ? history.map((b, i) => `<button class="btn ghost small" data-batch="${i}" style="display:flex;width:100%;justify-content:space-between">${esc(b.title)}<span class="faint">${esc(ago(b.completed_at))} ↗</span></button>`).join('') : '<div class="empty">None yet.</div>');
-  if (!dirty.outer) { $('outer-enabled').checked = settings.enabled; $('max-batches').value = settings.max_batches; }
+  if (!dirty.outer) { $('outer-enabled').checked = settings.enabled; $('max-batches').value = settings.max_batches ?? ''; $('max-batches').placeholder = 'No limit'; }
 }
 
 /* ---------- settings ---------- */
 function renderSettings() {
-  for (const k of LIMIT_KEYS) { $(k).disabled = data.active; if (!dirty.limits && document.activeElement !== $(k)) $(k).value = data.limits[k]; }
+  for (const k of LIMIT_KEYS) { $(k).disabled = data.active; $(k).placeholder = 'No limit'; if (!dirty.limits && document.activeElement !== $(k)) $(k).value = data.limits[k] ?? ''; }
   $('save-limits').disabled = data.active || busy;
   text('limit-note', data.active ? 'Stop the run to change limits' : '');
   const sessions = Object.entries(data.state.sessions || {}).map(([r, id]) => `${r}: ${id}`).join('\n') || 'none yet';
@@ -444,9 +452,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal'
 $('guidance').oninput = () => dirty.guidance = true;
 $('save-guidance').onclick = async () => { try { toast((await post('steering', { text: $('guidance').value })).message); dirty.guidance = false; await refresh(); } catch (e) { toast(e.message); } };
 LIMIT_KEYS.forEach(k => $(k).oninput = () => dirty.limits = true);
-$('save-limits').onclick = async () => { try { toast((await post('limits', Object.fromEntries(LIMIT_KEYS.map(k => [k, Number($(k).value)])))).message); dirty.limits = false; await refresh(); } catch (e) { toast(e.message); } };
+$('save-limits').onclick = async () => { try { toast((await post('limits', Object.fromEntries(LIMIT_KEYS.map(k => [k, $(k).value.trim() === '' ? null : Number($(k).value)])))).message); dirty.limits = false; await refresh(); } catch (e) { toast(e.message); } };
 $('outer-enabled').onchange = $('max-batches').oninput = () => dirty.outer = true;
-$('save-outer').onclick = async () => { try { toast((await post('outer', { enabled: $('outer-enabled').checked, max_batches: Number($('max-batches').value) })).message); dirty.outer = false; await refresh(); } catch (e) { toast(e.message); } };
+$('save-outer').onclick = async () => { try { toast((await post('outer', { enabled: $('outer-enabled').checked, max_batches: $('max-batches').value.trim() === '' ? null : Number($('max-batches').value) })).message); dirty.outer = false; await refresh(); } catch (e) { toast(e.message); } };
 $('nb-system').onclick = () => modal('How the team works', pre(data.notebook.system));
 $('nb-current').onclick = () => modal('Shared context', pre(JSON.stringify({ status: data.state.status, phase: data.state.phase, batch: data.state.outer?.current_batch, assignment: data.state.plan, latest_worker_report: data.state.report, checks: data.state.receipts, guidance: data.steering?.text }, null, 2)));
 $('nb-full').onclick = async () => { try { const r = await fetch('/api/journal'); modal('Full journal', pre(await r.text())); } catch { toast('Could not read the journal'); } };

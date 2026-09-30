@@ -179,6 +179,7 @@ main { max-width: 1440px; margin: 0 auto; padding: 22px 28px 60px; }
 .bar.ok span { background: var(--ok); }
 .bar.warn span { background: var(--warn); }
 .bar.bad span { background: var(--bad); }
+.bar.none { visibility: hidden; }
 .plusminus { font-family: var(--mono); font-size: 12px; }
 .plus { color: var(--ok); } .minus { color: var(--bad); }
 

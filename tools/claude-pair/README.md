@@ -40,21 +40,22 @@ revert, stash or commit changes they didn't make, and to stage only their own
 files. Your concurrent edits will still appear in review diffs, and a build you
 start can contend with theirs for the Cargo lock.
 
-The default run ends after **12 worker turns, 8 active hours, or $100 of estimated
-model usage**, whichever applies first. Each Claude call also has a 45-minute,
-100-turn and $10 estimated-usage limit. A final review is allowed after the last
-worker turn, within the other limits. The process pauses before disk free space
-falls below 2 GiB. These are bounded defaults, not an estimate of migration cost.
+**There are no run limits by default.** The pair works until your weekly
+Claude usage limit is used up: 5-hour limits pause it and it resumes after each
+reset (see "Claude usage limits" below). No per-call time, turn or cost caps
+apply, and the Director keeps choosing batches until it decides nothing is worth
+doing. The only other stop is a safety pause when disk free space falls below
+2 GiB. Calls also have no time limit, so a genuinely hung call waits until you
+press Stop.
 
-Change limits with `init --max-rounds N --max-hours H --budget-usd D
---call-budget-usd D --turn-minutes M --max-turns N`. After initialization,
-edit the same fields in `config.json` only while stopped. Omit `--model` to use
+To add caps anyway, pass any of `init --max-rounds N --max-hours H --budget-usd D
+--call-budget-usd D --turn-minutes M --max-turns N --no-director`, or fill in the
+dashboard's Settings (empty means no limit). Omit `--model` to use
 Claude's default; pass an explicit alias/ID if desired. No model is hardcoded.
-The CLI's dollar figures are API-price usage estimates, **not a charge or a
-measure of subscription tokens remaining**. Claude enforces each call's limit;
-the coordinator keeps an aggregate ledger, reserving the full call limit before
-launch and reconciling cumulative session totals afterward. Estimates/caps can
-overshoot by an in-flight model response; this is not a billing guarantee.
+The dollar figures are API-price usage estimates, **not a charge**. The
+coordinator reconciles each session's reported total after every call; when a
+dollar cap is set it reserves the call's cap first. The dashboard's 5-hour and
+weekly meters come from Claude Code's own usage readings.
 
 ## Observe, stop and resume
 
@@ -211,9 +212,10 @@ inventory without code edits.
 Enable the outer loop in the dashboard, or use:
 
 ```sh
-python3 tools/claude-pair/pair.py enable-outer \
-  --max-batches 8
+python3 tools/claude-pair/pair.py enable-outer   # optional --max-batches N
 ```
+
+New runs start with it on and no batch ceiling (`init --no-director` turns it off).
 
 The Director is a third Claude role, always started in a fresh session. It compares 3–6
 source-backed candidates across at least two of four categories: cohesion,
@@ -233,9 +235,8 @@ reconsiders the hopper against the current code instead of blindly draining an
 old queue. Failed checks, blocked work and interruptions do not refill it. The
 Director may stop with a reason when no candidate is worthwhile.
 
-All three sessions share the existing cumulative time, usage and worker-turn
-limits. The additional completed-batch ceiling defaults to eight and is editable
-in the dashboard. It includes an adopted in-progress assignment but excludes the
+All three roles share any time, usage and worker-turn limits you set. An
+optional completed-batch ceiling is editable in the dashboard (empty: none). It includes an adopted in-progress assignment but excludes the
 archived legacy whole-mission completion. Disabling automatic planning lets the
 current batch finish and pauses before selecting another one. Stop interrupts the
 active call as before. Neither control raises a budget.
@@ -277,8 +278,11 @@ are cumulative per session, while `--max-budget-usd` applies to the current call
 
 ## Claude usage limits
 
-When a call is stopped by a Claude usage limit (the 5-hour window, the weekly
-limit, or a spend limit), the run does not fail. The coordinator reads the reset
+When a call is stopped by a Claude usage limit, the run does not fail. **The
+weekly limit ends the run:** it pauses with the reset time shown, and Continue
+after the reset picks up the interrupted session (set `wait_for_weekly_limit:
+true` in `config.json` to wait through it automatically instead). For the 5-hour
+window or a spend limit, the coordinator reads the reset
 time from Claude Code's `rate_limit_event` stream data, falling back to the error
 text and then to a 15-minute retry (`limit_retry_minutes`). It marks the run
 **waiting**, sleeps until the reset plus a minute (`limit_margin_seconds`), then

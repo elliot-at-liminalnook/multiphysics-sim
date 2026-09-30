@@ -475,7 +475,7 @@ fn enter(world: &mut World, switch: &mut Switcher, seq: u64, from: ViewerMode, t
     switch.arrival = Some(arrival);
     switch.entering = Some((seq, target, summary));
     switch.revision += 1;
-    world.resource_mut::<NextState<ViewerMode>>().set_if_neq(target);
+    world.resource_mut::<NextState<ViewerMode>>().set(target);
 }
 
 /// JobResults: a switch's document has loaded (enter) or failed (refuse,

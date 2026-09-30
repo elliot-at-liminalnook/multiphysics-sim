@@ -7,8 +7,9 @@
 //! dispatch and journal matching live there, not here); `finish_gait_reports`
 //! installs the listing on the UI thread. Nothing is written and no
 //! evaluation is started.
-use super::ui::{Kit, Look, num, wrap, ACCENT_BG, HOVER_BG, DANGER, FAINT, OK, SUBTLE, TEXT, WARN};
+use super::ui::num;
 use super::*;
+use crate::ui_kit::{ACCENT, ACCENT_BG, DANGER, FAINT, Kit, Look, OK, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use sim_runtime::gait_lab::{JointLine, LabReport, ResultsEntry, ResultsListing, scan_results};
 use std::path::Path;
 
@@ -268,8 +269,8 @@ fn or_none(v: Option<f64>, unit: &str) -> String {
 /// selected report in full below it.
 pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     let g = &b.gait_lab;
-    body.spawn(k.text("Gait-lab results as recorded: each report.yaml under a results folder, with its journal time when one exists. Read-only; nothing is evaluated here.", 12., SUBTLE, 0));
-    body.spawn(k.text(CAVEAT, 11.5, WARN, 1));
+    body.spawn(k.caption("Gait-lab results as recorded: each report.yaml under a results folder, with its journal time when one exists. Read-only; nothing is evaluated here."));
+    body.spawn(k.text(CAVEAT, size::CAPTION, WARN, 1));
     body.spawn(k.section("Results folder"));
     let focused = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::GaitResults);
     let shown = if focused { b.input.as_ref().map(|i| i.buffer.clone()).unwrap_or_default() } else { g.root.as_ref().map(|p| p.display().to_string()).unwrap_or_default() };
@@ -281,30 +282,30 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         }
     });
     if let Some(pending) = g.pending() {
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Reading {}…", pending.display()), 12., TEXT, 0)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(ACCENT), k.text(format!("Reading {}…", pending.display()), size::SMALL, TEXT, 0)]));
     }
     if let Some(e) = &g.error {
-        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, 12., DANGER, 0)]));
+        body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Start, margin: UiRect::top(Val::Px(6.)), flex_shrink: 0., ..default() }, children![k.dot(DANGER), k.text(e, size::SMALL, DANGER, 0)]));
     }
     let Some(scan) = &g.shown else {
         if g.pending().is_none() && g.error.is_none() {
-            body.spawn(k.text("Not read yet.", 12., SUBTLE, 0));
+            body.spawn(k.caption("Not read yet."));
         }
         return;
     };
     let l = &scan.listing;
     if g.error.is_some() {
-        body.spawn(k.text(format!("Still showing the last good read: {}", l.root), 11.5, WARN, 1));
+        body.spawn(k.text(format!("Still showing the last good read: {}", l.root), size::CAPTION, WARN, 1));
     }
-    body.spawn(k.text(format!("Showing {}", l.root), 11., FAINT, 0));
-    body.spawn(k.text(if l.journal { "journal.jsonl present: gait entries with a journal line show its time." } else { "No journal.jsonl here, so no entry has a recorded time." }, 11., FAINT, 0));
+    body.spawn(k.text(format!("Showing {}", l.root), size::DETAIL, FAINT, 0));
+    body.spawn(k.text(if l.journal { "journal.jsonl present: gait entries with a journal line show its time." } else { "No journal.jsonl here, so no entry has a recorded time." }, size::DETAIL, FAINT, 0));
     for w in &l.warnings {
-        body.spawn(k.text(format!("⚠ {w}"), 11.5, WARN, 0));
+        body.spawn(k.text(format!("⚠ {w}"), size::CAPTION, WARN, 0));
     }
 
     body.spawn(k.section(&format!("Reports  {}", l.entries.len())));
     if l.entries.is_empty() {
-        body.spawn(k.text("No report.yaml in any subfolder.", 12., SUBTLE, 0));
+        body.spawn(k.caption("No report.yaml in any subfolder."));
     }
     for e in &l.entries {
         let selected = g.selected.as_deref() == Some(e.name.as_str());
@@ -321,17 +322,17 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
         body.spawn((
             Button,
             BuildAction::GaitReportSelect(e.name.clone()),
-            ui::Tint { idle: if selected { ACCENT_BG } else { Color::NONE }, hover: if selected { ACCENT_BG } else { HOVER_BG } },
+            Tint::selectable(selected),
             Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(8.), Val::Px(4.)), column_gap: Val::Px(8.), align_items: AlignItems::Center, border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
             BorderColor::all(if selected { ACCENT } else { Color::NONE }),
             BackgroundColor(if selected { ACCENT_BG } else { Color::NONE }),
             children![
                 k.dot(color),
-                (Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![k.text(&e.name, 12., TEXT, 1), k.text(line, 11., color, 0)])
+                (Node { flex_direction: FlexDirection::Column, flex_grow: 1., min_width: Val::Px(0.), ..default() }, children![k.text(&e.name, size::SMALL, TEXT, 1), k.text(line, size::DETAIL, color, 0)])
             ],
         ));
         if let Err(msg) = &e.report {
-            body.spawn(k.text(msg, 11., DANGER, 0));
+            body.spawn(k.text(msg, size::DETAIL, DANGER, 0));
         }
     }
 
@@ -339,20 +340,20 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     body.spawn(k.section(&format!("Report  {}", e.name)));
     match &e.report {
         Err(msg) => {
-            body.spawn(k.text(msg, 12., DANGER, 0));
+            body.spawn(k.text(msg, size::SMALL, DANGER, 0));
         }
         Ok(r) => {
-            body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(status_color(r.status())), k.text(format!("{} · {}", kind(r), r.status()), 12.5, status_color(r.status()), 2)]));
+            body.spawn((Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(status_color(r.status())), k.text(format!("{} · {}", kind(r), r.status()), size::BODY, status_color(r.status()), 2)]));
             let (summary, reasons, joints) = match r {
                 LabReport::Gait(x) => (&x.summary, &x.reasons, &x.joints),
                 LabReport::Pose(x) => (&x.summary, &x.reasons, &x.joints),
                 LabReport::Maneuver(x) => (&x.summary, &x.reasons, &x.joints),
             };
-            body.spawn(k.text(summary, 12., TEXT, 0));
+            body.spawn(k.text(summary, size::SMALL, TEXT, 0));
             match r {
                 LabReport::Gait(x) => {
-                    body.spawn(k.text("Fidelity", 11., FAINT, 2));
-                    body.spawn(k.text(&x.fidelity, 11.5, if x.fidelity.starts_with("fast") { WARN } else { TEXT }, 0));
+                    body.spawn(k.text("Fidelity", size::DETAIL, FAINT, 2));
+                    body.spawn(k.text(&x.fidelity, size::CAPTION, if x.fidelity.starts_with("fast") { WARN } else { TEXT }, 0));
                     k.property(body, "Gait", &x.gait, "", None::<BuildAction>, false);
                     k.property(body, "Speed", &or_none(x.speed_m_s, "m/s"), "", None::<BuildAction>, false);
                     k.property(body, "Forward distance", &or_none(x.forward_distance_m, "m"), "", None::<BuildAction>, false);
@@ -362,10 +363,10 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
                         for gate in &x.gates {
                             body.spawn(Node { flex_direction: FlexDirection::Column, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }).with_children(|row| {
                                 row.spawn(Node { justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(8.), ..default() }).with_children(|top| {
-                                    top.spawn(k.text(&gate.gate, 11.5, TEXT, 1));
-                                    top.spawn(k.text(if gate.ok { "✓ ok" } else { "✗ failed" }, 11.5, if gate.ok { OK } else { DANGER }, 2));
+                                    top.spawn(k.text(&gate.gate, size::CAPTION, TEXT, 1));
+                                    top.spawn(k.text(if gate.ok { "✓ ok" } else { "✗ failed" }, size::CAPTION, if gate.ok { OK } else { DANGER }, 2));
                                 });
-                                row.spawn(k.text(format!("value {} · limit {}", num(gate.value), num(gate.limit)), 11., SUBTLE, 0));
+                                row.spawn(k.text(format!("value {} · limit {}", num(gate.value), num(gate.limit)), size::DETAIL, SUBTLE, 0));
                             });
                         }
                     }
@@ -388,7 +389,7 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             if !reasons.is_empty() {
                 body.spawn(k.section("Reasons"));
                 for reason in reasons {
-                    body.spawn(k.text(format!("· {reason}"), 11.5, TEXT, 0));
+                    body.spawn(k.text(format!("· {reason}"), size::CAPTION, TEXT, 0));
                 }
             }
             if !joints.is_empty() {
@@ -422,7 +423,7 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             k.property(body, "Journal line", &j.line.to_string(), "", None::<BuildAction>, false);
         }
         None => {
-            body.spawn(k.text("No journal entry (no timestamp recorded).", 11.5, SUBTLE, 0));
+            body.spawn(k.text("No journal entry (no timestamp recorded).", size::CAPTION, SUBTLE, 0));
         }
     }
 }
@@ -432,10 +433,10 @@ fn joint_row(body: &mut ChildSpawnerCommands, k: &Kit, j: &JointLine) {
     let color = match j.percent_of_limit { Some(p) if p > 100. => DANGER, Some(p) if p > 80. => WARN, _ => TEXT };
     body.spawn(Node { flex_direction: FlexDirection::Column, padding: UiRect::vertical(Val::Px(2.)), flex_shrink: 0., ..default() }).with_children(|row| {
         row.spawn(Node { justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(8.), ..default() }).with_children(|top| {
-            top.spawn(k.text(&j.joint, 11.5, TEXT, 1));
-            top.spawn(k.text(percent, 11.5, color, 1));
+            top.spawn(k.text(&j.joint, size::CAPTION, TEXT, 1));
+            top.spawn(k.text(percent, size::CAPTION, color, 1));
         });
-        row.spawn(k.text(format!("peak {} · limit {}", or_none(j.reference_peak_rad_s, "rad/s"), or_none(j.motor_limit_rad_s, "rad/s")), 11., SUBTLE, 0));
+        row.spawn(k.text(format!("peak {} · limit {}", or_none(j.reference_peak_rad_s, "rad/s"), or_none(j.motor_limit_rad_s, "rad/s")), size::DETAIL, SUBTLE, 0));
     });
 }
 

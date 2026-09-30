@@ -1973,7 +1973,7 @@ fn rebuild_scene(
             entity.insert(Pickable::default()).observe(pick_reference);
         }
     }
-    spawn_ui(&mut commands, &scene);
+    // Build mode draws its own chrome (spawn_ui returns at once for a builder scene).
     builder.panel_dirty = true;
     if first || !builder.fitted {
         builder.fitted = true;
@@ -2079,7 +2079,6 @@ pub mod actuators;
 pub mod gait_lab;
 pub mod calibration;
 pub(crate) mod schematic;
-pub(crate) use ui::{TOPBAR, STATUSBAR, LEFT_WIDTH, RIGHT_WIDTH};
 
 /// Grab and push: with a run going, Alt-drag on a part changes the load
 /// acting on it (a load torque on its shaft, a load force on its slide) in

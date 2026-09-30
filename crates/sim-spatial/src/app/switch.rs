@@ -792,6 +792,36 @@ fn hide_lessons(learn: Option<ResMut<Learn>>) {
     }
 }
 
+/// A REST command that asks for a mode switch on the caller's behalf (the
+/// builder's "‹ lesson" control, `lesson_open` and `lesson_screen` in build
+/// mode): writes the same `WindowAction::Switch` a button writes, with a
+/// nested reply kept in the continuation, and waits ([`awaited_switch`]).
+pub(crate) fn ask_switch(out: &mut MessageWriter<Act<WindowAction>>, call: &mut actions::Call, mode: ViewerMode) -> Outcome {
+    let reply = call.replies.open();
+    out.write(Act { action: WindowAction::Switch(ModeSwitch { mode, document: None }), origin: Origin::Rest(reply) });
+    *call.continuation = json!({"switch": reply.id()});
+    Outcome::Pending
+}
+
+/// For a command waiting on [`ask_switch`]: None when it is not waiting;
+/// Pending until the switch has answered; then the switch's result (its
+/// summary, or the refusal naming the blocker). A cancel before the answer
+/// releases the nested reply (the switch then drops a load still in
+/// progress: its caller is gone) and answers "cancelled".
+pub(crate) fn awaited_switch(call: &mut actions::Call) -> Option<Outcome> {
+    let reply = actions::Reply::from_id(call.continuation.get("switch").and_then(Value::as_u64)?);
+    let answer = call.replies.take(reply);
+    Some(match answer {
+        None if call.cancelled => {
+            call.replies.forget(reply);
+            Outcome::Done(Err("cancelled".into()))
+        }
+        None => Outcome::Pending,
+        Some(Outcome::Done(result)) => Outcome::Done(result),
+        Some(_) => Outcome::Done(Err("the mode switch gave no answer".into())),
+    })
+}
+
 /// Input: the lesson screen's toggles become switch actions.
 fn lesson_screen_requests(learn: Option<ResMut<Learn>>, mode: Res<State<ViewerMode>>, mut switch: MessageWriter<Act<WindowAction>>) {
     let Some(mut learn) = learn else { return };

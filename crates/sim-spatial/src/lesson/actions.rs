@@ -5,8 +5,8 @@
 //! edit layer (`sim_lesson::edit`) and note store as clicks, so the UI, REST
 //! clients and the `sim-lesson` CLI share validation and undo.
 use super::*;
-use crate::app::actions::{self, Act, Call, InFlight, Origin, Replies, Reply, Spec, spec};
-use crate::app::switch::{ModeSwitch, WindowAction};
+use crate::app::actions::{self, Act, Call, InFlight, Replies, Spec, spec};
+use crate::app::switch::{WindowAction, ask_switch, awaited_switch};
 use crate::app::ViewerMode;
 use bevy::ecs::message::Messages;
 use serde::Deserialize;
@@ -199,22 +199,13 @@ fn handle(learn: &mut Learn, scene: &mut SpatialScene, mode: ViewerMode, switch:
     // A lesson command waiting for the mode switch it asked for. `lesson_open`
     // opens its lesson only once the switch is accepted, so a refused switch
     // leaves the builder (and the lesson) as they were.
-    if let Some(id) = call.continuation.get("switch").and_then(Value::as_u64) {
-        let reply = Reply::from_id(id);
-        let answer = call.replies.take(reply);
-        if answer.is_none() && call.cancelled {
-            // The switch stops a load still in progress; its answer is not waited for.
-            call.replies.forget(reply);
-            return Outcome::Done(Err("cancelled".into()));
-        }
-        return match answer {
-            Some(Outcome::Done(Ok(_))) => match command {
+    if let Some(outcome) = awaited_switch(call) {
+        return match outcome {
+            Outcome::Done(Ok(_)) => match command {
                 LessonCommand::LessonOpen { slug } => Outcome::Done(learn.open(slug).map(|()| state(learn))),
                 _ => Outcome::Done(Ok(state(learn))),
             },
-            Some(Outcome::Done(Err(e))) => Outcome::Done(Err(e)),
-            Some(_) => Outcome::Done(Err("the mode switch gave no answer".into())),
-            None => Outcome::Pending,
+            other => other,
         };
     }
     match command {
@@ -245,20 +236,11 @@ fn handle(learn: &mut Learn, scene: &mut SpatialScene, mode: ViewerMode, switch:
             if let Err(e) = sim_lesson::Lesson::load(&path) {
                 return Outcome::Done(Err(e.to_string()));
             }
-            enter_lessons(switch, call)
+            ask_switch(switch, call, ViewerMode::Lessons)
         }
-        LessonCommand::LessonScreen { learn: true } if mode == ViewerMode::Build => enter_lessons(switch, call),
+        LessonCommand::LessonScreen { learn: true } if mode == ViewerMode::Build => ask_switch(switch, call, ViewerMode::Lessons),
         other => Outcome::Done(execute(learn, scene, other.clone())),
     }
-}
-
-/// Ask the mode switch for Lessons on behalf of a REST command, and wait for
-/// its answer (the switch's own reply token, kept in the continuation).
-fn enter_lessons(switch: &mut MessageWriter<Act<WindowAction>>, call: &mut Call) -> Outcome {
-    let reply = call.replies.open();
-    switch.write(Act { action: WindowAction::Switch(ModeSwitch { mode: ViewerMode::Lessons, document: None }), origin: Origin::Rest(reply) });
-    *call.continuation = json!({"switch": reply.id()});
-    Outcome::Pending
 }
 
 /// Actions: the lessons' one apply system (build and lessons; without a

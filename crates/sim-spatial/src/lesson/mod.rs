@@ -95,6 +95,10 @@ pub(crate) enum LessonAction {
     /// back as a rewind (the press that starts a timebar drag; REST never
     /// counts). `None`: "seek needs time", after the scene checks.
     SeekTo { time: Option<f64>, rewind: bool },
+    /// A click on a lesson chart: keep the scene at that moment (s). Unlike
+    /// `SeekTo` it does not pause and does not rebuild the page (the chart's
+    /// hover already shows the moment; this keeps it when the pointer leaves).
+    KeepMoment(f64),
     /// A click on a part of the live scene (`pick_part`): a note draft on it in
     /// Annotate mode, else the picked part.
     Pick(String),
@@ -1058,6 +1062,14 @@ impl Learn {
                     if let (Some(scene), Some(slug)) = (rewound, self.slug().map(String::from)) {
                         self.progress.block(&slug, &scene).rewinds += 1;
                     }
+                }
+                LessonAction::KeepMoment(time) => {
+                    if let Some(a) = self.scene.as_mut().filter(|a| a.run.is_some()) {
+                        if (a.time - time).abs() > 1e-9 {
+                            a.seek(time);
+                        }
+                    }
+                    self.dirty = was_dirty;
                 }
                 LessonAction::Pick(component) => self.pick(scene, &component),
                 LessonAction::Slider { parameter, value } => {
@@ -2280,9 +2292,12 @@ pub(crate) struct ChartHover(pub String, pub f64, pub f64);
 /// Hovering a chart shows that moment in the scene (and the part it
 /// measures); clicking keeps it. Hovering a part lights up its charts.
 /// The hover preview is local (restored when the pointer leaves); a click
-/// commits the moment as the timebar's seek action.
-fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &ChartHover, &mut BorderColor)>, mut learn: ResMut<Learn>, pointed: Res<crate::view::PartHover>, mut preview: Local<Option<f64>>, mut lit: Local<Option<String>>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
+/// keeps the moment through the lesson handler (`KeepMoment`), once per
+/// press, with the moment held when the press ends (a drag keeps where it ends).
+#[allow(clippy::too_many_arguments)]
+fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPosition, &ChartHover, &mut BorderColor)>, mut learn: ResMut<Learn>, pointed: Res<crate::view::PartHover>, mut preview: Local<Option<f64>>, mut lit: Local<Option<String>>, mut held: Local<Option<f64>>, mut out: MessageWriter<Act<actions::LessonCommand>>) {
     if !learn.active {
+        *held = None;
         return;
     }
     let mut hovered = None;
@@ -2296,6 +2311,12 @@ fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPositio
         }
     }
     let part_of = |key: &str| key.split('.').next().unwrap_or(key).to_string();
+    // The press ended: keep its last moment through the handler (once per press).
+    if !clicked {
+        if let Some(t) = held.take() {
+            out.write(Act::ui(actions::LessonCommand::Ui(LessonAction::KeepMoment(t))));
+        }
+    }
     match (&hovered, learn.scene.as_ref().is_some_and(|a| a.run.is_some() && !a.playing)) {
         (Some((key, t)), true) => {
             let a = learn.bypass_change_detection().scene.as_mut().unwrap();
@@ -2306,9 +2327,9 @@ fn chart_hover(mut charts: Query<(&Interaction, &bevy::ui::RelativeCursorPositio
                 a.seek(*t);
             }
             if clicked {
-                // Kept: nothing to restore on leaving.
+                // Kept while held: nothing to restore on leaving.
                 *preview = None;
-                out.write(Act::ui(actions::LessonCommand::Ui(LessonAction::SeekTo { time: Some(*t), rewind: false })));
+                *held = Some(*t);
             }
             let part = part_of(key);
             if learn.hover_part.as_deref() != Some(part.as_str()) {

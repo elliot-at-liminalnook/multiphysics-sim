@@ -625,8 +625,11 @@ Paths are `crates/sim-spatial/src/`.
     `SubmitDraft`/`DropDraft`, `InspectAction::Select`/`Display`,
     `LessonAction::Pick`;
   - `system_ui` activate of the "‹ lesson" button answered success and did
-    nothing (as before 152e02de); it now refuses, pointing at
-    `mode:lessons`;
+    nothing (as before 152e02de); it now writes the button's
+    `WindowAction::Switch` to Lessons (`switch::ask_switch`, shared with
+    `lesson_open`/`lesson_screen`) and answers with the switch's result, a
+    refusal naming the blocker; with no lesson open it is an error (the
+    button does nothing then);
   - `system_open`, `system_gait_reports`, `system_calibration_review` and
     `system_actuators` with `args: null` were rejected ("args must be an
     object") where they used to read `{}`; restored
@@ -640,8 +643,10 @@ Paths are `crates/sim-spatial/src/`.
     continuation now records the owning feature;
   - `app/tests.rs` called `unwrap_err` on a `Result<&Feature, _>`
     (`Feature` is not `Debug`);
-  - a lesson chart click committed a seek outside the action layer; it now
-    writes `SeekTo`;
+  - a lesson chart click kept its moment outside the action layer; it now
+    writes `LessonAction::KeepMoment` once per press, with the moment held
+    when the press ends (no pause and no page rebuild, as the click did
+    before);
   - `lesson_open` in build mode switched to Lessons before checking the
     lesson loads; a lesson that fails to load is now refused first, with
     the loader's error, and the window stays in Build;
@@ -766,7 +771,7 @@ Paths are `crates/sim-spatial/src/`.
   starts a drag, so REST never counts rewinds), a slider writes
   `LessonAction::Slider` on release (the REST slider's), the narration bar
   `NarrateAction::Seek` (REST `lesson_narration`'s), a click on a lesson
-  chart `SeekTo` (its hover preview stays local and is undone on leaving),
+  chart `KeepMoment` (its hover preview stays local and is undone on leaving),
   a part or net click the mode's selection or pick action. A drag may keep a local preview
   (`slider_drag`). Freehand sketch strokes and typing into an open draft
   are input editing (Enter and Escape are the draft's submit and drop

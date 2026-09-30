@@ -23,6 +23,9 @@ use std::{
     time::Instant,
 };
 
+mod reports;
+pub use reports::{JournalRecord, LabReport, ResultsEntry, ResultsListing, read_report, scan_results};
+
 type R<T> = Result<T, String>;
 
 /// The parts of a `compare_gait_search` config a gait file is evaluated with.

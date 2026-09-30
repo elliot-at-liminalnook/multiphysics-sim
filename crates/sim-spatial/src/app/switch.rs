@@ -1,17 +1,21 @@
-//! Switching modes in the running window (native-viewer.md §1).
+//! Switching modes in the running window (native-viewer.md §1), and the
+//! window's other actions ([`WindowAction`]: `screenshot`, and `system_ui` in
+//! modes without controls of their own).
 //!
 //! One request type ([`ModeSwitch`]) and one validating handler
-//! ([`handle`]). Every entry point submits to [`Switcher`]: the mode switcher
-//! (bottom right, `super::switcher`), `system_ui` controls `mode:<mode>` and
-//! REST `viewer_mode` (both through `super::route`), and the lesson screen's own
-//! toggles ("Open in builder", "‹ lesson", `lesson_screen`), which ask for
-//! Build or Lessons.
+//! ([`handle`], `ViewerSet::Actions`). Every entry point writes a
+//! [`WindowAction`]: the mode switcher (bottom right, `super::switcher`),
+//! `system_ui` controls `mode:<mode>` and REST `viewer_mode` (routed by
+//! `super::route`), the builder's Lessons button, and the lesson screen's own
+//! toggles ("Open in builder", "‹ lesson", `lesson_screen`, `lesson_open`),
+//! which ask for Build or Lessons.
 //!
 //! - **Refusals** name the reason and keep the current mode: no document
 //!   for the target mode, the builder's `system_open` blockers
-//!   (`Builder::switch_blockers`, shared with open.rs) and a lesson's or a
-//!   robot's work in progress when that mode is left, another switch in
-//!   progress, or a document that fails to load.
+//!   (`Builder::switch_blockers`, shared with open.rs) when Build/Lessons is
+//!   left or Lessons is entered from Build, and a lesson's or a robot's work
+//!   in progress when that mode is left, another switch in progress, or a
+//!   document that fails to load.
 //! - **Documents** load with the loaders the launch uses, off the UI thread
 //!   (a `jobs` Compute job, or the robot view's own loader), and are
 //!   installed by [`arrive`] on the target mode's OnEnter, before the scope's
@@ -23,6 +27,9 @@
 //!   and the place are removed (their jobs cancel, their `RunThread`s join
 //!   within `jobs::JOIN_BOUND` on a drop thread). `ModelLibrary`, the fonts,
 //!   `Documents`, `Rest` and the workspace root always survive.
+//! - **REST** callers wait on their reply token (`actions::Replies`); a
+//!   cancel stops a switch whose document is still loading.
+use super::actions::{self, Act, Origin, Replies, Spec, spec};
 use super::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::Builder;
 use crate::jobs::{Job, Pool};
@@ -31,9 +38,11 @@ use crate::models::ModelLibrary;
 use crate::place_view::PlaceView;
 use crate::robot::RobotView;
 use crate::{SelectionLink, SpatialScene};
+use bevy::ecs::message::Messages;
 use bevy::prelude::*;
-use serde_json::{Value, json};
-use std::collections::VecDeque;
+use serde::Deserialize;
+use serde_json::{Map, Value, json};
+use sim_api::Outcome;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -67,6 +76,99 @@ pub struct ModeSwitch {
     pub mode: ViewerMode,
     pub document: Option<Document>,
 }
+impl ModeSwitch {
+    /// `viewer_mode {mode, path?, preset?}`.
+    fn from_args(args: Map<String, Value>) -> Result<Self, String> {
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Args {
+            mode: String,
+            #[serde(default)]
+            path: Option<PathBuf>,
+            #[serde(default)]
+            preset: Option<String>,
+        }
+        let args: Args = serde_json::from_value(Value::Object(args)).map_err(|e| format!("viewer_mode: {e}"))?;
+        let mode = ViewerMode::parse(&args.mode)?;
+        let document = match (args.path, args.preset) {
+            (Some(_), Some(_)) => return Err("viewer_mode takes path or preset, not both".into()),
+            (Some(p), None) => Some(Document::Path(p)),
+            (None, Some(id)) => Some(Document::Preset(id)),
+            (None, None) => None,
+        };
+        Ok(ModeSwitch { mode, document })
+    }
+}
+
+/// The window's actions, in every mode: the mode switch, `screenshot`, and
+/// `system_ui` where the mode has no controls of its own (inspect, place; in
+/// every mode for a `mode:*` control). REST arguments are kept as given and
+/// checked by [`handle`], so their errors read as before.
+#[derive(Deserialize)]
+#[serde(tag = "command", rename_all = "snake_case")]
+pub enum WindowAction {
+    /// `{}` reports the mode; `{mode, path?, preset?}` switches.
+    ViewerMode(Map<String, Value>),
+    /// `{path}`: the window as drawn, after the next frame.
+    Screenshot(Map<String, Value>),
+    /// `{action: {operation: controls | activate, id?, ui_revision?}}`.
+    SystemUi(Map<String, Value>),
+    /// The switcher's buttons, the builder's Lessons button and the lesson
+    /// screen's toggles.
+    #[serde(skip)]
+    Switch(ModeSwitch),
+}
+
+impl actions::Action for WindowAction {
+    fn commands() -> Vec<Spec> {
+        vec![
+            spec("viewer_mode", actions::ALL, json!({"mode":"robot","preset":"robot-measured-400hz"}), "Switch this window's mode, or with no mode (args {}) report it: active, modes, pending (a document still loading), entering, message (the switcher's last line) and documents (what each mode reopens: inspect description/spatial, lessons dir and lesson, robot path or preset, place; library, models, presets). mode inspect | build | lessons | robot | place; optional path (inspect: a *.description.json with its *.spatial.json beside it; build: a *.system.json; lessons: a folder of <slug>/lesson.md; robot: a *.simrobot.json; place: a sim-place build directory) or preset (robot: an id listed by robot_presets). Without one, a mode reopens what it showed before in this window or at launch; inspect falls back to the example assembly. The same handler as the mode switcher (bottom right of the window), the builder's Lessons button and system_ui mode:<mode> (every mode). Refused, naming the reason, with the current mode kept: no document for the target mode; leaving build or lessons, entering lessons from build (by any entry point: the switcher, the Lessons button, system_ui mode:lessons, viewer_mode, lesson_open or lesson_screen) or replacing the builder with a new lesson's, while a text or discussion draft, placement drag, study, replay, Codex answer or open is in progress (the builder's system_open blockers), or leaving build or lessons while a lesson draft or contact sheet is, and a new lesson replacing a build-mode builder with a live run; leaving robot mode while a recording is being written or a replay runs; another switch in progress; a path of the wrong kind; a document that fails to load (named). Documents load off the UI thread; poll the job. Build and lessons share the builder: switching between them keeps it and the lesson (the lesson screen is drawn over the builder), and entering lessons pauses a live build run and keeps it (Run resumes it in build mode). The builder stays in the window across every switch: leaving build/lessons pauses a live run and parks its scene; build with a path while it has another file open is refused (use system_open in build mode). Leaving lessons closes the lesson (its recordings and narration stop; lessons reopens it); leaving robot mode stops its run, gait and playback threads; leaving inspect parks its scene and selection link. Commands of another mode are refused naming the active mode. Result: mode, previous, document, load_seconds (unchanged=true when the mode was already active)."),
+            spec("screenshot", actions::ALL, json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn (UI, overlays, lesson pages) to a PNG after the next frame; refused, naming the cause, while the window is not visible"),
+        ]
+    }
+    /// `viewer_mode` with `args: null` reports the mode, as `{}` does.
+    fn parse(command: &sim_api::Command) -> Result<Self, String> {
+        if command.args.is_null() {
+            let empty = sim_api::Command { command: command.command.clone(), args: json!({}) };
+            return sim_api::decode::<Self>(&empty);
+        }
+        sim_api::decode::<Self>(command)
+    }
+    fn controls() -> &'static [&'static str] {
+        &["mode:inspect", "mode:build", "mode:lessons", "mode:robot", "mode:place"]
+    }
+}
+impl WindowAction {
+    /// `system_ui` in modes without controls of their own.
+    pub(crate) fn switcher_commands() -> Vec<Spec> {
+        vec![spec("system_ui", actions::SWITCHER_ONLY, json!({"action":{"operation":"controls"}}), "Inspect and place mode: the mode switcher's controls mode:inspect | mode:build | mode:lessons | mode:robot | mode:place (controls; activate {id, ui_revision}, the same handler as viewer_mode and the switcher's buttons; ui_revision is not checked for mode:* controls). In build, lessons and robot mode system_ui is the mode's own (its controls list ends with these mode:* controls).")]
+    }
+    /// The switch a `system_ui` `mode:*` control asks for.
+    pub(super) fn mode_control(args: &Map<String, Value>) -> Option<Result<ModeSwitch, String>> {
+        let action = args.get("action")?;
+        if action["operation"] != "activate" {
+            return None;
+        }
+        let target = action["id"].as_str()?.strip_prefix("mode:")?;
+        Some(ViewerMode::parse(target).map(|mode| ModeSwitch { mode, document: None }))
+    }
+    /// `system_ui` in a mode whose only controls are the switcher's.
+    fn switcher_ui(mode: ViewerMode, args: &Map<String, Value>) -> Result<Value, String> {
+        match args.get("action").and_then(|a| a["operation"].as_str()) {
+            Some("controls") => Ok(json!({"ui_revision": 0, "ready": true, "controls": super::route::mode_controls(mode), "state": {"viewer_mode": mode}})),
+            _ => Err(format!("system_ui in {} mode has only the mode switcher's controls: operation controls, or activate with a mode:<mode> id", mode.name())),
+        }
+    }
+    /// The headless server (inspect mode, no window): what it can answer of these.
+    pub(crate) fn headless(self) -> Result<Value, String> {
+        match self {
+            WindowAction::Screenshot(args) => crate::rest::screenshot_path(&Value::Object(args), false).map(|p| json!({"path": p, "note": "saved once the next frame renders"})),
+            WindowAction::SystemUi(args) => Self::switcher_ui(ViewerMode::Inspect, &args),
+            WindowAction::ViewerMode(_) | WindowAction::Switch(_) => Err("viewer_mode: this headless server has no window to switch (inspect mode only)".into()),
+        }
+    }
+}
+
 
 /// What this window can open in each mode without being told, and the
 /// launch facts the loaders need. Shared: it survives every switch.
@@ -122,18 +224,15 @@ impl Documents {
     }
 }
 
-/// Requests waiting for the handler, the one switch in progress and the
-/// latest outcomes (REST callers poll their job for them).
+/// The one switch in progress and the latest outcome (REST callers wait on
+/// their reply token, `actions::Replies`).
 #[derive(Resource, Default)]
 pub struct Switcher {
-    queue: Vec<(u64, ModeSwitch)>,
-    seq: u64,
     pending: Option<Pending>,
     /// Loaded documents waiting for the target mode's OnEnter ([`arrive`]).
     arrival: Option<Box<Arrival>>,
-    /// A switch whose `NextState` is set: (seq, target, result once entered).
-    entering: Option<(u64, ViewerMode, Value)>,
-    outcomes: VecDeque<(u64, Result<Value, String>)>,
+    /// A switch whose `NextState` is set: (who asked, target, result once entered).
+    entering: Option<(Origin, ViewerMode, Value)>,
     /// The latest outcome as the switcher shows it (refusals name the reason).
     pub message: Option<Result<String, String>>,
     /// Bumped whenever an outcome or a pending load changes.
@@ -141,7 +240,7 @@ pub struct Switcher {
 }
 
 struct Pending {
-    seq: u64,
+    origin: Origin,
     mode: ViewerMode,
     what: String,
     work: Work,
@@ -172,43 +271,21 @@ pub(crate) struct Arrival {
     document: Value,
 }
 
+/// A REST caller's answer (nothing for a click: the switcher shows the message).
+fn answer(world: &mut World, origin: Origin, result: Result<Value, String>) {
+    if let Origin::Rest(reply) = origin {
+        world.resource_mut::<Replies>().answer(reply, Outcome::Done(result));
+    }
+}
+
 impl Switcher {
-    /// Queue a request for [`handle`]; returns its sequence number.
-    pub fn submit(&mut self, request: ModeSwitch) -> u64 {
-        self.seq += 1;
-        self.queue.push((self.seq, request));
-        self.seq
+    /// Show the outcome and answer whoever asked.
+    fn finish(&mut self, world: &mut World, origin: Origin, result: Result<Value, String>) {
+        self.show(&result);
+        answer(world, origin, result);
     }
-    /// The outcome of request `seq`, once decided.
-    pub fn outcome(&self, seq: u64) -> Option<Result<Value, String>> {
-        self.outcomes.iter().find(|(s, _)| *s == seq).map(|(_, r)| r.clone())
-    }
-    pub(crate) fn waiting(&self, seq: u64) -> bool {
-        self.queue.iter().any(|(s, _)| *s == seq) || self.pending.as_ref().is_some_and(|p| p.seq == seq) || self.entering.as_ref().is_some_and(|e| e.0 == seq)
-    }
-    /// Stop a request that has not switched yet: a queued one, or one whose
-    /// document is still loading (its job is dropped, so it cancels).
-    pub fn cancel(&mut self, seq: u64) -> bool {
-        let queued = self.queue.len();
-        self.queue.retain(|(s, _)| *s != seq);
-        let loading = self.pending.as_ref().is_some_and(|p| p.seq == seq);
-        if loading {
-            if let Some(p) = self.pending.take() {
-                crate::jobs::drop_off_thread(p.work, "a cancelled mode switch");
-            }
-        }
-        if queued != self.queue.len() || loading {
-            self.finish(seq, Err("Mode switch cancelled; the current mode stays.".into()));
-            return true;
-        }
-        false
-    }
-    fn finish(&mut self, seq: u64, result: Result<Value, String>) {
+    fn show(&mut self, result: &Result<Value, String>) {
         self.message = Some(result.as_ref().map(|v| v["message"].as_str().unwrap_or_default().to_string()).map_err(Clone::clone));
-        self.outcomes.push_back((seq, result));
-        while self.outcomes.len() > 16 {
-            self.outcomes.pop_front();
-        }
         self.revision += 1;
     }
     /// `viewer_mode` with no mode, and `/v1/viewer_mode`.
@@ -228,9 +305,11 @@ impl Switcher {
 /// Registers the handler, the teardown and the lesson screen requests (no
 /// window needed: the state-transition test runs this on MinimalPlugins).
 pub(crate) fn build(app: &mut App) {
+    actions::register::<WindowAction>(app);
     app.init_resource::<Switcher>()
+        .init_resource::<Replies>()
         .init_resource::<Documents>()
-        .add_systems(Update, lesson_screen_requests.in_set(ViewerSet::Input))
+        .add_systems(Update, (actions::serve, lesson_screen_requests).chain().in_set(ViewerSet::Input))
         .add_systems(Update, handle.in_set(ViewerSet::Actions))
         .add_systems(Update, finish_load.in_set(ViewerSet::JobResults))
         .add_systems(OnExit(ModeScope::Inspect), leave_inspect)
@@ -248,23 +327,80 @@ pub(crate) fn build(app: &mut App) {
 }
 
 /// The one handler (Actions): confirms a switch once its state is entered,
-/// then validates every queued request.
+/// stops a loading switch whose REST caller cancelled, then applies this
+/// frame's window actions in order.
 pub(crate) fn handle(world: &mut World) {
     let current = *world.resource::<State<ViewerMode>>().get();
+    let acts: Vec<Act<WindowAction>> = world.resource_mut::<Messages<Act<WindowAction>>>().drain().collect();
     world.resource_scope(|world, mut switch: Mut<Switcher>| {
-        if let Some((seq, target, summary)) = switch.entering.take() {
+        if let Some((origin, target, summary)) = switch.entering.take() {
             if current == target {
-                switch.finish(seq, Ok(summary));
+                switch.finish(world, origin, Ok(summary));
             } else {
-                switch.entering = Some((seq, target, summary));
+                switch.entering = Some((origin, target, summary));
             }
         }
-        for (seq, request) in std::mem::take(&mut switch.queue) {
-            if let Err(e) = start(world, &mut switch, current, seq, request) {
-                switch.finish(seq, Err(e));
+        let cancelled = match switch.pending.as_ref().map(|p| p.origin) {
+            Some(Origin::Rest(reply)) => world.resource::<Replies>().cancelled(reply),
+            _ => false,
+        };
+        if cancelled {
+            // Its job is dropped, so it cancels; the caller is told "cancelled".
+            if let Some(p) = switch.pending.take() {
+                crate::jobs::drop_off_thread(p.work, "a cancelled mode switch");
+                switch.show(&Err("Mode switch cancelled; the current mode stays.".into()));
+                answer(world, p.origin, Err("cancelled".into()));
+            }
+        }
+        for Act { action, origin } in acts {
+            if let Origin::Rest(reply) = origin {
+                world.resource_mut::<Replies>().pick(reply);
+            }
+            let request = match action {
+                WindowAction::Switch(request) => Ok(request),
+                WindowAction::ViewerMode(args) if args.is_empty() => {
+                    let status = switch.json(current, world.resource::<Documents>());
+                    answer(world, origin, Ok(status));
+                    continue;
+                }
+                WindowAction::ViewerMode(args) => ModeSwitch::from_args(args),
+                WindowAction::SystemUi(args) => match WindowAction::mode_control(&args) {
+                    Some(request) => request,
+                    None => {
+                        let result = WindowAction::switcher_ui(current, &args);
+                        answer(world, origin, result);
+                        continue;
+                    }
+                },
+                WindowAction::Screenshot(args) => {
+                    let result = screenshot(world, args);
+                    answer(world, origin, result);
+                    continue;
+                }
+            };
+            // A malformed request is the caller's error, not the switcher's line.
+            let request = match request {
+                Ok(request) => request,
+                Err(e) => {
+                    answer(world, origin, Err(e));
+                    continue;
+                }
+            };
+            if let Err(e) = start(world, &mut switch, current, origin, request) {
+                switch.finish(world, origin, Err(e));
             }
         }
     });
+}
+
+/// `screenshot`: the window as drawn, saved on the render thread after the next frame.
+fn screenshot(world: &mut World, args: Map<String, Value>) -> Result<Value, String> {
+    use bevy::render::view::screenshot::{Screenshot, save_to_disk};
+    let occluded = world.get_resource::<crate::rest::Occlusion>().is_some_and(|o| o.0);
+    let path = crate::rest::screenshot_path(&Value::Object(args), occluded)?;
+    world.spawn(Screenshot::primary_window()).observe(save_to_disk(path.clone()));
+    let _ = world.write_message(bevy::window::RequestRedraw);
+    Ok(json!({"path": path, "note": "saved once the next frame renders"}))
 }
 
 fn refusal(target: ViewerMode, current: ViewerMode, why: &str) -> String {
@@ -281,7 +417,7 @@ fn open_hint(mode: ViewerMode) -> &'static str {
     }
 }
 
-fn start(world: &mut World, switch: &mut Switcher, current: ViewerMode, seq: u64, request: ModeSwitch) -> Result<(), String> {
+fn start(world: &mut World, switch: &mut Switcher, current: ViewerMode, origin: Origin, request: ModeSwitch) -> Result<(), String> {
     let target = request.mode;
     if let Some(p) = &switch.pending {
         return Err(refusal(target, current, &format!("the switch to {} mode is still loading {}", p.mode.label(), p.what)));
@@ -293,7 +429,7 @@ fn start(world: &mut World, switch: &mut Switcher, current: ViewerMode, seq: u64
         if let Some(d) = &request.document {
             return Err(refusal(target, current, &format!("{} mode is already active; open {} from within it ({})", target.label(), d.describe(), open_hint(target))));
         }
-        switch.finish(seq, Ok(json!({"mode": target, "previous": current, "unchanged": true, "message": format!("{} mode is already active.", target.label())})));
+        switch.finish(world, origin, Ok(json!({"mode": target, "previous": current, "unchanged": true, "message": format!("{} mode is already active.", target.label())})));
         return Ok(());
     }
     let blockers = leaving_blockers(world, current, target);
@@ -301,33 +437,37 @@ fn start(world: &mut World, switch: &mut Switcher, current: ViewerMode, seq: u64
         return Err(refusal(target, current, &blockers.join("; ")));
     }
     match prepare(world, current, &request).map_err(|e| refusal(target, current, &e))? {
-        Prepared::Now(arrival) => enter(world, switch, seq, current, target, arrival, Instant::now()),
+        Prepared::Now(arrival) => enter(world, switch, origin, current, target, arrival, Instant::now()),
         Prepared::Load(what, work) => {
             switch.message = Some(Ok(format!("Switching to {} mode: loading {what} off the UI thread…", target.label())));
             switch.revision += 1;
-            switch.pending = Some(Pending { seq, mode: target, what, work, started: Instant::now() });
+            switch.pending = Some(Pending { origin, mode: target, what, work, started: Instant::now() });
         }
     }
     Ok(())
 }
 
 /// What would be lost by leaving `current` for `target` now. Leaving the
-/// builder's modes is refused on the builder's `system_open` blockers and a
-/// pending open (`Builder::switch_blockers`, open.rs) and on a lesson's
+/// builder's modes, and entering Lessons from Build, is refused on the
+/// builder's `system_open` blockers and a pending open
+/// (`Builder::switch_blockers`, open.rs); leaving them also on a lesson's
 /// draft or capture; replacing the builder with a new lesson's also on a
 /// live run of the system file (`Builder::replace_blockers`); leaving robot
 /// mode on a recording being written or a replay.
-/// Build ↔ Lessons over an open lesson is the lesson screen's own toggle,
-/// never blocked (as before the modes were one app).
+/// Lessons → Build over an open lesson is the lesson screen's own toggle,
+/// never blocked (as before the modes were one app). Build → Lessons keeps a
+/// live run, paused (`show_lessons`).
 fn leaving_blockers(world: &World, current: ViewerMode, target: ViewerMode) -> Vec<String> {
     let mut blockers = Vec::new();
     // A new lessons folder brings its own builder in place of this one.
     let replacing = target == ViewerMode::Lessons && !world.contains_resource::<Learn>();
     let overlay = current.builder_family() && target.builder_family() && !replacing;
+    // The lesson screen would be drawn over a draft, a drag or work in progress.
+    let entering_lessons = current == ViewerMode::Build && target == ViewerMode::Lessons;
     if let Some(b) = world.get_resource::<Builder>() {
         if replacing {
             blockers.extend(b.replace_blockers());
-        } else if current.builder_family() && !overlay {
+        } else if (current.builder_family() && !overlay) || entering_lessons {
             blockers.extend(b.switch_blockers());
         }
     }
@@ -466,14 +606,14 @@ fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) -> Result<P
 }
 
 /// Hand the arrival to the target mode's OnEnter and set the state.
-fn enter(world: &mut World, switch: &mut Switcher, seq: u64, from: ViewerMode, target: ViewerMode, mut arrival: Box<Arrival>, started: Instant) {
+fn enter(world: &mut World, switch: &mut Switcher, origin: Origin, from: ViewerMode, target: ViewerMode, mut arrival: Box<Arrival>, started: Instant) {
     let summary = json!({
         "mode": target, "previous": from, "document": arrival.document.take(),
         "load_seconds": started.elapsed().as_secs_f64(),
         "message": format!("Switched to {} mode.", target.label()),
     });
     switch.arrival = Some(arrival);
-    switch.entering = Some((seq, target, summary));
+    switch.entering = Some((origin, target, summary));
     switch.revision += 1;
     world.resource_mut::<NextState<ViewerMode>>().set(target);
 }
@@ -493,11 +633,11 @@ pub(crate) fn finish_load(world: &mut World) {
             switch.pending = Some(pending);
             return;
         };
-        let (seq, target, started) = (pending.seq, pending.mode, pending.started);
+        let (origin, target, started) = (pending.origin, pending.mode, pending.started);
         let mut arrival = match result {
             Ok(arrival) => arrival,
             Err(e) => {
-                switch.finish(seq, Err(refusal(target, current, &format!("{} did not load: {}", pending.what, e.trim_end_matches('.')))));
+                switch.finish(world, origin, Err(refusal(target, current, &format!("{} did not load: {}", pending.what, e.trim_end_matches('.')))));
                 return;
             }
         };
@@ -506,11 +646,11 @@ pub(crate) fn finish_load(world: &mut World) {
         }
         let blockers = leaving_blockers(world, current, target);
         if !blockers.is_empty() {
-            switch.finish(seq, Err(refusal(target, current, &blockers.join("; "))));
+            switch.finish(world, origin, Err(refusal(target, current, &blockers.join("; "))));
             crate::jobs::drop_off_thread(arrival, "a refused mode switch");
             return;
         }
-        enter(world, &mut switch, seq, current, target, arrival, started);
+        enter(world, &mut switch, origin, current, target, arrival, started);
     });
 }
 
@@ -633,14 +773,14 @@ fn leave_place(world: &mut World) {
 }
 
 /// OnEnter(Lessons): the lesson screen is shown (its own bookkeeping), and
-/// the builder under it is stopped as the builder's Lessons button always
-/// did (`Builder::stop_for_learn`): whichever entry point switched, no
-/// builder draft keeps reading keys and no builder run or drag stays live
-/// under the lesson screen.
+/// the builder under it is paused (`Builder::pause_for_learn`): a live run is
+/// paused and kept, not dropped (Run resumes it in build mode). No builder
+/// draft or drag can be open: every entry to Lessons from Build goes through
+/// [`handle`], which refuses on them (`leaving_blockers`).
 fn show_lessons(learn: Option<ResMut<Learn>>, builder: Option<ResMut<Builder>>) {
     if let Some(mut learn) = learn {
         if let Some(mut builder) = builder {
-            builder.stop_for_learn();
+            builder.pause_for_learn();
         }
         learn.show(true);
     }
@@ -652,8 +792,8 @@ fn hide_lessons(learn: Option<ResMut<Learn>>) {
     }
 }
 
-/// Input: the lesson screen's toggles become switch requests.
-fn lesson_screen_requests(learn: Option<ResMut<Learn>>, mode: Res<State<ViewerMode>>, mut switch: ResMut<Switcher>) {
+/// Input: the lesson screen's toggles become switch actions.
+fn lesson_screen_requests(learn: Option<ResMut<Learn>>, mode: Res<State<ViewerMode>>, mut switch: MessageWriter<Act<WindowAction>>) {
     let Some(mut learn) = learn else { return };
     if learn.screen_request().is_none() {
         return;
@@ -661,6 +801,6 @@ fn lesson_screen_requests(learn: Option<ResMut<Learn>>, mode: Res<State<ViewerMo
     let Some(lessons) = learn.take_screen_request() else { return };
     let target = if lessons { ViewerMode::Lessons } else { ViewerMode::Build };
     if *mode.get() != target {
-        switch.submit(ModeSwitch { mode: target, document: None });
+        switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: target, document: None })));
     }
 }

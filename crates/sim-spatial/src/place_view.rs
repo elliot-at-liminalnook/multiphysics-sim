@@ -9,8 +9,11 @@ use bevy::asset::RenderAssetUsages;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
+use crate::app::actions::{self, Act, InFlight, Replies, Spec, spec};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
+use bevy::ecs::message::Messages;
 use serde::Deserialize;
+use sim_api::Outcome;
 use serde_json::json;
 use std::path::{Path, PathBuf};
 
@@ -126,28 +129,34 @@ impl PlaceView {
 }
 
 /// Place mode: the walkthrough's scene is spawned on entering the Place
-/// scope; flying, the toggles and REST run in place mode, in that order.
-/// Its continuous update while focused is set on entering place mode and
+/// scope; keys write its actions (Input), [`apply`] applies them and REST's
+/// (Actions), flying runs in SimSync and the REST snapshot in Present. Its
+/// continuous update while focused is set on entering place mode and
 /// replaced on entering any other (`app::CorePlugin`).
 pub struct PlacePlugin;
 impl Plugin for PlacePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(ModeScope::Place), setup).add_systems(Update, (poll_rest, fly, toggles).chain().in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Place)));
+        actions::register::<PlaceAction>(app);
+        app.add_systems(OnEnter(ModeScope::Place), setup).add_systems(
+            Update,
+            (
+                keys.after(actions::serve).in_set(ViewerSet::Input),
+                apply.in_set(ViewerSet::Actions),
+                fly.in_set(ViewerSet::SimSync),
+                publish.in_set(ViewerSet::Present),
+            )
+                .run_if(in_state(ViewerMode::Place)),
+        );
     }
 }
 
-/// Place mode's commands (tagged `place` in the one server's list).
-pub(crate) fn capabilities() -> Vec<serde_json::Value> {
-    use sim_api::capability as c;
-    vec![
-        c("state", json!({}), "Place mode: dir, description, stations (positions in the viewer frame: metres, Y up; the place's +Z up maps to +Y), views (photo count), station (the station last jumped to with keys 1-9 or camera {station}, null before any), camera {position, yaw, pitch (radians), speed (m/s)}, help_visible, markers_visible and viewer_mode. Presentation only: the place model is not changed."),
-        c("camera", json!({"position":[0.5,0.9,0.2],"yaw":0.6,"pitch":-0.25}), "Place mode: set the fly camera, any subset of position [x, y, z] (viewer frame, metres), yaw and pitch (radians; pitch within ±1.5), speed (m/s, 0.05-8) and station (index into state.stations: the same jump as keys 1-9, applied before position). Refused naming the field: a non-finite value, pitch or speed out of range, an unknown station. Returns state."),
-    ]
-}
-
-#[derive(Deserialize)]
+/// Every intent of place mode. REST keeps each command's JSON shape; keys
+/// 1–9 are `camera {station}`; P and H are the skipped toggles. (Flying with
+/// W/A/S/D/Q/E, dragging and the wheel are continuous camera motion, not
+/// actions: `fly`.)
+#[derive(Deserialize, Clone)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
-enum Request {
+pub(crate) enum PlaceAction {
     State,
     Camera {
         #[serde(default)]
@@ -161,6 +170,21 @@ enum Request {
         #[serde(default)]
         station: Option<usize>,
     },
+    /// Key P: the photo and station markers.
+    #[serde(skip)]
+    ToggleMarkers,
+    /// Key H: the help line.
+    #[serde(skip)]
+    ToggleHelp,
+}
+
+impl actions::Action for PlaceAction {
+    fn commands() -> Vec<Spec> {
+        vec![
+            spec("state", actions::PLACE, json!({}), "Place mode: dir, description, stations (positions in the viewer frame: metres, Y up; the place's +Z up maps to +Y), views (photo count), station (the station last jumped to with keys 1-9 or camera {station}, null before any), camera {position, yaw, pitch (radians), speed (m/s)}, help_visible, markers_visible and viewer_mode. Presentation only: the place model is not changed."),
+            spec("camera", actions::PLACE, json!({"position":[0.5,0.9,0.2],"yaw":0.6,"pitch":-0.25}), "Place mode: set the fly camera, any subset of position [x, y, z] (viewer frame, metres), yaw and pitch (radians; pitch within ±1.5), speed (m/s, 0.05-8) and station (index into state.stations: the same jump as keys 1-9, applied before position). Refused naming the field: a non-finite value, pitch or speed out of range, an unknown station. Returns state."),
+        ]
+    }
 }
 
 fn state(view: &PlaceView, t: &Transform, fly: &Fly) -> serde_json::Value {
@@ -179,10 +203,12 @@ fn station_pose(info: &PlaceInfo, index: usize) -> Option<Vec3> {
     info.stations.get(index).map(|s| *s + Vec3::Y * info.start.y - Vec3::X * 0.8)
 }
 
-fn execute(view: &mut PlaceView, t: &mut Transform, fly: &mut Fly, command: &sim_api::Command) -> sim_api::Result {
-    match sim_api::decode::<Request>(command)? {
-        Request::State => {}
-        Request::Camera { position, yaw, pitch, speed, station } => {
+/// The one handler of place mode's actions; REST gets `state` back.
+fn execute(view: &mut PlaceView, t: &mut Transform, fly: &mut Fly, markers: &mut Query<&mut Visibility, (With<PhotoMarker>, Without<Help>)>, help: &mut Query<&mut Visibility, With<Help>>, action: &PlaceAction) -> sim_api::Result {
+    match action {
+        PlaceAction::State => {}
+        PlaceAction::Camera { position, yaw, pitch, speed, station } => {
+            let (position, yaw, pitch, speed, station) = (*position, *yaw, *pitch, *speed, *station);
             let finite = |name: &str, v: Option<f32>| match v {
                 Some(x) if !x.is_finite() => Err(format!("camera {name} must be finite")),
                 _ => Ok(()),
@@ -215,42 +241,65 @@ fn execute(view: &mut PlaceView, t: &mut Transform, fly: &mut Fly, command: &sim
             fly.speed = speed.unwrap_or(fly.speed);
             t.rotation = orientation(fly);
         }
+        PlaceAction::ToggleMarkers => {
+            view.markers = !view.markers;
+            for mut v in markers.iter_mut() {
+                *v = if view.markers { Visibility::Inherited } else { Visibility::Hidden };
+            }
+        }
+        PlaceAction::ToggleHelp => {
+            view.help = !view.help;
+            for mut v in help.iter_mut() {
+                *v = if view.help { Visibility::Inherited } else { Visibility::Hidden };
+            }
+        }
     }
     Ok(state(view, t, fly))
 }
 
-/// Place mode's REST: the one dispatch first (viewer_mode, mode:* and other
-/// modes' commands), then `screenshot` (the shared path, refused while the
-/// window is hidden), `state` and `camera`.
-fn poll_rest(mut commands: Commands, mut redraw: MessageWriter<bevy::window::RequestRedraw>, mut rest: ResMut<crate::rest::Rest>, mut view: ResMut<PlaceView>, camera: Single<(&mut Transform, &mut Fly)>, occlusion: Res<crate::rest::Occlusion>, mut modes: crate::app::route::Modes) {
+/// Actions: place mode's one apply system (keys and REST; a key's refusal,
+/// such as a station the place does not have, is dropped as before).
+fn apply(
+    mut messages: ResMut<Messages<Act<PlaceAction>>>,
+    mut in_flight: ResMut<InFlight<PlaceAction>>,
+    mut replies: ResMut<Replies>,
+    view: Option<ResMut<PlaceView>>,
+    camera: Option<Single<(&mut Transform, &mut Fly)>>,
+    mut markers: Query<&mut Visibility, (With<PhotoMarker>, Without<Help>)>,
+    mut help: Query<&mut Visibility, With<Help>>,
+) {
+    let (Some(mut view), Some(camera)) = (view, camera) else {
+        actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the place is not open".into())));
+        return;
+    };
     let (mut t, mut fly) = camera.into_inner();
-    let server = &mut rest.0;
-    let mut shots = Vec::new();
-    server.poll(|command, continuation, cancelled| {
-        if let Some(outcome) = crate::app::route::route(ViewerMode::Place, Some(modes.parts()), command, continuation, cancelled) {
-            return outcome;
+    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| Outcome::Done(execute(&mut view, &mut t, &mut fly, &mut markers, &mut help, action)));
+}
+
+/// Input: keys 1–9 jump to a station (`camera {station}`), P and H toggle.
+fn keys(keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<Act<PlaceAction>>) {
+    let digits = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9];
+    for (i, k) in digits.iter().enumerate() {
+        if keys.just_pressed(*k) {
+            out.write(Act::ui(PlaceAction::Camera { position: None, yaw: None, pitch: None, speed: None, station: Some(i) }));
         }
-        let outcome = if command.command == "screenshot" {
-            sim_api::Outcome::Done(crate::rest::screenshot_path(&command.args, occlusion.0).map(|p| {
-                shots.push(p.clone());
-                json!({"path": p, "note": "saved once the next frame renders"})
-            }))
-        } else {
-            sim_api::Outcome::Done(execute(&mut view, &mut t, &mut fly, command))
-        };
-        crate::app::route::annotate(ViewerMode::Place, command, outcome)
-    });
-    if server.snapshot_due() {
-        let mut shown = state(&view, &t, &fly);
+    }
+    if keys.just_pressed(KeyCode::KeyP) {
+        out.write(Act::ui(PlaceAction::ToggleMarkers));
+    }
+    if keys.just_pressed(KeyCode::KeyH) {
+        out.write(Act::ui(PlaceAction::ToggleHelp));
+    }
+}
+
+/// Present: `/v1/state`, at most every 100 ms.
+fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<PlaceView>, camera: Single<(&Transform, &Fly)>) {
+    let Some(mut rest) = rest else { return };
+    let (t, fly) = *camera;
+    if rest.0.snapshot_due() {
+        let mut shown = state(&view, t, fly);
         shown["viewer_mode"] = json!(ViewerMode::Place.name());
-        server.publish("state", shown);
-    }
-    if server.busy() || !shots.is_empty() {
-        redraw.write(bevy::window::RequestRedraw);
-    }
-    for path in shots {
-        use bevy::render::view::screenshot::{Screenshot, save_to_disk};
-        commands.spawn(Screenshot::primary_window()).observe(save_to_disk(path));
+        rest.0.publish("state", shown);
     }
 }
 
@@ -303,7 +352,8 @@ fn orientation(fly: &Fly) -> Quat {
     Quat::from_euler(EulerRot::YXZ, fly.yaw, fly.pitch, 0.0) * Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2)
 }
 
-fn fly(time: Res<Time>, keys: Res<ButtonInput<KeyCode>>, buttons: Res<ButtonInput<MouseButton>>, mut motion: MessageReader<MouseMotion>, mut wheel: MessageReader<MouseWheel>, mut view: ResMut<PlaceView>, mut q: Query<(&mut Transform, &mut Fly)>) {
+/// SimSync: continuous flying (W/A/S/D, Q/E, Shift), mouse look and the wheel's speed.
+fn fly(time: Res<Time>, keys: Res<ButtonInput<KeyCode>>, buttons: Res<ButtonInput<MouseButton>>, mut motion: MessageReader<MouseMotion>, mut wheel: MessageReader<MouseWheel>, mut q: Query<(&mut Transform, &mut Fly)>) {
     let Ok((mut t, mut fly)) = q.single_mut() else { return };
     if buttons.pressed(MouseButton::Right) || buttons.pressed(MouseButton::Left) {
         for m in motion.read() {
@@ -315,15 +365,6 @@ fn fly(time: Res<Time>, keys: Res<ButtonInput<KeyCode>>, buttons: Res<ButtonInpu
     }
     for w in wheel.read() {
         fly.speed = (fly.speed * if w.y > 0.0 { 1.15 } else { 1.0 / 1.15 }).clamp(0.05, 8.0);
-    }
-    let digits = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9];
-    for (i, k) in digits.iter().enumerate() {
-        if keys.just_pressed(*k) {
-            if let Some(p) = station_pose(&view.info, i) {
-                t.translation = p;
-                view.station = Some(i);
-            }
-        }
     }
     t.rotation = orientation(&fly);
     let (forward, right) = (*t.forward(), *t.right());
@@ -337,19 +378,4 @@ fn fly(time: Res<Time>, keys: Res<ButtonInput<KeyCode>>, buttons: Res<ButtonInpu
     if keys.pressed(KeyCode::KeyQ) { d -= Vec3::Y; }
     let boost = if keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight) { 3.0 } else { 1.0 };
     t.translation += d.normalize_or_zero() * fly.speed * boost * time.delta_secs();
-}
-
-fn toggles(keys: Res<ButtonInput<KeyCode>>, mut view: ResMut<PlaceView>, mut markers: Query<&mut Visibility, (With<PhotoMarker>, Without<Help>)>, mut help: Query<&mut Visibility, With<Help>>) {
-    if keys.just_pressed(KeyCode::KeyP) {
-        view.markers = !view.markers;
-        for mut v in &mut markers {
-            *v = if view.markers { Visibility::Inherited } else { Visibility::Hidden };
-        }
-    }
-    if keys.just_pressed(KeyCode::KeyH) {
-        view.help = !view.help;
-        for mut v in &mut help {
-            *v = if view.help { Visibility::Inherited } else { Visibility::Hidden };
-        }
-    }
 }

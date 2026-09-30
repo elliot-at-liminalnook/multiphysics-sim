@@ -31,7 +31,7 @@ pub(crate) mod extras;
 pub(crate) mod frames;
 pub(crate) mod narrate;
 pub(crate) mod practice;
-pub mod rest;
+pub(crate) mod actions;
 mod ui;
 
 pub type Notes = sim_annotate::store::Store<ThreadDocument<LessonAnchor>>;
@@ -164,6 +164,12 @@ pub(crate) enum LessonAction {
     Setting(Setting),
     /// Keyboard focus for a slider (←/→ then nudge it).
     SliderFocus(String),
+    /// ←/→ with a focused slider: nudge it by one step (true: Shift, ten steps).
+    SliderStep(i8, bool),
+    /// ←/→: the previous (-1) or next (+1) event of the live scene.
+    EventStep(i8),
+    /// Escape outside a draft: drop the note draft's target and the picked part.
+    ClearPick,
 }
 
 /// Reader preferences (saved per machine, like progress).
@@ -1223,6 +1229,32 @@ impl Learn {
                 LessonAction::LabRun(id) => self.run_lab(&id)?,
                 LessonAction::Setting(change) => self.change_setting(change)?,
                 LessonAction::SliderFocus(p) => self.focus_slider = if self.focus_slider.as_deref() == Some(p.as_str()) { None } else { Some(p) },
+                LessonAction::SliderStep(step, coarse) => {
+                    if let Some(p) = self.focus_slider.clone() {
+                        if let Some(a) = self.scene.as_mut() {
+                            if let Some(spec) = a.scene.sliders.iter().find(|s| s.parameter == p).cloned() {
+                                let now = a.slider_value(scene, &p).unwrap_or(spec.min);
+                                let unit = spec.step.unwrap_or((spec.max - spec.min) / 100.);
+                                let v = spec.snap(now + step as f64 * unit * if coarse { 10. } else { 1. });
+                                a.overrides.insert(p, v);
+                                self.rerecord();
+                            }
+                        }
+                    }
+                }
+                LessonAction::EventStep(step) => {
+                    if let Some(a) = self.scene.as_mut().filter(|a| a.run.is_some()) {
+                        let events = event_times(a);
+                        let now = a.time;
+                        let target = if step > 0 { events.iter().copied().find(|t| *t > now + 1e-6).unwrap_or(a.duration()) } else { events.iter().rev().copied().find(|t| *t < now - 1e-3).unwrap_or(0.) };
+                        a.seek(target);
+                        a.playing = false;
+                    }
+                }
+                LessonAction::ClearPick => {
+                    self.draft = None;
+                    self.picked = None;
+                }
             }
             Ok(())
         }
@@ -1295,9 +1327,14 @@ pub struct LearnPlugin;
 impl Plugin for LearnPlugin {
     fn build(&self, app: &mut App) {
         let open = || in_state(crate::app::ModeScope::Builder).and_then(resource_exists::<Learn>);
+        crate::app::actions::register::<actions::LessonCommand>(app);
+        // Keys and buttons write lesson actions; the one handler applies them and
+        // REST's (in build and lessons: without a lesson, REST is told so).
+        app.add_systems(Update, (actions::keys, actions::buttons).chain().after(crate::app::actions::serve).in_set(crate::app::ViewerSet::Input).run_if(open()))
+            .add_systems(Update, actions::apply.in_set(crate::app::ViewerSet::Actions).run_if(in_state(crate::app::ModeScope::Builder)));
         app.add_systems(
             Update,
-            (poll, keys, buttons, seek, narrate::seek, practice::sketch_input, sliders, slider_live, chart_hover, ui::rebuild, ui::scroll, viewport, narrate::tick, playback, ui::live_text, narrate::live, narrate::overlay, practice::sketch_dots)
+            (poll, seek, narrate::seek, practice::sketch_input, sliders, slider_live, chart_hover, ui::rebuild, ui::scroll, viewport, narrate::tick, playback, ui::live_text, narrate::live, narrate::overlay, practice::sketch_dots)
                 .chain()
                 .before(crate::camera_viewport)
                 .in_set(crate::app::ViewerSet::SimSync)
@@ -1602,136 +1639,6 @@ fn charts_with(run: &SceneRun, companion: Option<&SceneRun>, scene: &Scene, time
             Some(Chart { key: key.clone(), unit: s.unit.clone(), image: images.add(image), range, window })
         })
         .collect()
-}
-
-/// Typing into drafts and block edits, plus playback keys.
-fn keys(mut events: MessageReader<KeyboardInput>, keys: Res<ButtonInput<KeyCode>>, mut learn: ResMut<Learn>, mut scene: ResMut<SpatialScene>) {
-    if !learn.active {
-        events.clear();
-        return;
-    }
-    let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
-    let command = keys.pressed(KeyCode::SuperLeft) || keys.pressed(KeyCode::SuperRight) || keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
-    if learn.input.is_none() {
-        events.clear();
-        if keys.just_pressed(KeyCode::Space) {
-            let playing = learn.scene.as_ref().is_some_and(|a| a.playing);
-            learn.act(if playing { LessonAction::Pause } else { LessonAction::Play }, &mut scene);
-        }
-        // ←/→: the previous or next event in the live scene, or nudge the focused slider.
-        let step = if keys.just_pressed(KeyCode::ArrowRight) { 1 } else if keys.just_pressed(KeyCode::ArrowLeft) { -1 } else { 0 };
-        if let (true, Some(p)) = (step != 0, learn.focus_slider.clone()) {
-            if let Some(a) = learn.scene.as_mut() {
-                if let Some(spec) = a.scene.sliders.iter().find(|s| s.parameter == p).cloned() {
-                    let now = a.slider_value(&scene, &p).unwrap_or(spec.min);
-                    let unit = spec.step.unwrap_or((spec.max - spec.min) / 100.);
-                    let v = spec.snap(now + step as f64 * unit * if shift { 10. } else { 1. });
-                    a.overrides.insert(p, v);
-                    learn.rerecord();
-                }
-            }
-            return;
-        }
-        // 1–9 pick an option of the next open question; Enter checks it.
-        let digit = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9].iter().position(|k| keys.just_pressed(*k));
-        if digit.is_some() || keys.just_pressed(KeyCode::Enter) {
-            if let Some(q) = learn.open_question() {
-                match digit {
-                    Some(i) => learn.act(LessonAction::QuizPick(q, i), &mut scene),
-                    None => learn.act(LessonAction::QuizCheck(q), &mut scene),
-                }
-                return;
-            }
-        }
-        if step != 0 {
-            if let Some(a) = learn.scene.as_mut().filter(|a| a.run.is_some()) {
-                let events = event_times(a);
-                let now = a.time;
-                let target = if step > 0 { events.iter().copied().find(|t| *t > now + 1e-6).unwrap_or(a.duration()) } else { events.iter().rev().copied().find(|t| *t < now - 1e-3).unwrap_or(0.) };
-                a.seek(target);
-                a.playing = false;
-            }
-        }
-        if keys.just_pressed(KeyCode::Escape) {
-            learn.draft = None;
-            learn.picked = None;
-            learn.dirty = true;
-        }
-        if command && keys.just_pressed(KeyCode::KeyZ) {
-            learn.act(if shift { LessonAction::Redo } else { LessonAction::Undo }, &mut scene);
-        }
-        return;
-    }
-    let block = matches!(learn.input.as_ref().map(|i| &i.purpose), Some(Purpose::Block(..) | Purpose::NewBlock(_) | Purpose::Reflection(_)));
-    for e in events.read() {
-        if e.state != ButtonState::Pressed {
-            continue;
-        }
-        match &e.logical_key {
-            Key::Enter => {
-                // Blocks are multi-line: Cmd/Ctrl+Enter saves. Notes: Enter posts.
-                if (block && command) || (!block && !shift) {
-                    learn.act(LessonAction::Submit, &mut scene);
-                    return;
-                }
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push('\n');
-                }
-            }
-            Key::Escape => {
-                learn.act(LessonAction::CancelDraft, &mut scene);
-                return;
-            }
-            Key::Backspace => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.pop();
-                }
-            }
-            Key::Tab => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push_str("  ");
-                }
-            }
-            Key::Space => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push(' ');
-                }
-            }
-            Key::Character(c) if !command => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push_str(c.as_str());
-                }
-            }
-            _ => continue,
-        }
-        learn.dirty = true;
-    }
-}
-
-fn buttons(actions: Query<(&Interaction, &LessonAction, Option<&crate::builder::ui_api::Enabled>), Changed<Interaction>>, mut learn: ResMut<Learn>, mut scene: ResMut<SpatialScene>) {
-    if !learn.active {
-        return;
-    }
-    let mut hover = learn.hover_part.clone();
-    let mut pressed = Vec::new();
-    for (interaction, action, enabled) in &actions {
-        if enabled.is_some_and(|e| !e.0) {
-            continue;
-        }
-        match (interaction, action) {
-            (Interaction::Pressed, LessonAction::Seek) => {}
-            (Interaction::Pressed, a) => pressed.push(a.clone()),
-            (Interaction::Hovered, LessonAction::Part(_, p)) => hover = Some(p.clone()),
-            (Interaction::None, LessonAction::Part(_, p)) if hover.as_deref() == Some(p) => hover = None,
-            _ => {}
-        }
-    }
-    if hover != learn.hover_part {
-        learn.hover_part = hover;
-    }
-    for action in pressed {
-        learn.act(action, &mut scene);
-    }
 }
 
 /// The timeline bar: press or drag to scrub.

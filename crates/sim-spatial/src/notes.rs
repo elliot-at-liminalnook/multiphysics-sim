@@ -158,6 +158,58 @@ pub(super) fn api(
         Err(error) => sim_api::Outcome::Done(Err(error)),
     }
 }
+/// Input: the notes panel's buttons, as the view's `annotations` action (the
+/// same request REST sends); ids and targets are read from the document now.
+pub(super) fn clicks(scene: Res<SpatialScene>, actions: Query<(&Interaction, &NoteAction), Changed<Interaction>>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
+    if actions.is_empty() {
+        return;
+    }
+    let doc = scene.note_document();
+    for (interaction, action) in &actions {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+        let request = match action {
+            NoteAction::Undo => Some(notes::Request::Edit { change: notes::Command::Undo, expected_revision: Some(doc.revision) }),
+            NoteAction::Redo => Some(notes::Request::Edit { change: notes::Command::Redo, expected_revision: Some(doc.revision) }),
+            NoteAction::Select(id) => Some(notes::Request::SelectNote { id: id.clone() }),
+            NoteAction::Restore(id) => Some(notes::Request::RestoreView { id: id.clone() }),
+            NoteAction::Link(note, index) => Some(notes::Request::FollowLink { note: note.clone(), index: *index }),
+            NoteAction::SaveView => {
+                let id = format!("physical-view-{}", doc.revision + 1);
+                Some(notes::Request::SaveView { id, label: "Assembly inspection view".into() })
+            }
+            NoteAction::New => {
+                if scene.selection != SelectionTarget::None {
+                    let id = format!("note-{}-{}", std::process::id(), doc.revision + 1);
+                    Some(notes::Request::Edit {
+                        change: notes::Command::PutNote {
+                            note: notes::Note {
+                                id,
+                                label: "Assembly discussion".into(),
+                                text: String::new(),
+                                targets: scene.selection.clone(),
+                                links: scene
+                                    .details
+                                    .components
+                                    .iter()
+                                    .map(|id| notes::Link { label: scene.description.components[id].label.clone(), target: notes::LinkTarget::Selection { target: SelectionTarget::component(id.clone()) } })
+                                    .collect(),
+                                color: [30, 155, 160],
+                            },
+                        },
+                        expected_revision: None,
+                    })
+                } else {
+                    None
+                }
+            }
+        };
+        if let Some(request) = request {
+            out.write(crate::app::actions::Act::ui(crate::inspect::InspectAction::Annotations { action: request }));
+        }
+    }
+}
 pub(super) fn update(
     mut commands: Commands,
     mut scene: ResMut<SpatialScene>,
@@ -168,6 +220,7 @@ pub(super) fn update(
 ) {
     sync(&mut scene, &mut camera);
     let doc = scene.note_document();
+    // Hovering a note, view or link emphasises what it points at (its press is `clicks`).
     if actions.iter().any(|(i, _)| i.is_changed()) {
         scene.note_pointer_hover = SelectionTarget::None;
         for (interaction, action) in &actions {
@@ -188,70 +241,6 @@ pub(super) fn update(
                     _ => None,
                 }
                 .unwrap_or(SelectionTarget::None);
-            }
-            if interaction.is_changed() && *interaction == Interaction::Pressed {
-                let request = match action {
-                    NoteAction::Undo => Some(notes::Request::Edit {
-                        change: notes::Command::Undo,
-                        expected_revision: Some(doc.revision),
-                    }),
-                    NoteAction::Redo => Some(notes::Request::Edit {
-                        change: notes::Command::Redo,
-                        expected_revision: Some(doc.revision),
-                    }),
-                    NoteAction::Select(id) => Some(notes::Request::SelectNote { id: id.clone() }),
-                    NoteAction::Restore(id) => Some(notes::Request::RestoreView { id: id.clone() }),
-                    NoteAction::Link(note, index) => Some(notes::Request::FollowLink {
-                        note: note.clone(),
-                        index: *index,
-                    }),
-                    NoteAction::SaveView => {
-                        let id = format!("physical-view-{}", doc.revision + 1);
-                        Some(notes::Request::SaveView {
-                            id,
-                            label: "Assembly inspection view".into(),
-                        })
-                    }
-                    NoteAction::New => {
-                        if scene.selection != SelectionTarget::None {
-                            let id = format!("note-{}-{}", std::process::id(), doc.revision + 1);
-                            Some(notes::Request::Edit {
-                                change: notes::Command::PutNote {
-                                    note: notes::Note {
-                                        id,
-                                        label: "Assembly discussion".into(),
-                                        text: String::new(),
-                                        targets: scene.selection.clone(),
-                                        links: scene
-                                            .details
-                                            .components
-                                            .iter()
-                                            .map(|id| notes::Link {
-                                                label: scene.description.components[id]
-                                                    .label
-                                                    .clone(),
-                                                target: notes::LinkTarget::Selection {
-                                                    target: SelectionTarget::component(id.clone()),
-                                                },
-                                            })
-                                            .collect(),
-                                        color: [30, 155, 160],
-                                    },
-                                },
-                                expected_revision: None,
-                            })
-                        } else {
-                            None
-                        }
-                    }
-                };
-                if let Some(request) = request {
-                    if let sim_api::Outcome::Done(Err(error)) =
-                        api(&mut scene, &mut camera, request, &mut Value::Null)
-                    {
-                        scene.note_error = Some(error);
-                    }
-                }
             }
         }
     }

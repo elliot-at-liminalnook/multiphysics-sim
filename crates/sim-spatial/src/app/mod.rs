@@ -13,10 +13,17 @@
 //!   mode, fonts, mesh picking, occlusion, the scroll clamp, the REST wake,
 //!   the mode switcher and the one REST server (`rest::Rest`, bound once by
 //!   `rest::bind`).
+//! - **Actions** ([`actions`], native-viewer.md §3): every intent is a typed
+//!   action (one enum per mode or feature), written as a Bevy Message by
+//!   buttons, keys, `system_ui` and REST (Input) and applied by one system
+//!   per action type (Actions). REST capabilities are generated from the
+//!   action registry; one REST poll ([`actions::serve`]) goes through the
+//!   one dispatch ([`route`]).
 //! - **Switching** lives in [`switch`]: one request type, one validating
-//!   handler, teardown on exit. Its entry points: [`switcher`] (the buttons)
-//!   and [`route`] (the one REST dispatch: `viewer_mode`, `system_ui`
-//!   `mode:*`, and other modes' commands refused by name).
+//!   handler, teardown on exit. Its entry points: [`switcher`] (the buttons),
+//!   `system_ui` `mode:*`, `viewer_mode`, the builder's Lessons button and
+//!   the lesson screen's toggles.
+pub mod actions;
 pub mod route;
 pub mod switch;
 pub mod switcher;
@@ -30,7 +37,7 @@ use serde::{Deserialize, Serialize};
 
 /// The window's mode. One is active at a time; the user switches between
 /// them in the running window (`switch`).
-#[derive(States, Clone, Copy, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
+#[derive(States, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ViewerMode {
     /// A source-bound assembly (`--description`/`--spatial`, or the example).
@@ -115,21 +122,22 @@ impl ComputedStates for SpatialScreen {
 }
 
 /// The shared pipeline (native-viewer.md §2), in this order every frame.
-/// A feature adds its systems to these sets. Until the action layer splits
-/// them, each mode's existing frame chain (REST poll, input handlers, job
-/// results and scene sync, in their original order) sits whole in `SimSync`
-/// and its drawing-only chain in `Present`.
+/// A feature adds its systems to these sets.
 #[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum ViewerSet {
-    /// Pointer and keyboard input that is shared by every mode (the mode switcher).
+    /// Buttons, keys and the one REST poll write actions (`actions::Act`);
+    /// nothing here changes a mode's state.
     Input,
-    /// Validated handlers of requests (the mode switch).
+    /// One handler per action type validates and applies this frame's
+    /// actions (and those still in flight), answering REST replies.
     Actions,
     /// Finished background work is applied (a mode switch's document load).
     JobResults,
-    /// Each mode's frame: REST, input, jobs and the scene synced to the model.
+    /// Each mode's frame: jobs, continuous gestures (orbit, fly, drags, text
+    /// entry) and the scene synced to the model.
     SimSync,
-    /// Drawing-only work: panels, overlays, gizmos, the switcher's highlight.
+    /// Drawing-only work: panels, overlays, gizmos, the switcher's highlight,
+    /// REST snapshots.
     Present,
 }
 

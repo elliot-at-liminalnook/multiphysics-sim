@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (measured 2026-09-30, after one-app-modes)
+## Where it is today (measured 2026-09-30, after action-layer)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -23,16 +23,28 @@ duplicates physics.
   `ModeScope` and `SpatialScreen` follow it. Launch flags choose the initial
   mode and document; the user switches modes in the window (the mode
   switcher, `system_ui` `mode:*`, REST `viewer_mode`), through one handler
-  (`app::switch::handle`). Done, pending verification.
+  (`app::switch::handle`). Verified at 7da1216e.
 - **One REST server** (`rest::bind`, the only `sim_api::Server::bind` in
-  sim-spatial, also used by `--headless`): every mode's commands, each
-  tagged with its `modes`; one dispatch (`app::route::route`) refuses a
-  command of another mode by name. Place mode answers `state`, `camera` and
-  `screenshot`.
+  sim-spatial, also used by `--headless`) and **one REST poll**
+  (`app::actions::serve`, Input): every mode's commands, each tagged with
+  its `modes`; one dispatch (`app::route::route`) refuses a command of
+  another mode by name. The capability list (92 entries, the same as
+  before) is generated from the action registry
+  (`app::actions::capabilities`); no hand-written list is left. Place mode
+  answers `state`, `camera` and `screenshot`.
+- **One action layer** (see [Action layer](#action-layer-2026-09-30)),
+  done 2026-09-30, pending verification: every intent is a typed action
+  (`WindowAction`, `InspectAction`, `SystemAction` carrying the builder's
+  `BuildAction`, `LessonCommand` carrying `LessonAction`, `RobotAction`,
+  `PlaceAction`) written as a Bevy Message (`Act<A>`) by buttons, keys,
+  `system_ui` and REST in Input and applied by one system per action type
+  in Actions. REST waits on reply tokens (`app::actions::Replies`).
 - **The shared pipeline sets** `ViewerSet` Input → Actions → JobResults →
-  SimSync → Present are configured once (`app::ModesPlugin`). Each mode's
-  existing frame chain sits whole in SimSync and its drawing-only chain in
-  Present, under `in_state(..)`, in their original order.
+  SimSync → Present are configured once (`app::ModesPlugin`). Input holds
+  the REST poll and every button and key mapping; Actions the apply
+  systems; SimSync each mode's continuous work (jobs, orbit and fly
+  cameras, drags, text entry, scene sync); Present drawing and REST
+  snapshots.
 - **Background work goes through one `jobs` module** (`src/jobs/`, see
   [§4](#4-one-background-work-abstraction) and
   [the jobs module](#jobs-module-2026-09-30)): 0 `thread::spawn` /
@@ -42,17 +54,21 @@ duplicates physics.
 - **Bevy structure:** 7 plugins (`CorePlugin`, `ModesPlugin`,
   `SpatialViewerPlugin`, `BuilderPlugin`, `LearnPlugin`, `RobotPlugin`,
   `PlacePlugin`), one `States` enum and two computed states, one set
-  enum. Buffered input uses the 0.17+ names (14 `MessageReader`, 7
-  `MessageWriter` sites); the 10 observers take `On<…>` (pointer picks,
-  drags, screenshots).
+  enum, 6 action Message types (`Act<A>`). 14 `MessageReader` and 25
+  `MessageWriter` sites; 10 `On<…>` sites (pointer picks, drags,
+  screenshots). `Interaction` is named 86 times in 16 files and `KeyCode`
+  135 times in 10 files; the press and key sites only map input to
+  actions.
 - **UI is hand-built** `Node` trees (17 files name `Node`). Headers,
   inspectors, tabs, docks and charts are rebuilt per feature.
-- **Large files:** `builder.rs` (3,013 lines), `robot.rs` (2,794),
-  `robot_run.rs` (2,597) and `lesson/mod.rs` (2,397). The new `app/` files
-  are under 700 lines each (`switch.rs` 659, `mod.rs` 319, `route.rs` 201,
-  `switcher.rs` 105, `tests.rs` 141).
+- **Large files:** `robot_run.rs` (2,597 lines), `builder.rs` (2,458),
+  `lesson/mod.rs` (2,304) and `robot.rs` (2,275). The action modules are
+  under 700 lines each (`lesson/actions.rs` 676, `robot/actions.rs` 634,
+  `builder/actions.rs` 608, `app/actions.rs` 470, `inspect.rs` 408,
+  `builder/system_actions.rs` 385); `app/switch.rs` is 806, `app/tests.rs`
+  280, `app/route.rs` 75, `rest.rs` 140.
 - **What already works well, to keep:**
-  - typed, validated handlers ("one handler per action")
+  - typed actions with one validated handler per action type
   - generation-stamped frames
   - shared undo history
   - one `jobs` module for background work (pool jobs and `RunThread`)
@@ -314,8 +330,8 @@ Paths below are `crates/sim-spatial/src/`.
   - `app/switch.rs`: `ModeSwitch`, `Switcher`, `Documents`, the handler
     (`handle`, Actions), document loads (`finish_load`, JobResults),
     `arrive` (every mode's OnEnter) and the scopes' OnExit teardown.
-  - `app/route.rs`: the one REST dispatch (`route`, `annotate`) and the
-    capabilities every mode shares (`viewer_mode`, `screenshot`).
+  - `app/route.rs`: the one REST dispatch (`route`, `annotate`); since the
+    action layer the shared commands are `switch::WindowAction`'s.
   - `app/switcher.rs`: the mode switcher's buttons.
   - Mode plugins: `SpatialViewerPlugin` (setup on OnEnter of the Inspect
     and Builder scopes; chains under `SpatialScreen`), `BuilderPlugin`
@@ -333,8 +349,9 @@ Paths below are `crates/sim-spatial/src/`.
   **Present**. Shared: the switcher's clicks and the lesson screen's
   requests in **Input**, the switch handler in **Actions**, its document
   loads in **JobResults**, the switcher's highlight and `/v1/viewer_mode` in
-  **Present**. Splitting the mode chains across the sets is the action
-  layer's work (epic 4).
+  **Present**. (Superseded by the action layer, which moved every REST
+  poll, button and key mapping to Input and their handlers to Actions; see
+  [Action layer](#action-layer-2026-09-30).)
 - **`building()` / `Learn.active`.** `building()` is gone: its uses are
   `in_state(ViewerMode::Build)`; `clear_for_learn` runs in Lessons; the
   lesson checks in `pick_part`, `keyboard`, `placement::start_part` and
@@ -467,6 +484,164 @@ Paths below are `crates/sim-spatial/src/`.
   core now enables, and a live switch between every pair of modes in a
   window are unverified until screenshots are on.
 
+## Action layer (2026-09-30)
+
+Batch action-layer put every user intent in the five modes onto typed
+actions with one handler each, generated the REST capabilities from one
+registry, and made entering Lessons from Build go through the mode switch's
+validation. No REST command name, argument shape, result, `system_ui` id,
+label or keybinding changed, apart from the Build → Lessons fix below.
+Paths are `crates/sim-spatial/src/`.
+
+- **Shape.**
+  - `app/actions.rs`: the `Action` trait (an action type's REST commands
+    as `Spec`s: name, modes, example args, description, next to its
+    variants; its `system_ui` control ids as patterns; its REST `parse`,
+    serde by default), the transport (`Act<A>`, a Bevy Message, with an
+    `Origin`: `Rest(Reply)`, `Ui` or `Quiet`), reply tokens (`Replies`),
+    `InFlight<A>` and `apply` (the body of every apply system), the
+    registry (`registry`, `capabilities`, `command_modes`, `feature_for`,
+    `fallback`), the one REST poll `serve` and `variants` (the commands an
+    action type's serde form accepts, read from serde itself).
+  - Action types, their apply systems (all in `ViewerSet::Actions`) and
+    where they are registered:
+
+    | Mode | Action type | Apply system | Registered in |
+    |---|---|---|---|
+    | every mode | `app::switch::WindowAction` (`viewer_mode`, `screenshot`, switcher `system_ui`, `Switch`) | `app::switch::handle` | `app::switch::build` |
+    | Inspect (and the spatial view of Build, Lessons) | `inspect::InspectAction` | `inspect::apply` | `SpatialViewerPlugin` |
+    | Build (and Lessons) | `builder::system_actions::SystemAction` (the `system_*` commands; `Ui(BuildAction)` for the chrome) | `builder::system_actions::apply` | `BuilderPlugin` |
+    | Lessons (and Build over a lesson) | `lesson::actions::LessonCommand` (the `lesson_*` commands; `Ui(LessonAction)` for the page) | `lesson::actions::apply` | `LearnPlugin` |
+    | Robot | `robot::RobotAction` (`robot/actions.rs`) | `robot::actions::apply` | `RobotPlugin` |
+    | Place | `place_view::PlaceAction` | `place_view::apply` | `PlacePlugin` |
+
+  - Input mappings (Input): `app::switcher::switcher_clicks`,
+    `app::switch::lesson_screen_requests`, `inspect::input`,
+    `notes::clicks`, `physics_view::overlay_clicks`,
+    `builder::actions::{buttons, keys}`, `lesson::actions::{buttons,
+    keys}`, `robot::actions::{buttons, motion_keys, graph_key,
+    overlay_keys, speed_keys}` and the `pick_link` observer,
+    `place_view::keys`. Continuous gestures stay where they were (orbit and
+    fly cameras, wheel scroll, drags, sliders, the scrub bar, text entry
+    into an open draft) because they are not discrete intents.
+- **Deleted.** `rest::capabilities`, `rest.rs` `Command`, `SystemRequest`,
+  `system_execute`, `execute`, `tick` and `poll`; `route::capabilities`,
+  `mode_ui_capability`, `Modes`, `rest_switch` and the capability-JSON
+  parse in `command_modes`; `robot::capabilities`, `Request`, `UiRequest`,
+  `execute` and `poll_rest` (merged into `RobotAction` and its REST form
+  `robot::actions::wire`); `place_view::capabilities`, `Request`,
+  `poll_rest` and `toggles`; `lesson/rest.rs` (`capabilities`, `Request`,
+  `NotesRequest`: now `LessonCommand` and `NoteOperation` in
+  `lesson/actions.rs`); `lib.rs` `Action`, `dispatch` and `keyboard`;
+  `builder/ui_api.rs` `Request` (now `system_actions::UiAction`);
+  `builder_buttons`, `builder_keys`; `Switcher::submit`, `outcome`,
+  `waiting`, `cancel` and its queue (generalized into `Replies`).
+- **Decisions.**
+  - *Messages, not observer triggers.* Each action type has exactly one
+    consumer that must run once per frame after every input mapping and
+    before job results and the scene sync; a Message drained by that
+    system in `ViewerSet::Actions` gives exactly that, keeps the frame's
+    order of actions and needs no entity. Rejected: `commands.trigger`
+    with a global observer per action type (runs at the writer's command
+    flush, so a REST action would apply in Input, outside the Actions
+    set, and ordering against the frame chains is lost).
+  - *Reply tokens generalize the switcher.* `Replies` is the switcher's
+    submit/outcome/waiting/cancel with one slot per REST command: the poll
+    (`Replies::submit`) parses, writes the action with `Origin::Rest`, keeps
+    `{"reply": token}` in the `sim_api` continuation and answers Pending
+    until the handler has answered. `sim_api` is unchanged. Rejected: owned
+    requests with reply channels in `sim_api` (an API change).
+  - *Asynchronous work.* A handler that answers Pending (system_open,
+    studies, context builds, actuators, calibration and gait-lab scans,
+    renders, annotation edits, lesson_frames, a lesson command waiting for
+    the mode switch) is kept in `InFlight<A>` with its own continuation and
+    applied again every frame until it answers; a REST cancel reaches it as
+    `Call::cancelled`, which each handler already honoured. A mode switch
+    that is still loading its document is dropped (its job cancels) when
+    its REST caller cancels. A click's Pending work continues in the
+    feature's own jobs, as before; only REST callers wait.
+  - *REST forms stay serde.* Every REST variant keeps its tag,
+    `rename_all`, `deny_unknown_fields` and defaults. Commands whose
+    arguments were read loosely before (`system_open`, `system_context`,
+    the tab loaders, `viewer_mode`, `screenshot`, `system_ui` in inspect
+    and place, `lesson_frames`) carry their argument object and are read by
+    the handler as before, so their error texts are unchanged. Robot's
+    commands deserialize through `wire::Command` into `RobotAction`
+    (`try_from`), keeping every argument error text.
+  - *The builder keeps its handlers.* `SystemAction` wraps
+    `Builder::apply` (validated commands, shared undo), the
+    `expected_revision` checks and `dispatch` (the chrome's handler, moved
+    to `builder/actions.rs`) exactly as they were; nothing is re-checked.
+    The builder is two action modules (`actions.rs`: the chrome;
+    `system_actions.rs`: the REST commands), not one per tab: the chrome's
+    `BuildAction` serialization names every `system_ui` control id
+    (`control-<hash>`), so splitting it would change ids.
+  - *Build → Lessons (the one behaviour change).* Every entry to Lessons
+    from Build is a `WindowAction::Switch` validated by `switch::handle`:
+    the switcher, the builder's Lessons button (`builder/actions.rs`
+    `buttons`), `system_ui` `mode:lessons`, `viewer_mode`, and
+    `lesson_open` / `lesson_screen {learn: true}` in build mode, which wait
+    for the switch's answer (`lesson/actions.rs` `enter_lessons`;
+    `lesson_open` opens its lesson only once the switch is accepted). It is
+    refused on `Builder::switch_blockers` (drafts, drag, study, replay,
+    Codex answer, pending open; `switch.rs` `leaving_blockers`), or
+    `replace_blockers` when a new lessons folder replaces the builder. A
+    live run is paused and kept (`Builder::pause_for_learn`, called from
+    `show_lessons`; `sync_run` leaves the scene to the lesson meanwhile);
+    Run resumes it back in build mode. `stop_for_learn` is gone. Rejected:
+    saving and dropping the run (loses the live session for no reason), or
+    a second blocker list. Limitation, unchanged from before: activating
+    another lesson scene installs that scene's sandbox builder, replacing
+    the builder (and a paused run of the previous sandbox).
+  - *Order within a frame.* Actions now apply before each mode's SimSync
+    chain instead of inside it. Robot: REST, keys and buttons apply before
+    `watch`/`receive` (they ran after them), so an action in the frame a
+    load finishes sees the view before the load (the next frame sees it);
+    the file watch's Reload is written in SimSync and applied next frame.
+    Place: station keys apply before `fly`. Inspect: actions apply before
+    `notes::update`. Builder and lessons: before `text_input` and the lesson
+    poll. Nothing reads state that an action of the same frame changes
+    later in the frame, except these one-frame shifts.
+  - *Error texts changed only in edge cases:* a malformed `lesson_*`
+    command with no lesson open now reports its parse error before "no
+    lessons are open"; a command whose mode handler is gone reports that
+    rather than hanging.
+  - *Control ids.* Dynamic ids are registered as patterns
+    (`link:<index>`, `control-<hash>`, …, matched by
+    `actions::control_matches`); the tests check every listed id against
+    them.
+- **Tests** (lib, no window): `app::tests::
+  every_capability_parses_into_its_action_and_every_parsed_command_is_registered`,
+  `every_mode_control_resolves_to_a_switch`,
+  `rest_refuses_commands_of_another_mode_by_name` (now through the
+  registry), `entering_lessons_from_build_refuses_on_a_draft_and_keeps_a_live_run`,
+  `build_robot_build_tears_down_the_robot_and_keeps_shared_state` (on reply
+  tokens); `robot::actions::tests::every_listed_control_fits_a_registered_pattern`
+  and `rest_argument_errors_are_unchanged`; `builder::ui_api::tests` checks
+  the collected id against the builder's pattern; `inspect::tests` (moved
+  from `rest::tests`).
+- **What the verification pass must run** (no screenshots):
+  - `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
+    warnings;
+  - `cargo test -p sim-spatial --lib` (the tests above, `jobs::tests::*`
+    including `threads_are_started_only_in_jobs`, `builder::*::tests`,
+    `robot_run::tests`, the lib.rs pick/button test);
+  - `cargo check -p sim-app`;
+  - a reading trace, per mode, of one REST command, one button and one key
+    to the same handler: Inspect `display` / Explode button / key E →
+    `inspect::apply`; Build `system_undo` / an Undo button / Cmd+Z →
+    `builder::system_actions::apply`; Lessons `lesson_scene {action:
+    play}` / the Play button / Space → `lesson::actions::apply`; Robot
+    `robot_speed {action: up}` / the + button / key = →
+    `robot::actions::apply`; Place `camera {station: 0}` / key 1 →
+    `place_view::apply` (Place has no buttons).
+  - Bevy API spots to check first: `EntityWorldMut::observe` with
+    `save_to_disk` in `switch::screenshot`; `Messages::drain` from
+    `ResMut<Messages<Act<A>>>`; `#[derive(Resource)]` on the generic
+    `InFlight<A>`; `MessageWriter` in the `pick_link` observer;
+    `World::write_message` in `serve`.
+- **Not yet verified.** Nothing here has been built or run.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -481,7 +656,7 @@ Paths below are `crates/sim-spatial/src/`.
 - `sim-app`'s scenes (phenomena exhibits, CAD view) become modes of this app, or
   are retired once parity is shown by tracing their workflows in code.
 - *Status:* in place since one-app-modes (see [One app](#one-app-2026-09-30)),
-  pending verification: `app::run`, `ViewerMode` with the `ModeScope` and
+  verified at 7da1216e: `app::run`, `ViewerMode` with the `ModeScope` and
   `SpatialScreen` computed states, setup on each scope's `OnEnter`, teardown
   by `DespawnOnExit<ModeScope>` and the scopes' `OnExit`, and one switch
   handler. What survives a switch: the builder, the display-model library,
@@ -503,10 +678,11 @@ Paths below are `crates/sim-spatial/src/`.
 
   A feature adds systems to these sets; it never orders itself against another
   feature's private systems. *Status:* `ViewerSet` is declared and ordered
-  once (`app::ModesPlugin`); the modes' existing chains sit whole in SimSync
-  and Present, and the builder and lesson chains still order themselves
-  against the spatial view's `update_parts` and `camera_viewport` (to be
-  untangled with the action layer).
+  once (`app::ModesPlugin`); since the action layer each mode's input
+  mappings sit in Input (after the one REST poll) and its apply system in
+  Actions. The builder and lesson SimSync chains still order themselves
+  against the spatial view's `update_parts` and `camera_viewport` (display
+  ordering, left for the UI kit epic).
 - **Files over about 800 lines are a smell.** Split them by responsibility when
   you touch them.
 
@@ -516,10 +692,21 @@ Paths below are `crates/sim-spatial/src/`.
   in one handler.
 - Buttons, keyboard, `system_ui`, REST and scripts all produce the same actions.
   UI callbacks contain no logic.
-- Actions travel as Bevy events or observer triggers (the 0.17 event/observer
-  model). Undoable actions go through the shared undo history.
-- `sim_api` capabilities are generated from, or checked against, the action
-  registry, so the REST surface can't drift from the UI.
+- Actions travel as Bevy **Messages** (`app::actions::Act<A>`: the action
+  and its `Origin`, REST reply token, UI or quiet), written in
+  `ViewerSet::Input` and drained once per frame by the action type's one
+  apply system in `ViewerSet::Actions`. Observer triggers are kept for
+  pointer events on entities (picks, drags, screenshots). Undoable actions
+  go through the shared undo history.
+- REST answers through **reply tokens** (`app::actions::Replies`): the poll
+  writes the action once with a token kept in the `sim_api` continuation
+  and answers Pending until the handler writes the outcome; a handler that
+  answers Pending is re-applied each frame with its own continuation
+  (`InFlight`) and sees a REST cancel as `Call::cancelled`.
+- `sim_api` capabilities are generated from the action registry
+  (`app::actions::registry`), and a lib test checks the registry against
+  what each action type parses, so the REST surface can't drift from the
+  UI. *Status:* done 2026-09-30, pending verification.
 
 ### 4. One background-work abstraction
 
@@ -655,11 +842,13 @@ The Director re-ranks with evidence, but this is the default:
 2. **Jobs abstraction.** *Done 2026-09-30 (verified at ae80a137; batch
    jobs-module; see [the jobs module](#jobs-module-2026-09-30)).* Build
    `jobs`, then move all 35 thread sites onto it.
-3. **One app.** *Done 2026-09-30, pending verification (batch
+3. **One app.** *Done 2026-09-30 (verified at 7da1216e; batch
    one-app-modes; see [One app](#one-app-2026-09-30)).* Merge the separate
    `App` setups into `ViewerMode` states, with switching modes in the
    window.
-4. **Action layer.** Unify buttons, `system_ui` and REST onto typed actions.
+4. **Action layer.** *Done 2026-09-30, pending verification (batch
+   action-layer; see [Action layer](#action-layer-2026-09-30)).* Unify
+   buttons, `system_ui` and REST onto typed actions.
 5. **UI kit.** Build it on Feathers, then move headers, inspectors, tabs, docks
    and charts onto it.
 6. **Fold in `sim-app`.** Bring its scenes in as modes, or retire them.

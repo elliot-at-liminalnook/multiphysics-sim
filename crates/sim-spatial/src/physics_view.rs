@@ -646,7 +646,11 @@ pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, came
     }
 }
 
-pub(crate) fn overlay_clicks(toggles: Query<(&Interaction, &OverlayToggle), Changed<Interaction>>, views: Query<(&Interaction, &ViewToggle), Changed<Interaction>>, mut scene: ResMut<SpatialScene>) {
+/// Input: the overlay bar's toggles, as the view's actions (the display state
+/// only, no refit; flipped from the current value when applied).
+pub(crate) fn overlay_clicks(toggles: Query<(&Interaction, &OverlayToggle), Changed<Interaction>>, views: Query<(&Interaction, &ViewToggle), Changed<Interaction>>, scene: Res<SpatialScene>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
+    use crate::app::actions::Act;
+    use crate::inspect::InspectAction;
     use sim_inspect::spatial::SpatialCommand as C;
     for (interaction, toggle) in &views {
         if *interaction == Interaction::Pressed {
@@ -655,15 +659,13 @@ pub(crate) fn overlay_clicks(toggles: Query<(&Interaction, &OverlayToggle), Chan
                 ViewToggle::Explode => C::SetExploded { enabled: !scene.state.exploded },
                 ViewToggle::Strobe => C::SetStrobe { enabled: !scene.state.strobe },
             };
-            let spatial = scene.spatial.clone();
-            let _ = scene.state.apply(&spatial, command);
+            out.write(Act::ui(InspectAction::View(command)));
         }
     }
     for (interaction, toggle) in &toggles {
         if *interaction == Interaction::Pressed {
             let enabled = !scene.state.overlays.contains(&toggle.0);
-            let spatial = scene.spatial.clone();
-            let _ = scene.state.apply(&spatial, sim_inspect::spatial::SpatialCommand::SetOverlay { layer: toggle.0, enabled });
+            out.write(Act::ui(InspectAction::View(C::SetOverlay { layer: toggle.0, enabled })));
         }
     }
 }

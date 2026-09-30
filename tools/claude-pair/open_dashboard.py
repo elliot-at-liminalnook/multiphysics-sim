@@ -12,10 +12,12 @@ import webbrowser
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--state", required=True)
+    parser.add_argument("--state", help="Run state directory (default: <repo>/.claude-pair)")
     parser.add_argument("--open", action="store_true")
     args = parser.parse_args()
-    root = Path(args.state).expanduser().resolve()
+    sys.path.insert(0, str(Path(__file__).parent))
+    import pair
+    root = Path(args.state).expanduser().resolve() if args.state else pair.default_state()
     expected = json.loads((root / "config.json").read_text())["worktree"]
 
     def existing():

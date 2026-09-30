@@ -93,6 +93,65 @@ def check_prefix(root, rounds, index, name):
 check_passed = outer_loop.check_passed
 
 
+class UsageLimit(Exception):
+    """A Claude subscription or spend limit stopped a call; resume after reset_at."""
+    def __init__(self, reset_at, detail):
+        super().__init__(detail)
+        self.reset_at, self.detail = reset_at, detail
+
+
+LIMIT_TEXT = re.compile(r"usage limit|limit reached|hit your limit|weekly limit|spend limit|rate.?limit|limit resets|resets in", re.I)
+RESUME_NOTE = ("(The coordinator resumed this session after a Claude usage-limit pause. Your earlier "
+               "progress in this conversation and in the project folder is intact: continue where you "
+               "left off rather than starting over, then return the structured result.)\n\n")
+
+
+def stream_events(raw):
+    for line in raw.splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(event, dict):
+            yield event
+
+
+def rate_limit_info(raw):
+    """The last rate_limit_event Claude Code reported in a stream-json transcript."""
+    info = None
+    for event in stream_events(raw):
+        if event.get("type") == "rate_limit_event" and isinstance(event.get("rate_limit_info"), dict):
+            info = event["rate_limit_info"]
+    return info
+
+
+def limit_reset(info, text, now, fallback_seconds=900):
+    """When a failed call was stopped by a usage limit, the time it resets; else None."""
+    rejected = bool(info) and info.get("status") not in (None, "allowed", "allowed_warning")
+    if not rejected and not LIMIT_TEXT.search(text or ""):
+        return None
+    times = []
+    if info:
+        if rejected and isinstance(info.get("resetsAt"), (int, float)):
+            times.append(info["resetsAt"])
+        for window in (info.get("unifiedWindows") or {}).values():
+            if isinstance(window, dict) and (window.get("utilization") or 0) >= 1 and isinstance(window.get("resetsAt"), (int, float)):
+                times.append(window["resetsAt"])
+    for match in re.finditer(r"limit reached\|(\d{9,})", text or ""):
+        times.append(int(match.group(1)))
+    match = re.search(r"resets? in (\d+)\s*(s|sec|second|m|min|minute|h|hr|hour)", text or "", re.I)
+    if match:
+        unit = match.group(2).lower()[0]
+        times.append(now + int(match.group(1)) * {"s": 1, "m": 60, "h": 3600}[unit])
+    match = re.search(r"resets? (?:at )?(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2})\s*UTC", text or "")
+    if match:
+        import datetime
+        stamp = datetime.datetime.fromisoformat(match.group(1).replace(" ", "T")).replace(tzinfo=datetime.timezone.utc)
+        times.append(stamp.timestamp())
+    future = [t for t in times if t > now]
+    return max(future) if future else now + fallback_seconds
+
+
 def cargo_path(path):
     cargo = Path.home() / ".cargo" / "bin"
     parts = [p for p in (path or "").split(os.pathsep) if p]
@@ -324,6 +383,8 @@ class Runner:
         counts = self.state.setdefault("session_calls", {})
         session = self.state["sessions"].get(role)
         retrying = session and self.state.pop("retry_session", None) == session
+        if retrying and self.state.pop("limit_resume", None) == session:
+            prompt = RESUME_NOTE + prompt
         if session and not retrying and (role == "director" or scopes.get(role) != scope or
                                          counts.get(session, 0) >= self.config.get("max_session_calls", 8)):
             session = None
@@ -363,14 +424,24 @@ class Runner:
         print(f"{role}: call {self.state['calls']} ({prefix.name}{', resumed' if session else ', fresh session'})", flush=True)
         code, out, err = self.process(argv, prefix, prompt)
         raw = out.read_text()
+        events = list(stream_events(raw))
         try:
             result = json.loads(raw)
         except json.JSONDecodeError:
-            events = [json.loads(line) for line in raw.splitlines() if line.strip()]
             results = [event for event in events if event.get("type") == "result"]
-            if not results:
-                raise RuntimeError("Claude stream has no final result; inspect logs before retrying")
-            result = results[-1]
+            result = results[-1] if results else None
+        info = rate_limit_info(raw)
+        if info:
+            self.state["rate_limits"] = {**info, "observed_at": time.time()}
+        if result is None or code or result.get("is_error") or result.get("subtype") != "success":
+            text = " ".join([str((result or {}).get("result", "")), (err.read_text()[-4000:] if err.exists() else ""), raw[-12000:]])
+            reset = limit_reset(info, text, time.time(), self.config.get("limit_retry_minutes", 15) * 60)
+            if reset:
+                self.settle_limited_call(role, sid, reservation, result,
+                                         any(e.get("type") == "assistant" for e in events))
+                raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a Claude usage limit")
+        if result is None:
+            raise RuntimeError("Claude stream has no final result; inspect logs before retrying")
         if result.get("session_id") != sid:
             raise RuntimeError("Claude returned an unexpected session ID")
         self.state["sessions"][role] = sid
@@ -394,6 +465,50 @@ class Runner:
         validate(data, schema)
         shared_notebook.response(self.root, role, self.state["calls"], data, out)
         return data
+
+    def settle_limited_call(self, role, sid, reservation, result, started):
+        """Reconcile a call a usage limit cut short, and arrange for the same
+        session to continue after the reset if it had already begun work."""
+        total = (result or {}).get("total_cost_usd")
+        prior = self.state["session_costs"].get(sid, 0.0)
+        spent = total - prior if isinstance(total, (int, float)) and math.isfinite(total) and total >= prior else 0.0
+        self.state["cost_usd"] += spent - reservation
+        if spent:
+            self.state["session_costs"][sid] = total
+        self.state.pop("inflight", None)
+        if started:
+            self.state["sessions"][role] = sid
+            self.state["retry_session"] = sid
+            self.state["limit_resume"] = sid
+        self.save()
+
+    def wait_until(self, reset_at, reason):
+        """Sleep through a usage-limit window without counting it as active time.
+        STOP still works; the saved resume time survives a coordinator restart."""
+        resume_at = reset_at + self.config.get("limit_margin_seconds", 60)
+        clock = time.strftime("%a %H:%M", time.localtime(resume_at))
+        self.state.update(status="waiting", resume_at=resume_at,
+                          message=f"{reason}. Resuming automatically at {clock}.")
+        self.save()
+        shared_notebook.append(self.root, {"id": f"limit-{self.state['calls']:04d}-{int(resume_at)}",
+            "author": "coordinator", "kind": "Usage limit",
+            "summary": f"{reason}. The run waits and resumes at {clock}, continuing the interrupted session.",
+            "notes": [], "source": str(self.root / "state.json")})
+        print(f"waiting: {reason}; resuming at {clock}", flush=True)
+        started = time.monotonic()
+        try:
+            while time.time() < resume_at:
+                if (self.root / "STOP").exists():
+                    self.state.pop("resume_at", None)
+                    raise InterruptedError("Stopped while waiting for the Claude usage limit to reset")
+                time.sleep(max(0.01, min(5, resume_at - time.time())))
+        finally:
+            waited = time.monotonic() - started
+            self.deadline += waited
+            self.waited += waited
+        self.state.pop("resume_at", None)
+        self.state.update(status="running", message="Usage limit reset; continuing where the run left off.")
+        self.save()
 
     def evidence(self):
         # The orchestrator can open all logs with Read; full diffs stay on disk.
@@ -471,6 +586,7 @@ class Runner:
         remaining = self.config["max_hours"] * 3600 - self.state["elapsed_seconds"]
         self.deadline = time.monotonic() + remaining
         started = time.monotonic()
+        self.waited = 0.0
         self.state["status"] = "running"
         self.state["message"] = "Coordinator running; consult logs for the active assignment."
         self.state["run_started_at"] = time.time()
@@ -478,121 +594,127 @@ class Runner:
         self.save()
         count = 0
         try:
+            if self.state.get("resume_at") and time.time() < self.state["resume_at"]:
+                self.wait_until(self.state["resume_at"] - self.config.get("limit_margin_seconds", 60),
+                                "Waiting for the Claude usage limit to reset")
             while True:
-                if time.monotonic() >= self.deadline or (self.root / "STOP").exists():
-                    raise InterruptedError("Stopped at the saved phase")
-                phase = self.state["phase"]
-                steering_path = self.root / "steering.json"
-                if phase == "worker" and steering_path.exists():
-                    guidance = read_json(steering_path)
-                    if guidance["updated_at"] != self.state.get("steering_seen"):
-                        self.state["operator_replan"] = {"queued_assignment": self.state.get("plan"),
-                                                        "previous_report": self.state.get("report")}
-                        self.state["report"] = None
+                try:
+                    if time.monotonic() >= self.deadline or (self.root / "STOP").exists():
+                        raise InterruptedError("Stopped at the saved phase")
+                    phase = self.state["phase"]
+                    steering_path = self.root / "steering.json"
+                    if phase == "worker" and steering_path.exists():
+                        guidance = read_json(steering_path)
+                        if guidance["updated_at"] != self.state.get("steering_seen"):
+                            self.state["operator_replan"] = {"queued_assignment": self.state.get("plan"),
+                                                            "previous_report": self.state.get("report")}
+                            self.state["report"] = None
+                            self.state["receipts"] = []
+                            self.state["phase"] = phase = "orchestrator"
+                            self.save()
+                    if phase == "director":
+                        settings = self.outer_settings()
+                        if not settings["enabled"]:
+                            raise InterruptedError("Batch finished; automatic next-batch planning is off")
+                        completed = sum(not b.get("legacy") for b in self.state["outer"]["history"])
+                        if completed >= settings["max_batches"]:
+                            raise InterruptedError("Completed-batch ceiling reached; increase it to continue")
+                        if self.state["rounds"] >= self.config["max_rounds"]:
+                            raise InterruptedError("Worker-turn ceiling reached before selecting another batch")
+                        prompt = outer_loop.director_prompt(self)
+                        if steering_path.exists():
+                            prompt += "\nCURRENT OPERATOR GUIDANCE:\n" + read_json(steering_path)["text"]
+                        decision = self.call("director", prompt, scope="director")
+                        outer_loop.guard_decision(decision, self.state, self.config["checks"])
+                        write_json(self.root / "logs" / f"director-{self.state['calls']:04d}.json", decision)
+                        if not outer_loop.dispatch(self, decision):
+                            break
+                    elif phase == "orchestrator":
+                        prompt = ("Read the mission and inspect the repository. Maintain your checklist. "
+                                  "Checks may be names from this catalogue or any shell command, run from the workspace root:\n"
+                                  + json.dumps(self.config["checks"]))
+                        if self.state.get("plan"):
+                            prompt += ("\nYour previous plan (you may be in a fresh session: carry its checklist IDs forward "
+                                       "and treat it as your own earlier decision):\n" + json.dumps(self.state["plan"]))
+                        if self.state.get("report"):
+                            prompt += "\nReview the worker using this evidence:\n" + json.dumps(self.evidence())
+                        elif self.state.get("operator_replan"):
+                            prompt += "\nNew operator guidance arrived before the queued worker assignment started. Reconsider that assignment now. There is no new worker result to review; use review=none. Prior context:\n" + json.dumps(self.state["operator_replan"])
+                        elif not self.state.get("outer", {}).get("current_batch"):
+                            prompt += ("\nFirst assign a bounded feature inventory and identify the best existing Rust native shell. "
+                                       "For this first assignment, request one concise Markdown inventory/decision document, "
+                                       "with source pointers and the first proposed implementation slice; do not implement UI changes yet. "
+                                       "Inspect representative source paths, not thousands of experiment artifacts. "
+                                       "The first assignment needs only the diff check; avoid builds for this documentation-only inventory.")
+                        if self.config["audit_only"]:
+                            prompt += "\nThis run is audit-only: assign read-only investigation, with diff as the only check."
+                        steering = self.root / "steering.json"
+                        if steering.exists():
+                            guidance = read_json(steering)
+                            prompt += "\nCURRENT OPERATOR GUIDANCE (apply within the mission; preserve safety/source constraints):\n" + guidance["text"]
+                            self.state["steering_seen"] = guidance["updated_at"]
+                            self.save()
+                        if self.state.get("outer", {}).get("current_batch"):
+                            prompt += outer_loop.contract_prompt(self)
+                        batch = (self.state.get("outer", {}).get("current_batch") or {}).get("id", "mission")
+                        plan = self.call("orchestrator", prompt, scope="batch:" + batch)
+                        guard_plan(plan, self.state, self.config["checks"])
+                        outer_loop.guard_contract(self, plan)
+                        if self.config["audit_only"] and set(plan["checks"]) - {"diff"}:
+                            raise ValueError("Audit-only run cannot request builds")
+                        shared_notebook.append(self.root, {"id": f"review-{self.state['calls']:04d}",
+                            "author": "coordinator", "kind": "Validated handoff",
+                            "summary": f"Orchestrator response passed the handoff guards: action={plan['action']}, review={plan['review']}.",
+                            "notes": ["Evidence remains scoped to the reviewed assignment; this does not establish whole-project completion."],
+                            "source": str(self.root / "logs" / f"plan-{self.state['calls']:04d}.json")})
+                        new_assignment = plan["action"] == "work" and plan["review"] != "revise"
+                        if new_assignment:
+                            # A new assignment gets a fresh worker; repairs resume the same one.
+                            self.state["assignment"] = self.state.get("assignment", 0) + 1
+                            self.state["prechecks"] = {}
+                        self.state["plan"] = plan
+                        self.state.pop("operator_replan", None)
+                        write_json(self.root / "logs" / f"plan-{self.state['calls']:04d}.json", plan)
+                        if plan["action"] == "complete" and self.state.get("outer", {}).get("current_batch"):
+                            outer_loop.finish_batch(self, plan)
+                        elif plan["action"] != "work":
+                            self.state["status"] = plan["action"]
+                            self.state["message"] = plan["summary"]
+                            break
+                        elif new_assignment and self.config.get("precheck") and len(check_names(plan)) > 1:
+                            self.state["phase"] = "precheck"
+                        else:
+                            self.state["phase"] = "worker"
+                    elif phase == "worker":
+                        if self.state["rounds"] >= self.config["max_rounds"]:
+                            raise InterruptedError("Worker-turn ceiling reached; reviewed progress is saved")
+                        plan = self.state["plan"]
+                        prompt = plan["worker_prompt"] + "\n\nAcceptance criteria:\n" + json.dumps(plan["acceptance_criteria"])
+                        self.state["report"] = self.call("worker", prompt, scope=f"assignment:{self.state.get('assignment', 0)}")
+                        self.state["rounds"] += 1
+                        self.state["phase"] = "verify"
                         self.state["receipts"] = []
-                        self.state["phase"] = phase = "orchestrator"
-                        self.save()
-                if phase == "director":
-                    settings = self.outer_settings()
-                    if not settings["enabled"]:
-                        raise InterruptedError("Batch finished; automatic next-batch planning is off")
-                    completed = sum(not b.get("legacy") for b in self.state["outer"]["history"])
-                    if completed >= settings["max_batches"]:
-                        raise InterruptedError("Completed-batch ceiling reached; increase it to continue")
-                    if self.state["rounds"] >= self.config["max_rounds"]:
-                        raise InterruptedError("Worker-turn ceiling reached before selecting another batch")
-                    prompt = outer_loop.director_prompt(self)
-                    if steering_path.exists():
-                        prompt += "\nCURRENT OPERATOR GUIDANCE:\n" + read_json(steering_path)["text"]
-                    decision = self.call("director", prompt, scope="director")
-                    outer_loop.guard_decision(decision, self.state, self.config["checks"])
-                    write_json(self.root / "logs" / f"director-{self.state['calls']:04d}.json", decision)
-                    if not outer_loop.dispatch(self, decision):
-                        break
-                elif phase == "orchestrator":
-                    prompt = ("Read the mission and inspect the repository. Maintain your checklist. "
-                              "Checks may be names from this catalogue or any shell command, run from the workspace root:\n"
-                              + json.dumps(self.config["checks"]))
-                    if self.state.get("plan"):
-                        prompt += ("\nYour previous plan (you may be in a fresh session: carry its checklist IDs forward "
-                                   "and treat it as your own earlier decision):\n" + json.dumps(self.state["plan"]))
-                    if self.state.get("report"):
-                        prompt += "\nReview the worker using this evidence:\n" + json.dumps(self.evidence())
-                    elif self.state.get("operator_replan"):
-                        prompt += "\nNew operator guidance arrived before the queued worker assignment started. Reconsider that assignment now. There is no new worker result to review; use review=none. Prior context:\n" + json.dumps(self.state["operator_replan"])
-                    elif not self.state.get("outer", {}).get("current_batch"):
-                        prompt += ("\nFirst assign a bounded feature inventory and identify the best existing Rust native shell. "
-                                   "For this first assignment, request one concise Markdown inventory/decision document, "
-                                   "with source pointers and the first proposed implementation slice; do not implement UI changes yet. "
-                                   "Inspect representative source paths, not thousands of experiment artifacts. "
-                                   "The first assignment needs only the diff check; avoid builds for this documentation-only inventory.")
-                    if self.config["audit_only"]:
-                        prompt += "\nThis run is audit-only: assign read-only investigation, with diff as the only check."
-                    steering = self.root / "steering.json"
-                    if steering.exists():
-                        guidance = read_json(steering)
-                        prompt += "\nCURRENT OPERATOR GUIDANCE (apply within the mission; preserve safety/source constraints):\n" + guidance["text"]
-                        self.state["steering_seen"] = guidance["updated_at"]
-                        self.save()
-                    if self.state.get("outer", {}).get("current_batch"):
-                        prompt += outer_loop.contract_prompt(self)
-                    batch = (self.state.get("outer", {}).get("current_batch") or {}).get("id", "mission")
-                    plan = self.call("orchestrator", prompt, scope="batch:" + batch)
-                    guard_plan(plan, self.state, self.config["checks"])
-                    outer_loop.guard_contract(self, plan)
-                    if self.config["audit_only"] and set(plan["checks"]) - {"diff"}:
-                        raise ValueError("Audit-only run cannot request builds")
-                    shared_notebook.append(self.root, {"id": f"review-{self.state['calls']:04d}",
-                        "author": "coordinator", "kind": "Validated handoff",
-                        "summary": f"Orchestrator response passed the handoff guards: action={plan['action']}, review={plan['review']}.",
-                        "notes": ["Evidence remains scoped to the reviewed assignment; this does not establish whole-project completion."],
-                        "source": str(self.root / "logs" / f"plan-{self.state['calls']:04d}.json")})
-                    new_assignment = plan["action"] == "work" and plan["review"] != "revise"
-                    if new_assignment:
-                        # A new assignment gets a fresh worker; repairs resume the same one.
-                        self.state["assignment"] = self.state.get("assignment", 0) + 1
-                        self.state["prechecks"] = {}
-                    self.state["plan"] = plan
-                    self.state.pop("operator_replan", None)
-                    write_json(self.root / "logs" / f"plan-{self.state['calls']:04d}.json", plan)
-                    if plan["action"] == "complete" and self.state.get("outer", {}).get("current_batch"):
-                        outer_loop.finish_batch(self, plan)
-                    elif plan["action"] != "work":
-                        self.state["status"] = plan["action"]
-                        self.state["message"] = plan["summary"]
-                        break
-                    elif new_assignment and self.config.get("precheck") and len(check_names(plan)) > 1:
-                        self.state["phase"] = "precheck"
-                    else:
+                        write_json(self.root / "logs" / f"worker-{self.state['rounds']:04d}.json", self.state["report"])
+                    elif phase == "precheck":
+                        self.precheck()
                         self.state["phase"] = "worker"
-                elif phase == "worker":
-                    if self.state["rounds"] >= self.config["max_rounds"]:
-                        raise InterruptedError("Worker-turn ceiling reached; reviewed progress is saved")
-                    plan = self.state["plan"]
-                    prompt = plan["worker_prompt"] + "\n\nAcceptance criteria:\n" + json.dumps(plan["acceptance_criteria"])
-                    self.state["report"] = self.call("worker", prompt, scope=f"assignment:{self.state.get('assignment', 0)}")
-                    self.state["rounds"] += 1
-                    self.state["phase"] = "verify"
-                    self.state["receipts"] = []
-                    write_json(self.root / "logs" / f"worker-{self.state['rounds']:04d}.json", self.state["report"])
-                elif phase == "precheck":
-                    self.precheck()
-                    self.state["phase"] = "worker"
-                elif phase == "verify":
-                    self.verify()
-                    self.state["phase"] = "orchestrator"
-                else:
-                    raise ValueError(f"Unknown phase: {phase}")
-                self.save()
-                count += 1
-                if steps and count >= steps:
-                    raise InterruptedError("Requested number of steps finished; ready to resume")
+                    elif phase == "verify":
+                        self.verify()
+                        self.state["phase"] = "orchestrator"
+                    else:
+                        raise ValueError(f"Unknown phase: {phase}")
+                    self.save()
+                    count += 1
+                    if steps and count >= steps:
+                        raise InterruptedError("Requested number of steps finished; ready to resume")
+                except UsageLimit as limit:
+                    self.wait_until(limit.reset_at, "Claude usage limit reached")
         except InterruptedError as e:
             self.state.update(status="paused", message=str(e))
         except (Exception, KeyboardInterrupt) as e:
             self.state.update(status="blocked", message=f"{type(e).__name__}: {e}")
         finally:
-            self.state["elapsed_seconds"] += time.monotonic() - started
+            self.state["elapsed_seconds"] += max(0.0, time.monotonic() - started - self.waited)
             self.state.pop("run_started_at", None)
             self.state.pop("pid", None)
             self.save()

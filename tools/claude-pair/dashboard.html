@@ -1,69 +1,193 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Claude Pair · Rust viewer</title>
-<style>
-:root{--ink:#182b32;--muted:#61757d;--line:#dae4e6;--bg:#f5f8f8;--green:#176958;--green-soft:#e6f4ee;--blue:#375eab;--orange:#b16024;--red:#ae3d41;--shadow:0 5px 22px #153e4b06}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.48}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #8ebbb0;outline-offset:3px}a{color:var(--green)}
-.topbar{background:#fff;border-bottom:1px solid var(--line);padding:19px 36px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:750;letter-spacing:-.4px}.mark{display:flex;gap:3px;transform:rotate(-10deg)}.mark i{display:block;width:15px;height:24px;background:var(--green);border-radius:5px}.mark i+ i{background:#a2cabc;transform:translateY(5px)}.project{color:var(--muted);font-size:13px;font-weight:450;margin-left:12px;letter-spacing:0}.local{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}.local:before{content:"";width:7px;height:7px;background:#629982;border-radius:50%}main{max-width:1392px;margin:auto;padding:32px 36px 64px}.heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}h1{font-size:31px;line-height:1.2;letter-spacing:-1px;margin:0 0 8px}h2{font-size:19px;letter-spacing:-.3px;margin:0}h3{font-size:15px;margin:0}.subtle{color:var(--muted);font-size:13px}.actions{display:flex;align-items:center;gap:10px}.btn{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:9px 15px;font-size:13px;font-weight:650;transition:.15s}.btn:hover:not(:disabled){background:#f0f5f4;border-color:#b1c6c0}.btn.primary{background:var(--green);border-color:var(--green);color:#fff}.btn.primary:hover:not(:disabled){background:#0d5344}.btn.stop{color:var(--red)}.btn.small{padding:5px 11px;font-size:12px}.btn.quiet{border:0;background:transparent;color:var(--green);padding:0;font-weight:650}.pill{font-size:12px;font-weight:650;padding:5px 10px;border-radius:20px;background:#e9eef0;color:#526870;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.pill.running{color:var(--green);background:var(--green-soft)}.pill.blocked{background:#fff0e5;color:#985022}.pill.complete{background:#e9f2ff;color:#315aa0}.dot{width:6px;height:6px;border-radius:50%;background:currentColor}.running .dot{animation:breathe 2s infinite}@keyframes breathe{50%{opacity:.35}}
-.objective{background:linear-gradient(115deg,#edf7f1,#f5faf7 62%,#e6f1ee);border:1px solid #cce2d8;border-radius:14px;padding:26px 28px;display:grid;grid-template-columns:1fr 265px;gap:32px;margin-bottom:25px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:9px}.objective h2{font-size:24px;line-height:1.3;margin-bottom:8px;letter-spacing:-.6px}.objective p{max-width:790px;color:#48645b;margin:0 0 14px;font-size:14px}.objective-side{border-left:1px solid #cfe0d8;padding-left:26px;display:flex;flex-direction:column;justify-content:center;gap:12px}.metric-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#5b756c}.metric-line strong{font-weight:700;color:#254f40}.meter{height:5px;background:#d6e6df;border-radius:6px;overflow:hidden}.meter span{display:block;background:#679984;height:100%;transition:width .3s}
-.section-title{display:flex;justify-content:space-between;align-items:center;margin:28px 0 13px}.section-title .subtle{font-size:12px}.agents{display:grid;grid-template-columns:1fr 1fr;gap:20px}.agent{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}.agent.active{border-color:#6da997;box-shadow:0 0 0 2px #82b8a718}.agent-top{padding:20px 22px 16px;display:flex;gap:12px;align-items:center}.avatar{display:grid;place-items:center;width:41px;height:41px;background:#e8f1f7;color:#3f6590;border-radius:11px;font-weight:750}.worker .avatar{background:#f3ede3;color:#986f37}.agent-name{flex:1}.agent-name h2{font-size:17px}.agent-name p{font-size:12px;color:var(--muted);margin:1px 0 0}.agent-badge{font-size:11px;color:var(--muted);font-weight:650}.agent.active .agent-badge{color:var(--green)}.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 22px;gap:22px}.tab{border:0;background:none;font-size:12px;font-weight:650;color:var(--muted);padding:8px 0 11px;border-bottom:2px solid transparent;margin-bottom:-1px}.tab.selected{color:var(--green);border-bottom-color:var(--green)}.agent-body{padding:18px 22px 14px;height:267px;overflow:auto}.prompt-text{font:13px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;white-space:pre-wrap;word-break:break-word;margin:0;color:#354c55}.empty{color:#8a9a9e;font-size:13px;line-height:1.7;padding:18px 0}.agent-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 22px;background:#fbfcfc;border-top:1px solid #e9eeee;font-size:11px;color:var(--muted)}.agent-footer .btn{font-size:11px}.activity-item{border-bottom:1px solid #edf1f2;padding:9px 0;font-size:12px;white-space:pre-wrap;word-break:break-word}.activity-item.tool{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#60787b}.activity-item.session{color:var(--green);font-size:11px}.result-summary{font-size:13px;color:#354c55}.result-summary p{margin-top:0}.result-summary ul{padding-left:18px}.inline-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
-.workbench{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:20px;margin-top:22px}.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:23px}.panel-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px}.panel-header h2{font-size:17px}.handoff-summary{font-size:13px;color:#48606a;line-height:1.75;margin:0 0 16px}.criteria{padding-left:20px;margin:0;font-size:12px;color:#516a72}.criteria li{margin:7px 0}.caption{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin:18px 0 9px}.guidance{resize:vertical;width:100%;min-height:138px;border:1px solid var(--line);border-radius:8px;padding:12px;color:#334d54;background:#fcfdfd;font-size:13px;line-height:1.65}.guidance::placeholder{color:#93a2a6}.guidance-bottom{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:12px}.guidance-bottom span{font-size:11px;color:var(--muted)}.notice{border:1px solid #eed7b9;background:#fff7ed;color:#8b5a2c;padding:13px 17px;border-radius:9px;margin-bottom:20px;font-size:13px}.notice[hidden]{display:none}.checklist{margin-top:20px}.checklist-row{display:grid;grid-template-columns:110px 1fr 95px;gap:12px;align-items:start;padding:13px 0;border-top:1px solid #e7eeee}.checklist-row:first-child{border:0}.check-id{overflow-wrap:anywhere;font-size:9px;color:#829699;padding-top:2px}.check-work{font-size:13px;font-weight:600}.check-evidence{font-size:11px;color:var(--muted);margin-top:4px;font-weight:400}.check-status{justify-self:end;font-size:10px;font-weight:650;border-radius:4px;background:#f0f3f4;color:#7b8b90;padding:3px 6px}.check-status.verified{background:var(--green-soft);color:var(--green)}.check-status.in_progress{background:#eaf1fc;color:#4068a6}.check-status.blocked{background:#fff0e5;color:#975528}
-.bottom-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:20px;margin-top:20px}.history-row{width:100%;display:flex;text-align:left;gap:12px;align-items:center;border:0;border-bottom:1px solid #e9eeee;background:none;padding:12px 0;color:var(--ink)}.history-row:hover{background:#f6faf8}.history-num{font-size:11px;color:#94a4a8;width:20px}.history-info{flex:1}.history-info strong{font-size:12px;font-weight:650}.history-info div{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:430px}.history-meta{font-size:10px;color:var(--muted)}.limits-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:17px}.field label{display:block;color:var(--muted);font-size:11px;margin-bottom:5px}.field input{width:100%;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--ink);background:#fcfdfd}.footer{display:flex;justify-content:space-between;align-items:center;gap:20px;color:#8b9ca1;font-size:11px;margin-top:26px}.footer button{font-size:11px!important}.dialog-backdrop{position:fixed;inset:0;background:#19303280;display:flex;align-items:center;justify-content:center;padding:30px;z-index:20;backdrop-filter:blur(3px)}.dialog-backdrop[hidden]{display:none}.dialog{background:#fff;border-radius:15px;width:850px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 25px 90px #102c3640}.dialog-head{padding:21px 25px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:15px}.dialog-head h2{font-size:18px}.dialog-content{padding:24px 25px;overflow:auto}.dialog-content pre{font:13px/1.75 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;color:#3b525a;margin:0}.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#173d32;color:#fff;border-radius:9px;padding:13px 20px;font-size:13px;box-shadow:0 8px 28px #173d3230;z-index:30;max-width:90vw}.toast[hidden]{display:none}.receipt{font-size:12px;padding:10px 0;border-bottom:1px solid #e9eeee}.receipt b{color:var(--green)}.receipt.failed b{color:var(--red)}
-@media(max-width:950px){.project{display:none}.objective{grid-template-columns:1fr}.objective-side{border-left:0;border-top:1px solid #cfe0d8;padding:18px 0 0;max-width:400px}.workbench,.bottom-grid{grid-template-columns:1fr}.history-info div{max-width:65vw}}@media(max-width:650px){main{padding:24px 16px}.topbar{padding:16px}.agents{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}h1{font-size:27px}.objective{padding:22px}.objective h2{font-size:22px}.panel{padding:19px}.local{font-size:10px}.dialog-backdrop{padding:12px}.checklist-row{grid-template-columns:60px 1fr 82px}.footer{align-items:flex-start;flex-direction:column}}
-.director-panel{margin:0 0 24px;border-color:#b7d5c8}.director-intro{max-width:900px;margin:8px 0 16px;color:#48645b;font-size:14px}.director-controls{display:flex;flex-wrap:wrap;align-items:center;gap:16px;font-size:12px;margin-top:18px}.director-controls input[type=number]{width:70px;padding:5px;border:1px solid var(--line);border-radius:5px}.hopper{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.candidate{border:1px solid var(--line);border-radius:9px;padding:16px;background:#fbfdfc}.candidate.selected{border-color:#86b29e;background:#f0f8f3}.candidate p{font-size:12px;color:#536d65;margin:8px 0}.candidate .eyebrow{font-size:9px}.batch-tasks{font-size:13px;padding-left:20px}.batch-tasks li{margin:9px 0}.director-links{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px}.director-log{max-height:180px;overflow:auto}.batch-history{margin-top:14px;font-size:12px}.batch-history button{display:block;margin:8px 0}.director-panel details{margin-top:14px;font-size:12px}.director-panel summary{cursor:pointer;color:var(--green);font-weight:650}
-</style>
-<link rel="stylesheet" href="/workflow.css"><link rel="stylesheet" href="/notebook.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Pair</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
-<header class="topbar"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i></span>Claude Pair<span class="project">/ physics-simulator</span></div><div class="local" id="connection">Local dashboard · connecting</div></header>
+<header class="top">
+  <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i></span>Claude Pair</div>
+  <div class="where"><b id="project">—</b><span class="branch" id="branch" hidden></span></div>
+  <div class="spacer"></div>
+  <span class="conn" id="conn">Connecting</span>
+  <span class="chip" id="status"><span class="dot"></span><span id="status-text">Connecting</span></span>
+  <button class="btn danger" id="stop" disabled>Stop</button>
+  <button class="btn primary" id="start" disabled>Start</button>
+  <button class="btn ghost icon-btn" id="theme" title="Theme: system" aria-label="Switch theme">◐</button>
+</header>
+
 <main>
-<div class="heading"><div><h1>One viewer. Continuous improvement.</h1><div class="subtle">A shared goal, visible handoffs, and you in control.</div></div><div class="actions"><span id="status" class="pill">Connecting</span><button class="btn stop" id="stop" disabled>Stop</button><button class="btn primary" id="start" disabled>Continue work</button></div></div>
-<section class="workflow" aria-label="Live workflow"><div class="workflow-header"><div><div class="eyebrow">THE WORKFLOW · AT A GLANCE</div><h2 id="flow-current">Reading the current step…</h2><p>Hover to preview a step. Click to keep its details open.</p></div><span class="pill" id="flow-state">Connecting</span></div><div class="workflow-alert" id="flow-alert" hidden></div><nav class="flow-track" id="flow-track" aria-label="Workflow steps"><button class="flow-step" id="flow-director" data-step="director" aria-pressed="false" aria-controls="flow-inspector"><span class="step-number">01</span><strong>Choose a batch</strong><span class="step-owner">Director</span><span class="step-status" id="flow-status-director">Waiting</span></button><button class="flow-step" id="flow-assign" data-step="assign" aria-pressed="false" aria-controls="flow-inspector"><span class="step-number">02</span><strong>Write assignment</strong><span class="step-owner">Orchestrator</span><span class="step-status" id="flow-status-assign">Waiting</span></button><button class="flow-step" id="flow-worker" data-step="worker" aria-pressed="false" aria-controls="flow-inspector"><span class="step-number">03</span><strong>Implement</strong><span class="step-owner">Worker</span><span class="step-status" id="flow-status-worker">Waiting</span></button><button class="flow-step" id="flow-verify" data-step="verify" aria-pressed="false" aria-controls="flow-inspector"><span class="step-number">04</span><strong>Run checks</strong><span class="step-owner">Coordinator</span><span class="step-status" id="flow-status-verify">Waiting</span></button><button class="flow-step" id="flow-review" data-step="review" aria-pressed="false" aria-controls="flow-inspector"><span class="step-number">05</span><strong>Review result</strong><span class="step-owner">Orchestrator</span><span class="step-status" id="flow-status-review">Waiting</span></button></nav><div class="flow-return"><span>↶ <b>More work or fixes:</b> review → assignment</span><span>↶ <b>Batch accepted:</b> review → Director</span></div><section class="flow-inspector" id="flow-inspector" aria-label="Selected step details"><div class="inspector-head"><div><h3 id="flow-title"></h3><p id="flow-purpose"></p></div><div><span class="subtle" id="flow-mode">Following current step</span> <button class="btn small" id="flow-follow" hidden>Follow current</button></div></div><div class="flow-stats"><div class="flow-stat"><strong id="flow-time">—</strong><span id="flow-time-label">Turn duration</span></div><div class="flow-stat"><strong id="flow-call">—</strong>Call number</div><div class="flow-stat"><strong id="flow-activity-age">—</strong>Last log update</div><div class="flow-stat"><strong id="flow-model">—</strong>Runs on</div></div><div class="flow-columns"><div><div class="flow-label"><span id="flow-prompt-label">Prompt</span><button class="btn quiet" id="flow-full">Read full ↗</button></div><pre class="flow-copy" id="flow-prompt"></pre></div><div><div class="flow-label" id="flow-feed-label">Activity</div><div class="flow-feed" id="flow-feed"></div></div></div><p class="subtle" id="flow-caption" style="font-size:11px;margin-bottom:0"></p></section><div class="workflow-foot"><strong id="flow-progress"></strong><span id="flow-totals"></span></div></section>
-<div class="notice" id="notice" hidden></div>
-<section class="panel notebook-panel" aria-label="Shared team notebook"><div class="panel-header"><div><div class="eyebrow">ONE SHARED WORKSPACE</div><h2>The team notebook</h2></div><span class="subtle" id="notebook-count">Loading…</span></div><p class="subtle">One chronological log for all three agents. Notes arrive after each completed turn; live activity stays in the workflow above.</p><div class="notebook-actions"><button class="btn small" id="notebook-system">How the team works ↗</button><button class="btn small" id="notebook-current">Shared task context ↗</button><button class="btn small" id="notebook-full">Read the full journal ↗</button><button class="btn quiet" id="notebook-latest">Jump to latest ↓</button></div><div class="notebook-feed" id="notebook-feed" tabindex="0" aria-label="Chronological team notes"></div><p class="subtle notebook-caption" id="notebook-caption">Agent reports and proposals are distinct from independently verified results.</p></section>
-<details class="workflow-details objective-details"><summary>Shared objective &amp; overall run limits</summary><section class="objective"><div><div class="eyebrow">THE SHARED OBJECTIVE</div><h2>Bring everything into one Rust viewer.</h2><p>Make the existing features coherent and usable in one native app, with shared physics, source data, and controls.</p><button class="btn quiet" id="mission">Read the full objective &amp; boundaries ↗</button></div><div class="objective-side"><div class="metric-line"><span>Workflow progress</span><strong id="progress-label">—</strong></div><div class="meter"><span id="progress-meter" style="width:0%"></span></div><div class="metric-line"><span>Worker turns</span><strong id="rounds">—</strong></div><div class="metric-line"><span>Time used</span><strong id="elapsed">—</strong></div><div class="metric-line"><span>Estimated usage</span><strong id="cost">—</strong></div></div></section>
-</details><details class="workflow-details"><summary>Director’s hopper, batch &amp; decision principles</summary><section class="panel director-panel" aria-label="Director and work hopper"><div class="panel-header"><div><div class="eyebrow">THE OUTER LOOP</div><h2>Director · decide what is worth doing next</h2></div><span class="pill" id="director-status">Loading</span></div><p class="director-intro">Compare improvements to cohesion, feature gaps, shared libraries, and technical debt. Choose one focused batch, let the pair deliver it, then reconsider priorities using the results.</p><div id="director-summary" class="handoff-summary"></div><div id="current-batch"></div><div class="caption">The hopper · considered opportunities</div><div class="hopper" id="hopper"></div><div class="director-links"><button class="btn quiet" id="director-prompt">Read Director prompt ↗</button><button class="btn quiet" id="director-taste">Read decision principles ↗</button><button class="btn quiet" id="director-decision">Read latest decision ↗</button></div><details><summary>Director activity</summary><div class="director-log" id="director-activity"></div></details><details><summary>Completed batches &amp; evidence</summary><div class="batch-history" id="batch-history"></div></details><details><summary>Long-term project roadmap</summary><pre class="prompt-text" id="outer-roadmap"></pre></details><div class="director-controls"><label><input type="checkbox" id="outer-enabled"> Automatically select the next batch</label><label>Completed-batch ceiling <input type="number" id="max-batches" min="1" step="1" value="8"></label><button class="btn small" id="save-outer">Save loop settings</button><span class="subtle">Shares the same total time, usage, and worker-turn limits.</span></div></section>
-</details><div class="section-title"><h2>The agents</h2><span class="subtle" id="turn-description">Loading saved sessions…</span></div>
-<section class="agents" aria-label="Agent prompts and activity">
-<article class="agent" id="orchestrator-card"><div class="agent-top"><div class="avatar">O</div><div class="agent-name"><h2>Orchestrator</h2><p>Breaks the batch into steps. Reviews the result.</p></div><span class="agent-badge" id="orchestrator-status">Waiting</span></div><div class="tabs" role="tablist" aria-label="Orchestrator details"><button class="tab selected" data-role="orchestrator" data-tab="prompt" role="tab" aria-selected="true">Current prompt</button><button class="tab" data-role="orchestrator" data-tab="activity" role="tab" aria-selected="false">Activity</button><button class="tab" data-role="orchestrator" data-tab="result" role="tab" aria-selected="false">Latest decision</button></div><div class="agent-body" id="orchestrator-body"></div><div class="agent-footer"><span id="orchestrator-meta">Session not started</span><button class="btn quiet" data-full="orchestrator">Read full prompt ↗</button></div></article>
-<article class="agent worker" id="worker-card"><div class="agent-top"><div class="avatar">W</div><div class="agent-name"><h2>Worker</h2><p>Implements the orchestrator’s assignment.</p></div><span class="agent-badge" id="worker-status">Waiting</span></div><div class="tabs" role="tablist" aria-label="Worker details"><button class="tab selected" data-role="worker" data-tab="prompt" role="tab" aria-selected="true">Current prompt</button><button class="tab" data-role="worker" data-tab="activity" role="tab" aria-selected="false">Activity</button><button class="tab" data-role="worker" data-tab="result" role="tab" aria-selected="false">Latest result</button></div><div class="agent-body" id="worker-body"></div><div class="agent-footer"><span id="worker-meta">Session not started</span><button class="btn quiet" data-full="worker">Read full prompt ↗</button></div></article>
-</section>
-<div class="workbench"><section class="panel"><div class="panel-header"><h2>The current handoff</h2><span class="pill" id="review-status">Planning</span></div><p class="handoff-summary" id="handoff">The orchestrator will inspect the project and write the first assignment.</p><div class="caption">What the worker must deliver</div><ul class="criteria" id="criteria"></ul></section>
-<section class="panel"><div class="panel-header"><h2>Guide the next step</h2><span class="subtle" id="guidance-status"></span></div><p class="subtle">Give the orchestrator a priority or correction. It will reconsider a queued assignment before the worker starts.</p><label for="guidance" class="caption">Your direction</label><textarea class="guidance" id="guidance" maxlength="10000" placeholder="For example: prioritize the existing builder workflow before migrating the CAD editor."></textarea><div class="guidance-bottom"><span id="guidance-note">Applies at the next orchestrator turn.</span><button class="btn primary" id="save-guidance">Save direction</button></div></section></div>
-<section class="panel checklist"><div class="panel-header"><h2>The current acceptance checklist</h2><span class="subtle">Verified means there is evidence.</span></div><div id="checklist"><div class="empty">The orchestrator is building the first checklist.</div></div></section>
-<div class="bottom-grid"><section class="panel"><div class="panel-header"><h2>Conversation history</h2><span class="subtle">Every prompt and handoff is saved.</span></div><div id="history"></div><div class="caption">Independent checks</div><div id="checks" class="subtle">No check receipts yet.</div></section>
-<section class="panel"><div class="panel-header"><h2>Run limits</h2><span class="subtle" id="limit-note">Edit while stopped.</span></div><div class="limits-grid"><div class="field"><label for="max_rounds">Total worker turns</label><input id="max_rounds" type="number" min="1" step="1"></div><div class="field"><label for="max_hours">Total active hours</label><input id="max_hours" type="number" min="0.1" step="0.5"></div><div class="field"><label for="budget_usd">Usage ceiling ($ equivalent)</label><input id="budget_usd" type="number" min="0.01" step="1"></div><div class="field"><label for="call_budget_usd">Per-call usage ceiling</label><input id="call_budget_usd" type="number" min="0.01" step="1"></div><div class="field"><label for="turn_minutes">Minutes per call</label><input id="turn_minutes" type="number" min="0.1" step="1"></div><div class="field"><label for="max_turns">Model turns per call</label><input id="max_turns" type="number" min="1" step="1"></div></div><button class="btn" id="save-limits">Save limits</button><p class="subtle" style="font-size:11px;margin-bottom:0">Usage is an API-price estimate, not a subscription bill. Limits apply across resumes. The pair also stops when disk space is low.</p></section></div>
-<footer class="footer"><span id="workspace-label">Changes stay in an isolated copy of your project.</span><button class="btn quiet" id="details">Workspace &amp; session details ↗</button></footer>
+  <div class="banner" id="banner" hidden><p id="banner-text"></p><button class="btn small" id="banner-action" hidden></button></div>
+
+  <section class="card now" aria-label="What is happening now">
+    <div class="now-top">
+      <div>
+        <div class="eyebrow"><span class="role-dot" id="now-dot"></span><span id="now-eyebrow">Now</span></div>
+        <h1 class="headline" id="headline">Loading…</h1>
+        <p class="subline" id="subline"></p>
+        <div class="now-meta" id="now-meta"></div>
+      </div>
+      <nav class="pipeline" id="pipeline" aria-label="Workflow stages"></nav>
+    </div>
+    <div class="meters" id="meters"></div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" data-view="overview" aria-selected="true">Overview</button>
+    <button class="tab" role="tab" data-view="timeline" aria-selected="false">Timeline <span class="badge" id="badge-timeline">0</span></button>
+    <button class="tab" role="tab" data-view="notebook" aria-selected="false">Notebook <span class="badge" id="badge-notebook">0</span></button>
+    <button class="tab" role="tab" data-view="director" aria-selected="false">Director</button>
+    <button class="tab" role="tab" data-view="settings" aria-selected="false">Settings</button>
+  </nav>
+
+  <!-- Overview -->
+  <section data-panel="overview" class="overview">
+    <section class="card live-panel" aria-label="Live agent activity">
+      <div class="card-head">
+        <h2>Live</h2>
+        <div class="segmented" id="roles" role="group" aria-label="Show agent"></div>
+        <div class="right"><button class="btn small" id="follow" hidden>Follow live</button></div>
+      </div>
+      <div class="live-sub">
+        <div class="segmented" id="live-tabs" role="group" aria-label="Show"></div>
+        <span class="follow" id="follow-note"></span>
+      </div>
+      <div class="feed" id="feed" tabindex="0"></div>
+      <div class="live-foot" id="live-foot"></div>
+    </section>
+
+    <div class="stack">
+      <section class="card">
+        <div class="card-head"><h2>Assignment</h2><span class="right" id="assign-chip"></span></div>
+        <div class="card-body" id="assignment"></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Checklist</h2><span class="count" id="checklist-count"></span></div>
+        <div class="card-body" id="checklist"></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Checks</h2><span class="count" id="checks-count"></span></div>
+        <div class="card-body" id="checks"></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Screenshots</h2><span class="count" id="shots-count"></span></div>
+        <div class="card-body" id="shots"></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Commits on <span id="commits-branch">this branch</span></h2><span class="count" id="commits-count"></span></div>
+        <div class="card-body" id="commits"></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Guide the next step</h2><span class="right" id="guide-chip"></span></div>
+        <div class="card-body">
+          <textarea class="input" id="guidance" maxlength="10000" placeholder="A priority or correction for the orchestrator, e.g. finish the builder workflow before touching CAD."></textarea>
+          <div class="row-end"><span class="note" id="guide-note">Read at the next orchestrator turn.</span><button class="btn small primary" id="save-guidance">Send</button></div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section data-panel="timeline" hidden>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+  <!-- Notebook -->
+  <section data-panel="notebook" hidden>
+    <div class="notes-tools">
+      <button class="btn small" id="nb-system">How the team works</button>
+      <button class="btn small" id="nb-current">Shared context</button>
+      <button class="btn small" id="nb-full">Full journal</button>
+      <span class="faint" id="nb-caption" style="font-size:12px;align-self:center"></span>
+    </div>
+    <div id="notebook"></div>
+  </section>
+
+  <!-- Director -->
+  <section data-panel="director" hidden>
+    <div class="dir-grid">
+      <div class="stack">
+        <section class="card">
+          <div class="card-head"><h2>Current batch</h2><span class="right" id="dir-chip"></span></div>
+          <div class="card-body" id="dir-batch"></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2>Hopper</h2><span class="count">Candidates the Director compared</span></div>
+          <div class="card-body"><div class="hopper" id="hopper"></div></div>
+        </section>
+      </div>
+      <div class="stack">
+        <section class="card">
+          <div class="card-head"><h2>Automatic planning</h2></div>
+          <div class="card-body">
+            <label class="toggle"><span class="switch"><input type="checkbox" id="outer-enabled"><span></span></span>Let the Director pick the next batch when one is accepted</label>
+            <div class="field" style="margin-top:14px"><label for="max-batches">Stop after this many accepted batches</label><input class="input" type="number" id="max-batches" min="1" step="1" style="max-width:140px"></div>
+            <div class="row-end"><span class="note">Shares the run's time, usage and turn limits.</span><button class="btn small" id="save-outer">Save</button></div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2>Accepted batches</h2><span class="count" id="history-count"></span></div>
+          <div class="card-body" id="dir-history"></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2>Principles &amp; decisions</h2></div>
+          <div class="card-body prompt-list">
+            <button class="btn" id="dir-prompt">Director's principles <span class="faint">↗</span></button>
+            <button class="btn" id="dir-decision">Latest decision <span class="faint">↗</span></button>
+            <button class="btn" id="dir-roadmap">Long-term roadmap <span class="faint">↗</span></button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section data-panel="settings" hidden>
+    <div class="settings-grid">
+      <section class="card">
+        <div class="card-head"><h2>Run limits</h2><span class="right faint" id="limit-note" style="font-size:12px"></span></div>
+        <div class="card-body">
+          <div class="fields">
+            <div class="field"><label for="max_rounds">Worker turns</label><input class="input" id="max_rounds" type="number" min="1" step="1"></div>
+            <div class="field"><label for="max_hours">Active hours</label><input class="input" id="max_hours" type="number" min="0.1" step="0.5"></div>
+            <div class="field"><label for="budget_usd">Usage ceiling ($)</label><input class="input" id="budget_usd" type="number" min="0.01" step="1"></div>
+            <div class="field"><label for="call_budget_usd">Per-call ceiling ($)</label><input class="input" id="call_budget_usd" type="number" min="0.01" step="1"></div>
+            <div class="field"><label for="turn_minutes">Minutes per call</label><input class="input" id="turn_minutes" type="number" min="0.1" step="1"></div>
+            <div class="field"><label for="max_turns">Model turns per call</label><input class="input" id="max_turns" type="number" min="1" step="1"></div>
+          </div>
+          <div class="row-end"><span class="note">Usage is an API-price estimate, not a bill. Limits are cumulative across resumes.</span><button class="btn small" id="save-limits">Save limits</button></div>
+        </div>
+      </section>
+      <div class="stack">
+        <section class="card">
+          <div class="card-head"><h2>This run</h2></div>
+          <div class="card-body"><dl class="kv" id="run-info"></dl></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2>Instructions the agents receive</h2></div>
+          <div class="card-body prompt-list">
+            <button class="btn" data-doc="mission">Mission &amp; boundaries <span class="faint">↗</span></button>
+            <button class="btn" data-doc="orchestrator">Orchestrator <span class="faint">↗</span></button>
+            <button class="btn" data-doc="worker">Worker <span class="faint">↗</span></button>
+            <button class="btn" data-doc="director">Director <span class="faint">↗</span></button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
 </main>
-<div class="dialog-backdrop" id="dialog" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button class="btn small" id="close-dialog">Close</button></div><div class="dialog-content"><pre id="dialog-text"></pre></div></section></div>
+
+<div class="backdrop" id="modal" hidden>
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-head"><h2 id="modal-title"></h2><button class="btn small" id="modal-close">Close</button></div>
+    <div class="modal-body" id="modal-body"></div>
+  </section>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/workflow.js"></script><script src="/notebook.js"></script>
-<script>
-const TOKEN='__PAIR_TOKEN__';
-const $=id=>document.getElementById(id);
-let data=null, tabs={orchestrator:'prompt',worker:'prompt'}, initial=true, guidanceDirty=false, limitsDirty=false, busy=false, outerDirty=false, previousFocus=null;
-const limitKeys=['max_rounds','max_hours','budget_usd','call_budget_usd','turn_minutes','max_turns'];
-const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const pretty=s=>String(s||'').replaceAll('_',' ');
-const duration=n=>n<60?`${Math.floor(n)}s`:`${Math.floor(n/60)}m${n>=3600?' ('+(n/3600).toFixed(1)+'h)':''}`;
-function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').hidden=true,5500)}
-function modal(title,text){previousFocus=document.activeElement;$('dialog-title').textContent=title;$('dialog-text').textContent=text;$('dialog').hidden=false;$('close-dialog').focus()}
-function closeModal(){$('dialog').hidden=true;previousFocus?.focus()}
-$('close-dialog').onclick=closeModal;$('dialog').onclick=e=>{if(e.target===$('dialog'))closeModal()};document.addEventListener('keydown',e=>{if(!$('dialog').hidden&&e.key==='Escape')closeModal();if(!$('dialog').hidden&&e.key==='Tab'){e.preventDefault();$('close-dialog').focus()}});
-function latest(role){return data?.calls.filter(c=>c.role===role).at(-1)}
-function renderAgent(role){const call=latest(role),active=data.active&&data.state.inflight?.role===role;$(role+'-card').classList.toggle('active',active);$(role+'-status').textContent=active?'Working now':call&&!call.finished?'Interrupted · saved':call?'Waiting for next turn':'Not started';$(role+'-meta').textContent=call?`Turn ${call.number} · ${call.model||'Claude Code'}${active?' · '+duration(data.now-call.started_at):''}`:'Session not started';const body=$(role+'-body');const scroll=body.scrollTop;let html='';if(tabs[role]==='prompt'){html=call?`<pre class="prompt-text">${escapeHTML(call.prompt)}</pre>`:'<div class="empty">The prompt will appear here when this agent starts.</div>'}else if(tabs[role]==='activity'){html=call?.activity.length?call.activity.map(e=>`<div class="activity-item ${escapeHTML(e.kind)}">${escapeHTML(e.text)}</div>`).join(''):`<div class="empty">${active?'Working on the prompt. Detailed activity will appear when this turn returns.':'No activity events for this turn. The prompt and final result are still available.'}</div>`}else{const r=call?.result;html=r?`<div class="result-summary"><p>${escapeHTML(r.summary)}</p>${r.worker_prompt?'<div class="caption">Prompt sent to the worker</div><pre class="prompt-text">'+escapeHTML(r.worker_prompt)+'</pre>':''}${r.changed_files?.length?'<div class="caption">Changed files</div><ul>'+r.changed_files.map(x=>'<li class="inline-code">'+escapeHTML(x)+'</li>').join('')+'</ul>':''}${r.evidence?.length?'<div class="caption">Evidence</div><ul>'+r.evidence.map(x=>'<li>'+escapeHTML(x)+'</li>').join('')+'</ul>':''}${r.blockers?.length?'<div class="caption">Blockers</div><ul>'+r.blockers.map(x=>'<li>'+escapeHTML(x)+'</li>').join('')+'</ul>':''}</div>`:`<div class="empty">${escapeHTML(call?.error||'The result will appear when this turn finishes.')}</div>`}if(body.innerHTML!==html){body.innerHTML=html;body.scrollTop=scroll}}
-function render(){const s=data.state,plan=s.plan,items=plan?.checklist||[],done=items.filter(x=>x.status==='verified').length;const status=data.stop_requested&&data.active?'Stopping':data.active?'Running':s.status==='blocked'?'Needs attention':pretty(s.status);$('status').className='pill '+(data.active?'running':s.status);$('status').innerHTML='<span class="dot"></span>'+escapeHTML(status);$('connection').textContent='Local dashboard · connected';$('start').disabled=data.active||busy||(s.status==='complete'&&!data.outer_settings.enabled);$('stop').disabled=!data.active||data.stop_requested||busy;$('start').textContent=s.calls?'Continue work':'Start pair';$('rounds').textContent=`${s.rounds} / ${data.limits.max_rounds}`;$('elapsed').textContent=duration(data.elapsed_seconds);$('cost').textContent=`$${data.estimated_spent.toFixed(2)} / $${data.limits.budget_usd}`;$('cost').title=data.reserved?`$${data.reserved.toFixed(2)} reserved for the active or interrupted turn.`:'API-price estimate, not a subscription bill';$('progress-label').textContent=items.length?`${done} of ${items.length} verified`:(s.outer?'Batch planning':'Inventory in progress');$('progress-meter').style.width=(items.length?done/items.length*100:0)+'%';$('turn-description').textContent=data.active?(s.inflight?`${pretty(s.inflight.role)} is working · the other agent is waiting`:'Running independent checks'):'Saved and ready for the next handoff';$('notice').hidden=true;$('notice').textContent=s.message||'';for(const role of ['orchestrator','worker'])renderAgent(role);$('handoff').textContent=plan?.summary||'The orchestrator will inspect the project and write the first assignment.';$('review-status').textContent=plan?.review==='accept'?'Last work accepted':plan?.review==='revise'?'Revision requested':plan?'Assigned':'Planning';$('criteria').innerHTML=(plan?.acceptance_criteria||[]).map(x=>'<li>'+escapeHTML(x)+'</li>').join('');$('checklist').innerHTML=items.length?items.map(i=>`<div class="checklist-row"><div class="check-id">${escapeHTML(i.id)}</div><div class="check-work">${escapeHTML(i.workflow)}<div class="check-evidence">${escapeHTML(i.evidence==='none'?'No evidence yet.':i.evidence)}</div></div><span class="check-status ${escapeHTML(i.status)}">${escapeHTML(pretty(i.status))}</span></div>`).join(''):'<div class="empty">The orchestrator is building the first checklist.</div>';$('history').innerHTML=data.calls.length?[...data.calls].reverse().map(c=>`<button class="history-row" data-history="${escapeHTML(c.id)}"><span class="history-num">${String(c.number).padStart(2,'0')}</span><span class="history-info"><strong>${pretty(c.role)}</strong><div>${escapeHTML(c.result?.summary||c.prompt.split('\n')[0])}</div></span><span class="history-meta">${c.finished?(c.subtype==='success'?'Finished':'Needs review'):(c.live?'In progress':'Interrupted')} ↗</span></button>`).join(''):'<div class="empty">Your conversation history will appear here.</div>';$('checks').innerHTML=data.checks.length?data.checks.map(c=>`<div class="receipt ${c.exit_code?'failed':''}"><b>${c.exit_code?'Failed':'Passed'}</b> · ${escapeHTML(c.name)} <button class="btn quiet small" data-check="${escapeHTML(c.name)}">Read receipt ↗</button></div>`).join(''):'No check receipts yet.';if(!guidanceDirty&&document.activeElement!==$('guidance'))$('guidance').value=data.steering?.text||'';$('guidance-status').textContent=data.steering_pending?'Queued':data.steering?.text?'Seen by orchestrator':'';$('guidance-note').textContent=data.steering_pending?'Saved. Waiting for the next orchestrator turn.':'Applies at the next orchestrator turn.';for(const key of limitKeys){$(key).disabled=data.active;if(!limitsDirty&&document.activeElement!==$(key))$(key).value=data.limits[key]}$('save-limits').disabled=data.active||busy;$('limit-note').textContent=data.active?'Stop to change limits.':'Cumulative across resumes.';renderOuter();renderWorkflow();renderNotebook();initial=false}
-const renderedHTML={};
-function stableHTML(id,html){if(renderedHTML[id]!==html){$(id).innerHTML=html;renderedHTML[id]=html}}
-function renderOuter(){const outer=data.state.outer,settings=data.outer_settings,call=latest('director'),active=data.active&&data.state.inflight?.role==='director',batch=outer?.current_batch;const pending=settings.enabled&&!outer;$('director-status').textContent=active?'Choosing next batch':pending?'Upgrade queued':!settings.enabled?'Automatic planning off':batch?'Batch in progress':outer?.last_decision?.action==='stop'?'Stopped with a reason':'Ready to plan';$('director-status').className='pill '+(active?'running':'');$('director-summary').textContent=pending?'Enabled. The current run uses the previous coordinator; the Director joins at its next safe restart without interrupting the worker.':outer?.last_decision?.rationale|| (batch?'The existing assignment is preserved as the first batch. After it passes review, the Director will compare what to do next.':'No priority decision has been made yet. Start or continue work to begin.');$('current-batch').innerHTML=batch?'<div class="caption">Current batch</div><h3>'+escapeHTML(batch.title)+'</h3><p class="subtle">'+escapeHTML(batch.objective)+'</p><ol class="batch-tasks">'+batch.tasks.map(t=>'<li><strong>'+escapeHTML(t.title)+'</strong><div class="subtle">'+escapeHTML(t.brief)+'</div></li>').join('')+'</ol>':'';stableHTML('hopper',outer?.hopper.length?outer.hopper.map(c=>`<article class="candidate ${c.disposition==='select'?'selected':''}"><div class="eyebrow">${escapeHTML(pretty(c.category))} · ${escapeHTML(pretty(c.disposition))}</div><h3>${escapeHTML(c.title)}</h3><p>${escapeHTML(c.benefit)}</p><p><strong>Why:</strong> ${escapeHTML(c.reason)}</p><details><summary>Evidence &amp; tradeoffs</summary><p>${escapeHTML(c.problem)}</p><p>${escapeHTML(c.leverage)}</p><p>Effort: ${escapeHTML(c.effort)} · Risk: ${escapeHTML(c.risk)}</p><p>${c.evidence.map(escapeHTML).join('<br>')}</p></details></article>`).join(''):'<div class="empty">No candidates reviewed yet. The Director will fill this hopper with evidence and reasons for selecting or deferring each opportunity.</div>');$('director-activity').innerHTML=call?.activity.length?call.activity.map(e=>'<div class="activity-item">'+escapeHTML(e.text)+'</div>').join(''):'<div class="empty">The Director has not produced activity yet.</div>';$('batch-history').innerHTML=outer?.history.length?outer.history.map((b,i)=>'<button class="btn quiet" data-batch="'+i+'">'+escapeHTML(b.title)+' · accepted ↗</button>').join(''):'No completed batches yet.';$('outer-roadmap').textContent=outer?.roadmap?.length?outer.roadmap.map(i=>pretty(i.status)+' · '+i.workflow+'\n'+i.evidence).join('\n\n'):'The current project checklist will be preserved here when the outer loop begins.';if(!outerDirty){$('outer-enabled').checked=settings.enabled;$('max-batches').value=settings.max_batches}}
-async function refresh(){try{const response=await fetch('/api/state');if(!response.ok)throw Error('Dashboard is unavailable');data=await response.json();render()}catch(e){$('connection').textContent='Disconnected · retrying';$('flow-state').textContent='Connection lost · saved snapshot';$('flow-state').className='pill blocked';document.querySelectorAll('.flow-step.running').forEach(el=>el.classList.remove('running'));$('start').disabled=true;$('stop').disabled=true}}
-async function post(path,payload={}){const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json','X-Pair-Token':TOKEN},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok){const error=Error(result.error||'Request failed');error.interrupted=result.interrupted;throw error}return result}
-async function act(path,payload){if(busy)return;busy=true;if(data)render();try{const r=await post(path,payload);toast(r.message);await refresh()}catch(e){if(e.interrupted&&confirm('The previous turn was interrupted. Its edits are preserved. After reviewing the last prompt, result and workspace, resume that turn?')){busy=false;return act('start',{retry_interrupted:true})}toast(e.message)}finally{busy=false;if(data)render()}}
-$('start').onclick=()=>act('start',{});$('stop').onclick=()=>act('stop',{});$('guidance').oninput=()=>guidanceDirty=true;$('save-guidance').onclick=async()=>{try{const r=await post('steering',{text:$('guidance').value});guidanceDirty=false;toast(r.message);await refresh()}catch(e){toast(e.message)}};for(const key of limitKeys)$(key).oninput=()=>limitsDirty=true;$('save-limits').onclick=async()=>{try{const r=await post('limits',Object.fromEntries(limitKeys.map(k=>[k,Number($(k).value)])));limitsDirty=false;toast(r.message);await refresh()}catch(e){toast(e.message)}};$('mission').onclick=()=>modal('The orchestrator’s main objective',data?.mission||'Loading…');$('details').onclick=()=>modal('Workspace & session details',JSON.stringify({source:data.source,workspace:data.workspace,sessions:data.state.sessions,role_instructions:data.roles},null,2));
-document.addEventListener('click',e=>{const tab=e.target.closest('[data-tab]');if(tab){tabs[tab.dataset.role]=tab.dataset.tab;document.querySelectorAll(`[data-role="${tab.dataset.role}"]`).forEach(b=>{b.classList.toggle('selected',b===tab);b.setAttribute('aria-selected',String(b===tab))});renderAgent(tab.dataset.role)}const full=e.target.closest('[data-full]');if(full){const role=full.dataset.full;modal(`${role==='worker'?'Worker':'Orchestrator'} · current prompt`,latest(role)?.prompt||'This session has not started.')}const history=e.target.closest('[data-history]');if(history){const call=data.calls.find(c=>c.id===history.dataset.history);modal(`Turn ${call.number} · ${call.role}`,`PROMPT\n\n${call.prompt}\n\nRESULT\n\n${call.result?JSON.stringify(call.result,null,2):call.error||'Not finished yet.'}${call.stderr?'\n\nERROR LOG\n\n'+call.stderr:''}`)}const check=e.target.closest('[data-check]');if(check){const r=data.checks.find(c=>c.name===check.dataset.check);modal(`Independent check · ${r.name}`,`${r.command.join(' ')}\nExit code: ${r.exit_code}\n\n${r.stdout_text||'(No standard output)'}\n\n${r.stderr_text||'(No error output)'}`)}});
-$('outer-enabled').onchange=()=>outerDirty=true;$('max-batches').oninput=()=>outerDirty=true;$('save-outer').onclick=async()=>{try{const r=await post('outer',{enabled:$('outer-enabled').checked,max_batches:Number($('max-batches').value)});outerDirty=false;toast(r.message);await refresh()}catch(e){toast(e.message)}};$('director-prompt').onclick=()=>modal('Director · current prompt',latest('director')?.prompt||'The Director has not started yet. Its decision principles are available beside this button.');$('director-taste').onclick=()=>modal('Director · decision principles',data.roles.director||'Enable the outer loop to install its decision principles.');$('director-decision').onclick=()=>modal('Director · latest decision',data.state.outer?.last_decision?JSON.stringify(data.state.outer.last_decision,null,2):'No decision yet.');document.addEventListener('click',e=>{const b=e.target.closest('[data-batch]');if(b)modal('Accepted batch & evidence',JSON.stringify(data.state.outer.history[Number(b.dataset.batch)],null,2))});
-initWorkflow();initNotebook();refresh();setInterval(refresh,2000);
-</script>
-</body></html>
+<script>window.PAIR_TOKEN = '__PAIR_TOKEN__';</script>
+<script src="/dashboard.js"></script>
+</body>
+</html>

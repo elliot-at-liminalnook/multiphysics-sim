@@ -327,9 +327,8 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             Button,
             BuildAction::GaitReportSelect(e.name.clone()),
             ui::Tint { idle: if selected { ACCENT_BG } else { Color::NONE }, hover: if selected { ACCENT_BG } else { HOVER_BG } },
-            Node { padding: UiRect::axes(Val::Px(8.), Val::Px(4.)), column_gap: Val::Px(8.), align_items: AlignItems::Center, border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
-            BorderColor(if selected { ACCENT } else { Color::NONE }),
-            BorderRadius::all(Val::Px(4.)),
+            Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(8.), Val::Px(4.)), column_gap: Val::Px(8.), align_items: AlignItems::Center, border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
+            BorderColor::all(if selected { ACCENT } else { Color::NONE }),
             BackgroundColor(if selected { ACCENT_BG } else { Color::NONE }),
             children![
                 k.dot(color),

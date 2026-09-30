@@ -38,7 +38,7 @@ pub(crate) struct UiFonts {
 }
 
 pub(crate) fn load_fonts(mut commands: Commands, mut fonts: ResMut<Assets<Font>>, mut images: ResMut<Assets<Image>>) {
-    let load = |bytes: &[u8]| Font::try_from_bytes(bytes.to_vec()).expect("bundled IBM Plex Sans");
+    let load = |bytes: &[u8]| Font::from_bytes(bytes.to_vec());
     let icons = sim_core::icons::NAMES.iter().map(|name| {
         let image = Image::new(bevy::render::render_resource::Extent3d { width:48, height:48, depth_or_array_layers:1 }, bevy::render::render_resource::TextureDimension::D2, sim_core::icons::rgba(name,48), bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb, RenderAssetUsages::default());
         (name.to_string(), images.add(image))
@@ -154,7 +154,7 @@ impl Kit<'_> {
             1 => self.f.medium.clone(),
             _ => self.f.semibold.clone(),
         };
-        (Text::new(value), TextFont { font, font_size: size, ..default() }, TextColor(color), TextLayout::new_with_linebreak(bevy::text::LineBreak::WordOrCharacter))
+        (Text::new(value), TextFont { font: font.into(), font_size: FontSize::Px(size), ..default() }, TextColor(color), TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter))
     }
 
     pub(crate) fn button<A: Component>(&self, label: &str, action: A, look: Look, enabled: bool) -> impl Bundle + use<A> {
@@ -179,7 +179,7 @@ impl Kit<'_> {
             action,
             ui_api::Enabled(enabled),
             Tint { idle, hover },
-            Node {
+            Node { border_radius: BorderRadius::all(Val::Px(if underline { 0. } else if matches!(look, Look::Chip(_)) { 10. } else { 5. })),
                 padding: UiRect::axes(Val::Px(pad_x), Val::Px(pad_y)),
                 border: if underline { UiRect::bottom(Val::Px(2.)) } else { UiRect::all(Val::Px(1.)) },
                 justify_content: JustifyContent::Center,
@@ -187,8 +187,7 @@ impl Kit<'_> {
                 flex_shrink: 0.,
                 ..default()
             },
-            BorderColor(if underline { ACCENT } else { border }),
-            BorderRadius::all(Val::Px(if underline { 0. } else if matches!(look, Look::Chip(_)) { 10. } else { 5. })),
+            BorderColor::all(if underline { ACCENT } else { border }),
             BackgroundColor(idle),
             children![self.text(label, size, color, weight)],
         )
@@ -197,7 +196,7 @@ impl Kit<'_> {
     pub(crate) fn section(&self, title: &str) -> impl Bundle + use<> {
         (
             Node { margin: UiRect::top(Val::Px(14.)), padding: UiRect::bottom(Val::Px(6.)), border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() },
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             children![self.text(title.to_uppercase(), 10.5, FAINT, 2)],
         )
     }
@@ -209,9 +208,8 @@ impl Kit<'_> {
             Button,
             action,
             Tint { idle: if selected { ACCENT_BG } else { Color::NONE }, hover: if selected { ACCENT_BG } else { HOVER_BG } },
-            Node { padding: UiRect::axes(Val::Px(8.), Val::Px(6.)), column_gap: Val::Px(9.), align_items: AlignItems::Center, border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
-            BorderColor(if selected { ACCENT } else { Color::NONE }),
-            BorderRadius::all(Val::Px(4.)),
+            Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(8.), Val::Px(6.)), column_gap: Val::Px(9.), align_items: AlignItems::Center, border: UiRect::left(Val::Px(2.)), flex_shrink: 0., ..default() },
+            BorderColor::all(if selected { ACCENT } else { Color::NONE }),
             BackgroundColor(if selected { ACCENT_BG } else { Color::NONE }),
             children![
                 (Node { width: Val::Px(28.), height: Val::Px(28.), flex_shrink: 0., ..default() }, ImageNode::new(self.f.icons.get(icon).unwrap_or(&self.f.icons["component"]).clone()).with_color(accent)),
@@ -238,9 +236,8 @@ impl Kit<'_> {
                             Button,
                             action,
                             Tint { idle: if editing { RAISED } else { Color::NONE }, hover: HOVER_BG },
-                            Node { padding: UiRect::axes(Val::Px(7.), Val::Px(3.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-                            BorderColor(if editing { ACCENT } else { BORDER }),
-                            BorderRadius::all(Val::Px(4.)),
+                            Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(7.), Val::Px(3.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+                            BorderColor::all(if editing { ACCENT } else { BORDER }),
                             BackgroundColor(if editing { RAISED } else { Color::NONE }),
                             children![body],
                         ));
@@ -258,16 +255,15 @@ impl Kit<'_> {
             Button,
             action,
             Tint { idle: RAISED, hover: HOVER_BG },
-            Node { padding: UiRect::axes(Val::Px(10.), Val::Px(7.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-            BorderColor(if focused { ACCENT } else { BORDER }),
-            BorderRadius::all(Val::Px(5.)),
+            Node { border_radius: BorderRadius::all(Val::Px(5.)), padding: UiRect::axes(Val::Px(10.), Val::Px(7.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+            BorderColor::all(if focused { ACCENT } else { BORDER }),
             BackgroundColor(RAISED),
             children![self.text(if empty && !focused { placeholder.to_string() } else if focused { format!("{shown}|") } else { shown.to_string() }, 12.5, if empty && !focused { FAINT } else { TEXT }, 0)],
         )
     }
 
     pub(crate) fn dot(&self, color: Color) -> impl Bundle + use<> {
-        (Node { width: Val::Px(7.), height: Val::Px(7.), flex_shrink: 0., ..default() }, BorderRadius::all(Val::Px(4.)), BackgroundColor(color))
+        (Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Px(7.), height: Val::Px(7.), flex_shrink: 0., ..default() }, BackgroundColor(color))
     }
 }
 
@@ -313,7 +309,7 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     if !builder.panel_dirty {
         return;
     }
-    let note_scroll=if builder.discussion.reset_scroll {0.}else{scrolls.iter().find(|(_,s)|matches!(s,Scroll::Left)).map(|(p,_)|p.offset_y).unwrap_or(0.)};
+    let note_scroll=if builder.discussion.reset_scroll {0.}else{scrolls.iter().find(|(_,s)|matches!(s,Scroll::Left)).map(|(p,_)|p.y).unwrap_or(0.)};
     builder.discussion.reset_scroll=false;
     let side_scroll = builder.sidebar_scroll.take().unwrap_or(0.);
     builder.panel_dirty = false;
@@ -355,7 +351,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
                 ..default()
             },
             BackgroundColor(BAR),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             BuilderPanel,
         ))
         .with_children(|bar| {
@@ -377,7 +373,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
             });
             // Center: tools.
             bar.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(6.), ..default() }).with_children(|mid| {
-                mid.spawn((Node { padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor(BORDER), BorderRadius::all(Val::Px(6.))))
+                mid.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor::all(BORDER)))
                     .with_children(|seg| {
                         seg.spawn(k.button("Select", BuildAction::SetMode(Mode::Select), Look::Segment(b.mode == Mode::Select), true));
                         seg.spawn(k.button("Annotate", BuildAction::SetMode(Mode::Annotate), Look::Segment(b.mode == Mode::Annotate), b.input.is_none()));
@@ -393,7 +389,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
             });
             // Right: simulation.
             bar.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(8.), ..default() }).with_children(|right| {
-                right.spawn((Node { padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor(BORDER), BorderRadius::all(Val::Px(6.))))
+                right.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::all(Val::Px(2.)), border: UiRect::all(Val::Px(1.)), column_gap: Val::Px(2.), ..default() }, BorderColor::all(BORDER)))
                     .with_children(|seg| {
                         seg.spawn(k.button("Detailed", BuildAction::ToggleRealtime, Look::Segment(!b.realtime), b.realtime));
                         seg.spawn(k.button("Realtime", BuildAction::ToggleRealtime, Look::Segment(b.realtime), !b.realtime && b.document.realtime.is_some()));
@@ -430,11 +426,11 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_
                 ..default()
             },
             BackgroundColor(SURFACE),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             BuilderPanel,
         ))
         .with_children(|side| {
-            side.spawn((Node { padding: UiRect::horizontal(Val::Px(10.)), column_gap: Val::Px(6.), flex_wrap: FlexWrap::Wrap, border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor(BORDER)))
+            side.spawn((Node { padding: UiRect::horizontal(Val::Px(10.)), column_gap: Val::Px(6.), flex_wrap: FlexWrap::Wrap, border: UiRect::bottom(Val::Px(1.)), flex_shrink: 0., ..default() }, BorderColor::all(BORDER)))
                 .with_children(|tabs| {
                     for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems), ("Actuators", Tab::Actuators), ("Gait lab", Tab::GaitLab)] {
                         if matches!(tab, Tab::Systems | Tab::Actuators | Tab::GaitLab) && b.open.shell.is_none() {
@@ -445,15 +441,15 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_
                 });
             if b.tab==Tab::Discussions {
                 side.spawn(Node{padding:UiRect::all(Val::Px(16.)),row_gap:Val::Px(10.),flex_direction:FlexDirection::Column,flex_shrink:0.,..default()}).with_children(|header|discussion_header(header,k,b));
-                side.spawn((Node{padding:UiRect::axes(Val::Px(16.),Val::Px(8.)),row_gap:Val::Px(14.),flex_direction:FlexDirection::Column,overflow:Overflow::scroll_y(),flex_grow:1.,min_height:Val::Px(0.),..default()},ScrollPosition{offset_y:note_scroll,..default()},Scroll::Left)).with_children(|body|discussion_content(body,k,b));
+                side.spawn((Node{padding:UiRect::axes(Val::Px(16.),Val::Px(8.)),row_gap:Val::Px(14.),flex_direction:FlexDirection::Column,overflow:Overflow::scroll_y(),flex_grow:1.,min_height:Val::Px(0.),..default()},ScrollPosition(Vec2::new(0.0, note_scroll)),Scroll::Left)).with_children(|body|discussion_content(body,k,b));
                 if b.discussion.selected.is_some()||b.input.as_ref().is_some_and(|i|matches!(i.purpose,Purpose::Comment|Purpose::CommentAuthor|Purpose::ThreadTitle)) {
-                    side.spawn((Node{padding:UiRect::all(Val::Px(14.)),row_gap:Val::Px(8.),flex_direction:FlexDirection::Column,flex_shrink:0.,border:UiRect::top(Val::Px(1.)),..default()},BorderColor(BORDER),BackgroundColor(BAR))).with_children(|footer|discussion_composer(footer,k,b));
+                    side.spawn((Node{padding:UiRect::all(Val::Px(14.)),row_gap:Val::Px(8.),flex_direction:FlexDirection::Column,flex_shrink:0.,border:UiRect::top(Val::Px(1.)),..default()},BorderColor::all(BORDER),BackgroundColor(BAR))).with_children(|footer|discussion_composer(footer,k,b));
                 }
                 return;
             }
             side.spawn((
                 Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(14.)), overflow: Overflow::scroll_y(), flex_grow: 1., ..default() },
-                ScrollPosition { offset_y: side_scroll, ..default() },
+                ScrollPosition(Vec2::new(0.0, side_scroll)),
                 Scroll::Left,
             ))
             .with_children(|body| match b.tab {
@@ -558,9 +554,8 @@ fn references_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     for (id, r) in refs {
         let calibrating = b.calibrating.as_ref().is_some_and(|(c, _)| c == id);
         body.spawn((
-            Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(10.)), margin: UiRect::bottom(Val::Px(6.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-            BorderColor(if calibrating { ACCENT } else { BORDER }),
-            BorderRadius::all(Val::Px(6.)),
+            Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.), padding: UiRect::all(Val::Px(10.)), margin: UiRect::bottom(Val::Px(6.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+            BorderColor::all(if calibrating { ACCENT } else { BORDER }),
             BackgroundColor(RAISED),
         ))
         .with_children(|card| {
@@ -601,7 +596,7 @@ fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene
                 ..default()
             },
             BackgroundColor(SURFACE),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             ScrollPosition::default(),
             Scroll::Right,
             BuilderPanel,
@@ -768,8 +763,7 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
                 Button,
                 BuildAction::Terminal(t.clone()),
                 Tint { idle: if armed { ACCENT_BG } else { Color::NONE }, hover: HOVER_BG },
-                Node { column_gap: Val::Px(8.), align_items: AlignItems::Center, padding: UiRect::axes(Val::Px(6.), Val::Px(4.)), flex_shrink: 0., ..default() },
-                BorderRadius::all(Val::Px(4.)),
+                Node { border_radius: BorderRadius::all(Val::Px(4.)), column_gap: Val::Px(8.), align_items: AlignItems::Center, padding: UiRect::axes(Val::Px(6.), Val::Px(4.)), flex_shrink: 0., ..default() },
                 BackgroundColor(if armed { ACCENT_BG } else { Color::NONE }),
             ))
             .with_children(|row| {
@@ -904,9 +898,8 @@ pub(crate) fn equations(col: &mut ChildSpawnerCommands, k: &Kit, lines: &[&str])
     }
     col.spawn(k.section("Equations"));
     col.spawn((
-        Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(9.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-        BorderColor(BORDER),
-        BorderRadius::all(Val::Px(5.)),
+        Node { border_radius: BorderRadius::all(Val::Px(5.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(9.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+        BorderColor::all(BORDER),
         BackgroundColor(BAR),
     ))
     .with_children(|box_| {
@@ -959,9 +952,8 @@ fn snap_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str
     for p in ports {
         let expanded = b.snap_expanded.contains(&p.port);
         col.spawn((
-            Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(5.), padding: UiRect::all(Val::Px(8.)), margin: UiRect::top(Val::Px(6.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-            BorderColor(BORDER),
-            BorderRadius::all(Val::Px(6.)),
+            Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(5.), padding: UiRect::all(Val::Px(8.)), margin: UiRect::top(Val::Px(6.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+            BorderColor::all(BORDER),
             BackgroundColor(RAISED),
         ))
         .with_children(|card| {
@@ -1132,12 +1124,12 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
                 ..default()
             },
             BackgroundColor(BAR),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             BuilderPanel,
         ))
         .with_children(|dock| {
             if let Some(r) = &b.study.result {
-                dock.spawn((Node { position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(BAR), BorderRadius::top(Val::Px(5.))))
+                dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(BAR)))
                     .with_children(|legend| {
                         legend.spawn(k.text(format!("Study {}", r.name), 11., TEXT, 2));
                         for (label, color) in b.graphs.charts.iter().find(|c| !c.legend.is_empty()).map(|c| c.legend.clone()).unwrap_or_default() {
@@ -1167,7 +1159,7 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
                     if let Some(image) = b.graphs.images.get(i) {
                         card.spawn((
                             Node { flex_grow: 1., border: UiRect::all(Val::Px(1.)), ..default() },
-                            BorderColor(BORDER),
+                            BorderColor::all(BORDER),
                             ImageNode::new(image.clone()),
                         ))
                         .with_children(|plot| {
@@ -1355,7 +1347,7 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     if let Some((name, done, total)) = b.study_progress() {
         body.spawn(k.section("Running"));
         body.spawn(k.text(format!("{name}: {done} of {total} variants"), 12.5, TEXT, 1));
-        body.spawn((Node { height: Val::Px(6.), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), BorderRadius::all(Val::Px(3.)), children![(Node { width: Val::Percent(100. * done as f32 / total.max(1) as f32), ..default() }, BackgroundColor(ACCENT), BorderRadius::all(Val::Px(3.)))]));
+        body.spawn((Node { border_radius: BorderRadius::all(Val::Px(3.)), height: Val::Px(6.), flex_shrink: 0., ..default() }, BackgroundColor(RAISED), children![(Node { border_radius: BorderRadius::all(Val::Px(3.)), width: Val::Percent(100. * done as f32 / total.max(1) as f32), ..default() }, BackgroundColor(ACCENT))]));
         body.spawn(wrap()).with_children(|r| {
             r.spawn(k.button("Cancel", BuildAction::CancelStudy, Look::Danger, true));
         });
@@ -1423,9 +1415,8 @@ fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     body.spawn(k.section(&format!("Result · {}", r.name)));
     for v in &r.variants {
         body.spawn((
-            Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.), padding: UiRect::all(Val::Px(8.)), margin: UiRect::bottom(Val::Px(6.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
-            BorderColor(BORDER),
-            BorderRadius::all(Val::Px(6.)),
+            Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(2.), padding: UiRect::all(Val::Px(8.)), margin: UiRect::bottom(Val::Px(6.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+            BorderColor::all(BORDER),
             BackgroundColor(RAISED),
         ))
         .with_children(|card| {
@@ -1475,7 +1466,7 @@ fn status_bar(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScen
                 ..default()
             },
             BackgroundColor(BAR),
-            BorderColor(BORDER),
+            BorderColor::all(BORDER),
             BuilderPanel,
         ))
         .with_children(|bar| {
@@ -1489,7 +1480,7 @@ fn status_bar(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScen
         });
 }
 
-pub(super) fn scroll_panels(mut wheel: EventReader<MouseWheel>, window: Single<&Window>, mut panels: Query<(&mut ScrollPosition, &Scroll)>) {
+pub(super) fn scroll_panels(mut wheel: MessageReader<MouseWheel>, window: Single<&Window>, mut panels: Query<(&mut ScrollPosition, &Scroll)>) {
     let delta = wheel.read().fold(0.0, |sum, e| {
         sum + match e.unit {
             MouseScrollUnit::Line => e.y * 28.0,
@@ -1506,7 +1497,7 @@ pub(super) fn scroll_panels(mut wheel: EventReader<MouseWheel>, window: Single<&
             Scroll::Right => p.x > window.width() - RIGHT_WIDTH,
         };
         if inside {
-            position.offset_y = (position.offset_y - delta).max(0.0);
+            position.y = (position.y - delta).max(0.0);
         }
     }
 }
@@ -1542,7 +1533,7 @@ fn discussion_header(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
         });
         agent_card(body,k,b,&t.id);
         if b.discussion.more {
-            body.spawn((Node{flex_direction:FlexDirection::Column,row_gap:Val::Px(4.),padding:UiRect::all(Val::Px(8.)),..default()},BackgroundColor(RAISED),BorderRadius::all(Val::Px(6.)))).with_children(|menu|{
+            body.spawn((Node{ border_radius: BorderRadius::all(Val::Px(6.)),flex_direction:FlexDirection::Column,row_gap:Val::Px(4.),padding:UiRect::all(Val::Px(8.)),..default()},BackgroundColor(RAISED))).with_children(|menu|{
                 for (label,a) in [("Rename note",A::Title),("Add selected parts",A::LinkSelection),("Inspect linked parts",A::Show("parts".into())),(if t.resolved{"Reopen note"}else{"Mark resolved"},A::Resolve),("Reset marker to part origin",A::Pin)]{menu.spawn(action(label,a,Look::Ghost));}
                 menu.spawn(action("Delete note",A::Delete,Look::Danger));
             });
@@ -1614,7 +1605,7 @@ fn discussion_composer(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
     let label=if input.is_some_and(|i|i.purpose==Purpose::CommentAuthor){"Your name"}else if input.is_some_and(|i|i.purpose==Purpose::ThreadTitle){"Note title"}else if b.discussion.editing.is_some(){"Edit message"}else if b.discussion.selected.is_none(){"Write a note"}else{"Reply"};
     body.spawn(k.text(label,12.,SUBTLE,1));
     // A persistent footer keeps the reply field in reach while messages scroll.
-    body.spawn((Button,BuildAction::Discussion(A::Reply),Tint{idle:RAISED,hover:HOVER_BG},Node{min_height:Val::Px(if special{36.}else{76.}),max_height:Val::Px(180.),overflow:Overflow::clip(),padding:UiRect::all(Val::Px(10.)),border:UiRect::all(Val::Px(1.)),..default()},BackgroundColor(RAISED),BorderColor(if focused{ACCENT}else{BORDER}),BorderRadius::all(Val::Px(7.)))).with_children(|field|{
+    body.spawn((Button,BuildAction::Discussion(A::Reply),Tint{idle:RAISED,hover:HOVER_BG},Node{ border_radius: BorderRadius::all(Val::Px(7.)),min_height:Val::Px(if special{36.}else{76.}),max_height:Val::Px(180.),overflow:Overflow::clip(),padding:UiRect::all(Val::Px(10.)),border:UiRect::all(Val::Px(1.)),..default()},BackgroundColor(RAISED),BorderColor::all(if focused{ACCENT}else{BORDER}))).with_children(|field|{
         field.spawn(k.text(if focused{format!("{shown}|")}else{"Write a reply…".into()},14.,if focused{TEXT}else{FAINT},0));
     });
     body.spawn(Node{justify_content:JustifyContent::SpaceBetween,align_items:AlignItems::Center,..default()}).with_children(|r|{
@@ -1631,7 +1622,7 @@ fn agent_card(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder,id:&str){
     use sim_agent::Status;
     let button=|label:&str,a:A|k.button(label,BuildAction::Agent(a),Look::Ghost,b.agent.state.ready);
     let run=b.agent.state.latest(id);
-    body.spawn((Node{flex_direction:FlexDirection::Column,row_gap:Val::Px(5.),padding:UiRect::all(Val::Px(9.)),flex_shrink:0.,min_width:Val::Px(0.),max_width:Val::Percent(100.),overflow:Overflow::clip(),..default()},BackgroundColor(RAISED),BorderRadius::all(Val::Px(6.)))).with_children(|card|{
+    body.spawn((Node{ border_radius: BorderRadius::all(Val::Px(6.)),flex_direction:FlexDirection::Column,row_gap:Val::Px(5.),padding:UiRect::all(Val::Px(9.)),flex_shrink:0.,min_width:Val::Px(0.),max_width:Val::Percent(100.),overflow:Overflow::clip(),..default()},BackgroundColor(RAISED))).with_children(|card|{
         card.spawn(Node{justify_content:JustifyContent::SpaceBetween,align_items:AlignItems::Center,..default()}).with_children(|row|{
             row.spawn(k.text("Codex · Astra / High",12.,TEXT,1));
             if let Some(r)=run.filter(|r|r.status.active()) {
@@ -1656,7 +1647,7 @@ fn agent_card(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder,id:&str){
                 card.spawn(k.text(format!("Source revision {} · started {}",r.input.revision,sim_system::display::relative_time(&r.created_at.to_string())),10.,FAINT,0));
                 for e in b.agent.state.events.iter().filter(|e|e.run==r.id).rev().take(3){
                     let mut message=e.message.chars().take(150).collect::<String>();if e.message.chars().count()>150{message.push('…');}
-                    let mut text=k.text(message,11.,SUBTLE,0);text.3=TextLayout::new_with_linebreak(bevy::text::LineBreak::AnyCharacter);
+                    let mut text=k.text(message,11.,SUBTLE,0);text.3=TextLayout::linebreak(bevy::text::LineBreak::AnyCharacter);
                     card.spawn((text,Node{min_width:Val::Px(0.),max_width:Val::Percent(100.),..default()}));
                 }
             }
@@ -1676,7 +1667,7 @@ fn source_preview(col:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
             col.spawn(k.text("Read-only · current file",10.5,FAINT,0));
             for line in &source.lines{
                 col.spawn((Node{width:Val::Percent(100.),min_width:Val::Px(0.),padding:UiRect::axes(Val::Px(5.),Val::Px(3.)),flex_shrink:0.,overflow:Overflow::clip(),..default()},BackgroundColor(if line.focused{RAISED}else{Color::NONE}))).with_children(|row|{
-                    row.spawn((Text::new(format!("{:>3}  {}",line.number,line.text)),TextFont{font:k.f.mono.clone(),font_size:11.,..default()},TextColor(if line.focused{ACCENT}else{SUBTLE}),TextLayout::new_with_linebreak(bevy::text::LineBreak::WordOrCharacter),Node{width:Val::Percent(100.),min_width:Val::Px(0.),..default()}));
+                    row.spawn((Text::new(format!("{:>3}  {}",line.number,line.text)),TextFont{font:k.f.mono.clone().into(),font_size:FontSize::Px(11.),..default()},TextColor(if line.focused{ACCENT}else{SUBTLE}),TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter),Node{width:Val::Percent(100.),min_width:Val::Px(0.),..default()}));
                 });
             }
         }

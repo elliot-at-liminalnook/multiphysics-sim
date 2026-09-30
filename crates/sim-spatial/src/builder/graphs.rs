@@ -154,7 +154,7 @@ pub(super) fn update(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: R
         let color = COLORS[slot % COLORS.len()];
         ensure_image(&mut builder, slot, &mut images);
         let (pixels, range, window) = rasterize(&[(&history, color)]);
-        if let Some(image) = images.get_mut(&builder.graphs.images[slot]) {
+        if let Some(mut image) = images.get_mut(&builder.graphs.images[slot]) {
             image.data = Some(pixels);
         }
         charts.push(Chart { id: id.clone(), title: system_builder::observable_key(&scene.description, id), unit, latest: history.last().map(|p| p[1]), range, window, color, pinned: *pinned, legend: Vec::new(), x_label: "s".into() });
@@ -182,7 +182,7 @@ fn study_charts(builder: &mut Builder, result: &sim_runtime::system_study::Study
         let points: Vec<[f64; 2]> = result.variants.iter().filter_map(|v| Some([v.value?, v.metrics.iter().find(|m| m.0 == first)?.1])).filter(|p| p[1].is_finite()).collect();
         ensure_image(builder, slot, images);
         let (pixels, range, window) = rasterize(&[(&points, COLORS[0])]);
-        if let Some(image) = images.get_mut(&builder.graphs.images[slot]) {
+        if let Some(mut image) = images.get_mut(&builder.graphs.images[slot]) {
             image.data = Some(pixels);
         }
         charts.push(Chart { id: format!("{parameter}→{first}"), title: format!("{first} vs {parameter}"), unit: String::new(), latest: points.last().map(|p| p[1]), range, window, color: COLORS[0], pinned: false, legend: Vec::new(), x_label: parameter.clone() });
@@ -199,7 +199,7 @@ fn study_charts(builder: &mut Builder, result: &sim_runtime::system_study::Study
         ensure_image(builder, slot, images);
         let refs: Vec<(&[[f64; 2]], [u8; 3])> = traces.iter().map(|(p, c)| (p.as_slice(), *c)).collect();
         let (pixels, range, window) = rasterize(&refs);
-        if let Some(image) = images.get_mut(&builder.graphs.images[slot]) {
+        if let Some(mut image) = images.get_mut(&builder.graphs.images[slot]) {
             image.data = Some(pixels);
         }
         charts.push(Chart { id: label.clone(), title: label, unit, latest: None, range, window, color: COLORS[0], pinned: false, legend: legend.clone(), x_label: "s".into() });

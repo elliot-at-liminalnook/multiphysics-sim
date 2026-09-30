@@ -74,7 +74,7 @@ pub fn run() {
             chart_clock: 0.0,
             last_error: None,
         })
-        .insert_resource(AmbientLight {
+        .insert_resource(GlobalAmbientLight {
             color: Color::srgb(0.85, 0.88, 0.95),
             brightness: 650.0,
             affects_lightmapped_meshes: true,
@@ -83,7 +83,7 @@ pub fn run() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "The surprise suite".to_owned(),
-                resolution: (1380.0_f32, 840.0_f32).into(),
+                resolution: (1380_u32, 840_u32).into(),
                 ..default()
             }),
             ..default()
@@ -110,7 +110,7 @@ fn setup(
         OrbitCamera { focus, radius, yaw: offset.x.atan2(offset.z), pitch: (offset.y / radius).asin() },
     ));
     commands.spawn((
-        DirectionalLight { illuminance: 9_000.0, shadows_enabled: true, ..default() },
+        DirectionalLight { illuminance: 9_000.0, shadow_maps_enabled: true, ..default() },
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.9, -0.5, 0.0)),
     ));
     commands.insert_resource(Pool {
@@ -123,7 +123,7 @@ fn setup(
     });
     commands.spawn((
         Text::new("Starting the surprise suite..."),
-        TextFont { font_size: 15.0, ..default() },
+        TextFont { font_size: FontSize::Px(15.0), ..default() },
         TextColor(Color::srgb(0.12, 0.15, 0.19)),
         Node { position_type: PositionType::Absolute, top: Val::Px(14.0), left: Val::Px(18.0), ..default() },
         Status,
@@ -316,7 +316,7 @@ fn render(
             mesh.0 = pool.meshes[kind].clone();
         }
         *transform = t;
-        if let Some(m) = materials.get_mut(material) {
+        if let Some(mut m) = materials.get_mut(material) {
             m.base_color = color(c);
         }
     }
@@ -376,8 +376,8 @@ fn update_status(gallery: Res<Gallery>, mut text: Single<&mut Text, With<Status>
 
 fn orbit_camera(
     buttons: Res<ButtonInput<MouseButton>>,
-    mut mouse_motion: EventReader<MouseMotion>,
-    mut mouse_wheel: EventReader<MouseWheel>,
+    mut mouse_motion: MessageReader<MouseMotion>,
+    mut mouse_wheel: MessageReader<MouseWheel>,
     camera: Single<(&mut Transform, &mut OrbitCamera)>,
 ) {
     let drag = mouse_motion.read().fold(Vec2::ZERO, |sum, event| sum + event.delta);

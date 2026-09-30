@@ -174,8 +174,9 @@ pub(crate) struct ViewCaption;
 pub(crate) fn caption_fonts(fonts: Option<Res<crate::builder::ui::UiFonts>>, mut captions: Query<&mut TextFont, With<ViewCaption>>) {
     let Some(fonts) = fonts else { return };
     for mut f in &mut captions {
-        if f.font != fonts.semibold {
-            f.font = fonts.semibold.clone();
+        let semibold = FontSource::from(fonts.semibold.clone());
+        if f.font != semibold {
+            f.font = semibold;
         }
     }
 }
@@ -264,12 +265,12 @@ pub(crate) fn inset(
 #[derive(Resource, Default)]
 pub(crate) struct PartHover(pub Option<String>);
 
-pub(crate) fn part_over(over: Trigger<Pointer<Over>>, parts: Query<&Part>, scene: Res<SpatialScene>, mut hover: ResMut<PartHover>) {
-    if let Some(p) = parts.get(over.target()).ok().and_then(|p| scene.spatial.parts.get(p.index)) {
+pub(crate) fn part_over(over: On<Pointer<Over>>, parts: Query<&Part>, scene: Res<SpatialScene>, mut hover: ResMut<PartHover>) {
+    if let Some(p) = parts.get(over.entity).ok().and_then(|p| scene.spatial.parts.get(p.index)) {
         hover.0 = Some(p.component.clone());
     }
 }
-pub(crate) fn part_out(_: Trigger<Pointer<Out>>, mut hover: ResMut<PartHover>) {
+pub(crate) fn part_out(_: On<Pointer<Out>>, mut hover: ResMut<PartHover>) {
     hover.0 = None;
 }
 
@@ -308,7 +309,7 @@ pub(crate) fn draw_ghost(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut label
         }
         let t = crate::animation::part_transform_at(&scene, i, c.frame.as_ref());
         match p.shape {
-            SpatialShape::Box { size } => gizmos.cuboid(t.with_scale(Vec3::from_array(size)), color),
+            SpatialShape::Box { size } => gizmos.cube(t.with_scale(Vec3::from_array(size)), color),
             SpatialShape::Cylinder { radius, length } => {
                 let axis = t.rotation * Vec3::Y;
                 for side in [-0.5, 0.5] {
@@ -424,4 +425,26 @@ mod tests {
         fresh.glide_to(to, 1.);
         assert_eq!(fresh.pose(), Pose { yaw: -3.0, ..to });
     }
+}
+
+/// Bevy 0.16's layout clamped `ScrollPosition` to the scrollable range (and
+/// zeroed axes that do not scroll) and wrote the result back; since 0.17 it
+/// only clamps a computed copy. Handlers here read and accumulate the stored
+/// value, so this restores the 0.16 write-back after layout.
+pub(crate) fn clamp_scroll_positions(mut nodes: Query<(&mut ScrollPosition, &Node, &ComputedNode)>) {
+    for (mut position, node, computed) in &mut nodes {
+        let scrolls = |axis: OverflowAxis| if axis == OverflowAxis::Scroll { 1.0 } else { 0.0 };
+        let max = (computed.content_size() - computed.size() + computed.scrollbar_size).max(Vec2::ZERO) * computed.inverse_scale_factor();
+        let clamped = (position.0 * Vec2::new(scrolls(node.overflow.x), scrolls(node.overflow.y))).clamp(Vec2::ZERO, max);
+        if clamped != position.0 {
+            position.0 = clamped;
+        }
+    }
+}
+
+/// The cursor as a fraction of the node, (0, 0) top-left to (1, 1)
+/// bottom-right: Bevy 0.16's `RelativeCursorPosition::normalized`. Since 0.17
+/// that field is centred on the node (corners at ±0.5).
+pub(crate) fn cursor_fraction(cursor: &bevy::ui::RelativeCursorPosition) -> Option<Vec2> {
+    cursor.normalized.map(|p| p + Vec2::splat(0.5))
 }

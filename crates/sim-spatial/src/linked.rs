@@ -75,9 +75,9 @@ pub(super) fn spawn_nets(
             .observe(pick_net);
     }
 }
-fn pick_net(click: Trigger<Pointer<Click>>, nets: Query<&NetHub>, mut scene: ResMut<SpatialScene>) {
+fn pick_net(click: On<Pointer<Click>>, nets: Query<&NetHub>, mut scene: ResMut<SpatialScene>) {
     if click.button == bevy::picking::pointer::PointerButton::Primary {
-        if let Ok(net) = nets.get(click.target()) {
+        if let Ok(net) = nets.get(click.entity) {
             if let Err(e) = scene.set_selection(SelectionTarget::net(net.0.clone())) {
                 error!("{e}");
             }
@@ -104,7 +104,7 @@ pub(super) fn update_nets(
         } else {
             *visibility = Visibility::Hidden;
         }
-        if let Some(material) = materials.get_mut(&material.0) {
+        if let Some(mut material) = materials.get_mut(&material.0) {
             material.base_color = if scene.details.nets.contains(&net.0) {
                 Color::srgb(1.0, 0.76, 0.32)
             } else {

@@ -62,10 +62,9 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
             Button,
             host.open(&t.id),
             Tint { idle: if selected { ACCENT_BG } else { RAISED }, hover: HOVER_BG },
-            Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(7.), padding: UiRect::all(Val::Px(12.)), flex_shrink: 0., border: UiRect::left(Val::Px(if selected { 2. } else { 0. })), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(7.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(7.), padding: UiRect::all(Val::Px(12.)), flex_shrink: 0., border: UiRect::left(Val::Px(if selected { 2. } else { 0. })), ..default() },
             BackgroundColor(if selected { ACCENT_BG } else { RAISED }),
-            BorderColor(crate::ACCENT),
-            BorderRadius::all(Val::Px(7.)),
+            BorderColor::all(crate::ACCENT),
         ))
         .with_children(|card| {
             card.spawn(k.text(format!("{count}  {}{}", t.title, if t.resolved { "  · resolved" } else { "" }), 14., TEXT, 2));
@@ -126,10 +125,9 @@ pub(crate) fn composer<Act: Component + Clone>(body: &mut ChildSpawnerCommands, 
         Button,
         c.focus,
         Tint { idle: RAISED, hover: HOVER_BG },
-        Node { min_height: Val::Px(64.), max_height: Val::Px(180.), overflow: Overflow::clip(), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+        Node { border_radius: BorderRadius::all(Val::Px(7.)), min_height: Val::Px(64.), max_height: Val::Px(180.), overflow: Overflow::clip(), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
         BackgroundColor(RAISED),
-        BorderColor(if focused { crate::ACCENT } else { BORDER }),
-        BorderRadius::all(Val::Px(7.)),
+        BorderColor::all(if focused { crate::ACCENT } else { BORDER }),
     ))
     .with_children(|field| {
         field.spawn(k.text(if focused { format!("{shown}|") } else { c.placeholder.to_string() }, 14., if focused { TEXT } else { FAINT }, 0));

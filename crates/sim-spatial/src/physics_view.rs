@@ -468,7 +468,7 @@ pub(crate) fn draw(scene: Res<SpatialScene>, time: Res<Time>, mut gizmos: Gizmos
                 let alpha = 0.08 + 0.5 * (k + 1) as f32 / n.max(1) as f32;
                 let c = Color::srgba(0.85, 0.90, 1.0, alpha);
                 match p.shape {
-                    SpatialShape::Box { size } => gizmos.cuboid(t.with_scale(Vec3::from_array(size)), c),
+                    SpatialShape::Box { size } => gizmos.cube(t.with_scale(Vec3::from_array(size)), c),
                     SpatialShape::Cylinder { radius, length } => {
                         let axis = t.rotation * Vec3::Y;
                         let iso = Isometry3d::new(t.translation + axis * length * 0.5, Quat::from_rotation_arc(Vec3::Z, axis));
@@ -586,12 +586,11 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
         placed.push(r);
         commands.spawn((
             PhysicsLabel,
-            Node { position_type: PositionType::Absolute, left: Val::Px(origin.x + r.min.x), top: Val::Px(origin.y + r.min.y), padding: UiRect::axes(Val::Px(5.), Val::Px(1.)), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(3.)), position_type: PositionType::Absolute, left: Val::Px(origin.x + r.min.x), top: Val::Px(origin.y + r.min.y), padding: UiRect::axes(Val::Px(5.), Val::Px(1.)), ..default() },
             BackgroundColor(Color::srgba(0.04, 0.06, 0.08, 0.72)),
-            BorderRadius::all(Val::Px(3.)),
             GlobalZIndex(24),
             Pickable::IGNORE,
-            children![(Text::new(text), TextFont { font: font.clone(), font_size: 11., ..default() }, TextColor(*color))],
+            children![(Text::new(text), TextFont { font: font.clone().into(), font_size: FontSize::Px(11.), ..default() }, TextColor(*color))],
         ));
     }
 }
@@ -629,11 +628,10 @@ pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, came
     let font = fonts.map(|f| f.semibold.clone()).unwrap_or_default();
     let chip = |on: bool, label: &str| {
         (
-            Node { padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), border: UiRect::all(Val::Px(1.)), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(9.)), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), border: UiRect::all(Val::Px(1.)), ..default() },
             BackgroundColor(if on { Color::srgba(0.12, 0.30, 0.28, 0.92) } else { Color::srgba(0.06, 0.08, 0.10, 0.85) }),
-            BorderColor(if on { ACCENT } else { Color::srgb(0.25, 0.29, 0.34) }),
-            BorderRadius::all(Val::Px(9.)),
-            children![(Text::new(label.to_string()), TextFont { font: font.clone(), font_size: 11., ..default() }, TextColor(if on { ACCENT } else { MUTED }), Pickable::IGNORE)],
+            BorderColor::all(if on { ACCENT } else { Color::srgb(0.25, 0.29, 0.34) }),
+            children![(Text::new(label.to_string()), TextFont { font: font.clone().into(), font_size: FontSize::Px(11.), ..default() }, TextColor(if on { ACCENT } else { MUTED }), Pickable::IGNORE)],
         )
     };
     for slot in &slots {

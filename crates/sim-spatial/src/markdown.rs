@@ -60,7 +60,7 @@ pub fn render<A: Component + Clone>(
                     _ => 14.,
                 };
                 body.spawn((
-                    Node {
+                    Node { border_radius: BorderRadius::all(Val::Px(5.)),
                         width: Val::Percent(100.),
                         min_width: Val::Px(0.),
                         padding: if code || quote {
@@ -79,7 +79,6 @@ pub fn render<A: Component + Clone>(
                     } else {
                         Color::NONE
                     }),
-                    BorderRadius::all(Val::Px(5.)),
                 ))
                 .with_children(|line| {
                     if let Kind::Code(language) = &block.kind {
@@ -87,8 +86,8 @@ pub fn render<A: Component + Clone>(
                             line.spawn((
                                 Text::new(language),
                                 TextFont {
-                                    font: theme.regular.clone(),
-                                    font_size: 10.,
+                                    font: theme.regular.clone().into(),
+                                    font_size: FontSize::Px(10.),
                                     ..default()
                                 },
                                 TextColor(theme.muted),
@@ -98,12 +97,12 @@ pub fn render<A: Component + Clone>(
                     line.spawn((
                         Text::new(""),
                         TextFont {
-                            font: theme.regular.clone(),
-                            font_size: size,
+                            font: theme.regular.clone().into(),
+                            font_size: FontSize::Px(size),
                             ..default()
                         },
                         TextColor(theme.text),
-                        TextLayout::new_with_linebreak(bevy::text::LineBreak::WordOrCharacter),
+                        TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter),
                         Node {
                             width: Val::Percent(100.),
                             min_width: Val::Px(0.),
@@ -131,12 +130,12 @@ pub fn render<A: Component + Clone>(
                             text.spawn((
                                 TextSpan::new(&span.text),
                                 TextFont {
-                                    font: font.clone(),
-                                    font_size: if span.style.code && !code {
+                                    font: font.clone().into(),
+                                    font_size: FontSize::Px(if span.style.code && !code {
                                         size - 1.
                                     } else {
                                         size
-                                    },
+                                    }),
                                     ..default()
                                 },
                                 TextColor(color),
@@ -161,25 +160,24 @@ pub fn render<A: Component + Clone>(
                                 .spawn((
                                     Button,
                                     action,
-                                    Node {
+                                    Node { border_radius: BorderRadius::all(Val::Px(5.)),
                                         max_width: Val::Percent(100.),
                                         min_width: Val::Px(0.),
                                         padding: UiRect::axes(Val::Px(8.), Val::Px(5.)),
                                         ..default()
                                     },
                                     BackgroundColor(theme.surface),
-                                    BorderRadius::all(Val::Px(5.)),
                                 ))
                                 .with_children(|button| {
                                     button.spawn((
                                         Text::new(format!("↗ {}", link.label)),
                                         TextFont {
-                                            font: theme.regular.clone(),
-                                            font_size: 12.,
+                                            font: theme.regular.clone().into(),
+                                            font_size: FontSize::Px(12.),
                                             ..default()
                                         },
                                         TextColor(theme.accent),
-                                        TextLayout::new_with_linebreak(
+                                        TextLayout::linebreak(
                                             bevy::text::LineBreak::WordOrCharacter,
                                         ),
                                     ));
@@ -192,11 +190,11 @@ pub fn render<A: Component + Clone>(
 }
 
 /// Rich text for one run of spans (paragraphs and table cells).
-fn spans(parent: &mut ChildSpawnerCommands, theme: &Theme, spans: &[Span], size: f32, strong: bool, justify: JustifyText) {
+fn spans(parent: &mut ChildSpawnerCommands, theme: &Theme, spans: &[Span], size: f32, strong: bool, justify: Justify) {
     parent
         .spawn((
             Text::new(""),
-            TextFont { font: theme.regular.clone(), font_size: size, ..default() },
+            TextFont { font: theme.regular.clone().into(), font_size: FontSize::Px(size), ..default() },
             TextColor(theme.text),
             TextLayout { justify, linebreak: bevy::text::LineBreak::WordBoundary },
             Node { max_width: Val::Percent(100.), min_width: Val::Px(0.), ..default() },
@@ -219,7 +217,7 @@ fn spans(parent: &mut ChildSpawnerCommands, theme: &Theme, spans: &[Span], size:
                 } else {
                     theme.text
                 };
-                text.spawn((TextSpan::new(&span.text), TextFont { font: font.clone(), font_size: if span.style.code { size - 1. } else { size }, ..default() }, TextColor(color)));
+                text.spawn((TextSpan::new(&span.text), TextFont { font: font.clone().into(), font_size: FontSize::Px(if span.style.code { size - 1. } else { size }), ..default() }, TextColor(color)));
             }
         });
 }
@@ -232,7 +230,7 @@ pub fn table(parent: &mut ChildSpawnerCommands, theme: &Theme, t: &Table) {
     let rule = theme.muted.with_alpha(0.25);
     parent
         .spawn((
-            Node {
+            Node { border_radius: BorderRadius::all(Val::Px(5.)),
                 display: Display::Grid,
                 width: Val::Percent(100.),
                 min_width: Val::Px(0.),
@@ -242,8 +240,7 @@ pub fn table(parent: &mut ChildSpawnerCommands, theme: &Theme, t: &Table) {
                 flex_shrink: 0.,
                 ..default()
             },
-            BorderColor(rule),
-            BorderRadius::all(Val::Px(5.)),
+            BorderColor::all(rule),
         ))
         .with_children(|grid| {
             let rows = std::iter::once((true, &t.head)).chain(t.rows.iter().map(|r| (false, r)));
@@ -252,9 +249,9 @@ pub fn table(parent: &mut ChildSpawnerCommands, theme: &Theme, t: &Table) {
                 for c in 0..columns {
                     let align = t.align.get(c).copied().unwrap_or_default();
                     let (justify, content) = match align {
-                        Align::Right => (JustifyText::Right, JustifyContent::FlexEnd),
-                        Align::Center => (JustifyText::Center, JustifyContent::Center),
-                        _ => (JustifyText::Left, JustifyContent::FlexStart),
+                        Align::Right => (Justify::Right, JustifyContent::FlexEnd),
+                        Align::Center => (Justify::Center, JustifyContent::Center),
+                        _ => (Justify::Left, JustifyContent::FlexStart),
                     };
                     let last = !head && i == count;
                     grid.spawn((
@@ -266,7 +263,7 @@ pub fn table(parent: &mut ChildSpawnerCommands, theme: &Theme, t: &Table) {
                             min_width: Val::Px(0.),
                             ..default()
                         },
-                        BorderColor(rule),
+                        BorderColor::all(rule),
                         BackgroundColor(if head { theme.surface } else { Color::NONE }),
                     ))
                     .with_children(|cell| {

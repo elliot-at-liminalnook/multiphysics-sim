@@ -16,8 +16,8 @@ use bevy::{
     input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},
     picking::mesh_picking::{MeshPickingCamera, MeshPickingSettings},
     prelude::*,
+    camera::Viewport,
     render::{
-        camera::Viewport,
         mesh::{Indices, PrimitiveTopology},
     },
     winit::{UpdateMode, WinitSettings},
@@ -975,7 +975,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
         .insert_resource(crate::rest::Rest(api, None))
         .insert_resource(view)
         .insert_resource(ClearColor(Color::srgb(0.10, 0.125, 0.155)))
-        .insert_resource(AmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
+        .insert_resource(GlobalAmbientLight { color: Color::srgb(0.85, 0.90, 1.0), brightness: 420.0, affects_lightmapped_meshes: true })
         .insert_resource(MeshPickingSettings { require_markers: true, ..default() })
         .insert_resource(WinitSettings {
             focused_mode: UpdateMode::reactive(std::time::Duration::from_secs_f64(1.0 / 60.0)),
@@ -984,7 +984,7 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Systems — Robot (file read-only)".into(),
-                resolution: (1500.0_f32, 940.0_f32).into(),
+                resolution: (1500_u32, 940_u32).into(),
                 resize_constraints: bevy::window::WindowResizeConstraints { min_width: 980.0, min_height: 720.0, ..default() },
                 ..default()
             }),
@@ -992,6 +992,9 @@ pub fn run_robot(view: RobotView, api: sim_api::Server) {
         }))
         .insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
         .add_systems(Startup, ((crate::builder::ui::load_fonts, setup).chain(), crate::rest::wake_on_request))
+        .add_systems(PostUpdate, crate::view::clamp_scroll_positions.after(bevy::ui::UiSystems::Layout))
+        .init_resource::<crate::rest::Occlusion>()
+        .add_systems(PreUpdate, crate::rest::track_occlusion)
         .add_systems(Update, ((watch, receive, poll_rest, motion_keys, graph_key, overlay_keys, speed_keys, buttons, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain(), (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, graph_dock, draw).chain()).chain())
         .run();
 }
@@ -1013,7 +1016,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     ));
     // UI over the whole window; the 3D camera only draws the middle viewport.
     commands.spawn((Camera2d, Camera { order: 3, clear_color: ClearColorConfig::None, ..default() }, IsDefaultUiCamera));
-    commands.spawn((DirectionalLight { illuminance: 9000.0, shadows_enabled: false, ..default() }, Transform::from_xyz(1.0, 2.0, 1.5).looking_at(Vec3::ZERO, Vec3::Y)));
+    commands.spawn((DirectionalLight { illuminance: 9000.0, shadow_maps_enabled: false, ..default() }, Transform::from_xyz(1.0, 2.0, 1.5).looking_at(Vec3::ZERO, Vec3::Y)));
     // Z-up model frame shown in Bevy's Y-up frame (as sim-app does).
     commands.spawn((Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)), Visibility::default(), RobotRoot));
     let file = view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
@@ -1072,7 +1075,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     commands.spawn((
         Node { position_type: PositionType::Absolute, left: Val::Px(LEFT), right: Val::Px(RIGHT), bottom: Val::Px(0.0), height: Val::Px(DOCK), padding: UiRect::all(Val::Px(10.0)), column_gap: Val::Px(10.0), display: Display::None, border: UiRect::top(Val::Px(1.0)), ..default() },
         BackgroundColor(PANEL),
-        BorderColor(Color::srgb(0.2, 0.24, 0.29)),
+        BorderColor::all(Color::srgb(0.2, 0.24, 0.29)),
         GraphDock,
     ));
 }
@@ -1082,8 +1085,7 @@ fn tab(fonts: &UiFonts, section: Section) -> impl Bundle {
         Button,
         RobotAction::ShowSection { section },
         TabButton(section),
-        Node { padding: UiRect::axes(Val::Px(10.0), Val::Px(4.0)), ..default() },
-        BorderRadius::all(Val::Px(4.0)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(10.0), Val::Px(4.0)), ..default() },
         BackgroundColor(Color::NONE),
         children![label(fonts, section.label(), 14.0, INK)],
     )
@@ -1094,8 +1096,7 @@ fn run_button(fonts: &UiFonts, action: RunAction) -> impl Bundle {
         Button,
         RobotAction::Run { action },
         RunButton(action),
-        Node { padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), ..default() },
-        BorderRadius::all(Val::Px(4.0)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), ..default() },
         BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
         children![label(fonts, action.label(), 13.0, INK)],
     )
@@ -1114,8 +1115,7 @@ fn speed_button(fonts: &UiFonts, speed: SpeedRequest) -> impl Bundle {
         Button,
         RobotAction::Speed { speed },
         SpeedButton,
-        Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(3.0)), ..default() },
-        BorderRadius::all(Val::Px(4.0)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(3.0)), ..default() },
         BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
         children![(label(fonts, name, 13.0, INK), SpeedLabel(matches!(speed, SpeedRequest::Set { .. })))],
     )
@@ -1128,8 +1128,7 @@ fn reload_button(fonts: &UiFonts, shown: bool) -> impl Bundle {
         Button,
         RobotAction::Reload { trigger: ReloadTrigger::Manual },
         ReloadButton,
-        Node { padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::right(Val::Px(8.0)), display: if shown { Display::Flex } else { Display::None }, ..default() },
-        BorderRadius::all(Val::Px(4.0)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::right(Val::Px(8.0)), display: if shown { Display::Flex } else { Display::None }, ..default() },
         BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
         children![label(fonts, "Reload file", 13.0, INK)],
     )
@@ -1143,8 +1142,7 @@ fn overlay_button(fonts: &UiFonts, i: usize) -> impl Bundle {
         Button,
         RobotAction::Overlay { contacts: None, joints: None, deflections: None, stress: None },
         OverlayButton(kind),
-        Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() },
-        BorderRadius::all(Val::Px(4.0)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() },
         BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
         children![(label(fonts, name, 12.0, INK), OverlayLabel(kind))],
     )
@@ -1155,15 +1153,14 @@ fn graphs_button(fonts: &UiFonts) -> impl Bundle {
     (
         Button,
         RobotAction::ToggleGraphs,
-        Node { padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::left(Val::Px(8.0)), ..default() },
-        BorderRadius::all(Val::Px(4.0)),
+        Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(12.0), Val::Px(3.0)), margin: UiRect::left(Val::Px(8.0)), ..default() },
         BackgroundColor(Color::srgb(0.16, 0.20, 0.25)),
         children![label(fonts, "Graphs (G)", 13.0, INK)],
     )
 }
 
 fn label(fonts: &UiFonts, value: &str, size: f32, color: Color) -> (Text, TextFont, TextColor, TextLayout) {
-    (Text::new(value), TextFont { font: fonts.regular.clone(), font_size: size, ..default() }, TextColor(color), TextLayout::new_with_linebreak(bevy::text::LineBreak::WordOrCharacter))
+    (Text::new(value), TextFont { font: fonts.regular.clone().into(), font_size: FontSize::Px(size), ..default() }, TextColor(color), TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter))
 }
 
 /// UI thread, FILE mode: stats the opened file every `robot_source::POLL`;
@@ -1192,7 +1189,7 @@ fn receive(
     root: Single<Entity, With<RobotRoot>>,
     list: Single<Entity, With<ListRoot>>,
     mut orbit: Single<&mut RobotOrbit>,
-    mut redraw: EventWriter<bevy::window::RequestRedraw>,
+    mut redraw: MessageWriter<bevy::window::RequestRedraw>,
     fonts: Res<UiFonts>,
 ) {
     let started = match view.status {
@@ -1301,8 +1298,7 @@ fn receive(
                     Button,
                     RobotAction::SelectLink { index: i, name: l.name.clone() },
                     LinkRow(i),
-                    Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)), flex_shrink: 0.0, ..default() },
-                    BorderRadius::all(Val::Px(4.0)),
+                    Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)), flex_shrink: 0.0, ..default() },
                     BackgroundColor(Color::NONE),
                     children![label(&fonts, &name, 13.0, INK)],
                 ))
@@ -1348,11 +1344,11 @@ fn receive(
     view.panels_ready = true;
 }
 
-fn pick_link(click: Trigger<Pointer<Click>>, links: Query<&LinkMesh>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
+fn pick_link(click: On<Pointer<Click>>, links: Query<&LinkMesh>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
     if click.button != bevy::picking::pointer::PointerButton::Primary {
         return;
     }
-    if let Ok(link) = links.get(click.target()) {
+    if let Ok(link) = links.get(click.entity) {
         let name = view.link_name(link.0).unwrap_or_default().to_string();
         let _ = dispatch(&mut view, &mut orbit, RobotAction::SelectLink { index: link.0, name });
     }
@@ -1366,19 +1362,15 @@ fn buttons(clicks: Query<(&Interaction, &RobotAction), Changed<Interaction>>, mu
     }
 }
 
-fn poll_rest(mut commands: Commands, mut redraw: EventWriter<bevy::window::RequestRedraw>, mut rest: ResMut<crate::rest::Rest>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>) {
+fn poll_rest(mut commands: Commands, mut redraw: MessageWriter<bevy::window::RequestRedraw>, mut rest: ResMut<crate::rest::Rest>, mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, occlusion: Res<crate::rest::Occlusion>) {
     let server = &mut rest.0;
     let mut shots = Vec::new();
     server.poll(|command, _, _| {
         if command.command == "screenshot" {
-            let path = command.args.get("path").and_then(|p| p.as_str()).map(PathBuf::from);
-            return sim_api::Outcome::Done(match path.filter(|p| p.extension().is_some_and(|e| e == "png")) {
-                Some(p) => {
-                    shots.push(p.clone());
-                    Ok(json!({"path": p, "note": "saved once the next frame renders"}))
-                }
-                None => Err("screenshot needs {\"path\": \"…/file.png\"}".into()),
-            });
+            return sim_api::Outcome::Done(crate::rest::screenshot_path(&command.args, occlusion.0).map(|p| {
+                shots.push(p.clone());
+                json!({"path": p, "note": "saved once the next frame renders"})
+            }));
         }
         sim_api::Outcome::Done(execute(&mut view, &mut orbit, command))
     });
@@ -1397,7 +1389,7 @@ fn poll_rest(mut commands: Commands, mut redraw: EventWriter<bevy::window::Reque
 /// Takes the run thread's latest frame (stale generations are discarded in
 /// `RunController::poll`) and poses the link meshes from it; with no frame of
 /// the current generation the static assembly pose is shown.
-fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut Transform)>, mut redraw: EventWriter<bevy::window::RequestRedraw>) {
+fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut Transform)>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
     let Some(run) = view.run.as_mut() else { return };
     let changed = run.poll();
     let active = run.active();
@@ -1429,8 +1421,8 @@ fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut T
 fn orbit(
     buttons: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
-    mut motion: EventReader<MouseMotion>,
-    mut wheel: EventReader<MouseWheel>,
+    mut motion: MessageReader<MouseMotion>,
+    mut wheel: MessageReader<MouseWheel>,
     window: Single<&Window>,
     camera: Single<(&mut Transform, &mut RobotOrbit)>,
     view: Res<RobotView>,
@@ -1535,7 +1527,7 @@ fn highlight(
 
 /// Wheel over the inspector, or a requested offset (reset on selection and
 /// section changes); reports the laid-out offset and its maximum back to REST.
-fn scroll(mut view: ResMut<RobotView>, mut wheel: EventReader<MouseWheel>, window: Single<&Window>, panel: Single<(&mut ScrollPosition, &ComputedNode), With<InspectorScroll>>) {
+fn scroll(mut view: ResMut<RobotView>, mut wheel: MessageReader<MouseWheel>, window: Single<&Window>, panel: Single<(&mut ScrollPosition, &ComputedNode), With<InspectorScroll>>) {
     let (mut position, node) = panel.into_inner();
     let delta = wheel.read().fold(0.0, |sum, e| sum + match e.unit {
         MouseScrollUnit::Line => e.y * 24.0,
@@ -1543,13 +1535,13 @@ fn scroll(mut view: ResMut<RobotView>, mut wheel: EventReader<MouseWheel>, windo
     });
     let max = ((node.content_size().y - node.size().y) * node.inverse_scale_factor()).max(0.0);
     if delta != 0.0 && window.cursor_position().is_some_and(|p| p.x >= window.width() - RIGHT && p.y > TOP) {
-        view.scroll_to = Some((position.offset_y - delta).clamp(0.0, max));
+        view.scroll_to = Some((position.y - delta).clamp(0.0, max));
     }
     if let Some(y) = view.scroll_to.take() {
-        position.offset_y = y.clamp(0.0, max);
+        position.y = y.clamp(0.0, max);
     }
-    if view.scroll != position.offset_y || view.scroll_max != max {
-        view.scroll = position.offset_y;
+    if view.scroll != position.y || view.scroll_max != max {
+        view.scroll = position.y;
         view.scroll_max = max;
     }
 }
@@ -1756,7 +1748,7 @@ fn jog_panel(
         let header = if joints.is_empty() { String::new() } else { format!("Jog — {JOG_LABEL}") };
         let mut rows = vec![commands.spawn(label(&fonts, &header, 11.5, MUTED)).id()];
         for (joint, step) in &joints {
-            let button = |sign: f64, text: &str| (Button, JogButton, RobotAction::Jog { joint: joint.clone(), delta: sign * step }, Node { padding: UiRect::axes(Val::Px(9.0), Val::Px(1.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 13.0, INK)]);
+            let button = |sign: f64, text: &str| (Button, JogButton, RobotAction::Jog { joint: joint.clone(), delta: sign * step }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(9.0), Val::Px(1.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 13.0, INK)]);
             rows.push(
                 commands
                     .spawn((
@@ -1826,18 +1818,18 @@ fn motion_panel(
     mut text: Query<(&mut Text, Has<RecordingText>, Has<ReplayText>), Or<(With<MotionText>, With<RecordingText>, With<ReplayText>)>>,
     mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<MotionButton>>,
 ) {
-    let button = |commands: &mut Commands, action: RobotAction, text: &str| commands.spawn((Button, MotionButton, action, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+    let button = |commands: &mut Commands, action: RobotAction, text: &str| commands.spawn((Button, MotionButton, action, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
     if view.preset.as_ref().is_some_and(|p| !p.is_recorded()) && !*shown {
         let header = commands.spawn(label(&fonts, &format!("Motion — {}", robot_motion::LABEL), 11.5, MUTED)).id();
         let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), ..default() }).id();
         for (_, text, request) in motion_buttons() {
-            let b = commands.spawn((Button, MotionButton, RobotAction::Motion { request }, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+            let b = commands.spawn((Button, MotionButton, RobotAction::Motion { request }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
             commands.entity(row).add_child(b);
         }
         let line = commands.spawn((label(&fonts, "", 11.5, INK), MotionText)).id();
         // Save recording: the same RobotAction::SaveRecording as system_ui recording:save and REST robot_save_recording.
         let save_row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
-        let save = commands.spawn((Button, MotionButton, RobotAction::SaveRecording { path: None, note: None }, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, "Save recording", 12.0, INK)])).id();
+        let save = commands.spawn((Button, MotionButton, RobotAction::SaveRecording { path: None, note: None }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, "Save recording", 12.0, INK)])).id();
         let saved = commands.spawn((label(&fonts, "", 11.5, INK), RecordingText, Node { flex_shrink: 1.0, ..default() })).id();
         commands.entity(save_row).add_children(&[save, saved]);
         // Replay: the same RobotAction::Replay / CancelReplay as system_ui replay:<file> / replay:cancel and REST robot_replay.
@@ -1914,7 +1906,7 @@ fn recorded_panel(
         let header = commands.spawn(label(&fonts, &format!("Recorded — {} · speed: header −/×/+ · seek: REST robot_recorded", crate::robot_preset::RECORDED_LABEL), 11.5, MUTED)).id();
         let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).id();
         for (_, name, action) in RECORDED_TRANSPORT {
-            let b = commands.spawn((Button, RecordedButton, RobotAction::Recorded { action }, Node { padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, name, 12.0, INK)])).id();
+            let b = commands.spawn((Button, RecordedButton, RobotAction::Recorded { action }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, name, 12.0, INK)])).id();
             commands.entity(row).add_child(b);
         }
         let line = commands.spawn((label(&fonts, "", 11.5, INK), RecordedText)).id();
@@ -1958,7 +1950,7 @@ fn gait_panel(
     mut buttons: Query<(&mut RobotAction, &Interaction, &mut BackgroundColor, Option<&GaitSeekButton>), With<GaitButton>>,
 ) {
     let Some(g) = view.run.as_ref().and_then(|r| r.gait_preview()) else { return };
-    let button = |commands: &mut Commands, action: GaitAction, text: &str| commands.spawn((Button, GaitButton, RobotAction::Gait { action }, Node { padding: UiRect::axes(Val::Px(7.0), Val::Px(2.0)), ..default() }, BorderRadius::all(Val::Px(4.0)), BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
+    let button = |commands: &mut Commands, action: GaitAction, text: &str| commands.spawn((Button, GaitButton, RobotAction::Gait { action }, Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(7.0), Val::Px(2.0)), ..default() }, BackgroundColor(Color::srgb(0.16, 0.20, 0.25)), children![label(&fonts, text, 12.0, INK)])).id();
     if !*shown {
         let header = commands.spawn(label(&fonts, &format!("Gait preview — {}", robot_gait::LABEL), 11.5, MUTED)).id();
         let row = |commands: &mut Commands| commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).id();
@@ -2495,7 +2487,7 @@ fn overlay_panel(
 /// shared rule (`robot_stress`, from already-parsed results; bounded by
 /// vertices × ≤200 hotspot cells per link, timed in `paint_seconds`) or
 /// loses them. Links without cells take the normal link colour.
-fn stress_paint(mut view: ResMut<RobotView>, links: Query<(&LinkMesh, &Mesh3d)>, mut meshes: ResMut<Assets<Mesh>>, mut redraw: EventWriter<bevy::window::RequestRedraw>) {
+fn stress_paint(mut view: ResMut<RobotView>, links: Query<(&LinkMesh, &Mesh3d)>, mut meshes: ResMut<Assets<Mesh>>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
     view.stress.take();
     if view.stress.busy() {
         // Keep polling the results-only read in the reactive window.
@@ -2508,7 +2500,7 @@ fn stress_paint(mut view: ResMut<RobotView>, links: Query<(&LinkMesh, &Mesh3d)>,
     let paint = view.stress.painting();
     let plain = LINK_COLOUR.to_linear().to_f32_array();
     for (link, mesh) in &links {
-        let Some(mesh) = meshes.get_mut(&mesh.0) else { continue };
+        let Some(mut mesh) = meshes.get_mut(&mesh.0) else { continue };
         if !paint {
             mesh.remove_attribute(Mesh::ATTRIBUTE_COLOR);
             continue;
@@ -2589,7 +2581,7 @@ fn graph_dock(
     dock: Single<(Entity, &mut Node), With<GraphDock>>,
     mut handles: Local<Vec<Handle<Image>>>,
     mut drawn: Local<Option<(String, f64)>>,
-    mut redraw: EventWriter<bevy::window::RequestRedraw>,
+    mut redraw: MessageWriter<bevy::window::RequestRedraw>,
 ) {
     let (entity, mut node) = dock.into_inner();
     let display = if view.graphs_visible { Display::Flex } else { Display::None };
@@ -2631,7 +2623,7 @@ fn graph_dock(
         let traces: Vec<(&[[f64; 2]], [u8; 3])> = c.traces.iter().enumerate().map(|(i, t)| (t.points.as_slice(), crate::chart::COLORS[i % crate::chart::COLORS.len()])).collect();
         let (pixels, range, window) = crate::chart::rasterize_span(&traces, Some(crate::robot_graphs::WINDOW_S));
         let drawable = c.traces.iter().map(|t| t.points.len()).sum::<usize>() >= 2;
-        if let Some(image) = images.get_mut(&handles[slot]) {
+        if let Some(mut image) = images.get_mut(&handles[slot]) {
             image.data = Some(pixels);
         }
         let units: std::collections::BTreeSet<&str> = c.traces.iter().map(|t| t.unit.as_str()).collect();
@@ -2647,7 +2639,7 @@ fn graph_dock(
             commands.entity(card).add_child(t);
         }
         if !c.traces.is_empty() {
-            let plot = commands.spawn((Node { flex_grow: 1.0, min_height: Val::Px(60.0), border: UiRect::all(Val::Px(1.0)), ..default() }, BorderColor(Color::srgb(0.2, 0.24, 0.29)), ImageNode::new(handles[slot].clone()))).id();
+            let plot = commands.spawn((Node { flex_grow: 1.0, min_height: Val::Px(60.0), border: UiRect::all(Val::Px(1.0)), ..default() }, BorderColor::all(Color::srgb(0.2, 0.24, 0.29)), ImageNode::new(handles[slot].clone()))).id();
             if drawable {
                 let with_unit = |v: f64| if unit.is_empty() { num(v) } else { format!("{} {unit}", num(v)) };
                 let top = commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(4.0), top: Val::Px(2.0), ..default() }, children![text(&with_unit(range.1), 10.0, MUTED)])).id();
@@ -2665,7 +2657,7 @@ fn graph_dock(
                 };
                 let source = if t.source.starts_with("request") { "request (held input in frame)" } else if t.source.starts_with(crate::robot_graphs::WORLD_FRAME) { crate::robot_graphs::WORLD_FRAME } else { t.source.split(" (").next().unwrap_or(&t.source) };
                 let color = Color::srgb_u8(r, g, b);
-                let swatch = commands.spawn((Node { width: Val::Px(9.0), height: Val::Px(9.0), flex_shrink: 0.0, ..default() }, BackgroundColor(color), BorderRadius::all(Val::Px(2.0)))).id();
+                let swatch = commands.spawn((Node { border_radius: BorderRadius::all(Val::Px(2.0)), width: Val::Px(9.0), height: Val::Px(9.0), flex_shrink: 0.0, ..default() }, BackgroundColor(color))).id();
                 let line = commands.spawn(text(&format!("{}: {value}  ·  {source}", t.name), 10.5, color)).id();
                 let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(5.0), align_items: AlignItems::Center, ..default() }).add_children(&[swatch, line]).id();
                 commands.entity(card).add_child(row);

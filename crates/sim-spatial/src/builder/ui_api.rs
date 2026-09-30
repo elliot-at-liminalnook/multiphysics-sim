@@ -282,7 +282,9 @@ pub(super) fn collect(
             .entry(id)
             .and_modify(|c| {
                 c.enabled |= candidate.enabled;
-                if candidate.label.len() < c.label.len() {
+                // Shortest label, ties broken by text so the result does not depend on
+                // ECS iteration order (which changed between Bevy 0.16 and 0.19).
+                if (candidate.label.len(), &candidate.label) < (c.label.len(), &c.label) {
                     c.label = candidate.label.clone();
                 }
             })

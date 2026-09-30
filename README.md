@@ -60,6 +60,7 @@ driven on a physical leg through an FPGA.
 cargo run --release -p sim-app -- --exhibit quadruped         # desktop exhibit
 cargo run --release -p sim-phenomena --bin sim-phenomena -- list   # physics phenomena gallery
 examples/systems-viewer/run-live.sh                           # linked schematic + physical views
+cargo run -p sim-spatial -- examples/systems-builder/motor-driver-board/board.system.json   # native viewer; switch modes in the window
 cad/run.sh examples/components/quadruped-parametric/model/robot.rcad   # CAD editor
 ```
 

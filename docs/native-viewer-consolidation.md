@@ -1931,6 +1931,33 @@ accepted types. FILE conflicts with the mode flags (`--system`, `--robot`,
 `--robot-preset`, `--lessons`, `--place`, `--description`, …), which keep
 their meaning; `--lesson SLUG` works with a lessons FILE.
 
+**One window, every mode (2026-09-30, batch one-app-modes).** The flags and
+FILE only choose the **initial** mode and its document; the window is one
+app (`sim_spatial::app::run`, `ViewerMode` states). Switch modes in the
+running window, through one handler (`app::switch::handle`):
+- the **mode switcher**, a row of buttons (Inspect, Build, Lessons, Robot,
+  Place) in the bottom-right corner of every mode, with the last outcome
+  (a refusal names its reason) above it;
+- `system_ui` controls `mode:inspect`, `mode:build`, `mode:lessons`,
+  `mode:robot`, `mode:place` (listed at the end of every mode's controls);
+- REST `viewer_mode {"mode": …, "path"?: …, "preset"?: …}` (poll the job;
+  `viewer_mode {}` or `GET /v1/viewer_mode` reports the active mode, and
+  `state` carries `viewer_mode`).
+
+A mode reopens what it last showed in this window (or the launch's); give a
+`path` (or a robot `preset`) the first time, e.g.
+`viewer_mode {"mode":"robot","preset":"robot-measured-400hz"}` from a
+build-mode window. Build and Lessons share the builder (the lesson screen is
+drawn over it); the builder stays in the window across every switch (paused,
+its scene parked, outside Build/Lessons). A switch is refused, naming the
+reason, while a draft, placement drag, study, replay, Codex answer or open
+is in progress in the builder, a lesson draft or contact sheet is, or a robot
+recording is being written or replayed; and when the target mode has no
+document or its document fails to load. One REST server on one port serves
+every mode: each capability lists its `modes`, and a command of another mode
+is refused naming the active mode. `--headless` still serves inspect mode
+only (no window to switch).
+
 **Workspace root.** Repository data (the part registry `library/parts`, the
 palette library `library/systems`, `library/models`, `web/viewer/presets.json`
 and its preset inputs, `runs/` outputs such as `runs/robot-presets` and the
@@ -1970,7 +1997,10 @@ sim-spatial examples/systems-builder/motor-driver-board/board.system.json
 ```
 Once it is running, open another system from the **Systems** sidebar tab (a
 discovered row, or a path in the field and Enter), or send REST
-`system_open {"path": …}`. There is no relaunch. Other modes today are `--lessons lessons`, `--place DIR`, and `--description/--spatial`.
+`system_open {"path": …}`. There is no relaunch. The other modes are one
+switch away in the same window (mode switcher, `mode:*` or `viewer_mode`);
+at launch they are `--lessons lessons`, `--robot FILE` / `--robot-preset ID`,
+`--place DIR` and `--description/--spatial` (inspect).
 
 Measured identification review (§2j), in build mode with any system: open the
 **Actuators** sidebar tab and choose **Measured evidence** (or `system_ui`

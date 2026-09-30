@@ -10,29 +10,47 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (measured 2026-09-30, after the jobs module)
+## Where it is today (measured 2026-09-30, after one-app-modes)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
   [Bevy 0.19.1 migration](#bevy-0191-migration-2026-09-30)). Only
   `sim-spatial` and `sim-app` depend on Bevy.
-- **Separate apps, not one viewer.** `sim-spatial/src/lib.rs` builds a separate
-  `App` per launch mode (`run_builder`, `run_lessons`, `run_with_api`, …), and
-  `main.rs` picks one from command-line flags. There is no switching modes in a
-  window. Place mode (`place_view.rs`) has no REST API.
+- **One app, modes as states** (see [One app](#one-app-2026-09-30)):
+  `app::run` is the only `App` builder (`App::new()` appears elsewhere in
+  `src/` only in `#[cfg(test)]` code). `ViewerMode` (Inspect, Build,
+  Lessons, Robot, Place) is a Bevy `States`; the computed states
+  `ModeScope` and `SpatialScreen` follow it. Launch flags choose the initial
+  mode and document; the user switches modes in the window (the mode
+  switcher, `system_ui` `mode:*`, REST `viewer_mode`), through one handler
+  (`app::switch::handle`). Done, pending verification.
+- **One REST server** (`rest::bind`, the only `sim_api::Server::bind` in
+  sim-spatial, also used by `--headless`): every mode's commands, each
+  tagged with its `modes`; one dispatch (`app::route::route`) refuses a
+  command of another mode by name. Place mode answers `state`, `camera` and
+  `screenshot`.
+- **The shared pipeline sets** `ViewerSet` Input → Actions → JobResults →
+  SimSync → Present are configured once (`app::ModesPlugin`). Each mode's
+  existing frame chain sits whole in SimSync and its drawing-only chain in
+  Present, under `in_state(..)`, in their original order.
 - **Background work goes through one `jobs` module** (`src/jobs/`, see
   [§4](#4-one-background-work-abstraction) and
   [the jobs module](#jobs-module-2026-09-30)): 0 `thread::spawn` /
   `thread::Builder` sites outside `src/jobs/` (there were 35 in 21 files),
   enforced by the lib test `jobs::tests::threads_are_started_only_in_jobs`.
-  Pending verification (see the parity checklist).
-- **Little Bevy structure:** 3 plugins, no `States`, no system sets. Buffered
-  input uses the 0.17+ names (16 `MessageReader`, 6 `MessageWriter` sites);
-  the 10 observers take `On<…>` (pointer picks, drags, screenshots).
-- **UI is hand-built** `Node` trees (18 files name `Node`). Headers,
+  Verified at ae80a137.
+- **Bevy structure:** 7 plugins (`CorePlugin`, `ModesPlugin`,
+  `SpatialViewerPlugin`, `BuilderPlugin`, `LearnPlugin`, `RobotPlugin`,
+  `PlacePlugin`), one `States` enum and two computed states, one set
+  enum. Buffered input uses the 0.17+ names (14 `MessageReader`, 7
+  `MessageWriter` sites); the 10 observers take `On<…>` (pointer picks,
+  drags, screenshots).
+- **UI is hand-built** `Node` trees (17 files name `Node`). Headers,
   inspectors, tabs, docks and charts are rebuilt per feature.
-- **Large files:** `builder.rs` (3,000 lines), `robot.rs` (2,750), `robot_run.rs`
-  (2,610) and `lesson/mod.rs` (2,340).
+- **Large files:** `builder.rs` (3,010 lines), `robot.rs` (2,790),
+  `robot_run.rs` (2,600) and `lesson/mod.rs` (2,400). The new `app/` files
+  are under 700 lines each (`switch.rs` 650, `mod.rs` 320, `route.rs` 200,
+  `switcher.rs` 105).
 - **What already works well, to keep:**
   - typed, validated handlers ("one handler per action")
   - generation-stamped frames
@@ -52,8 +70,11 @@ through the official 0.16→0.17→0.18→0.19 guides, with no intended feature 
   now separate; `mesh_picking` and `ui_picking` replace
   `bevy_mesh_picking_backend` / `bevy_ui_picking_backend`; `keyboard` and
   `mouse` are listed explicitly. The effective set matches 0.16: still no
-  `tonemapping_luts`, `smaa_luts`, `hdr`, `bevy_state`, scenes, glTF, audio or
-  gamepad. `sim-app` keeps Bevy's default features.
+  `tonemapping_luts`, `smaa_luts`, `hdr`, scenes, glTF, audio or gamepad.
+  `sim-app` keeps Bevy's default features.
+  - **Later addition (one-app-modes):** `bevy_state`, for the `ViewerMode`
+    states (`StatesPlugin` comes with `DefaultPlugins`; `bevy_state` was
+    already in `Cargo.lock` through `sim-app`).
 - **Pins.** `bevy = "0.19.1"` (workspace) and `=0.19.1` (`sim-spatial`).
   `image = "=0.25.10"` is unchanged (0.19.1 resolves to it). `objc2` 0.6 and
   `raw-window-handle` 0.6 became direct macOS dependencies of `sim-spatial`
@@ -268,11 +289,182 @@ result formats and state fields).
     runs on `LiveRun::spawn`), `builder::open::tests`,
     `builder::calibration::tests`, `builder::schematic::tests` and
     `robot_run::tests`.
-- **Verification so far.** An earlier pass on 4b74edc6 built sim-spatial
-  (debug), passed `cargo check -p sim-app`, and passed `cargo test -p
-  sim-spatial --lib` (75 passed, 1 ignored: the existing
-  `measure_full_robot_preset` benchmark). The follow-up edits (19e9fab3 and
-  the recording-panic fixes) are not yet built and tested.
+- **Verification.** Verified at ae80a137: `cargo check --workspace
+  --all-targets` with no errors, the sim-spatial bins built with no
+  sim-spatial warnings, and `cargo test -p sim-spatial --lib` gave 75 passed,
+  1 ignored (the existing `measure_full_robot_preset` benchmark), including
+  every jobs test and the source guard.
+
+## One app (2026-09-30)
+
+Batch one-app-modes replaced the five per-mode `App` builders (`run_builder`,
+`run_lessons`, `run_with_api` with `run`, `robot::run_robot`,
+`place_view::run_place`) and the two REST servers (`physical-assembly` and
+`robot`) with one app, `ViewerMode` states, one mode switch and one server.
+Paths below are `crates/sim-spatial/src/`.
+
+- **Shape.**
+  - `app/mod.rs`: `run(Launch)` (the one builder), `ViewerMode`, the
+    computed states `ModeScope` (entity and resource lifetime: Inspect,
+    Builder = Build + Lessons, Robot, Place) and `SpatialScreen` (the
+    spatial view is drawn: Inspect, Build, Lessons), `ViewerSet`,
+    `CorePlugin` (window, per-mode look, fonts, mesh picking, occlusion,
+    scroll clamp, REST wake, the switcher) and `ModesPlugin` (states, sets,
+    the switch; no window, so the test runs it).
+  - `app/switch.rs`: `ModeSwitch`, `Switcher`, `Documents`, the handler
+    (`handle`, Actions), document loads (`finish_load`, JobResults),
+    `arrive` (every mode's OnEnter) and the scopes' OnExit teardown.
+  - `app/route.rs`: the one REST dispatch (`route`, `annotate`) and the
+    capabilities every mode shares (`viewer_mode`, `screenshot`).
+  - `app/switcher.rs`: the mode switcher's buttons.
+  - Mode plugins: `SpatialViewerPlugin` (setup on OnEnter of the Inspect
+    and Builder scopes; chains under `SpatialScreen`), `BuilderPlugin`
+    (Builder scope; its Build-only systems under `in_state(Build)`),
+    `LearnPlugin` (Builder scope while a `Learn` exists), `RobotPlugin`,
+    `PlacePlugin` (their scopes and modes).
+- **Where each chain sits** (internal order unchanged): the spatial frame
+  chain (`notes::update` … `animation::draw_markers`), the builder chain
+  (still `.before(update_parts)`) and its placement/markers/`ui_api`
+  systems, the lesson chains (still `.before(camera_viewport)` and
+  `.after(ui::rebuild)`), robot's frame chain (`watch` … `highlight`) and
+  place's (`poll_rest`, `fly`, `toggles`) are in **SimSync**; the spatial
+  drawing chain (`view::animate` … `view::caption_fonts`) and robot's
+  panels chain (`panels` … `draw`, still after its frame chain) are in
+  **Present**. Shared: the switcher's clicks and the lesson screen's
+  requests in **Input**, the switch handler in **Actions**, its document
+  loads in **JobResults**, the switcher's highlight and `/v1/viewer_mode` in
+  **Present**. Splitting the mode chains across the sets is the action
+  layer's work (epic 4).
+- **`building()` / `Learn.active`.** `building()` is gone: its uses are
+  `in_state(ViewerMode::Build)`; `clear_for_learn` runs in Lessons; the
+  lesson checks in `pick_part`, `keyboard`, `placement::start_part` and
+  `rebuild_scene` read the state. `Learn.active` remains as the lesson
+  page's own flag, read by the lesson systems (13 reads in `lesson/`),
+  because those systems keep running while the builder is shown over a
+  lesson (recordings, narration and the lesson model keep going, and the
+  page hides itself). It is written only by `Learn::show`, which only
+  OnEnter/OnExit(Lessons) call, so it always matches the state. The lesson
+  and builder toggles ("Open in builder", "‹ lesson", `lesson_screen`,
+  `lesson_open`) call `Learn::request_screen`, a switch request.
+- **Decisions.**
+  - *Winit per mode.* Reactive (1/60 s focused, low power 40 ms unfocused)
+    stays the shared default; each mode's OnEnter sets its winit setting,
+    so Place's continuous update while focused (100 ms unfocused) is scoped
+    to Place and replaced on entering any other mode. The same OnEnter sets
+    the title, clear colour, ambient light and minimum size. The window
+    size is the initial mode's; a switch does not resize the window.
+  - *The builder stays across modes.* Build ↔ Lessons keep it (and the
+    lesson); leaving both for another mode keeps it too, paused (no physics
+    runs unseen), its scene parked in `Documents` and its chrome rebuilt on
+    return. Leaving Build/Lessons removes the lesson (its jobs cancel) and
+    resets the lesson's text size (`UiScale`). A new lessons folder replaces
+    the builder with the lesson's sandbox builder, as a lessons launch does
+    (refused on the builder's blockers). `viewer_mode build {path}` while
+    the builder has another file open is refused, pointing at `system_open`
+    (the one open path, which keeps a live run); a lesson's sandbox builder
+    (no Open) outside lessons is replaced by the file.
+  - *Teardown.* Mode entities carry `DespawnOnExit<ModeScope>`, inserted by
+    one sweep in `Last` (`app::scope_new_entities`: every root `Node` or
+    `Transform` not marked `Persistent`) rather than at each of the modes'
+    spawn sites; children go with their root. The robot view, a place and a
+    lesson are removed on exit and dropped off the UI thread
+    (`jobs::drop_off_thread`), so their jobs cancel and their `RunThread`s
+    join within `JOIN_BOUND` there. `ModelLibrary`, `UiFonts`, `Documents`,
+    `Rest` and the workspace root always survive. Inspect's scene and
+    selection link are parked and come back as they were.
+  - *Documents.* A switch reopens what the mode last showed (or the
+    launch's); a `path` or robot `preset` names a new one. Loads use the
+    launch's loaders off the UI thread: `builder::open::open_build`,
+    `lesson::open_lessons`, `load_inspect`, `PlaceView::open` (Compute
+    jobs), and the robot view's own loader, waited for through
+    `RobotView::opened` so a robot that fails to load leaves the current
+    mode. Refusals name the reason; the handler re-checks the blockers when
+    a load finishes (as `finish_open` does).
+  - *Blockers.* Leaving Build/Lessons (or replacing the builder) uses
+    `Builder::switch_blockers`: open.rs's `system_open` blockers (drafts,
+    drag, study, replay, Codex) plus a pending open; a lesson draft or
+    contact sheet; leaving Robot, a recording being written or a replay. A
+    new lesson that would replace a build-mode builder is also refused while
+    that builder has a live run (`Builder::replace_blockers`: `system_open`
+    saves a live run before replacing a builder, a mode switch cannot).
+    Build ↔ Lessons over an open lesson is the lesson screen's toggle and
+    is never blocked (as before).
+  - *The switcher.* A row of the robot header's buttons in the bottom-right
+    corner of every mode, with the last outcome above it: every mode's top
+    edge is full (toolbars, run controls). Not visually checked (screenshots
+    are off for this run).
+  - *Capability mode tags.* Each capability gains a `modes` array (added in
+    `rest::capabilities`; `sim_api` is unchanged). A name may appear more
+    than once with different modes and arguments (`system_ui`: builder,
+    robot, and the mode-only one for Inspect and Place; `camera`: the orbit
+    for the spatial modes and robot, the fly camera for Place; `state`).
+    The router's table is built from the same list, so a command's modes
+    cannot drift from what capabilities says.
+  - *Server kind.* `sim-spatial` (was `physical-assembly` or `robot`); no
+    client reads it (ui_capture polls `/v1/capabilities`; simbridge only
+    launches `--robot FILE`).
+  - *Place REST surface.* `state` (dir, description, stations, views,
+    station, camera pose and speed, help and marker visibility), `camera`
+    (position, yaw, pitch, speed, station), `screenshot` (the shared
+    Occlusion refusal), `viewer_mode` and `system_ui` `mode:*`.
+  - *Headless.* `--headless` binds through the same `rest::bind` and serves
+    inspect mode only; `viewer_mode` and `mode:*` answer that there is no
+    window to switch.
+  - *Found by reading.* Robot mode never added `MeshPickingPlugin`, so a
+    click on a link in the 3D view could not select it (robot.rs
+    `pick_link`); the core now adds mesh picking for every mode. Inspect's
+    captions and physics labels now use the interface fonts (the fonts are
+    loaded once for every mode).
+- **Launch path, traced by reading** (main.rs → OnEnter). Every mode:
+  `main` resolves the flags and calls `open_window` (main.rs:160), which
+  binds `rest::bind` and calls `app::run` with a `Launch` (the initial
+  mode, its documents, `Documents` with the launch facts, the shared
+  `ModelLibrary`). `run` (app/mod.rs:158) adds `CorePlugin` (window and
+  look of the initial mode; fonts loaded before the first OnEnter, which
+  runs ahead of Startup), inserts the documents, then `ModesPlugin`
+  (`insert_state(initial)`) and the mode plugins. At startup the
+  `StateTransition` schedule runs OnEnter(`ViewerMode`) (`apply_look`,
+  `arrive`: nothing to install at launch) and then OnEnter(`ModeScope`):
+  - Inspect: main.rs tail (`load_inspect`, flags, `set_compact`, link) →
+    OnEnter(Inspect scope) `setup_scene` + `setup_ui` (lib.rs:336).
+  - Build: `build_mode` (main.rs:235: `Builder::open`,
+    `builder::compiled_scene`, annotations, models, `enable_open`) →
+    OnEnter(Builder scope) `setup_scene` (lib.rs:337); the builder's chrome
+    is built by `ui::rebuild_panel` in Build.
+  - Lessons: `lessons_mode` (main.rs:173: `lesson::open_lessons`) →
+    OnEnter(Lessons) `arrive` then `show_lessons` (a no-op: a new `Learn`
+    is already shown) → OnEnter(Builder scope) `setup_scene`.
+  - Robot: `robot_mode` / `robot_preset_mode` (main.rs:195/208:
+    `RobotView::open` / `open_preset`, loading on their jobs as before) →
+    OnEnter(Robot scope) `robot::setup` (robot.rs:1021).
+  - Place: main.rs:303 `PlaceView::open` (read before the window opens, so
+    a bad directory still fails the launch) → OnEnter(Place scope)
+    `place_view::setup` (place_view.rs:135).
+- **A switch, traced by reading.** Switcher click (`switcher_clicks`,
+  Input), `system_ui` `mode:*` or REST `viewer_mode` (`route::route` in the
+  active mode's poll) → `Switcher::submit` → `switch::handle` (Actions):
+  blockers, then `prepare` (the document now, or a load) → `finish_load`
+  (JobResults) → `enter`: `NextState` → next frame's `StateTransition`:
+  OnExit of the old scope (despawn, park or remove) → OnEnter(new mode)
+  `apply_look`, `arrive` → OnEnter(new scope) setup → `handle` confirms the
+  outcome, which a pending REST job then returns.
+- **What the verification pass must run** (no screenshots):
+  - `cargo build -p sim-spatial --lib --tests --bins`, with no sim-spatial
+    warnings;
+  - `cargo check -p sim-app`;
+  - `cargo test -p sim-spatial --lib`, in particular
+    `app::tests::build_robot_build_tears_down_the_robot_and_keeps_shared_state`
+    and `app::tests::rest_refuses_commands_of_another_mode_by_name` (new),
+    the jobs tests (`jobs::tests::*`, including
+    `threads_are_started_only_in_jobs`), `builder::open::tests`,
+    `builder::placement::tests`, `builder::placement_worker::tests`,
+    `builder::ui_api::tests`, `builder::replay_tests`, `robot_run::tests`,
+    `rest::tests` and the lib.rs `keyboard`/`pick_part` test;
+  - a reading check of the launch trace above against the built code.
+- **Not yet verified.** Nothing here has been built or run yet. The
+  switcher's placement over each mode's panels, the robot link picking the
+  core now enables, and a live switch between every pair of modes in a
+  window are unverified until screenshots are on.
 
 ## Target shape
 
@@ -287,6 +479,14 @@ result formats and state fields).
   annotations) survives the switch.
 - `sim-app`'s scenes (phenomena exhibits, CAD view) become modes of this app, or
   are retired once parity is shown by tracing their workflows in code.
+- *Status:* in place since one-app-modes (see [One app](#one-app-2026-09-30)),
+  pending verification: `app::run`, `ViewerMode` with the `ModeScope` and
+  `SpatialScreen` computed states, setup on each scope's `OnEnter`, teardown
+  by `DespawnOnExit<ModeScope>` and the scopes' `OnExit`, and one switch
+  handler. What survives a switch: the builder, the display-model library,
+  the fonts, the REST server, the documents each mode reopens, and the
+  workspace root. Selection and annotations are still per mode (§7);
+  `sim-app` is not folded in (epic 6).
 
 ### 2. Plugins and ordered system sets
 
@@ -301,7 +501,11 @@ result formats and state fields).
   5. Present
 
   A feature adds systems to these sets; it never orders itself against another
-  feature's private systems.
+  feature's private systems. *Status:* `ViewerSet` is declared and ordered
+  once (`app::ModesPlugin`); the modes' existing chains sit whole in SimSync
+  and Present, and the builder and lesson chains still order themselves
+  against the spatial view's `update_parts` and `camera_viewport` (to be
+  untangled with the action layer).
 - **Files over about 800 lines are a smell.** Split them by responsibility when
   you touch them.
 
@@ -447,11 +651,13 @@ The Director re-ranks with evidence, but this is the default:
    - follow the migration guides 0.16→0.17→0.18→0.19
    - make no feature changes
    - every binary builds, and each mode opens and captures
-2. **Jobs abstraction.** *Done 2026-09-30, pending verification (batch
+2. **Jobs abstraction.** *Done 2026-09-30 (verified at ae80a137; batch
    jobs-module; see [the jobs module](#jobs-module-2026-09-30)).* Build
    `jobs`, then move all 35 thread sites onto it.
-3. **One app.** Merge the separate `App` setups into `ViewerMode` states, with
-   switching modes in the window.
+3. **One app.** *Done 2026-09-30, pending verification (batch
+   one-app-modes; see [One app](#one-app-2026-09-30)).* Merge the separate
+   `App` setups into `ViewerMode` states, with switching modes in the
+   window.
 4. **Action layer.** Unify buttons, `system_ui` and REST onto typed actions.
 5. **UI kit.** Build it on Feathers, then move headers, inspectors, tabs, docks
    and charts onto it.

@@ -290,14 +290,19 @@ pub(crate) fn repaint_buttons(
         border.set_if_neq(BorderColor::all(p.border));
         let edge = if p.underline { UiRect::bottom(Val::Px(2.)) } else { UiRect::all(Val::Px(1.)) };
         let radius = BorderRadius::all(Val::Px(p.radius));
-        if node.border != edge || node.border_radius != radius {
+        let padding = UiRect::axes(Val::Px(p.pad.0), Val::Px(p.pad.1));
+        if node.border != edge || node.border_radius != radius || node.padding != padding {
             node.border = edge;
             node.border_radius = radius;
+            node.padding = padding;
         }
         let Some(children) = children else { continue };
         for child in children.iter() {
             if let Ok((mut color, mut font)) = labels.get_mut(child) {
                 color.set_if_neq(TextColor(p.text));
+                if !matches!(font.font_size, FontSize::Px(px) if px == p.size) {
+                    font.font_size = FontSize::Px(p.size);
+                }
                 if let Some(fonts) = &fonts {
                     let face = FontSource::from(fonts.weight(p.weight));
                     if font.font != face {
@@ -334,10 +339,10 @@ pub(crate) fn follow_button_text(mut commands: Commands, texts: Query<(&Text, &C
 }
 
 /// `bevy::ui`'s accessibility system labels a `Button` from its direct text
-/// children when it is added (and clears the label when there is none,
+/// children when it changes (and clears the label when there is none,
 /// as for a list row whose text is nested). Re-apply the kit's
 /// `AccessibleLabel` after it, before AccessKit reads the tree.
-pub(crate) fn keep_labels(mut nodes: Query<(&AccessibleLabel, &mut AccessibilityNode), Or<(Added<Button>, Changed<AccessibleLabel>)>>) {
+pub(crate) fn keep_labels(mut nodes: Query<(&AccessibleLabel, &mut AccessibilityNode), Or<(Changed<Button>, Changed<AccessibleLabel>)>>) {
     for (label, mut node) in &mut nodes {
         if node.label() != Some(label.0.as_str()) {
             node.set_label(label.0.as_str());

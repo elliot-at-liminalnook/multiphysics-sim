@@ -1175,6 +1175,18 @@ pub struct PlanarHint {
     pub origin: V3,
 }
 
+/// The first simrobot version that is a physical (3-D) description. Older
+/// files are the planar summary that only `sim-app --scene cad` opens.
+pub const FIRST_PHYSICAL_VERSION: u32 = 3;
+
+/// The one simrobot version rule: the `version` field, or 2 when absent
+/// (RoboCAD's planar exports predate the field). sim-app's cad scene
+/// dispatches on it and [`PhysicalModel::parse`] refuses below
+/// [`FIRST_PHYSICAL_VERSION`].
+pub fn simrobot_version(value: &serde_json::Value) -> u32 {
+    value.get("version").and_then(|v| v.as_u64()).unwrap_or(2) as u32
+}
+
 impl PhysicalModel {
     /// Preserve model numbers in JSON, rejecting values JSON would turn into null.
     /// The legacy unbounded gearbox limits are represented by omitted fields,
@@ -1187,7 +1199,21 @@ impl PhysicalModel {
         let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
         Self::parse(&text).map_err(|e| format!("{path}: {e}"))
     }
+    /// Parse a physical (v3+) simrobot. Planar files (version < 3, or no
+    /// `version`, see [`simrobot_version`]) are refused by name before the
+    /// full deserialize; text that is not a JSON object keeps serde's error.
     pub fn parse(text: &str) -> Result<Self, String> {
+        if let Ok(value @ serde_json::Value::Object(_)) = serde_json::from_str::<serde_json::Value>(text) {
+            let version = simrobot_version(&value);
+            if version < FIRST_PHYSICAL_VERSION {
+                let found = if value.get("version").is_some() { format!("version {version}") } else { format!("no `version` (read as {version})") };
+                return Err(format!(
+                    "simrobot file has {found}: this is the planar (v2) simrobot format, and the physical model \
+                     (sim-spatial robot mode, sim-cad, sim-runtime) needs version >= {FIRST_PHYSICAL_VERSION}. \
+                     Open it with `sim-app --scene cad --model FILE`, or re-export it from RoboCAD, whose physical export writes version {FIRST_PHYSICAL_VERSION} or later"
+                ));
+            }
+        }
         serde_json::from_str(text).map_err(|e| e.to_string())
     }
     pub fn link(&self, name: &str) -> Option<&Link> {
@@ -1256,4 +1282,24 @@ pub fn model_by_handle(handle: f64) -> Option<Arc<PhysicalModel>> {
         return None;
     }
     s.get(handle as usize).cloned()
+}
+
+#[cfg(test)]
+mod version_tests {
+    use super::*;
+
+    #[test]
+    fn planar_v2_is_refused_by_name_and_v3_parses() {
+        for (text, found) in [(r#"{"format":"simrobot","version":2,"bodies":[]}"#, "version 2"), (r#"{"bodies":[]}"#, "no `version` (read as 2)")] {
+            let err = PhysicalModel::parse(text).err().expect("planar file must be refused");
+            for needle in [found, "planar (v2)", "version >= 3", "sim-app --scene cad --model FILE", "RoboCAD"] {
+                assert!(err.contains(needle), "{needle:?} missing from {err}");
+            }
+        }
+        assert_eq!(PhysicalModel::parse(r#"{"version":3}"#).unwrap().version, 3);
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/wheeled-robot/baseline/robot.simrobot.json");
+        let model = PhysicalModel::load(path).unwrap();
+        assert!(model.version >= FIRST_PHYSICAL_VERSION && !model.links.is_empty());
+        assert!(!PhysicalModel::parse(r#""x""#).unwrap_err().contains("planar"), "non-objects keep serde's error");
+    }
 }

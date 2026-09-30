@@ -497,11 +497,12 @@ pub enum AnyRobot {
     Physical(PhysicalRobot),
 }
 
-/// The `version` field of an exported file (2 when absent).
+/// The `version` field of an exported file (2 when absent; the shared rule
+/// is `sim_domain_robot::model::simrobot_version`).
 pub fn file_version(path: &str) -> Result<u32, String> {
     let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
     let value: serde_json::Value = serde_json::from_str(&text).map_err(|e| format!("{path}: {e}"))?;
-    Ok(value.get("version").and_then(|v| v.as_u64()).unwrap_or(2) as u32)
+    Ok(sim_domain_robot::model::simrobot_version(&value))
 }
 
 impl AnyRobot {

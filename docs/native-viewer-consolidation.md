@@ -1953,7 +1953,12 @@ its scene parked, outside Build/Lessons). A switch is refused, naming the
 reason, while a draft, placement drag, study, replay, Codex answer or open
 is in progress in the builder, a lesson draft or contact sheet is, or a robot
 recording is being written or replayed; and when the target mode has no
-document or its document fails to load. One REST server on one port serves
+document or its document fails to load. Entering Lessons from Build is
+checked the same way by every entry point (the switcher, the builder's
+Lessons button, `system_ui` `mode:lessons`, `viewer_mode`, `lesson_open`,
+`lesson_screen`): a builder draft or work in progress refuses it by name,
+and a live build run is paused and kept, not dropped (2026-09-30, batch
+action-layer). One REST server on one port serves
 every mode: each capability lists its `modes`, and a command of another mode
 is refused naming the active mode. `--headless` still serves inspect mode
 only (no window to switch).

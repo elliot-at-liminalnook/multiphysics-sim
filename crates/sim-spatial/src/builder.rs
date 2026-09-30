@@ -505,12 +505,16 @@ impl Builder {
         self.scene_dirty = true;
     }
 
-    /// Stop any interactive run and leave no pending input or drag, before a
-    /// lesson takes over the view (the lesson plays its own recorded runs).
-    pub(crate) fn stop_for_learn(&mut self) {
-        self.run = None;
-        self.input = None;
-        self.drag = None;
+    /// Entering Lessons: the lesson screen is drawn over the builder and plays
+    /// its own recorded runs. A live run is paused and kept, not dropped (Run
+    /// resumes it back in build mode; `sync_run` leaves the scene to the
+    /// lesson meanwhile); a connect or annotate mode ends. No draft or drag
+    /// can be open: the mode switch refuses to enter Lessons from Build on
+    /// them (`switch_blockers`).
+    pub(crate) fn pause_for_learn(&mut self) {
+        if self.running() {
+            self.run_pause();
+        }
         self.connect_from = None;
         self.mode = Mode::Select;
         self.panel_dirty = true;
@@ -1640,118 +1644,6 @@ pub(super) struct BuilderPanel;
 #[derive(Component)]
 pub(super) struct ReferenceQuad(String);
 
-#[derive(Component, Clone, Debug, serde::Serialize)]
-#[serde(rename_all="snake_case")]
-enum BuildAction {
-    /// Back to the lesson this builder was opened from.
-    Lessons,
-    OpenReference(String),
-    CloseReference,
-    Agent(agent::Request),
-    Discussion(discussion::Action),
-    ImportNotes,
-    GridSnap, GridVisible, GridPlane, GridSpacing, GridOrigin, Position,
-    Tab(Tab),
-    Category(Option<&'static str>),
-    SetMode(Mode),
-    /// Live run back to t = 0, paused (`Builder::run_reset`).
-    Reset,
-    /// Advance the paused live run one timestep (`Builder::run_step`).
-    Step,
-    Up,
-    Level(String),
-    Select(String),
-    /// A schematic box: the same selection path as `Select` (the Outline).
-    SchematicSelect(String),
-    /// Show or hide the schematic pane.
-    ToggleSchematic,
-    Open(String),
-    Filter,
-    Group,
-    Ungroup,
-    Swap,
-    SwapTo(usize),
-    MakeUnique,
-    Delete,
-    Rename,
-    Terminal(Terminal),
-    CancelConnect,
-    Disconnect(Terminal),
-    Parameter(String, String),
-    Undo,
-    Redo,
-    Run,
-    Pause,
-    ImportImage,
-    Opacity(String, f32),
-    Lock(String),
-    Calibrate(String),
-    Width(String),
-    RemoveReference(String),
-    SaveToLibrary,
-    SyncLibrary,
-    /// Expose (instance, parameter) of this level as a level parameter.
-    Expose(String, String),
-    /// Show a library item's card.
-    Preview(usize),
-    PreviewKind(InstanceKind),
-    ClosePreview,
-    PlacePreview,
-    /// Attach the preview to the selected instance's port.
-    AttachPreview(String),
-    /// Attach suggestion `index` to the selected instance's `port`.
-    Snap(String, usize),
-    SnapMore(String),
-    ToggleNotes,
-    ToggleGraphs,
-    RunStudy(String),
-    RemoveStudy(String),
-    CompareSelected,
-    SweepParameter(String, String),
-    CancelStudy,
-    ClearStudy,
-    SaveRun,
-    ToggleRealtime,
-    PickRun(String),
-    CompareRuns,
-    ReplayRun(String),
-    CancelReplay,
-    Pin(String),
-    Unpin(String),
-    /// Open this system file in the window (Systems tab list).
-    OpenSystem(PathBuf),
-    /// Type a system file path to open.
-    OpenSystemPath,
-    CancelOpen,
-    /// Type an actuator registry path (Actuators tab).
-    ActuatorRegistryPath,
-    /// Type a consumer file to check against the registry.
-    ActuatorConsumerPath,
-    /// Reload the registry and recheck the previous consumer files.
-    ActuatorReload,
-    CancelActuators,
-    /// Type a gait-lab results folder (Gait lab tab).
-    GaitResultsPath,
-    /// Reread the current results folder.
-    GaitReload,
-    CancelGaitReports,
-    /// Show this results entry (directory name) in detail.
-    GaitReportSelect(String),
-    /// Registry or Measured evidence part of the Actuators tab.
-    ActuatorView(calibration::ActuatorView),
-    /// Type an identification archive folder (Measured evidence).
-    CalibrationPath,
-    /// Reload the current identification archive.
-    CalibrationReload,
-    CancelCalibration,
-    CalibrationSplit(calibration::SplitFilter),
-    CalibrationOutcome(calibration::OutcomeFilter),
-    /// Page of the filtered trial list (0-based).
-    CalibrationPage(usize),
-    /// Select a trial of the shown archive and chart it.
-    CalibrationTrial(String),
-}
-
 /// The System Builder: Build mode, and the builder under the lesson screen
 /// (Lessons). Its systems run in the Builder scope (Build and Lessons), in
 /// their original order; those that draw or edit the builder's own chrome
@@ -1760,9 +1652,14 @@ pub struct BuilderPlugin;
 impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         let building = in_state(ViewerMode::Build);
+        crate::app::actions::register::<system_actions::SystemAction>(app);
+        // Buttons and keys write the builder's actions (after REST's, as the old chain
+        // applied them); its one handler applies them and REST's in Actions.
+        app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone())).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(ModeScope::Builder)))
+            .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building.clone()), grab_push.run_if(building.clone()), builder_buttons, builder_keys.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), ui::hover, clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
+            (frame_timing, watch, agent::tick, reference::tick, text_input, drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), ui::hover, clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
                 .before(update_parts)
                 .in_set(ViewerSet::SimSync)
@@ -1917,475 +1814,6 @@ fn drops(mut events: MessageReader<FileDragAndDrop>, mut builder: ResMut<Builder
             };
             builder.report(result);
         }
-    }
-}
-
-fn builder_buttons(
-    actions: Query<(&Interaction, &BuildAction, Option<&ui_api::Enabled>), (Changed<Interaction>, With<Button>)>,
-    mut builder: ResMut<Builder>,
-    mut scene: ResMut<SpatialScene>,
-    mut orbit: Single<&mut Orbit>,
-    mut learn: Option<ResMut<crate::lesson::Learn>>,
-) {
-    let pressed: Vec<BuildAction> = actions.iter().filter(|(i, _,enabled)| **i == Interaction::Pressed && enabled.is_none_or(|e|e.0)).map(|(_, a,_)| a.clone()).collect();
-    for action in pressed {
-        if matches!(action, BuildAction::Lessons) {
-            if let Some(learn) = learn.as_deref_mut() {
-                builder.stop_for_learn();
-                // A mode switch to Lessons (app::switch), not a flag flip.
-                learn.request_screen(true);
-            }
-            continue;
-        }
-        dispatch(&mut builder, &mut scene, &mut orbit, action);
-    }
-}
-
-fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, action: BuildAction) {
-    builder.action_error=None;
-    builder.panel_dirty = true;
-    match action {
-        BuildAction::Lessons => {}
-        BuildAction::OpenReference(target)=>{let r=builder.reference.open(target);builder.report(r);builder.panel_dirty=true;},
-        BuildAction::CloseReference=>{builder.reference=Default::default();builder.panel_dirty=true;},
-        BuildAction::Agent(action)=>{let r=builder.agent_request(action);builder.report(r);},
-        BuildAction::Discussion(action)=>discussion::act(builder,scene,orbit,action),
-        BuildAction::ImportNotes=>{let r=builder.discussion_request(discussion::Request::ImportLegacy,None,scene,orbit);builder.report(r);},
-        BuildAction::GridSnap | BuildAction::GridVisible | BuildAction::GridPlane => {
-            let mut grid=builder.grid(); match action {BuildAction::GridSnap=>grid.snap=!grid.snap, BuildAction::GridVisible=>grid.visible=!grid.visible,_=>grid.plane=match grid.plane {sim_system::display::Plane::Xz=>sim_system::display::Plane::Xy,sim_system::display::Plane::Xy=>sim_system::display::Plane::Yz,_=>sim_system::display::Plane::Xz}};
-            let r=builder.set_grid(grid);builder.report(r);
-        }
-        BuildAction::GridSpacing=>builder.start_input(Purpose::GridSpacing,builder.grid().spacing_m.to_string()),
-        BuildAction::GridOrigin=>builder.start_input(Purpose::GridOrigin,builder.grid().origin_m.iter().map(|v|v.to_string()).collect::<Vec<_>>().join(" ")),
-        BuildAction::Position=>{if let Some(s)=builder.selected.iter().next().and_then(|n|builder.spec(n)){builder.start_input(Purpose::Position,s.placement.position.iter().map(|v|v.to_string()).collect::<Vec<_>>().join(" "));}},
-        BuildAction::Tab(tab) => {
-            if tab == Tab::Systems && builder.open.shell.is_some() {
-                builder.open.systems = open::discover(&builder.store.path, &builder.library_dir);
-            }
-            // First visit: load the default registry (off the UI thread).
-            if tab == Tab::Actuators && builder.actuators.shown.is_none() && builder.actuators.error.is_none() && builder.actuators.pending().is_none() {
-                let r = builder.actuators_request(None, None);
-                builder.report(r);
-            }
-            if tab == Tab::Actuators && builder.actuator_view == calibration::ActuatorView::Evidence {
-                builder.calibration_first_visit();
-            }
-            // First visit: read the default results folder (off the UI thread).
-            if tab == Tab::GaitLab && builder.gait_lab.shown.is_none() && builder.gait_lab.error.is_none() && builder.gait_lab.pending().is_none() {
-                let r = builder.gait_reports_request(None);
-                builder.report(r);
-            }
-            builder.tab = tab;
-        }
-        BuildAction::Category(category) => {
-            builder.category = category;
-            builder.page = 0;
-        }
-        BuildAction::SetMode(mode) => {
-            if builder.input.is_some(){builder.status="Finish or cancel the current draft first.".into();return;}
-            builder.mode = mode;
-            builder.connect_from = None;
-            builder.status = match mode {
-                Mode::Annotate => "Annotate: click a rendered surface to place a comment; Escape cancels.".into(),
-                Mode::Connect => "Connect: select a part, pick a port in the inspector, then pick the other port.".into(),
-                Mode::Select => "Select: click parts; shift-click adds to the selection.".into(),
-            };
-            if let Some(name) = builder.only_selected() {
-                builder.port_menu = (mode == Mode::Connect).then_some(name);
-            }
-        }
-        BuildAction::Reset => {
-            let r = builder.run_reset();
-            builder.report(r);
-        }
-        BuildAction::Step => {
-            let r = builder.run_step();
-            builder.report(r);
-        }
-        BuildAction::Up => {
-            let parent = builder.level.rsplit_once('/').map(|(p, _)| p.to_string()).unwrap_or_default();
-            let child = builder.level.rsplit('/').next().unwrap_or("").to_string();
-            let r = builder.set_level(&parent);
-            if !child.is_empty() {
-                builder.selected = BTreeSet::from([child]);
-            }
-            orbit.home = true;
-            builder.report(r);
-        }
-        BuildAction::Level(path) => {
-            let r = builder.set_level(&path);
-            orbit.home = true;
-            builder.report(r);
-        }
-        BuildAction::Select(name) | BuildAction::SchematicSelect(name) => {
-            let _ = builder.suggestions(&name);
-            builder.selected = BTreeSet::from([name]);
-            builder.alternatives = None;
-            builder.scene_dirty = true;
-        }
-        BuildAction::Open(name) => {
-            let path = builder.full_path(&name);
-            let r = builder.set_level(&path);
-            orbit.home = true;
-            builder.report(r);
-        }
-        BuildAction::Preview(index) => {
-            builder.preview = builder.filtered().get(index).cloned().cloned();
-            builder.load_preview_sheet();
-            if let Some(name) = builder.only_selected() {
-                let _ = builder.suggestions(&name);
-            }
-        }
-        BuildAction::PreviewKind(kind) => {
-            builder.preview = builder.palette_item(&kind);
-            builder.load_preview_sheet();
-            if builder.preview.is_none() {
-                builder.status = format!("{} is not in the palette at this level", sim_system::commands::kind_label(&kind));
-            }
-        }
-        BuildAction::ClosePreview => builder.preview = None,
-        BuildAction::PlacePreview => {
-            if let Some(item) = builder.preview.take() {
-                builder.place(item);
-            }
-        }
-        BuildAction::AttachPreview(port) => {
-            let (Some(name), Some(item)) = (builder.only_selected(), builder.preview.clone()) else { return };
-            let candidate = builder.suggestions(&name).ok().and_then(|all| all.into_iter().find(|p| p.port == port)).and_then(|p| p.candidates.into_iter().find(|c| c.kind == item.kind));
-            let r = match candidate {
-                Some(c) => builder.snap(&name, &port, &c).map(|n| builder.status = format!("Snapped {n} onto {name}.{port}")),
-                None => Err(format!("{} has no port that fits {name}.{port}", item.label)),
-            };
-            builder.report(r);
-        }
-        BuildAction::Snap(port, index) => {
-            let Some(name) = builder.only_selected() else { return };
-            let candidate = builder.suggestions(&name).ok().and_then(|all| all.into_iter().find(|p| p.port == port)).and_then(|p| p.candidates.into_iter().nth(index));
-            if let Some(c) = candidate {
-                let r = builder.snap(&name, &port, &c).map(|n| builder.status = format!("Snapped {n} ({}) onto {name}.{port}", c.label));
-                builder.report(r);
-            }
-        }
-        BuildAction::SnapMore(port) => {
-            if !builder.snap_expanded.remove(&port) {
-                builder.snap_expanded.insert(port);
-            }
-        }
-        BuildAction::ToggleNotes => builder.show_notes = !builder.show_notes,
-        BuildAction::RunStudy(name) => {
-            let r = builder.run_study(&name);
-            builder.report(r);
-        }
-        BuildAction::RemoveStudy(name) => {
-            let r = builder.apply("Remove study", vec![SystemCommand::SetStudy { name, study: None }]);
-            builder.report(r);
-        }
-        BuildAction::CompareSelected => {
-            if let Some(name) = builder.only_selected() {
-                let r = builder.compare_alternatives(scene, &name);
-                builder.report(r);
-            }
-        }
-        BuildAction::SweepParameter(name, parameter) => {
-            let observe = builder.default_observe(scene, &name);
-            builder.start_input(Purpose::Sweep { name, parameter, observe }, String::new());
-            builder.status = "Sweep: type from, to and count (for example 1 4 4), then Enter.".into();
-        }
-        BuildAction::CancelStudy => {
-            if let Some(job) = builder.study.job.take() {
-                job.work.cancel();
-                builder.status = "Study cancelled.".into();
-            }
-        }
-        BuildAction::ClearStudy => builder.study.result = None,
-        BuildAction::OpenSystem(path) => {
-            let result = builder.open_system(path);
-            builder.report(result);
-        }
-        BuildAction::OpenSystemPath => builder.start_input(Purpose::OpenSystem, String::new()),
-        BuildAction::CancelOpen => {
-            builder.cancel_open();
-        }
-        BuildAction::ActuatorRegistryPath => {
-            let shown = builder.actuators.registry.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
-            builder.start_input(Purpose::ActuatorRegistry, shown);
-        }
-        BuildAction::ActuatorConsumerPath => builder.start_input(Purpose::ActuatorConsumer, String::new()),
-        BuildAction::ActuatorReload => {
-            let r = builder.actuators_request(None, None);
-            builder.report(r);
-        }
-        BuildAction::CancelActuators => {
-            builder.cancel_actuators();
-        }
-        BuildAction::ActuatorView(view) => {
-            builder.actuator_view = view;
-            // First visit: load the tracked archive (off the UI thread).
-            if view == calibration::ActuatorView::Evidence {
-                builder.calibration_first_visit();
-            }
-        }
-        BuildAction::CalibrationPath => {
-            let shown = builder.calibration.path.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
-            builder.start_input(Purpose::CalibrationArchive, shown);
-        }
-        BuildAction::CalibrationReload => {
-            let r = builder.calibration_request(None);
-            builder.report(r);
-        }
-        BuildAction::CancelCalibration => {
-            builder.cancel_calibration();
-        }
-        BuildAction::CalibrationSplit(f) => builder.set_calibration_filter(Some(f), None),
-        BuildAction::CalibrationOutcome(f) => builder.set_calibration_filter(None, Some(f)),
-        BuildAction::CalibrationPage(page) => builder.set_calibration_page(page),
-        BuildAction::CalibrationTrial(id) => {
-            let r = builder.select_calibration_trial(&id);
-            builder.report(r);
-        }
-        BuildAction::GaitResultsPath => {
-            let shown = builder.gait_lab.root.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
-            builder.start_input(Purpose::GaitResults, shown);
-        }
-        BuildAction::GaitReload => {
-            let r = builder.gait_reports_request(None);
-            builder.report(r);
-        }
-        BuildAction::CancelGaitReports => {
-            builder.cancel_gait_reports();
-        }
-        BuildAction::GaitReportSelect(name) => {
-            let r = builder.select_gait_report(name);
-            builder.report(r);
-        }
-        BuildAction::ToggleRealtime => {
-            builder.realtime = !builder.realtime;
-            builder.stop_run();
-            builder.status = if builder.realtime { "Realtime profile: every part's realtime model at the profile's step. Press Run.".into() } else { "Detailed model. Press Run.".into() };
-        }
-        BuildAction::SaveRun => {
-            let r = builder.save_run("saved by hand").map(|_| ());
-            builder.report(r);
-        }
-        BuildAction::PickRun(id) => {
-            if !builder.run_picks.remove(&id) {
-                builder.run_picks.insert(id);
-            }
-        }
-        BuildAction::ReplayRun(id) => {
-            let r = builder.replay_run(&id);
-            builder.report(r);
-        }
-        BuildAction::CancelReplay => {
-            builder.cancel_replay();
-        }
-        BuildAction::CompareRuns => {
-            let ids: Vec<String> = builder.run_picks.iter().cloned().collect();
-            let r = builder.compare_runs(&ids);
-            builder.report(r);
-        }
-        BuildAction::ToggleGraphs => builder.graphs.visible = !builder.graphs.visible,
-        BuildAction::ToggleSchematic => builder.schematic.visible = !builder.schematic.visible,
-        BuildAction::Pin(id) => {
-            if !builder.graphs.pinned.contains(&id) {
-                builder.graphs.pinned.push(id);
-                if builder.graphs.pinned.len() > graphs::MAX_CHARTS {
-                    builder.graphs.pinned.remove(0);
-                }
-            }
-            builder.graphs.visible = true;
-            builder.observe(scene);
-        }
-        BuildAction::Unpin(id) => builder.graphs.pinned.retain(|p| *p != id),
-        BuildAction::Filter => {
-            let initial = builder.filter.clone();
-            builder.start_input(Purpose::Filter, initial);
-        }
-        BuildAction::Group => builder.group_selected(),
-        BuildAction::Ungroup => {
-            if let Some(name) = builder.only_selected() {
-                let r = builder.apply("Ungroup", vec![SystemCommand::Ungroup { at: builder.level.clone(), name }]);
-                if r.is_ok() {
-                    builder.selected.clear();
-                }
-                builder.report(r);
-            }
-        }
-        BuildAction::Swap => {
-            if let Some(name) = builder.only_selected() {
-                match library::alternatives(&builder.document, &builder.registry, Some(&builder.library_dir), &builder.level, &name) {
-                    Ok(list) => {
-                        builder.status = format!("{} implementations fit {name}'s connected ports", list.len());
-                        builder.alternatives = Some((name, list));
-                    }
-                    Err(e) => builder.status = e.to_string(),
-                }
-            }
-        }
-        BuildAction::SwapTo(index) => {
-            if let Some((name, list)) = builder.alternatives.clone() {
-                if let Some(alt) = list.get(index) {
-                    let mut commands = Vec::new();
-                    if let Some(path) = &alt.library_path {
-                        match library::import(std::path::Path::new(path)) {
-                            Ok(definitions) => commands.push(SystemCommand::AddDefinitions { definitions }),
-                            Err(e) => {
-                                builder.status = e.to_string();
-                                return;
-                            }
-                        }
-                    }
-                    commands.push(SystemCommand::Swap { at: builder.level.clone(), name, kind: alt.kind.clone(), keep_parameters: true });
-                    let r = builder.apply(&format!("Swap to {}", alt.label), commands);
-                    builder.report(r);
-                }
-            }
-        }
-        BuildAction::MakeUnique => {
-            if let Some(name) = builder.only_selected() {
-                if let Some(InstanceKind::Subsystem { definition }) = builder.spec(&name).map(|s| s.kind) {
-                    let mut id = format!("{definition}_{name}");
-                    let mut n = 2;
-                    while builder.document.definitions.contains_key(&id) {
-                        id = format!("{definition}_{name}_{n}");
-                        n += 1;
-                    }
-                    let r = builder.apply("Make unique", vec![SystemCommand::MakeUnique { at: builder.level.clone(), name, definition: id }]);
-                    builder.report(r);
-                }
-            }
-        }
-        BuildAction::Delete => builder.remove_selected(),
-        BuildAction::Rename => {
-            if let Some(name) = builder.only_selected() {
-                builder.start_input(Purpose::Rename(name.clone()), name);
-            }
-        }
-        BuildAction::Terminal(t) => match builder.connect_from.take() {
-            None => {
-                builder.status = format!("Connecting from {t}: pick the other terminal (select another part, then its port).");
-                builder.connect_from = Some(t);
-            }
-            Some(from) if from == t => builder.status = "Connection cancelled.".into(),
-            Some(from) => {
-                let r = builder.apply("Connect", vec![SystemCommand::Connect { at: builder.level.clone(), terminals: vec![from, t], label: String::new() }]);
-                builder.report(r);
-            }
-        },
-        BuildAction::CancelConnect => {
-            builder.connect_from = None;
-            builder.status = "Connection cancelled.".into();
-        }
-        BuildAction::Disconnect(t) => {
-            let r = builder.apply("Disconnect", vec![SystemCommand::Disconnect { at: builder.level.clone(), terminal: t }]);
-            builder.report(r);
-        }
-        BuildAction::Parameter(name, parameter) => {
-            let current = builder.spec(&name).and_then(|s| s.parameters.get(&parameter).cloned()).map(|b| match b {
-                sim_system::ParameterBinding::Value { value, .. } => value.to_string(),
-                sim_system::ParameterBinding::Parameter { parameter } => format!("${parameter}"),
-            });
-            builder.start_input(Purpose::Parameter { name, parameter }, current.unwrap_or_default());
-        }
-        BuildAction::Undo => {
-            let _ = builder.undo();
-        }
-        BuildAction::Redo => {
-            let _ = builder.redo();
-        }
-        BuildAction::Run => builder.start_run(scene),
-        BuildAction::Pause => builder.pause_run(),
-        BuildAction::ImportImage => builder.start_input(Purpose::ImportImage, String::new()),
-        BuildAction::Opacity(id, delta) => {
-            if let Some(mut r) = builder.reference(&id) {
-                r.opacity = (r.opacity + delta).clamp(0.05, 1.0);
-                let result = builder.apply("Reference opacity", vec![SystemCommand::SetReference { at: builder.level.clone(), id, reference: r }]);
-                builder.report(result);
-            }
-        }
-        BuildAction::Lock(id) => {
-            if let Some(mut r) = builder.reference(&id) {
-                r.locked = !r.locked;
-                let result = builder.apply(if r.locked { "Lock reference" } else { "Unlock reference" }, vec![SystemCommand::SetReference { at: builder.level.clone(), id, reference: r }]);
-                builder.report(result);
-            }
-        }
-        BuildAction::Calibrate(id) => {
-            builder.calibrating = Some((id, Vec::new()));
-            builder.status = "Calibrate: click two points on the image a known distance apart.".into();
-        }
-        BuildAction::Width(id) => {
-            let width = builder.reference(&id).map(|r| r.width.to_string()).unwrap_or_default();
-            builder.start_input(Purpose::ReferenceWidth(id), width);
-        }
-        BuildAction::RemoveReference(id) => {
-            let r = builder.apply("Remove reference", vec![SystemCommand::RemoveReference { at: builder.level.clone(), id }]);
-            builder.report(r);
-        }
-        BuildAction::SaveToLibrary => {
-            if let Some(name) = builder.only_selected() {
-                if let Some(InstanceKind::Subsystem { definition }) = builder.spec(&name).map(|s| s.kind) {
-                    let r = builder.publish(&definition).map(|_| ());
-                    builder.report(r);
-                }
-            }
-        }
-        BuildAction::SyncLibrary => {
-            let r = builder.sync_library().map(|_| ());
-            builder.report(r);
-        }
-        BuildAction::Expose(instance, parameter) => {
-            let r = builder.expose(&instance, &parameter).map(|_| ());
-            builder.report(r);
-        }
-    }
-}
-
-fn builder_keys(keys: Res<ButtonInput<KeyCode>>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mut orbit: Single<&mut Orbit>) {
-    if builder.drag.is_some() { return; }
-    if builder.typing() {
-        return;
-    }
-    let command = keys.pressed(KeyCode::SuperLeft) || keys.pressed(KeyCode::SuperRight) || keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
-    let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
-    if command && keys.just_pressed(KeyCode::KeyZ) {
-        let _ = if shift { builder.redo() } else { builder.undo() };
-        return;
-    }
-    let step = if shift { 0.001 } else { 0.005 };
-    for (key, delta) in [
-        (KeyCode::ArrowLeft, [-step, 0., 0.]),
-        (KeyCode::ArrowRight, [step, 0., 0.]),
-        (KeyCode::ArrowUp, [0., 0., -step]),
-        (KeyCode::ArrowDown, [0., 0., step]),
-        (KeyCode::PageUp, [0., step, 0.]),
-        (KeyCode::PageDown, [0., -step, 0.]),
-    ] {
-        if keys.just_pressed(key) {
-            builder.nudge(delta);
-        }
-    }
-    let action = if keys.just_pressed(KeyCode::KeyN) {
-        Some(BuildAction::SetMode(Mode::Annotate))
-    } else if keys.just_pressed(KeyCode::Escape) {
-        Some(BuildAction::SetMode(Mode::Select))
-    } else if keys.just_pressed(KeyCode::Delete) || keys.just_pressed(KeyCode::Backspace) {
-        Some(BuildAction::Delete)
-    } else if keys.just_pressed(KeyCode::KeyG) {
-        Some(BuildAction::Group)
-    } else if keys.just_pressed(KeyCode::KeyU) {
-        Some(BuildAction::Up)
-    } else if keys.just_pressed(KeyCode::Enter) {
-        builder.only_selected().filter(|n| matches!(builder.spec(n).map(|s| s.kind), Some(InstanceKind::Subsystem { .. }))).map(BuildAction::Open)
-    } else if keys.just_pressed(KeyCode::Slash) {
-        Some(BuildAction::Filter)
-    } else if keys.just_pressed(KeyCode::KeyR) {
-        Some(if builder.running() { BuildAction::Pause } else { BuildAction::Run })
-    } else {
-        None
-    };
-    if let Some(action) = action {
-        dispatch(&mut builder, &mut scene, &mut orbit, action);
     }
 }
 
@@ -2609,7 +2037,7 @@ fn frame_timing(time: Res<Time>, mut builder: ResMut<Builder>) {
     }
 }
 
-fn sync_run(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>) {
+fn sync_run(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mode: Res<State<ViewerMode>>) {
     builder.poll_study();
     builder.poll_replay();
     if (builder.study.job.is_some() || builder.replay.job.is_some()) && time.elapsed_secs_f64() - builder.live_refresh > 0.25 {
@@ -2619,6 +2047,11 @@ fn sync_run(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<Spa
     if builder.run.is_some() && time.elapsed_secs_f64() - builder.live_refresh > 0.25 {
         builder.live_refresh = time.elapsed_secs_f64();
         builder.panel_dirty = true;
+    }
+    // Under the lesson screen the scene shows the lesson's recorded runs; a
+    // kept (paused) builder run shows again back in build mode.
+    if *mode.get() == ViewerMode::Lessons {
+        return;
     }
     let Some(run) = &builder.run else { return };
     let Ok(shared) = run.worker.shared().lock() else { return };
@@ -2633,6 +2066,10 @@ fn sync_run(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<Spa
 }
 
 mod reference;
+pub(crate) mod actions;
+pub(crate) mod system_actions;
+pub(crate) use actions::BuildAction;
+use actions::dispatch;
 pub(crate) mod agent;
 pub(crate) mod graphs;
 mod markers;
@@ -2736,6 +2173,10 @@ impl Builder {
     }
     pub(crate) fn test_drop_draft(&mut self) {
         self.input = None;
+    }
+    /// A live run is kept: whether its thread reports it running (None: no run).
+    pub(crate) fn test_run(&self) -> Option<bool> {
+        self.run.as_ref().map(|_| self.running())
     }
 }
 

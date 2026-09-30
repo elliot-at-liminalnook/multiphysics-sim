@@ -1,6 +1,10 @@
-//! Discoverable REST adapter for the actual UI handlers, without pixel input.
+//! `system_ui` for the builder: the live controls (every rendered button's
+//! `BuildAction`, collected after the panel is rebuilt) and the handler of
+//! `system_actions::UiAction`, which activates a control's action through
+//! `dispatch` or makes the gesture a click would, without pixel input.
 use super::*;
-use serde::{Deserialize, Serialize};
+use super::system_actions::UiAction;
+use serde::Serialize;
 use std::hash::{Hash, Hasher};
 
 #[derive(Component)]
@@ -30,49 +34,6 @@ impl Default for Controls {
         }
     }
 }
-#[derive(Deserialize)]
-#[serde(tag = "operation", rename_all = "snake_case", deny_unknown_fields)]
-pub(crate) enum Request {
-    Controls,
-    Activate {
-        id: String,
-        ui_revision: u64,
-    },
-    Tab {
-        tab: Tab,
-    },
-    Mode {
-        mode: Mode,
-    },
-    ClickPart {
-        component: String,
-        #[serde(default)]
-        add: bool,
-        #[serde(default)]
-        point_m: Option<[f32; 3]>,
-    },
-    Annotate {
-        target: String,
-        #[serde(default)]
-        pin_m: [f32; 3],
-    },
-    OpenThread {
-        id: String,
-    },
-    Input {
-        text: String,
-        expected_text: String,
-        #[serde(default)]
-        submit: bool,
-    },
-    CancelInput {
-        expected_text: String,
-    },
-    /// Scroll the left sidebar to a pixel offset, as the mouse wheel would.
-    Scroll {
-        offset_y: f32,
-    },
-}
 fn hash(value: &impl Serialize) -> u64 {
     let mut h = std::hash::DefaultHasher::new();
     serde_json::to_vec(value).unwrap_or_default().hash(&mut h);
@@ -84,7 +45,7 @@ impl Builder {
     }
     pub(crate) fn ui_request(
         &mut self,
-        request: Request,
+        request: UiAction,
         expected_revision: Option<u64>,
         scene: &mut SpatialScene,
         orbit: &mut Orbit,
@@ -94,12 +55,12 @@ impl Builder {
         }
         self.action_error = None;
         match request {
-            Request::Controls => {
+            UiAction::Controls => {
                 return Ok(
                     serde_json::json!({"ui_revision":self.ui_api.revision,"ready":!self.panel_dirty&&!self.ui_api.items.is_empty(),"controls":self.ui_api.items.values().collect::<Vec<_>>(),"state":self.ui_state()}),
                 );
             }
-            Request::Activate { id, ui_revision } => {
+            UiAction::Activate { id, ui_revision } => {
                 if self.panel_dirty || ui_revision != self.ui_api.revision {
                     return Err("UI changed; request controls again before activating".into());
                 }
@@ -114,14 +75,14 @@ impl Builder {
                 }
                 dispatch(self, scene, orbit, c.action);
             }
-            Request::Tab { tab } => dispatch(self, scene, orbit, BuildAction::Tab(tab)),
-            Request::Mode { mode } => {
+            UiAction::Tab { tab } => dispatch(self, scene, orbit, BuildAction::Tab(tab)),
+            UiAction::Mode { mode } => {
                 if self.input.is_some() {
                     return Err("finish or cancel the current draft first".into());
                 }
                 dispatch(self, scene, orbit, BuildAction::SetMode(mode));
             }
-            Request::OpenThread { id } => {
+            UiAction::OpenThread { id } => {
                 if !self.document.discussions.threads.contains_key(&id) {
                     return Err("unknown discussion".into());
                 }
@@ -132,7 +93,7 @@ impl Builder {
                     BuildAction::Discussion(discussion::Action::Open(id)),
                 );
             }
-            Request::ClickPart {
+            UiAction::ClickPart {
                 component,
                 add,
                 point_m,
@@ -147,10 +108,10 @@ impl Builder {
                     click_part(self, &component, add);
                 }
             }
-            Request::Annotate { target, pin_m } => {
+            UiAction::Annotate { target, pin_m } => {
                 self.begin_annotation_target(scene, &target, pin_m)?
             }
-            Request::Input {
+            UiAction::Input {
                 text,
                 expected_text,
                 submit,
@@ -180,7 +141,7 @@ impl Builder {
                     }
                 }
             }
-            Request::CancelInput { expected_text } => {
+            UiAction::CancelInput { expected_text } => {
                 let input = self.input.as_ref().ok_or("no input is open")?;
                 if input.buffer != expected_text {
                     return Err(
@@ -189,7 +150,7 @@ impl Builder {
                 }
                 discussion::act(self, scene, orbit, discussion::Action::CancelDraft);
             }
-            Request::Scroll { offset_y } => {
+            UiAction::Scroll { offset_y } => {
                 if !offset_y.is_finite() {
                     return Err("offset_y must be a finite number of pixels".into());
                 }
@@ -336,7 +297,7 @@ mod tests {
             ..Default::default()
         };
         b.ui_request(
-            Request::Mode {
+            UiAction::Mode {
                 mode: Mode::Connect,
             },
             None,
@@ -345,7 +306,7 @@ mod tests {
         )
         .unwrap();
         b.ui_request(
-            Request::ClickPart {
+            UiAction::ClickPart {
                 component: "motor".into(),
                 add: false,
                 point_m: None,
@@ -359,7 +320,7 @@ mod tests {
         assert!(b.selected.contains("motor"));
         let before = b.document.clone();
         b.ui_request(
-            Request::Annotate {
+            UiAction::Annotate {
                 target: "motor".into(),
                 pin_m: [0.001, 0.002, 0.003],
             },
@@ -371,7 +332,7 @@ mod tests {
         assert_eq!(b.tab, Tab::Discussions);
         assert!(
             b.ui_request(
-                Request::Input {
+                UiAction::Input {
                     text: "stale".into(),
                     expected_text: "some other draft".into(),
                     submit: false
@@ -385,7 +346,7 @@ mod tests {
         assert_eq!(b.input.as_ref().unwrap().buffer, "");
         assert_eq!(b.document, before);
         b.ui_request(
-            Request::Input {
+            UiAction::Input {
                 text: "REST surface note".into(),
                 expected_text: "".into(),
                 submit: true,
@@ -408,7 +369,7 @@ mod tests {
         );
         b.tab = Tab::Library;
         b.ui_request(
-            Request::OpenThread { id: id.clone() },
+            UiAction::OpenThread { id: id.clone() },
             None,
             &mut scene,
             &mut orbit,
@@ -430,11 +391,14 @@ mod tests {
         let mut b = app.world_mut().remove_resource::<Builder>().unwrap();
         let c = b.ui_api.items.values().next().unwrap().clone();
         let ui_revision = b.ui_api.revision;
+        // The collected id fits the builder's registered control pattern.
+        let patterns = <super::super::system_actions::SystemAction as crate::app::actions::Action>::controls();
+        assert!(patterns.iter().any(|p| crate::app::actions::control_matches(p, &c.id)), "{}", c.id);
         assert!(c.label.contains("reply"));
         assert!(!c.enabled);
         assert!(
             b.ui_request(
-                Request::Activate {
+                UiAction::Activate {
                     id: c.id.clone(),
                     ui_revision
                 },
@@ -447,7 +411,7 @@ mod tests {
         b.ui_api.items.get_mut(&c.id).unwrap().enabled = true;
         assert!(
             b.ui_request(
-                Request::Activate {
+                UiAction::Activate {
                     id: c.id.clone(),
                     ui_revision: ui_revision - 1
                 },
@@ -458,7 +422,7 @@ mod tests {
             .is_err()
         );
         b.ui_request(
-            Request::Activate {
+            UiAction::Activate {
                 id: c.id,
                 ui_revision,
             },
@@ -469,7 +433,7 @@ mod tests {
         .unwrap();
         assert_eq!(b.input.as_ref().unwrap().purpose, Purpose::Comment);
         b.ui_request(
-            Request::Input {
+            UiAction::Input {
                 text: "Draft to keep".into(),
                 expected_text: "".into(),
                 submit: false,
@@ -481,7 +445,7 @@ mod tests {
         .unwrap();
         assert!(
             b.ui_request(
-                Request::CancelInput {
+                UiAction::CancelInput {
                     expected_text: "wrong".into()
                 },
                 None,
@@ -492,7 +456,7 @@ mod tests {
         );
         assert_eq!(b.input.as_ref().unwrap().buffer, "Draft to keep");
         b.ui_request(
-            Request::CancelInput {
+            UiAction::CancelInput {
                 expected_text: "Draft to keep".into(),
             },
             None,

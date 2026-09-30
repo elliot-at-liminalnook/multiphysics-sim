@@ -5,6 +5,7 @@
 mod animation;
 pub(crate) mod annotate;
 pub mod app;
+pub(crate) mod inspect;
 pub(crate) mod chart;
 pub mod builder;
 pub mod jobs;
@@ -331,17 +332,19 @@ impl SpatialScene {
 pub struct SpatialViewerPlugin;
 impl Plugin for SpatialViewerPlugin {
     fn build(&self, app: &mut App) {
+        app::actions::register::<inspect::InspectAction>(app);
         app.init_resource::<physics_view::Labels>()
             .init_resource::<view::PartHover>()
             .add_systems(OnEnter(ModeScope::Inspect), (setup_scene, setup_ui))
             .add_systems(OnEnter(ModeScope::Builder), (setup_scene, setup_ui))
+            // Buttons, keys, the notes panel and the overlay bar write the view's actions.
+            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).in_set(ViewerSet::Input).run_if(in_state(SpatialScreen)))
+            .add_systems(Update, inspect::apply.in_set(ViewerSet::Actions).run_if(in_state(SpatialScreen)))
             .add_systems(
                 Update,
                 (
                     notes::update,
-                    rest::poll,
                     buttons,
-                    keyboard,
                     linked::sync_link,
                     animation::sync_live,
                     update_layout,
@@ -361,7 +364,7 @@ impl Plugin for SpatialViewerPlugin {
             )
             .add_systems(
                 Update,
-                (view::animate, physics_view::overlay_clicks, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, view::caption_fonts)
+                (view::animate, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, view::caption_fonts, inspect::publish)
                     .chain()
                     .after(animation::draw_markers)
                     .in_set(ViewerSet::Present)
@@ -415,18 +418,6 @@ struct Orbit {
     glide: Option<view::Glide>,
     /// Slow circling, rad/s; any learner input stops it.
     spin: f32,
-}
-#[derive(Component, Clone)]
-enum Action {
-    Select(String),
-    Net(String),
-    Clear,
-    Parts,
-    Explode,
-    Connections,
-    Home,
-    Hide,
-    ShowAll,
 }
 #[derive(Component)]
 struct PartsPanel;
@@ -654,7 +645,7 @@ fn text(value: impl Into<String>, size: f32, color: Color) -> impl Bundle {
         TextLayout::linebreak(bevy::text::LineBreak::WordOrCharacter),
     )
 }
-fn action_button(label: &str, action: Action) -> impl Bundle {
+fn action_button(label: &str, action: inspect::InspectAction) -> impl Bundle {
     (
         Button,
         action,
@@ -720,20 +711,21 @@ pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene) {
                 ..default()
             })
             .with_children(|row| {
-                row.spawn(action_button("Parts", Action::Parts));
-                row.spawn(action_button("Clear", Action::Clear));
-                row.spawn(action_button("Explode", Action::Explode));
-                row.spawn(action_button("Connections", Action::Connections));
-                row.spawn(action_button("Fit view", Action::Home));
-                row.spawn(action_button("Hide selected", Action::Hide));
-                row.spawn(action_button("Show all", Action::ShowAll));
+                use inspect::{InspectAction as A, Toggle};
+                row.spawn(action_button("Parts", A::Toggle(Toggle::Parts)));
+                row.spawn(action_button("Clear", A::Select { target: SelectionTarget::None }));
+                row.spawn(action_button("Explode", A::Toggle(Toggle::Exploded)));
+                row.spawn(action_button("Connections", A::Toggle(Toggle::Connections)));
+                row.spawn(action_button("Fit view", A::Fit));
+                row.spawn(action_button("Hide selected", A::Display { action: SpatialCommand::HideSelected }));
+                row.spawn(action_button("Show all", A::Display { action: SpatialCommand::ShowAll }));
             });
         });
     commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(0.0), top: Val::Px(TOP), bottom: Val::Px(BOTTOM), width: Val::Px(scene.left()), display: if scene.parts_visible && !scene.builder_mode { Display::Flex } else { Display::None }, padding: UiRect::all(Val::Px(18.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(9.0), ..default() }, BackgroundColor(PANEL), PartsPanel, UiRoot))
         .with_children(|column| {
             column.spawn(text("COMPONENTS", 12.0, MUTED));
             for (i, (id, label)) in scene.representatives().iter().enumerate() {
-                column.spawn(action_button(&format!("{}  {}", i+1, label), Action::Select(id.clone())));
+                column.spawn(action_button(&format!("{}  {}", i+1, label), inspect::InspectAction::Display { action: SpatialCommand::Select { component: id.clone() } }));
             }
             column.spawn((text("Select a part in the assembly or here.\n\nGold marks the selection.\nLive temperature colors retain their scale when selected.", 13.0, MUTED), Node { margin: UiRect::top(Val::Px(16.0)), ..default() }));
         });
@@ -790,7 +782,7 @@ pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene) {
                             .collect::<Vec<_>>()
                             .join(" / ")
                     ),
-                    Action::Net(id.clone()),
+                    inspect::InspectAction::Select { target: SelectionTarget::net(id.clone()) },
                 ));
             }
             column.spawn((
@@ -831,19 +823,22 @@ pub(crate) fn spawn_ui(commands: &mut Commands, scene: &SpatialScene) {
         });
 }
 
+/// The toolbar, parts and connection buttons: lit while what they select or
+/// switch on is (their presses are actions, `inspect::input`).
 fn buttons(
-    mut interactions: Query<(&Interaction, &Action, &mut BackgroundColor), With<Button>>,
+    mut interactions: Query<(&Interaction, &inspect::InspectAction, &mut BackgroundColor), With<Button>>,
     scene: Res<SpatialScene>,
 ) {
+    use inspect::{InspectAction as A, Toggle};
     for (interaction, action, mut bg) in &mut interactions {
         let active = match action {
-            Action::Select(id) => scene.details.components.contains(id),
-            Action::Net(id) => {
-                matches!(&scene.selection, SelectionTarget::Nets {ids} if ids.contains(id))
+            A::Display { action: SpatialCommand::Select { component } } => scene.details.components.contains(component),
+            A::Select { target: SelectionTarget::Nets { ids } } => {
+                matches!(&scene.selection, SelectionTarget::Nets { ids: selected } if ids.iter().all(|id| selected.contains(id)))
             }
-            Action::Parts => scene.parts_visible,
-            Action::Explode => scene.state.exploded,
-            Action::Connections => scene.state.connections,
+            A::Toggle(Toggle::Parts) => scene.parts_visible,
+            A::Toggle(Toggle::Exploded) => scene.state.exploded,
+            A::Toggle(Toggle::Connections) => scene.state.connections,
             _ => false,
         };
         bg.0 = if active {
@@ -853,104 +848,6 @@ fn buttons(
         } else {
             Color::srgb(0.115, 0.15, 0.19)
         };
-    }
-    // Press dispatch is handled by change detection below, to avoid repeat while held.
-}
-
-fn dispatch(action: &Action, scene: &mut SpatialScene, orbit: &mut Orbit) {
-    let command = match action {
-        Action::Net(id) => {
-            if let Err(e) = scene.set_selection(SelectionTarget::net(id.clone())) {
-                error!("{e}");
-            }
-            return;
-        }
-        Action::Clear => {
-            let _ = scene.set_selection(SelectionTarget::None);
-            return;
-        }
-        Action::Parts => {
-            scene.parts_visible = !scene.parts_visible;
-            orbit.home = true;
-            return;
-        }
-        Action::Select(id) => SpatialCommand::Select {
-            component: id.clone(),
-        },
-        Action::Explode => {
-            orbit.home = true;
-            SpatialCommand::SetExploded {
-                enabled: !scene.state.exploded,
-            }
-        }
-        Action::Connections => SpatialCommand::SetConnections {
-            enabled: !scene.state.connections,
-        },
-        Action::Home => {
-            orbit.home = true;
-            return;
-        }
-        Action::Hide => SpatialCommand::HideSelected,
-        Action::ShowAll => SpatialCommand::ShowAll,
-    };
-    if let Err(e) = scene.apply(command) {
-        error!("{e}");
-    }
-}
-
-fn keyboard(
-    keys: Res<ButtonInput<KeyCode>>,
-    actions: Query<(&Interaction, &Action), (Changed<Interaction>, With<Button>)>,
-    mut scene: ResMut<SpatialScene>,
-    mut camera: Single<&mut Orbit>,
-    window: Option<Single<&Window>>,
-    builder: Option<Res<builder::Builder>>,
-    mode: Option<Res<State<ViewerMode>>>,
-) {
-    // The lesson screen has its own keys.
-    if builder.as_ref().is_some_and(|b| b.typing()) || mode.is_some_and(|m| *m.get() == ViewerMode::Lessons) {
-        return;
-    }
-    // F: fly to the selected part (the whole system when nothing is selected).
-    if let Some(window) = window.filter(|_| keys.just_pressed(KeyCode::KeyF)) {
-        let focus = scene.details.components.iter().next().cloned().or_else(|| scene.state.selected.clone());
-        view::zoom_to(&scene, &mut camera, &window, focus.as_deref(), 1.0, view::GLIDE_S);
-    }
-    for (interaction, action) in &actions {
-        if *interaction == Interaction::Pressed {
-            dispatch(action, &mut scene, &mut camera);
-        }
-    }
-    for (key, action) in [
-        (KeyCode::Escape, Action::Clear),
-        (KeyCode::KeyH, Action::Home),
-        (KeyCode::KeyE, Action::Explode),
-        (KeyCode::KeyC, Action::Connections),
-    ] {
-        if keys.just_pressed(key) {
-            dispatch(&action, &mut scene, &mut camera);
-        }
-    }
-    let ids = scene.representatives();
-    for (i, key) in [
-        KeyCode::Digit1,
-        KeyCode::Digit2,
-        KeyCode::Digit3,
-        KeyCode::Digit4,
-        KeyCode::Digit5,
-        KeyCode::Digit6,
-        KeyCode::Digit7,
-        KeyCode::Digit8,
-        KeyCode::Digit9,
-    ]
-    .iter()
-    .enumerate()
-    {
-        if keys.just_pressed(*key) {
-            if let Some((id, _)) = ids.get(i) {
-                scene.select(id.clone());
-            }
-        }
     }
 }
 
@@ -1430,8 +1327,11 @@ mod tests {
         let expected = scene.spatial.parts[1].component.clone();
         let mut app = App::new();
         app.insert_resource(scene)
-            .insert_resource(ButtonInput::<KeyCode>::default());
-        app.add_systems(Update, keyboard);
+            .insert_resource(ButtonInput::<KeyCode>::default())
+            .init_resource::<app::actions::Replies>();
+        app::actions::register::<inspect::InspectAction>(&mut app);
+        // A press writes the action; its one handler applies it.
+        app.add_systems(Update, (inspect::input, inspect::apply).chain());
         let camera = app
             .world_mut()
             .spawn(Orbit {
@@ -1485,7 +1385,7 @@ mod tests {
             .spawn((
                 Button,
                 Interaction::Pressed,
-                Action::Select(expected.clone()),
+                inspect::InspectAction::Display { action: SpatialCommand::Select { component: expected.clone() } },
             ))
             .id();
         app.update();
@@ -1497,7 +1397,7 @@ mod tests {
                 .as_ref(),
             Some(&expected)
         );
-        *app.world_mut().get_mut::<Action>(button).unwrap() = Action::Explode;
+        *app.world_mut().get_mut::<inspect::InspectAction>(button).unwrap() = inspect::InspectAction::Toggle(inspect::Toggle::Exploded);
         *app.world_mut().get_mut::<Interaction>(button).unwrap() = Interaction::None;
         app.update();
         *app.world_mut().get_mut::<Interaction>(button).unwrap() = Interaction::Pressed;

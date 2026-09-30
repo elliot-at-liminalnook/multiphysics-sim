@@ -1,7 +1,9 @@
 //! The mode switcher: one small row of buttons in every mode, one of the
-//! three entry points of the mode switch (with `system_ui` `mode:*` and REST
-//! `viewer_mode`).
-use super::switch::{Documents, ModeSwitch, Switcher};
+//! entry points of the mode switch (with `system_ui` `mode:*`, REST
+//! `viewer_mode`, the builder's Lessons button and the lesson screen's
+//! toggles), all writing the same `WindowAction::Switch`.
+use super::actions::Act;
+use super::switch::{Documents, ModeSwitch, Switcher, WindowAction};
 use super::{Persistent, ViewerMode};
 use bevy::prelude::*;
 
@@ -51,12 +53,12 @@ pub(crate) fn spawn_switcher(mut commands: Commands, fonts: Res<crate::builder::
     ));
 }
 
-/// Input: a click on the switcher submits a switch (no document: the mode
+/// Input: a click on the switcher asks for a switch (no document: the mode
 /// reopens its own, or is refused naming what it needs).
-pub(crate) fn switcher_clicks(buttons: Query<(&Interaction, &ModeButton), Changed<Interaction>>, mut switch: ResMut<Switcher>) {
+pub(crate) fn switcher_clicks(buttons: Query<(&Interaction, &ModeButton), Changed<Interaction>>, mut switch: MessageWriter<Act<WindowAction>>) {
     for (interaction, button) in &buttons {
         if *interaction == Interaction::Pressed {
-            switch.submit(ModeSwitch { mode: button.0, document: None });
+            switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: button.0, document: None })));
         }
     }
 }

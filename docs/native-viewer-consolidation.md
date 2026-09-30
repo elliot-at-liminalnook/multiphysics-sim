@@ -497,13 +497,20 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     REST route, so it was not exercised natively. It is verified only by the
     unit test
     `builder::replay_tests::grab_swap_keeps_the_run_fidelity_and_marks_it_edited`.
-  - The viewer resolves the part registry from the working directory, so
-    launch it from the repository root.
+  - The part registry, library and `runs/` come from the one resolved
+    workspace root (§6), not the working directory, so the viewer can be
+    launched from anywhere with an absolute FILE. Verified in T14.3 from a
+    temporary directory outside the repository: the same palette (215
+    distinct rows, identical per-category counts), the authored parts and
+    the 18 library subsystems as a launch from the repository root
+    (`.claude-pair/captures/T14-launch/capture.json`).
 - **Source owner:** Rust runtime.
 - **Acceptance evidence:** reproduce by running
   `python3 .claude-pair/captures/T6-live-controls/drive_live.py` and
-  `python3 .claude-pair/captures/T7-live-truthfulness/drive_pause.py` from
-  the repository root. They need a current debug `sim-spatial` build.
+  `python3 .claude-pair/captures/T7-live-truthfulness/drive_pause.py`. They
+  need a current debug `sim-spatial` build. (Those drivers pass relative
+  example paths, so they still run from the repository root; the viewer
+  itself no longer needs to.)
 
 ### f. Annotations and source links
 - **Entry today:** sim-spatial Notes tab and pins (`builder/discussion.rs`,
@@ -798,7 +805,11 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
     idle/replaying/cancelled/done/failed, completed/total, completed_steps,
     verdict, error, measured, replaced, wall_s).
   - *File rule:* `runs/robot-presets/<preset-id>/<UTC stamp>.json` under the
-    repository root (the directory the preset paths are resolved against).
+    resolved workspace root (§6), the same root the preset paths are resolved
+    against, whatever the launch directory. Verified in T14.3: launched from
+    a temporary directory with `--robot-presets <root>/web/viewer/presets.json`,
+    Save wrote `<root>/runs/robot-presets/pendulum-environment/20260930T074259.860Z.json`
+    and its sidecar, and nothing in the launch directory.
     `<stem>.json` is the shared recording exactly as `serde_json` writes it,
     with no wrapper, so it goes straight into `prepare_replay`. The viewer's
     metadata (preset id and paths, UTC time, seed, note, viewer version,
@@ -1249,13 +1260,81 @@ unknown-id error).
    - *Still not done:* observation panels beyond the two charts, channel
      picking, a chart time cursor/scrub, file watching, gait playback, and a
      PWM build path for `--robot FILE` full-robot exports.
+6. **Partial — L0: one launch path** (batch launch-cwd, T14.1–T14.3).
+   - *Done:* `sim-spatial FILE` opens a `*.system.json`, a `*.simrobot.json`,
+     a lessons directory or a place directory in the mode its type selects
+     (`sim_spatial::launch::classify`, commit 3d092226). Repository data comes
+     from one workspace root resolved by `sim_runtime::workspace` (commit
+     ca305fbf) and reported over REST (§6).
+   - *Verified in T14.3* (`.claude-pair/captures/T14-launch/`, capture.json
+     ok=true): from a temporary directory outside the repository with
+     absolute paths, the system opened with the same registry and library
+     counts as a repository-root launch, the simrobot ran, a preset recording
+     saved under `<root>/runs/robot-presets/`, capabilities, system_state and
+     robot_state reported `found_by: opened_file`, and an unknown FILE failed
+     naming the path and the accepted types. Nothing was written to the
+     launch directory.
+   - *Still not done:* switching modes inside one window (a FILE of another
+     type needs a relaunch); presets are not positional (`--robot-preset ID`,
+     which from outside a checkout needs `--robot-presets FILE`, `--workspace`
+     or `SIM_WORKSPACE`); gait-lab output is not a FILE type; lessons and
+     place launches from outside the repository were not captured (they use
+     the same resolver and dispatch).
 
 ## 6. Launch path
 
-Today (build mode, the shell):
+One command opens any supported file, from any directory:
 
 ```
-cargo run -p sim-spatial -- --system examples/systems-builder/motor-driver-board/board.system.json
+sim-spatial FILE                  # e.g. target/debug/sim-spatial /abs/path/board.system.json
+cargo run -p sim-spatial -- FILE
+sim-spatial --validate-only FILE  # checks FILE without a window
+```
+FILE is dispatched by name or structure only (`sim_spatial::launch::classify`):
+`*.system.json` → build mode, `*.simrobot.json` → robot mode, a directory
+holding `place.json` → place mode, a directory with `<slug>/lesson.md`
+entries → lessons mode. Anything else (another suffix, a missing path, a
+directory with neither marker) exits nonzero naming the path and the four
+accepted types. FILE conflicts with the mode flags (`--system`, `--robot`,
+`--robot-preset`, `--lessons`, `--place`, `--description`, …), which keep
+their meaning; `--lesson SLUG` works with a lessons FILE.
+
+**Workspace root.** Repository data (the part registry `library/parts`, the
+palette library `library/systems`, `library/models`, `web/viewer/presets.json`
+and its preset inputs, `runs/` outputs such as `runs/robot-presets` and the
+lesson sandbox) comes from one root resolved once per launch by
+`sim_runtime::workspace` (rule in `workspace::RULE`), first match wins:
+1. `--workspace DIR`, then `$SIM_WORKSPACE` (an override without the marker
+   is an error naming it; it never falls through);
+2. the nearest ancestor of the opened file (FILE, the mode flag's path, or
+   an explicit `--robot-presets FILE`);
+3. the nearest ancestor of the current directory.
+
+The marker is a `Cargo.toml` with a `[workspace]` table next to a `library/`
+directory. Narrower overrides still win over the root: `SIM_PARTS_DIR` for
+authored parts, and explicit `--library`, `--models` and `--robot-presets`
+paths, which keep normal cwd-relative meaning. `SIM_LESSON_SANDBOX` /
+`SIM_LESSON_SETTINGS` still override the lesson sandbox.
+
+**No root found.** Nothing silently falls back to the current directory. The
+error lists every directory searched, the marker and how to override. Build
+and lessons modes refuse to start unless `--library` is given; the registry
+loads built-in components only, with a warning; `--robot FILE` still opens,
+with `root: null`; a preset needs `--robot-presets FILE`, `--workspace` or
+`SIM_WORKSPACE` (bare `--robot-preset ID` from outside a checkout fails with
+the named error, captured in T14.3).
+
+**Where REST reports it.** The `workspace` object `{root, found_by: override |
+env | opened_file | cwd, from, error, rule}` is in `GET /v1/capabilities`,
+build-mode `system_state` and `robot_state` (and `robot_presets`).
+Verified in T14.3 from a temporary directory outside the repository
+(`.claude-pair/captures/T14-launch/`: `system-outside.png`,
+`robot-outside.png`, `preset-outside.png`, capture.json ok=true).
+
+Build mode (the shell):
+
+```
+sim-spatial examples/systems-builder/motor-driver-board/board.system.json
 ```
 Once it is running, open another system from the **Systems** sidebar tab (a
 discovered row, or a path in the field and Enter), or send REST
@@ -1271,12 +1350,15 @@ cargo run -p sim-spatial -- --validate-only --robot FILE.simrobot.json
 REST `robot_state` returns the loaded values and the run and jog state.
 
 Robot presets (the scene, controller config and task declared in
-`web/viewer/presets.json`, run on the shared Rust environment/session). Run
-from the repository root; use a release build for the full robot, where debug
-reaches only about 0.03× real time:
+`web/viewer/presets.json`, run on the shared Rust environment/session). Inside
+a checkout the root comes from the current directory; from elsewhere pass
+`--robot-presets <root>/web/viewer/presets.json` (or `--workspace`). Use a
+release build for the full robot, where debug reaches only about 0.03× real
+time:
 
 ```
 cargo run --release -p sim-spatial -- --robot-preset robot-measured-400hz
+sim-spatial --robot-preset pendulum-environment --robot-presets /abs/repo/web/viewer/presets.json
 ```
 Press Run (or Step) to build. Then use W/A/S/D and X (Stop), the inspector
 buttons, `system_ui` `motion:*` or REST `robot_input` to send motion requests
@@ -1290,7 +1372,7 @@ Preset recordings (§2h). After Run or Step, **Save recording** (or
 `system_ui` `recording:save`, REST `robot_save_recording {"note": …}`)
 writes `runs/robot-presets/<preset-id>/<UTC stamp>.json` (the shared
 recording, as the browser's Download) plus `<stem>.meta.json` under the
-directory the viewer was launched from (the repository root). Nothing is
+resolved workspace root, whatever the launch directory. Nothing is
 overwritten; `robot_state.recording.last_saved` gives the path and step
 count. To list recordings, use the inspector's Replay section (the 5
 newest), `robot_state.recordings`, or `robot_replay {"action":"list"}` /
@@ -1332,7 +1414,9 @@ frames, observation panels beyond the two robot-mode charts, and realtime walkin
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,
 where FILE may be a system, simrobot, lesson directory or gait-lab output, opened
-in one window with modes and tabs. RoboCAD runs as a CAD service (its window is
+in one window with modes and tabs. The FILE launch exists now for systems,
+simrobots, lessons and places (above); gait-lab output and switching modes
+within one window do not. RoboCAD runs as a CAD service (its window is
 still used for geometry authoring), and the browser remains for realtime
 walking and hardware calibration.
 

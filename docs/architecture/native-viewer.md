@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (measured 2026-09-30, after action-layer)
+## Where it is today (measured 2026-09-30, after ui-kit)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -33,7 +33,7 @@ duplicates physics.
   (`app::actions::capabilities`); no hand-written list is left. Place mode
   answers `state`, `camera` and `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
-  done 2026-09-30, pending verification: every intent is a typed action
+  verified at 90c65c86: every intent is a typed action
   (`WindowAction`, `InspectAction`, `SystemAction` carrying the builder's
   `BuildAction`, `LessonCommand` carrying `LessonAction`, `RobotAction`,
   `PlaceAction`) written as a Bevy Message (`Act<A>`) by buttons, keys,
@@ -59,10 +59,35 @@ duplicates physics.
   screenshots). `Interaction` is named 86 times in 16 files and `KeyCode`
   133 times in 10 files; the press, key and pick sites only map input to
   actions or style hover (swept 2026-09-30).
-- **UI is hand-built** `Node` trees (17 files name `Node`). Headers,
-  inspectors, tabs, docks and charts are rebuilt per feature.
-- **Large files:** `robot_run.rs` (2,597 lines), `builder.rs` (2,442),
-  `lesson/mod.rs` (2,348) and `robot.rs` (2,275). The action modules are
+- **One UI kit** (`src/ui_kit/`, see [UI kit](#ui-kit-2026-09-30)), done
+  2026-09-30, pending verification: tokens defined once (`ui_kit/theme.rs`),
+  one widget builder (`Kit`: text, header, button in every `Look`, tab strip,
+  chip, segment, section, property row, list item, text-entry styling, dock,
+  scroll area, slider on `bevy_ui_widgets::Slider`, pointer surface, chart
+  image and labels), one repaint for hover and state (`Look`, `Tint`), and
+  accessible labels on interactive widgets. Every mode and the switcher
+  build their common UI from it; the lib test
+  `ui_kit::tests::ui_colours_come_from_the_kit` forbids `Tint` literals and
+  token-equal `Color::srgb` literals outside the kit. One chart rasterizer
+  (`chart::rasterize_span`).
+- **`Node {` sites per file**, before (90c65c86) → after: `builder/ui.rs`
+  82 → 64, `lesson/ui.rs` 78 → 76, `robot.rs` 48 → 28, `lesson/practice.rs`
+  27 → 27, `builder/calibration.rs` 16 → 13, `lib.rs` 14 → 13,
+  `lesson/narrate.rs` 13 → 12, `lesson/extras.rs` 11 → 11, `markdown.rs`
+  10 → 10, `builder/gait_lab.rs` 10 → 10, `builder/schematic.rs` 9 → 9,
+  `notes.rs` 6 → 2, `annotate.rs` 5 → 5, `physics_view.rs` 3 → 2,
+  `builder/markers.rs` 3 → 3, `app/switcher.rs` 3 → 1, `place_view.rs`
+  1 → 1; `ui_kit/` 27 (its widgets). What remains outside the kit is
+  layout-only containers (rows, columns, gaps, the `layout` a dock or scroll
+  area is given) and feature drawings (the schematic canvas, lesson cards,
+  playheads, masks, sketch dots, markers, 3D labels, cards the kit has no
+  widget for); see the UI kit section.
+- **Large files:** `robot_run.rs` (2,597 lines), `builder.rs` (2,453),
+  `lesson/mod.rs` (2,373) and `robot.rs` (2,205). UI files after ui-kit:
+  `builder/ui.rs` 1,395 (was 1,684), `lesson/ui.rs` 1,158, `lib.rs` 1,294
+  (was 1,411), `app/switcher.rs` 84; `ui_kit/` 903 lines (`widgets.rs` 346,
+  `theme.rs` 199, `tests.rs` 157, `slider.rs` 85, `mod.rs` 71, `scroll.rs`
+  45). The action modules are
   under 700 lines each (`lesson/actions.rs` 670, `builder/actions.rs` 661,
   `robot/actions.rs` 634, `app/actions.rs` 490, `inspect.rs` 412,
   `builder/system_actions.rs` 395); `app/switch.rs` is 806, `app/tests.rs`
@@ -91,6 +116,11 @@ through the official 0.16→0.17→0.18→0.19 guides, with no intended feature 
   - **Later addition (one-app-modes):** `bevy_state`, for the `ViewerMode`
     states (`StatesPlugin` comes with `DefaultPlugins`; `bevy_state` was
     already in `Cargo.lock` through `sim-app`).
+  - **Later addition (ui-kit):** `bevy_ui_widgets` (it enables
+    `bevy_input_focus`), for the kit's headless slider; `DefaultPlugins`
+    then adds `UiWidgetsPlugins` and the input-focus plugins. `bevy_feathers`
+    is not enabled (see [UI kit](#ui-kit-2026-09-30)). Both crates were
+    already in `Cargo.lock`.
 - **Pins.** `bevy = "0.19.1"` (workspace) and `=0.19.1` (`sim-spatial`).
   `image = "=0.25.10"` is unchanged (0.19.1 resolves to it). `objc2` 0.6 and
   `raw-window-handle` 0.6 became direct macOS dependencies of `sim-spatial`
@@ -707,6 +737,190 @@ Paths are `crates/sim-spatial/src/`.
     `World::write_message` in `serve`.
 - **Not yet verified.** Nothing here has been built or run.
 
+## UI kit (2026-09-30)
+
+Batch ui-kit (epic order item 5) put every mode's common UI on one kit,
+`crates/sim-spatial/src/ui_kit/`. Commits: 66a79f33 (kit, tokens, chart),
+60a9b9e3, d2584f09 and b5dfcb40 (kit follow-ups and tests), 1a9583da (robot),
+6f8f4d78 (build panels), 864bdda6 (lessons), 106c4dfe (inspect, place,
+switcher), 32e4cea1 and a56b4260 (review fixes).
+
+- **Layout.** `theme.rs` (tokens, `UiFonts`, `Look` and its `Paint`, `Tint`
+  and presets), `widgets.rs` (`Kit` and the repaint and label systems),
+  `slider.rs` (slider, pointer surface), `scroll.rs` (scroll area, wheel
+  step, scroll clamp), `mod.rs` (contract, `UiKitPlugin`), `tests.rs`.
+  `UiKitPlugin` is added once by `app::CorePlugin`.
+- **Tokens.** The builder's palette and metrics, defined once: layout
+  (`TOPBAR`, `STATUSBAR`, `LEFT_WIDTH`, `RIGHT_WIDTH`), colours (`BAR`,
+  `SURFACE`, `RAISED`, `HOVER_BG`, `BORDER`, `TEXT`, `SUBTLE`, `FAINT`,
+  `VALUE`, `ACCENT` and its hover, `ACCENT_BG`, `ON_ACCENT`, `WARN`, `DANGER`
+  and its hover and edge, `OK`), the type scale (`size::…`) and `UiFonts`.
+  Deleted: `builder::ui::Kit`, `Look`, `Tint`, `UiFonts`, `hover`, the
+  builder/ui.rs and lib.rs colour constants, lesson/ui.rs's `ACCENT` alias,
+  robot.rs's `label`, `tab` and header builders, the switcher's own button
+  colours, `builder/graphs.rs::rasterize` and `view::cursor_fraction`.
+- **Temporary re-exports** (66a79f33) kept the tree whole while the four
+  modes moved: `builder/ui.rs` re-exported the kit (tokens, `Kit`, `Look`,
+  `Tint`, `UiFonts`, `wrap`, `divider`), `builder.rs` re-exported the layout
+  constants and `lib.rs` aliased `INK`/`MUTED`/`PANEL`/`ACCENT` to kit tokens.
+  All three are gone (6f8f4d78, 106c4dfe); every file imports `crate::ui_kit`.
+
+### Decisions
+
+- **Buttons: `bevy::ui::Button` + `Interaction`, not `bevy_ui_widgets::Button`.**
+  The headless button activates on release (`Pointer<Click>`), or on a
+  picking press with `ActivateOnPress`, through `Activate` observers. Every
+  mode's input system, `system_ui` activation, the tests and the hover
+  styling read press-time `Interaction`, so adopting it would have changed
+  when clicks count and rewritten the action layer's input side. The kit
+  button keeps the same `Button` + action component + `Enabled` + label text
+  that `builder::ui_api::collect` discovers, so ids and labels are unchanged.
+  Revisit if the action layer moves to observers.
+- **Sliders: `bevy_ui_widgets::Slider`** (`TrackClick::Snap`, no thumb, range
+  0..=1, `SliderStep(0.01)`), with Bevy's `slider_self_update` observer.
+  Modes poll `SliderValue` (the pointer's fraction, as `cursor_fraction`
+  gave) and `ui_kit::slider_held` (the widget's `Pressed` and the left
+  button's `Interaction::Pressed`), so the timeline, parameter sliders and
+  narration bar send the same actions at the same moments as before. The
+  widget alone reacts to every mouse button and can keep `Pressed` after a
+  still release off the bar; `slider_held` restores the old left-button,
+  release-anywhere semantics. The chart hover and the sketch canvas are 2D
+  pointer surfaces (`pointer_surface`, `surface_point`), which Bevy has no
+  widget for.
+- **Scroll areas: not `bevy_ui_widgets::ScrollArea`.** Its wheel step is
+  fixed at 100 px a line and it scrolls the node under the pointer; the
+  modes scroll their columns by pointer region at 28 px (24 px in robot and
+  inspect) a line. The kit gives the node (`scroll_area`), the wheel step
+  (`wheel_delta`) and the clamp (`clamp_scroll_positions`, moved from
+  `view.rs`). No scrollbar widget was added (a visual addition).
+- **Feathers: not used.** Its palette, fonts and control shapes are not the
+  builder's, and the batch preserves the builder's look; its theme tokens
+  would have been a second token set. Revisit with a visual refresh.
+- **Text input: Bevy's text input not adopted.** The builder's draft
+  semantics (the "/" filter key is not typed, Escape leaves Connect, a draft
+  survives a mode switch) are recent reading-only fixes with no test; the
+  kit only styles the entry (`Kit::input`). Revisit when those have tests.
+- **State styling.** `Look` is a component: a mode that toggles a button
+  (current tab, lit chip, chosen segment, enabled) writes a new `Look` or
+  `Enabled` and `repaint_buttons` repaints it, hover included. `Tint`
+  (with presets; the struct literal is forbidden outside the kit) does the
+  same for rows and cards. This replaced robot's, inspect's and the
+  switcher's per-frame `BackgroundColor` painting.
+- **Accessibility.** Kit buttons, rows, inputs, sliders and pointer surfaces
+  carry `AccessibleLabel`; `keep_labels` re-applies it after `bevy::ui`'s
+  own button labelling (which clears labels of buttons without direct text
+  children), and `follow_button_text` keeps a button's label in step with a
+  rewritten label text. The remaining hand-built clickable rows got labels.
+- **Colour guard allowlist** (`ui_kit/tests.rs`): `builder/schematic.rs`
+  (the light schematic canvas), `builder/placement.rs`, `models.rs`,
+  `linked.rs`, `animation.rs` (3D materials and gizmos). Tag colours
+  (`builder::ui::tag_color`), chart trace colours and card drawings are
+  their own colours and none equals a token today (the one that did, the
+  Subsystems tag, now names `ACCENT`).
+
+### Visual differences (intended, none designed)
+
+- **Inspect:** text, secondary text and panels converge on `TEXT`, `SUBTLE`,
+  `SURFACE` (columns) and `BAR` (header and footer, now with a 1 px edge);
+  the old INK 0.87/0.90/0.94, MUTED 0.56/0.64/0.72 and PANEL 0.075/0.093/0.12
+  are gone. Buttons (fill 0.115/0.15/0.19, border 0.21/0.27/0.33, hover
+  0.20/0.26/0.32, active 0.12/0.32/0.31, 14 px) become Chip (toggles and
+  selections) and Secondary looks at 11.5/12.5 px; headings become kit
+  sections; the title is semibold IBM Plex at its old size.
+- **Robot:** the header is BAR with an edge, side columns and graph dock get
+  1 px edges; buttons (0.16/0.20/0.25, 45 % accent hover) become Secondary,
+  overlay toggles Chips, the current section Tab(true), link selection
+  `ACCENT_BG`; disabled buttons show FAINT text instead of a faded fill; the
+  title is 16 px semibold (was 18 px regular); block headings are kit
+  sections with a caption; the motion, recorded and gait rows wrap.
+- **Switcher:** a kit segmented control (Segment palette, kit frame and
+  padding) on its translucent backdrop.
+- **Physics overlay bar:** opaque Chip looks with hover (were translucent
+  without hover).
+- **Build:** none intended; the graph dock sits in a layout-only positioning
+  node. The inspect notes panel now uses IBM Plex, kit sections and buttons.
+- **Lessons:** the notes column's titles are 16 px (were 18), the lab's
+  expected values are property rows, equation and id text may break inside
+  words (`Kit::mono`), the narration overlay label uses `ON_ACCENT`.
+
+### Remaining raw `Node {` trees (reasons)
+
+- Layout-only containers: rows, columns, gaps and margins, the `layout`
+  argument of `dock`/`scroll_area`/`chart_image`, positioning slots
+  (graph docks, overlay bar, switcher corner, split and inset captions over
+  the 3D view, place help).
+- Feature drawings: the schematic pane and canvas (boxes, nets, ports,
+  overlay), viewport markers and leader lines, lesson cards (scene, quiz,
+  compare, reflect, lab, locked, editor, agent), playheads, masks, fills,
+  event marks, the concept meter, sketch canvas, grid and dots, phase dots,
+  figures, markdown blocks, discussion and annotation cards, composers and
+  3D labels.
+- Rows the kit has no widget for yet (requested, not built: a card, a
+  multi-line text area, a progress bar, an icon-less list row): builder
+  reference/snap/study cards, port rows, calibration and gait trial rows,
+  lesson outline rows, robot link rows.
+
+### Found by reading and fixed
+
+- The study sweep chart ("metric vs parameter") was drawn with the 20 s time
+  window on the parameter axis (dropping points more than 20 units below the
+  largest); it is an x–y plot and uses the whole range (66a79f33).
+- Robot's run controls could draw under the header (ui roots of equal
+  z-index); they get `ZIndex(1)` (1a9583da).
+- `Kit::chart_label` would not compile (`use<>` with an `impl` argument);
+  sliders answered every mouse button and could stay held; inspect's long
+  connection names overflowed; see 32e4cea1 and a56b4260.
+
+### Rejected or deferred review findings
+
+- A disabled `Look::Primary` keeps its accent fill: that is today's builder
+  look; not redesigned.
+- Moving `Enabled` from `builder::ui_api` into the kit: it is `system_ui`'s
+  discovery flag and stays with discovery; the kit depends on it on purpose.
+- A kit card, text area, progress bar and icon-less row: new widgets, left
+  for when a feature needs them.
+- `list_item`'s selected edge is drawn at spawn only (documented; rebuild the
+  row to change selection). Robot link rows are hand-built and only change
+  their `Tint`.
+- Lesson transcript wheel scrolling (the wheel scrolls by column): as before.
+
+### Disk
+
+Before the batch, 18.46 GiB were free. 573 older duplicate
+`target/debug/incremental/<crate>-*` directories (keeping the newest per
+crate, 377 kept) were removed, freeing about 31 GiB (49 GiB free after).
+
+### Verification checklist
+
+Nothing in this batch has been compiled or run. The verification pass should:
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
+  warnings (first compile of the kit: check `use<>` bounds, `AccessibleLabel`
+  and `AccessibilityNode` paths, `ChildOf::parent`, the `bevy_ui_widgets`
+  feature in the lock file);
+- `cargo test -p sim-spatial --lib`: the registry tests (app/tests.rs,
+  `builder::ui_api::tests`) with the same ids, the chart test
+  (`chart::tests::a_time_window_draws_the_same_pixels_as_the_points_inside_it`),
+  the source guard (`ui_kit::tests::ui_colours_come_from_the_kit`),
+  `kit_bundles_spawn`, `looks_paint_the_builder_palette`, the lesson card
+  test and the notes panel test;
+- `cargo check -p sim-app`;
+- a reading trace per mode of one button, one slider and one scroll area:
+  - Build: Toolbar "Run" (`Kit::button` → `Button` + `BuildAction::Run` →
+    `builder::actions::buttons` on `Changed<Interaction>` → `Act` →
+    `system_actions::apply`); sidebar scroll (`Scroll::Left` +
+    `scroll_panels` via `wheel_delta`); no slider.
+  - Lessons: timeline (`Kit::slider(Timebar)` → `SliderValue` + `slider_held`
+    in `lesson::seek` → `SeekTo`); a lesson button (`LessonAction` →
+    `lesson::actions::buttons`); the page scroll (`LearnScroll::Page`).
+  - Robot: a run button (`RobotAction::Run` → `robot::actions::buttons`);
+    the inspector scroll (`InspectorScroll` + `robot::scroll`); no slider.
+  - Inspect: a toolbar chip (`InspectAction` → `inspect::input`); the
+    inspector scroll (`scroll_inspector`); no slider.
+  - Switcher: a mode segment (`ModeButton` → `switcher_clicks` →
+    `WindowAction::Switch`).
+  - Place: no buttons or sliders (keys and fly camera only).
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -859,12 +1073,20 @@ started before the `App` (tests, `--validate-only`, headless) and
 
 ### 6. One UI kit
 
-- A `ui_kit` module on Bevy Feathers and the standard headless widgets
-  (0.17–0.19) provides: header, tabs, inspector sections, property rows, lists,
-  text input, docks, charts, toasts and dialogs.
-- Theme tokens live in one place.
+- The `ui_kit` module (`src/ui_kit/`) provides: text, header, tab strip,
+  buttons in every look (primary, secondary, ghost, danger, tab, chip,
+  segment), inspector sections, property rows, list items, text-entry
+  styling, docks, scroll areas, sliders, pointer surfaces and chart images.
+  Its contract is the comment at the top of `ui_kit/mod.rs`.
+- Behaviour comes from Bevy's own facilities: `bevy::ui::Button` and
+  `Interaction` for buttons, `bevy_ui_widgets::Slider` for sliders,
+  `AccessibleLabel`/`AccessibilityNode` for accessibility. Toasts and dialogs
+  are not built yet (no mode needs one).
+- Theme tokens live in one place (`ui_kit/theme.rs`), from the builder's
+  palette and metrics; a lib test forbids second definitions.
 - Features compose these widgets instead of building their own `Node` trees for
-  common UI. Accessible labels (0.19) go on interactive widgets.
+  common UI. Widgets take the typed action as a component and hold no intent.
+  Accessible labels go on interactive widgets.
 
 ### 7. Documents, selection, annotations
 
@@ -881,8 +1103,8 @@ on memory.
 | Feature | Release | Use it for |
 |---|---|---|
 | Event / observer overhaul | 0.17 | the action layer (§3) |
-| Feathers widgets, headless standard widgets | 0.17–0.19 | the UI kit (§6) |
-| Text input | 0.19 | the UI kit (§6) |
+| Headless standard widgets (`bevy_ui_widgets`); Feathers | 0.17–0.19 | the UI kit (§6): the slider is headless; Feathers is not used (its look is not the builder's) |
+| Text input | 0.19 | not adopted yet: the builder's draft keeps its own entry (see the UI kit section) |
 | `ViewportNode` | 0.17 | 3D views inside panels (schematic beside spatial, inspector previews) |
 | First-party camera controllers | 0.18 | replace hand-rolled orbit cameras where equivalent |
 | Easy screenshot and video recording | 0.18 | `ui_capture` and run recordings |
@@ -925,11 +1147,12 @@ The Director re-ranks with evidence, but this is the default:
    one-app-modes; see [One app](#one-app-2026-09-30)).* Merge the separate
    `App` setups into `ViewerMode` states, with switching modes in the
    window.
-4. **Action layer.** *Done 2026-09-30, pending verification (batch
+4. **Action layer.** *Done 2026-09-30, verified at 90c65c86 (batch
    action-layer; see [Action layer](#action-layer-2026-09-30)).* Unify
    buttons, `system_ui` and REST onto typed actions.
-5. **UI kit.** Build it on Feathers, then move headers, inspectors, tabs, docks
-   and charts onto it.
+5. **UI kit.** *Done 2026-09-30, pending verification (batch ui-kit; see
+   [UI kit](#ui-kit-2026-09-30)).* Build it on Bevy's widgets, then move
+   headers, inspectors, tabs, docks and charts onto it.
 6. **Fold in `sim-app`.** Bring its scenes in as modes, or retire them.
 
 After that, feature work resumes on the target shape. Split large files while

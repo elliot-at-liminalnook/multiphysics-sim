@@ -1897,7 +1897,15 @@ fn recorded_panel(
     mut text: Query<&mut Text, With<RecordedText>>,
     mut buttons: Query<(&RobotAction, &Interaction, &mut BackgroundColor), With<RecordedButton>>,
 ) {
-    let Some(p) = view.run.as_ref().and_then(|r| r.playback()) else { return };
+    let Some(p) = view.run.as_ref().and_then(|r| r.playback()) else {
+        // Switched to a view without a recorded timeline (an embedded preset):
+        // the old block would otherwise stay, frozen at the last recorded frame.
+        if *shown {
+            commands.entity(*root).despawn_children();
+            *shown = false;
+        }
+        return;
+    };
     if !*shown {
         let header = commands.spawn(label(&fonts, &format!("Recorded — {} · speed: header −/×/+ · seek: REST robot_recorded", crate::robot_preset::RECORDED_LABEL), 11.5, MUTED)).id();
         let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(4.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).id();

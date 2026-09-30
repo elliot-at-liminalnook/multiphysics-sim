@@ -192,25 +192,64 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   instance and a net. `system_undo` restores the previous revision.
 
 ### e. Live controls and graphs
-- **Entry today:** sim-spatial Run/Pause (`builder.rs:run_start`/`run_pause`,
-  REST `system_run {"action":"start"|"pause"}`), graph dock
+- **Entry today:** sim-spatial build-mode toolbar Run/Resume, Pause, Step
+  (enabled only while the run is not running) and Reset; REST
+  `system_run {"action":"start"|"pause"|"step"|"reset"}`. Both call the same
+  Builder methods (`run_start`, `run_pause`, `run_step`, `run_reset`). An
+  unknown action is an error that names it. Also: the graph dock
   (`builder/graphs.rs`, up to 4 charts, REST `system_plot`), overlays
   (`display` `set_overlay`: power, forces, current, heat, trails), and the
-  Detailed/Realtime toggle. Also sim-viewer `live_ui.rs` (worker-backed
-  graphs) and browser presets with sliders.
+  Detailed/Realtime toggle. `system_state` reports `realtime` and `live_run`
+  (null without a run; otherwise time, phase, step, generation, interval,
+  reset_pending, error, fidelity, edited). Legacy surfaces remain:
+  sim-viewer `live_ui.rs` (worker-backed graphs) and browser presets with
+  sliders.
 - **Reusable layer:** `sim_runtime::system_session::SystemSession`,
-  `sim_inspect::{live, plot, animation}`.
-- **Shell status:** *present* for system files. Gaps: no step or reset control
-  in the builder run (only start and pause are handled in
-  `rest.rs:system_execute`, lines 251–252). Graphs have no shared time cursor or
-  scrub.
+  `sim_inspect::{live, plot, animation}`. Step and Reset are sent to the run
+  thread and carried out only by `session.execute(Command::Step | Command::Reset)`.
+  No physics is stepped in the UI.
+- **Reset policy:** a run that reached at least 0.1 s is saved first, under the
+  same rule as stopping a run. The status then reads "Reset to t = 0 (paused);
+  kept the previous run as <id>." Reset clears the graph history, and
+  `reset_pending` drops pre-reset samples until the thread has reset, so a
+  later save holds only post-reset samples. After a reset, `edited` is false
+  and the fidelity is kept.
+- **Shell status:** *verified natively* (T6.2, commit bd0b7be4 binary) on a
+  copy of the worm-drive winch. Evidence is in
+  `.claude-pair/captures/T6-live-controls/` (`drive_live.py`, `capture.json`
+  ok with 23 of 23 assertions, `running.png`, `stepped.png`, `reset.png`,
+  `replayed.png`). The capture shows:
+  - Running: `live_run.time` rose from 0.633 to 1.071 s between polls, and the
+    pinned `drum.shaft.speed` chart window grew from 0.554 to 1.108 s.
+  - Step while running: the Step control reports disabled, activating it is
+    refused, and REST step returns "pause the run before stepping".
+  - Pause: time held at 2.215 s (step 4430) across polls 0.5 s apart.
+  - Step: step 4430 to 4431, and time rose by 0.0005 s, the configured
+    interval, within 1e-9.
+  - Reset: time 0, step 0, paused, generation 0 to 1, and the chart emptied.
+    The 2.2155 s run was auto-saved and named in the status.
+  - The post-reset 0.4305 s run was saved and replayed in the Studies tab:
+    "Reproduced exactly · max rel diff 0 · 1696 samples · detailed". All of
+    its sample times were ≤ its duration.
+  - The Realtime toggle turned `realtime` from false to true, and the next
+    run reported fidelity "realtime".
+- **Remaining limits:**
+  - There is no shared time cursor or scrub on the graphs, and no replay
+    cursor.
+  - Every control was activated through REST `system_ui`, which uses the same
+    handlers as a click. Pointer gestures (clicks, drags) were not exercised.
+  - After Pause, the status bar still reads "Running on the shared runtime…"
+    until the next action. The toolbar (Resume) and `live_run.phase` are
+    correct.
+  - Pre-existing: a grab/drag load swap (`swap_with`) does not update the
+    run's document. A Reset during an active grab can rebuild the grabbed
+    model, and that model is not what a later save records.
+  - The viewer resolves the part registry from the working directory, so
+    launch it from the repository root.
 - **Source owner:** Rust runtime.
-- **Dependencies:** `SystemSession` already supports reset through its factory
-  (`system_session.rs` header). Wire it up.
-- **Acceptance evidence:** `system_run start`, wait, then `system_plot` to pin
-  an observable. A screenshot shows a moving trace. `system_state` sim time
-  increases across two polls, stays unchanged after `pause`, and returns to 0
-  after reset.
+- **Acceptance evidence:** reproduce by running
+  `python3 .claude-pair/captures/T6-live-controls/drive_live.py` from the
+  repository root. It needs a current debug `sim-spatial` build.
 
 ### f. Annotations and source links
 - **Entry today:** sim-spatial Notes tab and pins (`builder/discussion.rs`,

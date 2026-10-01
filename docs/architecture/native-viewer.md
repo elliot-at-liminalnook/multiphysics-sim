@@ -10,14 +10,14 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01))
+## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01))
 
 **Nothing has been compiled, tested or run since aa34ef48** (the last
 verified commit). Three epics since were written and reviewed by reading
 only: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
 cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
-fixes 697a15c1, docs 61f1bea5) and now cad-print (in progress on this
-branch, from 35ea6de0). Their counts and "done" states below are by
+fixes 697a15c1, docs 61f1bea5) and cad-print (35ea6de0, 17f90d08 and
+its docs). Their counts and "done" states below are by
 reading, not by a build.
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
@@ -2689,7 +2689,9 @@ REST read no keys, so no key is read in every mode):
 |---|---|---|
 | Ctrl+Shift+M | `edit.select_same_material` (keymap), `robot.add_motor` (inline) | RoboCAD binds only the keymap's: Same Material runs; the palette shows RoboCAD's own conflict warning |
 | Ctrl+Space | `command_palette` | macOS takes Command+Space (Spotlight); Control+Space or Shift+F opens it |
-| Ctrl+H | `tool.fastener` (cad-print) | macOS's app menu takes Command+H (hide); Control+H reaches the refusal |
+| Ctrl+H | `tool.fastener` (cad-print: starts the fastener tool, its form beside the view, then face clicks) | macOS's app menu takes Command+H (hide); Control+H starts the tool |
+| Ctrl+W | `print.wall_check` (cad-print: the "Flag walls thinner than (mm):" form) | winit's default macOS menu has no Close item, so Command+W reaches the check; no other CAD reader of W (the shared camera's fly keys are not used in CAD mode) |
+| V, Ctrl+V, Ctrl+Shift+V | select vertices, paste with placement, validate for printing (cad-print) | exact modifiers |
 | Ctrl+M | `tool.mirror` | a macOS app menu binding Command+M (minimise) would take it; winit's default menu has none; Control+M always works |
 | Shift+A, B / C / S | `tool.box` / `tool.cylinder` / `tool.sphere` | the second key is the chord's (see above), not B (select bodies), C (sketch circle) or S (scale) |
 | S, G, R, D, Shift+D, M, Escape | tools (transform) | read by transform's keys only; Shift+S (sketch slot), Shift+R (revolve), Shift+J etc. differ by Shift, which transform's S/G/R/M refuse |
@@ -2699,6 +2701,7 @@ REST read no keys, so no key is read in every mode):
 | B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate (cad-views-export; native since) | exact modifiers |
 | F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus (cad-views-export; native since), palette, fillet, chamfer | exact modifiers |
 | H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (cad-views-export; native since), fastener, shell | exact modifiers |
+| C, Shift+C, Ctrl+C, Ctrl+Shift+C, Shift+A then C | sketch circle, sketch spline, copy, clearance offset (cad-print: needs selected faces, then its form), cylinder | exact modifiers; C after Shift+A is the chord's (see above), not the circle's |
 | P, Shift+P, Ctrl+P | select points, sketch polygon (cad-sketch), plane from face (cad-sketch) | exact modifiers |
 | Delete, Backspace | `edit.delete` | ignored while a text field (name, numeric bar, palette, form) has the keyboard |
 | Space | `view.radial` | typed as a space while a text field has the keyboard |
@@ -3701,7 +3704,8 @@ another crate.
 
 The cad-views-export rows of `cad/keys.rs`' module doc table (grep of
 `KeyCode::` over `crates/sim-spatial/src`, 2026-10-01; that table is the
-full, current one), then the shared camera's keys:
+full, current one), with the cad-print keys that share their letters
+(Ctrl+H, Ctrl+W, Ctrl+Shift+V, Ctrl+Shift+C), then the shared camera's keys:
 
 | Key | Commands | Resolution |
 |---|---|---|
@@ -3712,6 +3716,10 @@ full, current one), then the shared camera's keys:
 | B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate preview (`cad_display` toggle) | exact modifiers |
 | F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus selection (frames the selected nodes; Fit All with none), palette, fillet, chamfer | exact modifiers |
 | H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (catalogue: `Ops.set_visible`, `Ops.show_all`), fastener (cad-print), shell | exact modifiers; macOS's Option+H types "˙", but keys match the physical key (`KeyCode::KeyH`) with Alt held, so Alt+H reaches Show All |
+| Ctrl+H | `tool.fastener` (cad-print: starts the fastener tool, its form beside the view, then face clicks) | macOS's app menu takes Command+H (hide); Control+H starts the tool |
+| Ctrl+W | `print.wall_check` (cad-print: the "Flag walls thinner than (mm):" form) | winit's default macOS menu has no Close item, so Command+W reaches the check; no other CAD reader of W (the shared camera's fly keys are not used in CAD mode) |
+| V, Ctrl+V, Ctrl+Shift+V | select vertices, paste with placement, validate for printing (cad-print) | exact modifiers |
+| C, Shift+C, Ctrl+C, Ctrl+Shift+C, Shift+A then C | sketch circle, sketch spline, copy, clearance offset (cad-print: needs selected faces, then its form), cylinder | exact modifiers; C after Shift+A is the chord's (its second step), not the circle's |
 | Ctrl+G | grid (`cad_display` toggle) | no other reader in CAD mode |
 | 1, 3, 7, 0, Ctrl+1, Ctrl+3, Ctrl+7 | view front, right, top, iso; back, left, bottom (`camera_view`, RoboCAD's yaw/pitch table) | exact modifiers; the keypad's digits are the digits (`normalise`); the shared camera's numpad keys are off in CAD (`OrbitRules::keys` false, `scene`), so a digit is read once; macOS's Mission Control may take Control+digit ("Switch to Desktop n") when enabled, Command+digit still works |
 | 5 | orthographic toggle (`camera_projection`) | as the digits above |
@@ -4468,9 +4476,12 @@ another crate.
   which only RoboCAD's window can start.
 - **Keys.** Ctrl+Shift+J is bound to `robot.add_joint`; Ctrl+Shift+M stays
   Select Same Material and `robot.add_motor` is unbound (see Key clashes).
-- **Known residual.** A REST `cad_run ops.set_joint` with only some params
-  sends RoboCAD's dialog defaults for the rest (the window's form always
-  seeds every field from the joint); REST callers should pass every field.
+- **Known residual (fixed by cad-print).** A REST `cad_run ops.set_joint`
+  with only some params sent RoboCAD's dialog defaults for the rest (the
+  window's form always seeds every field from the joint). Since cad-print
+  the missing params are the joint's current values
+  (`cad/ops/robot_form.rs:fill_from_joint`, from `cad/ops/mod.rs:prepare`),
+  refused by name when they are not known at the shown revision.
 
 ### Key clashes
 
@@ -4599,6 +4610,290 @@ Nothing above was compiled or run. To do in the verification pass:
   load results with the stress overlay, apply identification, both
   exports, and the live link opening Robot mode and reloading it after a
   save.
+
+## CAD print (2026-10-01)
+
+*Batch cad-print (default order item 7, §9 phase 1; §9 "Later CAD
+epics" 6). Done pending verification: written and reviewed by reading in
+commits 35ea6de0 (the skeleton: client, catalogue entries, the
+`cad/print/` module and its wiring) and 17f90d08 (the parts, the
+`api.py` gap route and the tests); nothing was compiled, tested or run in
+the batch.* It brings RoboCAD's Print menu into CAD mode: the wall
+thickness check and its red points, validation for printing, overhang
+shading, the fastener hole and clearance offset tools, split for
+printing, check strength, plan, whole or split, the assembly guide, test
+coupons, RoboCAD's print jobs with progress and cancel, and the print
+study's results in the stress overlay. RoboCAD stays the kernel: its
+sampling, validation, split, strength, plan, assembly and coupon jobs run
+there, and its command layer does every edit. The ledger rows are in
+[docs/cad-parity.md](../cad-parity.md) (33 rows: 25 `done-by-reading`, 8
+`deliberately different`; none open; one REST row added for the gap
+route; the totals are in its Counts), and the side-by-side steps are in
+[docs/cad-checklist.md](../cad-checklist.md) Part H. Paths are relative
+to `crates/sim-spatial/src/` unless they name another crate.
+
+### Shape
+
+| Module | What it owns |
+|---|---|
+| `crates/sim-runtime/src/cad_client/print.rs` | The typed print client: `CadClient::print_registry` (`PrintRegistry`, printers and filaments in the registry's order through `Ordered`), `print_study`, `print_split_now`, `print_split_job` (`SplitRequest`, `background`), `print_start(kind, body)` for analyze, plan, assembly, coupons and strength_split (any other kind refused unsent), `print_jobs`, `print_job`, `cancel_print_job`, `thin_walls`, `validate_node`, and the Ops `clearance`, `fastener_hole` (`FastenerSpec`) and `print_split_op`; RoboCAD's choice lists `SPLIT_JOINTS`, `FASTENER_SIZES`, `FASTENER_KINDS`. Tests in `print_tests.rs`. |
+| `cad/robocad/api.py` (gap route) | `GET /print/study` in `Service.print_request`: `revision`, `robot_settings["print_study"]` or null, and the split group ids in tree order; read-only (405 otherwise). Pytests `cad/tests/test_api_print_routes.py` (with the registry's order). |
+| `cad/ops/catalogue/print.rs` | The Print menu's catalogue entries with RoboCAD's labels, prompts, defaults and refusals: `tool.fastener` (`Flow::PrintPick`), `tool.clearance`, `print.wall_check`, `print.validate`, `print.split`, `print.strength`, `print.plan`, `print.strength_split`, `print.assembly`, `print.coupons` (`Shape::Print(PrintCall)`), and the REST-only `ops.print_split`. |
+| `cad/print/mod.rs` | `PrintState` on `CadDocument.print` (reset with the document), `PrintCall`, `Plan`, `build_plan` (from `ops::args::build`), `send` (from `ops::start`), `picks`, `seed`, `precheck` (the robot forms' fallbacks), `edit_answered` (from `sync::finish_edit`), `command_action` (`print.overhangs`, `print.jobs`), `CadAction::CadPrint(PrintArgs)` (`cad_print`: state, jobs, cancel, pick, clear) and `handle`. |
+| `cad/print/checks.rs`, `thin_overlay.rs` | The wall check (`build`, `start_wall`, `land_wall`, `seed`, `clear`) and validation (`start_validate`, `land_validation`, `validation_lines`, `validation_status`) on `Pool::Dedicated` jobs landed by `receive`; the thin points drawn by `thin_overlay.rs:draw`, display only. |
+| `cad/print/edits.rs`, `fastener_tool.rs` | Fastener hole and Clearance offset (`build`, `send` through `actions::edit_at`, `seed` with the remembered values); the fastener tool's face clicks (`fastener_tool.rs:click` through `CadMeshes::face_at`, `pick`). |
+| `cad/print/studies.rs` | The registry read (once per generation) and the print study read (per shown revision) in `tick`; the six studies' `build` (RoboCAD's selection rules and texts, `expected_revision`) and `send` (one `edit_at` call each); `picks`, `precheck`. |
+| `cad/print/jobs_tracker.rs` | `PrintJobTracker` on `CadDocument.print.jobs`: `edit_answered` adopts a started job, `tick` polls `GET /print/jobs`, `land` writes the progress line, `finish` the done texts and refresh, `cancel`, `blockers`. |
+| `cad/print/jobs_panel.rs` | The Print jobs section of the right dock (`panel::Part::Print`): `show`, `draw`, `controls` (`cad:print:*`), `key`. |
+| `cad/print/overlay.rs` | The print study's blocks in the stress overlay: `inputs` (called from `cad/results/overlay.rs:inputs_of`), `staleness`, `panel_line`, `RULE`. |
+| `cad/display/mod.rs`, `section.rs`, `ui.rs` | `CadDisplay::overhangs` and `DisplaySetting::Overhangs` (`apply_display`: the build plate sets it, as RoboCAD); the tint `section.rs:overhangs` at `OVERHANG_DEG`; the toolbar chip. |
+| `jobs/child.rs` | `jobs::open_local(path)`: the assembly guide and the coupon protocol's folder opened with the system opener. |
+| `cad/robot/panel.rs`, `cad/ops/robot_form.rs` | Two cad-physical-inspect follow-ups: a Robot panel row press stamped with its description's revision (`select_action`), and a partial REST Edit joint filled from the joint (`fill_from_joint`, called from `cad/ops/mod.rs:prepare`). |
+
+### Decisions
+
+- **One poller on the document, per generation.** `PrintJobTracker`
+  lives on `CadDocument.print.jobs` and starts over when the connection
+  generation changes (`jobs_tracker.rs:reset`). *Why:* RoboCAD's jobs
+  belong to one service; a restarted service has none of the old ones, and
+  the document is already the thing reset per generation. *Rejected:* a
+  separate resource, which would need its own reset rule.
+- **`GET /print/jobs`, not `GET /print/jobs/{id}`.** One list poll is in
+  flight at most, on `Pool::Dedicated`, every 0.5 s while a watched job
+  runs or the Print jobs section is open (`jobs_tracker.rs:tick`). *Why:*
+  one request serves every watched job and the section alike, and the
+  per-job route's `wait` is useless: RoboCAD reads it from the body of a
+  GET, which it never parses (api.py `print_request`), so it never
+  waits. *Rejected:* RoboCAD's per-job 250 ms timer, which would be a
+  request per job per tick. *Revisit if* RoboCAD reads `wait` from the
+  query string.
+- **Jobs start through `edit_at` and are adopted in `finish_edit`.**
+  `studies.rs:send` makes each start one `actions::edit_at` call with
+  `expected_revision` set to the revision the selection, the form and the
+  study were read at, and notes the edit's sequence; when the edit
+  answers, `sync::finish_edit` calls `print::edit_answered`, which watches
+  the job RoboCAD returned. *Why:* the edit path already refuses by name an
+  edit in flight, a lost connection or a moved document, and RoboCAD
+  refuses a moved document too; a start is a RoboCAD call like any edit.
+  *Rejected:* a separate start job, which would need its own refusals.
+- **Split runs in the background, as RoboCAD's menu.** `print.split`
+  sends `background: true` (`print_split_job`), so it is a job with
+  progress and cancel like the others; the synchronous split is the
+  REST-only `ops.print_split` (one undo step, no job). *Why:* RoboCAD's
+  "Split selected for printing…" calls `split_job`.
+- **Leaving CAD mode is refused only while connected.**
+  `PrintJobTracker::blockers` names each running job this window started
+  (`CadDocument::switch_blockers`). *Why:* a self-started RoboCAD stops
+  when CAD mode closes, which would kill the job, and an attached one
+  would finish unseen. Not connected, nothing can be confirmed or
+  cancelled, so nothing is held.
+- **The print overlay is uniform per part, through the shared rule.**
+  `print/overlay.rs:inputs` turns a "print" block into one cell whose
+  stress is the governing failure index (1 / safety factor) with yield 1,
+  so `link_colours` colours the whole body, red at failure.
+  *Why:* one colour rule for every result in this window (see "One stress
+  rule" in CAD physical properties); RoboCAD's per-voxel field is a file in
+  its run folder, and porting its sampling is out of scope. Staleness
+  comes from the block's `cad_revision` (current until the document moves
+  past the publishing step). *Revisit if* a route serves the voxel field.
+- **Local files open through `jobs::open_local`** on a `Pool::Io` job
+  (the assembly guide, the coupons' protocol folder). *Why:* nothing
+  outside `jobs` starts a process; the opener is detached and reaped like
+  `open_in_browser`, and a relative or missing path is refused by name
+  before any process starts.
+- **The cancel confirmation is an inline row.** "Cancel the running
+  jobs?" with Yes and No is a row of the Print jobs section
+  (`jobs_panel.rs:draw`), and `cad_print {op: cancel}` without `confirm`
+  only asks. *Why:* the UI kit has no modal confirm, and an inline row
+  keeps REST and the window on one action. Yes sends exactly one `DELETE`
+  per running job.
+- **The registry keeps its order.** `Ordered` (client) keeps RoboCAD's
+  printers and filaments in the registry's order, and serialises back as
+  an object. *Why:* RoboCAD's dialogs list them in that order and preselect
+  the first; a map would reorder them.
+- **One gap route, `GET /print/study`.** RoboCAD's handlers read
+  `robot_settings["print_study"]` and find split groups by walking the
+  tree; no route served either headless. The route (`api.py`
+  `Service.print_request`) answers `revision`, the print study or null
+  and the split group ids in tree order; it is read-only (any other
+  method is 405) and is read per (generation, shown revision) in
+  `studies.rs:tick`. Pytests: `cad/tests/test_api_print_routes.py`.
+- **The wall check remembers its threshold.** The last threshold a check
+  ran with presets the next form (`checks.rs:seed`); RoboCAD reopens at
+  1.2 each time. *Why:* the other print dialogs (Fastener hole,
+  Clearance) remember their values; this one is used the same way.
+  Recorded as deliberately different.
+- **The fastener form has a Point field.** "Point (mm; empty: the clicked
+  point)" lets REST place a hole without a click; with a click, the point
+  is the click's snap, else its hit (`fastener_tool.rs:pick`). *Why:* every
+  window action must be reachable by REST with the same validation.
+- **Validation has no open-edge check.** RoboCAD's desktop adds a
+  tessellation open-edge count in `validate_for_export`; `GET
+  /nodes/{id}/validate` answers only the kernel's report, so the viewer
+  shows that and says so (`checks.rs:OPEN_EDGE_NOTE` in
+  `cad_state.print.checks`). *Revisit if* the route serves the count.
+
+### Reading trace (wall check → split with dovetail → plan progress → cancel → print overlay)
+
+1. **Wall check.** Ctrl+W: `cad/keys.rs:keys` matches the registry row
+   `print.wall_check` (`cad/surfaces/registry.rs`, `Native::Op`) and writes
+   `CadAction::CadInvoke` (`keys.rs:358`) → `cad/ops/mod.rs:handle` (488)
+   → `cad/ops/invoke.rs:invoke` (12, `Flow::Form` at 59): the form
+   "Flag walls thinner than (mm):" opens, preset by
+   `cad/ops/robot_form.rs:seed` (266) → `cad/print/mod.rs:seed` →
+   `cad/print/checks.rs:seed` (355; the last threshold, else 1.2). OK →
+   `CadAction::CadFormSubmit` → `cad/ops/form.rs:submit` (15) →
+   `cad/ops/mod.rs:run` (525) → `prepare` (540) → `cad/ops/args.rs:build`
+   (559; `Shape::Print` at 569) → `cad/print/mod.rs:build_plan` (125) →
+   `cad/print/checks.rs:build` (200; the selected nodes, else
+   `visible_bodies`) → `cad/ops/mod.rs:start` (581; `Built::Print` at 608)
+   → `cad/print/mod.rs:send` (136) → `checks.rs:start_wall` (237): cached
+   nodes answered at once, the rest read on one `Pool::Dedicated` job
+   (`CadClient::thin_walls`). The landing: `checks.rs:receive` (425, after
+   `sync::receive` in JobResults) → `land_wall` (302): cached, the points
+   kept, RoboCAD's status line ("N thin region(s) under T mm"); the points
+   are drawn by `cad/print/thin_overlay.rs:draw` (25) while their revision
+   is shown (`checks.rs:drawn`).
+2. **Split with dovetail.** Print ▸ Split selected for printing…
+   (`print.split`): the form's "Printer:" lists the registry's printers
+   (`cad/ops/robot_form.rs:picks` (84) → `cad/print/studies.rs:picks`
+   (277), from the registry read in `studies.rs:tick` (329)), refused by
+   `studies.rs:precheck` (293) until it is read; "Joints:" `dovetail`. OK
+   → as in 1 to `cad/print/studies.rs:build` (188): `SplitRequest { node,
+   printer, joint: "dovetail", expected_revision, background: true }` →
+   `studies.rs:send` (260) → `cad/actions.rs:edit_at` (523) →
+   `CadClient::print_split_job` on the edit's job; `studies.started` notes
+   the edit. When it answers, `cad/sync/mod.rs:finish_edit` (525) calls
+   `cad/print/mod.rs:edit_answered` (171, at sync 539) →
+   `cad/print/jobs_tracker.rs:edit_answered` (188): the job is watched and
+   polled at the next tick.
+3. **Plan job progress.** Print ▸ Plan print settings and plates
+   (`print.plan`) → `studies.rs:build` (the study read at the shown
+   revision, with `expected_revision`) → `send` →
+   `CadClient::print_start("plan", …)` → adopted as in 2. Then
+   `jobs_tracker.rs:tick` (336) starts one `GET /print/jobs` poll every
+   0.5 s → `land` (262): while the job runs the status line is
+   `progress` (128), "plan: message (n %)", written only when it changes;
+   when it ends `finish` (307): `done_text` ("plan: N plate(s), …"),
+   `cad/sync/mod.rs:refresh` and the robot reads invalidated (the plan
+   published a step).
+4. **Cancel.** The Print jobs section's "Cancel running jobs…"
+   (`cad/print/jobs_panel.rs:draw` (76), `controls` (53)) writes
+   `CadAction::CadPrint { op: cancel }` → `cad/print/mod.rs:handle` (235)
+   → `jobs_tracker.rs:cancel` (220): without `confirm` it opens "Cancel the
+   running jobs?"; Yes (`confirm: true`) sends one
+   `CadClient::cancel_print_job` per running job on one `Pool::Dedicated`
+   job, then polls; the job lands "plan cancelled" (`finish`).
+5. **Print overlay.** After Check strength publishes, the robot reads
+   (`cad/robot/data.rs:sync` (160), `CadClient::results_nodes`) carry each
+   part's "print" block from `GET /results/nodes`. With the overlay on
+   (`print.overlay` → `cad/results/mod.rs:handle`, `ResultsOp::PrintOverlay`
+   at 334), `cad/results/overlay.rs:paint` (127) asks
+   `inputs_of` (59), whose print branch is
+   `cad/print/overlay.rs:inputs` (46) → `cad/results/overlay.rs:cad_colours`
+   (75) → `sim_domain_robot::stress_results::link_colours` → the body's
+   vertex colours. The results panel adds `cad/print/overlay.rs:panel_line`
+   (71) with `staleness` (56): "current", or "stale (computed at revision
+   R, now M)".
+
+### Tests (windowless)
+
+- `cad/print/checks_tests.rs`: `floats_print_as_python_does`,
+  `status_texts_are_robocads`,
+  `build_takes_the_selection_else_the_visible_bodies_and_refuses_nothing`,
+  `a_repeat_check_of_unchanged_nodes_sends_nothing`,
+  `points_show_at_their_revision_and_clear`,
+  `results_land_for_this_generation_only`,
+  `overhang_shading_follows_the_build_plate`.
+- `cad/print/edits_tests.rs`: `the_fastener_spec_is_robocads_dialog`,
+  `a_hole_needs_a_point_and_a_face`,
+  `clearance_calls_go_per_node_in_selection_order`,
+  `the_forms_open_with_the_remembered_values`,
+  `a_refused_edit_sends_nothing_and_remembers_nothing`,
+  `picks_are_refused_by_name`,
+  `the_point_is_the_click_then_the_typed_point_then_the_face`,
+  `a_click_pick_is_one_fastener_run_refused_with_nothing_sent`.
+- `cad/print/studies_tests.rs`: `the_registry_picks_keep_its_order_and_robocads_labels`,
+  `split_sends_the_chosen_printer_and_joint_as_a_background_job`,
+  `strength_and_plan_send_the_study_with_the_revision_or_robocads_explanation`,
+  `strength_split_takes_the_first_study_part_selected_with_the_studys_settings`,
+  `assembly_takes_a_selected_split_or_a_selected_pieces_split`,
+  `coupons_send_the_split_or_none_with_the_chosen_printer_and_filament`,
+  `the_split_and_coupon_dialogs_wait_for_the_registry`,
+  `a_refused_start_sends_nothing_and_notes_nothing`,
+  `a_print_block_colours_its_body_through_the_shared_rule`.
+- `cad/print/tracker_tests.rs` (a fake RoboCAD on a loopback socket):
+  `a_watched_job_shows_its_progress_then_robocads_done_text_and_refreshes`,
+  `cancel_asks_first_then_sends_exactly_one_delete_per_running_job`,
+  `robocads_texts_for_each_kind`.
+- `cad/display/tests.rs`: `build_plate_sets_overhang_shading_and_its_toggle_flips_only_it`.
+- `cad/surfaces/tests.rs`: `the_print_rows_run_native_actions`.
+- `jobs/tests.rs`: `open_local_refuses_relative_and_missing_paths_by_name`.
+- `cad/robot/panel_tests.rs`: `a_row_press_carries_the_revision_the_description_was_read_at`.
+- `cad/ops/robot_tests.rs`: `a_partial_rest_edit_joint_keeps_the_joints_other_values`,
+  `a_partial_rest_edit_joint_refuses_without_the_current_description`.
+- `crates/sim-runtime/src/cad_client/print_tests.rs`:
+  `registry_keeps_the_registry_order_and_drops_a_malformed_printer`,
+  `study_reads_the_study_parts_and_split_groups`,
+  `split_now_answers_the_summary_and_split_job_starts_a_job`,
+  `print_start_sends_each_job_kind_and_refuses_others_unsent`,
+  `jobs_list_oldest_first_and_drop_a_malformed_job`,
+  `job_reads_and_cancel_sends_a_bare_delete`,
+  `thin_walls_and_validation_read_tolerantly`,
+  `print_ops_send_the_python_signature`,
+  `split_errors_carry_robocad_text_and_status`,
+  `choice_lists_match_robocad_dialogs`.
+- `cad/tests/test_api_print_routes.py`: `/print/study` empty, with the
+  study and split groups in tree order, read-only; `/print/registry` in
+  registry order.
+
+### Found by reading and fixed
+
+- `cad_client/print.rs`: `Ordered` serialised as a list of pairs, so a
+  registry round-tripped through serde came back empty; it now
+  serialises as an object (17f90d08).
+- Overhang shading was tied to the build plate; it is now its own setting,
+  which the build plate sets as RoboCAD's `toggle_build_plate` does, with
+  its own toggle (`print.overhangs`).
+- cad-physical-inspect's known residual: a REST `cad_run ops.set_joint`
+  with only some params sent the dialog's defaults for the rest; it now
+  fills them from the joint (`cad/ops/robot_form.rs:fill_from_joint`), or
+  is refused by name when the joint's values are not known.
+
+### Deliberately different (summary)
+
+8 rows, each with its reason in the ledger: the fastener dialog's fields
+beside the view with a Point field; the wall check's remembered
+threshold; validation without the open-edge check, in the status line;
+split's added `expected_revision`; the Print jobs section with an inline
+confirmation; the progress line without " — Print ▸ Print jobs… to
+cancel", with failures on the status line and one list poll; the print
+overlay's uniform per-part colour on the shared scale; and
+`GET /print/jobs/{id}`'s `wait`, never honoured, replaced by the list
+poll.
+
+### Verification checklist
+
+Nothing above was compiled or run. To do in the verification pass:
+
+- [ ] `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- [ ] `cargo test -p sim-spatial --lib --bins` (including
+  `app::tests::source_files_stay_small`, the registry cross-check and
+  `jobs::tests::processes_are_started_only_in_jobs`), and by name
+  `surfaces::tests::the_print_rows_run_native_actions`, the
+  `cad::print` checks, edits, studies and tracker tests, the `jobs`
+  `open_local` refusals, the Robot panel's row stamp and the partial
+  `set_joint` tests listed above.
+- [ ] `cargo test -p sim-runtime --lib cad_client`.
+- [ ] `cd cad && .venv/bin/pytest -q tests/test_api_print_routes.py tests/test_api_physical_routes.py`
+  (then the whole RoboCAD suite).
+- [ ] In the window, [docs/cad-checklist.md](../cad-checklist.md) Part H
+  side by side with RoboCAD: the wall check and validation, overhang
+  shading, the fastener and clearance tools, a dovetail split, strength,
+  plan with its progress, whole or split, the assembly guide, coupons, the
+  Print jobs section and cancel, the print overlay and its staleness,
+  leaving CAD mode while a job runs, the Robot panel row press and a
+  partial REST Edit joint.
 
 ## Target shape
 
@@ -4752,7 +5047,11 @@ started before the `App` (tests, `--validate-only`, headless) and
   starts a process whose lifetime is not tied to ours (the linked
   `sim-viewer` window) and `jobs::open_in_browser(url)` opens an http(s)
   link with `open`/`xdg-open` (anything else is "not a web link: {url}");
-  both are `ChildProcess::detach`ed, so a reaper thread waits for the
+  since cad-print `jobs::open_local(path)` opens an existing local file or
+  folder the same way (an absolute path only: "not an absolute path:
+  {path}", "no such file or folder: {path}", refused before any process
+  starts; cad-print runs it on a `Pool::Io` job for the assembly guide and
+  the coupons' protocol folder); all three are `ChildProcess::detach`ed, so a reaper thread waits for the
   process and it never lingers as a zombie. Nothing outside `jobs` starts a
   process (`jobs::tests::processes_are_started_only_in_jobs`; `main.rs` only
   builds the `sim-viewer` command it hands to `spawn_detached`).
@@ -5017,7 +5316,15 @@ its tools and dialogs, results and the stress overlay, physical export and
 the live link into Robot mode, with two api.py gap routes
 (`GET /results/nodes`, `GET /physical?planar=1`); it is written and
 reviewed by reading (3fb34225, f26842fa and the review fixes in 697a15c1)
-and pending verification. Next: cad-print.
+and pending verification. The seventh, **cad-print** (2026-10-01, see
+[CAD print](#cad-print-2026-10-01)), added RoboCAD's Print menu: the wall
+check and validation, overhang shading, the fastener and clearance tools,
+split, strength, plan, whole or split, the assembly guide and coupons as
+RoboCAD jobs started through the edit path, one poller of RoboCAD's print
+jobs with progress, cancel and the Print jobs section, and the print
+study's results in the stress overlay, with one api.py gap route
+(`GET /print/study`); it is written and reviewed by reading (35ea6de0,
+17f90d08) and pending verification. Next: cad-organize.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -5032,9 +5339,11 @@ later, 23 deliberately different when planned; the planned cad-tools' 179
 rows were split 2026-10-01 into cad-select-transform, 63, and cad-modify,
 116; after cad-modify 245 are done by reading, 458 later and 70
 deliberately different; after cad-sketch 286, 398 and 89; after
-cad-views-export see the ledger's Counts). Fifteen gaps there have no
-headless route (17 before cad-views-export added `POST /save/thumbnail`
-and `GET /import/units`; 22 before cad-modify added five routes). Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
+cad-views-export see the ledger's Counts). Ten gaps there have no
+headless route (15 before cad-physical-inspect added `GET /results/nodes`
+and `GET /physical?planar=1`; 17 before cad-views-export added `POST
+/save/thumbnail` and `GET /import/units`; 22 before cad-modify added five
+routes). Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
 by the parity harness. Planned order:
 
 1. **cad-select-transform** (63 rows; the first half of the planned
@@ -5136,14 +5445,21 @@ by the parity harness. Planned order:
    `POST /ops/add_joint|set_joint|add_motor|attach_motor|set_joint_physics|set_material_props`.
    Gaps (closed, see above): per-node results (inspector line, stress
    overlay, margins) and the planar export variant.
-6. **cad-print** (33 rows). Wall check, validate, overhang shading,
+6. **cad-print** (33 rows). *Done 2026-10-01 pending verification; see
+   [CAD print](#cad-print-2026-10-01). 25 `done-by-reading`, 8
+   `deliberately different`; one gap route added, `GET /print/study` (the
+   print study and split groups), which no flagged row needed.* As
+   planned: wall check, validate, overhang shading,
    fastener and clearance tools, split for printing, strength, plan,
    strength-or-split, assembly guide, coupons, and the job list with
    progress and cancel. Routes: `GET /nodes/{id}/thin|validate`,
-   `/print/*`, `POST /ops/fastener_hole|clearance|print_split`. Gap: the
-   print overlay's per-node results (shared with 5), closed by
+   `/print/*`, `POST /ops/fastener_hole|clearance|print_split`. Gaps,
+   both closed: the print overlay's per-node results (shared with 5), by
    cad-physical-inspect's `GET /results/nodes`, whose `nodes` keep the
-   print-study blocks (only its `margins` leave them out).
+   print-study blocks (only its `margins` leave them out); and the print
+   study with the split groups, which RoboCAD's handlers read in process,
+   by the new `GET /print/study` (read-only, other methods 405; pytests
+   `cad/tests/test_api_print_routes.py`).
 7. **cad-organize** (108 rows; planned as cad-annotations). Outliner
    organization (search, groups, drag-and-drop, move to group, active
    group, inline rename, multi-select), comments and threads with pins and
@@ -5259,9 +5575,12 @@ The Director re-ranks with evidence, but this is the default:
    pending verification (written and reviewed by reading in 3fb34225,
    f26842fa and the review fixes committed in 697a15c1; nothing compiled
    or run).
-   Next: **cad-print**.
+   **cad-print** (2026-10-01; see [CAD print](#cad-print-2026-10-01)) is
+   done pending verification (written and reviewed by reading in 35ea6de0
+   and 17f90d08; nothing compiled or run).
+   Next: **cad-organize**.
    Remaining, in order (§9 "Later CAD epics"):
-   cad-print, cad-organize, cad-experiments-motion.
+   cad-organize, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
    each.

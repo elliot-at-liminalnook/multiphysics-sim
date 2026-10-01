@@ -33,8 +33,8 @@ the user's real models and the user agrees to retire the Python path.
 feature. *Native target* is the symbol that implements it in this epic
 (`cad::…` is `crates/sim-spatial/src/cad/…`; `CadClient` is
 `sim_runtime::cad_client::CadClient`), or the later epic that owns it.
-The cad-views-export and cad-physical-inspect rows name a `file:function`
-instead: `camera/…` and `cad/…` are relative to `crates/sim-spatial/src/`, `main.rs` is
+The cad-views-export, cad-physical-inspect and cad-print rows name a
+`file:function` instead: `camera/…` and `cad/…` are relative to `crates/sim-spatial/src/`, `main.rs` is
 `crates/sim-spatial/src/main.rs`, and `crates/sim-runtime/src/cad_client/…`
 is written in full; a backticked symbol after a path is in that file.
 
@@ -59,16 +59,17 @@ is written in full; a backticked symbol after a path is in that file.
 **Status legend.**
 
 - `done-by-reading`: the cad-mode, cad-select-transform, cad-modify,
-  cad-sketch, cad-views-export or cad-physical-inspect epic implements it
-  (native-viewer.md, CAD mode section; "CAD selection and transform"; "CAD
-  modify"; "CAD sketch"; "Shared camera and CAD views"; "CAD physical
-  properties"). It is built and tested in that epic's
-  verification pass (still to come for cad-views-export and
-  cad-physical-inspect) and moves to `done` only when the user's checklist
+  cad-sketch, cad-views-export, cad-physical-inspect or cad-print epic
+  implements it (native-viewer.md, CAD mode section; "CAD selection and
+  transform"; "CAD modify"; "CAD sketch"; "Shared camera and CAD views";
+  "CAD physical properties"; "CAD print"). It is built and tested in that
+  epic's verification pass (still to come for cad-physical-inspect and
+  cad-print) and moves to `done` only when the user's checklist
   ([cad-checklist.md](cad-checklist.md)) passes. Nothing is `done` yet: no
   epic's checklist has been signed off (cad-sketch was verified at
-  cc7ac194), and neither cad-views-export nor cad-physical-inspect has
-  been through its verification pass.
+  cc7ac194 and cad-views-export at bcf0c56c), and neither
+  cad-physical-inspect nor cad-print has been through its verification
+  pass.
 - `later-epic: <name>`: owned by a later CAD epic (see "Epics" below).
   No row of an epic that has been worked is left open: every
   `later-epic` row names an epic not yet started.
@@ -155,6 +156,20 @@ and the planar export); the print overlay row stays cad-print's. It also
 stamped box-select, Alt+click menu and edges → faces items with their
 topology revision (rows "Box select", "Alt+click" and "Selection: edges →
 bounding faces", statuses unchanged).
+The `cad-print` epic (2026-10-01) is done by reading: its 33 rows map to
+native code: the wall check, validation and the thin points
+(`cad/print/checks.rs`, `thin_overlay.rs`), overhang shading (a display
+toggle, `cad/display/`), the fastener and clearance tools
+(`cad/print/edits.rs`, `fastener_tool.rs`), the six print studies
+(`cad/print/studies.rs`), the one job poller and the Print jobs section
+(`cad/print/jobs_tracker.rs`, `jobs_panel.rs`) and the print overlay
+(`cad/print/overlay.rs` through `cad/results/overlay.rs`), with the
+client's `print.rs` and the catalogue's `cad/ops/catalogue/print.rs`; 25
+`done-by-reading` and 8 `deliberately different`, each with its reason;
+none stays open. Its one new route in `api.py` (`GET /print/study`,
+pytests `cad/tests/test_api_print_routes.py`) adds one row to the REST
+routes table (`done-by-reading`); it closed no flagged gap (the print
+overlay's data came with cad-physical-inspect's `GET /results/nodes`).
 
 **Every Ops method is already reachable natively, but only by REST.** The
 `cad_op` REST command (`CadAction::CadOp` → `CadClient::op`) can call any
@@ -393,7 +408,7 @@ inspector shows as returned.
 | "Isolate" (`view.isolate`) | ui/app.py:312, commands.py:402 | `POST /ops/isolate` | /, View > Isolate, the 3D view's right-click menu → `cad/ops/catalogue/view.rs:ENTRIES` (`view.isolate`: `POST /ops/isolate` on the selected nodes, one undo step) | deliberately different: refused by name with nothing selected ("Select the nodes to isolate"); RoboCAD's runs and hides everything |
 | "Show All" (`view.show_all`) | ui/app.py:313, commands.py:415 | `POST /ops/show_all` | Alt+H, View > Show All → `cad/ops/catalogue/view.rs:ENTRIES` (`view.show_all`: `POST /ops/show_all`, one undo step) | done-by-reading |
 | "Hide" (`view.hide`, the selection) | ui/app.py:314 | `POST /ops/set_visible` | H, View > Hide, the 3D view's right-click menu → `cad/ops/catalogue/view.rs:ENTRIES` (`view.hide`: `POST /ops/set_visible` with false on the selected nodes, one undo step) | deliberately different: refused by name with nothing selected ("Select the nodes to hide"); RoboCAD's pushes an empty undo step |
-| Stress overlay (`view.stress` "Toggle stress overlay (from loaded results)" and `print.overlay` "Strength overlay on/off"; blue 0 → red at yield) | ui/app.py:399, ui/app.py:422, ui/app.py:1695-1698, ui/viewport.py:826-877 | `GET /results/nodes` (per-node `results.hotspot` and yield strength; added with cad-physical-inspect) | `cad/results/overlay.rs:paint`; `cad/results/mod.rs:handle` (`Overlay`, `PrintOverlay`); colours from `sim_domain_robot::stress_results::link_colours` | deliberately different: one colour rule shared with Robot mode (`link_colours`: log scale over 3 decades, blue at 0.1 % of yield → red at yield), where RoboCAD's window is linear from blue 0 to red at yield; `print.overlay` only toggles this overlay (the print study's failure-index colouring is cad-print's); the staleness label follows RoboCAD's stale flag |
+| Stress overlay (`view.stress` "Toggle stress overlay (from loaded results)" and `print.overlay` "Strength overlay on/off"; blue 0 → red at yield) | ui/app.py:399, ui/app.py:422, ui/app.py:1695-1698, ui/viewport.py:826-877 | `GET /results/nodes` (per-node `results.hotspot` and yield strength; added with cad-physical-inspect) | `cad/results/overlay.rs:paint`; `cad/results/mod.rs:handle` (`Overlay`, `PrintOverlay`); colours from `sim_domain_robot::stress_results::link_colours` | deliberately different: one colour rule shared with Robot mode (`link_colours`: log scale over 3 decades, blue at 0.1 % of yield → red at yield), where RoboCAD's window is linear from blue 0 to red at yield; `print.overlay` only toggles this overlay (print study blocks colour through the same rule since cad-print, `cad/print/overlay.rs:inputs`, see "The print overlay"); the staleness label follows RoboCAD's stale flag |
 | "Draft-angle shading" (`inspect.draft`, pull +Z) | ui/app.py:403, ui/app.py:1304-1317 | `GET /nodes/{id}/mesh` (derived natively) | none (`cad/surfaces/registry.rs` `DRAFT_SHADING`) | deliberately different: RoboCAD colours each selected body's triangles by draft against +Z (`analysis.draft_angle_colors`); no route serves those colours and the native meshes carry no per-triangle colours to draw them |
 | "Normal-direction shading" (`inspect.normals`, which switches to xray) | ui/app.py:404, ui/app.py:1319-1322 | n/a (display) | `inspect.normals` (Inspect menu) → `DisplayCmd::Mode(Xray)` (`cad/surfaces/registry.rs`), as RoboCAD's `normal_shading` switches to xray | done-by-reading |
 | Overlay: "tool · mode" and the tool hint; footer "Right-drag orbit · Shift+right-drag pan · Wheel zoom · F focus \| n ms/frame" | ui/viewport.py:1198-1223 | n/a (display) | "tool · mode" and the hint: `cad::numeric` head (`cad::transform::mode_label`, `cad::transform::hint`), at the bottom of the 3D view, with the navigation line (`cad::numeric::NAVIGATION`: this view's own orbit, pan, zoom and Home fit) | deliberately different: no ms/frame readout (frame timing belongs to the diagnostics overlay, see native-viewer.md "Bevy features to use"), and the navigation names this view's keys ("Right-drag orbit · Shift+right-drag or middle-drag pan · Wheel zoom · Home fit"; F focuses the selection since cad-views-export, `cad/surfaces/registry.rs:focus`, but the line does not list it) |
@@ -431,7 +446,7 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Midplane between two faces (`tool.plane_mid`) | ui/app.py:353, ui/tools.py:1096-1099 | `POST /ops/plane_midplane` | `cad::ops` catalogue `tool.plane_mid` (`Flow::PlanePick(Mid)`: two face picks as `tool.plane`; `Arg::Node`, `Arg::Face`, `Arg::FaceB`) → `POST /ops/plane_midplane`; the new plane becomes active | done-by-reading |
 | Active plane XY / XZ / YZ (`tool.plane_xy`, `tool.plane_xz`, `tool.plane_yz`; "Active plane set") | ui/app.py:354-356, ui/app.py:1022-1027 | n/a (viewer state; RoboCAD's `PUT /view {"active_plane"}` is GUI-only) | `cad::ops` catalogue `tool.plane_xy`, `tool.plane_xz`, `tool.plane_yz` (`Flow::View(ViewAct::Plane)`) → `sketch::plane::view_act` sets `CadActivePlane` (status "Active plane set"); `cad_state.plane` (`plane::state_json`); every plane parameter's "active" (`Arg::Plane`) and the tools read it | deliberately different: also, selecting exactly one plane node makes it the active plane (`plane::sync`), a native gesture (RoboCAD's plane nodes become active only when a plane tool creates them); the active plane is the viewer's display state, never `PUT /view` |
 | "Toggle 2D snapping to the active plane" (`tool.plane_2d_snap`) | ui/app.py:357, ui/app.py:1029-1031 | n/a (viewer state) | `cad::ops` catalogue `tool.plane_2d_snap` (`Flow::View(ViewAct::Snap2d)`) → `sketch::plane::view_act` toggles `CadActivePlane::snap_2d` ("2D snapping on\|off"); read through `snap::snap_plane` by measure, the cursor snap and the plane tools' points | done-by-reading |
-| Fastener hole… (`tool.fastener`, Ctrl+H: dialog "Size" M2–M8, "Kind" clearance/tap/counterbore/countersink/insert, "Extra clearance (mm)", "Depth (mm)" or "through"; remembers the last; then click faces) | ui/app.py:358, ui/app.py:889-894, ui/widgets.py:988-1021, ui/tools.py:1120-1155 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
+| Fastener hole… (`tool.fastener`, Ctrl+H: dialog "Size" M2–M8, "Kind" clearance/tap/counterbore/countersink/insert, "Extra clearance (mm)", "Depth (mm)" or "through"; remembers the last; then click faces) | ui/app.py:358, ui/app.py:889-894, ui/widgets.py:988-1021, ui/tools.py:1120-1155 | `POST /ops/fastener_hole` | `cad/ops/catalogue/print.rs` `tool.fastener` (`Flow::PrintPick`, Ctrl+H; Size M2–M8, Kind, Extra clearance (mm), Depth (mm; 0: through), Point; preset with the remembered values by `cad/print/edits.rs:seed`) → `cad/print/fastener_tool.rs:click` (the face under the pointer only through `CadMeshes::face_at` at the shown revision) → `fastener_tool.rs:pick` → `cad/ops/mod.rs:run_entry_on` → `cad/print/edits.rs:build`, `send` (one `crates/sim-runtime/src/cad_client/print.rs:CadClient::fastener_hole` per click through `cad/actions.rs:edit_at`; the values remembered as RoboCAD's `last_fastener`) | deliberately different: the dialog's fields stay beside the view while you click (one step; Escape ends both), as the motor tool's; a "Point (mm; empty: the clicked point)" field lets REST place a hole without a click (the point is the click's snap, else its hit, else the typed point, else the face's own point) |
 | Mirror (about active plane) (`tool.mirror`, Ctrl+M; YZ when no plane is active) | ui/app.py:360, ui/app.py:910-914 | `POST /ops/mirror` | `cad::ops` catalogue `tool.mirror` (`Flow::Immediate`; Ctrl+M) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): one `POST /ops/mirror {"args": [ids, plane], "kwargs": {"live": false}}`; `plane` defaults to "active" (`Arg::Plane("plane", Yz)`: the active plane by name or plane node id, else YZ as RoboCAD); REST `cad_run` may name xy, xz or yz | done-by-reading |
 | Mirror as live instance (`tool.mirror_live`) | ui/app.py:361 | `POST /ops/mirror {"live": true}` | `cad::ops` catalogue `tool.mirror_live` → one `POST /ops/mirror {"args": [ids, plane], "kwargs": {"live": true}}`; `plane` as `tool.mirror` (the active plane, else YZ) | done-by-reading |
 | Array… (`tool.array`, Ctrl+Shift+A: rectangular, count X/Y/Z, "count + spacing" or "count + total extent", or radial about the active plane; "As live instances"; "Merge into one body") | ui/app.py:365, ui/app.py:920-941, ui/widgets.py:1024-1063 | `POST /ops/array_rect`, `POST /ops/array_radial` | `cad::ops` catalogue `tool.array` (`Flow::Form`, `Shape::Array`: the ArrayDialog's fields in `cad::surfaces::form`, the rectangular or radial rows shown by `Param::when`) → `args::build` (`array`) → one `POST /ops/array_rect` (count X/Y/Z with `spacing` or `extent` by the mode) or `POST /ops/array_radial` (count, total angle, about the plane's normal through its origin: `plane_frame`, "active" by default: the active plane, else XY as RoboCAD), with `as_instances` and `merge` | done-by-reading |
@@ -552,26 +567,26 @@ that difference.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Wall thickness check…" (`print.wall_check`, Ctrl+W; "Flag walls thinner than (mm):" 1.2; red points) | ui/app.py:390, ui/app.py:1113-1127 | `GET /nodes/{id}/thin?threshold=` | cad-print epic | later-epic: cad-print |
-| "Validate for printing" (`print.validate`, Ctrl+Shift+V; "n body(ies): valid and watertight.") | ui/app.py:391, ui/app.py:1129-1135 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
-| "Toggle overhang shading" (`print.overhangs`; faces past 45° shaded red) | ui/app.py:392, ui/app.py:1079-1083, ui/viewport.py:293-294, ui/viewport.py:1675-1679 | `GET /nodes/{id}/mesh` (derived natively) | cad-print epic | later-epic: cad-print |
-| "Split selected for printing…" (`print.split`: "Printer:" list with usable size, "Joints:" auto / pins+screws / dovetail / pins) | ui/app.py:393, ui/app.py:1166-1183 | `POST /print/split`; `GET /print/registry` | cad-print epic | later-epic: cad-print |
-| "Check strength (document's print study)" (`print.strength`) | ui/app.py:394, ui/app.py:1185-1200 | `POST /print/analyze` | cad-print epic | later-epic: cad-print |
-| "Plan print settings and plates (document's print study)" (`print.plan`) | ui/app.py:395, ui/app.py:1202-1211 | `POST /print/plan` | cad-print epic | later-epic: cad-print |
-| "Whole or split for strength? (selected part of the print study)" (`print.strength_split`) | ui/app.py:396, ui/app.py:1213-1225 | `POST /print/strength_split` | cad-print epic | later-epic: cad-print |
-| "Assembly guide for the selected split…" (`print.assembly`; opens the guide) | ui/app.py:397, ui/app.py:1227-1242 | `POST /print/assembly` | cad-print epic | later-epic: cad-print |
-| "Test coupons (for the selected split, or the material)…" (`print.coupons`; "Printer:", "Filament:") | ui/app.py:398, ui/app.py:1244-1263 | `POST /print/coupons` | cad-print epic | later-epic: cad-print |
-| "Print jobs…" (`print.jobs`: the last eight; "Cancel the running jobs?") | ui/app.py:400, ui/app.py:1265-1275 | `GET /print/jobs`, `DELETE /print/jobs/{id}` | cad-print epic | later-epic: cad-print |
-| Job progress in the status bar ("kind: message (n %) — Print ▸ Print jobs… to cancel") | ui/app.py:1144-1164 | `GET /print/jobs/{id}` | cad-print epic | later-epic: cad-print |
-| The print overlay ("print" results section in the stress colours) | ui/viewport.py:831-840 | `GET /results/nodes` (per-node `results`, print-study blocks included; added with cad-physical-inspect) | cad-print epic | later-epic: cad-print |
-| "Clearance offset…" (`tool.clearance`, Ctrl+Shift+C; "Grow holes / shrink bosses by (mm):", remembered) | ui/app.py:359, ui/app.py:896-908 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
+| "Wall thickness check…" (`print.wall_check`, Ctrl+W; "Flag walls thinner than (mm):" 1.2; red points) | ui/app.py:390, ui/app.py:1113-1127 | `GET /nodes/{id}/thin?threshold=` | `cad/ops/catalogue/print.rs` `print.wall_check` (Ctrl+W; "Flag walls thinner than (mm):" 1.2, 0.1–20) → `cad/print/checks.rs:build` (the selected nodes, else `visible_bodies`) → `start_wall` (one `Pool::Dedicated` job of `crates/sim-runtime/src/cad_client/print.rs:CadClient::thin_walls` per node; answers cached by (generation, node, revision, threshold)) → `receive` → `land_wall` (RoboCAD's status text, `wall_status`); the red points `cad/print/thin_overlay.rs:draw`, display only | deliberately different: the last threshold a check ran with presets the next form (`cad/print/checks.rs:seed`; RoboCAD's dialog reopens at 1.2 each time); the points are drawn only at the revision they were read at, and `cad_print {op: clear}` clears them |
+| "Validate for printing" (`print.validate`, Ctrl+Shift+V; "n body(ies): valid and watertight.") | ui/app.py:391, ui/app.py:1129-1135 | `GET /nodes/{id}/validate` | `cad/ops/catalogue/print.rs` `print.validate` (Ctrl+Shift+V) → `cad/print/checks.rs:build` (every visible body, `visible_bodies`) → `start_validate` (`crates/sim-runtime/src/cad_client/print.rs:CadClient::validate_node` per body on one `Pool::Dedicated` job) → `land_validation` (`validation_lines`, `validation_status`: "n body(ies): valid and watertight." or `validate_for_export`'s messages) | deliberately different: `validate_for_export`'s tessellation open-edge check runs only in RoboCAD's desktop window (`GET /nodes/{id}/validate` answers only the kernel's report), so it is not part of this check and the state says so (`cad/print/checks.rs:OPEN_EDGE_NOTE`); the answer is the status line (messages joined by "; "), not an information or warning box |
+| "Toggle overhang shading" (`print.overhangs`; faces past 45° shaded red) | ui/app.py:392, ui/app.py:1079-1083, ui/viewport.py:293-294, ui/viewport.py:1675-1679 | `GET /nodes/{id}/mesh` (derived natively) | `print.overhangs` (`cad/surfaces/registry.rs`, `Do::Print`) → `cad/print/mod.rs:command_action` → `CadAction::CadDisplay { toggle: Overhangs }` → `cad/display/mod.rs:apply_display` (`DisplaySetting::Overhangs`; setting or toggling the build plate sets it, as RoboCAD's `toggle_build_plate`); the tint `cad/display/section.rs:overhangs` at `OVERHANG_DEG` (45°) over the shown mesh, a separate mesh in RoboCAD's 0.9, 0.35, 0.3 (`preview`), display only; the toolbar's "Overhangs" chip (`cad/display/ui.rs:toolbar`) | done-by-reading |
+| "Split selected for printing…" (`print.split`: "Printer:" list with usable size, "Joints:" auto / pins+screws / dovetail / pins) | ui/app.py:393, ui/app.py:1166-1183 | `POST /print/split`; `GET /print/registry` | `cad/ops/catalogue/print.rs` `print.split` ("Printer:" the registry's printers with their usable size from `cad/print/studies.rs:picks`, "Joints:" auto / pins+screws / dovetail / pins; refused by `cad/print/studies.rs:precheck` until `GET /print/registry` is read) → `studies.rs:build` (`SplitRequest { background: true, expected_revision }`) → `send` (`crates/sim-runtime/src/cad_client/print.rs:CadClient::print_split_job` through `cad/actions.rs:edit_at`) → `cad/sync/mod.rs:finish_edit` → `cad/print/jobs_tracker.rs:edit_answered`; done text `jobs_tracker.rs:done_text` (`SplitDone::status`) | deliberately different: it starts RoboCAD's `split_job` (background) as RoboCAD's menu does, and adds `expected_revision`, so RoboCAD also refuses a split whose document moved since the selection was read |
+| "Check strength (document's print study)" (`print.strength`) | ui/app.py:394, ui/app.py:1185-1200 | `POST /print/analyze` | `cad/ops/catalogue/print.rs` `print.strength` → `cad/print/studies.rs:build` (the study from `GET /print/study` at the shown revision; without one RoboCAD's explanation `NO_STUDY`, verbatim) → `send` (`crates/sim-runtime/src/cad_client/print.rs:CadClient::print_start("analyze", …)` through `cad/actions.rs:edit_at`, with `expected_revision`) → `cad/print/jobs_tracker.rs:edit_answered`; done "strength: least safety factor F on NAME (MODE); …" (`done_text`) | done-by-reading |
+| "Plan print settings and plates (document's print study)" (`print.plan`) | ui/app.py:395, ui/app.py:1202-1211 | `POST /print/plan` | `cad/ops/catalogue/print.rs` `print.plan` → `cad/print/studies.rs:build` (the study, else `NO_STUDY`) → `send` (`CadClient::print_start("plan", …)` through `edit_at`, with `expected_revision`) → `cad/print/jobs_tracker.rs:edit_answered`; progress and done "plan: N plate(s), about H h and G g (estimates); 3MF files in DIR" (`done_text`) | done-by-reading |
+| "Whole or split for strength? (selected part of the print study)" (`print.strength_split`) | ui/app.py:396, ui/app.py:1213-1225 | `POST /print/strength_split` | `cad/ops/catalogue/print.rs` `print.strength_split` → `cad/print/studies.rs:build` (the first study part whose node is selected, with the study's printer, material, simulation, safety_target and space; else RoboCAD's refusal) → `send` (`CadClient::print_start("strength_split", …)`); done "RECOMMENDATION: WHY" (`cad/print/jobs_tracker.rs:done_text`) | done-by-reading |
+| "Assembly guide for the selected split…" (`print.assembly`; opens the guide) | ui/app.py:397, ui/app.py:1227-1242 | `POST /print/assembly` | `cad/ops/catalogue/print.rs` `print.assembly` → `cad/print/studies.rs:build` (`split_groups`: a selected split group, else a selected piece's) → `send` (`CadClient::print_start("assembly", …)`); when done `cad/print/jobs_tracker.rs:finish` opens the guide through `jobs::open_local` on a `Pool::Io` job, "assembly: N steps; guide PATH" | done-by-reading |
+| "Test coupons (for the selected split, or the material)…" (`print.coupons`; "Printer:", "Filament:") | ui/app.py:398, ui/app.py:1244-1263 | `POST /print/coupons` | `cad/ops/catalogue/print.rs` `print.coupons` ("Printer:", "Filament:" the registry's ids, `cad/print/studies.rs:picks`) → `studies.rs:build` (the selected split group or a piece's, else none) → `send` (`CadClient::print_start("coupons", …)`); when done `cad/print/jobs_tracker.rs:finish` opens the protocol's folder through `jobs::open_local` on a `Pool::Io` job | done-by-reading |
+| "Print jobs…" (`print.jobs`: the last eight; "Cancel the running jobs?") | ui/app.py:400, ui/app.py:1265-1275 | `GET /print/jobs`, `DELETE /print/jobs/{id}` | `print.jobs` (`cad/surfaces/registry.rs`, `Do::Print`) → `cad/print/mod.rs:command_action` → `CadPrint {op: jobs}` (`cad_print`) → `cad/print/jobs_panel.rs:show`; the right dock's Print jobs section `jobs_panel.rs:draw` (`panel::Part::Print`: the last eight as RoboCAD's lines, "No print jobs yet."); "Cancel running jobs…" → `cad/print/jobs_tracker.rs:cancel` (asks, then one `DELETE` per running job) | deliberately different: a section of the right dock instead of a message box, and "Cancel the running jobs?" is an inline Yes/No row in it (the UI kit has no modal confirm) |
+| Job progress in the status bar ("kind: message (n %) — Print ▸ Print jobs… to cancel") | ui/app.py:1144-1164 | `GET /print/jobs/{id}` | `cad/print/jobs_tracker.rs:tick` (one `GET /print/jobs` poll in flight on `Pool::Dedicated`, every 0.5 s while a watched job runs or the Print jobs section is open) → `land` ("kind: message (n %)", `progress`, written only when it changes) → `finish` (`done_text`; `cad/sync/mod.rs:refresh` and the robot reads invalidated for the jobs that publish; failed "Kind: error"; "kind cancelled") | deliberately different: " — Print ▸ Print jobs… to cancel" is dropped (the Print jobs section has the Cancel button); a failure is the status line's error, not a warning box; one list poll every 0.5 s replaces RoboCAD's per-job 250 ms timer; the stress overlay is left as it is when a job ends (RoboCAD's handler clears its stress colours) |
+| The print overlay ("print" results section in the stress colours) | ui/viewport.py:831-840 | `GET /results/nodes` (per-node `results`, print-study blocks included; added with cad-physical-inspect) | `cad/results/overlay.rs:inputs_of` (its print branch) → `cad/print/overlay.rs:inputs` (one cell, failure index 1 / safety factor, yield 1) → `cad/results/overlay.rs:cad_colours` (`sim_domain_robot::stress_results::link_colours`) → `paint`; staleness `cad/print/overlay.rs:staleness` (from the block's `cad_revision`) on the results panel's line `panel_line` | deliberately different: each part takes one colour, its governing failure index (1 / safety factor) through the shared stress rule, red at failure, where RoboCAD's window samples the study's per-voxel failure-index field from its run folder at each vertex (green ≤ 0.25 → red ≥ 1) |
+| "Clearance offset…" (`tool.clearance`, Ctrl+Shift+C; "Grow holes / shrink bosses by (mm):", remembered) | ui/app.py:359, ui/app.py:896-908 | `POST /ops/clearance` | `cad/ops/catalogue/print.rs` `tool.clearance` (Ctrl+Shift+C; "Grow holes / shrink bosses by (mm):" −5–5, preset with the remembered amount, 0.2 at first, by `cad/print/edits.rs:seed`) → `edits.rs:build` (the selected faces grouped by node in selection order) → `send` (one `crates/sim-runtime/src/cad_client/print.rs:CadClient::clearance` per node in one edit job through `cad/actions.rs:edit_at`, each its own RoboCAD undo step "Clearance") | done-by-reading |
 
 ## Robot: joints, motors, sensors, cables, battery, control, uncertainty
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | Robot panel summary ("n bodies, n joints, n DoF, n motors, n sensors, n cables. Ground: …. Power: ….") | ui/widgets.py:1234-1291 | `GET /robot`; `GET /results` | `cad/robot/panel.rs:summary_line` (Robot section of the right dock; reads from `cad/robot/data.rs:sync`) | deliberately different: "(n s run)" is omitted (`GET /results/nodes` has no `duration_s`); "(stale: …)" is added when RoboCAD's stale flag is set |
-| Robot panel tree "Links", "Joints", "Motors", "Sensors & cables" with "Detail" and "Margin" columns; click selects; double-click a joint edits it | ui/widgets.py:1246-1252, ui/widgets.py:1304-1366 | `GET /robot`; `GET /results` | `cad/robot/panel.rs:view`, `row`, `double_click` | deliberately different: the branch glyphs ⚙ ⚡ ◎ 〜 ▣ are not in IBM Plex Sans, so rows sit under headings without them; Detail and Margin are lines under the name, not columns, to fit the dock width |
+| Robot panel tree "Links", "Joints", "Motors", "Sensors & cables" with "Detail" and "Margin" columns; click selects; double-click a joint edits it | ui/widgets.py:1246-1252, ui/widgets.py:1304-1366 | `GET /robot`; `GET /results` | `cad/robot/panel.rs:view`, `row`, `double_click` (since cad-print a row press carries the revision its description was read at, `select_action`) | deliberately different: the branch glyphs ⚙ ⚡ ◎ 〜 ▣ are not in IBM Plex Sans, so rows sit under headings without them; Detail and Margin are lines under the name, not columns, to fit the dock width |
 | Margins (yield, bearing, screw, stall, Tg, mount Tg) | ui/widgets.py:1293-1302, physical.py:1030 | `GET /results/nodes` (`margins`: `results_margins` per node, print-study blocks left out; added with cad-physical-inspect) | `cad/robot/panel.rs:margin_text` | done-by-reading |
 | Issues list "⛔"/"⚠" and "✓ robot is valid" | ui/widgets.py:1348-1355 | `GET /robot` (`issues`) | `cad/robot/panel.rs:view` | deliberately different: ⛔ and ⚠ are not in the font, so "Error:" and "Warning:" in the danger and warn colours; ✓ kept |
 | Robot panel buttons (Add joint…, Add motor…, Joint from selection…, Infer joints, Assign motor…, Fix together, Toggle ground, Add sensor…, Add cable…, Battery / control…, Export sim…, Stress overlay, Load results…, Apply identification…) | ui/widgets.py:1255-1269 | the commands' routes below | `cad/robot/panel.rs:buttons` | done-by-reading |
@@ -750,16 +765,17 @@ calls. Who uses each route, by reading:
 | Connect ports (client) | api.py:432-433 | `POST /system/connections` | cad-organize epic | later-epic: cad-organize |
 | Remove a connection (client) | api.py:436-437 | `DELETE /system/connections/{id}` | cad-organize epic | later-epic: cad-organize |
 | Run a repository model script as one undo step (client) | api.py:1114-1115, api.py:483-510 | `POST /doc/script` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Print registry: printers and materials | api.py:1116-1119, api.py:269-274 | `GET /print/registry` | cad-print epic | later-epic: cad-print |
-| Split for printing (synchronous; `background` makes it a job) | api.py:275-276 | `POST /print/split` | cad-print epic | later-epic: cad-print |
-| Strength analysis job | api.py:277-278 | `POST /print/analyze` | cad-print epic | later-epic: cad-print |
-| Print plan job | api.py:277-278 | `POST /print/plan` | cad-print epic | later-epic: cad-print |
-| Assembly guide job | api.py:277-278 | `POST /print/assembly` | cad-print epic | later-epic: cad-print |
-| Test coupons job | api.py:277-278 | `POST /print/coupons` | cad-print epic | later-epic: cad-print |
-| Whole or split for strength job | api.py:277-278 | `POST /print/strength_split` | cad-print epic | later-epic: cad-print |
-| List print jobs | api.py:279-280 | `GET /print/jobs` | cad-print epic | later-epic: cad-print |
-| A print job's state (its `wait` is read from the body, which RoboCAD never parses for GET, api.py:1102, so it is never honoured) | api.py:281-283 | `GET /print/jobs/{id}` | cad-print epic | later-epic: cad-print |
-| Cancel a print job | api.py:284-285 | `DELETE /print/jobs/{id}` | cad-print epic | later-epic: cad-print |
+| Print registry: printers and materials | api.py:1116-1119, api.py:269-274 | `GET /print/registry` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_registry` (`Ordered` keeps the registry's order); read once per connection generation in `cad/print/studies.rs:tick` | done-by-reading |
+| Print study and split groups (read-only; 405 otherwise) | api.py:312-318 (`Service.print_request`) | `GET /print/study` (added with cad-print: `revision`, `robot_settings["print_study"]` or null, and the split group ids in tree order; pytests `cad/tests/test_api_print_routes.py`) | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_study`; read per (generation, shown revision) in `cad/print/studies.rs:tick` | done-by-reading |
+| Split for printing (synchronous; `background` makes it a job) | api.py:275-276 | `POST /print/split` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_split_job` (`background: true`; `cad/print/studies.rs:send`) and `CadClient::print_split_now` (synchronous; client only) | done-by-reading |
+| Strength analysis job | api.py:277-278 | `POST /print/analyze` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_start("analyze", …)` (`cad/print/studies.rs:send`) | done-by-reading |
+| Print plan job | api.py:277-278 | `POST /print/plan` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_start("plan", …)` (`cad/print/studies.rs:send`) | done-by-reading |
+| Assembly guide job | api.py:277-278 | `POST /print/assembly` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_start("assembly", …)` (`cad/print/studies.rs:send`) | done-by-reading |
+| Test coupons job | api.py:277-278 | `POST /print/coupons` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_start("coupons", …)` (`cad/print/studies.rs:send`) | done-by-reading |
+| Whole or split for strength job | api.py:277-278 | `POST /print/strength_split` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_start("strength_split", …)` (`cad/print/studies.rs:send`) | done-by-reading |
+| List print jobs | api.py:279-280 | `GET /print/jobs` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_jobs`; polled in `cad/print/jobs_tracker.rs:tick` | done-by-reading |
+| A print job's state (its `wait` is read from the body, which RoboCAD never parses for GET, api.py:1102, so it is never honoured) | api.py:281-283 | `GET /print/jobs/{id}` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_job` (sends no `wait`; client only) | deliberately different: `wait` is never honoured (RoboCAD reads it from a GET body it never parses), so the viewer never waits on a job: it polls `GET /print/jobs` for every job at once (`cad/print/jobs_tracker.rs:tick`) |
+| Cancel a print job | api.py:284-285 | `DELETE /print/jobs/{id}` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::cancel_print_job` (a bare DELETE); `cad/print/jobs_tracker.rs:cancel` | done-by-reading |
 | List candidates | api.py:1120-1122, api.py:516-517 | `GET /candidates` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Create a candidate | api.py:518 | `POST /candidates` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Read a candidate | api.py:520 | `GET /candidates/{id}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
@@ -803,9 +819,9 @@ calls. Who uses each route, by reading:
 | Edge references | api.py:1159-1160, api.py:625-627 | `GET /nodes/{id}/edges`, `GET /nodes/{id}/edges?samples=N` | `CadClient::edges` (`?samples=N`) → `cad::topology` | done-by-reading |
 | Vertices | api.py:1161-1162, api.py:629-631 | `GET /nodes/{id}/vertices` | `CadClient::vertices` → `cad::topology` | done-by-reading |
 | Display mesh (vertices, triangles, triangle_face, face_count; 404 "no mesh") | api.py:1163-1164, api.py:633-637 | `GET /nodes/{id}/mesh?tolerance=` | `CadClient::mesh` → `cad::mesh` | done-by-reading |
-| Validation report | api.py:1165-1166, api.py:639-642 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
+| Validation report | api.py:1165-1166, api.py:639-642 | `GET /nodes/{id}/validate` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::validate_node`; `cad/print/checks.rs:start_validate` | done-by-reading |
 | Exact B-rep section outline | api.py:1167-1168, api.py:644-647 | `GET /nodes/{id}/section?plane=` | `crates/sim-runtime/src/cad_client/section.rs:CadClient::section` from `cad/display/section.rs:exact_jobs` (planes the route takes: xy, xz, yz through the origin, or a plane node, `cad/display/mod.rs:exact_query`) | done-by-reading |
-| Thin walls | api.py:1169-1170, api.py:649-651 | `GET /nodes/{id}/thin?threshold=` | cad-print epic | later-epic: cad-print |
+| Thin walls | api.py:1169-1170, api.py:649-651 | `GET /nodes/{id}/thin?threshold=` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::thin_walls`; `cad/print/checks.rs:start_wall` | done-by-reading |
 | A sketch's curves | api.py:1171-1174, api.py:117-118 | `GET /nodes/{id}/sketch`; `GET /nodes/{id}` (its `sketch`, the same `Sketch.to_json`) | `CadClient::sketch` (`SketchGeometry::from_value`, tolerant: unknown or malformed curves are counted, not fatal); `cad::sketch::cache` (`CadSketches`, by (node, revision), Dedicated jobs) reads `CadClient::node` and `SketchGeometry::from_value` on its `sketch`, keeping the dropped count (`CadSketches::dropped`: the sketch edits and a `cad_sketch` call naming curve indices refuse by name when it is non-zero); plane nodes' frames through `CadClient::node` and `plane_of` (`CadSketches::plane_state`: a plane read without a valid frame is "node X has no valid plane frame", not "still being read") | done-by-reading |
 | Edit a sketch with a call list | api.py:1172-1173, api.py:661-685 | `POST /nodes/{id}/sketch` | `CadClient::edit_sketch` (`SketchCall::to_json`, `calls_body`) from `ops::send_sketch`, the one path every sketch tool, edit and REST `cad_sketch` (`CadAction::CadSketch` → `sketch::edits::sketch_action`) takes | done-by-reading (api.py `Service.edit_sketch` now maps curve indices before turning two-number lists into points: a join of two curves, trim or extend with two, `circle_tangent` and `arc_tangent` failed through REST before; `cad/tests/test_api_sketch_calls.py`) |
 | Ops names and signatures | api.py:1175-1176, api.py:687-693 | `GET /ops` | `CadClient::ops` | done-by-reading |
@@ -883,7 +899,7 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 |---|---|---|---|---|
 | `configure_robot` (assembly metadata and connectors as one edit) | commands.py:257 | `POST /ops/configure_robot` | the catalogue's `ops.configure_robot` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::configure_robot` | done-by-reading |
 | `set_component_graph` | commands.py:262 | `POST /ops/set_component_graph` | cad-organize epic | later-epic: cad-organize |
-| `print_split` | commands.py:299 | `POST /ops/print_split` | cad-print epic | later-epic: cad-print |
+| `print_split` | commands.py:299 | `POST /ops/print_split` | the catalogue's REST-only `ops.print_split` (`cad/ops/catalogue/print.rs`: Printer, Joints; one undo step, no job); `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_split_op` | done-by-reading |
 | `undo` | commands.py:305 | `POST /undo` | `CadAction::CadUndo` | done-by-reading |
 | `redo` | commands.py:308 | `POST /redo` | `CadAction::CadRedo` | done-by-reading |
 | `delete` | commands.py:312 | `DELETE /nodes/{id}`; `POST /ops/delete` | `cad::ops` catalogue `edit.delete` (`POST /ops/delete` of every selected node); `CadAction::CadDelete` (`DELETE /nodes/{id}`, one node) | done-by-reading |
@@ -960,10 +976,10 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `plane_two_points_camera` | commands.py:881 | `POST /ops/plane_two_points_camera` | `cad::ops` catalogue `tool.plane_camera` via `ops::handle`/`args::build` | done-by-reading |
 | `plane_midplane` | commands.py:887 | `POST /ops/plane_midplane` | `cad::ops` catalogue `tool.plane_mid` via `ops::handle`/`args::build` | done-by-reading |
 | `add_measurement` | commands.py:897 | `POST /ops/add_measurement`; `POST /nodes {"kind": "measure"}` | `cad::transform::commit::measure` (`CadAction::CadMeasure { keep: true }`, REST `cad_measure`) | done-by-reading |
-| `clearance` | commands.py:903 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
-| `fastener_hole` | commands.py:922 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
+| `clearance` | commands.py:903 | `POST /ops/clearance` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::clearance`; `cad/print/edits.rs:send` (`tool.clearance`) | done-by-reading |
+| `fastener_hole` | commands.py:922 | `POST /ops/fastener_hole` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::fastener_hole` (`FastenerSpec`); `cad/print/edits.rs:send` (`tool.fastener`) | done-by-reading |
 | `add_joint` | commands.py:935 | `POST /ops/add_joint` | the catalogue's `robot.add_joint`, `robot.joint_dialog` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::add_joint` | done-by-reading |
-| `set_joint` | commands.py:949 | `POST /ops/set_joint` | the catalogue's `ops.set_joint (Edit joint)`, `robot.joint_dialog` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::set_joint` | done-by-reading |
+| `set_joint` | commands.py:949 | `POST /ops/set_joint` | the catalogue's `ops.set_joint (Edit joint)`, `robot.joint_dialog` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`; since cad-print a REST run's missing parameters are the joint's current values, `cad/ops/robot_form.rs:fill_from_joint` from `cad/ops/mod.rs:prepare`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::set_joint` | done-by-reading |
 | `connect_fixed` | commands.py:960 | `POST /ops/connect_fixed` | the catalogue's `robot.fixed` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::connect_fixed` | done-by-reading |
 | `add_motor` | commands.py:966 | `POST /ops/add_motor` | the catalogue's `robot.add_motor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::add_motor` | done-by-reading |
 | `mount_motor` | commands.py:983 | `POST /ops/mount_motor` | the catalogue's `robot.add_motor (Mount on)` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::mount_motor` | done-by-reading |
@@ -1085,8 +1101,8 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `tool.shell`: Ctrl+Shift+H | keymap.json:8 | `POST /ops/shell` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.shell }` when ready, else the status line says why | done-by-reading |
 | `tool.measure`: M | keymap.json:8 | `POST /ops/add_measurement` | `cad::transform::keys` → `CadAction::CadTool { tool: Measure }` (not with Ctrl: Ctrl+Shift+M is Same Material) | done-by-reading |
 | `tool.plane`: Ctrl+P | keymap.json:8 | `POST /ops/plane_from_face` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.plane }` when ready, else the status line says why | done-by-reading |
-| `tool.fastener`: Ctrl+H | keymap.json:8 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
-| `tool.clearance`: Ctrl+Shift+C | keymap.json:8 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
+| `tool.fastener`: Ctrl+H | keymap.json:8 | `POST /ops/fastener_hole` | `cad/keys.rs:keys` → `CadInvoke tool.fastener` (the fastener tool: its form beside the view, then face clicks) | done-by-reading |
+| `tool.clearance`: Ctrl+Shift+C | keymap.json:8 | `POST /ops/clearance` | `cad/keys.rs:keys` → `CadInvoke tool.clearance` (needs selected faces, then its form) | done-by-reading |
 | `tool.mirror`: Ctrl+M | keymap.json:8 | `POST /ops/mirror` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.mirror }` when ready, else the status line says why (Control+M always works; a macOS app menu binding Command+M to minimise would take it, and winit's default menu has none) | done-by-reading |
 | `tool.array`: Ctrl+Shift+A | keymap.json:8 | `POST /ops/array_rect` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.array }` when ready, else the status line says why | done-by-reading |
 | `sketch.line`: L | keymap.json:9 | `POST /nodes/{id}/sketch` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { sketch.line }` when ready, else the status line says why | done-by-reading |
@@ -1102,8 +1118,8 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `modify.intersect`: Ctrl+Alt+U | keymap.json:10 | `POST /ops/boolean` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.intersect }` when ready, else the status line says why | done-by-reading |
 | `modify.join`: J | keymap.json:10 | `POST /ops/join` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.join }` when ready, else the status line says why | done-by-reading |
 | `modify.unjoin`: Shift+J | keymap.json:10 | `POST /ops/unjoin` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.unjoin }` when ready, else the status line says why | done-by-reading |
-| `print.wall_check`: Ctrl+W | keymap.json:11 | `GET /nodes/{id}/thin` | cad-print epic | later-epic: cad-print |
-| `print.validate`: Ctrl+Shift+V | keymap.json:11 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
+| `print.wall_check`: Ctrl+W | keymap.json:11 | `GET /nodes/{id}/thin` | `cad/keys.rs:keys` → `CadInvoke print.wall_check` (Command+W reaches it on macOS: winit's default menu has no Close item) | done-by-reading |
+| `print.validate`: Ctrl+Shift+V | keymap.json:11 | `GET /nodes/{id}/validate` | `cad/keys.rs:keys` → `CadInvoke print.validate` | done-by-reading |
 | `numeric.entry`: Tab (cleared at ui/app.py:469 and routed by keyPressEvent) | keymap.json:12 | n/a | `cad::numeric::entry` | done-by-reading |
 | Keys listed in the registry but never bound, because they are not in keymap.json: `simulation.experiment` Ctrl+Return, `robot.add_motor` Ctrl+Shift+M (pressing it runs Select Same Material), `robot.add_joint` Ctrl+Shift+J (USER_GUIDE.md:368 and USER_GUIDE.md:375 document both) | ui/app.py:276, ui/app.py:408-409, ui/app.py:247-251 | n/a | `cad/surfaces/registry.rs` (`bound`), `cad/keys.rs` (module doc table) | deliberately different: Ctrl+Shift+J is bound to `robot.add_joint` (nothing else uses it; USER_GUIDE.md:375 documents it); Ctrl+Shift+M stays Select Same Material, RoboCAD's live behaviour, and `robot.add_motor` is unbound (menus, palette, the Robot panel); `simulation.experiment` stays cad-experiments-motion's |
 | Native addition: the same five shortcuts on Cmd and Ctrl in `cad::keys` (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Delete/Backspace, Home, Ctrl/Cmd+S) | n/a | as above | `cad::keys` | done-by-reading |
@@ -1122,11 +1138,11 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted from the tables above (2026-10-01, after the
-cad-physical-inspect epic, commits 3fb34225 and f26842fa and their review
-fixes: of its 82 rows, 64 became `done-by-reading` and 18 `deliberately
-different`; none stays open; no other row changed status) with
-this script, run from the repository
+Recounted from the tables above (2026-10-01, after the cad-print epic,
+commits 35ea6de0 and 17f90d08 and their documentation: of its 33 rows, 25
+became `done-by-reading` and 8 `deliberately different`; none stays open;
+one row was added, `GET /print/study`, `done-by-reading`; no other row
+changed status) with this script, run from the repository
 root; it splits each row on its unescaped `|`, takes the status cell and
 counts it by its leading status (up to its reason), skipping header rows
 and the count tables themselves:
@@ -1147,7 +1163,9 @@ print(dict(rows), sum(rows.values())); print(dict(epics))
 PY
 ```
 
-There are 773 rows. (After cad-views-export, at f15766ea and still at
+There are 774 rows. (After cad-physical-inspect, at 61f1bea5 and still at
+17f90d08, the ledger had 773 rows: 431 done by reading, 204 later (33 of
+them cad-print's) and 138 deliberately different. After cad-views-export, at f15766ea and still at
 f26842fa, the ledger had 367 done by reading, 286 later (82 of them
 cad-physical-inspect's) and 120 deliberately different. At 9b1e5eec and f15766ea the ledger was unchanged
 from cad-sketch's: an uncommitted draft before the review fixes had 363
@@ -1167,23 +1185,25 @@ tessellation tolerance and the view radial, which became `done-by-reading`.
 cad-physical-inspect's split was counted the same way, pairing each row of
 `git show f26842fa:docs/cad-parity.md` with the same row now: of the 82
 rows that were cad-physical-inspect's `later-epic` rows, 64 and 18; no other row
-changed status (the print overlay row keeps `later-epic: cad-print`
-with its new route).
+changed status (the print overlay row stayed a later cad-print row
+with its new route). cad-print's split was counted the same way, pairing
+each row of `git show 17f90d08:docs/cad-parity.md` with the same row now
+(the one added row, `GET /print/study`, set aside): of the 33 rows that
+were cad-print's later-epic rows, 25 and 8; no other row changed status.
 
 | Status | Rows |
 |---|---|
 | done | 0 |
-| done-by-reading | 431 |
-| later-epic | 204 |
-| deliberately different | 138 |
-| **total** | **773** |
+| done-by-reading | 457 |
+| later-epic | 171 |
+| deliberately different | 146 |
+| **total** | **774** |
 
 | Later epic | Rows |
 |---|---|
 | cad-organize | 108 |
 | cad-experiments-motion | 63 |
-| cad-print | 33 |
-| **total** | **204** |
+| **total** | **171** |
 
 Some rows repeat a feature from another angle: as a UI feature, as a REST
 route, as an Ops method and as a key. The ledger checks each of those
@@ -1193,12 +1213,14 @@ counts: 81 rows are `n/a (display)` and 10 are flagged (a REST route cell
 holding "none: needs a Python route").
 
 No row is blank or `todo`, and no cad-select-transform, cad-modify,
-cad-sketch, cad-views-export or cad-physical-inspect row is open. Nothing
+cad-sketch, cad-views-export, cad-physical-inspect or cad-print row is
+open. Nothing
 is `done`, because no epic's rows have been moved to `done` yet:
 cad-mode, cad-select-transform, cad-modify and cad-sketch were built and
 tested in their verification passes and await the user's checklist;
-cad-views-export and cad-physical-inspect are written and reviewed by
-reading, pending their verification passes. The verification passes and the checklist move rows to
+cad-views-export was verified at bcf0c56c; cad-physical-inspect and
+cad-print are written and reviewed by reading, pending their verification
+passes. The verification passes and the checklist move rows to
 `done`.
 
 ## Rows flagged "none: needs a Python route"

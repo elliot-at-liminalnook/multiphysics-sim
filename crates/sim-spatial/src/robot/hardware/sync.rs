@@ -32,18 +32,24 @@
 //!   seen running within [`START_GRACE`].
 //! - Preferences: the page's `walking-hardware-map-v1` is
 //!   `settings::SyncSettings`, saved on every change and at start.
-use super::actions::HardwareAction;
+mod apply;
+mod page;
+mod thread;
+
+pub use apply::apply;
+pub use page::{LiveInput, banner_text, distinct, legs, live_input, live_run, mapping, reading_lines, sample_from, source_text};
+
+use super::ServerTarget;
 use super::mirror::SceneId;
-use super::settings::{SyncBinding, SyncSettings, sign};
-use super::view::fixed;
-use super::{Hardware, ServerTarget};
+use super::settings::{SyncBinding, SyncSettings};
 use crate::jobs::{Job, Pool, RunThread};
 use crate::robot::{RobotAction, RobotView};
-use crate::robot::run::{Phase, ReplayPhase, RunAction};
+use crate::robot::run::{Phase, RunAction};
 use serde_json::{Value, json};
 use sim_runtime::hardware_client::{Body, Client, STOP_TIMEOUT, ServerKind, bench, token};
-use std::sync::{Arc, Mutex, MutexGuard, mpsc};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+use thread::worker;
 
 /// Sample posting period (the page's `setInterval(send, 50)`).
 pub const SEND_PERIOD: Duration = Duration::from_millis(50);
@@ -92,10 +98,6 @@ impl crate::jobs::Stamped for SyncShared {
     fn generation(&self) -> u64 {
         self.generation
     }
-}
-
-fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
-    m.lock().unwrap_or_else(|p| p.into_inner())
 }
 
 /// The page's closure state.
@@ -671,234 +673,6 @@ struct RunSeen {
 }
 fn run_seen(view: &RobotView) -> RunSeen {
     RunSeen { key: run_key(view), phase: view.run.as_ref().map(|r| r.phase()), live: sample_from(live_input(view), 0).map(|_| ()) }
-}
-
-/// The page's `snapshot().live` (`!playback`): a preset's own physics run,
-/// not a recorded preset, not a replay in progress or a run a replay
-/// replaced (until Reset), and no gait preview loaded or loading.
-pub fn live_run(recorded: bool, preset: bool, replay: ReplayPhase, replaced: bool, gait_holds: bool) -> bool {
-    let replay_run = replay == ReplayPhase::Replaying || (replaced && replay != ReplayPhase::Idle);
-    !recorded && preset && !replay_run && !gait_holds
-}
-
-/// The page's `snapshot()` (viewer.js:428), from the run's accepted frame.
-pub struct LiveInput<'a> {
-    /// A live run (not a recorded preset or a replay in progress).
-    pub live: bool,
-    pub coordinates: &'a [String],
-    pub targets: &'a [f64],
-    pub time_s: f64,
-    /// The episode ended (`frame.done`).
-    pub done: bool,
-}
-pub fn live_input(view: &RobotView) -> Option<LiveInput<'_>> {
-    let run = view.run.as_ref()?;
-    let frame = run.frame()?;
-    let replay = run.replay_state();
-    let gait_holds = run.gait_preview().is_some_and(|g| g.holds().is_some());
-    let live = live_run(run.recorded().is_some(), run.preset().is_some(), replay.phase, replay.replaced, gait_holds);
-    // `done` is the frame's (the page's `frame.done`), not the run's phase.
-    let (coordinates, targets, done) = frame.motor_targets.as_ref().map_or((&[][..], &[][..], false), |t| (t.coordinates.as_slice(), t.targets_rad.as_slice(), t.done));
-    Some(LiveInput { live, coordinates, targets, time_s: frame.time, done })
-}
-
-/// `currentSample()` (:17).
-pub fn sample_from(input: Option<LiveInput>, sequence: u64) -> Result<bench::Sample, String> {
-    match input {
-        Some(s) if s.live && !s.targets.is_empty() && s.coordinates.len() == s.targets.len() && !s.done => {
-            Ok(bench::Sample { sequence, time_s: s.time_s, targets: s.coordinates.iter().cloned().zip(s.targets.iter().copied()).collect() })
-        }
-        _ => Err(NOT_LIVE.into()),
-    }
-}
-
-/// The `/live/open` source: `JSON.stringify({preset, cad})`, members in the
-/// page's order (`cad` omitted when the scene's robot has no source).
-pub fn source_text(view: &RobotView) -> String {
-    let Some(p) = view.run.as_ref().and_then(|r| r.preset()) else { return String::new() };
-    let mut s = format!("{{\"preset\":{}", Value::from(p.preset.id.as_str()));
-    if !p.scene.robot.source.is_null() {
-        s.push_str(&format!(",\"cad\":{}", p.scene.robot.source));
-    }
-    s.push('}');
-    s
-}
-
-/// `new Set(ids).size !== 3` (:23).
-pub fn distinct(rows: &[SyncBinding]) -> Result<(), String> {
-    let ids: std::collections::BTreeSet<u8> = rows.iter().map(|b| b.motor_id).collect();
-    if ids.len() == 3 { Ok(()) } else { Err(DISTINCT.into()) }
-}
-
-/// `stateText`'s banner (:16).
-pub fn banner_text(active: bool, preparing: bool, s: &str) -> String {
-    format!("{}{s}", if active { "MOTOR SYNC · " } else if preparing { "CONNECTING MOTORS · " } else { "SIMULATION ONLY · " })
-}
-
-/// The leg options (:30): distinct `c.replace('joint.','').split(' | ')[0]`, in order.
-pub fn legs(coordinates: &[String]) -> Vec<String> {
-    let mut out: Vec<String> = Vec::new();
-    for c in coordinates {
-        let leg = c.replacen("joint.", "", 1).split(" | ").next().unwrap_or_default().to_string();
-        if !out.contains(&leg) {
-            out.push(leg);
-        }
-    }
-    out
-}
-
-/// `mapping(saved)` (:20): the leg's coordinates, each with its saved (by
-/// row) or default (`ids[i]`) motor and sign.
-pub fn mapping(coordinates: &[String], ids: &[u8], leg: &str, saved: Option<&[SyncBinding]>) -> Vec<SyncBinding> {
-    let prefix = format!("joint.{leg} | ");
-    coordinates
-        .iter()
-        .filter(|c| c.starts_with(&prefix))
-        .enumerate()
-        .map(|(i, c)| {
-            let s = saved.and_then(|s| s.get(i));
-            let motor_id = s.map(|s| s.motor_id).filter(|id| ids.contains(id)).or_else(|| ids.get(i).copied()).or_else(|| ids.first().copied()).unwrap_or(0);
-            let polarity = s.map_or(1, |s| sign(s.polarity));
-            SyncBinding { coordinate: c.clone(), motor_id, polarity }
-        })
-        .collect()
-}
-
-/// The readings block (:26), one line per binding.
-pub fn reading_lines(samples: &[bench::LiveSample], rows: &[SyncBinding]) -> String {
-    rows.iter()
-        .map(|b| match samples.iter().rev().find(|p| p.id == b.motor_id) {
-            None => format!("ID {}: waiting", b.motor_id),
-            Some(p) => {
-                // `toFixed` (ties away from zero), not `format!` (ties to even).
-                let age = p.live_source.as_ref().map(|_| format!(" · input age {} ms", p.input_age_s().map_or("NaN".into(), |a| fixed(a * 1000.0, 0)))).unwrap_or_default();
-                format!("ID {}: {}° · {} V · {} °C{age}", b.motor_id, fixed(p.measured_deg(), 2), fixed(p.telemetry.voltage_v, 1), p.telemetry.temperature_c)
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-/// The section's actions. Motion (`SyncStart`) is refused from REST by the caller.
-pub fn apply(hw: &mut Hardware, action: &HardwareAction, view: Option<&RobotView>, run: &mut dyn FnMut(RobotAction)) -> Result<(), String> {
-    let s = &mut hw.sync;
-    match action {
-        HardwareAction::SyncConnect => return s.connect(),
-        HardwareAction::SyncStart => {
-            s.start(view, run)?;
-            if s.preparing {
-                // The page saves the mapping when a session starts.
-                hw.settings.sync = hw.sync.to_save();
-                hw.settings.save();
-            }
-            return Ok(());
-        }
-        HardwareAction::SyncStop => {
-            s.stop("Operator stop");
-            run(RobotAction::Run { action: RunAction::Pause });
-            return Ok(());
-        }
-        HardwareAction::SyncLeg { leg } => {
-            s.editable()?;
-            if !s.legs.contains(leg) {
-                return Err(format!("motor sync leg `{leg}`: the bench offers {}", s.legs.join(", ")));
-            }
-            s.leg = leg.clone();
-            let config = s.config.as_ref().expect("editable");
-            s.rows = mapping(&config.coordinates, &config.ids, leg, None);
-        }
-        HardwareAction::SyncMotor { row, motor_id } => {
-            s.editable()?;
-            if !s.motor_ids().contains(motor_id) {
-                return Err(format!("motor ID {motor_id} is not on the bench (its motors: {:?})", s.motor_ids()));
-            }
-            let n = s.rows.len();
-            s.rows.get_mut(*row).ok_or_else(|| format!("mapping row {row}: the leg has {n} rows"))?.motor_id = *motor_id;
-        }
-        HardwareAction::SyncPolarity { row, polarity } => {
-            s.editable()?;
-            if !matches!(polarity, 1 | -1) {
-                return Err(format!("polarity {polarity}: expected 1 or -1"));
-            }
-            let n = s.rows.len();
-            s.rows.get_mut(*row).ok_or_else(|| format!("mapping row {row}: the leg has {n} rows"))?.polarity = *polarity;
-        }
-        HardwareAction::SyncScale { scale } => {
-            s.editable()?;
-            if !SCALES.iter().any(|(x, _)| x == scale) {
-                return Err(format!("bench motion scale {scale}: expected 0.03, 0.05 or 0.09"));
-            }
-            s.amplitude = *scale;
-        }
-        other => return Err(format!("`{}` is not a motor sync action", other.name())),
-    }
-    s.revision += 1;
-    s.samples_revision += 1;
-    hw.settings.sync = hw.sync.to_save();
-    hw.settings.save();
-    Ok(())
-}
-
-/// The sync thread's side of a session: active, the newest sample, the last sent.
-#[derive(Default)]
-struct Outbox {
-    active: bool,
-    latest: Option<bench::Sample>,
-    last_sent: u64,
-}
-
-/// Applies `first` and every queued command in order, re-checking the queue after each (a stop
-/// sent during `/live/open` is seen before any sample); the newest Latest wins.
-/// True when a session opened and is still active (send at once, :23).
-fn drain(rx: &mpsc::Receiver<SyncCommand>, first: Option<SyncCommand>, out: &mut Outbox, open: &mut dyn FnMut(&Body) -> Result<(), String>) -> bool {
-    let (mut next, mut opened) = (first, false);
-    while let Some(command) = next.take().or_else(|| rx.try_recv().ok()) {
-        match command {
-            SyncCommand::Latest(s) => out.latest = Some(s),
-            SyncCommand::Open { body, last_sent } => {
-                out.last_sent = last_sent;
-                out.active = open(&body).is_ok();
-                opened = true;
-            }
-            SyncCommand::Deactivate => out.active = false,
-        }
-    }
-    opened && out.active
-}
-
-/// The sync thread: `/live/open`, and `/live/sample` every 50 ms while
-/// active (`send()`, :21). Exits when the channel closes.
-fn worker(client: Client, rx: mpsc::Receiver<SyncCommand>, shared: Arc<Mutex<SyncShared>>) {
-    let mut out = Outbox::default();
-    let mut next_send = Instant::now() + SEND_PERIOD;
-    let mut open = |body: &Body| {
-        let result = client.post(bench::LIVE_OPEN, body).map(|_| ()).map_err(|e| e.to_string());
-        lock(&shared).open = Some(result.clone());
-        result
-    };
-    loop {
-        let first = match rx.recv_timeout(next_send.saturating_duration_since(Instant::now())) {
-            Err(mpsc::RecvTimeoutError::Disconnected) => return,
-            received => received.ok(),
-        };
-        let opened = drain(&rx, first, &mut out, &mut open);
-        let now = Instant::now();
-        if now >= next_send {
-            next_send = now + SEND_PERIOD;
-        } else if !opened {
-            continue;
-        }
-        // The newest sample, if newer than the last sent.
-        let (active, last_sent) = (out.active, out.last_sent);
-        let Some(sample) = out.latest.as_ref().filter(|s| active && s.sequence > last_sent) else { continue };
-        match client.post(bench::LIVE_SAMPLE, &bench::sample(sample)) {
-            Ok(_) => out.last_sent = sample.sequence,
-            Err(e) => {
-                out.active = false;
-                lock(&shared).send_error = Some(e.to_string());
-            }
-        }
-    }
 }
 
 #[cfg(test)]

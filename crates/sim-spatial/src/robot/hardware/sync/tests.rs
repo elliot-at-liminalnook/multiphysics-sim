@@ -1,7 +1,9 @@
 use super::*;
+use super::thread::{Outbox, drain};
 use crate::robot::hardware::sync_panel::{chart_note, charts, rms_and_saturation, row_title, stats_text};
 use sim_runtime::hardware_client::calibration::Telemetry;
 use sim_runtime::hardware_client::{Endpoint, new_client_id};
+use std::sync::mpsc;
 
 fn coords() -> Vec<String> {
     ["+X | Hip servo output", "+X | Worm servo output", "+X | Foot servo output", "-X | Hip servo output"].iter().map(|c| format!("joint.{c}")).collect()

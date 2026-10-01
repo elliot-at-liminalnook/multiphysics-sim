@@ -3,6 +3,7 @@
 //! (`PUT /selection` with the mode, one at a time, newest wins), and the
 //! inspected node's `GET /nodes/{id}`.
 use crate::cad::document::{CadDocument, Connection, SelectMode};
+use crate::cad::selection::{CadItems, Shared, View};
 use crate::jobs::{Job, Pool};
 use sim_runtime::cad_client::{Selection, SelectionItem};
 use std::time::Instant;
@@ -16,9 +17,12 @@ use std::time::Instant;
 /// Items naming a node absent from the shown tree are left out while that
 /// tree is current (`stale` is None); while it is behind RoboCAD's revision
 /// they are kept, and the next tree prunes the ones still absent
-/// (`take_snapshot`). `remote_selection` keeps RoboCAD's items as read.
-/// Returns whether the shown selection or mode changed.
-pub(in crate::cad) fn adopt_selection(doc: &mut CadDocument, sent: Instant, selection: Selection) -> bool {
+/// (`take_snapshot`). A connection's first read is adopted even when it
+/// equals the empty `remote_selection` (`selection_read`). `remote_selection` keeps RoboCAD's items as read.
+/// Adopted items go into the shared selection (`Op::Set`, stamped with the
+/// current revision) and the change is recorded as published, so it is
+/// never pushed back. Returns whether the shown selection or mode changed.
+pub(in crate::cad) fn adopt_selection(doc: &mut CadDocument, shared: &mut Shared, sent: Instant, selection: Selection) -> bool {
     let current = doc.selection_job.is_none() && doc.selection_pushed_at.is_none_or(|at| sent >= at);
     if !current {
         return false;
@@ -34,15 +38,25 @@ pub(in crate::cad) fn adopt_selection(doc: &mut CadDocument, sent: Instant, sele
             changed = true;
         }
     }
-    if selection.items != doc.remote_selection {
+    if !doc.selection_read || selection.items != doc.remote_selection {
+        doc.selection_read = true;
+        // A change not yet pushed (a new tree's prune in this snapshot)
+        // stays pending, so RoboCAD's copy is corrected if it still differs.
+        let pending = doc.published_selection != shared.view().changed();
         let items: Vec<SelectionItem> = match (&doc.doc, doc.stale.is_none()) {
             (Some(tree), true) => selection.items.iter().filter(|i| tree.nodes.iter().any(|n| n.id == i.0)).cloned().collect(),
             _ => selection.items.clone(),
         };
         doc.remote_selection = selection.items;
-        if doc.selection != items {
-            doc.selection = items;
-            changed = true;
+        if shared.items() != items {
+            match shared.set(items) {
+                Ok(c) => changed |= c,
+                Err(e) => doc.show(Err(format!("RoboCAD's selection was not adopted: {e}"))),
+            }
+        }
+        // RoboCAD's own change: not pushed back (`publish_changes`).
+        if !pending {
+            doc.published_selection = shared.view().changed();
         }
     }
     changed
@@ -52,7 +66,7 @@ pub(in crate::cad) fn adopt_selection(doc: &mut CadDocument, sent: Instant, sele
 /// answer is kept as RoboCAD's copy; a desktop window's mode is then the
 /// one pushed). A selection or mode change made while it was in flight is
 /// pushed now (the newest only).
-pub(super) fn finish_selection(doc: &mut CadDocument) {
+pub(in crate::cad) fn finish_selection(doc: &mut CadDocument, shared: View) {
     let Some(job) = &doc.selection_job else { return };
     let Some(result) = job.poll() else { return };
     let generation = job.generation();
@@ -72,27 +86,32 @@ pub(super) fn finish_selection(doc: &mut CadDocument) {
         }
         Err(e) => doc.show(Err(format!("the selection was not pushed to RoboCAD: {e}"))),
     }
-    if again && doc.connected() && crate::cad::selection::differs_from_remote(doc) {
-        push_selection(doc);
+    if again && doc.connected() {
+        let items = shared.items();
+        if crate::cad::selection::differs_from_remote(doc, &items) {
+            push_selection(doc, items);
+        }
     }
 }
 
-/// What `PUT /selection` sends: the items as RoboCAD writes them and the
-/// selection mode (a headless RoboCAD stores only the items).
-pub(in crate::cad) fn selection_body(doc: &CadDocument) -> (Vec<SelectionItem>, Option<&'static str>) {
-    (doc.selection.clone(), Some(doc.select_mode.name()))
+/// What `PUT /selection` sends: `items` (the shared selection's CAD items)
+/// as RoboCAD writes them and the selection mode (a headless RoboCAD
+/// stores only the items).
+pub(in crate::cad) fn selection_body(doc: &CadDocument, items: Vec<SelectionItem>) -> (Vec<SelectionItem>, Option<&'static str>) {
+    (items, Some(doc.select_mode.name()))
 }
 
-/// Push the selection and mode to RoboCAD's `/selection`. One push at a
-/// time, so they land in order: while one is in flight, the newest is
-/// remembered and pushed when it answers (`finish_selection`).
-pub(crate) fn push_selection(doc: &mut CadDocument) {
+/// Push `items` (the shared selection's CAD items) and the mode to
+/// RoboCAD's `/selection`. One push at a time, so they land in order: while
+/// one is in flight, the newest is pushed when it answers
+/// (`finish_selection` reads the shared selection again then).
+pub(crate) fn push_selection(doc: &mut CadDocument, items: Vec<SelectionItem>) {
     if doc.selection_job.is_some() {
         doc.selection_again = true;
         return;
     }
     let Some(client) = doc.client.clone() else { return };
-    let (items, mode) = selection_body(doc);
+    let (items, mode) = selection_body(doc, items);
     doc.selection_job = Some(Job::spawn(Pool::Dedicated, doc.generation, "cad-selection", move |_| {
         client.set_selection(&items, mode).map(|answered| answered.items).map_err(|e| e.to_string())
     }));
@@ -101,9 +120,9 @@ pub(crate) fn push_selection(doc: &mut CadDocument) {
 /// The inspected node's `GET /nodes/{id}`: refetched when the first
 /// selected node or the shown revision changes; a result for another node
 /// or revision is dropped.
-pub(super) fn detail(doc: &mut CadDocument) {
+pub(super) fn detail(doc: &mut CadDocument, shared: View) {
     let revision = doc.doc_key.as_ref().map_or(0, |k| k.1);
-    let wanted = doc.selected().map(|id| (id.to_string(), revision));
+    let wanted = shared.items().first_node().map(|id| (id.to_string(), revision));
     if let Some(job) = &doc.detail_job {
         if let Some(result) = job.poll() {
             let generation = job.generation();

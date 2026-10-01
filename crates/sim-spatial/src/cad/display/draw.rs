@@ -343,12 +343,13 @@ pub(super) fn lines(
     existing: Query<(Entity, &Layer, &Gizmo)>,
     mut assets: ResMut<Assets<GizmoAsset>>,
     mut stamps: Local<HashMap<Layer, u64>>,
+    selection: crate::cad::selection::CadSelection,
 ) {
     let (Some(doc), Some(display), Some(meshes), Some(root)) = (doc, display, meshes, root) else { return };
     let cut = cut_plane(&display);
     let revision = doc.doc_key.as_ref().map_or(0, |k| k.1);
     let present: HashMap<Layer, (Entity, Handle<GizmoAsset>)> = existing.iter().map(|(e, l, g)| (*l, (e, g.handle.clone()))).collect();
-    let selected = doc.selected_nodes();
+    let selected = crate::cad::selection::CadItems::nodes(selection.items().as_slice());
     for layer in [Layer::Edges, Layer::Grid, Layer::Axes, Layer::Outline, Layer::Exact, Layer::Curves] {
         let mut h = DefaultHasher::new();
         hash_plane(&mut h, cut);

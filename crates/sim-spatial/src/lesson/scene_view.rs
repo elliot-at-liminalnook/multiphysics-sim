@@ -195,6 +195,8 @@ pub(super) fn playback(time: Res<Time>, mut learn: ResMut<Learn>, mut scene: Res
         (None, Some(p)) => vec![p],
         (None, None) => state.highlight.clone(),
     };
+    // The page's own display of it (Lessons has no builder projection: the
+    // pick is shared as the Build document's selection by `selection::share`).
     if wanted != a.highlight {
         a.highlight = wanted.clone();
         let target = crate::builder::discussion::selection(&scene, &wanted);

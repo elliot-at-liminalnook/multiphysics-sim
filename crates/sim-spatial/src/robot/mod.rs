@@ -39,6 +39,8 @@ use gait::{GaitAction, GaitSource};
 use playback::RecordedAction;
 use run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, OverlayFlags, ReplayPhase, RunAction, RunController, SpeedRequest};
 use std::path::{Path, PathBuf};
+use crate::document::DocumentRegistry;
+use crate::selection::Selection;
 
 const LEFT: f32 = 280.0;
 const RIGHT: f32 = 390.0;
@@ -72,8 +74,7 @@ pub struct RobotView {
     triangles: Vec<usize>,
     notes: FileNotes,
     cad_link: Option<CadLinkStatus>,
-    /// The one link selection shared by the list, the 3D view and REST.
-    pub selected: Option<usize>,
+    // The selected link is the shared selection's (`picked`), not the view's.
     section: Section,
     /// Inspector scroll offset and its maximum, in logical pixels (as laid out).
     scroll: f32,
@@ -109,7 +110,7 @@ pub struct RobotView {
     /// Run is refused (the page's `setPlaying` refuses to play while mirroring).
     mirror: Option<hardware::MirrorDisplay>,
     /// `--robot FILE` with a planar (v2) file: its summary and planar run
-    /// (`model` and `run` are None then; `selected` indexes its bodies).
+    /// (`model` and `run` are None then; a selected link indexes its bodies).
     planar: Option<PlanarView>,
 }
 
@@ -153,6 +154,7 @@ mod inspector;
 mod loader;
 mod overlay_view;
 mod panel_ui;
+mod picked;
 mod scene;
 mod sections;
 mod state;

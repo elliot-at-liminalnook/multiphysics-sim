@@ -292,11 +292,11 @@ fn display_controls_fit_a_pattern_and_round_trip_through_rest() {
     doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.doc_key = Some((None, 4));
-    doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
+    let selection = [SelectionItem("b1".into(), "body".into(), 0)];
     // The section on XZ through the origin: RoboCAD's route names it (plane=xz), so exact is ready.
     let d = CadDisplay { section: Section { enabled: true, plane: Some(SectionPlane::on_axis(SectionAxis::Y, 0.0)) }, ..CadDisplay::default() };
     let cx = SectionContext { revision: 4, bounds: Some(([0.0, -2.0, 0.0], [4.0, 2.0, 6.0])), ..default() };
-    let controls = controls_of(&doc, Some(&d), &cx);
+    let controls = controls_of(&doc, &selection, Some(&d), &cx);
     let ids: Vec<&str> = controls.iter().map(|c| c.0.as_str()).collect();
     let mut want: Vec<String> = DisplayMode::ALL.iter().map(|m| format!("cad:display:mode_{}", m.name())).collect();
     want.push("cad:display:next".into());
@@ -316,7 +316,7 @@ fn display_controls_fit_a_pattern_and_round_trip_through_rest() {
     let x = controls.iter().find(|c| c.0 == "cad:section:x").unwrap();
     assert_eq!(x.2, CadAction::CadSection(SectionArgs { axis: Some(SectionAxis::X), offset: Some(2.0), ..default() }));
     // Without a 3D view every control is refused by name.
-    assert!(controls_of(&doc, None, &cx).iter().all(|c| c.3.as_ref().is_err_and(|e| e.contains("3D view"))));
+    assert!(controls_of(&doc, &selection, None, &cx).iter().all(|c| c.3.as_ref().is_err_and(|e| e.contains("3D view"))));
 }
 
 /// The toolbar's offset field (RoboCAD's Section tool Tab): a length

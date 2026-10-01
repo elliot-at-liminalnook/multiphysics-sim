@@ -165,7 +165,8 @@ pub(crate) fn spawn_parts(
 
 /// A primary click on a part, as its mode's action (applied in
 /// `ViewerSet::Actions` the same frame): the builder's `PickPart` in Build,
-/// the spatial view's selection in Inspect, the lesson page's `Pick` in Lessons.
+/// the spatial view's selection in Inspect (its handler writes the shared
+/// selection), the lesson page's `Pick` in Lessons.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn pick_part(
     click: On<Pointer<Click>>,
@@ -204,7 +205,7 @@ pub(super) fn pick_part(
     }
     let Some(mut out) = inspect_out else { return };
     if shift {
-        // Toggles the part in the current selection (a refusal is dropped, as before).
+        // Toggles the part among the components shown selected (a refusal is dropped, as before).
         let mut ids = scene.details.components.clone();
         if !ids.remove(&id) {
             ids.insert(id);

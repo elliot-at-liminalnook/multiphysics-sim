@@ -30,46 +30,54 @@ fn item(n: &str, k: &str, i: i64) -> SelectionItem {
     SelectionItem(n.into(), k.into(), i)
 }
 
+/// The shared selection with CAD's entry at the shown tree's revision (3).
+fn shared() -> Fixture {
+    Fixture::at(3)
+}
+
 #[test]
 fn select_replaces_extends_toggles_and_ids_are_body_items() {
     let mut doc = document();
+    let mut f = shared();
     doc.candidates = Some(Candidates { items: vec![item("b1", "face", 0)], extend: false, toggle: false });
     let r0 = doc.revision;
-    let answer = select(&mut doc, &["b1".into()], &[], false, false).unwrap();
-    assert_eq!(doc.selection, vec![item("b1", "body", 0)]);
+    let answer = select(&mut doc, &mut f.shared(), &["b1".into()], &[], false, false, None).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "body", 0)]);
+    assert_eq!(answer["selection"], json!([["b1", "body", 0]]), "cad_select answers the shared selection's items");
     assert!(doc.candidates.is_none(), "a choice closes the Alt menu");
     assert!(doc.revision > r0);
     assert_eq!(answer["connected"], json!(false));
     assert_eq!(answer["pushed"], json!(false));
     // Shift appends (once), Ctrl toggles.
-    select(&mut doc, &[], &[item("b2", "face", 4), item("b1", "body", 0)], true, false).unwrap();
-    assert_eq!(doc.selection, vec![item("b1", "body", 0), item("b2", "face", 4)]);
-    select(&mut doc, &[], &[item("b1", "body", 0), item("b2", "edge", 1)], false, true).unwrap();
-    assert_eq!(doc.selection, vec![item("b2", "face", 4), item("b2", "edge", 1)]);
+    select(&mut doc, &mut f.shared(), &[], &[item("b2", "face", 4), item("b1", "body", 0)], true, false, None).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "body", 0), item("b2", "face", 4)]);
+    select(&mut doc, &mut f.shared(), &[], &[item("b1", "body", 0), item("b2", "edge", 1)], false, true, None).unwrap();
+    assert_eq!(f.items(), vec![item("b2", "face", 4), item("b2", "edge", 1)]);
     assert_eq!(doc.status, Some(Ok("2 selected".to_string())));
     // Replace; empty clears.
-    select(&mut doc, &[], &[item("b2", "vertex", 3)], false, false).unwrap();
-    assert_eq!(doc.selection, vec![item("b2", "vertex", 3)]);
-    select(&mut doc, &[], &[], false, false).unwrap();
-    assert!(doc.selection.is_empty() && doc.status.is_none());
+    select(&mut doc, &mut f.shared(), &[], &[item("b2", "vertex", 3)], false, false, None).unwrap();
+    assert_eq!(f.items(), vec![item("b2", "vertex", 3)]);
+    select(&mut doc, &mut f.shared(), &[], &[], false, false, None).unwrap();
+    assert!(f.items().is_empty() && doc.status.is_none());
     // Refusals name the item.
-    let e = select(&mut doc, &[], &[item("b1", "solid", 0)], false, false).unwrap_err();
+    let e = select(&mut doc, &mut f.shared(), &[], &[item("b1", "solid", 0)], false, false, None).unwrap_err();
     assert!(e.contains("solid") && e.contains("b1"), "{e}");
-    let e = select(&mut doc, &["nope".into()], &[], false, false).unwrap_err();
+    let e = select(&mut doc, &mut f.shared(), &["nope".into()], &[], false, false, None).unwrap_err();
     assert!(e.contains("nope"), "{e}");
-    let e = select(&mut doc, &[], &[item("b1", "face", -1)], false, false).unwrap_err();
+    let e = select(&mut doc, &mut f.shared(), &[], &[item("b1", "face", -1)], false, false, None).unwrap_err();
     assert!(e.contains("negative"), "{e}");
 }
 
 #[test]
 fn a_mode_switch_clears_the_selection_hover_and_menu() {
     let mut doc = document();
-    doc.selection = vec![item("b1", "body", 0)];
+    let mut f = shared();
+    f.set(vec![item("b1", "body", 0)]);
     doc.hover = Some(item("b2", "body", 0));
     doc.candidates = Some(Candidates::default());
-    set_mode(&mut doc, SelectMode::Edge);
+    set_mode(&mut doc, &mut f.shared(), SelectMode::Edge);
     assert_eq!(doc.select_mode, SelectMode::Edge);
-    assert!(doc.selection.is_empty() && doc.hover.is_none() && doc.candidates.is_none());
+    assert!(f.items().is_empty() && doc.hover.is_none() && doc.candidates.is_none());
     assert_eq!(doc.status, Some(Ok("Selection mode: edge".to_string())));
     // A hover is display only: no panel refresh.
     let r = doc.revision;
@@ -81,28 +89,30 @@ fn a_mode_switch_clears_the_selection_hover_and_menu() {
 #[test]
 fn select_all_and_invert_take_visible_bodies_sheets_curves_instances_and_meshes() {
     let mut doc = document();
-    select_all(&mut doc);
-    let ids: Vec<&str> = doc.selection.iter().map(|i| i.0.as_str()).collect();
+    let mut f = shared();
+    select_all(&mut doc, &mut f.shared()).unwrap();
+    let ids: Vec<String> = f.items().iter().map(|i| i.0.clone()).collect();
     assert_eq!(ids, ["b1", "b2", "s1", "m1", "i1"]);
-    assert!(doc.selection.iter().all(|i| i.1 == "body" && i.2 == 0));
-    doc.selection = vec![item("b1", "face", 2), item("s1", "body", 0)];
-    invert(&mut doc);
-    let ids: Vec<&str> = doc.selection.iter().map(|i| i.0.as_str()).collect();
+    assert!(f.items().iter().all(|i| i.1 == "body" && i.2 == 0));
+    f.set(vec![item("b1", "face", 2), item("s1", "body", 0)]);
+    invert(&mut doc, &mut f.shared()).unwrap();
+    let ids: Vec<String> = f.items().iter().map(|i| i.0.clone()).collect();
     assert_eq!(ids, ["b2", "m1", "i1"]);
 }
 
 #[test]
 fn same_material_takes_the_first_selected_nodes_material() {
     let mut doc = document();
-    assert!(same_material(&mut doc).unwrap_err().contains("nothing is selected"));
-    doc.selection = vec![item("b2", "face", 1)];
-    let answer = same_material(&mut doc).unwrap();
+    let mut f = shared();
+    assert!(same_material(&mut doc, &mut f.shared()).unwrap_err().contains("nothing is selected"));
+    f.set(vec![item("b2", "face", 1)]);
+    let answer = same_material(&mut doc, &mut f.shared()).unwrap();
     assert_eq!(answer["material"], json!("pla"));
     // Hidden b3 too (RoboCAD's same_material does not filter visibility).
-    let ids: Vec<&str> = doc.selection.iter().map(|i| i.0.as_str()).collect();
+    let ids: Vec<String> = f.items().iter().map(|i| i.0.clone()).collect();
     assert_eq!(ids, ["b1", "b2", "b3"]);
-    doc.selection = vec![item("s1", "body", 0)];
-    let e = same_material(&mut doc).unwrap_err();
+    f.set(vec![item("s1", "body", 0)]);
+    let e = same_material(&mut doc, &mut f.shared()).unwrap_err();
     assert!(e.contains("Ns1") && e.contains("no material"), "{e}");
 }
 
@@ -130,21 +140,22 @@ fn edges_become_the_faces_their_triangles_share() {
 
     // Through the action: needs the mesh and the topology at the same revision.
     let mut doc = document();
+    let mut f = shared();
     doc.select_mode = SelectMode::Edge;
-    doc.selection = vec![item("b1", "edge", 7)];
+    f.set(vec![item("b1", "edge", 7)]);
     let mut meshes = CadMeshes::default();
     let mut topology = CadTopology::default();
-    let e = edges_to_faces(&mut doc, Some(&meshes), Some(&topology)).unwrap_err();
+    let e = edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap_err();
     assert!(e.contains("Nb1") && e.contains("loading"), "{e}");
     topology.insert("b1", NodeTopology { revision: 3, edges: vec![EdgeInfo { index: 7, points: vec![[0.0, 0.0, 0.0], [10.0, 0.0, 0.0]], ..Default::default() }], ..Default::default() });
-    let e = edges_to_faces(&mut doc, Some(&meshes), Some(&topology)).unwrap_err();
+    let e = edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap_err();
     assert!(e.contains("tessellation of Nb1"), "{e}");
     meshes.insert_drawn("b1", 3, mesh);
     assert_eq!(faces_of_edge(&meshes, &topology, "b1", 7), vec![0, 1]);
-    edges_to_faces(&mut doc, Some(&meshes), Some(&topology)).unwrap();
+    edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap();
     assert_eq!(doc.select_mode, SelectMode::Face);
-    assert_eq!(doc.selection, vec![item("b1", "face", 0), item("b1", "face", 1)]);
-    assert!(edges_to_faces(&mut doc, Some(&meshes), Some(&topology)).unwrap_err().contains("no edges"));
+    assert_eq!(f.items(), vec![item("b1", "face", 0), item("b1", "face", 1)]);
+    assert!(edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap_err().contains("no edges"));
 }
 
 /// A 0.5 mm wall: the top strip (face 0) and the outer side (face 1)
@@ -199,20 +210,21 @@ fn cube(centre: [f64; 3], half: f64) -> MeshData {
 #[test]
 fn box_select_takes_bodies_edges_and_vertices_inside_the_rectangle() {
     let mut doc = document();
+    let mut f = shared();
     let mut meshes = CadMeshes::default();
     // b1 at the origin (inside), b2 2 m to the right (about 48 px: outside).
     meshes.insert_drawn("b1", 3, cube([0.0, 0.0, 0.0], 100.0));
     meshes.insert_drawn("b2", 3, cube([2000.0, 0.0, 0.0], 100.0));
     let v = view();
     let rect = [120.0, 80.0, 100.0, 60.0];
-    doc.selection = vec![item("s1", "body", 0)];
-    let answer = box_select(&mut doc, &meshes, None, &v, rect, false).unwrap();
-    assert_eq!(doc.selection, vec![item("b1", "body", 0)]);
+    f.set(vec![item("s1", "body", 0)]);
+    let answer = box_select(&mut doc, &mut f.shared(), &meshes, None, &v, rect, false).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "body", 0)]);
     assert_eq!(answer["found"], json!(1));
     // Extend keeps what was selected.
-    doc.selection = vec![item("s1", "body", 0)];
-    box_select(&mut doc, &meshes, None, &v, rect, true).unwrap();
-    assert_eq!(doc.selection, vec![item("s1", "body", 0), item("b1", "body", 0)]);
+    f.set(vec![item("s1", "body", 0)]);
+    box_select(&mut doc, &mut f.shared(), &meshes, None, &v, rect, true).unwrap();
+    assert_eq!(f.items(), vec![item("s1", "body", 0), item("b1", "body", 0)]);
 
     // Edge mode: an edge whose samples all lie inside; vertex mode: vertices inside.
     let mut topology = CadTopology::default();
@@ -229,21 +241,22 @@ fn box_select_takes_bodies_edges_and_vertices_inside_the_rectangle() {
         },
     );
     doc.select_mode = SelectMode::Edge;
-    let answer = box_select(&mut doc, &meshes, Some(&topology), &v, rect, false).unwrap();
-    assert_eq!(doc.selection, vec![item("b1", "edge", 0)]);
+    let answer = box_select(&mut doc, &mut f.shared(), &meshes, Some(&topology), &v, rect, false).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "edge", 0)]);
     // b2's topology is not loaded: named, not tested.
     assert_eq!(answer["not_loaded"], json!(["Nb2"]));
     doc.select_mode = SelectMode::Vertex;
-    box_select(&mut doc, &meshes, Some(&topology), &v, rect, false).unwrap();
-    assert_eq!(doc.selection, vec![item("b1", "vertex", 0)]);
+    box_select(&mut doc, &mut f.shared(), &meshes, Some(&topology), &v, rect, false).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "vertex", 0)]);
 }
 
 #[test]
 fn a_face_selection_is_pushed_with_its_items_and_mode() {
     let mut doc = document();
+    let mut f = shared();
     doc.select_mode = SelectMode::Face;
-    doc.selection = vec![item("b1", "face", 2)];
-    let (items, mode) = super::super::sync::selection_body(&doc);
+    f.set(vec![item("b1", "face", 2)]);
+    let (items, mode) = super::super::sync::selection_body(&doc, f.items());
     assert_eq!(items, vec![item("b1", "face", 2)]);
     assert_eq!(mode, Some("face"));
     // As RoboCAD's PUT /selection body.
@@ -253,40 +266,143 @@ fn a_face_selection_is_pushed_with_its_items_and_mode() {
 #[test]
 fn robocads_moded_selection_is_adopted_but_not_during_a_push() {
     let mut doc = document();
+    let mut f = shared();
     doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, gui: true, revision: 3, ..Default::default() });
+    let adopt = |doc: &mut CadDocument, f: &mut Fixture, sent: Instant, s: Selection| super::super::sync::adopt_selection(doc, &mut f.shared(), sent, s);
     let sent = Instant::now();
     let remote = Selection { items: vec![item("b2", "edge", 5)], mode: Some("edge".into()) };
-    assert!(super::super::sync::adopt_selection(&mut doc, sent, remote.clone()));
+    assert!(adopt(&mut doc, &mut f, sent, remote.clone()));
     assert_eq!(doc.select_mode, SelectMode::Edge);
-    assert_eq!(doc.selection, vec![item("b2", "edge", 5)]);
+    assert_eq!(f.items(), vec![item("b2", "edge", 5)]);
     // The same answer again changes nothing.
-    assert!(!super::super::sync::adopt_selection(&mut doc, sent, remote));
+    assert!(!adopt(&mut doc, &mut f, sent, remote));
     // A headless answer (no mode) keeps the viewer's mode.
     let headless = Selection { items: vec![item("b1", "face", 1)], mode: None };
-    assert!(super::super::sync::adopt_selection(&mut doc, sent, headless));
+    assert!(adopt(&mut doc, &mut f, sent, headless));
     assert_eq!(doc.select_mode, SelectMode::Edge);
-    assert_eq!(doc.selection, vec![item("b1", "face", 1)]);
+    assert_eq!(f.items(), vec![item("b1", "face", 1)]);
     // An item naming a node the (current) shown tree lacks is left out;
     // RoboCAD's copy keeps it as read. While the tree is behind, it is kept.
     let ghost = Selection { items: vec![item("b1", "face", 1), item("gone", "body", 0)], mode: None };
-    assert!(!super::super::sync::adopt_selection(&mut doc, sent, ghost.clone()));
-    assert_eq!(doc.selection, vec![item("b1", "face", 1)]);
+    assert!(!adopt(&mut doc, &mut f, sent, ghost.clone()));
+    assert_eq!(f.items(), vec![item("b1", "face", 1)]);
     assert_eq!(doc.remote_selection, ghost.items);
     doc.remote_selection.clear();
     doc.stale = Some("refetching revision 4".into());
-    assert!(super::super::sync::adopt_selection(&mut doc, sent, ghost.clone()));
-    assert_eq!(doc.selection, ghost.items);
+    assert!(adopt(&mut doc, &mut f, sent, ghost.clone()));
+    assert_eq!(f.items(), ghost.items);
     doc.stale = None;
-    doc.selection = vec![item("b1", "face", 1)];
+    f.set(vec![item("b1", "face", 1)]);
     // While our push is in flight, or for a read sent before it answered, nothing is adopted.
     doc.selection_job = Some(Job::finished(doc.generation, Ok(Vec::new())));
     let other = Selection { items: vec![item("b1", "body", 0)], mode: Some("body".into()) };
-    assert!(!super::super::sync::adopt_selection(&mut doc, Instant::now(), other.clone()));
-    assert_eq!((doc.select_mode, doc.selection.clone()), (SelectMode::Edge, vec![item("b1", "face", 1)]));
+    assert!(!adopt(&mut doc, &mut f, Instant::now(), other.clone()));
+    assert_eq!((doc.select_mode, f.items()), (SelectMode::Edge, vec![item("b1", "face", 1)]));
     doc.selection_job = None;
     doc.selection_pushed_at = Some(Instant::now());
-    assert!(!super::super::sync::adopt_selection(&mut doc, sent.checked_sub(Duration::from_millis(1)).unwrap_or(sent), other));
+    assert!(!adopt(&mut doc, &mut f, sent.checked_sub(Duration::from_millis(1)).unwrap_or(sent), other));
     assert_eq!(doc.select_mode, SelectMode::Edge);
+}
+
+/// (a) RoboCAD's `/selection` echo does not loop: an adopted selection is
+/// not pushed back; a local change (any writer, here the shared apply as
+/// an `Act<SelectionAction>` makes it) is pushed exactly once; a change
+/// while a push is in flight is pushed once more when that push answers.
+/// The client points at a closed port: a push spawned here never reaches
+/// a RoboCAD on this machine, and each one is answered by hand.
+#[test]
+fn the_selection_echo_does_not_loop() {
+    let mut doc = document();
+    let mut f = shared();
+    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:9").unwrap());
+    doc.connection = Connection::Connected;
+    doc.health = Some(Health { ok: true, gui: false, revision: 3, ..Default::default() });
+    // Adopted from RoboCAD: no push, and nothing differs from RoboCAD's copy.
+    let remote = Selection { items: vec![item("b1", "body", 0)], mode: None };
+    assert!(super::super::sync::adopt_selection(&mut doc, &mut f.shared(), Instant::now(), remote));
+    publish_changes(&mut doc, f.shared().view());
+    assert!(doc.selection_job.is_none(), "an adopted selection is not pushed back");
+    assert!(!differs_from_remote(&doc, &f.items()));
+    // A local change: exactly one push, and seeing it again pushes nothing more.
+    f.shared().apply(Op::Set, [(item("b2", "body", 0), None)]).unwrap();
+    publish_changes(&mut doc, f.shared().view());
+    assert!(doc.selection_job.is_some() && !doc.selection_again, "one push started");
+    publish_changes(&mut doc, f.shared().view());
+    assert!(!doc.selection_again, "the same change is not pushed twice");
+    // A change while that push is in flight waits for it.
+    f.shared().apply(Op::Add, [(item("s1", "body", 0), None)]).unwrap();
+    publish_changes(&mut doc, f.shared().view());
+    assert!(doc.selection_again, "queued behind the push in flight");
+    // RoboCAD answers the first push: the newest is pushed, once.
+    doc.selection_job = Some(Job::finished(doc.generation, Ok(vec![item("b2", "body", 0)])));
+    super::super::sync::finish_selection(&mut doc, f.shared().view());
+    assert!(doc.selection_job.is_some() && !doc.selection_again, "one more push for the queued change");
+    assert_eq!(doc.remote_selection, vec![item("b2", "body", 0)]);
+    // It answers too: nothing more is pushed, and RoboCAD's copy is the selection.
+    doc.selection_job = Some(Job::finished(doc.generation, Ok(f.items())));
+    super::super::sync::finish_selection(&mut doc, f.shared().view());
+    assert!(doc.selection_job.is_none() && !doc.selection_again);
+    assert!(!differs_from_remote(&doc, &f.items()));
+}
+
+/// (b) Revisions: a face picked against an older tree is refused by name;
+/// when a new tree is shown, a body item is restamped, a face keeps the
+/// revision it was picked at (CAD's own stale refusals use it), and an
+/// item naming a node absent from the current tree is dropped and named
+/// (kept while the tree is behind RoboCAD's revision).
+#[test]
+fn picks_carry_their_revision_and_a_new_tree_rechecks_them() {
+    let mut doc = document();
+    let mut f = shared();
+    let e = select(&mut doc, &mut f.shared(), &[], &[item("b2", "face", 4)], false, false, Some(2)).unwrap_err();
+    assert!(e.contains("[b2, face, 4]") && e.contains("revision 2") && e.contains("revision 3"), "{e}");
+    assert!(f.items().is_empty(), "nothing applied");
+    // Picked at the shown revision: taken; a body item names no index and carries no pick revision.
+    select(&mut doc, &mut f.shared(), &["b1".into(), "s1".into()], &[item("b2", "face", 4)], false, false, Some(3)).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "body", 0), item("s1", "body", 0), item("b2", "face", 4)]);
+    // Revision 4 while RoboCAD is already further on: s1 is absent but kept.
+    let mut tree = doc.doc.clone().unwrap();
+    tree.nodes.retain(|n| n.id != "s1");
+    tree.revision = 4;
+    assert!(follow_tree(&mut f.shared(), 4, &tree, false).is_empty());
+    assert_eq!(f.registry.revision(f.id()), Some(4));
+    // Revision 5, current: s1 is dropped and named; b1 restamped; the face keeps revision 3.
+    tree.revision = 5;
+    let dropped = follow_tree(&mut f.shared(), 5, &tree, true);
+    assert_eq!(dropped, ["[s1, body, 0]"]);
+    assert_eq!(f.selection.dropped, dropped);
+    assert_eq!(f.selection.cad_stamped(f.id()), vec![(item("b1", "body", 0), 5), (item("b2", "face", 4), 3)]);
+}
+
+/// (c) A REST `cad_select` (parsed and run through CAD's one handler, the
+/// adapter) and the same items as an `Act<SelectionAction>` (the shared
+/// apply system) leave the same selection.
+#[test]
+fn cad_select_and_a_selection_action_give_the_same_selection() {
+    use crate::app::actions::{Act, Action, Call, Origin, Replies};
+    use crate::app::{ViewerMode, ViewerSet};
+    use crate::document::{DocumentKind, DocumentRegistry, Source};
+    use crate::selection::{Item, Selection as OneSelection, SelectionAction};
+    // Through the REST adapter.
+    let mut doc = document();
+    let mut f = Fixture::new();
+    let rest = json!({"ids": ["b1"], "items": [["b2", "face", 4]], "extend": false});
+    let action = <CadAction as Action>::parse(&sim_api::Command { command: "cad_select".into(), args: rest }).unwrap();
+    let mut plane = crate::cad::sketch::CadActivePlane::default();
+    let (mut continuation, mut replies) = (Value::Null, Replies::default());
+    let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
+    let mut cx = Cx { doc: &mut doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, camera: Vec::new() };
+    assert!(matches!(crate::cad::actions::handle(&action, &mut call, &mut cx), Outcome::Done(Ok(_))));
+    // Through the shared action and its one apply system.
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin)).insert_state(ViewerMode::Cad).configure_sets(Update, (ViewerSet::Input, ViewerSet::Actions).chain());
+    crate::selection::build(&mut app);
+    let id = app.world_mut().resource_mut::<DocumentRegistry>().open(ViewerMode::Cad, DocumentKind::Cad, Source::Url { url: "http://127.0.0.1:8420".into() }).id;
+    app.world_mut().write_message(Act::ui(SelectionAction::set(id, [Item::Cad(item("b1", "body", 0)), Item::Cad(item("b2", "face", 4))])));
+    app.update();
+    let world = app.world().resource::<OneSelection>();
+    assert_eq!(world.cad_stamped(id), f.selection.cad_stamped(f.id()));
+    assert_eq!(world.cad(id), vec![item("b1", "body", 0), item("b2", "face", 4)]);
 }

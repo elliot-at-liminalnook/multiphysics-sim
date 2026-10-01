@@ -11,6 +11,7 @@
 //! on the right.
 use super::actions::Act;
 use super::switch::{Documents, ModeSwitch, Switcher, WindowAction};
+use crate::document::DocumentRegistry;
 use super::{Persistent, ViewerMode};
 use crate::ui_kit::{DANGER, Dock, Kit, Look, SUBTLE, UiFonts, size};
 use bevy::prelude::*;
@@ -94,13 +95,14 @@ pub(crate) fn update_switcher(mut commands: Commands, mode: Res<State<ViewerMode
     }
 }
 
-/// Present: `/v1/viewer_mode` follows the mode and every outcome.
-pub(crate) fn publish(mode: Res<State<ViewerMode>>, switch: Res<Switcher>, documents: Res<Documents>, rest: Option<Res<crate::rest::Rest>>, mut last: Local<Option<(ViewerMode, u64)>>) {
+/// Present: `/v1/viewer_mode` follows the mode, every outcome and every
+/// change of the document registry.
+pub(crate) fn publish(mode: Res<State<ViewerMode>>, switch: Res<Switcher>, documents: Res<Documents>, registry: Res<DocumentRegistry>, rest: Option<Res<crate::rest::Rest>>, mut last: Local<Option<(ViewerMode, u64, u64)>>) {
     let Some(rest) = rest else { return };
-    let key = (*mode.get(), switch.revision);
+    let key = (*mode.get(), switch.revision, registry.changed);
     if *last == Some(key) {
         return;
     }
     *last = Some(key);
-    rest.0.publish("viewer_mode", switch.json(*mode.get(), &documents));
+    rest.0.publish("viewer_mode", switch.json(*mode.get(), &documents, &registry));
 }

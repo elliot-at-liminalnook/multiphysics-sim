@@ -428,21 +428,27 @@ mod tests {
         assert_eq!((b.path(), b.input.as_ref().map(|i| i.buffer.as_str())), (board.as_path(), Some("gear")));
         b.input = None;
 
-        // Success: path, document, runs, annotations and scene follow the winch.
-        b.selected = BTreeSet::from(["mcu".to_string()]);
+        // Success: path, document, runs, annotations and scene follow the winch;
+        // the board's selection leaves with its document (`picked::follow_open`).
+        let (mut selection, mut documents) = super::super::test_support::test_selection(&b);
+        let board_document = picked::document(&documents).unwrap();
+        Picked::new(&mut selection, &mut documents).set(["mcu".to_string()]).unwrap();
         let seq = b.open_system(winch.clone()).unwrap();
         assert!(b.status.starts_with("Opening"), "{}", b.status);
         wait(&mut b, &mut scene);
+        picked::follow_open(&mut selection, &mut documents, b.path());
+        let selected = picked::names(&selection, &documents);
+        assert_ne!(picked::document(&documents), Some(board_document), "the winch is a new document");
         let summary = b.open.last.clone().unwrap();
         assert_eq!(summary.0, seq);
         let summary = summary.1.unwrap();
         assert_eq!(b.path(), winch.as_path());
         assert_ne!(b.document.title, title);
-        assert!(b.runs.is_empty() && b.selected.is_empty() && b.level.is_empty() && b.replay.outcomes.is_empty());
+        assert!(b.runs.is_empty() && selected.is_empty() && selection.all().is_empty() && b.level.is_empty() && b.replay.outcomes.is_empty());
         assert!(b.study.result.is_none() && b.study.job.is_none() && !b.fitted && b.job.is_some());
         assert_eq!(summary["annotations"], serde_json::json!(format!("{}.annotations.json", winch.display())));
         assert_eq!(scene.description.id, b.job.as_ref().unwrap().poll().unwrap().unwrap().result.unwrap().description.id);
-        let state = b.state_json();
+        let state = b.state_json(&selected);
         assert_eq!((state["path"].clone(), state["title"].clone()), (serde_json::json!(winch), serde_json::json!(b.document.title)));
         // Opening wrote nothing: no runs directory or annotations file for the winch.
         assert!(!sim_runtime::run_history::dir_for(&winch).exists());

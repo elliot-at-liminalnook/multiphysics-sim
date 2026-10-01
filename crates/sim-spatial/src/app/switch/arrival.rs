@@ -1,13 +1,16 @@
 //! Entering the target mode: the state change, a loaded document's result,
 //! and installing what the switch brought on the mode's OnEnter.
 use super::prepare::{leaving_blockers, leaving_note};
-use super::{Arrival, Document, Documents, Switcher, Work, refusal};
+use super::{Arrival, Document, Switcher, Work, refusal, sources};
 use crate::SpatialScene;
 use crate::app::ViewerMode;
 use crate::app::actions::Origin;
 use crate::builder::Builder;
 use crate::cad::CadDocument;
+use crate::document::{DocumentRegistry, Parked, Source};
 use crate::lesson::Learn;
+use crate::place_view::PlaceView;
+use crate::robot::RobotView;
 use bevy::prelude::*;
 use serde_json::json;
 use std::time::Instant;
@@ -70,41 +73,56 @@ pub(crate) fn finish_load(world: &mut World) {
 
 /// OnEnter of every mode: installs what the switch brought (documents
 /// loaded off the UI thread, or the mode's parked scene) before the scope's
-/// own OnEnter spawns the mode's entities. Nothing at launch: `run` inserts
-/// the first mode's documents.
+/// own OnEnter spawns the mode's entities, and opens the mode's entry in the
+/// document registry: a document a load brought, or the mode's own reopened
+/// (the same document again is a reload, its id kept and its revision + 1),
+/// or its parked scene unparked (no new revision). At launch nothing was
+/// brought (`run` inserts the first mode's documents and the registry); the
+/// mode's open document is still made sure of ([`ensure_documents`]).
 pub(crate) fn arrive(world: &mut World) {
-    let Some(arrival) = world.resource_mut::<Switcher>().arrival.take() else { return };
-    let Arrival { scene, link, builder, learn, models, robot, place, cad, unpark_inspect, unpark_builder, inspect, lessons, document: _ } = *arrival;
-    let (parked_inspect, parked_builder) = {
-        let mut docs = world.resource_mut::<Documents>();
-        if inspect.is_some() {
-            docs.inspect = inspect;
-            docs.parked_inspect = None;
-        }
-        if lessons.is_some() {
-            docs.lessons = lessons;
-        }
-        if builder.is_some() {
-            // A new builder brings its own scene.
-            docs.parked_builder = None;
-        }
-        (if unpark_inspect { docs.parked_inspect.take() } else { None }, if unpark_builder { docs.parked_builder.take() } else { None })
-    };
-    if let Some(parked) = parked_inspect {
-        let (scene, link) = *parked;
-        world.insert_resource(scene);
-        if let Some(link) = link {
-            world.insert_resource(link);
-        }
+    let mode = *world.resource::<State<ViewerMode>>().get();
+    if let Some(arrival) = world.resource_mut::<Switcher>().arrival.take() {
+        install(world, mode, *arrival);
     }
-    if let Some(scene) = parked_builder {
-        world.insert_resource(*scene);
+    ensure_documents(world, mode);
+}
+
+/// A drop off the UI thread of a parked scene being replaced.
+fn drop_parked(world: &mut World, mode: ViewerMode, what: &str) {
+    if let Some(old) = world.resource_mut::<DocumentRegistry>().take_parked(mode) {
+        crate::jobs::drop_off_thread(old, what);
+    }
+}
+
+fn install(world: &mut World, mode: ViewerMode, arrival: Arrival) {
+    let Arrival { scene, link, builder, learn, models, robot, place, cad, unpark, inspect, document: _ } = arrival;
+    if let Some((description, spatial)) = inspect {
+        // A loaded assembly replaces the parked one.
+        drop_parked(world, ViewerMode::Inspect, "the replaced inspected scene");
+        sources::open(world, ViewerMode::Inspect, Source::Assembly { description, spatial });
+    }
+    if let Some(parked) = unpark {
+        match world.resource_mut::<DocumentRegistry>().unpark(parked) {
+            Some(Parked::Inspect(parked)) => {
+                let (scene, link) = *parked;
+                world.insert_resource(scene);
+                if let Some(link) = link {
+                    world.insert_resource(link);
+                }
+            }
+            Some(Parked::Builder(scene)) => world.insert_resource(*scene),
+            None => {}
+        }
     }
     if let Some(builder) = builder {
+        // A new builder brings its own scene.
+        drop_parked(world, ViewerMode::Build, "the replaced builder's scene");
+        let source = Source::path(builder.path());
         if let Some(old) = world.remove_resource::<Builder>() {
             crate::jobs::drop_off_thread(old, "the replaced builder");
         }
         world.insert_resource(builder);
+        sources::open(world, ViewerMode::Build, source);
     }
     // Within Build/Lessons the scene stays: a new builder recompiles it (as a lesson's scene builder does).
     if let Some(scene) = scene.filter(|_| !world.contains_resource::<SpatialScene>()) {
@@ -114,22 +132,28 @@ pub(crate) fn arrive(world: &mut World) {
         world.insert_resource(link);
     }
     if let Some(learn) = learn {
+        let source = lessons_source(&learn);
         if let Some(old) = world.remove_resource::<Learn>() {
             crate::jobs::drop_off_thread(old, "the replaced lessons");
         }
         world.insert_resource(learn);
+        sources::open(world, ViewerMode::Lessons, source);
     }
     if let Some(models) = models {
         world.insert_resource(models);
     }
     if let Some(robot) = robot {
+        let source = sources::document_source(&robot.document());
         world.insert_resource(robot);
+        sources::open(world, ViewerMode::Robot, source);
     }
     if let Some(place) = place {
+        let source = Source::path(place.dir.clone());
         world.insert_resource(place);
+        sources::open(world, ViewerMode::Place, source);
     }
     if let Some(cad) = cad {
-        world.resource_mut::<Documents>().cad = Some(cad.target.clone());
+        sources::open(world, ViewerMode::Cad, sources::cad_source(&cad.target));
         // Not expected (CAD mode is entered from another mode, whose exit took the old one); a guard.
         // Its self-started service is released like leave_cad's, so unsaved edits are kept.
         if let Some(mut old) = world.remove_resource::<CadDocument>() {
@@ -138,5 +162,54 @@ pub(crate) fn arrive(world: &mut World) {
             crate::jobs::drop_off_thread(old, "the replaced CAD document");
         }
         world.insert_resource(cad);
+    }
+    // A switch to the exhibits reopens them on the exhibit last shown.
+    if mode == ViewerMode::Phenomena {
+        let exhibit = sources::exhibit_of(world.resource::<DocumentRegistry>());
+        sources::open(world, ViewerMode::Phenomena, Source::Exhibit { exhibit });
+    }
+}
+
+/// Lessons' source: its folder and the lesson open in it.
+fn lessons_source(learn: &Learn) -> Source {
+    Source::Lessons { dir: learn.dir.clone(), lesson: learn.slug().map(str::to_string) }
+}
+
+/// The documents `mode` shows are open in the registry, derived from what
+/// is in the window (opened only when not already open on the same
+/// document): at launch, in a test harness, and Build ↔ Lessons, where the
+/// builder's entry stays open (Lessons draws over the builder, and its
+/// selection items are the builder's). Inspect's scene names no file: its
+/// entry comes from the launch or a load.
+fn ensure_documents(world: &mut World, mode: ViewerMode) {
+    match mode {
+        ViewerMode::Build | ViewerMode::Lessons => {
+            if let Some(source) = world.get_resource::<Builder>().map(|b| Source::path(b.path())) {
+                sources::ensure_open(world, ViewerMode::Build, source);
+            }
+            if let Some(source) = world.get_resource::<Learn>().map(lessons_source) {
+                sources::ensure_open(world, ViewerMode::Lessons, source);
+            }
+        }
+        ViewerMode::Robot => {
+            if let Some(source) = world.get_resource::<RobotView>().map(|v| sources::document_source(&v.document())) {
+                sources::ensure_open(world, mode, source);
+            }
+        }
+        ViewerMode::Place => {
+            if let Some(source) = world.get_resource::<PlaceView>().map(|p| Source::path(p.dir.clone())) {
+                sources::ensure_open(world, mode, source);
+            }
+        }
+        ViewerMode::Cad => {
+            if let Some(source) = world.get_resource::<CadDocument>().map(|d| sources::cad_source(&d.target)) {
+                sources::ensure_open(world, mode, source);
+            }
+        }
+        ViewerMode::Phenomena => {
+            let exhibit = sources::exhibit_of(world.resource::<DocumentRegistry>());
+            sources::ensure_open(world, mode, Source::Exhibit { exhibit });
+        }
+        ViewerMode::Inspect => {}
     }
 }

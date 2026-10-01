@@ -70,6 +70,12 @@ pub enum CadAction {
         extend: bool,
         #[serde(default)]
         toggle: bool,
+        /// The shown revision a 3D pick was made at (the window's picks
+        /// only; not a REST argument): its face, edge, vertex, point and
+        /// curve items carry it into the shared selection, so a pick made
+        /// against a tree that has since advanced is refused by name.
+        #[serde(skip_deserializing)]
+        picked_at: Option<u64>,
     },
     /// Switch the selection mode (body, face, edge, vertex, point); as in
     /// RoboCAD, the selection is cleared.
@@ -291,9 +297,11 @@ use super::sketch::{CadActivePlane, CadSketches};
 use super::sync::{self, value};
 use super::topology::CadTopology;
 use super::view::CadView;
+use super::selection::Shared;
 use super::snapshot::{Parts, state_json};
 use crate::app::actions::{Act, Call, InFlight, Origin, Replies};
-use crate::app::switch::Documents;
+use crate::document::DocumentRegistry;
+use crate::selection::Selection;
 use bevy::ecs::message::Messages;
 use bevy::prelude::*;
 use sim_api::Outcome;
@@ -313,24 +321,28 @@ pub(super) fn apply(
     mut meshes: Option<ResMut<CadMeshes>>,
     mut topology: Option<ResMut<CadTopology>>,
     view: Option<Res<CadView>>,
-    mut documents: ResMut<Documents>,
     mut plane: ResMut<CadActivePlane>,
     sketches: Option<Res<CadSketches>>,
     (mut display, mut views, mut files): (Option<ResMut<super::display::CadDisplay>>, Option<ResMut<super::views::CadViews>>, Option<ResMut<super::files::CadFiles>>),
     camera_out: Option<ResMut<Messages<Act<crate::camera::CameraAction>>>>,
+    (mut selection, mut registry): (ResMut<Selection>, ResMut<DocumentRegistry>),
 ) {
     let Some(mut doc) = doc else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("CAD mode has no document open".into())));
         return;
     };
+    // Read first: a `ResMut` deref would mark the registry changed every frame.
+    if super::selection::cad_id(&registry).is_none() {
+        super::selection::ensure_registered(&mut registry, &mut selection, &doc.target);
+    }
     let mut camera: Vec<crate::camera::CameraAction> = Vec::new();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let mut cx = Cx {
+            shared: Shared { selection: &mut *selection, registry: &mut *registry },
             doc: &mut *doc,
             meshes: meshes.as_deref_mut(),
             topology: topology.as_deref_mut(),
             view: view.as_deref(),
-            documents: &mut *documents,
             plane: &mut *plane,
             sketches: sketches.as_deref(),
             display: display.as_deref_mut(),
@@ -363,13 +375,15 @@ pub(super) fn apply(
 /// (`transform::handle`) take the same context.
 pub(super) struct Cx<'a> {
     pub doc: &'a mut CadDocument,
+    /// The one selection and the document registry (CAD's items are the
+    /// shared selection's; `selection::Shared`).
+    pub shared: Shared<'a>,
     /// The drawn bodies (None without a window).
     pub meshes: Option<&'a mut CadMeshes>,
     /// Faces, edges and vertices of the shown bodies (None without CAD mode's caches).
     pub topology: Option<&'a mut CadTopology>,
     /// The camera as last drawn (None without a window).
     pub view: Option<&'a CadView>,
-    pub documents: &'a mut Documents,
     /// The active plane and 2D snapping (cad-sketch; display state).
     pub plane: &'a mut CadActivePlane,
     /// Sketch geometry and plane frames (None without CAD mode's caches).
@@ -395,8 +409,8 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     let done = |r: Result<Value, String>| Outcome::Done(r);
     let doc = &mut *cx.doc;
     match action {
-        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref())))),
-        CadAction::CadOpen { path, url } => done(open(doc, cx.documents, path.as_ref(), url.as_deref())),
+        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref())))),
+        CadAction::CadOpen { path, url } => done(open(doc, &mut cx.shared, path.as_ref(), url.as_deref())),
         CadAction::CadSelect { .. }
         | CadAction::CadSelectMode { .. }
         | CadAction::CadHover { .. }
@@ -503,7 +517,7 @@ fn wait_edit(doc: &mut CadDocument, call: &mut Call, seq: u64) -> Outcome {
 
 /// `cad_open`: replace the document (refused on an edit in flight or a
 /// self-started document's unsaved edits, or edits it cannot confirm saved).
-fn open(doc: &mut CadDocument, documents: &mut Documents, path: Option<&PathBuf>, url: Option<&str>) -> Result<Value, String> {
+fn open(doc: &mut CadDocument, shared: &mut Shared, path: Option<&PathBuf>, url: Option<&str>) -> Result<Value, String> {
     let target = match (path, url) {
         (Some(p), None) => {
             if !p.to_string_lossy().ends_with(".rcad") {
@@ -537,7 +551,10 @@ fn open(doc: &mut CadDocument, documents: &mut Documents, path: Option<&PathBuf>
     let old = std::mem::replace(doc, next);
     // Its poll joins off the UI thread.
     crate::jobs::drop_off_thread(old, "the previous CAD document");
-    documents.cad = Some(target.clone());
+    // The registry's CAD entry follows, and is what CAD mode reopens (a new
+    // source gets a new id and the replaced document's items go; the same
+    // source again keeps its id).
+    super::selection::reopen(shared.registry, shared.selection, &target);
     let mut message = format!("Opening {}", target.describe());
     if let Some(note) = &note {
         message.push_str(&format!("; {note}"));
@@ -602,7 +619,7 @@ fn descendants(doc: &CadDocument, id: &str) -> HashSet<String> {
 /// CAD mode's `system_ui` controls: the panel's own list (`panel::controls`),
 /// so a control's label, enabled state and action are the button's.
 fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    let mut out: Vec<_> = super::panel::controls(cx.doc).into_iter().map(|c| (c.id, c.label, c.action, c.ready)).collect();
+    let mut out: Vec<_> = super::panel::controls(cx.doc, &cx.shared.items()).into_iter().map(|c| (c.id, c.label, c.action, c.ready)).collect();
     // cad-views-export: cad:display:*, cad:section:*, cad:view:*, cad:file:*.
     out.extend(super::display::controls(cx));
     out.extend(super::views::controls(cx));
@@ -621,7 +638,7 @@ fn system_ui(call: &mut Call, cx: &mut Cx, args: &Map<String, Value>) -> Outcome
                 .into_iter()
                 .map(|(id, label, action, ready)| json!({"id": id, "label": label, "enabled": ready.is_ok(), "disabled_reason": ready.err(), "action": super::rest_form::rest_form(&action)}))
                 .collect();
-            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()))})))
+            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()))})))
         }
         Some("activate") => {
             let Some(id) = action["id"].as_str() else { return Outcome::Done(Err("system_ui activate needs an id; request controls".into())) };

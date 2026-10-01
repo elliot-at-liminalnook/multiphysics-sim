@@ -27,6 +27,8 @@ use super::Surface;
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
+use crate::cad::selection::CadItems;
+use sim_runtime::cad_client::SelectionItem;
 use crate::cad::view::CadView;
 use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
@@ -36,9 +38,9 @@ use bevy::window::PrimaryWindow;
 const CLICK_SLOP: f32 = 4.0;
 
 /// A selected node is an instance (RoboCAD's make-unique filter).
-pub(super) fn instance_selected(doc: &CadDocument) -> bool {
+pub(super) fn instance_selected(doc: &CadDocument, selection: &[SelectionItem]) -> bool {
     let Some(state) = &doc.doc else { return false };
-    doc.selected_nodes().iter().any(|id| state.nodes.iter().any(|n| n.id == *id && n.kind == "instance"))
+    selection.nodes().iter().any(|id| state.nodes.iter().any(|n| n.id == *id && n.kind == "instance"))
 }
 
 /// Input: a right click in the 3D view opens the menu at the pointer.

@@ -214,7 +214,7 @@ impl actions::Action for SystemAction {
             c("system_calibration_review", json!({"path":"examples/actuators/hx30hm/pwm-full-range-identification","trial":"<trial id, e.g. from trials[].id>"}), "Read-only review of a measured actuator identification archive (same handler as the Actuators tab's Measured evidence path field, Reload/Cancel and first visit). Loads <path>/observations.json and results.json with the shared sim_runtime::experiment_comparison::hx_archive::load, verifying the archive's input hashes against the workspace root (system_state.workspace), off the UI thread (poll the job). Default path: examples/actuators/hx30hm/pwm-full-range-identification under the workspace root; omitted = the current one. Refused while a load is pending. A file (e.g. a study) or a sweep.csv folder is refused as not supported yet; any error names the path and the reason, and the last good archive stays in system_state.calibration_review with its own path. Result: path, repository, label, interpretation, split_policy (verbatim), observation_blake3, model_blake3, verified_inputs, input_blake3, integrity_issues, trial_count, counts (by_split/train/held_out/all: total, pass, fail, counted from each trial's comparison.passes; held-out = every split other than train), trials [{id, run, device, stage, kind, drive, duration_s, split, held_out, voltage_range_v, temperature_range_c, unit, limits {rmse, final_abs_error}, comparison {passes, rmse, maximum_abs_error, final_error} (in unit, rad; the archive's limits are 3 and 5 encoder counts of 2π/4096 rad), samples {measured, predicted}}]. system_state.calibration_review adds phase (idle/loading/loaded/failed), pending, requested, error, filters (split all/train/held_out, outcome all/pass/fail; set with system_ui), visible (filtered trial ids) and the current page of rows. Optional trial (a trial id): selects that trial through the same path as a trial row click and the system_ui action {\"calibration_trial\": id}; with no path it selects within the shown archive without reloading (result {selected}); with a path it selects once that load finishes (result gains selected). An unknown id is an error naming it and the previous selection stays; a reload that no longer contains the selected id clears the selection. system_state.calibration_review.selected (null when none) carries id, run, device, stage, kind, drive, duration_s, split, held_out, role (held-out (validation data) / train (fitting data)), quantity, unit, limits, comparison {passes, rmse, maximum_abs_error, final_error} and measured/predicted {source ('measured (hardware archive)' / 'predicted (fitted model, archive)'), quantity, unit, count (true sample count), first, last ({time_s, value}, null when empty)}; chart gives the shared-raster axes as drawn. Writes nothing; evaluates nothing."),
             c("system_actuators", json!({"registry":"examples/actuators/hx30hm/accepted/registry.json","check":["examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json"]}), "Read-only accepted actuator registry inspector (same handler as the Actuators tab). Loads the registry (default: examples/actuators/hx30hm/accepted/registry.json under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one) and checks each consumer file with sim_runtime::actuator_registry (omitted check = recheck the previous files, [] = none), off the UI thread (poll the job). Refused while a load is pending. A missing registry or family hash mismatch is an error naming the path; the last good load stays in system_state.actuators with its own path. Result and system_state.actuators: families (content hash, acceptance, limitations, parameters with value/unit/provenance/uncertainty (null = unknown)/evidence), roles, per-file checks (current/stale/invalid, have and accepted hashes). Writes nothing."),
             c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
-            c("system_select", json!({"names":["q1"]}), "Select instances at the current level"),
+            c("system_select", json!({"names":["q1"]}), "Select instances at the current level: the shared selection's items of the Build document (the Outline's and a part click's path); an unknown name is refused, naming it, and the selection stays. Answers system_state"),
             c("system_undo", json!({}), "Undo the last edit in the shared history"),
             c("system_redo", json!({}), "Redo in the shared history"),
             c("system_run", json!({"action":"step"}), "Control the background run on the shared runtime: action start, pause, step (one timestep while paused) or reset (t = 0, paused; a run that reached 0.1 s is saved first). Same Builder methods as the Run/Pause/Step/Reset buttons"),
@@ -261,11 +261,14 @@ fn no_builder(action: &SystemAction) -> String {
 /// frame with their continuation until done; `call.cancelled` stops them.
 /// `lessons`: a lesson is open in the window (the "‹ lesson" control's switch
 /// needs one); `switch` writes the mode switch.
-fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, lessons: bool, switch: &mut MessageWriter<Act<WindowAction>>, action: &SystemAction, call: &mut Call) -> Outcome {
+/// `pick`: the shared selection (`system_select`, `system_ui` rows and part
+/// clicks are its adapters; a `system_state` answer lists it, re-checked).
+#[allow(clippy::too_many_arguments)]
+fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, pick: &mut Picked, lessons: bool, switch: &mut MessageWriter<Act<WindowAction>>, action: &SystemAction, call: &mut Call) -> Outcome {
     let object = |args: &serde_json::Map<String, Value>| Value::Object(args.clone());
     let result = match action {
         SystemAction::Ui(action) => {
-            dispatch(builder, scene, camera, action.clone());
+            dispatch(builder, scene, camera, pick, action.clone());
             return Outcome::Done(Ok(Value::Null));
         }
         SystemAction::SystemContext(args) => {
@@ -293,11 +296,11 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
             match builder.activates_lessons(action, *expected_revision) {
                 Ok(true) if lessons => return ask_switch(switch, call, ViewerMode::Lessons),
                 Ok(true) => Err("the ‹ lesson control needs a lesson open in this window".into()),
-                Ok(false) => builder.ui_request(action.clone(), *expected_revision, scene, camera),
+                Ok(false) => builder.ui_request(action.clone(), *expected_revision, scene, camera, pick),
                 Err(e) => Err(e),
             }
         }
-        SystemAction::SystemDiscussions { action, expected_revision } => builder.discussion_request(action.clone(), *expected_revision, scene, camera),
+        SystemAction::SystemDiscussions { action, expected_revision } => builder.discussion_request(action.clone(), *expected_revision, scene, camera, pick),
         SystemAction::System { label, commands, expected_revision } => (|| -> sim_api::Result {
             if expected_revision.is_some_and(|r| r != builder.document.revision) {
                 return Err("stale system revision; reload system_state".into());
@@ -315,12 +318,9 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
             Ok(json!({"grid":builder.grid(),"semantics":sim_system::display::SEMANTICS,"frame":"enclosing_definition","unit":"m","revision":builder.document.revision}))
         })(),
         SystemAction::SystemMove { names, position_m, snap, preview, expected_revision } => builder.display_move(names.clone(), *position_m, *snap, *preview, *expected_revision),
-        SystemAction::SystemState => Ok(builder.state_json()),
-        SystemAction::SystemLevel { path } => builder.set_level(path).map(|_| builder.state_json()),
-        SystemAction::SystemSelect { names } => {
-            builder.select(names.clone());
-            Ok(builder.state_json())
-        }
+        SystemAction::SystemState => Ok(pick.state(builder)),
+        SystemAction::SystemLevel { path } => builder.enter_level(pick, path).map(|_| pick.state(builder)),
+        SystemAction::SystemSelect { names } => builder.select(pick, names.clone()).map(|_| pick.state(builder)),
         SystemAction::SystemUndo => builder.undo().map(|a| json!(a)),
         SystemAction::SystemRedo => builder.redo().map(|a| json!(a)),
         SystemAction::SystemRun { action } => (|| -> sim_api::Result {
@@ -331,9 +331,9 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
                 "reset" => builder.run_reset()?,
                 other => return Err(format!("unknown run action `{other}` (expected start, pause, step or reset)")),
             }
-            Ok(builder.state_json())
+            Ok(pick.state(builder))
         })(),
-        SystemAction::SystemImportImage { path } => builder.import_image(path.clone()).map(|_| builder.state_json()),
+        SystemAction::SystemImportImage { path } => builder.import_image(path.clone()).map(|_| pick.state(builder)),
         SystemAction::SystemSuggest { instance } => builder.suggestions(instance).map(|s| json!(s)),
         SystemAction::SystemSnap { instance, port, kind } => (|| -> sim_api::Result {
             let candidate = builder
@@ -345,8 +345,8 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
                 .into_iter()
                 .find(|c| &c.kind == kind)
                 .ok_or_else(|| format!("{} does not fit {instance}.{port}", sim_system::commands::kind_label(kind)))?;
-            let name = builder.snap(instance, port, &candidate)?;
-            Ok(json!({"name": name, "state": builder.state_json()}))
+            let name = builder.snap(pick, instance, port, &candidate)?;
+            Ok(json!({"name": name, "state": pick.state(builder)}))
         })(),
         SystemAction::SystemComponent { component_type } => builder.component_json(component_type),
         SystemAction::SystemStudy { name, study } => (|| -> sim_api::Result {
@@ -392,6 +392,8 @@ pub(super) fn apply(
     rest: Option<Res<crate::rest::Rest>>,
     learn: Option<Res<crate::lesson::Learn>>,
     mut switch: MessageWriter<Act<WindowAction>>,
+    mut selection: ResMut<Selection>,
+    mut registry: ResMut<DocumentRegistry>,
 ) {
     let (Some(mut builder), Some(mut scene), Some(mut orbit)) = (builder, scene, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| Outcome::Done(Err(no_builder(action))));
@@ -409,6 +411,12 @@ pub(super) fn apply(
         return;
     }
     let lessons = learn.is_some();
-    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| execute(&mut builder, &mut scene, &mut orbit, lessons, &mut switch, action, call));
+    let mut pick = Picked::new(&mut selection, &mut registry);
+    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
+        let outcome = execute(&mut builder, &mut scene, &mut orbit, &mut pick, lessons, &mut switch, action, call);
+        // An edit re-checks the selection at once (a later action in this frame sees it).
+        pick.sync(&builder);
+        outcome
+    });
 }
 

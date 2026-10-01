@@ -55,6 +55,8 @@ use crate::cad::views::{ViewsArgs, ViewsOp};
 use crate::camera::{CameraAction, ViewPreset};
 use crate::cad::ops::{self, Flow, Needs, OpEntry};
 use crate::cad::panel::Control;
+use crate::cad::selection::CadItems;
+use sim_runtime::cad_client::SelectionItem;
 use serde_json::json;
 use sim_api::Outcome;
 
@@ -504,15 +506,15 @@ fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
 /// rule as `ops::resolve`'s, without its revision and index checks, which
 /// it applies when the operation runs): Err(the entry's refusal). A
 /// pick-then-form operation is always ready: it is started to pick.
-pub(crate) fn readiness(entry: &OpEntry, doc: &CadDocument) -> Result<(), String> {
+pub(crate) fn readiness(entry: &OpEntry, doc: &CadDocument, selection: &[SelectionItem]) -> Result<(), String> {
     // An interaction is started to pick, click or drag (its own refusals
     // come when it runs); viewer state needs nothing.
     if matches!(entry.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_)) {
         return Ok(());
     }
-    let nodes = doc.selected_nodes();
-    let edges = doc.selected_of("edge");
-    let faces = doc.selected_of("face");
+    let nodes = selection.nodes();
+    let edges = selection.of_kind("edge");
+    let faces = selection.of_kind("face");
     let fits = match entry.needs {
         Needs::Nothing => true,
         Needs::Nodes { min, max, kinds } => {
@@ -536,13 +538,13 @@ pub(crate) fn readiness(entry: &OpEntry, doc: &CadDocument) -> Result<(), String
 /// controls (`panel::own_controls`): an action command is ready exactly
 /// when its button is. A catalogue operation first needs an edit to be
 /// sendable (`CadDocument::edit_refusal`, as `cad:delete`), then its
-/// selection ([`readiness`]).
-pub(crate) fn ready(cmd: &Command, doc: &CadDocument, own: &[Control]) -> Result<(), String> {
+/// selection ([`readiness`]; `selection`: the shared selection's CAD items).
+pub(crate) fn ready(cmd: &Command, doc: &CadDocument, selection: &[SelectionItem], own: &[Control]) -> Result<(), String> {
     match resolve(cmd) {
         // As every edit: nothing runs while one is in flight or unconnected.
         // Viewer state (the active plane, 2D snapping) is never an edit.
         Resolved::Op(entry) if matches!(entry.flow, Flow::View(_)) => Ok(()),
-        Resolved::Op(entry) => doc.edit_refusal().map_or_else(|| readiness(entry, doc), Err),
+        Resolved::Op(entry) => doc.edit_refusal().map_or_else(|| readiness(entry, doc, selection), Err),
         Resolved::Action(action) => own.iter().find(|c| c.action == action).map_or(Ok(()), |c| c.ready.clone()),
         Resolved::Surface(_) => Ok(()),
         Resolved::NumericEntry => numeric_entry_ready(doc),
@@ -614,7 +616,7 @@ fn camera(c: CameraCmd, call: &mut Call, cx: &mut Cx) -> Outcome {
 /// and everything under them framed; Fit All when nothing is selected.
 /// Display only.
 fn focus(call: &mut Call, cx: &mut Cx) -> Outcome {
-    let nodes = cx.doc.selected_nodes();
+    let nodes = cx.shared.items().nodes();
     if nodes.is_empty() {
         return crate::cad::actions::handle(&CadAction::CadFit { id: None }, call, cx);
     }

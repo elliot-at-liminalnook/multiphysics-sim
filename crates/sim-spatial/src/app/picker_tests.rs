@@ -360,3 +360,53 @@ fn picker_release_keeps_same_frame_releases() {
     assert_eq!(input.get_pressed().count(), 0);
     assert_eq!(input.get_just_pressed().count(), 0);
 }
+
+/// A `picker:<mode>:<n>` activation names the picker's listing it was read
+/// from (`picker_revision`, as each entry reports it; the answer's
+/// `ui_revision` is the mode's and is not checked here): one listed at another
+/// revision is refused, naming both, before its index is used; the current
+/// one, or none given, is applied. `picker:path` is not indexed: not checked.
+#[test]
+fn a_stale_picker_index_is_refused_naming_both_revisions() {
+    let mut app = app();
+    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: None })));
+    app.update();
+    // Discovery lands (and moves the listing on) before the entries are read.
+    for _ in 0..500 {
+        if app.world().resource::<Picker>().found.is_some() {
+            break;
+        }
+        app.update();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    assert!(app.world().resource::<Picker>().found.is_some(), "discovery finished");
+    let missing = "/no/such/dir/stale.simrobot.json";
+    app.world_mut().resource_mut::<Picker>().found = Some(Sources { sections: vec![Section { title: "Test".into(), empty: String::new(), choices: vec![choice("stale", true, Document::Path(missing.into()))] }], start_dir: None });
+    let controls = app.world().resource::<Picker>().controls();
+    let listed = controls[0]["picker_revision"].as_u64().expect("an entry reports its picker_revision");
+    assert_eq!(controls[0]["id"], "picker:robot:0");
+    assert!(listed > 0 && controls.iter().filter(|c| c.get("picker_revision").is_some()).count() == 1, "only indexed entries carry it: {controls:?}");
+
+    let at = |id: &str, ui_revision: Option<u64>| {
+        let mut action = json!({"operation": "activate", "id": id});
+        if let Some(r) = ui_revision {
+            action["picker_revision"] = json!(r);
+        }
+        WindowAction::SystemUi(args(json!({"action": action})))
+    };
+    let stale = listed - 1;
+    let reply = rest(&mut app, at("picker:robot:0", Some(stale)));
+    let e = settle(&mut app, reply).unwrap_err();
+    assert_eq!(e, format!("picker:robot:0 was listed at picker_revision {stale}; the picker is now at {listed}; list the controls again"));
+    assert_eq!(app.world().resource::<Picker>().open, Some(ViewerMode::Robot), "a refused activation keeps the picker");
+
+    // The current listing (or none given) reaches the switch, which refuses the missing file.
+    for ui_revision in [Some(listed), None] {
+        let reply = rest(&mut app, at("picker:robot:0", ui_revision));
+        let e = settle(&mut app, reply).unwrap_err();
+        assert!(e.contains("no such file") && e.contains(missing), "{ui_revision:?}: {e}");
+    }
+    // Not indexed: picker:path is applied whatever ui_revision it gives.
+    let reply = rest(&mut app, WindowAction::SystemUi(args(json!({"action": {"operation": "activate", "id": "picker:path", "text": missing, "picker_revision": stale}}))));
+    assert!(settle(&mut app, reply).unwrap_err().contains("no such file"));
+}

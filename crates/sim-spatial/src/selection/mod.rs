@@ -309,11 +309,21 @@ impl Selection {
     /// counts): each of its items is restamped, kept as picked, or dropped
     /// (named in [`Selection::dropped`]); `recheck` may also update an item
     /// (a link's index re-found by name). Returns the dropped labels.
-    pub fn revalidate(&mut self, document: DocumentId, revision: u64, mut recheck: impl FnMut(&mut Item) -> Recheck) -> Vec<String> {
+    pub fn revalidate(&mut self, document: DocumentId, revision: u64, recheck: impl FnMut(&mut Item) -> Recheck) -> Vec<String> {
+        self.recheck(document, revision, false, recheck)
+    }
+    /// As [`Selection::revalidate`], but every item of `document` is
+    /// re-checked, even one already stamped `revision`: its source was
+    /// replaced under the same document and revision (a lesson's new
+    /// sandbox builder).
+    pub fn revalidate_all(&mut self, document: DocumentId, revision: u64, recheck: impl FnMut(&mut Item) -> Recheck) -> Vec<String> {
+        self.recheck(document, revision, true, recheck)
+    }
+    fn recheck(&mut self, document: DocumentId, revision: u64, all: bool, mut recheck: impl FnMut(&mut Item) -> Recheck) -> Vec<String> {
         let mut dropped = Vec::new();
         let mut changed = false;
         self.items.retain_mut(|s| {
-            if s.document != document || s.revision == revision {
+            if s.document != document || (s.revision == revision && !all) {
                 return true;
             }
             let before = s.item.clone();

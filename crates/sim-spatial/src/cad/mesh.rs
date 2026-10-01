@@ -505,6 +505,7 @@ pub(super) fn highlight(
     mut bodies: Query<(&CadBody, &mut MeshMaterial3d<StandardMaterial>)>,
     added: Query<(), Added<CadBody>>,
     mut last: Local<Option<(u64, u64, u64)>>,
+    selection: super::selection::CadSelection,
 ) {
     let (Some(doc), Some(meshes), Some(mut materials)) = (doc, meshes, materials) else { return };
     let key = (doc.generation, doc.revision, meshes.epoch);
@@ -512,8 +513,10 @@ pub(super) fn highlight(
         return;
     }
     *last = Some(key);
+    // A selection change touches the document (`selection::publish`), so `key` follows it.
+    let selection = selection.items();
     for (body, mut material) in &mut bodies {
-        let selected = doc.selection.iter().any(|s| s.0 == body.id && s.1 == "body");
+        let selected = selection.iter().any(|s| s.0 == body.id && s.1 == "body");
         let want = if selected { materials.selected.clone() } else { materials.colour(&mut assets, node_colour(&doc, &body.id)) };
         if material.0 != want {
             material.0 = want;

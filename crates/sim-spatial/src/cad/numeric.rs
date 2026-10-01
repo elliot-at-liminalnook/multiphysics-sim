@@ -32,6 +32,7 @@ use super::actions::CadAction;
 use super::document::{CadDocument, CadInputFocus, CadTool};
 use super::mesh::CadMeshes;
 use super::panel::{CadButton, NameDraft};
+use super::selection::CadSelection;
 use super::topology::CadTopology;
 use super::transform::{DimensionEntry, Field, FieldCommit, fields, hint, keep_entry, mode_label};
 use sim_runtime::cad_client::SelectionItem;
@@ -121,14 +122,15 @@ type FieldsKey = (u64, CadTool, Vec<SelectionItem>, Option<DimensionEntry>, u64,
 /// SimSync: the fields follow the tool and the selection (see the module
 /// doc). They are recomputed only when what they come from changes (live
 /// dimensions walk the selected edges' tessellation: not every frame).
-pub(super) fn sync(doc: Option<ResMut<CadDocument>>, topology: Option<Res<CadTopology>>, meshes: Option<Res<CadMeshes>>, mut cache: Local<Option<(FieldsKey, Vec<Field>, String)>>) {
+pub(super) fn sync(doc: Option<ResMut<CadDocument>>, topology: Option<Res<CadTopology>>, meshes: Option<Res<CadMeshes>>, mut cache: Local<Option<(FieldsKey, Vec<Field>, String)>>, selection: CadSelection) {
     let Some(mut doc) = doc else { return };
+    let selection = selection.items();
     if doc.tool_state.dimension.is_some() {
-        keep_entry(&mut doc);
+        keep_entry(&mut doc, &selection);
     }
-    let inputs: FieldsKey = (doc.generation, doc.tool, doc.selection.clone(), doc.tool_state.dimension.clone(), topology.as_ref().map_or(0, |t| t.epoch), meshes.as_ref().map_or(0, |m| m.epoch), doc.shown_revision(), doc.ops.form.is_some());
+    let inputs: FieldsKey = (doc.generation, doc.tool, selection.clone(), doc.tool_state.dimension.clone(), topology.as_ref().map_or(0, |t| t.epoch), meshes.as_ref().map_or(0, |m| m.epoch), doc.shown_revision(), doc.ops.form.is_some());
     if cache.as_ref().is_none_or(|(k, ..)| *k != inputs) {
-        let list = fields(&doc, topology.as_deref(), meshes.as_deref());
+        let list = fields(&doc, &selection, topology.as_deref(), meshes.as_deref());
         let key = format!("{}|{list:?}", doc.tool.name());
         *cache = Some((inputs, list, key));
     }
@@ -304,7 +306,7 @@ fn body_key(doc: &CadDocument) -> String {
 }
 
 /// Present: rebuild the bar's parts whose content changed.
-pub(super) fn refresh(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, parts: Query<(Entity, &BarPart)>, mut shown: Local<Vec<(Entity, String)>>) {
+pub(super) fn refresh(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, parts: Query<(Entity, &BarPart)>, mut shown: Local<Vec<(Entity, String)>>, selection: CadSelection) {
     let Some(doc) = doc else { return };
     shown.retain(|(e, _)| parts.contains(*e));
     let k = Kit::new(&fonts);
@@ -320,7 +322,7 @@ pub(super) fn refresh(mut commands: Commands, doc: Option<Res<CadDocument>>, fon
         shown.push((entity, key));
         commands.entity(entity).despawn_related::<Children>();
         commands.entity(entity).with_children(|p| match part {
-            BarPart::Head => head(p, &k, &doc),
+            BarPart::Head => head(p, &k, &doc, &selection.items()),
             BarPart::Body => body(p, &k, &doc),
         });
     }
@@ -330,14 +332,14 @@ pub(super) fn refresh(mut commands: Commands, doc: Option<Res<CadDocument>>, fon
 const NAVIGATION: &str = "Right-drag orbit · Shift+right-drag or middle-drag pan · Wheel zoom · Home fit";
 
 /// The tool label, the hint, the navigation line and the tool strip.
-fn head(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
+fn head(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
     p.spawn(Node { column_gap: Val::Px(10.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).with_children(|row| {
         row.spawn(k.text(mode_label(doc), size::SMALL, TEXT, 2));
         row.spawn((k.text(hint(doc.tool), size::CAPTION, SUBTLE, 0), Node { flex_shrink: 1.0, min_width: Val::Px(0.0), ..default() }));        // RoboCAD's viewport footer, with this view's own navigation (scene.rs orbit; Home fits).
         row.spawn((k.text(NAVIGATION, size::CAPTION, FAINT, 0), Node { flex_shrink: 1.0, min_width: Val::Px(0.0), ..default() }));
     });
     p.spawn(k.segments()).with_children(|strip| {
-        for c in super::panel::controls(doc).into_iter().filter(|c| c.id.starts_with("cad:tool:")) {
+        for c in super::panel::controls(doc, selection).into_iter().filter(|c| c.id.starts_with("cad:tool:")) {
             let CadAction::CadTool { tool } = c.action else { continue };
             strip.spawn(k.segment(tool.label(), CadButton(c.action.clone()), tool == doc.tool, c.ready.is_ok()));
         }

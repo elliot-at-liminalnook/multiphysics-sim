@@ -5,7 +5,6 @@
 //! ├ lessons + contents ┬──── reading column (scene cards embed the 3D view) ──┬ notes ┤
 //! └ status                                                                           ┘
 use super::*;
-use crate::annotate::{self, Composer, Host};
 use crate::builder::ui::{equations, markdown_theme, num, paragraph};
 use crate::ui_kit::{
     ACCENT, BORDER, Dock, FAINT, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, SWITCHER_STRIP, SliderLook, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, above_strip, divider, size, wheel_delta, wrap,

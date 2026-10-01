@@ -144,7 +144,8 @@ pub(crate) enum BuildAction {
 
 /// The chrome's handler: one `BuildAction` (a button, key, marker, or a
 /// `system_ui` activation). Refusals are the status line (`Builder::report`).
-pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, action: BuildAction) {
+/// What is selected is the shared selection (`pick`, `picked`).
+pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &mut Orbit, pick: &mut Picked, action: BuildAction) {
     builder.action_error=None;
     builder.panel_dirty = true;
     match action {
@@ -152,15 +153,15 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
         BuildAction::OpenReference(target)=>{let r=builder.reference.open(target);builder.report(r);builder.panel_dirty=true;},
         BuildAction::CloseReference=>{builder.reference=Default::default();builder.panel_dirty=true;},
         BuildAction::Agent(action)=>{let r=builder.agent_request(action);builder.report(r);},
-        BuildAction::Discussion(action)=>discussion::act(builder,scene,orbit,action),
-        BuildAction::ImportNotes=>{let r=builder.discussion_request(discussion::Request::ImportLegacy,None,scene,orbit);builder.report(r);},
+        BuildAction::Discussion(action)=>discussion::act(builder,scene,orbit,pick,action),
+        BuildAction::ImportNotes=>{let r=builder.discussion_request(discussion::Request::ImportLegacy,None,scene,orbit,pick);builder.report(r);},
         BuildAction::GridSnap | BuildAction::GridVisible | BuildAction::GridPlane => {
             let mut grid=builder.grid(); match action {BuildAction::GridSnap=>grid.snap=!grid.snap, BuildAction::GridVisible=>grid.visible=!grid.visible,_=>grid.plane=match grid.plane {sim_system::display::Plane::Xz=>sim_system::display::Plane::Xy,sim_system::display::Plane::Xy=>sim_system::display::Plane::Yz,_=>sim_system::display::Plane::Xz}};
             let r=builder.set_grid(grid);builder.report(r);
         }
         BuildAction::GridSpacing=>builder.start_input(Purpose::GridSpacing,builder.grid().spacing_m.to_string()),
         BuildAction::GridOrigin=>builder.start_input(Purpose::GridOrigin,builder.grid().origin_m.iter().map(|v|v.to_string()).collect::<Vec<_>>().join(" ")),
-        BuildAction::Position=>{if let Some(s)=builder.selected.iter().next().and_then(|n|builder.spec(n)){builder.start_input(Purpose::Position,s.placement.position.iter().map(|v|v.to_string()).collect::<Vec<_>>().join(" "));}},
+        BuildAction::Position=>{if let Some(s)=pick.first().and_then(|n|builder.spec(&n)){builder.start_input(Purpose::Position,s.placement.position.iter().map(|v|v.to_string()).collect::<Vec<_>>().join(" "));}},
         BuildAction::Tab(tab) => {
             if tab == Tab::Systems && builder.open.shell.is_some() {
                 builder.open.systems = open::discover(&builder.store.path, &builder.library_dir);
@@ -193,7 +194,7 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
                 Mode::Connect => "Connect: select a part, pick a port in the inspector, then pick the other port.".into(),
                 Mode::Select => "Select: click parts; shift-click adds to the selection.".into(),
             };
-            if let Some(name) = builder.only_selected() {
+            if let Some(name) = pick.only() {
                 builder.port_menu = (mode == Mode::Connect).then_some(name);
             }
         }
@@ -208,34 +209,34 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
         BuildAction::Up => {
             let parent = builder.level.rsplit_once('/').map(|(p, _)| p.to_string()).unwrap_or_default();
             let child = builder.level.rsplit('/').next().unwrap_or("").to_string();
-            let r = builder.set_level(&parent);
-            if !child.is_empty() {
-                builder.selected = BTreeSet::from([child]);
+            // Back up, with the subsystem just left selected.
+            let r = builder.enter_level(pick, &parent);
+            if r.is_ok() && !child.is_empty() {
+                let _ = pick.set([child]);
             }
             orbit.home = true;
             builder.report(r);
         }
         BuildAction::Level(path) => {
-            let r = builder.set_level(&path);
+            let r = builder.enter_level(pick, &path);
             orbit.home = true;
             builder.report(r);
         }
         BuildAction::Select(name) | BuildAction::SchematicSelect(name) => {
             let _ = builder.suggestions(&name);
-            builder.selected = BTreeSet::from([name]);
-            builder.alternatives = None;
-            builder.scene_dirty = true;
+            let r = builder.select(pick, vec![name]);
+            builder.report(r);
         }
         BuildAction::Open(name) => {
             let path = builder.full_path(&name);
-            let r = builder.set_level(&path);
+            let r = builder.enter_level(pick, &path);
             orbit.home = true;
             builder.report(r);
         }
         BuildAction::Preview(index) => {
             builder.preview = builder.filtered().get(index).cloned().cloned();
             builder.load_preview_sheet();
-            if let Some(name) = builder.only_selected() {
+            if let Some(name) = pick.only() {
                 let _ = builder.suggestions(&name);
             }
         }
@@ -249,23 +250,23 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
         BuildAction::ClosePreview => builder.preview = None,
         BuildAction::PlacePreview => {
             if let Some(item) = builder.preview.take() {
-                builder.place(item);
+                builder.place(pick, item);
             }
         }
         BuildAction::AttachPreview(port) => {
-            let (Some(name), Some(item)) = (builder.only_selected(), builder.preview.clone()) else { return };
+            let (Some(name), Some(item)) = (pick.only(), builder.preview.clone()) else { return };
             let candidate = builder.suggestions(&name).ok().and_then(|all| all.into_iter().find(|p| p.port == port)).and_then(|p| p.candidates.into_iter().find(|c| c.kind == item.kind));
             let r = match candidate {
-                Some(c) => builder.snap(&name, &port, &c).map(|n| builder.status = format!("Snapped {n} onto {name}.{port}")),
+                Some(c) => builder.snap(pick, &name, &port, &c).map(|n| builder.status = format!("Snapped {n} onto {name}.{port}")),
                 None => Err(format!("{} has no port that fits {name}.{port}", item.label)),
             };
             builder.report(r);
         }
         BuildAction::Snap(port, index) => {
-            let Some(name) = builder.only_selected() else { return };
+            let Some(name) = pick.only() else { return };
             let candidate = builder.suggestions(&name).ok().and_then(|all| all.into_iter().find(|p| p.port == port)).and_then(|p| p.candidates.into_iter().nth(index));
             if let Some(c) = candidate {
-                let r = builder.snap(&name, &port, &c).map(|n| builder.status = format!("Snapped {n} ({}) onto {name}.{port}", c.label));
+                let r = builder.snap(pick, &name, &port, &c).map(|n| builder.status = format!("Snapped {n} ({}) onto {name}.{port}", c.label));
                 builder.report(r);
             }
         }
@@ -284,7 +285,7 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
             builder.report(r);
         }
         BuildAction::CompareSelected => {
-            if let Some(name) = builder.only_selected() {
+            if let Some(name) = pick.only() {
                 let r = builder.compare_alternatives(scene, &name);
                 builder.report(r);
             }
@@ -404,18 +405,17 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
             let initial = builder.filter.clone();
             builder.start_input(Purpose::Filter, initial);
         }
-        BuildAction::Group => builder.group_selected(),
+        BuildAction::Group => builder.group_selected(pick),
         BuildAction::Ungroup => {
-            if let Some(name) = builder.only_selected() {
-                let r = builder.apply("Ungroup", vec![SystemCommand::Ungroup { at: builder.level.clone(), name }]);
-                if r.is_ok() {
-                    builder.selected.clear();
-                }
+            if let Some(name) = pick.only() {
+                let r = builder.apply("Ungroup", vec![SystemCommand::Ungroup { at: builder.level.clone(), name }]).map(|_| {
+                    let _ = pick.clear();
+                });
                 builder.report(r);
             }
         }
         BuildAction::Swap => {
-            if let Some(name) = builder.only_selected() {
+            if let Some(name) = pick.only() {
                 match library::alternatives(&builder.document, &builder.registry, Some(&builder.library_dir), &builder.level, &name) {
                     Ok(list) => {
                         builder.status = format!("{} implementations fit {name}'s connected ports", list.len());
@@ -445,7 +445,7 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
             }
         }
         BuildAction::MakeUnique => {
-            if let Some(name) = builder.only_selected() {
+            if let Some(name) = pick.only() {
                 if let Some(InstanceKind::Subsystem { definition }) = builder.spec(&name).map(|s| s.kind) {
                     let mut id = format!("{definition}_{name}");
                     let mut n = 2;
@@ -458,9 +458,9 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
                 }
             }
         }
-        BuildAction::Delete => builder.remove_selected(),
+        BuildAction::Delete => builder.remove_selected(pick),
         BuildAction::Rename => {
-            if let Some(name) = builder.only_selected() {
+            if let Some(name) = pick.only() {
                 builder.start_input(Purpose::Rename(name.clone()), name);
             }
         }
@@ -526,7 +526,7 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
             builder.report(r);
         }
         BuildAction::SaveToLibrary => {
-            if let Some(name) = builder.only_selected() {
+            if let Some(name) = pick.only() {
                 if let Some(InstanceKind::Subsystem { definition }) = builder.spec(&name).map(|s| s.kind) {
                     let r = builder.publish(&definition).map(|_| ());
                     builder.report(r);
@@ -541,7 +541,7 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
             let r = builder.expose(&instance, &parameter).map(|_| ());
             builder.report(r);
         }
-        BuildAction::Nudge(delta) => builder.nudge(delta),
+        BuildAction::Nudge(delta) => builder.nudge(pick.names(), delta),
         BuildAction::PickPart { index, component, add, world } => {
             if builder.mode == Mode::Annotate {
                 // The part index is the clicked mesh's in this frame's scene; checked in case the scene was rebuilt.
@@ -549,18 +549,18 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
                     discussion::begin_surface(builder, scene, index, Vec3::from_array(world));
                 }
             } else {
-                click_part(builder, &component, add);
+                click_part(builder, pick, &component, add);
             }
         }
         BuildAction::SubmitDraft => {
             if builder.input.as_ref().is_some_and(|i| matches!(i.purpose, Purpose::Comment | Purpose::ThreadTitle)) {
-                discussion::submit(builder, scene, orbit);
+                discussion::submit(builder, scene, orbit, pick);
             } else if builder.input.is_some() {
-                builder.commit_input();
+                builder.commit_picking(pick);
             }
         }
         // The Cancel button's and REST cancel_input's handler (it also ends a comment edit).
-        BuildAction::DropDraft => discussion::act(builder, scene, orbit, discussion::Action::CancelDraft),
+        BuildAction::DropDraft => discussion::act(builder, scene, orbit, pick, discussion::Action::CancelDraft),
         BuildAction::ReferencePoint { id: quad, world } => {
             let frame = builder.subsystems.get(&builder.level).copied().unwrap_or(sim_system::flatten::WorldPlacement::IDENTITY);
             // Points are recorded in the level's frame, like the reference origin.
@@ -610,7 +610,7 @@ pub(super) fn buttons(
 }
 
 /// Input: build mode's keys, as the same actions as their buttons.
-pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, builder: Res<Builder>, mut out: MessageWriter<Act<SystemAction>>) {
+pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, builder: Res<Builder>, selection: Res<Selection>, registry: Res<DocumentRegistry>, mut out: MessageWriter<Act<SystemAction>>) {
     if builder.drag.is_some() || builder.typing() {
         return;
     }
@@ -647,7 +647,7 @@ pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, builder: Res<Builder>, mut o
     } else if keys.just_pressed(KeyCode::KeyU) {
         Some(BuildAction::Up)
     } else if keys.just_pressed(KeyCode::Enter) {
-        builder.only_selected().filter(|n| matches!(builder.spec(n).map(|s| s.kind), Some(InstanceKind::Subsystem { .. }))).map(BuildAction::Open)
+        picked::only(&picked::names(&selection, &registry)).filter(|n| matches!(builder.spec(n).map(|s| s.kind), Some(InstanceKind::Subsystem { .. }))).map(BuildAction::Open)
     } else if keys.just_pressed(KeyCode::Slash) {
         Some(BuildAction::Filter)
     } else if keys.just_pressed(KeyCode::KeyR) {

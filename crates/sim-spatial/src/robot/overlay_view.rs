@@ -94,9 +94,12 @@ pub(super) fn stress_panel(view: Res<RobotView>, mut line: Single<&mut Text, Wit
 /// The graph dock: the fixed chart set (`graphs::charts`) drawn with the
 /// shared `crate::chart` raster, redrawn at most ten times a second and only
 /// when the sampled history, selection, mode or visibility changed.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn graph_dock(
     mut commands: Commands,
     view: Res<RobotView>,
+    selection: Res<Selection>,
+    registry: Res<DocumentRegistry>,
     fonts: Res<UiFonts>,
     time: Res<Time>,
     mut images: ResMut<Assets<Image>>,
@@ -116,7 +119,8 @@ pub(super) fn graph_dock(
     };
     let h = run.graphs();
     let gait = run.gait_preview().is_some_and(|g| g.loaded().is_some());
-    let stamp = format!("{:?}|{}|{}|{}|{:?}|{:?}|{gait}", view.selected, h.generation(), h.frames(), run.graphs_mode(), h.window(), run.frame().map(|f| (f.time, f.steps)));
+    let link = picked::link(&selection, &registry);
+    let stamp = format!("{:?}|{}|{}|{}|{:?}|{:?}|{gait}", link, h.generation(), h.frames(), run.graphs_mode(), h.window(), run.frame().map(|f| (f.time, f.steps)));
     let now = time.elapsed_secs_f64();
     match drawn.as_ref() {
         Some((s, _)) if *s == stamp => return,
@@ -128,7 +132,7 @@ pub(super) fn graph_dock(
         _ => {}
     }
     *drawn = Some((stamp, now));
-    let charts = run.graph_charts(view.selected);
+    let charts = run.graph_charts(link);
     let mode = run.graphs_mode();
     commands.entity(entity).despawn_related::<Children>();
     let k = Kit { f: &fonts };
@@ -199,10 +203,11 @@ pub(super) fn overlay_gizmo_config() -> GizmoConfig {
 }
 
 /// Floor grid and the selected link's centre of mass.
-pub(super) fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, mut gizmos: Gizmos, mut overlay: Gizmos<OverlayGizmos>) {
+pub(super) fn draw(view: Res<RobotView>, selection: Res<Selection>, registry: Res<DocumentRegistry>, root: Single<&GlobalTransform, With<RobotRoot>>, mut gizmos: Gizmos, mut overlay: Gizmos<OverlayGizmos>) {
+    let link = picked::link(&selection, &registry);
     if let Some(p) = &view.planar {
         // A planar file: outlines, centres of mass and chain tips from the planar run's latest frame.
-        planar::draw(p, view.selected, &mut gizmos);
+        planar::draw(p, link, &mut gizmos);
         return;
     }
     let Some(model) = &view.model else { return };
@@ -243,7 +248,7 @@ pub(super) fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<Rob
     }
     let floor = model.world.floor_z as f32;
     gizmos.grid(Isometry3d::new(Vec3::new(0.0, floor, 0.0), Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)), UVec2::splat(20), Vec2::splat(0.05), Color::srgba(0.45, 0.50, 0.58, 0.35));
-    if let Some(l) = view.selected.and_then(|i| model.links.get(i)) {
+    if let Some(l) = link.and_then(|i| model.links.get(i)) {
         let com = Vec3::new(l.com[0] as f32, l.com[2] as f32, -l.com[1] as f32);
         gizmos.sphere(Isometry3d::from_translation(com), 0.006, ACCENT);
     }

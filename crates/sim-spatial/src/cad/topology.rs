@@ -18,9 +18,10 @@
 //!   on the next revision, `cad_refresh` or a reconnection.
 use super::document::{CadDocument, CadTool, SelectMode};
 use super::mesh::BODY_KINDS;
+use super::selection::CadItems;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{CadError, EdgeInfo, FaceInfo, VertexInfo};
+use sim_runtime::cad_client::{CadError, EdgeInfo, FaceInfo, SelectionItem, VertexInfo};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -107,9 +108,10 @@ pub fn tool_needs_topology(tool: CadTool) -> bool {
 }
 
 /// The nodes whose topology is wanted now: the selected ones, plus every
-/// drawn body in a sub-body mode or with a tool that snaps or picks faces.
-pub fn wanted(doc: &CadDocument) -> HashSet<String> {
-    let mut out: HashSet<String> = doc.selected_nodes().into_iter().collect();
+/// drawn body in a sub-body mode or with a tool that snaps or picks faces
+/// (`selection`: the shared selection's CAD items).
+pub fn wanted(doc: &CadDocument, selection: &[SelectionItem]) -> HashSet<String> {
+    let mut out: HashSet<String> = selection.nodes().into_iter().collect();
     // A catalogue pick or place tool snaps and picks over every drawn body.
     if doc.select_mode != SelectMode::Body || tool_needs_topology(doc.tool) || doc.ops.active.is_some() {
         if let Some(state) = &doc.doc {
@@ -134,7 +136,7 @@ fn fetch(client: &sim_runtime::cad_client::CadClient, id: &str, revision: u64) -
 }
 
 /// SimSync: bring the cache to the shown revision and the wanted nodes.
-pub(super) fn sync(doc: Option<Res<CadDocument>>, topology: Option<ResMut<CadTopology>>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>) {
+pub(super) fn sync(doc: Option<Res<CadDocument>>, topology: Option<ResMut<CadTopology>>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>, selection: super::selection::CadSelection) {
     let (Some(doc), Some(mut topology)) = (doc, topology) else { return };
     let t = &mut *topology;
     let document_id = doc.doc_key.as_ref().and_then(|k| k.0.clone());
@@ -154,7 +156,7 @@ pub(super) fn sync(doc: Option<Res<CadDocument>>, topology: Option<ResMut<CadTop
         t.retry = doc.mesh_retry;
         t.entries.retain(|_, s| matches!(s, Slot::Ready(_)));
     }
-    let wanted = wanted(&doc);
+    let wanted = wanted(&doc, &selection.items());
     t.fetching.retain(|f| f.revision == revision && f.job.generation() == doc.generation && wanted.contains(&f.id));
     let mut i = 0;
     while i < t.fetching.len() {

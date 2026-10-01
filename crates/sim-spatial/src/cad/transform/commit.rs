@@ -12,10 +12,12 @@ use super::{Field, FieldCommit, Phase, PushTarget, fa, face_target, fields, fl, 
 use crate::app::actions::Call;
 use crate::cad::actions::{CadAction, Cx, Dimension, MeasurePick};
 use crate::cad::document::{CadDocument, CadTool, EditDone};
+use crate::cad::selection::CadItems;
 use crate::cad::sync::value;
 use crate::cad::topology::CadTopology;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
+use sim_runtime::cad_client::SelectionItem;
 
 /// One Ops call: its name, positional args, keyword args and the label the
 /// header and RoboCAD's history name it by.
@@ -181,11 +183,12 @@ fn check_faces(doc: &CadDocument, topology: Option<&CadTopology>, node: &str, fa
     }
 }
 
-/// The Ops call a commit action sends.
-pub(super) fn op_for(doc: &CadDocument, topology: Option<&CadTopology>, action: &CadAction) -> Result<OpCall, String> {
+/// The Ops call a commit action sends (`selection`: the shared selection's
+/// CAD items, the nodes a transform without `ids` moves).
+pub(super) fn op_for(doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>, action: &CadAction) -> Result<OpCall, String> {
     match action {
         CadAction::CadTransform { ids, translation, axis, angle_deg, center, scale, .. } => {
-            let ids = ids.clone().unwrap_or_else(|| doc.selected_nodes());
+            let ids = ids.clone().unwrap_or_else(|| selection.nodes());
             for id in &ids {
                 check_node(doc, id)?;
             }
@@ -231,7 +234,7 @@ fn send(doc: &mut CadDocument, call: &mut Call, op: OpCall, extra: Option<(&'sta
 /// `CadSetDimension`): refused with nothing sent when `commit_refusal`
 /// names a reason, else exactly one Ops call. A released drag's preview
 /// follows its commit (kept while the edit runs, dropped when refused).
-pub(super) fn commit(doc: &mut CadDocument, topology: Option<&CadTopology>, call: &mut Call, action: &CadAction) -> Outcome {
+pub(super) fn commit(doc: &mut CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>, call: &mut Call, action: &CadAction) -> Outcome {
     let revision = match action {
         CadAction::CadTransform { revision, .. } | CadAction::CadPushPull { revision, .. } | CadAction::CadOffsetFaces { revision, .. } | CadAction::CadSetDimension { revision, .. } => *revision,
         _ => None,
@@ -239,7 +242,7 @@ pub(super) fn commit(doc: &mut CadDocument, topology: Option<&CadTopology>, call
     let before = doc.edit_seq;
     let outcome = match doc.commit_refusal(revision) {
         Some(why) => Outcome::Done(Err(why)),
-        None => match op_for(doc, topology, action) {
+        None => match op_for(doc, selection, topology, action) {
             Ok(op) => send(doc, call, op, None),
             Err(e) => Outcome::Done(Err(e)),
         },
@@ -272,8 +275,9 @@ pub(super) fn numeric(cx: &mut Cx, call: &mut Call, values: &[String]) -> Outcom
     let refuse = |e: String| Outcome::Done(Err(e));
     let topology = cx.topology.as_deref();
     let meshes = cx.meshes.as_deref();
+    let selection = cx.shared.items();
     let doc = &mut *cx.doc;
-    let list = fields(doc, topology, meshes);
+    let list = fields(doc, &selection, topology, meshes);
     if list.is_empty() {
         return refuse(match doc.tool {
             CadTool::Select => "nothing to type: select a cylindrical face (its diameter), two planar faces of one node (their distance or angle) or a circular edge, or double-click a face".into(),
@@ -292,7 +296,7 @@ pub(super) fn numeric(cx: &mut Cx, call: &mut Call, values: &[String]) -> Outcom
     let action = match doc.tool {
         CadTool::Move => transform(Some([v[0], v[1], v[2]]), None, None, None, None),
         CadTool::Rotate | CadTool::Scale => {
-            let Some((center, _)) = pivot(doc, meshes) else { return refuse("Select something to transform".into()) };
+            let Some((center, _)) = pivot(doc, &selection, meshes) else { return refuse("Select something to transform".into()) };
             if doc.tool == CadTool::Rotate {
                 transform(None, Some(mm(numeric_axis(&doc.tool_state))), Some(v[0]), Some(mm(center)), None)
             } else {
@@ -300,7 +304,7 @@ pub(super) fn numeric(cx: &mut Cx, call: &mut Call, values: &[String]) -> Outcom
             }
         }
         CadTool::PushPull | CadTool::OffsetFace => {
-            let target = doc.tool_state.push.clone().or_else(|| face_target(doc, topology));
+            let target = doc.tool_state.push.clone().or_else(|| face_target(doc, &selection, topology));
             let Some(target) = target else { return refuse("no face is targeted: select a face (or press on one in the 3D view) first".into()) };
             // A face index from an older revision is found again (RoboCAD's find_face) or refused by name.
             let faces = topology.and_then(|t| t.get(&target.node)).map(|t| &**t);
@@ -333,7 +337,7 @@ pub(super) fn numeric(cx: &mut Cx, call: &mut Call, values: &[String]) -> Outcom
         }
         CadTool::Measure => return refuse("the measure tool has no numeric fields".into()),
     };
-    commit(doc, topology, call, &action)
+    commit(doc, &selection, topology, call, &action)
 }
 
 /// `CadMeasure`: computed here over the shown topology; kept as one

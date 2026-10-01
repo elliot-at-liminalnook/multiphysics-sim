@@ -5,10 +5,11 @@
 //! the inspection panels (`ui`) are children; the crate root re-exports the
 //! names other modules use.
 mod camera;
+pub(crate) mod projection;
 mod scene;
 mod ui;
 
-use crate::app::{self, ModeScope, SpatialScreen, ViewerSet};
+use crate::app::{self, ModeScope, SpatialScreen, ViewerMode, ViewerSet};
 use crate::{animation, inspect, linked, notes, physics_view, ui_kit, view};
 use bevy::prelude::*;
 pub(crate) use camera::{spatial_rules, sync_camera};
@@ -33,7 +34,12 @@ pub struct SpatialScene {
     pub description: SystemDescription,
     pub spatial: SpatialDescription,
     pub state: SpatialViewState,
-    pub selection: SelectionTarget,
+    /// The selection the view shows: a display projection, written only by
+    /// [`SpatialScene::set_selection`] (and cleared by `replace`). Never the
+    /// owner: Inspect's selection is the shared `crate::selection::Selection`
+    /// (projected by `projection::project_selection`), the builder's and the
+    /// lesson page's are their own modes' projections.
+    pub shown: SelectionTarget,
     pub(crate) details: SelectionDetails,
     pub animation: Option<sim_inspect::animation::AnimationDescription>,
     pub(crate) live: animation::LivePresentation,
@@ -114,7 +120,7 @@ impl SpatialScene {
         self.animation = animation;
         self.state.hidden.clear();
         self.state.selected = None;
-        self.selection = SelectionTarget::None;
+        self.shown = SelectionTarget::None;
         self.details = SelectionDetails::default();
     }
     fn unchecked(description: SystemDescription, spatial: SpatialDescription) -> Self {
@@ -122,7 +128,7 @@ impl SpatialScene {
             description,
             spatial,
             state: SpatialViewState { overlays: sim_inspect::spatial::Overlay::defaults(), ..Default::default() },
-            selection: SelectionTarget::None,
+            shown: SelectionTarget::None,
             details: SelectionDetails::default(),
             animation: None,
             live: animation::LivePresentation::default(),
@@ -177,6 +183,9 @@ impl SpatialScene {
         }
         Ok(())
     }
+    /// Show `target` (resolved against the description; an unknown id is
+    /// refused and nothing changes): its details, the single selected
+    /// component, revealed parts and, for ports and nets, the connections.
     pub fn set_selection(&mut self, target: SelectionTarget) -> Result<(), InspectionError> {
         let details = target.resolve(&self.description)?;
         self.state.selected = match &target {
@@ -193,7 +202,7 @@ impl SpatialScene {
             self.state.connections = true;
         }
         self.details = details;
-        self.selection = target;
+        self.shown = target;
         Ok(())
     }
     pub(crate) fn left(&self) -> f32 {
@@ -309,6 +318,13 @@ impl Plugin for SpatialViewerPlugin {
             // Buttons, keys, the notes panel and the overlay bar write the view's actions.
             .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).chain().after(app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(SpatialScreen)))
             .add_systems(Update, inspect::apply.in_set(ViewerSet::Actions).run_if(in_state(SpatialScreen)))
+            // Inspect's shared selection, shown (and re-checked after a
+            // reload): after the notes' navigation, before the link's
+            // exchange (which then sends the launch's `--select`, adopted
+            // here, and never a reloaded document's dropped items; a peer's
+            // change it applies it shows itself) and before the parts and
+            // the inspector read what is shown.
+            .add_systems(Update, projection::project_selection.after(notes::update).before(linked::sync_link).before(update_parts).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Inspect)))
             .add_systems(
                 Update,
                 // The layout first: the camera's data (bounds, view area)

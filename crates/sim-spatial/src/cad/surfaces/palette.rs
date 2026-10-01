@@ -25,6 +25,8 @@ use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadInputFocus};
 use crate::cad::panel::{Control, NameDraft, own_controls};
+use crate::cad::selection::CadSelection;
+use sim_runtime::cad_client::SelectionItem;
 use crate::ui_kit::form::{DraftKey, TextDraft};
 use crate::ui_kit::palette::{PaletteEntry, rank};
 use crate::ui_kit::{Kit, LEFT_WIDTH, TOPBAR};
@@ -59,25 +61,25 @@ fn keys_of(cmd: &Command, doc: &CadDocument) -> Vec<String> {
 }
 
 /// Every command as a palette entry, in registry order.
-pub(super) fn palette_entries(doc: &CadDocument, own: &[Control]) -> Vec<PaletteEntry> {
+pub(super) fn palette_entries(doc: &CadDocument, selection: &[SelectionItem], own: &[Control]) -> Vec<PaletteEntry> {
     COMMANDS
         .iter()
-        .map(|cmd| PaletteEntry { id: cmd.id.to_string(), label: cmd.label.to_string(), category: cmd.category.to_string(), keys: keys_of(cmd, doc), note: registry::note(cmd), enabled: registry::ready(cmd, doc, own).is_ok() })
+        .map(|cmd| PaletteEntry { id: cmd.id.to_string(), label: cmd.label.to_string(), category: cmd.category.to_string(), keys: keys_of(cmd, doc), note: registry::note(cmd), enabled: registry::ready(cmd, doc, selection, own).is_ok() })
         .collect()
 }
 
 /// The ranked rows for `query`: each row's command and RoboCAD's row text.
-pub(super) fn ranked(doc: &CadDocument, own: &[Control], query: &str) -> Vec<(&'static Command, String)> {
+pub(super) fn ranked(doc: &CadDocument, selection: &[SelectionItem], own: &[Control], query: &str) -> Vec<(&'static Command, String)> {
     let all: &'static [Command] = COMMANDS;
-    rank(&palette_entries(doc, own), query).into_iter().filter_map(|r| all.get(r.index).map(|cmd| (cmd, r.text))).collect()
+    rank(&palette_entries(doc, selection, own), query).into_iter().filter_map(|r| all.get(r.index).map(|cmd| (cmd, r.text))).collect()
 }
 
 /// What a row's click or Enter writes.
-fn row_entry(cmd: &Command, doc: &CadDocument, own: &[Control]) -> SurfaceEntry {
+fn row_entry(cmd: &Command, doc: &CadDocument, selection: &[SelectionItem], own: &[Control]) -> SurfaceEntry {
     SurfaceEntry {
         action: CadAction::CadInvoke { id: cmd.id.to_string() },
         closes: !matches!(registry::resolve(cmd), Resolved::Surface(_)),
-        refusal: registry::ready(cmd, doc, own).err().map(|why| registry::status_line(cmd, &why)),
+        refusal: registry::ready(cmd, doc, selection, own).err().map(|why| registry::status_line(cmd, &why)),
     }
 }
 
@@ -93,11 +95,11 @@ fn placeholder(doc: &CadDocument) -> String {
 
 /// The palette popup (`surfaces::draw`), centred near the window's top as
 /// RoboCAD opens it (`open_palette`: x = width / 2, y = 80).
-pub(super) fn spawn(commands: &mut Commands, k: &Kit, doc: &CadDocument, own: &[Control], query: &str, highlight: usize, width: f32) {
-    let entries = palette_entries(doc, own);
+pub(super) fn spawn(commands: &mut Commands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem], own: &[Control], query: &str, highlight: usize, width: f32) {
+    let entries = palette_entries(doc, selection, own);
     let rows = rank(&entries, query);
     let all: &'static [Command] = COMMANDS;
-    let actions: Vec<SurfaceEntry> = rows.iter().filter_map(|r| all.get(r.index)).map(|cmd| row_entry(cmd, doc, own)).collect();
+    let actions: Vec<SurfaceEntry> = rows.iter().filter_map(|r| all.get(r.index)).map(|cmd| row_entry(cmd, doc, selection, own)).collect();
     let selected = highlight.min(rows.len().saturating_sub(1));
     commands
         .spawn((
@@ -125,6 +127,7 @@ pub(super) fn input(
     draft: Option<ResMut<NameDraft>>,
     mut out: MessageWriter<Act<CadAction>>,
     mut was_open: Local<bool>,
+    selection: CadSelection,
 ) {
     let open = doc.as_deref().and_then(|d| d.ops.surface.as_ref()).and_then(|o| match &o.surface {
         Surface::Palette { query } => Some((query.clone(), o.highlight.unwrap_or(0))),
@@ -158,8 +161,9 @@ pub(super) fn input(
         return;
     }
     let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-    let own = own_controls(&doc);
-    let mut rows = ranked(&doc, &own, &query);
+    let selection = selection.items();
+    let own = own_controls(&doc, &selection);
+    let mut rows = ranked(&doc, &selection, &own, &query);
     let (mut text, mut at) = (query.clone(), highlight);
     for e in typed {
         match &e.logical_key {
@@ -167,7 +171,7 @@ pub(super) fn input(
             Key::ArrowDown => at = (at + 1).min(rows.len().saturating_sub(1)),
             Key::Enter => {
                 if let Some((cmd, _)) = rows.get(at) {
-                    let entry = row_entry(cmd, &doc, &own);
+                    let entry = row_entry(cmd, &doc, &selection, &own);
                     match entry.refusal {
                         None => {
                             out.write(Act::ui(entry.action));
@@ -185,7 +189,7 @@ pub(super) fn input(
                 if draft.key(key, chord) == DraftKey::Edited {
                     text = draft.text;
                     at = 0;
-                    rows = ranked(&doc, &own, &text);
+                    rows = ranked(&doc, &selection, &own, &text);
                 }
             }
         }

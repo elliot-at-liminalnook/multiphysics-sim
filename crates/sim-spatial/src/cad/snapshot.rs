@@ -3,11 +3,13 @@
 //! jobs (split from `actions` to keep it under the size cap).
 use super::document::{CadDocument, CadTarget, Connection};
 use super::mesh::CadMeshes;
+use super::selection::CadSelection;
 use super::sketch::CadActivePlane;
 use super::sync::value;
 use crate::app::ViewerMode;
 use bevy::prelude::*;
 use serde_json::{Value, json};
+use sim_runtime::cad_client::SelectionItem;
 
 /// cad-views-export's parts of `cad_state` (None without CAD mode's window).
 #[derive(Clone, Copy, Default)]
@@ -24,7 +26,9 @@ impl<'a> Parts<'a> {
 
 /// `cad_state`: the document as this window shows it. Nothing is invented:
 /// absent values are null.
-pub(in crate::cad) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>, plane: Option<&CadActivePlane>, parts: Parts) -> Value {
+/// `selection`: the shared selection's CAD items (`cad_state.selection`,
+/// a list of `[node, kind, index]`).
+pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem], meshes: Option<&CadMeshes>, plane: Option<&CadActivePlane>, parts: Parts) -> Value {
     let connection = match &doc.connection {
         Connection::Connecting { what, since } => json!({"state": "connecting", "what": what, "seconds": since.elapsed().as_secs()}),
         Connection::Connected => json!({"state": "connected"}),
@@ -34,7 +38,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>, 
         Some(state) => state
             .nodes
             .iter()
-            .zip(doc.rows())
+            .zip(doc.rows(selection))
             .map(|(n, row)| json!({"id": n.id, "kind": n.kind, "name": n.name, "parent": n.parent, "depth": row.depth, "visible": n.visible, "effective_visible": n.effective_visible, "locked": n.locked, "disabled": n.disabled}))
             .collect(),
         None => Vec::new(),
@@ -63,7 +67,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>, 
         "document_key": doc.doc_key.as_ref().map(|(id, revision)| json!({"document_id": id, "revision": revision})),
         "stale": doc.stale,
         "nodes": nodes,
-        "selection": doc.selection,
+        "selection": selection,
         "select_mode": doc.select_mode,
         "hover": doc.hover,
         "candidates": doc.candidates.as_ref().map(|c| json!({"items": c.items, "extend": c.extend, "toggle": c.toggle})),
@@ -102,10 +106,11 @@ pub(in crate::cad) fn publish(
     display: Option<Res<super::display::CadDisplay>>,
     views: Option<Res<super::views::CadViews>>,
     files: Option<Res<super::files::CadFiles>>,
+    selection: CadSelection,
 ) {
     let (Some(mut rest), Some(doc)) = (rest, doc) else { return };
     if rest.0.snapshot_due() {
-        let state = state_json(&doc, meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()));
+        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()));
         let mut shown = state.clone();
         shown["viewer_mode"] = json!(ViewerMode::Cad.name());
         rest.0.publish("cad_state", state);

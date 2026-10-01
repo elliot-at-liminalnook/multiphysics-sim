@@ -7,8 +7,9 @@ use std::collections::HashMap;
 
 impl CadDocument {
     /// The model tree in RoboCAD's walk order (`/doc` nodes), with each
-    /// row's depth from its parent chain. Empty until the first `/doc`.
-    pub(crate) fn rows(&self) -> Vec<TreeRow> {
+    /// row's depth from its parent chain and whether any of `selection`'s
+    /// items names it. Empty until the first `/doc`.
+    pub(crate) fn rows(&self, selection: &[SelectionItem]) -> Vec<TreeRow> {
         let Some(doc) = &self.doc else { return Vec::new() };
         let parents: HashMap<&str, Option<&str>> = doc.nodes.iter().map(|n| (n.id.as_str(), n.parent.as_deref())).collect();
         doc.nodes
@@ -33,7 +34,7 @@ impl CadDocument {
                     visible: n.visible,
                     locked: n.locked,
                     disabled: n.disabled,
-                    selected: self.selection.iter().any(|s| s.0 == n.id),
+                    selected: selection.iter().any(|s| s.0 == n.id),
                 }
             })
             .collect()
@@ -121,28 +122,6 @@ impl CadDocument {
     /// The edit in flight, by name.
     pub(crate) fn edit_label(&self) -> Option<&str> {
         self.edit.as_ref().map(|e| e.label.as_str())
-    }
-
-    /// The first selected node (the inspected one).
-    pub(crate) fn selected(&self) -> Option<&str> {
-        self.selection.first().map(|i| i.0.as_str())
-    }
-
-    /// The selected nodes, each once, in selection order (RoboCAD's
-    /// `Selection.nodes`).
-    pub(crate) fn selected_nodes(&self) -> Vec<String> {
-        let mut out: Vec<String> = Vec::new();
-        for SelectionItem(node, ..) in &self.selection {
-            if !out.contains(node) {
-                out.push(node.clone());
-            }
-        }
-        out
-    }
-
-    /// The selected items of one kind ("face", "edge", …) as (node, index).
-    pub(crate) fn selected_of(&self, kind: &str) -> Vec<(String, i64)> {
-        self.selection.iter().filter(|i| i.1 == kind).map(|i| (i.0.clone(), i.2)).collect()
     }
 
     /// RoboCAD's revision the shown tree (and meshes, topology) is at.

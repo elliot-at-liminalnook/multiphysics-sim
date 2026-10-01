@@ -7,6 +7,7 @@
 use super::*;
 use crate::app::actions::{self, Act, Call, InFlight, Replies, Spec, spec};
 use crate::app::switch::{WindowAction, ask_switch, awaited_switch};
+use crate::annotations::{Committed, ThreadOp};
 use crate::app::ViewerMode;
 use bevy::ecs::message::Messages;
 use serde::Deserialize;
@@ -118,7 +119,8 @@ pub(crate) enum LessonCommand {
 }
 
 /// `lesson_notes` operations, as their REST form; each becomes a
-/// `ThreadCommand` for the note store (the same store the page's notes use).
+/// `ThreadOp` of the annotations service on the lesson's notes (the same
+/// source the page's notes use).
 #[derive(Deserialize, Clone)]
 #[serde(tag = "operation", rename_all = "snake_case", deny_unknown_fields)]
 pub(crate) enum NoteOperation {
@@ -245,7 +247,9 @@ fn handle(learn: &mut Learn, scene: &mut SpatialScene, mode: ViewerMode, switch:
 }
 
 /// Actions: the lessons' one apply system (build and lessons; without a
-/// lesson open, REST is told so).
+/// lesson open, REST is told so). In Lessons, a changed pick is shared as
+/// the Build document's selection (`selection::share`).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<LessonCommand>>>,
     mut in_flight: ResMut<InFlight<LessonCommand>>,
@@ -254,6 +258,7 @@ pub(super) fn apply(
     scene: Option<ResMut<SpatialScene>>,
     mode: Res<State<ViewerMode>>,
     mut switch: MessageWriter<Act<WindowAction>>,
+    (shared, registry, builder): (Option<ResMut<crate::selection::Selection>>, Option<Res<crate::document::DocumentRegistry>>, Option<Res<Builder>>),
 ) {
     let (Some(mut learn), Some(mut scene)) = (learn, scene) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err(NO_LESSONS.into())));
@@ -263,7 +268,11 @@ pub(super) fn apply(
         return;
     }
     let mode = *mode.get();
+    let picked = learn.picked.clone();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |command, call| handle(&mut learn, &mut scene, mode, &mut switch, command, call));
+    if let (ViewerMode::Lessons, true, Some(mut shared), Some(registry), Some(builder)) = (mode, learn.picked != picked, shared, registry, builder) {
+        selection::share(learn.picked.as_deref(), &builder, &mut shared, &registry);
+    }
 }
 
 /// Input: a pressed lesson button's action (and which part a hovered
@@ -487,7 +496,7 @@ fn execute(learn: &mut Learn, scene: &mut SpatialScene, command: LessonCommand) 
             if expected_revision.is_some_and(|r| r != learn.notes_doc.revision) {
                 return Err("stale notes revision; read lesson_notes again".into());
             }
-            let command = match action {
+            let op = match action {
                 NoteOperation::List => {
                     return Ok(json!({"revision": learn.notes_doc.revision, "threads": learn.threads(), "pending": learn.pending.len()}));
                 }
@@ -502,19 +511,23 @@ fn execute(learn: &mut Learn, scene: &mut SpatialScene, command: LessonCommand) 
                         _ => return Err("give either block or scene".into()),
                     };
                     let body = body.trim().to_string();
-                    let title = title.unwrap_or_else(|| sim_annotate::plain_comment(&body).lines().next().unwrap_or("Note").chars().take(80).collect());
-                    let comment = Comment { id: sim_annotate::uid("c"), author: author(learn, who), body, created_at: sim_annotate::stamp(), edited_at: None, links: vec![] };
-                    ThreadCommand::PutThread { thread: Thread { id: sim_annotate::uid("t"), title, resolved: false, targets: vec![anchor], comments: vec![comment], pin_m: None, view: None } }
+                    let title = title.unwrap_or_else(|| Learn::note_title(&body));
+                    ThreadOp::Create { title, targets: vec![anchor], author: author(learn, who), body, links: vec![], pin_m: None, view: None }
                 }
-                NoteOperation::Reply { thread, body, author: who } => ThreadCommand::AddComment { thread, comment: Comment { id: sim_annotate::uid("c"), author: author(learn, who), body, created_at: sim_annotate::stamp(), edited_at: None, links: vec![] } },
-                NoteOperation::EditComment { thread, comment, body } => ThreadCommand::EditComment { thread, comment, body, edited_at: sim_annotate::stamp() },
-                NoteOperation::DeleteComment { thread, comment } => ThreadCommand::DeleteComment { thread, comment },
-                NoteOperation::Resolve { thread, resolved } => ThreadCommand::Resolve { thread, resolved },
-                NoteOperation::Delete { thread } => ThreadCommand::DeleteThread { id: thread },
-                NoteOperation::Undo => ThreadCommand::Undo,
-                NoteOperation::Redo => ThreadCommand::Redo,
+                NoteOperation::Reply { thread, body, author: who } => ThreadOp::Reply { thread, author: author(learn, who), body, links: vec![] },
+                NoteOperation::EditComment { thread, comment, body } => ThreadOp::EditComment { thread, comment, body, links: None },
+                NoteOperation::DeleteComment { thread, comment } => ThreadOp::DeleteComment { thread, comment },
+                NoteOperation::Resolve { thread, resolved } => ThreadOp::Resolve { thread, resolved },
+                NoteOperation::Delete { thread } => ThreadOp::Delete { thread },
+                NoteOperation::Undo => ThreadOp::Undo,
+                NoteOperation::Redo => ThreadOp::Redo,
             };
-            let request = learn.note("REST note", command)?;
+            // The sidecar's worker applies it: the answer is the request id.
+            let request = match learn.thread_op("REST note", op)?.committed {
+                Committed::Pending(id) => id,
+                // Lesson notes always go through the sidecar's store.
+                Committed::Done => return Err("lesson notes are applied by the sidecar's store, which did not take this edit".into()),
+            };
             Ok(json!({"submitted": request, "note": "applied off the UI thread; read lesson_notes (or lesson_state notes_revision) for the result"}))
         }
         LessonCommand::LessonCompare { id } => {

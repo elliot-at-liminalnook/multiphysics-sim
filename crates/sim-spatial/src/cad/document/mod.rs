@@ -46,10 +46,9 @@ pub struct CadDocument {
     /// Why the shown document may be behind RoboCAD's ("refetching revision
     /// 12", or a failed refetch's error). None when it is current.
     pub stale: Option<String>,
-    /// The selection as RoboCAD's items `[node, kind, index]` (kind body,
-    /// face, edge, vertex or point), as last pushed to or read from RoboCAD's
-    /// `/selection`.
-    pub selection: Vec<SelectionItem>,
+    // The selection itself is the shared one (`crate::selection::Selection`,
+    // `Item::Cad` under CAD's registry entry: `cad::selection::Shared`);
+    // what follows is RoboCAD's echo of it and the viewer's mode and hover.
     /// The selection mode (what a 3D click picks). The viewer holds it: a
     /// headless RoboCAD stores only the items (api.py `set_selection`), a
     /// desktop one's `mode` is adopted when it changes there.
@@ -95,15 +94,25 @@ pub struct CadDocument {
     pub(super) physical_revision: u64,
     /// The last selection read from RoboCAD (adopted once when it changes).
     pub(super) remote_selection: Vec<SelectionItem>,
+    /// Whether this connection has read RoboCAD's selection yet: its first
+    /// read is adopted even when empty, so items the shared selection kept
+    /// from an earlier visit to CAD mode never stay shown while RoboCAD
+    /// holds another selection.
+    pub(super) selection_read: bool,
     /// The last selection mode read from RoboCAD (a desktop window's; a
     /// headless service sends none), adopted once when it changes.
     pub(super) remote_mode: Option<SelectMode>,
     /// When our latest selection push was answered: a poll's selection read
     /// sent before then is not adopted (it predates the push).
     pub(super) selection_pushed_at: Option<Instant>,
-    /// The selection changed while a push was in flight: the newest
-    /// (`selection`) is pushed when that push answers, so pushes never overlap.
+    /// The selection changed while a push was in flight: the newest (the
+    /// shared selection's CAD items) is pushed when that push answers, so
+    /// pushes never overlap.
     pub(super) selection_again: bool,
+    /// The shared selection's change count (`Selection::changed`) when CAD
+    /// last pushed or adopted it: a count past it is a change not yet
+    /// published (`selection::publish_changes`).
+    pub(super) published_selection: u64,
     /// Bumped by `cad_refresh` and a Lost → Connected transition: the mesh
     /// cache then retries the bodies whose fetch or build failed.
     pub(super) mesh_retry: u64,
@@ -155,7 +164,6 @@ impl CadDocument {
             doc: None,
             doc_key: None,
             stale: None,
-            selection: Vec::new(),
             select_mode: SelectMode::Body,
             hover: None,
             candidates: None,
@@ -179,9 +187,11 @@ impl CadDocument {
             detail_key: None,
             physical_revision: 0,
             remote_selection: Vec::new(),
+            selection_read: false,
             remote_mode: None,
             selection_pushed_at: None,
             selection_again: false,
+            published_selection: 0,
             mesh_retry: 0,
             edit_seq: 0,
             edit_waited: false,

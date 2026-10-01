@@ -3,7 +3,7 @@
 //! live readouts and the source preview.
 use super::*;
 
-pub(super) fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene) {
+pub(super) fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene, selected: &BTreeSet<String>) {
     // The dock is itself the scroll area: its layout scrolls vertically (the
     // kit's `scroll_area` makes a node of its own, and a dock is one node).
     commands
@@ -17,14 +17,14 @@ pub(super) fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &S
             if b.reference.target.is_some(){source_preview(col,k,b);return;}
             let definition = b.definition();
             if let Some(item) = &b.preview {
-                library_card(col, k, b, item);
+                library_card(col, k, b, item, selected);
                 return;
             }
-            match (b.selected.len(), b.only_selected()) {
+            match (selected.len(), picked::only(selected)) {
                 (0, _) => level_summary(col, k, b, definition.as_ref()),
                 (1, Some(name)) => instance_inspector(col, k, b, &name, definition.as_ref()),
                 (n, _) => {
-                    k.header(col, &format!("{n} selected"), &b.selected.iter().cloned().collect::<Vec<_>>().join(", "));
+                    k.header(col, &format!("{n} selected"), &selected.iter().cloned().collect::<Vec<_>>().join(", "));
                     col.spawn(Node { margin: UiRect::top(Val::Px(10.)), ..wrap() }).with_children(|r| {
                         r.spawn(k.button("Group into subsystem", BuildAction::Group, Look::Primary, true));
                         r.spawn(k.button("Delete", BuildAction::Delete, Look::Danger, true));
@@ -32,7 +32,7 @@ pub(super) fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &S
                     col.spawn(k.note("Nets that cross the selection become boundary ports of the new subsystem."));
                 }
             }
-            live_section(col, k, b, scene);
+            live_section(col, k, b, scene, selected);
         });
 }
 
@@ -253,8 +253,8 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
     col.spawn(k.text("Arrow keys move 5 mm (Shift: 1 mm). Page Up/Down lift.", size::DETAIL, FAINT, 0));
 }
 
-fn live_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, scene: &SpatialScene) {
-    if let Some(name) = b.only_selected().filter(|_| b.preview.is_none()) {
+fn live_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, scene: &SpatialScene, selected: &BTreeSet<String>) {
+    if let Some(name) = picked::only(selected).filter(|_| b.preview.is_none()) {
         let found = graphs::candidates(scene, &b.full_path(&name));
         if !found.is_empty() {
             col.spawn(k.section("Plot"));
@@ -374,7 +374,7 @@ fn snap_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str
 }
 
 /// A library item's card: everything to learn about it before placing it.
-fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &PaletteItem) {
+fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &PaletteItem, selected: &BTreeSet<String>) {
     let cat = category(&item.domain);
     col.spawn(k.text(&item.label, 17., TEXT, 2));
     col.spawn((Node { column_gap: Val::Px(7.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, children![k.dot(tag_color(cat)), k.text(format!("{cat}  ·  {}", kind_text(&item.kind)), size::CAPTION, SUBTLE, 0)]));
@@ -383,7 +383,7 @@ fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &Pal
         r.spawn(k.button("Close", BuildAction::ClosePreview, Look::Ghost, true));
     });
     // Snap straight onto the selected part, where a port fits.
-    if let Some(name) = b.only_selected() {
+    if let Some(name) = picked::only(selected) {
         if let Some(ports) = b.cached_suggestions(&name) {
             let fits: Vec<(&str, &sim_system::snap::Candidate)> = ports.iter().filter_map(|p| p.candidates.iter().find(|c| c.kind == item.kind).map(|c| (p.port.as_str(), c))).collect();
             col.spawn(k.section(&format!("Attach to {name}")));

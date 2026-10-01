@@ -76,6 +76,8 @@ pub(super) fn rebuild_scene(
     mut orbit: Single<&mut Orbit>,
     mut models: Option<ResMut<crate::models::ModelLibrary>>,
     mode: Option<Res<State<ViewerMode>>>,
+    selection: Res<Selection>,
+    registry: Res<DocumentRegistry>,
 ) {
     let learning = mode.is_some_and(|m| *m.get() == ViewerMode::Lessons);
     // Do not replace picked entities while a pointer owns them. A saved drop
@@ -137,9 +139,11 @@ pub(super) fn rebuild_scene(
         .filter(|p| !(level.is_empty() || p.component == level || p.component.starts_with(&format!("{level}/"))))
         .map(|p| p.component.clone())
         .collect();
-    let names: BTreeSet<String> = builder.selected.iter().map(|n| builder.full_path(n)).collect();
-    let chosen: BTreeSet<String> = scene.spatial.parts.iter().map(|p| p.component.clone()).filter(|c| names.iter().any(|n| c == n || c.starts_with(&format!("{n}/")))).collect();
-    let _ = scene.set_selection(if chosen.is_empty() { SelectionTarget::None } else { SelectionTarget::Components { ids: chosen } });
+    // The new scene shows the selection (`replace` cleared its highlight);
+    // in Lessons the lesson page draws its own highlight (`picked::track`).
+    if !learning {
+        picked::project(&builder, &mut scene, &picked::names(&selection, &registry));
+    }
     for e in &content {
         commands.entity(e).despawn();
     }
@@ -221,29 +225,31 @@ fn pick_reference(click: On<Pointer<Click>>, quads: Query<&ReferenceQuad>, mut o
     out.write(crate::app::actions::Act::ui(system_actions::SystemAction::Ui(BuildAction::ReferencePoint { id: quad.0.clone(), world: position.to_array() })));
 }
 
-/// Part clicks select instances at the current level.
-pub(crate) fn click_part(builder: &mut Builder, component: &str, shift: bool) {
+/// Part clicks select instances at the current level (shift toggles), through
+/// the shared selection; a refusal is the status line.
+pub(crate) fn click_part(builder: &mut Builder, pick: &mut Picked, component: &str, shift: bool) {
     if builder.drag.is_some(){return;}
     let Some(name) = builder.instance_for_component(component) else {
         builder.status = "That part is outside this level; press Up (U) to leave the subsystem.".into();
         builder.panel_dirty = true;
         return;
     };
-    if shift {
-        if !builder.selected.remove(&name) {
-            builder.selected.insert(name);
-        }
+    let result = if shift {
+        pick.toggle(name)
     } else if builder.connect_from.is_some() || builder.mode == Mode::Connect {
-        builder.selected = BTreeSet::from([name.clone()]);
-        builder.port_menu = Some(name);
+        builder.port_menu = Some(name.clone());
+        pick.set([name])
     } else {
-        builder.selected = BTreeSet::from([name]);
         builder.port_menu = None;
+        pick.set([name])
+    };
+    if let Err(e) = result {
+        builder.report(Err::<(), _>(e));
+        return;
     }
-    if let Some(n) = builder.only_selected() {
+    if let Some(n) = pick.only() {
         let _ = builder.suggestions(&n);
     }
     builder.alternatives = None;
-    builder.scene_dirty = true;
     builder.panel_dirty = true;
 }

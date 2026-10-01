@@ -39,17 +39,27 @@
 //!   outside Build/Lessons, its scene parked); the lesson, the robot view
 //!   and the place are removed (their jobs cancel, their `RunThread`s join
 //!   within `jobs::JOIN_BOUND` on a drop thread). `ModelLibrary`, the fonts,
-//!   `Documents`, `Rest` and the workspace root always survive.
+//!   `Documents` (the launch configuration), the document registry, `Rest`
+//!   and the workspace root always survive.
+//! - **Documents** are the registry's (`crate::document::DocumentRegistry`,
+//!   native-viewer.md §7; [`sources`]): one entry per mode. [`arrive`] opens
+//!   the target mode's entry (a reopen of the same document is a reload: its
+//!   id kept, its revision + 1; another document gets a new id and the old
+//!   one's selection items go) or unparks its scene; each scope's OnExit
+//!   parks the scene (Inspect, the builder) or closes the entry, keeping the
+//!   source the mode reopens.
 //! - **REST** callers wait on their reply token (`actions::Replies`); a
 //!   cancel stops a switch whose document is still loading.
 mod arrival;
 mod leave;
 mod prepare;
+pub mod sources;
 
 use super::actions::{self, Act, Origin, Replies, Spec, spec};
 use super::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::Builder;
-use crate::cad::{CadDocument, CadTarget};
+use crate::cad::CadDocument;
+use crate::document::DocumentRegistry;
 use crate::jobs::Job;
 use crate::lesson::Learn;
 use crate::models::ModelLibrary;
@@ -153,7 +163,7 @@ pub enum WindowAction {
 impl actions::Action for WindowAction {
     fn commands() -> Vec<Spec> {
         vec![
-            spec("viewer_mode", actions::ALL, json!({"mode":"robot","preset":"robot-measured-400hz"}), "Switch this window's mode, or with no mode (args {}) report it: active, modes, pending (a document still loading), entering, message (the switcher's last line) and documents (what each mode reopens: inspect description/spatial, lessons dir and lesson, robot path or preset, place; library, models, presets). mode inspect | build | lessons | robot | place | cad | phenomena; optional path (inspect: a *.description.json with its *.spatial.json beside it; build: a *.system.json; lessons: a folder of <slug>/lesson.md; robot: a *.simrobot.json; place: a sim-place build directory; cad: a *.rcad file, on which this window starts RoboCAD's headless service and stops it when the document closes), preset (robot: an id listed by robot_presets) or url (cad: a running loopback RoboCAD service such as http://127.0.0.1:8420, attached to and never stopped). Without one, a mode reopens what it showed before in this window or at launch; inspect falls back to the example assembly and cad to RoboCAD at http://127.0.0.1:8420. Phenomena takes no document: it opens the built-in exhibits (sim_phenomena::exhibits) on the exhibit it last showed, else --exhibit's or $PHENOMENA_EXHIBIT's, else the first; select another with phenomena_select. Entering cad mode does not wait for RoboCAD: the connection (or the service's start) runs on its own job and shows in cad_state.connection and the mode's header. The same handler as the window's mode switcher, the builder's Lessons button and system_ui mode:<mode> (every mode). In the window, a mode chosen in the switcher (or with system_ui mode:<mode>) that has no document opens a document picker instead of being refused; its entries are the system_ui controls picker:<mode>:<n>, picker:path (activate with an optional text, the path to open) and picker:close. Refused, naming the reason, with the current mode kept: no document for the target mode; leaving build or lessons, entering lessons from build (by any entry point: the switcher, the Lessons button, system_ui mode:lessons, viewer_mode, lesson_open or lesson_screen) or replacing the builder with a new lesson's, while a text or discussion draft, placement drag, study, replay, Codex answer or open is in progress (the builder's system_open blockers), or leaving build or lessons while a lesson draft or contact sheet is, and a new lesson replacing a build-mode builder with a live run; leaving robot mode while a recording is being written or a replay runs; leaving cad mode while a CAD edit is in flight or while a RoboCAD service this window started holds unsaved edits, or may hold edits whose saved state can't be confirmed because the window is not connected to it (save first; leaving an attached RoboCAD with unsaved edits is allowed and the result's message says it keeps them); another switch in progress; a path of the wrong kind; a document that fails to load (named). Documents load off the UI thread; poll the job. Build and lessons share the builder: switching between them keeps it and the lesson (the lesson screen is drawn over the builder), and entering lessons pauses a live build run and keeps it (Run resumes it in build mode). The builder stays in the window across every switch: leaving build/lessons pauses a live run and parks its scene; build with a path while it has another file open is refused (use system_open in build mode). Leaving lessons closes the lesson (its recordings and narration stop; lessons reopens it); leaving robot mode stops its run, gait and playback threads; leaving cad mode stops its poll and a RoboCAD service it started (never an attached one); leaving phenomena mode stops its exhibits' run thread (dropped off the UI thread: joined within 200 ms, else detached and ending at its next check) and remembers the exhibit; leaving inspect parks its scene and selection link. Commands of another mode are refused naming the active mode. Result: mode, previous, document, load_seconds (unchanged=true when the mode was already active)."),
+            spec("viewer_mode", actions::ALL, json!({"mode":"robot","preset":"robot-measured-400hz"}), "Switch this window's mode, or with no mode (args {}) report it: active, modes, pending (a document still loading), entering, message (the switcher's last line) and documents (what each mode reopens: inspect description/spatial, lessons dir and lesson, robot path or preset, place, cad path or url, phenomena exhibit; library, models, presets; registry, the document registry's entries: id, kind, source, revision, mode, presence open | parked | remembered, parked). mode inspect | build | lessons | robot | place | cad | phenomena; optional path (inspect: a *.description.json with its *.spatial.json beside it; build: a *.system.json; lessons: a folder of <slug>/lesson.md; robot: a *.simrobot.json; place: a sim-place build directory; cad: a *.rcad file, on which this window starts RoboCAD's headless service and stops it when the document closes), preset (robot: an id listed by robot_presets) or url (cad: a running loopback RoboCAD service such as http://127.0.0.1:8420, attached to and never stopped). Without one, a mode reopens what it showed before in this window or at launch; inspect falls back to the example assembly and cad to RoboCAD at http://127.0.0.1:8420. Phenomena takes no document: it opens the built-in exhibits (sim_phenomena::exhibits) on the exhibit it last showed, else --exhibit's or $PHENOMENA_EXHIBIT's, else the first; select another with phenomena_select. Entering cad mode does not wait for RoboCAD: the connection (or the service's start) runs on its own job and shows in cad_state.connection and the mode's header. The same handler as the window's mode switcher, the builder's Lessons button and system_ui mode:<mode> (every mode). In the window, a mode chosen in the switcher (or with system_ui mode:<mode>) that has no document opens a document picker instead of being refused; its entries are the system_ui controls picker:<mode>:<n> (each listed with picker_revision, the picker's own revision, separate from the answer's ui_revision; an activation giving another picker_revision is refused, naming both: list the controls again; ui_revision is not checked for picker:* controls), picker:path (activate with an optional text, the path to open) and picker:close. Refused, naming the reason, with the current mode kept: no document for the target mode; leaving build or lessons, entering lessons from build (by any entry point: the switcher, the Lessons button, system_ui mode:lessons, viewer_mode, lesson_open or lesson_screen) or replacing the builder with a new lesson's, while a text or discussion draft, placement drag, study, replay, Codex answer or open is in progress (the builder's system_open blockers), or leaving build or lessons while a lesson draft or contact sheet is, and a new lesson replacing a build-mode builder with a live run; leaving robot mode while a recording is being written or a replay runs; leaving cad mode while a CAD edit is in flight or while a RoboCAD service this window started holds unsaved edits, or may hold edits whose saved state can't be confirmed because the window is not connected to it (save first; leaving an attached RoboCAD with unsaved edits is allowed and the result's message says it keeps them); another switch in progress; a path of the wrong kind; a document that fails to load (named). Documents load off the UI thread; poll the job. Build and lessons share the builder: switching between them keeps it and the lesson (the lesson screen is drawn over the builder), and entering lessons pauses a live build run and keeps it (Run resumes it in build mode). The builder stays in the window across every switch: leaving build/lessons pauses a live run and parks its scene; build with a path while it has another file open is refused (use system_open in build mode). Leaving lessons closes the lesson (its recordings and narration stop; lessons reopens it); leaving robot mode stops its run, gait and playback threads; leaving cad mode stops its poll and a RoboCAD service it started (never an attached one); leaving phenomena mode stops its exhibits' run thread (dropped off the UI thread: joined within 200 ms, else detached and ending at its next check) and remembers the exhibit; leaving inspect parks its scene and selection link. Commands of another mode are refused naming the active mode. Result: mode, previous, document, load_seconds (unchanged=true when the mode was already active)."),
             spec("screenshot", actions::ALL, json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn (UI, overlays, lesson pages) to a PNG after the next frame; refused, naming the cause, while the window is not visible"),
         ]
     }
@@ -172,7 +182,7 @@ impl actions::Action for WindowAction {
 impl WindowAction {
     /// `system_ui` in modes without controls of their own.
     pub(crate) fn switcher_commands() -> Vec<Spec> {
-        vec![spec("system_ui", actions::SWITCHER_ONLY, json!({"action":{"operation":"controls"}}), "Inspect and place mode: the mode switcher's controls mode:inspect | mode:build | mode:lessons | mode:robot | mode:place | mode:cad | mode:phenomena (controls; activate {id, ui_revision}, the same handler as viewer_mode and the switcher's buttons; ui_revision is not checked for mode:* controls). In build, lessons, robot, cad and phenomena mode system_ui is the mode's own (its controls list ends with these mode:* controls). While the document picker is open, every mode's controls list ends with its picker:<mode>:<n>, picker:path and picker:close controls, and activating them works in every mode.")]
+        vec![spec("system_ui", actions::SWITCHER_ONLY, json!({"action":{"operation":"controls"}}), "Inspect and place mode: the mode switcher's controls mode:inspect | mode:build | mode:lessons | mode:robot | mode:place | mode:cad | mode:phenomena (controls; activate {id, ui_revision}, the same handler as viewer_mode and the switcher's buttons; ui_revision is not checked for mode:* controls). In build, lessons, robot, cad and phenomena mode system_ui is the mode's own (its controls list ends with these mode:* controls). While the document picker is open, every mode's controls list ends with its picker:<mode>:<n>, picker:path and picker:close controls, and activating them works in every mode; each picker:<mode>:<n> carries picker_revision, the picker's own revision, and an activation giving another one is refused (list the controls again); ui_revision is not checked for picker:* controls.")]
     }
     /// The switch a `system_ui` `mode:*` control asks for.
     pub(super) fn mode_control(args: &Map<String, Value>) -> Option<Result<ModeSwitch, String>> {
@@ -201,8 +211,9 @@ impl WindowAction {
 }
 
 
-/// What this window can open in each mode without being told, and the
-/// launch facts the loaders need. Shared: it survives every switch.
+/// The launch facts the loaders need. Shared: it survives every switch.
+/// What each mode opens without being told is the document registry's
+/// (`crate::document::DocumentRegistry`, [`sources`]).
 #[derive(Resource)]
 pub struct Documents {
     /// The palette library (`--library`, else `<workspace>/library/systems`).
@@ -211,27 +222,8 @@ pub struct Documents {
     pub models: PathBuf,
     /// `--robot-presets` (None: `<workspace>/web/viewer/presets.json`).
     pub presets: Option<PathBuf>,
-    /// The inspected assembly (description, spatial).
-    pub inspect: Option<(PathBuf, PathBuf)>,
-    /// The lessons folder and lesson last open.
-    pub lessons: Option<(PathBuf, Option<String>)>,
-    /// The robot file or preset last open.
-    pub robot: Option<Document>,
-    /// The place last walked through.
-    pub place: Option<PathBuf>,
     /// The hardware servers given at launch (`--hardware`, `--motor-bench`), for robot mode's Leg calibration panel.
     pub hardware: crate::robot::hardware::HardwareConfig,
-    /// The RoboCAD document CAD mode last showed (or the launch's): set by
-    /// the launch, `cad_open` and leaving CAD mode.
-    pub cad: Option<CadTarget>,
-    /// The exhibit phenomena mode opens: `--exhibit` (a 1-based number or a
-    /// title fragment, sim-app's rule), then the exhibit it last showed (set
-    /// on leaving, as its 1-based number). None: the first.
-    pub exhibit: Option<String>,
-    /// Inspect's scene (and selection link) while another mode is shown.
-    parked_inspect: Option<Box<(SpatialScene, Option<SelectionLink>)>>,
-    /// The builder's scene while a mode outside Build/Lessons is shown.
-    parked_builder: Option<Box<SpatialScene>>,
 }
 impl Default for Documents {
     fn default() -> Self {
@@ -239,33 +231,8 @@ impl Default for Documents {
             library: crate::workspace::path("library/systems"),
             models: crate::workspace::path("library/models").unwrap_or_else(|_| PathBuf::from("models")),
             presets: None,
-            inspect: None,
-            lessons: None,
-            robot: None,
-            place: None,
             hardware: Default::default(),
-            cad: None,
-            exhibit: None,
-            parked_inspect: None,
-            parked_builder: None,
         }
-    }
-}
-impl Documents {
-    pub fn json(&self) -> Value {
-        json!({
-            "inspect": self.inspect.as_ref().map(|(d, s)| json!({"description": d, "spatial": s})),
-            "inspect_parked": self.parked_inspect.is_some(),
-            "builder_scene_parked": self.parked_builder.is_some(),
-            "lessons": self.lessons.as_ref().map(|(d, s)| json!({"dir": d, "lesson": s})),
-            "robot": self.robot.as_ref().map(Document::json),
-            "place": self.place,
-            "cad": self.cad.as_ref().map(CadTarget::json),
-            "phenomena": {"exhibit": self.exhibit},
-            "library": match &self.library { Ok(p) => json!(p), Err(e) => json!({"error": e}) },
-            "models": self.models,
-            "presets": self.presets,
-        })
     }
 }
 
@@ -313,10 +280,10 @@ pub(crate) struct Arrival {
     robot: Option<RobotView>,
     place: Option<PlaceView>,
     cad: Option<CadDocument>,
-    unpark_inspect: bool,
-    unpark_builder: bool,
+    /// The mode whose parked scene comes back (Inspect, or Build for the builder's).
+    unpark: Option<ViewerMode>,
+    /// The inspected assembly a load brought (description, spatial).
     inspect: Option<(PathBuf, PathBuf)>,
-    lessons: Option<(PathBuf, Option<String>)>,
     document: Value,
 }
 
@@ -338,14 +305,14 @@ impl Switcher {
         self.revision += 1;
     }
     /// `viewer_mode` with no mode, and `/v1/viewer_mode`.
-    pub fn json(&self, mode: ViewerMode, documents: &Documents) -> Value {
+    pub fn json(&self, mode: ViewerMode, documents: &Documents, registry: &DocumentRegistry) -> Value {
         json!({
             "active": mode,
             "modes": ViewerMode::ALL,
             "pending": self.pending.as_ref().map(|p| json!({"mode": p.mode, "loading": p.what, "seconds": p.started.elapsed().as_secs_f64()})),
             "entering": self.entering.as_ref().map(|e| e.1),
             "message": self.message.as_ref().map(|m| match m { Ok(t) => json!({"ok": true, "text": t}), Err(e) => json!({"ok": false, "text": e}) }),
-            "documents": documents.json(),
+            "documents": documents.json(registry),
             "revision": self.revision,
         })
     }
@@ -431,15 +398,15 @@ pub(crate) fn handle(world: &mut World) {
             let (request, interactive) = match action {
                 WindowAction::Switch(request) => (Ok(request), origin == Origin::Ui),
                 WindowAction::ViewerMode(args) if args.is_empty() => {
-                    let mut status = switch.json(current, world.resource::<Documents>());
+                    let mut status = switch.json(current, world.resource::<Documents>(), world.resource::<DocumentRegistry>());
                     status["picker"] = world.get_resource::<Picker>().map_or(Value::Null, Picker::json);
                     answer(world, origin, Ok(status));
                     continue;
                 }
                 WindowAction::ViewerMode(args) => (ModeSwitch::from_args(args), false),
                 WindowAction::SystemUi(args) => {
-                    if let Some((id, text)) = picker::activation(&args) {
-                        match picker::activate(world, &id, text.as_deref()) {
+                    if let Some((id, text, ui_revision)) = picker::activation(&args) {
+                        match picker::activate(world, &id, text.as_deref(), ui_revision) {
                             Ok(picker::Activation::Switch(request)) => (Ok(request), true),
                             Ok(picker::Activation::Closed(mode)) => {
                                 answer(world, origin, Ok(json!({"closed": mode, "message": format!("The {} document picker is closed.", mode.label())})));

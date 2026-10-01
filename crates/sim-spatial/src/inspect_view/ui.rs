@@ -14,7 +14,7 @@ fn toggled(scene: &SpatialScene, action: &inspect::InspectAction) -> Option<bool
     use inspect::{InspectAction as A, Toggle};
     match action {
         A::Display { action: SpatialCommand::Select { component } } => Some(scene.details.components.contains(component)),
-        A::Select { target: SelectionTarget::Nets { ids } } => Some(matches!(&scene.selection, SelectionTarget::Nets { ids: selected } if ids.iter().all(|id| selected.contains(id)))),
+        A::Select { target: SelectionTarget::Nets { ids } } => Some(matches!(&scene.shown, SelectionTarget::Nets { ids: selected } if ids.iter().all(|id| selected.contains(id)))),
         A::Toggle(Toggle::Parts) => Some(scene.parts_visible),
         A::Toggle(Toggle::Exploded) => Some(scene.state.exploded),
         A::Toggle(Toggle::Connections) => Some(scene.state.connections),

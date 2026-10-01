@@ -29,7 +29,12 @@
 //! - **`system_ui`**: its entries are controls `picker:<mode>:<n>` (flat
 //!   index across the sections), `picker:path` (activate with an optional
 //!   `text`, set and submitted) and `picker:close`, appended to every
-//!   mode's controls while it is open (`route::annotate`).
+//!   mode's controls while it is open (`route::annotate`). Each
+//!   `picker:<mode>:<n>` is listed with `picker_revision` (its own key: the
+//!   answer's `ui_revision` is the mode's), the picker's revision
+//!   when its entries last changed ([`Picker::listed_at`]); an activation
+//!   giving another one is refused, naming both, as the builder's and robot
+//!   mode's controls refuse a stale listing.
 mod discover;
 
 pub(crate) use discover::discover;
@@ -105,6 +110,10 @@ pub(crate) struct Picker {
     pub(crate) opened_revision: u64,
     /// Bumped on every change it shows.
     pub(crate) revision: u64,
+    /// `revision` when the entries (`picker:<mode>:<n>`) last changed: on
+    /// opening, closing and discovery's result. Monotonic across reopens, so
+    /// an index listed by an earlier picker never matches.
+    pub(crate) listed_at: u64,
 }
 
 /// A mode's document, as the switcher's message names it.
@@ -157,6 +166,7 @@ impl Picker {
     /// Open for `mode` (from `from`, at switcher revision `revision`): the
     /// drafts start over and discovery starts on `Pool::Io`.
     pub(crate) fn open_for(&mut self, mode: ViewerMode, from: ViewerMode, reason: String, revision: u64, presets: Option<PathBuf>) {
+        // Closing first moves `listed_at` past every earlier listing.
         self.close();
         self.open = Some(mode);
         self.from = Some(from);
@@ -174,7 +184,7 @@ impl Picker {
     /// Closed: its jobs are dropped (cancelled) and its drafts cleared.
     pub(crate) fn close(&mut self) {
         let revision = self.revision + 1;
-        *self = Picker { revision, ..Default::default() };
+        *self = Picker { revision, listed_at: revision, ..Default::default() };
     }
 
     /// The choices in order (section by section).
@@ -248,7 +258,7 @@ impl Picker {
             .into_iter()
             .enumerate()
             .map(|(n, (_, _, c))| {
-                json!({"id": format!("picker:{}:{n}", mode.name()), "label": format!("Open {}", c.label), "detail": c.detail, "enabled": c.enabled,
+                json!({"id": format!("picker:{}:{n}", mode.name()), "picker_revision": self.listed_at, "label": format!("Open {}", c.label), "detail": c.detail, "enabled": c.enabled,
                     "disabled_reason": (!c.enabled).then(|| format!("{}: {}", c.label, c.detail)), "action": action(&c.document)})
             })
             .collect();
@@ -279,19 +289,22 @@ pub(crate) enum Activation {
     Closed(ViewerMode),
 }
 
-/// A `system_ui` activation of a `picker:*` id: (id, the optional `text`).
-pub(crate) fn activation(args: &Map<String, Value>) -> Option<(String, Option<String>)> {
+/// A `system_ui` activation of a `picker:*` id: (id, the optional `text`,
+/// the optional `picker_revision` it was listed at).
+pub(crate) fn activation(args: &Map<String, Value>) -> Option<(String, Option<String>, Option<u64>)> {
     let action = args.get("action")?;
     if action["operation"] != "activate" {
         return None;
     }
     let id = action["id"].as_str().filter(|id| id.starts_with("picker:"))?;
-    Some((id.to_string(), action.get("text").and_then(Value::as_str).map(str::to_string)))
+    Some((id.to_string(), action.get("text").and_then(Value::as_str).map(str::to_string), action.get("picker_revision").and_then(Value::as_u64)))
 }
 
 /// Apply a `picker:*` activation: an entry or the path field becomes the
-/// switch it asks for; Close closes. Err names why nothing happened.
-pub(crate) fn activate(world: &mut World, id: &str, text: Option<&str>) -> Result<Activation, String> {
+/// switch it asks for; Close closes. An entry (`picker:<mode>:<n>`) given a
+/// `picker_revision` other than the one it is listed at now is refused, naming
+/// both (its index may name another document). Err names why nothing happened.
+pub(crate) fn activate(world: &mut World, id: &str, text: Option<&str>, ui_revision: Option<u64>) -> Result<Activation, String> {
     let Some(mut picker) = world.get_resource_mut::<Picker>() else { return Err(format!("{id}: no document picker is open in this window")) };
     let Some(mode) = picker.open else {
         return Err(format!("{id}: no document picker is open (it opens when a mode with no document is chosen in the mode switcher, or with system_ui mode:<mode>)"));
@@ -312,6 +325,11 @@ pub(crate) fn activate(world: &mut World, id: &str, text: Option<&str>) -> Resul
             let (m, n) = rest.split_once(':').ok_or_else(|| format!("{id}: not a picker control (picker:<mode>:<n>, picker:path or picker:close)"))?;
             if m != mode.name() {
                 return Err(format!("{id}: the open picker is {}'s (picker:{}:<n>)", mode.name(), mode.name()));
+            }
+            if let Some(listed) = ui_revision
+                && listed != picker.listed_at
+            {
+                return Err(format!("{id} was listed at picker_revision {listed}; the picker is now at {}; list the controls again", picker.listed_at));
             }
             let n: usize = n.parse().map_err(|_| format!("{id}: <n> is not a number"))?;
             let flat = picker.flat();
@@ -392,6 +410,7 @@ pub(crate) fn receive(
         }
         picker.found = Some(sources);
         picker.revision += 1;
+        picker.listed_at = picker.revision;
     }
     if path_field::receive(&mut picker.listing, &mut picker.listed) {
         picker.revision += 1;

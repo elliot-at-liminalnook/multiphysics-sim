@@ -63,7 +63,7 @@ fn saved_runs_replay_in_the_background_and_cancel() {
     let stopped = sim_runtime::run_history::replay_with_cancel(&long, &registry, Some(&std::sync::atomic::AtomicBool::new(true)));
     assert_eq!(stopped.unwrap_err(), system_builder::CANCELLED);
     assert!(started.elapsed().as_secs_f64() < 2., "{:?}", started.elapsed());
-    let state = b.state_json();
+    let state = b.state_json(&Default::default());
     assert_eq!(state["replay"]["outcomes"].as_array().unwrap().len(), 3);
     std::fs::remove_dir_all(&dir).ok();
 }
@@ -91,7 +91,7 @@ fn live_run_step_and_reset_share_the_session_and_keep_work() {
     let key = observed[0].clone();
     b.last_description = Some(compiled.description.clone());
     assert!(b.run_step().is_err() && b.run_reset().is_err(), "no run: refused");
-    assert_eq!(b.state_json()["live_run"], serde_json::Value::Null);
+    assert_eq!(b.state_json(&Default::default())["live_run"], serde_json::Value::Null);
     b.run = Some(LiveRun::spawn(document.clone(), registry.clone(), observed, compiled.description.id.clone(), Fidelity::Detailed));
     let shared = b.run.as_ref().unwrap().worker.shared().clone();
     let status = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.clone());
@@ -115,7 +115,7 @@ fn live_run_step_and_reset_share_the_session_and_keep_work() {
     let after = status().unwrap();
     assert!((after.time - before.time - interval).abs() < 1e-9, "{} -> {} with dt {interval}", before.time, after.time);
     assert_eq!(b.history(&key).last().map(|p| p[0]), Some(after.time), "the stepped point is on the trace");
-    let state = b.state_json();
+    let state = b.state_json(&Default::default());
     assert_eq!((state["realtime"].as_bool(), state["live_run"]["step"].as_u64(), state["live_run"]["phase"].as_str(), state["live_run"]["fidelity"].as_str()), (Some(false), Some(after.step), Some("paused"), Some("detailed")));
     // Reset keeps the run so far, then returns to t = 0 with no history.
     let runs = b.runs.len();
@@ -128,7 +128,7 @@ fn live_run_step_and_reset_share_the_session_and_keep_work() {
     let reset = status().unwrap();
     assert_eq!((reset.time, reset.step, reset.phase, reset.generation), (0., 0, sim_inspect::live::Phase::Paused, before.generation + 1));
     assert!(b.history(&key).is_empty());
-    assert_eq!(b.state_json()["live_run"]["time"].as_f64(), Some(0.));
+    assert_eq!(b.state_json(&Default::default())["live_run"]["time"].as_f64(), Some(0.));
     // Step once from t = 0, resume briefly, pause and save.
     b.run_step().unwrap();
     until(&|| status().is_some_and(|x| x.step == 1));
@@ -201,7 +201,7 @@ fn grab_swap_keeps_the_run_fidelity_and_marks_it_edited() {
     while shared.lock().unwrap().running && started.elapsed().as_secs() < 60 {
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
-    assert_eq!(b.state_json()["live_run"]["phase"].as_str(), Some("paused"));
+    assert_eq!(b.state_json(&Default::default())["live_run"]["phase"].as_str(), Some("paused"));
     let record = sim_runtime::run_history::load(&b.save_run("grab").unwrap()).unwrap();
     assert_eq!((record.fidelity, record.edited_while_running(), record.content_hash.clone()), (Some(Fidelity::Realtime), true, expected.content_hash()));
     // Release: back to the file value, still edited.
@@ -261,7 +261,7 @@ fn realtime_runs_save_the_profile_they_ran_and_replay_exactly() {
     let o = wait(&mut b);
     assert_eq!((o.status, o.max_rel_diff, o.fidelity.as_str()), ("done", Some(0.), "realtime"), "{o:?}");
     assert!(o.headline().starts_with("Reproduced exactly") && o.headline().ends_with("realtime"), "{}", o.headline());
-    let state = b.state_json();
+    let state = b.state_json(&Default::default());
     assert_eq!(state["replay"]["outcomes"][0]["fidelity"], "realtime");
     // The detailed document (what was recorded before) does not reproduce it.
     let mut detailed = record.clone();

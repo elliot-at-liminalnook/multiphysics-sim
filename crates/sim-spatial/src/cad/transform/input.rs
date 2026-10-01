@@ -63,7 +63,7 @@ pub(in crate::cad) fn restore_cursor(mut commands: Commands, windows: Query<(Ent
 /// surfaces' key system turns Escape into closing the surface or
 /// cancelling the form then (`CadSurface` closed, `CadFormCancel`), and a
 /// tool key would change the tool under the op's form.
-pub(in crate::cad) fn keys(keys: Option<Res<ButtonInput<KeyCode>>>, focus: Option<Res<CadInputFocus>>, doc: Option<ResMut<CadDocument>>, mut out: MessageWriter<Act<CadAction>>) {
+pub(in crate::cad) fn keys(keys: Option<Res<ButtonInput<KeyCode>>>, focus: Option<Res<CadInputFocus>>, doc: Option<ResMut<CadDocument>>, mut out: MessageWriter<Act<CadAction>>, selection: crate::cad::selection::CadSelection) {
     let Some(keys) = keys else { return };
     if focus.is_some_and(|f| f.0) {
         return;
@@ -92,7 +92,7 @@ pub(in crate::cad) fn keys(keys: Option<Res<ButtonInput<KeyCode>>>, focus: Optio
     } else {
         return;
     };
-    let Some(found) = crate::cad::panel::controls(&doc).into_iter().find(|c| c.id == id) else { return };
+    let Some(found) = crate::cad::panel::controls(&doc, &selection.items()).into_iter().find(|c| c.id == id) else { return };
     match found.ready {
         Ok(()) => {
             out.write(Act::ui(found.action));

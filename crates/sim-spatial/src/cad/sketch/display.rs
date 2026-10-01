@@ -13,6 +13,8 @@
 use super::CadSketches;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::document::CadDocument;
+use crate::cad::selection::{CadItems, CadSelection};
+use sim_runtime::cad_client::SelectionItem;
 use crate::cad::view::CadView;
 use bevy::prelude::*;
 
@@ -43,10 +45,11 @@ pub(super) struct Drawn {
     lines: Vec<(Vec<Vec3>, bool)>,
 }
 
-/// The shown sketches, in walk order, each with whether it is selected.
-pub(crate) fn shown(doc: &CadDocument) -> Vec<(String, bool)> {
+/// The shown sketches, in walk order, each with whether it is selected
+/// (`selection`: the shared selection's CAD items).
+pub(crate) fn shown(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<(String, bool)> {
     let Some(state) = &doc.doc else { return Vec::new() };
-    let selected = doc.selected_nodes();
+    let selected = selection.nodes();
     state.nodes.iter().filter(|n| n.kind == "sketch" && n.effective_visible).map(|n| (n.id.clone(), selected.contains(&n.id))).collect()
 }
 
@@ -68,12 +71,12 @@ pub(crate) fn lines(sketches: &CadSketches, shown: &[(String, bool)]) -> Vec<(Ve
 }
 
 /// Present: the sketches' curves (display only).
-fn draw(doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, sketches: Option<Res<CadSketches>>, mut gizmos: Gizmos<SketchGizmos>, mut drawn: Local<Drawn>) {
+fn draw(doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, sketches: Option<Res<CadSketches>>, mut gizmos: Gizmos<SketchGizmos>, mut drawn: Local<Drawn>, selection: CadSelection) {
     let (Some(doc), Some(view), Some(sketches)) = (doc, view, sketches) else { return };
     if !view.valid {
         return;
     }
-    let key: Key = (doc.generation, sketches.epoch, shown(&doc));
+    let key: Key = (doc.generation, sketches.epoch, shown(&doc, &selection.items()));
     if drawn.key.as_ref() != Some(&key) {
         drawn.lines = lines(&sketches, &key.2).into_iter().map(|(l, s)| (l.into_iter().map(|p| Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32)).collect(), s)).collect();
         drawn.key = Some(key);

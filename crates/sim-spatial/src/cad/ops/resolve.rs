@@ -43,15 +43,15 @@ pub(crate) fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
     doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).map(|n| n.kind.as_str())
 }
 
-/// Resolve `entry`'s selection: `items` (explicit), else the document's
-/// selection. Refused by name when a node is not in the shown tree, when
+/// Resolve `entry`'s selection: `items` (explicit), else the shared
+/// selection's CAD items (`env.selection`). Refused by name when a node is not in the shown tree, when
 /// the selection's face or edge indices were read at an older revision,
 /// when an index does not exist in the shown topology, or when the
 /// selection does not fit `entry.needs` (`entry.refusal`).
 pub(super) fn resolve(entry: &OpEntry, doc: &CadDocument, env: &Env, items: Option<&[SelectionItem]>) -> Result<Resolved, String> {
     let (topology, view) = (env.topology, env.view);
     let explicit = items.is_some();
-    let items: &[SelectionItem] = items.unwrap_or(&doc.selection);
+    let items: &[SelectionItem] = items.unwrap_or(env.selection);
     let shown = doc.shown_revision();
     let mut r = Resolved { view_dir: view.filter(|v| v.valid).map(|v| mm(-view_back(v))), snap: doc.ops.cursor_snap.filter(|(at, _)| *at == shown).map(|(_, p)| p), revision: shown, ..Default::default() };
     for SelectionItem(node, kind, index) in items {
@@ -72,7 +72,7 @@ pub(super) fn resolve(entry: &OpEntry, doc: &CadDocument, env: &Env, items: Opti
         // (`CadMeshes::face_at`); a selection first seen before an edit may
         // name faces RoboCAD has renumbered since.
         if !explicit {
-            let seen = selection_revision(doc);
+            let seen = selection_revision(doc, env.selection);
             if seen != shown {
                 return Err(format!("the selection was made at revision {seen}; RoboCAD's faces may be renumbered since (now {shown}): reselect"));
             }

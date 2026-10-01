@@ -542,13 +542,13 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
 
 /// This part's `system_ui` controls: (id, label, action, ready).
 pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    controls_of(cx.doc, cx.display.as_deref(), &context(cx))
+    controls_of(cx.doc, &cx.shared.items(), cx.display.as_deref(), &context(cx))
 }
 
-/// The controls for `doc`, the display state (None: no 3D view) and what
-/// `cad_section` reads (`context`): the toolbar's buttons write the same
-/// actions.
-pub(in crate::cad) fn controls_of(doc: &crate::cad::document::CadDocument, shown: Option<&CadDisplay>, context: &SectionContext) -> Vec<(String, String, CadAction, Result<(), String>)> {
+/// The controls for `doc` and `selection` (the shared selection's CAD
+/// items), the display state (None: no 3D view) and what `cad_section`
+/// reads (`context`): the toolbar's buttons write the same actions.
+pub(in crate::cad) fn controls_of(doc: &crate::cad::document::CadDocument, selection: &[sim_runtime::cad_client::SelectionItem], shown: Option<&CadDisplay>, context: &SectionContext) -> Vec<(String, String, CadAction, Result<(), String>)> {
     let ready: Result<(), String> = if shown.is_some() { Ok(()) } else { Err("CAD mode's display state belongs to its 3D view, and this window has none".into()) };
     let display = |args: DisplayArgs| CadAction::CadDisplay(args);
     let mut out = Vec::new();
@@ -572,7 +572,7 @@ pub(in crate::cad) fn controls_of(doc: &crate::cad::document::CadDocument, shown
     let has_plane = shown.is_some_and(|d| d.section.plane.is_some());
     let need_plane = |r: &Result<(), String>| r.clone().and_then(|()| if has_plane { Ok(()) } else { Err("no section plane yet: turn the section on first".to_string()) });
     out.push(("cad:section:rotate".into(), "Rotate the section plane 90° about Z".into(), section(SectionArgs { rotate: true, ..default() }), need_plane(&ready)));
-    let first = doc.selected_nodes().into_iter().next();
+    let first = selection.first().map(|i| i.0.clone());
     let exact_ready = need_plane(&ready).and_then(|()| {
         let d = shown.expect("ready implies a display");
         if !d.section.enabled {

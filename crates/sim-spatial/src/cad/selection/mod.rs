@@ -12,9 +12,16 @@
 //!   `CadSelectSameMaterial` and `CadEdgesToFaces`. The 3D clicks
 //!   (`pick`), the tree rows, the mode strip and buttons (`overlay`), the
 //!   Alt menu, the keys, `system_ui` and REST all write these actions.
+//! - **One owner**: the items are the shared selection's (`crate::selection`,
+//!   `Item::Cad` under CAD's registry entry; [`shared`]). Every arm changes
+//!   them through `Selection::apply` with a `SelectionAction` (Ctrl toggles,
+//!   Shift adds, otherwise set: [`op`]), after the same validation as before.
 //! - **Push** ([`publish`]): after a selection or mode change the panels are
 //!   touched and, when connected and changed, the items and the mode go to
 //!   RoboCAD's `PUT /selection` (`sync::push_selection`, one at a time).
+//!   A change another writer made (an `Act<SelectionAction>`, a re-check
+//!   after a new tree) is pushed once by [`publish_changes`]; an adopted
+//!   RoboCAD selection is not pushed back.
 //!   A hover is display only: it neither touches the panels nor is pushed.
 //! - **Status**: as RoboCAD's `selection_changed`, "n selected" (or the
 //!   empty status, "Ready") after a selection change; "Selection mode: m"
@@ -44,8 +51,15 @@
 //!   acceptable for one release; a `Pool::Compute` job would need the
 //!   handler to answer Pending and a second apply path for a one-shot
 //!   gesture.
+mod shared;
+
+pub(crate) use shared::{CadItems, CadSelection, Shared, View, cad_id, cad_items, ensure_registered, follow_tree, reopen, source};
+#[cfg(test)]
+pub(crate) use shared::Fixture;
+
 use super::actions::{CadAction, Cx};
 use super::document::{CadDocument, SelectMode};
+use crate::selection::Op;
 use super::mesh::CadMeshes;
 use super::topology::CadTopology;
 use super::view::CadView;
@@ -82,19 +96,20 @@ pub(super) fn build(app: &mut App) {
 /// The selection actions (`actions::handle` forwards them here).
 pub(super) fn handle(action: &CadAction, _call: &mut Call, cx: &mut Cx) -> Outcome {
     let doc = &mut *cx.doc;
+    let shared = &mut cx.shared;
     let result = match action {
-        CadAction::CadSelect { ids, items, extend, toggle } => select(doc, ids, items, *extend, *toggle),
-        CadAction::CadSelectMode { mode } => Ok(set_mode(doc, *mode)),
+        CadAction::CadSelect { ids, items, extend, toggle, picked_at } => select(doc, shared, ids, items, *extend, *toggle, *picked_at),
+        CadAction::CadSelectMode { mode } => Ok(set_mode(doc, shared, *mode)),
         CadAction::CadHover { item } => Ok(hover(doc, item.as_ref())),
         CadAction::CadBoxSelect { rect, extend } => match (cx.meshes.as_deref(), cx.view) {
-            (Some(meshes), Some(view)) if view.valid => box_select(doc, meshes, cx.topology.as_deref(), view, *rect, *extend),
+            (Some(meshes), Some(view)) if view.valid => box_select(doc, shared, meshes, cx.topology.as_deref(), view, *rect, *extend),
             _ => Err("box select needs CAD mode's 3D view, which is not shown yet in this window".to_string()),
         },
         CadAction::CadCandidates { items, extend, toggle } => candidates(doc, items, *extend, *toggle),
-        CadAction::CadSelectAll => Ok(select_all(doc)),
-        CadAction::CadInvertSelection => Ok(invert(doc)),
-        CadAction::CadSelectSameMaterial => same_material(doc),
-        CadAction::CadEdgesToFaces => edges_to_faces(doc, cx.meshes.as_deref(), cx.topology.as_deref()),
+        CadAction::CadSelectAll => select_all(doc, shared),
+        CadAction::CadInvertSelection => invert(doc, shared),
+        CadAction::CadSelectSameMaterial => same_material(doc, shared),
+        CadAction::CadEdgesToFaces => edges_to_faces(doc, shared, cx.meshes.as_deref(), cx.topology.as_deref()),
         _ => Err("not a selection action".to_string()),
     };
     Outcome::Done(result)
@@ -102,36 +117,51 @@ pub(super) fn handle(action: &CadAction, _call: &mut Call, cx: &mut Cx) -> Outco
 
 /// After any selection or mode change: the panels refresh and, when
 /// connected and RoboCAD's copy differs (or a push is in flight, which then
-/// sends the newest once it answers), the items and the mode are pushed.
+/// sends the newest once it answers), the shared selection's CAD items and
+/// the mode are pushed. The change count it saw is recorded
+/// (`published_selection`), so [`publish_changes`] does not push it again.
 /// Returns whether a push was started or queued. Part D calls this when a
 /// tool switches the mode (push/pull to face mode).
-pub(super) fn publish(doc: &mut CadDocument) -> bool {
+pub(super) fn publish(doc: &mut CadDocument, shared: View) -> bool {
     doc.touch();
-    if !doc.connected() {
+    doc.published_selection = shared.changed();
+    if !doc.connected() || shared.id().is_none() {
         return false;
     }
-    if doc.selection_job.is_some() || differs_from_remote(doc) {
-        super::sync::push_selection(doc);
+    let items = shared.items();
+    if doc.selection_job.is_some() || differs_from_remote(doc, &items) {
+        super::sync::push_selection(doc, items);
         return true;
     }
     false
 }
 
+/// A change any writer made since CAD last published or adopted (an
+/// `Act<SelectionAction>` applied by the shared system, a re-check after a
+/// new tree, an op's clear): published once (`sync::receive`, JobResults).
+/// An adopted RoboCAD selection is recorded as published when adopted, so
+/// it is never pushed back.
+pub(super) fn publish_changes(doc: &mut CadDocument, shared: View) {
+    if shared.changed() != doc.published_selection {
+        publish(doc, shared);
+    }
+}
+
 /// Whether RoboCAD's last known selection (or, with a desktop window, its
-/// mode) differs from the viewer's.
-pub(super) fn differs_from_remote(doc: &CadDocument) -> bool {
+/// mode) differs from `items`, the shared selection's CAD items.
+pub(super) fn differs_from_remote(doc: &CadDocument, items: &[SelectionItem]) -> bool {
     let gui = doc.health.as_ref().is_some_and(|h| h.gui);
-    doc.selection != doc.remote_selection || (gui && doc.remote_mode != Some(doc.select_mode))
+    items != doc.remote_selection.as_slice() || (gui && doc.remote_mode != Some(doc.select_mode))
 }
 
 /// The answer every selection change gives.
-fn answer(doc: &CadDocument, pushed: bool) -> Value {
-    json!({"selection": doc.selection, "mode": doc.select_mode, "pushed": pushed, "connected": doc.connected()})
+fn answer(doc: &CadDocument, shared: &Shared, pushed: bool) -> Value {
+    json!({"selection": shared.items(), "mode": doc.select_mode, "pushed": pushed, "connected": doc.connected()})
 }
 
 /// RoboCAD's `selection_changed` status line: "n selected", or the empty status.
-fn selection_status(doc: &mut CadDocument) {
-    let n = doc.selection.len();
+fn selection_status(doc: &mut CadDocument, shared: &Shared) {
+    let n = shared.items().len();
     doc.status = if n == 0 { None } else { Some(Ok(format!("{n} selected"))) };
 }
 
@@ -152,55 +182,51 @@ fn validate(doc: &CadDocument, items: &[SelectionItem]) -> Result<(), String> {
     Ok(())
 }
 
-/// Apply `items` to `selection` as RoboCAD's `SelectTool._apply`: Ctrl
-/// toggles each (it wins over Shift), Shift appends the ones not selected,
-/// otherwise they replace the selection (duplicates dropped).
-pub(super) fn combine(selection: &mut Vec<SelectionItem>, items: Vec<SelectionItem>, extend: bool, toggle: bool) {
+/// How RoboCAD's `SelectTool._apply` combines items with the selection, as
+/// the shared selection's op: Ctrl toggles each (it wins over Shift), Shift
+/// appends the ones not selected, otherwise they replace the selection
+/// (duplicates dropped). `Selection::apply` does exactly these.
+pub(super) fn op(extend: bool, toggle: bool) -> Op {
     if toggle {
-        for item in items {
-            match selection.iter().position(|s| *s == item) {
-                Some(i) => {
-                    selection.remove(i);
-                }
-                None => selection.push(item),
-            }
-        }
-        return;
-    }
-    if !extend {
-        selection.clear();
-    }
-    for item in items {
-        if !selection.contains(&item) {
-            selection.push(item);
-        }
+        Op::Toggle
+    } else if extend {
+        Op::Add
+    } else {
+        Op::Set
     }
 }
 
 /// `CadSelect`: `ids` as body items, then `items`; replace, extend or toggle.
-/// Closes the Alt menu.
-pub(super) fn select(doc: &mut CadDocument, ids: &[String], items: &[SelectionItem], extend: bool, toggle: bool) -> Result<Value, String> {
+/// Closes the Alt menu. `picked_at`: the shown revision a 3D pick was made
+/// at; its face, edge, vertex, point and curve items carry it (their
+/// indices belong to it), so one picked against a tree that has since
+/// advanced is refused by name. Body items name a node, not an index, and
+/// are stamped with the current revision.
+pub(super) fn select(doc: &mut CadDocument, shared: &mut Shared, ids: &[String], items: &[SelectionItem], extend: bool, toggle: bool, picked_at: Option<u64>) -> Result<Value, String> {
     let mut wanted: Vec<SelectionItem> = ids.iter().map(|id| SelectionItem(id.clone(), "body".into(), 0)).collect();
     wanted.extend(items.iter().cloned());
     validate(doc, &wanted)?;
-    let mut selection = std::mem::take(&mut doc.selection);
-    combine(&mut selection, wanted, extend, toggle);
-    doc.selection = selection;
+    let stamped = wanted.into_iter().map(|i| {
+        let revision = if i.1 == "body" { None } else { picked_at };
+        (i, revision)
+    });
+    shared.apply(op(extend, toggle), stamped)?;
     doc.candidates = None;
-    selection_status(doc);
-    let pushed = publish(doc);
-    Ok(answer(doc, pushed))
+    selection_status(doc, shared);
+    let pushed = publish(doc, shared.view());
+    Ok(answer(doc, shared, pushed))
 }
 
 /// `CadSelectMode`: RoboCAD's `set_selection_mode` (the selection is cleared).
-pub(super) fn set_mode(doc: &mut CadDocument, mode: SelectMode) -> Value {
+pub(super) fn set_mode(doc: &mut CadDocument, shared: &mut Shared, mode: SelectMode) -> Value {
     doc.select_mode = mode;
-    doc.selection.clear();
+    // Refused only without a CAD entry, which holds no items to clear.
+    let _ = shared.clear();
     doc.hover = None;
     doc.candidates = None;
     doc.status = Some(Ok(format!("Selection mode: {}", mode.name())));
-    let pushed = publish(doc);
-    answer(doc, pushed)
+    let pushed = publish(doc, shared.view());
+    answer(doc, shared, pushed)
 }
 
 /// `CadHover`: display only, so no `touch` (that would rebuild the panels).
@@ -238,27 +264,27 @@ fn visible_bodies(doc: &CadDocument, except: &[String]) -> Vec<SelectionItem> {
 }
 
 /// `CadSelectAll`: RoboCAD's `select_all`.
-pub(super) fn select_all(doc: &mut CadDocument) -> Value {
-    doc.selection = visible_bodies(doc, &[]);
+pub(super) fn select_all(doc: &mut CadDocument, shared: &mut Shared) -> Result<Value, String> {
+    shared.set(visible_bodies(doc, &[]))?;
     doc.candidates = None;
-    selection_status(doc);
-    let pushed = publish(doc);
-    answer(doc, pushed)
+    selection_status(doc, shared);
+    let pushed = publish(doc, shared.view());
+    Ok(answer(doc, shared, pushed))
 }
 
 /// `CadInvertSelection`: RoboCAD's `invert_selection` (by node).
-pub(super) fn invert(doc: &mut CadDocument) -> Value {
-    let current = doc.selected_nodes();
-    doc.selection = visible_bodies(doc, &current);
+pub(super) fn invert(doc: &mut CadDocument, shared: &mut Shared) -> Result<Value, String> {
+    let current = shared.items().nodes();
+    shared.set(visible_bodies(doc, &current))?;
     doc.candidates = None;
-    selection_status(doc);
-    let pushed = publish(doc);
-    answer(doc, pushed)
+    selection_status(doc, shared);
+    let pushed = publish(doc, shared.view());
+    Ok(answer(doc, shared, pushed))
 }
 
 /// `CadSelectSameMaterial`: RoboCAD's `same_material` on the first selected node.
-pub(super) fn same_material(doc: &mut CadDocument) -> Result<Value, String> {
-    let Some(first) = doc.selected().map(str::to_string) else {
+pub(super) fn same_material(doc: &mut CadDocument, shared: &mut Shared) -> Result<Value, String> {
+    let Some(first) = shared.items().first_node().map(str::to_string) else {
         return Err("Select Same Material: nothing is selected; select a body first".to_string());
     };
     let Some(state) = &doc.doc else { return Err("Select Same Material: RoboCAD has not sent the document yet".to_string()) };
@@ -274,19 +300,19 @@ pub(super) fn same_material(doc: &mut CadDocument) -> Result<Value, String> {
         .filter(|n| MATERIAL_KINDS.contains(&n.kind.as_str()) && n.material.as_deref() == Some(material.as_str()))
         .map(|n| SelectionItem(n.id.clone(), "body".into(), 0))
         .collect();
-    doc.selection = same;
+    shared.set(same)?;
     doc.candidates = None;
-    selection_status(doc);
-    let pushed = publish(doc);
-    let mut out = answer(doc, pushed);
+    selection_status(doc, shared);
+    let pushed = publish(doc, shared.view());
+    let mut out = answer(doc, shared, pushed);
     out["material"] = json!(material);
     Ok(out)
 }
 
 /// `CadEdgesToFaces`: RoboCAD's `convert_edges_to_faces` from the drawn
 /// tessellation (see the module doc); the mode becomes face.
-pub(super) fn edges_to_faces(doc: &mut CadDocument, meshes: Option<&CadMeshes>, topology: Option<&CadTopology>) -> Result<Value, String> {
-    let edges = doc.selected_of("edge");
+pub(super) fn edges_to_faces(doc: &mut CadDocument, shared: &mut Shared, meshes: Option<&CadMeshes>, topology: Option<&CadTopology>) -> Result<Value, String> {
+    let edges = shared.items().of_kind("edge");
     if edges.is_empty() {
         return Err("Edges → faces: no edges are selected (edge mode, E)".to_string());
     }
@@ -320,13 +346,13 @@ pub(super) fn edges_to_faces(doc: &mut CadDocument, meshes: Option<&CadMeshes>, 
         }
     }
     let n = faces.len();
-    doc.selection = faces;
+    shared.set(faces)?;
     doc.select_mode = SelectMode::Face;
     doc.hover = None;
     doc.candidates = None;
     doc.status = Some(Ok(format!("Selection: {} edge{} → {n} face{}", edges.len(), if edges.len() == 1 { "" } else { "s" }, if n == 1 { "" } else { "s" })));
-    let pushed = publish(doc);
-    let mut out = answer(doc, pushed);
+    let pushed = publish(doc, shared.view());
+    let mut out = answer(doc, shared, pushed);
     out["note"] = json!("faces found from RoboCAD's tessellation (triangles with a side along each edge's sampled polyline), not RoboCAD's kernel");
     Ok(out)
 }
@@ -483,18 +509,18 @@ pub(super) fn box_items(doc: &CadDocument, meshes: &CadMeshes, topology: Option<
 
 /// `CadBoxSelect`: RoboCAD's `_box_select` (without `extend` the selection
 /// is replaced; found items not yet selected are appended).
-pub(super) fn box_select(doc: &mut CadDocument, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, rect: [f32; 4], extend: bool) -> Result<Value, String> {
+pub(super) fn box_select(doc: &mut CadDocument, shared: &mut Shared, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, rect: [f32; 4], extend: bool) -> Result<Value, String> {
     if rect.iter().any(|v| !v.is_finite()) {
         return Err("box select: rect must be four finite numbers [x0, y0, x1, y1]".to_string());
     }
     let sorted = [rect[0].min(rect[2]), rect[1].min(rect[3]), rect[0].max(rect[2]), rect[1].max(rect[3])];
     let (found, pending) = box_items(doc, meshes, topology, view, sorted);
     let n = found.len();
-    combine(&mut doc.selection, found, extend, false);
+    shared.apply(op(extend, false), found.into_iter().map(|i| (i, None)))?;
     doc.candidates = None;
-    selection_status(doc);
-    let pushed = publish(doc);
-    let mut out = answer(doc, pushed);
+    selection_status(doc, shared);
+    let pushed = publish(doc, shared.view());
+    let mut out = answer(doc, shared, pushed);
     out["found"] = json!(n);
     // A failed fetch is retried only on the next revision or cad_refresh: name it, not "loading".
     let (failed, loading): (Vec<&String>, Vec<&String>) = pending.iter().partition(|id| topology.and_then(|t| t.error(id)).is_some());

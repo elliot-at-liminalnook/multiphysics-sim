@@ -191,9 +191,22 @@ pub(super) fn check(view: &RobotView, action: &RobotAction) -> Result<(), String
 fn planar(view: &mut RobotView) -> Result<&mut PlanarView, String> {
     view.planar.as_mut().ok_or_else(|| "the planar v2 file is no longer loaded".to_string())
 }
+/// `SelectLink`: link `index` of the loaded model (a body of a planar file),
+/// checked against the name the control carries, becomes the one selected
+/// link of the Robot document (`picked::select`, `Selection::apply`).
+fn select_link(view: &mut RobotView, selection: &mut Selection, registry: &DocumentRegistry, index: usize, name: &str) -> Result<(), String> {
+    let actual = match view.link_name(index) {
+        None => return Err(format!("no link {index} in the loaded model; request controls again")),
+        Some(actual) if actual != name => return Err(format!("link {index} is `{actual}`, not `{name}`; request controls again")),
+        Some(actual) => actual.to_string(),
+    };
+    picked::select(selection, registry, index, actual)?;
+    view.scroll_to = Some(0.0);
+    Ok(())
+}
 /// A control action on a planar (v2) file: validated by [`check`], then applied
 /// to the planar run (Reset rebuilds from the loaded model; Reload re-reads the file).
-fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction) -> Result<(), String> {
+fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, registry: &DocumentRegistry, action: RobotAction) -> Result<(), String> {
     check(view, &action)?;
     match action {
         RobotAction::Run { action } => planar(view)?.run.act(action)?,
@@ -211,11 +224,10 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction)
         }
         // Checked above; applied in `receive` when the worker finishes.
         RobotAction::Reload { trigger } => view.source.as_mut().ok_or("a preset is not reloaded; reload is for --robot FILE")?.start(trigger)?,
-        RobotAction::SelectLink { index, .. } => {
-            view.selected = Some(index);
-            view.scroll_to = Some(0.0);
+        RobotAction::SelectLink { index, name } => select_link(view, selection, registry, index, &name)?,
+        RobotAction::ClearSelection => {
+            picked::clear(selection, registry)?;
         }
-        RobotAction::ClearSelection => view.selected = None,
         RobotAction::ShowSection { section } => {
             view.section = section;
             view.scroll_to = Some(0.0);
@@ -235,9 +247,9 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction)
 }
 /// A control action: validated by [`check`] (motion and save validate in
 /// their own handler), then applied.
-fn dispatch(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction) -> Result<(), String> {
+fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, registry: &DocumentRegistry, action: RobotAction) -> Result<(), String> {
     if view.planar.is_some() {
-        return dispatch_planar(view, orbit, action);
+        return dispatch_planar(view, orbit, selection, registry, action);
     }
     if let RobotAction::Motion { request } = action {
         // Validated (and a refusal recorded) inside the one motion handler.
@@ -270,11 +282,10 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction) -> Res
         }
         RobotAction::JogTo { joint, target } => view.run.as_mut().ok_or("the robot has not loaded")?.jog(&joint, target)?,
         RobotAction::SelectJoint { .. } => unreachable!("refused by `check` without a planar file"),
-        RobotAction::SelectLink { index, .. } => {
-            view.selected = Some(index);
-            view.scroll_to = Some(0.0);
+        RobotAction::SelectLink { index, name } => select_link(view, selection, registry, index, &name)?,
+        RobotAction::ClearSelection => {
+            picked::clear(selection, registry)?;
         }
-        RobotAction::ClearSelection => view.selected = None,
         RobotAction::ShowSection { section } => {
             view.section = section;
             view.scroll_to = Some(0.0);
@@ -316,7 +327,8 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction) -> Res
     Ok(())
 }
 /// The `system_ui` controls: (id, label, action), the table `Activate` resolves ids in.
-pub(super) fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
+/// `link`: the selected link (`picked::link`), whose joints get jog controls.
+pub(super) fn controls(view: &RobotView, link: Option<usize>) -> Vec<(String, String, RobotAction)> {
     if let Some(p) = &view.planar {
         return planar_controls(view, p);
     }
@@ -355,7 +367,7 @@ pub(super) fn controls(view: &RobotView) -> Vec<(String, String, RobotAction)> {
                 out.push((id, label, RobotAction::Recorded { action }));
             }
         }
-        for (joint, step) in jog_joints(view) {
+        for (joint, step) in jog_joints(view, link) {
             let unit = if step == JOG_STEP_M { "m" } else { "rad" };
             out.push((format!("jog:{joint}:-"), format!("Jog {joint} servo target −{step} {unit}"), RobotAction::Jog { joint: joint.clone(), delta: -step }));
             out.push((format!("jog:{joint}:+"), format!("Jog {joint} servo target +{step} {unit}"), RobotAction::Jog { joint, delta: step }));
@@ -450,10 +462,12 @@ fn recorded_controls() -> Vec<(String, String, RecordedAction)> {
 
 /// The one handler of robot mode's actions: REST reads and the view's own
 /// requests here, control actions through `dispatch` (validated by
-/// `check`). `Ok(None)`: the answer is `robot_state`.
-fn handle(view: &mut RobotView, orbit: &mut Orbit, action: &RobotAction) -> Result<Option<Value>, String> {
+/// `check`). `Ok(None)`: the answer is `robot_state`. The selected link is
+/// the shared selection's (`picked`).
+fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, registry: &mut DocumentRegistry, action: &RobotAction) -> Result<Option<Value>, String> {
+    let link = picked::link(selection, registry);
     match action {
-        RobotAction::State => Ok(Some(json!({"robot_state": view.state_json()}))),
+        RobotAction::State => Ok(Some(json!({"robot_state": view.state_json(link)}))),
         RobotAction::RobotState => Ok(None),
         RobotAction::Presets => {
             let (file, root) = (view.presets.clone()?, view.root.clone()?);
@@ -468,18 +482,20 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, action: &RobotAction) -> Resu
             next.ui_revision = view.ui_revision + 1;
             // The old view's run and playback threads are joined off the UI thread, as leave_robot does.
             crate::jobs::drop_off_thread(std::mem::replace(view, next), "the robot view");
+            // The Robot document is now the preset; the old one's link goes with it.
+            picked::opened_preset(selection, registry, id);
             Ok(None)
         }
         RobotAction::Controls => {
-            let items: Vec<Value> = controls(view).into_iter().map(|(id, label, action)| json!({"id": id, "label": label, "enabled": check(view, &action).is_ok(), "disabled_reason": check(view, &action).err(), "action": action})).collect();
-            Ok(Some(json!({"ui_revision": view.ui_revision, "ready": view.panels_ready, "controls": items, "state": view.state_json()})))
+            let items: Vec<Value> = controls(view, link).into_iter().map(|(id, label, action)| json!({"id": id, "label": label, "enabled": check(view, &action).is_ok(), "disabled_reason": check(view, &action).err(), "action": action})).collect();
+            Ok(Some(json!({"ui_revision": view.ui_revision, "ready": view.panels_ready, "controls": items, "state": view.state_json(link)})))
         }
         RobotAction::Activate { id, ui_revision } => {
             if !view.panels_ready || *ui_revision != view.ui_revision {
                 return Err("UI changed; request controls again before activating".into());
             }
-            let (_, _, action) = controls(view).into_iter().find(|(i, _, _)| i == id).ok_or("unknown control; request controls")?;
-            dispatch(view, orbit, action).map(|()| None)
+            let (_, _, action) = controls(view, link).into_iter().find(|(i, _, _)| i == id).ok_or("unknown control; request controls")?;
+            dispatch(view, orbit, selection, registry, action).map(|()| None)
         }
         RobotAction::Camera { focus, radius, yaw, pitch } => {
             let (radius, yaw, pitch) = (*radius, *yaw, *pitch);
@@ -493,7 +509,7 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, action: &RobotAction) -> Resu
             orbit.trackball = None;
             Ok(None)
         }
-        control => dispatch(view, orbit, control.clone()).map(|()| None),
+        control => dispatch(view, orbit, selection, registry, control.clone()).map(|()| None),
     }
 }
 
@@ -504,7 +520,9 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, action: &RobotAction) -> Resu
 /// own: activating one passes its `HardwareAction` on with
 /// `Origin::SystemUi`, and one that starts motion is refused here, naming it
 /// (the hardware handler refuses it again). Their ids are stable names, so
-/// they need no `ui_revision`.
+/// they need no `ui_revision`. Link selection goes through the shared
+/// selection (`picked`), applied here as its adapter.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<RobotAction>>>,
     mut in_flight: ResMut<InFlight<RobotAction>>,
@@ -513,6 +531,8 @@ pub(super) fn apply(
     orbit: Option<Single<&mut Orbit, With<RobotCamera>>>,
     hardware: Option<Res<super::hardware::Hardware>>,
     mut to_hardware: MessageWriter<Act<super::hardware::HardwareAction>>,
+    mut selection: ResMut<Selection>,
+    mut registry: ResMut<DocumentRegistry>,
 ) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the robot view is not open".into())));
@@ -521,7 +541,7 @@ pub(super) fn apply(
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let synced = hardware.as_ref().is_some_and(|hw| hw.sync.engaged());
         let result = match action {
-            _ if synced && call.remote() && moves_synced_motors(&view, action) => Err(SYNC_REMOTE_REFUSAL.to_string()),
+            _ if synced && call.remote() && moves_synced_motors(&view, picked::link(&selection, &registry), action) => Err(SYNC_REMOTE_REFUSAL.to_string()),
             RobotAction::Activate { id, .. } if id.starts_with("hardware:") => {
                 let found = hardware.as_ref().and_then(|hw| super::hardware::panel::controls(hw).into_iter().find(|(i, ..)| i == id));
                 match found {
@@ -536,7 +556,7 @@ pub(super) fn apply(
                     }
                 }
             }
-            RobotAction::Controls => handle(&mut view, &mut orbit, action).map(|answer| {
+            RobotAction::Controls => handle(&mut view, &mut orbit, &mut selection, &mut registry, action).map(|answer| {
                 answer.map(|mut listing| {
                     if let (Some(hw), Some(items)) = (hardware.as_ref(), listing.get_mut("controls").and_then(Value::as_array_mut)) {
                         for (id, label, action, ready) in super::hardware::panel::controls(hw) {
@@ -547,10 +567,10 @@ pub(super) fn apply(
                     listing
                 })
             }),
-            _ => handle(&mut view, &mut orbit, action),
+            _ => handle(&mut view, &mut orbit, &mut selection, &mut registry, action),
         };
         match call.origin {
-            Origin::Rest(_) => Outcome::Done(result.map(|answer| answer.unwrap_or_else(|| view.state_json()))),
+            Origin::Rest(_) => Outcome::Done(result.map(|answer| answer.unwrap_or_else(|| view.state_json(picked::link(&selection, &registry))))),
             Origin::Ui => {
                 view.run_message = result.err();
                 Outcome::Done(Ok(Value::Null))
@@ -568,11 +588,11 @@ const SYNC_REMOTE_REFUSAL: &str = "live motor sync is streaming this run's targe
 /// live motor sync streams to the bench: motion requests, jogs, Start and
 /// Step, and the run speed. Pause, Reset, replay and gait preview are not:
 /// each ends the sync session (`hardware::sync`'s stop rules).
-fn moves_synced_motors(view: &RobotView, action: &RobotAction) -> bool {
+fn moves_synced_motors(view: &RobotView, link: Option<usize>, action: &RobotAction) -> bool {
     match action {
         RobotAction::Motion { .. } | RobotAction::Jog { .. } | RobotAction::JogTo { .. } | RobotAction::Speed { .. } => true,
         RobotAction::Run { action } => matches!(action, RunAction::Start | RunAction::Step),
-        RobotAction::Activate { id, .. } => controls(view).into_iter().find(|(i, _, _)| i == id).is_some_and(|(_, _, a)| !matches!(a, RobotAction::Activate { .. }) && moves_synced_motors(view, &a)),
+        RobotAction::Activate { id, .. } => controls(view, link).into_iter().find(|(i, _, _)| i == id).is_some_and(|(_, _, a)| !matches!(a, RobotAction::Activate { .. }) && moves_synced_motors(view, link, &a)),
         _ => false,
     }
 }
@@ -585,10 +605,10 @@ mod tests;
 pub(super) use keys::{buttons, graph_key, motion_keys, overlay_keys, pick_link, planar_keys, speed_keys};
 
 /// Present: `/v1/robot_state`, at most every 100 ms.
-pub(super) fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<RobotView>) {
+pub(super) fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<RobotView>, selection: Res<Selection>, registry: Res<DocumentRegistry>) {
     let Some(mut rest) = rest else { return };
     if rest.0.snapshot_due() {
-        rest.0.publish("robot_state", view.state_json());
+        rest.0.publish("robot_state", view.state_json(picked::link(&selection, &registry)));
     }
 }
 

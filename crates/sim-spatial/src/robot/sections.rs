@@ -18,8 +18,8 @@ fn or_none(s: &str) -> &str {
 }
 
 /// Selected link: stored mass properties, material and the file's own text.
-pub(super) fn link_text(view: &RobotView, m: &PhysicalModel) -> String {
-    let Some((i, l)) = view.selected.and_then(|i| Some((i, m.links.get(i)?))) else {
+pub(super) fn link_text(view: &RobotView, m: &PhysicalModel, link: Option<usize>) -> String {
+    let Some((i, l)) = link.and_then(|i| Some((i, m.links.get(i)?))) else {
         return format!("Select a link in the list or the 3D view.\n\n{} links · {} joints · {} motors\n\nValues are shown exactly as stored (SI units, full precision).", m.links.len(), m.joints.len(), m.motors.len());
     };
     let mut t = format!("{}   (link {} of {})\n\n", l.name, i + 1, m.links.len());
@@ -58,8 +58,8 @@ pub(super) fn link_text(view: &RobotView, m: &PhysicalModel) -> String {
 }
 
 /// Joints touching the selected link (all joints when none is selected).
-pub(super) fn joints_text(view: &RobotView, m: &PhysicalModel) -> String {
-    let selected = view.selected.and_then(|i| m.links.get(i));
+pub(super) fn joints_text(view: &RobotView, m: &PhysicalModel, link: Option<usize>) -> String {
+    let selected = link.and_then(|i| m.links.get(i));
     let joints: Vec<_> = match selected {
         Some(l) => touching(m, &l.name).collect(),
         None => m.joints.iter().enumerate().collect(),

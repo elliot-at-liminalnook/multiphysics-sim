@@ -103,26 +103,34 @@ pub(super) fn wake_on_request(rest: Option<Res<Rest>>, proxy: Option<Res<bevy::w
 }
 
 /// Runs the identical command adapter without creating a window or GPU context.
+/// `assembly` is the description and spatial files the scene was read from
+/// (the Inspect document of its own selection and registry: the window's
+/// selection adapter, link exchange and projection run on them).
 pub fn headless(
     mut scene: SpatialScene,
     mut link: Option<SelectionLink>,
     mut server: sim_api::Server,
+    assembly: (std::path::PathBuf, std::path::PathBuf),
 ) -> ! {
     let (focus, radius) = scene.bounds();
     let mut camera = Orbit { focus, radius: radius * 2.9, yaw: 0.7, pitch: 0.4, centre: focus, extent: radius, ..Default::default() };
     // The window's rules; nothing steps a glide here, so a home request cuts.
     let rules = crate::camera::OrbitRules { glide_home: false, ..crate::inspect_view::spatial_rules() };
     let mut image_task = None;
+    let (description, spatial) = assembly;
+    let (mut selection, mut registry) = (crate::selection::Selection::default(), crate::document::DocumentRegistry::default());
+    registry.open(ViewerMode::Inspect, crate::document::DocumentKind::Assembly, crate::document::Source::Assembly { description, spatial });
+    let mut seen = None;
     loop {
+        // The launch's `--select` is adopted by the first projection.
+        crate::inspect_view::projection::project(&mut scene, &mut selection, &registry, &mut seen);
         if let Some(link) = &mut link {
-            if let Ok(target) = link.0.exchange(scene.selection.clone()) {
-                if target != scene.selection {
-                    let _ = scene.set_selection(target);
-                }
-            }
+            // A refused or failed exchange is dropped, as before.
+            let _ = crate::linked::exchange(link, &scene, Some((&mut selection, &registry)));
+            crate::inspect_view::projection::project(&mut scene, &mut selection, &registry, &mut seen);
         }
         scene.poll_live();
-        notes::sync(&mut scene, &mut camera);
+        notes::sync(&mut scene, &mut camera, crate::inspect::Owner::inspect(&mut selection, &registry).as_mut());
         if camera.home {
             // `fit`, `panels` and the exploded toggle: the bounds from the
             // current heading (as this server always framed them; the
@@ -130,7 +138,8 @@ pub fn headless(
             (camera.centre, camera.extent) = scene.bounds();
             camera.frame(&rules, 1.0, false);
         }
-        crate::inspect::serve_headless(&mut server, &mut scene, &mut camera, &mut image_task);
+        let owner = crate::inspect::Owner::inspect(&mut selection, &registry);
+        crate::inspect::serve_headless(&mut server, &mut scene, &mut camera, &mut image_task, owner);
         std::thread::sleep(std::time::Duration::from_millis(16));
     }
 }

@@ -20,7 +20,7 @@
 //!   view area). [`panel`]: the kit docks.
 //! - **Teardown.** Entities go by `DespawnOnExit<ModeScope>`; [`leave`]
 //!   (OnExit, registered by `app::switch`) removes the gallery, remembers its
-//!   exhibit in `Documents::exhibit` and drops it off the UI thread (its run
+//!   exhibit in phenomena's document registry entry and drops it off the UI thread (its run
 //!   thread joins within `jobs::JOIN_BOUND` there), and removes the pool and
 //!   panel state.
 mod actions;
@@ -35,12 +35,12 @@ mod tests;
 pub use actions::PhenomenaAction;
 pub(crate) use gallery::Gallery;
 
-use crate::app::switch::Documents;
+use crate::document::DocumentRegistry;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use bevy::prelude::*;
 use serde::Deserialize;
 
-/// An exhibit as `--exhibit`, `phenomena_select` and `Documents::exhibit`
+/// An exhibit as `--exhibit`, `phenomena_select` and the registry's exhibit source
 /// name it: a 1-based number, or a title fragment (case-insensitive; the
 /// first exhibit whose title contains it). sim-app's rule.
 #[derive(Deserialize, Clone, Debug, PartialEq)]
@@ -121,11 +121,11 @@ impl Plugin for PhenomenaPlugin {
 }
 
 /// OnEnter(ModeScope::Phenomena): the gallery, its run thread building the
-/// exhibits off the UI thread and opening `Documents::exhibit` (`--exhibit`'s
-/// text, or the number remembered on leaving; an unknown one opens exhibit 1
-/// and says so in the frame's notice).
-fn enter(mut commands: Commands, documents: Res<Documents>) {
-    commands.insert_resource(Gallery::open(documents.exhibit.clone()));
+/// exhibits off the UI thread and opening the exhibit phenomena's registry
+/// entry names (`--exhibit`'s text, or the number remembered on leaving; an
+/// unknown one opens exhibit 1 and says so in the frame's notice).
+fn enter(mut commands: Commands, registry: Res<DocumentRegistry>) {
+    commands.insert_resource(Gallery::open(crate::app::switch::sources::exhibit_of(&registry)));
 }
 
 /// JobResults: the newest frame at or after the requested generation.
@@ -136,8 +136,9 @@ fn receive(gallery: Option<ResMut<Gallery>>) {
 }
 
 /// OnExit(ModeScope::Phenomena), registered by `app::switch`: the gallery is
-/// removed, its exhibit remembered in `Documents::exhibit` (as its 1-based
-/// number; unchanged if the exhibits were never built) and the gallery
+/// removed, its exhibit remembered on phenomena's registry entry, which is
+/// closed (as its 1-based number; unchanged if the exhibits were never
+/// built), and the gallery
 /// dropped off the UI thread with `jobs::drop_off_thread`: its run thread
 /// checks its channel between ticks and so joins within `jobs::JOIN_BOUND`,
 /// but one `Exhibit::advance` call (a heavy exhibit at ×64) or the exhibits'
@@ -155,12 +156,12 @@ pub(crate) fn leave(world: &mut World) {
             }
         });
     }
+    let mut shown = None;
     if let Some(gallery) = world.remove_resource::<Gallery>() {
-        if let Some(number) = gallery.shown_number() {
-            world.resource_mut::<Documents>().exhibit = Some(number.to_string());
-        }
+        shown = gallery.shown_number().map(|number| crate::document::Source::Exhibit { exhibit: Some(number.to_string()) });
         crate::jobs::drop_off_thread(gallery, "the phenomena gallery");
     }
+    crate::app::switch::sources::left(world, ViewerMode::Phenomena, shown);
     world.remove_resource::<scene::Pool>();
     world.remove_resource::<panel::Panels>();
 }

@@ -110,6 +110,8 @@ use self::registry::{CATEGORIES, Command, Resolved};
 use super::actions::{CadAction, Cx};
 use super::document::{CadDocument, CadInputFocus};
 use super::panel::{Control, NameDraft};
+use super::selection::CadSelection;
+use sim_runtime::cad_client::SelectionItem;
 use super::view::CadView;
 use crate::app::actions::{Act, Call};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
@@ -142,12 +144,12 @@ pub(crate) struct Entry {
 }
 
 impl Entry {
-    fn of(cmd: &Command, label: &str, keys: Vec<String>, doc: &CadDocument, own: &[Control]) -> Entry {
+    fn of(cmd: &Command, label: &str, keys: Vec<String>, doc: &CadDocument, selection: &[SelectionItem], own: &[Control]) -> Entry {
         Entry {
             id: cmd.id.to_string(),
             label: label.to_string(),
             keys,
-            ready: registry::ready(cmd, doc, own),
+            ready: registry::ready(cmd, doc, selection, own),
             action: CadAction::CadInvoke { id: cmd.id.to_string() },
             closes: !matches!(registry::resolve(cmd), Resolved::Surface(_)),
         }
@@ -169,18 +171,19 @@ fn shortcut_keys(cmd: &Command) -> Vec<String> {
     if cmd.bound { cmd.keys.iter().map(|k| k.to_string()).collect() } else { Vec::new() }
 }
 
-/// A surface's entries now (`own`: the panel's own controls, for the
-/// readiness of action commands). The palette's are its ranked rows.
-pub(crate) fn entries(surface: &Surface, doc: &CadDocument, own: &[Control]) -> Vec<Entry> {
-    let by_id = |id: &str, label: Option<&str>| registry::command(id).map(|cmd| Entry::of(cmd, label.unwrap_or(cmd.label), shortcut_keys(cmd), doc, own));
+/// A surface's entries now (`selection`: the shared selection's CAD items;
+/// `own`: the panel's own controls, for the readiness of action commands).
+/// The palette's are its ranked rows.
+pub(crate) fn entries(surface: &Surface, doc: &CadDocument, selection: &[SelectionItem], own: &[Control]) -> Vec<Entry> {
+    let by_id = |id: &str, label: Option<&str>| registry::command(id).map(|cmd| Entry::of(cmd, label.unwrap_or(cmd.label), shortcut_keys(cmd), doc, selection, own));
     match surface {
         Surface::Closed => Vec::new(),
-        Surface::Palette { query } => palette::ranked(doc, own, query).into_iter().map(|(cmd, row)| Entry::of(cmd, &row, Vec::new(), doc, own)).collect(),
-        Surface::Menu { category } => registry::COMMANDS.iter().filter(|c| registry::menu_of(c.category) == category).map(|cmd| Entry::of(cmd, cmd.label, shortcut_keys(cmd), doc, own)).collect(),
+        Surface::Palette { query } => palette::ranked(doc, selection, own, query).into_iter().map(|(cmd, row)| Entry::of(cmd, &row, Vec::new(), doc, selection, own)).collect(),
+        Surface::Menu { category } => registry::COMMANDS.iter().filter(|c| registry::menu_of(c.category) == category).map(|cmd| Entry::of(cmd, cmd.label, shortcut_keys(cmd), doc, selection, own)).collect(),
         Surface::Context { .. } => {
             // RoboCAD's 14, then the native Sketch section (`context_menu`'s doc).
             let mut out: Vec<Entry> = registry::CONTEXT.iter().chain(registry::SKETCH_CONTEXT.iter()).filter_map(|id| by_id(id, None)).collect();
-            if context_menu::instance_selected(doc) {
+            if context_menu::instance_selected(doc, selection) {
                 let (id, label) = registry::MAKE_UNIQUE;
                 out.extend(by_id(id, Some(label)));
             }
@@ -206,6 +209,7 @@ fn view_centre(view: Option<&CadView>) -> [f32; 2] {
 pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     let _ = call;
     let CadAction::CadSurface { surface } = action else { return Outcome::Done(Err("not a command-surface action".into())) };
+    let selection = cx.shared.items();
     let doc = &mut *cx.doc;
     if let Surface::Menu { category } = surface
         && !CATEGORIES.contains(&category.as_str())
@@ -229,8 +233,8 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         doc.tool_state.numeric.began = None;
     }
     doc.ops.surface = Some(Open { surface: surface.clone(), at, highlight });
-    let own = super::panel::own_controls(doc);
-    let list: Vec<Value> = entries(surface, doc, &own).iter().map(Entry::json).collect();
+    let own = super::panel::own_controls(doc, &selection);
+    let list: Vec<Value> = entries(surface, doc, &selection, &own).iter().map(Entry::json).collect();
     Outcome::Done(Ok(json!({"surface": surface, "at": at, "entries": list})))
 }
 
@@ -245,11 +249,12 @@ pub(super) fn invoke_command(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome 
 /// `cad:op:<id>` for every RoboCAD command (its label, `CadInvoke`, its
 /// readiness), `cad:surface:<kind>`, `cad:menu:<category>`, and while a form
 /// is open `cad:form:ok`, `cad:form:cancel` and `cad:form:set:<name>:<value>`
-/// for each choice option and checkbox state.
-pub(crate) fn controls(doc: &CadDocument, own: &[Control]) -> Vec<Control> {
+/// for each choice option and checkbox state (`selection`: the shared
+/// selection's CAD items).
+pub(crate) fn controls(doc: &CadDocument, selection: &[SelectionItem], own: &[Control]) -> Vec<Control> {
     let mut out = Vec::new();
     for cmd in registry::COMMANDS {
-        out.push(Control { id: format!("cad:op:{}", cmd.id), label: cmd.label.to_string(), action: CadAction::CadInvoke { id: cmd.id.to_string() }, ready: registry::ready(cmd, doc, own) });
+        out.push(Control { id: format!("cad:op:{}", cmd.id), label: cmd.label.to_string(), action: CadAction::CadInvoke { id: cmd.id.to_string() }, ready: registry::ready(cmd, doc, selection, own) });
     }
     let open = doc.ops.surface.is_some();
     for (kind, label, surface) in [
@@ -421,13 +426,13 @@ fn popup_scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, Wi
 
 /// What the open popup shows, as a comparable text (`window`: the window's
 /// logical size, which places and clamps it).
-fn popup_key(doc: &CadDocument, window: Vec2) -> Option<String> {
+fn popup_key(doc: &CadDocument, selection: &[SelectionItem], window: Vec2) -> Option<String> {
     let open = doc.ops.surface.as_ref()?;
     // What enables an entry beyond the document: the connection, an edit in
     // flight, RoboCAD's desktop window and its command list.
     let commands = doc.commands.as_ref().map(|c| c.as_ref().map(|list| list.len()).ok());
     let gate = (doc.connected(), doc.edit.is_some(), doc.health.as_ref().map(|h| h.gui), commands);
-    Some(format!("{:?}", (doc.generation, doc.revision, open, &doc.selection, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), gate, window.round())))
+    Some(format!("{:?}", (doc.generation, doc.revision, open, selection, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), gate, window.round())))
 }
 
 /// Present: the open popup (palette, menu, context menu or radial),
@@ -441,10 +446,12 @@ fn draw(
     roots: Query<Entity, With<SurfaceRoot>>,
     tabs: Query<(&menus::MenuTab, &ComputedNode, &UiGlobalTransform)>,
     mut last: Local<Option<String>>,
+    selection: CadSelection,
 ) {
+    let selection = selection.items();
     let window = windows.single().map_or(Vec2::new(1280.0, 720.0), |w| Vec2::new(w.width(), w.height()));
     let width = window.x;
-    let key = doc.as_deref().and_then(|d| popup_key(d, window));
+    let key = doc.as_deref().and_then(|d| popup_key(d, &selection, window));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;
@@ -456,12 +463,12 @@ fn draw(
     let Some(doc) = doc.as_deref() else { return };
     let Some(open) = doc.ops.surface.clone() else { return };
     let k = Kit::new(&fonts);
-    let own = super::panel::own_controls(doc);
-    let list = entries(&open.surface, doc, &own);
+    let own = super::panel::own_controls(doc, &selection);
+    let list = entries(&open.surface, doc, &selection, &own);
     let at = Vec2::from(open.at);
     match &open.surface {
         Surface::Closed => {}
-        Surface::Palette { query } => palette::spawn(&mut commands, &k, doc, &own, query, open.highlight.unwrap_or(0), width),
+        Surface::Palette { query } => palette::spawn(&mut commands, &k, doc, &selection, &own, query, open.highlight.unwrap_or(0), width),
         Surface::Menu { category } => {
             // Under its tab in the menu bar (laid out in an earlier frame: the
             // tabs are spawned once and lit in place, `toolbar::refresh`),

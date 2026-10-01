@@ -111,7 +111,7 @@ impl Builder {
                 t.comments
                     .iter()
                     .rev()
-                    .find(|c| !is_agent(c))
+                    .find(|c| !c.is_agent())
                     .map(|c| c.body.clone())
             })
             .ok_or("discussion has no human question")?;
@@ -234,7 +234,7 @@ impl Builder {
             .filter(|t| !t.resolved)
         {
             // New posted human comments trigger turns; edits do not silently spend another turn.
-            for c in t.comments.iter().filter(|c| !is_agent(c)) {
+            for c in t.comments.iter().filter(|c| !c.is_agent()) {
                 let key = format!("comment/{}/{}", t.id, c.id);
                 if !self.agent.state.seen.contains(&key) {
                     inputs.push(self.agent_input(&t.id, key, Some(c.body.clone()))?);
@@ -263,6 +263,7 @@ impl Builder {
             .iter()
             .map(|p| sim_system::display::bind(&original, p).map_err(|e| e.to_string()))
             .collect::<Result<Vec<_>, _>>()?;
+        // Keyed by its run, so a reply is attached once.
         let comment = sim_system::display::Comment {
             id: run.id.clone(),
             author: "Codex".into(),
@@ -271,13 +272,8 @@ impl Builder {
             edited_at: None,
             links,
         };
-        self.apply(
-            "Codex reply",
-            vec![SystemCommand::AddComment {
-                thread: run.input.discussion.clone(),
-                comment,
-            }],
-        )?;
+        let op = crate::annotations::ThreadOp::Post { thread: run.input.discussion.clone(), comment };
+        crate::annotations::apply(&mut super::discussion::SystemThreads { b: self }, "Codex reply", op)?;
         Ok(())
     }
     pub(super) fn agent_badge(&self, id: &str) -> Option<String> {
@@ -290,9 +286,6 @@ impl Builder {
             _ => None,
         })
     }
-}
-fn is_agent(c: &sim_system::display::Comment) -> bool {
-    c.id.starts_with("agent-") || c.author.eq_ignore_ascii_case("codex")
 }
 pub(super) fn tick(time: Res<Time>, mut b: ResMut<Builder>) {
     if time.elapsed_secs_f64() - b.agent.checked < 0.2 {

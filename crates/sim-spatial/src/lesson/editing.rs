@@ -1,4 +1,5 @@
-//! Lesson edits and notes through the shared command layers.
+//! Lesson edits through the shared command layer, and the page's drafts
+//! (a note draft is posted by `threads`).
 use super::*;
 
 impl Learn {
@@ -34,22 +35,6 @@ impl Learn {
                     self.scene = None;
                 }
             }
-        }
-    }
-
-    /// Submit a note command (async; the result arrives in `poll`).
-    pub fn note(&mut self, label: &str, command: ThreadCommand<LessonAnchor>) -> Result<u64, String> {
-        let notes = self.notes.as_mut().ok_or("no lesson is open")?;
-        let id = notes.submit(command, Some(self.notes_doc.revision))?;
-        self.pending.push((id, label.to_string()));
-        Ok(id)
-    }
-
-    /// Threads re-attached to today's text (display only).
-    pub(crate) fn threads(&self) -> BTreeMap<String, Thread<LessonAnchor>> {
-        match &self.index {
-            Some(index) => self.notes_doc.refreshed(index),
-            None => self.notes_doc.threads.clone(),
         }
     }
 
@@ -96,30 +81,6 @@ impl Learn {
         if body.is_empty() {
             return Err("write something first".into());
         }
-        let comment = |id: String| Comment { id, author: self.author.clone(), body: body.clone(), created_at: sim_annotate::stamp(), edited_at: None, links: vec![] };
-        match (&input.purpose, &self.thread, &self.draft) {
-            (Purpose::EditComment(c), Some(t), _) => {
-                let command = ThreadCommand::EditComment { thread: t.clone(), comment: c.clone(), body: body.clone(), edited_at: sim_annotate::stamp() };
-                self.note("Edit comment", command)?;
-            }
-            (_, Some(t), _) => {
-                let command = ThreadCommand::AddComment { thread: t.clone(), comment: comment(sim_annotate::uid("c")) };
-                self.note("Reply", command)?;
-            }
-            (_, None, Some(anchor)) => {
-                let id = sim_annotate::uid("t");
-                let title: String = sim_annotate::plain_comment(&body).lines().next().unwrap_or("Note").chars().take(80).collect();
-                let thread = Thread { id: id.clone(), title, resolved: false, targets: vec![anchor.clone()], comments: vec![comment(sim_annotate::uid("c"))], pin_m: None, view: None };
-                self.note("New note", ThreadCommand::PutThread { thread })?;
-                if std::mem::take(&mut self.ask_next) {
-                    self.ask_when_saved = Some(id.clone());
-                }
-                self.thread = Some(id);
-                self.draft = None;
-            }
-            _ => return Err("pick a paragraph or a part to attach the note to".into()),
-        }
-        self.input = None;
-        Ok(())
+        self.submit_thread_draft(&input.purpose, body)
     }
 }

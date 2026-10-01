@@ -1,7 +1,10 @@
-//! The right dock: the picked part, notes and the agent.
+//! The right dock: the picked part, notes and the agent. Notes are drawn
+//! with the kit's thread panel (`ui_kit::threads`); they come from the
+//! lesson's thread source (`lesson/threads.rs`).
 use super::*;
+use crate::ui_kit::threads::{self, Composer, Host};
 
-/// Lesson threads drawn with the shared annotation views.
+/// Lesson threads drawn with the shared thread panel.
 struct MarginHost<'a> {
     l: &'a Learn,
 }
@@ -10,14 +13,14 @@ impl Host<LessonAnchor> for MarginHost<'_> {
     fn open(&self, thread: &str) -> LessonAction {
         LessonAction::OpenThread(thread.into())
     }
-    fn menu(&self, comment: &str) -> LessonAction {
-        LessonAction::CommentMenu(comment.into())
+    fn menu(&self, comment: &str) -> Option<LessonAction> {
+        Some(LessonAction::CommentMenu(comment.into()))
     }
-    fn edit(&self, comment: &str) -> LessonAction {
-        LessonAction::EditComment(comment.into())
+    fn edit(&self, comment: &str) -> Option<LessonAction> {
+        Some(LessonAction::EditComment(comment.into()))
     }
-    fn delete(&self, comment: &str) -> LessonAction {
-        LessonAction::DeleteComment(comment.into())
+    fn delete(&self, comment: &str) -> Option<LessonAction> {
+        Some(LessonAction::DeleteComment(comment.into()))
     }
     fn anchor(&self, a: &LessonAnchor) -> Option<LessonAction> {
         match a {
@@ -38,7 +41,7 @@ impl Host<LessonAnchor> for MarginHost<'_> {
 
 pub(super) fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Option<&Builder>, scene: &SpatialScene, offset: f32) {
     let host = MarginHost { l };
-    let threads = l.threads();
+    let notes = l.threads();
     commands
         .spawn((k.dock(Dock::Right { top: TOPBAR, bottom: STATUSBAR, width: RIGHT_WIDTH }, Node { flex_direction: FlexDirection::Column, ..default() }), LearnPanel))
         .with_children(|panel| {
@@ -63,20 +66,20 @@ pub(super) fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Optio
                             });
                         });
                     }
-                    let thread = l.thread.as_ref().and_then(|id| threads.get(id));
+                    let thread = l.thread.as_ref().and_then(|id| notes.get(id));
                     if let Some(t) = thread {
                         body.spawn(k.button("‹ All notes", LessonAction::ThreadList, Look::Ghost, true));
                         body.spawn(k.title(&t.title));
-                        annotate::anchors(body, k, &host, &t.targets);
+                        threads::anchors(body, k, &host, &t.targets);
                         body.spawn(wrap()).with_children(|r| {
                             r.spawn(k.button(if t.resolved { "Reopen" } else { "Resolve" }, LessonAction::Resolve, Look::Ghost, true));
                             r.spawn(k.button("Delete note", LessonAction::DeleteThread, Look::Danger, true));
                         });
                         agent_card(body, k, l, &t.id);
-                        annotate::messages(body, k, &host, t, l.menu.as_deref());
+                        threads::messages(body, k, &host, t, l.menu.as_deref());
                     } else if let Some(d) = &l.draft {
                         k.header(body, "New note", "Attached to");
-                        annotate::anchors(body, k, &host, std::slice::from_ref(d));
+                        threads::anchors(body, k, &host, std::slice::from_ref(d));
                     } else {
                         body.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, flex_shrink: 0., ..default() }).with_children(|r| {
                             r.spawn(k.title("Notes"));
@@ -91,8 +94,8 @@ pub(super) fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Optio
                             SUBTLE,
                             0,
                         ));
-                        let shown = threads.values().filter(|t| !l.open_only || !t.resolved);
-                        if annotate::list(body, k, &host, shown) == 0 {
+                        let shown = notes.values().filter(|t| !l.open_only || !t.resolved);
+                        if threads::list(body, k, &host, shown) == 0 {
                             body.spawn(k.text("No notes on this lesson yet.", 13., SUBTLE, 0));
                         }
                     }
@@ -107,7 +110,7 @@ pub(super) fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Optio
                         _ if l.thread.is_none() => ("Write a note", "Post note"),
                         _ => ("Reply", "Post reply"),
                     };
-                    annotate::composer(f, k, Composer { label, draft, placeholder: "Write…", focus: LessonAction::Compose, submit: LessonAction::Submit, submit_label: submit, cancel: LessonAction::CancelDraft, author: Some((&l.author, LessonAction::Author)), error: None });
+                    threads::composer(f, k, Composer { label, draft, placeholder: "Write…", min_height: 64., focus: LessonAction::Compose, submit: LessonAction::Submit, submit_label: submit, cancel: LessonAction::CancelDraft, author: Some((l.author.as_str(), LessonAction::Author)), error: None });
                 });
             }
         });

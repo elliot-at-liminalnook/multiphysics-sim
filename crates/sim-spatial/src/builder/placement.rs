@@ -270,8 +270,8 @@ pub(super) fn apply_preview(
     }
 }
 
-pub(super) fn draw_handles(b: Res<Builder>, mut gizmos: Gizmos) {
-    let Some(spec) = b.selected.iter().next().and_then(|n| b.spec(n)) else {
+pub(super) fn draw_handles(b: Res<Builder>, selection: Res<Selection>, registry: Res<DocumentRegistry>, mut gizmos: Gizmos) {
+    let Some(spec) = picked::names(&selection, &registry).first().and_then(|n| b.spec(n)) else {
         return;
     };
     let center = b
@@ -369,6 +369,8 @@ pub(crate) fn start_part(
     scene: Res<SpatialScene>,
     builder: Option<ResMut<Builder>>,
     mode: Option<Res<State<crate::ViewerMode>>>,
+    mut selection: ResMut<Selection>,
+    mut registry: ResMut<DocumentRegistry>,
 ) {
     // Only Build places parts: not under the lesson screen, and not in the
     // modes the builder waits through (inspect's parts are not the builder's).
@@ -391,10 +393,12 @@ pub(crate) fn start_part(
     let Some(name) = b.instance_for_component(&scene.spatial.parts[p.index].component) else {
         return;
     };
-    if !b.selected.contains(&name) {
-        b.selected = BTreeSet::from([name.clone()]);
+    // Dragging an unselected part selects it first (as a click would).
+    let mut pick = Picked::new(&mut selection, &mut registry);
+    if !pick.names().contains(&name) && pick.set([name.clone()]).is_err() {
+        return;
     }
-    let names: Vec<_> = b.selected.iter().cloned().collect();
+    let names: Vec<_> = pick.names().into_iter().collect();
     let Some(spec) = names.first().and_then(|n| b.spec(n)) else {
         return;
     };
@@ -433,6 +437,8 @@ pub(super) fn update(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Res<ButtonInput<MouseButton>>,
     mut gizmos: Gizmos,
+    mut selection: ResMut<Selection>,
+    mut registry: ResMut<DocumentRegistry>,
 ) {
     let frame = b.frame();
     let grid = b.grid();
@@ -467,7 +473,8 @@ pub(super) fn update(
             && p.y < window.height() - scene.bottom()
     });
     // Axis handles can be grabbed at their endpoint; keyboard X/Y/Z also constrains a drag.
-    if let Some(name) = b.selected.iter().next().cloned() {
+    let selected = picked::names(&selection, &registry);
+    if let Some(name) = selected.first().cloned() {
         if let Some(spec) = b.spec(&name) {
             let center = b
                 .drag
@@ -485,7 +492,7 @@ pub(super) fn update(
                         if cursor.distance(screen) < 12. {
                             b.drag = Some(DragState::new(
                                 &b,
-                                b.selected.iter().cloned().collect(),
+                                selected.iter().cloned().collect(),
                                 center,
                                 center,
                                 None,
@@ -502,7 +509,14 @@ pub(super) fn update(
     };
     // Keep the exact release preview until the authoritative transaction and
     // replacement scene arrive. No file locks, validation or compilation here.
+    let saving = drag.committed_revision.is_none();
     if let Some(hold_preview) = poll_drop(&mut b, &scene, &mut drag) {
+        // A palette drop just saved: the placed instance is selected.
+        if let (true, Some(_), Some(name)) = (saving, drag.committed_revision, drag.work.new_name.clone()) {
+            let mut pick = Picked::new(&mut selection, &mut registry);
+            pick.sync(&b);
+            let _ = pick.set([name]);
+        }
         if hold_preview {
             b.drag = Some(drag);
         }
@@ -606,9 +620,7 @@ fn poll_drop(b: &mut Builder, scene: &SpatialScene, drag: &mut DragState) -> Opt
                 drag.committing = None;
                 drag.committed_revision = Some(applied.revision);
                 b.reload();
-                if let Some(name) = &drag.work.new_name {
-                    b.selected = BTreeSet::from([name.clone()]);
-                }
+                // `update` selects a palette drop's new instance.
                 b.status = "Placement saved.".into();
             }
             Some(Err(e)) => {

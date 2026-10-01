@@ -82,8 +82,8 @@ impl Builder {
                 if self.definition_id().is_none() {
                     self.level.clear();
                 }
-                let names = self.definition_id().and_then(|id| self.document.definitions.get(&id).map(|d| d.instances.keys().cloned().collect::<BTreeSet<_>>())).unwrap_or_default();
-                self.selected.retain(|s| names.contains(s));
+                // The selection's items are re-checked by name against the new
+                // revision by `picked::sync` (the handler's answer, then `picked::track`).
                 self.alternatives = None;
                 self.refresh_palette();
                 self.updates = self.library_updates();
@@ -130,7 +130,8 @@ impl Builder {
     pub fn set_level(&mut self, path: &str) -> Result<(), String> {
         Resolver::new(&self.document, &self.registry).definition_id_at(path).map_err(|e| e.to_string())?;
         self.level = path.trim_matches('/').to_string();
-        self.selected.clear();
+        // The caller clears the selection (`Builder::enter_level`); a fresh
+        // builder (a lesson's sandbox) has none.
         self.alternatives = None;
         self.port_menu = None;
         self.connect_from = None;
@@ -158,11 +159,11 @@ impl Builder {
     }
 
     /// Propose the next slot on this level's grid; shared validation checks clearance.
-    pub(super) fn place(&mut self, item: PaletteItem) {
+    pub(super) fn place(&mut self, pick: &mut Picked, item: PaletteItem) {
         let count=self.definition().map(|d|d.instances.len()).unwrap_or(0);
         let grid=self.grid(); let (a,b,_)=grid.plane.axes(); let mut p=grid.origin_m;
         p[a]+=(count%6) as f32*grid.spacing_m*3.;p[b]+=(count/6) as f32*grid.spacing_m*3.;
-        self.place_at(item,p);
+        self.place_at(pick,item,p);
     }
     pub(super) fn placement_commands(&self, item: &PaletteItem, position: [f32;3]) -> Result<(String, Vec<SystemCommand>), String> {
         let mut commands = Vec::new();
@@ -179,12 +180,14 @@ impl Builder {
         commands.push(SystemCommand::AddInstance { at: self.level.clone(), name: name.clone(), instance: spec });
         Ok((name,commands))
     }
-    pub(super) fn place_at(&mut self, item: PaletteItem, position: [f32;3]) {
+    /// Place `item` at `position` and select it.
+    pub(super) fn place_at(&mut self, pick: &mut Picked, item: PaletteItem, position: [f32;3]) {
         let result = self.placement_commands(&item, position).and_then(|(name,commands)| {
-            self.apply(&format!("Place {}", item.label), commands).map(|applied| {
-                self.selected = BTreeSet::from([name]);
-                applied
-            })
+            let applied = self.apply(&format!("Place {}", item.label), commands)?;
+            // Selecting can only fail without an open Build document (then nothing is selected).
+            pick.sync(self);
+            let _ = pick.set([name]);
+            Ok(applied)
         });
         self.report(result);
     }
@@ -209,8 +212,9 @@ impl Builder {
         self.snaps.as_ref().filter(|(n, r, _)| n == name && *r == self.document.revision).and_then(|(_, _, s)| s.as_ref().ok())
     }
 
-    /// Attach a suggested candidate to `name.port` as one undoable edit.
-    pub fn snap(&mut self, name: &str, port: &str, candidate: &sim_system::snap::Candidate) -> Result<String, String> {
+    /// Attach a suggested candidate to `name.port` as one undoable edit; the
+    /// new instance is selected.
+    pub(crate) fn snap(&mut self, pick: &mut Picked, name: &str, port: &str, candidate: &sim_system::snap::Candidate) -> Result<String, String> {
         if let Some(conflict) = &candidate.conflict {
             return Err(conflict.clone());
         }
@@ -221,10 +225,11 @@ impl Builder {
         let new_name = self.unique_name(&base);
         let commands = sim_system::snap::snap(&self.document, &self.registry, &self.level, name, port, candidate, &new_name).map_err(|e| e.to_string())?;
         self.apply(&format!("Snap {} to {name}.{port}", candidate.label), commands)?;
-        self.selected = BTreeSet::from([new_name.clone()]);
         self.preview = None;
         self.scene_dirty = true;
         self.panel_dirty = true;
+        pick.sync(self);
+        let _ = pick.set([new_name.clone()]);
         Ok(new_name)
     }
 
@@ -255,17 +260,13 @@ impl Builder {
         self.elements.iter().find(|e| e.component_type == component_type)
     }
 
-    pub(super) fn only_selected(&self) -> Option<String> {
-        (self.selected.len() == 1).then(|| self.selected.iter().next().unwrap().clone())
-    }
-
     pub(super) fn spec(&self, name: &str) -> Option<InstanceSpec> {
         let id = self.definition_id()?;
         self.document.definitions.get(&id)?.instances.get(name).cloned()
     }
 
-    pub(super) fn nudge(&mut self, delta: [f32; 3]) {
-        let names: Vec<String> = self.selected.iter().cloned().collect();
+    /// Move `names` (the selection) by a display-only step.
+    pub(super) fn nudge(&mut self, names: BTreeSet<String>, delta: [f32; 3]) {
         let mut commands = Vec::new();
         for name in names {
             if let Some(spec) = self.spec(&name) {
@@ -282,8 +283,10 @@ impl Builder {
         }
     }
 
-    pub(super) fn group_selected(&mut self) {
-        if self.selected.is_empty() {
+    /// Group the selected instances into a new subsystem, which is then selected.
+    pub(super) fn group_selected(&mut self, pick: &mut Picked) {
+        let selected = pick.names();
+        if selected.is_empty() {
             self.status = "Select instances to group (shift-click to add).".into();
             return;
         }
@@ -295,23 +298,24 @@ impl Builder {
             definition = format!("{prefix}.{name}_{n}");
             n += 1;
         }
-        let instances: Vec<String> = self.selected.iter().cloned().collect();
-        let result = self.apply("Group", vec![SystemCommand::Group { at: self.level.clone(), instances, name: name.clone(), definition, label: format!("Group {name}") }]);
-        if result.is_ok() {
-            self.selected = BTreeSet::from([name]);
-        }
+        let instances: Vec<String> = selected.into_iter().collect();
+        let result = self.apply("Group", vec![SystemCommand::Group { at: self.level.clone(), instances, name: name.clone(), definition, label: format!("Group {name}") }]).and_then(|_| {
+            pick.sync(self);
+            let _ = pick.set([name]);
+            Ok(())
+        });
         self.report(result);
     }
 
-    pub(super) fn remove_selected(&mut self) {
-        let commands: Vec<_> = self.selected.iter().map(|n| SystemCommand::RemoveInstance { at: self.level.clone(), name: n.clone() }).collect();
+    /// Delete the selected instances (they leave the selection with them).
+    pub(super) fn remove_selected(&mut self, pick: &mut Picked) {
+        let commands: Vec<_> = pick.names().into_iter().map(|n| SystemCommand::RemoveInstance { at: self.level.clone(), name: n }).collect();
         if commands.is_empty() {
             return;
         }
-        let r = self.apply("Delete", commands);
-        if r.is_ok() {
-            self.selected.clear();
-        }
+        let r = self.apply("Delete", commands).map(|_| {
+            let _ = pick.clear();
+        });
         self.report(r);
     }
 

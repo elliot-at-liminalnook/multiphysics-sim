@@ -17,7 +17,7 @@ fn node(id: &str, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: "body".into(), name: name.into(), visible: true, effective_visible: true, ..Default::default() }
 }
 
-/// A connected document at revision 4 with two bodies, Bracket selected.
+/// A connected document at revision 4 with two bodies (Bracket selected: [`selected`]).
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
     doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
@@ -25,8 +25,12 @@ fn document() -> CadDocument {
     doc.health = Some(Health { ok: true, app: "robocad".into(), nodes: 2, revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("b1", "Bracket"), node("b2", "Plate")], revision: 4, ..Default::default() });
     doc.doc_key = Some((None, 4));
-    doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
     doc
+}
+
+/// The document's selection (the shared selection's CAD items): Bracket.
+fn selected() -> Vec<SelectionItem> {
+    vec![SelectionItem("b1".into(), "body".into(), 0)]
 }
 
 fn in_flight() -> Edit {
@@ -42,7 +46,7 @@ fn refusal(doc: &mut CadDocument, action: &CadAction) -> String {
     let mut continuation = Value::Null;
     let mut replies = Replies::default();
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    match commit::commit(doc, None, &mut call, action) {
+    match commit::commit(doc, &selected(), None, &mut call, action) {
         Outcome::Done(Err(e)) => e,
         _ => panic!("{action:?} was not refused"),
     }
@@ -94,13 +98,11 @@ fn face_edits_send_robocads_face_references() {
 #[test]
 fn a_commit_defaults_to_the_selection_and_names_it() {
     let doc = document();
-    let op = op_for(&doc, None, &move_by(10.0, Some(4))).unwrap();
+    let op = op_for(&doc, &selected(), None, &move_by(10.0, Some(4))).unwrap();
     assert_eq!((op.args, op.label.as_str()), (vec![json!(["b1"])], "Move Bracket by (10, 0, 0) mm"));
-    let mut empty = document();
-    empty.selection.clear();
-    assert!(op_for(&empty, None, &move_by(10.0, Some(4))).unwrap_err().contains("nothing is selected"));
+    assert!(op_for(&doc, &[], None, &move_by(10.0, Some(4))).unwrap_err().contains("nothing is selected"));
     let unknown = CadAction::CadPushPull { node: "b9".into(), face: 0, distance: 1.0, revision: None };
-    assert!(op_for(&doc, None, &unknown).unwrap_err().contains("no node b9"));
+    assert!(op_for(&doc, &selected(), None, &unknown).unwrap_err().contains("no node b9"));
 }
 
 #[test]
@@ -131,7 +133,7 @@ fn commits_are_refused_with_nothing_sent_while_an_edit_runs_or_after_the_documen
 fn numeric_fields_evaluate_per_tool_and_errors_name_the_field_and_token() {
     let mut doc = document();
     doc.tool = CadTool::Move;
-    let list = fields(&doc, None, None);
+    let list = fields(&doc, &selected(), None, None);
     assert_eq!(list.iter().map(|f| f.name.as_str()).collect::<Vec<_>>(), ["dx", "dy", "dz"]);
     assert_eq!(list.iter().map(Field::text).collect::<Vec<_>>(), ["0 mm", "0 mm", "0 mm"]);
     let v = evaluate_fields(doc.tool, &list, &["20mm + 0.3".into(), "1in".into(), "0".into()]).unwrap();
@@ -140,17 +142,17 @@ fn numeric_fields_evaluate_per_tool_and_errors_name_the_field_and_token() {
     assert!(e.starts_with("dx: ") && e.contains("qq"), "{e}");
     assert!(evaluate_fields(doc.tool, &list, &["1".into()]).unwrap_err().contains("takes 3 value(s) (dx, dy, dz); got 1"));
     doc.tool = CadTool::Rotate;
-    let list = fields(&doc, None, None);
+    let list = fields(&doc, &selected(), None, None);
     assert_eq!(list[0].text(), "0°");
     assert_eq!(evaluate_fields(doc.tool, &list, &["45deg".into()]).unwrap(), vec![45.0]);
     doc.tool = CadTool::Scale;
-    let list = fields(&doc, None, None);
+    let list = fields(&doc, &selected(), None, None);
     assert_eq!(list[0].text(), "1");
     assert_eq!(evaluate_fields(doc.tool, &list, &["1.5".into()]).unwrap(), vec![1.5]);
     doc.tool = CadTool::PushPull;
-    assert_eq!(fields(&doc, None, None)[0].name, "distance");
+    assert_eq!(fields(&doc, &selected(), None, None)[0].name, "distance");
     doc.tool = CadTool::Measure;
-    assert!(fields(&doc, None, None).is_empty());
+    assert!(fields(&doc, &selected(), None, None).is_empty());
     // The axis a typed rotation uses: the last dragged one, else Z.
     let mut state = ToolState::default();
     assert_eq!(numeric_axis(&state), Vec3::Z);

@@ -25,7 +25,7 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadFit { id } => json!({"command": "cad_fit", "id": id}),
         CadAction::CadPhysical => json!({"command": "cad_physical"}),
         CadAction::CadDelete { id } => json!({"command": "cad_delete", "id": id}),
-        CadAction::CadSelect { ids, items, extend, toggle } => json!({"command": "cad_select", "ids": ids, "items": items, "extend": extend, "toggle": toggle}),
+        CadAction::CadSelect { ids, items, extend, toggle, .. } => json!({"command": "cad_select", "ids": ids, "items": items, "extend": extend, "toggle": toggle}),
         CadAction::CadSelectMode { mode } => json!({"command": "cad_select_mode", "mode": mode}),
         CadAction::CadHover { item } => json!({"command": "cad_hover", "item": item}),
         CadAction::CadBoxSelect { rect, extend } => json!({"command": "cad_box_select", "rect": rect, "extend": extend}),

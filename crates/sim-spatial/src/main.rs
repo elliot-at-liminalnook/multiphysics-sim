@@ -185,22 +185,35 @@ fn model_library(args: &Args) -> sim_spatial::models::ModelLibrary {
     }
     library
 }
-/// What a switch needs to open other modes' documents later: the launch facts.
-fn documents(args: &Args) -> sim_spatial::app::switch::Documents {
-    let mut documents = sim_spatial::app::switch::Documents::default();
-    documents.library = library(args);
-    if let Ok(models) = models_path(args) {
-        documents.models = models;
+/// The launch's documents: the facts a switch needs to open other modes'
+/// documents later, and the document registry the launched mode's document
+/// is opened in ([`Documents::open`]; [`launch`] remembers the exhibit).
+struct Documents {
+    config: sim_spatial::app::switch::Documents,
+    registry: sim_spatial::document::DocumentRegistry,
+    /// The exhibit phenomena mode opens, at launch or on a later switch to
+    /// it: --exhibit, else sim-app's environment variable.
+    exhibit: Option<String>,
+}
+impl Documents {
+    /// `mode`'s document at launch, open in the registry.
+    fn open(&mut self, mode: sim_spatial::ViewerMode, source: sim_spatial::document::Source) {
+        self.registry.open(mode, sim_spatial::app::switch::sources::kind(mode), source);
     }
-    documents.presets = args.robot_presets.clone();
-    // The exhibit phenomena mode opens, at launch or on a later switch to it:
-    // --exhibit, else sim-app's environment variable.
-    documents.exhibit = args.exhibit.clone().or_else(|| std::env::var("PHENOMENA_EXHIBIT").ok().filter(|v| !v.trim().is_empty()));
-    documents.hardware = sim_spatial::robot::hardware::HardwareConfig {
+}
+fn documents(args: &Args) -> Documents {
+    let mut config = sim_spatial::app::switch::Documents::default();
+    config.library = library(args);
+    if let Ok(models) = models_path(args) {
+        config.models = models;
+    }
+    config.presets = args.robot_presets.clone();
+    config.hardware = sim_spatial::robot::hardware::HardwareConfig {
         calibration: args.hardware.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.hardware_token_file.clone() }),
         bench: args.motor_bench.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.motor_bench_token_file.clone() }),
     };
-    documents
+    let exhibit = args.exhibit.clone().or_else(|| std::env::var("PHENOMENA_EXHIBIT").ok().filter(|v| !v.trim().is_empty()));
+    Documents { config, registry: Default::default(), exhibit }
 }
 
 /// Open the one window in `launch.mode`, with the one REST server.
@@ -213,8 +226,21 @@ fn open_window(args: &Args, launch: impl FnOnce(sim_api::Server) -> sim_spatial:
     Ok(())
 }
 
-fn launch(mode: sim_spatial::ViewerMode, api: sim_api::Server, documents: sim_spatial::app::switch::Documents, models: sim_spatial::models::ModelLibrary) -> sim_spatial::Launch {
-    sim_spatial::Launch { mode, api, documents, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None, cad: None }
+/// The launch: `mode` with the documents [`Documents::open`] opened; the
+/// exhibit is phenomena's open document when phenomena is launched, else
+/// remembered when one was given.
+fn launch(mode: sim_spatial::ViewerMode, api: sim_api::Server, documents: Documents, models: sim_spatial::models::ModelLibrary) -> sim_spatial::Launch {
+    use sim_spatial::ViewerMode;
+    use sim_spatial::app::switch::sources::kind;
+    let Documents { config, mut registry, exhibit } = documents;
+    let given = exhibit.is_some();
+    let source = sim_spatial::document::Source::Exhibit { exhibit };
+    if mode == ViewerMode::Phenomena {
+        registry.open(mode, kind(mode), source);
+    } else if given {
+        registry.remember(ViewerMode::Phenomena, kind(ViewerMode::Phenomena), source);
+    }
+    sim_spatial::Launch { mode, api, documents: config, registry, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None, cad: None }
 }
 
 /// CAD mode: a `.rcad` file (RoboCAD's headless service is started on it
@@ -242,7 +268,7 @@ fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<
         sim_runtime::cad_client::CadClient::new(url).map_err(|e| e.to_string())?;
     }
     let mut documents = documents(args);
-    documents.cad = Some(target.clone());
+    documents.open(sim_spatial::ViewerMode::Cad, sim_spatial::app::switch::sources::cad_source(&target));
     let models = model_library(args);
     let cad = sim_spatial::cad::CadDocument::new(target);
     open_window(args, |api| sim_spatial::Launch { cad: Some(cad), ..launch(sim_spatial::ViewerMode::Cad, api, documents, models) })
@@ -289,7 +315,7 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
         eprintln!("{w}");
     }
     let mut documents = documents(args);
-    documents.lessons = Some((dir.to_path_buf(), learn.slug().map(str::to_string)));
+    documents.open(sim_spatial::ViewerMode::Lessons, sim_spatial::document::Source::Lessons { dir: dir.to_path_buf(), lesson: learn.slug().map(str::to_string) });
     let models = model_library(args);
     open_window(args, |api| sim_spatial::Launch { learn: Some(learn), builder: Some(builder), scene: Some(scene), ..launch(sim_spatial::ViewerMode::Lessons, api, documents, models) })
 }
@@ -312,7 +338,7 @@ fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     }
     let view = sim_spatial::robot::RobotView::open(path.to_path_buf()).with_presets(args.robot_presets.clone());
     let mut documents = documents(args);
-    documents.robot = Some(sim_spatial::app::switch::Document::Path(path.to_path_buf()));
+    documents.open(sim_spatial::ViewerMode::Robot, sim_spatial::document::Source::path(path));
     let models = model_library(args);
     open_window(args, |api| sim_spatial::Launch { robot: Some(view), ..launch(sim_spatial::ViewerMode::Robot, api, documents, models) })
 }
@@ -339,7 +365,7 @@ fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Er
     }
     let view = sim_spatial::robot::RobotView::open_preset(&presets(args)?, id)?;
     let mut documents = documents(args);
-    documents.robot = Some(sim_spatial::app::switch::Document::Preset(id.to_string()));
+    documents.open(sim_spatial::ViewerMode::Robot, sim_spatial::document::Source::Preset { id: id.to_string() });
     let models = model_library(args);
     open_window(args, |api| sim_spatial::Launch { robot: Some(view), ..launch(sim_spatial::ViewerMode::Robot, api, documents, models) })
 }
@@ -371,7 +397,8 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     }
     // Opening another file in this window needs these launch facts.
     builder.enable_open(sim_spatial::builder::open::Shell { launch: path.to_path_buf(), annotations: args.annotations.clone(), schematic: args.schematic.then(|| path.to_path_buf()), models: models_dir });
-    let documents = documents(args);
+    let mut documents = documents(args);
+    documents.open(sim_spatial::ViewerMode::Build, sim_spatial::document::Source::path(builder.path()));
     open_window(args, |api| sim_spatial::Launch { builder: Some(builder), scene: Some(scene), ..launch(sim_spatial::ViewerMode::Build, api, documents, models) })
 }
 
@@ -445,7 +472,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         let place = sim_spatial::place_view::PlaceView::open(dir.clone())?;
         let mut documents = documents(&args);
-        documents.place = Some(dir);
+        documents.open(sim_spatial::ViewerMode::Place, sim_spatial::document::Source::path(dir));
         let models = model_library(&args);
         return open_window(&args, |api| sim_spatial::Launch { place: Some(place), ..launch(sim_spatial::ViewerMode::Place, api, documents, models) });
     }
@@ -505,7 +532,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let session = if args.schematic {
         Some(sim_inspect::selection::native::create_session(
             &scene.description,
-            scene.selection.clone(),
+            scene.shown.clone(),
         )?)
     } else {
         args.selection_link.clone()
@@ -516,7 +543,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             std::sync::Arc::new(scene.description.clone()),
             directory.clone(),
             sim_inspect::selection::native::Peer::Assembly,
-            scene.selection.clone(),
+            scene.shown.clone(),
         )?;
         if args.schematic {
             let sibling = std::env::current_exe()?.with_file_name("sim-viewer");
@@ -551,10 +578,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // No window: the same server and inspect handler, polled by a loop.
         let api = sim_spatial::rest::bind(args.api_port)?;
         eprintln!("Physical REST (headless, inspect mode): http://{}", api.address);
-        sim_spatial::rest::headless(scene, link, api);
+        sim_spatial::rest::headless(scene, link, api, (description_path.clone(), spatial_path.clone()));
     }
     let mut documents = documents(&args);
-    documents.inspect = Some((description_path, spatial_path));
+    documents.open(sim_spatial::ViewerMode::Inspect, sim_spatial::document::Source::Assembly { description: description_path, spatial: spatial_path });
     let models = model_library(&args);
     open_window(&args, |api| sim_spatial::Launch { scene: Some(scene), link, ..launch(sim_spatial::ViewerMode::Inspect, api, documents, models) })
 }

@@ -30,6 +30,7 @@
 //!   the reason under the field (no request).
 use super::actions::CadAction;
 use super::document::{CadDocument, CadInputFocus, CadTool, Connection, SelectMode};
+use super::selection::{CadItems, CadSelection};
 use super::surfaces::SurfaceRoot;
 use crate::app::actions::Act;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
@@ -43,6 +44,7 @@ use bevy::ui::prelude::AccessibleLabel;
 use bevy::ui::{ComputedNode, FocusPolicy, UiGlobalTransform};
 use bevy::window::PrimaryWindow;
 use serde_json::{Map, Value};
+use sim_runtime::cad_client::SelectionItem;
 
 /// A CAD panel button: the action a press writes.
 #[derive(Component, Clone, Debug)]
@@ -170,9 +172,9 @@ pub(super) fn control<'a>(all: &'a [Control], id: &str) -> Option<&'a Control> {
 /// ([`own_controls`]), then the command surfaces' (`surfaces::controls`:
 /// `cad:op:<id>` per RoboCAD command, `cad:surface:<kind>`,
 /// `cad:menu:<category>`, the open form's `cad:form:*`).
-pub(crate) fn controls(doc: &CadDocument) -> Vec<Control> {
-    let mut all = own_controls(doc);
-    let surfaces = super::surfaces::controls(doc, &all);
+pub(crate) fn controls(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<Control> {
+    let mut all = own_controls(doc, selection);
+    let surfaces = super::surfaces::controls(doc, selection, &all);
     all.extend(surfaces);
     all
 }
@@ -181,7 +183,7 @@ pub(crate) fn controls(doc: &CadDocument) -> Vec<Control> {
 /// lock, disable and material choices, one select and one visibility
 /// toggle per tree row, one per RoboCAD GUI registry command. (The name
 /// field is not one: see the module doc.)
-pub(crate) fn own_controls(doc: &CadDocument) -> Vec<Control> {
+pub(crate) fn own_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<Control> {
     let blocked = edit_blocked(doc);
     let history = doc.doc.as_ref().map(|d| &d.history);
     let last_undo = history.and_then(|h| h.undo.last());
@@ -201,11 +203,11 @@ pub(crate) fn own_controls(doc: &CadDocument) -> Vec<Control> {
     add("cad:physical".into(), "Physical".into(), CadAction::CadPhysical, physical);
     // RoboCAD's Delete: every selected node in one step (the catalogue's
     // `edit.delete`); REST `cad_delete {id}` still deletes one node.
-    let delete = if doc.selected().is_some() { ready(blocked.clone()) } else { Err("nothing is selected".to_string()) };
+    let delete = if selection.first_node().is_some() { ready(blocked.clone()) } else { Err("nothing is selected".to_string()) };
     add("cad:delete".into(), "Delete".into(), CadAction::CadInvoke { id: "edit.delete".into() }, delete);
     // The inspected node's flags and material: the inspector's chips write
     // these same actions (`inspector::attributes`).
-    let inspected = doc.selected().and_then(|id| doc.doc.as_ref()?.nodes.iter().find(|n| n.id == id));
+    let inspected = selection.first_node().and_then(|id| doc.doc.as_ref()?.nodes.iter().find(|n| n.id == id));
     if let Some(n) = inspected {
         let label = format!("{} {}", if n.locked { "Unlock" } else { "Lock" }, n.name);
         add(format!("cad:locked:{}", n.id), label, patch(&n.id, "locked", Value::Bool(!n.locked)), ready(blocked.clone()));
@@ -216,8 +218,8 @@ pub(crate) fn own_controls(doc: &CadDocument) -> Vec<Control> {
             add(format!("cad:material:{}:{material_id}", n.id), label, patch(&n.id, "material", Value::String(material_id)), ready(blocked.clone()));
         }
     }
-    for row in doc.rows() {
-        add(format!("cad:node:{}", row.id), row.name.clone(), CadAction::CadSelect { ids: vec![row.id.clone()], items: Vec::new(), extend: false, toggle: false }, Ok(()));
+    for row in doc.rows(selection) {
+        add(format!("cad:node:{}", row.id), row.name.clone(), CadAction::CadSelect { ids: vec![row.id.clone()], items: Vec::new(), extend: false, toggle: false, picked_at: None }, Ok(()));
         let label = format!("{} {}", if row.visible { "Hide" } else { "Show" }, row.name);
         add(format!("cad:visible:{}", row.id), label, patch(&row.id, "visible", Value::Bool(!row.visible)), ready(blocked.clone()));
     }
@@ -230,9 +232,9 @@ pub(crate) fn own_controls(doc: &CadDocument) -> Vec<Control> {
     }
     add("cad:select_all".into(), "Select All".into(), CadAction::CadSelectAll, Ok(()));
     add("cad:invert_selection".into(), "Invert Selection".into(), CadAction::CadInvertSelection, Ok(()));
-    let same = if doc.selection.is_empty() { Err("nothing is selected".to_string()) } else { Ok(()) };
+    let same = if selection.is_empty() { Err("nothing is selected".to_string()) } else { Ok(()) };
     add("cad:select_same_material".into(), "Select Same Material".into(), CadAction::CadSelectSameMaterial, same);
-    let edges = if doc.selection.iter().any(|i| i.1 == "edge") { Ok(()) } else { Err("no edges are selected (edge mode, E)".to_string()) };
+    let edges = if selection.iter().any(|i| i.1 == "edge") { Ok(()) } else { Err("no edges are selected (edge mode, E)".to_string()) };
     add("cad:edges_to_faces".into(), "Selection: edges → bounding faces".into(), CadAction::CadEdgesToFaces, edges);
     // The Alt+click menu's entries while it is open (RoboCAD's labels).
     if let Some(c) = &doc.candidates {
@@ -240,7 +242,7 @@ pub(crate) fn own_controls(doc: &CadDocument) -> Vec<Control> {
             // RoboCAD's text: "name: kind #i", without "#i" for a body.
             let index = if item.1 == "body" { String::new() } else { format!(" #{}", item.2) };
             let label = format!("{}: {}{index}", doc.node_name(&item.0), item.1);
-            add(format!("cad:candidate:{n}"), label, CadAction::CadSelect { ids: Vec::new(), items: vec![item.clone()], extend: c.extend, toggle: c.toggle }, Ok(()));
+            add(format!("cad:candidate:{n}"), label, CadAction::CadSelect { ids: Vec::new(), items: vec![item.clone()], extend: c.extend, toggle: c.toggle, picked_at: None }, Ok(()));
         }
     }
     // Tools (RoboCAD's tool.*): activating one only changes the view; its
@@ -362,8 +364,9 @@ pub(super) fn name_entry(
     mut events: MessageReader<KeyboardInput>,
     focus: Option<ResMut<CadInputFocus>>,
     mut out: MessageWriter<Act<CadAction>>,
+    selection: CadSelection,
 ) {
-    let selected = doc.as_deref().and_then(|d| d.selected()).map(str::to_string);
+    let selected = doc.as_ref().and_then(|_| selection.items().first_node().map(str::to_string));
     let mut ended = false;
     // Read before writing: a `DerefMut` every frame would mark the draft
     // changed and rebuild the panels each frame.
@@ -497,6 +500,7 @@ fn refresh(
     mut rows: Query<(Entity, &super::tree::TreeRowId, &mut Tint, &mut BorderColor, &AccessibleLabel)>,
     mut eyes: Query<&mut Enabled, With<super::tree::EyeChip>>,
     plane: Option<Res<super::CadActivePlane>>,
+    selection: CadSelection,
 ) {
     let root = roots.iter().next();
     let stamp = doc.as_ref().map(|d| (d.generation, d.revision));
@@ -513,13 +517,14 @@ fn refresh(
     let doc = doc.as_deref();
     let topology = topology.as_deref();
     let plane = plane.as_deref();
+    let selection = selection.items();
     if let Some(doc) = doc {
-        super::tree::highlight(&mut commands, doc, &mut rows, &mut eyes);
+        super::tree::highlight(&mut commands, doc, &selection, &mut rows, &mut eyes);
     }
     let k = Kit::new(&fonts);
     for (entity, mut list) in &mut lists {
         let part = list.part;
-        let key = part_key(part, doc, topology, &draft, plane);
+        let key = part_key(part, doc, &selection, topology, &draft, plane);
         if list.key.as_ref() == Some(&key) {
             continue;
         }
@@ -532,41 +537,41 @@ fn refresh(
                 }
             }
             Some(doc) => match part {
-                Part::Top => top(p, &k, doc, plane),
+                Part::Top => top(p, &k, doc, &selection, plane),
                 Part::Document => document(p, &k, doc),
                 Part::Status => status(p, &k, doc),
-                Part::Tree => super::tree::build(p, &k, doc),
-                Part::Name => super::inspector::name(p, &k, doc, &draft),
-                Part::Inspector => super::inspector::inspector(p, &k, doc, topology),
-                Part::Physical => super::inspector::physical(p, &k, doc),
-                Part::Attributes => super::inspector::attributes(p, &k, doc),
+                Part::Tree => super::tree::build(p, &k, doc, &selection),
+                Part::Name => super::inspector::name(p, &k, doc, &selection, &draft),
+                Part::Inspector => super::inspector::inspector(p, &k, doc, &selection, topology),
+                Part::Physical => super::inspector::physical(p, &k, doc, &selection),
+                Part::Attributes => super::inspector::attributes(p, &k, doc, &selection),
                 Part::History => super::inspector::history(p, &k, doc),
-                Part::Commands => super::inspector::commands(p, &k, doc),
+                Part::Commands => super::inspector::commands(p, &k, doc, &selection),
             },
         });
     }
 }
 
 /// What a part shows now, as a comparable text.
-fn part_key(part: Part, doc: Option<&CadDocument>, topology: Option<&super::topology::CadTopology>, draft: &NameDraft, plane: Option<&super::CadActivePlane>) -> String {
+fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], topology: Option<&super::topology::CadTopology>, draft: &NameDraft, plane: Option<&super::CadActivePlane>) -> String {
     let Some(doc) = doc else { return "no document".to_string() };
     match part {
-        Part::Top => format!("{:?}", (doc.document_name(), connection_state(&doc.connection), dirty(doc), doc.health.is_some(), top_controls(doc), plane_line(doc, plane))),
+        Part::Top => format!("{:?}", (doc.document_name(), connection_state(&doc.connection), dirty(doc), doc.health.is_some(), top_controls(doc, selection), plane_line(doc, plane))),
         Part::Document => format!("{:?}", (path_line(doc), doc.service_line(), doc.connection_line(), doc.connection == Connection::Connected, autosave_line(doc), &doc.stale)),
         Part::Status => format!("{:?}", (doc.edit_label(), &doc.status)),
         Part::Tree => super::tree::key(doc),
-        Part::Name => super::inspector::name_key(doc, draft),
-        Part::Inspector => super::inspector::inspector_key(doc, topology),
-        Part::Physical => super::inspector::physical_key(doc),
-        Part::Attributes => super::inspector::attributes_key(doc),
+        Part::Name => super::inspector::name_key(doc, selection, draft),
+        Part::Inspector => super::inspector::inspector_key(doc, selection, topology),
+        Part::Physical => super::inspector::physical_key(doc, selection),
+        Part::Attributes => super::inspector::attributes_key(doc, selection),
         Part::History => format!("{:?}", doc.doc.as_ref().map(|d| &d.history)),
         Part::Commands => super::inspector::commands_key(doc),
     }
 }
 
 /// The top bar's buttons: (control, look, divider before it).
-fn top_controls(doc: &CadDocument) -> Vec<(Control, Look, bool)> {
-    let mut all = own_controls(doc);
+fn top_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<(Control, Look, bool)> {
+    let mut all = own_controls(doc, selection);
     all.retain(|c| matches!(c.id.as_str(), "cad:undo" | "cad:redo" | "cad:save" | "cad:refresh" | "cad:fit" | "cad:physical"));
     all.into_iter().map(|c| {
         let look = if c.id == "cad:save" && dirty(doc) == Some(true) { Look::Primary } else { Look::Secondary };
@@ -610,7 +615,7 @@ fn plane_line(doc: &CadDocument, plane: Option<&super::CadActivePlane>) -> Optio
 }
 
 /// The top bar: document name, connection, saved state, the active plane, the document buttons.
-fn top(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, plane: Option<&super::CadActivePlane>) {
+fn top(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem], plane: Option<&super::CadActivePlane>) {
     p.spawn(k.text("CAD", size::PRODUCT, SUBTLE, 2));
     p.spawn((k.title(doc.document_name()), Node { flex_shrink: 1.0, min_width: Val::Px(0.0), ..default() }));
     let (word, tone) = connection_state(&doc.connection);
@@ -628,7 +633,7 @@ fn top(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, plane: Option<&
         }
     }
     p.spawn(Node { flex_grow: 1.0, ..default() });
-    for (c, look, gap) in top_controls(doc) {
+    for (c, look, gap) in top_controls(doc, selection) {
         if gap {
             p.spawn(divider());
         }

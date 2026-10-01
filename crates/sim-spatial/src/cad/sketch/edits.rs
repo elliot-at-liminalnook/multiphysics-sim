@@ -41,15 +41,17 @@ use crate::cad::document::CadDocument;
 use crate::cad::ops::{Built, Env, OpEntry, Resolved};
 use serde_json::{Map, Value};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{PlaneFrame, SketchCall, SketchCurve, SketchGeometry, Uv, check_calls};
+use crate::cad::selection::CadItems;
+use sim_runtime::cad_client::{PlaneFrame, SelectionItem, SketchCall, SketchCurve, SketchGeometry, Uv, check_calls};
 use std::f64::consts::{PI, TAU};
 use std::sync::Arc;
 
-/// RoboCAD's `_selected_sketch` (ui/app.py:752-756).
-pub(crate) fn selected_sketch(doc: &CadDocument) -> Option<String> {
+/// RoboCAD's `_selected_sketch` (ui/app.py:752-756) over `selection`, the
+/// shared selection's CAD items.
+pub(crate) fn selected_sketch(doc: &CadDocument, selection: &[SelectionItem]) -> Option<String> {
     let state = doc.doc.as_ref()?;
     let is_sketch = |id: &str| state.nodes.iter().any(|n| n.id == id && n.kind == "sketch");
-    doc.selected_nodes().into_iter().find(|id| is_sketch(id.as_str())).or_else(|| state.nodes.iter().find(|n| n.kind == "sketch" && n.effective_visible).map(|n| n.id.clone()))
+    selection.nodes().into_iter().find(|id| is_sketch(id.as_str())).or_else(|| state.nodes.iter().find(|n| n.kind == "sketch" && n.effective_visible).map(|n| n.id.clone()))
 }
 
 /// Why sketch `id`'s curve indices cannot be used: its read dropped curves.
@@ -177,7 +179,7 @@ pub(crate) fn fillet_plan(curves: &[SketchCurve], radius: f64) -> Vec<SketchCall
 /// `Shape::SketchEdit`: offset, fillet corners or join on [`selected_sketch`].
 pub(crate) fn calls(entry: &OpEntry, edit: SketchEdit, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument, env: &Env) -> Result<Built, String> {
     let _ = r; // RoboCAD's handlers read the selection themselves (`_selected_sketch`).
-    let id = selected_sketch(doc).ok_or_else(|| entry.refusal.to_string())?;
+    let id = selected_sketch(doc, env.selection).ok_or_else(|| entry.refusal.to_string())?;
     let name = doc.node_name(&id);
     let g = read(env, &id, &name)?;
     let n = g.curves.len();
@@ -312,7 +314,8 @@ pub(in crate::cad) fn sketch_action(node: Option<&str>, plane: Option<&str>, cal
     if let Some(why) = cx.doc.commit_refusal(revision) {
         return Outcome::Done(Err(why));
     }
-    let (doc, env) = cx.split();
+    let selection = cx.shared.items();
+    let (doc, env) = cx.split(&selection);
     let (target, parsed, label) = match prepare(node, plane, calls, doc, &env) {
         Ok(p) => p,
         Err(e) => return Outcome::Done(Err(e)),

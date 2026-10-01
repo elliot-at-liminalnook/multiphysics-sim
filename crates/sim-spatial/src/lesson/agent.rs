@@ -159,6 +159,7 @@ fn attach(learn: &mut Learn, run: &sim_agent::Run) -> Result<(), String> {
         Some(scene) => reply.links.iter().filter(|p| known.contains(*p)).map(|p| LessonAnchor::Scene { scene: scene.clone(), part: Some(p.clone()), time_s: None, missing: false }).collect(),
         None => vec![],
     };
+    // Keyed by its run, so a reply is posted once.
     let comment = Comment { id: run.id.clone(), author: "Codex".into(), body: reply.body.clone(), created_at: sim_agent::now().to_string(), edited_at: None, links };
-    learn.note("Codex reply", ThreadCommand::AddComment { thread: t.id.clone(), comment }).map(|_| ())
+    learn.thread_op("Codex reply", crate::annotations::ThreadOp::Post { thread: t.id.clone(), comment }).map(|_| ())
 }

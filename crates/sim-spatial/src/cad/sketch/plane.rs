@@ -47,6 +47,7 @@ use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadInputFocus, SelectMode};
 use crate::cad::mesh::{CadBody, CadMeshes};
 use crate::cad::ops::{Flow, entry};
+use crate::cad::selection::{CadItems, CadSelection};
 use crate::cad::snap::{self, Candidate};
 use crate::cad::topology::CadTopology;
 use crate::cad::transform::{HOT, ToolGizmos, cursor_in_view, marker, num, ray_hit};
@@ -92,15 +93,15 @@ fn kind<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
 
 /// SimSync (core, after `cache::sync`): reset on a new generation, adopt a
 /// plane tool's new node, fill and drop node frames, follow a selected plane node.
-pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMut<CadActivePlane>>, sketches: Option<Res<super::CadSketches>>, mut seen: Local<Seen>) {
+pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMut<CadActivePlane>>, sketches: Option<Res<super::CadSketches>>, mut seen: Local<Seen>, selection: CadSelection) {
     let (Some(doc), Some(plane)) = (doc, plane) else { return };
-    follow(doc, plane, sketches.as_deref(), &mut seen);
+    follow(doc, plane, sketches.as_deref(), &selection.items(), &mut seen);
 }
 
 /// [`sync`]'s work, over anything that derefs to the resources (`ResMut`
 /// in the system, so a frame that changes nothing marks nothing changed;
-/// plain references in tests).
-pub(in crate::cad) fn follow(mut doc: impl DerefMut<Target = CadDocument>, mut plane: impl DerefMut<Target = CadActivePlane>, sketches: Option<&CadSketches>, seen: &mut Seen) {
+/// plain references in tests; `selection`: the shared selection's CAD items).
+pub(in crate::cad) fn follow(mut doc: impl DerefMut<Target = CadDocument>, mut plane: impl DerefMut<Target = CadActivePlane>, sketches: Option<&CadSketches>, selection: &[SelectionItem], seen: &mut Seen) {
     if plane.generation != doc.generation {
         *plane = CadActivePlane { generation: doc.generation, ..default() };
         *seen = Seen::default();
@@ -115,9 +116,9 @@ pub(in crate::cad) fn follow(mut doc: impl DerefMut<Target = CadDocument>, mut p
         doc.show(Ok(SET.to_string()));
     }
     // A selection that changed to exactly one plane node makes it active (native addition).
-    if seen.selection.as_ref() != Some(&doc.selection) {
-        seen.selection = Some(doc.selection.clone());
-        let nodes = doc.selected_nodes();
+    if seen.selection.as_deref() != Some(selection) {
+        seen.selection = Some(selection.to_vec());
+        let nodes = selection.nodes();
         if let [only] = nodes.as_slice()
             && kind(&doc, only) == Some("plane")
             && !matches!(&plane.plane, Some(ActivePlane::Node { id, .. }) if id == only)
@@ -188,6 +189,7 @@ pub(in crate::cad) fn view_act(doc: &mut CadDocument, plane: &mut CadActivePlane
 }
 
 /// `Flow::PlanePick` starts: RoboCAD's `PlaneTool.activate` (tools.py:1078-1081).
+/// The caller (`ops::invoke`) pushes a changed mode with the selection.
 pub(in crate::cad) fn begin(doc: &mut CadDocument, mode: PlaneMode) -> Result<(), String> {
     doc.ops.plane_picks.clear();
     let select = match mode {
@@ -196,7 +198,7 @@ pub(in crate::cad) fn begin(doc: &mut CadDocument, mode: PlaneMode) -> Result<()
     };
     if doc.select_mode != select {
         doc.select_mode = select;
-        crate::cad::selection::publish(doc);
+        doc.touch();
     }
     Ok(())
 }

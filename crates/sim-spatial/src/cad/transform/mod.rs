@@ -363,8 +363,8 @@ pub(super) fn is_transform(tool: CadTool) -> bool {
 pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     match action {
         CadAction::CadTool { tool } => Outcome::Done(Ok(activate(cx, *tool))),
-        CadAction::CadCancel => Outcome::Done(Ok(cancel(cx))),
-        CadAction::CadTransform { .. } | CadAction::CadPushPull { .. } | CadAction::CadOffsetFaces { .. } | CadAction::CadSetDimension { .. } => commit::commit(cx.doc, cx.topology.as_deref(), call, action),
+        CadAction::CadCancel => Outcome::Done(cancel(cx)),
+        CadAction::CadTransform { .. } | CadAction::CadPushPull { .. } | CadAction::CadOffsetFaces { .. } | CadAction::CadSetDimension { .. } => commit::commit(cx.doc, &cx.shared.items(), cx.topology.as_deref(), call, action),
         CadAction::CadNumeric { values } => commit::numeric(cx, call, values),
         CadAction::CadMeasure { a, b, keep } => commit::measure(cx, call, a, b, *keep),
         _ => Outcome::Done(Err("not a CAD tool action".into())),
@@ -386,6 +386,7 @@ fn end_live(doc: &mut CadDocument) {
 /// `CadTool`: RoboCAD's `set_tool` (the old tool's live work ends, the new
 /// one activates). A committed preview is kept until its edit lands.
 fn activate(cx: &mut Cx, tool: CadTool) -> Value {
+    let selection = cx.shared.items();
     let doc = &mut *cx.doc;
     end_live(doc);
     // RoboCAD's `set_tool` replaces a catalogue pick or place tool too: its
@@ -406,9 +407,9 @@ fn activate(cx: &mut Cx, tool: CadTool) -> Value {
     answer.insert("tool".into(), json!(tool.name()));
     match tool {
         CadTool::Move | CadTool::Rotate | CadTool::Scale => {
-            let p = pivot(doc, cx.meshes.as_deref());
+            let p = pivot(doc, &selection, cx.meshes.as_deref());
             doc.tool_state.pivot = p;
-            if doc.selection.is_empty() {
+            if selection.is_empty() {
                 status = "Select something to transform".into();
             }
             answer.insert("pivot".into(), p.map_or(Value::Null, |(at, rule)| json!({"point": mm(at), "rule": rule.name()})));
@@ -417,9 +418,9 @@ fn activate(cx: &mut Cx, tool: CadTool) -> Value {
             // RoboCAD's PushPullTool.activate sets the mode directly (the selection is kept).
             if doc.select_mode != super::document::SelectMode::Face {
                 doc.select_mode = super::document::SelectMode::Face;
-                super::selection::publish(doc);
+                super::selection::publish(doc, cx.shared.view());
             }
-            doc.tool_state.push = face_target(doc, cx.topology.as_deref());
+            doc.tool_state.push = face_target(doc, &selection, cx.topology.as_deref());
             answer.insert("target".into(), doc.tool_state.push.as_ref().map_or(Value::Null, |t| json!({"node": t.node, "face": t.face})));
         }
         CadTool::Select | CadTool::Measure => {}
@@ -433,29 +434,29 @@ fn activate(cx: &mut Cx, tool: CadTool) -> Value {
 /// is open; else end an active catalogue pick or placement, or an open
 /// form, exactly as the form's Cancel does (`ops::form_cancel`); else end
 /// the tool's live work and return to Select; in the Select tool, clear
-/// the selection.
-fn cancel(cx: &mut Cx) -> Value {
+/// the selection (through the shared selection, `Op::Clear`).
+fn cancel(cx: &mut Cx) -> Result<Value, String> {
     if cx.doc.candidates.is_some() {
         cx.doc.candidates = None;
         cx.doc.touch();
-        return json!({"closed": "the Alt menu"});
+        return Ok(json!({"closed": "the Alt menu"}));
     }
     if cx.doc.ops.active.is_some() || cx.doc.ops.form.is_some() {
-        return super::ops::form_cancel(cx.doc);
+        return Ok(super::ops::form_cancel(cx.doc));
     }
     if cx.doc.tool != CadTool::Select {
         let from = cx.doc.tool.name();
         activate(cx, CadTool::Select);
-        return json!({"tool": "select", "from": from});
+        return Ok(json!({"tool": "select", "from": from}));
     }
     let doc = &mut *cx.doc;
     end_live(doc);
     doc.tool_state.dimension = None;
     doc.tool_state.numeric.focus = None;
-    if doc.selection.is_empty() {
-        return json!({"selection": "already empty"});
+    if cx.shared.items().is_empty() {
+        return Ok(json!({"selection": "already empty"}));
     }
-    doc.selection.clear();
-    super::selection::publish(doc);
-    json!({"selection": "cleared"})
+    cx.shared.clear()?;
+    super::selection::publish(doc, cx.shared.view());
+    Ok(json!({"selection": "cleared"}))
 }

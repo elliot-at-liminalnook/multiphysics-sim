@@ -1,5 +1,6 @@
 //! The one lesson action handler (clicks, keys and REST).
 use super::*;
+use crate::annotations::ThreadOp;
 
 impl Learn {
     /// Everything a click (or REST) can do. Side effects that need the ECS
@@ -239,17 +240,17 @@ impl Learn {
                 }
                 LessonAction::DeleteComment(c) => {
                     let t = self.thread.clone().ok_or("open a note first")?;
-                    self.note("Delete comment", ThreadCommand::DeleteComment { thread: t, comment: c })?;
+                    self.thread_op("Delete comment", ThreadOp::DeleteComment { thread: t, comment: c })?;
                     self.menu = None;
                 }
                 LessonAction::Resolve => {
                     let t = self.thread.clone().ok_or("open a note first")?;
                     let resolved = !self.notes_doc.threads.get(&t).is_some_and(|x| x.resolved);
-                    self.note(if resolved { "Resolve" } else { "Reopen" }, ThreadCommand::Resolve { thread: t, resolved })?;
+                    self.thread_op(if resolved { "Resolve" } else { "Reopen" }, ThreadOp::Resolve { thread: t, resolved })?;
                 }
                 LessonAction::DeleteThread => {
                     let t = self.thread.take().ok_or("open a note first")?;
-                    self.note("Delete note", ThreadCommand::DeleteThread { id: t })?;
+                    self.thread_op("Delete note", ThreadOp::Delete { thread: t })?;
                 }
                 LessonAction::Author => self.input = Some(Input { purpose: Purpose::Author, buffer: self.author.clone() }),
                 LessonAction::OpenOnly => self.open_only = !self.open_only,
@@ -283,9 +284,8 @@ impl Learn {
                     let index = self.index.as_ref().ok_or("the lesson is still loading")?;
                     let (_, start, end) = heading.and_then(|h| index.ranges.iter().find(|(id, ..)| *id == h).cloned()).ok_or("the prompt has no section heading to attach the note to")?;
                     let quote = sim_annotate::text::TextAnchor::capture(&index.text.text, start, end, &section)?;
-                    let t = sim_annotate::uid("t");
-                    let thread = Thread { id: t.clone(), title: "Feedback on my explanation".into(), resolved: false, targets: vec![LessonAnchor::Text { quote }], comments: vec![Comment { id: sim_annotate::uid("c"), author: self.author.clone(), body, created_at: sim_annotate::stamp(), edited_at: None, links: vec![] }], pin_m: None, view: None };
-                    self.note("Feedback request", ThreadCommand::PutThread { thread })?;
+                    let op = ThreadOp::Create { title: "Feedback on my explanation".into(), targets: vec![LessonAnchor::Text { quote }], body, author: self.author.clone(), links: vec![], pin_m: None, view: None };
+                    let t = self.thread_op("Feedback request", op)?.thread.ok_or("the new note has no id")?;
                     self.thread = Some(t.clone());
                     self.ask_when_saved = Some(t);
                     self.status = "Saving your explanation as a note, then asking Codex for feedback…".into();

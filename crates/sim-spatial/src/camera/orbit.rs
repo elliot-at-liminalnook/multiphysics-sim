@@ -154,6 +154,16 @@ impl Orbit {
         }
     }
 
+    /// Keep the distance within the zoom limits (after `extent` changed: the
+    /// old robot orbit clamped it every frame; the wheel clamps it too).
+    pub fn clamp_radius(&mut self, rules: &OrbitRules) {
+        let (min, max) = self.limits(rules);
+        let radius = self.radius.clamp(min, max.max(min));
+        if radius != self.radius && self.radius > 0.0 {
+            self.radius = radius;
+        }
+    }
+
     /// A named view: RoboCAD's yaw and pitch (turntable), within the
     /// mode's pitch limit; focus and distance kept.
     pub fn preset(&mut self, view: ViewPreset, rules: &OrbitRules, seconds: f32) {
@@ -327,8 +337,14 @@ impl Orbit {
         match (self.orthographic, current) {
             (false, Projection::Perspective(p)) if (p.fov - self.fov).abs() <= 1e-6 => None,
             (false, Projection::Perspective(p)) => Some(Projection::Perspective(PerspectiveProjection { fov: self.fov, ..p.clone() })),
-            // Bevy's default clip plane sits at its default near (0.1); keep the two together.
-            (false, _) => Some(Projection::Perspective(PerspectiveProjection { fov: self.fov, near: 0.001, near_clip_plane: Vec4::new(0.0, 0.0, -1.0, -0.001), ..default() })),
+            // Back from orthographic: the mode's own near plane (recorded by `place`), else Bevy's default.
+            (false, _) => {
+                let mut p = PerspectiveProjection { fov: self.fov, ..default() };
+                if let Some((near, plane)) = self.perspective {
+                    (p.near, p.near_clip_plane) = (near, plane);
+                }
+                Some(Projection::Perspective(p))
+            }
             (true, current) => {
                 let height = 2.0 * self.radius.max(1e-6) * (self.fov * 0.5).tan();
                 // Clip planes reach far behind and before the eye: an ortho camera sees the whole model.
@@ -377,17 +393,14 @@ pub(super) fn area_aspect(window: &Window, view: &ViewArea) -> f32 {
     if size.x > 0.0 && size.y > 0.0 { (size.x / size.y).max(0.1) } else { 1.0 }
 }
 
-/// [`aspect`], also before the camera's first frame: Bevy computes the
-/// viewport's logical size (`camera_system`, PostUpdate) only after the
-/// first update, so until then (no logical size and no card sub-view) the
-/// aspect comes from the window and the view area, as the viewport will be.
+/// The aspect a view frames at: its view area's (a card's whole rectangle,
+/// else between the docks or the window; known before the camera's first
+/// frame, and unchanged while the spatial view's split halves the drawn
+/// viewport, as fly-to and the lesson glides frame), else the camera's.
 pub(crate) fn view_aspect(camera: &Camera, window: Option<&Window>, view: Option<&ViewArea>) -> f32 {
-    if camera.sub_camera_view.is_some() || camera.logical_viewport_size().is_some() {
-        return aspect(camera);
-    }
     match (window, view) {
         (Some(window), Some(view)) => area_aspect(window, view),
-        _ => 1.0,
+        _ => aspect(camera),
     }
 }
 
@@ -411,6 +424,11 @@ pub(super) fn place(time: Res<Time>, window: Option<Single<&Window, With<Primary
         let target = orbit.transform();
         if *transform != target {
             *transform = target;
+        }
+        if let Projection::Perspective(p) = &*projection
+            && orbit.perspective != Some((p.near, p.near_clip_plane))
+        {
+            orbit.perspective = Some((p.near, p.near_clip_plane));
         }
         if let Some(next) = orbit.projection(&projection) {
             *projection = next;

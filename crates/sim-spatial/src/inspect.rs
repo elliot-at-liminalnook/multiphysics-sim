@@ -160,6 +160,8 @@ fn execute(scene: &mut SpatialScene, camera: &mut Orbit, action: &InspectAction)
                 return Err("finite camera required; radius > 0 and pitch within ±1.5 radians".into());
             }
             // A cut: also ends any glide (which would overwrite it) and the trackball.
+            // A restored view stands still: a spin would turn away from it.
+            camera.interrupt();
             camera.glide_to(crate::camera::Pose { focus: Vec3::from_array(*focus), radius, yaw, pitch }, 0.0);
         }
         InspectAction::Fit => camera.home = true,

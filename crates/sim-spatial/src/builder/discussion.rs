@@ -152,6 +152,8 @@ fn view(scene: &SpatialScene, o: &Orbit) -> sim_inspect::annotations::PhysicalVi
 }
 fn restore(scene: &mut SpatialScene, o: &mut Orbit, v: sim_inspect::annotations::PhysicalView) {
     // A cut: also ends a glide (which would overwrite it) and the trackball.
+    // A restored view stands still: a spin would turn away from it.
+    o.interrupt();
     o.glide_to(crate::camera::Pose { focus: Vec3::from_array(v.focus), radius: v.radius, yaw: v.yaw, pitch: v.pitch }, 0.0);
     scene.state.hidden = v.hidden;
     scene.state.exploded = v.exploded;

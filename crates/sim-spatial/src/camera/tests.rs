@@ -146,6 +146,13 @@ fn the_projection_toggles_between_perspective_and_orthographic() {
     }
     assert!(orbit.projection(&ortho).is_none(), "an unchanged orthographic is not rewritten");
     orbit.orthographic = false;
+    // Without a recorded perspective, Bevy's default near plane.
+    match orbit.projection(&ortho) {
+        Some(Projection::Perspective(p)) => assert!(p.near == PerspectiveProjection::default().near && (p.fov - orbit.fov).abs() < 1e-6),
+        _ => panic!("back to perspective"),
+    }
+    // The mode's own near plane, as `place` records it while perspective.
+    orbit.perspective = Some((0.001, Vec4::new(0.0, 0.0, -1.0, -0.001)));
     match orbit.projection(&ortho) {
         Some(Projection::Perspective(p)) => assert!(p.near == 0.001 && p.near_clip_plane.w == -0.001 && (p.fov - orbit.fov).abs() < 1e-6),
         _ => panic!("back to perspective"),

@@ -48,6 +48,8 @@ pub(super) fn sync(scene: &mut SpatialScene, camera: &mut Orbit) {
             if let Some(v) = &view.physical {
                 // A cut: also ends a glide (which would carry on from its
                 // start) and returns from the trackball.
+                // A restored view stands still: a spin would turn away from it.
+                camera.interrupt();
                 camera.glide_to(crate::camera::Pose { focus: Vec3::from_array(v.focus), radius: v.radius, yaw: v.yaw, pitch: v.pitch }, 0.0);
                 scene.state.exploded = v.exploded;
                 scene.state.connections = v.connections;

@@ -30,6 +30,7 @@ pub(super) fn receive(
     root: Single<Entity, With<RobotRoot>>,
     list: Single<Entity, With<ListRoot>>,
     mut orbit: Single<&mut Orbit, With<RobotCamera>>,
+    rules: Single<&crate::camera::OrbitRules, With<RobotCamera>>,
     mut redraw: MessageWriter<bevy::window::RequestRedraw>,
     fonts: Res<UiFonts>,
 ) {
@@ -123,6 +124,8 @@ pub(super) fn receive(
         // The bounds a fit frames; the focus moves only on an open (`home`).
         orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
         orbit.centre = (lo + hi) / 2.0;
+        // A reload keeps the distance, within the new model's zoom limits.
+        orbit.clamp_radius(&rules);
     } else if reload.is_none() {
         // No geometry to frame: an open keeps the focus where it was, as before.
         orbit.centre = orbit.focus;
@@ -320,7 +323,12 @@ fn install_planar(
 /// (never one of an older generation), keeps the window redrawing while
 /// frames are expected, and frames the camera on the first built frame of an
 /// open (front view of the working plane) or a reload (extent only).
-pub(super) fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut Orbit, With<RobotCamera>>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
+pub(super) fn planar_sync(
+    mut view: ResMut<RobotView>,
+    mut orbit: Single<&mut Orbit, With<RobotCamera>>,
+    rules: Single<&crate::camera::OrbitRules, With<RobotCamera>>,
+    mut redraw: MessageWriter<bevy::window::RequestRedraw>,
+) {
     // Checked through a shared borrow first: a physical view is not marked changed.
     if view.planar.is_none() {
         return;
@@ -337,6 +345,7 @@ pub(super) fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut Or
     p.frame_camera = None;
     orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
     orbit.centre = (lo + hi) / 2.0;
+    orbit.clamp_radius(&rules);
     if move_focus {
         // Looking along −Z: x right, y up, as the plane is drawn; `home`
         // moves the focus to the centre at 3.2 × extent (`camera::place`).

@@ -20,7 +20,7 @@
 //! read. It would narrow access to the server's user, but it is a server
 //! change (both servers, their configs and their tests) for no gain while
 //! the page stays readable.
-use super::{Client, ClientError, Endpoint, ServerKind, new_client_id};
+use super::{Client, ClientError, Endpoint, ServerKind, process_client_id};
 use std::path::Path;
 use std::time::Duration;
 
@@ -94,7 +94,9 @@ pub fn read_file(path: &Path) -> Result<String, String> {
 }
 
 /// A client for the server at `url` (loopback only): the token from
-/// `token_file` when given, else from the server's page; a fresh client id;
+/// `token_file` when given, else from the server's page; this process's
+/// client id ([`process_client_id`], the same on every connect and
+/// reconnect, as the page keeps one per page load);
 /// the body limit of `kind`'s server ([`Client::for_kind`]).
 pub fn connect(url: &str, token_file: Option<&Path>, kind: ServerKind) -> Result<Client, ClientError> {
     let endpoint = Endpoint::parse(url)?;
@@ -102,5 +104,5 @@ pub fn connect(url: &str, token_file: Option<&Path>, kind: ServerKind) -> Result
         Some(path) => read_file(path).map_err(ClientError::Decode)?,
         None => discover(&endpoint, kind)?,
     };
-    Ok(Client::new(endpoint, token, new_client_id()).for_kind(kind))
+    Ok(Client::new(endpoint, token, process_client_id()).for_kind(kind))
 }

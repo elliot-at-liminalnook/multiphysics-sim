@@ -124,7 +124,8 @@ impl Client {
     /// the request was written, not that the server accepted it.
     pub fn send_only(&self, path: &str, body: &Body) -> Result<(), ClientError> {
         let text = self.checked_body(body)?;
-        let (stream, _) = self.send("POST", path, Some(&text), true)?;
+        let (stream, fail, written) = self.send("POST", path, Some(&text), true)?;
+        written.map_err(|e| fail("write", e))?;
         // The request is complete (the servers read by `Content-Length`); the
         // FIN tells the server nothing more follows. A server that already
         // answered and closed may make this fail (ENOTCONN on macOS) after
@@ -144,9 +145,13 @@ impl Client {
         Ok(text)
     }
 
-    /// Checks the request, connects and writes it in full; the stream and
-    /// the error builder for this request.
-    fn send(&self, method: &str, path: &str, body: Option<&str>, control: bool) -> Result<(TcpStream, impl Fn(&str, std::io::Error) -> ClientError), ClientError> {
+    /// Checks the request, connects and writes it in full; the stream, the
+    /// error builder for this request and how the write went (a server that
+    /// refuses a request answers and closes without reading its body, which
+    /// may fail the write after the answer has arrived: see
+    /// [`Client::exchange`]).
+    #[allow(clippy::type_complexity)]
+    fn send(&self, method: &str, path: &str, body: Option<&str>, control: bool) -> Result<(TcpStream, impl Fn(&str, std::io::Error) -> ClientError, std::io::Result<()>), ClientError> {
         // The fields are public: check again rather than trust construction.
         if self.endpoint.ip != IpAddr::V4(Ipv4Addr::LOCALHOST) {
             return Err(ClientError::NotLoopback(format!("{}: {ONLY_IPV4_LOOPBACK}", self.endpoint.origin())));
@@ -181,19 +186,45 @@ impl Client {
         if let Some(body) = body {
             request.push_str(body);
         }
-        stream.write_all(request.as_bytes()).map_err(|e| fail("write", e))?;
-        stream.flush().map_err(|e| fail("write", e))?;
-        Ok((stream, fail))
+        let written = stream.write_all(request.as_bytes()).and_then(|()| stream.flush());
+        Ok((stream, fail, written))
     }
 
     /// One request on its own connection; the 2xx body, or the server's error.
+    ///
+    /// Both servers read a request's head and, when they refuse it (a stale
+    /// token after a restart, a bad client id or length), answer and close
+    /// without reading its body. With body bytes left unread the server's
+    /// kernel resets the connection, so our write or read may fail with
+    /// `ConnectionReset`/`BrokenPipe`/`ConnectionAborted` after the answer
+    /// arrived. Then the answer received so far is used when it is whole
+    /// ([`salvage`]), so the server's `error` (e.g. "Session token required")
+    /// surfaces; else the error says the server closed the connection and its
+    /// token may have changed.
     fn exchange(&self, method: &str, path: &str, body: Option<&str>, control: bool) -> Result<String, ClientError> {
         let origin = self.endpoint.origin();
-        let (mut stream, fail) = self.send(method, path, body, control)?;
-        let (status, text) = read_response(&mut stream, Instant::now() + self.timeout).map_err(|e| match e {
-            ReadError::Io(what, e) => fail(what, e),
-            ReadError::Malformed(why) => ClientError::Decode(format!("{method} {origin}{path}: {why}")),
-        })?;
+        let (mut stream, fail, written) = self.send(method, path, body, control)?;
+        let closed = |e: std::io::Error| {
+            ClientError::Transport(format!(
+                "{method} {origin}{path}: the server closed the connection without a usable answer ({e}); \
+                 if it was restarted its control token changed: reconnect to read the new one"
+            ))
+        };
+        let reset = match written {
+            Ok(()) => None,
+            Err(e) if is_closed(&e) => Some(e),
+            Err(e) => return Err(fail("write", e)),
+        };
+        let read = read_response(&mut stream, Instant::now() + self.timeout);
+        let (status, text) = match (read, reset) {
+            (Ok(answer), _) => answer,
+            (Err(ReadError::Io(_, e, data)), _) if is_closed(&e) => salvage(&data).ok_or_else(|| closed(e))?,
+            // The write already failed with a reset: that is the cause.
+            (Err(ReadError::Io(_, _, data)), Some(e)) => salvage(&data).ok_or_else(|| closed(e))?,
+            (Err(ReadError::Io(what, e, _)), None) => return Err(fail(what, e)),
+            (Err(ReadError::Malformed(why)), Some(e)) if why == NO_ANSWER => return Err(closed(e)),
+            (Err(ReadError::Malformed(why)), _) => return Err(ClientError::Decode(format!("{method} {origin}{path}: {why}"))),
+        };
         if (200..300).contains(&status) {
             return Ok(text);
         }
@@ -206,8 +237,33 @@ impl Client {
 }
 
 enum ReadError {
-    Io(&'static str, std::io::Error),
+    /// What failed, why, and the bytes received before it.
+    Io(&'static str, std::io::Error, Vec<u8>),
     Malformed(String),
+}
+
+/// Why a response could not be read when nothing arrived.
+const NO_ANSWER: &str = "the server closed the connection without answering";
+
+/// Whether an I/O error means the peer closed or reset the connection.
+fn is_closed(e: &std::io::Error) -> bool {
+    matches!(e.kind(), ErrorKind::ConnectionReset | ErrorKind::BrokenPipe | ErrorKind::ConnectionAborted)
+}
+
+/// A response from the bytes received before the connection was reset: a
+/// complete head and its `Content-Length` body, or a complete head and
+/// whatever body arrived when that parses as JSON (a server error without a
+/// length). `None` when nothing usable arrived.
+fn salvage(data: &[u8]) -> Option<(u16, String)> {
+    let p = data.windows(4).position(|w| w == b"\r\n\r\n")?;
+    let (status, length) = parse_head(std::str::from_utf8(&data[..p]).ok()?).ok()?;
+    let body = &data[p + 4..];
+    let body = match length {
+        Some(n) if body.len() >= n => &body[..n],
+        _ if serde_json::from_slice::<Value>(body).is_ok() => body,
+        _ => return None,
+    };
+    Some((status, String::from_utf8(body.to_vec()).ok()?))
 }
 
 /// Reads one response: the status code and the body as UTF-8. Stops at
@@ -248,18 +304,22 @@ fn read_response(stream: &mut TcpStream, deadline: Instant) -> Result<(u16, Stri
         }
         let remaining = deadline.saturating_duration_since(Instant::now());
         if remaining.is_zero() {
-            return Err(ReadError::Io("read", std::io::Error::from(ErrorKind::TimedOut)));
+            return Err(ReadError::Io("read", std::io::Error::from(ErrorKind::TimedOut), data));
         }
-        stream.set_read_timeout(Some(remaining)).map_err(|e| ReadError::Io("set timeout", e))?;
+        // macOS refuses to set a timeout (EINVAL) on a socket the peer has
+        // already reset; the answer it sent may still be buffered, so read
+        // on under the previous timeout (at most the client's); the loop
+        // still checks the deadline between reads.
+        let _ = stream.set_read_timeout(Some(remaining));
         match stream.read(&mut chunk) {
             Ok(0) => eof = true,
             Ok(n) => data.extend_from_slice(&chunk[..n]),
             Err(e) if e.kind() == ErrorKind::Interrupted => {}
-            Err(e) => return Err(ReadError::Io("read", e)),
+            Err(e) => return Err(ReadError::Io("read", e, data)),
         }
     }
     let Some((start, status, length)) = head else {
-        return Err(malformed(if data.is_empty() { "the server closed the connection without answering" } else { "incomplete response headers" }));
+        return Err(malformed(if data.is_empty() { NO_ANSWER } else { "incomplete response headers" }));
     };
     if let Some(length) = length {
         if data.len() < start + length {
@@ -304,6 +364,16 @@ fn json(path: &str, text: &str) -> Result<Value, ClientError> {
 
 fn decode<T: DeserializeOwned>(path: &str, value: Value) -> Result<T, ClientError> {
     serde_json::from_value(value).map_err(|e| ClientError::Decode(format!("{path}: unexpected answer: {e}")))
+}
+
+/// This process's `X-Client-Id`: one [`new_client_id`], made on first use
+/// and returned on every later call, so every connect and reconnect of the
+/// viewer presents the same identity, as the browser page keeps one
+/// `crypto.randomUUID()` per page load (the servers tie leases and command
+/// ordering to it).
+pub fn process_client_id() -> String {
+    static ID: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    ID.get_or_init(new_client_id).clone()
 }
 
 /// A random (version 4) UUID for `X-Client-Id`, as `crypto.randomUUID()`:

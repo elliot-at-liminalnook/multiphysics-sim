@@ -3,7 +3,7 @@
 //! wire, tolerant status parsing, loopback refusal, server errors and token
 //! discovery.
 use super::calibration::{self, GaitBinding, Input};
-use super::{Body, CALIBRATION_MAX_BODY, Client, ClientError, Endpoint, Json, MOTOR_BENCH_MAX_BODY, ServerKind, bench, encode_uri_component, js_number, new_client_id, token};
+use super::{Body, CALIBRATION_MAX_BODY, Client, ClientError, Endpoint, Json, MOTOR_BENCH_MAX_BODY, ServerKind, bench, encode_uri_component, js_number, js_number_text, new_client_id, process_client_id, token};
 use crate::acquisition::calibration_sweep::DriveMode;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -637,6 +637,34 @@ fn numbers_paths_and_ids_as_javascript_writes_them() {
     assert_eq!(text(0.1), "0.1");
     assert_eq!(text(f64::NAN), "null");
     assert_eq!(text(f64::INFINITY), "null");
+    // ECMAScript Number::toString, which JSON.stringify uses: plain decimal
+    // for 1e-7 < |x| < 1e21, shortest round-trip digits, `e+`/`e-` beyond.
+    for (x, js) in [
+        (3.2e-6, "0.0000032"),
+        (1e-6, "0.000001"),
+        (1e-7, "1e-7"),
+        (-2.5e-7, "-2.5e-7"),
+        (1e21, "1e+21"),
+        (1.5e300, "1.5e+300"),
+        (1e20, "100000000000000000000"),
+        (2f64.powi(60), "1152921504606847000"),
+        (-0.0, "0"),
+        (0.1 + 0.2, "0.30000000000000004"),
+        (123.0, "123"),
+        (1.5, "1.5"),
+        (-1234.5678, "-1234.5678"),
+        (5e-324, "5e-324"),
+        (f64::MAX, "1.7976931348623157e+308"),
+        (f64::NEG_INFINITY, "null"),
+    ] {
+        assert_eq!(js_number_text(x), js, "{x:e}");
+        assert_eq!(text(x), js, "{x:e}");
+    }
+    // A body carries the same text, and its order-free reading is what a
+    // server parsing those bytes gets.
+    let body = Body::new(vec![("a", js_number(3.2e-6)), ("b", js_number(2f64.powi(60))), ("c", js_number(-0.0))]);
+    assert_eq!(body.text(), r#"{"a":0.0000032,"b":1152921504606847000,"c":0}"#);
+    assert_eq!(serde_json::from_str::<Value>(&body.text()).unwrap(), body.to_value());
     assert_eq!(encode_uri_component("examples/full-robot/a b/compiled.json"), "examples%2Ffull-robot%2Fa%20b%2Fcompiled.json");
     assert_eq!(encode_uri_component("a-_.!~*'()é"), "a-_.!~*'()%C3%A9");
     assert_eq!(calibration::gait_path("examples/x y/compiled.json"), "/calibration/gait?path=examples%2Fx%20y%2Fcompiled.json");
@@ -650,4 +678,48 @@ fn numbers_paths_and_ids_as_javascript_writes_them() {
             _ => assert!(c.is_ascii_digit() || ('a'..='f').contains(&c), "{a}"),
         }
     }
+}
+
+#[test]
+fn one_client_id_per_process() {
+    let path = std::env::temp_dir().join(format!("hardware-client-id-token-{}", std::process::id()));
+    std::fs::write(&path, TOKEN).unwrap();
+    // A token file: nothing is contacted, so no server is needed.
+    let first = token::connect("http://127.0.0.1:1", Some(&path), ServerKind::Calibration).unwrap();
+    let again = token::connect("http://127.0.0.1:1", Some(&path), ServerKind::Calibration).unwrap();
+    let bench = token::connect("http://localhost:2", Some(&path), ServerKind::MotorBench).unwrap();
+    std::fs::remove_file(&path).unwrap();
+    assert_eq!(first.client_id, again.client_id);
+    assert_eq!(first.client_id, bench.client_id);
+    assert_eq!(first.client_id, process_client_id());
+    // The format both servers check: 36 characters of hex and dashes.
+    assert_eq!(first.client_id.len(), 36);
+    assert!(first.client_id.bytes().all(|b| b.is_ascii_hexdigit() || b == b'-'));
+}
+
+/// A refusal as both servers make it: read the head in 1024-byte pieces,
+/// answer, close without reading the body. With body bytes unread the
+/// kernel may reset the connection; the server's `error` still surfaces.
+#[test]
+fn a_refusal_before_the_body_surfaces_the_servers_error() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let endpoint = Endpoint::loopback(IpAddr::V4(Ipv4Addr::LOCALHOST), listener.local_addr().unwrap().port()).unwrap();
+    let server = std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        stream.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
+        let mut data = Vec::new();
+        while !data.windows(4).any(|w| w == b"\r\n\r\n") {
+            let mut b = [0u8; 1024];
+            let n = stream.read(&mut b).unwrap();
+            assert!(n > 0, "request ended before its headers");
+            data.extend_from_slice(&b[..n]);
+        }
+        let answer = r#"{"error":"Session token required"}"#;
+        let _ = write!(stream, "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{answer}", answer.len());
+        // Dropped with the body unread (a reset where the platform sends one).
+    });
+    let c = client(endpoint);
+    let e = c.post(calibration::COMMAND, &body_of(3000)).unwrap_err();
+    server.join().unwrap();
+    assert!(e.to_string().contains("Session token required"), "{e:?}");
 }

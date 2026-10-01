@@ -1918,8 +1918,14 @@ started before the `App` (tests, `--validate-only`, headless) and
   check). The placement validator uses bound zero: a release or cancel never
   waits on a validation. A replaced worker's snapshots are never applied: the
   new worker's owner starts at a later generation or has its own snapshot.
-- **Helpers**: `jobs::reap_child` waits for a detached child process (the
-  linked `sim-viewer` window, a browser opened for a link) on its own thread;
+- **Helpers**: `jobs::spawn_detached(name, command) -> Result<u32, String>`
+  starts a process whose lifetime is not tied to ours (the linked
+  `sim-viewer` window) and `jobs::open_in_browser(url)` opens an http(s)
+  link with `open`/`xdg-open` (anything else is "not a web link: {url}");
+  both are `ChildProcess::detach`ed, so a reaper thread waits for the
+  process and it never lingers as a zombie. Nothing outside `jobs` starts a
+  process (`jobs::tests::processes_are_started_only_in_jobs`; `main.rs` only
+  builds the `sim-viewer` command it hands to `spawn_detached`).
   `jobs::drop_off_thread` drops a value whose drop is slow or joins threads
   (the builder replaced by Open system) away from the UI thread.
 

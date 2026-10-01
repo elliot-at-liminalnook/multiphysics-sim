@@ -13,16 +13,8 @@ impl Reference {
     }
     pub fn open(&mut self, target: String) -> Result<(), String> {
         if target.starts_with("https://") || target.starts_with("http://") {
-            #[cfg(target_os = "macos")]
-            let program = "open";
-            #[cfg(not(target_os = "macos"))]
-            let program = "xdg-open";
-            let child = std::process::Command::new(program)
-                .arg(&target)
-                .spawn()
-                .map_err(|e| e.to_string())?;
-            crate::jobs::reap_child(child, program);
-            return Ok(());
+            // Detached and reaped; a failed start answers the OS error.
+            return crate::jobs::open_in_browser(&target);
         }
         sim_markdown::source_location(&target)?;
         // Source links resolve against the workspace root.

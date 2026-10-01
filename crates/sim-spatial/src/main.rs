@@ -340,13 +340,10 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     scene.connect_annotations(annotation_path);
     if args.schematic {
         let sibling = std::env::current_exe()?.with_file_name("sim-viewer");
-        let child = std::process::Command::new(sibling)
-            .arg("--system")
-            .arg(path)
-            .arg("--compact")
-            .spawn()
-            .map_err(|e| format!("Could not open the schematic: {e}. Build sim-viewer first."))?;
-        sim_spatial::jobs::reap_child(child, "sim-viewer");
+        let mut command = std::process::Command::new(sibling);
+        command.arg("--system").arg(path).arg("--compact");
+        // Detached (outlives this window) and reaped when it exits.
+        sim_spatial::jobs::spawn_detached("sim-viewer", command).map_err(|e| format!("Could not open the schematic: {e}. Build sim-viewer first."))?;
     }
     let models_dir = models_dir(args, &library);
     let mut models = sim_spatial::models::ModelLibrary::open(models_dir.clone());
@@ -501,11 +498,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .arg(&spatial_path);
                 }
             }
-            let child = command
-                .arg("--selection-link").arg(&directory).arg("--compact")
-                .spawn().map_err(|e| format!("Could not open schematic: {e}. Run examples/systems-viewer/run-linked.sh to build both viewers."))?;
+            command.arg("--selection-link").arg(&directory).arg("--compact");
             // Reap the companion when it exits, without tying its lifetime to ours.
-            sim_spatial::jobs::reap_child(child, "sim-viewer");
+            sim_spatial::jobs::spawn_detached("sim-viewer", command).map_err(|e| format!("Could not open schematic: {e}. Run examples/systems-viewer/run-linked.sh to build both viewers."))?;
         }
         if scene.animation.is_some() {
             scene.connect_live(directory);

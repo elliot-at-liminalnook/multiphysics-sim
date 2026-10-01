@@ -1376,12 +1376,10 @@ fn record(lesson: &Lesson, scene: &Scene, extra: &BTreeMap<String, f64>, registr
     runtime::scene_run(&doc, registry, &sc, &timeline, true, Some(ctx.cancel_flag()), &|f| ctx.fraction(((f * 1000.) as u32) as f64 / 1000.0))
 }
 
+/// An http(s) link in the browser ("not a web link: {url}" otherwise),
+/// through `jobs`, which reaps the opener so it never lingers as a zombie.
 fn open_url(url: &str) -> Result<(), String> {
-    if !(url.starts_with("https://") || url.starts_with("http://")) {
-        return Err(format!("not a web link: {url}"));
-    }
-    let opener = if cfg!(target_os = "macos") { "open" } else { "xdg-open" };
-    std::process::Command::new(opener).arg(url).spawn().map(|_| ()).map_err(|e| e.to_string())
+    crate::jobs::open_in_browser(url)
 }
 
 pub struct LearnPlugin;

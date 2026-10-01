@@ -1,8 +1,15 @@
-//! A child process the viewer started and owns (RoboCAD's headless REST
-//! service, started by CAD mode). Only a process the viewer itself spawned
-//! ever becomes a [`ChildProcess`], so only self-started services are ever
-//! stopped: a RoboCAD the viewer attached to has no `ChildProcess` and is
-//! never touched.
+//! Child processes the viewer starts. Nothing outside `jobs` spawns a
+//! process (`tests::processes_are_started_only_in_jobs` scans for it).
+//!
+//! - [`ChildProcess`]: a process the viewer started and owns (RoboCAD's
+//!   headless REST service, started by CAD mode). Only a process the viewer
+//!   itself spawned ever becomes a `ChildProcess`, so only self-started
+//!   services are ever stopped: a RoboCAD the viewer attached to has no
+//!   `ChildProcess` and is never touched.
+//! - [`spawn_detached`]: a process whose lifetime is not tied to ours (the
+//!   linked `sim-viewer` schematic window), reaped when it exits.
+//! - [`open_in_browser`]: an http(s) link opened with the system opener
+//!   (`open` on macOS, `xdg-open` elsewhere), detached and reaped.
 //!
 //! Nothing here blocks the caller: `stop` sends the kill and leaves the wait
 //! to a reaper thread ([`super::reap_child`]), `detach` leaves the process
@@ -27,8 +34,13 @@ pub struct ChildProcess {
 impl ChildProcess {
     /// Starts `command`. `name` names the process in errors, exit reports
     /// and the reaper thread: "could not start {name}: {e}".
-    pub fn spawn(name: &str, mut command: Command) -> Result<ChildProcess, String> {
-        let child = command.spawn().map_err(|e| format!("could not start {name}: {e}"))?;
+    pub fn spawn(name: &str, command: Command) -> Result<ChildProcess, String> {
+        Self::start(name, command).map_err(|e| format!("could not start {name}: {e}"))
+    }
+
+    /// [`Self::spawn`] with the OS error as it is, for callers that word it.
+    fn start(name: &str, mut command: Command) -> std::io::Result<ChildProcess> {
+        let child = command.spawn()?;
         Ok(ChildProcess { name: name.to_string(), id: child.id(), child: Some(child), reaped: false, exit: None })
     }
 
@@ -105,4 +117,31 @@ impl Drop for ChildProcess {
     fn drop(&mut self) {
         self.stop_now();
     }
+}
+
+/// Starts `command` and leaves it running: its lifetime is not tied to the
+/// viewer's, and a reaper thread waits for it so it never lingers as a
+/// zombie ([`ChildProcess::detach`]). Returns its OS process id. `name`
+/// names it in the error, "could not start {name}: {e}", and the reaper.
+pub fn spawn_detached(name: &str, command: Command) -> Result<u32, String> {
+    let child = ChildProcess::spawn(name, command)?;
+    let id = child.id();
+    child.detach();
+    Ok(id)
+}
+
+/// Opens an http(s) `url` in the user's browser with the system opener
+/// (`open` on macOS, `xdg-open` elsewhere), detached and reaped like
+/// [`spawn_detached`]. Anything else is refused with "not a web link: {url}"
+/// (local paths are not handed to the opener). A failed start answers the
+/// OS error as it is.
+pub fn open_in_browser(url: &str) -> Result<(), String> {
+    if !(url.starts_with("https://") || url.starts_with("http://")) {
+        return Err(format!("not a web link: {url}"));
+    }
+    let opener = if cfg!(target_os = "macos") { "open" } else { "xdg-open" };
+    let mut command = Command::new(opener);
+    command.arg(url);
+    ChildProcess::start(opener, command).map_err(|e| e.to_string())?.detach();
+    Ok(())
 }

@@ -609,6 +609,11 @@ pub(super) fn motion_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>,
     }
 }
 
+/// Cmd/Ctrl/Alt chords (Cmd+R, Cmd+C, Cmd+=, …) are not robot mode's keys.
+fn chord(keys: &ButtonInput<KeyCode>) -> bool {
+    keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::AltLeft, KeyCode::AltRight])
+}
+
 /// Input, a planar (v2) file only: the planar viewer's keys as robot actions —
 /// Space Run/Pause, R Reset (rebuild from the loaded model), ←/→ select a joint
 /// (`SelectJoint`), ↑/↓ move its target while held (the same `RobotAction::Jog`
@@ -616,8 +621,7 @@ pub(super) fn motion_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>,
 /// name, as key H). C (contacts) and =/− (speed) are robot mode's own keys.
 pub(super) fn planar_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, mut out: MessageWriter<Act<RobotAction>>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
     let Some(p) = view.planar.as_ref() else { return };
-    // Cmd/Ctrl/Alt chords (Cmd+R, Cmd+S, …) are not these keys.
-    if keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::AltLeft, KeyCode::AltRight]) {
+    if chord(&keys) {
         return;
     }
     if keys.just_pressed(KeyCode::Space) {
@@ -653,13 +657,16 @@ pub(super) fn planar_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>,
 
 /// Input: key G, the same `RobotAction::ToggleGraphs` as the Graphs button and `system_ui` graphs:toggle.
 pub(super) fn graph_key(keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<Act<RobotAction>>) {
-    if keys.just_pressed(KeyCode::KeyG) {
+    if !chord(&keys) && keys.just_pressed(KeyCode::KeyG) {
         out.write(Act::ui(RobotAction::ToggleGraphs));
     }
 }
 
 /// Input: keys C / J / F / H, the same `RobotAction::Overlay` as the inspector buttons and `system_ui` overlay:*.
 pub(super) fn overlay_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, mut out: MessageWriter<Act<RobotAction>>) {
+    if chord(&keys) {
+        return;
+    }
     for (kind, _, key) in OVERLAYS {
         if keys.just_pressed(key) {
             out.write(Act::ui(overlay_toggle(&view, kind)));
@@ -670,6 +677,9 @@ pub(super) fn overlay_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>
 /// Input: keys =/+ and − (main row and numpad), the same `RobotAction::Speed` as the header
 /// −/+ buttons, `system_ui` run:speed_* and REST robot_speed. A refusal at ×8 / ×0.125 shows in the header.
 pub(super) fn speed_keys(keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<Act<RobotAction>>) {
+    if chord(&keys) {
+        return;
+    }
     let speed = if keys.any_just_pressed([KeyCode::Equal, KeyCode::NumpadAdd]) {
         SpeedRequest::Up
     } else if keys.any_just_pressed([KeyCode::Minus, KeyCode::NumpadSubtract]) {
@@ -717,7 +727,7 @@ impl actions::Action for RobotAction {
             c("robot_save_recording", json!({"note":"after motion:w"}), &format!("Save the loaded preset run's recording: the same handler as the Save recording button and system_ui recording:save. The run thread snapshots the shared recording (EmbeddedEnvironment::episode_recording() for a preset with a task, EmbeddedSession::recording() without, as the browser's Download) in any phase with a built session, running, paused, ended or failed; a writer thread writes it, so the response returns at once with recording.pending set and robot_state.recording.last_saved {{path, meta_path, kind, version, completed_steps, replayable, not_replayable_reason, failure, saved_utc, bytes}} (or recording.error) once written. Optional path (relative to the root or absolute) and note (kept in the sidecar). {} {} {} Refused, naming the reason: --robot FILE, no built session (Run or Step first), a save still being written, a path under examples/, cad/ or web/, a name not ending in .json or ending in .meta.json, and an existing file (reported in recording.error).", robot_recording::LOCATION_RULE, robot_recording::FILE_RULE, robot_recording::REPLAYABLE_RULE)),
             c("robot_gait", json!({"report":"6216-Bayesian-009-472d11d4"}), &format!("Kinematic gait preview on the loaded preset: {}. Open a gait with report (a name in robot_state.gait_preview.reports: {}) or path (a compiled.json, relative to the workspace root or absolute); then {{\"action\":\"play\"}}, pause, stop, list, {{\"action\":\"seek\",\"t\":0.5}} (gait time, s) or {{\"action\":\"speed\",\"scale\":0.5}} (0 < scale <= 1). One worker reads the gait with sim_runtime::gait_playback::compiled_with_governor (governor from detailed.spec.json, else spec-identity.json, else none) and Gait::from_compiled, samples it ({}) and poses the scene with the shared KinematicMirror at lift {} m (web/viewer/calibration-mirror.mjs). Refused naming the reason: --robot FILE (no scene), a missing file (named), an unknown report, a gait joint that is not a coordinate of the preset's scene (named), a mirror that cannot serve the scene, a running physics run or a replay in progress; Run, Step and Replay are refused while a gait is loaded. Load errors after the command returns land in robot_state.gait_preview.error, with any previous preview kept. robot_state.gait_preview reports label, phase (idle | loading | playing | paused | failed), generation and frame_generation, report, compiled, governor_source, period_s, nominal_speed_m_s, report_speed_m_s, status and fidelity (the report's, verbatim), gait_time_s, speed_scale, desired_rad and commanded_rad by joint, drives, lift_m, authored_limit_violations and solve_ms. Nothing is simulated, written or sent to hardware.", robot_gait::LABEL, robot_gait::LISTING_RULE, robot_gait::SAMPLING_RULE, robot_gait::LIFT_M)),
             c("robot_replay", json!({"file":"20260930T060822.729Z.json"}), &format!("Replay a saved recording of the loaded preset: the same handler as the inspector Replay buttons and system_ui replay:<file>. Give file (a bare name listed in robot_state.recordings.files, in runs/robot-presets/<preset-id>/) or path (any readable recording .json, relative to the root or absolute; reading is not restricted). {{\"action\":\"cancel\"}} stops the replay between chunks (system_ui replay:cancel); {{\"action\":\"list\"}} lists the recordings again off the UI thread (system_ui replay:refresh). {} {} {} {} robot_state.replay reports path, phase (idle | replaying | cancelled | done | failed), completed/total with unit, completed_steps and recorded_completed_steps, verdict, error, measured, replaced and sidecar. Refused, naming the reason: --robot FILE, a replay already in progress, a running run (Pause first), a building session, a missing or non-.json file, a recording of the other kind, a runtime mismatch (the runtime's message) and a session identity mismatch (the viewer's labelled check).", robot_recording::REPLAY_RULE, robot_recording::VERDICT_RULE, robot_recording::IDENTITY_RULE, robot_recording::MEASURED_RULE)),
-            c("robot_reload", json!({}), &format!("Re-read the opened --robot FILE now: the same RobotAction::Reload as the watch, the header Reload button and system_ui robot:reload. {} Returns at once; the result lands in robot_state.source_file {{path, sha256 (of the displayed model's bytes), loaded_at (UTC), reload_count (successful reloads), unchanged_checks, watching, in_flight, last_reload {{trigger watch | manual, outcome loaded | unchanged | failed, error naming the path, at (UTC)}}, run_reset, showing_last_good, failing_error}} and robot_state.notice. A loaded reload replaces the model, meshes, link list, notes and cad_link, keeps the selected link by name (else clears it with a note), discards any run or jog and spawns a fresh idle run thread whose generation is the old one + 1 (robot_state.run.generation; graphs clear by the generation rule). Refused naming the reason: a preset, a load or reload already in flight. (robot_state.source is still the file's own export source block.)", robot_source::RULE)),
+            c("robot_reload", json!({}), &format!("Re-read the opened --robot FILE now: the same RobotAction::Reload as the watch, the header Reload button and system_ui robot:reload. {} Returns at once; the result lands in robot_state.source_file {{path, sha256 (of the displayed model's bytes), loaded_at (UTC), reload_count (successful reloads), unchanged_checks, watching, in_flight, last_reload {{trigger watch | manual, outcome loaded | unchanged | failed, error naming the path, at (UTC)}}, run_reset, showing_last_good, failing_error}} and robot_state.notice. A loaded reload replaces the model, meshes, link list, notes and cad_link, keeps the selected link by name (else clears it with a note), discards any run or jog and spawns a fresh idle run thread whose generation is the old one + 1 (robot_state.run.generation; graphs clear by the generation rule); a planar v2 file whose run was running starts again from t = 0 once rebuilt. Refused naming the reason: a preset, a load or reload already in flight. (robot_state.source is still the file's own export source block.)", robot_source::RULE)),
             c("robot_overlay", json!({"contacts":true,"joints":true,"deflections":false,"stress":true}), &format!("Show or hide the --robot FILE overlays. stress (key H, system_ui overlay:stress; default off) colours the link meshes per vertex from the model's read-only .simresult.json through sim_domain_robot::stress_results ({}); robot_state.overlays.stress reports enabled, painting, path, mtime_unix_s and mtime_utc, status (current | stale | no recorded hash | no results file | invalid results file), recorded_physical_hash, model_physical_hash, peak_stress_pa per link, hotspot_links, error, absent and paint_seconds. {} Run-thread overlays: contacts (spheres at PhysicalRobot::contacts points with force lines at {} m/N; red on the ground, orange against another link), joints (PhysicalRobot::joint_frames: a white sphere and each axis drawn ±{} m in yellow, cyan, magenta) and deflections (PhysicalRobot::deflections: flexible-link boundary displacement lines magnified ×{}). Give any subset; the others keep their values. The same RobotAction::Overlay as keys C / J / F / H, the inspector overlay buttons and system_ui overlay:contacts | overlay:joints | overlay:deflections | overlay:stress. Run-thread defaults: all on. A planar v2 file draws only contacts (its chain-tip contact points, red dots); turning joints, deflections or stress on is refused naming why (they need a v3 export). {} Drawn in the model frame through RobotRoot's transform (the link meshes' parent), only from the latest accepted frame of the current generation. robot_state.overlays reports flags, frame_flags, frame_generation, frame_time, contacts {{count, sample: first {} of link, other (link name | ground), point, force, penetration}}, joints {{count, sample}}, deflections {{count, max_displacement_m}} and scales. Refused for presets (their session frames publish no contacts, joint frames or deflections, and a preset has no results file).", sim_domain_robot::stress_results::SCALE, robot_stress::RULE, robot_run::FORCE_SCALE_M_PER_N, robot_run::JOINT_AXIS_HALF_M, robot_run::DEFLECTION_MAGNIFICATION, robot_run::OVERLAY_COST_RULE, robot_run::OVERLAY_SAMPLE)),
             c("state", json!({}), "Robot mode: {robot_state (as robot_state), viewer_mode}"),
             c("camera", json!({"focus":[0,0,0],"radius":0.5,"yaw":0.7,"pitch":0.4}), "Absolute orbit in the display frame (Y up); SI metres and radians"),

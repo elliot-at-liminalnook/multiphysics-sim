@@ -193,11 +193,11 @@ impl CadRobot {
                     "revolute" | "continuous" => true,
                     // Message text only: the joint is dropped, so its child is not welded on.
                     "fixed" => {
-                        warnings.push(format!("joint {} is fixed: the planar simulator does not weld bodies; the joint is dropped, so body {} and everything beyond it are neither simulated nor drawn", j.name, j.child));
+                        warnings.push(format!("joint {} is fixed: the planar simulator does not weld bodies; the joint is dropped, so body {} is not attached through it (unless it becomes the root, it and everything beyond it are neither simulated nor drawn)", j.name, j.child));
                         false
                     }
                     other => {
-                        warnings.push(format!("joint {} is {other}: the planar simulator has revolute joints only; the joint is dropped, so body {} and everything beyond it are neither simulated nor drawn", j.name, j.child));
+                        warnings.push(format!("joint {} is {other}: the planar simulator has revolute joints only; the joint is dropped, so body {} is not attached through it (unless it becomes the root, it and everything beyond it are neither simulated nor drawn)", j.name, j.child));
                         false
                     }
                 }

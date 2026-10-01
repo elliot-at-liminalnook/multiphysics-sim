@@ -327,7 +327,7 @@ robot mode, run through sim-phenomena's shared planar build and labelled
 "planar v2 summary · uncalibrated · not the v3 physical model": it draws
 the bodies' section outlines in their simulated poses, holds every joint
 with a PD servo, and the keys are Space run/pause, R reset (rebuild from
-the loaded file), ←/→ select a joint, ↑/↓ move its target 0.01 rad per
+the loaded model), ←/→ select a joint, ↑/↓ move its target 0.01 rad per
 frame while held (Shift 0.05), C chain-tip contacts and `=`/`-` speed.
 Stress, gait preview, recordings, graphs, the joint-frame and deflection
 overlays and the leg mirror need a v3 export and are refused by name.

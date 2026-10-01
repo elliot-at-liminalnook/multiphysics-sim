@@ -543,6 +543,13 @@ fn start(world: &mut World, switch: &mut Switcher, current: ViewerMode, origin: 
         if current == ViewerMode::Robot && world.get_resource::<crate::robot::hardware::Hardware>().is_some_and(|hw| hw.open) {
             return Err(refusal(target, current, "close the Leg calibration panel first (its STOP must stay reachable), then choose the mode again"));
         }
+        // Already open for this mode: keep what was typed and found.
+        if world.resource::<Picker>().open == Some(target) {
+            let controls = world.resource::<Picker>().controls();
+            let message = format!("Choose {} for {} mode in the picker.", picker::noun(target), target.label());
+            answer(world, origin, Ok(json!({"picker": target, "message": message, "controls": controls})));
+            return Ok(());
+        }
         let message = format!("Choose {} for {} mode in the picker.", picker::noun(target), target.label());
         switch.message = Some(Ok(message.clone()));
         switch.revision += 1;

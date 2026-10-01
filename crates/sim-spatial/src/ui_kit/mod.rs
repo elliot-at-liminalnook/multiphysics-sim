@@ -29,7 +29,14 @@
 //! - `list_item(icon, accent: Color, title, subtitle, action, selected)`,
 //!   `item(icon, title, subtitle, tag, action, selected)` (accent from the builder's tag colour)
 //! - `icon(name) -> Handle<Image>`, `dot(color)`; free functions `divider()`, `wrap() -> Node`
-//! - `input(shown, placeholder, action, focused)`: text-entry styling (the draft stays the builder's)
+//! - `input(shown, placeholder, action, focused)` / `input_selectable(…, selected)`:
+//!   how a text field is drawn (tagged `text::KitInput`); the draft is the
+//!   field's (`text`)
+//! - `text` (`text/`): the one text field (`TextField`, `FieldId`, added
+//!   with `TextFieldApp::add_text_field`), the one focus (Bevy's
+//!   `InputFocus`), the one input system, `FieldMsg` (Changed, Submit,
+//!   Cancel, Tab, Blur) for owners, `TextFocus` (focus, set, blur), the
+//!   `typing` run condition / `Typing` parameter, and `release_held`
 //! - `dock(Dock::{Top, Bottom, Left, Right, Under}, layout: Node)`: a docked panel
 //! - `scroll_area(layout: Node, offset: f32)`; `wheel_delta(&mut MessageReader<MouseWheel>, line_px) -> f32`
 //! - `slider(SliderLook::{Track, Timebar, Scrub}, value: f32, action, label)`: read
@@ -50,7 +57,7 @@
 //!   (`form.rs`, RoboCAD's input dialogs and `ArrayDialog`): labelled fields
 //!   with their evaluation or error under them (as the CAD numeric bar),
 //!   choice segments, checkbox chips, OK and Cancel. Pure:
-//!   `form::evaluate(kind, text)` and `form::TextDraft::key(key, chord)`.
+//!   `form::evaluate(kind, text)` and `text::TextDraft::key(key, chord)`.
 //!
 //! - `path_field(parent, &PathView, hit: Fn(PathHit) -> A)` and
 //!   `path_listing(parent, path, listing, hit)` (`path_field.rs`): the one
@@ -87,6 +94,7 @@ pub(crate) mod picker;
 pub(crate) mod pie;
 mod scroll;
 mod slider;
+pub(crate) mod text;
 mod theme;
 pub(crate) mod threads;
 mod widgets;
@@ -105,7 +113,8 @@ use bevy::prelude::*;
 pub struct UiKitPlugin;
 impl Plugin for UiKitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(bevy::ui_widgets::slider_self_update)
+        app.add_plugins(text::TextEntryPlugin)
+            .add_observer(bevy::ui_widgets::slider_self_update)
             .add_systems(PostUpdate, (widgets::repaint_buttons, widgets::repaint_tints, widgets::follow_button_text).before(bevy::ui::UiSystems::Prepare))
             .add_systems(PostUpdate, clamp_scroll_positions.after(bevy::ui::UiSystems::Layout))
             .add_systems(PostUpdate, widgets::keep_labels.after(bevy::ui::UiSystems::PostLayout).before(bevy::a11y::AccessibilitySystems::Update));

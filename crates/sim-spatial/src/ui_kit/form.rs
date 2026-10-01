@@ -7,8 +7,9 @@
 //! fields are clickable.
 //!
 //! No intent logic: the caller owns the drafts and passes one action
-//! component per clickable part (`FormHit`); [`evaluate`] and
-//! [`TextDraft::key`] are pure functions the caller calls.
+//! component per clickable part (`FormHit`); [`evaluate`] is a pure
+//! function the caller calls. A field's text is the kit text field's
+//! (`ui_kit::text`): the caller passes the shown draft in `FormRow::text`.
 //!
 //! A number keeps its typed value: RoboCAD's spin boxes round what they
 //! show to their decimals, but the form does not round (`decimals` is the
@@ -17,10 +18,12 @@
 //! prefixes the field's label.
 use super::Kit;
 use super::theme::*;
-use bevy::input::keyboard::Key;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
+
+// Moved to `ui_kit::text` (one-text-entry); re-exported while callers move.
+pub(crate) use super::text::{DraftKey, TextDraft};
 
 /// How a number is read: a length (bare numbers mm), an angle (degrees),
 /// a whole count (RoboCAD's `NumericField(angle=)` and `QSpinBox`), or a
@@ -199,58 +202,6 @@ pub(crate) enum FormHit {
     Check(usize),
     Ok,
     Cancel,
-}
-
-/// What a key did to a draft ([`TextDraft::key`]).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum DraftKey {
-    Edited,
-    Enter,
-    Escape,
-    Tab,
-    Ignored,
-}
-
-/// A text field's draft: the text and whether it is selected (the next
-/// character replaces it, RoboCAD's `selectAll`).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct TextDraft {
-    pub text: String,
-    pub select_all: bool,
-}
-impl TextDraft {
-    /// Apply one pressed key (`chord`: Control/Command held, so characters
-    /// are not typed). `Edited` when the text or the selection changed (typing
-    /// the selected text's own character over it still clears the selection).
-    pub(crate) fn key(&mut self, key: &Key, chord: bool) -> DraftKey {
-        let (text, select_all) = (self.text.clone(), self.select_all);
-        match key {
-            Key::Enter => return DraftKey::Enter,
-            Key::Escape => return DraftKey::Escape,
-            Key::Tab => return DraftKey::Tab,
-            Key::Backspace => {
-                if self.select_all {
-                    self.text.clear();
-                    self.select_all = false;
-                } else {
-                    self.text.pop();
-                }
-            }
-            Key::Space if !chord => self.type_text(" "),
-            Key::Character(c) if !chord && !c.chars().any(char::is_control) => self.type_text(c.as_str()),
-            _ => {}
-        }
-        if self.text != text || self.select_all != select_all { DraftKey::Edited } else { DraftKey::Ignored }
-    }
-
-    /// Type `text` (replacing a selected text), as `cad::numeric`'s `type_text`.
-    fn type_text(&mut self, text: &str) {
-        if self.select_all {
-            self.text.clear();
-            self.select_all = false;
-        }
-        self.text.push_str(text);
-    }
 }
 
 impl Kit<'_> {

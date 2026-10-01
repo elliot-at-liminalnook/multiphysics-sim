@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify written and reviewed by reading, pending its verification pass)
+## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files 2026-10-01, see [Split large files](#split-large-files-2026-10-01))
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -143,7 +143,7 @@ duplicates physics.
   `document.rs` 734, `transform/mod.rs` 737, `panel.rs` 687, `actions.rs`
   678), `sim-runtime/src/units.rs` 901 (tests included).
   **cad-modify** (2026-10-01, see [CAD modify](#cad-modify-2026-10-01)),
-  written and reviewed by reading, pending its verification pass: the op
+  verified at e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean): the op
   catalogue as data (`cad/ops/`, 54 entries: 43 RoboCAD commands and 11
   REST-only Ops methods) with one apply
   path into the existing edit job, primitive placement, pick-then-form
@@ -2353,8 +2353,8 @@ ledger rows are in [docs/cad-parity.md](../cad-parity.md) (116 rows: 77
 done by reading, 39 deliberately different, each with its reason; none
 open; after the epic the ledger has 245 rows done by reading, 458 later and
 70 deliberately different), the side-by-side steps in
-[docs/cad-checklist.md](../cad-checklist.md) (CAD-35 to CAD-76). Written
-and reviewed by reading, pending its verification pass. Paths are
+[docs/cad-checklist.md](../cad-checklist.md) (CAD-35 to CAD-76). Verified
+at e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean). Paths are
 `crates/sim-spatial/src/cad/` unless they name another crate.
 
 ### Shape
@@ -3141,8 +3141,8 @@ RoboCAD's command table (menus, toolbar, right-click menu, radials,
 palette, parameter form), data-driven keys, read-only analysis overlays and
 the inspector's pivot and transform editors, with five RoboCAD routes
 (copy and paste with placement, control points, curvature comb,
-continuity) and an `ArgConverter` fix for cutting with a node; written and
-reviewed by reading, pending its verification pass. Next: cad-sketch.
+continuity) and an `ArgConverter` fix for cutting with a node; verified at
+e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean). Next: cad-sketch.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -3180,7 +3180,7 @@ by the parity harness. Planned order:
    It comes first because sketching, printing and cad-modify reuse its
    picking, snapping and numeric entry.
 2. **cad-modify** (116 rows; the second half of the planned cad-tools).
-   *Done by reading 2026-10-01, pending its verification pass (see
+   *Done 2026-10-01, verified at e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean) (see
    [CAD modify](#cad-modify-2026-10-01)): 77 rows done by reading, 39
    deliberately different; the five gaps below now have routes.* The
    operation catalogue on top of cad-select-transform's picking and
@@ -3340,8 +3340,8 @@ The Director re-ranks with evidence, but this is the default:
    [CAD selection and transform](#cad-selection-and-transform-2026-10-01))
    is verified at c0ed9b29 (sim-spatial lib 209 passed, 1 ignored; bins 4;
    `cad_client` and `units` 59; api pytests 14). **cad-modify** (2026-10-01;
-   see [CAD modify](#cad-modify-2026-10-01)) is done, written and reviewed
-   by reading, pending its verification pass. Next: **cad-sketch**.
+   see [CAD modify](#cad-modify-2026-10-01)) is verified at e0996878
+   (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean). Next: **cad-sketch**.
    Remaining, in order (§9 "Later CAD epics"): cad-sketch,
    cad-views-export, cad-physical-inspect, cad-print, cad-organize,
    cad-experiments-motion.

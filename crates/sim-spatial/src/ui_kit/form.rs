@@ -43,6 +43,8 @@ pub(crate) enum FieldKind {
     Check,
     /// A JSON value as typed (REST-only shapes such as a components map).
     Json,
+    /// Plain text as typed (RoboCAD's `QInputDialog.getText`: "Text to sketch:").
+    Text,
 }
 
 /// A field's evaluated value.
@@ -53,6 +55,7 @@ pub(crate) enum FieldValue {
     Choice(usize),
     Check(bool),
     Json(Value),
+    Text(String),
 }
 
 /// Evaluate a field's text as its kind reads it. Errors name the token
@@ -91,6 +94,7 @@ pub(crate) fn evaluate(kind: &FieldKind, text: &str) -> Result<FieldValue, Strin
             _ => Err(format!("expected true or false (got {text:?})")),
         },
         FieldKind::Json => serde_json::from_str::<Value>(text).map(FieldValue::Json).map_err(|e| e.to_string()),
+        FieldKind::Text => Ok(FieldValue::Text(text.to_string())),
     }
 }
 
@@ -290,7 +294,7 @@ impl Kit<'_> {
                     line.spawn(self.chip(row.label, hit(FormHit::Check(i)), evaluate(&row.kind, row.text) == Ok(FieldValue::Check(true)), true));
                 });
             }
-            FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json => {
+            FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json | FieldKind::Text => {
                 cell.spawn(self.text(row.label, size::CAPTION, SUBTLE, 1));
                 // An empty optional field is left out, not an error.
                 if row.optional && row.text.is_empty() {

@@ -394,7 +394,9 @@ fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
 /// it applies when the operation runs): Err(the entry's refusal). A
 /// pick-then-form operation is always ready: it is started to pick.
 pub(crate) fn readiness(entry: &OpEntry, doc: &CadDocument) -> Result<(), String> {
-    if matches!(entry.flow, Flow::PickThenForm(_)) {
+    // An interaction is started to pick, click or drag (its own refusals
+    // come when it runs); viewer state needs nothing.
+    if matches!(entry.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_)) {
         return Ok(());
     }
     let nodes = doc.selected_nodes();
@@ -427,6 +429,8 @@ pub(crate) fn readiness(entry: &OpEntry, doc: &CadDocument) -> Result<(), String
 pub(crate) fn ready(cmd: &Command, doc: &CadDocument, own: &[Control]) -> Result<(), String> {
     match resolve(cmd) {
         // As every edit: nothing runs while one is in flight or unconnected.
+        // Viewer state (the active plane, 2D snapping) is never an edit.
+        Resolved::Op(entry) if matches!(entry.flow, Flow::View(_)) => Ok(()),
         Resolved::Op(entry) => doc.edit_refusal().map_or_else(|| readiness(entry, doc), Err),
         Resolved::Action(action) => own.iter().find(|c| c.action == action).map_or(Ok(()), |c| c.ready.clone()),
         Resolved::Surface(_) => Ok(()),

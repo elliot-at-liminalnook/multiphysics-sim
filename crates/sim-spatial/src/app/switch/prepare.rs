@@ -19,7 +19,9 @@ use std::path::PathBuf;
 /// (`Builder::switch_blockers`, open.rs); leaving them also on a lesson's
 /// draft or capture; replacing the builder with a new lesson's also on a
 /// live run of the system file (`Builder::replace_blockers`); leaving robot
-/// mode on a recording being written or a replay.
+/// mode on a recording being written or a replay; leaving CAD mode on an
+/// edit in flight, its own service's unsaved edits, or a sketch shape in
+/// progress (`cad::sketch_blocker`).
 /// Lessons → Build over an open lesson is the lesson screen's own toggle,
 /// never blocked (as before the modes were one app). Build → Lessons keeps a
 /// live run, paused (`show_lessons`).
@@ -52,6 +54,8 @@ pub(super) fn leaving_blockers(world: &World, current: ViewerMode, target: Viewe
     if current == ViewerMode::Cad {
         if let Some(doc) = world.get_resource::<CadDocument>() {
             blockers.extend(doc.switch_blockers());
+            // A sketch shape with clicked points would be lost (cad-sketch).
+            blockers.extend(crate::cad::sketch_blocker(doc));
         }
     }
     blockers

@@ -63,6 +63,10 @@ pub struct Edit {
     /// this selection (RoboCAD clears after its Ops call returns, so a
     /// failed edit keeps the user's picks). None for every other edit.
     pub clear_selection: Option<Vec<SelectionItem>>,
+    /// The edit creates a plane node (a plane tool's op): once it succeeds,
+    /// the node RoboCAD answers becomes the active plane
+    /// (`ops::OpsState::plane_created`; RoboCAD's `set_active_plane(pid)`).
+    pub activates_plane: bool,
 }
 
 /// What a finished edit hands back: the outcome text and whether the

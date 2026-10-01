@@ -473,11 +473,19 @@ fn finish_edit(doc: &mut CadDocument) {
     let Some(edit) = &doc.edit else { return };
     let Some(result) = edit.job.poll() else { return };
     let generation = edit.job.generation();
-    let clear_selection = doc.edit.take().and_then(|e| e.clear_selection);
+    let (clear_selection, activates_plane) = doc.edit.take().map_or((None, false), |e| (e.clear_selection, e.activates_plane));
     if generation != doc.generation {
         return;
     }
     let answer = result.map(|EditDone { message, result }| (message, result));
+    // A plane tool's new plane node becomes the active plane (the op's
+    // answer is `{"result": id, …}`); `sketch::plane::sync` applies it.
+    if activates_plane
+        && let Ok((_, result)) = &answer
+        && let Some(id) = result.get("result").and_then(Value::as_str)
+    {
+        doc.ops.plane_created = Some(id.to_string());
+    }
     doc.status = Some(answer.as_ref().map(|(m, _)| m.clone()).map_err(Clone::clone));
     // RoboCAD's handler clears the selection after its Ops call returned
     // (`ops::started` noted which); a failed edit keeps the picks, and a
@@ -559,7 +567,7 @@ pub(crate) fn start_edit(doc: &mut CadDocument, label: String, waited: bool, wor
     doc.edit_seq += 1;
     doc.edit_waited = waited;
     let job = Job::spawn(Pool::Dedicated, doc.generation, format!("RoboCAD edit: {label}"), move |_| work(&client).map_err(|e| e.to_string()));
-    doc.edit = Some(super::document::Edit { label, job, started: Instant::now(), clear_selection: None });
+    doc.edit = Some(super::document::Edit { label, job, started: Instant::now(), clear_selection: None, activates_plane: false });
     doc.touch();
     Ok(doc.edit_seq)
 }

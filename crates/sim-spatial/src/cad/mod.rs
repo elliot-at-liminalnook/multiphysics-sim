@@ -48,6 +48,7 @@ mod panel;
 mod pick;
 mod scene;
 mod selection;
+mod sketch;
 mod snap;
 mod specs;
 mod surfaces;
@@ -65,6 +66,8 @@ pub use actions::{CadAction, Dimension, MeasurePick};
 pub use document::{CadDocument, CadInputFocus, CadTarget, CadTool, Candidates, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 pub use mesh::{BODY_KINDS, CadBody, CadMeshes, MeshCounts};
 pub use ops::{FormState, OpsState};
+pub use sketch::{ActivePlane, BasePlane, CadActivePlane, CadSketches};
+pub(crate) use sketch::blocker as sketch_blocker;
 pub use surfaces::Surface;
 pub use topology::{CadTopology, NodeTopology};
 pub use view::CadView;
@@ -84,11 +87,14 @@ impl Plugin for CadCorePlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<CadAction>(app);
         app.init_resource::<CadInputFocus>()
+            .init_resource::<CadActivePlane>()
             .add_systems(
                 OnEnter(ModeScope::Cad),
                 (sync::enter, |mut commands: Commands| {
                     commands.insert_resource(CadMeshes::default());
                     commands.insert_resource(CadTopology::default());
+                    commands.insert_resource(CadSketches::default());
+                    commands.insert_resource(CadActivePlane::default());
                 }),
             )
             .add_systems(
@@ -99,6 +105,8 @@ impl Plugin for CadCorePlugin {
                     // A read's result (copy, control points, comb, continuity), with or without a window.
                     analysis_overlay::receive.in_set(ViewerSet::JobResults).after(sync::receive),
                     topology::sync.in_set(ViewerSet::SimSync),
+                    // Sketch geometry and plane frames, then the active plane follows them (cad-sketch).
+                    (sketch::cache::sync, sketch::plane::sync).chain().in_set(ViewerSet::SimSync),
                     actions::publish.in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
@@ -142,6 +150,9 @@ impl Plugin for CadPlugin {
         ops::interact::build(app);
         surfaces::build(app);
         analysis_overlay::build(app);
+        // cad-sketch: the plane tools and quads, the sketch tools, the
+        // sketches drawn, extrude and revolve.
+        sketch::build(app);
     }
 }
 
@@ -150,6 +161,10 @@ impl Plugin for CadPlugin {
 pub(crate) fn clear(world: &mut World) {
     world.remove_resource::<CadMeshes>();
     world.remove_resource::<CadTopology>();
+    world.remove_resource::<CadSketches>();
+    if let Some(mut plane) = world.get_resource_mut::<CadActivePlane>() {
+        *plane = CadActivePlane::default();
+    }
     world.remove_resource::<CadView>();
     world.remove_resource::<mesh::CadMaterials>();
     if let Some(mut focus) = world.get_resource_mut::<CadInputFocus>() {

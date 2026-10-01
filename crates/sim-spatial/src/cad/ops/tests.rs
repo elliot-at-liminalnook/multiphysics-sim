@@ -110,6 +110,11 @@ fn every_entry_builds_calls_to_its_route() {
     doc.ops.clipboard = Some((4, json!({"robocad_clipboard": true, "items": [{"id": "b1"}]})));
     let r = everything();
     for e in CATALOGUE {
+        // The cad-sketch shapes read the sketch cache, the active plane and
+        // clicked points: their builders are tested in `sketch::tests`.
+        if matches!(e.shape, Shape::Sketch(_) | Shape::SketchEdit(_) | Shape::Extrude { .. } | Shape::View(_)) {
+            continue;
+        }
         // A sample for each parameter without a default (REST-only Ops methods).
         let sample: Map<String, Value> = e
             .params
@@ -122,12 +127,13 @@ fn every_entry_builds_calls_to_its_route() {
                     FieldKind::Json => "{\"part\": [0]}".to_string(),
                     FieldKind::Choice { options } => options[0].to_string(),
                     FieldKind::Check => "false".to_string(),
+                    FieldKind::Text => "text".to_string(),
                 };
                 (p.name.to_string(), Value::String(text))
             })
             .collect();
         let values = values(e, &sample).unwrap_or_else(|err| panic!("{}: {err}", e.id));
-        let built = build(e, &r, &values, &doc).unwrap_or_else(|err| panic!("{} does not build: {err}", e.id));
+        let built = build(e, &r, &values, &doc, &Env::default()).unwrap_or_else(|err| panic!("{} does not build: {err}", e.id));
         match e.shape {
             Shape::Copy | Shape::ControlPoints | Shape::CurvatureComb | Shape::Continuity => assert!(matches!(built, Built::Read(_)), "{}: {built:?}", e.id),
             Shape::Paste => assert!(matches!(built, Built::Paste { .. }), "{}: {built:?}", e.id),
@@ -145,7 +151,7 @@ fn every_entry_builds_calls_to_its_route() {
     // The Array dialog's radial kind calls array_radial.
     let array = op("tool.array");
     let values = values(array, &given(&[("kind", json!("radial"))])).unwrap();
-    assert_eq!(calls(build(array, &r, &values, &doc).unwrap())[0].name, "array_radial");
+    assert_eq!(calls(build(array, &r, &values, &doc, &Env::default()).unwrap())[0].name, "array_radial");
 }
 
 #[test]
@@ -153,7 +159,7 @@ fn fillet_and_chamfer_send_one_call_per_node_with_edge_refs() {
     let doc = document();
     let r = Resolved { nodes: vec!["b1".into(), "b2".into()], edges: vec![("b1".into(), 0), ("b2".into(), 3), ("b1".into(), 1)], ..Default::default() };
     let fillet = op("tool.fillet");
-    let calls_ = calls(build(fillet, &r, &values(fillet, &Map::new()).unwrap(), &doc).unwrap());
+    let calls_ = calls(build(fillet, &r, &values(fillet, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(calls_.len(), 2, "one call per node, in first-appearance order");
     assert_eq!(calls_[0].name, "fillet");
     assert_eq!(calls_[0].args, vec![json!("b1"), json!([edge_ref("b1", 0), edge_ref("b1", 1)]), json!(1.0)]);
@@ -161,13 +167,13 @@ fn fillet_and_chamfer_send_one_call_per_node_with_edge_refs() {
     assert!(calls_[0].kwargs.is_empty());
 
     let variable = op("tool.fillet_variable");
-    let c = calls(build(variable, &r, &values(variable, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(variable, &r, &values(variable, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args[2..], [json!(1.0), json!(2.0)]);
 
     let chamfer = op("tool.chamfer");
-    let c = calls(build(chamfer, &r, &values(chamfer, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(chamfer, &r, &values(chamfer, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args, vec![json!("b1"), json!([edge_ref("b1", 0), edge_ref("b1", 1)]), json!({"distance": 1.0})], "45° is not sent");
-    let c = calls(build(chamfer, &r, &values(chamfer, &given(&[("distance", json!("2 mm")), ("angle", json!(30))])).unwrap(), &doc).unwrap());
+    let c = calls(build(chamfer, &r, &values(chamfer, &given(&[("distance", json!("2 mm")), ("angle", json!(30))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args[2], json!({"distance": 2.0, "angle_deg": 30.0}));
 }
 
@@ -176,13 +182,13 @@ fn shell_draft_and_faces_use_face_refs() {
     let doc = document();
     let shell = op("tool.shell");
     let r = Resolved { nodes: vec!["b1".into(), "b2".into()], faces: vec![("b1".into(), 4)], ..Default::default() };
-    let c = calls(build(shell, &r, &values(shell, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(shell, &r, &values(shell, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c.len(), 2, "every selected node is shelled, with its own open faces");
     assert_eq!(c[0].args, vec![json!("b1"), json!(2.0), json!([face_ref("b1", 4)])]);
     assert_eq!(c[1].args, vec![json!("b2"), json!(2.0), json!([])]);
 
     let draft = op("tool.draft");
-    let c = calls(build(draft, &r, &values(draft, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(draft, &r, &values(draft, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c.len(), 1, "only nodes with selected faces");
     assert_eq!(c[0].args, vec![json!("b1"), json!([face_ref("b1", 4)]), json!([0, 0, 1]), json!(2.0), json!("xy")]);
 }
@@ -193,17 +199,17 @@ fn booleans_mirror_and_instance_match_robocad_handlers() {
     let r = Resolved { nodes: vec!["b1".into(), "b2".into(), "s1".into()], ..Default::default() };
     for (id, op_name) in [("modify.union", "union"), ("modify.subtract", "subtract"), ("modify.intersect", "intersect")] {
         let e = op(id);
-        let c = calls(build(e, &r, &Map::new(), &doc).unwrap());
+        let c = calls(build(e, &r, &Map::new(), &doc, &Env::default()).unwrap());
         assert_eq!(c.len(), 1);
         assert_eq!(c[0].name, "boolean");
         assert_eq!(c[0].args, vec![json!("b1"), json!(["b2", "s1"]), json!(op_name)]);
     }
     let mirror = op("tool.mirror_live");
-    let c = calls(build(mirror, &r, &values(mirror, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(mirror, &r, &values(mirror, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args, vec![json!(["b1", "b2", "s1"]), json!("yz")]);
     assert_eq!(c[0].kwargs.get("live"), Some(&json!(true)));
     let instance = op("tool.instance");
-    let c = calls(build(instance, &r, &Map::new(), &doc).unwrap());
+    let c = calls(build(instance, &r, &Map::new(), &doc, &Env::default()).unwrap());
     assert_eq!(c.len(), 3);
     assert_eq!(c[2].args, vec![json!("s1"), json!({"translation": [20.0, 0.0, 0.0]})]);
 }
@@ -213,7 +219,7 @@ fn array_dialog_builds_rect_or_radial() {
     let doc = document();
     let array = op("tool.array");
     let r = Resolved { nodes: vec!["b1".into()], ..Default::default() };
-    let c = calls(build(array, &r, &values(array, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(array, &r, &values(array, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].name, "array_rect");
     assert_eq!(c[0].args, vec![json!(["b1"]), json!([3, 1, 1])]);
     let mut kwargs = Map::new();
@@ -222,13 +228,13 @@ fn array_dialog_builds_rect_or_radial() {
     kwargs.insert("merge".into(), json!(false));
     assert_eq!(c[0].kwargs, kwargs);
     let v = values(array, &given(&[("mode", json!("count + total extent")), ("merge", json!(true))])).unwrap();
-    let c = calls(build(array, &r, &v, &doc).unwrap());
+    let c = calls(build(array, &r, &v, &doc, &Env::default()).unwrap());
     assert_eq!(c[0].kwargs.get("extent"), Some(&json!([10.0, 10.0, 10.0])));
     assert!(!c[0].kwargs.contains_key("spacing"));
     assert_eq!(c[0].kwargs.get("merge"), Some(&json!(true)));
     let v = values(array, &given(&[("kind", json!("radial")), ("plane", json!("xz"))])).unwrap();
     assert!(!v.contains_key("count_x"), "the rectangular rows are left out");
-    let c = calls(build(array, &r, &v, &doc).unwrap());
+    let c = calls(build(array, &r, &v, &doc, &Env::default()).unwrap());
     assert_eq!(c[0].name, "array_radial");
     assert_eq!(c[0].args, vec![json!(["b1"]), json!(6), json!([0.0, 0.0, 0.0]), json!([0.0, -1.0, 0.0])]);
     assert_eq!(c[0].kwargs.get("total_angle"), Some(&json!(360.0)));
@@ -239,21 +245,21 @@ fn primitives_follow_the_primitive_tool() {
     let doc = document();
     let r = Resolved::default();
     let boxed = op("tool.box");
-    let c = calls(build(boxed, &r, &values(boxed, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(boxed, &r, &values(boxed, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!((c[0].name, c[0].args.clone()), ("box", vec![json!([0.0, 0.0, 0.0]), json!([20.0, 20.0, 10.0])]));
     // A negative height extrudes down; a zero height is 1 mm (ui/tools.py:517-520).
-    let c = calls(build(boxed, &r, &values(boxed, &given(&[("height", json!(-5))])).unwrap(), &doc).unwrap());
+    let c = calls(build(boxed, &r, &values(boxed, &given(&[("height", json!(-5))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args, vec![json!([0.0, 0.0, -5.0]), json!([20.0, 20.0, 5.0])]);
-    let c = calls(build(boxed, &r, &values(boxed, &given(&[("height", json!(0))])).unwrap(), &doc).unwrap());
+    let c = calls(build(boxed, &r, &values(boxed, &given(&[("height", json!(0))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args[1], json!([20.0, 20.0, 1.0]));
     let centre = op("tool.box_center");
-    let c = calls(build(centre, &r, &values(centre, &given(&[("center", json!([10, 10, 0]))])).unwrap(), &doc).unwrap());
+    let c = calls(build(centre, &r, &values(centre, &given(&[("center", json!([10, 10, 0]))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args, vec![json!([0.0, 0.0, 0.0]), json!([20.0, 20.0, 10.0])], "centred in the plane, base on it");
     let cylinder = op("tool.cylinder");
-    let c = calls(build(cylinder, &r, &values(cylinder, &given(&[("height", json!(-10))])).unwrap(), &doc).unwrap());
+    let c = calls(build(cylinder, &r, &values(cylinder, &given(&[("height", json!(-10))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args, vec![json!([0.0, 0.0, 0.0]), json!([0.0, 0.0, -1.0]), json!(5.0), json!(10.0)]);
     let sphere = op("tool.sphere");
-    let c = calls(build(sphere, &r, &values(sphere, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(sphere, &r, &values(sphere, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args, vec![json!([0.0, 0.0, 0.0]), json!(5.0)]);
 }
 
@@ -261,23 +267,23 @@ fn primitives_follow_the_primitive_tool() {
 fn resolve_refuses_with_robocad_messages() {
     let mut doc = document();
     doc.selection = vec![item("b1", "body", 0)];
-    assert_eq!(resolve(op("modify.union"), &doc, None, None, None), Err("Select the target body first, then the tools".to_string()));
-    assert_eq!(resolve(op("modify.region"), &doc, None, None, None), Err("Select exactly two bodies".to_string()));
-    assert_eq!(resolve(op("tool.thicken"), &doc, None, None, None), Err("Select a sheet".to_string()), "a body is not a sheet");
+    assert_eq!(resolve(op("modify.union"), &doc, &Env::default(), None), Err("Select the target body first, then the tools".to_string()));
+    assert_eq!(resolve(op("modify.region"), &doc, &Env::default(), None), Err("Select exactly two bodies".to_string()));
+    assert_eq!(resolve(op("tool.thicken"), &doc, &Env::default(), None), Err("Select a sheet".to_string()), "a body is not a sheet");
     let edges = [item("b1", "edge", 0), item("b2", "edge", 1)];
-    assert_eq!(resolve(op("tool.full_round"), &doc, None, None, Some(&edges)), Err("Select two edges of the same body".to_string()));
+    assert_eq!(resolve(op("tool.full_round"), &doc, &Env::default(), Some(&edges)), Err("Select two edges of the same body".to_string()));
     let ok = [item("b1", "edge", 0), item("b1", "edge", 1)];
-    assert_eq!(resolve(op("tool.full_round"), &doc, None, None, Some(&ok)).unwrap().edges, vec![("b1".to_string(), 0), ("b1".to_string(), 1)]);
-    assert_eq!(resolve(op("tool.fillet"), &doc, None, None, None), Err("Select one or more edges first".to_string()));
-    assert_eq!(resolve(op("edit.delete"), &doc, None, None, Some(&[item("zz", "body", 0)])), Err("no node zz in the shown tree".to_string()));
+    assert_eq!(resolve(op("tool.full_round"), &doc, &Env::default(), Some(&ok)).unwrap().edges, vec![("b1".to_string(), 0), ("b1".to_string(), 1)]);
+    assert_eq!(resolve(op("tool.fillet"), &doc, &Env::default(), None), Err("Select one or more edges first".to_string()));
+    assert_eq!(resolve(op("edit.delete"), &doc, &Env::default(), Some(&[item("zz", "body", 0)])), Err("no node zz in the shown tree".to_string()));
     // Kinds filter as RoboCAD's handlers do; the order is the selection's.
     let picked = [item("i1", "body", 0), item("s1", "body", 0), item("b1", "face", 3)];
-    assert_eq!(resolve(op("tool.thicken"), &doc, None, None, Some(&picked)).unwrap().nodes, vec!["s1".to_string()]);
-    assert_eq!(resolve(op("modify.make_unique"), &doc, None, None, Some(&picked)).unwrap().nodes, vec!["i1".to_string()]);
+    assert_eq!(resolve(op("tool.thicken"), &doc, &Env::default(), Some(&picked)).unwrap().nodes, vec!["s1".to_string()]);
+    assert_eq!(resolve(op("modify.make_unique"), &doc, &Env::default(), Some(&picked)).unwrap().nodes, vec!["i1".to_string()]);
     // Dependent offset: a face, then a body that owns none of the selected faces.
-    let r = resolve(op("tool.dependent_offset"), &doc, None, None, Some(&[item("b1", "face", 2), item("b2", "body", 0)])).unwrap();
+    let r = resolve(op("tool.dependent_offset"), &doc, &Env::default(), Some(&[item("b1", "face", 2), item("b2", "body", 0)])).unwrap();
     assert_eq!(r.other.as_deref(), Some("b2"));
-    assert!(resolve(op("tool.dependent_offset"), &doc, None, None, Some(&[item("b1", "face", 2)])).is_err());
+    assert!(resolve(op("tool.dependent_offset"), &doc, &Env::default(), Some(&[item("b1", "face", 2)])).is_err());
 }
 
 #[test]
@@ -285,12 +291,12 @@ fn a_selection_seen_at_an_older_revision_is_refused() {
     let mut doc = document();
     doc.selection = vec![item("b1", "face", 2)];
     doc.tool_state.selection_seen = Some((doc.selection.clone(), 3));
-    let err = resolve(op("tool.remove_fillets"), &doc, None, None, None).unwrap_err();
+    let err = resolve(op("tool.remove_fillets"), &doc, &Env::default(), None).unwrap_err();
     assert!(err.contains("revision 3") && err.contains("reselect"), "{err}");
     // A body operation does not read face indices.
-    assert!(resolve(op("edit.delete"), &doc, None, None, None).is_ok());
+    assert!(resolve(op("edit.delete"), &doc, &Env::default(), None).is_ok());
     doc.tool_state.selection_seen = Some((doc.selection.clone(), 4));
-    assert!(resolve(op("tool.remove_fillets"), &doc, None, None, None).is_ok());
+    assert!(resolve(op("tool.remove_fillets"), &doc, &Env::default(), None).is_ok());
 }
 
 #[test]
@@ -298,21 +304,21 @@ fn runs_are_refused_in_flight_stale_or_with_unknown_parameters() {
     let mut doc = document();
     let items = [item("b1", "body", 0), item("b2", "body", 0)];
     let union = op("modify.union");
-    assert!(prepare(&doc, None, None, union, &Map::new(), Some(&items), Some(4)).is_ok());
-    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None });
-    let err = prepare(&doc, None, None, union, &Map::new(), Some(&items), None).unwrap_err();
+    assert!(prepare(&doc, &Env::default(), union, &Map::new(), Some(&items), Some(4)).is_ok());
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false });
+    let err = prepare(&doc, &Env::default(), union, &Map::new(), Some(&items), None).unwrap_err();
     assert!(err.contains("in flight") && err.contains("Patch Bracket"), "{err}");
     doc.edit = None;
-    let err = prepare(&doc, None, None, union, &Map::new(), Some(&items), Some(3)).unwrap_err();
+    let err = prepare(&doc, &Env::default(), union, &Map::new(), Some(&items), Some(3)).unwrap_err();
     assert!(err.contains("revision 3") && err.contains("nothing was sent"), "{err}");
     let fillet = op("tool.fillet");
     let edges = [item("b1", "edge", 0)];
-    let err = prepare(&doc, None, None, fillet, &given(&[("bogus", json!(1))]), Some(&edges), Some(4)).unwrap_err();
+    let err = prepare(&doc, &Env::default(), fillet, &given(&[("bogus", json!(1))]), Some(&edges), Some(4)).unwrap_err();
     assert!(err.contains("takes no parameter bogus"), "{err}");
-    let err = prepare(&doc, None, None, op("edit.paste"), &Map::new(), None, None).unwrap_err();
+    let err = prepare(&doc, &Env::default(), op("edit.paste"), &Map::new(), None, None).unwrap_err();
     assert_eq!(err, op("edit.paste").refusal);
     // A required parameter with no default is named.
-    let r = prepare(&doc, None, None, op("ops.set_radius"), &Map::new(), Some(&[item("b1", "face", 1)]), Some(4)).unwrap_err();
+    let r = prepare(&doc, &Env::default(), op("ops.set_radius"), &Map::new(), Some(&[item("b1", "face", 1)]), Some(4)).unwrap_err();
     assert!(r.contains("radius") && r.contains("required"), "{r}");
 }
 
@@ -321,15 +327,15 @@ fn explicit_face_and_edge_items_need_their_revision() {
     let doc = document();
     let faces = [item("b1", "face", 2)];
     let points = op("tool.control_points");
-    let err = prepare(&doc, None, None, points, &Map::new(), Some(&faces), None).unwrap_err();
+    let err = prepare(&doc, &Env::default(), points, &Map::new(), Some(&faces), None).unwrap_err();
     assert_eq!(err, "pass revision: the RoboCAD revision the face and edge indices in items were read at");
-    assert_eq!(prepare(&doc, None, None, points, &Map::new(), Some(&faces), Some(4)), Ok(Built::Read(Read::ControlPoints { node: "b1".into(), face: 2 })));
-    let err = prepare(&doc, None, None, points, &Map::new(), Some(&faces), Some(3)).unwrap_err();
+    assert_eq!(prepare(&doc, &Env::default(), points, &Map::new(), Some(&faces), Some(4)), Ok(Built::Read(Read::ControlPoints { node: "b1".into(), face: 2 })));
+    let err = prepare(&doc, &Env::default(), points, &Map::new(), Some(&faces), Some(3)).unwrap_err();
     assert!(err.contains("revision 3") && err.contains("nothing was sent") && err.contains("the form"), "{err}");
     let edges = [item("b1", "edge", 0)];
-    assert!(prepare(&doc, None, None, op("tool.fillet"), &Map::new(), Some(&edges), None).unwrap_err().starts_with("pass revision"));
+    assert!(prepare(&doc, &Env::default(), op("tool.fillet"), &Map::new(), Some(&edges), None).unwrap_err().starts_with("pass revision"));
     // Body items name no indices; the selection carries its own revision.
-    assert!(prepare(&doc, None, None, op("modify.union"), &Map::new(), Some(&[item("b1", "body", 0), item("b2", "body", 0)]), None).is_ok());
+    assert!(prepare(&doc, &Env::default(), op("modify.union"), &Map::new(), Some(&[item("b1", "body", 0), item("b2", "body", 0)]), None).is_ok());
 }
 
 #[test]
@@ -338,11 +344,11 @@ fn extract_components_sends_the_revision_its_caller_read_at() {
     let extract = op("ops.extract_components");
     let body = [item("b1", "body", 0)];
     let components = given(&[("components", json!("{\"part\": [0]}"))]);
-    let err = prepare(&doc, None, None, extract, &components, Some(&body), None).unwrap_err();
+    let err = prepare(&doc, &Env::default(), extract, &components, Some(&body), None).unwrap_err();
     assert!(err.contains("pass revision"), "{err}");
-    let err = prepare(&doc, None, None, extract, &components, Some(&body), Some(3)).unwrap_err();
+    let err = prepare(&doc, &Env::default(), extract, &components, Some(&body), Some(3)).unwrap_err();
     assert!(err.contains("revision 3") && err.contains("nothing was sent"), "{err}");
-    let sent = calls(prepare(&doc, None, None, extract, &components, Some(&body), Some(4)).unwrap());
+    let sent = calls(prepare(&doc, &Env::default(), extract, &components, Some(&body), Some(4)).unwrap());
     assert_eq!(sent[0].kwargs.get("expected_revision"), Some(&json!(4)));
 }
 
@@ -383,7 +389,7 @@ fn an_operation_that_needs_nothing_names_no_selected_node() {
     let doc = document();
     let r = Resolved { nodes: vec!["b1".into()], ..Default::default() };
     let boxed = op("ops.box");
-    let c = calls(build(boxed, &r, &values(boxed, &Map::new()).unwrap(), &doc).unwrap());
+    let c = calls(build(boxed, &r, &values(boxed, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
     assert!(!c[0].label.contains("Bracket"), "{}", c[0].label);
     assert!(c[0].label.starts_with("Box"), "{}", c[0].label);
 }
@@ -393,18 +399,18 @@ fn primitive_anchors_are_projected_onto_the_plane_and_come_last() {
     let doc = document();
     let r = Resolved::default();
     let boxed = op("tool.box");
-    let c = calls(build(boxed, &r, &values(boxed, &given(&[("corner", json!([1, 2, 5]))])).unwrap(), &doc).unwrap());
+    let c = calls(build(boxed, &r, &values(boxed, &given(&[("corner", json!([1, 2, 5]))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args, vec![json!([1.0, 2.0, 0.0]), json!([20.0, 20.0, 10.0])]);
-    let c = calls(build(boxed, &r, &values(boxed, &given(&[("corner", json!([1, 2, 5])), ("height", json!(-4))])).unwrap(), &doc).unwrap());
+    let c = calls(build(boxed, &r, &values(boxed, &given(&[("corner", json!([1, 2, 5])), ("height", json!(-4))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args[0], json!([1.0, 2.0, -4.0]), "a negative height extrudes down from the plane");
     let centre = op("tool.box_center");
-    let c = calls(build(centre, &r, &values(centre, &given(&[("center", json!([10, 10, 7]))])).unwrap(), &doc).unwrap());
+    let c = calls(build(centre, &r, &values(centre, &given(&[("center", json!([10, 10, 7]))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args[0], json!([0.0, 0.0, 0.0]));
     let cylinder = op("tool.cylinder");
-    let c = calls(build(cylinder, &r, &values(cylinder, &given(&[("base", json!([1, 2, 5]))])).unwrap(), &doc).unwrap());
+    let c = calls(build(cylinder, &r, &values(cylinder, &given(&[("base", json!([1, 2, 5]))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args[0], json!([1.0, 2.0, 0.0]));
     let sphere = op("tool.sphere");
-    let c = calls(build(sphere, &r, &values(sphere, &given(&[("center", json!([1, 2, 5]))])).unwrap(), &doc).unwrap());
+    let c = calls(build(sphere, &r, &values(sphere, &given(&[("center", json!([1, 2, 5]))])).unwrap(), &doc, &Env::default()).unwrap());
     assert_eq!(c[0].args[0], json!([1.0, 2.0, 5.0]), "the sphere keeps its centre");
     // The sizes come first (RoboCAD's NumericField order), the anchor last.
     for (id, first) in [("tool.box", "width"), ("tool.box_center", "width"), ("tool.cylinder", "diameter"), ("tool.sphere", "diameter")] {
@@ -422,12 +428,12 @@ fn comb_and_continuity_read_the_last_node_with_a_body() {
     }
     let comb = op("inspect.curvature");
     let r = Resolved { nodes: vec!["c1".into(), "k1".into()], ..Default::default() };
-    assert_eq!(build(comb, &r, &Map::new(), &doc), Ok(Built::Read(Read::CurvatureComb { node: "c1".into() })), "a sketch has no body: skipped");
+    assert_eq!(build(comb, &r, &Map::new(), &doc, &Env::default()), Ok(Built::Read(Read::CurvatureComb { node: "c1".into() })), "a sketch has no body: skipped");
     let r = Resolved { nodes: vec!["k1".into()], ..Default::default() };
-    assert!(build(comb, &r, &Map::new(), &doc).unwrap_err().starts_with("Select a curve"));
+    assert!(build(comb, &r, &Map::new(), &doc, &Env::default()).unwrap_err().starts_with("Select a curve"));
     let continuity = op("inspect.continuity");
     let r = Resolved { nodes: vec!["b1".into(), "k1".into()], ..Default::default() };
-    assert_eq!(build(continuity, &r, &Map::new(), &doc), Ok(Built::Read(Read::Continuity { node: "b1".into() })));
+    assert_eq!(build(continuity, &r, &Map::new(), &doc, &Env::default()), Ok(Built::Read(Read::Continuity { node: "b1".into() })));
     let r = Resolved { nodes: vec!["k1".into()], ..Default::default() };
-    assert!(build(continuity, &r, &Map::new(), &doc).unwrap_err().starts_with("Select a body"));
+    assert!(build(continuity, &r, &Map::new(), &doc, &Env::default()).unwrap_err().starts_with("Select a body"));
 }

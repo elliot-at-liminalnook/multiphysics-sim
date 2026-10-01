@@ -1,0 +1,63 @@
+//! The catalogue's data: one `OpEntry` per cad-modify operation, with
+//! RoboCAD's ids, labels, categories, keys, prompts, defaults, ranges and
+//! messages, each citing its RoboCAD source (paths under `cad/robocad/`).
+//!
+//! Where RoboCAD says nothing (a handler that silently does nothing on an
+//! empty selection), the refusal is a plain sentence of ours; those are
+//! marked "(ours)" in `source`. Ranges are the dialog's (`QInputDialog`,
+//! `QSpinBox`); the tools' `NumericField`s have none. `decimals` is the
+//! dialog's, else 6 (what the viewer sends: rounded to 1e-6).
+//!
+//! The entries live in one file per part of RoboCAD's registry, joined here
+//! in RoboCAD's order (`ui/app.py` `_build_commands`: Edit, Create
+//! primitives, extrude and the other solids, Modify, Planes, mirror to set
+//! pivot, Sketch, booleans and Inspect), then the REST-only `Ops` methods.
+mod arrange;
+mod boolean;
+mod edit_create;
+mod modify;
+mod plane;
+mod rest_only;
+mod sketch;
+mod solid;
+
+use super::OpEntry;
+use super::kinds::BASE;
+
+/// The parts in RoboCAD's registry order.
+const PARTS: &[&[OpEntry]] = &[edit_create::ENTRIES, solid::ENTRIES, modify::ENTRIES, plane::ENTRIES, arrange::ENTRIES, sketch::ENTRIES, boolean::ENTRIES, rest_only::ENTRIES];
+
+/// How many entries there are.
+const COUNT: usize = {
+    let mut n = 0;
+    let mut i = 0;
+    while i < PARTS.len() {
+        n += PARTS[i].len();
+        i += 1;
+    }
+    n
+};
+
+/// The parts joined, at compile time.
+const fn join() -> [OpEntry; COUNT] {
+    let mut out = [BASE; COUNT];
+    let mut k = 0;
+    let mut i = 0;
+    while i < PARTS.len() {
+        let part = PARTS[i];
+        let mut j = 0;
+        while j < part.len() {
+            out[k] = part[j];
+            k += 1;
+            j += 1;
+        }
+        i += 1;
+    }
+    out
+}
+
+static ALL: [OpEntry; COUNT] = join();
+
+/// Every operation, in RoboCAD's registry order (`ui/app.py` `_build_commands`),
+/// then the REST-only `Ops` methods (`ops.<name>`).
+pub(crate) static CATALOGUE: &[OpEntry] = &ALL;

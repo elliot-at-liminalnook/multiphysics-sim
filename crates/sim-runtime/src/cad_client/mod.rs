@@ -30,10 +30,12 @@
 //! - **No file writes by accident**: [`CadClient::physical`] never passes
 //!   `path` (RoboCAD would write the description to that file).
 pub mod service;
+pub mod sketch;
 pub mod types;
 #[cfg(test)]
 mod tests;
 
+pub use sketch::{PlaneFrame, SKETCH_CALLS, SketchCall, SketchCurve, SketchGeometry, Uv, calls_body, check_calls, plane_of};
 pub use types::*;
 
 use crate::hardware_client::encode_uri_component;

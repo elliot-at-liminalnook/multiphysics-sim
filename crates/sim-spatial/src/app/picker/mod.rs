@@ -97,6 +97,9 @@ pub(crate) struct Picker {
     listing: Latest<Listing>,
     pub(crate) listed: Option<Listing>,
     listing_asked: Option<String>,
+    /// The draft is still the examples folder it started in, not a choice:
+    /// Enter and Open don't submit it (Lessons and Place take folders).
+    prefilled: bool,
     /// The switcher's revision when it opened: a later outcome (a refused
     /// choice, a load in progress) is its status line.
     pub(crate) opened_revision: u64,
@@ -191,12 +194,16 @@ impl Picker {
     /// The switch the typed path asks for (None when closed or empty).
     pub(crate) fn typed(&self) -> Option<ModeSwitch> {
         let mode = self.open?;
+        if self.prefilled {
+            return None;
+        }
         typed_document(mode, &self.draft.text).map(|d| ModeSwitch { mode, document: Some(d) })
     }
 
     /// Set the draft (a pick, "..", a REST text) and follow it with the listing.
     pub(crate) fn set_text(&mut self, text: String) {
         self.draft = TextDraft { text, select_all: false };
+        self.prefilled = false;
         self.follow_listing();
         self.revision += 1;
     }
@@ -336,11 +343,27 @@ pub(crate) struct PickerList;
 /// JobResults: discovery and the listing land; the picker closes when the
 /// window's mode changed since it opened (its choice succeeded, or another
 /// mode was chosen in the switcher).
-pub(crate) fn receive(picker: Option<ResMut<Picker>>, mode: Option<Res<State<ViewerMode>>>, hardware: Option<Res<crate::robot::hardware::Hardware>>) {
+pub(crate) fn receive(
+    picker: Option<ResMut<Picker>>,
+    mode: Option<Res<State<ViewerMode>>>,
+    hardware: Option<Res<crate::robot::hardware::Hardware>>,
+    switch: Option<ResMut<Switcher>>,
+    mut watched: Local<Option<u64>>,
+) {
     let Some(mut picker) = picker else { return };
     if picker.open.is_none() {
+        // Closed with nothing chosen (Escape, Close, picker:close): the
+        // switcher's "Choose … in the picker." line goes with it. A later
+        // outcome (a switch, a refusal) bumped the revision and stays.
+        if let (Some(opened), Some(mut switch)) = (watched.take(), switch)
+            && switch.revision == opened
+        {
+            switch.message = None;
+            switch.revision += 1;
+        }
         return;
     }
+    *watched = Some(picker.opened_revision);
     // The Leg calibration panel opened while the picker was up (a remote
     // toggle): its STOP must stay reachable, so the modal picker closes.
     let hardware_open = hardware.is_some_and(|h| h.open);
@@ -364,6 +387,7 @@ pub(crate) fn receive(picker: Option<ResMut<Picker>>, mode: Option<Res<State<Vie
             && let Some(dir) = &sources.start_dir
         {
             picker.draft = TextDraft { text: dir.clone(), select_all: false };
+            picker.prefilled = true;
             picker.follow_listing();
         }
         picker.found = Some(sources);
@@ -434,14 +458,19 @@ const CHORD_KEYS: [KeyCode; 4] = [KeyCode::SuperLeft, KeyCode::SuperRight, KeyCo
 /// Releases every held input so the systems underneath see `just_released`
 /// once (a robot walking on a held W, a hardware jog on a held Q/A stops),
 /// and no new press: one made this frame is dropped, unless it re-presses
-/// a key also released this frame (then its release stays).
-fn release_held<T: Clone + Eq + std::hash::Hash + Send + Sync + 'static>(input: &mut ButtonInput<T>) {
-    let fresh: Vec<T> = input.get_just_pressed().filter(|k| !input.just_released((*k).clone())).cloned().collect();
-    input.clear();
-    input.release_all();
-    for key in fresh {
-        input.reset(key);
+/// a key also released this frame (then its release stays). A release that
+/// arrived this frame is kept: Bevy's input system already moved it out of
+/// `pressed`, so dropping it would lose the only `just_released` it gets.
+pub(crate) fn release_held<T: Clone + Eq + std::hash::Hash + Send + Sync + 'static>(input: &mut ButtonInput<T>) {
+    let pressed_now: Vec<T> = input.get_just_pressed().cloned().collect();
+    for key in pressed_now {
+        if input.just_released(key.clone()) {
+            input.clear_just_pressed(key);
+        } else {
+            input.reset(key);
+        }
     }
+    input.release_all();
 }
 
 /// PreUpdate, after Bevy's input systems: while the picker is open, its
@@ -588,6 +617,7 @@ impl Picker {
     /// A typed edit: the draft (with its selection) and the listing follow.
     fn set_text_selected(&mut self, draft: TextDraft) {
         self.draft = draft;
+        self.prefilled = false;
         self.follow_listing();
         self.revision += 1;
     }

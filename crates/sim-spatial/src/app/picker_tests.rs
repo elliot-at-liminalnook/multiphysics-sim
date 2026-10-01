@@ -334,3 +334,29 @@ fn discovery_finds_examples_and_skips_runs() {
     assert!(cut.choices.is_empty() && cut.empty.contains("first"), "{cut:?}");
     std::fs::remove_dir_all(&root).ok();
 }
+
+/// The modal picker releases held keys without losing a release that
+/// arrived the same frame (found by reading: `clear()` dropped it, so a
+/// robot walking on a held W kept walking under the picker).
+#[test]
+fn picker_release_keeps_same_frame_releases() {
+    use bevy::input::ButtonInput;
+    use bevy::prelude::KeyCode;
+    let mut input = ButtonInput::<KeyCode>::default();
+    input.press(KeyCode::KeyW);
+    input.press(KeyCode::KeyA);
+    input.press(KeyCode::KeyS);
+    input.clear();
+    // This frame: W released, A still held, D freshly pressed, S re-pressed after a release.
+    input.release(KeyCode::KeyW);
+    input.press(KeyCode::KeyD);
+    input.release(KeyCode::KeyS);
+    input.press(KeyCode::KeyS);
+    super::picker::release_held(&mut input);
+    assert!(input.just_released(KeyCode::KeyW), "a release this frame survives");
+    assert!(input.just_released(KeyCode::KeyA), "a held key is released");
+    assert!(input.just_released(KeyCode::KeyS), "a re-pressed key keeps its release");
+    assert!(!input.pressed(KeyCode::KeyD) && !input.just_pressed(KeyCode::KeyD) && !input.just_released(KeyCode::KeyD), "a fresh press is dropped");
+    assert_eq!(input.get_pressed().count(), 0);
+    assert_eq!(input.get_just_pressed().count(), 0);
+}

@@ -4,8 +4,9 @@
 //! The tools (ui/app.py:377-378, ui/tools.py:638-817): labels "Sketch:
 //! <Label>", category Sketch, keys from keymap.json; each is `Flow::Sketch`
 //! driven by its `sketch::specs` row, its Tab fields RoboCAD's `_fields`
-//! (names and defaults; the polygon's sides open with the remembered count,
-//! `sketch::interact::begin`) plus one optional `anchor` (RoboCAD's
+//! (names and defaults; the polygon's `sides` has no default: its form
+//! opens with the remembered count, `sketch::interact::begin`, and a run
+//! without it uses that count, `sketch::specs::from_values`) plus one optional `anchor` (RoboCAD's
 //! `commit` anchors at the first clicked point, else the plane origin; the
 //! form's submit fills it from the first click). The text tool's first
 //! field is RoboCAD's "Text to sketch:" dialog (app.py:743-750), focused
@@ -120,7 +121,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         "Sketch: Polygon",
         &["Shift+P"],
         SketchShape::Polygon,
-        &[p("radius", "radius", LENGTH, "10.0"), p("sides", "sides", count_from(3.0), "6"), ANCHOR],
+        &[p("radius", "radius", LENGTH, "10.0"), p("sides", "sides", count_from(3.0), ""), ANCHOR],
         hint!("polygon"),
         "ui/app.py:377-378, ui/tools.py:638-817 (_fields :668 sides = Sketch.last_polygon_sides, _build :745 rotation toward the second click, commit :799-800 int(sides)), kernel/sketch.py:259-265, keymap.json Shift+P",
     ),

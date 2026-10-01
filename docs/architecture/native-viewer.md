@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files 2026-10-01, see [Split large files](#split-large-files-2026-10-01))
+## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch written 2026-10-01, pending verification, see [CAD sketch](#cad-sketch-2026-10-01))
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -46,7 +46,9 @@ duplicates physics.
   6 (`cad_invoke`, `cad_run`, `cad_form_set`, `cad_form_submit`,
   `cad_form_cancel`, `cad_surface`; the CAD specs moved to `cad/specs.rs`,
   37 `spec(` entries there, re-counted 2026-10-01 against the 31 before):
-  144 in all. Place mode answers `state`, `camera` and `screenshot`.
+  144 in all. cad-sketch adds 1 (`cad_sketch`; 38 `spec(` entries,
+  re-counted 2026-10-01 with `grep -c 'spec(' crates/sim-spatial/src/cad/specs.rs`
+  against 37 at e0996878): 145 in all. Place mode answers `state`, `camera` and `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
   verified at 90c65c86: every intent is a typed action
   (`WindowAction`, `InspectAction`, `SystemAction` carrying the builder's
@@ -159,6 +161,22 @@ duplicates physics.
   `actions.rs` 676, `inspector/mod.rs` 663, `sync/mod.rs` 582;
   `document.rs` became `document/` 774 in three files and
   `transform/mod.rs` 460).
+  **cad-sketch** (2026-10-01, see [CAD sketch](#cad-sketch-2026-10-01)),
+  written and reviewed by reading, pending its verification pass: the
+  active plane (XY/XZ/YZ or a plane node, display state) and 2D snapping,
+  the four plane tools, the 13 sketch tools on one data-driven
+  interaction, sketch offset/fillet corners/join and the `cad_sketch` REST
+  command, extrude and revolve with Shift/Ctrl/Alt booleans, sweep, pipe,
+  loft and fill; the plane-dependent cad-modify operations and the
+  primitives now follow the active plane. One recorded Python fix
+  (`Service.edit_sketch`'s curve indices). Re-measured 2026-10-01: `cad/`
+  is 21,893 lines in 75 files (`find crates/sim-spatial/src/cad -name '*.rs' | xargs wc -l`,
+  tests included; `sketch/` 3,148 in 11; `ops/` 4,032 in 17); the
+  catalogue has 84 entries (`grep -c 'id: "' crates/sim-spatial/src/cad/ops/catalogue/*.rs`
+  gives 68, plus the 16 `tool(`/`edit(` rows of `catalogue/sketch.rs`,
+  `grep -cE '^\s+(tool|edit)\($'`; 54 before: 6 solids, 8 plane entries
+  and 16 sketch entries added); `sim-runtime`'s `cad_client/sketch/` is
+  930 lines in 2 files plus `sketch_tests.rs` 356.
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
   verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
@@ -193,19 +211,22 @@ duplicates physics.
   [Split large files](#split-large-files-2026-10-01)). No non-test source
   file in `crates/sim-spatial/src` is over 750 lines, and the lib test
   `app::tests::source_files_stay_small` keeps it so (cap 750 non-test
-  lines, empty allowlist). Re-measured 2026-10-01 (non-test lines, the
-  guard's rule): the largest are `cad/ops/mod.rs` 708, `cad/panel.rs` 700,
-  `robot/hardware/session.rs` 698, `cad/ops/catalogue.rs` 698,
-  `robot/hardware/sync.rs` 679, `cad/actions.rs` 676, `physics_view.rs`
-  672, `builder/actions.rs` 661, `lesson/mod.rs` 657; every other file is
-  under 655. The former giants are now short roots: `robot/mod.rs` 201
+  lines, empty allowlist). Re-measured 2026-10-01 after cad-sketch
+  (non-test lines, the guard's rule, by a script repeating its count): the
+  largest are `cad/panel.rs` 716, `cad/actions.rs` 705,
+  `robot/hardware/session.rs` 698, `cad/ops/mod.rs` 686,
+  `robot/hardware/sync.rs` 679, `physics_view.rs` 672,
+  `builder/actions.rs` 661, `lesson/mod.rs` 657; every other file is under
+  655 (`cad/ops/catalogue.rs`, 698 at split-large-files, became
+  `cad/ops/catalogue/`, nine files). The former giants are now short roots: `robot/mod.rs` 201
   (was `robot.rs` 2,532), `robot/run/mod.rs` 30 (was `robot_run.rs`
   2,647), `builder.rs` 590 (was 2,453), `lesson/mod.rs` 657 (was 2,371),
   `lib.rs` 64 (was 1,297), `app/switch/mod.rs` 536 (was `app/switch.rs`
   959). Trees (wc -l, tests included): `robot/` 18,902 lines in 67 files
   (`run/` 2,736 in 11, `hardware/` 9,139 in 30), `builder*` 11,364 in 33,
   `lesson/` 7,193 in 23, `app/` 2,646 in 9, `inspect_view/` 1,280 in 5;
-  `src/` 68,672 lines in 228 files. Robot mode is one module tree under
+  `src/` 68,672 lines in 228 files at split-large-files, 73,269 in 249
+  after cad-sketch. Robot mode is one module tree under
   `robot/`, as CAD mode is under `cad/`.
 - **What already works well, to keep:**
   - typed actions with one validated handler per action type
@@ -2403,8 +2424,8 @@ at e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `un
   rule, every 33 ms at most, candidates cached by epochs; it carries the
   shown revision it was snapped at and is cleared when that revision moves
   on, the pointer leaves the window or the search finds nothing, so a stale
-  snap is refused by name, never sent) for "Set pivot at cursor snap". A placement's base and Tab anchor lie on z = 0 (a
-  sphere keeps its centre); the anchor is the form's last field, so Tab
+  snap is refused by name, never sent) for "Set pivot at cursor snap". A placement's base and Tab anchor lie on z = 0 (on the
+  active plane since cad-sketch; a sphere keeps its centre); the anchor is the form's last field, so Tab
   reaches width or diameter first as in RoboCAD. `topology::wanted` loads every
   drawn body's topology while an op is active.
 - **Surfaces** (`surfaces/`): `registry.rs` is RoboCAD's whole command
@@ -2489,13 +2510,17 @@ at e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `un
   *Rejected:* one guard at the form's opening for every flow (a fillet
   tool left open across an undo would be refused forever, or would send
   stale indices). *Revisit if* forms become non-persistent.
-- **No active plane until cad-sketch.** Mirror (YZ), cut, split,
-  silhouette, draft's neutral plane and the radial array's axis (XY) take
-  a plane choice parameter with the default RoboCAD uses when no plane is
-  active; primitives are placed on XY through the origin. *Rejected:* a
-  stand-in active-plane state here (cad-sketch owns it, with its picking
-  and snapping). *Revisit with* cad-sketch: the parameter's default becomes
-  the active plane.
+- **No active plane until cad-sketch.** *Retired by cad-sketch
+  (2026-10-01; see [CAD sketch](#cad-sketch-2026-10-01)).* Mirror (YZ),
+  cut, split, silhouette, draft's neutral plane and the radial array's axis
+  (XY) took a plane choice parameter with the default RoboCAD uses when no
+  plane is active, and primitives were placed on XY through the origin.
+  Now the parameter is "active" | xy | xz | yz with `Arg::Plane(name,
+  fallback)`: "active" sends the native active plane (`CadActivePlane`, by
+  name or plane node id), else that handler's RoboCAD fallback (YZ for
+  mirror, XY for the rest); the radial array reads the plane's frame; the
+  primitives are placed on the active plane (a box off XY is sent as
+  `Ops.box_three_point`).
 - **Both box tools send `Ops.box`.** RoboCAD's `PrimitiveTool` extrudes a
   sketch rectangle (history label "Extrude", node "Box"); the viewer sends
   one `POST /ops/box` (label "Box") with the corner the tool computes. The
@@ -2570,6 +2595,11 @@ REST read no keys, so no key is read in every mode):
 
 Commands of later epics keep their keys, so a press says which epic owns
 them (status line), as their menu entries do.
+
+(This table is the cad-modify record. Since cad-sketch the keys marked
+"(cad-sketch)" run natively, A binds the three-point arc, and the table in
+`cad/keys.rs`'s module doc is the current one: S/Shift+S, R/Shift+R, L,
+Shift+L, C, Shift+C, T, X, Ctrl+P and Enter rows added.)
 
 ### Review findings (five pair-reviewers by area, then fixes)
 
@@ -2902,6 +2932,378 @@ when* those servers change.
 - [ ] `cargo test -p sim-runtime --lib hardware_client` (the refusal test
   and its one-write case pass on macOS).
 - [ ] `cargo check -p sim-web --target wasm32-unknown-unknown`.
+
+## CAD sketch (2026-10-01)
+
+Batch cad-sketch (default order item 7, §9 phase 1; §9 "Later CAD epics"
+3) brought RoboCAD's sketching into CAD mode: the active plane (XY, XZ, YZ
+or a plane node) and 2D snapping, the four plane tools, the 13 sketch
+tools, sketch offset, fillet corners and join, the REST-only sketch calls,
+extrude and revolve with RoboCAD's Shift/Ctrl/Alt booleans, and sweep,
+pipe, loft and fill. RoboCAD's command layer still does every edit: each
+finished shape, plane or solid is one RoboCAD call on one edit job, so
+undo and provenance stay RoboCAD's. The ledger rows are in
+[docs/cad-parity.md](../cad-parity.md) (60 rows: 35 done by reading, 25
+deliberately different, each with its reason; none open; 6 earlier rows
+that waited for the active plane became done by reading; after the epic
+the ledger has 286 rows done by reading, 398 later and 89 deliberately
+different), the side-by-side steps in
+[docs/cad-checklist.md](../cad-checklist.md) (CAD-77 to CAD-98). Written
+and reviewed by reading in commits 34fa7901, f0c23f87 and 87287d70; not
+compiled or run yet (see the verification checklist). Paths are
+`crates/sim-spatial/src/cad/` unless they name another crate.
+
+### Shape
+
+- **Client types** (`sim-runtime/src/cad_client/sketch/`): `PlaneFrame`
+  (origin, x axis, normal; `to_local`, `to_world`, `project`, `same`),
+  `SketchGeometry` and `SketchCurve` read tolerantly (an unknown or
+  malformed curve is counted, not fatal; `sample(n)` as RoboCAD's viewport
+  samples, a slot's caps outward as the kernel builds them), `SketchCall`
+  (`calls.rs`: the 31 kernel/sketch.py calls api.py accepts, `to_json`,
+  `from_json` with refusals naming the call and the argument, `check`,
+  `curves_after`), `check_calls` (curve indices as each call leaves the
+  list), `plane_of` (a plane node's frame), and
+  `CadClient::sketch`, `edit_sketch` (`POST /nodes/{id}/sketch`) and
+  `create_sketch` (`POST /nodes {"kind": "sketch", "plane", "calls"}`).
+  Tests in `sketch_tests.rs`.
+- **The active plane** (`sketch/mod.rs` `CadActivePlane`: `Base(BasePlane)`
+  or `Node {id, frame}`, `snap_2d`, the document generation; `frame`,
+  `frame_or_xy`, `arg_or`, `label`). `sketch/plane.rs`: `sync` (a plane
+  tool's new node becomes active, `ops.plane_created`; selecting exactly
+  one plane node makes it active; a node's frame from the cache; a node
+  gone from the tree is dropped by name), `view_act` (Active plane:
+  XY/XZ/YZ, Toggle 2D snapping, RoboCAD's status lines), `begin`,
+  `picks` and `run_for` (the plane tools' face picks and snapped points, one
+  `CadRun` per complete set), `state_json` (`cad_state.plane`).
+  `sketch/plane_draw.rs`: the translucent quads (`wanted`, `quads`,
+  `outlines`).
+- **The cache** (`sketch/cache.rs` `CadSketches`): sketch geometry and
+  plane frames of the shown tree by (node, revision), one `Pool::Dedicated`
+  job per node; `sketch`/`plane` answer only at the shown revision (the
+  tools decide on current geometry), `sketch_last`/`plane_last` also
+  answer the last read (the display does not blink).
+- **The sketch tools as data** (`ops/catalogue/sketch.rs`, 13 `tool(…)`
+  entries with `Flow::Sketch(shape)`; `sketch/specs.rs` `SPECS`, one
+  `SketchSpec` per shape: points `needed`, `Finish::Points(n)` or
+  `EnterOrDouble`, `chains`, `Readout`, `text_form`). `specs::from_points`
+  is RoboCAD's `_build`, `from_values` its `commit`, `target` its
+  `_ensure_sketch`, `calls` the Tab path; `remember_polygon_sides` is
+  `Sketch.last_polygon_sides`. `sketch/interact.rs`: one pointer system
+  for all 13 (`begin`, `pointer`, `finish_action`, `reset_after_finish`,
+  `readout`; double-click `DOUBLE_CLICK` 400 ms and `DOUBLE_DISTANCE`
+  5 px). `sketch/preview.rs` (`preview_curves`, `preview_lines`, `draw`)
+  and `sketch/display.rs` (`shown`, `lines`, `draw`) are display only.
+- **One sketch edit path** (`ops/mod.rs` `send_sketch`): every finished
+  shape, Tab commit, sketch edit and REST `cad_sketch` ends in one
+  `actions::edit` job calling `CadClient::edit_sketch` or `create_sketch`.
+  `sketch/edits.rs`: `selected_sketch` (RoboCAD's `_selected_sketch`),
+  `calls` (offset, `fillet_plan` over `fillet_corner`, join),
+  `sketch_action` (`CadAction::CadSketch`: `commit_refusal`, the calls
+  read and checked, `specs::target` without a node).
+- **Extrude and revolve** (`sketch/extrude.rs`, entries in
+  `ops/catalogue/solid.rs` with sweep, pipe, loft and fill): `begin`,
+  `source` (RoboCAD's `activate` rule), `body_under_selection`,
+  `boolean_for`, `pointer` (the drag through `transform::push_distance`),
+  `calls` (`Shape::Extrude`), `draw` (outlines).
+- **Planes in the catalogue** (`ops/catalogue/plane.rs`): the four plane
+  tools (`Flow::PlanePick(mode)`, `activates_plane`) and the four viewer
+  state entries (`Flow::View(ViewAct)`, `Shape::View`, `Built::View`).
+- **Catalogue plumbing** (`ops/`): `Flow::{Sketch, Extrude, PlanePick,
+  View}`, `Shape::{Sketch, SketchEdit, Extrude, View}`, `Arg::{FaceB,
+  Keyed, Plane}`, `Env` (the active plane and the cache for builders),
+  `OpEntry::activates_plane`, `Built::{Sketch, View}`; `ops/mod.rs` split
+  into `form.rs` (the form's state and `form_cancel`) and `state.rs`;
+  `catalogue.rs` split into `catalogue/{edit_create, solid, modify, plane,
+  arrange, sketch, boolean, rest_only}.rs`, joined at compile time in
+  RoboCAD's registry order (`catalogue/mod.rs` `join`), 84 entries. Plane
+  parameters are "active" | xy | xz | yz (`kinds::PLANES`,
+  `Arg::Plane(name, fallback)`); `args::place` puts primitives on the
+  active plane.
+- **Snapping** (`snap.rs`): `SnapKind::{Endpoint, Plane}`,
+  `sketch_candidates`, `drawn_candidates`, `snap_plane`, `snap_on` (the
+  best candidate projected onto the plane, the grid in plane coordinates,
+  else the plane hit); `measure.rs` and the cursor snap honour 2D
+  snapping. `pick.rs` leaves the left button to the plane, sketch and
+  extrude interactions.
+- **Surfaces and keys**: every cad-sketch command is `Native::Op` in
+  `surfaces/registry.rs`; the toolbar's Rectangle, Circle, Slot and
+  Extrude run and light (`toolbar::checkable`); the right-click menu's
+  "Sketch" section (`registry::SKETCH_CONTEXT`); `keys.rs`' clash table
+  covers the new keys; `surfaces/form.rs` keeps Enter for the spline and
+  makes Enter in "Text to sketch:" start the clicks. `ui_kit/form.rs`:
+  `FieldKind::Text`, `Unit::Plain`.
+- **REST and state**: `CadAction::CadSketch` (`cad_sketch`, `specs.rs`),
+  `Cx` carries the plane and the cache, `cad_state.plane`;
+  `app/switch/prepare.rs` refuses leaving CAD mode while a shape is in
+  progress (`cad::sketch_blocker`, `sketch::blocker`).
+- **Python** (`cad/robocad/api.py` `Service.edit_sketch`): curve indices
+  are mapped before two-number lists become points; pytest
+  `cad/tests/test_api_sketch_calls.py`.
+
+### Decisions
+
+- **The active plane is a native resource, display state.** `CadActivePlane`
+  holds it; it is sent to RoboCAD only as the plane argument of an
+  operation that uses it. *Why:* RoboCAD's `viewport.active_plane` is its
+  GUI's state, and `PUT /view {"active_plane"}` is GUI-only (a headless
+  service answers 409), so it could not be shared anyway. *Rejected:*
+  `PUT /view` (fails headless; would move RoboCAD's window when attached).
+  *Revisit if* RoboCAD stores the active plane in the document.
+- **Sketch tools are catalogue entries driven by one interaction.** 13
+  `OpEntry`s with `Flow::Sketch(shape)` and one `SketchSpec` row each;
+  `interact::pointer`, `specs::from_points` and `from_values` have no
+  per-tool branch beyond the shape's geometry. *Why:* surfaces, keys, REST
+  and `system_ui` already read the catalogue, and RoboCAD's `SketchTool`
+  is itself one class. *Rejected:* one tool type per shape; a separate
+  sketch-mode state machine. *Revisit if* a constraint solver arrives
+  (RoboCAD has none).
+- **A finished shape is one `cad_sketch`.** The pointer writes
+  `CadSketch {node: None, plane, calls, revision}`, and the action picks
+  the sketch by RoboCAD's rule (tools.py:675-686: the selected sketch on the
+  plane, else the first visible one, else new). A new sketch is created
+  with the first shape (`POST /nodes {"kind": "sketch", "plane", "calls"}`),
+  not when the tool starts. *Why:* activating a tool never edits the
+  document, so Escape leaves nothing behind, and REST and the pointer share
+  one path. *Rejected:* `POST /ops/new_sketch` on activation (an empty
+  undo step and a node for every tool started). *Revisit if* a user wants
+  the empty sketch to exist before drawing.
+- **The `Service.edit_sketch` fix.** api.py turned every two-number list
+  into a point before mapping curve indices, so `join([0, 1])`, trim or
+  extend with two curves, `circle_tangent` and `arc_tangent` failed over
+  REST. Indices are now mapped first; route, body and undo label are
+  unchanged. *Rejected:* refusing those calls natively (the REST surface
+  would stay broken for every client). *Revisit if* api.py's call format
+  changes.
+- **History label "Sketch (API)".** Every native sketch edit goes through
+  `POST /nodes/{id}/sketch`, which RoboCAD's history labels "Sketch (API)";
+  its GUI labels "Sketch rectangle" (its `SketchTool` label), "Offset curves". The native status line
+  shows the GUI's wording. *Rejected:* a new route taking a label (a
+  Python change for a label only). *Revisit if* the parity harness
+  compares history labels.
+- **A runs the three-point arc.** keymap.json binds `sketch.arc` to A, a
+  command RoboCAD never registers; the native registry binds A to
+  `sketch.arc_3pt`, the only arc tool. *Rejected:* leaving A dead as
+  RoboCAD does. *Revisit if* RoboCAD fixes its keymap differently.
+- **The right-click menu gains a "Sketch" section.** The 13 tools follow
+  RoboCAD's 14 entries, which stay first and unchanged. *Why:* the batch
+  asked for every sketch tool in the 3D view's own menu. *Rejected:* a
+  separate sketch pie (more surface to keep). *Revisit if* it crowds the
+  menu.
+- **Selecting a plane node activates it.** Exactly one selected plane node
+  becomes the active plane (`plane::sync`). *Why:* otherwise an existing
+  plane node could be made active only by rebuilding it with a plane tool,
+  as in RoboCAD. *Rejected:* a separate "make active" command (one more
+  step for the common case). *Revisit if* selecting planes for other
+  operations changes the active plane unexpectedly.
+- **The named active plane is drawn.** `plane_draw::wanted` adds a quad for
+  the active plane when no visible plane node is it (XY, XZ, YZ, a hidden
+  node). *Why:* the plane the tools draw on is always visible. RoboCAD
+  draws plane nodes only. *Revisit if* the quad hides geometry users need.
+- **A box off XY is sent as `Ops.box_three_point`.** RoboCAD's tool
+  extrudes a sketch rectangle; no route takes a client-built sketch body,
+  and `Ops.box` is axis-aligned. `args::place` picks a, b, c so the
+  three-point box spans the same solid (label "Box"). On XY it stays
+  `Ops.box`. *Rejected:* sketch + extrude as two edits (two undo steps
+  where RoboCAD's tool records one composite). *Revisit if* the undo
+  label must read "Extrude".
+- **Fillet corners simulates the kernel.** RoboCAD's GUI loops over every
+  corner and swallows each `KernelError`; over REST one failing call fails
+  the whole list. `edits::fillet_plan` runs kernel/sketch.py's
+  `fillet_corner` exactly (`edits::fillet_corner`, its straight-corner
+  and too-large checks, each fillet's 9 arc points changing the next
+  corner's neighbours) and sends only the corners RoboCAD would round.
+  *Rejected:* one REST call per corner (an undo step each). *Revisit if*
+  the kernel's fillet changes (the simulation must follow it).
+- **Join with one curve or none is refused.** RoboCAD records an empty undo
+  step (and is silent with no sketch); the viewer refuses by name and
+  sends nothing, as it does for an empty offset or a fillet with no
+  corner. *Revisit if* the harness needs identical history.
+- **A revolve press and release revolves 360°, as RoboCAD's.** RoboCAD's
+  release calls `_apply(h, …)` with `angle=None`, so a click revolves a
+  full turn whatever the angle field says; the viewer keeps that gesture
+  for parity (one `tool.revolve` with angle 360 and the release's
+  boolean; the readout says so) and the form's OK revolves by the typed
+  angle. *Rejected:* no click commit (a silent gesture), or the click
+  reading the angle field (not RoboCAD). *Revisit if* RoboCAD's release
+  is fixed to read the angle.
+- **The drag sends taper 0, as RoboCAD's.** RoboCAD's drag sends
+  `self.taper`, which stays 0.0 (only its Tab commit reads the field); the
+  viewer's drag does the same, so the preview (which draws no taper) shows
+  what is sent, and only the form's OK sends the typed taper. *Rejected:*
+  sending the form's taper draft (a taper typed once would apply to every
+  later drag unseen, and a half-typed draft would fail every drag).
+  *Revisit if* the preview draws the taper.
+- **The extrude preview is outlines only.** RoboCAD tessellates a preview
+  body with its kernel (`_preview`), which no REST route serves; the
+  viewer draws the profile at the base and the top with connecting lines,
+  without the taper. *Rejected:* a preview route (a Python addition for
+  display only). *Revisit with* a Rust kernel (§9 phase 4).
+- **Slot caps are drawn outward.** `io/exporters.py` `_slot_points`
+  sweeps the other way from the kernel's slot, so RoboCAD's viewport and
+  SVG draw the caps turned inward; `SketchCurve::sample` draws the solid's
+  outline. *Revisit if* RoboCAD fixes `_slot_points` (then both agree).
+- **The text preview is a placeholder box.** RoboCAD's outlines need
+  fontTools (`text_outlines`), and its text tool finishes on its one
+  click, so its hover never shows text either; the box shows where and how
+  large. *Revisit if* text outlines get a route.
+- **Enter outside a sketch form's fields does nothing.** RoboCAD's
+  `SketchTool.key` takes Enter only to finish a spline, and its Tab values
+  commit from the numeric bar; so the form's Enter-submit stands aside for
+  `Flow::Sketch`, and Enter in "Text to sketch:" starts the clicks, as
+  RoboCAD's `getText` OK does. *Rejected:* Enter submitting the Tab values
+  (would place a shape where RoboCAD finishes nothing).
+- **Double-click is 400 ms and 5 px.** Qt delivers a double-click instead
+  of the second press (`QStyleHints` defaults); within those limits the
+  second press is not a point for any tool and only finishes a spline.
+  *Revisit if* the platform's own double-click settings should apply.
+- **A press that cannot be sent is not taken.** A press that would start
+  a shape (its revision is stamped then) or complete one, and the
+  spline's finish, are checked first: `commit_refusal` (an edit in
+  flight, the shown document stale or behind RoboCAD's) and where the
+  shape would go (`edits::shape_target`: the plane frame and the sketches
+  read at the shown revision). Refused, the point is not added, the
+  clicked points stay, nothing is sent, and the status line names why
+  ("Sketch line not sent: …; click again when RoboCAD has caught up"), so
+  fast chained lines are never lost between RoboCAD's answer and the
+  refetch. Points clicked before RoboCAD's revision moved are dropped with
+  a message (they were made against geometry that is gone). *Rejected:*
+  sending and letting the action refuse it next frame (the points were
+  already cleared: shapes were silently lost); queueing the shape until
+  RoboCAD catches up (sends geometry the user can no longer see refused).
+  *Revisit if* RoboCAD answers edits synchronously with the new tree.
+- **A lone chained point does not block leaving CAD mode.** After a line
+  its end point starts the next one (RoboCAD's chaining); nothing unsent
+  is lost by leaving, so `sketch::blocker` counts only points beyond it
+  (`SketchState::unsent`).
+- **Snaps carry their f64 source point** (`Snap::exact`): the sketch,
+  placement, plane-tool and measure picks send the topology's or
+  sketch's own coordinates (projected in f64 onto the plane), not the
+  f32 point drawn, so a point snapped onto an endpoint coincides with it
+  within RoboCAD's 1e-6 joins.
+- **Fill takes a node id through RoboCAD's REST.** `ArgConverter._one`
+  treated any parameter named `edges` as edge references, so `Ops.fill(edges:
+  str | Body)` got a 400 for every node id; api.py now passes a string
+  through when the annotation has no `EdgeRef` (cad/tests/test_api_fill_node.py).
+  The second minimal, recorded Python change of this epic, with the
+  `edit_sketch` index mapping.
+
+### Verification checklist
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- `cargo test -p sim-spatial --lib --bins`, in particular
+  `cad::sketch::tests::*` (`a_shape_in_progress_blocks_leaving_cad_mode`,
+  `escape_drops_the_shape_and_sends_nothing`,
+  `the_rows_follow_robocads_needed_counts_in_shape_order`,
+  `clicks_build_robocads_calls_for_every_shape`,
+  `tab_values_build_robocads_commit_at_the_anchor`,
+  `a_finished_line_is_one_cad_sketch_and_the_next_line_starts_at_its_end`,
+  `the_polygon_remembers_its_sides`,
+  `a_shape_goes_to_the_selected_then_the_first_visible_sketch_on_its_plane`,
+  `fillet_corners_sends_only_the_corners_robocad_rounds`,
+  `sketch_edits_work_on_the_selected_or_first_visible_sketch`,
+  `cad_sketch_refusals_name_the_call_and_the_argument_and_send_nothing`,
+  `a_press_that_cannot_be_sent_is_not_taken_and_keeps_the_points`),
+  `app::tests::leaving_cad_mode_is_refused_only_on_unsent_sketch_points`
+  (through the real mode switch, `switch::leaving_blockers`),
+  `cad::ops::tests::a_created_plane_waits_for_the_tree_that_shows_it`,
+  `cad::snap::tests::the_exact_point_is_the_source_points_f64`,
+  `cad::sketch::extrude::tests::*`,
+  `cad::sketch::plane::tests::complete_picks_make_one_run`,
+  `cad::ops::tests` (`plane_entries_follow_robocads_registry`,
+  `active_plane_entries_are_viewer_state`,
+  `plane_parameters_default_to_the_active_plane`,
+  `primitives_are_placed_on_the_active_plane`),
+  `cad::snap::tests::sketch_endpoints_and_the_plane_step`,
+  `cad::surfaces::tests` (`the_context_menus_sketch_section_is_robocads_sketch_tools`,
+  `every_cad_sketch_command_runs_through_the_catalogue`,
+  `the_toolbars_sketch_and_extrude_buttons_are_enabled_operations`,
+  `menus_and_palette_list_the_cad_sketch_commands_in_robocads_order`,
+  `system_ui_reaches_every_cad_sketch_command_as_a_click_does`,
+  `cad_sketch_is_a_capability_with_a_valid_example`),
+  `app::tests::source_files_stay_small`, and the earlier epics' tests.
+- `cargo test -p sim-runtime --lib cad_client units` (new in
+  `cad_client::sketch_tests`: `sketch_decodes_as_api_writes_it`,
+  `sketch_reads_missing_and_malformed_fields_tolerantly`,
+  `edit_sketch_request_and_answer`, `create_sketch_request_and_answer`,
+  `plane_of_a_plane_node`, `every_call_to_json_and_back`,
+  `from_json_refusals_name_the_call_and_the_argument`,
+  `check_calls_tracks_curve_indices`, `sample_counts_as_the_viewport_draws`, …).
+- `cd cad && .venv/bin/pytest -q tests/test_api*.py`, including the new
+  `tests/test_api_sketch_calls.py` (join of two curves, trim with two
+  cutters, extend to two targets, `circle_tangent` to three curves,
+  `arc_tangent` after a line, points still become points) and
+  `tests/test_api_fill_node.py` (fill takes a closed curve's node id;
+  fillet's edge references still convert).
+- `cargo check -p sim-web --target wasm32-unknown-unknown`.
+- Then the user's [docs/cad-checklist.md](../cad-checklist.md) CAD-77 to
+  CAD-98, each step against RoboCAD's own window.
+
+### Reading trace (plane from face → rectangle → extrude with Ctrl → undo)
+
+Function names, not line numbers (fixes may follow the verification pass).
+
+- **Plane from face.** Ctrl/Cmd+P → `keys::keys` (matches `tool.plane`'s
+  "Ctrl+P" from `surfaces::registry`; ready) → `CadInvoke { tool.plane }`
+  → `actions::handle` → `ops::handle` → `ops::invoke`:
+  `Flow::PlanePick(Face)` → `end_tool`, `OpsState::active = tool.plane`, no
+  form → `sketch::plane::begin` (picks cleared, selection mode Face,
+  `selection::publish`) → the hint. A left press on a face:
+  `sketch::plane::picks` (SimSync; `pick::pointer` leaves the left button
+  to the plane tool) → `transform::ray_hit` → `CadMeshes::face_at` at the
+  shown revision → `PlanePick::Face` → `plane::run_for` → `CadRun
+  {id: tool.plane, items: [[node, "face", i]], revision}` →
+  `ops::handle` → `ops::run` → `ops::prepare`
+  (`CadDocument::commit_refusal`, the revision check, `resolve::resolve`,
+  `values`, `args::build` → `plain`: `[node, face]`) → `ops::start` →
+  `actions::edit` → `sync::start_edit` (a Dedicated job) →
+  `CadClient::op` → `POST /ops/plane_from_face` (RoboCAD's
+  `Ops.plane_from_face`, one undo step) → `ops::started` marks the edit
+  `activates_plane` → the job lands: `sync::finish_edit` writes the new
+  node's id to `ops.plane_created` → `sketch::cache::sync` reads its frame
+  (`CadClient::node`, `plane_of`) → `sketch::plane::sync` sets
+  `CadActivePlane` to `Node {id, frame}`, status "Active plane set";
+  `plane_draw::quads` brightens its square.
+- **Rectangle.** Shift+L → `keys::keys` → `CadInvoke { sketch.rectangle }`
+  → `ops::invoke`: `Flow::Sketch(Rectangle)` → `open_form` (width, height,
+  anchor; unfocused) → `sketch::interact::begin` (`SketchState`). Each left
+  press: `interact::pointer` → `snap::snap_on` (the drawn bodies' and
+  sketches' candidates, on the active plane's frame) → `PlaneFrame::project`
+  → the point appended (the first records `began`); the preview
+  (`preview::draw`) and readout ("W × H") follow the cursor. At the second
+  point (`SketchSpec::finish` `Points(2)`): `interact::finish_action` →
+  `specs::local` → `specs::from_points` (`rectangle(corner, size)`) →
+  `CadSketch {node: None, plane: <plane node id>, calls, revision: began}`
+  → `ops::handle` → `sketch::edits::sketch_action` (`commit_refusal(began)`)
+  → `edits::prepare` (`SketchCall::from_json`; `specs::target`: the
+  selected sketch on the plane, else the first visible one, else
+  `SketchTarget::New`; `check_calls`) → `ops::send_sketch`
+  (`specs::remember_polygon_sides`) → `actions::edit` →
+  `CadClient::create_sketch` → `POST /nodes {"kind": "sketch", "plane":
+  "<plane node id>", "calls": [["rectangle", …]]}` (RoboCAD's
+  `Service.create`: `Ops.new_sketch`, then `edit_sketch`, label "Sketch
+  (API)"), or `CadClient::edit_sketch` → `POST /nodes/{id}/sketch` when a
+  sketch is on that plane. `interact::reset_after_finish` clears the
+  points; the cache refetches the sketch at the new revision and
+  `display::draw` draws it.
+- **Extrude with Ctrl (union).** Select the sketch, X → `CadInvoke {
+  tool.extrude }` → `ops::invoke`: `Flow::Extrude` → `open_form`
+  (distance 10, taper 0, boolean new) → `sketch::extrude::begin`
+  (`extrude::source`). A left press: `extrude::pointer` → `source_plane`
+  (the sketch's plane from the cache) → `CadView::ray` meets it
+  (`view::ray_plane`) → `ExtrudeDrag`; moving: `transform::push_distance`
+  → the height, readout "extrude h", `extrude::draw` outlines. Release
+  holding Ctrl: `boolean_for(false, true, false)` = "union" → `CadRun
+  {tool.extrude, {distance, taper, boolean: union}, revision at the press}`
+  → `ops::run` → `ops::prepare` → `args::build` → `extrude::calls`
+  (`body_under_selection`: the selected body, else the only visible body)
+  → `ops::start` → `actions::edit` → `POST /ops/extrude {"args": [source,
+  h, null, taper, false, "union", target]}` (RoboCAD's `Ops.extrude`).
+- **Undo.** Ctrl/Cmd+Z → `keys::keys` → `CadInvoke { edit.undo }` →
+  `ops::invoke` (not in the catalogue) → `surfaces::invoke_command` →
+  `registry::invoke` (`Native::Action(Do::Undo)`) → `actions::handle`
+  `CadUndo` → `actions::edit` → `POST /undo` (RoboCAD's stack undoes the
+  extrude; again: the sketch edit, the new sketch, the plane).
 
 ## Target shape
 
@@ -3263,9 +3665,10 @@ or attach to a running RoboCAD, the model tree, tessellated bodies, picking
 and selection shared with `/selection`, the inspector with RoboCAD's fields
 and labels as returned, attribute edits, delete, undo/redo, save, GUI
 registry commands and Ops, as typed `CadAction`s over a shared loopback
-client. It is written and reviewed by reading; the verification pass builds
-and tests it, and the user's [docs/cad-checklist.md](../cad-checklist.md)
-compares it with RoboCAD step by step. The ledger
+client. It was built and tested in its verification pass, verified at
+a4fe42d3 (sim-spatial lib tests 154 passed, 1 ignored), and the user's
+[docs/cad-checklist.md](../cad-checklist.md) compares it with RoboCAD step
+by step. The ledger
 [docs/cad-parity.md](../cad-parity.md) assigns every other RoboCAD feature
 to one of the later epics below. The second, **cad-select-transform**
 (2026-10-01, see [CAD selection and transform](#cad-selection-and-transform-2026-10-01)),
@@ -3282,7 +3685,14 @@ palette, parameter form), data-driven keys, read-only analysis overlays and
 the inspector's pivot and transform editors, with five RoboCAD routes
 (copy and paste with placement, control points, curvature comb,
 continuity) and an `ArgConverter` fix for cutting with a node; verified at
-e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean). Next: cad-sketch.
+e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean). The fourth,
+**cad-sketch** (2026-10-01, see [CAD sketch](#cad-sketch-2026-10-01)),
+added the active plane and 2D snapping, the four plane tools, the 13
+sketch tools on one data-driven interaction, the sketch edits and the
+`cad_sketch` REST command, extrude, revolve, sweep, pipe, loft and fill,
+with one recorded Python fix (`Service.edit_sketch` maps curve indices
+first); it is written and reviewed by reading, pending its verification
+pass. Next: that pass, then cad-views-export.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -3296,7 +3706,7 @@ is in [docs/cad-parity.md](../cad-parity.md) (773 rows: 113 cad-mode, 637
 later, 23 deliberately different when planned; the planned cad-tools' 179
 rows were split 2026-10-01 into cad-select-transform, 63, and cad-modify,
 116; after cad-modify 245 are done by reading, 458 later and 70
-deliberately different). Seventeen gaps there have no headless route (22
+deliberately different; after cad-sketch 286, 398 and 89). Seventeen gaps there have no headless route (22
 before cad-modify added five routes). Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
 by the parity harness. Planned order:
 
@@ -3339,17 +3749,22 @@ by the parity harness. Planned order:
    curvature comb and continuity check (each needed a Python route; the
    epic added `POST /clipboard/copy`, `POST /clipboard/paste` and `GET
    /nodes/{id}/control_points|curvature_comb|continuity`).
-3. **cad-sketch** (60 rows). The active plane, construction planes (from a
+3. **cad-sketch** (60 rows). *Written 2026-10-01 and reviewed by reading,
+   pending its verification pass (see [CAD sketch](#cad-sketch-2026-10-01)):
+   35 rows done by reading, 25 deliberately different, none open; 6
+   earlier rows that waited for the active plane became done by reading.*
+   The active plane, construction planes (from a
    face, three points, two points and the camera, midplane), the 13 sketch
    tools, sketch offset/fillet/join and the REST-only edits (trim, split,
    extend, rebuild, vertices), extrude and revolve with boolean modifiers,
    sweep, pipe, loft and fill. Routes: `GET/POST /nodes/{id}/sketch`,
    `POST /nodes {"kind": "sketch"}`, `POST /ops/plane_*`,
-   `POST /ops/extrude|revolve|sweep|pipe|loft|fill`. Curve-node display
-   uses the sampled edge polylines cad-select-transform added
-   (`GET /nodes/{id}/edges?samples=N`). RoboCAD has no sketch constraints, so
-   there is nothing to port there. The dead `sketch.arc` key (A) should be
-   bound deliberately.
+   `POST /ops/extrude|revolve|sweep|pipe|loft|fill`. Sketch curves are
+   drawn from the sketch geometry (`GET /nodes/{id}/sketch`, sampled as
+   RoboCAD's viewport samples them); curve nodes keep the sampled edge
+   polylines cad-select-transform added (`GET /nodes/{id}/edges?samples=N`). RoboCAD has no sketch constraints, so
+   there is nothing to port there. The dead `sketch.arc` key (A) is bound
+   to the three-point arc.
 4. **cad-views-export** (112 rows). Display modes (shaded with edges,
    wireframe, xray, matcap, render), pan, zoom to the cursor, trackball,
    view presets, the view cube, ortho and FOV, the grid, the build plate,
@@ -3481,10 +3896,12 @@ The Director re-ranks with evidence, but this is the default:
    is verified at c0ed9b29 (sim-spatial lib 209 passed, 1 ignored; bins 4;
    `cad_client` and `units` 59; api pytests 14). **cad-modify** (2026-10-01;
    see [CAD modify](#cad-modify-2026-10-01)) is verified at e0996878
-   (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean). Next: **cad-sketch**.
-   Remaining, in order (§9 "Later CAD epics"): cad-sketch,
-   cad-views-export, cad-physical-inspect, cad-print, cad-organize,
-   cad-experiments-motion.
+   (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean).
+   **cad-sketch** (2026-10-01; see [CAD sketch](#cad-sketch-2026-10-01))
+   is done pending verification: written and reviewed by reading, its
+   verification pass still to build and test it. Next: **cad-views-export**.
+   Remaining, in order (§9 "Later CAD epics"): cad-views-export,
+   cad-physical-inspect, cad-print, cad-organize, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
    each.
@@ -3496,7 +3913,9 @@ The Director re-ranks with evidence, but this is the default:
 
 After that, feature work resumes on the target shape. The large-file debt
 was paid off by split-large-files (2026-10-01, see
-[Split large files](#split-large-files-2026-10-01)); the source-size guard
+[Split large files](#split-large-files-2026-10-01)), verified at 9765dcb6
+(code as of 57f7d447; sim-spatial lib 253 passed, 1 ignored; bins 4;
+`hardware_client` 18; `cad_client` 33); the source-size guard
 (`app::tests::source_files_stay_small`, cap 750 non-test lines) keeps it
 paid, so split a file along a seam when a change would take it past the cap.
 

@@ -16,7 +16,10 @@
 //! then sketches' endpoints and centres).
 //!
 //! Pure functions over [`CadView`], the topology and the sketch cache;
-//! display only. The measure tool (`measure`), the cursor snap and the
+//! nothing here changes the document. A snap carries its f32 drawing point
+//! and the f64 point a caller sends ([`Snap::exact`]: the source point
+//! itself, so a point snapped onto a vertex or sketch endpoint coincides
+//! with it, where f32 would move it by ~1e-6 mm). The measure tool (`measure`), the cursor snap and the
 //! primitives (`ops::interact`), the plane tools (`sketch::plane`) and the
 //! sketch tools read it. Measure and the cursor snap pass the active plane
 //! only while 2D snapping is on ([`snap_plane`], RoboCAD's
@@ -79,21 +82,31 @@ impl SnapKind {
 /// A snap: the point (mm, RoboCAD's frame), its kind and the node it came from.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Snap {
+    /// The point for drawing (f32; up to ~1e-5 mm off at 100 mm).
     pub point: Vec3,
+    /// The point to send to RoboCAD (f64): a vertex, endpoint, centre or
+    /// midpoint exactly as the topology or sketch gave it (projected in f64
+    /// onto the plane when there is one), a grid point computed in f64, or
+    /// the f64 of the cursor ray's hit (on the plane, projected onto it).
+    /// So a point snapped onto an existing point coincides with it.
+    pub exact: [f64; 3],
     pub kind: SnapKind,
     pub node: Option<String>,
 }
 impl Snap {
     /// RoboCAD's `_snap_marker` readout (app.py:552-555): "vertex  (1.00, 2.00, 3.00)".
     pub fn readout(&self) -> String {
-        format!("{}  ({:.2}, {:.2}, {:.2})", self.kind.name(), self.point.x, self.point.y, self.point.z)
+        format!("{}  ({:.2}, {:.2}, {:.2})", self.kind.name(), self.exact[0], self.exact[1], self.exact[2])
     }
 }
 
 /// One snap candidate of a drawn body.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Candidate {
+    /// For projecting to the screen (f32).
     pub point: Vec3,
+    /// The source point as the topology or sketch gave it (f64; see [`Snap::exact`]).
+    pub exact: [f64; 3],
     pub kind: SnapKind,
     pub node: String,
 }
@@ -114,7 +127,7 @@ pub fn candidates<'a>(nodes: impl IntoIterator<Item = (&'a str, &'a NodeTopology
     nodes.sort_by(|a, b| a.0.cmp(b.0));
     let mut out = Vec::new();
     for (id, t) in nodes {
-        let push = |out: &mut Vec<Candidate>, p: [f64; 3], kind: SnapKind| out.push(Candidate { point: vec(p), kind, node: id.to_string() });
+        let push = |out: &mut Vec<Candidate>, p: [f64; 3], kind: SnapKind| out.push(Candidate { point: vec(p), exact: p, kind, node: id.to_string() });
         for v in &t.vertices {
             if let Some(p) = v.point {
                 push(&mut out, p, SnapKind::Vertex);
@@ -143,13 +156,16 @@ pub fn sketch_candidates<'a>(sketches: impl IntoIterator<Item = (&'a str, &'a Sk
     let mut out = Vec::new();
     for (id, sketch) in sketches {
         let Some(plane) = sketch.plane else { continue };
-        let world = |p: [f64; 2]| vec(plane.to_world(p[0], p[1], 0.0));
+        let at = |p: [f64; 2], kind: SnapKind| {
+            let exact = plane.to_world(p[0], p[1], 0.0);
+            Candidate { point: vec(exact), exact, kind, node: id.to_string() }
+        };
         for c in &sketch.curves {
             if matches!(c.kind.as_str(), "line" | "polyline" | "spline" | "control") {
-                out.extend(c.points.iter().map(|p| Candidate { point: world(*p), kind: SnapKind::Endpoint, node: id.to_string() }));
+                out.extend(c.points.iter().map(|p| at(*p, SnapKind::Endpoint)));
             }
             if let Some(centre) = c.center {
-                out.push(Candidate { point: world(centre), kind: SnapKind::Center, node: id.to_string() });
+                out.push(at(centre, SnapKind::Center));
             }
         }
     }
@@ -188,12 +204,6 @@ pub(in crate::cad) fn snap_plane(plane: Option<&CadActivePlane>) -> Option<Plane
     plane.filter(|p| p.snap_2d).and_then(|p| p.frame().ok().flatten())
 }
 
-/// The best snap under window pixel `cursor` with no plane (see the module
-/// doc). None only when the view is not ready.
-pub fn snap(view: &CadView, cursor: Vec2, candidates: &[Candidate], suppress: bool) -> Option<Snap> {
-    snap_on(view, cursor, candidates, suppress, None)
-}
-
 /// The best snap under window pixel `cursor` (see the module doc), on
 /// `plane` when given (RoboCAD's `want_plane`, or the active plane with 2D
 /// snapping on). None only when the view is not ready.
@@ -211,9 +221,9 @@ pub fn snap_on(view: &CadView, cursor: Vec2, candidates: &[Candidate], suppress:
             }
         }
         if let Some(c) = best {
-            // On a plane, the best snap is projected onto it (viewport.py:1405-1406).
-            let point = plane.map_or(c.point, |p| vec(p.project(arr(c.point))));
-            return Some(Snap { point, kind: c.kind, node: Some(c.node.clone()) });
+            // On a plane, the best snap is projected onto it (viewport.py:1405-1406), in f64.
+            let exact = plane.map_or(c.exact, |p| p.project(c.exact));
+            return Some(Snap { point: vec(exact), exact, kind: c.kind, node: Some(c.node.clone()) });
         }
     }
     if let Some(p) = plane
@@ -223,25 +233,32 @@ pub fn snap_on(view: &CadView, cursor: Vec2, candidates: &[Candidate], suppress:
             // The grid in the plane's own coordinates (viewport.py:1413-1418), half to even.
             let [u, v, _] = p.to_local(arr(hit));
             let step = f64::from(GRID_STEP);
-            let grid = vec(p.to_world((u / step).round_ties_even() * step, (v / step).round_ties_even() * step, 0.0));
+            let exact = p.to_world((u / step).round_ties_even() * step, (v / step).round_ties_even() * step, 0.0);
+            let grid = vec(exact);
             if view.project(grid).is_some_and(|sp| (sp - cursor).length() < SNAP_PIXELS) {
-                return Some(Snap { point: grid, kind: SnapKind::Grid, node: None });
+                return Some(Snap { point: grid, exact, kind: SnapKind::Grid, node: None });
             }
         }
-        return Some(Snap { point: hit, kind: SnapKind::Plane, node: None });
+        // The hit, put exactly on the plane in f64.
+        let exact = p.project(arr(hit));
+        return Some(Snap { point: vec(exact), exact, kind: SnapKind::Plane, node: None });
     }
     if let Some(hit) = ray_plane(origin, dir, Vec3::ZERO, Vec3::Z) {
         if !suppress {
-            // Python's `round` (half to even), as RoboCAD.
-            let grid = Vec3::new((hit.x / GRID_STEP).round_ties_even() * GRID_STEP, (hit.y / GRID_STEP).round_ties_even() * GRID_STEP, 0.0);
+            // Python's `round` (half to even), as RoboCAD; in f64.
+            let step = f64::from(GRID_STEP);
+            let exact = [(f64::from(hit.x) / step).round_ties_even() * step, (f64::from(hit.y) / step).round_ties_even() * step, 0.0];
+            let grid = vec(exact);
             if view.project(grid).is_some_and(|sp| (sp - cursor).length() < SNAP_PIXELS) {
-                return Some(Snap { point: grid, kind: SnapKind::Grid, node: None });
+                return Some(Snap { point: grid, exact, kind: SnapKind::Grid, node: None });
             }
         }
-        return Some(Snap { point: hit, kind: SnapKind::Free, node: None });
+        // The hit, exactly on the ground plane.
+        let exact = [f64::from(hit.x), f64::from(hit.y), 0.0];
+        return Some(Snap { point: vec(exact), exact, kind: SnapKind::Free, node: None });
     }
-    let distance = (-origin).dot(dir).max(1.0);
-    Some(Snap { point: origin + dir * distance, kind: SnapKind::Free, node: None })
+    let point = origin + dir * (-origin).dot(dir).max(1.0);
+    Some(Snap { point, exact: arr(point), kind: SnapKind::Free, node: None })
 }
 
 #[cfg(test)]
@@ -297,17 +314,17 @@ pub(crate) mod tests {
         assert_eq!(cands.iter().map(|c| c.kind).collect::<Vec<_>>(), vec![SnapKind::Vertex, SnapKind::Midpoint, SnapKind::Center]);
         // At the origin: the vertex (≈1.2 px) beats the midpoint (≈8.4 px).
         let centre = view.project(Vec3::ZERO).unwrap();
-        let s = snap(&view, centre, &cands, false).unwrap();
+        let s = snap_on(&view, centre, &cands, false, None).unwrap();
         assert_eq!((s.kind, s.node.as_deref()), (SnapKind::Vertex, Some("n1")));
         assert_eq!(s.point, Vec3::new(2.0, 0.0, 0.0));
         // Over (13, 0, 0): the midpoint is nearer than the vertex.
         let near_mid = view.project(Vec3::new(13.0, 0.0, 0.0)).unwrap();
-        assert_eq!(snap(&view, near_mid, &cands, false).unwrap().kind, SnapKind::Midpoint);
+        assert_eq!(snap_on(&view, near_mid, &cands, false, None).unwrap().kind, SnapKind::Midpoint);
         // Over the circle's centre.
         let over_centre = view.project(Vec3::new(0.0, 29.0, 0.0)).unwrap();
-        assert_eq!(snap(&view, over_centre, &cands, false).unwrap().kind, SnapKind::Center);
+        assert_eq!(snap_on(&view, over_centre, &cands, false, None).unwrap().kind, SnapKind::Center);
         // Alt: no candidate and no grid, the ground-plane hit under the cursor.
-        let free = snap(&view, near_mid, &cands, true).unwrap();
+        let free = snap_on(&view, near_mid, &cands, true, None).unwrap();
         assert_eq!(free.kind, SnapKind::Free);
         assert!((free.point - Vec3::new(13.0, 0.0, 0.0)).length() < 0.05, "{:?}", free.point);
         assert!(free.readout().starts_with("free  (13.0"), "{}", free.readout());
@@ -320,15 +337,35 @@ pub(crate) mod tests {
         let t = topology();
         let cands = candidates([("n1", &t)]);
         let p = view.project(Vec3::new(101.0, -49.0, 0.0)).unwrap();
-        let s = snap(&view, p, &cands, false).unwrap();
+        let s = snap_on(&view, p, &cands, false, None).unwrap();
         assert_eq!(s.kind, SnapKind::Grid);
         assert!((s.point - Vec3::new(100.0, -50.0, 0.0)).length() < 1e-3, "{:?}", s.point);
         // Zoomed in (10 mm above: ≈0.083 mm a pixel) a grid point 5 mm away is ≈60 px off: free.
         let close = top_view(10.0);
         let p = close.project(Vec3::new(5.0, 5.0, 0.0)).unwrap();
-        let s = snap(&close, p, &[], false).unwrap();
+        let s = snap_on(&close, p, &[], false, None).unwrap();
         assert_eq!(s.kind, SnapKind::Free);
         assert!((s.point - Vec3::new(5.0, 5.0, 0.0)).length() < 0.01, "{:?}", s.point);
+    }
+
+    /// The point sent is the source point in f64 (f32 would move it by
+    /// ~1e-6 mm, and RoboCAD joins loops only within 1e-6), projected in
+    /// f64 onto a plane; grid points are exact in f64.
+    #[test]
+    fn the_exact_point_is_the_source_points_f64() {
+        let view = top_view(200.0);
+        let p = [20.000_000_3, 0.1, 0.0];
+        let t = NodeTopology { revision: 1, faces: Vec::new(), edges: Vec::new(), vertices: vec![VertexInfo { index: 0, point: Some(p) }] };
+        let cands = candidates([("n1", &t)]);
+        assert_eq!(cands[0].exact, p);
+        let s = snap_on(&view, view.project(cands[0].point).unwrap(), &cands, false, None).unwrap();
+        assert_eq!((s.kind, s.exact), (SnapKind::Vertex, p));
+        assert_ne!(arr(s.point), p, "f32 cannot hold it");
+        let up = PlaneFrame { origin: [0.0, 0.0, 5.0], ..PlaneFrame::XY };
+        let s = snap_on(&view, view.project(cands[0].point).unwrap(), &cands, false, Some(&up)).unwrap();
+        assert_eq!(s.exact, [p[0], p[1], 5.0]);
+        let s = snap_on(&view, view.project(Vec3::new(101.0, -49.0, 0.0)).unwrap(), &cands, false, None).unwrap();
+        assert_eq!((s.kind, s.exact), (SnapKind::Grid, [100.0, -50.0, 0.0]));
     }
 
     /// Sketch endpoints and centres come after the bodies', through the
@@ -353,7 +390,7 @@ pub(crate) mod tests {
         let kinds: Vec<SnapKind> = cands.iter().map(|c| c.kind).collect();
         assert_eq!(kinds, vec![SnapKind::Vertex, SnapKind::Midpoint, SnapKind::Center, SnapKind::Endpoint, SnapKind::Endpoint, SnapKind::Center]);
         assert_eq!(cands[3].point, Vec3::new(40.0, 0.0, 5.0));
-        let s = snap(&view, view.project(Vec3::new(41.0, 0.0, 5.0)).unwrap(), &cands, false).unwrap();
+        let s = snap_on(&view, view.project(Vec3::new(41.0, 0.0, 5.0)).unwrap(), &cands, false, None).unwrap();
         assert_eq!((s.kind, s.node.as_deref(), s.point), (SnapKind::Endpoint, Some("k1"), Vec3::new(40.0, 0.0, 5.0)));
         assert_eq!(s.kind.name(), "endpoint");
         // On the XY plane the endpoint is projected onto it.

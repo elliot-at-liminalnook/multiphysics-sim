@@ -141,7 +141,9 @@ fn value(shape: SketchShape, values: &Map<String, Value>, name: &str) -> Result<
 
 /// RoboCAD's `commit` (tools.py:784-815): the Tab values at `anchor`
 /// (plane coordinates). `polygon_sides` stands in for a polygon's missing
-/// `sides` (RoboCAD's field opens with `Sketch.last_polygon_sides`).
+/// `sides` (RoboCAD's field opens with `Sketch.last_polygon_sides`; the
+/// catalogue's `sides` has no default, so `cad_run sketch.polygon` without
+/// it gets the remembered count, as the form's draft does).
 pub(crate) fn from_values(shape: SketchShape, anchor: Uv, values: &Map<String, Value>, text: &str, polygon_sides: u32) -> Result<Vec<SketchCall>, String> {
     let a = anchor;
     let v = |name: &str| value(shape, values, name);

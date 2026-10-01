@@ -352,6 +352,54 @@ fn build_cad_build_tears_down_the_cad_document_and_keeps_shared_state() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
+/// Leaving CAD mode goes through the switch's `leaving_blockers`, which
+/// adds `cad::sketch_blocker`: refused, naming it, while a sketch shape has
+/// clicked points not sent; a lone chained point (the end of a line
+/// already sent) loses nothing and does not block.
+#[test]
+fn leaving_cad_mode_is_refused_only_on_unsent_sketch_points() {
+    let dir = std::env::temp_dir().join(format!("mode-switch-sketch-{}", std::process::id()));
+    let (_, builder, scene) = self::board(&dir);
+    let url = "http://127.0.0.1:1";
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_resource(builder)
+        .insert_resource(scene)
+        .insert_resource(crate::models::ModelLibrary::default())
+        .insert_resource(crate::rest::Rest(crate::rest::bind(0).unwrap(), None))
+        .add_plugins((ModesPlugin { initial: ViewerMode::Build }, crate::cad::CadCorePlugin));
+    app.update();
+    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Url(url.into())));
+    settle(&mut app, seq).unwrap();
+    assert_eq!(mode(&app), ViewerMode::Cad);
+    // The connect job settles first (refused: nothing listens on port 1).
+    for _ in 0..500 {
+        app.update();
+        if matches!(app.world().resource::<crate::cad::CadDocument>().connection, crate::cad::Connection::Lost { .. }) {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    // The line tool starts as its command does, then one point is clicked.
+    app.world_mut().write_message(Act::ui(crate::cad::CadAction::CadInvoke { id: "sketch.line".into() }));
+    app.update();
+    {
+        let mut doc = app.world_mut().resource_mut::<crate::cad::CadDocument>();
+        assert_eq!(doc.ops.active, Some("sketch.line"), "the line tool started");
+        doc.ops.sketch.as_mut().expect("the line tool's shape").points.push([1.0, 2.0, 0.0]);
+    }
+    let seq = submit(&mut app, ViewerMode::Build, None);
+    let e = settle(&mut app, seq).unwrap_err();
+    assert!(e.contains("Not switching to Build mode") && e.contains("a sketch line is in progress (1 point(s) clicked)") && e.contains("CAD mode stays"), "{e}");
+    assert_eq!(mode(&app), ViewerMode::Cad);
+    // The same point as a chained one: nothing unsent, the switch goes ahead.
+    app.world_mut().resource_mut::<crate::cad::CadDocument>().ops.sketch.as_mut().expect("the shape is kept").chained = true;
+    let seq = submit(&mut app, ViewerMode::Build, None);
+    settle(&mut app, seq).unwrap();
+    assert_eq!(mode(&app), ViewerMode::Build);
+    std::fs::remove_dir_all(&dir).ok();
+}
+
 /// A REST poll's side of an action: parse and write it once (Pending, with
 /// its reply token in the continuation), then Pending until its handler answers.
 fn poll(replies: &mut Replies, messages: &mut Messages<Act<u32>>, continuation: &mut Value, cancelled: bool) -> sim_api::Outcome {

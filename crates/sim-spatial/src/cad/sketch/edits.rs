@@ -14,8 +14,8 @@
 //!   polyline from the last vertex down, RoboCAD swallowing each corner's
 //!   `KernelError`. Over REST one failing call fails the whole edit, so
 //!   [`fillet_plan`] runs kernel/sketch.py's `fillet_corner` (:389-420)
-//!   in plane space exactly, its straight-corner and too-large checks
-//!   included, on the points as each fillet changes them (a fillet replaces
+//!   in plane space exactly, its open-end, straight-corner and too-large
+//!   checks included, on the points as each fillet changes them (a fillet replaces
 //!   its vertex with 9 arc points, so a later corner sees the new
 //!   neighbours), and sends only the corners RoboCAD would fillet.
 //! - **Join** ("Join curves"): all curves into one when there are two or more.
@@ -74,15 +74,20 @@ fn dist(a: Uv, b: Uv) -> f64 {
     (a[0] - b[0]).hypot(a[1] - b[1])
 }
 
-/// kernel/sketch.py `fillet_corner` (:389-420) on a closed polyline's
-/// points: the points after rounding vertex `i`, or None where it raises
-/// ("corner is straight", "fillet radius … is too large for this corner").
-pub(crate) fn fillet_corner(pts: &[Uv], i: usize, radius: f64) -> Option<Vec<Uv>> {
+/// kernel/sketch.py `fillet_corner` (:389-420) on a polyline's points
+/// (`closed`: the polyline's): the points after rounding vertex `i`, or
+/// None where it raises ("cannot fillet an end vertex" of an open one,
+/// "corner is straight", "fillet radius … is too large for this corner";
+/// no points: the kernel's `% 0` raises too).
+pub(crate) fn fillet_corner(pts: &[Uv], closed: bool, i: usize, radius: f64) -> Option<Vec<Uv>> {
     let n = pts.len();
     if n == 0 {
         return None;
     }
     let i = i % n;
+    if !closed && (i == 0 || i == n - 1) {
+        return None;
+    }
     let (p0, p1, p2) = (pts[(i + n - 1) % n], pts[i], pts[(i + 1) % n]);
     let d0 = unit([p0[0] - p1[0], p0[1] - p1[1]]);
     let d1 = unit([p2[0] - p1[0], p2[1] - p1[1]]);
@@ -124,7 +129,7 @@ pub(crate) fn fillet_plan(curves: &[SketchCurve], radius: f64) -> Vec<SketchCall
         }
         let mut pts = c.points.clone();
         for i in (0..c.points.len()).rev() {
-            if let Some(next) = fillet_corner(&pts, i, radius) {
+            if let Some(next) = fillet_corner(&pts, c.closed, i, radius) {
                 pts = next;
                 calls.push(SketchCall::FilletCorner { curve: ci, vertex_index: i as i64, radius });
             }
@@ -191,6 +196,22 @@ fn named_plane(name: &str, doc: &CadDocument, env: &Env) -> Result<(Value, Plane
     }
 }
 
+/// Where a shape sent without a node goes, as `cad_sketch` decides it:
+/// on `plane` (given, else the active plane, else XY; a plane node's frame
+/// read at the shown revision), RoboCAD's sketch tools' rule
+/// (`specs::target`). The sketch tools ask it at a completing press, so a
+/// shape that would be refused is not sent (`interact::press`).
+pub(crate) fn shape_target(plane: Option<&str>, doc: &CadDocument, env: &Env) -> Result<SketchTarget, String> {
+    let (plane_arg, frame) = match plane {
+        Some(p) => named_plane(p, doc, env)?,
+        None => match env.plane {
+            Some(active) => (active.arg_or(BasePlane::Xy), active.frame_or_xy()?),
+            None => (Value::from(BasePlane::Xy.arg()), BasePlane::Xy.frame()),
+        },
+    };
+    specs::target(doc, env, &plane_arg, frame)
+}
+
 /// The edit's label: where and which calls ("Sketch Profile: line, circle").
 fn label(where_: &str, calls: &[SketchCall]) -> String {
     let names: Vec<&str> = calls.iter().take(4).map(SketchCall::name).collect();
@@ -213,14 +234,7 @@ fn prepare(node: Option<&str>, plane: Option<&str>, calls: &[Value], doc: &CadDo
             (SketchTarget::Node(id.to_string()), env.sketches.and_then(|c| c.sketch(id)).map(|g| g.curves.len()))
         }
         None => {
-            let (plane_arg, frame) = match plane {
-                Some(p) => named_plane(p, doc, env)?,
-                None => match env.plane {
-                    Some(active) => (active.arg_or(BasePlane::Xy), active.frame_or_xy()?),
-                    None => (Value::from(BasePlane::Xy.arg()), BasePlane::Xy.frame()),
-                },
-            };
-            let target = specs::target(doc, env, &plane_arg, frame)?;
+            let target = shape_target(plane, doc, env)?;
             let curves = match &target {
                 SketchTarget::Node(id) => env.sketches.and_then(|c| c.sketch(id)).map(|g| g.curves.len()),
                 SketchTarget::New { .. } => Some(0),

@@ -13,13 +13,15 @@
 //!   pickable. Rebuilt only when its inputs change: the document generation
 //!   and shown revision (visibility is an edit), the sketch cache's epoch
 //!   (frames) and the active plane; frames are the cache's last read
-//!   (`plane_last`), so a quad does not blink while it is refetched.
+//!   (`plane_last`), so a quad does not blink while it is refetched; the
+//!   active plane node's too (its `ActivePlane::Node::frame`, which
+//!   operations use, is the shown revision's only and None meanwhile).
 //! - **Outline** ([`outlines`], Present): the same squares as gizmo lines.
 //! - Native addition, recorded: the active plane is drawn even when no
 //!   visible plane node is it (a named plane XY/XZ/YZ, or a hidden node),
 //!   so the plane the tools work on is always shown; RoboCAD draws plane
 //!   nodes only.
-use super::{CadActivePlane, CadSketches};
+use super::{ActivePlane, CadActivePlane, CadSketches};
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::document::CadDocument;
 use crate::cad::mesh::CadRoot;
@@ -73,7 +75,12 @@ fn corners(frame: &PlaneFrame) -> [Vec3; 4] {
 /// The quads to draw: the visible plane nodes with a frame read, in tree
 /// order, then the active plane when none of them is it (see the module doc).
 pub(in crate::cad) fn wanted(doc: &CadDocument, plane: &CadActivePlane, sketches: &CadSketches) -> Vec<Quad> {
-    let active = plane.frame().ok().flatten();
+    // A plane node's frame is None while it is refetched (operations refuse
+    // then); the display draws its last read meanwhile.
+    let active = match &plane.plane {
+        Some(ActivePlane::Node { id, frame }) => frame.or_else(|| sketches.plane_last(id)),
+        _ => plane.frame().ok().flatten(),
+    };
     let is_active = |f: &PlaneFrame| active.is_some_and(|a| a.same(f, 1e-9));
     let mut out: Vec<Quad> = match &doc.doc {
         Some(state) => state.nodes.iter().filter(|n| n.kind == "plane" && n.effective_visible).filter_map(|n| sketches.plane_last(&n.id)).map(|frame| Quad { frame, active: is_active(&frame) }).collect(),
@@ -100,7 +107,7 @@ fn quad_mesh(frame: &PlaneFrame) -> Mesh {
 /// What the fill was last built from.
 #[derive(Default)]
 struct Built {
-    key: Option<(Option<Entity>, u64, u64, u64, Option<super::ActivePlane>)>,
+    key: Option<(Option<Entity>, u64, u64, u64, Option<ActivePlane>)>,
     entities: Vec<Entity>,
     /// The active and inactive fill materials (made once).
     materials: Option<[Handle<StandardMaterial>; 2]>,

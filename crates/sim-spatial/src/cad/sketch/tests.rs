@@ -1,13 +1,13 @@
 //! The sketch tools without a window: the in-progress blocker, Escape
 //! sending nothing, the builders' kernel calls for all 13 shapes (clicks
-//! and Tab values), line chaining, the polygon's remembered sides, which
-//! sketch a shape goes to (tools.py:675-686), the corner-fillet simulation,
-//! the sketch edits and the `cad_sketch` refusals. Nothing here reaches the
-//! network: a fake RoboCAD (a bound socket nobody answers) checks that no
-//! request was even attempted.
+//! and Tab values), line chaining, a press refused before it is taken, the
+//! polygon's remembered sides, which sketch a shape goes to
+//! (tools.py:675-686), the corner-fillet simulation, the sketch edits and
+//! the `cad_sketch` refusals. "Sends nothing" is checked where it is
+//! decided: no edit started (`CadDocument::edit`), no action returned.
 use super::cache::Geometry;
 use super::edits::{self, fillet_corner, fillet_plan};
-use super::interact::{begin, finish_action, readout, reset_after_finish};
+use super::interact::{Step, begin, finish_action, finish_check, press, readout, reset_after_finish};
 use super::specs::{self, from_points, from_values, spec, target};
 use super::*;
 use crate::app::actions::{Call, Origin, Replies};
@@ -85,15 +85,16 @@ fn a_shape_in_progress_blocks_leaving_cad_mode() {
     // The function `app::switch::prepare::leaving_blockers` adds for CAD mode.
     let why = crate::cad::sketch_blocker(&doc).expect("a blocker");
     assert!(why.contains("a sketch line is in progress") && why.contains("1 point(s)"), "{why}");
+    // A lone chained point is the end of a line already sent: nothing would be lost.
+    let s = doc.ops.sketch.as_mut().unwrap();
+    s.chained = true;
+    assert!(s.in_progress() && !s.unsent());
+    assert_eq!(crate::cad::sketch_blocker(&doc), None);
 }
 
 #[test]
 fn escape_drops_the_shape_and_sends_nothing() {
-    // A fake RoboCAD: a socket that would see any request.
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-    listener.set_nonblocking(true).unwrap();
-    let url = format!("http://{}", listener.local_addr().unwrap());
-    let mut doc = document(&url, Vec::new());
+    let mut doc = document("http://127.0.0.1:8420", Vec::new());
     doc.ops.active = Some("sketch.rectangle");
     let mut s = SketchState::new(SketchShape::Rectangle);
     s.points.push([0.0, 0.0, 0.0]);
@@ -106,7 +107,6 @@ fn escape_drops_the_shape_and_sends_nothing() {
     assert_eq!(answer["closed"]["sketch_in_progress"], json!(true), "{answer}");
     assert!(doc.ops.sketch.is_none() && doc.ops.active.is_none(), "the shape and the tool end");
     assert!(doc.edit.is_none(), "no edit started");
-    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock), "RoboCAD received a connection");
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn the_rows_follow_robocads_needed_counts_in_shape_order() {
     assert_eq!(needed(SketchShape::Spline), Finish::EnterOrDouble);
     assert!(spec(SketchShape::Line).chains && !spec(SketchShape::Rectangle).chains);
     assert_eq!(entry("sketch.arc_3pt").unwrap().keys, &["A"]);
-    assert_eq!(entry("sketch.polygon").unwrap().params.iter().map(|p| (p.name, p.default)).collect::<Vec<_>>(), vec![("radius", "10.0"), ("sides", "6"), ("anchor", "")]);
+    assert_eq!(entry("sketch.polygon").unwrap().params.iter().map(|p| (p.name, p.default)).collect::<Vec<_>>(), vec![("radius", "10.0"), ("sides", ""), ("anchor", "")]);
 }
 
 #[test]
@@ -273,8 +273,11 @@ fn fillet_corners_sends_only_the_corners_robocad_rounds() {
     assert_eq!(fillet_plan(&[polyline(&SQUARE, true)], 6.0), vec![corner(3, 6.0), corner(1, 6.0)]);
     // Open polylines and other curves are left alone; a fillet adds 8 points.
     assert!(fillet_plan(&[polyline(&SQUARE, false), line([0.0; 2], [1.0, 0.0])], 1.0).is_empty());
-    assert_eq!(fillet_corner(&SQUARE, 3, 2.0).unwrap().len(), 12);
-    assert!(fillet_corner(&straight, 1, 2.0).is_none());
+    assert_eq!(fillet_corner(&SQUARE, true, 3, 2.0).unwrap().len(), 12);
+    assert!(fillet_corner(&straight, true, 1, 2.0).is_none());
+    // The kernel's "cannot fillet an end vertex" of an open polyline; its inner corners round.
+    assert!(fillet_corner(&SQUARE, false, 0, 2.0).is_none() && fillet_corner(&SQUARE, false, 3, 2.0).is_none());
+    assert_eq!(fillet_corner(&SQUARE, false, 1, 2.0).unwrap().len(), 12);
 }
 
 #[test]
@@ -301,10 +304,7 @@ fn sketch_edits_work_on_the_selected_or_first_visible_sketch() {
 
 #[test]
 fn cad_sketch_refusals_name_the_call_and_the_argument_and_send_nothing() {
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-    listener.set_nonblocking(true).unwrap();
-    let url = format!("http://{}", listener.local_addr().unwrap());
-    let mut doc = document(&url, vec![node("k1", "sketch", "Profile", true), node("b1", "body", "Bracket", true)]);
+    let mut doc = document("http://127.0.0.1:8420", vec![node("k1", "sketch", "Profile", true), node("b1", "body", "Bracket", true)]);
     let c = cache(&[("k1", PlaneFrame::XY, vec![line([0.0; 2], [1.0, 0.0]), line([1.0, 0.0], [1.0, 1.0])])]);
     let sketch = |node: Option<&str>, calls: Vec<Value>, revision| CadAction::CadSketch { node: node.map(str::to_string), plane: None, calls, revision };
     let e = refused(apply(&mut doc, Some(&c), &sketch(Some("k1"), vec![json!(["no_such_method", []])], None)));
@@ -319,5 +319,64 @@ fn cad_sketch_refusals_name_the_call_and_the_argument_and_send_nothing() {
     let unknown = CadAction::CadSketch { node: None, plane: Some("diagonal".into()), calls: vec![json!(["line", [[0, 0], [1, 1]]])], revision: None };
     assert!(refused(apply(&mut doc, Some(&c), &unknown)).contains("unknown plane"));
     assert!(doc.edit.is_none(), "no edit started");
-    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock), "RoboCAD received a connection");
+}
+
+#[test]
+fn a_press_that_cannot_be_sent_is_not_taken_and_keeps_the_points() {
+    let mut doc = document("http://127.0.0.1:8420", Vec::new());
+    let env = Env::default();
+    let xy = json!("xy");
+    let line = spec(SketchShape::Line);
+    // A line chained at (10, 0) after the last one was sent: its next press stamps `began`.
+    let mut s = SketchState::new(SketchShape::Line);
+    s.points = vec![[10.0, 0.0, 0.0]];
+    s.began = 3;
+    s.chained = true;
+    // The shown document is being refetched: the completing press is refused by name.
+    doc.stale = Some("refetching revision 5".into());
+    let kept = s.clone();
+    let Step::Wait(why) = press(line, &mut s, [20.0, 0.0, 0.0], &doc, &env, &xy) else { panic!("the press was taken") };
+    assert!(why.starts_with("Sketch line not sent: the shown document is behind RoboCAD's") && why.ends_with("; click again when RoboCAD has caught up"), "{why}");
+    assert_eq!(s, kept, "the point is not added; the chained point and its chain stay");
+    assert!(doc.edit.is_none(), "no edit started");
+    // Caught up: the same press is taken, at the shown revision, and finishes the line.
+    doc.stale = None;
+    assert_eq!(press(line, &mut s, [20.0, 0.0, 0.0], &doc, &env, &xy), Step::Finish);
+    assert_eq!((s.points.len(), s.began, s.chained), (2, 4, false));
+    let action = finish_action(SketchShape::Line, &s, &PlaneFrame::XY, &xy).unwrap().unwrap();
+    assert!(matches!(action, CadAction::CadSketch { revision: Some(4), .. }), "{action:?}");
+
+    // A rectangle: an edit in flight or a stale document at the completing press keeps its first point.
+    let rect = spec(SketchShape::Rectangle);
+    let mut r = SketchState::new(SketchShape::Rectangle);
+    assert_eq!(press(rect, &mut r, [0.0; 3], &doc, &env, &xy), Step::Added);
+    assert_eq!((r.points.len(), r.began), (1, 4));
+    doc.stale = Some("refetching revision 5".into());
+    assert!(matches!(press(rect, &mut r, [5.0, 5.0, 0.0], &doc, &env, &xy), Step::Wait(_)));
+    assert_eq!(r.points, vec![[0.0; 3]]);
+    // RoboCAD's revision moved since the first click: that point is gone for good, said by name.
+    doc.stale = None;
+    doc.health.as_mut().unwrap().revision = 5;
+    let Step::Dropped(why) = press(rect, &mut r, [5.0, 5.0, 0.0], &doc, &env, &xy) else { panic!("not dropped") };
+    assert!(why.contains("changed since") && why.contains("click the rectangle again"), "{why}");
+    assert!(r.points.is_empty() && !r.unsent());
+    doc.health.as_mut().unwrap().revision = 4;
+
+    // The target sketch not read at the shown revision: the text click waits.
+    let doc = document("http://127.0.0.1:8420", vec![node("k1", "sketch", "Profile", true)]);
+    let empty = CadSketches::default();
+    let reading = Env { sketches: Some(&empty), ..Default::default() };
+    let mut t = SketchState::new(SketchShape::Text);
+    let Step::Wait(why) = press(spec(SketchShape::Text), &mut t, [0.0; 3], &doc, &reading, &xy) else { panic!("the press was taken") };
+    assert!(why.contains("still being read"), "{why}");
+    assert!(t.points.is_empty());
+    // The spline's Enter is checked the same way; its points stay.
+    let mut sp = SketchState::new(SketchShape::Spline);
+    sp.points = vec![[0.0; 3], [5.0, 0.0, 0.0]];
+    sp.began = 4;
+    assert!(matches!(finish_check(spec(SketchShape::Spline), &mut sp, &doc, &reading, &xy), Step::Wait(_)));
+    assert_eq!(sp.points.len(), 2);
+    let read = cache(&[("k1", PlaneFrame::XY, vec![])]);
+    let ready = Env { sketches: Some(&read), ..Default::default() };
+    assert_eq!(finish_check(spec(SketchShape::Spline), &mut sp, &doc, &ready, &xy), Step::Finish);
 }

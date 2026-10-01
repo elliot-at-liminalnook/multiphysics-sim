@@ -41,7 +41,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         route: "revolve",
         shape: Shape::Extrude { revolve: true },
         hint: HINT_EXTRUDE,
-        source: "ui/app.py:333, keymap.json tool.revolve, ui/tools.py:822-931 (ExtrudeTool(revolve=True): field :843-844, _plane :849-853, _apply :916-918 angle or 360, commit :926-929), commands.py:489-491",
+        source: "ui/app.py:333, keymap.json tool.revolve, ui/tools.py:822-931 (ExtrudeTool(revolve=True): field :843-844, _plane :849-853, press :855-857, release :877-880 (angle None: 360), _apply :916-918 angle or 360, commit :926-929), commands.py:489-491",
         ..BASE
     },
     OpEntry {

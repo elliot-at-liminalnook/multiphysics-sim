@@ -256,10 +256,7 @@ pub(super) fn tool(
     let on = snap::snap_plane(plane.as_deref());
     let Some(s) = snap::snap_on(&view, cursor, candidates, alt, on.as_ref()) else { return };
     let readout = match &doc.tool_state.measure.first {
-        Some(first) => {
-            let a = Vec3::new(first.point[0] as f32, first.point[1] as f32, first.point[2] as f32);
-            format!("{}  ({})", fl(f64::from(a.distance(s.point))), s.kind.name())
-        }
+        Some(first) => format!("{}  ({})", fl(norm(sub(s.exact, first.point))), s.kind.name()),
         None => s.kind.name().to_string(),
     };
     // Written only on change (the bar refreshes on what it shows).
@@ -291,8 +288,12 @@ pub(super) fn tool(
         SelectMode::Point => None,
     };
     // As `MeasureTool.press`: the snap point unless the snap is free or on the plane, then the surface hit.
-    let point = if !matches!(s.kind, SnapKind::Free | SnapKind::Plane) { s.point } else { hit.as_ref().map_or(s.point, |h| h.point) };
-    let pick = MeasurePick { item, point: [f64::from(point.x), f64::from(point.y), f64::from(point.z)] };
+    // The snap's f64 point (a vertex exactly as the topology gave it), as `add_measurement` keeps it.
+    let point = match &hit {
+        Some(h) if matches!(s.kind, SnapKind::Free | SnapKind::Plane) => [f64::from(h.point.x), f64::from(h.point.y), f64::from(h.point.z)],
+        _ => s.exact,
+    };
+    let pick = MeasurePick { item, point };
     match doc.tool_state.measure.first.take() {
         None => doc.tool_state.measure.first = Some(pick),
         Some(a) => {

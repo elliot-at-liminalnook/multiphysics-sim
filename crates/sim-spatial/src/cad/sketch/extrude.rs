@@ -23,11 +23,23 @@
 //!   through a plane facing the camera (`transform::push_distance`; Ctrl or
 //!   Command snaps to the 10 mm grid; never exactly 0: 0.001), readout
 //!   "extrude <h>". The release with |h| > 1e-6 writes one `CadRun
-//!   {tool.extrude, {distance, taper, boolean}, revision at the press}`,
+//!   {tool.extrude, {distance, taper 0, boolean}, revision at the press}`,
 //!   the boolean from the release's modifiers (Shift subtract, Ctrl union,
 //!   Alt intersect; RoboCAD's `release(pos, mods)`). As RoboCAD, a press
 //!   and release without moving applies the current height (10 mm until
-//!   the first drag).
+//!   the first drag). The drag's taper is always 0, a RoboCAD quirk kept
+//!   for parity: its release sends `self.taper`, which stays 0.0 (only its
+//!   Tab commit reads the field), so a typed taper applies only to Tab/Enter
+//!   (the form's OK); consistent with the preview, which draws no taper.
+//! - **Revolve press** ([`pointer`]): RoboCAD's behaviour, kept for parity.
+//!   A press on the source's plane and its release (no movement needed:
+//!   RoboCAD's `h` starts at 10 and is never 0) writes one `CadRun
+//!   {tool.revolve, {angle 360, boolean}, revision at the press}` with the
+//!   release's modifiers: RoboCAD's release calls `_apply(h, …, mods)`
+//!   with `angle=None`, i.e. `angle or 360.0`, whatever the angle field
+//!   says. The readout says so and that Tab/Enter (the form's OK) revolves
+//!   by the typed angle. The entry's hint is RoboCAD's one `ExtrudeTool`
+//!   hint for both tools.
 //! - **Calls** ([`calls`]): `extrude(source, distance, None, taper, False,
 //!   op, target)` or `revolve(source, plane.origin, plane.x_axis, angle or
 //!   360, op, target)` (commands.py:480, :489), `op` "new" and no target
@@ -41,12 +53,6 @@
 //! - The source follows the selection while the tool is active (RoboCAD
 //!   fixes it at `activate`): the run reads the selection (as a REST run
 //!   reads its items), so the preview and the run always agree.
-//! - The drag sends the form's taper draft (RoboCAD's drag always sends
-//!   `self.taper`, which stays 0.0: only its Tab commit reads the field).
-//! - Revolve has no drag commit: RoboCAD's release revolves a full 360°
-//!   whatever the angle field says (`_apply(h, …)` with `angle=None`);
-//!   here a revolve press only records the press's boolean, and Tab/Enter
-//!   (the form's OK) revolves by the typed angle.
 //! - The preview is outlines only, and taper is not drawn: RoboCAD
 //!   tessellates a preview body with its kernel (`_preview`), which has no
 //!   REST route. A curve or sheet source's preview is its topology's edges
@@ -181,7 +187,10 @@ fn unread(doc: &CadDocument, id: &str, sketches: Option<&CadSketches>) -> String
 /// RoboCAD's `App.body_under_selection` (ui/app.py:647-652): the first
 /// selected node of kind body, else the only effectively visible body or
 /// sheet (`Document.bodies(visible_only=True)`, document.py:430-431) when
-/// there is exactly one.
+/// there is exactly one. Known gap: RoboCAD's `bodies` also requires
+/// `n.body is not None`; `NodeSummary` carries no such field, so a body or
+/// sheet node without geometry still counts here and can become the target
+/// where RoboCAD would pick none (or another body).
 pub fn body_under_selection(doc: &CadDocument, nodes: &[String]) -> Option<String> {
     if let Some(id) = nodes.iter().find(|n| kind_of(doc, n) == Some("body")) {
         return Some(id.clone());
@@ -296,9 +305,16 @@ struct Pointer {
     /// A command surface was open at the end of the last frame's SimSync,
     /// i.e. when this frame's Input saw the press.
     surface_open: bool,
-    /// The unread sketch the status last named.
+    /// The unread sketch the status last named. Kept while the fallback
+    /// source resolves (so the same sketch re-read at a later revision,
+    /// e.g. after the run's own edit, does not overwrite the run's
+    /// message); cleared when the selection supplies the source or the
+    /// tool ends.
     announced: Option<String>,
 }
+
+/// RoboCAD's readout for a revolve press: its release revolves 360°.
+const REVOLVE_READOUT: &str = "revolve 360° on release • Tab for an angle";
 
 /// The active extrude or revolve entry.
 fn active(doc: &CadDocument) -> Option<(&'static OpEntry, bool)> {
@@ -307,12 +323,6 @@ fn active(doc: &CadDocument) -> Option<(&'static OpEntry, bool)> {
         Flow::Extrude { revolve } => Some((e, revolve)),
         _ => None,
     }
-}
-
-/// The open form's draft of `name`, when the form is `e`'s.
-fn draft<'a>(doc: &'a CadDocument, e: &OpEntry, name: &str) -> Option<&'a str> {
-    let i = e.params.iter().position(|p| p.name == name)?;
-    doc.ops.form.as_ref().filter(|f| f.op == e.id)?.texts.get(i).map(String::as_str)
 }
 
 /// SimSync: the source following the selection, the press, the height
@@ -351,16 +361,20 @@ fn pointer(
     let mut tool = before.clone();
     tool.revolve = revolve;
 
-    // The source follows the selection; an unread sketch is named once in the status.
-    tool.source = source(&doc, &selected_nodes(&doc.selection), sketches);
+    // The source follows the selection; an unread sketch is named once in
+    // the status (not again when the same sketch is re-read at a new
+    // revision, which would overwrite the run's own message).
+    let selected = selected_nodes(&doc.selection);
+    tool.source = source(&doc, &selected, sketches);
     match &tool.source {
         ExtrudeSource::Reading(id) if state.announced.as_ref() != Some(id) => {
             let why = unread(&doc, id, sketches);
             doc.show(Ok(format!("{} • {why}", e.hint)));
             state.announced = Some(id.clone());
         }
-        ExtrudeSource::Reading(_) => {}
-        _ => state.announced = None,
+        // The selection supplies the source: a later fallback is news again.
+        ExtrudeSource::Node(id) if selected.contains(id) => state.announced = None,
+        _ => {}
     }
 
     let held = |codes: &[KeyCode]| keys.as_ref().is_some_and(|k| k.any_pressed(codes.iter().copied()));
@@ -374,6 +388,7 @@ fn pointer(
     let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !surface_was_open && doc.ops.surface.is_none() && !focused && doc.tool == CadTool::Select;
     let down = buttons.as_ref().is_some_and(|b| b.pressed(MouseButton::Left));
     let mut just_started = false;
+    let mut readout = None;
 
     if pressed && let Some(c) = cursor {
         // RoboCAD's `press`: `_mods` for a later Tab commit (both tools) …
@@ -385,26 +400,28 @@ fn pointer(
             form.texts[i] = op.to_string();
             doc.touch();
         }
-        // … and the drag's start on the source's plane (extrude only: see the module doc).
-        if !revolve {
-            match source_plane(&doc, &tool.source, sketches, plane.as_deref()) {
-                Err(why) => doc.show(Err(why)),
-                Ok(frame) => {
-                    let (origin, normal) = (v3(frame.origin), v3(frame.normal).try_normalize().unwrap_or(Vec3::Z));
-                    let start = view.ray(c).and_then(|(o, d)| ray_plane(o, d, origin, normal));
-                    tool.drag = start.map(|start| ExtrudeDrag { start, normal, began: doc.shown_revision(), cursor: c });
-                    just_started = tool.drag.is_some();
+        // … and the drag's start on the source's plane (RoboCAD's `self.start`, both tools).
+        match source_plane(&doc, &tool.source, sketches, plane.as_deref()) {
+            Err(why) => doc.show(Err(why)),
+            Ok(frame) => {
+                let (origin, normal) = (v3(frame.origin), v3(frame.normal).try_normalize().unwrap_or(Vec3::Z));
+                let start = view.ray(c).and_then(|(o, d)| ray_plane(o, d, origin, normal));
+                tool.drag = start.map(|start| ExtrudeDrag { start, normal, began: doc.shown_revision(), cursor: c });
+                just_started = tool.drag.is_some();
+                if just_started && revolve {
+                    readout = Some(REVOLVE_READOUT.to_string());
                 }
             }
         }
     }
-    let mut readout = None;
     if let Some(drag) = tool.drag.clone()
         && !just_started
     {
         if down {
-            // RoboCAD's `drag`: only when the pointer moved (kept while over a panel).
-            if let Some(c) = window.and_then(Window::cursor_position).filter(|c| *c != drag.cursor)
+            // RoboCAD's `drag`: only when the pointer moved (kept while over a
+            // panel). Revolve's height is never used (its release turns 360°).
+            if !revolve
+                && let Some(c) = window.and_then(Window::cursor_position).filter(|c| *c != drag.cursor)
                 && let Some(h) = push_distance(&view, c, drag.start, drag.normal, view_back(&view), ctrl)
             {
                 let h = f64::from(h);
@@ -413,13 +430,18 @@ fn pointer(
                 readout = Some(format!("extrude {}", fl(tool.height)));
             }
         } else {
-            // RoboCAD's `release`: applied with the release's modifiers.
+            // RoboCAD's `release`: `_apply(self.h, self.taper, mods)` with the
+            // release's modifiers; `self.taper` stays 0.0 and a revolve turns
+            // `angle or 360.0` with `angle=None` (see the module doc).
             tool.drag = None;
             if tool.height.abs() > 1e-6 {
-                let taper = draft(&doc, e, "taper").unwrap_or("0.0").to_string();
                 let mut params = Map::new();
-                params.insert("distance".into(), json!(round6(tool.height)));
-                params.insert("taper".into(), Value::String(taper));
+                if revolve {
+                    params.insert("angle".into(), json!("360"));
+                } else {
+                    params.insert("distance".into(), json!(round6(tool.height)));
+                    params.insert("taper".into(), json!(0.0));
+                }
                 params.insert("boolean".into(), json!(boolean_for(shift, ctrl, alt)));
                 out.write(Act::ui(CadAction::CadRun { id: e.id.to_string(), params, items: None, revision: Some(drag.began) }));
             }

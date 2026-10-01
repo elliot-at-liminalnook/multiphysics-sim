@@ -452,7 +452,8 @@ pub(super) fn preview(
         if !meshes.shows_copy(&body.id, copy.as_ref()) {
             meshes.set_shown_copy(&body.id, copy);
         }
-        let overlay = entry.shown.as_ref().filter(|(k, _)| like(k) && k.overhang && overhang).and_then(|(_, s)| s.overhang.clone());
+        // Not over a body a thread's isolation hides (cad-organize; `CadMeshes::shown` is false for it).
+        let overlay = entry.shown.as_ref().filter(|(k, _)| like(k) && k.overhang && overhang && meshes.shown(&body.id)).and_then(|(_, s)| s.overhang.clone());
         match (overlay, entry.overlay.clone()) {
             (Some(h), Some((e, shown))) => {
                 if shown != h {

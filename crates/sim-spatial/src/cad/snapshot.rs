@@ -99,6 +99,10 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     state["inspector_physical"] = super::inspector::physical_state_json(doc);
     state["results"] = super::results::state_json(doc);
     state["print"] = super::print::state_json(doc);
+    // cad-organize.
+    state["tree"] = super::tree::state_json(doc);
+    state["threads"] = super::threads::state_json(doc);
+    state["references"] = super::references::state_json(doc);
     state
 }
 

@@ -29,7 +29,7 @@
 //! - **Panel** ([`panel`]): RoboCAD's Saved Views panel as a floating kit
 //!   panel (`view.saved_views` toggles it), and the field-of-view entry
 //!   RoboCAD's `view.fov` opens.
-mod convert;
+pub(in crate::cad) mod convert;
 mod panel;
 #[cfg(test)]
 mod tests;

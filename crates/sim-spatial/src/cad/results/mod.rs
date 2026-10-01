@@ -53,6 +53,8 @@ mod tests;
 pub(crate) use export::{ExportRequest, Exports};
 pub(crate) use forms::{FormKind, PathForm};
 pub(crate) use link::LiveLink;
+// cad-organize: Open in builder refuses as the live link's switch does.
+pub(crate) use link::switch_refusal;
 pub(crate) use overlay::{Inputs, StressPaint};
 #[cfg(test)]
 pub(crate) use overlay::cad_colours;

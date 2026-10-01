@@ -203,7 +203,15 @@ pub(super) fn sync_field(
     }
 }
 
-pub(super) fn drops(mut events: MessageReader<FileDragAndDrop>, mut builder: ResMut<Builder>) {
+/// Build mode's dropped files. Skipped on the frame Build mode is entered
+/// (`State<ViewerMode>` changed): a reader gated off by `run_if` keeps its
+/// cursor, so drops still buffered from the mode before (CAD's reference
+/// images; messages live two updates) would be read here again.
+pub(super) fn drops(mut events: MessageReader<FileDragAndDrop>, mode: Res<State<crate::app::ViewerMode>>, mut builder: ResMut<Builder>) {
+    if mode.is_changed() {
+        events.clear();
+        return;
+    }
     for e in events.read() {
         if let FileDragAndDrop::DroppedFile { path_buf, .. } = e {
             let name = path_buf.to_string_lossy().to_lowercase();

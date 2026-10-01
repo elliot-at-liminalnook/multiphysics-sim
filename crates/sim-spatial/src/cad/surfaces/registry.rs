@@ -93,6 +93,17 @@ pub(crate) enum Do {
     /// A cad-print command that is not a catalogue operation (overhang
     /// shading, the print jobs panel): `print::command_action(id)`.
     Print(&'static str),
+    /// A cad-organize command that is not a catalogue operation (the
+    /// Comments and References docks, Annotate, comment pins, Add
+    /// reference images…): [`organize_action`].
+    Organize(&'static str),
+}
+
+/// The action of a cad-organize command id: the outliner's
+/// (`tree::command_action`), the threads' (`threads::command_action`) or
+/// the references' (`references::command_action`).
+pub(crate) fn organize_action(id: &str) -> Option<CadAction> {
+    crate::cad::tree::command_action(id).or_else(|| crate::cad::threads::command_action(id)).or_else(|| crate::cad::references::command_action(id))
 }
 impl Do {
     pub(crate) fn action(self) -> CadAction {
@@ -116,6 +127,8 @@ impl Do {
             Do::Physical(id) => crate::cad::robot::command_action(id).unwrap_or_else(|| panic!("{id}: no physical action")),
             // Every `Do::Print` id is one `print::command_action` maps (`surfaces::tests`).
             Do::Print(id) => crate::cad::print::command_action(id).unwrap_or_else(|| panic!("{id}: no print action")),
+            // Every `Do::Organize` id is one `organize_action` maps (`surfaces::tests`).
+            Do::Organize(id) => organize_action(id).unwrap_or_else(|| panic!("{id}: no organize action")),
         }
     }
 }
@@ -271,16 +284,16 @@ pub(crate) const SELECT_RADIAL: [(&str, &str); 5] = [("Body", "select.body"), ("
 
 /// Every command, in RoboCAD's registry order.
 pub(crate) static COMMANDS: &[Command] = &[
-    c("view.references", "References", "View", &[], false, Native::Later("cad-organize")),
-    c("reference.import", "Add reference images…", "File", &[], false, Native::Later("cad-organize")),
+    c("view.references", "References", "View", &[], false, Native::Action(Do::Organize("view.references"))),
+    c("reference.import", "Add reference images…", "File", &[], false, Native::Action(Do::Organize("reference.import"))),
     c("view.pose", "Pose", "View", &[], false, Native::Later("cad-experiments-motion")),
     c("view.experiments", "Experiments", "View", &[], false, Native::Later("cad-experiments-motion")),
     c("simulation.experiment", "Run captured experiment", "Simulation", &["Ctrl+Return"], false, Native::Later("cad-experiments-motion")),
     c("robot.pose", "Preview joint motion", "Robot", &[], false, Native::Later("cad-experiments-motion")),
-    c("tool.annotate", "Annotate", "Inspect", &["N"], true, Native::Later("cad-organize")),
-    c("view.comments", "Comments panel", "View", &[], false, Native::Later("cad-organize")),
+    c("tool.annotate", "Annotate", "Inspect", &["N"], true, Native::Action(Do::Organize("tool.annotate"))),
+    c("view.comments", "Comments panel", "View", &[], false, Native::Action(Do::Organize("view.comments"))),
     c("view.saved_views", "Saved Views", "View", &[], false, Native::Action(Do::SavedViews)),
-    c("view.comment_pins", "Toggle comment pins", "View", &[], false, Native::Later("cad-organize")),
+    c("view.comment_pins", "Toggle comment pins", "View", &[], false, Native::Action(Do::Organize("view.comment_pins"))),
     c("command_palette", "Command palette", "General", &["Ctrl+Space", "Shift+F"], true, Native::Surface(Opens::Palette)),
     c("file.new", "New", "File", &["Ctrl+N"], true, Native::Action(Do::File("file.new"))),
     c("file.open", "Open…", "File", &["Ctrl+O"], true, Native::Action(Do::File("file.open"))),
@@ -373,8 +386,8 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("tool.clearance", "Clearance offset…", "Print", &["Ctrl+Shift+C"], true, Native::Op),
     c("tool.mirror", "Mirror (about active plane)", "Modify", &["Ctrl+M"], true, Native::Op),
     c("tool.mirror_live", "Mirror as live instance", "Modify", &[], false, Native::Op),
-    c("components.show", "Components library", "Window", &[], false, Native::Later("cad-organize")),
-    c("components.make", "Make linked component…", "Create", &[], false, Native::Later("cad-organize")),
+    c("components.show", "Components library", "Window", &[], false, Native::Later("cad-components")),
+    c("components.make", "Make linked component…", "Create", &[], false, Native::Later("cad-components")),
     c("tool.instance", "Instance selected", "Modify", &[], false, Native::Op),
     c("tool.array", "Array…", "Modify", &["Ctrl+Shift+A"], true, Native::Op),
     c("tool.cut_plane", "Cut with active plane", "Modify", &[], false, Native::Op),
@@ -452,8 +465,8 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("sim.export", "Simulation: export robot model…", "Simulation", &[], false, Native::Action(Do::Physical("sim.export"))),
     c("sim.link", "Simulation: live link (watch + run viewer)", "Simulation", &[], false, Native::Action(Do::Physical("sim.link"))),
     c("api.address", "REST API: show address", "Bridge", &[], false, Native::Different("the header always shows the service URL, so no dialog is needed")),
-    c("group.set_active", "Set selected group as active", "Outliner", &[], false, Native::Later("cad-organize")),
-    c("group.group", "Group selection", "Outliner", &[], false, Native::Later("cad-organize")),
+    c("group.set_active", "Set selected group as active", "Outliner", &[], false, Native::Op),
+    c("group.group", "Group selection", "Outliner", &[], false, Native::Op),
     c("numeric.entry", "Numeric entry (Tab)", "General", &["Tab"], true, Native::NumericEntry),
     c("help.guide", "User guide", "Help", &[], false, Native::Different("RoboCAD shows only a path; the viewer's docs live in the repository")),
     c("help.logs", "Open diagnostics folder", "Help", &[], false, Native::Different("the viewer reports the log of the service it started; RoboCAD's own session logs stay in RoboCAD")),

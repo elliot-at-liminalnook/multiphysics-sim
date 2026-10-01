@@ -61,7 +61,16 @@ pub(super) enum Part {
     Top,
     Document,
     Tree,
+    /// cad-organize: the outliner's search field, New group, Expand all and
+    /// Collapse all (`tree::tools`; its context menu and name dialog are
+    /// popups of their own, `tree::popup`).
+    TreeTools,
     Name,
+    /// cad-organize: RoboCAD's Comments dock (`threads::dock`) and
+    /// References dock with the linked system file (`references::dock`),
+    /// as sections at the top of the right dock while shown.
+    Comments,
+    References,
     Inspector,
     Physical,
     Attributes,
@@ -291,6 +300,7 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
             left.spawn(Node { padding: UiRect::horizontal(Val::Px(14.0)), ..column(0.0) }).with_children(|s| {
                 s.spawn(k.section("Model tree"));
             });
+            left.spawn((Node { padding: UiRect::new(Val::Px(14.0), Val::Px(14.0), Val::Px(4.0), Val::Px(0.0)), ..column(4.0) }, CadList::new(Part::TreeTools)));
             left.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), TreeScroll)).with_children(|area| {
                 area.spawn((Node { padding: UiRect::new(Val::Px(8.0), Val::Px(8.0), Val::Px(6.0), Val::Px(14.0)), ..column(1.0) }, CadList::new(Part::Tree)));
             });
@@ -304,7 +314,7 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
         .with_children(|right| {
             right.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), InspectorScroll)).with_children(|area| {
                 area.spawn(Node { padding: UiRect::all(Val::Px(14.0)), ..column(4.0) }).with_children(|body| {
-                    for part in [Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
+                    for part in [Part::Comments, Part::References, Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
                         body.spawn((column(4.0), CadList::new(part)));
                     }
                 });
@@ -321,15 +331,22 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
 }
 
 /// The wheel over a dock scrolls it (the tree on the left, the inspector on
-/// the right), unless an open command popup over it takes the wheel.
-fn scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<PrimaryWindow>>, popups: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>, mut tree: Query<&mut ScrollPosition, (With<TreeScroll>, Without<InspectorScroll>)>, mut inspector: Query<&mut ScrollPosition, (With<InspectorScroll>, Without<TreeScroll>)>) {
+/// the right), unless an open command popup over it (or the outliner's
+/// context menu or name dialog, cad-organize) takes the wheel.
+#[allow(clippy::type_complexity)]
+fn scroll(
+    mut wheel: MessageReader<MouseWheel>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    popups: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>,
+    tree_popups: Query<(&ComputedNode, &UiGlobalTransform), Or<(With<super::tree::TreeMenuRoot>, With<super::tree::TreeDialogRoot>)>>,
+    mut tree: Query<&mut ScrollPosition, (With<TreeScroll>, Without<InspectorScroll>)>, mut inspector: Query<&mut ScrollPosition, (With<InspectorScroll>, Without<TreeScroll>)>) {
     let delta = wheel_delta(&mut wheel, crate::ui_kit::WHEEL_LINE);
     if delta == 0.0 {
         return;
     }
     let Ok(window) = windows.single() else { return };
     let Some(p) = window.cursor_position() else { return };
-    if p.y <= TOPBAR || p.y >= window.height() - STATUSBAR - SWITCHER_STRIP || super::surfaces::over_popup(&popups, p) {
+    if p.y <= TOPBAR || p.y >= window.height() - STATUSBAR - SWITCHER_STRIP || super::surfaces::over_popup(&popups, p) || super::surfaces::over_popup(&tree_popups, p) {
         return;
     }
     let areas = if p.x <= LEFT_WIDTH {
@@ -408,7 +425,10 @@ fn refresh(
                 Part::Top => top(p, &k, doc, &selection, plane),
                 Part::Document => document(p, &k, doc),
                 Part::Status => status(p, &k, doc),
-                Part::Tree => super::tree::build(p, &k, doc, &selection),
+                Part::Tree => super::tree::draw(p, &k, doc, &selection),
+                Part::TreeTools => super::tree::tools(p, &k, doc, &selection),
+                Part::Comments => super::threads::dock::draw(p, &k, doc, &selection),
+                Part::References => super::references::dock::draw(p, &k, doc, &selection),
                 Part::Name => super::inspector::name(p, &k, doc, &selection, &draft),
                 Part::Inspector => super::inspector::inspector(p, &k, doc, &selection, topology),
                 Part::Physical => super::inspector::physical(p, &k, doc, &selection),
@@ -431,6 +451,9 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
         Part::Document => format!("{:?}", (path_line(doc), doc.service_line(), doc.connection_line(), doc.connection == Connection::Connected, autosave_line(doc), &doc.stale)),
         Part::Status => format!("{:?}", (doc.edit_label(), &doc.status)),
         Part::Tree => super::tree::key(doc),
+        Part::TreeTools => super::tree::tools_key(doc, selection),
+        Part::Comments => super::threads::dock::key(doc, selection),
+        Part::References => super::references::dock::key(doc, selection),
         Part::Name => super::inspector::name_key(doc, selection, draft),
         Part::Inspector => super::inspector::inspector_key(doc, selection, topology),
         Part::Physical => super::inspector::physical_key(doc, selection),

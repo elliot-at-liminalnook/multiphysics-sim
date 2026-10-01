@@ -79,6 +79,12 @@ pub(crate) fn start(doc: &mut CadDocument) {
         child.stop();
     }
     doc.generation = super::document::next_generation();
+    // cad-organize: thread commits sent on the old connection never land
+    // here; the outliner's and references' open edits and picks were read
+    // from the old service (a restarted one may report the same revision).
+    crate::cad::threads::restarted(doc);
+    crate::cad::tree::restarted(doc);
+    crate::cad::references::restarted(doc);
     doc.client = None;
     doc.child_exit = None;
     doc.log = None;
@@ -537,6 +543,10 @@ fn finish_edit(doc: &mut CadDocument) -> Option<(Vec<SelectionItem>, Vec<Selecti
     let answer = result.map(|EditDone { message, result }| (message, result));
     // cad-print: a print start's answer is the job it started (tracked from now on).
     crate::cad::print::edit_answered(doc, seq, answer.as_ref().ok().map(|(_, r)| r));
+    // cad-organize: a thread commit lands in its source's `annotations::InFlight`;
+    // a reference or system-link edit rereads what it changed.
+    crate::cad::threads::edit_answered(doc, seq, answer.as_ref().map(|(_, r)| r).map_err(Clone::clone));
+    crate::cad::references::edit_answered(doc, seq, answer.as_ref().map(|(_, r)| r));
     // A polygon sent with sides: its count is the remembered one once RoboCAD took it.
     crate::cad::sketch::specs::polygon_edit_done(doc, seq, answer.is_ok());
     // A plane tool's new plane node becomes the active plane (the op's

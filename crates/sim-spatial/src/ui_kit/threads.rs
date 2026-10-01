@@ -45,6 +45,16 @@ pub(crate) trait Host<A: Anchor> {
     fn color(&self, _thread: &str) -> Option<Color> {
         None
     }
+    /// A list card's heading; `drawn` is its place in the drawn list. The
+    /// default is "{drawn}  {title}" with "  · resolved" when resolved (a
+    /// source that numbers its threads itself, as RoboCAD's comments, says so).
+    fn heading(&self, thread: &Thread<A>, drawn: usize) -> String {
+        format!("{drawn}  {}{}", thread.title, if thread.resolved { "  · resolved" } else { "" })
+    }
+    /// The message a list card previews (default: the latest).
+    fn previewed<'t>(&self, thread: &'t Thread<A>) -> Option<&'t Comment<A>> {
+        thread.comments.last()
+    }
 }
 
 /// Anchor chips: pressable when attached, marked missing otherwise.
@@ -86,13 +96,13 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
             BorderColor::all(edge),
         ))
         .with_children(|card| {
-            card.spawn(k.text(format!("{count}  {}{}", t.title, if t.resolved { "  · resolved" } else { "" }), 14., TEXT, 2));
+            card.spawn(k.text(host.heading(t, count), 14., TEXT, 2));
             if let Some(label) = host.badge(&t.id) {
                 card.spawn(k.text(label, size::DETAIL, ACCENT, 1));
             }
             let places: Vec<String> = t.targets.iter().map(|a| if a.missing() { format!("{} (missing)", host.anchor_text(a)) } else { host.anchor_text(a) }).collect();
             card.spawn(k.text(places.join(" · "), size::DETAIL, ACCENT, 0));
-            if let Some(c) = t.comments.last() {
+            if let Some(c) = host.previewed(t) {
                 card.spawn(k.text(sim_markdown::parse(&c.body).plain().chars().take(90).collect::<String>(), size::BODY, SUBTLE, 0));
                 if !c.created_at.is_empty() {
                     card.spawn(k.text(format!("{} message{} · {}", t.comments.len(), if t.comments.len() == 1 { "" } else { "s" }, sim_annotate::relative_time(&c.created_at)), 10.5, FAINT, 0));

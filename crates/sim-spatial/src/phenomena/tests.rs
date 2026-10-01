@@ -108,6 +108,9 @@ fn exhibit_refs_resolve_by_number_or_title_fragment() {
     // Digits are a number, whichever way they came.
     assert_eq!(ExhibitRef::Title(" 3 ".into()).resolve(&titles), Ok(2));
     assert!(ExhibitRef::Title("9".into()).resolve(&titles).unwrap_err().contains("out of range"));
+    // sim-app's rule: a number out of range is then tried as a title fragment.
+    assert_eq!(ExhibitRef::Number(42).resolve(&["Other", "Rule 42"]), Ok(1));
+    assert_eq!(ExhibitRef::parse("42").resolve(&["Other", "Rule 42"]), Ok(1));
     let e = ExhibitRef::Title("geyser".into()).resolve(&titles).unwrap_err();
     assert!(e.contains("`geyser`") && e.contains("3 exhibits"), "{e}");
     assert_eq!(ExhibitRef::parse("2"), ExhibitRef::Number(2));

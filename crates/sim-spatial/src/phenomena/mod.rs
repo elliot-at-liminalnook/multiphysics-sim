@@ -57,21 +57,27 @@ impl ExhibitRef {
             Err(_) => ExhibitRef::Title(text.to_string()),
         }
     }
-    /// The 0-based index among `titles` (sim-app's rule: a number in
-    /// 1..=len, else the first title containing the text, case-insensitive;
-    /// a `Title` of digits is read as a number first). An error names what
-    /// was wanted and how many exhibits there are.
+    /// The 0-based index among `titles`, sim-app's rule: a number in
+    /// 1..=len; otherwise (a number out of range too, or any other text) the
+    /// first title containing the text, case-insensitive. A `Title` of digits
+    /// is read as a number first. The error names what was wanted and how
+    /// many exhibits there are (sim-app opened exhibit 1 silently).
     pub fn resolve(&self, titles: &[&str]) -> Result<usize, String> {
-        let number = match self {
-            ExhibitRef::Number(n) => Some(*n),
-            ExhibitRef::Title(t) => t.trim().parse::<usize>().ok(),
+        let (number, text) = match self {
+            ExhibitRef::Number(n) => (Some(*n), n.to_string()),
+            ExhibitRef::Title(t) => (t.trim().parse::<usize>().ok(), t.clone()),
         };
-        if let Some(n) = number {
-            return n.checked_sub(1).filter(|i| *i < titles.len()).ok_or_else(|| format!("exhibit {n} is out of range: there are {} exhibits, numbered 1 to {}", titles.len(), titles.len()));
+        if let Some(index) = number.and_then(|n| n.checked_sub(1)).filter(|i| *i < titles.len()) {
+            return Ok(index);
         }
-        let ExhibitRef::Title(wanted) = self else { unreachable!("a number returned above") };
-        let lower = wanted.to_lowercase();
-        titles.iter().position(|t| t.to_lowercase().contains(&lower)).ok_or_else(|| format!("no exhibit title contains `{wanted}` (phenomena_state lists the {} exhibits)", titles.len()))
+        let lower = text.to_lowercase();
+        if let Some(index) = titles.iter().position(|t| t.to_lowercase().contains(&lower)) {
+            return Ok(index);
+        }
+        Err(match number {
+            Some(n) => format!("exhibit {n} is out of range: there are {} exhibits, numbered 1 to {}, and no title contains `{text}`", titles.len(), titles.len()),
+            None => format!("no exhibit title contains `{text}` (phenomena_state lists the {} exhibits)", titles.len()),
+        })
     }
 }
 

@@ -18,7 +18,8 @@ use std::sync::mpsc::{Receiver, RecvTimeoutError, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// The strip chart shows the last minute of real time, sampled at 30 Hz
+/// The strip chart: one sample per 1/30 s of real time on ticks that advance
+/// (paused, stopped and carried ticks add none), the last 1800
 /// (phenomena_app.rs:49–51).
 pub(crate) const CHART_POINTS: usize = 1800;
 pub(crate) const CHART_INTERVAL: f64 = 1.0 / 30.0;
@@ -415,7 +416,17 @@ fn run(commands: &Receiver<Command>, shared: &Arc<Mutex<Frame>>, selector: Optio
         last = now;
         next = now + TICK;
         let current = run.current;
-        if matches!(run.pacing.step(&mut *run.exhibits[current], real), Stepped::Advanced | Stepped::Failed) {
+        // `step` catches a panic in `advance`; this catches one in the
+        // exhibit's other calls (time_scale, grid, signal, time), so the
+        // thread never dies with the last frame still showing.
+        let stepped = match catch_unwind(AssertUnwindSafe(|| run.pacing.step(&mut *run.exhibits[current], real))) {
+            Ok(stepped) => stepped,
+            Err(panic) => {
+                run.pacing.error = Some(format!("the exhibit's simulation panicked: {}", panic_text(&*panic)));
+                Stepped::Failed
+            }
+        };
+        if matches!(stepped, Stepped::Advanced | Stepped::Failed) {
             publish(shared, run.frame());
         }
     }

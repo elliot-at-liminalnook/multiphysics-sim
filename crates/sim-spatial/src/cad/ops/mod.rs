@@ -174,6 +174,8 @@ pub(crate) enum Arg {
     /// `expected_revision`): a REST run's `revision` (required), a form's
     /// opening revision, else the shown one.
     Revision,
+    /// `{key: parameter's value}` (sweep's `options {"twist_deg"}`).
+    Keyed(&'static str, &'static str),
     /// A plane parameter (`kinds::PLANES`): "active" sends the active
     /// plane (`CadActivePlane::arg_or`), else RoboCAD's fallback when no
     /// plane is active (its `active_plane or Plane.yz()`); "xy", "xz" or
@@ -385,6 +387,9 @@ pub struct OpsState {
     /// A plane node created by a plane tool's edit, to become the active
     /// plane (`sync::finish_edit` sets it; `sketch::plane::sync` takes it).
     pub plane_created: Option<String>,
+    /// The polygon tool's last side count (RoboCAD's
+    /// `Sketch.last_polygon_sides`; None: its 6).
+    pub polygon_sides: Option<u32>,
 }
 
 /// What a run reads besides the document: the caches and the active plane
@@ -444,8 +449,22 @@ fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
         Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) => {
             end_tool(call, cx);
             let (doc, env) = cx.split();
-            // Each interaction's own start (its state, the selection mode a
-            // plane tool sets, an extrude's source), then its form.
+            doc.ops.active = Some(entry.id);
+            doc.ops.place = None;
+            doc.ops.sketch = None;
+            doc.ops.extrude = None;
+            doc.ops.plane_picks.clear();
+            // A sketch or extrude tool's Tab fields (RoboCAD's numeric bar);
+            // a plane tool has none (RoboCAD's `PlaneTool` only picks).
+            let answer = if entry.params.is_empty() || matches!(entry.flow, Flow::PlanePick(_)) {
+                doc.ops.form = None;
+                json!({"active": entry.id})
+            } else {
+                open_form(doc, entry)
+            };
+            // Each interaction's own start, after its form opened (it may set
+            // drafts: the polygon's remembered sides, the text field's focus):
+            // its state, the selection mode a plane tool sets, an extrude's source.
             let started = match entry.flow {
                 Flow::Sketch(shape) => super::sketch::interact::begin(doc, shape),
                 Flow::Extrude { revolve } => super::sketch::extrude::begin(doc, &env, revolve),
@@ -453,17 +472,9 @@ fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
                 _ => Ok(()),
             };
             if let Err(e) = started {
+                form_cancel(doc);
                 return Outcome::Done(Err(e));
             }
-            let doc = &mut *cx.doc;
-            doc.ops.active = Some(entry.id);
-            doc.ops.place = None;
-            let answer = if entry.params.is_empty() {
-                doc.ops.form = None;
-                json!({"active": entry.id})
-            } else {
-                open_form(doc, entry)
-            };
             doc.show(Ok(entry.hint.to_string()));
             Outcome::Done(Ok(answer))
         }
@@ -603,16 +614,7 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call,
         Built::Paste { clip, label } => super::actions::edit(doc, call, label, move |c| {
             c.paste(&clip).map(|p| EditDone { message: format!("Pasted {} item(s)", p.pasted.len()), result: value(&p) })
         }),
-        Built::Sketch { target, calls, label } => {
-            let message = label.clone();
-            super::actions::edit(doc, call, label, move |c| {
-                let detail = match &target {
-                    SketchTarget::Node(id) => c.edit_sketch(id, &calls)?,
-                    SketchTarget::New { plane } => c.create_sketch(plane, &calls, None)?,
-                };
-                Ok(EditDone { message, result: value(&detail) })
-            })
-        }
+        Built::Sketch { target, calls, label } => send_sketch(doc, call, target, calls, label),
         // Applied by `run` before `start`.
         Built::View(_) => return Outcome::Done(Err("viewer state is not sent to RoboCAD".into())),
         Built::Read(read) => {
@@ -629,6 +631,21 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call,
         started(doc, entry, explicit);
     }
     outcome
+}
+
+/// One sketch edit on a job: `POST /nodes/{id}/sketch` on the target, or
+/// `POST /nodes {"kind": "sketch", "plane", "calls"}` for a new sketch. The
+/// one path every sketch shape and sketch edit takes (`cad_sketch` too);
+/// the caller has checked `CadDocument::commit_refusal`.
+pub(in crate::cad) fn send_sketch(doc: &mut CadDocument, call: &mut Call, target: SketchTarget, calls: Vec<sim_runtime::cad_client::SketchCall>, label: String) -> Outcome {
+    let message = label.clone();
+    super::actions::edit(doc, call, label, move |c| {
+        let detail = match &target {
+            SketchTarget::Node(id) => c.edit_sketch(id, &calls)?,
+            SketchTarget::New { plane } => c.create_sketch(plane, &calls, None)?,
+        };
+        Ok(EditDone { message, result: value(&detail) })
+    })
 }
 
 /// After an edit started: where RoboCAD's handler clears the selection,

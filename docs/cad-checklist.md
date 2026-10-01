@@ -13,15 +13,20 @@ hide, saved views, the tessellation tolerance, and new, open, save as,
 import, export and render, Part F) and the sixth (**cad-physical-inspect**:
 materials, the inspector's physical rows, the Robot panel and its tools,
 results, the stress overlay, physical export and the live link, Part G,
-section "CAD physical properties (2026-10-01)"). cad-mode,
+section "CAD physical properties (2026-10-01)") and the seventh
+(**cad-print**: the wall check, validation, overhang shading, the fastener
+and clearance tools, split, strength, plan, whole or split, the assembly
+guide, coupons, the Print jobs section and the print overlay, Part H,
+section "CAD print (2026-10-01)"). cad-mode,
 cad-select-transform, cad-modify and cad-sketch (at cc7ac194) were built
 and tested in their verification passes; cad-views-export was verified at
-bcf0c56c; cad-physical-inspect was written and checked only by reading:
-**Part G has not been through its verification pass yet**. Each
+bcf0c56c; cad-physical-inspect and cad-print were written and checked only
+by reading: **Parts G and H have not been through their verification
+passes yet**. Each
 step is done once in the native viewer and once in RoboCAD's own window,
 so you can compare them. The feature-by-feature ledger is
 [cad-parity.md](cad-parity.md); its `done-by-reading` rows are the ones
-these steps show. Everything else in RoboCAD (printing, experiments,
+these steps show. Everything else in RoboCAD (experiments,
 motion, comments, …) is a later CAD epic and stays in RoboCAD's window.
 
 **RoboCAD stays the reference.** Nothing here changes it, its command layer
@@ -321,6 +326,45 @@ through its verification pass yet**.
 | CAD-151 Apply identification | Robot ▸ Robot: apply identified joint parameters…: a `sim-cad fit` output file if you have one, else a missing path | The same entry and file | The same stored joint parameters (the next export's joint physics) in both, or the same RoboCAD error verbatim |
 | CAD-152 Live link into Robot mode | Simulation ▸ Simulation: live link (watch + run viewer) on the saved document: the window switches to Robot mode on `turntable.simrobot.json`; go back to CAD, change a joint limit, Save (Ctrl/Cmd+S), then switch to Robot mode | Simulation ▸ live link in RoboCAD's window: it exports and starts `sim-spatial --robot` | The viewer opens Robot mode in the same window (no new process) on the exported model, and after the save Robot mode shows the new limit; with an export running, leaving CAD is refused naming it; an unsaved document refuses the link ("Save the document first: …") |
 
+## Part H: printing (cad-print)
+
+Set up as in Part G: the viewer on one copy of `turntable.rcad`, RoboCAD's
+own window on a second copy (`turntable-rc.rcad`), the same node selected
+in both. Print studies run as RoboCAD jobs, which only its REST service
+runs, so RoboCAD's window must serve its API (it does from 8420 up; Part
+B). CAD-159 to CAD-161 and CAD-165 need a print study on the document: in
+both, set one on a body `<id>` (one of the model's printed parts):
+
+- the viewer: `cad_op {"name":"set_robot_setting","args":["print_study",{"printer":"bambu-p1s","material":"petg-hf","parts":[{"node":"<id>","fixtures":[{"region":{"bottom":true}}],"loads":[{"region":{"faces":[3]},"direction":[0,0,-1],"magnitude":20.0}]}]}]}`
+- RoboCAD: `curl -X POST http://127.0.0.1:<RoboCAD port>/ops/set_robot_setting -d '{"args":["print_study",{…the same study…}]}'`
+
+The Print menu is named as both menu bars show it. In the viewer, "Print
+jobs" is a section of the right dock (RoboCAD: a message box).
+`cad_state.print` shows the viewer's state (checks, remembered values,
+registry and study reads, jobs, the overlay). Steps that edit are undone
+in both before the next step, unless the step says otherwise. Nothing in
+this part was compiled or run before it was written: **Part H has not
+been through its verification pass yet**.
+
+| Step | Native viewer | RoboCAD | Pass when |
+|---|---|---|---|
+| CAD-153 Wall thickness check | Print ▸ Wall thickness check… (Ctrl+W) with nothing selected: "Flag walls thinner than (mm):" 1.2, OK; then select one body and run it again at `2`; then open the form once more; finally `cad_print {"op":"clear"}` | Print ▸ Wall thickness check… (Ctrl+W), the same thresholds and selection | The same red points (RoboCAD's 1.0, 0.2, 0.2, 9 px) on the same places and the same status ("N thin region(s) under 1.2 mm" or "No walls thinner than 1.2 mm"); the window never stalls while it reads; the third form opens at `2` in the viewer (it remembers the last threshold; RoboCAD reopens at 1.2: recorded); running the same check again on unchanged nodes sends nothing (`cad_state.print.checks.cached_reads`); after any edit the points are no longer drawn; clear removes them |
+| CAD-154 Validate for printing | Print ▸ Validate for printing (Ctrl+Shift+V); then hide a body and run it again | Print ▸ Validate for printing | The same verdict: "n body(ies): valid and watertight." (the same n: every visible body), or the same messages ("name: message near (x, y, z) — fix"). The viewer's answer is the status line, not a box, and it has no open-edge lines: RoboCAD's tessellation open-edge check is its desktop's only (`cad_state.print.checks.open_edge_check` says so; recorded) |
+| CAD-155 Overhang shading | Print ▸ Toggle overhang shading (or the toolbar's **Overhangs** chip); toggle it off; then View ▸ Build Plate Preview (Ctrl+Shift+B) on and off; then the plate on and overhang shading off | The same entries | The same faces facing down past 45° are tinted 0.9, 0.35, 0.3 in both; the build plate turns overhang shading on with it and off with it in both, and the shading's own toggle flips only the shading; nothing is written to the document (no undo step) |
+| CAD-156 Fastener hole | Print ▸ Fastener hole… (Ctrl+H): Size `M4`, Kind `counterbore`, Extra clearance (mm) `0.1`, Depth (mm; 0: through) `0`; click a flat face, then another; Escape; open the tool again | Print ▸ Fastener hole… (Ctrl+H): the same values in the dialog, OK, then click the same faces; Escape; open it again | Each click is one hole and one undo step at the clicked point in both (the viewer's status line names it "M4 counterbore hole in NAME"), through the part (depth 0 is "through"); the viewer's fields stay beside the view while you click (recorded); both reopen with M4, counterbore, 0.1, through (remembered); a click off any face does nothing; the selection is not changed by the clicks |
+| CAD-157 Clearance offset | Select two faces of one hole and one face of another body, Print ▸ Clearance offset… (Ctrl+Shift+C): "Grow holes / shrink bosses by (mm):" `0.3`, OK; open it again | The same faces, Print ▸ Clearance offset…, `0.3` | The same faces move by 0.3 mm in both; one RoboCAD undo step "Clearance" per body (two here) in both; the form reopens at 0.3 in both (0.2 the first time); with no face selected both refuse "Select holes, bosses or faces to offset" |
+| CAD-158 Split for printing (dovetail) | Select one body, Print ▸ Split selected for printing…: Printer the first entry ("id (x × y × z mm)") and another printer, Joints `dovetail`, OK; watch the status line until it ends | Print ▸ Split selected for printing…, the same printer and joint | The same printer list in the same order with the same usable sizes; while it runs "split: … (n %)"; the same pieces under a new split group and the same done text ("split into N pieces; hardware: …"); with two bodies selected both refuse "Select one body to split." |
+| CAD-159 Check strength | Print ▸ Check strength (document's print study); first on a copy with no study, then with the study set above | The same entry, without and with the study | Without a study both explain "This document has no print study yet. …" word for word; with it, both run a job and end "strength: least safety factor F on NAME (MODE); Print ▸ Strength overlay shows where" with the same F and part |
+| CAD-160 Plan with job progress | Print ▸ Plan print settings and plates (document's print study); watch the status line | The same entry | While it runs the status line reads "plan: message (n %)" in both (RoboCAD adds " — Print ▸ Print jobs… to cancel"; recorded), changing as it progresses; both end "plan: N plate(s), about H h and G g (estimates); 3MF files in DIR" with the same plates; the window never stalls |
+| CAD-161 Whole or split | Select the study's part, Print ▸ Whole or split for strength?; then select a body that is not in the study | The same | The same "RECOMMENDATION: WHY" in both; a body outside the study is refused by both ("Select a part that is in the document's print study …") |
+| CAD-162 Assembly guide | Select the split group from CAD-158 (then one of its pieces), Print ▸ Assembly guide for the selected split… | The same | Both run a job, end "assembly: N steps; guide PATH" and open the same guide with the system's opener; selecting a piece finds its split group in both; with nothing split selected both refuse by name |
+| CAD-163 Test coupons | With the split group selected, Print ▸ Test coupons…: Printer, Filament from the lists; then with nothing selected | The same, Printer and Filament | The same printer and filament ids in the same order; both end "coupons: N on P plate(s); break them, fill results.json, then `sim-print promote results.json`" and open the protocol's folder; with nothing selected the coupons are for the material only in both |
+| CAD-164 Print jobs and cancel | Start a plan (CAD-160), then Print ▸ Print jobs…: the section lists the last eight jobs ("kind id: state n % message"); **Cancel running jobs…** → "Cancel the running jobs?" → **No**; again → **Yes**; **Close** | Start a plan, Print ▸ Print jobs…: the list and "Cancel the running jobs?" → No; again → Yes | The same jobs and lines in both; No leaves the job running in both; Yes cancels it in both (status "plan cancelled"); the viewer asks in an inline row of the section, not a box (recorded), and sends exactly one cancel per running job (`cad_state.print.jobs`); with no job running there is no Cancel button and the list says "No print jobs yet." on a fresh service |
+| CAD-165 Print overlay and staleness | After CAD-159, Print ▸ Strength overlay on/off; read the results line in the Results section; then make any edit | Print ▸ Strength overlay on/off | The same parts are coloured, and the part with the least safety factor is the reddest in both; the viewer colours each part in one colour by its governing failure index (1 / safety factor) on Robot mode's stress scale, where RoboCAD colours each voxel's failure index (recorded), so colours inside a part differ; the viewer's line "Print strength: N part(s); least safety factor F on NAME (current)" turns "stale (computed at revision R, now M)" after the edit |
+| CAD-166 Leaving CAD mode while a job runs | Start a plan, then switch to Robot mode before it ends; then wait for it to end and switch again | (n/a: RoboCAD has no other modes) | The switch is refused while the job runs, naming it ("a print job is running in RoboCAD: plan (n %); wait for it, or cancel it in the Print jobs section"); once it ends the switch goes through; with the service lost (not connected) nothing holds the switch |
+| CAD-167 Robot panel row press | Click a joint row in the Robot section, then the same row through `system_ui` `cad:robot:row:<id>` | Click the same row in RoboCAD's Robot dock | The node is selected in both, as in CAD-141; the viewer's press is stamped with the revision the robot description was read at, which records where the row came from without refusing a row of an older read; a row of a node that has left the tree is refused by name |
+| CAD-168 Partial REST Edit joint | With joint `<j>` selected, `cad_run {"id":"ops.set_joint","params":{"lower":-30}}` | `curl -X POST http://127.0.0.1:<RoboCAD port>/ops/set_joint -d '{"args":["<j>"],"kwargs":{…every current value, lower -0.5236…}}'` (RoboCAD's `set_joint` takes every field; the Edit joint dialog fills them) | Only the lower limit changes (−30°), the joint's type, parent, child, pivot, axis, upper limit, motor, gear ratio, damping and name stay as they were in both (`GET /robot`); a type change between prismatic and revolute without both limits is refused by name; with the robot description not yet read at the shown revision it is refused by name and nothing is sent |
+
 ## Known differences (deliberate)
 
 - RoboCAD asks Save/Discard/Cancel when closing; the viewer never saves for
@@ -408,6 +452,20 @@ through its verification pass yet**.
   on a job; the live link opens Robot mode in this window; Ctrl+Shift+J is
   bound to the joint tool and Ctrl+Shift+M stays Select Same Material. No
   cad-physical-inspect row is open.
+- cad-print (each recorded in cad-parity.md with its reason): the wall
+  check remembers its last threshold (RoboCAD reopens at 1.2); validation
+  has no open-edge lines (RoboCAD's desktop runs that tessellation check;
+  its REST route serves only the kernel's report) and answers in the
+  status line; the Fastener hole fields stay beside the view while you
+  click, with a Point field for REST; split adds `expected_revision` to
+  RoboCAD's background split; job progress drops " — Print ▸ Print jobs…
+  to cancel", one list poll every 0.5 s replaces RoboCAD's per-job timer
+  and a failure is the status line's error, not a box; Print jobs is a
+  section of the right dock and "Cancel the running jobs?" an inline Yes/No
+  row; the print overlay colours each part uniformly by its governing
+  failure index on Robot mode's scale, not RoboCAD's per-voxel field;
+  `GET /print/jobs/{id}`'s `wait` is never used (RoboCAD never honours
+  it). No cad-print row is open.
 
 ## Sign-off
 

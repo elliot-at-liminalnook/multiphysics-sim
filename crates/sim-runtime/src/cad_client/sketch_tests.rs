@@ -286,6 +286,44 @@ fn check_calls_tracks_curve_indices() {
 }
 
 #[test]
+fn check_refuses_non_finite_numbers_as_from_json_does() {
+    use SketchCall::*;
+    let nan = f64::NAN;
+    let inf = f64::INFINITY;
+    assert_eq!(Circle { center: [0.0, 0.0], radius: nan }.check(None).unwrap_err(), "circle: argument radius must be a finite number (got NaN)");
+    assert_eq!(Line { a: [0.0, 0.0], b: [inf, 1.0] }.check(None).unwrap_err(), "line: argument b must be a point [u, v] of two finite numbers (got [inf, 1])");
+    assert_eq!(Polyline { points: vec![[0.0, 0.0], [1.0, -inf]], closed: false }.check(None).unwrap_err(), "polyline: argument points[1] must be a point [u, v] of two finite numbers (got [1, -inf])");
+    assert_eq!(CircleTangent { curves: vec![0, 1], radius: Some(nan), near: [0.0, 0.0] }.check(None).unwrap_err(), "circle_tangent: argument radius must be a finite number (got NaN)");
+    assert_eq!(Trim { curve: 0, cutters: vec![1], click: [nan, 0.0] }.check(None).unwrap_err(), "trim: argument click must be a point [u, v] of two finite numbers (got [NaN, 0])");
+    assert_eq!(Polygon { center: [0.0, 0.0], radius: 10.0, sides: None, rotation: inf }.check(None).unwrap_err(), "polygon: argument rotation must be a finite number (got inf)");
+    // Through check_calls, with the call's position.
+    assert_eq!(check_calls(&[Offset { curve: 0, distance: nan }], None).unwrap_err(), "call 1 (offset): argument distance must be a finite number (got NaN)");
+    // Every finite case still passes.
+    for (call, _) in call_cases() {
+        assert!(call.check(None).is_ok(), "{}", call.name());
+    }
+}
+
+#[test]
+fn check_refuses_collinear_three_point_circles_and_arcs() {
+    use SketchCall::*;
+    assert_eq!(
+        CircleThreePoint { a: [0.0, 0.0], b: [1.0, 1.0], c: [2.0, 2.0] }.check(None).unwrap_err(),
+        "circle_three_point: arguments a, b and c are collinear (no circle passes through [0, 0], [1, 1] and [2, 2])"
+    );
+    assert!(ArcThreePoint { a: [0.0, 0.0], b: [5.0, 0.0], c: [10.0, 0.0] }.check(None).unwrap_err().starts_with("arc_three_point: arguments a, b and c are collinear"));
+    // Coincident points too (d = 0).
+    assert!(CircleThreePoint { a: [3.0, 3.0], b: [3.0, 3.0], c: [7.0, 1.0] }.check(None).is_err());
+    // From a REST caller's JSON as well.
+    assert!(SketchCall::from_json(&json!(["circle_three_point", [[0, 0], [1, 1], [2, 2]]])).unwrap_err().contains("collinear"));
+    // Kernel tolerance: |d| < 1e-12 refused, a small but larger |d| kept.
+    assert!(CircleThreePoint { a: [0.0, 0.0], b: [1.0, 0.0], c: [2.0, 1e-13] }.check(None).is_err());
+    assert!(CircleThreePoint { a: [0.0, 0.0], b: [1.0, 0.0], c: [2.0, 1e-9] }.check(None).is_ok());
+    // rectangle_three_point is not a circumcircle.
+    assert!(RectangleThreePoint { a: [0.0, 0.0], b: [1.0, 0.0], c: [2.0, 0.0] }.check(None).is_ok());
+}
+
+#[test]
 fn plane_frames_as_kernel_base_plane() {
     assert_eq!(PlaneFrame::XY.y_axis(), [0.0, 1.0, 0.0]);
     // Plane.xz: normal -Y, x +X, so y = (-Y) × X = +Z.

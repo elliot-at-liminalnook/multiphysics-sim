@@ -37,7 +37,7 @@ mod page;
 mod thread;
 
 pub use apply::apply;
-pub use page::{LiveInput, banner_text, distinct, legs, live_input, live_run, mapping, reading_lines, sample_from, source_text};
+pub use page::{banner_text, distinct, legs, live_input, mapping, reading_lines, sample_from, source_text};
 
 use super::ServerTarget;
 use super::mirror::SceneId;

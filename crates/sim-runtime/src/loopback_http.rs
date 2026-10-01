@@ -138,13 +138,29 @@ impl Endpoint {
 /// may fail with `ConnectionReset`/`BrokenPipe`/`ConnectionAborted` after
 /// the answer arrived. Then the answer received so far is used when it is
 /// whole (`salvage`), so the server's `error` surfaces; else the error
-/// says the server closed the connection, followed by
-/// [`Request::closed_hint`].
+/// says the server closed the connection (with the status code when its
+/// status line arrived) and that a refusal can lose its answer this way,
+/// followed by [`Request::closed_hint`].
+///
+/// The client cannot always recover the answer: a reset also discards what
+/// the server had written but not yet sent. On macOS a server that writes
+/// its answer in several pieces (`write!` on an unbuffered `TcpStream`)
+/// and then closes with body bytes unread loses every piece after the
+/// first, since Nagle holds them until the first is acknowledged and the
+/// reset drops them (the client received only the status line and part of
+/// the head). A server avoids it by writing the whole answer at once, or
+/// by shutting down its write half and draining the body before closing.
 pub fn exchange(endpoint: &Endpoint, timeout: Duration, request: &Request) -> Result<String, Error> {
     let Request { method, path, closed_hint, .. } = *request;
     let origin = endpoint.origin();
     let (mut stream, fail, written) = send(endpoint, timeout, request)?;
-    let closed = |e: std::io::Error| Error::Transport(format!("{method} {origin}{path}: the server closed the connection without a usable answer ({e}){closed_hint}"));
+    let closed = |e: std::io::Error, data: &[u8]| {
+        let what = match partial_status(data) {
+            Some(status) => format!("closed the connection after sending only part of an HTTP {status} answer"),
+            None => "closed the connection without a usable answer".to_string(),
+        };
+        Error::Transport(format!("{method} {origin}{path}: the server {what} ({e}); {REFUSAL_LOST}{closed_hint}"))
+    };
     let reset = match written {
         Ok(()) => None,
         Err(e) if is_closed(&e) => Some(e),
@@ -153,11 +169,11 @@ pub fn exchange(endpoint: &Endpoint, timeout: Duration, request: &Request) -> Re
     let read = read_response(&mut stream, Instant::now() + timeout);
     let (status, text) = match (read, reset) {
         (Ok(answer), _) => answer,
-        (Err(ReadError::Io(_, e, data)), _) if is_closed(&e) => salvage(&data).ok_or_else(|| closed(e))?,
+        (Err(ReadError::Io(_, e, data)), _) if is_closed(&e) => salvage(&data).ok_or_else(|| closed(e, &data))?,
         // The write already failed with a reset: that is the cause.
-        (Err(ReadError::Io(_, _, data)), Some(e)) => salvage(&data).ok_or_else(|| closed(e))?,
+        (Err(ReadError::Io(_, _, data)), Some(e)) => salvage(&data).ok_or_else(|| closed(e, &data))?,
         (Err(ReadError::Io(what, e, _)), None) => return Err(fail(what, e)),
-        (Err(ReadError::Malformed(why)), Some(e)) if why == NO_ANSWER => return Err(closed(e)),
+        (Err(ReadError::Malformed(why)), Some(e)) if why == NO_ANSWER => return Err(closed(e, &[])),
         (Err(ReadError::Malformed(why)), _) => return Err(Error::Decode(format!("{method} {origin}{path}: {why}"))),
     };
     if (200..300).contains(&status) {
@@ -264,6 +280,27 @@ enum ReadError {
 
 /// Why a response could not be read when nothing arrived.
 const NO_ANSWER: &str = "the server closed the connection without answering";
+
+/// Why a closed or reset connection may have lost the server's answer
+/// (appended to every "the server closed the connection" error; it says
+/// what can happen, not what the server said).
+pub const REFUSAL_LOST: &str = "a server that refuses a request without reading its body resets the connection, which can discard its answer";
+
+/// The status code of an answer cut short: its status line's code when
+/// `HTTP/1.x`, the three digits and the byte after them arrived. `None`
+/// when less arrived or the line is not an HTTP status line.
+fn partial_status(data: &[u8]) -> Option<u16> {
+    let line = data.split(|&b| b == b'\r').next()?;
+    let line = std::str::from_utf8(line).ok()?;
+    let mut parts = line.split(' ');
+    let (version, code) = (parts.next()?, parts.next()?);
+    // The code is whole only when a byte (a space or `\r`) follows it.
+    let whole = data.len() > version.len() + 1 + code.len();
+    if !version.starts_with("HTTP/1.") || code.len() != 3 || !code.bytes().all(|b| b.is_ascii_digit()) || !whole {
+        return None;
+    }
+    code.parse().ok().filter(|s| (100..600).contains(s))
+}
 
 /// Whether an I/O error means the peer closed or reset the connection.
 fn is_closed(e: &std::io::Error) -> bool {

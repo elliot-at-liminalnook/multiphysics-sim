@@ -159,3 +159,24 @@ fn system_discussions_round_trip_in_the_system_document() {
     assert_eq!(written["discussions"], discussions);
     sim_annotate::validate_thread(&doc.discussions.threads["t1"]).unwrap();
 }
+
+/// A remote source's requests wait in `InFlight` until their job's answer
+/// lands; an answer that is not this source's is ignored.
+#[test]
+fn a_remote_commit_lands_through_in_flight() {
+    let mut f = InFlight::default();
+    assert!(!f.busy());
+    f.submitted(7, "Reply", Some("t1".into()));
+    f.submitted(8, "New thread", None);
+    assert!(f.busy() && f.waits(7) && f.waits(8));
+    assert_eq!(f.land(9, Ok(None)), None, "not this source's request");
+    let landed = f.land(8, Ok(Some("rc-42".into()))).unwrap();
+    assert_eq!((landed.request, landed.label.as_str(), landed.thread, landed.result), (8, "New thread", None, Ok(Some("rc-42".to_string()))));
+    assert_eq!(f.land(8, Ok(None)), None, "landed once");
+    let failed = f.land(7, Err("RoboCAD: 422".into())).unwrap();
+    assert_eq!(failed.thread.as_deref(), Some("t1"));
+    assert!(!f.busy());
+    f.submitted(10, "Resolve", Some("t1".into()));
+    f.clear();
+    assert!(!f.waits(10));
+}

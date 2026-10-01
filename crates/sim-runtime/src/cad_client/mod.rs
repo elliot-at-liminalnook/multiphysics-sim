@@ -30,21 +30,29 @@
 //! - **No file writes by accident**: [`CadClient::physical`] never passes
 //!   `path` (RoboCAD would write the description to that file).
 pub mod files;
+pub mod organize;
 pub mod physical;
 pub mod print;
+pub mod references;
 pub mod robot;
 pub mod robot_ops;
 pub mod section;
 pub mod service;
 pub mod sketch;
+pub mod system_link;
+pub mod threads;
 pub mod types;
 pub mod views;
 #[cfg(test)]
 mod files_tests;
 #[cfg(test)]
+mod organize_tests;
+#[cfg(test)]
 mod physical_tests;
 #[cfg(test)]
 mod print_tests;
+#[cfg(test)]
+mod references_tests;
 #[cfg(test)]
 mod robot_tests;
 #[cfg(test)]
@@ -52,7 +60,11 @@ mod section_tests;
 #[cfg(test)]
 mod sketch_tests;
 #[cfg(test)]
+mod system_link_tests;
+#[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod threads_tests;
 #[cfg(test)]
 mod views_tests;
 
@@ -62,9 +74,13 @@ pub use types::*;
 pub use files::*;
 pub use physical::*;
 pub use print::*;
+// cad-organize: threads, the outliner's organization, references, the linked system file.
+pub use references::*;
 pub use robot::*;
 pub use robot_ops::*;
 pub use section::*;
+pub use system_link::*;
+pub use threads::*;
 pub use views::*;
 
 use crate::hardware_client::encode_uri_component;

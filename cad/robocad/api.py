@@ -21,6 +21,7 @@ node ids from `/nodes`. Faces/edges are addressed by `{"node": id,
     GET  /nodes/{id}/control_points?face=i   {"node", "face", "rows": [[[x,y,z], …], …]}  a face's B-spline poles (read-only)
     GET  /nodes/{id}/curvature_comb[?scale=5&samples=48]   {"node", "lines": [[[x,y,z],[x,y,z]], …]}  curves and sketches (read-only)
     GET  /nodes/{id}/continuity     {"node", "edges": [{"index", "continuity": "G0"|"G1"|"G2"|"boundary", "points"}], "counts"}  (read-only)
+    GET  /nodes/{id}/image          {"id", "revision", "format", "width_px", "height_px", "bytes", "data": base64}  a reference image's stored bytes (read-only)
     POST /nodes/{id}/sketch         {"calls": [["rectangle", [[0,0],[20,10]]], ["circle", [[10,5], 2]]]}  edits a sketch
     POST /ops/{name}                any `Ops` method: {"args": [...], "kwargs": {...}} → its return value
     GET  /ops                       the callable Ops methods and their signatures
@@ -1313,6 +1314,22 @@ class Service:
     def materials(self):
         return [m.to_json() for m in self.doc.materials.values()]
 
+    def reference_image(self, nid: str) -> dict:
+        """`GET /nodes/{id}/image`: a reference image node's stored bytes
+        (base64) with its format and pixel size, at the document's revision.
+        Read-only; the gap route the native viewer's CAD mode textures
+        reference planes from (node_detail strips the bytes)."""
+        from PIL import Image
+
+        n = self.node(nid)
+        if n.image is None:
+            raise ApiError(404, f"{n.name} is not a reference image")
+        data = n.image["data"]
+        with Image.open(io.BytesIO(data)) as image:
+            fmt, (width, height) = (image.format or "").lower(), image.size
+        return {"id": n.id, "revision": self.doc.revision, "format": fmt, "width_px": width, "height_px": height,
+                "bytes": len(data), "data": base64.b64encode(data).decode("ascii")}
+
     def results_nodes(self) -> dict:
         """`GET /results/nodes`: the loaded results per node id (the margins
         `results_margins` computes, each node's results block and its
@@ -1467,6 +1484,8 @@ def make_handler(service: Service):
                     return self._send(200, run(lambda: s.curvature_comb(nid, q.get("scale"), q.get("samples"))))
                 if sub == "continuity" and method == "GET":
                     return self._send(200, run(lambda: s.continuity(nid)))
+                if sub == "image" and method == "GET":
+                    return self._send(200, run(lambda: s.reference_image(nid)))
                 if sub == "sketch":
                     if method == "POST":
                         return self._send(200, run(lambda: s.edit_sketch(nid, body.get("calls", []))))

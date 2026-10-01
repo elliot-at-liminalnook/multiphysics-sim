@@ -468,7 +468,7 @@ class OcctKernel(GeometryKernel):
         mk.Build()
         if not mk.IsDone():
             raise KernelError("could not fill the hole: the boundary is not closed or is too twisted")
-        return _finish(mk.Face(), "sheet")
+        return _finish(mk.Shape(), "sheet")
 
     def bridge(self, edge_a: Body, edge_b: Body) -> Body:
         mk = BRepOffsetAPI_ThruSections(False, True)

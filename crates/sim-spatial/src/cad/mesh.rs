@@ -214,6 +214,14 @@ impl CadMeshes {
         };
     }
 
+    /// The face under drawn triangle `triangle` of node `id`, only while the
+    /// drawn mesh is still the one at RoboCAD revision `shown` (a pick made
+    /// on an older drawing names no face); [`Self::face_of`] reads it from
+    /// the mesh the body shows.
+    pub fn face_at(&self, id: &str, triangle: usize, shown: u64) -> Option<i64> {
+        (self.drawn_revision(id) == Some(shown)).then(|| self.face_of(id, triangle)).flatten()
+    }
+
     /// The nodes recorded as showing a derived copy.
     pub fn copy_ids(&self) -> impl Iterator<Item = &str> {
         self.copies.keys().map(String::as_str)

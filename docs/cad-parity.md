@@ -60,7 +60,7 @@ is written in full; a backticked symbol after a path is in that file.
   cad-sketch or cad-views-export epic implements it (native-viewer.md, CAD
   mode section; "CAD selection and transform"; "CAD modify"; "CAD
   sketch"; "Shared camera and CAD views"). It is built and tested in that epic's
-  verification pass and moves to `done` only when the user's checklist
+  verification pass (still to come for cad-views-export) and moves to `done` only when the user's checklist
   ([cad-checklist.md](cad-checklist.md)) passes. Nothing is `done` yet: no
   epic's checklist has been signed off (cad-sketch was verified at
   cc7ac194), and cad-views-export has not been through its verification
@@ -148,7 +148,7 @@ the feature is later, not that it cannot be reached at all.
 | Open from the command line (`.rcad` argument; other files are imported after load) | ui/app.py:1962-1978, ui/load_process.py:44-46 | `POST /import` for the extra files | `main.rs:take_file` → `CadTarget::File` (one `.rcad` FILE argument; or `--cad-url`) | deliberately different: the viewer takes one file argument; other files are imported after it opens, with File > Import… (`cad/files/mod.rs:file`, `FileOp::Import`) |
 | Attach to a running RoboCAD (each window serves REST from 8420 up; `ROBOCAD_API_PORT`) | ui/app.py:1783-1795 | `GET /` (api.py:387) | `CadAction::CadOpen { url }` (loopback only; never stopped) | done-by-reading |
 | New ("New", `file.new`: an empty document in a new window) | ui/app.py:283 | `POST /new {"path"}` (api.py `Service.new_file`, added with cad-views-export: creates the `.rcad` exclusively, `open(path, "xb")`, then saves an empty document over it, so an existing file is never replaced (409)) | File > New and Ctrl+N → `cad/files/mod.rs:file` (`FileOp::New`: the path form; `cad_open`'s rule, `CadDocument::switch_blockers`, checked before RoboCAD writes the file; then `crates/sim-runtime/src/cad_client/files.rs:CadClient::new_file` on a `Pool::Dedicated` job, then `CadOpen` of the new file, `jobs::Then::Open`: `cad/files/jobs.rs:receive` for a click, `cad/files/jobs.rs:wait` → `open_created` for a REST caller, whose answer is the open's outcome) | deliberately different: New names its file first and opens it in this window under `cad_open`'s rule (a self-started service with unsaved edits is refused; an attached RoboCAD keeps its edits): CAD mode shows one document, served by a headless service from its file; RoboCAD opens an untitled window, so its New never loses edits |
-| Save ("Save", `file.save`; with no path it falls through to Save As) | ui/app.py:285, ui/app.py:1337-1342 | `POST /save` (api.py:957; answers 400 "no path" for a never-saved document); since f15766ea the viewer sends `POST /save/thumbnail` instead, as RoboCAD's desktop Save writes the thumbnail too | `CadAction::CadSave { path: None }` (Ctrl/Cmd+S in `cad::keys`, `cad:save`, REST `cad_save`) → `cad/actions.rs` CadSave arm → `cad/files/mod.rs:save` → `crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail` | done-by-reading |
+| Save ("Save", `file.save`; with no path it falls through to Save As) | ui/app.py:285, ui/app.py:1337-1342 | `POST /save` (api.py `Service.save`; answers 400 "no path" for a never-saved document); since f15766ea the viewer sends `POST /save/thumbnail` instead, as RoboCAD's desktop Save writes the thumbnail too | `CadAction::CadSave { path: None }` (Ctrl/Cmd+S in `cad::keys`, `cad:save`, REST `cad_save`) → `cad/actions.rs` CadSave arm → `cad/files/mod.rs:save` → `crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail` | done-by-reading |
 | Save writes `thumbnail.png` from the viewport into the `.rcad` | ui/app.py:1340, ui/app.py:1352-1362 | `POST /save/thumbnail {"path"?}` (api.py `Service.save_with_thumbnail`, added with cad-views-export: the window's thumbnail, or headless the snapshot renderer at 256 × 192) | every save: Save (Ctrl/Cmd+S, `cad:save`, REST `cad_save`: `CadAction::CadSave`, `cad/actions.rs` CadSave arm) and Save As… (`cad/files/mod.rs:file`, `FileOp::SaveAs`) both go through `cad/files/mod.rs:save` → `crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail`; the status line says whether RoboCAD could draw the thumbnail | done-by-reading |
 | Save As… ("Save As…", `file.save_as`; appends `.rcad`) | ui/app.py:286, ui/app.py:1344-1350 | `POST /save {"path"}`; the viewer sends `POST /save/thumbnail {"path"}` (since cad-views-export; REST `cad_save {path}` too since f15766ea) | File > Save As… and Ctrl+Shift+S open the path form (`cad/files/mod.rs:file`, `FileOp::SaveAs`: absolute, `~/` expanded, appends `.rcad`) → `cad/files/mod.rs:save` → `CadClient::save_with_thumbnail`; REST `cad_save {path}` is `CadAction::CadSave { path: Some }` → `cad/files/mod.rs:absolute` (absolute, `~/` expanded; no `.rcad` appended) → the same `save`; a self-started document follows the saved file (`Edit::retarget`, set on the edit that save started) | done-by-reading |
 | Quit ("Quit", `file.quit` → window close) | ui/app.py:290 | n/a (display) | the viewer's own window | deliberately different: one native app with modes; leaving CAD mode is the app's mode switch, not a RoboCAD window close |
@@ -819,7 +819,7 @@ calls. Who uses each route, by reading:
 | Software render PNG (client) | api.py:1202-1203, api.py:830-894 | `GET /render` | `crates/sim-runtime/src/cad_client/files.rs:CadClient::render` (`cad/files/mod.rs:render`) | done-by-reading |
 | RoboCAD viewport screenshot (client) | api.py:1204-1205, api.py:945-954 | `GET /screenshot` (GUI only) | the viewer's own capture | deliberately different: the native viewport is captured by the viewer, not by RoboCAD |
 | Temporary-camera capture PNG | api.py:1206-1207, api.py:896-943 | `POST /capture` (GUI only) | the viewer's own capture | deliberately different: same reason as `/screenshot` |
-| Save (`{"path"}` saves as) | api.py:1208-1209, api.py:957-964 | `POST /save` | `CadClient::save` remains a client call, unused by CAD mode since f15766ea: `CadAction::CadSave` (Save, and `cad_save {path}` to save as) sends the same save with RoboCAD's thumbnail, `POST /save/thumbnail` (`crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail`, `cad/files/mod.rs:save`) | done-by-reading |
+| Save (`{"path"}` saves as) | api.py `Service.save` and its `save` route | `POST /save` | `CadClient::save` remains a client call, unused by CAD mode since f15766ea: `CadAction::CadSave` (Save, and `cad_save {path}` to save as) sends the same save with RoboCAD's thumbnail, `POST /save/thumbnail` (`crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail`, `cad/files/mod.rs:save`) | done-by-reading |
 | Open a file in a new RoboCAD window (headless 409) | api.py:1210-1211, api.py:966-972 | `POST /open` (GUI only) | `CadClient::open` exists; CAD mode opens files by starting its own service | deliberately different: CAD mode starts a headless service on the file rather than asking RoboCAD for another window |
 | Load status | api.py:1212-1213, api.py:974-985 | `GET /loads/{id}` (GUI only) | `crates/sim-runtime/src/cad_client/mod.rs:CadClient::load_status` (unused) | deliberately different: `POST /open` opens another RoboCAD window (409 headless) and never replaces the document; CAD mode starts its own headless service on the file instead (see "Headless versus GUI-only routes") |
 | Cancel a load | api.py:1212-1213, api.py:978-983 | `DELETE /loads/{id}` (GUI only) | `crates/sim-runtime/src/cad_client/mod.rs:CadClient::cancel_load` (unused) | deliberately different: `POST /open` opens another RoboCAD window (409 headless) and never replaces the document; CAD mode starts its own headless service on the file instead (see "Headless versus GUI-only routes") |
@@ -1126,9 +1126,10 @@ print(dict(rows), sum(rows.values())); print(dict(epics))
 PY
 ```
 
-There are 773 rows. (Before f15766ea's review fixes the cad-views-export
-counts were 363 done by reading, 292 later (6 of them cad-views-export's
-own open rows) and 118 deliberately different; after cad-sketch 286, 398
+There are 773 rows. (At 9b1e5eec and f15766ea the ledger was unchanged
+from cad-sketch's: an uncommitted draft before the review fixes had 363
+done by reading, 292 later (6 of them cad-views-export's own open rows)
+and 118 deliberately different; after cad-sketch 286, 398
 and 89; after cad-modify 245, 458 and 70; after cad-select-transform
 168, 574 and 31; cad-select-transform's 63 rows were 55 and 8.) The
 epic's own split was counted by pairing each row of the ledger at
@@ -1136,8 +1137,8 @@ f15766ea (`git show f15766ea:docs/cad-parity.md`, the same ledger as at
 9b1e5eec: neither commit changed it) with the same row now, in order and
 checked to be in the same section, through the same row parser, and
 counting the new status of every row that was `later-epic:
-cad-views-export`: 79 and 33 of 112 (it was 75, 31 and 6 open before
-f15766ea); no other row changed status except the 2 named above.
+cad-views-export`: 79 and 33 of 112 (an uncommitted draft before the
+review fixes had 75, 31 and 6 open); no other row changed status except the 2 named above.
 
 | Status | Rows |
 |---|---|

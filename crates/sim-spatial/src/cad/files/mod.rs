@@ -581,7 +581,9 @@ pub(in crate::cad) fn build(app: &mut App) {
                 .before(crate::cad::inspector::editor_entry)
                 .before(crate::cad::keys::keys)
                 .in_set(ViewerSet::Input),
-            jobs::receive.in_set(ViewerSet::JobResults),
+            // Before the edits' results: a finished edit's status line (`sync::finish_edit`) is
+            // the one `views::sync` reads as a view save's answer (found by review).
+            jobs::receive.before(crate::cad::sync::receive).in_set(ViewerSet::JobResults),
             (form::draw, jobs::strip).in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

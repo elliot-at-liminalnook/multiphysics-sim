@@ -127,7 +127,7 @@ pub(crate) enum BuildAction {
     CalibrationTrial(String),
     /// Arrow keys and Page Up/Down: move the selection by a display-only step (metres).
     Nudge([f32; 3]),
-    /// A primary click on a rendered part (`pick_part` in lib.rs; no button
+    /// A primary click on a rendered part (`pick_part` in `inspect_view/scene.rs`; no button
     /// carries it, so it is not a `system_ui` control): in Annotate mode a
     /// comment draft pinned at `world` (display metres) on part `index`, else
     /// the same selection as `system_ui` `click_part` (`add`: shift held).

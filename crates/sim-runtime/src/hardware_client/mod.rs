@@ -18,8 +18,10 @@
 //!   connection (`Connection: close`, as both servers answer), so a slow
 //!   request never holds another's socket.
 //! - **Headers.** `Host` is the server's own origin (`127.0.0.1:PORT`: the
-//!   servers refuse any other), `X-Control-Token`, `X-Client-Id` (a UUID the
-//!   size the servers check, 36 characters), `Content-Type:
+//!   servers refuse any other), `X-Control-Token`, `X-Client-Id` (one random
+//!   UUID per viewer process, [`process_client_id`], reused on every connect
+//!   and reconnect as the page keeps one per page load; 36 characters of hex
+//!   and dashes, as the servers check), `Content-Type:
 //!   application/json`, and `Content-Length` for a body. No `Origin` or
 //!   `Sec-Fetch-Site` (the servers accept their absence).
 //! - **Token hand-off** ([`token`]): the token the server injects into the
@@ -36,8 +38,9 @@
 //!   its answer, as the page's `keepalive` fetch on `pagehide`, for STOP
 //!   while the window closes.
 //! - **Bodies** ([`Body`]): written with their members in the page's order
-//!   and numbers as JavaScript writes them ([`js_number`]), so a body is the
-//!   same bytes as the page's `JSON.stringify`.
+//!   and numbers as JavaScript writes them ([`js_number`], ECMAScript
+//!   `Number::toString`), so a body is the same bytes as the page's
+//!   `JSON.stringify`.
 pub mod bench;
 pub mod calibration;
 mod http;
@@ -48,7 +51,7 @@ mod tests;
 use serde_json::Value;
 use std::time::Duration;
 
-pub use http::new_client_id;
+pub use http::{new_client_id, process_client_id};
 
 /// Connect timeout for every request.
 pub const CONNECT_TIMEOUT: Duration = Duration::from_millis(500);
@@ -93,7 +96,8 @@ pub struct Endpoint {
 pub struct Client {
     pub endpoint: Endpoint,
     pub token: String,
-    /// The `X-Client-Id` (one per viewer panel, as one per browser tab).
+    /// The `X-Client-Id`: [`process_client_id`] for every client the viewer
+    /// connects (one per process, as the page keeps one per page load).
     pub client_id: String,
     pub timeout: Duration,
     /// Largest request body the server accepts, in bytes
@@ -129,8 +133,15 @@ impl std::error::Error for ClientError {}
 /// (serde_json's `Map` sorts keys; the pages' `JSON.stringify` does not).
 #[derive(Clone, Debug, PartialEq)]
 pub enum Json {
-    /// A scalar, or any value whose member order does not matter.
+    /// A scalar, or any value whose member order does not matter. Written
+    /// by serde_json: use it for strings, booleans and integers; make a
+    /// non-integer `f64` with [`js_number`] (`Json::from(f64)` lands here and
+    /// would not be written as JavaScript writes it).
     Value(Value),
+    /// A number written as JavaScript writes it ([`js_number_text`]); made
+    /// by [`js_number`]. serde_json writes some numbers differently
+    /// (`3.2e-6` for JavaScript's `0.0000032`, every digit of `2^60`).
+    Number(f64),
     Object(Vec<(String, Json)>),
     Array(Vec<Json>),
 }
@@ -139,6 +150,7 @@ impl Json {
     pub fn write(&self, out: &mut String) {
         match self {
             Json::Value(v) => out.push_str(&v.to_string()),
+            Json::Number(x) => out.push_str(&js_number_text(*x)),
             Json::Object(members) => {
                 out.push('{');
                 for (i, (k, v)) in members.iter().enumerate() {
@@ -167,6 +179,9 @@ impl Json {
     pub fn to_value(&self) -> Value {
         match self {
             Json::Value(v) => v.clone(),
+            // What a server reading the written text gets (serde_json reads
+            // `5` as an integer, `1152921504606847000` as that integer).
+            Json::Number(x) => serde_json::from_str(&js_number_text(*x)).unwrap_or(Value::Null),
             Json::Object(members) => Value::Object(members.iter().map(|(k, v)| (k.clone(), v.to_value())).collect()),
             Json::Array(items) => Value::Array(items.iter().map(Json::to_value).collect()),
         }
@@ -209,22 +224,64 @@ impl From<Body> for Json {
     }
 }
 
-/// A number as JavaScript's `JSON.stringify` writes it: an integral value
-/// (within the `i64` range, where the conversion is exact) without a
-/// fraction, anything else as serde_json's shortest round-trip form (the same
-/// digits as JavaScript; only magnitudes of 1e21 and above differ, `1e21`
-/// against JavaScript's `1e+21`); non-finite values are `null`, as in
-/// JavaScript.
+/// A number as JavaScript's `JSON.stringify` writes it ([`js_number_text`]);
+/// non-finite values are `null`, as in JavaScript.
 pub fn js_number(x: f64) -> Json {
+    if x.is_finite() { Json::Number(x) } else { Json::Value(Value::Null) }
+}
+
+/// The text `JSON.stringify` writes for `x`: ECMAScript
+/// `Number::toString(x)` (ECMA-262 §6.1.6.1.20) for finite values, with
+/// `-0` as `0`; `null` for NaN and the infinities.
+///
+/// With `k` the shortest round-trip digits `d₁…d_k` and `n` the decimal
+/// exponent (the value is `0.d₁…d_k × 10ⁿ`): `k ≤ n ≤ 21` writes the
+/// digits then `n − k` zeros; `0 < n ≤ 21` puts the point after `n`
+/// digits; `−6 < n ≤ 0` writes `0.`, `−n` zeros and the digits; otherwise
+/// `d₁[.d₂…d_k]e±(n−1)`. So `0.0000032`, `1e-7`, `1e+21`, and `2^60` as
+/// `1152921504606847000`. The digits are Rust's shortest round-trip digits
+/// (`{:e}`), the same set JavaScript requires (the shortest `k`, and among
+/// those the closest to `x`).
+pub fn js_number_text(x: f64) -> String {
     if !x.is_finite() {
-        return Json::Value(Value::Null);
+        return "null".into();
     }
-    // 2^63 is exactly representable; every integral f64 below it fits an i64.
-    if x.fract() == 0.0 && x.abs() < 9_223_372_036_854_775_808.0 {
-        // -0 is written 0 by JavaScript.
-        return Json::Value(Value::from(x as i64));
+    if x == 0.0 {
+        return "0".into();
     }
-    Json::Value(Value::from(x))
+    let sci = format!("{:e}", x.abs());
+    let (mantissa, exponent) = sci.split_once('e').unwrap_or((sci.as_str(), "0"));
+    let digits: String = mantissa.chars().filter(char::is_ascii_digit).collect();
+    let digits = digits.trim_end_matches('0');
+    let digits = if digits.is_empty() { "0" } else { digits };
+    let k = digits.len() as i64;
+    let n = exponent.parse::<i64>().unwrap_or(0) + 1;
+    let mut out = String::new();
+    if x < 0.0 {
+        out.push('-');
+    }
+    if k <= n && n <= 21 {
+        out.push_str(digits);
+        out.extend(std::iter::repeat_n('0', (n - k) as usize));
+    } else if 0 < n && n <= 21 {
+        out.push_str(&digits[..n as usize]);
+        out.push('.');
+        out.push_str(&digits[n as usize..]);
+    } else if -6 < n && n <= 0 {
+        out.push_str("0.");
+        out.extend(std::iter::repeat_n('0', (-n) as usize));
+        out.push_str(digits);
+    } else {
+        out.push_str(&digits[..1]);
+        if k > 1 {
+            out.push('.');
+            out.push_str(&digits[1..]);
+        }
+        out.push('e');
+        out.push(if n - 1 >= 0 { '+' } else { '-' });
+        out.push_str(&(n - 1).abs().to_string());
+    }
+    out
 }
 
 /// `deserialize_with` for a status field: a value of the wrong shape reads

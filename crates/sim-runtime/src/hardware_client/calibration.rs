@@ -6,8 +6,10 @@
 //! members omitted). The server parses them with serde (`Request`,
 //! `deny_unknown_fields`), so a misspelt key is an error there.
 //!
-//! Numbers are written as JavaScript writes them ([`super::js_number`]): an
-//! integral value without a fraction (`5`, not `5.0`). The server's integer
+//! Numbers are written as JavaScript writes them ([`super::js_number`],
+//! ECMAScript `Number::toString`): an integral value without a fraction
+//! (`5`, not `5.0`), small magnitudes in plain decimal down to 1e-6
+//! (`0.0000032`), exponents as `1e-7` and `1e+21`. The server's integer
 //! fields (`id` u8, `sequence` u64, `run_id` u64, `drive_pwm` u16, `delta`
 //! i16) are integers here too.
 use super::{Body, Json, js_number, lenient, lenient_items};

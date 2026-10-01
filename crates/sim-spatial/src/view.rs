@@ -1,93 +1,11 @@
-//! How the camera moves and what the view emphasises: eased glides between
-//! framings (never a cut), slow orbiting, zoom to a part, and the display
-//! directives shared with lesson scripts and narration (spotlight, pins,
-//! picture-in-picture, X-ray, exploded view). The learner's own input always
-//! wins: dragging or zooming stops any scripted move.
+//! Where the spatial view's camera goes and what the view emphasises: the
+//! framing of a component (or everything) that lessons, narration and
+//! fly-to glide to, and the display directives shared with lesson scripts
+//! and narration (spotlight, pins, picture-in-picture, X-ray, exploded
+//! view). The camera itself (glides, spin, gestures, the learner's input
+//! stopping any scripted move) is the shared `crate::camera`.
 use super::*;
-
-/// A camera position around its focus.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Pose {
-    pub focus: Vec3,
-    pub radius: f32,
-    pub yaw: f32,
-    pub pitch: f32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Glide {
-    from: Pose,
-    to: Pose,
-    t: f32,
-    duration: f32,
-}
-
-/// Default glide time: long enough to follow where the view goes (about a
-/// second), short enough not to feel like waiting.
-pub(crate) const GLIDE_S: f32 = 1.0;
-
-fn ease(t: f32) -> f32 {
-    let t = t.clamp(0., 1.);
-    t * t * (3. - 2. * t)
-}
-fn wrap(a: f32) -> f32 {
-    (a + std::f32::consts::PI).rem_euclid(std::f32::consts::TAU) - std::f32::consts::PI
-}
-
-impl Orbit {
-    pub(crate) fn pose(&self) -> Pose {
-        Pose { focus: self.focus, radius: self.radius, yaw: self.yaw, pitch: self.pitch }
-    }
-    fn set_pose(&mut self, p: Pose) {
-        self.focus = p.focus;
-        self.radius = p.radius;
-        self.yaw = p.yaw;
-        self.pitch = p.pitch;
-    }
-    /// Ease to `to` over `seconds`; 0 (or no previous pose) cuts.
-    pub(crate) fn glide_to(&mut self, to: Pose, seconds: f32) {
-        self.home = false;
-        if seconds <= 0. || self.radius <= 0. {
-            self.glide = None;
-            self.set_pose(to);
-            return;
-        }
-        // Turn the short way round.
-        let to = Pose { yaw: self.yaw + wrap(to.yaw - self.yaw), ..to };
-        self.glide = Some(Glide { from: self.pose(), to, t: 0., duration: seconds });
-    }
-    /// The direction the camera is settling on: a glide's destination, else
-    /// where it is now. A zoom that starts during a glide keeps that heading.
-    pub(crate) fn heading(&self) -> (f32, f32) {
-        self.glide.map_or((self.yaw, self.pitch), |g| (g.to.yaw, g.to.pitch))
-    }
-    /// Advance any glide and spin by `dt` wall seconds.
-    pub(crate) fn step(&mut self, dt: f32) {
-        if let Some(mut g) = self.glide {
-            g.t += dt / g.duration.max(1e-3);
-            let s = ease(g.t);
-            let lerp = |a: f32, b: f32| a + (b - a) * s;
-            // Radius eases in log space so zooms feel even.
-            let radius = (g.from.radius.max(1e-6).ln() + (g.to.radius.max(1e-6).ln() - g.from.radius.max(1e-6).ln()) * s).exp();
-            self.set_pose(Pose { focus: g.from.focus.lerp(g.to.focus, s), radius, yaw: lerp(g.from.yaw, g.to.yaw), pitch: lerp(g.from.pitch, g.to.pitch) });
-            self.glide = (g.t < 1.).then_some(g);
-        }
-        if self.spin != 0. {
-            self.yaw += self.spin * dt;
-        }
-    }
-    /// Jump to where a glide was going (reduced motion: cuts, not glides).
-    pub(crate) fn finish_glide(&mut self) {
-        if let Some(g) = self.glide.take() {
-            self.set_pose(g.to);
-        }
-    }
-    /// The learner took over: stop scripted motion.
-    pub(crate) fn interrupt(&mut self) {
-        self.glide = None;
-        self.spin = 0.;
-    }
-}
+use crate::camera::Pose;
 
 /// The pose framing an instance path (none: everything) at `zoom`, from
 /// `yaw`/`pitch`, for a view of the given aspect ratio.
@@ -231,8 +149,9 @@ pub(crate) fn inset(
     camera.is_active = true;
     camera.viewport = Some(Viewport { physical_position: position, physical_size: size, ..default() });
     let distance = radius.max(1e-3) * 2.9 / zoom.max(0.1) as f32;
-    let horizontal = orbit.pitch.cos() * distance;
-    **transform = Transform::from_translation(centre + Vec3::new(orbit.yaw.sin() * horizontal, orbit.pitch.sin() * distance, orbit.yaw.cos() * horizontal)).looking_at(centre, Vec3::Y);
+    // The main camera's direction (turntable or trackball).
+    let rotation = orbit.rotation();
+    **transform = Transform { translation: centre + rotation * Vec3::Z * distance, rotation, scale: Vec3::ONE };
     let scale = window.scale_factor();
     for (mut node, mut vis, children) in &mut frame {
         *vis = Visibility::Inherited;

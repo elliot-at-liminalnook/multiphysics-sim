@@ -1,12 +1,11 @@
 //! CAD mode's view snapshot: the 3D camera and the Z-up millimetre root as
-//! plain matrices, refreshed every frame in SimSync after the orbit
-//! ([`update`]). Picking, box select, snapping, the gizmo and the overlays
+//! plain matrices, refreshed every frame in SimSync after the shared
+//! camera places it (`crate::camera::CameraSet::Place`; [`update`]). Picking, box select, snapping, the gizmo and the overlays
 //! project RoboCAD's model points (mm, Z up) to window pixels and cast
 //! cursor rays into the model through it, so they agree with what is drawn
 //! and need no camera query of their own (the apply system and jobs get a
 //! copy). Display only: nothing here changes geometry.
 use super::mesh::CadRoot;
-use super::scene::CadOrbit;
 use bevy::math::Affine3A;
 use bevy::prelude::*;
 
@@ -106,8 +105,13 @@ pub fn ray_plane(origin: Vec3, direction: Vec3, point: Vec3, normal: Vec3) -> Op
     (t >= 0.0).then(|| origin + direction * t)
 }
 
-/// SimSync (after the orbit and the viewport): refresh the snapshot.
-pub(super) fn update(camera: Option<Single<(&Camera, &GlobalTransform), With<CadOrbit>>>, root: Option<Single<&GlobalTransform, With<CadRoot>>>, view: Option<ResMut<CadView>>) {
+/// SimSync, after `CameraSet::Place` (the viewport and the camera's
+/// transform are this frame's): refresh the snapshot. The camera and the
+/// root are top-level entities, so their `Transform` is their world
+/// transform; it is read rather than `GlobalTransform`, which Bevy
+/// propagates only in PostUpdate and would be last frame's (overlays and
+/// picks would trail the drawn view by a frame while orbiting).
+pub(super) fn update(camera: Option<Single<(&Camera, &Transform), With<crate::camera::Orbit>>>, root: Option<Single<&Transform, With<CadRoot>>>, view: Option<ResMut<CadView>>) {
     let Some(mut view) = view else { return };
     let (Some(camera), Some(root)) = (camera, root) else {
         if view.valid {
@@ -117,8 +121,8 @@ pub(super) fn update(camera: Option<Single<(&Camera, &GlobalTransform), With<Cad
     };
     let (camera, camera_transform) = *camera;
     let Some(rect) = camera.logical_viewport_rect() else { return };
-    let world_from_model = root.affine();
-    let world_from_view = camera_transform.affine();
+    let world_from_model = root.compute_affine();
+    let world_from_view = camera_transform.compute_affine();
     let clip_from_view = camera.clip_from_view();
     let next = CadView {
         valid: rect.size().x > 0.0 && rect.size().y > 0.0,

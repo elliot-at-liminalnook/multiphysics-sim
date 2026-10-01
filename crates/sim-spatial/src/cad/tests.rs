@@ -3,7 +3,8 @@
 //! (`CadAction::controls`), and its action, written as the REST command
 //! `system_ui` shows, parses back to the same `CadAction` value a click
 //! writes. So REST, `system_ui` and the panel's buttons cannot drift apart.
-use super::actions::{CadAction, rest_form};
+use super::actions::CadAction;
+use super::rest_form::rest_form;
 use super::document::{CadDocument, CadTarget, Connection, Edit, EditDone};
 use crate::app::actions::{self, Action};
 use serde_json::{Value, json};

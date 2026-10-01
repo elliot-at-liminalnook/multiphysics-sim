@@ -4,6 +4,7 @@
 //! background thread; it contains no physics of its own.
 mod animation;
 pub(crate) mod annotate;
+pub(crate) mod camera;
 pub mod app;
 pub(crate) mod inspect;
 mod inspect_view;
@@ -33,7 +34,8 @@ pub use app::{Launch, ViewerMode};
 use app::{ModeScope, ViewerSet};
 pub use builder::{Builder, BuilderPlugin};
 pub use inspect_view::{LearnView, ModelColor, SceneContent, SpatialScene, SpatialViewerPlugin, UiRoot, default_inspect_paths, inspect_pair, load_inspect};
-pub(crate) use inspect_view::{Orbit, Part, camera_viewport, spawn_parts, update_parts};
+pub(crate) use camera::Orbit;
+pub(crate) use inspect_view::{Part, spawn_parts, update_parts};
 pub use linked::SelectionLink;
 use sim_inspect::selection::SelectionTarget;
 use sim_inspect::{

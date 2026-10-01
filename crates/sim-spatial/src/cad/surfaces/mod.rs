@@ -159,7 +159,7 @@ impl Entry {
     }
 
     fn json(&self) -> Value {
-        json!({"id": self.id, "label": self.label, "keys": self.keys, "enabled": self.ready.is_ok(), "disabled_reason": self.ready.as_ref().err(), "action": super::actions::rest_form(&self.action)})
+        json!({"id": self.id, "label": self.label, "keys": self.keys, "enabled": self.ready.is_ok(), "disabled_reason": self.ready.as_ref().err(), "action": super::rest_form::rest_form(&self.action)})
     }
 }
 

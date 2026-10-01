@@ -109,14 +109,9 @@ pub fn headless(
     mut server: sim_api::Server,
 ) -> ! {
     let (focus, radius) = scene.bounds();
-    let mut camera = Orbit {
-        focus,
-        radius: radius * 2.9,
-        yaw: 0.7,
-        pitch: 0.4,
-        home: false,
-        ..Default::default()
-    };
+    let mut camera = Orbit { focus, radius: radius * 2.9, yaw: 0.7, pitch: 0.4, centre: focus, extent: radius, ..Default::default() };
+    // The window's rules; nothing steps a glide here, so a home request cuts.
+    let rules = crate::camera::OrbitRules { glide_home: false, ..crate::inspect_view::spatial_rules() };
     let mut image_task = None;
     loop {
         if let Some(link) = &mut link {
@@ -129,10 +124,9 @@ pub fn headless(
         scene.poll_live();
         notes::sync(&mut scene, &mut camera);
         if camera.home {
-            let (focus, radius) = scene.bounds();
-            camera.focus = focus;
-            camera.radius = radius * 2.9;
-            camera.home = false;
+            // The window's overview framing (no view, so aspect 1).
+            (camera.centre, camera.extent) = scene.bounds();
+            camera.frame(&rules, 1.0, true);
         }
         crate::inspect::serve_headless(&mut server, &mut scene, &mut camera, &mut image_task);
         std::thread::sleep(std::time::Duration::from_millis(16));

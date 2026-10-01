@@ -8,6 +8,27 @@ use serde_json::{Map, Value, json};
 
 impl actions::Action for CadAction {
     fn commands() -> Vec<Spec> {
+        let mut specs = Self::core_commands();
+        // cad-views-export: the display state and section, saved views, files, export and render.
+        specs.extend(super::display::specs());
+        specs.extend(super::views::specs());
+        specs.extend(super::files::specs());
+        specs
+    }
+    fn controls() -> &'static [&'static str] {
+        &[
+            "cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:<id>", "cad:visible:<id>", "cad:locked:<id>", "cad:disabled:<id>", "cad:material:<id>:<mat>", "cad:command:<id>",
+            "cad:mode:<mode>", "cad:select_all", "cad:invert_selection", "cad:select_same_material", "cad:edges_to_faces", "cad:candidate:<n>", "cad:tool:<tool>", "cad:cancel",
+            "cad:op:<id>", "cad:surface:<kind>", "cad:menu:<category>", "cad:form:ok", "cad:form:cancel", "cad:form:set:<name>:<value>",
+            // cad-views-export (part D: display, section, views; part E: files).
+            "cad:display:<setting>", "cad:section:<setting>", "cad:view:<id>", "cad:file:<op>",
+        ]
+    }
+}
+
+impl CadAction {
+    /// The commands written before cad-views-export.
+    fn core_commands() -> Vec<Spec> {
         vec![
             spec("state", CAD, json!({}), "CAD mode: the same answer as cad_state, plus viewer_mode."),
             spec("cad_state", CAD, json!({}), "CAD mode: the RoboCAD document as this window shows it: target (file or service URL), service (self-started or attached; url, pid), connection (connecting | connected | lost with the error verbatim), health (RoboCAD's GET /: path, dirty, gui, nodes, document_id, revision), stale (why the shown tree may be behind RoboCAD, or null), nodes (id, kind, name, parent, depth, visible, effective_visible, locked, disabled), selection (RoboCAD's items [node, kind, index], synced with its /selection), select_mode (body | face | edge | vertex | point), hover (the item under the pointer, display only), candidates (the Alt menu while open), selection_error (why the last read of RoboCAD's /selection failed, or null), unsaved (RoboCAD's dirty flag, or null when it can't be confirmed: not connected, or an edit in flight or just finished), inspected (RoboCAD's node detail for the first selected node, exactly as returned), physical (fetched with cad_physical), history (undo and redo labels), commands (RoboCAD's GUI registry; empty headless), autosave (GUI only), edit (the mutating request in flight, by name), meshes (shown, pending, failed), tool (the active tool), tool_state (pivot, drag and preview with the revision each began at, push/pull target, numeric fields with their evaluations, last measurement, snap, readout), ops (the catalogue operations: the open parameter form with each field's text and evaluation, the active pick or place operation, the primitive being placed, the open command surface, the cursor snap, the last copy, and the catalogue: id, label, category, keys, flow, route, parameters) and status (the last outcome)."),
@@ -47,13 +68,6 @@ impl actions::Action for CadAction {
             spec("cad_fit", CAD, json!({}), "CAD mode: frame the native 3D view on every shown body, or on node id. Display only: RoboCAD's own view and the geometry are not changed."),
             spec("cad_physical", CAD, json!({}), "CAD mode: fetch RoboCAD's physical description (GET /physical?flex=0; nothing is written) for the inspector: the link holding the selected body, its mass, centre of mass and inertia, and mass_sources as RoboCAD labels them (declared measurement source, material density, ...), never filled in."),
             spec("system_ui", CAD, json!({"action": {"operation": "controls"}}), "CAD mode: its controls (cad:undo, cad:redo, cad:save, cad:refresh, cad:fit, cad:physical, cad:delete, cad:node:<id> to select a tree row, cad:visible:<id> to toggle visibility, cad:locked:<id> to toggle locked, cad:disabled:<id> to toggle disabled, cad:material:<id>:<mat> to assign material <mat> (an id from RoboCAD's /doc materials) to node <id>, cad:command:<id> for RoboCAD's registry commands, cad:mode:<mode> for a selection mode, cad:select_all, cad:invert_selection, cad:select_same_material, cad:edges_to_faces, cad:candidate:<n> for an entry of the open Alt menu, cad:tool:<tool> to activate a tool, cad:cancel for Escape, cad:op:<id> to invoke a catalogue operation as cad_invoke, cad:surface:<kind> to open a command surface (palette, context, view_radial, select_radial, closed), cad:menu:<category> for a category's menu, cad:form:ok and cad:form:cancel for the open form's buttons, cad:form:set:<name>:<value> to set one of its fields), each with enabled and disabled_reason, then the mode switcher's mode:* controls; activate {id} writes the same CAD action a click does."),
-        ]
-    }
-    fn controls() -> &'static [&'static str] {
-        &[
-            "cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:<id>", "cad:visible:<id>", "cad:locked:<id>", "cad:disabled:<id>", "cad:material:<id>:<mat>", "cad:command:<id>",
-            "cad:mode:<mode>", "cad:select_all", "cad:invert_selection", "cad:select_same_material", "cad:edges_to_faces", "cad:candidate:<n>", "cad:tool:<tool>", "cad:cancel",
-            "cad:op:<id>", "cad:surface:<kind>", "cad:menu:<category>", "cad:form:ok", "cad:form:cancel", "cad:form:set:<name>:<value>",
         ]
     }
 }

@@ -3,7 +3,8 @@
 //! spheres, rods and blocks and gizmos for its lines, arrows and polylines
 //! (phenomena_app.rs `render`, :238–323), drawn from the shown frame.
 //!
-//! The orbit follows this viewer's convention, not sim-app's: right-drag
+//! The orbit is the shared camera (`crate::camera`) with sim-app's rates
+//! and limits, in this viewer's convention, not sim-app's: right-drag
 //! rotates, middle-drag or Shift+right-drag pans, the wheel zooms, only for
 //! gestures that start over the 3D area between the docks. sim-app orbited
 //! on a left drag; here the left button is the panels' (list rows, buttons,
@@ -12,21 +13,10 @@ use super::gallery::Gallery;
 use super::panel::CHART_HEIGHT;
 use crate::app::ModeScope;
 use crate::ui_kit::{LEFT_WIDTH, RIGHT_WIDTH, TOPBAR};
-use bevy::camera::Viewport;
+use crate::camera::{Framing, Orbit, OrbitRules, Pose, RadiusLimits, ViewArea};
 use bevy::core_pipeline::tonemapping::Tonemapping;
-use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 use sim_phenomena::exhibit::Shape;
-
-/// The orbit camera's state (phenomena_app.rs `OrbitCamera`).
-#[derive(Component, Clone, Copy, Debug)]
-pub(super) struct PhenomenaOrbit {
-    focus: Vec3,
-    radius: f32,
-    yaw: f32,
-    pitch: f32,
-}
 
 /// A pool entity: which mesh it shows (0 sphere, 1 rod, 2 block) and the
 /// colour last written to its material.
@@ -52,14 +42,34 @@ pub(super) fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     let position = Vec3::new(3.0, 2.6, 9.0);
     let offset = position - focus;
     let radius = offset.length();
+    // sim-app's pose (phenomena_app.rs `OrbitCamera`), which is also the home view.
+    let home = Pose { focus, radius, yaw: offset.x.atan2(offset.z), pitch: (offset.y / radius).asin() };
+    let orbit = Orbit { focus, radius, yaw: home.yaw, pitch: home.pitch, ..default() };
     commands.spawn((
         Camera3d::default(),
         // The viewer is built without `tonemapping_luts`: the default
         // TonyMcMapface would sample a placeholder table (as robot and place
         // mode, tone mapping is off).
         Tonemapping::None,
-        Transform::from_translation(position).looking_at(focus, Vec3::Y),
-        PhenomenaOrbit { focus, radius, yaw: offset.x.atan2(offset.z), pitch: (offset.y / radius).asin() },
+        // Camera3d's required components insert the perspective Projection.
+        orbit.transform(),
+        orbit,
+        // sim-app's rates and limits: 0.008 rad per pixel, pitch within
+        // ±1.35, radius within 3…30 m; home is its camera pose.
+        OrbitRules {
+            rate: 0.008,
+            pitch_limit: 1.35,
+            radius: RadiusLimits::Absolute { min: 3.0, max: 30.0 },
+            framing: Framing::Fixed(home),
+            glide_home: false,
+            zoom_to_cursor: false,
+            yield_to_ui: false,
+            keys: true,
+            ..default()
+        },
+        // Between the header, exhibit list, inspector and chart strip (the
+        // whole window when they leave no room).
+        ViewArea::Docks { left: LEFT_WIDTH, right: RIGHT_WIDTH, top: TOPBAR, bottom: CHART_HEIGHT },
         DespawnOnExit(ModeScope::Phenomena),
     ));
     // UI over the whole window, drawn after the 3D view.
@@ -70,88 +80,6 @@ pub(super) fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         DespawnOnExit(ModeScope::Phenomena),
     ));
     commands.insert_resource(Pool { meshes: [meshes.add(Sphere::new(1.0)), meshes.add(Cylinder::new(1.0, 1.0)), meshes.add(Cuboid::new(2.0, 2.0, 2.0))], entities: Vec::new() });
-}
-
-/// SimSync: the 3D view draws between the docks (header, exhibit list,
-/// inspector, chart strip).
-pub(super) fn viewport(window: Option<Single<&Window, With<PrimaryWindow>>>, camera: Option<Single<&mut Camera, With<PhenomenaOrbit>>>) {
-    let (Some(window), Some(mut camera)) = (window, camera) else { return };
-    let want = scene_viewport(&window);
-    let same = match (&camera.viewport, &want) {
-        (Some(a), Some(b)) => a.physical_position == b.physical_position && a.physical_size == b.physical_size,
-        (None, None) => true,
-        _ => false,
-    };
-    if !same {
-        camera.viewport = want;
-    }
-}
-
-/// The 3D view between the docks; None for a window narrower than the
-/// docks, where it draws over the whole window rather than outside it.
-fn scene_viewport(window: &Window) -> Option<Viewport> {
-    let scale = window.scale_factor();
-    let width = (window.width() - LEFT_WIDTH - RIGHT_WIDTH).max(1.0);
-    let height = (window.height() - TOPBAR - CHART_HEIGHT).max(1.0);
-    let viewport = Viewport { physical_position: UVec2::new((LEFT_WIDTH * scale) as u32, (TOPBAR * scale) as u32), physical_size: UVec2::new((width * scale) as u32, (height * scale) as u32), ..default() };
-    (viewport.physical_position + viewport.physical_size).cmple(window.physical_size()).all().then_some(viewport)
-}
-
-/// Whether the cursor is over the 3D area: between the docks, or anywhere
-/// when the view covers the whole window.
-fn over_scene(window: &Window) -> bool {
-    let whole = scene_viewport(window).is_none();
-    window.cursor_position().is_some_and(|p| whole || (p.x > LEFT_WIDTH && p.x < window.width() - RIGHT_WIDTH && p.y > TOPBAR && p.y < window.height() - CHART_HEIGHT))
-}
-
-/// SimSync: the orbit (navigation only; nothing in the exhibit changes).
-/// sim-app's rates and limits: 0.008 rad per pixel, pitch within ±1.35,
-/// radius within 3…30.
-pub(super) fn orbit(
-    buttons: Res<ButtonInput<MouseButton>>,
-    keys: Res<ButtonInput<KeyCode>>,
-    mut motion: MessageReader<MouseMotion>,
-    mut wheel: MessageReader<MouseWheel>,
-    window: Option<Single<&Window, With<PrimaryWindow>>>,
-    camera: Option<Single<(&mut Transform, &mut PhenomenaOrbit)>>,
-    mut dragging: Local<bool>,
-) {
-    let drag = motion.read().fold(Vec2::ZERO, |sum, e| sum + e.delta);
-    let zoom = wheel.read().fold(0.0, |sum, e| {
-        sum + match e.unit {
-            MouseScrollUnit::Line => e.y,
-            MouseScrollUnit::Pixel => e.y * 0.02,
-        }
-    });
-    let (Some(window), Some(camera)) = (window, camera) else { return };
-    let (mut transform, mut orbit) = camera.into_inner();
-    let in_scene = over_scene(&window);
-    // A drag that starts over the 3D view keeps going over a panel; one that starts over a panel is the panel's.
-    if buttons.any_just_pressed([MouseButton::Right, MouseButton::Middle]) {
-        *dragging = in_scene;
-    }
-    if !buttons.any_pressed([MouseButton::Right, MouseButton::Middle]) {
-        *dragging = false;
-    }
-    if *dragging && drag != Vec2::ZERO {
-        let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-        if buttons.pressed(MouseButton::Middle) || (buttons.pressed(MouseButton::Right) && shift) {
-            let pan = (transform.right() * -drag.x + transform.up() * drag.y) * orbit.radius * 0.0015;
-            orbit.focus += pan;
-        } else {
-            orbit.yaw -= drag.x * 0.008;
-            orbit.pitch = (orbit.pitch + drag.y * 0.008).clamp(-1.35, 1.35);
-        }
-    }
-    if zoom != 0.0 && in_scene {
-        orbit.radius = (orbit.radius * (-zoom * 0.12).exp()).clamp(3.0, 30.0);
-    }
-    let horizontal = orbit.pitch.cos() * orbit.radius;
-    let eye = orbit.focus + Vec3::new(orbit.yaw.sin() * horizontal, orbit.pitch.sin() * orbit.radius, orbit.yaw.cos() * horizontal);
-    let target = Transform::from_translation(eye).looking_at(orbit.focus, Vec3::Y);
-    if *transform != target {
-        *transform = target;
-    }
 }
 
 fn v3(p: [f64; 3]) -> Vec3 {

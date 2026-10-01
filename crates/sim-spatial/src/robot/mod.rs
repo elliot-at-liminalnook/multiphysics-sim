@@ -13,16 +13,16 @@
 //! shared planar build on its own run thread (`planar`); every action
 //! without a v2 meaning is refused naming it.
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
+use crate::camera::{CameraSet, Framing, Orbit, OrbitRules, RadiusLimits, ViewArea};
 use crate::builder::ui_api::Enabled;
 use crate::ui_kit::{ACCENT, Corner, DANGER, Dock, Kit, Look, SUBTLE, TEXT, Tint, UiFonts, WARN, size, wheel_delta, wrap};
 use bevy::ui::prelude::AccessibleLabel;
 use bevy::{
     asset::RenderAssetUsages,
     core_pipeline::tonemapping::Tonemapping,
-    input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},
+    input::mouse::MouseWheel,
     picking::mesh_picking::MeshPickingCamera,
     prelude::*,
-    camera::Viewport,
     render::{
         mesh::{Indices, PrimitiveTopology},
     },
@@ -162,12 +162,12 @@ pub use loader::{FileNotes, LinkGeometry, Loaded, Opened, PLANAR_POSE, load, loa
 use controls::{GAIT_SCALES, GAIT_SEEK, OVERLAYS, RECORDED_TRANSPORT, STRESS_PRESET, gait_panel, gait_seek, jog_joints, jog_panel, motion_buttons, motion_panel, motion_text, overlay_on, recorded_panel, replay_line};
 use inspector::{clip, overlay_panel, panels, recorded_line, speed_panel};
 use overlay_view::{OverlayGizmos, draw, graph_dock, overlay_gizmo_config, stress_paint, stress_panel};
-use scene::{apply_frames, enable, highlight, orbit, planar_sync, receive, scroll, viewport, watch};
+use scene::{apply_frames, enable, highlight, planar_sync, receive, scroll, view_area, watch};
 use sections::{drives_text, file_watch_text, jog_line, joints_text, link_text, source_text};
 use state::touching;
 use ui::{
     GaitButton, GaitError, GaitList, GaitRoot, GaitSeekButton, GaitText, GraphDock, Inspector, InspectorScroll, JogButton, JogRoot, JogText, LINK_COLOUR, LinkMesh, LinkRow, ListRoot, Materials, MotionButton,
-    MotionRoot, MotionText, OverlayButton, OverlayLabel, OverlayText, RecordedButton, RecordedRoot, RecordedText, RecordingText, ReloadButton, ReplayList, ReplayText, RobotOrbit, RobotRoot, RunButton, RunText,
+    MotionRoot, MotionText, OverlayButton, OverlayLabel, OverlayText, RecordedButton, RecordedRoot, RecordedText, RecordingText, ReloadButton, ReplayList, ReplayText, RobotCamera, RobotRoot, RunButton, RunText,
     SpeedButton, SpeedLabel, StatusText, StressText, TabButton, TitleText, setup,
 };
 
@@ -192,7 +192,10 @@ impl Plugin for RobotPlugin {
                     // Keys and buttons write robot actions after REST's, as the old chain applied them.
                     (actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input),
                     actions::apply.in_set(ViewerSet::Actions),
-                    (watch, receive, stress_paint, apply_frames, planar_sync, scroll, orbit, viewport, highlight).chain().in_set(ViewerSet::SimSync),
+                    // Before the shared camera (`crate::camera`): its viewport reads the
+                    // ViewArea `view_area` sets, its place step frames the bounds `receive`
+                    // and `planar_sync` write.
+                    (watch, receive, stress_paint, apply_frames, planar_sync, scroll, view_area, highlight).chain().in_set(ViewerSet::SimSync).before(CameraSet::Viewport),
                     (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),

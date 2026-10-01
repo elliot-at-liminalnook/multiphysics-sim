@@ -1,6 +1,7 @@
 use super::scene::pick_part;
 use super::ui::inspector;
 use super::*;
+use crate::camera::Orbit;
 use crate::tests::fixture;
 use bevy::picking::{
     backend::HitData,

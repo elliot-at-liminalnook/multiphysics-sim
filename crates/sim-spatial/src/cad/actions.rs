@@ -261,6 +261,23 @@ pub enum CadAction {
     /// Fetch `GET /physical?flex=0` for the inspector's physical section
     /// (RoboCAD derives it; nothing is written).
     CadPhysical,
+    /// The display state (display mode, grid, build plate, view cube,
+    /// high contrast, comment pins): display only, never a document edit
+    /// (`display`).
+    CadDisplay(super::display::DisplayArgs),
+    /// The section tool: the live display-triangle preview and the exact
+    /// section from `GET /nodes/{id}/section` on a job (`display::section`).
+    CadSection(super::display::SectionArgs),
+    /// Saved views through RoboCAD's `/views` in its view-state schema
+    /// (list, save, rename, replace, delete, restore onto the native camera).
+    CadViews(super::views::ViewsArgs),
+    /// New, open, save as and import (with units), with RoboCAD's
+    /// unsaved-edit rule (`files`).
+    CadFile(super::files::FileArgs),
+    /// `POST /export` in any RoboCAD format, and the drawing, on a job.
+    CadExport(super::files::ExportArgs),
+    /// `GET /render` (headless) to a PNG file, on a job.
+    CadRender(super::files::RenderArgs),
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
 }
@@ -297,14 +314,30 @@ pub(super) fn apply(
     mut documents: ResMut<Documents>,
     mut plane: ResMut<CadActivePlane>,
     sketches: Option<Res<CadSketches>>,
+    (mut display, mut views, mut files): (Option<ResMut<super::display::CadDisplay>>, Option<ResMut<super::views::CadViews>>, Option<ResMut<super::files::CadFiles>>),
+    camera_out: Option<ResMut<Messages<Act<crate::camera::CameraAction>>>>,
 ) {
     let Some(mut doc) = doc else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("CAD mode has no document open".into())));
         return;
     };
+    let mut camera: Vec<crate::camera::CameraAction> = Vec::new();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
-        let mut cx = Cx { doc: &mut *doc, meshes: meshes.as_deref_mut(), topology: topology.as_deref_mut(), view: view.as_deref(), documents: &mut *documents, plane: &mut *plane, sketches: sketches.as_deref() };
+        let mut cx = Cx {
+            doc: &mut *doc,
+            meshes: meshes.as_deref_mut(),
+            topology: topology.as_deref_mut(),
+            view: view.as_deref(),
+            documents: &mut *documents,
+            plane: &mut *plane,
+            sketches: sketches.as_deref(),
+            display: display.as_deref_mut(),
+            views: views.as_deref_mut(),
+            files: files.as_deref_mut(),
+            camera: Vec::new(),
+        };
         let outcome = handle(action, call, &mut cx);
+        camera.append(&mut cx.camera);
         match call.origin {
             Origin::Rest(_) => outcome,
             origin => {
@@ -314,7 +347,12 @@ pub(super) fn apply(
                 Outcome::Done(Ok(Value::Null))
             }
         }
-    });
+    });    // The camera intents CAD commands stood for (a named view, ortho, a saved view's restore).
+    if let Some(mut out) = camera_out {
+        for action in camera {
+            out.write(Act::quiet(action));
+        }
+    }
 }
 
 /// What the one handler works on: the document and CAD mode's caches. The
@@ -333,6 +371,16 @@ pub(super) struct Cx<'a> {
     pub plane: &'a mut CadActivePlane,
     /// Sketch geometry and plane frames (None without CAD mode's caches).
     pub sketches: Option<&'a CadSketches>,
+    /// The display state (display mode, grid, section…; display only).
+    pub display: Option<&'a mut super::display::CadDisplay>,
+    /// Saved views as last listed, and their jobs.
+    pub views: Option<&'a mut super::views::CadViews>,
+    /// The file dialogs, exports and renders in flight.
+    pub files: Option<&'a mut super::files::CadFiles>,
+    /// Camera intents a CAD command stands for (a named view, ortho, a
+    /// saved view's restore), written as `Act<CameraAction>` after the
+    /// handler (the shared camera applies them).
+    pub camera: Vec<crate::camera::CameraAction>,
 }
 
 /// One action, from any entry point.
@@ -409,6 +457,9 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadRefresh => done(Ok(refresh(doc))),
         CadAction::CadFit { id } => done(fit(doc, cx.meshes.as_deref_mut(), id.as_deref())),
         CadAction::CadPhysical => done(sync::fetch_physical(doc).map(|()| json!({"message": "Fetching RoboCAD's physical description (GET /physical?flex=0); it shows in cad_state.physical."}))),
+        CadAction::CadDisplay(_) | CadAction::CadSection(_) => super::display::handle(action, call, cx),
+        CadAction::CadViews(_) => super::views::handle(action, call, cx),
+        CadAction::CadFile(_) | CadAction::CadExport(_) | CadAction::CadRender(_) => super::files::handle(action, call, cx),
         CadAction::SystemUi(args) => system_ui(call, cx, args),
     }
 }
@@ -548,56 +599,13 @@ fn descendants(doc: &CadDocument, id: &str) -> HashSet<String> {
 
 /// CAD mode's `system_ui` controls: the panel's own list (`panel::controls`),
 /// so a control's label, enabled state and action are the button's.
-fn controls(doc: &CadDocument) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    super::panel::controls(doc).into_iter().map(|c| (c.id, c.label, c.action, c.ready)).collect()
-}
-
-/// An action as its REST command (what `system_ui` lists as a control's action).
-pub(super) fn rest_form(action: &CadAction) -> Value {
-    match action {
-        CadAction::CadUndo => json!({"command": "cad_undo"}),
-        CadAction::CadRedo => json!({"command": "cad_redo"}),
-        CadAction::CadSave { path } => json!({"command": "cad_save", "path": path}),
-        CadAction::CadRefresh => json!({"command": "cad_refresh"}),
-        CadAction::CadFit { id } => json!({"command": "cad_fit", "id": id}),
-        CadAction::CadPhysical => json!({"command": "cad_physical"}),
-        CadAction::CadDelete { id } => json!({"command": "cad_delete", "id": id}),
-        CadAction::CadSelect { ids, items, extend, toggle } => json!({"command": "cad_select", "ids": ids, "items": items, "extend": extend, "toggle": toggle}),
-        CadAction::CadSelectMode { mode } => json!({"command": "cad_select_mode", "mode": mode}),
-        CadAction::CadHover { item } => json!({"command": "cad_hover", "item": item}),
-        CadAction::CadBoxSelect { rect, extend } => json!({"command": "cad_box_select", "rect": rect, "extend": extend}),
-        CadAction::CadCandidates { items, extend, toggle } => json!({"command": "cad_candidates", "items": items, "extend": extend, "toggle": toggle}),
-        CadAction::CadSelectAll => json!({"command": "cad_select_all"}),
-        CadAction::CadInvertSelection => json!({"command": "cad_invert_selection"}),
-        CadAction::CadSelectSameMaterial => json!({"command": "cad_select_same_material"}),
-        CadAction::CadEdgesToFaces => json!({"command": "cad_edges_to_faces"}),
-        CadAction::CadTool { tool } => json!({"command": "cad_tool", "tool": tool}),
-        CadAction::CadTransform { ids, translation, axis, angle_deg, center, scale, revision } => {
-            json!({"command": "cad_transform", "ids": ids, "translation": translation, "axis": axis, "angle_deg": angle_deg, "center": center, "scale": scale, "revision": revision})
-        }
-        CadAction::CadPushPull { node, face, distance, revision } => json!({"command": "cad_push_pull", "node": node, "face": face, "distance": distance, "revision": revision}),
-        CadAction::CadOffsetFaces { node, faces, distance, revision } => json!({"command": "cad_offset_faces", "node": node, "faces": faces, "distance": distance, "revision": revision}),
-        CadAction::CadSetDimension { node, dimension, faces, value, revision } => {
-            json!({"command": "cad_set_dimension", "node": node, "dimension": dimension, "faces": faces, "value": value, "revision": revision})
-        }
-        CadAction::CadNumeric { values } => json!({"command": "cad_numeric", "values": values}),
-        CadAction::CadMeasure { a, b, keep } => json!({"command": "cad_measure", "a": a, "b": b, "keep": keep}),
-        CadAction::CadCancel => json!({"command": "cad_cancel"}),
-        CadAction::CadPatch { id, attrs } => json!({"command": "cad_patch", "id": id, "attrs": attrs}),
-        CadAction::CadCommand { id } => json!({"command": "cad_command", "id": id}),
-        CadAction::CadOp { name, args, kwargs } => json!({"command": "cad_op", "name": name, "args": args, "kwargs": kwargs}),
-        CadAction::CadOpen { path, url } => json!({"command": "cad_open", "path": path, "url": url}),
-        CadAction::CadInvoke { id } => json!({"command": "cad_invoke", "id": id}),
-        CadAction::CadRun { id, params, items, revision } => json!({"command": "cad_run", "id": id, "params": params, "items": items, "revision": revision}),
-        CadAction::CadFormSet { name, value } => json!({"command": "cad_form_set", "name": name, "value": value}),
-        CadAction::CadFormSubmit => json!({"command": "cad_form_submit"}),
-        CadAction::CadFormCancel => json!({"command": "cad_form_cancel"}),
-        CadAction::CadSketch { node, plane, calls, revision } => json!({"command": "cad_sketch", "node": node, "plane": plane, "calls": calls, "revision": revision}),
-        CadAction::CadSurface { surface } => json!({"command": "cad_surface", "surface": surface}),
-        CadAction::State => json!({"command": "state"}),
-        CadAction::CadState => json!({"command": "cad_state"}),
-        CadAction::SystemUi(args) => json!({"command": "system_ui", "action": args.get("action")}),
-    }
+fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
+    let mut out: Vec<_> = super::panel::controls(cx.doc).into_iter().map(|c| (c.id, c.label, c.action, c.ready)).collect();
+    // cad-views-export: cad:display:*, cad:section:*, cad:view:*, cad:file:*.
+    out.extend(super::display::controls(cx));
+    out.extend(super::views::controls(cx));
+    out.extend(super::files::controls(cx));
+    out
 }
 
 /// `system_ui`: the controls, or one activated through this handler (the
@@ -607,15 +615,15 @@ fn system_ui(call: &mut Call, cx: &mut Cx, args: &Map<String, Value>) -> Outcome
     let action = args.get("action").cloned().unwrap_or(Value::Null);
     match action["operation"].as_str() {
         Some("controls") => {
-            let items: Vec<Value> = controls(cx.doc)
+            let items: Vec<Value> = controls(cx)
                 .into_iter()
-                .map(|(id, label, action, ready)| json!({"id": id, "label": label, "enabled": ready.is_ok(), "disabled_reason": ready.err(), "action": rest_form(&action)}))
+                .map(|(id, label, action, ready)| json!({"id": id, "label": label, "enabled": ready.is_ok(), "disabled_reason": ready.err(), "action": super::rest_form::rest_form(&action)}))
                 .collect();
             Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, cx.meshes.as_deref(), Some(&*cx.plane))})))
         }
         Some("activate") => {
             let Some(id) = action["id"].as_str() else { return Outcome::Done(Err("system_ui activate needs an id; request controls".into())) };
-            let found = controls(cx.doc).into_iter().find(|(i, ..)| i == id);
+            let found = controls(cx).into_iter().find(|(i, ..)| i == id);
             match found {
                 None => Outcome::Done(Err(format!("unknown control {id}; request controls"))),
                 Some((id, _, _, Err(why))) => Outcome::Done(Err(format!("{id} is disabled: {why}"))),

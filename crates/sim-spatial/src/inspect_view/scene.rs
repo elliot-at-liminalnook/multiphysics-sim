@@ -1,6 +1,7 @@
 //! The spatial view's scene: cameras, lights and parts spawned on entering,
 //! part picks as the mode's action, part transforms and colours, and the guides.
-use super::{ModelColor, Orbit, Part, SceneContent, SpatialScene};
+use super::{ModelColor, Part, SceneContent, SpatialScene};
+use crate::camera::Orbit;
 use crate::app::{self, ViewerMode};
 use crate::{animation, builder, inspect, lesson, linked, models, physics_view, ui_kit, view};
 use bevy::{core_pipeline::tonemapping::Tonemapping, picking::mesh_picking::MeshPickingCamera, prelude::*};
@@ -31,14 +32,11 @@ pub(super) fn setup_scene(
         MeshPickingCamera,
         Tonemapping::None,
         Transform::from_xyz(0.5, 0.6, 0.8).looking_at(focus, Vec3::Y),
-        Orbit {
-            focus,
-            radius: radius * 3.5,
-            yaw: 0.35,
-            pitch: 0.6,
-            home: true,
-            ..Default::default()
-        },
+        // The shared camera (`crate::camera`), placed by `CameraSet::Place`:
+        // the home request frames the overview from here (`super::camera`).
+        Orbit { focus, radius: radius * 3.5, yaw: 0.35, pitch: 0.6, home: true, centre: focus, extent: radius, ..Default::default() },
+        super::camera::spatial_rules(),
+        super::camera::view_area(&scene),
     ));
     // Split view: a second camera on the companion run's copy.
     commands.spawn((

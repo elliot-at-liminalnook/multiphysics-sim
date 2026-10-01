@@ -1,6 +1,7 @@
 //! Scene sync (SimSync): the file watch, installing loaded models (physical
-//! or planar), run frames onto the link meshes, the camera orbit and
-//! viewport, selection highlight and inspector scrolling.
+//! or planar), run frames onto the link meshes, the camera's bounds and
+//! view area (the orbit itself is the shared `crate::camera`), selection
+//! highlight and inspector scrolling.
 use super::*;
 
 /// UI thread, FILE mode: stats the opened file every `source::POLL`;
@@ -28,7 +29,7 @@ pub(super) fn receive(
     materials: Res<Materials>,
     root: Single<Entity, With<RobotRoot>>,
     list: Single<Entity, With<ListRoot>>,
-    mut orbit: Single<&mut RobotOrbit>,
+    mut orbit: Single<&mut Orbit, With<RobotCamera>>,
     mut redraw: MessageWriter<bevy::window::RequestRedraw>,
     fonts: Res<UiFonts>,
 ) {
@@ -119,12 +120,15 @@ pub(super) fn receive(
         commands.entity(*root).add_child(entity);
     }
     if lo.x.is_finite() {
+        // The bounds a fit frames; the focus moves only on an open (`home`).
         orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
-        if reload.is_none() {
-            orbit.focus = (lo + hi) / 2.0;
-        }
+        orbit.centre = (lo + hi) / 2.0;
+    } else if reload.is_none() {
+        // No geometry to frame: an open keeps the focus where it was, as before.
+        orbit.centre = orbit.focus;
     }
-    // A reload keeps the user's camera.
+    // A reload keeps the user's camera; an open frames the bounds at
+    // 3.2 × extent from the current heading (`camera::place`).
     orbit.home = reload.is_none();
     view.triangles = loaded.geometry.iter().map(|g| g.as_ref().map_or(0, |g| g.triangles())).collect();
     // New meshes are painted (or not) for the stress overlay by `stress_paint`.
@@ -316,7 +320,7 @@ fn install_planar(
 /// (never one of an older generation), keeps the window redrawing while
 /// frames are expected, and frames the camera on the first built frame of an
 /// open (front view of the working plane) or a reload (extent only).
-pub(super) fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
+pub(super) fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut Orbit, With<RobotCamera>>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
     // Checked through a shared borrow first: a physical view is not marked changed.
     if view.planar.is_none() {
         return;
@@ -332,9 +336,12 @@ pub(super) fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut Ro
     let Some((lo, hi)) = p.run.frame().filter(|f| f.built).and_then(planar::bounds) else { return };
     p.frame_camera = None;
     orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
+    orbit.centre = (lo + hi) / 2.0;
     if move_focus {
-        orbit.focus = (lo + hi) / 2.0;
-        // Looking along −Z: x right, y up, as the plane is drawn.
+        // Looking along −Z: x right, y up, as the plane is drawn; `home`
+        // moves the focus to the centre at 3.2 × extent (`camera::place`).
+        orbit.interrupt();
+        orbit.trackball = None;
         orbit.yaw = 0.0;
         orbit.pitch = 0.12;
         orbit.home = true;
@@ -376,54 +383,13 @@ pub(super) fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkM
     }
 }
 
-pub(super) fn orbit(
-    buttons: Res<ButtonInput<MouseButton>>,
-    keys: Res<ButtonInput<KeyCode>>,
-    mut motion: MessageReader<MouseMotion>,
-    mut wheel: MessageReader<MouseWheel>,
-    window: Single<&Window>,
-    camera: Single<(&mut Transform, &mut RobotOrbit)>,
-    view: Res<RobotView>,
-) {
-    let drag = motion.read().fold(Vec2::ZERO, |sum, e| sum + e.delta);
-    let zoom = wheel.read().fold(0.0, |sum, e| sum + match e.unit {
-        MouseScrollUnit::Line => e.y,
-        MouseScrollUnit::Pixel => e.y * 0.02,
-    });
-    let (mut transform, mut orbit) = camera.into_inner();
-    if orbit.home {
-        orbit.radius = orbit.extent * 3.2;
-        orbit.home = false;
-    }
-    let dock = if view.graphs_visible { DOCK } else { 0.0 };
-    let in_scene = window.cursor_position().is_some_and(|p| p.x > LEFT && p.x < window.width() - RIGHT && p.y > TOP && p.y < window.height() - dock);
-    if in_scene {
-        let pan = buttons.pressed(MouseButton::Middle) || (buttons.pressed(MouseButton::Right) && (keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight)));
-        if pan {
-            let shift = (transform.right() * -drag.x + transform.up() * drag.y) * orbit.radius * 0.0015;
-            orbit.focus += shift;
-        } else if buttons.pressed(MouseButton::Right) {
-            orbit.yaw -= drag.x * 0.007;
-            orbit.pitch = (orbit.pitch + drag.y * 0.007).clamp(-1.4, 1.4);
-        }
-        orbit.radius = (orbit.radius * (-zoom * 0.12).exp()).clamp(orbit.extent * 0.3, orbit.extent * 20.0);
-    }
-    let horizontal = orbit.pitch.cos() * orbit.radius;
-    let eye = orbit.focus + Vec3::new(orbit.yaw.sin() * horizontal, orbit.pitch.sin() * orbit.radius, orbit.yaw.cos() * horizontal);
-    let target = Transform::from_translation(eye).looking_at(orbit.focus, Vec3::Y);
-    if *transform != target {
-        *transform = target;
-    }
-}
-
-pub(super) fn viewport(window: Single<&Window>, view: Res<RobotView>, mut camera: Single<&mut Camera, With<RobotOrbit>>) {
-    let scale = window.scale_factor();
-    let width = (window.width() - LEFT - RIGHT).max(1.0);
-    let height = (window.height() - TOP - if view.graphs_visible { DOCK } else { 0.0 }).max(1.0);
-    let viewport = Viewport { physical_position: UVec2::new((LEFT * scale) as u32, (TOP * scale) as u32), physical_size: UVec2::new((width * scale) as u32, (height * scale) as u32), ..default() };
-    if camera.viewport.as_ref().is_none_or(|old| old.physical_size != viewport.physical_size || old.physical_position != viewport.physical_position) {
-        camera.viewport = Some(viewport);
-    }
+/// SimSync, before `CameraSet::Viewport`: the 3D view draws between the
+/// list, the inspector and the header, above the graph dock when it is
+/// shown (the shared camera falls back to the whole window when they leave
+/// no room).
+pub(super) fn view_area(view: Res<RobotView>, mut area: Single<&mut ViewArea, With<RobotCamera>>) {
+    let want = ViewArea::Docks { left: LEFT, right: RIGHT, top: TOP, bottom: if view.graphs_visible { DOCK } else { 0.0 } };
+    area.set_if_neq(want);
 }
 
 /// The one selection, shown in 3D and in the list (a selectable `Tint`);

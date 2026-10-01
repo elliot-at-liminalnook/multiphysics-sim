@@ -34,6 +34,10 @@ pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) 
     if name == "viewer_mode" || mode_control(command) {
         return if window { Ok(actions::named("window")) } else { Err(format!("{name}: this headless server has no window to switch (inspect mode only)")) };
     }
+    // `system_ui` `camera:*`: the shared camera's controls, in every orbit mode.
+    if crate::camera::is_camera_control(command) && crate::camera::ORBIT_MODES.contains(&mode) {
+        return if window { Ok(actions::named("camera")) } else { Err(format!("{name}: this headless server has no camera to move")) };
+    }
     match actions::command_modes(name) {
         Some(needs) if !needs.contains(&mode) => Err(format!(
             "`{name}` is a {} mode command; the active mode is {}. Switch first: viewer_mode {{\"mode\":\"{}\"}}.",
@@ -56,9 +60,16 @@ pub(crate) fn annotate(mode: ViewerMode, command: &sim_api::Command, mut outcome
     if let Outcome::Done(Ok(value)) = &mut outcome {
         match command.command.as_str() {
             "state" if value.is_object() => value["viewer_mode"] = json!(mode.name()),
-            "system_ui" if command.args["action"]["operation"] == "controls" && !actions::SWITCHER_ONLY.contains(&mode) => {
+            "system_ui" if command.args["action"]["operation"] == "controls" => {
                 if let Some(controls) = value.get_mut("controls").and_then(Value::as_array_mut) {
-                    controls.extend(mode_controls(mode));
+                    // The shared camera's controls in every orbit mode, then the switcher's
+                    // (which the switcher-only modes' own list already ends with).
+                    if crate::camera::ORBIT_MODES.contains(&mode) {
+                        controls.extend(crate::camera::controls());
+                    }
+                    if !actions::SWITCHER_ONLY.contains(&mode) {
+                        controls.extend(mode_controls(mode));
+                    }
                 }
             }
             _ => {}

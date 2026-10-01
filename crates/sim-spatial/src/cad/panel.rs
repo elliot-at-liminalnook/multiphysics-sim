@@ -87,6 +87,8 @@ pub(super) enum Part {
     /// sections of the right dock (`robot::panel`, `materials`).
     Robot,
     Materials,
+    /// cad-print: RoboCAD's print jobs (`print::jobs_panel`).
+    Print,
     History,
     Commands,
     Status,
@@ -322,7 +324,7 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
         .with_children(|right| {
             right.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), InspectorScroll)).with_children(|area| {
                 area.spawn(Node { padding: UiRect::all(Val::Px(14.0)), ..column(4.0) }).with_children(|body| {
-                    for part in [Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::History, Part::Commands] {
+                    for part in [Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
                         body.spawn((column(4.0), CadList::new(part)));
                     }
                 });
@@ -553,6 +555,7 @@ fn refresh(
                 Part::Attributes => super::inspector::attributes(p, &k, doc, &selection),
                 Part::Robot => super::robot::panel::draw(p, &k, doc, &selection),
                 Part::Materials => super::materials::draw(p, &k, doc, &selection),
+                Part::Print => super::print::jobs_panel::draw(p, &k, doc),
                 Part::History => super::inspector::history(p, &k, doc),
                 Part::Commands => super::inspector::commands(p, &k, doc, &selection),
             },
@@ -574,6 +577,7 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
         Part::Attributes => super::inspector::attributes_key(doc, selection),
         Part::Robot => super::robot::panel::key(doc, selection),
         Part::Materials => super::materials::key(doc, selection),
+        Part::Print => super::print::jobs_panel::key(doc),
         Part::History => format!("{:?}", doc.doc.as_ref().map(|d| &d.history)),
         Part::Commands => super::inspector::commands_key(doc),
     }

@@ -200,6 +200,8 @@ impl CadDocument {
         if let Some(queued) = &exports.queued {
             blockers.push(format!("a model export is queued: {} to {}; wait for it, or stop the live link", queued.label, queued.path.display()));
         }
+        // cad-print: a RoboCAD print job this window started and still tracks.
+        blockers.extend(self.print.jobs.blockers());
         if self.edit.is_none() && self.child_may_hold_edits() {
             let name = self.document_name();
             let pid = self.child.pid().map_or_else(String::new, |p| format!(" (pid {p})"));

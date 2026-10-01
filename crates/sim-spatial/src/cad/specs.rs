@@ -18,6 +18,7 @@ impl actions::Action for CadAction {
         specs.extend(super::materials::specs());
         specs.extend(super::inspector::physical_specs());
         specs.extend(super::results::specs());
+        specs.extend(super::print::specs());
         specs
     }
     fn controls() -> &'static [&'static str] {
@@ -29,6 +30,8 @@ impl actions::Action for CadAction {
             "cad:display:<setting>", "cad:section:<setting>", "cad:view:<id>", "cad:file:<op>",
             // cad-physical-inspect.
             "cad:robot:<id>", "cad:robot:row:<id>", "cad:robot:button:<id>", "cad:materials:<id>", "cad:inspect:<id>", "cad:results:<id>",
+            // cad-print.
+            "cad:print:<id>",
         ]
     }
 }

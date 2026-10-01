@@ -79,7 +79,8 @@ fn fixed(v: f64, decimals: i32) -> String {
 /// "bodies_or_pick" (MotorDialog's "(pick by clicking a face)"),
 /// "bodies_or_none", "joints" (the tree's joints), "joints_or_none",
 /// "motors_placed" (`_robot_motors`), "motors_placed_or_none",
-/// "joint_types", "sensor_kinds". Empty for an unknown source.
+/// "joint_types", "sensor_kinds"; cad-print's "printers" and "filaments"
+/// (`print::picks`). Empty for an unknown source.
 pub(in crate::cad) fn picks(source: &str, doc: &CadDocument) -> Vec<(String, String)> {
     let nodes = doc.doc.as_ref().map_or(&[][..], |d| d.nodes.as_slice());
     let summary = doc.robot.data.summary();
@@ -103,7 +104,8 @@ pub(in crate::cad) fn picks(source: &str, doc: &CadDocument) -> Vec<(String, Str
         "motors_placed_or_none" => first("(none)", placed()),
         "joint_types" => hinted(&JOINT_TYPES),
         "sensor_kinds" => hinted(&SENSOR_KINDS),
-        _ => Vec::new(),
+        // cad-print's lists: the registry's printers and filaments.
+        _ => crate::cad::print::picks(source, doc),
     }
 }
 
@@ -272,7 +274,8 @@ pub(super) fn seed(entry: &OpEntry, doc: &CadDocument, env: &Env, texts: &mut [S
             }
         }
         "robot.power" => power(entry, doc, texts),
-        _ => {}
+        // cad-print: the remembered Fastener hole, Clearance and wall check values.
+        _ => crate::cad::print::seed(entry, doc, env, texts),
     }
     // A combo box is always on one of its entries.
     for (i, p) in entry.params.iter().enumerate() {

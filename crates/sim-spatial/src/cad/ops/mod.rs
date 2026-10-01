@@ -125,6 +125,10 @@ pub(crate) enum Flow {
     /// tool's form holds the Add motor dialog's values, each face click is
     /// one run; the joint tool's third click opens `robot.joint_dialog`.
     RobotPick(RobotTool),
+    /// RoboCAD's `FastenerTool` (cad-print): the Fastener hole dialog's
+    /// values stay in the form beside the view; each face click (through
+    /// `CadMeshes::face_at`) is one `fastener_hole` run (`print::fastener_tool`).
+    PrintPick,
 }
 
 /// RoboCAD's robot click tools (ui/tools.py:1244-1361).
@@ -255,6 +259,9 @@ pub(crate) enum Shape {
     View(ViewAct),
     /// A robot dialog's or tool's calls (`robot_args`, cad-physical-inspect).
     Robot(RobotCall),
+    /// A Print menu entry's call (`crate::cad::print`, cad-print): a check
+    /// read, a print edit or a print study job.
+    Print(crate::cad::print::PrintCall),
 }
 
 /// One typed parameter: its argument name, RoboCAD's label or prompt,
@@ -586,6 +593,7 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, selection: &[Sel
         }),
         Built::Sketch { target, calls, label } => send_sketch(doc, call, target, calls, label),
         Built::Robot(plan) => robot_args::send(doc, call, plan),
+        Built::Print(plan) => crate::cad::print::send(doc, call, plan),
         // Applied by `run` before `start`.
         Built::View(_) => return Outcome::Done(Err("viewer state is not sent to RoboCAD".into())),
         Built::Read(read) => {

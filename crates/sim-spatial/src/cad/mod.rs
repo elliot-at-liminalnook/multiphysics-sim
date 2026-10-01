@@ -35,6 +35,10 @@
 //!   materials panel, joint and material edits, results with the stress
 //!   overlay, physical export and the live link to Robot mode. Every edit
 //!   is one RoboCAD call through `actions::edit_at`.
+//! - `print` (cad-print, native-viewer.md "CAD print"): RoboCAD's Print
+//!   menu: wall check, validate, overhang shading, fastener hole and
+//!   clearance, the print studies, the one poller of RoboCAD's print jobs,
+//!   the Print jobs section and the print overlay.
 //!
 //! Teardown is the one-app pattern: `app::switch`'s OnExit(ModeScope::Cad)
 //! removes the document, releases its self-started service at once
@@ -58,6 +62,7 @@ mod ops;
 mod overlay;
 mod panel;
 mod pick;
+mod print;
 mod rest_form;
 mod results;
 mod robot;
@@ -130,7 +135,7 @@ impl Plugin for CadCorePlugin {
             )
             // cad-physical-inspect, windowless parts: the robot description's
             // reads, the exact measurement and the results and export jobs.
-            .add_plugins((robot::CoreParts, inspector::CoreParts, results::CoreParts))
+            .add_plugins((robot::CoreParts, inspector::CoreParts, results::CoreParts, print::CoreParts))
             // At window close, a self-started service is stopped (or left running with unsaved edits).
             // After ExitSystems, which writes AppExit in Last: before it, the
             // message would be read only on a frame that never comes, and the
@@ -192,6 +197,9 @@ impl Plugin for CadPlugin {
         materials::build(app);
         inspector::build_physical(app);
         results::build(app);
+        // cad-print: the wall check's points, the fastener tool's clicks
+        // and the Print jobs section's input.
+        print::build(app);
     }
 }
 

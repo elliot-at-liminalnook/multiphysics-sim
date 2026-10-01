@@ -11,13 +11,15 @@
 //! The entries live in one file per part of RoboCAD's registry, joined here
 //! in RoboCAD's order (`ui/app.py` `_build_commands`: Edit, Create
 //! primitives, extrude and the other solids, Modify, Planes, mirror to set
-//! pivot, Sketch, booleans and Inspect, the Robot menu with the robot
-//! `Ops` methods beside it), then the REST-only `Ops` methods.
+//! pivot, Sketch, booleans and Inspect, the Print menu with `print_split`
+//! beside it (cad-print), the Robot menu with the robot `Ops` methods
+//! beside it), then the REST-only `Ops` methods.
 mod arrange;
 mod boolean;
 mod edit_create;
 mod modify;
 mod plane;
+mod print;
 mod rest_only;
 mod robot;
 mod sketch;
@@ -28,7 +30,7 @@ use super::OpEntry;
 use super::kinds::BASE;
 
 /// The parts in RoboCAD's registry order.
-const PARTS: &[&[OpEntry]] = &[edit_create::ENTRIES, view::ENTRIES, solid::ENTRIES, modify::ENTRIES, plane::ENTRIES, arrange::ENTRIES, sketch::ENTRIES, boolean::ENTRIES, robot::ENTRIES, rest_only::ENTRIES];
+const PARTS: &[&[OpEntry]] = &[edit_create::ENTRIES, view::ENTRIES, solid::ENTRIES, modify::ENTRIES, plane::ENTRIES, arrange::ENTRIES, sketch::ENTRIES, boolean::ENTRIES, print::ENTRIES, robot::ENTRIES, rest_only::ENTRIES];
 
 /// How many entries there are.
 const COUNT: usize = {

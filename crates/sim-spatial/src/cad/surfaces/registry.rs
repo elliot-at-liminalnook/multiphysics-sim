@@ -9,7 +9,12 @@
 //! So `keys` is what RoboCAD's palette lists and `bound` says whether the
 //! keys are live: `simulation.experiment` Ctrl+Return, `robot.add_motor`
 //! Ctrl+Shift+M and `robot.add_joint` Ctrl+Shift+J are listed but never
-//! bound (docs/cad-parity.md:1086). keymap.json's `sketch.arc` (A) names
+//! bound in RoboCAD (docs/cad-parity.md:1086). Here, deliberately,
+//! `robot.add_joint` Ctrl+Shift+J is bound (no other command lists it, and
+//! RoboCAD's USER_GUIDE.md:375 documents it), while `robot.add_motor`'s
+//! Ctrl+Shift+M stays unbound: RoboCAD's live binding of that key is
+//! `edit.select_same_material` (keymap.json), which it keeps running here
+//! (the clash table in `cad::keys`). keymap.json's `sketch.arc` (A) names
 //! no command and RoboCAD drops it; here A is bound to `sketch.arc_3pt`
 //! instead, deliberately (the ledger's cad-sketch row: bind A to the
 //! three-point arc, as RoboCAD's USER_GUIDE.md:181 documents "`A` arc"),
@@ -81,6 +86,10 @@ pub(crate) enum Do {
     /// (new, open, save as, import, export, export drawing; the path form
     /// opens without a path).
     File(&'static str),
+    /// A cad-physical-inspect command that is not a catalogue operation
+    /// (validate, the motor library, results, identification, the stress
+    /// overlay, physical export, the live link): `robot::command_action(id)`.
+    Physical(&'static str),
 }
 impl Do {
     pub(crate) fn action(self) -> CadAction {
@@ -100,6 +109,8 @@ impl Do {
             Do::SavedViews => CadAction::CadViews(ViewsArgs { op: ViewsOp::Panel, open: Some(true), ..ViewsArgs::default() }),
             // Every `Do::File` id is one `files::command_action` maps (`surfaces::tests`).
             Do::File(id) => crate::cad::files::command_action(id).unwrap_or_else(|| panic!("{id}: no file action")),
+            // Every `Do::Physical` id is one `robot::command_action` maps (`surfaces::tests`).
+            Do::Physical(id) => crate::cad::robot::command_action(id).unwrap_or_else(|| panic!("{id}: no physical action")),
         }
     }
 }
@@ -408,7 +419,7 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("print.strength_split", "Whole or split for strength? (selected part of the print study)", "Print", &[], false, Native::Later("cad-print")),
     c("print.assembly", "Assembly guide for the selected split…", "Print", &[], false, Native::Later("cad-print")),
     c("print.coupons", "Test coupons (for the selected split, or the material)…", "Print", &[], false, Native::Later("cad-print")),
-    c("print.overlay", "Strength overlay on/off", "Print", &[], false, Native::Later("cad-physical-inspect")),
+    c("print.overlay", "Strength overlay on/off", "Print", &[], false, Native::Action(Do::Physical("print.overlay"))),
     c("print.jobs", "Print jobs…", "Print", &[], false, Native::Later("cad-print")),
     c("inspect.curvature", "Curvature comb on selected curve", "Inspect", &[], false, Native::Op),
     c("inspect.continuity", "Continuity check (G0/G1/G2)", "Inspect", &[], false, Native::Op),
@@ -417,24 +428,24 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("bridge.start", "Live link: start (Blender)", "Bridge", &[], false, Native::Different(BLENDER_LINK)),
     c("bridge.stop", "Live link: stop", "Bridge", &[], false, Native::Different(BLENDER_LINK)),
     c("bridge.share", "Web share: publish viewer…", "Bridge", &[], false, Native::Different(WEB_SHARE)),
-    c("robot.add_motor", "Robot: add motor from library…", "Robot", &["Ctrl+Shift+M"], false, Native::Later("cad-physical-inspect")),
-    c("robot.add_joint", "Robot: add joint (click parent, child, axis face)", "Robot", &["Ctrl+Shift+J"], false, Native::Later("cad-physical-inspect")),
-    c("robot.joint_dialog", "Robot: joint from the two selected bodies…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.infer", "Robot: infer joints from coaxial holes and pins", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.assign_motor", "Robot: assign selected motor to a joint…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.fixed", "Robot: fix selected bodies together (first is the parent)", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.ground", "Robot: toggle ground on selected bodies", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.validate", "Robot: validate", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.motors", "Robot: motor library…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.add_sensor", "Robot: add sensor (IMU, encoder, current, force)…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.add_cable", "Robot: add cable between bodies…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.power", "Robot: battery, control loop and uncertainty…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.load_results", "Robot: load simulation results…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("robot.apply_identification", "Robot: apply identified joint parameters…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
-    c("view.stress", "Toggle stress overlay (from loaded results)", "Inspect", &[], false, Native::Later("cad-physical-inspect")),
-    c("sim.export_physical", "Simulation: export physical model (simrobot v4, with flexible links)…", "Simulation", &[], false, Native::Later("cad-physical-inspect")),
-    c("sim.export", "Simulation: export robot model…", "Simulation", &[], false, Native::Later("cad-physical-inspect")),
-    c("sim.link", "Simulation: live link (watch + run viewer)", "Simulation", &[], false, Native::Later("cad-physical-inspect")),
+    c("robot.add_motor", "Robot: add motor from library…", "Robot", &["Ctrl+Shift+M"], false, Native::Op),
+    c("robot.add_joint", "Robot: add joint (click parent, child, axis face)", "Robot", &["Ctrl+Shift+J"], true, Native::Op),
+    c("robot.joint_dialog", "Robot: joint from the two selected bodies…", "Robot", &[], false, Native::Op),
+    c("robot.infer", "Robot: infer joints from coaxial holes and pins", "Robot", &[], false, Native::Op),
+    c("robot.assign_motor", "Robot: assign selected motor to a joint…", "Robot", &[], false, Native::Op),
+    c("robot.fixed", "Robot: fix selected bodies together (first is the parent)", "Robot", &[], false, Native::Op),
+    c("robot.ground", "Robot: toggle ground on selected bodies", "Robot", &[], false, Native::Op),
+    c("robot.validate", "Robot: validate", "Robot", &[], false, Native::Action(Do::Physical("robot.validate"))),
+    c("robot.motors", "Robot: motor library…", "Robot", &[], false, Native::Action(Do::Physical("robot.motors"))),
+    c("robot.add_sensor", "Robot: add sensor (IMU, encoder, current, force)…", "Robot", &[], false, Native::Op),
+    c("robot.add_cable", "Robot: add cable between bodies…", "Robot", &[], false, Native::Op),
+    c("robot.power", "Robot: battery, control loop and uncertainty…", "Robot", &[], false, Native::Op),
+    c("robot.load_results", "Robot: load simulation results…", "Robot", &[], false, Native::Action(Do::Physical("robot.load_results"))),
+    c("robot.apply_identification", "Robot: apply identified joint parameters…", "Robot", &[], false, Native::Action(Do::Physical("robot.apply_identification"))),
+    c("view.stress", "Toggle stress overlay (from loaded results)", "Inspect", &[], false, Native::Action(Do::Physical("view.stress"))),
+    c("sim.export_physical", "Simulation: export physical model (simrobot v4, with flexible links)…", "Simulation", &[], false, Native::Action(Do::Physical("sim.export_physical"))),
+    c("sim.export", "Simulation: export robot model…", "Simulation", &[], false, Native::Action(Do::Physical("sim.export"))),
+    c("sim.link", "Simulation: live link (watch + run viewer)", "Simulation", &[], false, Native::Action(Do::Physical("sim.link"))),
     c("api.address", "REST API: show address", "Bridge", &[], false, Native::Different("the header always shows the service URL, so no dialog is needed")),
     c("group.set_active", "Set selected group as active", "Outliner", &[], false, Native::Later("cad-organize")),
     c("group.group", "Group selection", "Outliner", &[], false, Native::Later("cad-organize")),

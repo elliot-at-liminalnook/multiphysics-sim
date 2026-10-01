@@ -39,7 +39,7 @@ fn shared() -> Fixture {
 fn select_replaces_extends_toggles_and_ids_are_body_items() {
     let mut doc = document();
     let mut f = shared();
-    doc.candidates = Some(Candidates { items: vec![item("b1", "face", 0)], extend: false, toggle: false });
+    doc.candidates = Some(Candidates { items: vec![item("b1", "face", 0)], extend: false, toggle: false, revision: Some(3) });
     let r0 = doc.revision;
     let answer = select(&mut doc, &mut f.shared(), &["b1".into()], &[], false, false, None).unwrap();
     assert_eq!(f.items(), vec![item("b1", "body", 0)]);
@@ -155,6 +155,7 @@ fn edges_become_the_faces_their_triangles_share() {
     edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap();
     assert_eq!(doc.select_mode, SelectMode::Face);
     assert_eq!(f.items(), vec![item("b1", "face", 0), item("b1", "face", 1)]);
+    assert_eq!(f.selection.cad_stamped(f.id()), vec![(item("b1", "face", 0), 3), (item("b1", "face", 1), 3)], "converted at the topology's revision");
     assert!(edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap_err().contains("no edges"));
 }
 
@@ -405,4 +406,81 @@ fn cad_select_and_a_selection_action_give_the_same_selection() {
     let world = app.world().resource::<OneSelection>();
     assert_eq!(world.cad_stamped(id), f.selection.cad_stamped(f.id()));
     assert_eq!(world.cad(id), vec![item("b1", "body", 0), item("b2", "face", 4)]);
+}
+
+/// The registry's CAD entry and the shown tree move to `revision` (a new
+/// tree arrived; items keep the revision they were picked at).
+fn advance(doc: &mut CadDocument, f: &mut Fixture, revision: u64) {
+    let id = f.id();
+    f.registry.set_revision(id, revision);
+    doc.doc_key = Some((None, revision));
+}
+
+/// An Alt-menu choice carries the revision the menu was gathered at: after
+/// the tree moved on it is refused by name and the stale menu closes; from
+/// a menu gathered at the current revision it applies.
+#[test]
+fn a_candidate_chosen_after_the_tree_moved_is_refused_by_name() {
+    let mut doc = document();
+    let mut f = shared();
+    candidates(&mut doc, &[item("b1", "face", 2), item("b2", "face", 0)], false, false).unwrap();
+    assert_eq!(doc.candidates.as_ref().and_then(|c| c.revision), Some(3));
+    advance(&mut doc, &mut f, 4);
+    let e = select(&mut doc, &mut f.shared(), &[], &[item("b1", "face", 2)], false, false, None).unwrap_err();
+    assert!(e.contains("[b1, face, 2]") && e.contains("revision 3") && e.contains("revision 4"), "{e}");
+    assert!(f.items().is_empty(), "nothing applied");
+    assert!(doc.candidates.is_none(), "the stale menu closes");
+    // Gathered at the shown revision: the choice applies (and closes the menu).
+    candidates(&mut doc, &[item("b1", "face", 2), item("b2", "face", 0)], false, false).unwrap();
+    select(&mut doc, &mut f.shared(), &[], &[item("b1", "face", 2)], false, false, None).unwrap();
+    assert_eq!(f.selection.cad_stamped(f.id()), vec![(item("b1", "face", 2), 4)]);
+    assert!(doc.candidates.is_none());
+    // A body candidate names no index: it applies at the current revision.
+    candidates(&mut doc, &[item("b1", "body", 0)], false, false).unwrap();
+    advance(&mut doc, &mut f, 5);
+    select(&mut doc, &mut f.shared(), &[], &[item("b1", "body", 0)], false, false, None).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "body", 0)]);
+    // A select that is not the menu's choice (another extend) is not stamped by it.
+    candidates(&mut doc, &[item("b2", "face", 0)], false, false).unwrap();
+    advance(&mut doc, &mut f, 6);
+    select(&mut doc, &mut f.shared(), &[], &[item("b2", "face", 0)], true, false, None).unwrap();
+    assert_eq!(f.items(), vec![item("b1", "body", 0), item("b2", "face", 0)]);
+}
+
+/// A box select's edges carry their topology's revision: a topology the
+/// shown tree has moved past is refused by name; edges → faces refuses an
+/// edge picked at another revision than the topology it would convert with.
+#[test]
+fn a_box_or_edges_to_faces_over_a_moved_tree_is_refused_by_name() {
+    let mut doc = document();
+    let mut f = shared();
+    let mut meshes = CadMeshes::default();
+    meshes.insert_drawn("b1", 3, cube([0.0, 0.0, 0.0], 100.0));
+    let mut topology = CadTopology::default();
+    topology.insert("b1", NodeTopology { revision: 3, edges: vec![EdgeInfo { index: 0, points: vec![[-100.0, 0.0, 0.0], [100.0, 0.0, 0.0]], ..Default::default() }], ..Default::default() });
+    doc.select_mode = SelectMode::Edge;
+    let rect = [120.0, 80.0, 100.0, 60.0];
+    advance(&mut doc, &mut f, 4);
+    let e = box_select(&mut doc, &mut f.shared(), &meshes, Some(&topology), &view(), rect, false).unwrap_err();
+    assert!(e.contains("[b1, edge, 0]") && e.contains("revision 3") && e.contains("revision 4"), "{e}");
+    assert!(f.items().is_empty());
+    // The topology at the shown revision: applied, stamped with it.
+    topology.insert("b1", NodeTopology { revision: 4, edges: vec![EdgeInfo { index: 0, points: vec![[-100.0, 0.0, 0.0], [100.0, 0.0, 0.0]], ..Default::default() }], ..Default::default() });
+    box_select(&mut doc, &mut f.shared(), &meshes, Some(&topology), &view(), rect, false).unwrap();
+    assert_eq!(f.selection.cad_stamped(f.id()), vec![(item("b1", "edge", 0), 4)]);
+
+    // Edges → faces: edge 7 picked at revision 4, the tree and topology now at 5.
+    f.set(vec![item("b1", "edge", 7)]);
+    advance(&mut doc, &mut f, 5);
+    let mut meshes = CadMeshes::default();
+    meshes.insert_drawn("b1", 5, two_faces());
+    let mut topology = CadTopology::default();
+    topology.insert("b1", NodeTopology { revision: 5, edges: vec![EdgeInfo { index: 7, points: vec![[0.0, 0.0, 0.0], [10.0, 0.0, 0.0]], ..Default::default() }], ..Default::default() });
+    let e = edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap_err();
+    assert!(e.contains("edge 7 of Nb1") && e.contains("revision 4") && e.contains("revision 5"), "{e}");
+    assert_eq!(f.items(), vec![item("b1", "edge", 7)], "nothing converted");
+    // Picked again at the topology's revision: converted.
+    f.set(vec![item("b1", "edge", 7)]);
+    edges_to_faces(&mut doc, &mut f.shared(), Some(&meshes), Some(&topology)).unwrap();
+    assert_eq!(f.selection.cad_stamped(f.id()), vec![(item("b1", "face", 0), 5), (item("b1", "face", 1), 5)]);
 }

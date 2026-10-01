@@ -75,6 +75,18 @@ pub struct CadDocument {
     pub autosave: Option<Result<Autosave, String>>,
     /// `GET /physical?flex=0` for the inspector's physical section: (revision, result).
     pub physical: Option<(u64, Result<Value, String>)>,
+    /// cad-physical-inspect: RoboCAD's robot description, per-node results,
+    /// sensors, cables, settings and motor library as last read
+    /// (`robot::data`), with the Robot panel's and the robot tools' state.
+    pub robot: super::robot::RobotState,
+    /// cad-physical-inspect: the materials panel (search, the open form).
+    pub materials: super::materials::MaterialsState,
+    /// cad-physical-inspect: the inspector's physical rows (drafts, the
+    /// exact measurement job).
+    pub physical_edit: super::inspector::PhysicalEdit,
+    /// cad-physical-inspect: results, the stress overlay, physical export
+    /// and the live link.
+    pub results: super::results::ResultsState,
     /// The mutating request in flight.
     pub edit: Option<Edit>,
     /// The latest outcome line (Ok message or the refusal / error).
@@ -175,6 +187,10 @@ impl CadDocument {
             commands: None,
             autosave: None,
             physical: None,
+            robot: Default::default(),
+            materials: Default::default(),
+            physical_edit: Default::default(),
+            results: Default::default(),
             edit: None,
             status: None,
             revision: 0,

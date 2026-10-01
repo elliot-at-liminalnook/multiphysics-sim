@@ -18,24 +18,42 @@
 //! mm²), "fetching…" while they load and the fetch's error verbatim.
 //! The node's pivot and, for instances and reference meshes and images,
 //! its transform are editable ([`editors`]: one `CadPatch` per Enter).
+//!
+//! Modules: [`node`] (the head, the sub-body item, the node and its
+//! detail), [`editors`] (pivot, transform, tessellation tolerance),
+//! [`sections`] (the physical link, attributes, history, commands) and,
+//! for cad-physical-inspect, [`physical_edit`] (`cad_inspector`: its action,
+//! handler, controls and state), [`rows`] (the physical rows RoboCAD's
+//! properties panel shows: colour, the joint and its physics overrides,
+//! the results line, exact measurements, material properties), [`entry`]
+//! (their typing) and [`exact`] (the exact-measurement job).
 mod editors;
+mod entry;
+mod exact;
+mod node;
+mod physical_edit;
+#[cfg(test)]
+mod physical_tests;
+mod rows;
+mod sections;
 
 pub use editors::EditDraft;
 /// The editors' typing system (for other Input systems' ordering).
 pub(super) use editors::entry as editor_entry;
+/// The physical rows' typing system (for other Input systems' ordering).
+pub(super) use entry::entry as physical_entry;
+pub(super) use node::{inspector, inspector_key, name, name_key};
+pub(crate) use physical_edit::{CoreParts, InspectorArgs, PhysicalEdit, py_g};
+pub(super) use physical_edit::{build_physical, handle_physical, physical_controls, physical_specs, physical_state_json};
+pub(super) use sections::{attributes, attributes_key, commands, commands_key, history, physical, physical_key};
 
-use super::actions::CadAction;
 use super::document::CadDocument;
-use super::document::Connection;
-use super::selection::CadItems;
-use super::panel::{CadButton, Control, HEADLESS_COMMANDS, Inert, NameDraft, NameField, column, command_label, control, controls, edit_blocked, material};
-use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, TEXT, VALUE, WARN, size, wrap};
+use super::panel::{Inert, column};
+use crate::app::{ViewerMode, ViewerSet};
+use crate::ui_kit::{Kit, SUBTLE, VALUE, size};
 use bevy::prelude::*;
 use serde_json::Value;
-use super::topology::CadTopology;
-use crate::app::{ViewerMode, ViewerSet};
-use sim_runtime::cad_client::{FaceInfo, NodeSummary, SelectionItem};
-use std::collections::BTreeMap;
+use sim_runtime::cad_client::NodeSummary;
 
 /// The editors' typing (Input): after the name field (it resets
 /// `CadInputFocus` when it has no draft) and before the numeric bar and
@@ -177,192 +195,6 @@ fn node<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a NodeSummary> {
     doc.doc.as_ref()?.nodes.iter().find(|n| n.id == id)
 }
 
-pub(super) fn name_key(doc: &CadDocument, selection: &[SelectionItem], draft: &NameDraft) -> String {
-    let sel = selection.first_node();
-    format!("{:?}", (sel, sel.and_then(|id| node(doc, id)).map(|n| (&n.name, &n.kind)), &draft.editing, &draft.refusal))
-}
-
-/// The inspector's head: the node's name (editable), kind and id.
-pub(super) fn name(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem], draft: &NameDraft) {
-    let Some(id) = selection.first_node() else {
-        k.header(p, "Nothing selected", "Click a row in the model tree or a body in the 3D view.");
-        return;
-    };
-    let Some(n) = node(doc, id) else {
-        k.header(p, id, "Not in the document RoboCAD last sent (it may have been deleted).");
-        return;
-    };
-    k.header(p, &n.name, &format!("{} · {}", n.kind, n.id));
-    let editing = draft.editing.as_ref().filter(|(edit, _)| edit == id);
-    let shown = editing.map_or(n.name.as_str(), |(_, text)| text.as_str());
-    p.spawn(k.input(shown, "Name", NameField { id: id.to_string(), name: n.name.clone() }, editing.is_some()));
-    match (editing, &draft.refusal) {
-        (Some(_), Some(why)) => {
-            p.spawn(k.text(why.clone(), size::SMALL, WARN, 0));
-        }
-        (Some(_), None) => {
-            p.spawn(k.note("Enter renames it in RoboCAD (one undo step); Escape cancels."));
-        }
-        (None, _) => {
-            p.spawn(k.note("Click the name to rename it."));
-        }
-    }
-}
-
-pub(super) fn inspector_key(doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>) -> String {
-    let sel = selection.first_node();
-    let n = sel.and_then(|id| node(doc, id));
-    let detail = doc.detail.as_ref().filter(|(id, ..)| Some(id.as_str()) == sel);
-    let source = n.and_then(|n| n.source.as_deref()).map(|s| instance_of(doc, s));
-    format!("{:?}", (sel, n, source, detail, doc.connected(), waiting(doc), sub_key(doc, selection, topology), editors::key(doc)))
-}
-
-/// The first selected item when it is a face, edge, vertex or point.
-fn sub_item(selection: &[SelectionItem]) -> Option<&SelectionItem> {
-    selection.first().filter(|i| i.1 != "body")
-}
-
-/// What the sub-body section shows: the item, the selection's size and the
-/// node's topology state (the element shown, the error, or loading).
-fn sub_key(doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>) -> String {
-    let Some(SelectionItem(node, kind, index)) = sub_item(selection) else { return String::new() };
-    let state = topology.map(|t| match t.get(node) {
-        Some(topo) => {
-            let element = match kind.as_str() {
-                "edge" => format!("{:?}", topo.edges.iter().find(|e| e.index == *index).map(|e| (&e.kind, e.length, e.radius, e.center, e.start, e.end, e.midpoint))),
-                "vertex" => format!("{:?}", topo.vertices.iter().find(|v| v.index == *index)),
-                _ => format!("{:?}", topo.faces.iter().find(|f| f.index == *index)),
-            };
-            format!("{} {element}", topo.revision)
-        }
-        None => format!("{:?} {}", t.error(node), t.pending(node)),
-    });
-    format!("{node} {kind} {index} {} {} {state:?}", selection.len(), doc.node_name(node))
-}
-
-/// Three coordinates as RoboCAD sent them, or the null text.
-fn point_text(v: Option<[f64; 3]>) -> (String, bool) {
-    match v {
-        Some(p) => (numbers(&p), true),
-        None => (NULL_VALUE.to_string(), false),
-    }
-}
-
-/// A vector row with its unit only when RoboCAD sent it.
-fn point_field(p: &mut ChildSpawnerCommands, k: &Kit, key: &str, v: Option<[f64; 3]>, unit: &str) {
-    let (text, present) = point_text(v);
-    field(p, k, key, &text, if present { unit } else { "" });
-}
-
-/// A face's rows (`face_json`): kind, area, normal, centroid, radius and its
-/// diameter, the axis for revolved surfaces.
-fn face_rows(p: &mut ChildSpawnerCommands, k: &Kit, f: &FaceInfo) {
-    field(p, k, "Surface", &f.kind, "");
-    mass_field(p, k, "Area", f.area, "mm²");
-    point_field(p, k, "Normal", f.normal, "");
-    point_field(p, k, "Centroid", f.centroid, "mm");
-    if let Some(r) = f.radius {
-        field(p, k, "Radius", &r.to_string(), "mm");
-        field(p, k, "Ø", &(2.0 * r).to_string(), "mm");
-    }
-    if f.axis_point.is_some() || f.axis_dir.is_some() {
-        point_field(p, k, "Axis point", f.axis_point, "mm");
-        point_field(p, k, "Axis direction", f.axis_dir, "");
-    }
-}
-
-/// The sub-body section ("Face 3", "Edge 7", "Vertex 2", "Point on face 4").
-fn sub_body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>) {
-    let Some(SelectionItem(node, kind, index)) = sub_item(selection) else { return };
-    let title = match kind.as_str() {
-        "face" => format!("Face {index}"),
-        "edge" => format!("Edge {index}"),
-        "vertex" => format!("Vertex {index}"),
-        "point" => format!("Point on face {index}"),
-        other => format!("{other} {index}"),
-    };
-    let name = doc.node_name(node);
-    p.spawn(k.section(&title));
-    field(p, k, "Of", &name, "");
-    if selection.len() > 1 {
-        field(p, k, "Selected items", &selection.len().to_string(), "");
-    }
-    let Some(topology) = topology else {
-        p.spawn(k.caption("This window holds no topology (no 3D view)."));
-        return;
-    };
-    let Some(topo) = topology.get(node) else {
-        match topology.error(node) {
-            Some(e) => {
-                p.spawn(k.text(e.to_string(), size::SMALL, DANGER, 0));
-            }
-            None => {
-                p.spawn(k.caption("fetching…"));
-            }
-        }
-        return;
-    };
-    p.spawn(k.note(format!("RoboCAD's topology of {name} at revision {} (mm)", topo.revision)));
-    let missing = |what: &str| format!("RoboCAD listed no {what} {index} for {name} at revision {}.", topo.revision);
-    match kind.as_str() {
-        "edge" => match topo.edges.iter().find(|e| e.index == *index) {
-            Some(e) => {
-                field(p, k, "Curve", &e.kind, "");
-                mass_field(p, k, "Length", e.length, "mm");
-                if let Some(r) = e.radius {
-                    field(p, k, "Radius", &r.to_string(), "mm");
-                    field(p, k, "Ø", &(2.0 * r).to_string(), "mm");
-                }
-                if e.center.is_some() {
-                    point_field(p, k, "Centre", e.center, "mm");
-                }
-                point_field(p, k, "Start", e.start, "mm");
-                point_field(p, k, "End", e.end, "mm");
-                point_field(p, k, "Midpoint", e.midpoint, "mm");
-            }
-            None => {
-                p.spawn(k.caption(missing("edge")));
-            }
-        },
-        "vertex" => match topo.vertices.iter().find(|v| v.index == *index) {
-            Some(v) => point_field(p, k, "Position", v.point, "mm"),
-            None => {
-                p.spawn(k.caption(missing("vertex")));
-            }
-        },
-        _ => match topo.faces.iter().find(|f| f.index == *index) {
-            Some(f) => {
-                if kind == "point" {
-                    p.spawn(k.note("A point pick names the face it lies on; the face:"));
-                }
-                face_rows(p, k, f);
-            }
-            None => {
-                p.spawn(k.caption(missing("face")));
-            }
-        },
-    }
-}
-
-/// "Instance of": the source node's name and id (the id alone when the
-/// shown tree does not have it).
-fn instance_of(doc: &CadDocument, source: &str) -> String {
-    let name = doc.node_name(source);
-    if name == source { source.to_string() } else { format!("{name} ({source})") }
-}
-
-/// Why no detail can come now (not connected), and whether that is an error.
-fn waiting(doc: &CadDocument) -> Option<(String, bool)> {
-    if doc.connected() {
-        return None;
-    }
-    Some(match &doc.connection {
-        Connection::Connecting { what, .. } => (format!("Waiting for the connection to RoboCAD: {what}."), false),
-        Connection::Lost { error, .. } => (format!("No detail: not connected to RoboCAD: {error}"), true),
-        Connection::Connected => ("Waiting for the connection to RoboCAD.".to_string(), false),
-    })
-}
-
 /// A value RoboCAD may have sent as null (or non-finite): never a number then.
 const NULL_VALUE: &str = "null in RoboCAD's answer";
 
@@ -382,258 +214,9 @@ fn mass_vector(p: &mut ChildSpawnerCommands, k: &Kit, key: &str, v: &[Option<f64
     field(p, k, key, &text, if v.iter().any(Option::is_some) { unit } else { "" });
 }
 
-/// The sub-body item (if the first selected is one), then the node:
-/// summary, transform, then RoboCAD's detail for it.
-pub(super) fn inspector(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>) {
-    let Some(id) = selection.first_node() else { return };
-    let Some(n) = node(doc, id) else { return };
-    sub_body(p, k, doc, selection, topology);
-    p.spawn(k.section("Node"));
-    field(p, k, "Kind", &n.kind, "");
-    field(p, k, "Id", &n.id, "");
-    field(p, k, "Parent", n.parent.as_deref().unwrap_or("null (a root)"), "");
-    field(p, k, "Children", &n.children.len().to_string(), "");
-    field(p, k, "Effective visibility", if n.effective_visible { "shown" } else { "hidden" }, "");
-    field(p, k, "Material", n.material.as_deref().unwrap_or("not set (null)"), "");
-    if let Some(c) = &n.color {
-        field(p, k, "Colour", &numbers(c), "");
-    }
-    if let Some(source) = &n.source {
-        field(p, k, "Instance of", &instance_of(doc, source), "");
-    }
-    if let Some(v) = &n.component_instance {
-        lines(p, k, "component_instance", v);
-    }
-    if let Some(v) = &n.component_member {
-        lines(p, k, "component_member", v);
-    }
-    editors::editors(p, k, doc, n);
-    p.spawn(k.section("Detail"));
-    match &doc.detail {
-        Some((detail_id, revision, result)) if detail_id == id => match result {
-            Err(e) => {
-                p.spawn(k.text(e.clone(), size::SMALL, DANGER, 0));
-            }
-            Ok(d) => {
-                p.spawn(k.note(format!("RoboCAD's GET /nodes/{id} at revision {revision}")));
-                if let Some(kind) = &d.body_kind {
-                    field(p, k, "Body kind", kind, "");
-                }
-                if let Some(m) = &d.mass {
-                    mass_field(p, k, "Volume", m.volume_mm3, "mm³");
-                    mass_field(p, k, "Area", m.area_mm2, "mm²");
-                    mass_field(p, k, "Mass", m.mass_g, "g");
-                    mass_vector(p, k, "Centroid", &m.centroid, "mm");
-                    mass_vector(p, k, "Bounding box min", &m.bbox_min, "mm");
-                    mass_vector(p, k, "Bounding box max", &m.bbox_max, "mm");
-                    mass_vector(p, k, "Size", &m.size, "mm");
-                }
-                if let Some(f) = d.face_count {
-                    field(p, k, "Faces", &f.to_string(), "");
-                }
-                if let Some(e) = d.edge_count {
-                    field(p, k, "Edges", &e.to_string(), "");
-                }
-                for (name, value) in [("joint", &d.joint), ("robot", &d.robot), ("sketch", &d.sketch), ("plane", &d.plane), ("measure", &d.measure), ("mirror_plane", &d.mirror_plane), ("mesh", &d.mesh), ("image", &d.image)] {
-                    if let Some(v) = value {
-                        p.spawn(k.section(name));
-                        lines(p, k, name, v);
-                    }
-                }
-            }
-        },
-        _ if !doc.connected() => {
-            if let Some((text, error)) = waiting(doc) {
-                p.spawn(k.text(text, size::SMALL, if error { DANGER } else { SUBTLE }, 0));
-            }
-        }
-        _ => {
-            p.spawn(k.caption("Loading…"));
-        }
-    }
-}
-
 /// The revision of the shown `/doc` (what `sync::fetch_physical` stamps).
 fn current_revision(doc: &CadDocument) -> Option<u64> {
     doc.doc_key.as_ref().map(|k| k.1)
-}
-
-pub(super) fn physical_key(doc: &CadDocument, selection: &[SelectionItem]) -> String {
-    // Not the model itself (collision meshes make it large): its revision,
-    // whether it failed, and the selection pick the shown link.
-    let physical = doc.physical.as_ref().map(|(r, result)| (*r, result.as_ref().err()));
-    format!("{:?}", (selection.first_node(), physical, current_revision(doc), doc.physical_job.is_some()))
-}
-
-/// The physical link holding the inspected body, from `GET /physical?flex=0`.
-pub(super) fn physical(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
-    let Some(id) = selection.first_node() else { return };
-    p.spawn(k.section("Physical link"));
-    if doc.physical_job.is_some() {
-        p.spawn(k.caption("Fetching RoboCAD's physical model…"));
-        return;
-    }
-    let hint = "Press Physical in the toolbar to fetch RoboCAD's physical model for this revision (GET /physical; nothing is written).";
-    let Some((revision, result)) = &doc.physical else {
-        p.spawn(k.caption(hint));
-        return;
-    };
-    if Some(*revision) != current_revision(doc) {
-        p.spawn(k.caption(format!("The physical model shown was fetched at revision {revision}; the document has changed since. {hint}")));
-        return;
-    }
-    let model = match result {
-        Err(e) => {
-            p.spawn(k.text(e.clone(), size::SMALL, DANGER, 0));
-            return;
-        }
-        Ok(model) => model,
-    };
-    let link = model.get("links").and_then(Value::as_array).and_then(|links| links.iter().find(|l| l.get("members").and_then(Value::as_array).is_some_and(|m| m.iter().any(|m| m.as_str() == Some(id)))));
-    let Some(link) = link else {
-        p.spawn(k.caption("This node is not a member of any link in RoboCAD's physical model (links are made of bodies)."));
-        return;
-    };
-    p.spawn(k.note("As RoboCAD's physical model gives it, in SI units (kg, m); the link merges every body fixed to it."));
-    for (key, label, unit) in [("name", "Link", ""), ("id", "Link id", ""), ("material", "Material", ""), ("mass", "Mass", "kg"), ("com", "Centre of mass", "m"), ("inertia", "Inertia about the centre of mass", "kg·m²"), ("bbox", "Bounding box from the centre of mass", "m")] {
-        if let Some(v) = link.get(key) {
-            match inline(v, 0) {
-                Some(text) => field(p, k, label, &text, unit),
-                None => lines(p, k, label, v),
-            }
-        }
-    }
-    if let Some(members) = link.get("members").and_then(Value::as_array) {
-        field(p, k, "Bodies in the link", &members.len().to_string(), "");
-    }
-    if let Some(source) = link.get("mass_sources").and_then(|s| s.get(id)) {
-        match source.as_str() {
-            Some(text) => provenance(p, k, &format!("mass_sources[{id}]"), text),
-            None => lines(p, k, &format!("mass_sources[{id}]"), source),
-        }
-    }
-}
-
-pub(super) fn attributes_key(doc: &CadDocument, selection: &[SelectionItem]) -> String {
-    let sel = selection.first_node();
-    let n = sel.and_then(|id| node(doc, id)).map(|n| (n.visible, n.locked, n.disabled, &n.material));
-    format!("{:?}", (sel, n, doc.doc.as_ref().map(|d| &d.materials), edit_blocked(doc)))
-}
-
-/// A chip for control `id` (from `panel::controls`), if it is listed.
-fn control_chip(p: &mut ChildSpawnerCommands, k: &Kit, all: &[Control], id: &str, label: &str, on: bool) {
-    if let Some(c) = control(all, id) {
-        p.spawn(k.chip(label, CadButton(c.action.clone()), on, c.ready.is_ok()));
-    }
-}
-
-/// The node's flags, its material and Delete: each one `CadPatch`/`CadDelete`,
-/// the action `panel::controls` lists for it.
-pub(super) fn attributes(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
-    let Some(id) = selection.first_node() else { return };
-    let Some(n) = node(doc, id) else { return };
-    p.spawn(k.section("Edit"));
-    let blocked = edit_blocked(doc);
-    p.spawn(k.caption(match &blocked {
-        Some(why) => format!("Editing is unavailable: {why}."),
-        None => "Each change is one step in RoboCAD's undo history.".to_string(),
-    }));
-    let all = controls(doc, selection);
-    p.spawn(wrap()).with_children(|r| {
-        for (key, label, on) in [("visible", "Visible", n.visible), ("locked", "Locked", n.locked), ("disabled", "Disabled", n.disabled)] {
-            control_chip(r, k, &all, &format!("cad:{key}:{id}"), label, on);
-        }
-    });
-    p.spawn(k.text("Material", size::BODY, TEXT, 1));
-    let materials: Vec<(String, String)> = doc.doc.as_ref().map(|d| d.materials.iter().filter_map(material).collect()).unwrap_or_default();
-    if materials.is_empty() {
-        p.spawn(k.caption("RoboCAD listed no materials."));
-    } else {
-        p.spawn(wrap()).with_children(|r| {
-            for (material_id, label) in materials {
-                let on = n.material.as_deref() == Some(material_id.as_str());
-                control_chip(r, k, &all, &format!("cad:material:{id}:{material_id}"), &label, on);
-            }
-        });
-    }
-    p.spawn(Node { margin: UiRect::top(Val::Px(6.0)), ..wrap() }).with_children(|r| {
-        if let Some(c) = control(&all, "cad:delete") {
-            r.spawn(k.button("Delete", CadButton(c.action.clone()), Look::Danger, c.ready.is_ok()));
-        }
-    });
-}
-
-/// RoboCAD's undo and redo labels, most recent first (read-only).
-pub(super) fn history(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
-    p.spawn(k.section("History"));
-    let Some(d) = &doc.doc else {
-        p.spawn(k.caption("RoboCAD has not sent its history yet."));
-        return;
-    };
-    for (title, labels, empty) in [("Undo (most recent first)", &d.history.undo, "Nothing to undo."), ("Redo (most recent first)", &d.history.redo, "Nothing to redo.")] {
-        p.spawn(k.text(title, size::BODY, TEXT, 1));
-        if labels.is_empty() {
-            p.spawn(k.note(empty));
-        }
-        for label in labels.iter().rev() {
-            p.spawn((k.text(label.clone(), size::SMALL, SUBTLE, 0), Node { margin: UiRect::left(Val::Px(8.0)), ..default() }));
-        }
-    }
-}
-
-pub(super) fn commands_key(doc: &CadDocument) -> String {
-    format!("{:?}", (&doc.commands, doc.health.as_ref().map(|h| h.gui), edit_blocked(doc)))
-}
-
-/// RoboCAD's GUI command registry, by category; a press runs the command there.
-pub(super) fn commands(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
-    p.spawn(k.section("RoboCAD commands"));
-    let Some(health) = &doc.health else {
-        p.spawn(k.caption("Waiting for RoboCAD to answer."));
-        return;
-    };
-    let map = match &doc.commands {
-        Some(Err(e)) => {
-            p.spawn(k.text(e.clone(), size::SMALL, DANGER, 0));
-            return;
-        }
-        Some(Ok(map)) if health.gui && !map.is_empty() => map,
-        Some(Ok(_)) if health.gui => {
-            p.spawn(k.caption("RoboCAD listed no commands."));
-            return;
-        }
-        Some(Ok(_)) => {
-            p.spawn(k.caption(HEADLESS_COMMANDS));
-            return;
-        }
-        None if !health.gui => {
-            p.spawn(k.caption(HEADLESS_COMMANDS));
-            return;
-        }
-        None => {
-            p.spawn(k.caption("Loading RoboCAD's command registry…"));
-            return;
-        }
-    };
-    let blocked = edit_blocked(doc);
-    if let Some(why) = &blocked {
-        p.spawn(k.text(format!("Commands are unavailable: {why}."), size::SMALL, WARN, 0));
-    }
-    let all = controls(doc, selection);
-    let mut groups: BTreeMap<&str, Vec<(&String, &sim_runtime::cad_client::CommandInfo)>> = BTreeMap::new();
-    for (id, info) in map {
-        groups.entry(info.category.as_str()).or_default().push((id, info));
-    }
-    for (category, items) in groups {
-        p.spawn(k.text(if category.is_empty() { "Other" } else { category }, size::BODY, TEXT, 1));
-        p.spawn(wrap()).with_children(|r| {
-            for (id, info) in items {
-                // The action and enabled state `system_ui` lists (`panel::controls`).
-                let ready = control(&all, &format!("cad:command:{id}")).map_or(blocked.is_none(), |c| c.ready.is_ok());
-                r.spawn(k.button(&command_label(&info.label, &info.keys), CadButton(CadAction::CadCommand { id: id.clone() }), Look::Secondary, ready));
-            }
-        });
-    }
 }
 
 #[cfg(test)]

@@ -15,8 +15,10 @@
 //!   hits here are parameter indices.
 //! - **Clicks** (`FormHit`): a text field takes the keyboard (focus is
 //!   display state, set here as the numeric bar sets its own); a choice
-//!   option or a checkbox writes `CadFormSet { name, value }`; OK writes
-//!   `CadFormSubmit`, Cancel `CadFormCancel`.
+//!   option, a pick's choice (its key: a body, joint or motor id from
+//!   `ops::picks`, "" for "(world)" or "(none)") or a checkbox writes
+//!   `CadFormSet { name, value }`; OK writes `CadFormSubmit`, Cancel
+//!   `CadFormCancel`.
 //! - **Keys** while a field has the keyboard (`CadInputFocus` is set):
 //!   typing edits the draft (`TextDraft`: the first character replaces a
 //!   selected text), Tab moves to the next text field, Enter writes
@@ -33,7 +35,10 @@
 //!   catalogue opens it, RoboCAD's dialog); a tool's form opens unfocused,
 //!   as RoboCAD's numeric bar does until Tab.
 //! - `form.error` (OK's last refusal) shows under the form in the danger
-//!   colour; a tool's hint under that.
+//!   colour; a tool's hint under that; the Add motor form's notes line
+//!   (`ops::robot_form::note`) under the fields. A pick's choices are read
+//!   from the document each time the form is drawn, and the form is
+//!   rebuilt when they change (the motor library or the tree arriving).
 use super::POPUP_Z;
 use super::other_field_focused;
 use crate::app::ModeScope;
@@ -100,8 +105,9 @@ fn ok_ready(entry: &OpEntry, form: &FormState) -> Result<(), String> {
 
 /// The open form's `system_ui` controls: `cad:form:ok` (enabled when every
 /// field evaluates), `cad:form:cancel`, and `cad:form:set:<name>:<value>`
-/// for each shown choice's options and checkbox's states (a name or option
-/// with ":" cannot be a control id and is left to REST `cad_form_set`).
+/// for each shown choice's options, pick's choices (by key; "-" for the
+/// empty key of "(world)" or "(none)") and checkbox's states (a name or
+/// option with ":" cannot be a control id and is left to REST `cad_form_set`).
 pub(crate) fn controls(doc: &CadDocument) -> Vec<Control> {
     let Some(form) = &doc.ops.form else { return Vec::new() };
     let Some(entry) = ops::entry(form.op) else { return Vec::new() };
@@ -125,6 +131,14 @@ pub(crate) fn controls(doc: &CadDocument) -> Vec<Control> {
             FieldKind::Check => {
                 for v in [true, false] {
                     out.push(Control { id: format!("cad:form:set:{}:{v}", p.name), label: format!("{}: {}", p.label, if v { "on" } else { "off" }), action: set(Value::Bool(v)), ready: Ok(()) });
+                }
+            }
+            FieldKind::Pick { source } => {
+                for (key, label) in ops::picks(source, doc) {
+                    let token = if key.is_empty() { "-".to_string() } else { key.clone() };
+                    if fits(token.as_str()) {
+                        out.push(Control { id: format!("cad:form:set:{}:{token}", p.name), label: format!("{}: {label}", p.label), action: set(Value::String(key)), ready: Ok(()) });
+                    }
                 }
             }
             _ => {}
@@ -205,14 +219,20 @@ pub(super) fn input(
                 select_all = true;
                 started = true;
             }
-            FormHit::Option(i, k) => {
-                if let Some(p) = param(i)
-                    && let FieldKind::Choice { options } = p.kind
-                    && let Some(o) = options.get(k)
-                {
-                    out.write(Act::ui(CadAction::CadFormSet { name: p.name.to_string(), value: Value::String(o.to_string()) }));
+            FormHit::Option(i, k) => match param(i).map(|p| (p, p.kind)) {
+                Some((p, FieldKind::Choice { options })) => {
+                    if let Some(o) = options.get(k) {
+                        out.write(Act::ui(CadAction::CadFormSet { name: p.name.to_string(), value: Value::String(o.to_string()) }));
+                    }
                 }
-            }
+                // The choice's key, as the form showed the list (read again now: the same document).
+                Some((p, FieldKind::Pick { source })) => {
+                    if let Some((key, _)) = ops::picks(source, &doc).into_iter().nth(k) {
+                        out.write(Act::ui(CadAction::CadFormSet { name: p.name.to_string(), value: Value::String(key) }));
+                    }
+                }
+                _ => {}
+            },
             FormHit::Check(i) => {
                 if let Some(p) = param(i) {
                     let on = texts.get(i).map_or(p.default, String::as_str) == "true";
@@ -321,10 +341,19 @@ pub(super) fn input(
     }
 }
 
-/// What the form shows, as a comparable text.
+/// The shown pick fields' choices (by parameter index; empty for other
+/// kinds) and the form's notes line, from the document now.
+fn lists(doc: &CadDocument, entry: &OpEntry, form: &FormState) -> (Vec<Vec<(String, String)>>, Option<String>) {
+    let picks = entry.params.iter().map(|p| if let FieldKind::Pick { source } = p.kind { ops::picks(source, doc) } else { Vec::new() }).collect();
+    (picks, ops::note(entry, &form.texts, doc))
+}
+
+/// What the form shows, as a comparable text (with the picks' choices and
+/// the notes line, which change as RoboCAD's answers arrive).
 fn form_key(doc: &CadDocument) -> Option<String> {
     let form = doc.ops.form.as_ref()?;
-    Some(format!("{:?}", (doc.generation, form, doc.ops.active)))
+    let entry = ops::entry(form.op)?;
+    Some(format!("{:?}", (doc.generation, form, doc.ops.active, lists(doc, entry, form))))
 }
 
 /// Present: the form, rebuilt when its drafts, focus or error change;
@@ -344,13 +373,14 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
     let Some(entry) = ops::entry(form.op) else { return };
     let k = Kit::new(&fonts);
     let rows_at = shown(entry, &form.texts);
+    let (picks, note) = lists(doc, entry, form);
     let rows: Vec<FormRow> = rows_at
         .iter()
         .map(|i| {
             let p = &entry.params[*i];
             let focused = form.focus == Some(*i);
             // An empty default is optional (`ok_ready` and `ops::values` leave it out empty).
-            FormRow { label: p.label, kind: p.kind, text: form.texts.get(*i).map_or(p.default, String::as_str), focused, optional: p.default.is_empty(), selected: focused && form.select_all }
+            FormRow { label: p.label, kind: p.kind, text: form.texts.get(*i).map_or(p.default, String::as_str), focused, optional: p.default.is_empty(), selected: focused && form.select_all, picks: picks.get(*i).map_or(&[][..], Vec::as_slice) }
         })
         .collect();
     let param = |r: usize| rows_at.get(r).copied().unwrap_or(usize::MAX);
@@ -380,7 +410,7 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
                 FormRoot,
                 DespawnOnExit(ModeScope::Cad),
             ))
-            .with_children(|backdrop| body(backdrop, &k, entry, &rows, ok, &hit, form.error.as_ref(), modal));
+            .with_children(|backdrop| body(backdrop, &k, entry, &rows, ok, &hit, (form.error.as_ref(), note.as_deref()), modal));
     } else {
         commands
             .spawn((
@@ -391,15 +421,18 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
                 FormRoot,
                 DespawnOnExit(ModeScope::Cad),
             ))
-            .with_children(|p| body(p, &k, entry, &rows, ok, &hit, form.error.as_ref(), modal));
+            .with_children(|p| body(p, &k, entry, &rows, ok, &hit, (form.error.as_ref(), note.as_deref()), modal));
     }
 }
 
-/// The form's content: the kit form, with OK's last refusal and a tool's
-/// hint in its panel under the buttons.
+/// The form's content: the kit form, with OK's last refusal, the notes
+/// line and a tool's hint in its panel under the buttons.
 #[allow(clippy::too_many_arguments)]
-fn body(p: &mut ChildSpawnerCommands, k: &Kit, entry: &OpEntry, rows: &[FormRow], ok: bool, hit: &impl Fn(FormHit) -> FormPart, error: Option<&String>, modal: bool) {
+fn body(p: &mut ChildSpawnerCommands, k: &Kit, entry: &OpEntry, rows: &[FormRow], ok: bool, hit: &impl Fn(FormHit) -> FormPart, (error, note): (Option<&String>, Option<&str>), modal: bool) {
     k.form(p, entry.label, rows, ok, Some(WIDTH), hit, |p| {
+        if let Some(note) = note {
+            p.spawn(k.note(note.to_string()));
+        }
         if let Some(error) = error {
             p.spawn(k.text(error.clone(), size::SMALL, DANGER, 0));
         }

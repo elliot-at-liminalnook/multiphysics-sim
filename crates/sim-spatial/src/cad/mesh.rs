@@ -496,7 +496,10 @@ fn settle_failed(meshes: &mut CadMeshes, id: String, revision: u64, error: Strin
 }
 
 /// SimSync (after `sync`): each body's colour, or the selection's for a
-/// body selected as a body item (`[id, "body", 0]`).
+/// body selected as a body item (`[id, "body", 0]`), or white for a body
+/// showing the stress overlay's vertex colours (`results::StressPaint`,
+/// display only), which the material multiplies.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn highlight(
     doc: Option<Res<CadDocument>>,
     meshes: Option<Res<CadMeshes>>,
@@ -504,11 +507,12 @@ pub(super) fn highlight(
     mut assets: ResMut<Assets<StandardMaterial>>,
     mut bodies: Query<(&CadBody, &mut MeshMaterial3d<StandardMaterial>)>,
     added: Query<(), Added<CadBody>>,
-    mut last: Local<Option<(u64, u64, u64)>>,
+    mut last: Local<Option<(u64, u64, u64, u64)>>,
     selection: super::selection::CadSelection,
+    paint: Option<Res<super::results::StressPaint>>,
 ) {
     let (Some(doc), Some(meshes), Some(mut materials)) = (doc, meshes, materials) else { return };
-    let key = (doc.generation, doc.revision, meshes.epoch);
+    let key = (doc.generation, doc.revision, meshes.epoch, paint.as_ref().map_or(0, |p| p.epoch));
     if *last == Some(key) && added.is_empty() {
         return;
     }
@@ -517,7 +521,14 @@ pub(super) fn highlight(
     let selection = selection.items();
     for (body, mut material) in &mut bodies {
         let selected = selection.iter().any(|s| s.0 == body.id && s.1 == "body");
-        let want = if selected { materials.selected.clone() } else { materials.colour(&mut assets, node_colour(&doc, &body.id)) };
+        let painted = paint.as_ref().is_some_and(|p| p.painted(&body.id));
+        let want = if selected {
+            materials.selected.clone()
+        } else if painted {
+            materials.colour(&mut assets, [1.0, 1.0, 1.0])
+        } else {
+            materials.colour(&mut assets, node_colour(&doc, &body.id))
+        };
         if material.0 != want {
             material.0 = want;
         }

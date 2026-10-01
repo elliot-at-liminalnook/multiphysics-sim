@@ -56,7 +56,10 @@ fn the_table_is_robocads_registry() {
     assert_eq!(cmd("tool.annotate").keys, &["N"]);
     assert!(cmd("tool.annotate").bound);
     assert_eq!(cmd("robot.add_motor").keys, &["Ctrl+Shift+M"]);
-    assert!(!cmd("robot.add_motor").bound && !cmd("robot.add_joint").bound && !cmd("simulation.experiment").bound);
+    assert!(!cmd("robot.add_motor").bound && !cmd("simulation.experiment").bound);
+    // Bound here deliberately (registry module doc): RoboCAD lists it, nothing else uses it.
+    assert!(cmd("robot.add_joint").bound);
+    assert_eq!(cmd("robot.add_joint").keys, &["Ctrl+Shift+J"]);
     assert_eq!(cmd("command_palette").keys, &["Ctrl+Space", "Shift+F"]);
     assert_eq!(cmd("edit.delete").keys, &["Delete", "Backspace"]);
     assert!(registry::command("sketch.arc").is_none(), "keymap.json's sketch.arc names no command");
@@ -178,7 +181,8 @@ fn the_palette_shows_robocads_key_conflict() {
     let same = list.iter().position(|e| e.id == "edit.select_same_material").unwrap();
     let motor = list.iter().position(|e| e.id == "robot.add_motor").unwrap();
     assert_eq!(conflicts(&list).get("ctrl+shift+m"), Some(&vec![same, motor]));
-    assert_eq!(list[motor].note, "cad-physical-inspect");
+    // Native since cad-physical-inspect: the catalogue runs it (no note).
+    assert_eq!(list[motor].note, "");
     assert_eq!(list.iter().find(|e| e.id == "help.guide").unwrap().note, "not ported");
 }
 
@@ -447,4 +451,48 @@ fn the_file_rows_run_the_files_actions() {
         assert_eq!(resolved(id), Resolved::Action(crate::cad::files::command_action(id).unwrap()), "{id}");
     }
     assert!(matches!(resolved("edit.preferences"), Resolved::Different(_)));
+}
+
+/// cad-physical-inspect: every robot tool row of RoboCAD's table runs the
+/// catalogue's entry, with RoboCAD's label, category and keys; Ctrl+Shift+J
+/// starts the joint tool and Ctrl+Shift+M stays Select Same Material.
+#[test]
+fn every_robot_tool_row_runs_in_the_catalogue() {
+    let ids = ["robot.add_motor", "robot.add_joint", "robot.joint_dialog", "robot.infer", "robot.assign_motor", "robot.fixed", "robot.ground", "robot.add_sensor", "robot.add_cable", "robot.power"];
+    for id in ids {
+        let c = registry::command(id).unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(c.native, Native::Op, "{id}");
+        let Resolved::Op(e) = registry::resolve(c) else { panic!("{id} does not resolve to the catalogue") };
+        assert_eq!((e.label, e.category, e.keys), (c.label, c.category, c.keys), "{id}");
+    }
+    for c in COMMANDS.iter().filter(|c| c.native == Native::Op && (c.id.starts_with("robot.") || c.id.starts_with("sim."))) {
+        assert!(crate::cad::ops::entry(c.id).is_some(), "{} is an Op row the catalogue does not list", c.id);
+    }
+    let bound = |key: &str| COMMANDS.iter().filter(|c| c.bound && c.keys.iter().any(|k| *k == key)).map(|c| c.id).collect::<Vec<_>>();
+    assert_eq!(bound("Ctrl+Shift+J"), ["robot.add_joint"]);
+    assert_eq!(bound("Ctrl+Shift+M"), ["edit.select_same_material"]);
+    // An interaction or a dialog with nothing to check first is ready with nothing selected.
+    let doc = document();
+    let own = own_controls(&doc, &[]);
+    for id in ["robot.add_motor", "robot.add_joint", "robot.joint_dialog", "robot.infer", "robot.add_sensor", "robot.add_cable", "robot.power"] {
+        assert_eq!(registry::ready(registry::command(id).unwrap(), &doc, &[], &own), Ok(()), "{id}");
+    }
+    assert_eq!(registry::ready(registry::command("robot.fixed").unwrap(), &doc, &[], &own), Err("select the parent body first, then the bodies to fix to it".into()));
+}
+
+/// A pick field's choices are form controls by key ("-" for "(world)").
+#[test]
+fn a_pick_fields_choices_are_form_controls() {
+    let mut doc = document();
+    let e = crate::cad::ops::entry("robot.joint_dialog").unwrap();
+    doc.ops.form = Some(FormState { op: e.id, texts: e.params.iter().map(|p| p.default.to_string()).collect(), focus: None, select_all: false, began: 4, error: None });
+    let controls = super::form::controls(&doc);
+    let ids: Vec<&str> = controls.iter().map(|c| c.id.as_str()).collect();
+    for want in ["cad:form:set:parent:-", "cad:form:set:parent:b1", "cad:form:set:child:b2", "cad:form:set:type:prismatic"] {
+        assert!(ids.contains(&want), "{want}: {ids:?}");
+    }
+    let world = controls.iter().find(|c| c.id == "cad:form:set:parent:-").unwrap();
+    assert_eq!(world.action, CadAction::CadFormSet { name: "parent".into(), value: json!("") });
+    let patterns = <CadAction as Action>::controls();
+    assert!(patterns.iter().any(|p| actions::control_matches(p, "cad:form:set:parent:-")));
 }

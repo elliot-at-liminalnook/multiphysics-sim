@@ -19,6 +19,11 @@ pub(crate) const PLANES: FieldKind = FieldKind::Choice { options: &["active", "x
 pub(crate) const TEXT: FieldKind = FieldKind::Text;
 pub(crate) const CHECK: FieldKind = FieldKind::Check;
 pub(crate) const JSON: FieldKind = FieldKind::Json;
+/// One of a list filled from the document when the form shows it
+/// (`robot_form::picks`: "motors", "bodies", "joints", …).
+pub(crate) const fn pick(source: &'static str) -> FieldKind {
+    FieldKind::Pick { source }
+}
 
 /// A dialog's number: `QInputDialog.getDouble(…, value, min, max, decimals)` or `getInt`.
 pub(crate) const fn number(unit: Unit, min: f64, max: f64, decimals: u8) -> FieldKind {

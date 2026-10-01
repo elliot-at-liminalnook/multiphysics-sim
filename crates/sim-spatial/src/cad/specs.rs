@@ -13,6 +13,11 @@ impl actions::Action for CadAction {
         specs.extend(super::display::specs());
         specs.extend(super::views::specs());
         specs.extend(super::files::specs());
+        // cad-physical-inspect: the Robot panel and robot tools, materials, the inspector's physical rows, results.
+        specs.extend(super::robot::specs());
+        specs.extend(super::materials::specs());
+        specs.extend(super::inspector::physical_specs());
+        specs.extend(super::results::specs());
         specs
     }
     fn controls() -> &'static [&'static str] {
@@ -22,6 +27,8 @@ impl actions::Action for CadAction {
             "cad:op:<id>", "cad:surface:<kind>", "cad:menu:<category>", "cad:form:ok", "cad:form:cancel", "cad:form:set:<name>:<value>",
             // cad-views-export (part D: display, section, views; part E: files).
             "cad:display:<setting>", "cad:section:<setting>", "cad:view:<id>", "cad:file:<op>",
+            // cad-physical-inspect.
+            "cad:robot:<id>", "cad:robot:row:<id>", "cad:robot:button:<id>", "cad:materials:<id>", "cad:inspect:<id>", "cad:results:<id>",
         ]
     }
 }

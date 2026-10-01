@@ -284,6 +284,11 @@ pub struct Candidates {
     pub items: Vec<SelectionItem>,
     pub extend: bool,
     pub toggle: bool,
+    /// The shown revision the candidates were gathered at: a choice's face,
+    /// edge, vertex, point and curve items carry it into the shared
+    /// selection, so a choice from a menu the tree has since moved past is
+    /// refused by name (`selection::select`).
+    pub revision: Option<u64>,
 }
 
 /// True while one of CAD mode's text fields has the keyboard (D2's panel

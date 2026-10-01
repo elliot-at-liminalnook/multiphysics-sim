@@ -27,10 +27,24 @@ pub struct Hotspot {
 impl Hotspot {
     /// `results["links"][link]["hotspot"]`; `None` without cells (the link keeps its normal look).
     pub fn from_results(results: &Value, link: &str) -> Option<Self> {
-        let l = &results["links"][link];
-        let cells: Vec<[f64; 3]> = l["hotspot"]["cells"].as_array()?.iter().filter_map(|c| Some([c[0].as_f64()?, c[1].as_f64()?, c[2].as_f64()?])).collect();
-        let stress_pa: Vec<f64> = l["hotspot"]["stress_pa"].as_array()?.iter().filter_map(|v| v.as_f64()).collect();
+        Self::from_block(&results["links"][link]["hotspot"])
+    }
+    /// One hotspot block `{"cells": [[x, y, z], …], "stress_pa": […]}` (the
+    /// link block's `hotspot`, also as RoboCAD hangs it on a node's
+    /// `results`); `None` without cells. A cell and its stress are kept or
+    /// dropped together (a non-number in either, e.g. a NaN written as
+    /// null, drops the pair), so every later cell keeps its own stress.
+    pub fn from_block(hotspot: &Value) -> Option<Self> {
+        let cells = hotspot["cells"].as_array()?;
+        let stress = hotspot["stress_pa"].as_array()?;
+        let (cells, stress_pa): (Vec<[f64; 3]>, Vec<f64>) = cells.iter().zip(stress).filter_map(|(c, v)| Some(([c[0].as_f64()?, c[1].as_f64()?, c[2].as_f64()?], v.as_f64()?))).unzip();
         if cells.is_empty() { None } else { Some(Self { cells, stress_pa }) }
+    }
+    /// The largest recorded cell stress, at least 1 Pa: the yield a link
+    /// without a known material yield is scaled by (RoboCAD's fallback,
+    /// `max(stress, 1)`).
+    pub fn peak_or_one(&self) -> f64 {
+        self.stress_pa.iter().copied().filter(|v| v.is_finite()).fold(1.0, f64::max)
     }
 }
 
@@ -47,6 +61,15 @@ pub fn stress_colour(hotspot: &Hotspot, yield_strength: f64, p: [f64; 3]) -> [f3
     // Scale so that yield is red; the scale is logarithmic over 3 decades.
     let ratio = (best.1 / yield_strength.max(1.0)).max(1e-6);
     colormap(((ratio.log10() + 3.0) / 3.0) as f32)
+}
+
+/// The one stress colouring rule for a whole link: each position (link
+/// frame, metres; the frame of the hotspot cells) through [`stress_colour`].
+/// Robot mode (`robot::stress`, positions of `Collision::display_triangles`)
+/// and CAD mode's overlay (RoboCAD's mesh vertices, mm, moved into the link
+/// frame by the caller) both colour through this.
+pub fn link_colours(hotspot: &Hotspot, yield_strength: f64, positions_link_frame_m: impl IntoIterator<Item = [f64; 3]>) -> Vec<[f32; 4]> {
+    positions_link_frame_m.into_iter().map(|p| stress_colour(hotspot, yield_strength, p)).collect()
 }
 
 /// The model hash the results were computed from: `provenance.physical_hash`

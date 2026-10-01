@@ -386,10 +386,12 @@ pub(in crate::cad) fn save(doc: &mut CadDocument, call: &mut Call, path: Option<
             result: value(&s),
         })
     });
-    if doc.edit_seq != before
-        && let (Some(edit), Some(path)) = (doc.edit.as_mut(), path)
-    {
-        edit.retarget = Some(PathBuf::from(path));
+    if doc.edit_seq != before {
+        // cad-physical-inspect: the live link re-exports once this save succeeds.
+        crate::cad::results::note_save(doc, path.as_deref());
+        if let (Some(edit), Some(path)) = (doc.edit.as_mut(), path) {
+            edit.retarget = Some(PathBuf::from(path));
+        }
     }
     outcome
 }
@@ -438,6 +440,8 @@ fn open_form(cx: &mut Cx, kind: form::Kind, format: Option<&str>) -> Result<Valu
     let form = FileForm::new(kind, &dir, &stem, format, &context, &files.export_settings)?;
     let shown = form.json();
     files.form = Some(form);
+    // One modal path form at a time: a results, identification or export form closes (cad-physical-inspect).
+    cx.doc.results.form = None;
     Ok(json!({"opened": shown}))
 }
 

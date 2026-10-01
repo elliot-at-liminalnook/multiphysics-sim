@@ -1,5 +1,5 @@
 //! The catalogue's parameter form (`CadDocument::ops.form`): opening it
-//! with RoboCAD's defaults, a draft set, OK (`CadFormSubmit`: the drafts as
+//! with RoboCAD's defaults (and a robot dialog's presets), a draft set, OK (`CadFormSubmit`: the drafts as
 //! a `CadRun`), Cancel and Escape (`form_cancel`, which also ends a pick,
 //! place, sketch, extrude or plane interaction without sending anything),
 //! and the form as `cad_state.ops.form` shows it. Split from `ops` to keep
@@ -61,10 +61,25 @@ pub(super) fn submit(call: &mut Call, cx: &mut Cx) -> Outcome {
 /// Open `entry`'s form with RoboCAD's defaults (or the drafts of the same
 /// form, when it is open already); a number field first takes the keyboard
 /// with its text selected (RoboCAD's dialog).
+#[cfg(test)]
 pub(super) fn open_form(doc: &mut CadDocument, entry: &'static OpEntry) -> Value {
+    open_form_with(doc, entry, None)
+}
+
+/// Open `entry`'s form (as `open_form`), with RoboCAD's presets where its dialog takes them from
+/// the document and the selection (`env`; `robot_form::seed`: a robot
+/// dialog's bodies, joint, motor, battery and control values): a form
+/// opened anew is seeded, the drafts of the same form are kept.
+pub(super) fn open_form_with(doc: &mut CadDocument, entry: &'static OpEntry, env: Option<&Env>) -> Value {
     let texts = match &doc.ops.form {
         Some(f) if f.op == entry.id && f.texts.len() == entry.params.len() => f.texts.clone(),
-        _ => entry.params.iter().map(|p| p.default.to_string()).collect(),
+        _ => {
+            let mut texts: Vec<String> = entry.params.iter().map(|p| p.default.to_string()).collect();
+            if let Some(env) = env {
+                super::robot_form::seed(entry, doc, env, &mut texts);
+            }
+            texts
+        }
     };
     // A dialog's first number field takes the keyboard; a pick or place
     // tool's fields wait for Tab, as RoboCAD's numeric bar does.
@@ -115,6 +130,8 @@ pub(in crate::cad) fn form_cancel(doc: &mut CadDocument) -> Value {
     let sketch = doc.ops.sketch.take().is_some_and(|s| s.unsent());
     doc.ops.extrude = None;
     doc.ops.plane_picks.clear();
+    // A robot click tool's picks so far (the joint tool's parent and child).
+    doc.robot.tools.reset_picks();
     if form.is_none() && active.is_none() && !place {
         return json!({"closed": null});
     }
@@ -155,6 +172,10 @@ pub(super) fn form_json(doc: &CadDocument) -> Value {
             f.insert("default".into(), json!(p.default));
             f.insert("shown".into(), json!(shown));
             f.insert("evaluation".into(), evaluation);
+            // A pick's choices as (key, label), from the document now.
+            if let FieldKind::Pick { source } = p.kind {
+                f.insert("picks".into(), json!(super::robot_form::picks(source, doc)));
+            }
             Value::Object(f)
         })
         .collect();

@@ -237,7 +237,7 @@ pub(super) fn recorded_panel(
     mut shown: Local<bool>,
     mut text: Query<&mut Text, With<RecordedText>>,
     mut buttons: Query<(&RobotAction, &mut Enabled), With<RecordedButton>>,
-    mut seek: Query<(&mut bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction), With<RecordedSeek>>,
+    seek: Query<(Entity, &bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction), With<RecordedSeek>>,
     mut fill: Query<&mut Node, With<RecordedSeekFill>>,
 ) {
     let Some(p) = view.run.as_ref().and_then(|r| r.playback()) else {
@@ -276,10 +276,11 @@ pub(super) fn recorded_panel(
         *shown = true;
     }
     // The slider follows the shown time unless it is held (then it is the pointer's).
+    // `SliderValue` is an immutable component: replace it, don't mutate it.
     let at = seek_fraction(&p.timeline().times, p.timeline().t);
-    for (mut value, pressed, interaction) in &mut seek {
+    for (entity, value, pressed, interaction) in &seek {
         if !crate::ui_kit::slider_held(pressed, interaction) && (value.0 - at).abs() > 1e-4 {
-            value.0 = at;
+            commands.entity(entity).insert(bevy::ui_widgets::SliderValue(at));
         }
     }
     for mut node in &mut fill {

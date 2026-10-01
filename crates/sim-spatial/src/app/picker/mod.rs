@@ -46,6 +46,7 @@ use super::{Persistent, ViewerMode};
 use crate::builder::ui_api::Enabled;
 use crate::jobs::{Latest, Pool};
 use crate::ui_kit::form::{DraftKey, TextDraft};
+use crate::ui_kit::text::release_held;
 use crate::ui_kit::path_field::{self, Listing, PathHit, PathView};
 use crate::ui_kit::picker::{PickHit, PickerEntry, PickerSection};
 use crate::ui_kit::{DANGER, Kit, SUBTLE, UiFonts};
@@ -473,24 +474,6 @@ pub(crate) struct Cursors {
 
 /// The keys that make a typed key a chord (Cmd+V pastes, not "v").
 const CHORD_KEYS: [KeyCode; 4] = [KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight];
-
-/// Releases every held input so the systems underneath see `just_released`
-/// once (a robot walking on a held W, a hardware jog on a held Q/A stops),
-/// and no new press: one made this frame is dropped, unless it re-presses
-/// a key also released this frame (then its release stays). A release that
-/// arrived this frame is kept: Bevy's input system already moved it out of
-/// `pressed`, so dropping it would lose the only `just_released` it gets.
-pub(crate) fn release_held<T: Clone + Eq + std::hash::Hash + Send + Sync + 'static>(input: &mut ButtonInput<T>) {
-    let pressed_now: Vec<T> = input.get_just_pressed().cloned().collect();
-    for key in pressed_now {
-        if input.just_released(key.clone()) {
-            input.clear_just_pressed(key);
-        } else {
-            input.reset(key);
-        }
-    }
-    input.release_all();
-}
 
 /// PreUpdate, after Bevy's input systems: while the picker is open, its
 /// keys (typing into the focused draft; Enter submits, Escape closes, Tab

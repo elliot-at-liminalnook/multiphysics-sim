@@ -249,6 +249,7 @@ impl Kit<'_> {
         (
             Button,
             action,
+            super::text::KitInput,
             Tint::RAISED,
             AccessibleLabel::new(if empty { placeholder.to_string() } else { shown.to_string() }),
             Node { border_radius: BorderRadius::all(Val::Px(5.)), padding: UiRect::axes(Val::Px(10.), Val::Px(7.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },

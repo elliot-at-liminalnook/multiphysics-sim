@@ -315,9 +315,15 @@ kill over ssh from another machine.
 1. **Window closed mid-jog.** Hold Q and close the viewer's window with its
    close button. *Expect:* drive stops at once (`Loss { Leaving }`: the
    immediate STOP, a STOP written synchronously as the window closes, and
-   the link's STOP on drop). Cmd+Q may quit without a close request; then
-   the server's lease is what stops drive, as in 2. *Browser:* hold Q and
-   close the tab. The keepalive STOP stops it at once.
+   the link's STOP on drop). Repeat with Cmd+Q instead of the close button:
+   *Expect:* drive stops at once too (the `AppExit` system and the link's
+   drop write STOP synchronously; the server's log shows the `stop`).
+   *Browser:* hold Q and close the tab. The keepalive STOP stops it at once.
+   **Known limit:** after a crash or `kill -9` the viewer sends nothing. Gait
+   and motion sessions stop when their leases expire and the FPGA watchdog
+   stops motion independently, but a running tune, campaign or sweep-all
+   keeps going on the server until it ends or STOP is pressed (on the
+   server's page, or in a restarted viewer).
 2. **Viewer killed mid-jog (no STOP sent).** Start the delayed kill, click
    into the viewer, choose the motor and hold Q until the viewer dies.
    *Expect:* the heartbeat stops. Within the server's 1.5 s motion lease the
@@ -380,6 +386,12 @@ curl -s -H 'Content-Type: application/json' \
   -d '{"command":"hardware","args":{"action":{"mirror_enabled":{"on":true}}}}' \
   http://127.0.0.1:8421/v1/commands
 curl -s -H 'Content-Type: application/json' \
+  -d '{"command":"hardware","args":{"action":{"mirror_polarity":{"id":2,"polarity":-1}}}}' \
+  http://127.0.0.1:8421/v1/commands
+curl -s -H 'Content-Type: application/json' \
+  -d '{"command":"hardware","args":{"action":{"loss":{"reason":"leaving"}}}}' \
+  http://127.0.0.1:8421/v1/commands
+curl -s -H 'Content-Type: application/json' \
   -d '{"command":"hardware_status"}' http://127.0.0.1:8421/v1/commands
 ```
 
@@ -391,9 +403,12 @@ then click into the viewer, choose Worm and hold Q until it stops.
 - **Expect:** `select` and `tune_confirm` are refused, each naming itself:
   "hardware `select` starts, changes or arms motion and needs an operator at
   the window: REST and system_ui may read status, list gaits, export,
-  connect, change the mirror's display and STOP only". Nothing is energized
-  and the tune box stays unticked. `mirror_enabled` is accepted (display
-  only). `hardware_status` reports the link, its age and the server status.
+  connect, turn the mirror on or off and STOP only". Nothing is energized
+  and the tune box stays unticked. `mirror_polarity` is refused the same
+  way (the mirror's leg, joint, polarity and alignment become the Leg/Both
+  gait bindings), and its sign in the panel is unchanged. `loss` `leaving`
+  is refused, pointing at `hardware_stop`. `mirror_enabled` is accepted
+  (display only). `hardware_status` reports the link, its age and the server status.
   `hardware_stop` stops the held jog within a heartbeat; if the motor stopped
   before the curl ran, focus was lost first: repeat. `system_ui` with
   `{"action":{"operation":"controls"}}` lists the `hardware:<name>` controls

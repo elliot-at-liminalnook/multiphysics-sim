@@ -287,7 +287,13 @@ pub(super) fn drag(
     }
     let axis = if handle == CENTRE { back } else { AXES[handle] };
     let Some(start) = drag_point(&view, c, doc.tool, handle, origin, axis, back) else { return };
-    let ids = doc.selected_nodes();
+    // RoboCAD's Ops.transform skips locked nodes: previewing them would show a move that never lands.
+    let locked = |id: &String| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| &n.id == id)).is_some_and(|n| n.locked);
+    let ids: Vec<String> = doc.selected_nodes().into_iter().filter(|id| !locked(id)).collect();
+    if ids.is_empty() {
+        doc.show(Err("Every selected node is locked; RoboCAD would not move it (unlock it first)".into()));
+        return;
+    }
     let bodies = preview_bodies(&doc, &ids);
     let tool = doc.tool;
     doc.tool_state.axis = Some(handle);

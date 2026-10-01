@@ -2142,12 +2142,26 @@ another crate.
 - **Preview life** (`transform/preview.rs`): the moved bodies' display
   transforms follow the drag; after a commit they stay until each body's
   mesh is drawn from a newer revision (that body then drops the delta),
-  and are reset at once on a failed edit or Escape, so a body is never
-  left offset.
+  and are reset at once on a failed or refused edit. Escape ends a live
+  drag (its preview is dropped); a released or committed preview waits
+  for its edit, since the request was already sent. A drag leaves out
+  locked nodes (RoboCAD's `Ops.transform` skips them) and is refused by
+  name when every selected node is locked, so a body is never left offset.
 - `sync.rs` became `sync/` (`mod.rs` connect, poll, edits; `launch.rs`
   `self_start`, `serves`, `accept_served`; `selection.rs` adoption,
   pushes, node detail). `lifecycle_tests.rs`: the service lifecycle
-  without a window. `main.rs`: the CLI refusals below.
+  without a window. `main.rs`: the CLI refusals: `--cad-url` with any of
+  `NOT_IN_CAD_MODE` (`--select`, `--exploded`, `--connections`,
+  `--compact`, `--annotations`) is a clap `conflicts_with_all`; a `.rcad`
+  FILE is refused by `cad_mode_refusal` in `take_file`, before any
+  window or service starts (clap cannot conflict on a positional's file
+  extension).
+- **Revision guards** (verification pass): a face index is read from the
+  drawn tessellation only while it is at the shown revision
+  (`CadMeshes::face_at`): picking, hover, measure and double-click give
+  nothing, or say the body is being redrawn, while a mesh lags; live
+  dimensions show only for a selection first seen at the shown revision;
+  `selection::faces_of_edge` needs the mesh and topology at one revision.
 
 ### Decisions
 
@@ -2219,8 +2233,8 @@ were missing.
 
 Rejected: a blank `?samples=` returns the unsampled answer (`parse_qs`
 drops blank values; the Rust client always sends a number); the lifecycle
-test's pid-reuse window (only on a failure path, 400 ms, sequential pids on
-macOS; a `ps` check would need another process build site); selection
+test's pid-reuse window (only on the clean-stop test's failure path,
+after waiting up to 2 s, sequential pids on macOS; a `ps` check would need another process build site); selection
 overlays do not follow a preview (they return when the new meshes land).
 
 ### Verification checklist

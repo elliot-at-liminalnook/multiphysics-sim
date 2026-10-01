@@ -349,7 +349,8 @@ pub(super) fn apply(
                 Outcome::Done(Ok(Value::Null))
             }
         }
-    });    // The camera intents CAD commands stood for (a named view, ortho, a saved view's restore).
+    });
+    // The camera intents CAD commands stood for (a named view, ortho, a saved view's restore).
     if let Some(mut out) = camera_out {
         for action in camera {
             out.write(Act::quiet(action));

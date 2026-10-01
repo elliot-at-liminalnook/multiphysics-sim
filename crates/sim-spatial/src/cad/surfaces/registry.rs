@@ -9,7 +9,7 @@
 //! So `keys` is what RoboCAD's palette lists and `bound` says whether the
 //! keys are live: `simulation.experiment` Ctrl+Return, `robot.add_motor`
 //! Ctrl+Shift+M and `robot.add_joint` Ctrl+Shift+J are listed but never
-//! bound (docs/cad-parity.md:1020). keymap.json's `sketch.arc` (A) names
+//! bound (docs/cad-parity.md:1086). keymap.json's `sketch.arc` (A) names
 //! no command and RoboCAD drops it; here A is bound to `sketch.arc_3pt`
 //! instead, deliberately (the ledger's cad-sketch row: bind A to the
 //! three-point arc, as RoboCAD's USER_GUIDE.md:181 documents "`A` arc"),
@@ -154,13 +154,13 @@ impl CameraCmd {
     }
 }
 
-/// `inspect.draft`'s reason (docs/cad-parity.md:342).
+/// `inspect.draft`'s reason (docs/cad-parity.md:375).
 const DRAFT_SHADING: &str = "RoboCAD colours each selected body's triangles by draft against +Z through its overhang flags (ui/app.py:1304-1317, analysis.draft_angle_colors); no route serves those colours and the native meshes carry no per-triangle colours to draw them";
-/// `bridge.start` and `bridge.stop`'s reason (docs/cad-parity.md:667).
+/// `bridge.start` and `bridge.stop`'s reason (docs/cad-parity.md:700).
 const BLENDER_LINK: &str = "RoboCAD-GUI-only: the Blender live link is a websocket server inside RoboCAD's desktop window (POST /commands/bridge.start|stop, ui/app.py:1497-1509); a headless service has no route for it and the native viewer has no Blender bridge";
 /// `edit.preferences`' reason (ui/app.py:1486-1494).
 const PREFERENCES: &str = "RoboCAD's Preferences dialog sets its desktop autosave timer (a headless service has none: /autosave answers 409 and cad_state.autosave shows RoboCAD's own state) and its viewport grid step; the native grid is RoboCAD's default 10 mm step (cad_display)";
-/// `bridge.share`'s reason (docs/cad-parity.md:668).
+/// `bridge.share`'s reason (docs/cad-parity.md:701).
 const WEB_SHARE: &str = "RoboCAD-GUI-only: web share writes one HTML viewer through a desktop save dialog (POST /commands/bridge.share, ui/app.py:1511-1517); no headless route serves it (export a mesh with File > Export instead)";
 
 /// A command surface a command opens.

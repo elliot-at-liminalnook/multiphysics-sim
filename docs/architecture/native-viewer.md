@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01))
+## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export written and reviewed by reading at f15766ea, pending its verification pass, see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -48,7 +48,14 @@ duplicates physics.
   37 `spec(` entries there, re-counted 2026-10-01 against the 31 before):
   144 in all. cad-sketch adds 1 (`cad_sketch`; 38 `spec(` entries,
   re-counted 2026-10-01 with `grep -c 'spec(' crates/sim-spatial/src/cad/specs.rs`
-  against 37 at e0996878): 145 in all. Place mode answers `state`, `camera` and `screenshot`.
+  against 37 at e0996878): 145 in all. cad-views-export adds 19: the
+  shared camera's 13 `camera_*` commands (`camera/mod.rs`, one entry each,
+  tagged with every orbit mode) and 6 CAD commands (`cad_display`,
+  `cad_section`, `cad_views`, `cad_file`, `cad_export`, `cad_render`, from
+  the `specs()` of `cad/display`, `cad/views` and `cad/files`; `cad/specs.rs`
+  still has 38), 164 in all. Re-counted 2026-10-01 with `grep -c 'spec('`
+  per file and `git grep -E '(^|[^a-z_])spec\('` over the crate's non-test
+  sources (89 at cc7ac194, 108 at f15766ea). Place mode answers `state`, `camera` and `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
   verified at 90c65c86: every intent is a typed action
   (`WindowAction`, `InspectAction`, `SystemAction` carrying the builder's
@@ -62,9 +69,10 @@ duplicates physics.
 - **The shared pipeline sets** `ViewerSet` Input → Actions → JobResults →
   SimSync → Present are configured once (`app::ModesPlugin`). Input holds
   the REST poll and every button and key mapping; Actions the apply
-  systems; SimSync each mode's continuous work (jobs, orbit and fly
-  cameras, drags, text entry, scene sync); Present drawing and REST
-  snapshots.
+  systems; SimSync each mode's continuous work (jobs, drags, text entry,
+  scene sync, and the shared camera's `CameraSet` Viewport → Navigate →
+  Place, which holds every orbit camera and Place's fly camera since
+  cad-views-export); Present drawing and REST snapshots.
 - **Background work goes through one `jobs` module** (`src/jobs/`, see
   [§4](#4-one-background-work-abstraction) and
   [the jobs module](#jobs-module-2026-09-30)): 0 `thread::spawn` /
@@ -83,6 +91,16 @@ duplicates physics.
   `PhenomenaAction`). Same greps after fold-sim-app: 27
   `MessageReader<` lines, 57 `MessageWriter<` lines, 11 `On<` lines,
   `KeyCode` 223 times in 17 files, `Interaction` 94 times in 21 files.
+  After cad-views-export (re-measured 2026-10-01 at f15766ea, same greps):
+  13 plugins (`CameraPlugin` added: the shared camera, `src/camera/`), 10
+  action Message types (`Act<CameraAction>` added; counted from the
+  `actions::register::<…>` sites, `InspectAction` registered in
+  `inspect_view` and once more in a `notes.rs` test), 27 `MessageReader<`
+  lines, 88 `MessageWriter<` lines, 10 `On<` lines, `KeyCode` 474 times
+  in 36 files (`grep -row`), `Interaction` 121 times in 31 files, and 4
+  `MessageCursor<` lines (the camera's `navigate` and `fly` drain the
+  pointer messages through `Option<Res<Messages<…>>>` with a local
+  cursor).
   The figures below are the hardware front end's. Site counts, re-measured 2026-09-30 after the hardware front
   end with `grep -rn` over `crates/sim-spatial/src` (lines, comments
   included): 18 `MessageReader<` lines (16 at 4bc03789 by the same grep; 2
@@ -180,6 +198,25 @@ duplicates physics.
   `grep -cE '^\s+(tool|edit)\($'`; 54 before: 6 solids, 8 plane entries
   and 16 sketch entries added); `sim-runtime`'s `cad_client/sketch/` is
   930 lines in 2 files plus `sketch_tests.rs` 356.
+  **cad-views-export** (2026-10-01, see
+  [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)),
+  written and reviewed by reading in 78553886, 9b1e5eec and f15766ea,
+  pending its verification pass (nothing in it compiled or run yet): one
+  shared camera for every orbit mode (`src/camera/`, `CameraPlugin`,
+  `CameraAction` with 13 `camera_*` commands; CAD gets RoboCAD's presets,
+  89.5° pitch, zoom to the cursor, trackball, ortho/FOV and its extra
+  gestures), and in CAD mode the six display modes, grid, build plate,
+  view cube, high contrast, the section preview and exact section, saved
+  views in RoboCAD's view-state schema, isolate/hide/show all, per-node
+  tessellation tolerance, and new, open, save as, import with units,
+  export, drawing and render on jobs; three api.py gap routes (`POST /new`,
+  `POST /save/thumbnail`, `GET /import/units`). Re-measured 2026-10-01 at
+  f15766ea: `cad/` is 29,375 lines in 93 files (same `find … | xargs wc -l`;
+  `display/` 2,569 in 6, `views/` 1,279 in 4, `files/` 2,224 in 5);
+  `camera/` 2,458 in 7 (881 of them `tests.rs`); the catalogue has 87
+  entries (the same two greps give 71 and 16; `view.isolate`,
+  `view.show_all` and `view.hide` added); `cad_client` gains `views.rs`
+  285, `section.rs` 108 and `files.rs` 178 lines, plus their tests.
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
   verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
@@ -230,7 +267,15 @@ duplicates physics.
   `lesson/` 7,193 in 23, `app/` 2,646 in 9, `inspect_view/` 1,280 in 5;
   `src/` 68,672 lines in 228 files at split-large-files, 73,269 in 249
   after cad-sketch. Robot mode is one module tree under
-  `robot/`, as CAD mode is under `cad/`.
+  `robot/`, as CAD mode is under `cad/`. Re-measured 2026-10-01 after
+  cad-views-export at f15766ea (the same script): the largest are
+  `cad/files/form.rs` 734, `cad/panel.rs` 716, `robot/hardware/session.rs`
+  698, `cad/ops/mod.rs` 698, `robot/hardware/sync.rs` 679,
+  `physics_view.rs` 672, `cad/display/draw.rs` 671, `builder/actions.rs`
+  661, `lesson/mod.rs` 659; every other file is at most 654
+  (`cad/actions.rs` fell from 705 to under 640 when `snapshot.rs` and
+  `rest_form.rs` were split out). `src/` is 83,045 lines in 274 files
+  (wc -l, tests included; `camera/` 2,458 in 7).
 - **What already works well, to keep:**
   - typed actions with one validated handler per action type
   - generation-stamped frames
@@ -529,7 +574,13 @@ Paths below are `crates/sim-spatial/src/`.
   loads in **JobResults**, the switcher's highlight and `/v1/viewer_mode` in
   **Present**. (Superseded by the action layer, which moved every REST
   poll, button and key mapping to Input and their handlers to Actions; see
-  [Action layer](#action-layer-2026-09-30).)
+  [Action layer](#action-layer-2026-09-30). Since cad-views-export
+  `camera_viewport` and the per-mode orbit systems are gone: the spatial
+  view's first chain ends in `sync_camera` `.before(CameraSet::Viewport)`
+  and its second runs `.after(CameraSet::Place)`, the builder and lesson
+  chains run `.before(inspect_view::sync_camera)`, place's `fly` is
+  `camera::fly` in `CameraSet::Place`; see
+  [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01).)
 - **`building()` / `Learn.active`.** `building()` is gone: its uses are
   `in_state(ViewerMode::Build)`; `clear_for_learn` runs in Lessons; the
   lesson checks in `pick_part`, `keyboard`, `placement::start_part` and
@@ -1758,7 +1809,11 @@ through RoboCAD's routes; a REST caller waits for RoboCAD's answer.
   detaches such a service (left running, URL logged) instead of stopping
   it. An attached RoboCAD keeps its edits, and the switch's message says
   so. *Rejected:* auto-save (writes the user's file unasked), RoboCAD's
-  Save/Discard prompt (a modal flow the viewer does not have).
+  Save/Discard prompt (a modal flow the viewer does not have). Since
+  cad-views-export the file form's and `cad_file`'s new and open follow
+  the same rule (`CadDocument::switch_blockers`), and every save is
+  `POST /save/thumbnail` (see
+  [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)).
 - **Network on `Pool::Dedicated`, not `Pool::Io`.** The assignment asked for
   mesh fetches on Io; the jobs module's pool rule puts network on
   Dedicated, because a request may wait up to its timeout and Io has at
@@ -1870,7 +1925,10 @@ holds `push_selection` and `detail`), the 3D pick is `cad/pick.rs`
 - **Undo.** Button / Cmd+Z (`keys`, cad/keys.rs:28, only when `cad:undo`
   is ready) / `cad_undo` → cad/actions.rs:181 → `POST /undo` → as Patch.
 - **Save.** Button / Cmd+S / `cad_save` → cad/actions.rs:187-193 → `POST
-  /save` (RoboCAD writes its file) → as Patch; the poll sees `dirty`
+  /save` (RoboCAD writes its file) → as Patch (since cad-views-export:
+  `CadAction::CadSave` → `files::save` → `CadClient::save_with_thumbnail`
+  → `POST /save/thumbnail`, so the desktop's thumbnail is kept; the line
+  numbers here are the cad-mode record); the poll sees `dirty`
   false and the header says Saved. Leaving: `leaving_blockers`
   (app/switch/prepare.rs:26; CAD clause :52) → `CadDocument::switch_blockers`; `leave_cad`
   (app/switch/leave.rs:71) removes the document (the slot's child is stopped,
@@ -2435,7 +2493,8 @@ at e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `un
   table (183 commands, `COMMANDS`, keys and whether they are bound, and a
   `Native` mapping: `Op`, `Action`, `Surface`, `NumericEntry`,
   `Later(epic)`, `Different(reason)`; the ledger leaves no command
-  GUI-only: Blender link and web share belong to cad-views-export), plus `TOOLBAR`,
+  GUI-only: Blender link and web share belonged to cad-views-export, which
+  made them `Different` with their reasons, `BLENDER_LINK` and `WEB_SHARE`), plus `TOOLBAR`,
   `CONTEXT`, `VIEW_RADIAL`, `SELECT_RADIAL`, `CATEGORIES` and `ready`, the
   readiness every surface, key and `system_ui` control shares. `mod.rs`
   `handle` opens and closes a surface (`OpsState::surface`) and answers its
@@ -2586,15 +2645,15 @@ REST read no keys, so no key is read in every mode):
 | S, G, R, D, Shift+D, M, Escape | tools (transform) | read by transform's keys only; Shift+S (sketch slot), Shift+R (revolve), Shift+J etc. differ by Shift, which transform's S/G/R/M refuse |
 | Ctrl+S, Ctrl+Shift+S, Ctrl+Shift+D | save, save as, export drawing | transform's S and D act only without Ctrl |
 | Ctrl+A, Ctrl+Shift+A, Shift+A | select all, array, chord start | exact modifiers keep them apart |
-| Ctrl+Z, Z | undo, next display mode (cad-views-export) | exact modifiers |
-| B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate (cad-views-export) | exact modifiers |
-| F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus (cad-views-export), palette, fillet, chamfer | exact modifiers |
-| H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (cad-views-export), fastener, shell | exact modifiers |
+| Ctrl+Z, Z | undo, next display mode (cad-views-export; native since) | exact modifiers |
+| B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate (cad-views-export; native since) | exact modifiers |
+| F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus (cad-views-export; native since), palette, fillet, chamfer | exact modifiers |
+| H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (cad-views-export; native since), fastener, shell | exact modifiers |
 | P, Shift+P, Ctrl+P | select points, sketch polygon (cad-sketch), plane from face (cad-sketch) | exact modifiers |
 | Delete, Backspace | `edit.delete` | ignored while a text field (name, numeric bar, palette, form) has the keyboard |
 | Space | `view.radial` | typed as a space while a text field has the keyboard |
 | Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`); during a placement drag `ops::interact` also copies the base point into the form's anchor field; else the numeric bar's |
-| digits, J, Q, X, T, L, C, N, /, Home | views (cad-views-export), join, selection radial, extrude, sketch text/line/circle (cad-sketch), annotate (cad-organize), isolate, fit | no other reader in CAD mode |
+| digits, J, Q, X, T, L, C, N, /, Home | views (cad-views-export; native since), join, selection radial, extrude, sketch text/line/circle (cad-sketch), annotate (cad-organize), isolate, fit | no other reader in CAD mode |
 
 Commands of later epics keep their keys, so a press says which epic owns
 them (status line), as their menu entries do.
@@ -2602,7 +2661,11 @@ them (status line), as their menu entries do.
 (This table is the cad-modify record. Since cad-sketch the keys marked
 "(cad-sketch)" run natively, A binds the three-point arc, and the table in
 `cad/keys.rs`'s module doc is the current one: S/Shift+S, R/Shift+R, L,
-Shift+L, C, Shift+C, T, X, Ctrl+P and Enter rows added.)
+Shift+L, C, Shift+C, T, X, Ctrl+P and Enter rows added. Since
+cad-views-export the keys marked "(cad-views-export; native since)" run
+natively, `/` isolates, and the numpad and arrow keys are the shared
+camera's; see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01),
+Key clashes.)
 
 ### Review findings (five pair-reviewers by area, then fixes)
 
@@ -3309,6 +3372,474 @@ Function names, not line numbers (fixes may follow the verification pass).
   `CadUndo` → `actions::edit` → `POST /undo` (RoboCAD's stack undoes the
   extrude; again: the sketch edit, the new sketch, the plane).
 
+## Shared camera and CAD views (2026-10-01)
+
+Batch cad-views-export (default order item 7, §9 phase 1; §9 "Later CAD
+epics" 4) did two things. First it gave every mode one camera: `camera/`
+replaces CAD's `CadOrbit`, Robot's `RobotOrbit`, Phenomena's
+`PhenomenaOrbit` and the spatial view's `Orbit`, together with each mode's
+own orbit input and viewport code. Then it brought RoboCAD's view, display
+and file workflows into CAD mode: the six display modes, the grid, the
+build plate, the view cube, high contrast, the section tool (a preview
+and the exact section), saved views, isolate, hide and show all, per-node
+tessellation tolerance, new, open, save as, import with units, export in
+every `exporters.py` format and the drawing, and render. RoboCAD's command
+layer still does every edit, and the display is display only. The ledger
+rows are in [docs/cad-parity.md](../cad-parity.md) (112 rows; their split
+into done by reading and deliberately different, and the ledger's totals
+after the epic, are in its Counts), and the side-by-side steps are in
+[docs/cad-checklist.md](../cad-checklist.md) Part F. The work was written
+and reviewed by reading in commits 78553886, 9b1e5eec and f15766ea and is
+pending its verification pass: nothing in this epic has been compiled or
+run yet. Paths are relative to `crates/sim-spatial/src/` unless they name
+another crate.
+
+### Shape
+
+- **The camera** (`camera/`, 2,458 lines in 7 files including the 881-line
+  `tests.rs`):
+  - `mod.rs` holds the types. `Orbit` is the crate's one orbit-state
+    component: focus, radius, yaw/pitch or a `trackball` quaternion,
+    `orthographic`, `fov`, the framed `centre`/`extent`, a `home` request, a
+    `Glide` and `spin`. `OrbitRules` is the mode's feel (`rate`,
+    `pan_rate`, `pitch_limit`, `RadiusLimits::{Extent, Absolute}`,
+    `Framing::{Bounds, Fixed}`, `glide_home`, `zoom_to_cursor`,
+    `yield_to_ui`, `robocad_gestures`) plus a per-frame input gate the mode
+    writes as data (`enabled`, `zoom_modifier`, `reduced_motion`, `keys`,
+    `alt_left`, `typing`). `ViewArea::{Window, Docks, Card}` says where the
+    view draws. `ViewPreset` is RoboCAD's `set_view` table
+    (`robocad_degrees`, `robocad_to_display`/`display_to_robocad`).
+    `OrbitMode` and `CameraState` round out the types.
+  - `CameraAction` has 13 REST commands: `camera_view`, `camera_opposite`,
+    `camera_projection`, `camera_fov`, `camera_fit`, `camera_home`,
+    `camera_pan`, `camera_zoom`, `camera_orbit` (pixels or `degrees`),
+    `camera_orbit_mode`, `camera_spin`, `camera_set` and `camera_state`.
+    All are tagged with `ORBIT_MODES` (every mode but Place), and the
+    `system_ui` controls are `camera:*`.
+  - `CameraSet` orders Viewport → Navigate → Place inside SimSync.
+    `CameraPlugin` registers the action once, puts `input::keys` in Input
+    and `apply::apply` in Actions, and runs `viewport::viewport`,
+    `input::navigate` and `orbit::place` with `fly::fly` in that order.
+  - `orbit.rs` holds `Orbit`'s methods (`rotate`, `rotate_by`, `pan`,
+    `zoom` with an anchor, `snap_to_axis`, `set_trackball`, `preset`,
+    `opposite`, `framing`/`frame`/`frame_bounds`, `glide_to`, `step`,
+    `interrupt`, `projection`), `view_aspect` and the `place` system.
+  - `input.rs` has `navigate`: a drag latched where it starts, `drag_kind`,
+    the Alt+left press past `ALT_DRAG_SLOP` (6 px) and the wheel with
+    `cursor_anchor`. It also has `keys` (the numpad and `arrow_action`).
+  - `apply.rs` has `apply`, `handle` (with `checked` and `fov` refusals)
+    and `controls`/`control_action`. `viewport.rs` has `viewport`, `wanted`
+    and `area`. `fly.rs` is Place's `Fly`, `orientation` and `fly`, moved
+    unchanged from `place_view.rs`.
+- **Each mode's spawn**:
+  - CAD: `cad/scene.rs` `rules()` sets 89.5° pitch, zoom 0.05–40 × extent,
+    zoom to the cursor, `yield_to_ui`, numpad `keys` off and
+    `robocad_gestures` on. `setup` spawns `Orbit`, `rules()` and
+    `ViewArea::Docks`. `fit` writes every drawn body's bounds on
+    `CadMeshes::epoch`, runs `cad_fit` through `frame_bounds`, and sets the
+    gate from `gate`.
+  - Robot: `robot/ui.rs` spawns the camera; `robot/scene.rs` `view_area`
+    keeps the docks, which move with the graph dock.
+  - Phenomena: `phenomena/scene.rs` uses sim-app's rates,
+    `RadiusLimits::Absolute` 3–30 m and `Framing::Fixed(home)`.
+  - Inspect, Build and Lessons: `inspect_view/camera.rs` `spatial_rules`
+    (the overview from yaw 0.35, pitch 0.60, gliding), `sync_camera` and
+    `view_area` (a lesson card is `ViewArea::Card`).
+- **CAD display** (`cad/display/`, 2,569 lines in 6 files):
+  - `mod.rs` holds `CadDisplay` (mode, grid, build plate, high contrast,
+    view cube, comment pins, `Section`, `ExactSection`), `DisplayMode`
+    (RoboCAD's `MODES`), `SectionPlane`, `apply_display`, `apply_section`,
+    `exact_query`, `default_plane`, `state_json`, `handle`, and the specs
+    for `cad_display` and `cad_section`.
+  - `draw.rs` holds `materials`, `edges_sync`/`lines` (display edges and
+    curve nodes), `draw_grid`, `quads` (the plate and the section plane)
+    and `lights`.
+  - `section.rs` holds `clip`, `segments`, `overhangs`, `clip_polyline`,
+    `derive_preview` and `preview` (a `Pool::Compute` job), plus
+    `exact_jobs` on a `jobs::Latest` (`Pool::Dedicated`).
+  - `ui.rs` holds the view cube (`cube`, `cube_face`, `facing`,
+    `cube_action`, `cube_press`) and the display `toolbar`.
+  - `entry.rs` holds the section offset field (`offset_action`, `input`).
+- **Saved views** (`cad/views/`, 1,279 lines in 4 files): `mod.rs` holds
+  `CadViews`, `handle` (list, save, rename, replace, delete, restore),
+  `restore`, `settle_save`, `sync` (the list on a job) and `snapshot`
+  (after `CameraSet::Place`). `convert.rs` has `capture`, `camera_of`,
+  `apply_display`, `rot_of`/`rotation_of` and the model ↔ display maps.
+  `panel.rs` has the Saved Views panel and the field-of-view entry.
+- **Catalogue** (`cad/ops/catalogue/view.rs`): `view.isolate` (/),
+  `view.show_all` (Alt+H) and `view.hide` (H), one Ops call each.
+- **Files** (`cad/files/`, 2,224 lines in 5 files): `mod.rs` holds
+  `CadFiles`, `handle`, `file` (new, open, save_as, import, guess_unit,
+  close), `save` (also `cad_save`), `export`, `render`/`render_request`,
+  `command_action` and the specs for `cad_file`, `cad_export` and
+  `cad_render`. `form.rs` is the kit path form (rows, unit guess, listing
+  picks, `open_rule`). `formats.rs` is every `exporters.py` format with its
+  settings (`format`, `settings`, `extension_fits`). `jobs.rs` has
+  `start`, `wait`, `receive`, `keep_result`, `list`/`request_listing` and
+  the status strip.
+- **Split from `actions`**: `cad/snapshot.rs` (`cad_state` with `display`,
+  `views` and `files`, and the REST snapshot) and `cad/rest_form.rs` (a
+  `CadAction` as its REST command).
+- **Client** (`sim-runtime/src/cad_client/`):
+  - `views.rs` has `SavedView`, `ViewState` (exactly the 12
+    `VIEW_STATE_KEYS`; `check` mirrors `validate_state`),
+    `check_view_name`, and `views`, `view`, `save_view`, `update_view` and
+    `delete_view`.
+  - `section.rs` has `SectionQuery::{named, …}`, `SectionCurves` and
+    `section`.
+  - `files.rs` has `import`, `save_with_thumbnail`, `new_file`,
+    `mesh_units`, `render` and `RenderRequest`.
+  - `mod.rs` adds `NODE_TOLERANCE` and `export`. `loopback_http.rs` gains
+    `exchange_bytes`, which render uses.
+  - Tests are in `views_tests.rs`, `section_tests.rs` and `files_tests.rs`.
+- **Python gap routes** (`cad/robocad/api.py`, 87 lines added; each calls
+  existing functions only):
+  - `POST /new` is `Service.new_file`: an exclusive create, then
+    `Document().save`, removed again on failure.
+  - `POST /save/thumbnail` is `save_with_thumbnail`: the desktop's
+    `thumbnail()`, or headless a 256×192 `render` at tolerance 0.
+  - `GET /import/units` is `mesh_units`: `importers.load_mesh_file` and
+    `mesh_units_guess`.
+  - The pytests are in `cad/tests/test_api_files.py`.
+
+### Decisions
+
+- **One `Orbit` component with per-mode data.** Each mode spawns `Orbit`,
+  `OrbitRules` and `ViewArea` and writes only data into them; the module
+  holds no mode code. *Why:* five copies of orbit, pan, zoom, viewport and
+  glide code had drifted (pitch limits, wheel scaling, viewport fallback),
+  and REST camera commands needed one target. *Rejected:* per-mode wrapper
+  components over a shared core, which would keep five input systems.
+  *Revisit if* a mode needs a gesture that cannot be written as rules
+  data.
+- **Bevy 0.19.1's first-party controllers are not adopted; the orbit core
+  is ours** (`camera/fly.rs` module doc). `FreeCamera` lives in the
+  `bevy_camera_controller` crate, which is in neither the lockfile nor the
+  local registry. It grabs the cursor on a right-click, and its state
+  (velocity, speed multipliers) is not REST-addressable the way `Fly`'s
+  yaw, pitch and speed are for Place's `camera` and `state`. `PanCamera`
+  is 2D, and 0.19.1 has no orbit controller. Place's `Fly` moved to
+  `camera/fly.rs` unchanged: it is first-person, with no focus to orbit,
+  so it is not orbit state. *Revisit if* Bevy ships an orbit controller
+  whose state can be set and read as data.
+- **Grid: gizmo lines as RoboCAD's `_draw_grid`, not `bevy_dev_tools`'
+  `InfiniteGrid`** (`cad/display/mod.rs` module doc, `draw.rs`
+  `draw_grid`). The grid uses a 10 mm step (`GRID_STEP_MM`) and ±20 steps
+  (±200 mm, `GRID_STEPS`) on the model's XY. Every 5th line is major
+  (minor lines are 0.7 × the major colour 0.36, 0.38, 0.42), and the axes
+  are red X, green Y and blue Z. *Rejected:* `InfiniteGrid`. It is
+  infinite and fades with distance, marks every 10th line, and colours
+  only the X and Z axes (`InfiniteGridSettings`). It would need the
+  `bevy_dev_tools` feature (in the registry, not in the lockfile), and the
+  section plane could not cut it. *Revisit if* users want an unbounded
+  grid.
+- **Presets come from RoboCAD's `set_view` table** through `yaw =
+  robocad_yaw + 90°`, because CAD and Robot hang their Z-up models from a
+  root rotated −90° about X (`camera/mod.rs` `robocad_to_display`). Top
+  and bottom are ±89.5°, as RoboCAD's.
+- **CAD feel changes, on purpose** (`cad/scene.rs` module doc). The pitch
+  limit is RoboCAD's 89.5° (it was 1.5 rad ≈ 85.9°), and the wheel zooms
+  toward the point under the cursor, as RoboCAD's `Camera.zoom(factor,
+  anchor)` (it zoomed toward the focus).
+- **RoboCAD's gestures only in CAD** (`OrbitRules::robocad_gestures`).
+  These are Shift+middle orbit, Alt+right snap to the nearest axis view
+  after every orbit step (as `mouseMoveEvent` calls `snap_orthographic`),
+  Alt+left-drag orbit once past the 6 px slop, and the arrow keys (10°, or
+  90° with Ctrl/Cmd, and Shift pans 4 px per degree). Other modes keep
+  their feel. RoboCAD's own Alt+left orbit never fires: the press reaches
+  `_on_drag`, which sets `_tool_dragging` (ui/app.py:542), and that flag
+  blocks `alt_left` (ui/viewport.py:1488). Natively a short Alt+click
+  stays CAD's candidates menu and a drag orbits. *Revisit if* the
+  checklist shows users relying on RoboCAD's behaviour.
+- **Robot: intended differences.** A drag latches to the camera where it
+  starts, and continues over a panel until both buttons are up. Robot's
+  Fit (`robot/actions/mod.rs` `RobotAction::Fit`, `orbit.home`) now
+  re-centres the focus on the bounds, as RoboCAD's `focus_all`; Robot's
+  former Fit kept the focus.
+- **Viewport fallback.** When the docks leave no room, a view draws over
+  the whole window rather than outside it (`viewport.rs` `docks`; CAD's
+  former rule, now every mode's).
+- **The headless inspect server refuses `camera_*`** and `system_ui`
+  `camera:*` by name: it has no window and no camera to move
+  (`app/route.rs` `route` with `window` false). Its controls list no
+  camera control.
+- **Meshes at each node's own tolerance.** `mesh.rs` asks with
+  `NODE_TOLERANCE` (0), which RoboCAD's `Document.mesh_of` reads as
+  `tolerance or n.tessellation_tolerance` (document.py:475), so a body is
+  drawn as RoboCAD's viewport draws it. The default 0.05 mm is finer than
+  the former fixed 0.1 mm. That means more triangles on curved faces (up
+  to about twice as many for doubly curved ones by chord-tolerance
+  scaling; not measured). *Revisit if* frame time or fetch time suffers
+  on large assemblies.
+- **Display modes are approximations without custom shaders**
+  (`draw.rs` module doc):
+  - Matcap is the colour times RoboCAD's clay tint, fully rough, under
+    the view-following headlight, with no rim term.
+  - Render is the headlight casting shadows plus RoboCAD's fill and back
+    lights. There is no ground shadow (Bevy has no shadow-catcher
+    material) and the ambient is not lowered.
+  - Wireframe is a fully transparent, still pickable copy plus edges.
+  - X-ray is 0.35 alpha with no depth writes, plus edges.
+  - *Revisit with* a matcap shader if the look matters.
+- **High contrast covers the 3D view only** (background 0.98, 0.98, 0.99,
+  grid and edges). RoboCAD also swaps its Qt stylesheet; the kit's tokens
+  are constants, so a UI theme switch needs a runtime `ui_kit` theme.
+  *Revisit with* that theme.
+- **The view cube is a 3 × 3 net of kit buttons** (Top; Left, Front,
+  Right; Iso, Bottom, Back), not a shaded 3D cube. The face the camera
+  faces is lit (`facing`, RoboCAD's `view_cube_hit` at the centre). A
+  second click on the current face sends `Opposite`, as RoboCAD's does.
+  *Revisit if* the checklist finds the net hard to read.
+- **Section preview by clipping display triangles** on a `Pool::Compute`
+  job (`section.rs` `clip`, `derive_preview`). The side the normal points
+  to is removed, as RoboCAD's `glClipPlane`. The default plane is XZ
+  through the bounds' centre in Y (`SectionTool.activate`).
+  - **The exact section** reads `GET /nodes/{id}/section` on a `Latest`
+    job, cached by (node, revision, plane), and is never drawn stale.
+    It works only for planes RoboCAD's route can name, xy, xz or yz
+    through the origin or a plane node (api.py passes `plane` as a
+    string to `ArgConverter.plane`; `exact_query` refuses anything else
+    by name).
+  - **An offset field replaces R, Tab and the plane drag**
+    (`entry.rs`): R is the Rotate tool's key, Tab the numeric bar's, and
+    a left drag on the plane quad is box select or the camera's.
+    *Revisit if* the section becomes a tool that owns keys.
+- **Saved views in RoboCAD's exact 12-key view-state schema, restored
+  natively.** Save and replace capture the native camera (`snapshot`,
+  after `CameraSet::Place`) and `CadDisplay` through `convert::capture`.
+  Restore reads the listed view and sends `CameraAction::Set` (a cut) and
+  the display state. *Rejected:* `POST /views/{id}/restore`, which is
+  GUI-only (409 headless) and moves RoboCAD's own camera.
+- **Isolate, hide and show all are catalogue operations**, one RoboCAD
+  undo step each. Isolate and Hide refuse an empty selection by name;
+  RoboCAD hides everything, or pushes an empty step. *Revisit if* the
+  parity harness compares history.
+- **The tessellation tolerance lives in the inspector**, where RoboCAD
+  keeps it (0.005–2 mm, one PATCH). `node_summary` does not report the
+  current value, so the field opens empty.
+- **File dialogs are a kit path form, not `rfd`** (`files/mod.rs` module
+  doc). `rfd` is not in the workspace and would add a new dependency
+  tree, and its macOS dialogs must run on the main thread's event loop,
+  which cannot be checked without running. *Revisit in* a verification
+  pass that can run the viewer.
+- **Unsaved edits: new and open follow `cad_open`'s rule.**
+  `CadDocument::switch_blockers` refuses by name while an edit is in
+  flight or a self-started service has unsaved or unconfirmable edits; an
+  attached RoboCAD keeps its edits (`leaving_note`). This matches RoboCAD,
+  whose New and Open open another window and never lose edits. *Rejected:*
+  a Save / Discard / Cancel prompt (see CAD mode's decision).
+- **Every save goes through `POST /save/thumbnail`**, as RoboCAD's
+  desktop `save`/`save_as` always write the thumbnail; a plain `/save`
+  would erase it. Save As (and `cad_save {path}`) retargets a
+  self-started document's file once the save succeeds (`Edit::retarget`).
+- **Gap routes added versus deliberately different.** Added: `POST /new`
+  (exclusive create), `POST /save/thumbnail` and `GET /import/units`.
+  Deliberately different:
+  - the autosave interval and failure report: RoboCAD's desktop timer and
+    status-bar message, with no stored state;
+  - `/capture` and `/screenshot`, the Blender live link and web share,
+    which are GUI-only;
+  - `edit.preferences` and `inspect.draft`;
+  - SpaceMouse: Bevy 0.19.1 has no 6-DoF input and the lockfile has no
+    HID crate.
+- **Export and render are not cancellable once sent.** api.py has no
+  cancel route; a REST caller's cancel stops waiting only, and the outcome
+  still lands in `cad_state.files.last`.
+
+### Key clashes
+
+The cad-views-export rows of `cad/keys.rs`' module doc table (grep of
+`KeyCode::` over `crates/sim-spatial/src`, 2026-10-01; that table is the
+full, current one), then the shared camera's keys:
+
+| Key | Commands | Resolution |
+|---|---|---|
+| Ctrl+S, Ctrl+Shift+S, Ctrl+Shift+D | save, save as, export drawing | transform's S and D act only without Ctrl |
+| S, Shift+S, Ctrl+S, Ctrl+Shift+S | scale (transform), sketch slot, save, save as (the files part's row) | transform's S refuses Shift and Ctrl; the rest are exact modifiers here |
+| X, Ctrl+Shift+X | extrude, section analysis (`cad_section` toggle) | exact modifiers |
+| Ctrl+Z, Ctrl+Shift+Z, Z | undo, redo, next display mode (`cad_display` next) | exact modifiers |
+| B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate preview (`cad_display` toggle) | exact modifiers |
+| F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus selection (frames the selected nodes; Fit All with none), palette, fillet, chamfer | exact modifiers |
+| H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (catalogue: `Ops.set_visible`, `Ops.show_all`), fastener (cad-print), shell | exact modifiers; macOS's Option+H types "˙", but keys match the physical key (`KeyCode::KeyH`) with Alt held, so Alt+H reaches Show All |
+| Ctrl+G | grid (`cad_display` toggle) | no other reader in CAD mode |
+| 1, 3, 7, 0, Ctrl+1, Ctrl+3, Ctrl+7 | view front, right, top, iso; back, left, bottom (`camera_view`, RoboCAD's yaw/pitch table) | exact modifiers; the keypad's digits are the digits (`normalise`); the shared camera's numpad keys are off in CAD (`OrbitRules::keys` false, `scene`), so a digit is read once; macOS's Mission Control may take Control+digit ("Switch to Desktop n") when enabled, Command+digit still works |
+| 5 | orthographic toggle (`camera_projection`) | as the digits above |
+| / | isolate (catalogue: `Ops.isolate`) | the keypad's divide is `/` (`normalise`) |
+| J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), fit | no other reader in CAD mode |
+| Numpad1, Numpad3, Numpad7 (Ctrl: the opposite side), Numpad9, Numpad5, Numpad0, NumpadDecimal, Home | shared camera (`camera/input.rs` `keys`): front/back, right/left, top/bottom, opposite, orthographic toggle, iso, fit, home | read only where an enabled camera's rules set `keys` and no text field is `typing`: Inspect, Build, Lessons, Robot and Phenomena; off in CAD, whose keymap reads the digits and Home itself; no other reader of the numpad or Home in those modes (grep of `Numpad` and `KeyCode::Home`) |
+| Arrow keys (Ctrl/Cmd: 90°; Shift: pan) | RoboCAD's orbit 10° and pan steps (`camera/input.rs` `arrow_action`, `camera_orbit {degrees}`, `camera_pan`) | CAD only (`robocad_gestures`), not while a text field has the keyboard (`typing` from `CadInputFocus`, which the palette sets, so its Up/Down stay the palette's); Robot, Phenomena, Lessons and Build read their own arrows, and the camera's arrows are off there |
+
+### Review findings (three reviewers by area, then fixes in f15766ea)
+
+- **Camera.** Fixed:
+  - CAD's `camera_fit`/`camera_home` framed stale bounds (only a `cad_fit`
+    wrote them; now the bounds follow every mesh change, and a node fit no
+    longer overwrites them);
+  - fits dropped the trackball;
+  - the headless server parsed `camera_*` with a parser that could not
+    take them (now a named refusal);
+  - a headless fit jumped to the overview heading;
+  - the first home framing used aspect 1 before the viewport existed
+    (`view_aspect`);
+  - CAD's view snapshot paired this frame's transform with last frame's
+    projection;
+  - the split camera ignored ortho;
+  - saved views and notes stored stale yaw/pitch under the trackball
+    (`Orbit::turntable`).
+
+  Kept and recorded: Robot's Fit re-centres. Left, pre-existing: the
+  builder's placement and markers read `GlobalTransform`, which is a frame
+  late.
+- **Display.** Fixed:
+  - picks on the section preview's appended triangle halves named no face
+    (the shown copy's `triangle_face` is kept and read);
+  - `system_ui` text;
+  - the saved-view name was cleared before RoboCAD answered
+    (`settle_save`);
+  - a controls test was added
+    (`display_controls_fit_a_pattern_and_round_trip_through_rest`).
+
+  Rejected: that edges → faces breaks with coarse node tolerances.
+  `selection::faces_along` tests the mesh *vertices* against the sampled
+  edge polyline, and tessellation vertices on an edge lie on the edge
+  curve whatever the chord tolerance, so the bound is the polyline's own
+  sag. The docs drift is this section. Left (display only): the overlay
+  outline is not clipped while sectioned.
+- **Files.** Fixed:
+  - `Edit` literals lacked `retarget` in two test files (a compile error);
+  - the Discard path discarded nothing and disagreed with `cad_open`
+    (replaced by `cad_open`'s rule);
+  - Save As retargeted by label (now tied to its edit, and
+    `cad_save {path}` retargets too);
+  - a plain Save erased the thumbnail;
+  - a mesh import defaulted to mm (now RoboCAD's guess, and OK waits for
+    it);
+  - New answered before the open;
+  - waited answers were pruned by distance (`keep_result` keeps them by
+    count);
+  - a listing click could pick from a stale listing;
+  - api.py's `new_file` raced between its check and its save (now an
+    exclusive create).
+
+  Reduced: the headless thumbnail's cost (it reuses the node-tolerance
+  tessellation the meshes already cached).
+
+### Found by reading and fixed (across the epic)
+
+- REST `camera`, note restore and discussion restore wrote the pose
+  without ending a glide, so the next step overwrote it (78553886).
+- `CadView` read the `GlobalTransform` before propagation, a frame behind
+  the drawn view (78553886).
+- `mesh.rs` fetched every body at 0.1 mm, overriding each node's own
+  tessellation tolerance (9b1e5eec; now `NODE_TOLERANCE`).
+- A Save As left the window's target on the old file, so leaving and
+  re-entering CAD mode reopened it (9b1e5eec; `Edit::retarget`).
+
+### Reading trace (orbit in Robot → saved view in CAD → section → export STEP)
+
+Function names, not line numbers (fixes may follow the verification
+pass).
+
+- **Orbit in Robot.**
+  1. A right-drag inside the view reaches `camera/input.rs` `navigate`
+     (SimSync, `CameraSet::Navigate`). The press latches the camera whose
+     `ViewArea` contains the cursor (`accepts`, `viewport::area`; Robot's
+     docks are written by `robot/scene.rs` `view_area`, before
+     `CameraSet::Viewport`).
+  2. `drag_kind` gives `Orbit`, then `Orbit::interrupt` and
+     `Orbit::rotate` (yaw and pitch within `pitch_limit` 1.4).
+  3. `orbit.rs` `place` (`CameraSet::Place`) writes the `Transform` from
+     `Orbit::transform`.
+- **Switch to CAD.** `viewer_mode {"mode": "cad"}` goes to
+  `app::switch::handle`. On entering, `cad/scene.rs` `setup` spawns the
+  camera with `Orbit`, `rules()` and `ViewArea::Docks`, and `fit` writes
+  the bounds when the meshes arrive.
+- **Save the view.**
+  1. `cad_views {"op": "save", "name": …}` (or the panel's Save) reaches
+     `cad/actions.rs` `apply`, then `views::handle` `ViewsOp::Save`.
+  2. `check_view_name`, then `CadViews::capture`: the camera copied by
+     `views::snapshot` after `CameraSet::Place`, then
+     `convert::capture` (`ViewCamera` and `CadDisplay` → `ViewState`).
+  3. `actions::edit` runs `CadClient::save_view`, which is `POST /views`
+     (RoboCAD's `SavedViewOps.save_view`, one undo step "Save view").
+  4. `settle_save` clears the typed name on success.
+- **Restore it.** `cad_views {"op": "restore", "id"}` goes to
+  `ViewsOp::Restore` and then `restore`: `convert::camera_of` and
+  `convert::apply_display`, then a `CameraAction::Set` pushed on
+  `Cx::camera`. `cad/actions.rs` `apply` writes it as
+  `Act<CameraAction>`, and `camera/apply.rs` `apply` → `handle` → `Set`
+  (`checked`) applies it.
+- **Section.**
+  1. `cad_section {}` (or the toolbar chip, or Ctrl+Shift+X) goes to
+     `display::handle`, then `apply_section`, which turns the section on
+     at `default_plane`.
+  2. `section.rs` `preview` (SimSync) starts a `Pool::Compute` job
+     (`derive_preview` → `clip`) per body. The drawn mesh is swapped for
+     the clipped copy, and `draw.rs` `lines` draws the cut outline.
+  3. Exact: `cad_section {"exact": id}` → `apply_section` →
+     `exact_query` (xy/xz/yz or the plane node) → `ExactSection::request`.
+     `exact_jobs` (JobResults) starts `CadClient::section` (`GET
+     /nodes/{id}/section?plane=…`) on its `Latest`, `accept` keeps the
+     answer, and `ExactSection::drawn` draws it only while it is current.
+- **Export STEP.**
+  1. `cad_export {"format": "step", "path", "settings"}` goes to
+     `files::handle` and then `export`.
+  2. The checks are `formats::format`, `absolute`, `extension_fits` and
+     `formats::settings` (defaults filled, unknown settings refused by
+     name).
+  3. `jobs::start` (`Pool::Dedicated`, `complete_on_drop`) runs
+     `CadClient::export`, which is `POST /export`; that is `Service.export`
+     → `exporters.export_step`.
+  4. `jobs::receive` writes the outcome to `cad_state.files.last` and the
+     status line; a REST caller waits through `jobs::wait`.
+
+### Verification checklist
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- `cargo test -p sim-spatial --lib --bins`, in particular:
+  - `camera::tests::*` (27 tests, among them
+    `presets_look_as_robocads_views`,
+    `drags_latch_where_they_start_and_the_wheel_zooms_inside_the_view`,
+    `camera_commands_route_in_every_orbit_mode`,
+    `headless_controls_list_no_camera_controls`,
+    `fits_and_heading_keeping_homes_keep_the_trackball`,
+    `the_first_home_framing_uses_the_view_areas_aspect`,
+    `robocad_drags_shift_middle_orbits_alt_right_snaps_and_alt_left_drags_past_the_slop`
+    and `arrow_keys_only_where_the_rules_ask_and_no_text_field_types`);
+  - `cad::scene::tests` (`the_orbit_bounds_follow_every_drawn_body_and_a_node_fit_keeps_them`,
+    `the_gate_follows_the_text_focus`);
+  - `cad::display::tests::*` (among them
+    `clipping_a_unit_cube_keeps_robocads_side_and_triangle_order`,
+    `a_stale_exact_section_is_never_drawn`,
+    `picks_on_a_clipped_copy_name_the_copys_faces`,
+    `the_view_cube_writes_robocads_views`);
+  - `cad::views::tests::*`, `cad::files::tests::*`
+    (`new_and_open_use_cad_opens_rule_and_never_discard`, …);
+  - `app::tests::source_files_stay_small` and the earlier epics' tests,
+    which now run on the shared camera.
+- `cargo test -p sim-runtime --lib -- cad_client units loopback_http
+  hardware_client` (`loopback_http` and `hardware_client` because
+  `loopback_http` gained `exchange_bytes`). New in `cad_client`:
+  `views_tests`, `section_tests` and `files_tests`.
+- `cd cad && .venv/bin/pytest -q tests/test_api*.py`, including the new
+  `tests/test_api_files.py` (eight tests: new, its refusals and its
+  cleanup; the headless thumbnail and its reuse of the node tessellation;
+  an untitled save; the unit guess and its refusals).
+- `cargo check -p sim-web --target wasm32-unknown-unknown`.
+- If a build fails, look first at:
+  - serde's internally tagged enums (`CadAction`'s new newtype variants
+    `CadDisplay`, `CadSection`, `CadViews`, `CadFile`, `CadExport` and
+    `CadRender` need struct payloads; `CameraAction`'s
+    `#[serde(tag = "command", deny_unknown_fields)]`);
+  - Bevy 0.19.1 names in `camera/` and `cad/display/` (`SubCameraView`,
+    `Viewport`, `Camera::viewport_to_world`, `GizmoAsset`,
+    `bevy::light::{CascadeShadowConfigBuilder, NotShadowCaster}`,
+    `Projection`, `HoverMap`);
+  - the `Option<Res<Messages<..>>>` + `Local<MessageCursor<..>>` readers
+    in `camera/input.rs` `navigate`.
+- Then the user's [docs/cad-checklist.md](../cad-checklist.md) Part F,
+  each step against RoboCAD's own window.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -3353,8 +3884,13 @@ Function names, not line numbers (fixes may follow the verification pass).
   once (`app::ModesPlugin`); since the action layer each mode's input
   mappings sit in Input (after the one REST poll) and its apply system in
   Actions. The builder and lesson SimSync chains still order themselves
-  against the spatial view's `update_parts` and `camera_viewport` (display
-  ordering, left for the UI kit epic).
+  against the spatial view's `update_parts` and `sync_camera` (display
+  ordering, left for the UI kit epic). Since cad-views-export the cameras
+  are one feature with a public set: `camera::CameraSet` (Viewport →
+  Navigate → Place, in SimSync), which the spatial view, Robot and CAD
+  order their camera data before and their camera readers after
+  (Phenomena writes none per frame), in place of the spatial view's
+  private `camera_viewport`.
 - **Files over about 800 lines are a smell.** Split them by responsibility when
   you touch them.
 
@@ -3697,7 +4233,17 @@ sketch tools on one data-driven interaction, the sketch edits and the
 with recorded Python fixes (`Service.edit_sketch` maps curve indices
 first; `ArgConverter` passes `fill`'s node id; the verification pass fixed
 `fill_hole` and made sketch refusals 4xx with a rolled-back failed create); it is verified at cc7ac194
-(sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean). Next: cad-views-export.
+(sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean). The fifth,
+**cad-views-export** (2026-10-01, see
+[Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)),
+replaced every mode's own orbit camera with one shared camera
+(`src/camera/`, 13 `camera_*` commands) and added RoboCAD's display
+modes, grid, build plate, view cube, high contrast, section preview and
+exact section, saved views, isolate/hide/show all, per-node tessellation
+tolerance and the file workflows (new, open, save as, import with units,
+export, drawing, render) with three api.py gap routes; it is written and
+reviewed by reading (78553886, 9b1e5eec, f15766ea), pending its
+verification pass. Next: its verification pass, then cad-physical-inspect.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -3711,8 +4257,10 @@ is in [docs/cad-parity.md](../cad-parity.md) (773 rows: 113 cad-mode, 637
 later, 23 deliberately different when planned; the planned cad-tools' 179
 rows were split 2026-10-01 into cad-select-transform, 63, and cad-modify,
 116; after cad-modify 245 are done by reading, 458 later and 70
-deliberately different; after cad-sketch 286, 398 and 89). Seventeen gaps there have no headless route (22
-before cad-modify added five routes). Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
+deliberately different; after cad-sketch 286, 398 and 89; after
+cad-views-export see the ledger's Counts). Fifteen gaps there have no
+headless route (17 before cad-views-export added `POST /save/thumbnail`
+and `GET /import/units`; 22 before cad-modify added five routes). Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
 by the parity harness. Planned order:
 
 1. **cad-select-transform** (63 rows; the first half of the planned
@@ -3784,6 +4332,16 @@ by the parity harness. Planned order:
    thumbnail, the autosave interval and failure report, the mesh-unit
    guess, and the GUI-only Blender link and web share (edge polylines are
    served since cad-select-transform; drawing them as display edges is here).
+   *Done by reading 2026-10-01* (78553886, 9b1e5eec, f15766ea; see
+   [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)),
+   pending its verification pass. Every row is now done by reading or
+   deliberately different; the split and the ledger's totals are in
+   [docs/cad-parity.md](../cad-parity.md)'s Counts. Gaps closed by new
+   routes: the save thumbnail (`POST /save/thumbnail`) and the mesh-unit
+   guess (`GET /import/units`), plus `POST /new`. Deliberately different:
+   the autosave interval and failure report, `/capture` and `/screenshot`,
+   the Blender link, web share and SpaceMouse. The camera work also
+   replaced every other mode's orbit camera with the shared one.
 5. **cad-physical-inspect** (82 rows). The materials panel and engineering
    properties, colour, the Robot panel (summary, tree, margins, issues),
    motor, joint, sensor and cable tools and dialogs, joint editing and
@@ -3838,10 +4396,10 @@ on memory.
 | Headless standard widgets (`bevy_ui_widgets`); Feathers | 0.17–0.19 | the UI kit (§6): the slider is headless; Feathers is not used (its look is not the builder's) |
 | Text input | 0.19 | not adopted yet: the builder's draft keeps its own entry (see the UI kit section) |
 | `ViewportNode` | 0.17 | 3D views inside panels (schematic beside spatial, inspector previews) |
-| First-party camera controllers | 0.18 | replace hand-rolled orbit cameras where equivalent |
+| First-party camera controllers | 0.18 | not adopted (cad-views-export): 0.19.1 has no orbit controller, `FreeCamera` (`bevy_camera_controller`, in neither the lockfile nor the registry) grabs the cursor on a right-click and keeps state REST cannot set as Place's `Fly` yaw/pitch/speed, and `PanCamera` is 2D; the hand-rolled orbit cameras became one shared module instead (`src/camera/`, see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)) |
 | Easy screenshot and video recording | 0.18 | `ui_capture` and run recordings |
 | App settings | 0.19 | persisted viewer preferences |
-| Interactive transform gizmo, infinite grid | 0.19 | build-mode placement and grid (display-only) |
+| Interactive transform gizmo, infinite grid | 0.19 | build-mode placement (display-only); the infinite grid is not adopted for CAD (cad-views-export): CAD draws RoboCAD's `_draw_grid` as gizmo lines (10 mm step, ±200 mm, every 5th line major, X/Y/Z axis colours) because `InfiniteGrid` is infinite and fading, marks every 10th line, colours only X and Z, needs the `bevy_dev_tools` feature and cannot be cut by the section plane |
 | Text gizmos | 0.19 | 3D labels (steady values, fixed anchors) |
 | Diagnostics overlay, frame time graph | 0.17–0.19 | measuring realtime performance, which `AGENTS.md` requires |
 | Observer run conditions, delayed commands | 0.19 | mode-scoped observers, timed UI |
@@ -3904,8 +4462,12 @@ The Director re-ranks with evidence, but this is the default:
    (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean).
    **cad-sketch** (2026-10-01; see [CAD sketch](#cad-sketch-2026-10-01))
    is verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean).
-   Next: **cad-views-export**.
-   Remaining, in order (§9 "Later CAD epics"): cad-views-export,
+   **cad-views-export** (2026-10-01; see
+   [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
+   is written and reviewed by reading at f15766ea, pending its
+   verification pass (nothing in it compiled or run yet).
+   Next: the cad-views-export verification pass, then **cad-physical-inspect**.
+   Remaining, in order (§9 "Later CAD epics"):
    cad-physical-inspect, cad-print, cad-organize, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family

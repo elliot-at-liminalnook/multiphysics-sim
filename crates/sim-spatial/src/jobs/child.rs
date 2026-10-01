@@ -10,11 +10,15 @@
 //!   linked `sim-viewer` schematic window), reaped when it exits.
 //! - [`open_in_browser`]: an http(s) link opened with the system opener
 //!   (`open` on macOS, `xdg-open` elsewhere), detached and reaped.
+//! - [`open_local`]: an existing local file or folder (an absolute path)
+//!   opened with the same opener, detached and reaped (cad-print's assembly
+//!   guide and coupon protocol folder).
 //!
 //! Nothing here blocks the caller: `stop` sends the kill and leaves the wait
 //! to a reaper thread ([`super::reap_child`]), `detach` leaves the process
 //! running with a reaper waiting for it, and `exited` is a non-blocking
 //! `try_wait`.
+use std::path::Path;
 use std::process::{Child, Command};
 
 use super::reap_child;
@@ -142,6 +146,27 @@ pub fn open_in_browser(url: &str) -> Result<(), String> {
     let opener = if cfg!(target_os = "macos") { "open" } else { "xdg-open" };
     let mut command = Command::new(opener);
     command.arg(url);
+    ChildProcess::start(opener, command).map_err(|e| e.to_string())?.detach();
+    Ok(())
+}
+
+/// Opens an existing local file or folder (an absolute `path`) with the
+/// system opener (`open` on macOS, `xdg-open` elsewhere), detached and
+/// reaped like [`open_in_browser`]. A relative path is refused with "not
+/// an absolute path: {path}" and one that is neither a file nor a folder
+/// with "no such file or folder: {path}", before any opener is started (a
+/// link is [`open_in_browser`]'s). It checks the disk, so callers run it on
+/// a `Pool::Io` job. A failed start answers the OS error as it is.
+pub fn open_local(path: &Path) -> Result<(), String> {
+    if !path.is_absolute() {
+        return Err(format!("not an absolute path: {}", path.display()));
+    }
+    if !(path.is_file() || path.is_dir()) {
+        return Err(format!("no such file or folder: {}", path.display()));
+    }
+    let opener = if cfg!(target_os = "macos") { "open" } else { "xdg-open" };
+    let mut command = Command::new(opener);
+    command.arg(path);
     ChildProcess::start(opener, command).map_err(|e| e.to_string())?.detach();
     Ok(())
 }

@@ -31,7 +31,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
             p("kind", "Kind", FieldKind::Choice { options: &FASTENER_KINDS }, "clearance"),
             p("extra", "Extra clearance (mm)", number(Unit::Length, 0.0, 1.0, 2), "0"),
             p("depth", "Depth (mm; 0: through)", number(Unit::Length, 0.0, 500.0, 2), "0"),
-            p("point", "Point (mm; a face click sets it)", POINT, ""),
+            p("point", "Point (mm; empty: the clicked point)", POINT, ""),
         ],
         flow: Flow::PrintPick,
         route: "fastener_hole",

@@ -25,6 +25,11 @@
 //!   keyed by (document generation, the body's mesh asset, the node's
 //!   results; a failed one also by the connection), and removed when the overlay goes off. `mesh::highlight`
 //!   draws a coloured body in a white material ([`StressPaint::painted`]).
+//! - **Print study blocks** (section "print", `print.strength`/`print.plan`)
+//!   go through the same rule: `print::overlay::inputs` makes one cell at
+//!   the origin whose stress is the governing failure index (1 / safety
+//!   factor) with yield 1, so the body is one colour, red at failure. The
+//!   panel adds the print line with its staleness (`print::overlay`).
 use super::{ROBOCAD_SCALE, controls_of, link_active, staleness};
 use crate::app::ModeScope;
 use crate::app::{ViewerMode, ViewerSet};
@@ -49,10 +54,14 @@ pub(crate) struct Inputs {
     pub com_m: Option<[f64; 3]>,
 }
 
-/// Node `id`'s inputs, when its results are a link block with a hotspot.
+/// Node `id`'s inputs, when its results are a link block with a hotspot,
+/// or a print study block with a safety factor (`print::overlay::inputs`).
 pub(crate) fn inputs_of(doc: &CadDocument, id: &str) -> Option<Inputs> {
     let node = doc.robot.data.node_results(id)?;
     let block = &node.results;
+    if block["section"].as_str() == Some(crate::cad::print::overlay::SECTION) {
+        return crate::cad::print::overlay::inputs(node);
+    }
     if block["section"].as_str() != Some("links") {
         return None;
     }
@@ -241,7 +250,8 @@ fn panel_key(doc: &CadDocument, paint: Option<&StressPaint>) -> Option<String> {
         return None;
     }
     let loaded = doc.robot.data.results().map(|l| (l.path.clone(), l.loaded.clone(), l.stale));
-    Some(format!("{}{running:?}{:?}{:?}{loaded:?}{:?}{}{}", r.overlay, r.exports.queued.as_ref().map(|q| &q.label), r.link, paint.map(StressPaint::counts), doc.edit.is_some(), doc.connected()))
+    let print = if r.overlay { crate::cad::print::overlay::panel_line(doc) } else { None };
+    Some(format!("{}{running:?}{:?}{:?}{loaded:?}{:?}{}{}{print:?}", r.overlay, r.exports.queued.as_ref().map(|q| &q.label), r.link, paint.map(StressPaint::counts), doc.edit.is_some(), doc.connected()))
 }
 
 /// Present: the floating results panel while the overlay is on, an export
@@ -303,11 +313,15 @@ fn body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, paint: Option<
         let status = staleness(doc);
         let loaded = doc.robot.data.results().and_then(|l| l.path.clone());
         p.spawn(k.caption(format!("Results: {status}{}", loaded.map_or_else(String::new, |l| format!(" · {l}")))));
+        if let Some(line) = crate::cad::print::overlay::panel_line(doc) {
+            p.spawn(k.caption(line));
+            p.spawn(k.note(crate::cad::print::overlay::RULE));
+        }
         p.spawn(k.note(SCALE));
         p.spawn(k.note(ROBOCAD_SCALE));
         if let Some((painted, pending, errors)) = paint.map(StressPaint::counts) {
             let line = match (painted, pending) {
-                (0, 0) => "No body carries a stress hotspot in the loaded results.".to_string(),
+                (0, 0) => "No body carries a stress hotspot or a print strength result.".to_string(),
                 (n, 0) => format!("{n} bodies coloured."),
                 (n, m) => format!("{n} bodies coloured, {m} being computed…"),
             };

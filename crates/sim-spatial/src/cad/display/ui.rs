@@ -113,7 +113,7 @@ pub(super) fn cube_press(clicks: Query<(&Interaction, &CubeButton, Option<&Enabl
 pub(super) struct Shown {
     root: Entity,
     mode: DisplayMode,
-    toggles: [bool; 5],
+    toggles: [bool; DisplaySetting::ALL.len()],
     section: bool,
     cube: bool,
     facing: Option<ViewPreset>,
@@ -192,6 +192,7 @@ pub(super) fn toolbar(
             let chip = |s: DisplaySetting, label: &str| k.chip(label, CadButton(CadAction::CadDisplay(DisplayArgs { toggle: Some(s), ..default() })), s.get(&display), true);
             r.spawn(chip(DisplaySetting::Grid, "Grid"));
             r.spawn(chip(DisplaySetting::BuildPlate, "Plate"));
+            r.spawn(chip(DisplaySetting::Overhangs, "Overhangs"));
             r.spawn(k.chip("Section", CadButton(CadAction::CadSection(SectionArgs::default())), display.section.enabled, true));
             r.spawn(chip(DisplaySetting::HighContrast, "Contrast"));
             r.spawn(chip(DisplaySetting::ViewCube, "Cube"));

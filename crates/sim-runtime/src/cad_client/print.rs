@@ -1,5 +1,5 @@
 //! RoboCAD's print routes (cad-print; `api.py` `Service.print_request`
-//! :299-325, `print_jobs.py`, the `/nodes/{id}/thin|validate` reads and the
+//! :300-333, `print_jobs.py`, the `/nodes/{id}/thin|validate` reads and the
 //! print `Ops` methods), typed for the native viewer's Print menu.
 //!
 //! - `GET /print/registry`: the printing registry's printers (with the
@@ -20,7 +20,7 @@
 //!   `GET /print/jobs/{id}` and `DELETE /print/jobs/{id}` (cancel: the job
 //!   stops at its next check and ends `cancelled`). `GET /print/jobs/{id}`
 //!   reads its `wait` from the request body, which RoboCAD never parses for
-//!   a `GET` (api.py:1387), so a wait is never honoured: poll instead.
+//!   a `GET` (api.py:1395), so a wait is never honoured: poll instead.
 //! - `GET /nodes/{id}/thin?threshold=` (`wall_thickness`: sample points
 //!   whose wall is thinner, mm) and `GET /nodes/{id}/validate` (the
 //!   kernel's validation report).
@@ -28,29 +28,43 @@
 //!   `commands.py`'s parameter names, each one RoboCAD undo step.
 //!
 //! Errors are RoboCAD's text verbatim ([`CadError`]): an unknown job is a
-//! 404 ("no print job …"), a document changed since `expected_revision` a
-//! 409, a bad body or kernel error a 422. Reads are tolerant: unknown
+//! 404 whose text is the `KeyError`'s repr, quotes included (`'no print job
+//! x'`; an unknown printer on a split likewise, `"printer 'x' is not in the
+//! print registry (have: …)"`), a document changed since
+//! `expected_revision` a 409, a bad body or kernel error a 422 (a split's
+//! unknown option key is ignored, not refused). Reads are tolerant: unknown
 //! fields are ignored, missing ones take their defaults.
 use super::{CadClient, CadError, OpResult, node_route, null_non_finite};
 use crate::hardware_client::{encode_uri_component, lenient, lenient_items};
 use crate::loopback_http::{self, Request};
 use serde::de::{DeserializeOwned, MapAccess, Visitor};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::ser::SerializeMap;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value, json};
 use std::fmt;
 use std::marker::PhantomData;
 
 /// The joint choices of RoboCAD's "Split for printing" dialog
-/// (ui/app.py:1176; `SplitOptions.joint`).
+/// (ui/app.py:1179; `SplitOptions.joint`).
 pub const SPLIT_JOINTS: [&str; 4] = ["auto", "pins+screws", "dovetail", "pins"];
-/// `FastenerDialog`'s sizes and kinds (ui/widgets.py:992-995).
+/// `FastenerDialog`'s sizes and kinds (ui/widgets.py:994-996).
 pub const FASTENER_SIZES: [&str; 7] = ["M2", "M2.5", "M3", "M4", "M5", "M6", "M8"];
 pub const FASTENER_KINDS: [&str; 5] = ["clearance", "tap", "counterbore", "countersink", "insert"];
 
 /// A JSON object's entries in document order; an entry whose value does
-/// not parse is dropped, anything but an object reads as empty.
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+/// not parse is dropped, anything but an object reads as empty. Written
+/// back as an object in the same order.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Ordered<T>(pub Vec<(String, T)>);
+impl<T: Serialize> Serialize for Ordered<T> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(Some(self.0.len()))?;
+        for (k, v) in &self.0 {
+            map.serialize_entry(k, v)?;
+        }
+        map.end()
+    }
+}
 impl<T> Ordered<T> {
     pub fn get(&self, key: &str) -> Option<&T> {
         self.0.iter().find(|(k, _)| k == key).map(|(_, v)| v)
@@ -122,7 +136,7 @@ pub struct PrinterInfo {
 }
 impl PrinterInfo {
     /// RoboCAD's "Printer:" entry: `"{id} ({x} × {y} × {z} mm)"` with
-    /// Python's `:g` numbers (ui/app.py:1172).
+    /// Python's `:g` numbers (ui/app.py:1175).
     pub fn label(&self, id: &str, g: impl Fn(f64) -> String) -> String {
         format!("{id} ({} mm)", self.usable_mm.iter().map(|x| g(*x)).collect::<Vec<_>>().join(" × "))
     }
@@ -179,7 +193,7 @@ impl PrintStudy {
     }
 }
 
-/// One print job (`Job.public`, print_jobs.py:41-44).
+/// One print job (`Job.public`, print_jobs.py:42-45).
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct PrintJob {
@@ -267,7 +281,7 @@ pub struct SplitDone {
     pub summary: Map<String, Value>,
 }
 impl SplitDone {
-    /// RoboCAD's status text once a split job is done (ui/app.py:1181):
+    /// RoboCAD's status text once a split job is done (ui/app.py:1183):
     /// "split into N pieces; hardware: 4× screw M3, …".
     pub fn status(&self) -> String {
         format!("split into {} pieces; hardware: {}", self.piece_nodes.len(), self.hardware.iter().map(|h| format!("{}× {} {}", h.count, h.item, h.size)).collect::<Vec<_>>().join(", "))

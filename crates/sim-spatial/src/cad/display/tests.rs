@@ -67,10 +67,48 @@ fn display_args_set_and_toggle() {
     assert_eq!(d, before);
 }
 
+/// RoboCAD's `toggle_build_plate` sets `show_overhangs` to the plate's new
+/// state; `toggle_overhangs` flips only the shading (ui/app.py:1072-1083).
+#[test]
+fn build_plate_sets_overhang_shading_and_its_toggle_flips_only_it() {
+    let toggle = |d: &mut CadDisplay, s| apply_display(d, &DisplayArgs { toggle: Some(s), ..default() }).unwrap();
+    let mut d = CadDisplay::default();
+    assert!(!d.overhangs && !d.build_plate);
+    toggle(&mut d, DisplaySetting::BuildPlate);
+    assert!(d.build_plate && d.overhangs);
+    toggle(&mut d, DisplaySetting::Overhangs);
+    assert!(d.build_plate && !d.overhangs);
+    toggle(&mut d, DisplaySetting::BuildPlate);
+    assert!(!d.build_plate && !d.overhangs);
+    toggle(&mut d, DisplaySetting::Overhangs);
+    assert!(!d.build_plate && d.overhangs, "the shading without the plate");
+    // Turning the plate off turns the shading off, as RoboCAD's.
+    toggle(&mut d, DisplaySetting::BuildPlate);
+    toggle(&mut d, DisplaySetting::BuildPlate);
+    assert!(!d.build_plate && !d.overhangs);
+    // Setting the plate sets the shading; an explicit overhangs given with it wins.
+    apply_display(&mut d, &DisplayArgs { build_plate: Some(true), ..default() }).unwrap();
+    assert!(d.build_plate && d.overhangs);
+    apply_display(&mut d, &DisplayArgs { build_plate: Some(true), overhangs: Some(false), ..default() }).unwrap();
+    assert!(d.build_plate && !d.overhangs);
+    // Toggling the plate with an explicit overhangs is refused, changing nothing.
+    let before = d.clone();
+    assert!(apply_display(&mut d, &DisplayArgs { toggle: Some(DisplaySetting::BuildPlate), overhangs: Some(true), ..default() }).is_err());
+    assert!(apply_display(&mut d, &DisplayArgs { toggle: Some(DisplaySetting::Overhangs), overhangs: Some(true), ..default() }).is_err());
+    assert_eq!(d, before);
+    // The state names it; the Print menu's command writes the same toggle.
+    let state = state_json(&d);
+    assert_eq!((state["overhangs"].clone(), state["overhang_deg"].clone()), (serde_json::json!(false), serde_json::json!(45.0)));
+    assert_eq!(crate::cad::print::command_action("print.overhangs"), Some(CadAction::CadDisplay(DisplayArgs { toggle: Some(DisplaySetting::Overhangs), ..default() })));
+    assert_eq!(serde_json::to_value(DisplaySetting::Overhangs).unwrap(), serde_json::json!("overhangs"));
+}
+
 #[test]
 fn rest_forms_parse_back_to_the_same_action() {
     let actions = [
         CadAction::CadDisplay(DisplayArgs { toggle: Some(DisplaySetting::BuildPlate), ..default() }),
+        CadAction::CadDisplay(DisplayArgs { toggle: Some(DisplaySetting::Overhangs), ..default() }),
+        CadAction::CadDisplay(DisplayArgs { build_plate: Some(true), overhangs: Some(false), ..default() }),
         CadAction::CadDisplay(DisplayArgs { mode: Some(DisplayMode::Matcap), high_contrast: Some(true), ..default() }),
         CadAction::CadDisplay(DisplayArgs { next: true, ..default() }),
         CadAction::CadSection(SectionArgs::default()),

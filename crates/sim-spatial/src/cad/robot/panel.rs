@@ -18,7 +18,8 @@
 //!   it changes), [`controls`] lists its buttons and rows for `system_ui`
 //!   and [`state_json`] reports it, so none of them can drift apart.
 //! - **A row press** is `CadSelect {ids: [id]}`, the model tree's own path
-//!   into the shared selection (`cad:robot:row:<id>`). Two presses on the
+//!   into the shared selection (`cad:robot:row:<id>`), with `picked_at` the
+//!   revision the description was read at. Two presses on the
 //!   same joint row within [`DOUBLE_CLICK`] also write `CadInvoke
 //!   ops.set_joint` (the Edit joint form for the selected joint), as
 //!   RoboCAD's `_edit` runs `robot_edit_joint`.
@@ -184,9 +185,14 @@ fn selected(selection: &[SelectionItem], id: &str) -> bool {
     selection.iter().any(|s| s.0 == id)
 }
 
-/// A row press: the model tree's `CadSelect` (the node as a body item).
-fn select_action(id: &str) -> CadAction {
-    CadAction::CadSelect { ids: vec![id.to_string()], items: Vec::new(), extend: false, toggle: false, picked_at: None }
+/// A row press: the model tree's `CadSelect` (the node as a body item),
+/// stamped with the revision the description the row shows was read at
+/// (`picked_at`). `selection::select` stamps body items with no revision
+/// (they name a node, not an index), so the stamp records where the row
+/// came from without refusing a row of an older read; a node that has
+/// left the shown tree is refused by name there.
+fn select_action(doc: &CadDocument, id: &str) -> CadAction {
+    CadAction::CadSelect { ids: vec![id.to_string()], items: Vec::new(), extend: false, toggle: false, picked_at: doc.robot.data.read_at() }
 }
 
 /// Which revision the description describes, or why there is none.
@@ -407,7 +413,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, sel
             p.spawn(k.note("none"));
         }
         for r in &b.rows {
-            row(p, k, r);
+            row(p, k, doc, r);
         }
     }
     if !v.issues.is_empty() {
@@ -424,7 +430,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, sel
 }
 
 /// One tree row: the name, then RoboCAD's Detail and Margin columns as lines under it.
-fn row(p: &mut ChildSpawnerCommands, k: &Kit, r: &Row) {
+fn row(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, r: &Row) {
     let mut label = format!("{}, {}", r.name, r.kind);
     if !r.detail.is_empty() {
         label += &format!(", {}", r.detail);
@@ -437,7 +443,7 @@ fn row(p: &mut ChildSpawnerCommands, k: &Kit, r: &Row) {
     }
     p.spawn((
         Button,
-        CadButton(select_action(&r.id)),
+        CadButton(select_action(doc, &r.id)),
         RobotRow { id: r.id.clone(), joint: r.kind == "joint" },
         Tint::selectable(r.selected),
         AccessibleLabel::new(label),
@@ -493,7 +499,7 @@ pub(crate) fn controls(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<(S
     }
     for b in &v.branches {
         for r in &b.rows {
-            out.push((format!("cad:robot:row:{}", r.id), format!("{}: {}", b.title, r.name), select_action(&r.id), Ok(())));
+            out.push((format!("cad:robot:row:{}", r.id), format!("{}: {}", b.title, r.name), select_action(doc, &r.id), Ok(())));
         }
     }
     for b in v.buttons {

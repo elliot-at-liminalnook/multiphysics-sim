@@ -20,8 +20,11 @@
 //!   copy was cut from an older tessellation than the drawn one. While a
 //!   newer copy builds, the previous one stays shown (as `mesh` keeps a
 //!   body's previous mesh during a refetch).
-//!   The same job builds the build plate's overhang overlay (RoboCAD's
-//!   `printing.overhangs` at 45°, drawn in its 0.9, 0.35, 0.3).
+//!   The same job builds the overhang overlay while overhang shading is on
+//!   (`CadDisplay::overhangs`, RoboCAD's `show_overhangs`, which its build
+//!   plate toggle also sets): RoboCAD's `printing.overhangs` at 45°, drawn
+//!   in its 0.9, 0.35, 0.3 as a separate tint mesh; the body's mesh and
+//!   RoboCAD's document are never changed.
 //! - **The exact section** ([`exact_jobs`], JobResults): `GET
 //!   /nodes/{id}/section` on a `jobs::Latest` (`Pool::Dedicated`, network),
 //!   keyed by (node, RoboCAD revision, plane); an answer for a superseded
@@ -375,7 +378,7 @@ pub(super) fn preview(
     let (Some(display), Some(mut meshes), Some(mut cache), Some(root)) = (display, meshes, cache, root) else { return };
     let cache = &mut *cache;
     let plane = if display.section.enabled { display.section.plane } else { None };
-    let overhang = display.build_plate;
+    let overhang = display.overhangs;
     let material = cache.material.get_or_insert_with(|| materials.add(StandardMaterial { base_color: OVERHANG, perceptual_roughness: 0.7, cull_mode: None, depth_bias: 10.0, ..default() })).clone();
     let mut seen: HashSet<String> = HashSet::new();
     for (body, mut mesh3d) in &mut bodies {

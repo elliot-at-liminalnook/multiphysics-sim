@@ -50,6 +50,7 @@ node ids from `/nodes`. Faces/edges are addressed by `{"node": id,
     GET  /physical?flex=1[&planar=1]   the physical assembly description (simrobot v4, SI); planar=1 adds the XZ-plane hint
     GET  /results | POST /results/load {"path"}      simulation results (peak stress, margins, temperatures)
     GET  /results/nodes             {"revision", "path", "loaded", "stale", "provenance", "margins": {id: …}, "nodes": {id: {"results", "yield_strength_pa"}}}  (read-only)
+    GET  /print/study               {"revision", "study": robot_settings["print_study"] or null, "splits": [split group ids in tree order]}  (read-only)
     POST /identification/apply {"path"}              fitted joint parameters from `sim-cad fit`
     POST /sensors {"kind","body","point",...} | POST /cables {"from_body","from_point","to_body","to_point",...}
     PUT  /battery {"cells","chemistry",...} | PUT /control {"period_s","latency_s","targets"} | PUT /uncertainty {...}
@@ -308,6 +309,13 @@ class Service:
                 return {'path': pr.default_path(), 'sha256': sha, 'revision': data['revision'],
                         'printers': {k: {'name': v['name'], 'usable_mm': pr.usable_mm(k)} for k, v in data['printers'].items()},
                         'materials': {k: {'name': v['name'], 'cad_material': v['cad_material']} for k, v in data['materials'].items()}}
+            if parts == ['print', 'study'] and method == 'GET':
+                def study():
+                    doc = self.doc
+                    with doc._lock:
+                        return {'revision': doc.revision, 'study': doc.robot_settings.get('print_study'),
+                                'splits': [n.id for n in doc.walk() if (n.robot or {}).get('print_split')]}
+                return self.run_on_main(study)
             if parts == ['print', 'split'] and method == 'POST':
                 return jobs.split_job(body) if body.get('background') else jobs.split(body)
             if len(parts) == 2 and method == 'POST' and hasattr(jobs, parts[1]) and parts[1] in ('analyze', 'plan', 'assembly', 'coupons', 'strength_split'):

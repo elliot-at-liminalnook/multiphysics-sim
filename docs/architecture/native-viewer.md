@@ -12,6 +12,14 @@ duplicates physics.
 
 ## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01))
 
+**Nothing has been compiled, tested or run since aa34ef48** (the last
+verified commit). Three epics since were written and reviewed by reading
+only: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
+cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
+fixes 697a15c1, docs 61f1bea5) and now cad-print (in progress on this
+branch, from 35ea6de0). Their counts and "done" states below are by
+reading, not by a build.
+
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
   [Bevy 0.19.1 migration](#bevy-0191-migration-2026-09-30)). Only
@@ -235,7 +243,8 @@ duplicates physics.
   **cad-physical-inspect** (2026-10-01, see
   [CAD physical properties](#cad-physical-properties-2026-10-01)), done
   pending verification (written and reviewed by reading in 3fb34225,
-  f26842fa and uncommitted review fixes; nothing compiled or run): the
+  f26842fa and the review fixes committed in 697a15c1; nothing compiled
+  or run): the
   materials panel and dialogs, the inspector's physical rows and exact
   measurement, the Robot panel with its tools, dialogs, motor library and
   glyphs, results and identification, the stress overlay (one colour rule
@@ -4364,8 +4373,8 @@ a worker on a session directory.
 *Batch cad-physical-inspect (default order item 7, §9 phase 1; §9 "Later
 CAD epics" 5). Done pending verification: written and reviewed by reading
 in commits 3fb34225 (client and `api.py` routes) and f26842fa (the native
-viewer), plus uncommitted review fixes; nothing was compiled, tested or
-run in the batch.* It brings RoboCAD's physical side into CAD mode: the
+viewer), plus review fixes committed in 697a15c1; nothing was compiled,
+tested or run in the batch.* It brings RoboCAD's physical side into CAD mode: the
 materials panel and its dialogs; the inspector's physical rows (colour,
 joint editor, joint physics overrides, results line, exact measurement);
 the Robot panel with its tools, dialogs, motor library and glyphs;
@@ -5007,8 +5016,8 @@ the materials panel, the inspector's physical rows, the Robot panel with
 its tools and dialogs, results and the stress overlay, physical export and
 the live link into Robot mode, with two api.py gap routes
 (`GET /results/nodes`, `GET /physical?planar=1`); it is written and
-reviewed by reading (3fb34225, f26842fa and uncommitted review fixes) and
-pending verification. Next: cad-print.
+reviewed by reading (3fb34225, f26842fa and the review fixes in 697a15c1)
+and pending verification. Next: cad-print.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -5248,7 +5257,8 @@ The Director re-ranks with evidence, but this is the default:
    **cad-physical-inspect** (2026-10-01; see
    [CAD physical properties](#cad-physical-properties-2026-10-01)) is done
    pending verification (written and reviewed by reading in 3fb34225,
-   f26842fa and uncommitted review fixes; nothing compiled or run).
+   f26842fa and the review fixes committed in 697a15c1; nothing compiled
+   or run).
    Next: **cad-print**.
    Remaining, in order (§9 "Later CAD epics"):
    cad-print, cad-organize, cad-experiments-motion.

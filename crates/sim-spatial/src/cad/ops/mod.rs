@@ -511,6 +511,16 @@ pub(in crate::cad) fn run_entry(id: &str, params: &Map<String, Value>, revision:
     }
 }
 
+/// `CadRun` of catalogue entry `id` on explicit `items` (the fastener
+/// tool's clicked face, cad-print): as `CadRun {id, params, items,
+/// revision}` (`revision`: the pick's; required for face items).
+pub(in crate::cad) fn run_entry_on(id: &str, params: &Map<String, Value>, items: &[SelectionItem], revision: Option<u64>, call: &mut Call, cx: &mut Cx) -> Outcome {
+    match entry(id) {
+        None => Outcome::Done(Err(unknown(id))),
+        Some(e) => run(e, params, Some(items), revision, call, cx),
+    }
+}
+
 /// `CadRun`: refused by name with nothing sent, else one edit job (or a read).
 fn run(entry: &'static OpEntry, params: &Map<String, Value>, items: Option<&[SelectionItem]>, revision: Option<u64>, call: &mut Call, cx: &mut Cx) -> Outcome {
     let selection = cx.shared.items();
@@ -557,7 +567,9 @@ fn prepare(doc: &CadDocument, env: &Env, entry: &OpEntry, params: &Map<String, V
     if let Some(revision) = revision {
         r.revision = revision;
     }
-    let values = values(entry, params)?;
+    // Edit joint: the parameters a REST run leaves out are the joint's current values (the form sends all).
+    let filled = if entry.id == "ops.set_joint" { Some(robot_form::fill_from_joint(entry, doc, &r, params)?) } else { None };
+    let values = values(entry, filled.as_ref().unwrap_or(params))?;
     args::build(entry, &r, &values, doc, env)
 }
 

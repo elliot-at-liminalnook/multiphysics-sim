@@ -21,8 +21,9 @@
 //!   service is never stopped.
 //! - **Helpers**: [`spawn_detached`] starts a process whose lifetime is not
 //!   tied to ours (the linked `sim-viewer` schematic window) and
-//!   [`open_in_browser`] opens an http(s) link with `open`/`xdg-open`; both
-//!   leave a reaper thread waiting for it, so it never lingers as a zombie.
+//!   [`open_in_browser`] opens an http(s) link with `open`/`xdg-open`
+//!   ([`open_local`] an existing local file or folder); each leaves a reaper
+//!   thread waiting for it, so it never lingers as a zombie.
 //!   [`drop_off_thread`] drops a large value away from the UI thread.
 //!
 //! Pool rule (Bevy 0.19.1 `TaskPoolOptions::default()`: `IoTaskPool` and
@@ -50,7 +51,7 @@ mod run_thread;
 #[cfg(test)]
 mod tests;
 
-pub use child::{ChildProcess, open_in_browser, spawn_detached};
+pub use child::{ChildProcess, open_in_browser, open_local, spawn_detached};
 pub use run_thread::{JOIN_BOUND, RunThread, Stamped, Stopped};
 
 /// Where a one-shot job runs (see the module's pool rule).

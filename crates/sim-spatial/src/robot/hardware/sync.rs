@@ -644,6 +644,11 @@ impl StartInput {
         Self { initial: Err(NOT_LIVE.into()), source: String::new(), key: None, running: false, start: Err(NOT_LIVE.into()) }
     }
     fn of(view: &RobotView, seq: u64) -> Self {
+        // A planar v2 file has no live controller: refused by name, not as "reset the episode".
+        if view.is_planar() {
+            let why = crate::robot_planar::LIVE_SYNC;
+            return Self { initial: Err(why.into()), source: String::new(), key: None, running: false, start: Err(why.into()) };
+        }
         let r = view.run.as_ref();
         let running = r.is_some_and(|r| r.phase() == Phase::Running);
         // Pause is accepted exactly when Start was requested and still holds (a run starting to build counts).

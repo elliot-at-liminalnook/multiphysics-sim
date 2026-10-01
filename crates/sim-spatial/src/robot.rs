@@ -1065,7 +1065,7 @@ fn install_planar(
         commands.entity(entity).despawn();
     }
     let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
-    let (mut speed, mut contacts, mut generation, mut run_reset, mut joint) = (1.0, true, 0, false, 0);
+    let (mut speed, mut contacts, mut generation, mut run_reset, mut joint) = (1.0, true, 0, false, (0, None));
     // A planar file that was running keeps running after a reload (the CAD
     // scene's edit, save, watch loop): the new run is started once built.
     let mut resume = false;
@@ -1075,7 +1075,7 @@ fn install_planar(
         crate::jobs::drop_off_thread(run, "the robot run (replaced by a planar v2 file)");
     }
     if let Some(p) = view.planar.take() {
-        (speed, contacts, joint) = (p.run.speed_scale(), p.contacts, p.selected_joint);
+        (speed, contacts, joint) = (p.run.speed_scale(), p.contacts, (p.selected_joint, p.selected_joint_name().map(str::to_string)));
         run_reset = p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == robot_planar::PlanarPhase::Running;
         resume = p.run.phase() == robot_planar::PlanarPhase::Running;
         generation = p.run.generation() + 1;
@@ -1116,7 +1116,8 @@ fn install_planar(
     commands.entity(list).add_children(&rows);
     view.selected = kept.as_ref().and_then(|n| loaded.model.bodies.iter().position(|b| &b.name == n));
     let mut planar = PlanarView::new(loaded, generation, speed, contacts, reload.is_none());
-    planar.selected_joint = joint;
+    // Carried by name: the new file's joint order may differ (resolved in planar_sync once built).
+    (planar.selected_joint, planar.pending_joint) = joint;
     // Queued behind the build on the run thread, so it starts once built (a failed build ignores it).
     if resume {
         let _ = planar.run.act(RunAction::Start);
@@ -1128,7 +1129,7 @@ fn install_planar(
     if let Some((trigger, _)) = reload {
         let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
         let run = match (run_reset, resume) {
-            (_, true) => "run reset and running again from t = 0",
+            (_, true) => "run reset; it runs again from t = 0 once the new build is ready",
             (true, false) => "run reset",
             (false, false) => "no run to reset",
         };
@@ -1160,6 +1161,8 @@ fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, 
     if p.run.active() {
         redraw.write(bevy::window::RequestRedraw);
     }
+    // Every frame: also clamps a carried index when the old run had no built frame to name it.
+    p.resolve_pending_joint();
     let Some(move_focus) = p.frame_camera else { return };
     let Some((lo, hi)) = p.run.frame().filter(|f| f.built).and_then(robot_planar::bounds) else { return };
     p.frame_camera = None;

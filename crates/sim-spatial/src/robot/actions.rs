@@ -195,7 +195,10 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAc
         RobotAction::Run { action } => planar(view)?.run.act(action)?,
         RobotAction::Jog { joint, delta } => planar(view)?.run.nudge(&joint, delta)?,
         RobotAction::JogTo { joint, target } => planar(view)?.run.set_target(&joint, target)?,
-        RobotAction::SelectJoint { index } => planar(view)?.selected_joint = index,
+        RobotAction::SelectJoint { index } => {
+            let p = planar(view)?;
+            (p.selected_joint, p.pending_joint) = (index, None);
+        }
         RobotAction::Speed { speed } => planar(view)?.run.speed(speed)?,
         RobotAction::Overlay { contacts, .. } => {
             if let Some(on) = contacts {

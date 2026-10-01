@@ -36,6 +36,19 @@
 //!   values rounded to 1e-6, so a vector component whose typed text is
 //!   still its shown text is sent as the value the draft opened with
 //!   (an axis of 0.7071067811865476 is not re-sent as 0.707107).
+//! - **Tessellation tolerance** (cad-views-export; RoboCAD's inspector
+//!   spin box "Tessellation tolerance (mm)", ui/widgets.py:469-476: 0.005–2
+//!   mm, three decimals, default 0.05): one `CadPatch
+//!   {"tessellation_tolerance": mm}` (api.py:645, one undo step "Set
+//!   attributes") on the inspected body, sheet or instance. RoboCAD's
+//!   spin box writes every selected node directly, without undo
+//!   (`_tol_changed`, widgets.py:729-735); here it is the inspected node,
+//!   undoable, as every other inspector edit. RoboCAD reports no node's
+//!   current value (`node_summary` has no `tessellation_tolerance`), so
+//!   the field opens empty; the patch bumps RoboCAD's revision, so meshes
+//!   are refetched, at the node's own tolerance (`mesh.rs` asks with
+//!   `cad_client::NODE_TOLERANCE`, which RoboCAD's `mesh_of` reads as "the
+//!   node's"): the change shows here as in RoboCAD's own viewport.
 use super::{field, node};
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
@@ -52,6 +65,13 @@ use sim_runtime::cad_client::NodeSummary;
 /// The node kinds whose transform RoboCAD applies (instances, reference meshes and images).
 pub const PLACED_KINDS: [&str; 3] = ["instance", "mesh", "image"];
 
+/// The node kinds RoboCAD tessellates at their own tolerance (`Document.mesh_of`:
+/// a mesh node keeps its triangles).
+pub const TESSELLATED_KINDS: [&str; 3] = ["body", "sheet", "instance"];
+/// RoboCAD's tolerance spin box: range, decimals and default (ui/widgets.py:469-473).
+pub const TOLERANCE_RANGE: (f64, f64) = (0.005, 2.0);
+pub const TOLERANCE_DEFAULT: f64 = 0.05;
+
 /// Which value an editor types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EditKey {
@@ -60,6 +80,8 @@ pub enum EditKey {
     Axis,
     Angle,
     Scale,
+    /// RoboCAD's per-node tessellation tolerance, mm.
+    Tessellation,
 }
 impl EditKey {
     pub fn label(self) -> &'static str {
@@ -69,11 +91,12 @@ impl EditKey {
             EditKey::Axis => "Axis",
             EditKey::Angle => "Angle",
             EditKey::Scale => "Scale",
+            EditKey::Tessellation => "Tessellation tolerance",
         }
     }
     fn unit(self) -> &'static str {
         match self {
-            EditKey::Pivot | EditKey::Translation => "mm",
+            EditKey::Pivot | EditKey::Translation | EditKey::Tessellation => "mm",
             EditKey::Angle => "°",
             EditKey::Axis | EditKey::Scale => "",
         }
@@ -154,7 +177,8 @@ pub fn refusal(n: &NodeSummary, key: EditKey) -> Option<&'static str> {
     if truthy(n.component_member.as_ref()) {
         return Some("Edit component parameters or detach the occurrence first");
     }
-    if key != EditKey::Pivot && truthy(n.component_instance.as_ref()) {
+    let transform = matches!(key, EditKey::Translation | EditKey::Axis | EditKey::Angle | EditKey::Scale);
+    if transform && truthy(n.component_instance.as_ref()) {
         return Some("Use set_component_overrides with placement for a component occurrence");
     }
     None
@@ -180,14 +204,16 @@ pub fn current_vector(n: &NodeSummary, key: EditKey) -> Option<[f64; 3]> {
         EditKey::Pivot => pivot_of(n),
         EditKey::Translation => placement(n).ok().map(|p| p.translation),
         EditKey::Axis => placement(n).ok().map(|p| p.axis),
-        EditKey::Angle | EditKey::Scale => None,
+        EditKey::Angle | EditKey::Scale | EditKey::Tessellation => None,
     }
 }
 
-/// The text an editor opens with (empty for an unset pivot).
+/// The text an editor opens with (empty for an unset pivot, and for the
+/// tessellation tolerance, which RoboCAD does not report).
 pub fn current_text(n: &NodeSummary, key: EditKey) -> String {
     match key {
         EditKey::Pivot => pivot_of(n).map(vector_text).unwrap_or_default(),
+        EditKey::Tessellation => String::new(),
         other => match placement(n) {
             Ok(p) => match other {
                 EditKey::Translation => vector_text(p.translation),
@@ -241,6 +267,17 @@ pub fn evaluate(key: EditKey, text: &str, original: Option<[f64; 3]>) -> Result<
             }
             Ok(json!(s))
         }
+        EditKey::Tessellation => {
+            if text.trim().is_empty() {
+                return Err(format!("type a tolerance in mm ({}–{}; RoboCAD's default is {})", TOLERANCE_RANGE.0, TOLERANCE_RANGE.1, TOLERANCE_DEFAULT));
+            }
+            // RoboCAD's spin box keeps three decimals.
+            let t = (length(text)? * 1000.0).round() / 1000.0;
+            if !(TOLERANCE_RANGE.0..=TOLERANCE_RANGE.1).contains(&t) {
+                return Err(format!("the tolerance must be {}–{} mm, as RoboCAD's inspector allows (got {t})", TOLERANCE_RANGE.0, TOLERANCE_RANGE.1));
+            }
+            Ok(json!(t))
+        }
     }
 }
 
@@ -255,6 +292,9 @@ pub fn patch_for(n: &NodeSummary, key: EditKey, text: &str, original: Option<[f6
     if key == EditKey::Pivot {
         return Ok(patch(&n.id, "pivot", value));
     }
+    if key == EditKey::Tessellation {
+        return Ok(patch(&n.id, "tessellation_tolerance", value));
+    }
     let mut p = placement(n)?;
     let number = value.as_f64();
     match key {
@@ -262,7 +302,7 @@ pub fn patch_for(n: &NodeSummary, key: EditKey, text: &str, original: Option<[f6
         EditKey::Axis => p.axis = vec3(Some(&value)).ok_or("axis: not three numbers")?,
         EditKey::Angle => p.angle_deg = number.ok_or("angle: not a number")?,
         EditKey::Scale => p.scale = number.ok_or("scale: not a number")?,
-        EditKey::Pivot => {}
+        EditKey::Pivot | EditKey::Tessellation => {}
     }
     Ok(patch(&n.id, "transform", p.json()))
 }
@@ -283,7 +323,11 @@ fn row(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, n: &NodeSummary
     }
     let draft = doc.tool_state.inspector_edit.as_ref().filter(|d| d.node == n.id && d.key == key);
     let shown = draft.map_or_else(|| current_text(n, key), |d| d.text.clone());
-    let placeholder = if key == EditKey::Pivot { "not set: x, y, z" } else { key.label() };
+    let placeholder = match key {
+        EditKey::Pivot => "not set: x, y, z",
+        EditKey::Tessellation => "not reported: type mm",
+        _ => key.label(),
+    };
     p.spawn(Node { column_gap: Val::Px(6.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).with_children(|line| {
         line.spawn(k.text(key.label(), size::BODY, SUBTLE, 0));
         line.spawn(k.input(&shown, placeholder, EditField { node: n.id.clone(), key }, draft.is_some()));
@@ -314,6 +358,14 @@ pub(super) fn editors(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, 
         p.spawn(wrap()).with_children(|r| {
             r.spawn(k.button("Clear pivot", CadButton(patch(&n.id, "pivot", Value::Null)), Look::Secondary, ready));
         });
+    }
+    if TESSELLATED_KINDS.contains(&n.kind.as_str()) {
+        p.spawn(k.section("Tessellation"));
+        row(p, k, doc, n, EditKey::Tessellation);
+        p.spawn(k.caption(format!(
+            "RoboCAD's default {TOLERANCE_DEFAULT} mm ({}–{} mm). RoboCAD does not report the current value; bodies are drawn at each node's own tolerance, as in RoboCAD's viewport.",
+            TOLERANCE_RANGE.0, TOLERANCE_RANGE.1
+        )));
     }
     p.spawn(k.section("Transform"));
     if !PLACED_KINDS.contains(&n.kind.as_str()) {
@@ -425,7 +477,7 @@ pub(in crate::cad) fn entry(
                     // The transform is sent whole, its untouched components
                     // as read when the draft opened: refused once RoboCAD's
                     // document has moved on since (or the shown one is stale).
-                    let blocked = if d.key == EditKey::Pivot { edit_blocked(&doc) } else { doc.commit_refusal(Some(d.began)) };
+                    let blocked = if matches!(d.key, EditKey::Pivot | EditKey::Tessellation) { edit_blocked(&doc) } else { doc.commit_refusal(Some(d.began)) };
                     match result.and_then(|action| match blocked {
                         Some(why) if action.is_some() => Err(format!("Not sent: {why}. Enter again once it clears, or Escape and reopen the field for the current values.")),
                         _ => Ok(action),
@@ -526,6 +578,27 @@ mod tests {
         let empty = NodeSummary { component_member: Some(json!({})), ..instance() };
         assert!(refusal(&empty, EditKey::Scale).is_none());
         assert_eq!(current_text(&instance(), EditKey::Translation), "1, 2, 3");
+    }
+
+    /// The tessellation tolerance: RoboCAD's spin box range and decimals,
+    /// one patch of the inspected node; refused for a component member only.
+    #[test]
+    fn the_tessellation_tolerance_is_one_patch_in_robocads_range() {
+        let body = NodeSummary { id: "b1".into(), kind: "body".into(), name: "Bracket".into(), ..Default::default() };
+        let (id, a) = attrs(patch_for(&body, EditKey::Tessellation, "0.02", None).unwrap());
+        assert_eq!((id.as_str(), a), ("b1", json!({"tessellation_tolerance": 0.02})));
+        let (_, a) = attrs(patch_for(&body, EditKey::Tessellation, "0.01234", None).unwrap());
+        assert_eq!(a, json!({"tessellation_tolerance": 0.012}), "three decimals");
+        let (_, a) = attrs(patch_for(&body, EditKey::Tessellation, "0.1cm", None).unwrap());
+        assert_eq!(a, json!({"tessellation_tolerance": 1.0}), "units as RoboCAD's lengths");
+        assert!(patch_for(&body, EditKey::Tessellation, "3", None).unwrap_err().contains("0.005–2"));
+        assert!(patch_for(&body, EditKey::Tessellation, "0.001", None).unwrap_err().contains("0.005–2"));
+        assert!(patch_for(&body, EditKey::Tessellation, " ", None).unwrap_err().contains("0.05"));
+        assert_eq!(current_text(&body, EditKey::Tessellation), "", "RoboCAD does not report it");
+        let occurrence = NodeSummary { component_instance: Some(json!({"component": "c1"})), ..instance() };
+        assert!(patch_for(&occurrence, EditKey::Tessellation, "0.1", None).is_ok(), "only the transform is refused for an occurrence");
+        let member = NodeSummary { component_member: Some(json!({"component": "c1"})), ..instance() };
+        assert!(patch_for(&member, EditKey::Tessellation, "0.1", None).unwrap_err().contains("detach the occurrence"));
     }
 
     /// The field shows 1e-6-rounded values; a component left as shown is

@@ -17,8 +17,8 @@
 //! `system_ui` control (`cad:op:<id>`) and REST `cad_invoke` write; the
 //! palette and the radials open with `CadSurface` at the pointer instead
 //! (`cad_invoke` of them opens at the 3D view's centre). Not ready, the key
-//! writes nothing and the status line shows why ("Fillet: …", "View front
-//! belongs to the cad-views-export epic; …"), so a key press is never
+//! writes nothing and the status line shows why ("Fillet: …", "Fastener
+//! hole… belongs to the cad-print epic; …"), so a key press is never
 //! silently ignored; Delete/Backspace with nothing selected stays silent:
 //! Backspace is too common a key to report on.
 //!
@@ -27,7 +27,9 @@
 //! `tool.offset_face` Shift+D and `tool.measure` M (`transform::input::keys`),
 //! `numeric.entry` Tab (`numeric::entry`, and the open form's first field,
 //! `surfaces::form`). Keys are ignored while a text field has the keyboard
-//! (`CadInputFocus`), while a command surface is open (RoboCAD's popups take
+//! (`CadInputFocus`: the name field, the inspector's editors, the numeric
+//! bar, the form, the palette, and the Saved Views panel's name, rename and
+//! field-of-view fields, `views::panel::input`), while a command surface is open (RoboCAD's popups take
 //! the keyboard; the surfaces read their own keys) and while a modal
 //! parameter form is open (RoboCAD's dialogs are modal; a pick-then-form or
 //! place operation's form beside the view leaves the keys live, as
@@ -59,24 +61,28 @@
 //! | Shift+A, B / C / S | `tool.box` / `tool.cylinder` / `tool.sphere` | the second key is the chord's (see above), not B (select bodies), C (sketch circle) or S (scale) |
 //! | S, G, R, D, Shift+D, M, Escape | tools (transform) | read by transform's keys only (`transform::input::keys`, and not while an operation's interaction, form or a surface is open: a sketch tool's keys stay the registry's); Shift+S (sketch slot), Shift+R (revolve), Shift+J etc. differ by Shift, which transform's S/G/R/M refuse (`!shift`) |
 //! | Ctrl+S, Ctrl+Shift+S, Ctrl+Shift+D | save, save as, export drawing | transform's S and D act only without Ctrl |
-//! | S, Shift+S, Ctrl+S, Ctrl+Shift+S | scale (transform), sketch slot, save, save as (cad-views-export) | transform's S refuses Shift and Ctrl; the rest are exact modifiers here |
+//! | S, Shift+S, Ctrl+S, Ctrl+Shift+S | scale (transform), sketch slot, save, save as (the files part's row) | transform's S refuses Shift and Ctrl; the rest are exact modifiers here |
 //! | R, Shift+R | rotate (transform), revolve | transform's R refuses Shift |
 //! | A, Shift+A, Ctrl+A, Ctrl+Shift+A | sketch arc (three points; the native binding of keymap.json's dead `sketch.arc`), chord start (box, cylinder, sphere), select all, array | exact modifiers keep them apart: A alone is no chord's first step, so it runs the arc at once |
 //! | L, Shift+L | sketch line, sketch rectangle | exact modifiers |
 //! | C, Shift+C, Ctrl+C, Ctrl+Shift+C, Shift+A then C | sketch circle, sketch spline, copy, clearance (cad-print), cylinder | exact modifiers; C after Shift+A is the chord's (see above), not the circle's |
-//! | X, Ctrl+Shift+X | extrude, section analysis (cad-views-export) | exact modifiers |
+//! | X, Ctrl+Shift+X | extrude, section analysis (`cad_section` toggle) | exact modifiers |
 //! | T | sketch text | no other reader in CAD mode; while the Text tool's form has its text field focused (`CadInputFocus`), T is typed |
 //! | Ctrl+P | plane from face | exact modifiers (P select points, Shift+P sketch polygon; see the P row) |
 //! | Enter | the spline's finish (`sketch::Finish::EnterOrDouble`, read by the sketch interaction), the open form's submit (`surfaces::form::input`, `CadFormSubmit`, only when no field has the keyboard), the numeric bar's commit (`numeric::entry`, while it is focused) | bound to no command here (`simulation.experiment`'s Ctrl+Return is listed, never bound); a focused field's Enter is that field's; with the Spline tool active and no field focused, Enter is the spline's finish, so the form's Enter submit must stand aside while a `Flow::Sketch` interaction is active (that guard is `surfaces::form`'s) |
-//! | Ctrl+Z, Z | undo, next display mode (cad-views-export) | exact modifiers |
-//! | B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate (cad-views-export) | exact modifiers |
-//! | F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus (cad-views-export), palette, fillet, chamfer | exact modifiers |
-//! | H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (cad-views-export), fastener, shell | exact modifiers |
+//! | Ctrl+Z, Ctrl+Shift+Z, Z | undo, redo, next display mode (`cad_display` next) | exact modifiers |
+//! | B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate preview (`cad_display` toggle) | exact modifiers |
+//! | F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus selection (frames the selected nodes; Fit All with none), palette, fillet, chamfer | exact modifiers |
+//! | H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (catalogue: `Ops.set_visible`, `Ops.show_all`), fastener (cad-print), shell | exact modifiers; macOS's Option+H types "˙", but keys match the physical key (`KeyCode::KeyH`) with Alt held, so Alt+H reaches Show All |
+//! | Ctrl+G | grid (`cad_display` toggle) | no other reader in CAD mode |
+//! | 1, 3, 7, 0, Ctrl+1, Ctrl+3, Ctrl+7 | view front, right, top, iso; back, left, bottom (`camera_view`, RoboCAD's yaw/pitch table) | exact modifiers; the keypad's digits are the digits (`normalise`); the shared camera's numpad keys are off in CAD (`OrbitRules::keys` false, `scene`), so a digit is read once; macOS's Mission Control may take Control+digit ("Switch to Desktop n") when enabled, Command+digit still works |
+//! | 5 | orthographic toggle (`camera_projection`) | as the digits above |
+//! | / | isolate (catalogue: `Ops.isolate`) | the keypad's divide is `/` (`normalise`) |
 //! | P, Shift+P, Ctrl+P | select points, sketch polygon, plane from face | exact modifiers |
 //! | Delete, Backspace | `edit.delete` | ignored while a text field (name, numeric bar, palette, form) has the keyboard |
 //! | Space | `view.radial` | typed as a space while a text field has the keyboard |
 //! | Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`: its first field, then the next); during a placement drag `ops::interact` also reads it to copy the base point into the form's anchor field; else the numeric bar's (`numeric::entry`) |
-//! | digits, J, Q, X, T, L, C, A, N, /, Home | views (cad-views-export), join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), isolate, fit | no other reader in CAD mode |
+//! | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), fit | no other reader in CAD mode |
 //!
 //! Commands of later epics keep their keys so a press says which epic owns
 //! them (status line), as their menu entries do.

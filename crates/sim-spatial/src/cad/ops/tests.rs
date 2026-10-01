@@ -308,7 +308,7 @@ fn runs_are_refused_in_flight_stale_or_with_unknown_parameters() {
     let items = [item("b1", "body", 0), item("b2", "body", 0)];
     let union = op("modify.union");
     assert!(prepare(&doc, &Env::default(), union, &Map::new(), Some(&items), Some(4)).is_ok());
-    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false });
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
     let err = prepare(&doc, &Env::default(), union, &Map::new(), Some(&items), None).unwrap_err();
     assert!(err.contains("in flight") && err.contains("Patch Bracket"), "{err}");
     doc.edit = None;
@@ -482,7 +482,7 @@ fn plane_entries_follow_robocads_registry() {
 fn active_plane_entries_are_viewer_state() {
     let mut doc = document();
     // Never refused for an edit in flight: nothing is sent.
-    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false });
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
     assert_eq!(prepare(&doc, &Env::default(), op("tool.plane_xz"), &Map::new(), None, None), Ok(Built::View(ViewAct::Plane(BasePlane::Xz))));
     assert_eq!(prepare(&doc, &Env::default(), op("tool.plane_2d_snap"), &Map::new(), None, None), Ok(Built::View(ViewAct::Snap2d)));
     let mut plane = CadActivePlane::default();

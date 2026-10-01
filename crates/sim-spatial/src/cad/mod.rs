@@ -52,6 +52,7 @@ mod rest_form;
 mod scene;
 mod selection;
 mod sketch;
+mod snapshot;
 mod snap;
 mod specs;
 mod surfaces;
@@ -111,7 +112,7 @@ impl Plugin for CadCorePlugin {
                     topology::sync.in_set(ViewerSet::SimSync),
                     // Sketch geometry and plane frames, then the active plane follows them (cad-sketch).
                     (sketch::cache::sync, sketch::plane::sync).chain().in_set(ViewerSet::SimSync),
-                    actions::publish.in_set(ViewerSet::Present),
+                    snapshot::publish.in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
             )

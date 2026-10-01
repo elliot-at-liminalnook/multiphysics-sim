@@ -29,16 +29,29 @@
 //!   `Infinity` and `-Infinity`; they read as `null` (never as a number).
 //! - **No file writes by accident**: [`CadClient::physical`] never passes
 //!   `path` (RoboCAD would write the description to that file).
+pub mod files;
+pub mod section;
 pub mod service;
 pub mod sketch;
 pub mod types;
+pub mod views;
+#[cfg(test)]
+mod files_tests;
+#[cfg(test)]
+mod section_tests;
 #[cfg(test)]
 mod sketch_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod views_tests;
 
 pub use sketch::{PlaneFrame, SKETCH_CALLS, SketchCall, SketchCurve, SketchGeometry, Uv, calls_body, check_calls, plane_of};
 pub use types::*;
+// cad-views-export: saved views, sections, files/export/render.
+pub use files::*;
+pub use section::*;
+pub use views::*;
 
 use crate::hardware_client::encode_uri_component;
 use crate::loopback_http::{self, Endpoint, Request};
@@ -67,6 +80,11 @@ pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 pub const EDIT_TIMEOUT: Duration = Duration::from_secs(130);
 /// api.py's default mesh tolerance (`/nodes/{id}/mesh?tolerance=`, mm).
 pub const MESH_TOLERANCE: f64 = 0.1;
+/// The `tolerance` that asks RoboCAD for the node's own tessellation
+/// tolerance: `Document.mesh_of` uses `tolerance or n.tessellation_tolerance`
+/// (document.py:475), so 0 draws a node as RoboCAD's own viewport does
+/// (its per-node tolerance, default 0.05 mm; cad-views-export).
+pub const NODE_TOLERANCE: f64 = 0.0;
 
 /// Appended to the timeout of a request that may edit the document.
 const MAY_STILL_APPLY: &str = "RoboCAD may still apply it; refresh before retrying";

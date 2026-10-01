@@ -60,7 +60,7 @@ fn every_cad_control_fits_a_pattern_and_round_trips_through_rest() {
 #[test]
 fn edits_are_refused_while_one_is_in_flight_or_disconnected() {
     let mut doc = document();
-    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false });
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
     let controls = super::panel::controls(&doc);
     for id in ["cad:undo", "cad:save", "cad:delete", "cad:visible:b1", "cad:locked:b1"] {
         let c = controls.iter().find(|c| c.id == id).unwrap();

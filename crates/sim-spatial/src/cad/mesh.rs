@@ -31,7 +31,7 @@ use bevy::picking::mesh_picking::ray_cast::RayCastBackfaces;
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use sim_runtime::cad_client::{MESH_TOLERANCE, MeshData};
+use sim_runtime::cad_client::{MeshData, NODE_TOLERANCE};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -397,7 +397,7 @@ pub(super) fn sync(
                 continue;
             }
             let (client, node) = (client.clone(), id.to_string());
-            let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-mesh-fetch", move |_| client.mesh(&node, MESH_TOLERANCE).map_err(|e| e.to_string()));
+            let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-mesh-fetch", move |_| client.mesh(&node, NODE_TOLERANCE).map_err(|e| e.to_string()));
             meshes.fetching.push(Fetch { id: id.to_string(), revision, job });
         }
     }

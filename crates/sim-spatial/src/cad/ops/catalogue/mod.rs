@@ -20,12 +20,13 @@ mod plane;
 mod rest_only;
 mod sketch;
 mod solid;
+mod view;
 
 use super::OpEntry;
 use super::kinds::BASE;
 
 /// The parts in RoboCAD's registry order.
-const PARTS: &[&[OpEntry]] = &[edit_create::ENTRIES, solid::ENTRIES, modify::ENTRIES, plane::ENTRIES, arrange::ENTRIES, sketch::ENTRIES, boolean::ENTRIES, rest_only::ENTRIES];
+const PARTS: &[&[OpEntry]] = &[edit_create::ENTRIES, view::ENTRIES, solid::ENTRIES, modify::ENTRIES, plane::ENTRIES, arrange::ENTRIES, sketch::ENTRIES, boolean::ENTRIES, rest_only::ENTRIES];
 
 /// How many entries there are.
 const COUNT: usize = {

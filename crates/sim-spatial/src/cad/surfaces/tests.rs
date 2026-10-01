@@ -4,7 +4,8 @@
 use super::registry::{self, CATEGORIES, COMMANDS, CONTEXT, MAKE_UNIQUE, Native, Resolved, SELECT_RADIAL, SKETCH_CONTEXT, TOOLBAR, VIEW_RADIAL};
 use super::{Surface, entries};
 use crate::app::actions::{self, Action};
-use crate::cad::actions::{CadAction, rest_form};
+use crate::cad::actions::CadAction;
+use crate::cad::rest_form::rest_form;
 use crate::cad::document::{CadDocument, CadTarget, Connection, Edit, EditDone};
 use crate::cad::keys::{Binding, parse};
 use crate::cad::ops::{CATALOGUE, Flow, FormState, Needs, OpEntry};
@@ -130,7 +131,9 @@ fn readiness_refuses_with_the_entrys_refusal() {
     // Later epics and deliberately different commands refuse by name.
     let own = own_controls(&doc);
     let front = registry::command("view.front").unwrap();
-    assert_eq!(registry::ready(front, &doc, &own), Err("View front belongs to the cad-views-export epic; not in the native viewer yet".to_string()));
+    assert_eq!(registry::ready(front, &doc, &own), Ok(()), "a named view runs since cad-views-export");
+    let draft = registry::command("inspect.draft").unwrap();
+    assert!(registry::ready(draft, &doc, &own).is_err_and(|e| e.starts_with("Draft-angle shading is not ported: ")));
     let guide = registry::command("help.guide").unwrap();
     assert_eq!(registry::ready(guide, &doc, &own), Err("User guide is not ported: RoboCAD shows only a path; the viewer's docs live in the repository".to_string()));
     // An action command is ready as its button: nothing to redo.
@@ -385,4 +388,65 @@ fn cad_sketch_is_a_capability_with_a_valid_example() {
     let parsed = <CadAction as Action>::parse(&sim_api::Command { command: "cad_sketch".into(), args: spec.example.clone() }).unwrap_or_else(|e| panic!("the example does not parse: {e}"));
     assert!(matches!(parsed, CadAction::CadSketch { ref calls, .. } if !calls.is_empty()), "{parsed:?}");
     assert!(actions::command_modes("cad_sketch").is_some_and(|m| m.contains(&crate::app::ViewerMode::Cad)));
+}
+
+/// cad-views-export's View rows run natively: every View-menu command but
+/// the deliberately different ones; the view radial's eight entries all run;
+/// camera rows write their camera intent, display rows their display action.
+#[test]
+fn the_views_export_rows_run_natively() {
+    use super::registry::{CameraCmd, DisplayCmd, Do};
+    use crate::cad::display::{DisplayArgs, DisplayMode, SectionArgs};
+    use crate::cad::views::{ViewsArgs, ViewsOp};
+    use crate::camera::{CameraAction, ViewPreset};
+    let doc = document();
+    let own = own_controls(&doc);
+    for c in COMMANDS.iter().filter(|c| c.id.starts_with("view.") || c.id.starts_with("inspect.") || c.id.starts_with("bridge.")) {
+        assert_ne!(c.native, Native::Later("cad-views-export"), "{} is still left for later", c.id);
+    }
+    for (label, id) in VIEW_RADIAL {
+        let e = entries(&Surface::ViewRadial { at: None }, &doc, &own).into_iter().find(|e| e.id == id).unwrap();
+        assert_eq!(e.ready, Ok(()), "{label} ({id})");
+    }
+    let resolved = |id: &str| registry::resolve(registry::command(id).unwrap());
+    assert_eq!(resolved("view.front"), Resolved::Camera(CameraCmd::Preset(ViewPreset::Front)));
+    assert_eq!(CameraCmd::Preset(ViewPreset::Bottom).action(), Some(CameraAction::View { view: ViewPreset::Bottom }));
+    assert_eq!(CameraCmd::Ortho.action(), Some(CameraAction::Projection { orthographic: None }));
+    assert_eq!(resolved("view.focus"), Resolved::Camera(CameraCmd::Focus));
+    assert_eq!(resolved("view.mode_next"), Resolved::Action(CadAction::CadDisplay(DisplayArgs { next: true, ..DisplayArgs::default() })));
+    assert_eq!(resolved("inspect.normals"), Resolved::Action(CadAction::CadDisplay(DisplayArgs { mode: Some(DisplayMode::Xray), ..DisplayArgs::default() })), "RoboCAD's normal shading is xray");
+    assert_eq!(resolved("view.section"), Resolved::Action(CadAction::CadSection(SectionArgs::default())));
+    assert_eq!(resolved("view.saved_views"), Resolved::Action(CadAction::CadViews(ViewsArgs { op: ViewsOp::Panel, ..ViewsArgs::default() })));
+    assert_eq!(Do::Display(DisplayCmd::Grid).action(), DisplayCmd::Grid.action());
+    for id in ["view.isolate", "view.hide", "view.show_all"] {
+        assert!(matches!(resolved(id), Resolved::Op(e) if e.id == id), "{id} is a catalogue operation");
+    }
+    for id in ["bridge.start", "bridge.stop", "bridge.share"] {
+        assert!(matches!(resolved(id), Resolved::Different(why) if why.starts_with("RoboCAD-GUI-only")), "{id}");
+    }
+    // Isolate and Hide need a selection; Show All does not.
+    let ready = |doc: &CadDocument, id: &str| registry::ready(registry::command(id).unwrap(), doc, &own_controls(doc));
+    assert!(ready(&doc, "view.isolate").is_err() && ready(&doc, "view.hide").is_err());
+    assert_eq!(ready(&doc, "view.show_all"), Ok(()));
+    let mut picked = document();
+    picked.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
+    assert_eq!((ready(&picked, "view.isolate"), ready(&picked, "view.hide")), (Ok(()), Ok(())));
+}
+
+/// The File menu's rows run the files part's actions (no cad-views-export
+/// row is left for later), and every `Do::File` id has an action.
+#[test]
+fn the_file_rows_run_the_files_actions() {
+    for c in COMMANDS.iter() {
+        assert_ne!(c.native, Native::Later("cad-views-export"), "{} is still left for later", c.id);
+        if let Native::Action(super::registry::Do::File(id)) = c.native {
+            assert_eq!(id, c.id, "a file row names its own id");
+            assert!(crate::cad::files::command_action(id).is_some(), "{id}: files::command_action has no action");
+        }
+    }
+    let resolved = |id: &str| registry::resolve(registry::command(id).unwrap());
+    for id in ["file.new", "file.open", "file.save_as", "file.import", "file.export", "file.export_drawing"] {
+        assert_eq!(resolved(id), Resolved::Action(crate::cad::files::command_action(id).unwrap()), "{id}");
+    }
+    assert!(matches!(resolved("edit.preferences"), Resolved::Different(_)));
 }

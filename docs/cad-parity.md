@@ -33,7 +33,7 @@ the user's real models and the user agrees to retire the Python path.
 feature. *Native target* is the symbol that implements it in this epic
 (`cad::…` is `crates/sim-spatial/src/cad/…`; `CadClient` is
 `sim_runtime::cad_client::CadClient`), or the later epic that owns it.
-The cad-views-export, cad-physical-inspect and cad-print rows name a
+The cad-views-export, cad-physical-inspect, cad-print and cad-organize rows name a
 `file:function` instead: `camera/…` and `cad/…` are relative to `crates/sim-spatial/src/`, `main.rs` is
 `crates/sim-spatial/src/main.rs`, and `crates/sim-runtime/src/cad_client/…`
 is written in full; a backticked symbol after a path is in that file.
@@ -46,7 +46,8 @@ is written in full; a backticked symbol after a path is in that file.
 - **none: needs a Python route**: nothing in `api.py` reaches the feature
   (or reaches it only through a GUI command, which opens RoboCAD's dialogs
   or uses its clipboard or viewport). These rows are flagged and listed at
-  the end: 10 rows, 10 distinct gaps (15 and 15 until the
+  the end: 8 rows, 8 distinct gaps (10 and 10 until the cad-organize
+  epic added `GET /nodes/{id}/image`; 15 and 15 until the
   cad-physical-inspect epic added `GET /results/nodes` and
   `GET /physical?planar=1`; 17 and 17 until the
   cad-views-export epic added `POST /save/thumbnail` and
@@ -59,17 +60,17 @@ is written in full; a backticked symbol after a path is in that file.
 **Status legend.**
 
 - `done-by-reading`: the cad-mode, cad-select-transform, cad-modify,
-  cad-sketch, cad-views-export, cad-physical-inspect or cad-print epic
-  implements it (native-viewer.md, CAD mode section; "CAD selection and
-  transform"; "CAD modify"; "CAD sketch"; "Shared camera and CAD views";
-  "CAD physical properties"; "CAD print"). It is built and tested in that
-  epic's verification pass (still to come for cad-physical-inspect and
-  cad-print) and moves to `done` only when the user's checklist
+  cad-sketch, cad-views-export, cad-physical-inspect, cad-print or
+  cad-organize epic implements it (native-viewer.md, CAD mode section;
+  "CAD selection and transform"; "CAD modify"; "CAD sketch"; "Shared
+  camera and CAD views"; "CAD physical properties"; "CAD print"; "CAD
+  organize"). It is built and tested in that epic's verification pass
+  (still to come for cad-physical-inspect, cad-print and cad-organize) and moves to `done` only when the user's checklist
   ([cad-checklist.md](cad-checklist.md)) passes. Nothing is `done` yet: no
   epic's checklist has been signed off (cad-sketch was verified at
-  cc7ac194 and cad-views-export at bcf0c56c), and neither
-  cad-physical-inspect nor cad-print has been through its verification
-  pass.
+  cc7ac194 and cad-views-export at bcf0c56c), and none of
+  cad-physical-inspect, cad-print and cad-organize has been through its
+  verification pass.
 - `later-epic: <name>`: owned by a later CAD epic (see "Epics" below).
   No row of an epic that has been worked is left open: every
   `later-epic` row names an epic not yet started.
@@ -86,10 +87,13 @@ Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Delete/Backspace, Home and Ctrl/Cmd+S; and
 service status, dirty state, the autosave indicator and stale/lost states.
 The later epics are `cad-select-transform` and
 `cad-modify` (the planned `cad-tools`, split 2026-10-01), `cad-sketch`, `cad-views-export`,
-`cad-physical-inspect`, `cad-print`, `cad-experiments-motion` and
-`cad-organize`. `cad-organize` was planned as `cad-annotations`;
+`cad-physical-inspect`, `cad-print`, `cad-organize`, `cad-components`
+and `cad-experiments-motion`. `cad-organize` was planned as `cad-annotations`;
 it is renamed because it also takes the outliner's organization features, which no other epic
-fits. The `cad-select-transform` epic (2026-10-01) has mapped its rows to
+fits. `cad-components` was split out of `cad-organize` by the Director
+(2026-10-01): the components library, component jobs and the system
+graph share `sim_system`'s graph types with Build mode and need their own
+design. The `cad-select-transform` epic (2026-10-01) has mapped its rows to
 native code (sub-body selection, the transform tools, push/pull, the
 numeric bar, live dimensions, snapping and measure); none stays open
 (see "Counts"). The `cad-modify` epic (2026-10-01) is done by reading: its
@@ -170,6 +174,32 @@ none stays open. Its one new route in `api.py` (`GET /print/study`,
 pytests `cad/tests/test_api_print_routes.py`) adds one row to the REST
 routes table (`done-by-reading`); it closed no flagged gap (the print
 overlay's data came with cad-physical-inspect's `GET /results/nodes`).
+The `cad-organize` epic (2026-10-01) is done pending verification, by
+reading only (nothing compiled): of its 108 rows, 38 (the components
+library dock, component jobs, the system graph, its component form,
+geometry rule and connections, the `/system*` client rows,
+`set_component_graph`, `transform_components` and the components.py Ops)
+moved to `later-epic: cad-components`; the other 70 map to native code
+(cited `file:function` against the code as written):
+the outliner's organization (`cad/tree.rs`, `cad/tree/`, and the
+catalogue's `cad/ops/catalogue/organize.rs` for `group.group` and
+`group.set_active`), RoboCAD's comment threads as the fourth
+`annotations::ThreadSource` drawn by the one `ui_kit::threads` panel
+(`cad/threads/`), the References section, reference image planes, the
+calibrate tool and the linked system file with Open in builder
+(`cad/references/`), with the client's `threads.rs`, `organize.rs`,
+`references.rs` and `system_link.rs`; 44 `done-by-reading` and 26
+`deliberately different`, each with its reason; none stays open. It also
+re-assessed four earlier `deliberately different` rows whose reason was
+"the native tree has no context menu": the outliner's context menu now
+has Isolate, Hide/Show, Make unique (bake instance) and Show all, so they
+became `done-by-reading`.
+Its one new route in `api.py` (`GET /nodes/{id}/image`,
+`Service.reference_image`, pytests
+`cad/tests/test_api_reference_image.py`) adds one row to the REST routes
+table (`done-by-reading`) and closes two flagged rows and two gaps: the
+reference image pixels in the viewport and in the list's preview (the
+same data). The geometry-rule row stays flagged under cad-components.
 
 **Every Ops method is already reachable natively, but only by REST.** The
 `cad_op` REST command (`CadAction::CadOp` → `CadClient::op`) can call any
@@ -201,7 +231,7 @@ the feature is later, not that it cannot be reached at all.
 | Dark stylesheet | ui/app.py:44-57 | n/a (display) | the UI kit's theme | deliberately different: the native UI kit owns the look (native-viewer.md "UI kit") |
 | High-Contrast Theme (`view.high_contrast`, kept in QSettings) | ui/app.py:317, ui/app.py:1085-1093, ui/viewport.py:287 | n/a (display) | `view.high_contrast` (View menu), the toolbar's Contrast chip (`cad/display/ui.rs:toolbar`) → `cad/display/mod.rs:apply_display` (toggle); drawn by `cad/display/draw.rs:lights` (background 0.98, 0.98, 0.99), `draw_grid` and `draw_edges` (black edges) | deliberately different: only the 3D view changes (background, grid, edges): the UI kit's colour tokens are constants, so RoboCAD's stylesheet swap has no counterpart; not kept between launches (RoboCAD keeps it in QSettings) |
 | 3Dconnexion SpaceMouse (buttons mapped in `~/.robocad/spacemouse.json`) | ui/app.py:1885-1918 | n/a (display) | none | deliberately different: RoboCAD polls `pyspacemouse` when it is installed (ui/app.py:1885-1918); Bevy 0.19.1 has no 6-DoF input (bevy_input reads keyboards, mice, touch and gamepads) and no HID crate is in the workspace, so it needs a new dependency; the same motions are the shared camera's actions (`camera_orbit`, `camera_pan`, `camera_zoom`) |
-| Drop image files on the viewport: they become references | ui/app.py:243-245, ui/app.py:1801-1803 | `POST /ops/import_references` | cad-organize epic | later-epic: cad-organize |
+| Drop image files on the viewport: they become references | ui/app.py:243-245, ui/app.py:1801-1803 | `POST /ops/import_references` | `cad/references/drop.rs:drops` (Bevy's `FileDragAndDrop::DroppedFile` messages, CAD mode only, skipping the frame CAD mode is entered) → `cad/references/edits.rs:handle` (`ReferencesOp` import: `image_path` checks each path) → `crates/sim-runtime/src/cad_client/references.rs:CadClient::import_references` on the active plane, else XY, through `cad/actions.rs:edit_at` | deliberately different: a dropped folder or a file without an image suffix (png, jpg, jpeg, webp, bmp) is refused by name before anything is sent (`cad/references/edits.rs:image_path`), where RoboCAD sends every dropped file to `import_references` and Pillow refuses a non-image there |
 | "Preferences…" (`edit.preferences`): grid step | ui/app.py:300, ui/app.py:1491-1494 | n/a (display) | none: the grid keeps RoboCAD's default step (`cad/display/mod.rs:GRID_STEP_MM`, 10 mm) | deliberately different: RoboCAD's Preferences dialog sets its desktop autosave timer, which a headless service does not have, and its viewport grid step; the native grid keeps the 10 mm default (`cad/surfaces/registry.rs` `PREFERENCES`) |
 | Shutdown on close: cancel component jobs, picks and measurements; stop autosave, the export child, pose, bridge, API and sim link | ui/app.py:1935-1959 | n/a | the self-started service is stopped when the document closes (`jobs::ChildProcess::stop`; an attached RoboCAD is never stopped) | done-by-reading |
 
@@ -287,24 +317,24 @@ the feature is later, not that it cannot be reached at all.
 | Disabled column ⏸; clicking toggles | ui/widgets.py:293, ui/widgets.py:363-364 | `PATCH /nodes/{id} {"disabled"}` | shown and toggled in `cad::inspector` | done-by-reading |
 | Selected rows highlighted, and kept in sync without rebuilding the tree | ui/widgets.py:307-308, ui/widgets.py:316-329 | `GET /selection` | `cad::tree` | done-by-reading |
 | Click a row to select it (always a body item `(id, "body", 0)`, even for groups and joints) | ui/widgets.py:331-339 | `PUT /selection` | `cad::tree` row → `CadAction::CadSelect` (system_ui `cad:node:<id>`) | done-by-reading |
-| Shift/Ctrl multi-select in the tree | ui/widgets.py:250 | `PUT /selection` | cad-organize epic | later-epic: cad-organize |
-| Active group shown in blue | ui/widgets.py:299-300 | `GET /doc` (`active_group`) | cad-organize epic | later-epic: cad-organize |
-| Search "Search (Ctrl+F)…" (matches names; shows ancestors and descendants; expands them temporarily) | ui/widgets.py:231-233, ui/widgets.py:276-291, ui/strings.py:20 | n/a (display) | cad-organize epic | later-epic: cad-organize |
-| "New group" button ("Organize components" / "Group name:") | ui/widgets.py:236, ui/widgets.py:392-395 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
-| "Expand all" / "Collapse all"; collapse state survives edits and search | ui/widgets.py:237-238, ui/widgets.py:261-269, ui/widgets.py:306 | n/a (display) | cad-organize epic | later-epic: cad-organize |
-| Double-click a name to rename it in place | ui/widgets.py:256, ui/widgets.py:341-352 | `PATCH /nodes/{id} {"name"}` | cad-organize epic (the REST rename is done: see "Edit and history") | later-epic: cad-organize |
-| Drag rows into a group, or before a sibling | ui/widgets.py:251-252, ui/widgets.py:366-381 | `POST /ops/move_nodes`; `PATCH /nodes/{id} {"parent", "index"}` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Fit in view" ("Fit in view: names" / "No geometry to frame in this selection") | ui/widgets.py:397-401, ui/widgets.py:408 | n/a (display) | `CadAction::CadFit { id }` (native camera) | done-by-reading |
-| Context menu "Isolate" | ui/widgets.py:410 | `POST /ops/isolate` | View > Isolate, `/` and the 3D view's right-click "Isolate" → `cad/ops/catalogue/view.rs:ENTRIES` (`view.isolate`: `POST /ops/isolate` on the selected nodes) | deliberately different: offered in the View menu, on `/` and in the 3D view's right-click menu: the native tree has no context menu (the outliner's menu belongs to cad-organize) |
-| Context menu "Hide" / "Show" (whole selection, one undo step) | ui/widgets.py:411-412 | `POST /ops/set_visible` | Hide: View > Hide, H and the 3D view's right-click "Hide" → `cad/ops/catalogue/view.rs:ENTRIES` (`view.hide`: `POST /ops/set_visible` with false, one undo step); Show: the tree's per-node visibility toggle, or Show All | deliberately different: the native tree has no context menu (the outliner's menu belongs to cad-organize), so there is no "Show" of a whole selection; Hide is in the View menu, on H and in the 3D view's right-click menu |
-| Context menu "Lock" / "Unlock" (whole selection) | ui/widgets.py:413-414 | `POST /ops/set_locked` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Group selection…" | ui/widgets.py:415 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Move to group" ▸ "Top level" and every group path ("A / B") | ui/widgets.py:416-430 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Make unique (bake instance)" | ui/widgets.py:431 | `POST /ops/make_unique` | `cad::surfaces::context_menu`: `registry::MAKE_UNIQUE` ("Make unique (bake instance)") is added to the 3D view's right-click menu while an instance is selected (`context_menu::instance_selected`) → `CadInvoke { modify.make_unique }` → `cad::ops` catalogue `modify.make_unique` (instances only, one call per node) | deliberately different: offered in the 3D view's right-click menu: the native tree has no context menu (the outliner's menu belongs to cad-organize) |
-| Context menu "Set as active group"; "Clear active group"; registry "Set selected group as active" (`group.set_active`) | ui/widgets.py:432-435, ui/app.py:427 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Delete" | ui/widgets.py:434 | `DELETE /nodes/{id}`; `POST /ops/delete` | the panel's Delete (`cad:delete` → `CadInvoke { edit.delete }`: every selected node in one `POST /ops/delete` since cad-modify); REST `cad_delete` (`CadAction::CadDelete`, one node) | done-by-reading |
-| Context menu "Show all" | ui/widgets.py:436 | `POST /ops/show_all` | View > Show All and Alt+H → `cad/ops/catalogue/view.rs:ENTRIES` (`view.show_all`: `POST /ops/show_all`) | deliberately different: offered in the View menu and on Alt+H: the native tree has no context menu (the outliner's menu belongs to cad-organize) |
-| "Group selection" (`group.group`) | ui/app.py:428 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
+| Shift/Ctrl multi-select in the tree | ui/widgets.py:250 | `PUT /selection` | `cad/tree/input.rs:rows` (press, Shift range from the anchor over the shown rows, Ctrl/Cmd toggle; `cad/tree/state.rs:range`) → `TreeOp::Select` in `cad/tree/handle.rs:handle` → `select_action` → `CadAction::CadSelect` (every row's node as a body item); a plain press on a selected row selects it alone on release without a drag | done-by-reading |
+| Active group shown in blue | ui/widgets.py:299-300 | `GET /doc` (`active_group`) | `cad/tree/rows.rs:draw` and `highlight` (`name_colour`): the row of `GET /doc`'s `active_group` in `rows::ACTIVE_GROUP`, RoboCAD's (120, 200, 255) | done-by-reading |
+| Search "Search (Ctrl+F)…" (matches names; shows ancestors and descendants; expands them temporarily) | ui/widgets.py:231-233, ui/widgets.py:276-291, ui/strings.py:20 | n/a (display) | `cad/tree/rows.rs:tools` (`panel::Part::TreeTools`: the kit field "Search (Ctrl+F)…") → `TreeOp::Search` → `cad/tree/state.rs:matches` (name contains the text, case-insensitive, stripped; ancestors and descendants) and `shown` (every shown row expanded; `TreeState::collapsed` unchanged) → `cad/tree/rows.rs:draw`; Ctrl/Cmd+F with the pointer over the tree dock → `cad/tree/input.rs:search` (after `keys::gate`, before `keys::keys`, consuming the key) | deliberately different: Ctrl+F is Fillet elsewhere (RoboCAD's keymap binds Ctrl+F to Fillet, so its own placeholder names a key that never reaches the field); here Ctrl+F reaches the field only with the pointer over the model tree dock (cad/keys.rs clash table) |
+| "New group" button ("Organize components" / "Group name:") | ui/widgets.py:236, ui/widgets.py:392-395 | `POST /ops/group` | `cad/tree/rows.rs:tools` New group → `TreeOp::GroupDialog` with ids [] ("Organize components", "Group name:", `cad/tree/popup.rs:draw`) → OK → `cad/tree/handle.rs:group` → `crates/sim-runtime/src/cad_client/organize.rs:CadClient::group` with no ids and the trimmed name through `cad/actions.rs:edit_at` | deliberately different: an empty name is refused by name in the dialog (RoboCAD's dialog does nothing) |
+| "Expand all" / "Collapse all"; collapse state survives edits and search | ui/widgets.py:237-238, ui/widgets.py:261-269, ui/widgets.py:306 | n/a (display) | `cad/tree/rows.rs:tools` Expand all and Collapse all and each row's "+"/"−" disclosure chip (`TreeOp::ExpandAll`, `CollapseAll`, `Toggle` → `cad/tree/handle.rs:all`, `disclose`): `TreeState::collapsed` is RoboCAD's `_expansion`, kept across edits and refetches | deliberately different: Expand all, Collapse all and a disclosure are refused by name while a search is typed, where RoboCAD's buttons change the searched view without keeping it (the collapse state stays unchanged in both) |
+| Double-click a name to rename it in place | ui/widgets.py:256, ui/widgets.py:341-352 | `PATCH /nodes/{id} {"name"}` | `cad/tree/input.rs:rows` (a double-click within 400 ms, `DOUBLE_CLICK`) → `TreeOp::BeginRename` (the kit field on the row, the name selected) → Enter → `cad/tree/handle.rs:rename` → one `CadClient::patch {"name"}` through `cad/actions.rs:edit_at` (unchanged: nothing sent; empty: refused by name); Escape or a press elsewhere ends it | deliberately different: a rename ends without renaming when the field loses the keyboard (Qt's delegate commits on focus loss), and an empty name is refused by name |
+| Drag rows into a group, or before a sibling | ui/widgets.py:251-252, ui/widgets.py:366-381 | `POST /ops/move_nodes`; `PATCH /nodes/{id} {"parent", "index"}` | `cad/tree/input.rs:rows`: Bevy picking's `Pointer<DragStart/Drag/DragEnter/DragOver/DragLeave/DragDrop/DragEnd>` messages read in one Input system (a recorded departure from §3's observers: native-viewer.md "CAD organize") → `cad/tree/state.rs:move_plan` (into a group; before any other row under its parent at `index_of`; below the rows: top level; RoboCAD's refusals checked first) → `TreeOp::Move` → `cad/tree/handle.rs:handle` → one `crates/sim-runtime/src/cad_client/organize.rs:CadClient::move_nodes` through `cad/actions.rs:edit_at`; it moves the selection when the dragged row is selected, else that row | deliberately different: a drop on a group row's top quarter (`BEFORE_BAND`) lands in front of the group, where RoboCAD always drops into a group (so a group could not be reordered by dragging) |
+| Context menu "Fit in view" ("Fit in view: names" / "No geometry to frame in this selection") | ui/widgets.py:397-401, ui/widgets.py:408 | n/a (display) | `CadAction::CadFit { id }` (native camera); the outliner's context menu (cad-organize, `cad/tree/controls.rs:menu_rows`) runs `view.focus` on the menu's nodes | done-by-reading |
+| Context menu "Isolate" | ui/widgets.py:410 | `POST /ops/isolate` | the outliner's context menu (cad-organize: `cad/tree/controls.rs:menu_rows`, drawn by `cad/tree/popup.rs:draw`) runs `view.isolate` → `cad/ops/catalogue/view.rs:ENTRIES` (`POST /ops/isolate` on the selected nodes; a right press on an unselected row selects it first); also View > Isolate, `/` and the 3D view's right-click "Isolate" | done-by-reading |
+| Context menu "Hide" / "Show" (whole selection, one undo step) | ui/widgets.py:411-412 | `POST /ops/set_visible` | the outliner's context menu Hide and Show (`cad/tree/controls.rs:menu_rows`) → `TreeOp::Visible` → `cad/tree/handle.rs:flags` → one `Ops.set_visible(ids, visible)` on the menu's nodes through `cad/actions.rs:edit_at` (one undo step); also View > Hide, H and the 3D view's right-click "Hide" | done-by-reading |
+| Context menu "Lock" / "Unlock" (whole selection) | ui/widgets.py:413-414 | `POST /ops/set_locked` | the outliner's context menu Lock and Unlock (`cad/tree/controls.rs:menu_rows`) → `TreeOp::Lock` → `cad/tree/handle.rs:flags` → one `crates/sim-runtime/src/cad_client/organize.rs:CadClient::set_locked` on the menu's nodes through `cad/actions.rs:edit_at` | done-by-reading |
+| Context menu "Group selection…" | ui/widgets.py:415 | `POST /ops/group` | the outliner's context menu "Group selection…" → `TreeOp::GroupDialog` ("Organize components", "Group name:", `cad/tree/popup.rs:draw`) → OK → `cad/tree/handle.rs:group` → `crates/sim-runtime/src/cad_client/organize.rs:CadClient::group` with the menu's ids through `cad/actions.rs:edit_at` | deliberately different: an empty name is refused by name in the dialog (RoboCAD's dialog does nothing) |
+| Context menu "Move to group" ▸ "Top level" and every group path ("A / B") | ui/widgets.py:416-430 | `POST /ops/move_nodes` | the outliner's context menu: the heading "Move to group" over "Top level" and every group's "A / B" path in walk order except the moving nodes and their descendants (`cad/tree/state.rs:group_paths`, `cad/tree/controls.rs:menu_rows`) → `TreeOp::Move` → one `crates/sim-runtime/src/cad_client/organize.rs:CadClient::move_nodes` through `cad/actions.rs:edit_at` | deliberately different: "Move to group" is a heading over indented entries in the one popup, not a submenu (the UI kit's popup has no submenus) |
+| Context menu "Make unique (bake instance)" | ui/widgets.py:431 | `POST /ops/make_unique` | the outliner's context menu (`cad/tree/controls.rs:menu_rows`) runs `modify.make_unique` → `cad::ops` catalogue `modify.make_unique` (instances only, one call per node); also `cad::surfaces::context_menu` adds `registry::MAKE_UNIQUE` to the 3D view's right-click menu while an instance is selected | done-by-reading |
+| Context menu "Set as active group"; "Clear active group"; registry "Set selected group as active" (`group.set_active`) | ui/widgets.py:432-435, ui/app.py:427 | `POST /ops/set_active_group` | the outliner's context menu "Set as active group" (one group selected) and "Clear active group" (always; `cad/tree/controls.rs:menu_rows`) → `TreeOp::SetActive` → `cad/tree/handle.rs:handle` → `crates/sim-runtime/src/cad_client/organize.rs:CadClient::set_active_group` through `cad/actions.rs:edit_at`; the registry's `group.set_active` is the catalogue entry `cad/ops/catalogue/organize.rs:ENTRIES` (route `set_active_group`, one group node) | deliberately different: `group.set_active` with no group selected is refused by name ("Select a group to make it the active group"), where RoboCAD silently clears the active group; clearing is the RoboCAD outliner's entry "Clear active group", here the same entry in the outliner's menu |
+| Context menu "Delete" | ui/widgets.py:434 | `DELETE /nodes/{id}`; `POST /ops/delete` | the panel's Delete (`cad:delete` → `CadInvoke { edit.delete }`: every selected node in one `POST /ops/delete` since cad-modify) and the outliner's context menu Delete (`cad/tree/controls.rs:menu_rows`, the same `edit.delete`); REST `cad_delete` (`CadAction::CadDelete`, one node) | done-by-reading |
+| Context menu "Show all" | ui/widgets.py:436 | `POST /ops/show_all` | the outliner's context menu "Show all" (`cad/tree/controls.rs:menu_rows`) runs `view.show_all` → `cad/ops/catalogue/view.rs:ENTRIES` (`POST /ops/show_all`); also View > Show All and Alt+H | done-by-reading |
+| "Group selection" (`group.group`) | ui/app.py:428 | `POST /ops/group` | `cad/ops/catalogue/organize.rs:ENTRIES` `group.group` (route `group`, the selected nodes, Ops.group's default name "Group"; with nothing selected an empty group, as RoboCAD) | done-by-reading |
 
 ## Inspector (properties)
 
@@ -380,7 +410,7 @@ inspector shows as returned.
 | B-rep edge polylines (display edges, edge picking, curve nodes) | ui/viewport.py:1634-1672, ui/viewport.py:906-920 | `GET /nodes/{id}/edges?samples=N` (api.py:625-638: each edge's `points`, as `kernel.sample_edges`); `/mesh` has no curves | display edges: `cad/display/draw.rs:edges_sync` and `draw_edges` (bodies, sheets, instances; a mesh node shows its triangle sides); edge picking: `cad::pick` and `cad::topology` (cad-select-transform); curve nodes: `cad/display/draw.rs:edges_sync` fetches every visible `curve` node's `GET /nodes/{id}/edges?samples=32` (`curve_nodes`, `fetch_edges` with `CURVE_SAMPLES`, in every display mode) and `lines` draws them as 2 px gizmo polylines in RoboCAD's colours (`curve_color`: 1.0, 0.65, 0.2 selected, else the node's colour, else 0.35, 0.8, 1.0), cut by the section plane | deliberately different: curve nodes are drawn but not pickable in the 3D view (RoboCAD's 8 px curve pick pass is not ported); pick them in the tree |
 | Sketch curves drawn on their planes | ui/viewport.py:922-939 | `GET /nodes/{id}` (its `sketch` field, so dropped curves are counted) | `cad::sketch::display` (`shown`: every `effective_visible` sketch node; `lines`: each curve's `SketchCurve::sample(48)` through the sketch's own plane, from `CadSketches::sketch_last`; `draw`, Present: orange (1.0, 0.65, 0.2) when selected, else blue (0.35, 0.8, 1.0), 2 px over the bodies); the geometry from `cad::sketch::cache::sync` (`CadClient::sketch`, one Dedicated job per node, by (node, revision)) | deliberately different: a slot's caps bulge outward, as the kernel's solid does (`sim_runtime::cad_client::SketchCurve::sample`); RoboCAD's viewport turns them inward (`io/exporters.py` `_slot_points` sweeps the other way: a RoboCAD display bug, see the notes below) |
 | Construction planes (translucent quads; the active plane is brighter) | ui/viewport.py:635-657 | `GET /doc`, `GET /nodes/{id}` (`plane`) | `cad::sketch::plane_draw` (`wanted`, `quads`: every visible plane node with its frame read (`CadSketches::plane_last`), a ±60 mm square filled (0.3, 0.6, 0.9) at alpha 0.18 when it is the active plane, else 0.08; `outlines`: alpha 0.8, else 0.4); frames from `cad::sketch::cache` | deliberately different: the active plane is drawn even when no visible plane node is it (XY, XZ, YZ or a hidden node), so the plane the tools work on is always shown; RoboCAD draws plane nodes only |
-| Reference images textured on their planes | ui/viewport.py:659-691 | none: needs a Python route (`node_detail` strips the image bytes, api.py:128-130) | cad-organize epic | later-epic: cad-organize |
+| Reference images textured on their planes | ui/viewport.py:659-691 | `GET /nodes/{id}/image` (added with cad-organize: the stored bytes in base64 with `format`, `width_px`, `height_px` and `revision`; read-only; pytests `cad/tests/test_api_reference_image.py`) | `cad/references/planes.rs:sync`: one quad per shown image node (`effective_visible`, not hidden by a thread's isolation) under `mesh::CadRoot`, corners `ImagePlacement::corners` with RoboCAD's texture coordinates, an unlit double-sided `StandardMaterial` with the image as `base_color_texture` and the opacity as alpha (`AlphaMode::Blend`), `Pickable::IGNORE`; the pixels from `crates/sim-runtime/src/cad_client/references.rs:CadClient::reference_image` decoded on the same `Pool::Dedicated` job by `planes.rs:decode` (`Image::from_buffer`; `decodable`: png, jpeg, jpg, mpo), cached per (connection generation, node), at most two reads at once | deliberately different: WebP and BMP references (RoboCAD's file filter accepts them) are listed but not drawn (sim-spatial enables only Bevy's `png` and `jpeg` image features; the References section says so for each), and an MPO is decoded as its first JPEG frame; pixels are cached per (connection, node), since RoboCAD never changes an image node's bytes |
 | Joint glyphs, motor shaft axes, sensor triads and sagging cable arcs | ui/viewport.py:971-1021 | `GET /nodes/{id}` (`joint`, `robot`) | `cad/robot/glyphs.rs:draw` (shapes from `glyph_lines`; cached by generation and read revision) | deliberately different: screen sizes are measured at each glyph's own depth; dots are small three-axis crosses (gizmos draw no points); nothing is hidden for a pose preview (CAD mode has none) |
 | Orbit (right-drag, Alt+left-drag, Shift+middle-drag; turntable) | ui/viewport.py:1480-1512, ui/viewport.py:79-86 | n/a (display) | `camera/input.rs:navigate` → `camera/orbit.rs:Orbit::rotate` (turntable, 89.5° pitch limit, `cad/scene.rs:rules`): right-drag, and with `OrbitRules::robocad_gestures` (true only in CAD, `cad/scene.rs:rules`) Shift+middle-drag (`camera/input.rs:drag_kind`) and Alt+left-drag once it moves past `camera/input.rs:ALT_DRAG_SLOP` (6 px), gated by `cad/scene.rs:gate` to the Select tool with no catalogue interaction or command surface; `cad::pick` no longer box-selects an Alt drag, and an Alt click still opens the candidates menu (RoboCAD's own Alt+left orbit never fires: see the notes at the end) | done-by-reading |
 | Pan (Shift+right-drag, middle-drag) | ui/viewport.py:1489-1497, ui/viewport.py:88-91 | n/a (display) | `camera/input.rs:navigate` → `camera/orbit.rs:Orbit::pan` on middle-drag or Shift+right-drag | done-by-reading |
@@ -422,7 +452,7 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | Select tool (`tool.select`, "Select tool"; the click part is in "Selection") | ui/app.py:322, ui/tools.py:111-228 | `PUT /selection` | `cad::pick` (click, Shift, Ctrl, box, Alt menu, hover; see "Selection") and `cad::transform::dimensions::double_click`; `CadAction::CadTool { tool: Select }` | done-by-reading |
-| Annotate (`tool.annotate`, N: click a surface, then write in Comments) | ui/app.py:278, ui/comments.py:98-125 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
+| Annotate (`tool.annotate`, N: click a surface, then write in Comments) | ui/app.py:278, ui/comments.py:98-125 | `POST /threads` | registry `tool.annotate` (N) → `Do::Organize` → `cad/threads/mod.rs:command_action` → `cad/threads/annotate.rs:start` (refused while a draft is open; replaces the active tool, RoboCAD's hint) → `click` (a left press over the 3D view casts its own ray, `transform::ray_hit`, and reads the face through `CadMeshes::face_at` at the shown revision; nothing hit: "Click a visible surface to place the annotation") → `place` (the Comments section opens with the pending "+" pin and the composer) → Post annotation → `cad/threads/ops.rs:create` → `annotations::apply` → `cad/threads/source.rs:CadThreadSource::commit` → `Request::send` → `crates/sim-runtime/src/cad_client/threads.rs:CadClient::create_thread` through `cad/actions.rs:edit_at` (with RoboCAD's camera, `isolation::camera_dict`, as `view`) | deliberately different: the surface is picked on the press (RoboCAD picks on the release), and the selection mode is left as it is (RoboCAD switches to face mode while the tool is active; here the click casts its own ray, so the mode is not needed) |
 | Move (`tool.move`, G: gizmo axes, centre handle for screen-space, Ctrl snaps to the grid, Tab for dx dy dz) | ui/app.py:323, ui/tools.py:234-385, ui/viewport.py:1060-1132 | `POST /ops/transform {"translation"}` | `cad::transform::gizmo::drag` (axis handles; the centre handle on the screen plane; Ctrl 10 mm grid, `move_delta`) → one `CadAction::CadTransform` → `cad::transform::commit::transform_call`; Tab: dx dy dz in `cad::numeric` | done-by-reading |
 | Rotate (`tool.rotate`, R: rings, Ctrl snaps 15°, Tab for the angle) | ui/app.py:324, ui/tools.py:311-322, ui/tools.py:360-362 | `POST /ops/transform {"axis", "angle_deg", "center"}` | `cad::transform::gizmo` rings (`rotate_angle`, Ctrl 15°) → `CadTransform { axis, angle_deg, center }`; Tab: the angle | deliberately different: the pivot for several selected nodes is the centre of their drawn-mesh bounds, not RoboCAD's mass-weighted centroid (`cad::transform::pivot`); a typed angle turns about the last dragged ring's axis, also after the X ring (RoboCAD's `axis_index or 2` turns about Z then) |
 | Scale (`tool.scale`, S: Ctrl snaps 0.1, Tab for the factor) | ui/app.py:325, ui/tools.py:323-330, ui/tools.py:363-364 | `POST /ops/transform {"scale", "center"}` | `cad::transform::gizmo` (`scale_factor`, uniform, Ctrl ×0.1) → `CadTransform { scale, center }`; Tab: the factor | deliberately different: the pivot for several selected nodes is the centre of their drawn-mesh bounds, not RoboCAD's mass-weighted centroid (`cad::transform::pivot`) |
@@ -452,14 +482,14 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Array… (`tool.array`, Ctrl+Shift+A: rectangular, count X/Y/Z, "count + spacing" or "count + total extent", or radial about the active plane; "As live instances"; "Merge into one body") | ui/app.py:365, ui/app.py:920-941, ui/widgets.py:1024-1063 | `POST /ops/array_rect`, `POST /ops/array_radial` | `cad::ops` catalogue `tool.array` (`Flow::Form`, `Shape::Array`: the ArrayDialog's fields in `cad::surfaces::form`, the rectangular or radial rows shown by `Param::when`) → `args::build` (`array`) → one `POST /ops/array_rect` (count X/Y/Z with `spacing` or `extent` by the mode) or `POST /ops/array_radial` (count, total angle, about the plane's normal through its origin: `plane_frame`, "active" by default: the active plane, else XY as RoboCAD), with `as_instances` and `merge` | done-by-reading |
 | Instance selected (`tool.instance`: offset +20 mm in X) | ui/app.py:364, ui/app.py:916-918 | `POST /ops/instance` | `cad::ops` catalogue `tool.instance` (`Flow::Immediate`) → `POST /ops/instance {"args": [node, {"translation": [20, 0, 0]}]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: refused by name ("Select the bodies to instance") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
 | "Set pivot at cursor snap" (`tool.set_pivot`) | ui/app.py:376, ui/app.py:1015-1020 | `POST /ops/set_pivot`; `PATCH /nodes/{id} {"pivot"}` | `cad::ops` catalogue `tool.set_pivot` (`Flow::AtCursorSnap`) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): `POST /ops/set_pivot {"args": [first node, point]}` with `Arg::CursorSnap`, the snap `cad::ops::interact::pointer` keeps in `OpsState::cursor_snap` while the pointer is over the 3D view, with the shown revision it was snapped at (used only at that revision; cleared when the pointer leaves the window), or REST's `point` | deliberately different: the snap falls back to the first surface under the pointer (RoboCAD's `viewport.snap` has none), so a pivot can be set on a face; an empty selection is refused by name ("Select the node whose pivot to set") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
-| Image calibrate tool (two clicks on the image, type the real distance) | ui/tools.py:1210-1241 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
+| Image calibrate tool (two clicks on the image, type the real distance) | ui/tools.py:1210-1241 | `POST /ops/calibrate_reference` | `cad/references/calibrate.rs:start` (aligns first, RoboCAD's hint) → `click` (a left press: the cursor ray met with the image's plane in f64, as RoboCAD's `world_on_plane`) → `pick` ("Point 1", "Point 2" markers, `markers`; equal points refused with RoboCAD's text) → the References section's "Real distance" field preset with the picked distance → Enter → `distance` → `crates/sim-runtime/src/cad_client/references.rs:CadClient::calibrate_reference` through `cad/actions.rs:edit_at`; Escape (`calibrate.rs:escape`) ends it | deliberately different: the real distance is typed in the References section's "Real distance" field (mm, RoboCAD's unit expressions), not the numeric bar |
 | Motor tool (click a face: housing outside, shaft into the body) | ui/tools.py:1244-1291 | `POST /ops/add_motor` | `cad/robot/tools.rs:motor_pick` (the face from `cad/robot/tools_click.rs:click` → `CadMeshes::face_at` at the shown revision) → `cad/ops/mod.rs:run_entry` | deliberately different: the "Add motor" dialog's fields stay beside the view while you click (one step; Escape ends both) |
 | Joint tool (parent, Ctrl-click for the world; child; an axis face) | ui/tools.py:1294-1361 | `POST /ops/add_joint` | `cad/robot/tools.rs:joint_pick` → `cad/ops/robot_form.rs:open_preset` ("Add joint" with the picks) | done-by-reading |
 | Snapping: vertices, edge midpoints, centres, sketch endpoints, grid, plane, free; Alt suppresses; readout "kind (x, y, z)" | ui/viewport.py:1369-1435, ui/app.py:557-560 | `GET /nodes/{id}/vertices`, `GET /nodes/{id}/edges`, `GET /nodes/{id}` (sketch field) | `cad::snap::snap_on` (`candidates`: vertices, edge midpoints, edge centres; `sketch_candidates`: the visible sketches' endpoints; then the 10 mm grid in plane coordinates; then the plane or free; projected onto the active plane while 2D snapping is on or a sketch or placement tool passes its plane; Alt suppresses), readout `Snap::readout`; used by `cad::measure::tool`, the cursor snap, placement, the plane tools and the sketch tools | deliberately different: centre snaps work here (RoboCAD reads a `centers` attribute its items lack, so its never fire) |
 | Gizmo drawing and hit testing | ui/viewport.py:1060-1132 | n/a (display) | `cad::transform::gizmo::draw` and `hit_test` (RoboCAD's 90 px handles; centre within 10 px, axes and rings within 14 px), CAD mode's own rather than Bevy's `TransformGizmoPlugin` (reasons in cad/transform/mod.rs) | done-by-reading |
 | Tool cursors (arrow, size-all, crosshair) | ui/app.py:519-523 | n/a (display) | `cad::transform::tool_cursor` (arrow, move, crosshair over the 3D view; `restore_cursor` on leaving CAD mode) | done-by-reading |
 | Tools toolbar (Select, Annotate, Saved Views, References, Pose, Experiments, Move, Rotate, Scale, Box, Cylinder, Sphere, Rectangle, Circle, Slot, Extrude, Push/Pull, Fillet, Shell, Union, Subtract, Fastener, Measure, Section, Validate; tools checkable) | ui/app.py:440-447, ui/app.py:527-529 | n/a (display) | `cad::surfaces::toolbar` (`registry::TOOLBAR`, RoboCAD's 25 entries in order, under the menu bar's tabs; each a kit chip with `CadButton(CadInvoke { id })` and `Enabled` from `registry::ready`; the `tool.*` and `sketch.*` entries lit while that tool or op is active, `toolbar::checkable` and `lit`; a hint under the hovered button names its keys and why it cannot run); Rectangle, Circle, Slot and Extrude are catalogue ops (cad-sketch) | deliberately different: the entries owned by later epics (Annotate, References, Pose, Experiments, Fastener, Validate) are shown disabled with the hint naming the epic (Saved Views and Section run since cad-views-export: `Do::SavedViews`, `DisplayCmd::Section`); Rectangle, Circle and Slot light while their sketch tool is active (RoboCAD checks only `tool.*`, app.py:445-446); the row scrolls sideways where Qt folds its overflow behind "»"; the hint stands in for Qt's tooltips (the kit has no tooltip widget) |
-| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | `cad::surfaces::context_menu` (a right press and release without a drag over the 3D view → `CadSurface { context { at } }`; `registry::CONTEXT`, RoboCAD's 14 entries in order, then a "Sketch" section of the 13 sketch tools in registry order, `registry::SKETCH_CONTEXT`; each enabled by `registry::ready`; a click → `CadInvoke`, then `CadSurface { closed }`) | deliberately different: Annotate and Comments panel (cad-organize) are shown disabled, naming their epic (Isolate and Hide run since cad-views-export: `cad/ops/catalogue/view.rs:ENTRIES`); the "Sketch" section is a native addition after RoboCAD's 14 (RoboCAD's menu has no sketch tools); the outliner's "Make unique (bake instance)" is added while an instance is selected |
+| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | `cad::surfaces::context_menu` (a right press and release without a drag over the 3D view → `CadSurface { context { at } }`; `registry::CONTEXT`, RoboCAD's 14 entries in order, then a "Sketch" section of the 13 sketch tools in registry order, `registry::SKETCH_CONTEXT`; each enabled by `registry::ready`; a click → `CadInvoke`, then `CadSurface { closed }`) | deliberately different: Annotate and Comments panel run since cad-organize (`Do::Organize` → `cad/threads/`) (Isolate and Hide run since cad-views-export: `cad/ops/catalogue/view.rs:ENTRIES`); the "Sketch" section is a native addition after RoboCAD's 14 (RoboCAD's menu has no sketch tools); the RoboCAD outliner's entry "Make unique (bake instance)" is added while an instance is selected |
 | Double-click a face: its dimension goes into the numeric bar | ui/tools.py:185-196, ui/app.py:693-713 | `GET /nodes/{id}/faces`; `POST /ops/set_diameter`, `set_distance` | `cad::transform::dimensions::double_click` (`edit_at`: a cylinder's diameter, or a planar face's distance to the opposite face) → the focused `cad::numeric` field; face mode only | deliberately different: face mode only. In body mode the second click's pick (on release) re-selects the body, so a face entry would be overwritten; switch to face mode (Shift+B) first. RoboCAD picks a face temporarily in body mode (tools.py:185-196) |
 | Escape cancels the tool and returns to Select | ui/app.py:487-497, ui/tools.py:103-105 | n/a | Escape → `CadAction::CadCancel` → `cad::transform::cancel` (`activate(Select)`) | done-by-reading |
 
@@ -657,53 +687,53 @@ that difference.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Comments" dock ("Comments panel", `view.comments`) and "＋ Annotate model" | ui/app.py:279, ui/comments.py:128-144 | n/a (display) | cad-organize epic | later-epic: cad-organize |
-| Filter "Open" / "All" / "Resolved"; "Selected parts only" | ui/comments.py:145-152, ui/comments.py:249-263 | `GET /threads?node_id&status` | cad-organize epic | later-epic: cad-organize |
-| Thread list "n · part" with a preview; "✓" when resolved | ui/comments.py:153-159, ui/comments.py:254-260 | `GET /threads` | cad-organize epic | later-epic: cad-organize |
-| Attachment state ("Attached to surface", "Part deleted — reattach this annotation", "Geometry changed — check and reattach this pin", "Captured experiment") | ui/comments.py:283-287 | `GET /threads/{id}` (`anchor_status`) | cad-organize epic | later-epic: cad-organize |
-| "Show on model" (restore the saved view, or open the run evidence) | ui/comments.py:164, ui/comments.py:370-390 | `POST /threads/{id}/show {"mode": "context"}` (GUI only); `GET /threads/{id}` (`view`) | cad-organize epic | later-epic: cad-organize |
-| "Fit in view" (the thread's parts, at the current angle) | ui/comments.py:164-171, ui/comments.py:475-486 | `GET /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| "Reattach…" | ui/comments.py:164, ui/comments.py:488-489 | `PATCH /threads/{id} {"node_id", "point", "face"}` | cad-organize epic | later-epic: cad-organize |
-| "Resolve" / "Reopen" | ui/comments.py:172, ui/comments.py:491-495 | `PATCH /threads/{id} {"status"}` | cad-organize epic | later-epic: cad-organize |
-| Linked parts list with labels; "Link selected parts", "Rename part label…" | ui/comments.py:174-190, ui/comments.py:442-458 | `PATCH /threads/{id} {"part_refs"}` | cad-organize epic | later-epic: cad-organize |
-| "Show only linked parts" / "Return to assembly" (and Escape; temporary isolation that never changes visibility) | ui/comments.py:182-191, ui/comments.py:402-436, ui/app.py:480-482 | `POST /threads/{id}/show {"mode": "parts" or "highlight" or "back"}` (GUI only) | cad-organize epic | later-epic: cad-organize |
-| Messages with clickable part links `[label](part:ID)`; "Insert part link from selection" | ui/comments.py:57-68, ui/comments.py:201-204, ui/comments.py:438-473 | `GET /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| Author field ("You"); editor "Write a reply…"; "Reply" / "Post annotation" / "Save edit"; "Cancel" | ui/comments.py:197-219, ui/comments.py:326-368 | `POST /threads`, `POST /threads/{id}/comments`, `PATCH /comments/{id}` | cad-organize epic | later-epic: cad-organize |
-| "Edit message", "Delete message", "Delete thread" | ui/comments.py:221-227, ui/comments.py:497-514 | `PATCH /comments/{id}`, `DELETE /comments/{id}`, `DELETE /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| Numbered pins in the viewport (amber for review); click a pin to open its thread | ui/comments.py:516-540, ui/viewport.py:1453-1457 | `GET /threads` (`anchor.point`) | cad-organize epic | later-epic: cad-organize |
-| "Toggle comment pins" (`view.comment_pins`) | ui/app.py:281, ui/app.py:531-533 | n/a (display) | cad-organize epic | later-epic: cad-organize |
+| "Comments" dock ("Comments panel", `view.comments`) and "＋ Annotate model" | ui/app.py:279, ui/comments.py:128-144 | n/a (display) | `cad/threads/dock.rs:draw` (`panel::Part::Comments`, a section at the top of the right dock while shown, Close hides it) drawing the one `ui_kit::threads` panel through `CadHost` over `cad/threads/source.rs:CadThreadSource` (the fourth `annotations::ThreadSource`); `view.comments` → `Do::Organize` → `cad/threads/mod.rs:command_action`; "＋ Annotate model" → `annotate.rs:start` | done-by-reading |
+| Filter "Open" / "All" / "Resolved"; "Selected parts only" | ui/comments.py:145-152, ui/comments.py:249-263 | `GET /threads?node_id&status` | `cad/threads/read.rs:tick` reads every thread (`crates/sim-runtime/src/cad_client/threads.rs:CadClient::threads(None, None, None)`) on a `Pool::Dedicated` job per (generation, revision, epoch); the filter and "Selected parts only" are applied locally (`cad/threads/mod.rs` `Filter::keeps`, `cad/threads/controls.rs:shown_threads`), as RoboCAD's `refresh` filters its own list | done-by-reading |
+| Thread list "n · part" with a preview; "✓" when resolved | ui/comments.py:153-159, ui/comments.py:254-260 | `GET /threads` | `ui_kit::threads` list rows from `cad/threads/source.rs:thread_of` and `cad/threads/controls.rs:shown_threads` ("n · part" numbered by the place in RoboCAD's list, the first message's preview, "✓" when resolved); a stale list labelled with its revision (`read.rs:line`) | done-by-reading |
+| Attachment state ("Attached to surface", "Part deleted — reattach this annotation", "Geometry changed — check and reattach this pin", "Captured experiment") | ui/comments.py:283-287 | `GET /threads/{id}` (`anchor_status`) | `cad/threads/controls.rs:attachment` (`AnchorStatus` from `crates/sim-runtime/src/cad_client/threads.rs`): RoboCAD's four texts in the location line | deliberately different: an `anchor_status` this viewer does not know (or none) reads "Attachment unknown" (`AnchorStatus::Unknown`), where RoboCAD's window has only its four states |
+| "Show on model" (restore the saved view, or open the run evidence) | ui/comments.py:164, ui/comments.py:370-390 | `POST /threads/{id}/show {"mode": "context"}` (GUI only); `GET /threads/{id}` (`view`) | `cad/threads/isolation.rs:show`: any isolation ends, the pin's part is selected (as `cad_select`), the thread's saved RoboCAD camera restored on the shared camera through `views::convert` (`CameraAction::Set`), then its `inspection_view`; the thread from the last list (`cad/threads/read.rs:thread`), not `GET /threads/{id}` | deliberately different: `POST /threads/{id}/show` is GUI-only (409 headless) and moves RoboCAD's camera, so the view is restored natively from the thread list; a thread of experiment evidence is refused by name (RoboCAD opens it in its experiments panel, which CAD mode does not have yet: cad-experiments-motion) |
+| "Fit in view" (the thread's parts, at the current angle) | ui/comments.py:164-171, ui/comments.py:475-486 | `GET /threads/{id}` | `cad/threads/isolation.rs:fit`: the thread's linked parts that still exist (`fit_nodes`) framed at the current angle (`CadMeshes::frame`), selected, the pins shown; RoboCAD's status texts | done-by-reading |
+| "Reattach…" | ui/comments.py:164, ui/comments.py:488-489 | `PATCH /threads/{id} {"node_id", "point", "face"}` | `cad/threads/annotate.rs:start` with the thread's id → `click` → `reattach` → one `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_thread` (`node_id`, `point`, `face`, `view`) through the source's commit through `cad/actions.rs:edit_at` | deliberately different: the new surface is picked on the press, as Annotate's (RoboCAD picks on the release) |
+| "Resolve" / "Reopen" | ui/comments.py:172, ui/comments.py:491-495 | `PATCH /threads/{id} {"status"}` | `cad/threads/ops.rs:handle` Resolve/Reopen → `annotations::apply` → `CadThreadSource::commit` → `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_thread` (`status`) through `cad/actions.rs:edit_at` | done-by-reading |
+| Linked parts list with labels; "Link selected parts", "Rename part label…" | ui/comments.py:174-190, ui/comments.py:442-458 | `PATCH /threads/{id} {"part_refs"}` | `cad/threads/dock.rs:draw` "Parts in this discussion" (label, description, " · deleted"); a part row press → `ThreadsOp::Part` → `cad/threads/isolation.rs:highlight`; Link selected parts (`cad/threads/ops.rs:link`) and Rename part label… (`ops.rs:label`, the inline dialog `dock.rs:label_dialog`: "Part label for this discussion", "Plain-language label:") → one `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_thread` (`part_refs`) through `cad/actions.rs:edit_at` | deliberately different: a part row has a single press (highlight); RoboCAD's double-click on a row to view that part alone is reached through its part link or Show only linked parts; the label dialog is inline in the section, not a modal box |
+| "Show only linked parts" / "Return to assembly" (and Escape; temporary isolation that never changes visibility) | ui/comments.py:182-191, ui/comments.py:402-436, ui/app.py:480-482 | `POST /threads/{id}/show {"mode": "parts" or "highlight" or "back"}` (GUI only) | `cad/threads/isolation.rs:view_parts` (the camera, selection and whole `CadDisplay` captured; a single part with a saved view restores it, else the section off, orthographic, framed; the parts and their descendants shown alone by `cad/mesh.rs` at display time: no `set_visible`) and `end` (Return to assembly, or Escape: `cad/threads/input.rs:escape`, after `references::calibrate::escape`, before `transform::keys`) restoring the camera, the selection and the whole display | deliberately different: `POST /threads/{id}/show` is GUI-only, so the isolation is the viewer's own, from the thread list's `linked_parts`; RoboCAD's window is not isolated |
+| Messages with clickable part links `[label](part:ID)`; "Insert part link from selection" | ui/comments.py:57-68, ui/comments.py:201-204, ui/comments.py:438-473 | `GET /threads/{id}` | `ui_kit::threads` message bodies with links parsed by `crates/sim-runtime/src/cad_client/threads.rs:part_links`; a press on a link → `cad/threads/dock.rs` `CadHost::link` → `ThreadsOp::PartLink` → `cad/threads/isolation.rs:part_link` (shows the part alone through `view_parts`, then selects exactly `[ID]` as `cad_select` does); "Insert part link from selection" → `cad/threads/ops.rs:insert_link` (`part_link(label, id)` per selected node; "Select a part in the outliner or viewport first") | deliberately different: a link selects exactly the linked part, as `cad_select {ids: [ID]}`, where RoboCAD's `highlight_parts` selects it with its descendants (both show the descendants alone) |
+| Author field ("You"); editor "Write a reply…"; "Reply" / "Post annotation" / "Save edit"; "Cancel" | ui/comments.py:197-219, ui/comments.py:326-368 | `POST /threads`, `POST /threads/{id}/comments`, `PATCH /comments/{id}` | `cad/threads/input.rs` (the kit's text fields `COMPOSE`, "Write a reply…", and `AUTHOR`, "You") and `cad/threads/dock.rs:draw`; Reply → `CadClient::add_comment`, Post annotation → `cad/threads/ops.rs:create` → `create_thread`, Save edit → `update_comment`, each through `CadThreadSource::commit` (`crates/sim-runtime/src/cad_client/threads.rs`) through `cad/actions.rs:edit_at`; Cancel discards the draft; the draft stays until RoboCAD takes it (`cad/threads/mod.rs:edit_answered`) | deliberately different: Enter posts and Shift+Enter types a newline (RoboCAD's `QPlainTextEdit` types a newline on Enter and posts only by its button) |
+| "Edit message", "Delete message", "Delete thread" | ui/comments.py:221-227, ui/comments.py:497-514 | `PATCH /comments/{id}`, `DELETE /comments/{id}`, `DELETE /threads/{id}` | `ui_kit::threads` message actions ("···" opens Edit and Delete) and Delete thread → `cad/threads/ops.rs:edit_message`, `handle` → `CadThreadSource::commit` → `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_comment`, `delete_comment`, `delete_thread`, each through `cad/actions.rs:edit_at` | done-by-reading |
+| Numbered pins in the viewport (amber for review); click a pin to open its thread | ui/comments.py:516-540, ui/viewport.py:1453-1457 | `GET /threads` (`anchor.point`) | `cad/threads/pins.rs:entries`, `draw`: open threads' anchors (and the pending "+") as numbered 26 px badges 19 px right and up of the point, fill #193749, edge #74c8ef or amber #f6b957 for needs review, with a leader; none for evidence, deleted or hidden parts, or other threads while isolated; `press`: a 32 px button opens its thread | deliberately different: an attachment state this viewer does not know draws a neutral grey pin (`AnchorStatus::Unknown`) |
+| "Toggle comment pins" (`view.comment_pins`) | ui/app.py:281, ui/app.py:531-533 | n/a (display) | registry `view.comment_pins` → `Do::Organize` → `cad/threads/mod.rs:command_action` (`CadDisplay::comment_pins`, display only: `cad/threads/pins.rs`) | done-by-reading |
 
 ## Components and system graph
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Components library" dock (`components.show`; category "Window", which has no menu, so it lands in Help) | ui/app.py:362, ui/components.py:93-131 | `GET /components` | cad-organize epic | later-epic: cad-organize |
-| Definitions "name · rN · n placed"; "Find a component…" | ui/components.py:102-105, ui/components.py:133-136, ui/components.py:184-197 | `GET /components` | cad-organize epic | later-epic: cad-organize |
-| "Make from selection" (and "Make linked component…", `components.make`) | ui/app.py:363, ui/components.py:107, ui/components.py:224-226 | `POST /ops/make_component` (GUI: a job, `{"job"}`) | cad-organize epic | later-epic: cad-organize |
-| "New parametric…" (box or cylinder) | ui/components.py:107, ui/components.py:228-230 | `POST /ops/new_parametric_component` | cad-organize epic | later-epic: cad-organize |
-| "Place…" (Name, Origin, Rotation around Z, Variant, port bindings) | ui/components.py:109, ui/components.py:232-249 | `POST /ops/place_component` | cad-organize epic | later-epic: cad-organize |
-| "Edit defaults…" (tabs Parameters with Name/Default/Unit/Min/Max/Provenance/Description; "Geometry and joints" JSON; "Nested parameters"; "Family variants") | ui/components.py:22-90, ui/components.py:251-255 | `POST /ops/set_component_parameters` | cad-organize epic | later-epic: cad-organize |
-| "Import…", "Save to library…", saved library list, "Choose folder…", "Import selected" (`~/Documents/RoboCAD/Components`) | ui/components.py:111-115, ui/components.py:278-295 | `POST /ops/import_component`, `POST /ops/export_component` | cad-organize epic | later-epic: cad-organize |
-| "Occurrence" tab: overrides table (Parameter, Current, Override, Value), "Occurrence origin (mm)", "Apply occurrence", "Reset to inherited", "Detach outer occurrence" | ui/components.py:117-124, ui/components.py:199-276 | `POST /ops/set_component_overrides`, `POST /ops/detach_component` | cad-organize epic | later-epic: cad-organize |
-| Rebuild progress and "Cancel rebuild" | ui/components.py:125-182 | `GET/DELETE /component-jobs/{id}` (GUI only) | cad-organize epic | later-epic: cad-organize |
-| System graph: type chooser and "New"; imports from a check ("Use existing", "Check") | ui/system_graph.py:114-141, ui/system_graph.py:207-258, ui/system_graph.py:352-361 | `GET /experiments/catalogue`, `GET /experiments/{id}/components` | cad-organize epic | later-epic: cad-organize |
-| Component form: Name, CAD body, "Bind existing", "Specific heat · J/(kg·K)", "Fluid direction", "Attach to selected CAD body", parameters table, "+ Parameter", "Apply", "Remove" | ui/system_graph.py:143-175, ui/system_graph.py:377-412 | `GET /system`, `POST /system/components`, `PATCH /system/components/{id}`, `DELETE /system/components/{id}` | cad-organize epic | later-epic: cad-organize |
-| "Geometry rule" choices and their derived outputs ("Derived from CAD") | ui/system_graph.py:154-155, ui/system_graph.py:414-429 | none: needs a Python route (`component_derivation.RECIPES` is not served) | cad-organize epic | later-epic: cad-organize |
-| Connection graph: "Overview", "Focus selected", "−"/"+", click ports to connect, "Leave port open", "Remove connection" | ui/system_graph.py:12-112, ui/system_graph.py:179-196, ui/system_graph.py:431-459 | `POST /system/connections`, `DELETE /system/connections/{id}` | cad-organize epic | later-epic: cad-organize |
+| "Components library" dock (`components.show`; category "Window", which has no menu, so it lands in Help) | ui/app.py:362, ui/components.py:93-131 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Definitions "name · rN · n placed"; "Find a component…" | ui/components.py:102-105, ui/components.py:133-136, ui/components.py:184-197 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "Make from selection" (and "Make linked component…", `components.make`) | ui/app.py:363, ui/components.py:107, ui/components.py:224-226 | `POST /ops/make_component` (GUI: a job, `{"job"}`) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "New parametric…" (box or cylinder) | ui/components.py:107, ui/components.py:228-230 | `POST /ops/new_parametric_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "Place…" (Name, Origin, Rotation around Z, Variant, port bindings) | ui/components.py:109, ui/components.py:232-249 | `POST /ops/place_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "Edit defaults…" (tabs Parameters with Name/Default/Unit/Min/Max/Provenance/Description; "Geometry and joints" JSON; "Nested parameters"; "Family variants") | ui/components.py:22-90, ui/components.py:251-255 | `POST /ops/set_component_parameters` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "Import…", "Save to library…", saved library list, "Choose folder…", "Import selected" (`~/Documents/RoboCAD/Components`) | ui/components.py:111-115, ui/components.py:278-295 | `POST /ops/import_component`, `POST /ops/export_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "Occurrence" tab: overrides table (Parameter, Current, Override, Value), "Occurrence origin (mm)", "Apply occurrence", "Reset to inherited", "Detach outer occurrence" | ui/components.py:117-124, ui/components.py:199-276 | `POST /ops/set_component_overrides`, `POST /ops/detach_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Rebuild progress and "Cancel rebuild" | ui/components.py:125-182 | `GET/DELETE /component-jobs/{id}` (GUI only) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| System graph: type chooser and "New"; imports from a check ("Use existing", "Check") | ui/system_graph.py:114-141, ui/system_graph.py:207-258, ui/system_graph.py:352-361 | `GET /experiments/catalogue`, `GET /experiments/{id}/components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Component form: Name, CAD body, "Bind existing", "Specific heat · J/(kg·K)", "Fluid direction", "Attach to selected CAD body", parameters table, "+ Parameter", "Apply", "Remove" | ui/system_graph.py:143-175, ui/system_graph.py:377-412 | `GET /system`, `POST /system/components`, `PATCH /system/components/{id}`, `DELETE /system/components/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "Geometry rule" choices and their derived outputs ("Derived from CAD") | ui/system_graph.py:154-155, ui/system_graph.py:414-429 | none: needs a Python route (`component_derivation.RECIPES` is not served) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Connection graph: "Overview", "Focus selected", "−"/"+", click ports to connect, "Leave port open", "Remove connection" | ui/system_graph.py:12-112, ui/system_graph.py:179-196, ui/system_graph.py:431-459 | `POST /system/connections`, `DELETE /system/connections/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
 
 ## References
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "References" dock (`view.references`) | ui/app.py:272, ui/references.py:12-78 | n/a (display) | cad-organize epic | later-epic: cad-organize |
-| Linked system file line ("System file: none linked…", "System file missing", "System: title · revision n · n definitions", "CHANGED since linked") | ui/references.py:90-103 | `POST /ops/system_status` | cad-organize epic | later-epic: cad-organize |
-| "Link system file…", "Accept changes", "Unlink" | ui/references.py:24-28, ui/references.py:105-117 | `POST /ops/link_system`, `refresh_system_link`, `unlink_system` | cad-organize epic | later-epic: cad-organize |
-| "Open in builder" (starts `sim-spatial --system … --schematic`) | ui/references.py:119-130 | `POST /ops/system_status` (the path) | cad-organize epic (switch to the builder mode in this app) | later-epic: cad-organize |
-| "＋ Add reference images…" (and `reference.import` "Add reference images…"); drop images on the panel | ui/app.py:273, ui/references.py:32-34, ui/references.py:170-184, ui/references.py:224-230 | `POST /ops/import_references` | cad-organize epic | later-epic: cad-organize |
-| Image list with visibility checkboxes and a preview | ui/references.py:35-44, ui/references.py:132-168 | `PATCH /nodes/{id}`; `POST /ops/update_reference {"visible"}`; preview: none: needs a Python route (no image bytes; see "Viewport") | cad-organize epic | later-epic: cad-organize |
-| Placement: Plane ("Keep current plane", "Front (XZ)", "Side (YZ)", "Top (XY)", "Active construction plane"), Width, Origin X/Y/Z, Rotation, Opacity, "Lock reference against selection", "Apply placement" | ui/references.py:45-63, ui/references.py:186-193 | `POST /ops/update_reference` | cad-organize epic | later-epic: cad-organize |
-| "Align view", "Calibrate scale", "Sketch over this" | ui/references.py:64-69, ui/references.py:195-219 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
-| "Remove reference" | ui/references.py:70-72, ui/references.py:221-222 | `DELETE /nodes/{id}` | `CadAction::CadDelete` (the node); the panel is cad-organize | later-epic: cad-organize |
+| "References" dock (`view.references`) | ui/app.py:272, ui/references.py:12-78 | n/a (display) | `cad/references/dock.rs:draw` (`panel::Part::References`, at the top of the right dock after Comments while open; Close hides it); `view.references` → `Do::Organize` → `cad/references/mod.rs:command_action` | done-by-reading |
+| Linked system file line ("System file: none linked…", "System file missing", "System: title · revision n · n definitions", "CHANGED since linked") | ui/references.py:90-103 | `POST /ops/system_status` | `cad/references/reads.rs:tick` (`crates/sim-runtime/src/cad_client/system_link.rs:CadClient::system_status` on a `Pool::Dedicated` job per (generation, shown revision) while the dock is open or Open in builder asks; again after each link edit) → `cad/references/system_link.rs:line` (`SystemStatus::line`, RoboCAD's four texts; "Reading the linked system file…" until read) | done-by-reading |
+| "Link system file…", "Accept changes", "Unlink" | ui/references.py:24-28, ui/references.py:105-117 | `POST /ops/link_system`, `refresh_system_link`, `unlink_system` | `cad/references/dock.rs` Link system file… (the path field, `cad/references/input.rs`) → `cad/references/edits.rs:handle` → `crates/sim-runtime/src/cad_client/system_link.rs:CadClient::link_system`; Accept changes → `refresh_system_link`; Unlink → `unlink_system` (readiness `system_link.rs:accept_ready`, `unlink_ready`); each through `cad/actions.rs:edit_at`, then the status read again | deliberately different: the path is typed in the viewer's path field, not chosen in the system's file dialog (as cad-views-export's file commands) |
+| "Open in builder" (starts `sim-spatial --system … --schematic`) | ui/references.py:119-130 | `POST /ops/system_status` (the path) | `cad/references/system_link.rs:open_builder` (`builder_target`: refused "Link an existing system file first" when unlinked or missing, and while the status is not read for the shown revision; refused without a window and when leaving CAD mode is blocked, `results::switch_refusal`) sets `switch_to` → `cad/references/reads.rs:receive` writes `system_link::switch_action` (`WindowAction::Switch(ModeSwitch { Build, Document::Path })`) → `app/switch/mod.rs:handle` (the document registry opens it, `app/switch/prepare.rs`) | deliberately different: RoboCAD starts a second `sim-spatial --system … --schematic` process; the viewer switches this window to Build mode on the same file (one app, modes as states) |
+| "＋ Add reference images…" (and `reference.import` "Add reference images…"); drop images on the panel | ui/app.py:273, ui/references.py:32-34, ui/references.py:170-184, ui/references.py:224-230 | `POST /ops/import_references` | `cad/references/dock.rs` "＋ Add reference images…" and `reference.import` (`Do::Organize` → `cad/references/mod.rs:command_action`): the path field (`cad/references/input.rs`, `ui_kit::path_field`) → `cad/references/edits.rs:handle` (`image_path`) → `crates/sim-runtime/src/cad_client/references.rs:CadClient::import_references` on the active plane, else XY, through `cad/actions.rs:edit_at`; then the last image current, the dock shown and the view aligned once its placement is read (`cad/references/reads.rs:receive`); files dropped on the window go the same way (`cad/references/drop.rs:drops`) | deliberately different: paths are typed in the viewer's path field, one image per submit (RoboCAD's file dialog takes several), not the system's file dialog; a path that is not absolute or not an image is refused by name; a drop anywhere on the CAD window imports, not only on the panel |
+| Image list with visibility checkboxes and a preview | ui/references.py:35-44, ui/references.py:132-168 | `PATCH /nodes/{id}`; `POST /ops/update_reference {"visible"}`; preview: `GET /nodes/{id}/image` (added with cad-organize; see "Viewport") | `cad/references/dock.rs:draw`: one row per image node (a press makes it current, its chip shows or hides it) → `cad/references/edits.rs:handle` → `crates/sim-runtime/src/cad_client/references.rs:CadClient::update_reference` (`visible`) through `cad/actions.rs:edit_at` | deliberately different: no preview thumbnail under the list (the image is drawn on its plane in the view, `cad/references/planes.rs`); WebP and BMP images are listed but not drawn, and the row says so |
+| Placement: Plane ("Keep current plane", "Front (XZ)", "Side (YZ)", "Top (XY)", "Active construction plane"), Width, Origin X/Y/Z, Rotation, Opacity, "Lock reference against selection", "Apply placement" | ui/references.py:45-63, ui/references.py:186-193 | `POST /ops/update_reference` | `cad/references/form.rs` (`ROWS`: Width, Origin X/Y/Z, Rotation, Opacity as kit fields with RoboCAD's unit expressions and spin-box rounding; the plane choice and the lock as chips; `PlacementForm::load` from the placement read at the shown revision, `update`) → Apply placement → `cad/references/edits.rs:placement` → one `crates/sim-runtime/src/cad_client/references.rs:CadClient::update_reference` with every value through `cad/actions.rs:edit_at` and the form's revision, "Reference placement updated • Ctrl+Z undoes" | done-by-reading |
+| "Align view", "Calibrate scale", "Sketch over this" | ui/references.py:64-69, ui/references.py:195-219 | `POST /ops/calibrate_reference` | `cad/references/align.rs:align` (RoboCAD's camera: trackball rows `[x_axis, y_axis, normal]`, orthographic, the image's centre, its distance rule, one `CameraAction::Set`; the image's plane made the active plane when it is XY, XZ, YZ or a plane node) and `sketch` (Align, then the sketch line tool); Calibrate scale → `cad/references/calibrate.rs:start`; all from the placement read at the shown revision (`reads.rs:current_placement`) | deliberately different: an image on a plane the native active plane cannot name (not XY, XZ, YZ or a plane node) leaves the active plane as it is, and Sketch over this is then refused by name rather than sketching on another plane |
+| "Remove reference" | ui/references.py:70-72, ui/references.py:221-222 | `DELETE /nodes/{id}` | `cad/references/dock.rs` Remove reference → `CadAction::CadDelete` (the current image node) | done-by-reading |
 
 ## Saved views
 
@@ -756,14 +786,14 @@ calls. Who uses each route, by reading:
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | Health: ok, app, version, path, dirty, gui, nodes, document_id, revision (client: base URL) | api.py:1109-1110, api.py:387-388 | `GET /` | `CadClient::health` (`cad::sync` poll; `service::wait_until_live`) | done-by-reading |
-| System graph and revision (client) | api.py:1112-1113, api.py:413-448 | `GET /system` | cad-organize epic | later-epic: cad-organize |
-| Replace the system graph (expected_revision; client) | api.py:442-445 | `PUT /system` | cad-organize epic | later-epic: cad-organize |
-| Read components or connections | api.py:423-425 | `GET /system/{components\|connections}[/{id}]` | cad-organize epic | later-epic: cad-organize |
-| Add a system component (client) | api.py:432-433 | `POST /system/components` | cad-organize epic | later-epic: cad-organize |
-| Update a system component (client) | api.py:434-435 | `PATCH /system/components/{id}` | cad-organize epic | later-epic: cad-organize |
-| Delete a system component (`?expected_revision=`; client) | api.py:426-430, api.py:436-437 | `DELETE /system/components/{id}` | cad-organize epic | later-epic: cad-organize |
-| Connect ports (client) | api.py:432-433 | `POST /system/connections` | cad-organize epic | later-epic: cad-organize |
-| Remove a connection (client) | api.py:436-437 | `DELETE /system/connections/{id}` | cad-organize epic | later-epic: cad-organize |
+| System graph and revision (client) | api.py:1112-1113, api.py:413-448 | `GET /system` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Replace the system graph (expected_revision; client) | api.py:442-445 | `PUT /system` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Read components or connections | api.py:423-425 | `GET /system/{components\|connections}[/{id}]` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Add a system component (client) | api.py:432-433 | `POST /system/components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Update a system component (client) | api.py:434-435 | `PATCH /system/components/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Delete a system component (`?expected_revision=`; client) | api.py:426-430, api.py:436-437 | `DELETE /system/components/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Connect ports (client) | api.py:432-433 | `POST /system/connections` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Remove a connection (client) | api.py:436-437 | `DELETE /system/connections/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
 | Run a repository model script as one undo step (client) | api.py:1114-1115, api.py:483-510 | `POST /doc/script` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Print registry: printers and materials | api.py:1116-1119, api.py:269-274 | `GET /print/registry` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_registry` (`Ordered` keeps the registry's order); read once per connection generation in `cad/print/studies.rs:tick` | done-by-reading |
 | Print study and split groups (read-only; 405 otherwise) | api.py:312-318 (`Service.print_request`) | `GET /print/study` (added with cad-print: `revision`, `robot_settings["print_study"]` or null, and the split group ids in tree order; pytests `cad/tests/test_api_print_routes.py`) | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_study`; read per (generation, shown revision) in `cad/print/studies.rs:tick` | done-by-reading |
@@ -795,22 +825,22 @@ calls. Who uses each route, by reading:
 | Captured sources (client) | api.py:464 | `GET /experiments/{id}/sources` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Partial trace | api.py:465 | `GET /experiments/{id}/partial` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Compare with a baseline | api.py:466 | `POST /experiments/{id}/compare` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| List threads (`node_id`, `status`, `run_id`; client) | api.py:1126-1128, api.py:349-351 | `GET /threads` | cad-organize epic | later-epic: cad-organize |
-| Create a thread (client) | api.py:352-354 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
-| Read a thread | api.py:357 | `GET /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| Resolve, reopen, reattach, relink (client) | api.py:358-360 | `PATCH /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| Delete a thread (client) | api.py:361-363 | `DELETE /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| Reply (client) | api.py:364-366 | `POST /threads/{id}/comments` | cad-organize epic | later-epic: cad-organize |
-| Show a thread in RoboCAD's window (context, parts, highlight, back) | api.py:333-348 | `POST /threads/{id}/show` (GUI only) | cad-organize epic | later-epic: cad-organize |
-| Read a message | api.py:367-373 | `GET /comments/{id}` | cad-organize epic | later-epic: cad-organize |
-| Edit a message (client) | api.py:374-376 | `PATCH /comments/{id}` | cad-organize epic | later-epic: cad-organize |
-| Delete a message (client) | api.py:377-379 | `DELETE /comments/{id}` | cad-organize epic | later-epic: cad-organize |
+| List threads (`node_id`, `status`, `run_id`; client) | api.py:1126-1128, api.py:349-351 | `GET /threads` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::threads` (`threads_route`) from `cad/threads/read.rs:tick` (all threads; filtered locally) | done-by-reading |
+| Create a thread (client) | api.py:352-354 | `POST /threads` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::create_thread` (`NewThread`) from `cad/threads/source.rs` `Request::send` (`CadThreadSource::commit`, Post annotation) | done-by-reading |
+| Read a thread | api.py:357 | `GET /threads/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::thread` (client only: the viewer reads threads from the list, `cad/threads/read.rs:thread`) | done-by-reading |
+| Resolve, reopen, reattach, relink (client) | api.py:358-360 | `PATCH /threads/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_thread` (`ThreadPatch`) from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| Delete a thread (client) | api.py:361-363 | `DELETE /threads/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::delete_thread` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| Reply (client) | api.py:364-366 | `POST /threads/{id}/comments` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::add_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| Show a thread in RoboCAD's window (context, parts, highlight, back) | api.py:333-348 | `POST /threads/{id}/show` (GUI only) | reproduced natively by `cad/threads/isolation.rs` from the thread list (`cad/threads/read.rs:thread`): `show` (Show on model), `view_parts` (Show only linked parts), `end` (Return to assembly) | deliberately different: GUI-only route (409 headless) that moves RoboCAD's own camera; reproduced natively from the thread list by `cad/threads/isolation.rs` (Show on model, Show only linked parts) |
+| Read a message | api.py:367-373 | `GET /comments/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::comment` (client only) | done-by-reading |
+| Edit a message (client) | api.py:374-376 | `PATCH /comments/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| Delete a message (client) | api.py:377-379 | `DELETE /comments/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::delete_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
 | Document state: path, dirty, roots, active group, nodes, materials, selection, view, history, document_id, revision | api.py:1129-1130, api.py:401-402 | `GET /doc` | `CadClient::doc` (`cad::sync` poll) | done-by-reading |
 | Undo and redo labels | api.py:1131-1132, api.py:472-473 | `GET /history` | `CadClient::history` | done-by-reading |
 | Autosave status | api.py:1133-1134, api.py:390-399 | `GET /autosave` (GUI only) | `CadClient::autosave` → `cad::panel` | done-by-reading |
 | Start a recovery save | api.py:1133-1134, api.py:392-393 | `POST /autosave` (GUI only) | none | deliberately different: `POST /autosave` is GUI-only (409 headless) and the viewer never saves for the user; Save and Save As write the file |
 | Node summaries (`?kind=`) | api.py:1137-1138, api.py:532-533 | `GET /nodes` | `CadClient::nodes` | done-by-reading |
-| Create box, cylinder, sphere, sketch, plane, group, instance or measure (client) | api.py:1139-1140, api.py:541-571 | `POST /nodes` | the catalogue creates boxes, cylinders, spheres and instances through `POST /ops/box`, `/ops/box_three_point`, `/ops/cylinder`, `/ops/sphere` and `/ops/instance` (`tool.box`, `tool.box_center`, `tool.cylinder`, `tool.sphere`, `tool.instance`, `ops.box`), the Ops methods `POST /nodes` itself calls (api.py `Service.create`); sketches through `POST /nodes {"kind": "sketch", "plane", "calls"}` (`CadClient::create_sketch` from `ops::send_sketch`); planes through the plane tools' `POST /ops/plane_*` | deliberately different: the viewer calls the Ops methods directly for solids and planes (one route family, `POST /ops/*`); groups belong to cad-organize, measure nodes to cad-select-transform's `POST /ops/add_measurement` |
+| Create box, cylinder, sphere, sketch, plane, group, instance or measure (client) | api.py:1139-1140, api.py:541-571 | `POST /nodes` | the catalogue creates boxes, cylinders, spheres and instances through `POST /ops/box`, `/ops/box_three_point`, `/ops/cylinder`, `/ops/sphere` and `/ops/instance` (`tool.box`, `tool.box_center`, `tool.cylinder`, `tool.sphere`, `tool.instance`, `ops.box`), the Ops methods `POST /nodes` itself calls (api.py `Service.create`); sketches through `POST /nodes {"kind": "sketch", "plane", "calls"}` (`CadClient::create_sketch` from `ops::send_sketch`); planes through the plane tools' `POST /ops/plane_*` | deliberately different: the viewer calls the Ops methods directly for solids and planes (one route family, `POST /ops/*`); groups through `POST /ops/group` since cad-organize (`group.group`, the outliner's New group and Group selection…), measure nodes to cad-select-transform's `POST /ops/add_measurement` |
 | Node detail | api.py:1143-1144, api.py:102-133 | `GET /nodes/{id}` | `CadClient::node` → `cad::inspector` | done-by-reading |
 | Set attributes (name, visible, locked, disabled, material, color, pivot, transform, parent and index, tessellation_tolerance, plane, sketch) | api.py:1145-1146, api.py:573-612 | `PATCH /nodes/{id}` | `CadClient::patch` (`CadAction::CadPatch`) | done-by-reading |
 | Delete a node | api.py:1147-1148, api.py:614-618 | `DELETE /nodes/{id}` | `CadClient::delete` (`CadAction::CadDelete`) | done-by-reading |
@@ -822,6 +852,7 @@ calls. Who uses each route, by reading:
 | Validation report | api.py:1165-1166, api.py:639-642 | `GET /nodes/{id}/validate` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::validate_node`; `cad/print/checks.rs:start_validate` | done-by-reading |
 | Exact B-rep section outline | api.py:1167-1168, api.py:644-647 | `GET /nodes/{id}/section?plane=` | `crates/sim-runtime/src/cad_client/section.rs:CadClient::section` from `cad/display/section.rs:exact_jobs` (planes the route takes: xy, xz, yz through the origin, or a plane node, `cad/display/mod.rs:exact_query`) | done-by-reading |
 | Thin walls | api.py:1169-1170, api.py:649-651 | `GET /nodes/{id}/thin?threshold=` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::thin_walls`; `cad/print/checks.rs:start_wall` | done-by-reading |
+| A reference image's stored bytes (read-only; 404 for a node that is not an image or has no stored bytes, 422 for unreadable bytes) | api.py:1492-1493, api.py:1317-1336 (`Service.reference_image`) | `GET /nodes/{id}/image` (added with cad-organize: `id`, `revision`, `format`, `width_px`, `height_px`, `bytes` and the base64 `data`; pytests `cad/tests/test_api_reference_image.py`) | `crates/sim-runtime/src/cad_client/references.rs:CadClient::reference_image` (`ReferenceImage::decode`); read per image node on a job by `cad/references/planes.rs:sync`, cached per (connection generation, node) | done-by-reading |
 | A sketch's curves | api.py:1171-1174, api.py:117-118 | `GET /nodes/{id}/sketch`; `GET /nodes/{id}` (its `sketch`, the same `Sketch.to_json`) | `CadClient::sketch` (`SketchGeometry::from_value`, tolerant: unknown or malformed curves are counted, not fatal); `cad::sketch::cache` (`CadSketches`, by (node, revision), Dedicated jobs) reads `CadClient::node` and `SketchGeometry::from_value` on its `sketch`, keeping the dropped count (`CadSketches::dropped`: the sketch edits and a `cad_sketch` call naming curve indices refuse by name when it is non-zero); plane nodes' frames through `CadClient::node` and `plane_of` (`CadSketches::plane_state`: a plane read without a valid frame is "node X has no valid plane frame", not "still being read") | done-by-reading |
 | Edit a sketch with a call list | api.py:1172-1173, api.py:661-685 | `POST /nodes/{id}/sketch` | `CadClient::edit_sketch` (`SketchCall::to_json`, `calls_body`) from `ops::send_sketch`, the one path every sketch tool, edit and REST `cad_sketch` (`CadAction::CadSketch` → `sketch::edits::sketch_action`) takes | done-by-reading (api.py `Service.edit_sketch` now maps curve indices before turning two-number lists into points: a join of two curves, trim or extend with two, `circle_tangent` and `arc_tangent` failed through REST before; `cad/tests/test_api_sketch_calls.py`) |
 | Ops names and signatures | api.py:1175-1176, api.py:687-693 | `GET /ops` | `CadClient::ops` | done-by-reading |
@@ -833,9 +864,9 @@ calls. Who uses each route, by reading:
 | RoboCAD's camera and display state (headless `{}`) | api.py:1190-1191, api.py:747-752 | `GET /view` | the viewer's own camera (`cad::scene`) | deliberately different: the native view is the viewer's own; RoboCAD's `/view` describes only RoboCAD's window |
 | Set RoboCAD's camera and display (409 "no GUI: /view needs the app" headless) | api.py:1192, api.py:754-793 | `PUT /view` | the viewer's own camera | deliberately different: the native camera is not RoboCAD's |
 | Fit RoboCAD's camera | api.py:1188-1189 | `POST /view/fit` | `CadAction::CadFit` (native camera) | deliberately different: `cad_fit` frames the viewer's camera and leaves RoboCAD's alone |
-| Component catalogue | api.py:1193-1194, components.py:648-650 | `GET /components` | cad-organize epic | later-epic: cad-organize |
-| Component job status | api.py:1195-1196, api.py:713-717 | `GET /component-jobs/{id}` (GUI only) | cad-organize epic | later-epic: cad-organize |
-| Cancel a component job | api.py:1195-1196, api.py:713-717 | `DELETE /component-jobs/{id}` (GUI only) | cad-organize epic | later-epic: cad-organize |
+| Component catalogue | api.py:1193-1194, components.py:648-650 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Component job status | api.py:1195-1196, api.py:713-717 | `GET /component-jobs/{id}` (GUI only) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Cancel a component job | api.py:1195-1196, api.py:713-717 | `DELETE /component-jobs/{id}` (GUI only) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
 | Pose panel state | api.py:1197-1198, api.py:315 | `GET /motion` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Motion programs | api.py:296-297 | `GET /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Save a motion program | api.py:298 | `POST /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
@@ -898,7 +929,7 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | `configure_robot` (assembly metadata and connectors as one edit) | commands.py:257 | `POST /ops/configure_robot` | the catalogue's `ops.configure_robot` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::configure_robot` | done-by-reading |
-| `set_component_graph` | commands.py:262 | `POST /ops/set_component_graph` | cad-organize epic | later-epic: cad-organize |
+| `set_component_graph` | commands.py:262 | `POST /ops/set_component_graph` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
 | `print_split` | commands.py:299 | `POST /ops/print_split` | the catalogue's REST-only `ops.print_split` (`cad/ops/catalogue/print.rs`: Printer, Joints; one undo step, no job); `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_split_op` | done-by-reading |
 | `undo` | commands.py:305 | `POST /undo` | `CadAction::CadUndo` | done-by-reading |
 | `redo` | commands.py:308 | `POST /redo` | `CadAction::CadRedo` | done-by-reading |
@@ -910,10 +941,10 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `set_material` | commands.py:345 | `PATCH /nodes/{id} {"material"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_color` | commands.py:348 | `PATCH /nodes/{id} {"color"}` | `cad/inspector/physical_edit.rs:handle_physical` (`PATCH /nodes/{id} {"color"}` through `cad/actions.rs:edit_at`); `crates/sim-runtime/src/cad_client/physical.rs:CadClient::set_color` also exists | done-by-reading |
 | `set_pivot` | commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | `cad::ops` catalogue `tool.set_pivot`; the inspector's pivot editor (`cad::inspector::editors`) sends `PATCH /nodes/{id} {"pivot"}` via `ops::handle`/`args::build` | done-by-reading |
-| `group` | commands.py:354 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
-| `move_nodes` | commands.py:377 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
-| `move_node` | commands.py:395 | `PATCH /nodes/{id} {"parent", "index"}` | cad-organize epic | later-epic: cad-organize |
-| `set_active_group` | commands.py:398 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
+| `group` | commands.py:354 | `POST /ops/group` | `crates/sim-runtime/src/cad_client/organize.rs:CadClient::group` from `cad/tree/handle.rs:group` (New group, Group selection…); `group.group` in `cad/ops/catalogue/organize.rs` | done-by-reading |
+| `move_nodes` | commands.py:377 | `POST /ops/move_nodes` | `crates/sim-runtime/src/cad_client/organize.rs:CadClient::move_nodes` from `cad/tree/handle.rs:handle` (`TreeOp::Move`: drag-and-drop and Move to group) | done-by-reading |
+| `move_node` | commands.py:395 | `PATCH /nodes/{id} {"parent", "index"}` | `crates/sim-runtime/src/cad_client/organize.rs:CadClient::move_node` (client only; the outliner moves through `move_nodes`) | done-by-reading |
+| `set_active_group` | commands.py:398 | `POST /ops/set_active_group` | `crates/sim-runtime/src/cad_client/organize.rs:CadClient::set_active_group` from `cad/tree/handle.rs:handle` (`TreeOp::SetActive`); `group.set_active` in `cad/ops/catalogue/organize.rs` | done-by-reading |
 | `isolate` | commands.py:402 | `POST /ops/isolate` | `cad/ops/catalogue/view.rs:ENTRIES` (`view.isolate`, route `isolate`) | done-by-reading |
 | `show_all` | commands.py:415 | `POST /ops/show_all` | `cad/ops/catalogue/view.rs:ENTRIES` (`view.show_all`, route `show_all`) | done-by-reading |
 | `box` | commands.py:419 | `POST /ops/box`; `POST /nodes` | `cad::ops` catalogue `tool.box` and `tool.box_center` (both send `Ops.box`), and the REST-only `ops.box` via `ops::handle`/`args::build` | done-by-reading |
@@ -993,10 +1024,10 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `save_motion` | commands.py:1073 | `POST /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | `delete_motion` | commands.py:1083 | `DELETE /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | `set_robot_setting` | commands.py:1090 | `POST /ops/set_robot_setting` | the catalogue's `robot.power` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::set_robot_setting` | done-by-reading |
-| `link_system` | commands.py:1112 | `POST /ops/link_system` | cad-organize epic | later-epic: cad-organize |
-| `unlink_system` | commands.py:1121 | `POST /ops/unlink_system` | cad-organize epic | later-epic: cad-organize |
-| `refresh_system_link` | commands.py:1126 | `POST /ops/refresh_system_link` | cad-organize epic | later-epic: cad-organize |
-| `system_status` | commands.py:1134 | `POST /ops/system_status` | cad-organize epic | later-epic: cad-organize |
+| `link_system` | commands.py:1112 | `POST /ops/link_system` | `crates/sim-runtime/src/cad_client/system_link.rs:CadClient::link_system` from `cad/references/edits.rs:handle` | done-by-reading |
+| `unlink_system` | commands.py:1121 | `POST /ops/unlink_system` | `crates/sim-runtime/src/cad_client/system_link.rs:CadClient::unlink_system` from `cad/references/edits.rs:handle` | done-by-reading |
+| `refresh_system_link` | commands.py:1126 | `POST /ops/refresh_system_link` | `crates/sim-runtime/src/cad_client/system_link.rs:CadClient::refresh_system_link` (Accept changes) from `cad/references/edits.rs:handle` | done-by-reading |
+| `system_status` | commands.py:1134 | `POST /ops/system_status` | `crates/sim-runtime/src/cad_client/system_link.rs:CadClient::system_status` (`SystemStatus`) from `cad/references/reads.rs:tick` | done-by-reading |
 | `set_actuator_profiles` | commands.py:1138 | `POST /actuator-profiles` | `cad/results/mod.rs:profiles`; `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_actuator_profiles` | done-by-reading |
 | `set_battery` | commands.py:1145 | `PUT /battery` | the catalogue's `robot.power` (`cad/ops/robot_args.rs` `power`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_battery` | done-by-reading |
 | `set_control` | commands.py:1151 | `PUT /control` | the catalogue's `robot.power` (`cad/ops/robot_args.rs` `power`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_control` | done-by-reading |
@@ -1006,34 +1037,34 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `physical` (`path` writes a file) | commands.py:1233 | `GET /physical` | `CadAction::CadPhysical` (never `path`) | done-by-reading |
 | `load_results` | commands.py:1239 | `POST /results/load` | `cad/results/mod.rs:handle` (`Load`); `crates/sim-runtime/src/cad_client/physical.rs:CadClient::load_results` | done-by-reading |
 | `apply_identification` | commands.py:1244 | `POST /identification/apply` | `cad/results/mod.rs:handle` (`Identify`); `crates/sim-runtime/src/cad_client/physical.rs:CadClient::apply_identification` | done-by-reading |
-| `import_references` | references.py:11 | `POST /ops/import_references` | cad-organize epic | later-epic: cad-organize |
-| `update_reference` | references.py:31 | `POST /ops/update_reference` | cad-organize epic | later-epic: cad-organize |
-| `calibrate_reference` | references.py:65 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
+| `import_references` | references.py:11 | `POST /ops/import_references` | `crates/sim-runtime/src/cad_client/references.rs:CadClient::import_references` from `cad/references/edits.rs:handle` (Add reference images…, drops) | done-by-reading |
+| `update_reference` | references.py:31 | `POST /ops/update_reference` | `crates/sim-runtime/src/cad_client/references.rs:CadClient::update_reference` (`ReferenceUpdate`) from `cad/references/edits.rs:handle` (visible) and `placement` | done-by-reading |
+| `calibrate_reference` | references.py:65 | `POST /ops/calibrate_reference` | `crates/sim-runtime/src/cad_client/references.rs:CadClient::calibrate_reference` from `cad/references/calibrate.rs:distance` | done-by-reading |
 | `saved_views` | saved_views.py:104 | `GET /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::views` | done-by-reading |
 | `save_view` | saved_views.py:107 | `POST /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::save_view` | done-by-reading |
 | `update_saved_view` | saved_views.py:116 | `PATCH /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::update_view` | done-by-reading |
 | `delete_saved_view` | saved_views.py:124 | `DELETE /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::delete_view` | done-by-reading |
-| `threads` | annotations.py:216 | `GET /threads` | cad-organize epic | later-epic: cad-organize |
-| `thread` | annotations.py:228 | `GET /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| `create_thread` | annotations.py:233 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
-| `update_thread` | annotations.py:251 | `PATCH /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| `delete_thread` | annotations.py:271 | `DELETE /threads/{id}` | cad-organize epic | later-epic: cad-organize |
-| `add_comment` | annotations.py:276 | `POST /threads/{id}/comments` | cad-organize epic | later-epic: cad-organize |
-| `update_comment` | annotations.py:284 | `PATCH /comments/{id}` | cad-organize epic | later-epic: cad-organize |
-| `delete_comment` | annotations.py:287 | `DELETE /comments/{id}` | cad-organize epic | later-epic: cad-organize |
-| `transform_components` | components.py:490 | `POST /ops/transform_components` | cad-organize epic | later-epic: cad-organize |
-| `make_component` | components.py:515 | `POST /ops/make_component` | cad-organize epic | later-epic: cad-organize |
-| `create_component_family` | components.py:541 | `POST /ops/create_component_family` | cad-organize epic | later-epic: cad-organize |
-| `link_component_family` | components.py:554 | `POST /ops/link_component_family` | cad-organize epic | later-epic: cad-organize |
-| `new_parametric_component` | components.py:566 | `POST /ops/new_parametric_component` | cad-organize epic | later-epic: cad-organize |
-| `export_component` | components.py:593 | `POST /ops/export_component` | cad-organize epic | later-epic: cad-organize |
-| `import_component` | components.py:612 | `POST /ops/import_component` | cad-organize epic | later-epic: cad-organize |
-| `component_catalogue` | components.py:648 | `GET /components` | cad-organize epic | later-epic: cad-organize |
-| `create_component` | components.py:652 | `POST /ops/create_component` | cad-organize epic | later-epic: cad-organize |
-| `place_component` | components.py:658 | `POST /ops/place_component` | cad-organize epic | later-epic: cad-organize |
-| `set_component_parameters` | components.py:677 | `POST /ops/set_component_parameters` | cad-organize epic | later-epic: cad-organize |
-| `set_component_overrides` | components.py:715 | `POST /ops/set_component_overrides` | cad-organize epic | later-epic: cad-organize |
-| `detach_component` | components.py:735 | `POST /ops/detach_component` | cad-organize epic | later-epic: cad-organize |
+| `threads` | annotations.py:216 | `GET /threads` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::threads` from `cad/threads/read.rs:tick` | done-by-reading |
+| `thread` | annotations.py:228 | `GET /threads/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::thread` (client only) | done-by-reading |
+| `create_thread` | annotations.py:233 | `POST /threads` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::create_thread` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| `update_thread` | annotations.py:251 | `PATCH /threads/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_thread` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| `delete_thread` | annotations.py:271 | `DELETE /threads/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::delete_thread` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| `add_comment` | annotations.py:276 | `POST /threads/{id}/comments` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::add_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| `update_comment` | annotations.py:284 | `PATCH /comments/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| `delete_comment` | annotations.py:287 | `DELETE /comments/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::delete_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
+| `transform_components` | components.py:490 | `POST /ops/transform_components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `make_component` | components.py:515 | `POST /ops/make_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `create_component_family` | components.py:541 | `POST /ops/create_component_family` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `link_component_family` | components.py:554 | `POST /ops/link_component_family` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `new_parametric_component` | components.py:566 | `POST /ops/new_parametric_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `export_component` | components.py:593 | `POST /ops/export_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `import_component` | components.py:612 | `POST /ops/import_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `component_catalogue` | components.py:648 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `create_component` | components.py:652 | `POST /ops/create_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `place_component` | components.py:658 | `POST /ops/place_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `set_component_parameters` | components.py:677 | `POST /ops/set_component_parameters` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `set_component_overrides` | components.py:715 | `POST /ops/set_component_overrides` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `detach_component` | components.py:735 | `POST /ops/detach_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
 
 ## Keymap
 
@@ -1085,7 +1116,7 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `select.point`: P | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Point }` | done-by-reading |
 | `select.mode_radial`: Q | keymap.json:7 | n/a (display) | `cad::keys` → `CadSurface { select_radial }` at the pointer | done-by-reading |
 | `tool.select`: Escape | keymap.json:8 | n/a | `cad::transform::keys` → `CadAction::CadCancel` | done-by-reading |
-| `tool.annotate`: N | keymap.json:8 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
+| `tool.annotate`: N | keymap.json:8 | `POST /threads` | `cad/keys.rs` → `CadInvoke { tool.annotate }` → `Do::Organize` → `cad/threads/mod.rs:command_action` → `cad/threads/annotate.rs:start` (typed, not run, while a Comments field has the keyboard) | done-by-reading |
 | `tool.move`: G | keymap.json:8 | `POST /ops/transform` | `cad::transform::keys` → `CadAction::CadTool { tool: Move }` | done-by-reading |
 | `tool.rotate`: R | keymap.json:8 | `POST /ops/transform` | `cad::transform::keys` → `CadAction::CadTool { tool: Rotate }` | done-by-reading |
 | `tool.scale`: S | keymap.json:8 | `POST /ops/transform` | `cad::transform::keys` → `CadAction::CadTool { tool: Scale }` (not with Ctrl: Ctrl+S saves) | done-by-reading |
@@ -1138,11 +1169,16 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted from the tables above (2026-10-01, after the cad-print epic,
-commits 35ea6de0 and 17f90d08 and their documentation: of its 33 rows, 25
-became `done-by-reading` and 8 `deliberately different`; none stays open;
-one row was added, `GET /print/study`, `done-by-reading`; no other row
-changed status) with this script, run from the repository
+Recounted from the tables above (2026-10-01, after the cad-organize
+epic, by reading against its code (nothing compiled): of its 108 rows,
+38 moved to `later-epic: cad-components`, 44 became `done-by-reading`
+and 26 `deliberately different`; none stays open; one row was added,
+`GET /nodes/{id}/image`, `done-by-reading`; four earlier outliner
+context-menu rows (Isolate, Hide/Show, Make unique, Show all) went from
+`deliberately different` to `done-by-reading`; the text of three more
+earlier rows changed without a status change: the outliner's Fit in view
+and Delete, the right-click menu's Annotate and Comments panel, and
+`POST /nodes`'s groups) with this script, run from the repository
 root; it splits each row on its unescaped `|`, takes the status cell and
 counts it by its leading status (up to its reason), skipping header rows
 and the count tables themselves:
@@ -1163,7 +1199,9 @@ print(dict(rows), sum(rows.values())); print(dict(epics))
 PY
 ```
 
-There are 774 rows. (After cad-physical-inspect, at 61f1bea5 and still at
+There are 775 rows. (After cad-print, at 17f90d08 and still at
+b476b28e, the ledger had 774 rows: 457 done by reading, 171 later (108
+of them cad-organize's) and 146 deliberately different. After cad-physical-inspect, at 61f1bea5 and still at
 17f90d08, the ledger had 773 rows: 431 done by reading, 204 later (33 of
 them cad-print's) and 138 deliberately different. After cad-views-export, at f15766ea and still at
 f26842fa, the ledger had 367 done by reading, 286 later (82 of them
@@ -1190,61 +1228,79 @@ with its new route). cad-print's split was counted the same way, pairing
 each row of `git show 17f90d08:docs/cad-parity.md` with the same row now
 (the one added row, `GET /print/study`, set aside): of the 33 rows that
 were cad-print's later-epic rows, 25 and 8; no other row changed status.
+cad-organize's split was counted the same way, pairing each row of
+`git show b476b28e:docs/cad-parity.md` with the same row now (the one
+added row, `GET /nodes/{id}/image`, set aside): of the 108 rows that were
+cad-organize's later-epic rows, 38 `later-epic: cad-components`, 44
+`done-by-reading` and 26 `deliberately different`; the only other status
+changes were the four outliner context-menu rows above.
 
 | Status | Rows |
 |---|---|
 | done | 0 |
-| done-by-reading | 457 |
-| later-epic | 171 |
-| deliberately different | 146 |
-| **total** | **774** |
+| done-by-reading | 506 |
+| later-epic | 101 |
+| deliberately different | 168 |
+| **total** | **775** |
 
 | Later epic | Rows |
 |---|---|
-| cad-organize | 108 |
+| cad-components | 38 |
 | cad-experiments-motion | 63 |
-| **total** | **171** |
+| **total** | **101** |
 
 Some rows repeat a feature from another angle: as a UI feature, as a REST
 route, as an Ops method and as a key. The ledger checks each of those
 surfaces separately. By script, every one of the 183 registry command ids,
 the 77 keymap ids and the 134 public Ops methods appears in a row. Other
-counts: 81 rows are `n/a (display)` and 10 are flagged (a REST route cell
+counts: 81 rows are `n/a (display)` and 8 are flagged (a REST route cell
 holding "none: needs a Python route").
 
 No row is blank or `todo`, and no cad-select-transform, cad-modify,
-cad-sketch, cad-views-export, cad-physical-inspect or cad-print row is
-open. Nothing
+cad-sketch, cad-views-export, cad-physical-inspect, cad-print or
+cad-organize row is open (no row says `later-epic: cad-organize`). Nothing
 is `done`, because no epic's rows have been moved to `done` yet:
 cad-mode, cad-select-transform, cad-modify and cad-sketch were built and
 tested in their verification passes and await the user's checklist;
 cad-views-export was verified at bcf0c56c; cad-physical-inspect and
 cad-print are written and reviewed by reading, pending their verification
-passes. The verification passes and the checklist move rows to
+passes; cad-organize is written and reviewed by reading, uncompiled,
+pending its verification pass. The verification passes and the checklist move rows to
 `done`.
 
 ## Rows flagged "none: needs a Python route"
 
-There are 10 flagged rows covering 10 distinct gaps. Each gap needs one of
+There are 8 flagged rows covering 8 distinct gaps. Each gap needs one of
 two things before the native viewer can reach the feature headless:
 
 - a new route in `cad/robocad/api.py`, a RoboCAD change outside this epic;
 - a Rust port, gated by the parity harness.
 
-No route at all (8):
+No route at all (6):
 
 1. Report a failed autosave. `/autosave` does not report one.
    `deliberately different` since cad-views-export: a headless service
    never autosaves.
 2. Set the autosave interval preference. `deliberately different` since
    cad-views-export: it is RoboCAD's desktop timer.
-3. Reference image pixels in the viewport.
-4. The reference list's preview (same data as 3).
-5. Run review's captured CAD replay (captured document and poses).
-6. Candidate review's proposed geometry.
-7. Pose kinematics without a desktop window.
-8. Geometry-rule recipes for system components
-   (`component_derivation.RECIPES`).
+3. Run review's captured CAD replay (captured document and poses).
+4. Candidate review's proposed geometry.
+5. Pose kinematics without a desktop window.
+6. Geometry-rule recipes for system components
+   (`component_derivation.RECIPES`); `later-epic: cad-components` since
+   the Director's split (2026-10-01).
+
+No longer gaps since cad-organize (2026-10-01; gap route added to
+`api.py` `Service`, pytests `cad/tests/test_api_reference_image.py`: 2
+passed at b476b28e; the third, added after review, is unverified):
+reference image pixels in the viewport and the reference list's
+preview (the same data), both from `GET /nodes/{id}/image`
+(`Service.reference_image`, read-only: a reference image node's stored
+bytes in base64 with its `format`, `width_px`, `height_px` and the
+document's `revision`; 404 for a node that is not an image or has no
+stored bytes, 422 for bytes Pillow cannot read).
+`node_detail` strips the bytes (api.py:141-142: `image` without `data`),
+which is why no other route served them.
 
 No longer gaps since cad-physical-inspect (2026-10-01; routes added to
 `api.py` `Service`, pytests `cad/tests/test_api_physical_routes.py`):
@@ -1293,8 +1349,8 @@ before.
 GUI-only through `POST /commands/{id}`, with no headless route (2;
 both `deliberately different` since cad-views-export):
 
-9. Blender live link start and stop.
-10. Web share.
+7. Blender live link start and stop.
+8. Web share.
 
 ## Headless versus GUI-only routes
 
@@ -1429,3 +1485,21 @@ service is stopped and reaped. An attached RoboCAD is never stopped.
   - `sim_domain_robot::stress_results` paired a hotspot's cells and
     stresses out of step when a stress was null (Rust; fixed in the same
     epic).
+
+- Found with cad-organize (2026-10-01):
+  - The outliner's search placeholder reads "Search (Ctrl+F)…"
+    (ui/strings.py:20), but keymap.json:8 binds Ctrl+F to `tool.fillet`,
+    so Ctrl+F never reaches the field. The native viewer keeps Ctrl+F as
+    Fillet and focuses the search only with the pointer over the model
+    tree dock (row "Search").
+  - `group.set_active` with no group selected calls
+    `set_active_group(None)` (ui/app.py:427), silently clearing the active
+    group under a label that says "Set". The native command refuses by
+    name; the outliner menu's "Clear active group" clears it.
+  - A drop on the viewport passes every local file to the references
+    (`_drop_material` → `ReferencesPanel.dropEvent`, ui/app.py:1801-1804,
+    ui/references.py:227-230), with no image filter, so dropping a STEP
+    file fails inside PIL in `import_references` (references.py:16-18).
+  - "Open in builder" starts a second `sim-spatial` process
+    (ui/references.py:119-130). The native viewer switches its own
+    window to Build mode instead.

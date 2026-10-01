@@ -10,17 +10,21 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01))
+## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
 
 **Nothing has been compiled, tested or run since aa34ef48** (the last
-verified commit). Four epics since were written and reviewed by reading
-only: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
+verified commit). Five epics since were written by reading only, stacked
+uncompiled: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
 cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
 fixes 697a15c1, docs 61f1bea5), cad-print (35ea6de0, 17f90d08, review
-fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3) and one-text-entry
+fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3), one-text-entry
 (d385e7eb, 8627fd51, 91c44f38 and its docs commit: one keyboard focus
-and one kit text field; see [One text entry](#one-text-entry-2026-10-01)).
-This epic is uncompiled too. Their counts and "done" states below are by
+and one kit text field; see [One text entry](#one-text-entry-2026-10-01))
+and cad-organize (b476b28e and the commits after it: the outliner's
+organization, RoboCAD's comment threads, reference images and the system
+link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)).
+cad-organize is done pending verification and
+uncompiled, like the four before it. Their counts and "done" states below are by
 reading, not by a build.
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
@@ -5237,6 +5241,382 @@ picker's path-field parts are `KitInput`).
   the name field; the palette's ↑/↓; a held W in Robot then a press on
   the gait path field (the robot stops); the picker's path field.
 
+## CAD organize (2026-10-01)
+
+*Batch cad-organize (default order item 7, §9 phase 1; §9 "Later CAD
+epics" 7). Done pending verification: written and reviewed by reading
+only, in b476b28e (the client's `threads.rs`, `organize.rs`,
+`references.rs` and `system_link.rs` with fake-server tests, the `api.py`
+gap route with its pytest, and `annotations::InFlight`) and the commits
+after it (the `cad/tree/`, `cad/threads/` and `cad/references/` modules,
+their wiring and the review fixes). Nothing was compiled; only the gap
+route's pytest ran (2 passed at b476b28e; the third test, added after
+review, is unverified). It is the fifth epic stacked uncompiled since
+aa34ef48.* It brings RoboCAD's organization features into CAD mode: the
+outliner's search, expand and collapse, Shift/Ctrl multi-select, inline
+rename, drag-and-drop, its context menu (Fit in view, Isolate, Hide,
+Show, Lock, Unlock, Group selection…, Move to group, Make unique, Set as
+active group, Delete, Clear active group, Show all) and New group;
+RoboCAD's comment threads as the fourth `annotations::ThreadSource`, drawn
+by the one `ui_kit::threads` panel, with Annotate (N), pins, part links,
+Show on model, Fit in view and the temporary "Show only linked parts";
+the References section with textured reference image planes, placement,
+Align view, Sketch over this and the calibrate tool; and the linked
+system file with Open in builder, an in-window switch to Build mode.
+RoboCAD stays the kernel and the reference: its command layer does every
+edit, and undo and provenance stay RoboCAD's. The components library,
+component jobs and the system graph moved to the new epic cad-components
+(see §9 "Later CAD epics"). The ledger rows are in
+[docs/cad-parity.md](../cad-parity.md) (108 rows: 38 moved to `later-epic:
+cad-components`; of the other 70, 44 `done-by-reading` and 26
+`deliberately different`; none open; one REST row added for the gap
+route; four earlier outliner context-menu rows became `done-by-reading`;
+the totals are in its Counts), and the side-by-side steps are in
+[docs/cad-checklist.md](../cad-checklist.md) Part I. Paths are relative
+to `crates/sim-spatial/src/` unless they name another crate. Each module
+root (`cad/tree.rs`, `cad/threads/mod.rs`, `cad/references/mod.rs`) has a
+doc comment listing what it does and its deliberate differences.
+
+### Shape
+
+| Module | What it owns |
+|---|---|
+| `crates/sim-runtime/src/cad_client/threads.rs` | The typed thread client: `CadClient::threads` (`threads_route`: `node_id`, `status`, `run_id`), `thread`, `create_thread` (`NewThread`), `update_thread` (`ThreadPatch`), `delete_thread`, `add_comment`, `comment`, `update_comment`, `delete_comment`; `CadThread`, `ThreadAnchor`, `AnchorStatus` (with `Unknown` for a state it does not know), `PartRef`, `LinkedPart`; `part_links` and `part_link` (RoboCAD's `[label](part:ID)`). Tests in `threads_tests.rs`. |
+| `crates/sim-runtime/src/cad_client/organize.rs` | `CadClient::group`, `move_nodes`, `set_active_group`, `set_locked`, `move_node` (the `PATCH /nodes/{id} {"parent", "index"}` form, client only). Tests in `organize_tests.rs`. |
+| `crates/sim-runtime/src/cad_client/references.rs` | `CadClient::import_references`, `update_reference` (`ReferenceUpdate`, only the given keys), `calibrate_reference`, `reference_image` (`ReferenceImage::decode`, `base64_decode`); `ImagePlacement::of` (a node's `image` without the bytes) and `corners`; `PlaneJson`. Tests in `references_tests.rs`. |
+| `crates/sim-runtime/src/cad_client/system_link.rs` | `CadClient::link_system`, `unlink_system`, `refresh_system_link`, `system_status` (`SystemStatus`, `LinkState`, `SystemStatus::line`: RoboCAD's four texts). Tests in `system_link_tests.rs`. |
+| `cad/robocad/api.py` (gap route) | `GET /nodes/{id}/image` in `Service.reference_image` (api.py:1317-1336, routed at 1492-1493): a reference image node's stored bytes in base64 with `format`, `width_px`, `height_px`, `bytes` and `revision`; 404 for a node that is not an image or has no stored bytes, 422 for bytes Pillow cannot read; read-only. Pytests `cad/tests/test_api_reference_image.py`. The only Python change. |
+| `annotations/mod.rs` | `InFlight` and `InFlight::land`: the seam a remote `ThreadSource` keeps its pending requests in and lands each job's answer through, as the sidecar sources land `sim_annotate::store::Store`'s. |
+| `cad/ops/catalogue/organize.rs` | The registry's `group.group` ("Group selection", `Ops.group(selection)` with the default name "Group") and `group.set_active` ("Set selected group as active", one group node; refused by name with none) as catalogue entries. |
+| `cad/tree.rs` | The outliner's module root: its doc, `command_action`, `menu_open` (read by `pick.rs` so a press that dismisses the menu does not select), `restarted` (on reconnect, from `sync`), and the plugin `build` (the kit fields, `input::search` after `keys::gate` and before `keys::keys`, the popup's input before `keys::gate`). |
+| `cad/tree/state.rs` | `TreeState` (on `CadDocument::tree`: search, `collapsed`, the anchor, the rename row, the menu, the dialog, the drag) and the pure readings: `matches`, `shown`, `range`, `index_of`, `move_plan` (a drop's parent and index with `Ops.move_nodes`' refusals), `group_paths`. |
+| `cad/tree/handle.rs` | `TreeOp`, `TreeArgs` (`CadAction::CadTree`, REST `cad_tree`) and the one `handle`: display ops on `TreeState`; `select_action` → `CadSelect`; `rename`, `flags` (Lock/Unlock, Hide/Show), `group`, move and set-active, each one RoboCAD call through `actions::edit_at`; `state_json` (`cad_state.tree`), `specs`. |
+| `cad/tree/controls.rs` | `controls_of`, `controls` (`cad:tree:*`) and `menu_rows`: the context menu's entries in RoboCAD's order, each with its action and readiness. |
+| `cad/tree/rows.rs` | `draw` and `highlight` (the rows, `Part::Tree`; `ACTIVE_GROUP`, `name_colour`), `tools` and `tools_key` (`Part::TreeTools`: the search field, New group, Expand all, Collapse all). |
+| `cad/tree/input.rs` | `search` (Ctrl/Cmd+F over the tree dock), `rows` (presses, the 400 ms double-click, Shift and Ctrl, and the drag from Bevy picking's pointer messages), `fields` (the search, rename and group-name kit fields). |
+| `cad/tree/popup.rs` | The context menu (a kit popup at the pointer) and the "Organize components" dialog: `draw` in Present, `input` in Input (its Escape before `keys::gate`). |
+| `cad/threads/mod.rs` | `ThreadsState`, `ThreadsArgs`/`ThreadsOp` (`CadAction::CadThreads`, REST `cad_threads`), `Filter` (`keeps`), `command_action`, `takes_clicks`, `shown`, `edit_answered` (lands commits through `InFlight::land`), `restarted`, `state_json`, `specs`. |
+| `cad/threads/source.rs` | `CadAnchor`, `thread_of` and `CadThreadSource` (the fourth `annotations::ThreadSource`): `validate` (RoboCAD's limits) and `commit`, one RoboCAD call per command (`Request::send`) through `edit_at`, reported `Committed::Pending`. |
+| `cad/threads/read.rs` | `tick`: `GET /threads` (all threads, `CadClient::threads(None, None, None)`) on a `Pool::Dedicated` job per (generation, revision, epoch); `thread` (a thread from the last list), `line` (a stale list's label), `wait` (a REST caller waits for the list at RoboCAD's revision). |
+| `cad/threads/ops.rs`, `controls.rs` | `handle` and its ops (`create`, `edit_message`, `link`, `label`, `insert_link`, …); `controls_of`, `controls` (`cad:threads:*`), `shown_threads` (the filter, applied locally), `attachment`, `submit_action`. |
+| `cad/threads/dock.rs`, `input.rs` | The Comments section (`Part::Comments`: `draw`, `key`, `label_dialog`, the panel's `CadHost`); the three kit fields (composer, author, part label) and `escape` (after `references::calibrate::escape`, before `transform::keys`). |
+| `cad/threads/annotate.rs`, `pins.rs`, `isolation.rs` | Annotate and Reattach… (`start`, `click`, `place`, `reattach`); the numbered pins (`entries`, `draw`, `press`); Show on model, Fit in view, Show only linked parts, Return to assembly and part links (`show`, `fit`, `view_parts`, `end`, `highlight`, `part_link`), display only. |
+| `cad/references/mod.rs` | `ReferencesState`, `ReferencesArgs`/`ReferencesOp` (`CadAction::CadReferences`, REST `cad_references`), `handle`, `command_action`, `controls`, `edit_answered`, `restarted`, `takes_clicks`, `state_json`, `specs`. |
+| `cad/references/dock.rs`, `form.rs`, `input.rs` | The References section (`Part::References`: `draw`, `key`); the placement form (`ROWS`, `PlacementForm::load`, `apply`, `update`); the kit fields (the placement rows, the path field of Add and Link, the calibrate tool's "Real distance"). |
+| `cad/references/edits.rs`, `reads.rs` | The edits (add with `image_path`, visible, `placement`, link, accept, unlink, remove), each one RoboCAD call through `edit_at`; the windowless reads (`tick`: placements per (generation, shown revision), the system status) and `receive` (the align after an import, Open in builder's window action, the path listing). |
+| `cad/references/align.rs`, `calibrate.rs`, `planes.rs`, `drop.rs`, `system_link.rs` | Align view and Sketch over this (`align`, `sketch`); Calibrate scale (`start`, `click`, `pick`, `distance`, `escape`, `markers`); the textured planes (`sync`, `decodable`, `decode`); dropped files (`drops`); the status line and Open in builder (`line`, `builder_target`, `open_builder`, `switch_action`). |
+| `cad/surfaces/registry.rs` | `Do::Organize(id)` → `organize_action` (`tree::command_action`, else `threads::command_action`, else `references::command_action`) for `view.references`, `reference.import`, `tool.annotate` (N), `view.comments` and `view.comment_pins`; `components.show` and `components.make` are `Native::Later("cad-components")`. |
+| `cad/keys.rs`, `cad/panel.rs`, `cad/pick.rs`, `builder/drafts.rs` | The clash table's Ctrl+F, N and Escape rows; `Part::TreeTools` above the tree and `Part::Comments`, `Part::References` at the top of the right dock (the panel's wheel stands aside over the outliner's popups); a press that dismisses the outliner menu or began with a click tool does not select (`tool_press`, `tree::menu_open`); Build mode's `drops` skips the frame Build mode is entered. |
+
+### Decisions
+
+- **RoboCAD's threads are a remote `ThreadSource` on edit jobs.**
+  `cad/threads/source.rs:CadThreadSource` implements
+  `annotations::ThreadSource`; each commit is one RoboCAD call through
+  `actions::edit_at` (refused by name when stale, in flight or
+  disconnected) and reports `Committed::Pending` with the edit's sequence;
+  its pending requests sit in `annotations::InFlight` and
+  `cad/threads/mod.rs:edit_answered` (called from
+  `cad/sync/mod.rs:finish_edit`) lands each answer through
+  `InFlight::land`. *Why:* §7's one annotations service and one thread
+  panel; the edit path already refuses what an edit must not do. Undo
+  stays RoboCAD's (the source refuses undo and redo by name).
+  *Rejected:* a CAD-only comments panel, a second thread UI.
+- **One list read, filtered locally.** `read.rs:tick` reads every thread
+  and the dock filters (`Filter::keeps`, `controls::shown_threads`), as
+  RoboCAD's `refresh` does; Show on model, Fit in view and Show only
+  linked parts read the thread from that list (`read::thread`), so no
+  viewer code calls `CadClient::thread`.
+- **One gap route, `GET /nodes/{id}/image`.** `node_detail` strips the
+  image bytes (api.py:141-142), so no route served a reference's pixels.
+  The route answers the stored bytes in base64 with format, pixel size and
+  revision; it is read-only. *Rejected:* reading the file at the image's
+  stored `path`, which may be gone or changed; the document holds the
+  bytes.
+- **`POST /threads/{id}/show` is reproduced natively.** It is GUI-only
+  (409 headless) and moves RoboCAD's own camera. Show on model restores
+  the thread's saved camera on the shared camera through `views::convert`;
+  Show only linked parts isolates the linked parts at display time only
+  (`cad/mesh.rs`), never calling `set_visible`, and Return restores the
+  camera, the selection and the whole `CadDisplay`. A thread of
+  experiment evidence is refused by name (cad-experiments-motion).
+- **Ctrl+F stays Fillet.** RoboCAD's keymap binds Ctrl+F to Fillet while
+  its outliner placeholder reads "Search (Ctrl+F)…". Here Ctrl+F focuses
+  the search only with the pointer over the model tree dock
+  (`tree/input.rs:search`, after `keys::gate` and before `keys::keys`,
+  consuming the key); elsewhere it is Fillet.
+- **`group.set_active` refuses with no group selected.** RoboCAD's
+  handler calls `set_active_group(None)` then, silently clearing the
+  active group under a "Set" label. The command refuses by name ("Select a
+  group to make it the active group"); the outliner menu's "Clear active
+  group" clears it.
+- **Comments and References are sections at the top of the right dock
+  while shown,** above the inspector (`panel::Part::Comments`,
+  `Part::References`), as Materials, Robot and Print jobs are sections;
+  the outliner's tools are `Part::TreeTools` above the tree.
+- **Open in builder switches this window.** RoboCAD starts a second
+  `sim-spatial --system … --schematic` process. Here
+  `references/system_link.rs:open_builder` sets `switch_to`, and
+  `references/reads.rs:receive` writes `system_link::switch_action`
+  (`WindowAction::Switch(ModeSwitch { mode: Build, document:
+  Document::Path })`) to `app/switch/mod.rs:handle`, which opens the file
+  through the document registry (`app/switch/prepare.rs`). Refused by name
+  with nothing written: without a window; unlinked or missing ("Link an
+  existing system file first"); while the status is not read for the
+  shown revision; and when leaving CAD mode is blocked
+  (`results::switch_refusal`, the live link's check). Nothing outside
+  `jobs` starts a process.
+- **Escape has one consumer per press, in a fixed order:** the outliner
+  popup's (`tree::popup::input`, before `keys::gate`), then the calibrate
+  tool's (`references::calibrate::escape`), then the threads'
+  (`threads::input::escape`: Annotate, else Return to assembly), then the
+  Select tool's (`transform::keys`). Each consumes the key only when it
+  acted (the `cad/keys.rs` Escape row).
+- **Drag-and-drop reads pointer messages, a recorded departure from §3.**
+  §3 keeps observer triggers for pointer events on entities. The
+  outliner's gesture (press, double-click timing, a pending plain press
+  on a selected row, the drag's slop, target and end) is one `Local`
+  spanning several events, and the rows are despawned and rebuilt during
+  a drag, so one Input system (`tree/input.rs:rows`) reads Bevy picking's
+  `Pointer<DragStart/Drag/DragEnter/DragOver/DragLeave/DragDrop/DragEnd>`
+  messages in order. Every `Pointer<E>` is both an `EntityEvent` and a
+  `Message` (`bevy_picking-0.19.1/src/events.rs:71-84`), written by
+  `pointer_events` beside each trigger (events.rs:597-614; 824-835
+  `DragEnter`; 1007-1031 `DragDrop` then `DragEnd` on release) in
+  PreUpdate's `PickingSystems::Hover` (lib.rs:428-454). Messages do not
+  bubble (the triggers propagate through `PointerTraversal`,
+  events.rs:95-125), so a hit on a row's chip resolves to the row by
+  walking `ChildOf`, and the row's labels are `Pickable::IGNORE`. The drop
+  is `tree/state.rs:move_plan`: on a group, into it (its top quarter, in
+  front of it: a recorded difference, so a group can be reordered); on
+  another row, in front of it under its parent; below the rows, the top
+  level; RoboCAD's refusals checked first; then one `Ops.move_nodes`.
+- **Dropped files: `FileDragAndDrop` in CAD mode only.**
+  `bevy_window-0.19.1/src/event.rs:372-406`: `FileDragAndDrop` is a
+  `Message` (`DroppedFile { window, path_buf }`, `HoveredFile`,
+  `HoveredFileCanceled`), registered by `WindowPlugin`; winit writes one
+  `DroppedFile` per file. The window has one drop target, so the modes
+  share it by state: `references/drop.rs:drops` runs only in CAD mode and
+  `builder/drafts.rs:drops` only in Build mode, and each skips the frame
+  its mode is entered (a reader gated off keeps its cursor, and messages
+  live two updates, so drops from the mode before would otherwise land).
+  A folder or a file without an image suffix is refused by name before
+  anything is sent (`references/edits.rs:image_path`; RoboCAD sends every
+  dropped file to `import_references`).
+- **Image formats: PNG and JPEG are textured.** sim-spatial enables
+  Bevy's `png` and `jpeg` features (`crates/sim-spatial/Cargo.toml`);
+  `references/planes.rs:decodable` takes png, jpeg, jpg and mpo (an MPO
+  decodes as its first JPEG frame) and `decode` builds the texture with
+  `Image::from_buffer` (`bevy_image-0.19.1/src/image.rs:1557`) on the read
+  job. WebP and BMP, which RoboCAD's file filter accepts, are imported,
+  placed and listed but not drawn; the References section says so for
+  each. Pixels are cached per (connection generation, node): RoboCAD never
+  changes an image node's bytes. *Revisit if* another image feature is
+  enabled.
+- **File paths are typed in the viewer's path field,** for Add reference
+  images… (one image per submit; absolute image paths only) and Link
+  system file…, as cad-views-export's file commands (no system file
+  dialog).
+
+### Reading trace (search → rename → drag into a group → Annotate a face → reply with a part link → Show only linked parts → Return → Open in builder)
+
+1. **Search.** Pointer over the tree, Ctrl+F → `cad/tree/input.rs:search`
+   (61; after `keys::gate`, before `keys::keys`) gives the kit's search
+   field the keyboard (`InputFocus`); typing → `TreeOp::Search` →
+   `cad/tree/handle.rs:handle` (195) → `TreeState` → `cad/tree/state.rs:matches`
+   (166) and `shown` (179) → `cad/tree/rows.rs:draw` (143) with every shown
+   row expanded and `TreeState::collapsed` unchanged.
+2. **Rename.** A second press on a row within 400 ms
+   (`cad/tree/input.rs:rows` (199), `DOUBLE_CLICK` (45)) →
+   `TreeOp::BeginRename` → the row's kit field with the name selected;
+   Enter → `TreeOp::Rename` → `cad/tree/handle.rs:handle` → `rename` (341;
+   stripped; unchanged: nothing sent; empty: refused by name) → one
+   `CadClient::patch {"name"}` through `cad/actions.rs:edit_at` → when it
+   answers, `cad/sync/mod.rs:finish_edit` (531) → refresh.
+3. **Drag into a group.** Press, drag past the slop, release on a group
+   row: `cad/tree/input.rs:rows` reads the `Pointer<DragStart … DragDrop,
+   DragEnd>` messages, `cad/tree/state.rs:move_plan` (236) gives (parent =
+   the group, index None) → `TreeOp::Move` → `handle.rs:handle` (Move at
+   247) → one `crates/sim-runtime/src/cad_client/organize.rs:CadClient::move_nodes`
+   through `edit_at` (262) → `finish_edit` → refresh.
+4. **Annotate a face.** N → `cad/keys.rs` → `CadInvoke { tool.annotate }`
+   → `cad/surfaces/registry.rs` `Do::Organize` → `organize_action` →
+   `cad/threads/mod.rs:command_action` (348) → `cad/threads/annotate.rs:start`
+   (48) → a left press over the 3D view → `click` (153: its own ray,
+   `transform::ray_hit`, the face through `CadMeshes::face_at` at the shown
+   revision) → `cad_threads {op: place}` → `place` (78: the Comments
+   section, the "+" pin, the composer); Post annotation →
+   `cad/threads/ops.rs:create` (315) → `annotations::apply`
+   (`annotations/mod.rs`, 219) → `cad/threads/source.rs:CadThreadSource::commit`
+   (426) → `Request::send` (282) → `CadClient::create_thread` on the edit
+   job → `cad/sync/mod.rs:finish_edit` calls
+   `cad/threads/mod.rs:edit_answered` (378, at sync 548) →
+   `InFlight::land` (384).
+5. **Reply with a part link.** Select a body, Insert part link from
+   selection → `cad/threads/ops.rs:insert_link` (426): `part_link(label,
+   id)` into the composer; Reply → `annotations::apply` →
+   `CadThreadSource::commit` → `CadClient::add_comment`.
+6. **Show only linked parts.** A press on the link → `cad/threads/dock.rs`
+   `CadHost::link` (70) → `ThreadsOp::PartLink` → `cad/threads/ops.rs:handle`
+   (272) → `cad/threads/isolation.rs:part_link` (286): `view_parts` (193;
+   the camera, selection and whole `CadDisplay` captured, the part and its
+   descendants shown alone, framed), then the selection exactly `[ID]`,
+   as `cad_select` selects it.
+7. **Return.** Escape → `cad/threads/input.rs:escape` (208; after
+   `references::calibrate::escape`, before `transform::keys`) →
+   `cad/threads/isolation.rs:end` (248): the camera, the selection
+   (without parts deleted since) and the whole `CadDisplay` restored.
+8. **Open in builder.** References ▸ Open in builder →
+   `CadAction::CadReferences` → `cad/references/system_link.rs:open_builder`
+   (122; `builder_target` (99), `switch_refusal` (94)) sets `switch_to` →
+   `cad/references/reads.rs:receive` (209) writes
+   `system_link::switch_action` (137; at reads 230) →
+   `app/switch/mod.rs:handle` (365) → Build mode on the linked file.
+
+### Tests (windowless)
+
+- `cad/tree/tests.rs`: `the_search_keeps_ancestors_and_descendants`,
+  `the_collapse_state_survives_an_edit_and_a_search`,
+  `shift_ranges_and_ctrl_toggles_write_the_expected_select`,
+  `a_drop_builds_robocads_parent_and_index`,
+  `every_tree_control_fits_its_pattern_and_round_trips_through_rest`,
+  `an_edit_while_another_is_in_flight_is_refused_with_nothing_sent`,
+  `renames_and_groups_are_checked_before_sending`.
+- `cad/threads/tests.rs`: `a_commit_is_refused_by_name_when_stale_and_pending_otherwise`,
+  `a_posted_pin_opens_the_new_thread_when_robocad_answers`,
+  `a_part_link_selects_as_cad_select_does`,
+  `showing_linked_parts_alone_never_writes_visibility`,
+  `every_threads_control_fits_its_pattern_and_round_trips`,
+  `thread_detail_maps_onto_the_annotations_thread`,
+  `a_whole_thread_change_is_one_patch_of_what_changed`.
+- `cad/references/tests.rs`: `controls_fit_the_pattern_and_round_trip_through_rest`,
+  `apply_placement_builds_robocads_one_update`,
+  `calibrate_refuses_equal_points_and_stale_picks`,
+  `the_align_camera_is_robocads_formula`,
+  `open_in_builder_switches_this_window_to_build_on_the_linked_file`,
+  `the_system_status_line_is_robocads`, `drops_are_taken_in_cad_mode_only`.
+- `annotations/tests.rs`: `a_remote_commit_lands_through_in_flight`.
+- `cad/surfaces/tests.rs`: `the_organize_rows_run_native_actions`.
+- `crates/sim-runtime/src/cad_client/threads_tests.rs` (a fake RoboCAD on
+  a loopback socket): `threads_read_tolerantly_with_filters_encoded`,
+  `an_unknown_anchor_state_and_malformed_fields_read_as_defaults`,
+  `create_update_and_delete_send_annotations_shapes`,
+  `comments_reply_read_edit_and_delete`,
+  `part_links_match_annotations_part_link`.
+- `crates/sim-runtime/src/cad_client/organize_tests.rs`:
+  `organize_ops_send_positional_args`,
+  `a_one_node_move_is_a_parent_and_index_patch`.
+- `crates/sim-runtime/src/cad_client/references_tests.rs`:
+  `reference_ops_send_only_the_given_keys`,
+  `an_import_without_a_plane_sends_null`,
+  `placement_reads_from_the_node_and_places_the_corners`,
+  `the_image_route_decodes_base64`, `base64_matches_pythons_encoder`.
+- `crates/sim-runtime/src/cad_client/system_link_tests.rs`:
+  `link_accept_and_unlink_are_one_op_each`,
+  `status_reads_every_state_and_writes_robocads_line`.
+- `cad/tests/test_api_reference_image.py`:
+  `test_image_route_returns_the_stored_bytes`,
+  `test_image_route_refuses_other_nodes` (2 passed in 4.5 s at b476b28e),
+  `test_image_route_refuses_missing_or_unreadable_bytes` (added after
+  review; its run timed out at 10 s, so unverified).
+
+### Review findings (six pair-reviewer passes, then fixes)
+
+Six passes by area: the client and `api.py`; the outliner; the threads
+and the annotations seam; the references and the system link; the
+shared wiring; the docs. By reading, they found no compile errors (not
+a substitute for a build). Fixed:
+
+- `api.py`: the image route refuses missing bytes (404) and bytes Pillow
+  cannot read (422); a pytest was added, unverified (its rerun timed out).
+- Client: `AnchorStatus` defaults to `Unknown` ("Attachment unknown", a
+  grey pin); a `part_refs` list keeps its good items when one is malformed.
+- Keys: Escape ordering made deterministic (tree popup → calibrate →
+  threads → Select tool); the Ctrl+F search ordered after `keys::gate`.
+- Outliner: a press that dismisses the outliner menu, or that started
+  with a click tool, no longer selects (`pick.rs` `tool_press`,
+  `tree::menu_open`); Shift+Ctrl range; frozen menu ids (the menu acts on
+  the nodes it opened for); the panel's wheel stands aside over the
+  outliner's popups.
+- Reconnect: `restarted()` for the tree, the threads and the references.
+- Threads: the draft is not lost when a post lands; isolation frames with
+  `CadMeshes::bounds_of`; bodies respawned during an isolation stay
+  hidden, and the overhang overlay hides with its body; no per-frame
+  document change while a thread read runs; no REST routes in window copy;
+  a REST revision waits for the read (`read::wait`); the isolation
+  restores the whole display.
+- References: the status read is requested when needed (Accept, Unlink
+  and Open in builder with the dock closed); failed placement reads are
+  shown; refusals of placement, calibrate, import and link are shown
+  (`edit_answered` gets the `Result`); MPO decoded; a Close button; the
+  builder's drop skips the frame Build is entered; non-image paths
+  refused; Align and Sketch over this use the placement read at the shown
+  revision; RoboCAD's calibrate hint; Open in builder refused without a
+  window; one shared `switch_refusal`.
+- A final pass over the fix round found one compile error, fixed: the
+  Comments dock's key moved the non-`Copy` `sending` out of a borrow
+  (`threads/dock.rs:key` now keys the sequence only). The calibrate and
+  threads Escape readers now stand aside while a file form is open
+  (`files::form` closes on Escape without consuming it).
+
+Low-severity leftovers, not fixed: the builder's existing drop and
+library import read files on the UI thread (pre-existing); one
+`GET /nodes/{id}` per image node per revision; WebP and BMP untextured;
+a reconnect during Show only linked parts drops the isolation without
+restoring the camera, selection and display it saved
+(`threads::restarted`).
+
+### Deliberately different (summary)
+
+26 rows, each with its reason in the ledger. The outliner: Ctrl+F only
+over the tree dock; expand and collapse refused while searching; a
+rename ends without renaming on focus loss, and an empty name (rename,
+New group, Group selection…) is refused by name; a drop on a group row's
+top quarter lands in front of it; "Move to group" is a heading, not a
+submenu; `group.set_active` refuses with no group selected. The threads:
+Annotate and Reattach pick on the press and leave the selection mode
+alone; "Attachment unknown" and a grey pin for an unknown state; Show on
+model, Show only linked parts and `POST /threads/{id}/show` reproduced
+from the thread list, evidence threads refused; a part row has a single
+press and the label dialog is inline; a part link selects exactly the
+linked node; Enter posts in the composer. The references: drops and
+paths that are not images refused by name, one image per submit in the
+path field, a drop anywhere on the CAD window; WebP and BMP not textured,
+MPO as JPEG, pixels cached per (connection, node); no preview thumbnail;
+the calibrate distance in the References section; an image off the
+nameable planes leaves the active plane and refuses Sketch over this;
+Link system file… in the path field; Open in builder switches this
+window to Build mode.
+
+### Verification checklist
+
+Nothing above was compiled or run, except the gap route's pytest (2
+passed at b476b28e; the third test, added after review, is unverified).
+To do in the verification pass:
+
+- [ ] `cargo build -p sim-spatial --lib --tests --bins` with no warnings
+  (the four stacked epics before this one build in the same pass).
+- [ ] `cargo test -p sim-spatial --lib --bins` (including
+  `app::tests::source_files_stay_small`, the registry cross-check,
+  `surfaces::tests::the_organize_rows_run_native_actions`, the keyboard
+  guard's allowlist and `jobs::tests::processes_are_started_only_in_jobs`),
+  and by name the `cad::tree`, `cad::threads` and `cad::references` tests
+  and `annotations::tests::a_remote_commit_lands_through_in_flight`.
+- [ ] `cargo test -p sim-runtime --lib cad_client` (the threads, organize,
+  references and system_link fake-server tests).
+- [ ] `cd cad && .venv/bin/pytest -q tests/test_api_reference_image.py`
+  (all three; then the whole RoboCAD suite).
+- [ ] In the window, [docs/cad-checklist.md](../cad-checklist.md) Part I
+  side by side with RoboCAD: search, expand and collapse, Shift/Ctrl
+  select, rename, drag into a group and before a sibling, the context
+  menu, New group; the Comments section, Annotate (N), a reply with a part
+  link, the link click, Show on model, Fit in view, Show only linked parts
+  and Return (and Escape), Resolve/Reopen, edit and delete a message,
+  delete a thread, pins, Reattach…; the References section, add and drop
+  images, visibility, placement, Align view, Calibrate scale, Sketch over
+  this, Remove reference; the system status line, Link, Accept changes,
+  Unlink and Open in builder.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -5669,7 +6049,19 @@ study's results in the stress overlay, with one api.py gap route
 17f90d08, review fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3) and
 pending verification. After it, the structural one-text-entry (see
 [One text entry](#one-text-entry-2026-10-01)) moved every CAD text field
-onto the kit field. Next: cad-organize.
+onto the kit field. The eighth, **cad-organize** (2026-10-01, see
+[CAD organize](#cad-organize-2026-10-01)), added the outliner's
+organization (search, expand and collapse, multi-select, inline rename,
+drag-and-drop, the context menu, the active group, New group), RoboCAD's
+comment threads as the fourth `annotations::ThreadSource` in the one
+`ui_kit::threads` panel (Annotate, pins, part links, Show on model, Fit
+in view, Show only linked parts), the References section with textured
+image planes and the calibrate tool, and the linked system file with Open
+in builder as an in-window switch to Build mode, with one api.py gap
+route (`GET /nodes/{id}/image`); it is written and reviewed by reading
+and pending verification: nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified). Its components and system-graph rows
+moved to cad-components. Next: the structural public-system-sets, then
+cad-components, then cad-experiments-motion.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -5684,8 +6076,9 @@ later, 23 deliberately different when planned; the planned cad-tools' 179
 rows were split 2026-10-01 into cad-select-transform, 63, and cad-modify,
 116; after cad-modify 245 are done by reading, 458 later and 70
 deliberately different; after cad-sketch 286, 398 and 89; after
-cad-views-export see the ledger's Counts). Ten gaps there have no
-headless route (15 before cad-physical-inspect added `GET /results/nodes`
+cad-views-export see the ledger's Counts). Eight gaps there have no
+headless route (10 before cad-organize added `GET /nodes/{id}/image`; 15
+before cad-physical-inspect added `GET /results/nodes`
 and `GET /physical?planar=1`; 17 before cad-views-export added `POST
 /save/thumbnail` and `GET /import/units`; 22 before cad-modify added five
 routes). Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
@@ -5805,18 +6198,38 @@ by the parity harness. Planned order:
    study with the split groups, which RoboCAD's handlers read in process,
    by the new `GET /print/study` (read-only, other methods 405; pytests
    `cad/tests/test_api_print_routes.py`).
-7. **cad-organize** (108 rows; planned as cad-annotations). Outliner
-   organization (search, groups, drag-and-drop, move to group, active
-   group, inline rename, multi-select), comments and threads with pins and
-   part links, references (images, placement, calibration, the linked
-   system file and opening it in builder mode), components (library,
-   place, recipes, occurrences, jobs) and the system graph. Routes:
-   `/threads*`, `/comments/{id}`, `GET /components`,
-   `/component-jobs/{id}`, `/system*`,
-   `POST /ops/group|move_nodes|set_active_group|import_references|update_reference|calibrate_reference|make_component|place_component|…`.
-   Gaps: reference image pixels (viewport and list preview) and the
-   geometry-rule recipes (`component_derivation.RECIPES`).
-8. **cad-experiments-motion** (63 rows). The experiments panel (Rhai
+7. **cad-organize** (108 rows when planned; planned as cad-annotations).
+   *Done 2026-10-01 pending verification, written and reviewed by
+   reading (nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)); see [CAD organize](#cad-organize-2026-10-01).
+   The Director moved 38 rows (components and the system graph) to
+   cad-components; of the other 70, 44 `done-by-reading` and 26
+   `deliberately different`; four earlier outliner context-menu rows
+   became `done-by-reading`; the reference-pixel gap closed by the new
+   `GET /nodes/{id}/image`.* Outliner organization (search, groups,
+   drag-and-drop, move to group, active group, inline rename,
+   multi-select), comments and threads with pins and part links (the
+   fourth `annotations::ThreadSource`, drawn by `ui_kit::threads`),
+   references (images, placement, calibration, the linked system file and
+   Open in builder, an in-window switch to Build mode). Routes:
+   `/threads*`, `/comments/{id}`, `GET /nodes/{id}/image`,
+   `POST /ops/group|move_nodes|set_active_group|set_locked|import_references|update_reference|calibrate_reference|link_system|unlink_system|refresh_system_link|system_status`.
+   Gaps, both closed: reference image pixels in the viewport and in the
+   list's preview (the same data).
+8. **cad-components** (38 rows; split out of cad-organize by the Director
+   2026-10-01). The components library dock (definitions, find, make from
+   selection and make linked, new parametric, place, edit defaults with
+   variants and nested parameters, import and export, the saved library),
+   occurrences and their overrides, detach, component jobs with rebuild
+   progress and cancel, the system graph (type chooser, the component
+   form, the geometry rule, the connection graph), `set_component_graph`
+   and `transform_components`. *Why separate:* it shares `sim_system`'s
+   graph types with Build mode and needs its own design (one graph model
+   for the builder and CAD, not a second editor). Routes:
+   `GET /components`, `/component-jobs/{id}` (GUI only), `GET/PUT /system`,
+   `/system/components|connections`,
+   `POST /ops/make_component|place_component|set_component_parameters|set_component_overrides|detach_component|import_component|export_component|…`.
+   Gap: the geometry-rule recipes (`component_derivation.RECIPES`).
+9. **cad-experiments-motion** (63 rows). The experiments panel (Rhai
    editors, profiles, runs, cancel, baseline and compare, linked files,
    restore inputs, auto-rerun, the catalogue), run review, candidate
    review, model scripts and batches, the pose panel, motion programs and
@@ -5926,9 +6339,14 @@ The Director re-ranks with evidence, but this is the default:
    Then the structural **one-text-entry** (2026-10-01; see
    [One text entry](#one-text-entry-2026-10-01)), done pending
    verification (by reading; nothing compiled or run).
-   Next: **cad-organize**.
+   **cad-organize** (2026-10-01; see [CAD organize](#cad-organize-2026-10-01))
+   is done pending verification (written and reviewed by reading;
+   nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)); its components and system-graph rows became the new epic
+   cad-components.
+   Next: the structural **public-system-sets** (the structural slot), then
+   **cad-components**.
    Remaining, in order (§9 "Later CAD epics"):
-   cad-organize, cad-experiments-motion.
+   cad-components, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
    each.
@@ -5939,9 +6357,10 @@ The Director re-ranks with evidence, but this is the default:
     [Fold in sim-app](#fold-in-sim-app-2026-09-30)).*
 
 **Bevy-practice epics** (added 2026-10-01; structural; the gaps are listed under
-"Bevy-practice gaps" in "Where it is today"). one-text-entry is done
-(pending verification); cad-organize is next (Director, 2026-10-01), then
-**public-system-sets**, which finishes the same ordering cleanup.
+"Bevy-practice gaps" in "Where it is today"). one-text-entry and
+cad-organize are done (pending verification); **public-system-sets** is
+next (the structural slot; Director, 2026-10-01), which finishes the same
+ordering cleanup, then cad-components, then cad-experiments-motion.
 Interleave the other two with the remaining CAD epics, keeping at least
 one epic in three structural:
 

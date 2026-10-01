@@ -57,7 +57,10 @@ pub const STRESS: &str = "planar v2 file: the stress overlay is not available (s
 /// Why the hardware mirror cannot pose a planar file (for `robot::hardware::mirror::scene_of`).
 pub const NO_MIRROR: &str = "planar v2 file: the leg mirror is not available (it poses a robot preset's scene; a planar v2 summary has no scene or PhysicalModel)";
 /// `robot_state.unavailable` for a planar file.
-pub const UNAVAILABLE: [(&str, &str); 10] = [
+/// Live motor sync (hardware panel) streams a live controller's named motor targets; a planar v2 run has none.
+pub const LIVE_SYNC: &str = "planar v2 file: live motor sync is not available (it streams a live walking controller's named motor targets; the planar v2 build holds joint targets with its own PD and names no motors)";
+
+pub const UNAVAILABLE: [(&str, &str); 11] = [
     ("motion", MOTION),
     ("save_recording", SAVE_RECORDING),
     ("replay", REPLAY),
@@ -68,9 +71,11 @@ pub const UNAVAILABLE: [(&str, &str); 10] = [
     ("overlay_stress", STRESS),
     ("graphs", GRAPHS),
     ("leg_mirror", NO_MIRROR),
+    ("live_sync", LIVE_SYNC),
 ];
 
-/// A planar file as read on the worker thread (never built there: the run thread builds it).
+/// A planar file as read on the worker thread (built there once only to
+/// refuse a file that cannot build; the run thread builds the robot it runs).
 pub struct PlanarLoaded {
     pub model: CadModel,
     /// The file's `version` as stored (None when absent: read as 2).
@@ -85,9 +90,12 @@ pub struct PlanarLoaded {
 
 /// Reads a planar file from the bytes the worker read (`raw` is the same bytes
 /// as JSON). Refused, naming the path: a unit other than mm (the planar build
-/// reads millimetres), no bodies, or a revolute/continuous joint naming an
-/// unknown body (the build's own errors, checked here so a failed reload keeps
-/// the last good model; the build drops other joint types before it looks).
+/// reads millimetres), no bodies, a revolute/continuous joint naming an
+/// unknown body, or anything else the shared build refuses or panics on: the
+/// build is tried once here, on the reload worker (off the UI thread), so a
+/// file that cannot build keeps the last good model and its run instead of
+/// replacing them with a failed one (`robot_source::RULE`). The run thread
+/// builds its own robot from the same model.
 pub fn load_bytes(path: &Path, bytes: &[u8], raw: &Value) -> Result<PlanarLoaded, String> {
     let name = path.display();
     let model: CadModel = serde_json::from_slice(bytes).map_err(|e| format!("{name}: planar v2 file: {e}"))?;
@@ -100,6 +108,11 @@ pub fn load_bytes(path: &Path, bytes: &[u8], raw: &Value) -> Result<PlanarLoaded
     }
     if let Some(j) = model.joints.iter().filter(|j| matches!(j.kind.as_str(), "revolute" | "continuous")).find(|j| !model.bodies.iter().any(|b| b.name == j.child)) {
         return Err(format!("{name}: planar v2 file: joint {} names an unknown body {}", j.name, j.child));
+    }
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| build_planar(model.clone()))) {
+        Ok(Ok(_)) => {}
+        Ok(Err(e)) => return Err(format!("{name}: planar v2 file does not build: {e}")),
+        Err(_) => return Err(format!("{name}: planar v2 file does not build: the planar build panicked (a duplicate joint or body name is the usual cause)")),
     }
     Ok(PlanarLoaded {
         declared_version: raw.get("version").and_then(Value::as_u64),
@@ -548,6 +561,9 @@ impl PlanarRun {
         json!({"thread": THREAD, "model": "sim_phenomena::scenarios::cad_robot::CadRobot (build_planar)", "phase": self.phase().name(), "requested_running": self.running,
             "generation": self.generation, "time": f.filter(|f| f.built).map(|f| f.time), "steps": f.map(|f| f.steps), "grid_s": GRID_S, "speed_scale": self.speed,
             "achieved_rate": f.and_then(|f| f.achieved_rate), "compute_s_per_sim_s": f.filter(|f| f.sim_s > 0.0).map(|f| f.compute_s / f.sim_s),
+            // robot_run's key names, so a client reading robot_state.run works for either generation.
+            "chunk_s": GRID_S, "rtf": f.and_then(|f| f.achieved_rate), "compute_limited": Value::Null,
+            "compute_limited_rule": "null for a planar v2 run: its pacing caps it near 1.2 × real time whatever the scale (pacing), so a shortfall against speed_scale is that cap, not compute; compute_s_per_sim_s is the compute measure",
             "error": f.and_then(|f| f.error.clone()), "pacing": PACING})
     }
 }
@@ -559,6 +575,10 @@ pub struct PlanarView {
     pub run: PlanarRun,
     /// The joint ←/→ select and ↑/↓ move (index in the built joint order).
     pub selected_joint: usize,
+    /// The joint selected before a reload, by name: resolved against the new
+    /// build's joint order on its first built frame (`selected_joint` then
+    /// points at it, else stays clamped to the joint count).
+    pub pending_joint: Option<String>,
     /// Red chain-tip dots (key C, overlay:contacts, robot_overlay contacts).
     pub contacts: bool,
     /// Frame the camera on the next built frame: Some(true) also moves the focus (an open), Some(false) only sets the extent (a reload keeps the camera).
@@ -568,7 +588,7 @@ impl PlanarView {
     /// Spawns the run thread for a loaded file (`generation`, speed and contacts carried over by the caller).
     pub fn new(loaded: PlanarLoaded, generation: u64, speed: f64, contacts: bool, move_camera: bool) -> Self {
         let run = PlanarRun::spawn(loaded.model.clone(), generation, speed);
-        Self { loaded, run, selected_joint: 0, contacts, frame_camera: Some(move_camera) }
+        Self { loaded, run, selected_joint: 0, pending_joint: None, contacts, frame_camera: Some(move_camera) }
     }
     /// The built joint names (empty until the first built frame).
     pub fn joint_names(&self) -> &[String] {
@@ -576,6 +596,17 @@ impl PlanarView {
     }
     pub fn selected_joint_name(&self) -> Option<&str> {
         self.joint_names().get(self.selected_joint).map(String::as_str)
+    }
+    /// Once built, point `selected_joint` at the joint selected before a
+    /// reload (by name), or clamp it to the new joint count.
+    pub fn resolve_pending_joint(&mut self) {
+        let names = self.joint_names();
+        if names.is_empty() {
+            return;
+        }
+        let index = self.pending_joint.as_ref().and_then(|n| names.iter().position(|j| j == n)).unwrap_or(self.selected_joint.min(names.len() - 1));
+        self.selected_joint = index;
+        self.pending_joint = None;
     }
     /// `robot_state.format` for a planar file.
     pub fn format_json(&self) -> Value {
@@ -776,6 +807,11 @@ mod tests {
         }
         let unit = FILE.replace(r#""unit":"mm""#, r#""unit":"in""#);
         assert!(crate::robot::load_file_bytes(path, unit.as_bytes()).err().unwrap().contains("unit `in`"));
+        // A closed loop is refused by the shared build on the worker (it used to never finish building).
+        let looped = FILE.replace(r#""limits":[-1.0,1.0]}]"#, r#""limits":[-1.0,1.0]},{"name":"back","type":"revolute","child":"ground","parent":"thigh","pivot2":[0,80]}]"#);
+        assert_ne!(looped, FILE);
+        let e = crate::robot::load_file_bytes(path, looped.as_bytes()).err().unwrap();
+        assert!(e.contains("does not build") && e.contains("joint back closes a loop"), "{e}");
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let v3 = root.join("examples/wheeled-robot/baseline/robot.simrobot.json");
         let bytes = std::fs::read(&v3).unwrap();

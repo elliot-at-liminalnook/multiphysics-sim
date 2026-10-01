@@ -1870,7 +1870,14 @@ unless they name another crate.
   `CadRobot::build`), and v3+ files report `physical v<N>`. Run, pause,
   step, reset, speed, joint select and target, tip contacts, outlines and
   COM dots, the watch and reload; everything without a v2 meaning is
-  refused by name (`robot_planar::UNAVAILABLE`).
+  refused by name (`robot_planar::UNAVAILABLE`, live motor sync included).
+  The reload worker tries the shared build once, so a file that cannot
+  build (a closed joint loop, which the build now refuses by name instead
+  of never finishing) keeps the last good model and its run; the selected
+  joint is carried across a reload by name. `robot_state.run` also carries
+  `robot_run`'s `chunk_s` and `rtf` keys (`compute_limited` is null: the
+  planar pacing cap, not compute, limits it). Verification pass
+  2026-10-01.
 - **Child processes** (`jobs/child.rs`): `spawn_detached` and
   `open_in_browser`; `reap_child` is private. The two `sim-viewer` launches,
   the builder's source links and the lesson's `open_url` use them.

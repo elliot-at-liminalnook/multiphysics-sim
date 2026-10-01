@@ -147,21 +147,33 @@ pub struct CadRobot {
 const SCALE: f64 = 1.0e-3; // mm → m
 
 /// Serial chains from the joint graph: each child of the root starts a chain
-/// that follows single children onward.
-fn chains_of(model: &CadModel, root: &str) -> Vec<Vec<CadJoint>> {
+/// that follows single children onward. A joint whose child is already in
+/// the tree (a closed loop, or a self-joint) is refused by name: following it
+/// would never end.
+fn chains_of(model: &CadModel, root: &str) -> Result<Vec<Vec<CadJoint>>, String> {
     let mut by_parent: HashMap<String, Vec<CadJoint>> = HashMap::new();
     for j in &model.joints {
         let parent = j.parent.clone().unwrap_or_else(|| root.to_string());
         by_parent.entry(parent).or_default().push(j.clone());
     }
     let mut chains = Vec::new();
+    let mut visited: std::collections::HashSet<String> = std::collections::HashSet::from([root.to_string()]);
+    let mut enter = |j: &CadJoint| -> Result<(), String> {
+        if visited.insert(j.child.clone()) {
+            Ok(())
+        } else {
+            Err(format!("joint {} closes a loop back to body {}: the planar simulator builds open serial chains only", j.name, j.child))
+        }
+    };
     let mut stack: Vec<CadJoint> = by_parent.get(root).cloned().unwrap_or_default();
     while let Some(first) = stack.pop() {
+        enter(&first)?;
         let mut chain = vec![first.clone()];
         let mut current = first.child.clone();
         loop {
             let children = by_parent.get(&current).cloned().unwrap_or_default();
             if children.len() == 1 {
+                enter(&children[0])?;
                 chain.push(children[0].clone());
                 current = children[0].child.clone();
             } else {
@@ -174,7 +186,7 @@ fn chains_of(model: &CadModel, root: &str) -> Vec<Vec<CadJoint>> {
         }
         chains.push(chain);
     }
-    chains
+    Ok(chains)
 }
 
 impl CadRobot {
@@ -245,7 +257,7 @@ impl CadRobot {
                 body_ports.push(foot.port("frame"));
             }
         }
-        let chain_specs = chains_of(&model, &root_body.name);
+        let chain_specs = chains_of(&model, &root_body.name)?;
         let mut joint_names = Vec::new();
         let mut seam_params: Vec<(&'static str, f64)> = vec![("period", 2.0e-3)];
         let mut chains_built = Vec::new();

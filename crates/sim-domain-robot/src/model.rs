@@ -1210,7 +1210,7 @@ impl PhysicalModel {
                 let found = if value.get("version").is_some() { format!("version {version}") } else { format!("no `version` (read as {version})") };
                 return Err(format!(
                     "simrobot file has {found}: this is the planar (v2) simrobot format, and the physical model \
-                     (sim-spatial robot mode, sim-cad, sim-runtime) needs version >= {FIRST_PHYSICAL_VERSION}. \
+                     (robot presets, robot mode's physical path, sim-cad, sim-runtime) needs version >= {FIRST_PHYSICAL_VERSION}. \
                      Open it with `sim-spatial --robot FILE` (which runs it through sim-phenomena's planar v2 build), or re-export it from RoboCAD, whose physical export writes version {FIRST_PHYSICAL_VERSION} or later"
                 ));
             }

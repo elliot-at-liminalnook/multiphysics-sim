@@ -35,7 +35,7 @@ const VALUE_REFRESH: f64 = 0.25;
 /// Seconds between chart redraws.
 const CHART_REFRESH: f64 = 0.1;
 /// The key bindings, shown in the status line.
-const HINT: &str = "] next  ·  [ previous  ·  1–9, 0 exhibits 1–10  ·  ←/→ knob (Shift ×5)  ·  R reset  ·  Space pause  ·  ↑/↓ speed  ·  right-drag orbit, middle-drag pan, wheel zoom";
+const HINT: &str = "] next  ·  [ previous  ·  1–9, 0 exhibits 1–10  ·  ←/→ knob (Shift ×5)  ·  R reset  ·  Space pause  ·  ↑/↓ speed  ·  right-drag orbit, middle or Shift+right-drag pan, wheel zoom";
 
 /// A kit widget's meaning: the phenomena action a press writes.
 #[derive(Component, Clone, Debug)]

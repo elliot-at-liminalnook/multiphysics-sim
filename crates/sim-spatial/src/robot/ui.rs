@@ -2,15 +2,9 @@
 //! (camera, light, header, link list, inspector dock and graph dock).
 use super::*;
 
-#[derive(Component, Clone, Copy)]
-pub(super) struct RobotOrbit {
-    pub(super) focus: Vec3,
-    pub(super) radius: f32,
-    pub(super) yaw: f32,
-    pub(super) pitch: f32,
-    pub(super) home: bool,
-    pub(super) extent: f32,
-}
+/// Robot mode's 3D camera (its orbit state is the shared `camera::Orbit`).
+#[derive(Component)]
+pub(super) struct RobotCamera;
 #[derive(Component)]
 pub(super) struct RobotRoot;
 #[derive(Component)]
@@ -118,12 +112,30 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
         stress_selected: materials.add(StandardMaterial { base_color: Color::WHITE, emissive: LinearRgba::rgb(0.35, 0.16, 0.02), perceptual_roughness: 0.6, cull_mode: None, ..default() }),
         mirrored: materials.add(StandardMaterial { base_color: LINK_COLOUR, emissive: Color::srgb_u8(0x1d, 0x4a, 0x7a).into(), perceptual_roughness: 0.7, metallic: 0.05, cull_mode: None, ..default() }),
     });
+    // The shared orbit camera (`crate::camera`); Camera3d's required components insert its perspective Projection.
+    let orbit = Orbit { focus: Vec3::ZERO, radius: 1.0, yaw: 0.7, pitch: 0.45, centre: Vec3::ZERO, extent: 0.3, ..default() };
     commands.spawn((
         Camera3d::default(),
         MeshPickingCamera,
         Tonemapping::None,
-        Transform::from_xyz(0.5, 0.6, 0.8).looking_at(Vec3::ZERO, Vec3::Y),
-        RobotOrbit { focus: Vec3::ZERO, radius: 1.0, yaw: 0.7, pitch: 0.45, home: false, extent: 0.3 },
+        orbit.transform(),
+        orbit,
+        // Drag 0.007 rad/px, pitch within ±1.4, zoom 0.3–20 × extent; a fit is
+        // the bounds at 3.2 × extent from the current heading; the docks are
+        // kept up to date by `scene::view_area`.
+        OrbitRules {
+            rate: 0.007,
+            pitch_limit: 1.4,
+            radius: RadiusLimits::Extent { min: 0.3, max: 20.0 },
+            framing: Framing::Bounds { scale: 3.2, aspect: false, view: None },
+            glide_home: false,
+            zoom_to_cursor: false,
+            yield_to_ui: false,
+            keys: true,
+            ..default()
+        },
+        ViewArea::Docks { left: LEFT, right: RIGHT, top: TOP, bottom: if view.graphs_visible { DOCK } else { 0.0 } },
+        RobotCamera,
     ));
     // UI over the whole window; the 3D camera only draws the middle viewport.
     commands.spawn((Camera2d, Camera { order: 3, clear_color: ClearColorConfig::None, ..default() }, IsDefaultUiCamera));

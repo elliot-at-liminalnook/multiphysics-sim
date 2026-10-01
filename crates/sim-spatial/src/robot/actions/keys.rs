@@ -14,8 +14,8 @@ pub(in crate::robot) fn buttons(clicks: Query<(&Interaction, &RobotAction), Chan
 
 /// Input: physical W/A/S/D (press/release) and X (Stop) while a built preset
 /// has a motion config: the same `RobotAction::Motion` as the buttons,
-/// `system_ui` motion:* and REST `robot_input`. Robot mode's camera is
-/// mouse-only, so these keys take no camera action. Bevy releases every key
+/// `system_ui` motion:* and REST `robot_input`. Robot mode's camera takes
+/// the mouse and the shared numpad camera keys, so these keys take no camera action. Bevy releases every key
 /// when the window loses keyboard focus, which requests zero, as the browser's blur.
 ///
 /// While the Leg calibration panel is shown, A is its hold-to-move key

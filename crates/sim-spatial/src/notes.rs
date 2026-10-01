@@ -46,11 +46,9 @@ pub(super) fn sync(scene: &mut SpatialScene, camera: &mut Orbit) {
         scene.note_navigation = nav.revision;
         if let Some(view) = doc.views.get(&nav.view) {
             if let Some(v) = &view.physical {
-                camera.focus = Vec3::from_array(v.focus);
-                camera.radius = v.radius;
-                camera.yaw = v.yaw;
-                camera.pitch = v.pitch;
-                camera.home = false;
+                // A cut: also ends a glide (which would carry on from its
+                // start) and returns from the trackball.
+                camera.glide_to(crate::camera::Pose { focus: Vec3::from_array(v.focus), radius: v.radius, yaw: v.yaw, pitch: v.pitch }, 0.0);
                 scene.state.exploded = v.exploded;
                 scene.state.connections = v.connections;
                 scene.state.hidden = v.hidden.clone();

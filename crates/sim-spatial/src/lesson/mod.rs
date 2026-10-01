@@ -645,7 +645,9 @@ impl Plugin for LearnPlugin {
             Update,
             (poll, practice::sketch_input, slider_live, chart_hover, ui::rebuild, ui::scroll, viewport, narrate::tick, playback, ui::live_text, narrate::live, narrate::overlay, practice::sketch_dots)
                 .chain()
-                .before(crate::camera_viewport)
+                // The card's place (`viewport` writes `learn_view`) and the
+                // cues' glides reach the camera before it is placed.
+                .before(crate::inspect_view::sync_camera)
                 .in_set(crate::app::ViewerSet::SimSync)
                 .run_if(open()),
         );

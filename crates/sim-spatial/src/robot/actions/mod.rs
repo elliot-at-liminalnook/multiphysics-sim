@@ -188,7 +188,7 @@ fn planar(view: &mut RobotView) -> Result<&mut PlanarView, String> {
 }
 /// A control action on a planar (v2) file: validated by [`check`], then applied
 /// to the planar run (Reset rebuilds from the loaded model; Reload re-reads the file).
-fn dispatch_planar(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -> Result<(), String> {
+fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction) -> Result<(), String> {
     check(view, &action)?;
     match action {
         RobotAction::Run { action } => planar(view)?.run.act(action)?,
@@ -230,7 +230,7 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAc
 }
 /// A control action: validated by [`check`] (motion and save validate in
 /// their own handler), then applied.
-fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -> Result<(), String> {
+fn dispatch(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction) -> Result<(), String> {
     if view.planar.is_some() {
         return dispatch_planar(view, orbit, action);
     }
@@ -275,6 +275,7 @@ fn dispatch(view: &mut RobotView, orbit: &mut RobotOrbit, action: RobotAction) -
             view.scroll_to = Some(0.0);
         }
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
+        // The bounds at 3.2 × extent from the current heading (`camera::place`).
         RobotAction::Fit => orbit.home = true,
         RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
         RobotAction::Speed { speed } => view.run.as_mut().ok_or("the robot has not loaded")?.speed(speed)?,
@@ -444,7 +445,7 @@ fn recorded_controls() -> Vec<(String, String, RecordedAction)> {
 /// The one handler of robot mode's actions: REST reads and the view's own
 /// requests here, control actions through `dispatch` (validated by
 /// `check`). `Ok(None)`: the answer is `robot_state`.
-fn handle(view: &mut RobotView, orbit: &mut RobotOrbit, action: &RobotAction) -> Result<Option<Value>, String> {
+fn handle(view: &mut RobotView, orbit: &mut Orbit, action: &RobotAction) -> Result<Option<Value>, String> {
     match action {
         RobotAction::State => Ok(Some(json!({"robot_state": view.state_json()}))),
         RobotAction::RobotState => Ok(None),
@@ -479,7 +480,11 @@ fn handle(view: &mut RobotView, orbit: &mut RobotOrbit, action: &RobotAction) ->
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
                 return Err("finite camera required; radius > 0 and pitch within ±1.5 radians".into());
             }
-            *orbit = RobotOrbit { focus: Vec3::from_array(*focus), radius, yaw, pitch, home: false, ..*orbit };
+            // The shared orbit, set absolutely: scripted motion stops, a pending fit is dropped, turntable.
+            orbit.interrupt();
+            (orbit.focus, orbit.radius, orbit.yaw, orbit.pitch) = (Vec3::from_array(*focus), radius, yaw, pitch);
+            orbit.home = false;
+            orbit.trackball = None;
             Ok(None)
         }
         control => dispatch(view, orbit, control.clone()).map(|()| None),
@@ -499,7 +504,7 @@ pub(super) fn apply(
     mut in_flight: ResMut<InFlight<RobotAction>>,
     mut replies: ResMut<Replies>,
     view: Option<ResMut<RobotView>>,
-    orbit: Option<Single<&mut RobotOrbit>>,
+    orbit: Option<Single<&mut Orbit, With<RobotCamera>>>,
     hardware: Option<Res<super::hardware::Hardware>>,
     mut to_hardware: MessageWriter<Act<super::hardware::HardwareAction>>,
 ) {

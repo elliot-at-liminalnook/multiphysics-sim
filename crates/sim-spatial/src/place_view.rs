@@ -6,11 +6,11 @@
 //! left-drag) to look around, wheel to change speed, P to toggle photo
 //! markers, 1–9 to jump to a scan station's view, H to toggle help.
 use bevy::asset::RenderAssetUsages;
-use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use crate::app::actions::{self, Act, InFlight, Replies, Spec, spec};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
+use crate::camera::fly::{Fly, orientation};
 use bevy::ecs::message::Messages;
 use serde::Deserialize;
 use sim_api::Outcome;
@@ -25,12 +25,6 @@ struct PlaceInfo {
     description: String,
 }
 
-#[derive(Component)]
-struct Fly {
-    yaw: f32,
-    pitch: f32,
-    speed: f32,
-}
 #[derive(Component)]
 struct PhotoMarker;
 #[derive(Component)]
@@ -130,7 +124,8 @@ impl PlaceView {
 
 /// Place mode: the walkthrough's scene is spawned on entering the Place
 /// scope; keys write its actions (Input), [`apply`] applies them and REST's
-/// (Actions), flying runs in SimSync and the REST snapshot in Present. Its
+/// (Actions), flying is the camera module's (`camera::fly`, SimSync's
+/// `CameraSet::Place`) and the REST snapshot is in Present. Its
 /// continuous update while focused is set on entering place mode and
 /// replaced on entering any other (`app::CorePlugin`).
 pub struct PlacePlugin;
@@ -142,7 +137,6 @@ impl Plugin for PlacePlugin {
             (
                 keys.after(actions::serve).in_set(ViewerSet::Input),
                 apply.in_set(ViewerSet::Actions),
-                fly.in_set(ViewerSet::SimSync),
                 publish.in_set(ViewerSet::Present),
             )
                 .run_if(in_state(ViewerMode::Place)),
@@ -153,7 +147,7 @@ impl Plugin for PlacePlugin {
 /// Every intent of place mode. REST keeps each command's JSON shape; keys
 /// 1–9 are `camera {station}`; P and H are the skipped toggles. (Flying with
 /// W/A/S/D/Q/E, dragging and the wheel are continuous camera motion, not
-/// actions: `fly`.)
+/// actions: `camera::fly`.)
 #[derive(Deserialize, Clone)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub(crate) enum PlaceAction {
@@ -345,37 +339,4 @@ fn setup(mut commands: Commands, fonts: Res<crate::ui_kit::UiFonts>, mut meshes:
             }
         });
     }
-}
-
-/// The fly camera's rotation from its yaw and pitch.
-fn orientation(fly: &Fly) -> Quat {
-    Quat::from_euler(EulerRot::YXZ, fly.yaw, fly.pitch, 0.0) * Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2)
-}
-
-/// SimSync: continuous flying (W/A/S/D, Q/E, Shift), mouse look and the wheel's speed.
-fn fly(time: Res<Time>, keys: Res<ButtonInput<KeyCode>>, buttons: Res<ButtonInput<MouseButton>>, mut motion: MessageReader<MouseMotion>, mut wheel: MessageReader<MouseWheel>, mut q: Query<(&mut Transform, &mut Fly)>) {
-    let Ok((mut t, mut fly)) = q.single_mut() else { return };
-    if buttons.pressed(MouseButton::Right) || buttons.pressed(MouseButton::Left) {
-        for m in motion.read() {
-            fly.yaw -= m.delta.x * 0.004;
-            fly.pitch = (fly.pitch - m.delta.y * 0.004).clamp(-1.5, 1.5);
-        }
-    } else {
-        motion.clear();
-    }
-    for w in wheel.read() {
-        fly.speed = (fly.speed * if w.y > 0.0 { 1.15 } else { 1.0 / 1.15 }).clamp(0.05, 8.0);
-    }
-    t.rotation = orientation(&fly);
-    let (forward, right) = (*t.forward(), *t.right());
-    let flat = Vec3::new(forward.x, 0.0, forward.z).normalize_or_zero();
-    let mut d = Vec3::ZERO;
-    if keys.pressed(KeyCode::KeyW) { d += flat; }
-    if keys.pressed(KeyCode::KeyS) { d -= flat; }
-    if keys.pressed(KeyCode::KeyD) { d += right; }
-    if keys.pressed(KeyCode::KeyA) { d -= right; }
-    if keys.pressed(KeyCode::KeyE) { d += Vec3::Y; }
-    if keys.pressed(KeyCode::KeyQ) { d -= Vec3::Y; }
-    let boost = if keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight) { 3.0 } else { 1.0 };
-    t.translation += d.normalize_or_zero() * fly.speed * boost * time.delta_secs();
 }

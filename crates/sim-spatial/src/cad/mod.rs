@@ -36,7 +36,9 @@
 //! by `DespawnOnExit`.
 mod actions;
 mod analysis_overlay;
+mod display;
 mod document;
+mod files;
 mod inspector;
 mod keys;
 mod measure;
@@ -46,6 +48,7 @@ mod ops;
 mod overlay;
 mod panel;
 mod pick;
+mod rest_form;
 mod scene;
 mod selection;
 mod sketch;
@@ -57,6 +60,7 @@ mod topology;
 mod transform;
 mod tree;
 mod view;
+mod views;
 #[cfg(test)]
 mod lifecycle_tests;
 #[cfg(test)]
@@ -132,7 +136,11 @@ impl Plugin for CadPlugin {
                 (
                     // After the name field, so a key that opens or ends it this frame is its own (`CadInputFocus`).
                     keys::keys.after(crate::app::actions::serve).after(panel::name_entry).in_set(ViewerSet::Input),
-                    (mesh::sync, mesh::highlight, scene::fit, scene::orbit, scene::viewport, view::update).chain().in_set(ViewerSet::SimSync),
+                    // The shared camera (`crate::camera`) navigates, sets the viewport and places
+                    // the view in its sets: a fit's home request goes in before the place step,
+                    // and the snapshot is taken after it.
+                    (mesh::sync, mesh::highlight, scene::fit).chain().before(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
+                    view::update.after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
             );
@@ -153,6 +161,12 @@ impl Plugin for CadPlugin {
         // cad-sketch: the plane tools and quads, the sketch tools, the
         // sketches drawn, extrude and revolve.
         sketch::build(app);
+        // cad-views-export: the display state, grid, build plate, view cube
+        // and section (display only); saved views over RoboCAD's /views;
+        // new, open, save as, import, export and render on jobs.
+        display::build(app);
+        views::build(app);
+        files::build(app);
     }
 }
 
@@ -166,6 +180,9 @@ pub(crate) fn clear(world: &mut World) {
         *plane = CadActivePlane::default();
     }
     world.remove_resource::<CadView>();
+    world.remove_resource::<display::CadDisplay>();
+    world.remove_resource::<views::CadViews>();
+    world.remove_resource::<files::CadFiles>();
     world.remove_resource::<mesh::CadMaterials>();
     if let Some(mut focus) = world.get_resource_mut::<CadInputFocus>() {
         focus.0 = false;

@@ -177,7 +177,7 @@ pub(super) fn playback(time: Res<Time>, mut learn: ResMut<Learn>, mut scene: Res
                 let aspect = view_aspect(&scene).unwrap_or(1.6);
                 let (yaw, pitch) = orbit.heading();
                 let pose = crate::view::frame_pose(&scene, Some(p), 1.0, yaw, pitch, aspect);
-                orbit.glide_to(pose, crate::view::GLIDE_S);
+                orbit.glide_to(pose, crate::camera::GLIDE_S);
             }
             None => frame(&scene, &mut orbit, &a.scene.camera.clone().unwrap_or_default()),
         }
@@ -212,7 +212,7 @@ pub(super) fn frame(scene: &SpatialScene, orbit: &mut Orbit, spec: &CameraSpec) 
     let (yaw, pitch) = spec.preset.map(|p| p.angles()).unwrap_or((0.35, 0.60));
     let aspect = view_aspect(&scene).unwrap_or(1.6);
     let pose = crate::view::frame_pose(scene, spec.focus.as_deref(), spec.zoom.unwrap_or(1.0), spec.yaw.unwrap_or(yaw), spec.pitch.unwrap_or(pitch), aspect);
-    orbit.glide_to(pose, crate::view::GLIDE_S);
+    orbit.glide_to(pose, crate::camera::GLIDE_S);
 }
 
 /// Times worth jumping to in a scene: captions, parameter changes and pauses.

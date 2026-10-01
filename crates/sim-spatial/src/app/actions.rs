@@ -358,6 +358,8 @@ pub fn registry() -> &'static [Feature] {
             feature::<crate::place_view::PlaceAction>("place", <crate::place_view::PlaceAction as Action>::commands),
             feature::<crate::cad::CadAction>("cad", <crate::cad::CadAction as Action>::commands),
             feature::<crate::phenomena::PhenomenaAction>("phenomena", <crate::phenomena::PhenomenaAction as Action>::commands),
+            // The shared camera's `camera_*` commands, in every orbit mode.
+            feature::<crate::camera::CameraAction>("camera", <crate::camera::CameraAction as Action>::commands),
             // `system_ui` in inspect and place mode: the switcher's controls (listed last, as before).
             feature::<WindowAction>("switcher", WindowAction::switcher_commands),
         ]

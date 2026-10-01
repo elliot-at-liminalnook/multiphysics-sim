@@ -148,11 +148,8 @@ fn view(scene: &SpatialScene, o: &Orbit) -> sim_inspect::annotations::PhysicalVi
     }
 }
 fn restore(scene: &mut SpatialScene, o: &mut Orbit, v: sim_inspect::annotations::PhysicalView) {
-    o.focus = Vec3::from_array(v.focus);
-    o.radius = v.radius;
-    o.yaw = v.yaw;
-    o.pitch = v.pitch;
-    o.home = false;
+    // A cut: also ends a glide (which would overwrite it) and the trackball.
+    o.glide_to(crate::camera::Pose { focus: Vec3::from_array(v.focus), radius: v.radius, yaw: v.yaw, pitch: v.pitch }, 0.0);
     scene.state.hidden = v.hidden;
     scene.state.exploded = v.exploded;
     scene.state.connections = v.connections;
@@ -465,8 +462,7 @@ impl Builder {
         }
         if count > 0. {
             center /= count;
-            o.focus = center;
-            o.radius = scene
+            let radius = scene
                 .spatial
                 .parts
                 .iter()
@@ -474,7 +470,9 @@ impl Builder {
                 .map(|p| (Vec3::from_array(p.position) - center).length() + 0.04)
                 .fold(0.04, f32::max)
                 * 3.;
-            o.home = false;
+            // A cut from the direction the view is settling on.
+            let (yaw, pitch) = o.heading();
+            o.glide_to(crate::camera::Pose { focus: center, radius, yaw, pitch }, 0.0);
         }
         if isolate {
             scene.state.hidden = scene

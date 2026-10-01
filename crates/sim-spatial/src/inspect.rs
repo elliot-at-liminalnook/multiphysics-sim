@@ -89,8 +89,16 @@ impl actions::Action for InspectAction {
 
 pub(crate) fn state(scene: &SpatialScene, camera: &Orbit) -> Value {
     json!({"description_id":scene.description.id,"selection":scene.selection,"display":scene.state,
-        "camera":{"focus":camera.focus.to_array(),"radius":camera.radius,"yaw":camera.yaw,"pitch":camera.pitch,"fit_pending":camera.home},
+        "camera":camera_json(camera),
         "annotations_revision":scene.note_document().revision,"annotation_emphasis":scene.note_hover,"annotation_error":scene.note_error,"parts_visible":scene.parts_visible,"compact":scene.compact,"live_status":scene.live_status(),"live_error":scene.live.error})
+}
+
+/// The shared camera's state (`camera_state`'s fields), with `fit_pending`
+/// kept for existing callers.
+fn camera_json(camera: &Orbit) -> Value {
+    let mut out = crate::camera::state_json(camera, None);
+    out["fit_pending"] = json!(camera.home);
+    out
 }
 
 /// The one handler of the spatial view's actions. `window` is None
@@ -121,7 +129,7 @@ pub(crate) fn handle(scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Op
         InspectAction::FlyTo => {
             if let Some(window) = window {
                 let focus = scene.details.components.iter().next().cloned().or_else(|| scene.state.selected.clone());
-                view::zoom_to(scene, camera, window, focus.as_deref(), 1.0, view::GLIDE_S);
+                view::zoom_to(scene, camera, window, focus.as_deref(), 1.0, crate::camera::GLIDE_S);
             }
             Outcome::Done(Ok(Value::Null))
         }
@@ -151,11 +159,8 @@ fn execute(scene: &mut SpatialScene, camera: &mut Orbit, action: &InspectAction)
             if !focus.iter().chain([radius, yaw, pitch].iter()).all(|x| x.is_finite()) || radius <= 0. || pitch.abs() > 1.5 {
                 return Err("finite camera required; radius > 0 and pitch within ±1.5 radians".into());
             }
-            camera.focus = Vec3::from_array(*focus);
-            camera.radius = radius;
-            camera.yaw = yaw;
-            camera.pitch = pitch;
-            camera.home = false;
+            // A cut: also ends any glide (which would overwrite it) and the trackball.
+            camera.glide_to(crate::camera::Pose { focus: Vec3::from_array(*focus), radius, yaw, pitch }, 0.0);
         }
         InspectAction::Fit => camera.home = true,
         InspectAction::Panels { parts, compact } => {

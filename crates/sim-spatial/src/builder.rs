@@ -540,11 +540,14 @@ impl Plugin for BuilderPlugin {
             Update,
             (frame_timing, watch, agent::tick, reference::tick, text_input.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
+                // Docks and home requests reach the shared camera before it is placed.
+                .before(crate::inspect_view::sync_camera)
                 .before(update_parts)
                 .in_set(ViewerSet::SimSync)
                 .run_if(in_state(ModeScope::Builder)),
         )
-        .add_systems(Update, placement::update.after(update_parts).in_set(ViewerSet::SimSync).run_if(building.clone()))
+        // Picks and handles read the placed camera.
+        .add_systems(Update, placement::update.after(update_parts).after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, (placement::apply_preview, placement::draw_handles).chain().after(placement::update).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, discussion::hover.after(notes::update).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, markers::sync.after(placement::apply_preview).after(discussion::hover).in_set(ViewerSet::SimSync).run_if(building.clone()))

@@ -64,7 +64,7 @@ fn apply(doc: &mut CadDocument, sketches: Option<&CadSketches>, action: &CadActi
     let mut continuation = Value::Null;
     let mut replies = Replies::default();
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc, meshes: None, topology: None, view: None, documents: &mut documents, plane: &mut plane, sketches };
+    let mut cx = Cx { doc, meshes: None, topology: None, view: None, documents: &mut documents, plane: &mut plane, sketches, display: None, views: None, files: None, camera: Vec::new() };
     crate::cad::actions::handle(action, &mut call, &mut cx)
 }
 

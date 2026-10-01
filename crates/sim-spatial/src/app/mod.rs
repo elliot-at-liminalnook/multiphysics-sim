@@ -212,6 +212,8 @@ pub fn run(launch: Launch) {
     }
     app.add_plugins((
         ModesPlugin { initial: mode },
+        // The one orbit/fly camera every mode's 3D view uses.
+        crate::camera::CameraPlugin,
         crate::SpatialViewerPlugin,
         crate::builder::BuilderPlugin,
         crate::lesson::LearnPlugin,

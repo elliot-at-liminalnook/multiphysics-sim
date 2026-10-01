@@ -16,7 +16,8 @@
 //!   keys, kit buttons, the knob slider, `system_ui` and REST; the REST
 //!   snapshot (Present).
 //! - [`keys`]: sim-app's bindings (Input). [`scene`]: cameras, light, the
-//!   entity pool and gizmos, the orbit. [`panel`]: the kit docks.
+//!   entity pool and gizmos, the shared orbit camera's spawn (its rules and
+//!   view area). [`panel`]: the kit docks.
 //! - **Teardown.** Entities go by `DespawnOnExit<ModeScope>`; [`leave`]
 //!   (OnExit, registered by `app::switch`) removes the gallery, remembers its
 //!   exhibit in `Documents::exhibit` and drops it off the UI thread (its run
@@ -111,7 +112,7 @@ impl Plugin for PhenomenaPlugin {
                 Update,
                 (
                     (keys::keys, panel::buttons, panel::slider).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input),
-                    (scene::orbit, scene::viewport, panel::scroll).chain().in_set(ViewerSet::SimSync),
+                    panel::scroll.in_set(ViewerSet::SimSync),
                     (scene::render, panel::rebuild, panel::refresh, panel::chart).chain().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Phenomena)),

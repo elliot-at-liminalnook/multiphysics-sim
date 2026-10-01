@@ -1,8 +1,9 @@
 //! Inspect mode's spatial assembly view: the [`SpatialScene`] resource, the
 //! [`SpatialViewerPlugin`] that draws it, and the 3D scene the builder (Build)
 //! and the lesson pages (Lessons) draw into. The scene and its parts
-//! (`scene`), the camera (`camera`) and the inspection panels (`ui`) are
-//! children; the crate root re-exports the names other modules use.
+//! (`scene`), the camera's data for the shared camera module (`camera`) and
+//! the inspection panels (`ui`) are children; the crate root re-exports the
+//! names other modules use.
 mod camera;
 mod scene;
 mod ui;
@@ -10,8 +11,8 @@ mod ui;
 use crate::app::{self, ModeScope, SpatialScreen, ViewerSet};
 use crate::{animation, inspect, linked, notes, physics_view, ui_kit, view};
 use bevy::prelude::*;
-use camera::orbit;
-pub(crate) use camera::camera_viewport;
+pub(crate) use camera::{spatial_rules, sync_camera};
+use crate::camera::CameraSet;
 use scene::{draw_guides, setup_scene};
 pub(crate) use scene::{spawn_parts, update_parts};
 use sim_inspect::selection::{SelectionDetails, SelectionTarget};
@@ -307,23 +308,20 @@ impl Plugin for SpatialViewerPlugin {
             .add_systems(Update, inspect::apply.in_set(ViewerSet::Actions).run_if(in_state(SpatialScreen)))
             .add_systems(
                 Update,
-                (
-                    notes::update,
-                    buttons,
-                    linked::sync_link,
-                    animation::sync_live,
-                    update_layout,
-                    camera_viewport,
-                    orbit,
-                    scroll_inspector,
-                    update_parts,
-                    linked::update_nets,
-                    update_ui,
-                    draw_guides,
-                    notes::guides,
-                    animation::draw_markers,
-                )
+                // The layout first: the camera's data (bounds, view area)
+                // goes to the shared camera before it sets the viewport.
+                (notes::update, buttons, linked::sync_link, animation::sync_live, update_layout, sync_camera)
                     .chain()
+                    .before(CameraSet::Viewport)
+                    .in_set(ViewerSet::SimSync)
+                    .run_if(in_state(SpatialScreen)),
+            )
+            .add_systems(
+                Update,
+                // Then what reads the placed camera.
+                (scroll_inspector, update_parts, linked::update_nets, update_ui, draw_guides, notes::guides, animation::draw_markers)
+                    .chain()
+                    .after(CameraSet::Place)
                     .in_set(ViewerSet::SimSync)
                     .run_if(in_state(SpatialScreen)),
             )
@@ -371,18 +369,6 @@ pub fn load_inspect(description: &std::path::Path, spatial: &std::path::Path) ->
 #[derive(Component)]
 pub(crate) struct Part {
     pub(crate) index: usize,
-}
-#[derive(Component, Default)]
-pub(crate) struct Orbit {
-    pub(crate) focus: Vec3,
-    pub(crate) radius: f32,
-    pub(crate) yaw: f32,
-    pub(crate) pitch: f32,
-    pub(crate) home: bool,
-    /// An eased camera move in progress (see `view.rs`).
-    pub(crate) glide: Option<view::Glide>,
-    /// Slow circling, rad/s; any learner input stops it.
-    pub(crate) spin: f32,
 }
 #[derive(Component)]
 struct PartsPanel;

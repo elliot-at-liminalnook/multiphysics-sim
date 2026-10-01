@@ -1,5 +1,5 @@
 //! Recorded-preset timeline: one worker thread owns a recorded preset's
-//! pre-mapped frames (`robot_preset::RecordedRun`), runs the playback clock and
+//! pre-mapped frames (`robot::preset::RecordedRun`), runs the playback clock and
 //! looks up the frame at or before the clock time with the shared
 //! `sim_runtime::embedded_capture::frame_at` (web/viewer/viewer.js `replayAt`).
 //! It publishes generation-stamped states; the UI thread only sends commands

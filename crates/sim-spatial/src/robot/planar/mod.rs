@@ -99,7 +99,7 @@ pub struct PlanarLoaded {
 /// unknown body, or anything else the shared build refuses or panics on: the
 /// build is tried once here, on the reload worker (off the UI thread), so a
 /// file that cannot build keeps the last good model and its run instead of
-/// replacing them with a failed one (`robot_source::RULE`). The run thread
+/// replacing them with a failed one (`robot::source::RULE`). The run thread
 /// builds its own robot from the same model.
 pub fn load_bytes(path: &Path, bytes: &[u8], raw: &Value) -> Result<PlanarLoaded, String> {
     let name = path.display();

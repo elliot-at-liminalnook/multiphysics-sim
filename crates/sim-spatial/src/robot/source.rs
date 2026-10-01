@@ -81,7 +81,7 @@ pub struct Checked {
 
 /// Stat, read, hash, compare with `loaded_hash` and (only when different)
 /// parse through the shared loader; then read the results file beside it
-/// (`robot_stress::read`). Called on a worker thread.
+/// (`robot::stress::read`). Called on a worker thread.
 pub fn check(path: &Path, loaded_hash: Option<&str>) -> Checked {
     let started = Instant::now();
     let stat = stat(path);

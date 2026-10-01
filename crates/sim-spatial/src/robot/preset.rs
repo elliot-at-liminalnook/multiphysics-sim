@@ -154,7 +154,7 @@ pub const RECORDED_LABEL: &str = "recorded physics (played back, not simulated h
 /// A recorded preset opened on the loader thread: the scene parsed as
 /// declared, the capture read by the shared `sim_runtime::embedded_capture`
 /// reader, and every frame mapped to the scene's links by name (the same
-/// mapping as live preset frames, `robot_run::map_poses`).
+/// mapping as live preset frames, `robot::run::map_poses`).
 pub struct RecordedRun {
     pub preset: Preset,
     /// Absolute scene path (the CAD link resolves against it).

@@ -2,15 +2,15 @@
 //! read-only. The shared `PhysicalModel` loader runs on a worker thread; each
 //! link's collision geometry is drawn at the exported assembly pose until a
 //! run starts. Run/Pause/Step/Reset drive the shared `PhysicalRobot` on the
-//! run thread (`robot_run`); links follow its frames. Nothing is written.
+//! run thread (`run`); links follow its frames. Nothing is written.
 //! A preset (`--robot-preset ID`, REST `robot_preset`) opens the same way:
 //! its scene's `robot` goes through the same loader, and the run thread runs
-//! the preset's shared EmbeddedEnvironment/EmbeddedSession (`robot_preset`).
-//! A FILE is watched and reloaded on change or Reload (`robot_source`); a
+//! the preset's shared EmbeddedEnvironment/EmbeddedSession (`preset`).
+//! A FILE is watched and reloaded on change or Reload (`source`); a
 //! reload replaces the model and starts a fresh run context.
 //! A planar (v2) FILE, which `PhysicalModel` refuses, is read as
 //! sim-phenomena's `CadModel` by the shared version rule and run through the
-//! shared planar build on its own run thread (`robot_planar`); every action
+//! shared planar build on its own run thread (`planar`); every action
 //! without a v2 meaning is refused naming it.
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;

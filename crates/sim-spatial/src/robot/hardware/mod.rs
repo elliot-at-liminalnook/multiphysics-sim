@@ -209,7 +209,7 @@ impl Hardware {
 /// What the leg mirror shows instead of the run's frame (`RobotView`'s
 /// `mirror`, written by `mirror_panel` when a pose is solved, cleared when
 /// the mirror ends): each loaded link's pose by index (model frame, as
-/// `robot_run::Frame::poses`) and the mirrored leg's links, tinted blue.
+/// `robot::run::Frame::poses`) and the mirrored leg's links, tinted blue.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct MirrorDisplay {
     pub poses: Vec<Option<([f64; 3], bevy::math::DQuat)>>,

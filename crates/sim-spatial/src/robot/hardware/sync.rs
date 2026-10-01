@@ -1,6 +1,6 @@
 //! Real motor sync: the port of `web/viewer/hardware-sync.mjs` against
 //! `serve_motor_bench`. Robot mode's live preset run publishes named motor
-//! targets on its frames (`robot_run::Frame::motor_targets`, the session's
+//! targets on its frames (`robot::run::Frame::motor_targets`, the session's
 //! `servo_targets_rad` and coordinate names); this streams the newest of them
 //! to the bench's `/live/*` routes. The bench maps them to three motors, the
 //! FPGA runs the loop, the watchdog and the 12-second session; nothing here

@@ -73,7 +73,7 @@ pub(crate) enum Do {
     Tool(CadTool),
     /// A display command (cad-views-export): `CadDisplay` or `CadSection`.
     Display(DisplayCmd),
-    /// RoboCAD's Saved Views panel (shown or hidden).
+    /// RoboCAD's Saved Views panel (shown).
     SavedViews,
     /// A file command (cad-views-export): `files::command_action(id)`
     /// (new, open, save as, import, export, export drawing; the path form
@@ -94,7 +94,8 @@ impl Do {
             Do::Mode(mode) => CadAction::CadSelectMode { mode },
             Do::Tool(tool) => CadAction::CadTool { tool },
             Do::Display(d) => d.action(),
-            Do::SavedViews => CadAction::CadViews(ViewsArgs { op: ViewsOp::Panel, ..ViewsArgs::default() }),
+            // Shown and raised, never hidden, as RoboCAD's `view.saved_views` (the panel's Close hides it).
+            Do::SavedViews => CadAction::CadViews(ViewsArgs { op: ViewsOp::Panel, open: Some(true), ..ViewsArgs::default() }),
             // Every `Do::File` id is one `files::command_action` maps (`surfaces::tests`).
             Do::File(id) => crate::cad::files::command_action(id).unwrap_or_else(|| panic!("{id}: no file action")),
         }

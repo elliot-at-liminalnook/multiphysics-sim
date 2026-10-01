@@ -142,11 +142,16 @@ pub fn capture(cam: &ViewCamera, display: &CadDisplay) -> ViewState {
 pub fn camera_of(state: &ViewState) -> Result<(CameraState, Option<String>), String> {
     state.check()?;
     let (yaw, pitch) = robocad_to_display(state.yaw as f32, state.pitch as f32);
+    // Checked in f64 by `check`; the camera's f32 must hold it too.
+    let radius = (state.distance / 1000.0) as f32;
+    if !(radius.is_finite() && radius > 0.0) {
+        return Err(format!("the view's distance {} mm does not fit the native camera", state.distance));
+    }
     let fov = state.fov.clamp(FOV_RANGE.0, FOV_RANGE.1);
     let note = (fov != state.fov).then(|| format!("the view's field of view {}° is outside the native camera's {}–{}° (RoboCAD's view.fov range); shown at {fov}°", state.fov, FOV_RANGE.0, FOV_RANGE.1));
     let camera = CameraState {
         focus: model_to_display(state.target).to_array(),
-        radius: (state.distance / 1000.0) as f32,
+        radius,
         yaw,
         pitch,
         orthographic: state.orthographic,

@@ -404,6 +404,11 @@ pub fn apply_section(d: &mut CadDisplay, a: &SectionArgs, cx: &SectionContext) -
     d.section = Section { enabled, plane };
     let asked = request.is_some();
     if let Some(key) = request {
+        // Asking again retries a failed answer (a transport error or a
+        // timeout); an answered section stays cached.
+        if d.exact.result.as_ref().is_some_and(|(k, r)| *k == key && r.is_err()) {
+            d.exact.result = None;
+        }
         d.exact.request = Some(key);
     }
     Ok(asked)

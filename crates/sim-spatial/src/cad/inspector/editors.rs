@@ -472,7 +472,8 @@ pub(in crate::cad) fn entry(
                         ended = true;
                         break;
                     };
-                    let unchanged = d.text.trim() == current_text(n, d.key);
+                    // The tolerance has no shown value (`current_text` is ""): an empty Enter is evaluated, so it names what to type.
+                    let unchanged = d.key != EditKey::Tessellation && d.text.trim() == current_text(n, d.key);
                     let result = if unchanged { Ok(None) } else { patch_for(n, d.key, &d.text, d.original).map(Some) };
                     // The transform is sent whole, its untouched components
                     // as read when the draft opened: refused once RoboCAD's

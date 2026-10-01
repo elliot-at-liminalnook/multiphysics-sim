@@ -148,11 +148,12 @@ pub(crate) struct FieldMsg {
 }
 impl Message for FieldMsg {}
 
-/// The one typing check: a kit text field has the keyboard.
+/// The one typing check: a kit text field has the keyboard. Read-only,
+/// so panels that draw a field read its draft through it too.
 #[derive(SystemParam)]
 pub(crate) struct Typing<'w, 's> {
     focus: Option<Res<'w, InputFocus>>,
-    fields: Query<'w, 's, &'static FieldId, With<TextField>>,
+    fields: Query<'w, 's, (&'static FieldId, &'static TextField)>,
 }
 impl Typing<'_, '_> {
     /// A text field has the keyboard.
@@ -161,7 +162,15 @@ impl Typing<'_, '_> {
     }
     /// The field that has the keyboard.
     pub(crate) fn field(&self) -> Option<FieldId> {
-        self.focus.as_ref().and_then(|f| f.get()).and_then(|e| self.fields.get(e).ok()).copied()
+        self.focus.as_ref().and_then(|f| f.get()).and_then(|e| self.fields.get(e).ok()).map(|(id, _)| *id)
+    }
+    /// `id` has the keyboard.
+    pub(crate) fn focused(&self, id: FieldId) -> bool {
+        self.field() == Some(id)
+    }
+    /// `id`'s working draft.
+    pub(crate) fn draft(&self, id: FieldId) -> Option<&TextDraft> {
+        self.fields.iter().find(|(f, _)| **f == id).map(|(_, t)| &t.draft)
     }
 }
 

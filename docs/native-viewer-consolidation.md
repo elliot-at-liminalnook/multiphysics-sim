@@ -2266,8 +2266,8 @@ the reference and is still needed for sketching, direct-edit tools,
 printing, experiments, motion and the other later CAD epics.
 
 Phenomena mode (batch fold-sim-app, 2026-09-30) is sim-app's former default
-scene, the live gallery of `sim_phenomena::exhibits`, each exhibit on its own
-`jobs::RunThread` on simulation time (`crates/sim-spatial/src/phenomena/`):
+scene, the live gallery of `sim_phenomena::exhibits`: one "phenomena-run"
+`jobs::RunThread` owns every exhibit and advances the shown one on simulation time (`crates/sim-spatial/src/phenomena/`):
 
 ```
 cargo run --release -p sim-spatial -- --phenomena                      # the first exhibit

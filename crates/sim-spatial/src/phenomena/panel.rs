@@ -277,7 +277,9 @@ pub(super) fn slider(tracks: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui
         (None, Some(v)) => {
             gallery.knob_drag = None;
             // A click that leaves the value where it is commits nothing: a knob change rebuilds the exhibit.
-            if v != knob.value {
+            // The exhibit reports its value back (possibly off the step grid or by an ulp), so compare snapped values with a tolerance.
+            let shown = knob_target(&knob, Some(knob.value), None);
+            if (v - shown).abs() > knob.step.abs().max(f64::EPSILON) * 1e-9 {
                 out.write(Act::ui(PhenomenaAction::PhenomenaKnob { value: Some(v), steps: None }));
             }
         }

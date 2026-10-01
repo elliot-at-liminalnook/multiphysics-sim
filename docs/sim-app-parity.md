@@ -83,7 +83,7 @@ a4fe42d3 (`git show a4fe42d3:crates/sim-app/src/<file>`).
 | C15 | v3: joint axes, deflections drawn | :317-325, :335-339 | `robot.rs` `draw` (overlays J, F) | done-by-reading (pre-existing robot mode); refused by name for v2 (`JOINT_FRAMES`, `DEFLECTIONS`) |
 | C16 | Ground grid | :277-292, :311-316 | `robot_planar.rs` `draw` (v2); robot mode's floor (v3) | done-by-reading |
 | C17 | Status: path, paused, error, time, speed, real-time ratio, joint angles and targets, warnings | :344-371 | `robot.rs` header and inspector (`robot_planar::run_line`, `inspector_text`); `robot_state.planar` | done-by-reading; the ratio is reported as `achieved_rate` (sim s per wall s) and `compute_s_per_sim_s`, since sim-app's "× real time" was the inverse |
-| C18 | Fidelity of a v2 file (sim-app showed none) | — | `robot_planar.rs` `FIDELITY`, `HEADER_LABEL`; `robot_state.format {version, name, fidelity}` (v3 reports `physical v3`) | done-by-reading (new) |
+| C18 | Fidelity of a v2 file (sim-app showed none) | — | `robot_planar.rs` `FIDELITY`, `HEADER_LABEL`; `robot_state.format {version, name, fidelity}` (v3+ files report `physical v<N>` from their version) | done-by-reading (new) |
 | C19 | Orbit camera (left-drag orbit, right-drag pan, wheel) | :373-395 | `robot.rs` `orbit` (right-drag, middle/Shift pan, wheel) | deliberately different: the viewer's orbit convention |
 | C20 | Features without a v2 meaning | — | `robot/actions.rs` `check_planar` with `robot_planar::{MOTION, SAVE_RECORDING, REPLAY, GAIT, RECORDED, JOINT_FRAMES, DEFLECTIONS, GRAPHS, STRESS, NO_MIRROR}` | done-by-reading (refused by name) |
 

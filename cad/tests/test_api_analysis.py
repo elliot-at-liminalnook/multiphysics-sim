@@ -117,3 +117,13 @@ def test_continuity_needs_geometry(served):
     _, client, _, _, sketch, _ = served
     assert _error(lambda: client.get(f"/nodes/{sketch}/continuity"), 404) == "Sketch has no geometry"
     assert _error(lambda: client.get("/nodes/nope/continuity"), 404) == "no node nope"
+
+
+def test_comb_scale_is_bounded_so_the_json_stays_finite(served):
+    _, client, _, _, _, curve = served
+    for big in ("1e7", "-1e300", "1e308"):
+        assert _error(lambda: client.get(f"/nodes/{curve}/curvature_comb?scale={big}"), 400) == (
+            f"scale must be at most 1e6 in magnitude, got '{big}'")
+    for edge in ("1e6", "-1e6"):
+        lines = client.get(f"/nodes/{curve}/curvature_comb?scale={edge}&samples=4")["lines"]
+        assert len(lines) == 4 and all(math.isfinite(c) for line in lines for p in line for c in p)

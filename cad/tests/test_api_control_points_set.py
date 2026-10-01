@@ -48,3 +48,33 @@ def test_points_grid_and_flat_points_convert():
         [(0.0, 1.0, 2.0), (3.0, 4.0, 5.0)], [(6.0, 7.0, 8.0), (9.0, 10.0, 11.0)]]
     assert conv._one("points", None, [[0, 1, 2], [3, 4, 5]]) == [(0.0, 1.0, 2.0), (3.0, 4.0, 5.0)]
     assert conv._one("points", "list", [[0, 1, 2]]) == [(0.0, 1.0, 2.0)]
+
+
+def test_second_edit_does_not_mutate_the_first_edits_undo_snapshot(served):
+    # After one edit the face is a B-spline; editing it again must work on a
+    # copy, or undo would bring back the second edit's poles.
+    doc, client, box = served
+    top = next(f["index"] for f in client.get(f"/nodes/{box}/faces") if f["normal"][2] > 0.9)
+    rows = client.get(f"/nodes/{box}/control_points?face={top}")["rows"]
+    first = [[[p[0], p[1], p[2] + 0.5] for p in row] for row in rows]
+    client.post("/ops/set_control_points", {"args": [box, {"node": box, "face": top}, first]})
+    top = next(f["index"] for f in client.get(f"/nodes/{box}/faces") if f["normal"][2] > 0.9)
+    got_first = client.get(f"/nodes/{box}/control_points?face={top}")["rows"]
+    second = [[[p[0], p[1], p[2] + 1.0] for p in row] for row in got_first]
+    client.post("/ops/set_control_points", {"args": [box, {"node": box, "face": top}, second]})
+    assert client.post("/undo")["undone"] == "Move control points"
+    back = client.get(f"/nodes/{box}/control_points?face={top}")["rows"]
+    assert [[pytest.approx(p) for p in row] for row in got_first] == back
+
+
+def test_a_grid_of_the_wrong_shape_is_refused(served):
+    doc, client, box = served
+    top = next(f["index"] for f in client.get(f"/nodes/{box}/faces") if f["normal"][2] > 0.9)
+    rows = client.get(f"/nodes/{box}/control_points?face={top}")["rows"]
+    undo_before = client.get("/history")["undo"]
+    for bad in (rows[:-1], [row[:-1] for row in rows], rows + [rows[0]]):
+        with pytest.raises(RuntimeError) as e:
+            client.post("/ops/set_control_points", {"args": [box, {"node": box, "face": top}, bad]})
+        assert "control points must be a" in str(e.value)
+    assert client.get("/history")["undo"] == undo_before
+    assert client.get(f"/nodes/{box}/control_points?face={top}")["rows"] == rows

@@ -105,3 +105,14 @@ def test_failed_paste_after_a_valid_item_leaves_the_document_untouched(served):
     assert after["nodes"] == before["nodes"]
     assert (after["revision"], after["dirty"]) == (before["revision"], before["dirty"])
     assert client.get("/history") == history
+
+
+def test_paste_passes_kernel_errors_through_unprefixed(served):
+    # Well-formed clip, unreadable B-rep: the kernel's message, as a 422.
+    _, client, _, _ = served
+    before = client.get("/")
+    history = client.get("/history")
+    clip = {"robocad_clipboard": True, "items": [{"node": {"name": "X"}, "brep": "00"}]}
+    assert _error(lambda: client.post("/clipboard/paste", {"clip": clip}), 422) == "could not read the B-rep data"
+    assert client.get("/")["nodes"] == before["nodes"]
+    assert client.get("/history") == history

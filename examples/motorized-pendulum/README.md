@@ -57,10 +57,12 @@ run each experiment separately instead of combining `--controller` with
 To view the generated mechanism:
 
 ```sh
-cargo run --release -p sim-app -- --scene cad --model runs/motorized-pendulum/pendulum.simrobot.json
+cargo run --release -p sim-spatial -- --robot runs/motorized-pendulum/pendulum.simrobot.json
 ```
 
-The viewer starts with the CAD model's zero target; Up/Down moves the target.
+Robot mode starts with the CAD model's zero target (control mode `hold`); the
+inspector's jog buttons move the `pivot` servo target, refused outside the
+file's limits.
 The saved benchmark traces record the two-step experiment.
 
 ## Acceptance contract

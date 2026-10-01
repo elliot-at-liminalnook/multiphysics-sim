@@ -317,16 +317,22 @@ move a joint's servo target. The mouse orbits, pans and zooms. The same
 controls are available over the viewer's REST API (`GET /v1/capabilities`
 on port 8421).
 
-If sim-spatial is not built, the live link falls back to the legacy
-`sim-app --scene cad --model …` window and the status line says so
-(build the native viewer with `cargo build --release -p sim-spatial`).
-sim-app is also the only viewer for **planar v2** files
-(`export_sim_model(..., version=2)`): it draws the bodies' section outlines
-in their simulated poses, holds every joint with a PD servo (arrow keys
-move the selected joint's target) and scales speed with +/-. sim-spatial
-refuses a v2 file with a message naming its version and
-`sim-app --scene cad`. `sim-cad model.simrobot.json 2` runs a model
-headless and prints the trajectory.
+If sim-spatial is not built, the live link launches nothing and the
+status line names the build command (`cargo build --release -p
+sim-spatial`); there is no fallback viewer (sim-app was retired on
+2026-09-30).
+
+**Planar v2** files (`export_sim_model(..., version=2)`) open in the same
+robot mode, run through sim-phenomena's shared planar build and labelled
+"planar v2 summary · uncalibrated · not the v3 physical model": it draws
+the bodies' section outlines in their simulated poses, holds every joint
+with a PD servo, and the keys are Space run/pause, R reset (rebuild from
+the loaded file), ←/→ select a joint, ↑/↓ move its target 0.01 rad per
+frame while held (Shift 0.05), C chain-tip contacts and `=`/`-` speed.
+Stress, gait preview, recordings, graphs, the joint-frame and deflection
+overlays and the leg mirror need a v3 export and are refused by name.
+`sim-cad model.simrobot.json 2` runs a model headless and prints the
+trajectory.
 
 ## The REST API (working alongside a script or an agent)
 
@@ -440,8 +446,7 @@ with geometric derivations, authored estimates and measurements:
 The file is `<name>.simrobot.json`, SI units, described key by key in
 `PHYSICAL_MODEL.md`. `sim-cad run model.simrobot.json` simulates it, and
 `sim-spatial --robot model.simrobot.json` shows it live (the Simulate
-viewer; `sim-app --scene cad --model …` is the fallback when sim-spatial
-is not built).
+viewer; there is no fallback when sim-spatial is not built).
 
 ## Results back in CAD
 

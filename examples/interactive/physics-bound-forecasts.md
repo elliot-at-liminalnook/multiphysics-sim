@@ -8,8 +8,8 @@ cannot silently reuse the model. Prediction results return the checked context.
 
 `RuntimeIdentity` records the library-source BLAKE3 and Cargo feature set. The build
 script hashes workspace manifests/lockfile plus crate manifests, build scripts,
-`src` resources and `native` sources, excluding `sim-app` and `sim-web` host
-crates. Native and WASM builds from the same library sources and features share
+`src` resources and `native` sources, excluding the `sim-web` host
+crate. Native and WASM builds from the same library sources and features share
 this identity. Comments and other source-only edits conservatively change it.
 It does not identify compiler flags, external system libraries, the executable,
 hardware or numerical equivalence; retain the separate fidelity provenance and

@@ -519,6 +519,32 @@ mod tests {
         assert!(build("n2", &bad).unwrap_err().contains("n2"));
     }
 
+    /// A face index is read from the drawn tessellation only while it is
+    /// at the shown revision: a body still drawn from revision 3 while
+    /// revision 4 is shown gives no face (its triangles index revision 3's
+    /// faces), and picking, hover and measure then give nothing.
+    #[test]
+    fn face_at_reads_only_a_tessellation_at_the_shown_revision() {
+        let mut meshes = CadMeshes::default();
+        let data = MeshData {
+            vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]],
+            triangles: vec![[0, 1, 2], [0, 2, 3]],
+            triangle_face: vec![5, 7],
+            face_count: 8,
+        };
+        meshes.insert_drawn("b1", 3, data);
+        assert_eq!(meshes.drawn_revision("b1"), Some(3));
+        for t in 0..2 {
+            assert!(meshes.face_of("b1", t).is_some());
+            assert_eq!(meshes.face_at("b1", t, 3), meshes.face_of("b1", t));
+            assert_eq!(meshes.face_at("b1", t, 4), None);
+        }
+        assert_eq!(meshes.face_at("b1", 1, 3), Some(7));
+        // A triangle past the tessellation, or a body not drawn, has no face.
+        assert_eq!(meshes.face_at("b1", 2, 3), None);
+        assert_eq!(meshes.face_at("b9", 0, 3), None);
+    }
+
     #[test]
     fn display_frame_is_z_up_millimetres() {
         // mm × 0.001 is not exact in f32 (3000 → 3.0000002).

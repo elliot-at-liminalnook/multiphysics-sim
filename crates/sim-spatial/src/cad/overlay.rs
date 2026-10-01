@@ -270,7 +270,7 @@ fn strip(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFon
                 Node {
                     position_type: PositionType::Absolute,
                     left: Val::Px(LEFT_WIDTH + 8.0),
-                    top: Val::Px(TOPBAR + 8.0),
+                    top: Val::Px(TOPBAR + super::surfaces::COMMAND_BAR + 8.0),
                     max_width: Val::Px(560.0),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexStart,

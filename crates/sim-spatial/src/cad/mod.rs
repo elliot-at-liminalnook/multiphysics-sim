@@ -49,6 +49,7 @@ mod pick;
 mod scene;
 mod selection;
 mod snap;
+mod specs;
 mod surfaces;
 mod sync;
 mod topology;

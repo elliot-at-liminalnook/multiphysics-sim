@@ -27,6 +27,7 @@
 //! older revision.
 mod args;
 mod catalogue;
+mod kinds;
 pub(super) mod interact;
 mod resolve;
 #[cfg(test)]
@@ -35,11 +36,17 @@ mod tests;
 pub(crate) use catalogue::CATALOGUE;
 
 use super::actions::{CadAction, Cx};
-use super::document::SelectMode;
+use super::document::{CadDocument, CadTool, EditDone, SelectMode};
+use super::sync::value;
+use super::topology::CadTopology;
+use super::view::CadView;
 use crate::app::actions::Call;
 use crate::ui_kit::form::{FieldKind, FieldValue};
-use serde_json::{Map, Value};
+use args::Built;
+use serde_json::{Map, Value, json};
 use sim_api::Outcome;
+use sim_runtime::cad_client::SelectionItem;
+use std::sync::OnceLock;
 
 /// What an operation needs selected (RoboCAD's handler reads
 /// `selection.nodes()`, `.edges()` or `.faces()`).
@@ -135,10 +142,15 @@ pub(crate) enum Arg {
     Param(&'static str),
     /// A fixed JSON value, written as JSON text ("[0, 0, 1]", "4", "\"union\"").
     Const(&'static str),
-    /// The direction the camera looks along (RoboCAD's `-camera.basis()[2]`).
+    /// The direction the camera looks along (RoboCAD's `-camera.basis()[2]`),
+    /// or the entry's `direction` parameter when given (REST without a view).
     ViewDir,
-    /// The snapped point under the pointer.
+    /// The snapped point under the pointer, or the entry's `point`
+    /// parameter when given.
     CursorSnap,
+    /// The shown revision the picks were read at (`extract_components`'s
+    /// `expected_revision`).
+    Revision,
 }
 
 /// How the arguments are built (keyed by route shape, not by operation).
@@ -154,9 +166,9 @@ pub(crate) enum Shape {
     Array,
     /// A primitive placed from the anchor (drag or plane origin) and the sizes.
     Place(Primitive),
-    /// Not an Ops call: the copy read (`GET /clipboard`).
+    /// Not an Ops call: the copy read (`POST /clipboard/copy`; read-only).
     Copy,
-    /// Not an Ops call: `POST /paste` with the copied items (one undo step "Paste").
+    /// Not an Ops call: `POST /clipboard/paste` with the copied items (one undo step "Paste").
     Paste,
     /// Read-only analysis reads, drawn as display-only overlays.
     ControlPoints,
@@ -318,11 +330,325 @@ pub struct OpsState {
     pub analysis: super::analysis_overlay::Analysis,
 }
 
+
 // ---- The handler ----------------------------------------------------------------
+
+/// The refusal for an id that is not in the catalogue.
+fn unknown(id: &str) -> String {
+    format!("unknown operation {id}; see cad_state.ops or GET /v1/capabilities")
+}
 
 /// The catalogue arms of `CadAction` (`CadInvoke`, `CadRun`, `CadFormSet`,
 /// `CadFormSubmit`, `CadFormCancel`), from `actions::handle`.
 pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
-    let _ = (action, call, cx);
-    todo!("ops::handle")
+    match action {
+        CadAction::CadInvoke { id } => invoke(id, call, cx),
+        CadAction::CadRun { id, params, items, revision } => match entry(id) {
+            None => Outcome::Done(Err(unknown(id))),
+            Some(e) => run(e, params, items.as_deref(), *revision, call, cx),
+        },
+        CadAction::CadFormSet { name, value } => Outcome::Done(form_set(cx.doc, name, value)),
+        CadAction::CadFormSubmit => submit(call, cx),
+        CadAction::CadFormCancel => Outcome::Done(Ok(form_cancel(cx.doc))),
+        _ => Outcome::Done(Err("not a CAD catalogue action".into())),
+    }
+}
+
+/// `CadInvoke`: what RoboCAD's command does when its menu entry, button or
+/// key fires (its handler in ui/app.py, or `set_tool`).
+fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
+    let Some(entry) = entry(id) else { return super::surfaces::invoke_command(id, call, cx) };
+    match entry.flow {
+        Flow::Immediate | Flow::AtCursorSnap => run(entry, &Map::new(), None, None, call, cx),
+        Flow::Form => {
+            // RoboCAD's handlers check the selection before their dialog opens.
+            if let Err(e) = resolve::resolve(entry, cx.doc, cx.topology.as_deref(), cx.view, None) {
+                return Outcome::Done(Err(e));
+            }
+            Outcome::Done(Ok(open_form(cx.doc, entry)))
+        }
+        Flow::PickThenForm(mode) => {
+            end_tool(call, cx);
+            let doc = &mut *cx.doc;
+            // As RoboCAD's EdgeTool/ShellTool.activate (ui/tools.py:946, :999):
+            // the mode is set directly and the selection is kept.
+            if doc.select_mode != mode {
+                doc.select_mode = mode;
+                super::selection::publish(doc);
+            }
+            doc.ops.active = Some(entry.id);
+            doc.ops.place = None;
+            let answer = open_form(doc, entry);
+            doc.show(Ok(entry.hint.to_string()));
+            Outcome::Done(Ok(answer))
+        }
+        Flow::Place(_) => {
+            end_tool(call, cx);
+            let doc = &mut *cx.doc;
+            doc.ops.active = Some(entry.id);
+            doc.ops.place = None;
+            let answer = open_form(doc, entry);
+            doc.show(Ok(entry.hint.to_string()));
+            Outcome::Done(Ok(answer))
+        }
+    }
+}
+
+/// RoboCAD's `set_tool` replaces the active tool: a transform tool's live
+/// work ends and Select becomes the tool before a pick or place operation starts.
+fn end_tool(call: &mut Call, cx: &mut Cx) {
+    if cx.doc.tool != CadTool::Select {
+        let _ = super::transform::handle(&CadAction::CadTool { tool: CadTool::Select }, call, cx);
+    }
+}
+
+/// `CadRun`: refused by name with nothing sent, else one edit job (or a read).
+fn run(entry: &'static OpEntry, params: &Map<String, Value>, items: Option<&[SelectionItem]>, revision: Option<u64>, call: &mut Call, cx: &mut Cx) -> Outcome {
+    match prepare(cx.doc, cx.topology.as_deref(), cx.view, entry, params, items, revision) {
+        Ok(built) => start(entry, built, call, cx.doc),
+        Err(e) => Outcome::Done(Err(e)),
+    }
+}
+
+/// Everything a run checks before sending: the commit refusal (an edit in
+/// flight, not connected, the shown document stale, RoboCAD's revision
+/// changed since `revision`), the selection against the entry's needs, the
+/// parameters, then the arguments.
+fn prepare(doc: &CadDocument, topology: Option<&CadTopology>, view: Option<&CadView>, entry: &OpEntry, params: &Map<String, Value>, items: Option<&[SelectionItem]>, revision: Option<u64>) -> Result<Built, String> {
+    if let Some(why) = doc.commit_refusal(revision) {
+        return Err(why);
+    }
+    let r = resolve::resolve(entry, doc, topology, view, items)?;
+    let values = values(entry, params)?;
+    args::build(entry, &r, &values, doc)
+}
+
+/// Send what was built: the calls in order inside one edit job (RoboCAD's
+/// handler loop; each call its own RoboCAD undo step; the first error stops
+/// the rest and is reported verbatim with how many had run), a paste, or a read.
+fn start(entry: &'static OpEntry, built: Built, call: &mut Call, doc: &mut CadDocument) -> Outcome {
+    let outcome = match built {
+        Built::Edit { calls, label } => {
+            let n = calls.len();
+            let message = if n > 1 { format!("{label} ({n} calls, each its own RoboCAD undo step)") } else { label.clone() };
+            super::actions::edit(doc, call, label, move |c| {
+                let mut results = Vec::with_capacity(n);
+                for (i, op) in calls.iter().enumerate() {
+                    match c.op(op.name, &op.args, &op.kwargs) {
+                        Ok(r) => results.push(value(&r)),
+                        Err(mut e) => {
+                            if n > 1 {
+                                e.message = format!("{} (call {} of {n}: {}; the {i} before it ran, each its own RoboCAD undo step)", e.message, i + 1, op.label);
+                            }
+                            return Err(e);
+                        }
+                    }
+                }
+                let result = if n == 1 { results.pop().unwrap_or(Value::Null) } else { Value::Array(results) };
+                Ok(EditDone { message, result })
+            })
+        }
+        Built::Paste { clip, label } => super::actions::edit(doc, call, label, move |c| {
+            c.paste(&clip).map(|p| EditDone { message: format!("Pasted {} item(s)", p.pasted.len()), result: value(&p) })
+        }),
+        Built::Read(read) => {
+            let revision = doc.shown_revision();
+            return Outcome::Done(super::analysis_overlay::start(doc, read, revision));
+        }
+    };
+    if !matches!(outcome, Outcome::Done(Err(_))) {
+        started(doc, entry);
+    }
+    outcome
+}
+
+/// After an edit started: RoboCAD's handler clears the selection where it
+/// does; a form-flow operation's form closes (RoboCAD's dialog has
+/// returned); a pick or place tool keeps its form and stays active.
+fn started(doc: &mut CadDocument, entry: &OpEntry) {
+    if entry.clears_selection && !doc.selection.is_empty() {
+        doc.selection.clear();
+        super::selection::publish(doc);
+    }
+    // A placed primitive is finished (RoboCAD's `commit` resets the stage).
+    if matches!(entry.flow, Flow::Place(_)) {
+        doc.ops.place = None;
+    }
+    if doc.ops.form.as_ref().is_some_and(|f| f.op == entry.id) {
+        if entry.flow == Flow::Form {
+            doc.ops.form = None;
+        } else if let Some(f) = doc.ops.form.as_mut() {
+            f.error = None;
+        }
+    }
+    doc.touch();
+}
+
+/// `CadFormSubmit`: the open form's drafts as `CadRun` parameters. A form
+/// flow's run is refused when RoboCAD's revision changed since the form
+/// opened; a pick or place tool's form stays open across its runs, so its
+/// picks carry their own guard (the selection's revision) instead.
+fn submit(call: &mut Call, cx: &mut Cx) -> Outcome {
+    let Some(form) = cx.doc.ops.form.clone() else { return Outcome::Done(Err("no form is open".into())) };
+    let Some(entry) = entry(form.op) else {
+        cx.doc.ops.form = None;
+        return Outcome::Done(Err(unknown(form.op)));
+    };
+    let params: Map<String, Value> = entry.params.iter().zip(&form.texts).map(|(p, t)| (p.name.to_string(), Value::String(t.clone()))).collect();
+    let revision = if entry.flow == Flow::Form { Some(form.began) } else { None };
+    let outcome = run(entry, &params, None, revision, call, cx);
+    if let Outcome::Done(Err(e)) = &outcome {
+        if let Some(f) = cx.doc.ops.form.as_mut().filter(|f| f.op == entry.id) {
+            f.error = Some(e.clone());
+        }
+        cx.doc.touch();
+    }
+    outcome
+}
+
+/// Open `entry`'s form with RoboCAD's defaults (or the drafts of the same
+/// form, when it is open already); a number field first takes the keyboard
+/// with its text selected (RoboCAD's dialog).
+fn open_form(doc: &mut CadDocument, entry: &'static OpEntry) -> Value {
+    let texts = match &doc.ops.form {
+        Some(f) if f.op == entry.id && f.texts.len() == entry.params.len() => f.texts.clone(),
+        _ => entry.params.iter().map(|p| p.default.to_string()).collect(),
+    };
+    // A dialog's first number field takes the keyboard; a pick or place
+    // tool's fields wait for Tab, as RoboCAD's numeric bar does.
+    let focus = match entry.params.first() {
+        Some(p) if entry.flow == Flow::Form && matches!(p.kind, FieldKind::Number { .. }) => Some(0),
+        _ => None,
+    };
+    let began = doc.shown_revision();
+    doc.ops.form = Some(FormState { op: entry.id, texts, focus, select_all: true, began, error: None });
+    doc.touch();
+    json!({"opened": entry.id, "form": form_json(doc)})
+}
+
+/// `CadFormSet`: one draft (a string as typed; a bool or number as its
+/// text; `[x, y, z]` as "x, y, z").
+fn form_set(doc: &mut CadDocument, name: &str, value: &Value) -> Result<Value, String> {
+    {
+        let Some(form) = doc.ops.form.as_mut() else { return Err("no form is open".into()) };
+        let entry = entry(form.op).ok_or_else(|| unknown(form.op))?;
+        let Some(i) = entry.params.iter().position(|p| p.name == name) else {
+            let names: Vec<&str> = entry.params.iter().map(|p| p.name).collect();
+            return Err(format!("{} has no parameter {name} (its parameters: {})", entry.id, if names.is_empty() { "none".to_string() } else { names.join(", ") }));
+        };
+        let text = match value {
+            Value::String(s) => s.clone(),
+            Value::Array(a) => a.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "),
+            other => other.to_string(),
+        };
+        form.texts.resize(entry.params.len(), String::new());
+        form.texts[i] = text;
+        if form.focus == Some(i) {
+            form.select_all = false;
+        }
+        form.error = None;
+    }
+    doc.touch();
+    Ok(form_json(doc))
+}
+
+/// `CadFormCancel` (Cancel, Escape): close the form and end its interaction.
+fn form_cancel(doc: &mut CadDocument) -> Value {
+    let form = doc.ops.form.take().map(|f| f.op);
+    let active = doc.ops.active.take();
+    let place = doc.ops.place.take().is_some();
+    if form.is_none() && active.is_none() && !place {
+        return json!({"closed": null});
+    }
+    let what = active.or(form).and_then(entry).map_or("", |e| e.label);
+    doc.show(Ok(format!("Cancelled {what}")));
+    json!({"closed": {"form": form, "active": active, "place": place}})
+}
+
+/// The open form as `cad_state.ops.form` shows it: each field's draft,
+/// whether it is shown (its `when`), and its evaluation or error.
+fn form_json(doc: &CadDocument) -> Value {
+    let Some(form) = &doc.ops.form else { return Value::Null };
+    let Some(entry) = entry(form.op) else { return Value::Null };
+    let text_of = |name: &str| entry.params.iter().position(|p| p.name == name).and_then(|i| form.texts.get(i)).map(String::as_str);
+    let fields: Vec<Value> = entry
+        .params
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            let text = form.texts.get(i).map_or("", String::as_str);
+            let shown = p.when.is_none_or(|(on, is)| text_of(on) == Some(is));
+            let evaluation = if !shown {
+                Value::Null
+            } else if text.is_empty() && p.default.is_empty() {
+                json!({"ok": true, "optional_or_required": "empty"})
+            } else {
+                match param_value(p, &Value::String(text.to_string())) {
+                    Ok(v) => json!({"ok": true, "value": v}),
+                    Err(e) => json!({"ok": false, "error": e}),
+                }
+            };
+            let mut f = Map::new();
+            f.insert("name".into(), json!(p.name));
+            f.insert("label".into(), json!(p.label));
+            f.insert("kind".into(), json!(format!("{:?}", p.kind)));
+            f.insert("text".into(), json!(text));
+            f.insert("default".into(), json!(p.default));
+            f.insert("shown".into(), json!(shown));
+            f.insert("evaluation".into(), evaluation);
+            Value::Object(f)
+        })
+        .collect();
+    let mut out = Map::new();
+    out.insert("op".into(), json!(entry.id));
+    out.insert("label".into(), json!(entry.label));
+    out.insert("fields".into(), Value::Array(fields));
+    out.insert("focus".into(), json!(form.focus));
+    out.insert("began".into(), json!(form.began));
+    out.insert("error".into(), json!(form.error));
+    Value::Object(out)
+}
+
+/// Every catalogue entry as `cad_state.ops.catalogue` lists it (built once).
+fn catalogue_json() -> &'static Value {
+    static JSON: OnceLock<Value> = OnceLock::new();
+    JSON.get_or_init(|| {
+        Value::Array(
+            CATALOGUE
+                .iter()
+                .map(|e| {
+                    let params: Vec<Value> = e.params.iter().map(|p| json!({"name": p.name, "label": p.label, "default": p.default, "when": p.when})).collect();
+                    let mut m = Map::new();
+                    m.insert("id".into(), json!(e.id));
+                    m.insert("label".into(), json!(e.label));
+                    m.insert("category".into(), json!(e.category));
+                    m.insert("keys".into(), json!(e.keys));
+                    m.insert("flow".into(), json!(format!("{:?}", e.flow)));
+                    m.insert("route".into(), json!(e.route));
+                    m.insert("params".into(), Value::Array(params));
+                    Value::Object(m)
+                })
+                .collect(),
+        )
+    })
+}
+
+/// `cad_state.ops`: the open form with its fields and evaluations, the
+/// active operation, the primitive being placed, the open command surface,
+/// the cursor snap, the clipboard and the catalogue.
+pub(super) fn state_json(doc: &CadDocument) -> Value {
+    let ops = &doc.ops;
+    let mut out = Map::new();
+    out.insert("form".into(), form_json(doc));
+    out.insert("active".into(), json!(ops.active));
+    out.insert("place".into(), ops.place.as_ref().map_or(Value::Null, |p| json!(format!("{p:?}"))));
+    out.insert("surface".into(), ops.surface.as_ref().map_or(Value::Null, |o| json!({"surface": o.surface, "highlight": o.highlight})));
+    out.insert("cursor_snap".into(), json!(ops.cursor_snap));
+    out.insert(
+        "clipboard".into(),
+        ops.clipboard.as_ref().map_or(Value::Null, |(revision, clip)| json!({"revision": revision, "items": clip.get("items").and_then(Value::as_array).map_or(0, Vec::len)})),
+    );
+    out.insert("analysis".into(), super::analysis_overlay::state_json(&ops.analysis));
+    out.insert("catalogue".into(), catalogue_json().clone());
+    Value::Object(out)
 }

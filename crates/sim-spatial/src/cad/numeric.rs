@@ -113,8 +113,10 @@ pub(super) fn spawn(mut commands: Commands) {
 }
 
 /// What the fields are computed from: generation, tool, selection, the
-/// double-clicked entry, the topology's and meshes' epochs, the shown revision.
-type FieldsKey = (u64, CadTool, Vec<SelectionItem>, Option<DimensionEntry>, u64, u64, u64);
+/// double-clicked entry, the topology's and meshes' epochs, the shown
+/// revision, and whether a catalogue form is open (the bar then yields:
+/// `transform::fields` is empty).
+type FieldsKey = (u64, CadTool, Vec<SelectionItem>, Option<DimensionEntry>, u64, u64, u64, bool);
 
 /// SimSync: the fields follow the tool and the selection (see the module
 /// doc). They are recomputed only when what they come from changes (live
@@ -124,7 +126,7 @@ pub(super) fn sync(doc: Option<ResMut<CadDocument>>, topology: Option<Res<CadTop
     if doc.tool_state.dimension.is_some() {
         keep_entry(&mut doc);
     }
-    let inputs: FieldsKey = (doc.generation, doc.tool, doc.selection.clone(), doc.tool_state.dimension.clone(), topology.as_ref().map_or(0, |t| t.epoch), meshes.as_ref().map_or(0, |m| m.epoch), doc.shown_revision());
+    let inputs: FieldsKey = (doc.generation, doc.tool, doc.selection.clone(), doc.tool_state.dimension.clone(), topology.as_ref().map_or(0, |t| t.epoch), meshes.as_ref().map_or(0, |m| m.epoch), doc.shown_revision(), doc.ops.form.is_some());
     if cache.as_ref().is_none_or(|(k, ..)| *k != inputs) {
         let list = fields(&doc, topology.as_deref(), meshes.as_deref());
         let key = format!("{}|{list:?}", doc.tool.name());

@@ -4,7 +4,7 @@
 //! [`apply`] (ViewerSet::Actions) is the one handler. Mutations go to
 //! RoboCAD's command layer through its REST routes on jobs, so RoboCAD's
 //! undo, provenance and `.rcad` file stay its own.
-use crate::app::actions::{self, Spec, spec};
+use crate::app::actions;
 use crate::app::ViewerMode;
 use super::document::{CadTool, SelectMode};
 use serde::{Deserialize, Serialize};
@@ -243,51 +243,6 @@ pub enum CadAction {
     CadPhysical,
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
-}
-
-impl actions::Action for CadAction {
-    fn commands() -> Vec<Spec> {
-        vec![
-            spec("state", CAD, json!({}), "CAD mode: the same answer as cad_state, plus viewer_mode."),
-            spec("cad_state", CAD, json!({}), "CAD mode: the RoboCAD document as this window shows it: target (file or service URL), service (self-started or attached; url, pid), connection (connecting | connected | lost with the error verbatim), health (RoboCAD's GET /: path, dirty, gui, nodes, document_id, revision), stale (why the shown tree may be behind RoboCAD, or null), nodes (id, kind, name, parent, depth, visible, effective_visible, locked, disabled), selection (RoboCAD's items [node, kind, index], synced with its /selection), select_mode (body | face | edge | vertex | point), hover (the item under the pointer, display only), candidates (the Alt menu while open), selection_error (why the last read of RoboCAD's /selection failed, or null), unsaved (RoboCAD's dirty flag, or null when it can't be confirmed: not connected, or an edit in flight or just finished), inspected (RoboCAD's node detail for the first selected node, exactly as returned), physical (fetched with cad_physical), history (undo and redo labels), commands (RoboCAD's GUI registry; empty headless), autosave (GUI only), edit (the mutating request in flight, by name), meshes (shown, pending, failed), tool (the active tool), tool_state (pivot, drag and preview with the revision each began at, push/pull target, numeric fields with their evaluations, last measurement, snap, readout) and status (the last outcome)."),
-            spec("cad_open", CAD, json!({"path": "examples/camera-turntable/cad/turntable.rcad"}), "CAD mode: open a .rcad file (path: RoboCAD's headless service is started on it with cad/.venv/bin/python -m robocad.api PATH --port N, and stopped when the document closes) or attach to a running RoboCAD (url, loopback only, e.g. http://127.0.0.1:8420; never stopped). Refused, naming the reason, while an edit is in flight or while a self-started document has unsaved edits or edits whose saved state can't be confirmed (not connected to it; save first: the viewer never saves for you). Answers once the service is starting; poll cad_state for the connection."),
-            spec("cad_select", CAD, json!({"items": [["n1", "face", 2]], "extend": false}), "CAD mode: select items as RoboCAD writes them (items: [[node, kind, index], ...], kind body | face | edge | vertex | point; ids: node ids as body items [id, \"body\", 0]; [] clears; extend adds like Shift; toggle adds or removes like Ctrl). The same action as a click on a tree row, a pick or box select in the 3D view, or a choice in the Alt menu. Pushed to RoboCAD's PUT /selection with the selection mode, so RoboCAD's window shows it too; RoboCAD's own selection changes come back on the next poll."),
-            spec("cad_select_mode", CAD, json!({"mode": "face"}), "CAD mode: the selection mode (body | face | edge | vertex | point; RoboCAD's B, Shift+B, E, V, P): what a click in the 3D view picks. Clears the selection, as RoboCAD does. A headless RoboCAD does not store the mode (its GET /selection has none), so the viewer holds it; a desktop RoboCAD's mode is adopted when it changes there."),
-            spec("cad_hover", CAD, json!({"item": ["n1", "face", 2]}), "CAD mode: the hover highlight (item [node, kind, index], or null to clear). Display only: nothing is sent to RoboCAD."),
-            spec("cad_box_select", CAD, json!({"rect": [300.0, 200.0, 600.0, 450.0]}), "CAD mode: box select over the window rectangle rect [x0, y0, x1, y1] (logical pixels), as RoboCAD's drag: in body mode the bodies whose bounding box lies inside, in edge mode the edges whose sampled polylines lie inside, in vertex mode the vertices inside. extend keeps the selection (Shift or Ctrl)."),
-            spec("cad_candidates", CAD, json!({"items": [["n1", "face", 2], ["n2", "face", 0]]}), "CAD mode: open the Alt+click menu over stacked candidates (items as cad_select's; extend, toggle say how a choice applies). Its entries are system_ui controls cad:candidate:<n>."),
-            spec("cad_select_all", CAD, json!({}), "CAD mode: RoboCAD's Select All (Ctrl+A): every visible body, sheet, curve, instance and mesh, as body items."),
-            spec("cad_invert_selection", CAD, json!({}), "CAD mode: RoboCAD's Invert Selection (Ctrl+Shift+I): the visible bodies, sheets, curves, instances and meshes not selected now."),
-            spec("cad_select_same_material", CAD, json!({}), "CAD mode: RoboCAD's Select Same Material (Ctrl+Shift+M): every node with the first selected node's material."),
-            spec("cad_edges_to_faces", CAD, json!({}), "CAD mode: RoboCAD's 'Selection: edges → bounding faces': each selected edge becomes the faces it bounds (found from RoboCAD's tessellation: faces with a triangle side along the edge), and the mode becomes face."),
-            spec("cad_tool", CAD, json!({"tool": "move"}), "CAD mode: activate a tool (select | move | rotate | scale | push_pull | offset_face | measure; RoboCAD's Escape, G, R, S, D, Shift+D, M). Move, rotate and scale place the gizmo at the first selected node's pivot (else the selection's centre); push/pull and offset target the first selected face; measure takes two picks. Display only until a commit."),
-            spec("cad_transform", CAD, json!({"translation": [10.0, 0.0, 0.0]}), "CAD mode: commit a transform as exactly one POST /ops/transform (RoboCAD's Ops.transform: translation [dx, dy, dz] mm, or axis [x, y, z] with angle_deg about center, or a uniform scale factor about center) on the selected nodes or ids. revision: RoboCAD's revision the preview began at (refused, naming it, when the document changed since). Refused while another edit is in flight. RoboCAD's command layer applies it as one undo step."),
-            spec("cad_push_pull", CAD, json!({"node": "n1", "face": 3, "distance": 5.0}), "CAD mode: push/pull planar face index face of node by distance mm along its normal: exactly one POST /ops/push_pull (one undo step in RoboCAD). revision as cad_transform's. Refused while another edit is in flight."),
-            spec("cad_offset_faces", CAD, json!({"node": "n1", "faces": [3], "distance": 1.5}), "CAD mode: offset faces of node by distance mm: exactly one POST /ops/offset_faces (one undo step). revision as cad_transform's."),
-            spec("cad_set_dimension", CAD, json!({"node": "n1", "dimension": "diameter", "faces": [4], "value": 8.0}), "CAD mode: set a live dimension of the selected faces (RoboCAD's live_dimensions): diameter of a cylindrical face (faces [f], set_diameter), distance between two parallel planar faces (faces [a, b], b moves, set_distance) or angle between two planar faces (faces [a, b], degrees, set_angle). Exactly one POST /ops call; revision as cad_transform's."),
-            spec("cad_numeric", CAD, json!({"values": ["20mm + 0.3"]}), "CAD mode: the numeric bar's Enter: values are the active tool's fields as typed (move dx dy dz, rotate angle, scale factor, push/pull or offset distance, a live dimension), each a unit expression RoboCAD's numeric bar accepts (20mm + 0.3, 1in, pi*10, 45deg; bare numbers are mm or degrees), evaluated by sim_runtime::units. An error names the token and its position. Commits through the tool's one call."),
-            spec("cad_measure", CAD, json!({"a": {"item": ["n1", "face", 0], "point": [0.0, 0.0, 0.0]}, "b": {"item": ["n1", "face", 5], "point": [0.0, 0.0, 20.0]}}), "CAD mode: measure between two picks as RoboCAD's measure tool (distance between parallel planar faces, the angle between faces or between line edges, an edge's radius when both picks are the same circular edge, else the points' distance). Answers the measurement; keep (RoboCAD's Shift+click) also adds it as a measure node with exactly one POST /ops/add_measurement."),
-            spec("cad_cancel", CAD, json!({}), "CAD mode: Escape: cancel a preview and return to the Select tool; in the Select tool, clear the selection. Nothing is sent to RoboCAD except the cleared selection."),
-            spec("cad_patch", CAD, json!({"id": "n1", "attrs": {"visible": false}}), "CAD mode: PATCH /nodes/{id} with attrs exactly as RoboCAD accepts them (name, visible, locked, disabled, material, color, pivot, transform, parent, index, tessellation_tolerance, plane, sketch): RoboCAD's command layer applies it as one undo step. One edit at a time: refused while another is in flight. Answers RoboCAD's node detail, or its error verbatim."),
-            spec("cad_delete", CAD, json!({"id": "n1"}), "CAD mode: DELETE /nodes/{id} through RoboCAD's delete command (undoable there). Refused while another edit is in flight."),
-            spec("cad_undo", CAD, json!({}), "CAD mode: POST /undo: RoboCAD undoes its last command; answers the label undone and the history."),
-            spec("cad_redo", CAD, json!({}), "CAD mode: POST /redo: RoboCAD redoes; answers the label redone and the history."),
-            spec("cad_save", CAD, json!({}), "CAD mode: POST /save: RoboCAD writes its document to its own path (or path, to save as). The viewer never writes the .rcad itself."),
-            spec("cad_command", CAD, json!({"id": "view.fit"}), "CAD mode: run a RoboCAD GUI registry command by id (POST /commands/{id}; ids from cad_state.commands). RoboCAD's desktop window only: a headless service answers 409 \"no GUI\", shown verbatim."),
-            spec("cad_op", CAD, json!({"name": "rename", "args": ["n1", "Bracket"]}), "CAD mode: call RoboCAD's command layer (POST /ops/{name} {args, kwargs}; names and signatures from RoboCAD's GET /ops). Works headless. Refused while another edit is in flight."),
-            spec("cad_refresh", CAD, json!({}), "CAD mode: refetch RoboCAD's /doc, /commands and /autosave now."),
-            spec("cad_fit", CAD, json!({}), "CAD mode: frame the native 3D view on every shown body, or on node id. Display only: RoboCAD's own view and the geometry are not changed."),
-            spec("cad_physical", CAD, json!({}), "CAD mode: fetch RoboCAD's physical description (GET /physical?flex=0; nothing is written) for the inspector: the link holding the selected body, its mass, centre of mass and inertia, and mass_sources as RoboCAD labels them (declared measurement source, material density, ...), never filled in."),
-            spec("system_ui", CAD, json!({"action": {"operation": "controls"}}), "CAD mode: its controls (cad:undo, cad:redo, cad:save, cad:refresh, cad:fit, cad:physical, cad:delete, cad:node:<id> to select a tree row, cad:visible:<id> to toggle visibility, cad:locked:<id> to toggle locked, cad:disabled:<id> to toggle disabled, cad:material:<id>:<mat> to assign material <mat> (an id from RoboCAD's /doc materials) to node <id>, cad:command:<id> for RoboCAD's registry commands, cad:mode:<mode> for a selection mode, cad:select_all, cad:invert_selection, cad:select_same_material, cad:edges_to_faces, cad:candidate:<n> for an entry of the open Alt menu, cad:tool:<tool> to activate a tool, cad:cancel for Escape), each with enabled and disabled_reason, then the mode switcher's mode:* controls; activate {id} writes the same CAD action a click does."),
-        ]
-    }
-    fn controls() -> &'static [&'static str] {
-        &[
-            "cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:<id>", "cad:visible:<id>", "cad:locked:<id>", "cad:disabled:<id>", "cad:material:<id>:<mat>", "cad:command:<id>",
-            "cad:mode:<mode>", "cad:select_all", "cad:invert_selection", "cad:select_same_material", "cad:edges_to_faces", "cad:candidate:<n>", "cad:tool:<tool>", "cad:cancel",
-            "cad:op:<id>", "cad:surface:<kind>", "cad:menu:<category>", "cad:form:ok", "cad:form:cancel", "cad:form:set:<name>:<value>",
-        ]
-    }
 }
 
 // ---- The one handler -------------------------------------------------------
@@ -668,7 +623,7 @@ pub(super) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Value
         json!({"shown": m.counts.shown, "pending": m.counts.pending, "no_mesh": m.counts.no_mesh,
             "failed": m.counts.failed.iter().map(|(id, e)| json!({"id": id, "error": e})).collect::<Vec<_>>()})
     });
-    json!({
+    let mut state = json!({
         "target": doc.target.json(),
         "document": doc.document_name(),
         "service": {
@@ -702,7 +657,10 @@ pub(super) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Value
         "status": doc.status.as_ref().map(|s| match s { Ok(t) => json!({"ok": true, "text": t}), Err(e) => json!({"ok": false, "text": e}) }),
         "revision": doc.revision,
         "generation": doc.generation,
-    })
+    });
+    // Outside the macro: one more key there would pass json!'s recursion limit.
+    state["ops"] = super::ops::state_json(doc);
+    state
 }
 
 /// Present: `/v1/state` (with `viewer_mode`) and `/v1/cad_state`, at most every 100 ms.

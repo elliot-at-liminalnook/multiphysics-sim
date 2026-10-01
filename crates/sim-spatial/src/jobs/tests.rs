@@ -291,14 +291,31 @@ fn exited_reports_a_finished_child_and_none_while_running() {
     done.stop();
 }
 
-/// Nothing outside `src/jobs/` starts a thread (native-viewer.md §4).
+#[cfg(unix)]
 #[test]
-fn threads_are_started_only_in_jobs() {
+fn spawn_detached_keeps_running_reaps_and_names_a_failure() {
+    let pid = spawn_detached("detached helper sleeper", command("sleep", &["0.3"])).unwrap();
+    assert!(pid_alive(pid), "a detached process is not killed");
+    assert!(within(Duration::from_millis(1500), || !pid_alive(pid)), "pid {pid} ended and was reaped");
+    let e = spawn_detached("the missing companion", command("/no/such/dir/sim-spatial-missing-program", &[])).unwrap_err();
+    assert!(e.starts_with("could not start the missing companion: "), "{e}");
+}
+
+#[test]
+fn open_in_browser_refuses_anything_but_a_web_link() {
+    // Refused before any opener is started.
+    for url in ["file:///etc/hosts", "/tmp/notes.md", "ftp://example.com", ""] {
+        assert_eq!(open_in_browser(url), Err(format!("not a web link: {url}")));
+    }
+}
+
+/// Every non-comment line of the `.rs` files under `src/` outside
+/// `src/jobs/` for which `hit` is true: (path relative to `src/`,
+/// "path:line: text"), sorted by path.
+fn scan_outside_jobs(hit: impl Fn(&str) -> bool) -> Vec<(std::path::PathBuf, String)> {
     let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
     let jobs = src.join("jobs");
-    // Built so this file never contains the needles literally.
-    let needles = [["thread", "::spawn"].concat(), ["thread", "::Builder"].concat()];
-    let mut offenders = Vec::new();
+    let mut hits = Vec::new();
     let mut dirs = vec![src.clone()];
     while let Some(dir) = dirs.pop() {
         for entry in std::fs::read_dir(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())) {
@@ -309,13 +326,62 @@ fn threads_are_started_only_in_jobs() {
                 }
             } else if path.extension().is_some_and(|e| e == "rs") {
                 let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+                let relative = path.strip_prefix(&src).unwrap_or(&path).to_path_buf();
                 for (i, line) in text.lines().enumerate() {
-                    if needles.iter().any(|n| line.contains(n.as_str())) {
-                        offenders.push(format!("{}:{}: {}", path.strip_prefix(&src).unwrap_or(&path).display(), i + 1, line.trim()));
+                    if !line.trim_start().starts_with("//") && hit(line) {
+                        hits.push((relative.clone(), format!("{}:{}: {}", relative.display(), i + 1, line.trim())));
                     }
                 }
             }
         }
     }
-    assert!(offenders.is_empty(), "start threads through crate::jobs (Job, RunThread, reap_child, drop_off_thread), not directly:\n{}", offenders.join("\n"));
+    hits.sort();
+    hits
+}
+
+/// Nothing outside `src/jobs/` starts a thread (native-viewer.md §4).
+#[test]
+fn threads_are_started_only_in_jobs() {
+    // Built so this file never contains the needles literally.
+    let needles = [["thread", "::spawn"].concat(), ["thread", "::Builder"].concat()];
+    let offenders: Vec<String> = scan_outside_jobs(|line| needles.iter().any(|n| line.contains(n.as_str()))).into_iter().map(|(_, hit)| hit).collect();
+    assert!(offenders.is_empty(), "start threads through crate::jobs (Job, RunThread, drop_off_thread), not directly:\n{}", offenders.join("\n"));
+}
+
+/// True if `line` names `needle` as a whole path segment (`Command::new(`
+/// but not `SpatialCommand::new(`).
+fn has_segment(line: &str, needle: &str) -> bool {
+    line.match_indices(needle).any(|(at, _)| !line[..at].chars().next_back().is_some_and(|c| c.is_alphanumeric() || c == '_'))
+}
+
+/// Nothing outside `src/jobs/` starts a process (native-viewer.md §4): no
+/// `.spawn()`/`.output()` (std's `Command` runners; Bevy's and the jobs
+/// module's `spawn` take arguments), and a `Command::new(` only where the
+/// command is built and handed to `jobs` (`ChildProcess::spawn`,
+/// `spawn_detached`), listed in `BUILDS` with the number of sites and why.
+/// A command built elsewhere (sim-runtime's `service_command`, which CAD
+/// mode hands to `ChildProcess::spawn`) does not appear here at all.
+#[test]
+fn processes_are_started_only_in_jobs() {
+    const BUILDS: &[(&str, usize, &str)] = &[("main.rs", 2, "the linked sim-viewer window's command (build and inspect modes), started with jobs::spawn_detached")];
+    // Built so this file never contains the needles literally.
+    let runners = [[".spawn", "()"].concat(), [".output", "()"].concat()];
+    let new = ["Command", "::new("].concat();
+    let mut offenders: Vec<String> = scan_outside_jobs(|line| runners.iter().any(|n| line.contains(n.as_str()))).into_iter().map(|(_, hit)| hit).collect();
+    let builds = scan_outside_jobs(|line| has_segment(line, &new));
+    let mut files: Vec<&std::path::PathBuf> = builds.iter().map(|(file, _)| file).collect();
+    files.dedup();
+    for file in files {
+        let sites: Vec<&String> = builds.iter().filter(|(f, _)| f == file).map(|(_, hit)| hit).collect();
+        let allowed = BUILDS.iter().find(|(path, _, _)| file.as_path() == std::path::Path::new(path)).map_or(0, |(_, count, _)| *count);
+        if sites.len() != allowed {
+            offenders.push(format!("{} builds {} Command(s), {allowed} allowed:\n  {}", file.display(), sites.len(), sites.iter().map(|s| s.as_str()).collect::<Vec<_>>().join("\n  ")));
+        }
+    }
+    for (path, count, _) in BUILDS {
+        if *count > 0 && !builds.iter().any(|(f, _)| f.as_path() == std::path::Path::new(path)) {
+            offenders.push(format!("{path}: allowed {count} Command build(s) but has none; update BUILDS"));
+        }
+    }
+    assert!(offenders.is_empty(), "start processes through crate::jobs (ChildProcess, spawn_detached, open_in_browser), not directly:\n{}", offenders.join("\n"));
 }

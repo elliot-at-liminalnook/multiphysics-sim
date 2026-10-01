@@ -1,6 +1,7 @@
 //! All background work of the viewer (native-viewer.md §4). Nothing outside
-//! this module starts a thread (`tests::threads_are_started_only_in_jobs`
-//! scans the source tree for it).
+//! this module starts a thread or a process
+//! (`tests::threads_are_started_only_in_jobs` and
+//! `tests::processes_are_started_only_in_jobs` scan the source tree for it).
 //!
 //! - **One-shot jobs** ([`Job`], [`Latest`]): load, scan, read, write,
 //!   compute, lay out, generate. A job runs a closure once on a [`Pool`] and
@@ -18,7 +19,10 @@
 //!   a reaper thread waits for it; dropping it does the same; `detach` leaves
 //!   it running. Only self-started processes are ever owned, so an attached
 //!   service is never stopped.
-//! - **Helpers**: [`reap_child`] waits for a detached child process and
+//! - **Helpers**: [`spawn_detached`] starts a process whose lifetime is not
+//!   tied to ours (the linked `sim-viewer` schematic window) and
+//!   [`open_in_browser`] opens an http(s) link with `open`/`xdg-open`; both
+//!   leave a reaper thread waiting for it, so it never lingers as a zombie.
 //!   [`drop_off_thread`] drops a large value away from the UI thread.
 //!
 //! Pool rule (Bevy 0.19.1 `TaskPoolOptions::default()`: `IoTaskPool` and
@@ -46,7 +50,7 @@ mod run_thread;
 #[cfg(test)]
 mod tests;
 
-pub use child::ChildProcess;
+pub use child::{ChildProcess, open_in_browser, spawn_detached};
 pub use run_thread::{JOIN_BOUND, RunThread, Stamped, Stopped};
 
 /// Where a one-shot job runs (see the module's pool rule).
@@ -319,8 +323,10 @@ fn thread_name(name: &str) -> String {
 }
 
 /// Waits for a child process we started and do not otherwise wait for, so it
-/// never lingers as a zombie; its lifetime is not tied to ours.
-pub fn reap_child(mut child: std::process::Child, name: &str) {
+/// never lingers as a zombie; its lifetime is not tied to ours. Private to
+/// `jobs`: callers use [`spawn_detached`], [`open_in_browser`] or
+/// [`ChildProcess::detach`].
+fn reap_child(mut child: std::process::Child, name: &str) {
     let spawned = std::thread::Builder::new().name(thread_name(&format!("reap {name}"))).spawn(move || {
         let _ = child.wait();
     });

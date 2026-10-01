@@ -471,6 +471,7 @@ pub(super) fn input(
     focus: Option<ResMut<CadInputFocus>>,
     name: Option<ResMut<NameDraft>>,
     mut out: MessageWriter<Act<CadAction>>,
+    (section, views): (Option<ResMut<crate::cad::display::entry::SectionEntry>>, Option<ResMut<crate::cad::views::CadViews>>),
 ) {
     let Some(mut files) = files else { return };
     let Some(before) = files.form.clone() else { return };
@@ -486,6 +487,13 @@ pub(super) fn input(
     {
         name.editing = None;
         name.refusal = None;
+    }
+    // The section offset and saved-view fields too (found by review: their keys reached both).
+    if let Some(mut section) = section.filter(|s| s.typing.is_some()) {
+        section.typing = None;
+    }
+    if let Some(mut views) = views.filter(|v| v.typing.is_some()) {
+        views.typing = None;
     }
     if let Some(mut doc) = doc {
         if doc.tool_state.numeric.focus.is_some() {

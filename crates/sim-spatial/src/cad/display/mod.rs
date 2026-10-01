@@ -430,7 +430,7 @@ pub fn default_plane(cx: &SectionContext) -> SectionPlane {
     SectionPlane::on_axis(SectionAxis::Y, y)
 }
 
-/// `cad_state`'s `display` key (the lead's `actions::state_json` calls it).
+/// `cad_state`'s `display` key (`snapshot::state_json` calls it).
 pub(in crate::cad) fn state_json(d: &CadDisplay) -> Value {
     let key = |k: &ExactKey| json!({"node": k.node, "revision": k.revision, "plane": k.plane, "query": k.query.as_str()});
     let result = d.exact.result.as_ref().map(|(k, r)| match r {

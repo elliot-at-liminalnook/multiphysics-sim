@@ -85,7 +85,7 @@ duplicates physics.
   `RobotPlugin`, `PlacePlugin`, `CadPlugin` with its window-free
   `CadCorePlugin`, `PhenomenaPlugin` with `PhenomenaCorePlugin`; the
   hardware panel is part of `RobotPlugin`), one `States` enum (7 modes) and
-  two computed states, one set enum, 9 action Message types (`Act<A>` for
+  two computed states, one set enum (`CameraSet` joined it in cad-views-export: 2), 9 action Message types (10 with `CameraAction`) (`Act<A>` for
   `WindowAction`, `InspectAction`, `SystemAction`, `LessonCommand`,
   `RobotAction`, `HardwareAction`, `PlaceAction`, `CadAction`,
   `PhenomenaAction`). Same greps after fold-sim-app: 27
@@ -1759,7 +1759,8 @@ a4fe42d3 (see the journal's verification pass).* Paths are
     under a Z-up mm→m root, picked (`CadSelect`, the tree's value), a
     failed fetch retried on Refresh and on reconnect.
   - `scene.rs`: camera (`MeshPickingCamera`), UI camera, light, orbit,
-    fit. `keys.rs`: RoboCAD's keymap (below).
+    fit (since cad-views-export: the shared camera's spawn, `rules()`,
+    `fit` on `CadMeshes::epoch` and `gate`; no orbit of its own). `keys.rs`: RoboCAD's keymap (below).
   - `actions.rs`: `CadAction` and its one handler `apply` (Actions),
     `system_ui` (its controls are `panel::controls`), `cad_state`,
     `publish` (`/v1/state`, `/v1/cad_state`).
@@ -2018,8 +2019,10 @@ unless they name another crate.
   board. The panels are kit docks with their own surfaces.
 - **Orbit convention**: right-drag rotates, middle or Shift+right-drag pans,
   wheel zooms, only over the 3D area; sim-app's left-drag orbit is
-  deliberately dropped (left click belongs to the panels). No camera is
-  shared by every mode today, so the mode has its own in that convention.
+  deliberately dropped (left click belongs to the panels). Since
+  cad-views-export every orbit mode uses the shared camera
+  (`crate::camera`), and Phenomena writes its feel as data
+  (`phenomena/scene.rs`).
 - **Chart**: the kit's chart image through `rasterize_span` instead of a 3D
   gizmo board; `rasterize_span` pads 8 % (sim-app padded 10 %).
 - **Keys**: sim-app's bindings, no clash: nothing outside a mode reads keys
@@ -3015,8 +3018,9 @@ that waited for the active plane became done by reading; after the epic
 the ledger has 286 rows done by reading, 398 later and 89 deliberately
 different), the side-by-side steps in
 [docs/cad-checklist.md](../cad-checklist.md) (CAD-77 to CAD-98). Written
-and reviewed by reading in commits 34fa7901, f0c23f87 and 87287d70; not
-compiled or run yet (see the verification checklist). Paths are
+and reviewed by reading in commits 34fa7901, f0c23f87 and 87287d70; verified
+at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47;
+`units` 29; api pytests 61; sim-web wasm check clean). Paths are
 `crates/sim-spatial/src/cad/` unless they name another crate.
 
 ### Shape
@@ -3565,7 +3569,7 @@ another crate.
   camera control.
 - **Meshes at each node's own tolerance.** `mesh.rs` asks with
   `NODE_TOLERANCE` (0), which RoboCAD's `Document.mesh_of` reads as
-  `tolerance or n.tessellation_tolerance` (document.py:475), so a body is
+  `tolerance or n.tessellation_tolerance` (document.py:474), so a body is
   drawn as RoboCAD's viewport draws it. The default 0.05 mm is finer than
   the former fixed 0.1 mm. That means more triangles on curved faces (up
   to about twice as many for doubly curved ones by chord-tolerance
@@ -3666,7 +3670,7 @@ full, current one), then the shared camera's keys:
 | 5 | orthographic toggle (`camera_projection`) | as the digits above |
 | / | isolate (catalogue: `Ops.isolate`) | the keypad's divide is `/` (`normalise`) |
 | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), fit | no other reader in CAD mode |
-| Numpad1, Numpad3, Numpad7 (Ctrl: the opposite side), Numpad9, Numpad5, Numpad0, NumpadDecimal, Home | shared camera (`camera/input.rs` `keys`): front/back, right/left, top/bottom, opposite, orthographic toggle, iso, fit, home | read only where an enabled camera's rules set `keys` and no text field is `typing`: Inspect, Build, Lessons, Robot and Phenomena; off in CAD, whose keymap reads the digits and Home itself; no other reader of the numpad or Home in those modes (grep of `Numpad` and `KeyCode::Home`) |
+| Numpad1, Numpad3, Numpad7 (Ctrl: the opposite side), Numpad9, Numpad5, Numpad0, NumpadDecimal, Home | shared camera (`camera/input.rs` `keys`): front/back, right/left, top/bottom, opposite, orthographic toggle, iso, fit, home | read only where an enabled camera's rules set `keys` and no text field is `typing`: Inspect, Build, Lessons, Robot and Phenomena; off in CAD, whose keymap reads the digits and Home itself; no other reader of these numpad keys or Home in those modes (Robot's NumpadAdd/NumpadSubtract set speed; grep of `Numpad` and `KeyCode::Home`) |
 | Arrow keys (Ctrl/Cmd: 90°; Shift: pan) | RoboCAD's orbit 10° and pan steps (`camera/input.rs` `arrow_action`, `camera_orbit {degrees}`, `camera_pan`) | CAD only (`robocad_gestures`), not while a text field has the keyboard (`typing` from `CadInputFocus`, which the palette sets, so its Up/Down stay the palette's); Robot, Phenomena, Lessons and Build read their own arrows, and the camera's arrows are off there |
 
 ### Review findings (three reviewers by area, then fixes in f15766ea)
@@ -3723,6 +3727,18 @@ full, current one), then the shared camera's keys:
 
   Reduced: the headless thumbnail's cost (it reuses the node-tolerance
   tessellation the meshes already cached).
+- **Second pass** (two reviewers over f15766ea and the docs; fixed in the
+  final commit): `CadMeshes::face_at` was deleted while pick, measure,
+  push/pull, dimensions and the plane tools still called it (a compile
+  error; restored over `face_of`); the modal file form left the section
+  offset and saved-view fields typing, so its keys reached them too; a
+  view save's answer could be read from a file job's status line written
+  the same frame (`files` results now run before `sync::receive`); docs:
+  the CAD sketch intro still said "not compiled", stale notes on
+  Phenomena's own camera, the set-enum count, CAD's `scene.rs` and the
+  ledger's pre-fix counts. Left: many api.py line citations in
+  docs/cad-parity.md predate this epic and are stale as api.py grew
+  (cited by name where this epic rewrote the row).
 
 ### Found by reading and fixed (across the epic)
 
@@ -3777,7 +3793,7 @@ pass).
      (`derive_preview` → `clip`) per body. The drawn mesh is swapped for
      the clipped copy, and `draw.rs` `lines` draws the cut outline.
   3. Exact: `cad_section {"exact": id}` → `apply_section` →
-     `exact_query` (xy/xz/yz or the plane node) → `ExactSection::request`.
+     `exact_query` (xy/xz/yz or the plane node) → sets `ExactSection.request`.
      `exact_jobs` (JobResults) starts `CadClient::section` (`GET
      /nodes/{id}/section?plane=…`) on its `Latest`, `accept` keeps the
      answer, and `ExactSection::drawn` draws it only while it is current.

@@ -14,7 +14,8 @@
 //!   and `http://localhost:PORT` (connected as 127.0.0.1) and refuses any
 //!   other host, `[::1]` and other 127.x addresses included: both servers
 //!   bind 127.0.0.1 only and require `Host: 127.0.0.1:PORT`. Every
-//!   connection has a connect, read and write timeout. Plain HTTP/1.1 over `std::net::TcpStream`, one request per
+//!   connection has a connect, read and write timeout. Plain HTTP/1.1 over
+//!   `std::net::TcpStream` (the shared [`crate::loopback_http`]), one request per
 //!   connection (`Connection: close`, as both servers answer), so a slow
 //!   request never holds another's socket.
 //! - **Headers.** `Host` is the server's own origin (`127.0.0.1:PORT`: the
@@ -52,9 +53,15 @@ use serde_json::Value;
 use std::time::Duration;
 
 pub use http::{new_client_id, process_client_id};
+/// The loopback transport's address and connect timeout
+/// ([`crate::loopback_http`], shared with the CAD client).
+pub use crate::loopback_http::{CONNECT_TIMEOUT, Endpoint};
 
-/// Connect timeout for every request.
-pub const CONNECT_TIMEOUT: Duration = Duration::from_millis(500);
+/// Why a request failed: the shared transport's error
+/// ([`crate::loopback_http::Error`]: `NotLoopback`, `Transport`,
+/// `Server { status, error }`, `Decode`).
+pub type ClientError = crate::loopback_http::Error;
+
 /// Read/write timeout for an ordinary request: longer than the calibration
 /// server's own 8 s wait for its hardware worker, so its answer (or its
 /// "Hardware response timed out") arrives rather than a client timeout.
@@ -80,15 +87,6 @@ pub enum ServerKind {
     MotorBench,
 }
 
-/// A loopback server address.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Endpoint {
-    /// The host to connect to: always `127.0.0.1` (checked again before
-    /// every connection).
-    pub ip: std::net::IpAddr,
-    pub port: u16,
-}
-
 /// A client of one server: its endpoint, token, identity, timeout and
 /// request body limit.
 /// Cheap to clone; each request opens its own connection.
@@ -105,29 +103,6 @@ pub struct Client {
     /// [`Client::for_kind`]). A larger body is refused before connecting.
     pub max_body: usize,
 }
-
-/// Why a request failed.
-#[derive(Clone, Debug, PartialEq)]
-pub enum ClientError {
-    /// Not a loopback address (nothing was sent).
-    NotLoopback(String),
-    /// Connecting, writing or reading failed (includes timeouts).
-    Transport(String),
-    /// The server answered with an error status: its `error` field, or
-    /// "Request failed (HTTP {status})" when the answer has none.
-    Server { status: u16, error: String },
-    /// The answer was not the JSON expected.
-    Decode(String),
-}
-impl std::fmt::Display for ClientError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ClientError::NotLoopback(e) | ClientError::Transport(e) | ClientError::Decode(e) => f.write_str(e),
-            ClientError::Server { error, .. } => f.write_str(error),
-        }
-    }
-}
-impl std::error::Error for ClientError {}
 
 /// A JSON value whose object members keep the order they were written in
 /// (serde_json's `Map` sorts keys; the pages' `JSON.stringify` does not).

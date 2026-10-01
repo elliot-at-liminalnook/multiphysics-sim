@@ -2770,7 +2770,15 @@ run condition or UI changed. Every plugin's `build()` (`RobotPlugin`,
 back into the module root under their old names. Written and reviewed by
 reading (four parallel reviews: run thread, robot tree and hardware,
 builder and lessons, lib/switch/guard/transport; no compile or ordering
-defect found); pending its verification pass. Commits 33ebd373 (doc
+defect found). Verified at 57f7d447 (2026-10-01 pass): `cargo check
+--workspace --all-targets` and `cargo build -p sim-spatial --lib --tests
+--bins` with no sim-spatial warnings; `cargo test -p sim-spatial --lib
+--bins` 253 passed (252 plus `source_files_stay_small`), 1 ignored, bins 4;
+`cargo test -p sim-runtime --lib hardware_client` 18 passed (the refusal
+test included), `cad_client` 33; `cargo check -p sim-web --target
+wasm32-unknown-unknown` clean. The build found one slip, fixed in 0170f176:
+`HeldSlider` private under the now-`pub(super)` `sliders` system (E0446),
+and an unused `LiveInput`/`live_run` re-export. Commits 33ebd373 (doc
 truth), d39bd96b (robot moves), 19b4b86b (run thread), 1f6c5311 (robot
 view, actions, planar), c021ce87 (hardware), b2b5397e (builder), 2a883b20
 (lessons), eff1de77 (lib.rs, switch, guard), a62ece7b (transport), plus

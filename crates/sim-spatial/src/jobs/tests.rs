@@ -196,6 +196,101 @@ fn run_thread_drop_is_bounded_when_the_worker_is_busy() {
     assert!(started.elapsed() < Duration::from_millis(100));
 }
 
+/// True while `pid` exists. A zombie still answers `kill -0` until it is
+/// reaped, so "gone" also proves a reaper waited for it.
+#[cfg(unix)]
+fn pid_alive(pid: u32) -> bool {
+    std::process::Command::new("kill")
+        .args(["-0", &pid.to_string()])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .is_ok_and(|s| s.success())
+}
+
+/// Polls `f` until it is true or `bound` passes; returns whether it became true.
+#[cfg(unix)]
+fn within(bound: Duration, mut f: impl FnMut() -> bool) -> bool {
+    let started = Instant::now();
+    while started.elapsed() < bound {
+        if f() {
+            return true;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    f()
+}
+
+#[cfg(unix)]
+fn command(program: &str, args: &[&str]) -> std::process::Command {
+    let mut c = std::process::Command::new(program);
+    c.args(args).stdin(std::process::Stdio::null()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
+    c
+}
+
+#[cfg(unix)]
+#[test]
+fn child_stop_kills_and_reaps_without_blocking() {
+    let child = ChildProcess::spawn("test sleeper", command("sleep", &["30"])).unwrap();
+    let pid = child.id();
+    assert_eq!(child.name(), "test sleeper");
+    assert!(pid_alive(pid));
+    let started = Instant::now();
+    child.stop();
+    assert!(started.elapsed() < Duration::from_millis(500), "stop never waits on the caller: {:?}", started.elapsed());
+    assert!(within(Duration::from_secs(2), || !pid_alive(pid)), "pid {pid} was killed and reaped");
+}
+
+#[cfg(unix)]
+#[test]
+fn dropping_a_child_process_stops_it() {
+    let child = ChildProcess::spawn("dropped sleeper", command("sleep", &["30"])).unwrap();
+    let pid = child.id();
+    assert!(pid_alive(pid));
+    drop(child);
+    assert!(within(Duration::from_secs(2), || !pid_alive(pid)), "pid {pid} was killed and reaped on drop");
+}
+
+#[cfg(unix)]
+#[test]
+fn a_detached_child_keeps_running_and_is_reaped_when_it_ends() {
+    let child = ChildProcess::spawn("detached sleeper", command("sleep", &["0.3"])).unwrap();
+    let pid = child.id();
+    child.detach();
+    assert!(pid_alive(pid), "detach does not kill");
+    assert!(within(Duration::from_millis(1500), || !pid_alive(pid)), "pid {pid} ended and was reaped");
+}
+
+#[cfg(unix)]
+#[test]
+fn spawning_a_missing_program_names_it() {
+    let missing = "/no/such/dir/sim-spatial-missing-program";
+    let e = ChildProcess::spawn("the missing tool", command(missing, &[])).err().expect("spawn of a missing program fails");
+    assert!(e.starts_with("could not start the missing tool: "), "{e}");
+}
+
+#[cfg(unix)]
+#[test]
+fn exited_reports_a_finished_child_and_none_while_running() {
+    let mut running = ChildProcess::spawn("running sleeper", command("sleep", &["30"])).unwrap();
+    assert_eq!(running.exited(), None);
+    let pid = running.id();
+    running.stop();
+    assert!(within(Duration::from_secs(2), || !pid_alive(pid)));
+
+    let mut done = ChildProcess::spawn("true", command("true", &[])).unwrap();
+    let mut report = None;
+    assert!(within(Duration::from_secs(2), || {
+        report = done.exited();
+        report.is_some()
+    }));
+    let report = report.unwrap();
+    assert!(report.starts_with("true exited ("), "{report}");
+    assert_eq!(done.exited(), Some(report), "repeated calls report the same exit");
+    // Already reaped: stopping it neither kills nor waits again.
+    done.stop();
+}
+
 /// Nothing outside `src/jobs/` starts a thread (native-viewer.md §4).
 #[test]
 fn threads_are_started_only_in_jobs() {

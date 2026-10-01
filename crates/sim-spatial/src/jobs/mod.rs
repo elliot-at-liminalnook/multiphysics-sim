@@ -13,6 +13,11 @@
 //!   playback clock, the placement validator. One named OS thread each, with
 //!   commands in and a shared, generation-stamped snapshot out; dropping it
 //!   closes the command channel and joins within a bound.
+//! - **Child processes** ([`ChildProcess`]): a process the viewer started
+//!   and owns (CAD mode's self-started RoboCAD service). `stop` kills it and
+//!   a reaper thread waits for it; dropping it does the same; `detach` leaves
+//!   it running. Only self-started processes are ever owned, so an attached
+//!   service is never stopped.
 //! - **Helpers**: [`reap_child`] waits for a detached child process and
 //!   [`drop_off_thread`] drops a large value away from the UI thread.
 //!
@@ -36,10 +41,12 @@ use std::sync::{Arc, Mutex, MutexGuard, Once};
 
 use bevy::tasks::{AsyncComputeTaskPool, IoTaskPool, Task, TaskPool};
 
+mod child;
 mod run_thread;
 #[cfg(test)]
 mod tests;
 
+pub use child::ChildProcess;
 pub use run_thread::{JOIN_BOUND, RunThread, Stamped, Stopped};
 
 /// Where a one-shot job runs (see the module's pool rule).

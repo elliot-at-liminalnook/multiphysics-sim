@@ -29,7 +29,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-/// The file's schema version.
+/// The file's schema version. Bump it when an entry gains a variant or
+/// field an older viewer cannot read: an older viewer replaces a file of
+/// its own version it cannot parse.
 pub const VERSION: u32 = 1;
 /// Documents kept per mode, newest first.
 pub const KEEP: usize = 10;
@@ -170,7 +172,11 @@ pub fn save(path: &Path, recents: &Recents) -> Result<(), String> {
         let mut f = std::fs::File::create(&tmp)?;
         f.write_all(&serde_json::to_vec_pretty(recents).map_err(std::io::Error::other)?)?;
         f.sync_all()?;
-        std::fs::rename(&tmp, path)
+        std::fs::rename(&tmp, path)?;
+        // The rename itself is durable once the directory is synced (some
+        // platforms refuse to sync a directory; the file is whole either way).
+        let _ = std::fs::File::open(dir).and_then(|d| d.sync_all());
+        Ok(())
     };
     write().map_err(|e| {
         let _ = std::fs::remove_file(&tmp);

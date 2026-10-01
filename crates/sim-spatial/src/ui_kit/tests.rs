@@ -402,6 +402,13 @@ fn path_field_paths() {
     assert_eq!(up("/w/sub/a.rcad", false), "/w/");
     assert_eq!(up("/w/sub/", false), "/w/");
     assert_eq!(up("/a.rcad", true), "/a.rcad", "the root has no parent");
+    // A typed prefix of the directory narrowed the listing; it is not kept.
+    assert_eq!(pick("/w/su", "/w/", "sub", true, true), "/w/sub/");
+    assert_eq!(pick("/w/SU", "/w/", "sub", true, true), "/w/sub/");
+    // A trailing "." or ".." names a directory to list, not a prefix.
+    assert_eq!(dir_of("/a/b/.."), "/a/b/../");
+    assert_eq!(dir_of("/a/b/."), "/a/b/./");
+    assert_eq!(file_of(&expand("/a/b/..")), "");
 }
 
 /// `path_field::list` on a scratch directory: directories first, by name

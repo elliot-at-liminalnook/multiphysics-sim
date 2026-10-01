@@ -19,17 +19,21 @@ use serde_json::{Value, json};
 
 /// Entries the field shows under it (the typed file name narrows them).
 pub(crate) const SHOWN: usize = 12;
-/// Entries a listing keeps.
-const MAX_LISTED: usize = 200;
+/// Entries a listing keeps (names only; the typed file name narrows them
+/// when drawn, so a listing must hold every entry it can reach).
+const MAX_LISTED: usize = 20_000;
 
-/// `~` and `~/…` expanded with `$HOME` (unchanged without one).
+/// `~` and `~/…` expanded with `$HOME` (unchanged without one). A last
+/// component of `.` or `..` gets a trailing `/`, so it names a directory to
+/// list rather than a prefix to narrow by.
 pub(crate) fn expand(path: &str) -> String {
-    let home = std::env::var("HOME").ok().map(|h| h.trim_end_matches('/').to_string());
-    match (path, home) {
+    let home = std::env::var("HOME").ok().map(|h| h.trim_end_matches('/').to_string()).map(|h| if h.is_empty() { "/".to_string() } else { h });
+    let path = match (path, home) {
         ("~", Some(home)) => home,
-        (p, Some(home)) if p.starts_with("~/") => format!("{home}/{}", &p[2..]),
+        (p, Some(home)) if p.starts_with("~/") => format!("{}/{}", home.trim_end_matches('/'), &p[2..]),
         (p, _) => p.to_string(),
-    }
+    };
+    if matches!(file_of(&path), "." | "..") { format!("{path}/") } else { path }
 }
 
 /// The directory part of `path` with a trailing `/` (`~/` expanded); empty
@@ -135,7 +139,12 @@ pub(crate) fn receive(latest: &mut Latest<Listing>, listed: &mut Option<Listing>
 /// name when `keep_file`, as a save field does), a file fills the path.
 pub(crate) fn pick(path: &str, dir: &str, name: &str, is_dir: bool, keep_file: bool) -> String {
     // The file name as `dir_of` splits it: after `~` expansion.
-    let keep = if keep_file { file_of(&expand(path.trim())).to_string() } else { String::new() };
+    let mut keep = if keep_file { file_of(&expand(path.trim())).to_string() } else { String::new() };
+    // A typed name the directory starts with was narrowing the listing to
+    // find it, not a file name to keep ("/w/su" + "sub" is "/w/sub/").
+    if is_dir && name.to_lowercase().starts_with(&keep.to_lowercase()) {
+        keep.clear();
+    }
     let dir = dir.trim_end_matches('/');
     if is_dir { format!("{dir}/{name}/{keep}") } else { format!("{dir}/{name}") }
 }
@@ -232,7 +241,10 @@ impl Kit<'_> {
                 list.spawn(self.button(&label, hit(PathHit::Entry(i)), Look::Ghost, true));
             }
         });
-        let more = listing.entries.iter().filter(|(n, _)| narrows(n)).count().saturating_sub(SHOWN) + listing.more;
+        // Entries past MAX_LISTED were never read, so they only count
+        // while nothing narrows the listing.
+        let unread = if prefix.is_empty() { listing.more } else { 0 };
+        let more = listing.entries.iter().filter(|(n, _)| narrows(n)).count().saturating_sub(SHOWN) + unread;
         if more > 0 {
             parent.spawn(self.text(format!("{more} more: type to narrow the path."), size::SMALL, FAINT, 0));
         }

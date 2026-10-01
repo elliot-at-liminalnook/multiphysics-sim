@@ -11,9 +11,12 @@ struct Args {
     /// directory holding `place.json` → place mode (--place), a directory with
     /// `<slug>/lesson.md` entries → lessons mode (--lessons), a `*.rcad` file →
     /// CAD mode (RoboCAD's headless service is started on it with
-    /// cad/.venv/bin/python and stopped when the document closes). Detected by
-    /// name or directory structure only; anything else is an error. Presets
-    /// stay on --robot-preset.
+    /// cad/.venv/bin/python and stopped when the document closes, unless it
+    /// may hold unsaved edits: then closing the window leaves it running and
+    /// logs its URL; --select, --exploded, --connections, --compact and
+    /// --annotations are refused with it). Detected by name or directory
+    /// structure only; anything else is an error. Presets stay on
+    /// --robot-preset.
     #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link", "cad_url", "phenomena"])]
     file: Option<PathBuf>,
     /// Shared discussion and saved-view sidecar.
@@ -117,7 +120,9 @@ struct Args {
     /// CAD mode attached to a running RoboCAD service (its desktop GUI serves
     /// http://127.0.0.1:8420; loopback only). Never stopped by this window;
     /// unsaved edits stay in that service.
-    #[arg(long, value_name = "URL", conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot", "robot_preset"])]
+    /// --select, --exploded, --connections, --compact and --annotations are
+    /// refused with it (CAD mode does not use them), as with a `.rcad` FILE.
+    #[arg(long, value_name = "URL", conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot", "robot_preset", "select", "exploded", "connections", "compact", "annotations"])]
     cad_url: Option<String>,
     /// Phenomena mode: the live gallery of the built-in exhibits
     /// (`sim_phenomena::exhibits`; sim-app's former default scene). One run
@@ -370,26 +375,47 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
     open_window(args, |api| sim_spatial::Launch { builder: Some(builder), scene: Some(scene), ..launch(sim_spatial::ViewerMode::Build, api, documents, models) })
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut args = Args::parse();
-    let mut cad_file = None;
-    // A positional FILE becomes the matching mode flag, so it takes exactly that flag's path.
-    if let Some(file) = args.file.take() {
-        use sim_spatial::launch::LaunchKind;
-        match sim_spatial::launch::classify(&file)? {
-            LaunchKind::System => args.system = Some(file),
-            LaunchKind::Robot if args.headless || args.schematic => {
-                return Err(format!("{}: robot mode does not support --headless or --schematic", file.display()).into());
+/// The inspect-mode flags CAD mode does not use (its view comes from
+/// RoboCAD): refused with a `.rcad` FILE ([`cad_mode_refusal`]) and, by
+/// clap, with --cad-url.
+const NOT_IN_CAD_MODE: [&str; 5] = ["--select", "--exploded", "--connections", "--compact", "--annotations"];
+
+/// The first of [`NOT_IN_CAD_MODE`] given, worded as the refusal.
+fn cad_mode_refusal(args: &Args) -> Option<String> {
+    let given = [args.select.is_some(), args.exploded, args.connections, args.compact, args.annotations.is_some()];
+    NOT_IN_CAD_MODE.iter().zip(given).find(|(_, on)| *on).map(|(flag, _)| format!("{flag} is not used in CAD mode (a .rcad file or --cad-url)"))
+}
+
+/// A positional FILE becomes the matching mode flag, so it takes exactly
+/// that flag's path; a `.rcad` FILE is returned (CAD mode). Flags the
+/// chosen mode cannot use are refused here, before any window or service.
+fn take_file(args: &mut Args) -> Result<Option<PathBuf>, String> {
+    use sim_spatial::launch::LaunchKind;
+    let Some(file) = args.file.take() else { return Ok(None) };
+    match sim_spatial::launch::classify(&file)? {
+        LaunchKind::System => args.system = Some(file),
+        LaunchKind::Robot if args.headless || args.schematic => {
+            return Err(format!("{}: robot mode does not support --headless or --schematic", file.display()));
+        }
+        LaunchKind::Robot => args.robot = Some(file),
+        LaunchKind::Place => args.place = Some(file),
+        LaunchKind::Lessons => args.lessons = Some(file),
+        LaunchKind::Cad if args.headless || args.schematic => {
+            return Err(format!("{}: CAD mode does not support --headless or --schematic", file.display()));
+        }
+        LaunchKind::Cad => {
+            if let Some(refusal) = cad_mode_refusal(args) {
+                return Err(format!("{}: {refusal}", file.display()));
             }
-            LaunchKind::Robot => args.robot = Some(file),
-            LaunchKind::Place => args.place = Some(file),
-            LaunchKind::Lessons => args.lessons = Some(file),
-            LaunchKind::Cad if args.headless || args.schematic => {
-                return Err(format!("{}: CAD mode does not support --headless or --schematic", file.display()).into());
-            }
-            LaunchKind::Cad => cad_file = Some(file),
+            return Ok(Some(file));
         }
     }
+    Ok(None)
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut args = Args::parse();
+    let cad_file = take_file(&mut args)?;
     if args.lesson.is_some() && args.lessons.is_none() {
         return Err("--lesson requires lessons mode (--lessons DIR or a lessons directory as FILE)".into());
     }
@@ -531,4 +557,89 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     documents.inspect = Some((description_path, spatial_path));
     let models = model_library(&args);
     open_window(&args, |api| sim_spatial::Launch { scene: Some(scene), link, ..launch(sim_spatial::ViewerMode::Inspect, api, documents, models) })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::CommandFactory;
+    use std::ffi::OsString;
+
+    /// Each flag CAD mode does not use, with a value where it takes one.
+    const IGNORED: [&[&str]; 5] = [&["--select", "b1"], &["--exploded"], &["--connections"], &["--compact"], &["--annotations", "notes.json"]];
+
+    fn argv(head: &[OsString], flag: &[&str]) -> Vec<OsString> {
+        let mut v = vec![OsString::from("sim-spatial")];
+        v.extend(head.iter().cloned());
+        v.extend(flag.iter().map(OsString::from));
+        v
+    }
+
+    /// A directory under the temp dir, removed on drop.
+    struct TempDir(PathBuf);
+    impl TempDir {
+        fn new(tag: &str) -> TempDir {
+            let dir = std::env::temp_dir().join(format!("sim-spatial-main-{tag}-{}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).unwrap();
+            TempDir(dir)
+        }
+        fn file(&self, name: &str) -> PathBuf {
+            let path = self.0.join(name);
+            std::fs::write(&path, "{}").unwrap();
+            path
+        }
+    }
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn the_argument_table_is_consistent() {
+        // Every id named in conflicts_with_all / requires exists, and so on.
+        Args::command().debug_assert();
+    }
+
+    #[test]
+    fn cad_url_refuses_the_flags_cad_mode_does_not_use() {
+        let head = [OsString::from("--cad-url"), OsString::from("http://127.0.0.1:8420")];
+        assert!(Args::try_parse_from(argv(&head, &[])).is_ok(), "--cad-url alone parses");
+        for flag in IGNORED {
+            let e = Args::try_parse_from(argv(&head, flag)).err().unwrap_or_else(|| panic!("--cad-url with {flag:?} is refused"));
+            assert_eq!(e.kind(), clap::error::ErrorKind::ArgumentConflict, "{flag:?}: {e}");
+            assert!(e.to_string().contains(flag[0]), "the refusal names {}: {e}", flag[0]);
+        }
+    }
+
+    #[test]
+    fn an_rcad_file_refuses_the_flags_cad_mode_does_not_use() {
+        let dir = TempDir::new("rcad");
+        let rcad = dir.file("x.rcad");
+        let head = [rcad.clone().into_os_string()];
+        let mut args = Args::try_parse_from(argv(&head, &[])).unwrap();
+        assert_eq!(take_file(&mut args), Ok(Some(rcad.clone())), "a .rcad file alone opens CAD mode");
+        for flag in IGNORED {
+            let mut args = Args::try_parse_from(argv(&head, flag)).unwrap_or_else(|e| panic!("{flag:?} parses with a FILE (refused after classifying it): {e}"));
+            let e = take_file(&mut args).expect_err("refused in CAD mode");
+            assert_eq!(e, format!("{}: {} is not used in CAD mode (a .rcad file or --cad-url)", rcad.display(), flag[0]));
+        }
+    }
+
+    #[test]
+    fn other_files_and_inspect_mode_keep_those_flags() {
+        let dir = TempDir::new("system");
+        let system = dir.file("x.system.json");
+        // Build mode uses --compact and --annotations.
+        let mut args = Args::try_parse_from(argv(&[system.clone().into_os_string()], &["--compact", "--annotations", "notes.json"])).unwrap();
+        assert_eq!(take_file(&mut args), Ok(None));
+        assert_eq!(args.system.as_deref(), Some(system.as_path()));
+        assert!(args.compact && args.annotations.is_some());
+        // Inspect mode (no FILE) uses all five.
+        let all: Vec<&str> = IGNORED.iter().flat_map(|f| f.iter().copied()).collect();
+        let mut args = Args::try_parse_from(argv(&[], &all)).unwrap();
+        assert_eq!(take_file(&mut args), Ok(None));
+        assert!(args.select.is_some() && args.exploded && args.connections && args.compact && args.annotations.is_some());
+    }
 }

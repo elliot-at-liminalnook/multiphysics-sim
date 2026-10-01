@@ -23,15 +23,6 @@ pub enum Direction {
     Upper,
     Lower,
 }
-impl Direction {
-    /// The `motion` value the page sends.
-    pub fn motion(self) -> &'static str {
-        match self {
-            Direction::Upper => "upper",
-            Direction::Lower => "lower",
-        }
-    }
-}
 
 /// A taught pose to save here.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

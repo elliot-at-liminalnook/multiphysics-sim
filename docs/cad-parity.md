@@ -33,8 +33,8 @@ the user's real models and the user agrees to retire the Python path.
 feature. *Native target* is the symbol that implements it in this epic
 (`cad::…` is `crates/sim-spatial/src/cad/…`; `CadClient` is
 `sim_runtime::cad_client::CadClient`), or the later epic that owns it.
-The cad-views-export rows name a `file:function` instead: `camera/…` and
-`cad/…` are relative to `crates/sim-spatial/src/`, `main.rs` is
+The cad-views-export and cad-physical-inspect rows name a `file:function`
+instead: `camera/…` and `cad/…` are relative to `crates/sim-spatial/src/`, `main.rs` is
 `crates/sim-spatial/src/main.rs`, and `crates/sim-runtime/src/cad_client/…`
 is written in full; a backticked symbol after a path is in that file.
 
@@ -46,7 +46,9 @@ is written in full; a backticked symbol after a path is in that file.
 - **none: needs a Python route**: nothing in `api.py` reaches the feature
   (or reaches it only through a GUI command, which opens RoboCAD's dialogs
   or uses its clipboard or viewport). These rows are flagged and listed at
-  the end: 15 rows, 15 distinct gaps (17 and 17 until the
+  the end: 10 rows, 10 distinct gaps (15 and 15 until the
+  cad-physical-inspect epic added `GET /results/nodes` and
+  `GET /physical?planar=1`; 17 and 17 until the
   cad-views-export epic added `POST /save/thumbnail` and
   `GET /import/units`; 24 rows and 22 gaps until the cad-modify epic added
   routes for copy and paste with placement, control points, the curvature
@@ -57,14 +59,16 @@ is written in full; a backticked symbol after a path is in that file.
 **Status legend.**
 
 - `done-by-reading`: the cad-mode, cad-select-transform, cad-modify,
-  cad-sketch or cad-views-export epic implements it (native-viewer.md, CAD
-  mode section; "CAD selection and transform"; "CAD modify"; "CAD
-  sketch"; "Shared camera and CAD views"). It is built and tested in that epic's
-  verification pass (still to come for cad-views-export) and moves to `done` only when the user's checklist
+  cad-sketch, cad-views-export or cad-physical-inspect epic implements it
+  (native-viewer.md, CAD mode section; "CAD selection and transform"; "CAD
+  modify"; "CAD sketch"; "Shared camera and CAD views"; "CAD physical
+  properties"). It is built and tested in that epic's
+  verification pass (still to come for cad-views-export and
+  cad-physical-inspect) and moves to `done` only when the user's checklist
   ([cad-checklist.md](cad-checklist.md)) passes. Nothing is `done` yet: no
   epic's checklist has been signed off (cad-sketch was verified at
-  cc7ac194), and cad-views-export has not been through its verification
-  pass.
+  cc7ac194), and neither cad-views-export nor cad-physical-inspect has
+  been through its verification pass.
 - `later-epic: <name>`: owned by a later CAD epic (see "Epics" below).
   No row of an epic that has been worked is left open: every
   `later-epic` row names an epic not yet started.
@@ -133,6 +137,24 @@ row and the navigation footer keep their status with updated text. Its
 three new routes in `api.py` (`POST /new`, `POST /save/thumbnail`, `GET
 /import/units`, pytests `cad/tests/test_api_files.py`) closed two flagged
 gaps (the save thumbnail and the mesh-unit guess); New needed no gap.
+The `cad-physical-inspect` epic (2026-10-01) is done by reading: its 82
+rows map to native code: the materials panel and its dialogs
+(`cad/materials/`), the inspector's physical rows, colour, joint editor,
+joint physics overrides, results line and exact measurement
+(`cad/inspector/`), the Robot panel, its tools, dialogs, motor library and
+glyphs (`cad/robot/`, the catalogue's `cad/ops/catalogue/robot.rs`), and
+results, the stress overlay, physical export and the live link
+(`cad/results/`), with the client's `robot.rs`, `robot_ops.rs` and
+`physical.rs`; 64 `done-by-reading` and 18 `deliberately different`, each
+with its reason; none stays open. Its two new routes in `api.py`
+(`GET /results/nodes`, `Service.results_nodes`, and `GET
+/physical?planar=1`; pytests `cad/tests/test_api_physical_routes.py`)
+closed five flagged rows and five gaps (the inspector's "Results" line,
+the stress overlay, the print overlay's data, the Robot panel's margins
+and the planar export); the print overlay row stays cad-print's. It also
+stamped box-select, Alt+click menu and edges → faces items with their
+topology revision (rows "Box select", "Alt+click" and "Selection: edges →
+bounding faces", statuses unchanged).
 
 **Every Ops method is already reachable natively, but only by REST.** The
 `cad_op` REST command (`CadAction::CadOp` → `CadClient::op`) can call any
@@ -221,9 +243,9 @@ the feature is later, not that it cannot be reached at all.
 | Clicking empty space clears (unless Shift/Ctrl) | ui/tools.py:154-156 | `PUT /selection {"items": []}` | `cad::pick` click on nothing → `CadSelect` with no items (kept with Shift or Ctrl) → `cad::selection::select`; REST `cad_select {"ids":[]}` | done-by-reading |
 | The selection is synced with RoboCAD (its window, scripts and this viewer share it) | api.py:741-756, ui/widgets.py:316-329 | `GET/PUT /selection` | `cad::sync::selection::adopt_selection` (the poll adopts RoboCAD's items of every kind, and a desktop window's mode); `cad::selection::publish` → `cad::sync::selection::push_selection` (`PUT /selection` with items `[node, kind, index]` and the mode, one at a time, newest wins) | deliberately different: a headless RoboCAD stores only the items, not the mode (api.py:741-756), so the viewer holds its own selection mode and adopts only a desktop window's |
 | Locked and hidden nodes are not pickable | ui/viewport.py:1262 | `/doc` (`locked`, `effective_visible`) | `cad::pick`: hidden and disabled bodies are not drawn; locked nodes are left out of the click, Alt and hover picks and do not hide what is behind them; box select takes them (as RoboCAD's `_box_select`, tools.py:203-228) | done-by-reading |
-| Box select (drag more than 6 px; bodies whose bounding box lies inside; vertex and edge modes too) | ui/tools.py:124-137, ui/tools.py:198-228 | `PUT /selection` | `cad::pick` drag past 6 px (rubber band `cad::overlay::band`) → `CadAction::CadBoxSelect` → `cad::selection::box_select` (`box_items`: bounding-box corners in body, face and point modes; every sampled edge point; vertices) | done-by-reading |
+| Box select (drag more than 6 px; bodies whose bounding box lies inside; vertex and edge modes too) | ui/tools.py:124-137, ui/tools.py:198-228 | `PUT /selection` | `cad::pick` drag past 6 px (rubber band `cad::overlay::band`) → `CadAction::CadBoxSelect` → `cad::selection::box_select` (`box_items`: bounding-box corners in body, face and point modes; every sampled edge point; vertices; since cad-physical-inspect edge and vertex items carry their topology's revision) | done-by-reading |
 | Hover highlight (coalesced to 33 ms; never replaces a click pick) | ui/tools.py:171-183, ui/viewport.py:1226-1247 | n/a (display) | `cad::pick` hover (one search per 33 ms; edge and vertex search on a `Pool::Compute` job) → `CadAction::CadHover` → `cad::selection::hover`; drawn by `cad::overlay::highlights` | done-by-reading |
-| Alt+click on overlapping picks opens a disambiguation menu ("name: kind #i") | ui/tools.py:140-147, ui/widgets.py:888-894 | n/a (display) | `cad::pick` Alt+click → `CadAction::CadCandidates` → `cad::selection::candidates`; the list `cad::overlay::menu` (`cad:candidate:<n>`, "name: kind #i") | done-by-reading |
+| Alt+click on overlapping picks opens a disambiguation menu ("name: kind #i") | ui/tools.py:140-147, ui/widgets.py:888-894 | n/a (display) | `cad::pick` Alt+click → `CadAction::CadCandidates` → `cad::selection::candidates`, `select`, `menu_revision` (since cad-physical-inspect a choice carries the menu's revision; a stale choice is refused by name and closes the menu); the list `cad::overlay::menu` (`cad:candidate:<n>`, "name: kind #i") | done-by-reading |
 | Selection mode bodies (`select.body`, "Select bodys") | ui/app.py:319-320, ui/app.py:597-602 | `PUT /selection {"mode": "body"}` | `CadAction::CadSelectMode { mode: Body }` → `cad::selection::set_mode`; `cad::pick` picks `[id, "body", 0]` | done-by-reading |
 | Selection mode faces (`select.face`) | ui/app.py:319-320, ui/viewport.py:1281-1293 | `PUT /selection {"mode": "face"}`; `GET /nodes/{id}/mesh` (`triangle_face`) | `CadSelectMode { mode: Face }` → `cad::selection::set_mode`; `cad::pick` maps the hit triangle to `[id, "face", f]` (`CadMeshes::face_of`); outlines `cad::overlay` | done-by-reading |
 | Selection mode edges (`select.edge`) | ui/app.py:319-320, ui/viewport.py:1301-1309 | `GET /nodes/{id}/edges?samples=N` | `CadSelectMode { mode: Edge }`; `cad::pick::search`: the nearest sampled edge polyline within 6 px not behind the first surface → `[id, "edge", i]` (polylines from `cad::topology`); `cad::overlay` draws the edges | done-by-reading |
@@ -233,7 +255,7 @@ the feature is later, not that it cannot be reached at all.
 | "Select All" (`edit.select_all`: visible bodies, sheets, curves, instances and meshes) | ui/app.py:296, ui/app.py:604-610 | `PUT /selection` (computed from `/doc`) | `CadAction::CadSelectAll` → `cad::selection::select_all` (`SELECTABLE_KINDS`, visible) | done-by-reading |
 | "Invert Selection" (`edit.invert`) | ui/app.py:297, ui/app.py:612-619 | `PUT /selection` | `CadAction::CadInvertSelection` → `cad::selection::invert` | done-by-reading |
 | "Select Same Material" (`edit.select_same_material`) | ui/app.py:298, ui/app.py:621-629, document.py:448 | `PUT /selection` (from `/doc` materials) | `CadAction::CadSelectSameMaterial` → `cad::selection::same_material` | deliberately different: refuses by name when nothing is selected or the first selected node has no material; RoboCAD does nothing for an empty selection and selects every body without a material for one with none |
-| "Selection: edges → bounding faces" (`edit.convert_faces`) | ui/app.py:299, ui/app.py:631-645 | `GET /nodes/{id}/edges`, `/faces`; `PUT /selection` | `CadAction::CadEdgesToFaces` → `cad::selection::edges_to_faces` (`faces_along`) | deliberately different: RoboCAD asks its kernel (`faces_of_edge`), which has no REST route; the faces come from RoboCAD's drawn tessellation along the sampled edge polyline, and the command refuses by name until both are loaded |
+| "Selection: edges → bounding faces" (`edit.convert_faces`) | ui/app.py:299, ui/app.py:631-645 | `GET /nodes/{id}/edges`, `/faces`; `PUT /selection` | `CadAction::CadEdgesToFaces` → `cad::selection::edges_to_faces` (`faces_along`; since cad-physical-inspect the faces are stamped with the topology revision, and an edge picked at an older revision is refused by name) | deliberately different: RoboCAD asks its kernel (`faces_of_edge`), which has no REST route; the faces come from RoboCAD's drawn tessellation along the sampled edge polyline, and the command refuses by name until both are loaded |
 | Status "n selected" / "Ready" | ui/app.py:594-595 | n/a (display) | `cad::selection` ("n selected"); the `cad::panel` status line shows "Ready" when empty | done-by-reading |
 | Escape clears the selection in the Select tool, or returns to the Select tool | ui/app.py:487-497 | n/a | Escape (`cad::transform::keys`) → `CadAction::CadCancel` → `cad::transform::cancel` (closes the Alt menu first, then leaves a tool, then clears the selection) | done-by-reading |
 
@@ -278,13 +300,13 @@ inspector shows as returned.
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | Facts: "Nothing selected." / "n item(s)" / "Display size ≈ x × y × z mm" / "Exact measurements available on request." (display bounds only; a click never integrates a B-rep) | ui/widgets.py:452-455, ui/widgets.py:494-500, ui/widgets.py:555-564 | `GET /nodes/{id}` | `cad::inspector` shows `GET /nodes/{id}` (with its exact mass block) for the first selected node | deliberately different: the native inspector shows RoboCAD's node detail, whose mass block RoboCAD computes for each request (api.py:105-110). On a large imported body that request is slow, and in the GUI it runs on RoboCAD's Qt thread (api.py:1143-1144); RoboCAD's own panel avoids it |
-| "Calculate exact measurements" (a separate process over the whole selection: size, volume, area, mass, centroid; 60 s limit; cancelled by any edit or selection change) | ui/widgets.py:456-462, ui/widgets.py:566-633 | `GET /nodes/{id}` per node (combined natively) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| "Calculate exact measurements" (a separate process over the whole selection: size, volume, area, mass, centroid; 60 s limit; cancelled by any edit or selection change) | ui/widgets.py:456-462, ui/widgets.py:566-633 | `GET /nodes/{id}` per node (combined natively) | `cad/inspector/exact.rs:start`, `settle`, `sync` (the inspector's "Calculate exact measurements" button: one `GET /nodes/{id}` per selected node on a `Pool::Dedicated` job, combined as RoboCAD's `analysis.selection_properties`) | deliberately different: one `GET /nodes/{id}` per node on a job instead of RoboCAD's child process over the whole selection; the 60 s limit and the cancel on any edit or selection change are RoboCAD's, but a cancel only stops waiting (the request already sent finishes in RoboCAD); the preview drops "Display size ≈" |
 | Live dimensions of the selected faces and edges, editable | ui/widgets.py:505-509, ui/app.py:654-691 | `GET /nodes/{id}/faces`, `/edges`; `POST /ops/set_diameter`, `set_distance`, `set_angle` | `cad::transform::dimensions::live` as `cad::numeric` fields; Enter → `CadAction::CadSetDimension` → `cad::transform::commit::dimension_call` | done-by-reading |
 | "Material" dropdown "name (density g/cm³)", applied to the selection | ui/widgets.py:465-468, ui/widgets.py:491-503, ui/widgets.py:723-728 | `PATCH /nodes/{id} {"material"}`; `GET /doc` (`materials`) | `cad::inspector` material choice → `CadPatch` | done-by-reading |
 | "Tessellation tolerance (mm)" (0.005–2.0; RoboCAD's panel sets it without undo) | ui/widgets.py:469-476, ui/widgets.py:730-735 | `PATCH /nodes/{id} {"tessellation_tolerance"}` (undoable) | `cad/inspector/editors.rs:patch_for` (the inspector's "Tessellation tolerance (mm)" field: 0.005–2 mm, three decimals; one `PATCH /nodes/{id} {"tessellation_tolerance"}`); meshes refetched at the node's own tolerance (`cad/mesh.rs:sync`) | deliberately different: it patches the inspected node as one undo step, like every inspector edit (RoboCAD's spin box writes every selected node directly, without undo), and the field opens empty because RoboCAD reports no node's current value |
-| Joint physics overrides: "Radial clearance (mm)", "Wobble (°)", "Drive backlash (°; provenance)" ("Unmeasured"), "Coulomb friction (mN·m)", "Viscous (mN·m·s)", "Radial stiffness (N/m)", "Flex patch radius (mm)", the source line, and "*" for overridden values | ui/widgets.py:510-544, ui/widgets.py:635-679 | `GET /physical?flex=0` (joint `physics`, physical.py:552); `POST /ops/set_joint_physics` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Results: key value, …" for the selected node | ui/widgets.py:545-549 | none: needs a Python route (`Node.results` is not in `node_detail`; `GET /results` returns only the whole file, mapped to nodes in physical.py:999-1024) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Material properties…" ("name: engineering properties" dialog) | ui/widgets.py:550-552, ui/widgets.py:681-713 | `POST /ops/set_material_props` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Joint physics overrides: "Radial clearance (mm)", "Wobble (°)", "Drive backlash (°; provenance)" ("Unmeasured"), "Coulomb friction (mN·m)", "Viscous (mN·m·s)", "Radial stiffness (N/m)", "Flex patch radius (mm)", the source line, and "*" for overridden values | ui/widgets.py:510-544, ui/widgets.py:635-679 | `GET /physical?flex=0` (joint `physics`, physical.py:552); `POST /ops/set_joint_physics` | `cad/inspector/rows.rs:row` (the joint physics rows) and `cad/inspector/physical_edit.rs:joint_override` → `handle_physical` (`POST /ops/set_joint_physics` through `cad/actions.rs:edit_at`); values and provenance from `GET /physical?flex=0`, read again on each revision by `cad/inspector/refresh.rs:sync` | deliberately different: a value the physical model lacks is left empty instead of RoboCAD's 0.0 |
+| "Results: key value, …" for the selected node | ui/widgets.py:545-549 | `GET /results/nodes` (api.py `Service.results_nodes`, added with cad-physical-inspect: each node's `results` block and its material's yield strength; pytests `cad/tests/test_api_physical_routes.py`) | `cad/inspector/rows.rs:results_line` over the robot reads' `GET /results/nodes` (`cad/robot/data.rs:sync`) | done-by-reading |
+| "Material properties…" ("name: engineering properties" dialog) | ui/widgets.py:550-552, ui/widgets.py:681-713 | `POST /ops/set_material_props` | `cad/inspector/physical_edit.rs:controls_of` ("Material properties…") → `cad/materials/form.rs:properties_form` | done-by-reading |
 | The panel is disabled during pose preview | ui/pose.py:127, ui/pose.py:350 | n/a | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | `id`, `kind`, `name`, `parent`, `children`, `source` | api.py:98-99 | `GET /nodes/{id}` | `cad::inspector` (as returned) | done-by-reading |
 | `visible` (editable) | api.py:99, api.py:584-585 | `PATCH /nodes/{id} {"visible"}` | `cad::inspector` → `CadPatch` | done-by-reading |
@@ -294,7 +316,7 @@ inspector shows as returned.
 | `name` (editable) | api.py:99, api.py:582-583 | `PATCH /nodes/{id} {"name"}` | `CadPatch`: the inspector's name field and REST `cad_patch` | done-by-reading |
 | `effective_visible` | api.py:99 | `GET /nodes/{id}` | `cad::inspector`, `cad::tree` | done-by-reading |
 | `color` shown | api.py:99 | `GET /nodes/{id}` | `cad::inspector` (as returned) | done-by-reading |
-| `color` editor | api.py:592-593, commands.py:348 | `PATCH /nodes/{id} {"color"}` (REST `cad_patch` works now) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `color` editor | api.py:592-593, commands.py:348 | `PATCH /nodes/{id} {"color"}` (REST `cad_patch` works now) | `cad/inspector/physical_edit.rs:handle_physical` (`Color`, `MaterialColor`: `PATCH /nodes/{id} {"color"}` through `cad/actions.rs:edit_at`) | deliberately different: an "r, g, b" field plus "Use material colour" instead of a colour dialog |
 | `pivot` shown | api.py:99 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
 | `pivot` editor | api.py:594-595, commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | `cad::inspector::editors` (`EditKey::Pivot`: `editors::entry` evaluates "x, y, z" with `sim_runtime::units` → `patch_for` → `CadAction::CadPatch {"pivot"}`, one undo step; "Clear pivot" sends `null`; refused as RoboCAD refuses a component member's, `editors::refusal`) | done-by-reading |
 | `transform` shown (`Transform.to_json`) | api.py:99 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
@@ -306,7 +328,7 @@ inspector shows as returned.
 | `measure` shown | api.py:114-115 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
 | `mirror_plane` (live mirror instance) shown | api.py:116-117 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
 | `joint` shown | api.py:118-119 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
-| `joint` editor ("Edit joint" dialog) | ui/app.py:1565-1575 | `POST /ops/set_joint`, `POST /ops/rename` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `joint` editor ("Edit joint" dialog) | ui/app.py:1565-1575 | `POST /ops/set_joint`, `POST /ops/rename` | `cad/inspector/rows.rs:joint` ("Edit joint") → the catalogue's `ops.set_joint` (`cad/ops/catalogue/robot.rs`; `cad/ops/robot_args.rs` `EditJoint`: `set_joint`, then `rename` only when the name changed) | done-by-reading |
 | `robot` (motor, ground, print-split and other metadata) shown | api.py:120-121 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
 | Sensors (`kind: sensor`, `robot` block: kind, body, point, axes, rate, joint) shown | api.py:120-121, api.py:1250-1253 | `GET /nodes/{id}`, `GET /sensors` | `cad::inspector` | done-by-reading |
 | Cables (`kind: cable`, `robot` block: from/to body and point, length, mass) shown | api.py:120-121, api.py:1254-1257 | `GET /nodes/{id}`, `GET /cables` | `cad::inspector` | done-by-reading |
@@ -319,12 +341,12 @@ inspector shows as returned.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| Materials panel: "■ name density g/cm³" in the material's colour | ui/widgets.py:741-774, ui/app.py:186-189 | `GET /materials` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Search materials…" (name or tag) | ui/widgets.py:747-750, ui/widgets.py:768-770 | n/a (display) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Apply to selection" button and double-click | ui/widgets.py:753, ui/widgets.py:756-758, ui/widgets.py:776-781 | `POST /ops/set_material` | cad-physical-inspect epic (single node: the inspector dropdown) | later-epic: cad-physical-inspect |
-| Drag a material onto a body in the viewport | ui/widgets.py:752, ui/widgets.py:783-793, ui/app.py:1801-1816 | `POST /ops/set_material` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "New…" material dialog ("Name", "Density (g/cm³)") | ui/widgets.py:759-761, ui/widgets.py:795-815 | `POST /materials` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Engineering properties dialog (Young's modulus, Poisson ratio, yield, ultimate, glass transition, conductivity, specific heat, expansion, bearing pressure, friction against itself and steel, print anisotropy) | ui/widgets.py:681-713 | `POST /ops/set_material_props` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Materials panel: "■ name density g/cm³" in the material's colour | ui/widgets.py:741-774, ui/app.py:186-189 | `GET /materials` | `cad/materials/panel.rs:draw` (a section of the right dock) | done-by-reading |
+| "Search materials…" (name or tag) | ui/widgets.py:747-750, ui/widgets.py:768-770 | n/a (display) | `cad/materials/mod.rs:matches` | done-by-reading |
+| "Apply to selection" button and double-click | ui/widgets.py:753, ui/widgets.py:756-758, ui/widgets.py:776-781 | `POST /ops/set_material` | `cad/materials/mod.rs:apply`, `cad/materials/panel.rs:input` (Apply and double-click: one `POST /ops/set_material` over the shared selection's nodes through `cad/actions.rs:edit_at`) | done-by-reading |
+| Drag a material onto a body in the viewport | ui/widgets.py:752, ui/widgets.py:783-793, ui/app.py:1801-1816 | `POST /ops/set_material` | none (Apply to selection and double-click, `cad/materials/mod.rs:apply`) | deliberately different: a drop onto a body would need a second pointer path (a drag across the dock into the view with its own ray cast) beside `cad/pick.rs`; Apply and double-click make the same single edit |
+| "New…" material dialog ("Name", "Density (g/cm³)") | ui/widgets.py:759-761, ui/widgets.py:795-815 | `POST /materials` | `cad/materials/form.rs:new_form`, `submit` → `cad/materials/mod.rs:submit` (`POST /materials`) | done-by-reading |
+| Engineering properties dialog (Young's modulus, Poisson ratio, yield, ultimate, glass transition, conductivity, specific heat, expansion, bearing pressure, friction against itself and steel, print anisotropy) | ui/widgets.py:681-713 | `POST /ops/set_material_props` | `cad/materials/form.rs:properties_form`, `submit` → `cad/materials/mod.rs:submit` (one `POST /ops/set_material_props`) | deliberately different: only the changed keys are sent; the defaults shown come from the physical model's materials, else "not reported" (RoboCAD's `_ENG` table is not copied into Rust) |
 
 ## Viewport: display, camera, views, grid, build plate, section, isolate
 
@@ -344,7 +366,7 @@ inspector shows as returned.
 | Sketch curves drawn on their planes | ui/viewport.py:922-939 | `GET /nodes/{id}` (its `sketch` field, so dropped curves are counted) | `cad::sketch::display` (`shown`: every `effective_visible` sketch node; `lines`: each curve's `SketchCurve::sample(48)` through the sketch's own plane, from `CadSketches::sketch_last`; `draw`, Present: orange (1.0, 0.65, 0.2) when selected, else blue (0.35, 0.8, 1.0), 2 px over the bodies); the geometry from `cad::sketch::cache::sync` (`CadClient::sketch`, one Dedicated job per node, by (node, revision)) | deliberately different: a slot's caps bulge outward, as the kernel's solid does (`sim_runtime::cad_client::SketchCurve::sample`); RoboCAD's viewport turns them inward (`io/exporters.py` `_slot_points` sweeps the other way: a RoboCAD display bug, see the notes below) |
 | Construction planes (translucent quads; the active plane is brighter) | ui/viewport.py:635-657 | `GET /doc`, `GET /nodes/{id}` (`plane`) | `cad::sketch::plane_draw` (`wanted`, `quads`: every visible plane node with its frame read (`CadSketches::plane_last`), a ±60 mm square filled (0.3, 0.6, 0.9) at alpha 0.18 when it is the active plane, else 0.08; `outlines`: alpha 0.8, else 0.4); frames from `cad::sketch::cache` | deliberately different: the active plane is drawn even when no visible plane node is it (XY, XZ, YZ or a hidden node), so the plane the tools work on is always shown; RoboCAD draws plane nodes only |
 | Reference images textured on their planes | ui/viewport.py:659-691 | none: needs a Python route (`node_detail` strips the image bytes, api.py:128-130) | cad-organize epic | later-epic: cad-organize |
-| Joint glyphs, motor shaft axes, sensor triads and sagging cable arcs | ui/viewport.py:971-1021 | `GET /nodes/{id}` (`joint`, `robot`) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Joint glyphs, motor shaft axes, sensor triads and sagging cable arcs | ui/viewport.py:971-1021 | `GET /nodes/{id}` (`joint`, `robot`) | `cad/robot/glyphs.rs:draw` (shapes from `glyph_lines`; cached by generation and read revision) | deliberately different: screen sizes are measured at each glyph's own depth; dots are small three-axis crosses (gizmos draw no points); nothing is hidden for a pose preview (CAD mode has none) |
 | Orbit (right-drag, Alt+left-drag, Shift+middle-drag; turntable) | ui/viewport.py:1480-1512, ui/viewport.py:79-86 | n/a (display) | `camera/input.rs:navigate` → `camera/orbit.rs:Orbit::rotate` (turntable, 89.5° pitch limit, `cad/scene.rs:rules`): right-drag, and with `OrbitRules::robocad_gestures` (true only in CAD, `cad/scene.rs:rules`) Shift+middle-drag (`camera/input.rs:drag_kind`) and Alt+left-drag once it moves past `camera/input.rs:ALT_DRAG_SLOP` (6 px), gated by `cad/scene.rs:gate` to the Select tool with no catalogue interaction or command surface; `cad::pick` no longer box-selects an Alt drag, and an Alt click still opens the candidates menu (RoboCAD's own Alt+left orbit never fires: see the notes at the end) | done-by-reading |
 | Pan (Shift+right-drag, middle-drag) | ui/viewport.py:1489-1497, ui/viewport.py:88-91 | n/a (display) | `camera/input.rs:navigate` → `camera/orbit.rs:Orbit::pan` on middle-drag or Shift+right-drag | done-by-reading |
 | Wheel zoom | ui/viewport.py:1553-1569 | n/a (display) | `cad::scene` zoom | done-by-reading |
@@ -371,7 +393,7 @@ inspector shows as returned.
 | "Isolate" (`view.isolate`) | ui/app.py:312, commands.py:402 | `POST /ops/isolate` | /, View > Isolate, the 3D view's right-click menu → `cad/ops/catalogue/view.rs:ENTRIES` (`view.isolate`: `POST /ops/isolate` on the selected nodes, one undo step) | deliberately different: refused by name with nothing selected ("Select the nodes to isolate"); RoboCAD's runs and hides everything |
 | "Show All" (`view.show_all`) | ui/app.py:313, commands.py:415 | `POST /ops/show_all` | Alt+H, View > Show All → `cad/ops/catalogue/view.rs:ENTRIES` (`view.show_all`: `POST /ops/show_all`, one undo step) | done-by-reading |
 | "Hide" (`view.hide`, the selection) | ui/app.py:314 | `POST /ops/set_visible` | H, View > Hide, the 3D view's right-click menu → `cad/ops/catalogue/view.rs:ENTRIES` (`view.hide`: `POST /ops/set_visible` with false on the selected nodes, one undo step) | deliberately different: refused by name with nothing selected ("Select the nodes to hide"); RoboCAD's pushes an empty undo step |
-| Stress overlay (`view.stress` "Toggle stress overlay (from loaded results)" and `print.overlay` "Strength overlay on/off"; blue 0 → red at yield) | ui/app.py:399, ui/app.py:422, ui/app.py:1695-1698, ui/viewport.py:826-877 | none: needs a Python route (per-node `results.hotspot`; see the inspector's "Results" row) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Stress overlay (`view.stress` "Toggle stress overlay (from loaded results)" and `print.overlay` "Strength overlay on/off"; blue 0 → red at yield) | ui/app.py:399, ui/app.py:422, ui/app.py:1695-1698, ui/viewport.py:826-877 | `GET /results/nodes` (per-node `results.hotspot` and yield strength; added with cad-physical-inspect) | `cad/results/overlay.rs:paint`; `cad/results/mod.rs:handle` (`Overlay`, `PrintOverlay`); colours from `sim_domain_robot::stress_results::link_colours` | deliberately different: one colour rule shared with Robot mode (`link_colours`: log scale over 3 decades, blue at 0.1 % of yield → red at yield), where RoboCAD's window is linear from blue 0 to red at yield; `print.overlay` only toggles this overlay (the print study's failure-index colouring is cad-print's); the staleness label follows RoboCAD's stale flag |
 | "Draft-angle shading" (`inspect.draft`, pull +Z) | ui/app.py:403, ui/app.py:1304-1317 | `GET /nodes/{id}/mesh` (derived natively) | none (`cad/surfaces/registry.rs` `DRAFT_SHADING`) | deliberately different: RoboCAD colours each selected body's triangles by draft against +Z (`analysis.draft_angle_colors`); no route serves those colours and the native meshes carry no per-triangle colours to draw them |
 | "Normal-direction shading" (`inspect.normals`, which switches to xray) | ui/app.py:404, ui/app.py:1319-1322 | n/a (display) | `inspect.normals` (Inspect menu) → `DisplayCmd::Mode(Xray)` (`cad/surfaces/registry.rs`), as RoboCAD's `normal_shading` switches to xray | done-by-reading |
 | Overlay: "tool · mode" and the tool hint; footer "Right-drag orbit · Shift+right-drag pan · Wheel zoom · F focus \| n ms/frame" | ui/viewport.py:1198-1223 | n/a (display) | "tool · mode" and the hint: `cad::numeric` head (`cad::transform::mode_label`, `cad::transform::hint`), at the bottom of the 3D view, with the navigation line (`cad::numeric::NAVIGATION`: this view's own orbit, pan, zoom and Home fit) | deliberately different: no ms/frame readout (frame timing belongs to the diagnostics overlay, see native-viewer.md "Bevy features to use"), and the navigation names this view's keys ("Right-drag orbit · Shift+right-drag or middle-drag pan · Wheel zoom · Home fit"; F focuses the selection since cad-views-export, `cad/surfaces/registry.rs:focus`, but the line does not list it) |
@@ -408,7 +430,7 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Plane from two points (camera) (`tool.plane_camera`) | ui/app.py:352, ui/tools.py:1107-1111 | `POST /ops/plane_two_points_camera` | `cad::ops` catalogue `tool.plane_camera` (`Flow::PlanePick(Camera)`: two snaps as `tool.plane_three`; `Arg::ViewDir`, the view's direction at the run) → `POST /ops/plane_two_points_camera`; the new plane becomes active | done-by-reading |
 | Midplane between two faces (`tool.plane_mid`) | ui/app.py:353, ui/tools.py:1096-1099 | `POST /ops/plane_midplane` | `cad::ops` catalogue `tool.plane_mid` (`Flow::PlanePick(Mid)`: two face picks as `tool.plane`; `Arg::Node`, `Arg::Face`, `Arg::FaceB`) → `POST /ops/plane_midplane`; the new plane becomes active | done-by-reading |
 | Active plane XY / XZ / YZ (`tool.plane_xy`, `tool.plane_xz`, `tool.plane_yz`; "Active plane set") | ui/app.py:354-356, ui/app.py:1022-1027 | n/a (viewer state; RoboCAD's `PUT /view {"active_plane"}` is GUI-only) | `cad::ops` catalogue `tool.plane_xy`, `tool.plane_xz`, `tool.plane_yz` (`Flow::View(ViewAct::Plane)`) → `sketch::plane::view_act` sets `CadActivePlane` (status "Active plane set"); `cad_state.plane` (`plane::state_json`); every plane parameter's "active" (`Arg::Plane`) and the tools read it | deliberately different: also, selecting exactly one plane node makes it the active plane (`plane::sync`), a native gesture (RoboCAD's plane nodes become active only when a plane tool creates them); the active plane is the viewer's display state, never `PUT /view` |
-| "Toggle 2D snapping to the active plane" (`tool.plane_2d_snap`) | ui/app.py:357, ui/app.py:1029-1031 | n/a (viewer state) | `cad::ops` catalogue `tool.plane_2d_snap` (`Flow::View(ViewAct::Snap2d)`) → `sketch::plane::view_act` toggles `CadActivePlane::snap_2d` ("2D snapping on|off"); read through `snap::snap_plane` by measure, the cursor snap and the plane tools' points | done-by-reading |
+| "Toggle 2D snapping to the active plane" (`tool.plane_2d_snap`) | ui/app.py:357, ui/app.py:1029-1031 | n/a (viewer state) | `cad::ops` catalogue `tool.plane_2d_snap` (`Flow::View(ViewAct::Snap2d)`) → `sketch::plane::view_act` toggles `CadActivePlane::snap_2d` ("2D snapping on\|off"); read through `snap::snap_plane` by measure, the cursor snap and the plane tools' points | done-by-reading |
 | Fastener hole… (`tool.fastener`, Ctrl+H: dialog "Size" M2–M8, "Kind" clearance/tap/counterbore/countersink/insert, "Extra clearance (mm)", "Depth (mm)" or "through"; remembers the last; then click faces) | ui/app.py:358, ui/app.py:889-894, ui/widgets.py:988-1021, ui/tools.py:1120-1155 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
 | Mirror (about active plane) (`tool.mirror`, Ctrl+M; YZ when no plane is active) | ui/app.py:360, ui/app.py:910-914 | `POST /ops/mirror` | `cad::ops` catalogue `tool.mirror` (`Flow::Immediate`; Ctrl+M) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): one `POST /ops/mirror {"args": [ids, plane], "kwargs": {"live": false}}`; `plane` defaults to "active" (`Arg::Plane("plane", Yz)`: the active plane by name or plane node id, else YZ as RoboCAD); REST `cad_run` may name xy, xz or yz | done-by-reading |
 | Mirror as live instance (`tool.mirror_live`) | ui/app.py:361 | `POST /ops/mirror {"live": true}` | `cad::ops` catalogue `tool.mirror_live` → one `POST /ops/mirror {"args": [ids, plane], "kwargs": {"live": true}}`; `plane` as `tool.mirror` (the active plane, else YZ) | done-by-reading |
@@ -416,8 +438,8 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Instance selected (`tool.instance`: offset +20 mm in X) | ui/app.py:364, ui/app.py:916-918 | `POST /ops/instance` | `cad::ops` catalogue `tool.instance` (`Flow::Immediate`) → `POST /ops/instance {"args": [node, {"translation": [20, 0, 0]}]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: refused by name ("Select the bodies to instance") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
 | "Set pivot at cursor snap" (`tool.set_pivot`) | ui/app.py:376, ui/app.py:1015-1020 | `POST /ops/set_pivot`; `PATCH /nodes/{id} {"pivot"}` | `cad::ops` catalogue `tool.set_pivot` (`Flow::AtCursorSnap`) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): `POST /ops/set_pivot {"args": [first node, point]}` with `Arg::CursorSnap`, the snap `cad::ops::interact::pointer` keeps in `OpsState::cursor_snap` while the pointer is over the 3D view, with the shown revision it was snapped at (used only at that revision; cleared when the pointer leaves the window), or REST's `point` | deliberately different: the snap falls back to the first surface under the pointer (RoboCAD's `viewport.snap` has none), so a pivot can be set on a face; an empty selection is refused by name ("Select the node whose pivot to set") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
 | Image calibrate tool (two clicks on the image, type the real distance) | ui/tools.py:1210-1241 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
-| Motor tool (click a face: housing outside, shaft into the body) | ui/tools.py:1244-1291 | `POST /ops/add_motor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Joint tool (parent, Ctrl-click for the world; child; an axis face) | ui/tools.py:1294-1361 | `POST /ops/add_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Motor tool (click a face: housing outside, shaft into the body) | ui/tools.py:1244-1291 | `POST /ops/add_motor` | `cad/robot/tools.rs:motor_pick` (the face from `cad/robot/tools_click.rs:click` → `CadMeshes::face_at` at the shown revision) → `cad/ops/mod.rs:run_entry` | deliberately different: the "Add motor" dialog's fields stay beside the view while you click (one step; Escape ends both) |
+| Joint tool (parent, Ctrl-click for the world; child; an axis face) | ui/tools.py:1294-1361 | `POST /ops/add_joint` | `cad/robot/tools.rs:joint_pick` → `cad/ops/robot_form.rs:open_preset` ("Add joint" with the picks) | done-by-reading |
 | Snapping: vertices, edge midpoints, centres, sketch endpoints, grid, plane, free; Alt suppresses; readout "kind (x, y, z)" | ui/viewport.py:1369-1435, ui/app.py:557-560 | `GET /nodes/{id}/vertices`, `GET /nodes/{id}/edges`, `GET /nodes/{id}` (sketch field) | `cad::snap::snap_on` (`candidates`: vertices, edge midpoints, edge centres; `sketch_candidates`: the visible sketches' endpoints; then the 10 mm grid in plane coordinates; then the plane or free; projected onto the active plane while 2D snapping is on or a sketch or placement tool passes its plane; Alt suppresses), readout `Snap::readout`; used by `cad::measure::tool`, the cursor snap, placement, the plane tools and the sketch tools | deliberately different: centre snaps work here (RoboCAD reads a `centers` attribute its items lack, so its never fire) |
 | Gizmo drawing and hit testing | ui/viewport.py:1060-1132 | n/a (display) | `cad::transform::gizmo::draw` and `hit_test` (RoboCAD's 90 px handles; centre within 10 px, axes and rings within 14 px), CAD mode's own rather than Bevy's `TransformGizmoPlugin` (reasons in cad/transform/mod.rs) | done-by-reading |
 | Tool cursors (arrow, size-all, crosshair) | ui/app.py:519-523 | n/a (display) | `cad::transform::tool_cursor` (arrow, move, crosshair over the 3D view; `restore_cursor` on leaving CAD mode) | done-by-reading |
@@ -465,7 +487,7 @@ that difference.
 | "Sweep (profile + path from selection)" (`tool.sweep`; "Twist (degrees):") | ui/app.py:334, ui/app.py:801-809 | `POST /ops/sweep {"options": {"twist_deg"}}` | `cad::ops` catalogue `tool.sweep` (`Flow::Form`: "Twist (degrees):" 0.0, −3600 to 3600; the selected sketches and curves, at least two) → `args::build` → one `POST /ops/sweep {"args": [profile, path, {"twist_deg"}]}` (`Arg::Keyed`) | done-by-reading |
 | "Pipe along selected curve…" (`tool.pipe`; "Diameter (mm):") | ui/app.py:335, ui/app.py:811-818 | `POST /ops/pipe` | `cad::ops` catalogue `tool.pipe` (`Flow::Form`: "Diameter (mm):" 4.0, 0.01 to 1000) → one `POST /ops/pipe {"args": [node, diameter]}` per selected sketch or curve (`Fan::PerNode`) | done-by-reading |
 | "Loft selected sketches" (`tool.loft`) | ui/app.py:336, ui/app.py:820-824 | `POST /ops/loft` | `cad::ops` catalogue `tool.loft` (two or more sketches or curves, else "Select two or more sketches to loft") → one `POST /ops/loft {"args": [ids]}` | done-by-reading |
-| "Fill / patch selected curve" (`tool.fill`) | ui/app.py:337, ui/app.py:826-830 | `POST /ops/fill` | `cad::ops` catalogue `tool.fill` (the first selected sketch or curve, else "Select a closed curve") → one `POST /ops/fill {"args": [node]}`; needs api.py's 2026-10-01 fix: `ArgConverter` read the node id given to `Ops.fill(edges: str | Body)` as an edge reference (any parameter named `edges`), a 400 for every fill; a string now passes through when the annotation has no `EdgeRef` (cad/tests/test_api_fill_node.py) | done-by-reading |
+| "Fill / patch selected curve" (`tool.fill`) | ui/app.py:337, ui/app.py:826-830 | `POST /ops/fill` | `cad::ops` catalogue `tool.fill` (the first selected sketch or curve, else "Select a closed curve") → one `POST /ops/fill {"args": [node]}`; needs api.py's 2026-10-01 fix: `ArgConverter` read the node id given to `Ops.fill(edges: str \| Body)` as an edge reference (any parameter named `edges`), a 400 for every fill; a string now passes through when the annotation has no `EdgeRef` (cad/tests/test_api_fill_node.py) | done-by-reading |
 
 ## Modify and booleans
 
@@ -541,42 +563,42 @@ that difference.
 | "Test coupons (for the selected split, or the material)…" (`print.coupons`; "Printer:", "Filament:") | ui/app.py:398, ui/app.py:1244-1263 | `POST /print/coupons` | cad-print epic | later-epic: cad-print |
 | "Print jobs…" (`print.jobs`: the last eight; "Cancel the running jobs?") | ui/app.py:400, ui/app.py:1265-1275 | `GET /print/jobs`, `DELETE /print/jobs/{id}` | cad-print epic | later-epic: cad-print |
 | Job progress in the status bar ("kind: message (n %) — Print ▸ Print jobs… to cancel") | ui/app.py:1144-1164 | `GET /print/jobs/{id}` | cad-print epic | later-epic: cad-print |
-| The print overlay ("print" results section in the stress colours) | ui/viewport.py:831-840 | none: needs a Python route (per-node results; see the inspector) | cad-print epic | later-epic: cad-print |
+| The print overlay ("print" results section in the stress colours) | ui/viewport.py:831-840 | `GET /results/nodes` (per-node `results`, print-study blocks included; added with cad-physical-inspect) | cad-print epic | later-epic: cad-print |
 | "Clearance offset…" (`tool.clearance`, Ctrl+Shift+C; "Grow holes / shrink bosses by (mm):", remembered) | ui/app.py:359, ui/app.py:896-908 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
 
 ## Robot: joints, motors, sensors, cables, battery, control, uncertainty
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| Robot panel summary ("n bodies, n joints, n DoF, n motors, n sensors, n cables. Ground: …. Power: ….") | ui/widgets.py:1234-1291 | `GET /robot`; `GET /results` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Robot panel tree "Links", "Joints", "Motors", "Sensors & cables" with "Detail" and "Margin" columns; click selects; double-click a joint edits it | ui/widgets.py:1246-1252, ui/widgets.py:1304-1366 | `GET /robot`; `GET /results` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Margins (yield, bearing, screw, stall, Tg, mount Tg) | ui/widgets.py:1293-1302, physical.py:1030 | none: needs a Python route (`results_margins` maps the results file to nodes in Python) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Issues list "⛔"/"⚠" and "✓ robot is valid" | ui/widgets.py:1348-1355 | `GET /robot` (`issues`) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Robot panel buttons (Add joint…, Add motor…, Joint from selection…, Infer joints, Assign motor…, Fix together, Toggle ground, Add sensor…, Add cable…, Battery / control…, Export sim…, Stress overlay, Load results…, Apply identification…) | ui/widgets.py:1255-1269 | the commands' routes below | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: add motor from library…" (`robot.add_motor`; "Add motor" dialog: Motor, Rotation about shaft, Mount on, "Cut mounting holes and pilot into the mounted body", Name, notes) | ui/app.py:408, ui/app.py:1526-1531, ui/widgets.py:1076-1129 | `POST /ops/add_motor`; `GET /motors` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: add joint (click parent, child, axis face)" (`robot.add_joint`) | ui/app.py:409, ui/app.py:1533-1538 | `POST /ops/add_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: joint from the two selected bodies…" (`robot.joint_dialog`; "Add joint" dialog: Type with hints, Parent "(world)", Child, Pivot (mm), Axis, limits (° or mm), Motor, Extra gear ratio, Damping, Name) | ui/app.py:410, ui/app.py:1540-1563, ui/widgets.py:1132-1231 | `POST /ops/add_joint`, `POST /ops/set_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: infer joints from coaxial holes and pins" (`robot.infer`) | ui/app.py:411, ui/app.py:1577-1581 | `POST /ops/infer_joints` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: assign selected motor to a joint…" (`robot.assign_motor`; "Motor", "Joint", "Extra gear ratio") | ui/app.py:412, ui/app.py:1583-1615 | `POST /ops/attach_motor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: fix selected bodies together (first is the parent)" (`robot.fixed`) | ui/app.py:413, ui/app.py:1617-1624 | `POST /ops/connect_fixed` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: toggle ground on selected bodies" (`robot.ground`) | ui/app.py:414, ui/app.py:1626-1633 | `POST /ops/set_ground` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: validate" (`robot.validate`; "robot valid: …" or the "Robot validation" warning) | ui/app.py:415, ui/app.py:1635-1642 | `GET /robot` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: motor library…" (`robot.motors`) | ui/app.py:416, ui/app.py:1644-1647 | `GET /motors` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: add sensor (IMU, encoder, current, force)…" (`robot.add_sensor`; Kind, On body, Point (mm), Reads joint, Rate (Hz), Name) | ui/app.py:417, ui/app.py:1649-1657, ui/widgets.py:1369-1407 | `POST /sensors`; `POST /ops/add_sensor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: add cable between bodies…" (`robot.add_cable`; From/To body and point, Length "auto: 10 % slack", Mass "auto: 4 g per 100 mm", Name) | ui/app.py:418, ui/app.py:1659-1667, ui/widgets.py:1410-1457 | `POST /cables`; `POST /ops/add_cable` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: battery, control loop and uncertainty…" (`robot.power`; Battery cells, Chemistry, Capacity (Ah), Control period (s), Control latency (s), Target per joint (°), Dimension σ (mm), Friction σ (fraction)) | ui/app.py:419, ui/app.py:1669-1674, ui/widgets.py:1460-1523 | `PUT /battery`, `PUT /control`, `PUT /uncertainty`; `POST /ops/set_robot_setting` (no battery) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: load simulation results…" (`robot.load_results`; defaults to `<name>.simresult.json`; turns the stress overlay on) | ui/app.py:420, ui/app.py:1676-1687 | `POST /results/load` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Robot: apply identified joint parameters…" (`robot.apply_identification`) | ui/app.py:421, ui/app.py:1689-1693 | `POST /identification/apply` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Actuator profiles (REST only) | api.py:1239-1243, commands.py:1138 | `GET/POST /actuator-profiles` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Robot panel summary ("n bodies, n joints, n DoF, n motors, n sensors, n cables. Ground: …. Power: ….") | ui/widgets.py:1234-1291 | `GET /robot`; `GET /results` | `cad/robot/panel.rs:summary_line` (Robot section of the right dock; reads from `cad/robot/data.rs:sync`) | deliberately different: "(n s run)" is omitted (`GET /results/nodes` has no `duration_s`); "(stale: …)" is added when RoboCAD's stale flag is set |
+| Robot panel tree "Links", "Joints", "Motors", "Sensors & cables" with "Detail" and "Margin" columns; click selects; double-click a joint edits it | ui/widgets.py:1246-1252, ui/widgets.py:1304-1366 | `GET /robot`; `GET /results` | `cad/robot/panel.rs:view`, `row`, `double_click` | deliberately different: the branch glyphs ⚙ ⚡ ◎ 〜 ▣ are not in IBM Plex Sans, so rows sit under headings without them; Detail and Margin are lines under the name, not columns, to fit the dock width |
+| Margins (yield, bearing, screw, stall, Tg, mount Tg) | ui/widgets.py:1293-1302, physical.py:1030 | `GET /results/nodes` (`margins`: `results_margins` per node, print-study blocks left out; added with cad-physical-inspect) | `cad/robot/panel.rs:margin_text` | done-by-reading |
+| Issues list "⛔"/"⚠" and "✓ robot is valid" | ui/widgets.py:1348-1355 | `GET /robot` (`issues`) | `cad/robot/panel.rs:view` | deliberately different: ⛔ and ⚠ are not in the font, so "Error:" and "Warning:" in the danger and warn colours; ✓ kept |
+| Robot panel buttons (Add joint…, Add motor…, Joint from selection…, Infer joints, Assign motor…, Fix together, Toggle ground, Add sensor…, Add cable…, Battery / control…, Export sim…, Stress overlay, Load results…, Apply identification…) | ui/widgets.py:1255-1269 | the commands' routes below | `cad/robot/panel.rs:buttons` | done-by-reading |
+| "Robot: add motor from library…" (`robot.add_motor`; "Add motor" dialog: Motor, Rotation about shaft, Mount on, "Cut mounting holes and pilot into the mounted body", Name, notes) | ui/app.py:408, ui/app.py:1526-1531, ui/widgets.py:1076-1129 | `POST /ops/add_motor`; `GET /motors` | the catalogue's `robot.add_motor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`, `cad/ops/robot_form.rs`; motors from `GET /motors` only) | deliberately different: motors are listed in id order (`GET /motors` read into a `BTreeMap`) |
+| "Robot: add joint (click parent, child, axis face)" (`robot.add_joint`) | ui/app.py:409, ui/app.py:1533-1538 | `POST /ops/add_joint` | the catalogue's `robot.add_joint` → the joint tool `cad/robot/tools.rs:joint_pick` (Ctrl+Shift+J) | done-by-reading |
+| "Robot: joint from the two selected bodies…" (`robot.joint_dialog`; "Add joint" dialog: Type with hints, Parent "(world)", Child, Pivot (mm), Axis, limits (° or mm), Motor, Extra gear ratio, Damping, Name) | ui/app.py:410, ui/app.py:1540-1563, ui/widgets.py:1132-1231 | `POST /ops/add_joint`, `POST /ops/set_joint` | the catalogue's `robot.joint_dialog` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_form.rs`, `cad/ops/robot_args.rs`) | done-by-reading |
+| "Robot: infer joints from coaxial holes and pins" (`robot.infer`) | ui/app.py:411, ui/app.py:1577-1581 | `POST /ops/infer_joints` | the catalogue's `robot.infer` (`cad/ops/catalogue/robot.rs`) | done-by-reading |
+| "Robot: assign selected motor to a joint…" (`robot.assign_motor`; "Motor", "Joint", "Extra gear ratio") | ui/app.py:412, ui/app.py:1583-1615 | `POST /ops/attach_motor` | the catalogue's `robot.assign_motor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_form.rs`) | done-by-reading |
+| "Robot: fix selected bodies together (first is the parent)" (`robot.fixed`) | ui/app.py:413, ui/app.py:1617-1624 | `POST /ops/connect_fixed` | the catalogue's `robot.fixed` (`cad/ops/catalogue/robot.rs`) | done-by-reading |
+| "Robot: toggle ground on selected bodies" (`robot.ground`) | ui/app.py:414, ui/app.py:1626-1633 | `POST /ops/set_ground` | the catalogue's `robot.ground` (`cad/ops/catalogue/robot.rs`) | done-by-reading |
+| "Robot: validate" (`robot.validate`; "robot valid: …" or the "Robot validation" warning) | ui/app.py:415, ui/app.py:1635-1642 | `GET /robot` | `cad/robot/tools.rs:validate`, `verdict` | deliberately different: RoboCAD's warning box becomes the status line and the Robot panel's issue list |
+| "Robot: motor library…" (`robot.motors`) | ui/app.py:416, ui/app.py:1644-1647 | `GET /motors` | `cad/robot/tools_library.rs:draw` | deliberately different: a floating panel instead of a message box |
+| "Robot: add sensor (IMU, encoder, current, force)…" (`robot.add_sensor`; Kind, On body, Point (mm), Reads joint, Rate (Hz), Name) | ui/app.py:417, ui/app.py:1649-1657, ui/widgets.py:1369-1407 | `POST /sensors`; `POST /ops/add_sensor` | the catalogue's `robot.add_sensor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`) | done-by-reading |
+| "Robot: add cable between bodies…" (`robot.add_cable`; From/To body and point, Length "auto: 10 % slack", Mass "auto: 4 g per 100 mm", Name) | ui/app.py:418, ui/app.py:1659-1667, ui/widgets.py:1410-1457 | `POST /cables`; `POST /ops/add_cable` | the catalogue's `robot.add_cable` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`) | done-by-reading |
+| "Robot: battery, control loop and uncertainty…" (`robot.power`; Battery cells, Chemistry, Capacity (Ah), Control period (s), Control latency (s), Target per joint (°), Dimension σ (mm), Friction σ (fraction)) | ui/app.py:419, ui/app.py:1669-1674, ui/widgets.py:1460-1523 | `PUT /battery`, `PUT /control`, `PUT /uncertainty`; `POST /ops/set_robot_setting` (no battery) | the catalogue's `robot.power` (`cad/ops/robot_form.rs:precheck`, `cad/ops/robot_args.rs` `power`) | deliberately different: the per-joint targets are one JSON field {name: deg}; joints left out keep their target and non-motion joints are refused; the dialog is refused until the description, battery, control and uncertainty reads are current (`cad/ops/robot_form.rs:precheck`) |
+| "Robot: load simulation results…" (`robot.load_results`; defaults to `<name>.simresult.json`; turns the stress overlay on) | ui/app.py:420, ui/app.py:1676-1687 | `POST /results/load` | `cad/results/mod.rs:handle` (`Load`) and `cad/results/forms.rs` (path field, starting at `<stem>.simresult.json` even when it is missing, where RoboCAD falls back to the folder) | done-by-reading |
+| "Robot: apply identified joint parameters…" (`robot.apply_identification`) | ui/app.py:421, ui/app.py:1689-1693 | `POST /identification/apply` | `cad/results/mod.rs:handle` (`Identify`) | done-by-reading |
+| Actuator profiles (REST only) | api.py:1239-1243, commands.py:1138 | `GET/POST /actuator-profiles` | `cad/results/mod.rs:profiles` (`POST /actuator-profiles`; in the window through a JSON file field); the current profiles in `cad_state.results` | done-by-reading |
 
 ## Physical export and simulation link
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | The physical description for the inspector (nothing written) | api.py:1229-1238 | `GET /physical?flex=0` | `CadAction::CadPhysical` → `CadClient::physical(false)` | done-by-reading |
-| "Simulation: export physical model (simrobot v4, with flexible links)…" (`sim.export_physical`; a background child process, "exporting … n s", queued while one runs, terminated on close) | ui/app.py:423, ui/app.py:1700-1703, ui/app.py:1711-1767 | `GET /physical?path=P&flex=1` (writes the file; in the GUI a child process derives it, api.py:1233-1238) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Simulation: export robot model…" (`sim.export`: the same model with the x–z planar hint) | ui/app.py:424, ui/app.py:1705-1709 | none: needs a Python route (`/physical` has no `planar` parameter; export_worker.py:33 does) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Simulation: live link (watch + run viewer)" (`sim.link`: re-exports `<name>.simrobot.json` on every save and runs `sim-spatial --robot`) | ui/app.py:425, ui/app.py:1769-1781, simbridge.py:215-265 | `POST /save` then `GET /physical?path=…&flex=0` | cad-physical-inspect epic (robot mode in this same app reloads the file) | later-epic: cad-physical-inspect |
+| "Simulation: export physical model (simrobot v4, with flexible links)…" (`sim.export_physical`; a background child process, "exporting … n s", queued while one runs, terminated on close) | ui/app.py:423, ui/app.py:1700-1703, ui/app.py:1711-1767 | `GET /physical?path=P&flex=1` (writes the file; in the GUI a child process derives it, api.py:1533-1546); the viewer sends `GET /physical?flex=1` without `path` and writes the file itself | `cad/results/export.rs:request`, `start`, `poll`, `cancel` (`crates/sim-runtime/src/cad_client/physical.rs:CadClient::physical_model` on a `Pool::Dedicated` job; written atomically by `write_model`) | deliberately different: a job runs `GET /physical?flex=1` and writes the file here instead of a RoboCAD child process; cancelling, or leaving CAD, drops it before the write (RoboCAD's request itself cannot be aborted); leaving CAD is refused while an export runs or is queued |
+| "Simulation: export robot model…" (`sim.export`: the same model with the x–z planar hint) | ui/app.py:424, ui/app.py:1705-1709 | `GET /physical?flex=1&planar=1` (added with cad-physical-inspect: headless `export_physical_model(planar=Plane.xz())`, desktop `export_snapshot(planar=True)`; pytests `cad/tests/test_api_physical_routes.py`) | the same as the row above (`cad/results/export.rs:request`, `ExportKind::Simulation`) with `planar=1` | done-by-reading |
+| "Simulation: live link (watch + run viewer)" (`sim.link`: re-exports `<name>.simrobot.json` on every save and runs `sim-spatial --robot`) | ui/app.py:425, ui/app.py:1769-1781, simbridge.py:215-265 | `POST /save` then `GET /physical?path=…&flex=0` | `cad/results/link.rs:toggle`, `saved`, `after_write`, `receive` | deliberately different: no process is started; on the first written export Robot mode opens in this window through `WindowAction::Switch`, and later saves re-export and bump the registry's Robot entry (same id); simbridge's watch-and-run stays for RoboCAD's own window |
 
 ## Experiments
 
@@ -825,27 +847,27 @@ calls. Who uses each route, by reading:
 | Cancel a load | api.py:1212-1213, api.py:978-983 | `DELETE /loads/{id}` (GUI only) | `crates/sim-runtime/src/cad_client/mod.rs:CadClient::cancel_load` (unused) | deliberately different: `POST /open` opens another RoboCAD window (409 headless) and never replaces the document; CAD mode starts its own headless service on the file instead (see "Headless versus GUI-only routes") |
 | Export STL, 3MF, STEP, IGES, OBJ, sketch SVG or drawing | api.py:1214-1215, api.py:987-1019 | `POST /export` | `crates/sim-runtime/src/cad_client/mod.rs:CadClient::export` (`cad/files/mod.rs:export`) | done-by-reading |
 | Import a file | api.py:1216-1217, api.py:1021-1036 | `POST /import` | `crates/sim-runtime/src/cad_client/files.rs:CadClient::import` (`cad/files/mod.rs:file`) | done-by-reading |
-| Robot summary: joints, motors, DoF, ground, issues | api.py:1218-1219 | `GET /robot` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Motor library | api.py:1220-1221 | `GET /motors` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Robot summary: joints, motors, DoF, ground, issues | api.py:1218-1219 | `GET /robot` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::robot`; read in `cad/robot/data.rs:sync` | done-by-reading |
+| Motor library | api.py:1220-1221 | `GET /motors` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::motors`; read once per generation in `cad/robot/data.rs:sync` | done-by-reading |
 | Frame time and display triangles (GUI); revision and node count | api.py:1222-1228 | `GET /performance` | the viewer's own frame statistics | deliberately different: the viewer measures its own frames |
 | Physical description (`flex`; `path` writes the file; client) | api.py:1229-1238 | `GET /physical` | `CadClient::physical` (never passes `path`) | done-by-reading |
-| Actuator profiles | api.py:1239-1241 | `GET /actuator-profiles` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Set actuator profiles | api.py:1242-1243 | `POST /actuator-profiles` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Simulation results file (client) | api.py:1247 | `GET /results` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Load results (client) | api.py:1245-1246 | `POST /results/load` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Apply identification (any method or sub-path under `/identification`; client) | api.py:1248-1249 | `POST /identification/apply` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| List sensors | api.py:1250-1253 | `GET /sensors` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Add a sensor (client) | api.py:1251-1252 | `POST /sensors` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| List cables | api.py:1254-1257 | `GET /cables` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Add a cable (client) | api.py:1255-1256 | `POST /cables` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Battery | api.py:1258-1261 | `GET /battery` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Set the battery (client) | api.py:1259-1260 | `PUT /battery` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Control loop | api.py:1262-1265 | `GET /control` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Set the control loop (client) | api.py:1263-1264 | `PUT /control` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Uncertainty | api.py:1266-1269 | `GET /uncertainty` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Set the uncertainty (client) | api.py:1267-1268 | `PUT /uncertainty` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Materials | api.py:1270-1273, api.py:1038-1039 | `GET /materials` | cad-physical-inspect epic (this epic reads them from `/doc`) | later-epic: cad-physical-inspect |
-| Add a material | api.py:1271-1272, api.py:1041-1048 | `POST /materials` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| Actuator profiles | api.py:1239-1241 | `GET /actuator-profiles` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::actuator_profiles`; read in `cad/robot/data.rs:sync` | done-by-reading |
+| Set actuator profiles | api.py:1242-1243 | `POST /actuator-profiles` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_actuator_profiles`; `cad/results/mod.rs:profiles` | done-by-reading |
+| Simulation results file (client) | api.py:1247 | `GET /results` | `crates/sim-runtime/src/cad_client/physical.rs:CadClient::results`; the viewer reads `GET /results/nodes` (`CadClient::results_nodes` in `cad/robot/data.rs:sync`) | done-by-reading |
+| Load results (client) | api.py:1245-1246 | `POST /results/load` | `crates/sim-runtime/src/cad_client/physical.rs:CadClient::load_results`; `cad/results/mod.rs:handle` | done-by-reading |
+| Apply identification (any method or sub-path under `/identification`; client) | api.py:1248-1249 | `POST /identification/apply` | `crates/sim-runtime/src/cad_client/physical.rs:CadClient::apply_identification`; `cad/results/mod.rs:handle` | done-by-reading |
+| List sensors | api.py:1250-1253 | `GET /sensors` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::sensors`; read in `cad/robot/data.rs:sync` | done-by-reading |
+| Add a sensor (client) | api.py:1251-1252 | `POST /sensors` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::add_sensor`; the catalogue's robot entries (`cad/ops/robot_args.rs`) | done-by-reading |
+| List cables | api.py:1254-1257 | `GET /cables` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::cables`; read in `cad/robot/data.rs:sync` | done-by-reading |
+| Add a cable (client) | api.py:1255-1256 | `POST /cables` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::add_cable`; the catalogue's robot entries (`cad/ops/robot_args.rs`) | done-by-reading |
+| Battery | api.py:1258-1261 | `GET /battery` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::battery`; read in `cad/robot/data.rs:sync` | done-by-reading |
+| Set the battery (client) | api.py:1259-1260 | `PUT /battery` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_battery`; the catalogue's robot entries (`cad/ops/robot_args.rs`) | done-by-reading |
+| Control loop | api.py:1262-1265 | `GET /control` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::control`; read in `cad/robot/data.rs:sync` | done-by-reading |
+| Set the control loop (client) | api.py:1263-1264 | `PUT /control` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_control`; the catalogue's robot entries (`cad/ops/robot_args.rs`) | done-by-reading |
+| Uncertainty | api.py:1266-1269 | `GET /uncertainty` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::uncertainty`; read in `cad/robot/data.rs:sync` | done-by-reading |
+| Set the uncertainty (client) | api.py:1267-1268 | `PUT /uncertainty` | `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_uncertainty`; the catalogue's robot entries (`cad/ops/robot_args.rs`) | done-by-reading |
+| Materials | api.py:1270-1273, api.py:1038-1039 | `GET /materials` | read from `/doc` (`cad/materials/mod.rs:list`); `crates/sim-runtime/src/cad_client/physical.rs:CadClient::materials` | done-by-reading |
+| Add a material | api.py:1271-1272, api.py:1041-1048 | `POST /materials` | `cad/materials/mod.rs:submit` → `crates/sim-runtime/src/cad_client/physical.rs:CadClient::add_material` | done-by-reading |
 | The GUI command registry (`{}` headless) | api.py:1274-1278, api.py:1050-1053 | `GET /commands` | `CadClient::commands` → `cad::panel` | done-by-reading |
 | Run a GUI command (409 "no GUI" headless; 404 unknown) | api.py:1275-1276, api.py:1055-1061 | `POST /commands/{id}` | `CadClient::run_command` (`CadAction::CadCommand`) | done-by-reading |
 | CORS preflight (`Access-Control-Allow-Methods`) | api.py:1303-1308 | `OPTIONS *` | n/a | deliberately different: CORS is for browser pages; the native client is not a browser and sends no preflight |
@@ -859,7 +881,7 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| `configure_robot` (assembly metadata and connectors as one edit) | commands.py:257 | `POST /ops/configure_robot` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `configure_robot` (assembly metadata and connectors as one edit) | commands.py:257 | `POST /ops/configure_robot` | the catalogue's `ops.configure_robot` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::configure_robot` | done-by-reading |
 | `set_component_graph` | commands.py:262 | `POST /ops/set_component_graph` | cad-organize epic | later-epic: cad-organize |
 | `print_split` | commands.py:299 | `POST /ops/print_split` | cad-print epic | later-epic: cad-print |
 | `undo` | commands.py:305 | `POST /undo` | `CadAction::CadUndo` | done-by-reading |
@@ -870,7 +892,7 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `set_locked` | commands.py:339 | `PATCH /nodes/{id} {"locked"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_disabled` | commands.py:342 | `PATCH /nodes/{id} {"disabled"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_material` | commands.py:345 | `PATCH /nodes/{id} {"material"}` | `CadAction::CadPatch` | done-by-reading |
-| `set_color` | commands.py:348 | `PATCH /nodes/{id} {"color"}` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `set_color` | commands.py:348 | `PATCH /nodes/{id} {"color"}` | `cad/inspector/physical_edit.rs:handle_physical` (`PATCH /nodes/{id} {"color"}` through `cad/actions.rs:edit_at`); `crates/sim-runtime/src/cad_client/physical.rs:CadClient::set_color` also exists | done-by-reading |
 | `set_pivot` | commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | `cad::ops` catalogue `tool.set_pivot`; the inspector's pivot editor (`cad::inspector::editors`) sends `PATCH /nodes/{id} {"pivot"}` via `ops::handle`/`args::build` | done-by-reading |
 | `group` | commands.py:354 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 | `move_nodes` | commands.py:377 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
@@ -890,7 +912,7 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `sweep` | commands.py:493 | `POST /ops/sweep` | `cad::ops` catalogue `tool.sweep` via `ops::handle`/`args::build` | done-by-reading |
 | `pipe` | commands.py:498 | `POST /ops/pipe` | `cad::ops` catalogue `tool.pipe` via `ops::handle`/`args::build` | done-by-reading |
 | `loft` | commands.py:502 | `POST /ops/loft` | `cad::ops` catalogue `tool.loft` via `ops::handle`/`args::build` | done-by-reading |
-| `fill` | commands.py:507 | `POST /ops/fill` | `cad::ops` catalogue `tool.fill` via `ops::handle`/`args::build`; needs api.py's 2026-10-01 fix: `ArgConverter` read the node id given to `Ops.fill(edges: str | Body)` as an edge reference (any parameter named `edges`), a 400 for every fill; a string now passes through when the annotation has no `EdgeRef` (cad/tests/test_api_fill_node.py) | done-by-reading |
+| `fill` | commands.py:507 | `POST /ops/fill` | `cad::ops` catalogue `tool.fill` via `ops::handle`/`args::build`; needs api.py's 2026-10-01 fix: `ArgConverter` read the node id given to `Ops.fill(edges: str \| Body)` as an edge reference (any parameter named `edges`), a 400 for every fill; a string now passes through when the annotation has no `EdgeRef` (cad/tests/test_api_fill_node.py) | done-by-reading |
 | `bridge` | commands.py:511 | `POST /ops/bridge` | `cad::ops` catalogue `ops.bridge` (two curves or sketches; REST) via `ops::handle`/`args::build` | done-by-reading |
 | `push_pull` | commands.py:515 | `POST /ops/push_pull` | `cad::transform::commit::push_pull_call` (`CadAction::CadPushPull`, REST `cad_push_pull`) | done-by-reading |
 | `offset_faces` | commands.py:518 | `POST /ops/offset_faces` | `cad::transform::commit::offset_call` (`CadAction::CadOffsetFaces`, REST `cad_offset_faces`) | done-by-reading |
@@ -940,34 +962,34 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `add_measurement` | commands.py:897 | `POST /ops/add_measurement`; `POST /nodes {"kind": "measure"}` | `cad::transform::commit::measure` (`CadAction::CadMeasure { keep: true }`, REST `cad_measure`) | done-by-reading |
 | `clearance` | commands.py:903 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
 | `fastener_hole` | commands.py:922 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
-| `add_joint` | commands.py:935 | `POST /ops/add_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_joint` | commands.py:949 | `POST /ops/set_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `connect_fixed` | commands.py:960 | `POST /ops/connect_fixed` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `add_motor` | commands.py:966 | `POST /ops/add_motor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `mount_motor` | commands.py:983 | `POST /ops/mount_motor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `attach_motor` | commands.py:992 | `POST /ops/attach_motor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_ground` | commands.py:1016 | `POST /ops/set_ground` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `infer_joints` | commands.py:1023 | `POST /ops/infer_joints` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `robot` | commands.py:1036 | `GET /robot`; `POST /ops/robot` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `motor_library` | commands.py:1041 | `GET /motors` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `add_sensor` | commands.py:1047 | `POST /sensors`; `POST /ops/add_sensor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `add_cable` | commands.py:1062 | `POST /cables`; `POST /ops/add_cable` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `add_joint` | commands.py:935 | `POST /ops/add_joint` | the catalogue's `robot.add_joint`, `robot.joint_dialog` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::add_joint` | done-by-reading |
+| `set_joint` | commands.py:949 | `POST /ops/set_joint` | the catalogue's `ops.set_joint (Edit joint)`, `robot.joint_dialog` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::set_joint` | done-by-reading |
+| `connect_fixed` | commands.py:960 | `POST /ops/connect_fixed` | the catalogue's `robot.fixed` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::connect_fixed` | done-by-reading |
+| `add_motor` | commands.py:966 | `POST /ops/add_motor` | the catalogue's `robot.add_motor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::add_motor` | done-by-reading |
+| `mount_motor` | commands.py:983 | `POST /ops/mount_motor` | the catalogue's `robot.add_motor (Mount on)` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::mount_motor` | done-by-reading |
+| `attach_motor` | commands.py:992 | `POST /ops/attach_motor` | the catalogue's `robot.assign_motor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::attach_motor` | done-by-reading |
+| `set_ground` | commands.py:1016 | `POST /ops/set_ground` | the catalogue's `robot.ground` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::set_ground` | done-by-reading |
+| `infer_joints` | commands.py:1023 | `POST /ops/infer_joints` | the catalogue's `robot.infer` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::infer_joints` | done-by-reading |
+| `robot` | commands.py:1036 | `GET /robot`; `POST /ops/robot` | `cad/robot/tools.rs:validate` (`robot.validate`) and the Robot panel (`cad/robot/data.rs:sync`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::robot` | done-by-reading |
+| `motor_library` | commands.py:1041 | `GET /motors` | `cad/robot/tools_library.rs:draw` (`robot.motors`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::motors` | done-by-reading |
+| `add_sensor` | commands.py:1047 | `POST /sensors`; `POST /ops/add_sensor` | the catalogue's `robot.add_sensor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::add_sensor` | done-by-reading |
+| `add_cable` | commands.py:1062 | `POST /cables`; `POST /ops/add_cable` | the catalogue's `robot.add_cable` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::add_cable` | done-by-reading |
 | `save_motion` | commands.py:1073 | `POST /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | `delete_motion` | commands.py:1083 | `DELETE /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| `set_robot_setting` | commands.py:1090 | `POST /ops/set_robot_setting` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `set_robot_setting` | commands.py:1090 | `POST /ops/set_robot_setting` | the catalogue's `robot.power` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::set_robot_setting` | done-by-reading |
 | `link_system` | commands.py:1112 | `POST /ops/link_system` | cad-organize epic | later-epic: cad-organize |
 | `unlink_system` | commands.py:1121 | `POST /ops/unlink_system` | cad-organize epic | later-epic: cad-organize |
 | `refresh_system_link` | commands.py:1126 | `POST /ops/refresh_system_link` | cad-organize epic | later-epic: cad-organize |
 | `system_status` | commands.py:1134 | `POST /ops/system_status` | cad-organize epic | later-epic: cad-organize |
-| `set_actuator_profiles` | commands.py:1138 | `POST /actuator-profiles` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_battery` | commands.py:1145 | `PUT /battery` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_control` | commands.py:1151 | `PUT /control` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_uncertainty` | commands.py:1162 | `PUT /uncertainty` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_material_props` | commands.py:1171 | `POST /ops/set_material_props` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_joint_physics` | commands.py:1184 | `POST /ops/set_joint_physics` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `set_actuator_profiles` | commands.py:1138 | `POST /actuator-profiles` | `cad/results/mod.rs:profiles`; `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_actuator_profiles` | done-by-reading |
+| `set_battery` | commands.py:1145 | `PUT /battery` | the catalogue's `robot.power` (`cad/ops/robot_args.rs` `power`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_battery` | done-by-reading |
+| `set_control` | commands.py:1151 | `PUT /control` | the catalogue's `robot.power` (`cad/ops/robot_args.rs` `power`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_control` | done-by-reading |
+| `set_uncertainty` | commands.py:1162 | `PUT /uncertainty` | the catalogue's `robot.power` (`cad/ops/robot_args.rs` `power`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::set_uncertainty` | done-by-reading |
+| `set_material_props` | commands.py:1171 | `POST /ops/set_material_props` | `cad/materials/mod.rs:submit`; `crates/sim-runtime/src/cad_client/physical.rs:CadClient::set_material_props` | done-by-reading |
+| `set_joint_physics` | commands.py:1184 | `POST /ops/set_joint_physics` | `cad/inspector/physical_edit.rs:handle_physical`; `crates/sim-runtime/src/cad_client/physical.rs:CadClient::set_joint_physics` | done-by-reading |
 | `physical` (`path` writes a file) | commands.py:1233 | `GET /physical` | `CadAction::CadPhysical` (never `path`) | done-by-reading |
-| `load_results` | commands.py:1239 | `POST /results/load` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `apply_identification` | commands.py:1244 | `POST /identification/apply` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
+| `load_results` | commands.py:1239 | `POST /results/load` | `cad/results/mod.rs:handle` (`Load`); `crates/sim-runtime/src/cad_client/physical.rs:CadClient::load_results` | done-by-reading |
+| `apply_identification` | commands.py:1244 | `POST /identification/apply` | `cad/results/mod.rs:handle` (`Identify`); `crates/sim-runtime/src/cad_client/physical.rs:CadClient::apply_identification` | done-by-reading |
 | `import_references` | references.py:11 | `POST /ops/import_references` | cad-organize epic | later-epic: cad-organize |
 | `update_reference` | references.py:31 | `POST /ops/update_reference` | cad-organize epic | later-epic: cad-organize |
 | `calibrate_reference` | references.py:65 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
@@ -1083,7 +1105,7 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `print.wall_check`: Ctrl+W | keymap.json:11 | `GET /nodes/{id}/thin` | cad-print epic | later-epic: cad-print |
 | `print.validate`: Ctrl+Shift+V | keymap.json:11 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
 | `numeric.entry`: Tab (cleared at ui/app.py:469 and routed by keyPressEvent) | keymap.json:12 | n/a | `cad::numeric::entry` | done-by-reading |
-| Keys listed in the registry but never bound, because they are not in keymap.json: `simulation.experiment` Ctrl+Return, `robot.add_motor` Ctrl+Shift+M (pressing it runs Select Same Material), `robot.add_joint` Ctrl+Shift+J (USER_GUIDE.md:368 and USER_GUIDE.md:375 document both) | ui/app.py:276, ui/app.py:408-409, ui/app.py:247-251 | n/a | cad-physical-inspect epic (decide the bindings deliberately) | later-epic: cad-physical-inspect |
+| Keys listed in the registry but never bound, because they are not in keymap.json: `simulation.experiment` Ctrl+Return, `robot.add_motor` Ctrl+Shift+M (pressing it runs Select Same Material), `robot.add_joint` Ctrl+Shift+J (USER_GUIDE.md:368 and USER_GUIDE.md:375 document both) | ui/app.py:276, ui/app.py:408-409, ui/app.py:247-251 | n/a | `cad/surfaces/registry.rs` (`bound`), `cad/keys.rs` (module doc table) | deliberately different: Ctrl+Shift+J is bound to `robot.add_joint` (nothing else uses it; USER_GUIDE.md:375 documents it); Ctrl+Shift+M stays Select Same Material, RoboCAD's live behaviour, and `robot.add_motor` is unbound (menus, palette, the Robot panel); `simulation.experiment` stays cad-experiments-motion's |
 | Native addition: the same five shortcuts on Cmd and Ctrl in `cad::keys` (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Delete/Backspace, Home, Ctrl/Cmd+S) | n/a | as above | `cad::keys` | done-by-reading |
 
 ## Native surface (no RoboCAD counterpart)
@@ -1100,11 +1122,10 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted from the tables above (2026-10-01, after the cad-views-export
-epic and its review fixes in f15766ea: of its 112 rows, 79 became
-`done-by-reading` and 33 `deliberately different`; none stays open;
-2 earlier `deliberately different` rows that waited for it, the per-node
-tessellation tolerance and the view radial, became `done-by-reading`) with
+Recounted from the tables above (2026-10-01, after the
+cad-physical-inspect epic, commits 3fb34225 and f26842fa and their review
+fixes: of its 82 rows, 64 became `done-by-reading` and 18 `deliberately
+different`; none stays open; no other row changed status) with
 this script, run from the repository
 root; it splits each row on its unescaped `|`, takes the status cell and
 counts it by its leading status (up to its reason), skipping header rows
@@ -1126,7 +1147,9 @@ print(dict(rows), sum(rows.values())); print(dict(epics))
 PY
 ```
 
-There are 773 rows. (At 9b1e5eec and f15766ea the ledger was unchanged
+There are 773 rows. (After cad-views-export, at f15766ea and still at
+f26842fa, the ledger had 367 done by reading, 286 later (82 of them
+cad-physical-inspect's) and 120 deliberately different. At 9b1e5eec and f15766ea the ledger was unchanged
 from cad-sketch's: an uncommitted draft before the review fixes had 363
 done by reading, 292 later (6 of them cad-views-export's own open rows)
 and 118 deliberately different; after cad-sketch 286, 398
@@ -1138,67 +1161,83 @@ f15766ea (`git show f15766ea:docs/cad-parity.md`, the same ledger as at
 checked to be in the same section, through the same row parser, and
 counting the new status of every row that was `later-epic:
 cad-views-export`: 79 and 33 of 112 (an uncommitted draft before the
-review fixes had 75, 31 and 6 open); no other row changed status except the 2 named above.
+review fixes had 75, 31 and 6 open); no other row changed status except
+2 earlier `deliberately different` rows that waited for it, the per-node
+tessellation tolerance and the view radial, which became `done-by-reading`.
+cad-physical-inspect's split was counted the same way, pairing each row of
+`git show f26842fa:docs/cad-parity.md` with the same row now: of the 82
+rows that were cad-physical-inspect's `later-epic` rows, 64 and 18; no other row
+changed status (the print overlay row keeps `later-epic: cad-print`
+with its new route).
 
 | Status | Rows |
 |---|---|
 | done | 0 |
-| done-by-reading | 367 |
-| later-epic | 286 |
-| deliberately different | 120 |
+| done-by-reading | 431 |
+| later-epic | 204 |
+| deliberately different | 138 |
 | **total** | **773** |
 
 | Later epic | Rows |
 |---|---|
 | cad-organize | 108 |
-| cad-physical-inspect | 82 |
 | cad-experiments-motion | 63 |
 | cad-print | 33 |
-| **total** | **286** |
+| **total** | **204** |
 
 Some rows repeat a feature from another angle: as a UI feature, as a REST
 route, as an Ops method and as a key. The ledger checks each of those
 surfaces separately. By script, every one of the 183 registry command ids,
 the 77 keymap ids and the 134 public Ops methods appears in a row. Other
-counts: 81 rows are `n/a (display)` and 15 are flagged.
+counts: 81 rows are `n/a (display)` and 10 are flagged (a REST route cell
+holding "none: needs a Python route").
 
 No row is blank or `todo`, and no cad-select-transform, cad-modify,
-cad-sketch or cad-views-export row is open. Nothing
+cad-sketch, cad-views-export or cad-physical-inspect row is open. Nothing
 is `done`, because no epic's rows have been moved to `done` yet:
 cad-mode, cad-select-transform, cad-modify and cad-sketch were built and
 tested in their verification passes and await the user's checklist;
-cad-views-export is written and reviewed by reading, pending its
-verification pass. The verification passes and the checklist move rows to
+cad-views-export and cad-physical-inspect are written and reviewed by
+reading, pending their verification passes. The verification passes and the checklist move rows to
 `done`.
 
 ## Rows flagged "none: needs a Python route"
 
-There are 15 flagged rows covering 15 distinct gaps. Each gap needs one of
+There are 10 flagged rows covering 10 distinct gaps. Each gap needs one of
 two things before the native viewer can reach the feature headless:
 
 - a new route in `cad/robocad/api.py`, a RoboCAD change outside this epic;
 - a Rust port, gated by the parity harness.
 
-No route at all (13):
+No route at all (8):
 
 1. Report a failed autosave. `/autosave` does not report one.
    `deliberately different` since cad-views-export: a headless service
    never autosaves.
 2. Set the autosave interval preference. `deliberately different` since
    cad-views-export: it is RoboCAD's desktop timer.
-3. Per-node simulation results (`Node.results`) for the inspector's
-   "Results" line.
-4. The stress overlay's per-node hotspot colours (same data as 3).
-5. The print overlay's per-node results (same data as 3).
-6. The Robot panel's margins (`results_margins`, same data as 3).
-7. Reference image pixels in the viewport.
-8. The reference list's preview (same data as 7).
-9. The planar ("x–z") simulation export.
-10. Run review's captured CAD replay (captured document and poses).
-11. Candidate review's proposed geometry.
-12. Pose kinematics without a desktop window.
-13. Geometry-rule recipes for system components
-    (`component_derivation.RECIPES`).
+3. Reference image pixels in the viewport.
+4. The reference list's preview (same data as 3).
+5. Run review's captured CAD replay (captured document and poses).
+6. Candidate review's proposed geometry.
+7. Pose kinematics without a desktop window.
+8. Geometry-rule recipes for system components
+   (`component_derivation.RECIPES`).
+
+No longer gaps since cad-physical-inspect (2026-10-01; routes added to
+`api.py` `Service`, pytests `cad/tests/test_api_physical_routes.py`):
+per-node simulation results (`GET /results/nodes`,
+`Service.results_nodes`, read-only: the results file's path, loaded,
+stale and provenance, each node's `results` block with its material's
+yield strength, and `results_margins` per node with print-study blocks
+left out), which closed four gaps: the inspector's "Results" line, the
+stress overlay's per-node hotspot colours, the print overlay's per-node
+results (row kept by cad-print, which reuses the route) and the Robot
+panel's margins; and the planar ("x–z") simulation export (`GET
+/physical?…&planar=1`: headless `export_physical_model(planar=Plane.xz())`,
+in the desktop window `export_snapshot(planar=True)`; without it the
+route is unchanged). The same epic corrected `api.py`'s module docstring,
+which called the export simrobot v3: `physical.py` `SCHEMA_VERSION` is 4.
 
 No longer a gap: B-rep edge polylines (edge display, edge picking and
 curve nodes). RoboCAD now serves them as `GET /nodes/{id}/edges?samples=N`
@@ -1232,8 +1271,8 @@ before.
 GUI-only through `POST /commands/{id}`, with no headless route (2;
 both `deliberately different` since cad-views-export):
 
-14. Blender live link start and stop.
-15. Web share.
+9. Blender live link start and stop.
+10. Web share.
 
 ## Headless versus GUI-only routes
 
@@ -1354,3 +1393,17 @@ service is stopped and reaped. An attached RoboCAD is never stopped.
     `_on_drag` returns first). The native viewer orbits on Alt+left-drag
     past 6 px, as viewport.py's own comment (ui/viewport.py:1485-1487)
     describes it (USER_GUIDE.md:266-270 lists only right-drag orbit).
+
+- Found with cad-physical-inspect (2026-10-01):
+  - `api.py`'s module docstring called `GET /physical` "simrobot v3", but
+    `physical.py` writes `SCHEMA_VERSION = 4`. **Changed**: the docstring
+    says v4.
+  - RoboCAD's stress overlay colours linearly from blue at 0 to red at
+    yield (ui/viewport.py:826-877), while Robot mode colours the same
+    results on a log scale over 3 decades. The native CAD overlay uses
+    Robot mode's rule (`sim_domain_robot::stress_results::link_colours`,
+    now the one rule for both), so RoboCAD's window and the native viewer
+    colour the same results differently (row "Stress overlay").
+  - `sim_domain_robot::stress_results` paired a hotspot's cells and
+    stresses out of step when a stress was null (Rust; fixed in the same
+    epic).

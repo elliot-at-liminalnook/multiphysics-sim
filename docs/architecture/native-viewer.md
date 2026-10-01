@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
+## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01))
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -232,6 +232,21 @@ duplicates physics.
   entries (the same two greps give 71 and 16; `view.isolate`,
   `view.show_all` and `view.hide` added); `cad_client` gains `views.rs`
   285, `section.rs` 108 and `files.rs` 178 lines, plus their tests.
+  **cad-physical-inspect** (2026-10-01, see
+  [CAD physical properties](#cad-physical-properties-2026-10-01)), done
+  pending verification (written and reviewed by reading in 3fb34225,
+  f26842fa and uncommitted review fixes; nothing compiled or run): the
+  materials panel and dialogs, the inspector's physical rows and exact
+  measurement, the Robot panel with its tools, dialogs, motor library and
+  glyphs, results and identification, the stress overlay (one colour rule
+  with Robot mode), physical export on a job and the live link into Robot
+  mode in this window; two api.py gap routes (`GET /results/nodes`,
+  `GET /physical?planar=1`). Measured 2026-10-01 in the working tree:
+  `cad/` is 39,198 lines in 128 files (same `find … | xargs wc -l`;
+  `robot/` 2,326 in 10, `materials/` 1,283 in 4, `results/` 2,065 in 6);
+  the catalogue has 101 entries (the same two greps give 85 and 16);
+  `cad_client` gains `robot.rs` 491, `robot_ops.rs` 132 and `physical.rs`
+  219 lines, plus their tests.
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
   verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
@@ -4344,6 +4359,238 @@ a worker on a session directory.
 - [ ] `grep -rn "selected: BTreeSet<String>\|pub selected: Option<usize>\|pub selection: Vec<SelectionItem>\|pub selection: SelectionTarget" crates/sim-spatial/src`
   finds nothing.
 
+## CAD physical properties (2026-10-01)
+
+*Batch cad-physical-inspect (default order item 7, §9 phase 1; §9 "Later
+CAD epics" 5). Done pending verification: written and reviewed by reading
+in commits 3fb34225 (client and `api.py` routes) and f26842fa (the native
+viewer), plus uncommitted review fixes; nothing was compiled, tested or
+run in the batch.* It brings RoboCAD's physical side into CAD mode: the
+materials panel and its dialogs; the inspector's physical rows (colour,
+joint editor, joint physics overrides, results line, exact measurement);
+the Robot panel with its tools, dialogs, motor library and glyphs;
+results, identification, actuator profiles and the stress overlay; and
+physical export with the live link into Robot mode in the same window.
+RoboCAD's command layer still does every edit. The ledger rows are in
+[docs/cad-parity.md](../cad-parity.md) (82 rows: 64 `done-by-reading`, 18
+`deliberately different`; none open; the totals are in its Counts), and
+the side-by-side steps are in [docs/cad-checklist.md](../cad-checklist.md)
+Part G. Paths are relative to `crates/sim-spatial/src/` unless they name
+another crate.
+
+### Shape
+
+| Module | What it owns |
+|---|---|
+| `crates/sim-runtime/src/cad_client/robot.rs` | Reads and REST-shaped writes: `CadClient::robot`, `robot_exact`, `motors`, `actuator_profiles`/`set_actuator_profiles`, `sensors`/`add_sensor`, `cables`/`add_cable`, `battery`/`set_battery`, `control`/`set_control`, `uncertainty`/`set_uncertainty`, with tolerant types (`RobotSummary`, `MotorSpec`, …). |
+| `crates/sim-runtime/src/cad_client/robot_ops.rs` | The `POST /ops/…` wrappers with RoboCAD's signatures: `add_joint`, `set_joint`, `rename`, `connect_fixed`, `add_motor`, `mount_motor`, `attach_motor`, `set_ground`, `infer_joints`, `set_robot_setting`, `configure_robot`. |
+| `crates/sim-runtime/src/cad_client/physical.rs` | `materials`, `add_material`, `results`, `load_results`, `results_nodes`, `apply_identification`, `physical_model(flex, planar)` (never `path=`), `set_material`, `set_color`, `set_material_props`, `set_joint_physics`. |
+| `cad/robocad/api.py` (gap routes) | `GET /results/nodes` (`Service.results_nodes`: path, loaded, stale, provenance, `results_margins` per node with print-study blocks left out, and each node's results block with its material's yield strength; read-only, 405 otherwise) and `GET /physical?…&planar=1` (headless `export_physical_model(planar=Plane.xz())`, desktop `export_snapshot(planar=True)`; unchanged without it). The module docstring said simrobot v3; `physical.py` `SCHEMA_VERSION` is 4, and it now says v4. |
+| `cad/robot/mod.rs`, `data.rs` | `CadAction::CadRobot` (`cad_robot`) and the robot reads: `data.rs:sync` runs one `Pool::Dedicated` job per (generation, shown revision) over `/robot`, `/results/nodes`, `/sensors`, `/cables`, `/battery`, `/control`, `/uncertainty`, `/actuator-profiles` (and `/motors` once per generation), kept on `CadDocument.robot.data`. |
+| `cad/robot/panel.rs` | The Robot section of the right dock (`Part::Robot`): `summary_line`, `view` (tree and issues), `row`, `double_click`, `margin_text`, `buttons`. |
+| `cad/robot/tools.rs`, `tools_click.rs`, `tools_library.rs` | The motor and joint tools (`motor_pick`, `joint_pick`; the face from `tools_click.rs:click` through `CadMeshes::face_at` at the shown revision), `validate`/`verdict`, and the motor library panel (`tools_library.rs:draw`). |
+| `cad/robot/glyphs.rs` | Joint glyphs, motor shaft axes, sensor triads and cable arcs (`glyph_lines`, `draw`), cached by (generation, read revision). |
+| `cad/materials/` | The Materials section of the right dock (`Part::Materials`): `mod.rs` (`list`, `matches`, `apply`, `submit`, `CadAction::CadMaterials`, `cad_materials`), `panel.rs` (`draw`, `input`), `form.rs` (`new_form`, `properties_form`, `submit`). |
+| `cad/inspector/node.rs`, `sections.rs`, `rows.rs`, `entry.rs`, `exact.rs`, `refresh.rs`, `physical_edit.rs` | The inspector's physical rows: `rows.rs` (`row`, `joint`, `results_line`), `physical_edit.rs` (`controls_of`, `joint_override`, `handle_physical`; `cad_inspector`), `exact.rs` (`start`, `settle`, `sync`: the exact measurement), `refresh.rs:sync` (`GET /physical?flex=0` again per revision), with `node.rs`, `sections.rs` and `entry.rs` laying the rows out. |
+| `cad/ops/catalogue/robot.rs`, `robot_args.rs`, `robot_form.rs`, `invoke.rs` | The robot entries of the op catalogue (`robot.add_motor`, `add_joint`, `joint_dialog`, `infer`, `assign_motor`, `fixed`, `ground`, `add_sensor`, `add_cable`, `power`, `ops.set_joint`, `ops.configure_robot`); `robot_args.rs:build` turns a form into RoboCAD calls (`EditJoint`: `set_joint` then `rename`; `power`); `robot_form.rs` (`picks`, `seed`, `precheck`, `note`, `open_preset`); `invoke.rs` starts and ends the tools. |
+| `cad/results/` | `mod.rs` (`handle`: load, identify, overlay, print overlay, export, link; `profiles`; `CadAction::CadResults`, `cad_results`), `export.rs` (`request`, `start`, `poll`, `cancel`, `write_model`), `link.rs` (`toggle`, `saved`, `after_write`, `follow`, `receive`), `forms.rs` (the path forms), `overlay.rs` (`paint`). |
+| `crates/sim-domain-robot/src/stress_results.rs` | `link_colours`: the one stress colouring rule, used by Robot mode (`robot/stress.rs`) and the CAD overlay. |
+
+### Decisions
+
+- **Robot reads are one job per shown revision.** `cad/robot/data.rs:sync`
+  reads every robot route together on `Pool::Dedicated` and keeps the
+  answers on `CadDocument.robot.data`; `load_results` and
+  `apply_identification` invalidate it because they do not move RoboCAD's
+  revision. *Why:* the panel, the glyphs, the dialogs' picks and the
+  inspector's results line need a consistent snapshot, and none of them
+  may block the UI thread. *Rejected:* a read per panel, which could show
+  a summary and margins from different revisions. *Revisit if* RoboCAD
+  bumps its revision on results loads, or one read becomes slow enough to
+  split.
+- **One edit helper.** `cad/actions.rs:edit_at(doc, call, began, label,
+  work)` is `CadDocument::commit_refusal(began)` then `actions::edit`;
+  every new edit (materials, inspector rows, results) goes through it,
+  and catalogue runs use `prepare`'s `commit_refusal` then `edit`. *Why:*
+  one place refuses by name an edit in flight, a lost connection, a shown
+  tree behind RoboCAD's or a revision that moved since the form or row was
+  read. *Rejected:* a check in each panel, which could differ.
+- **Runtime choices in forms.** `FieldKind::Pick { source }` with
+  `FormRow.picks` fills the robot dialogs' combo boxes at open time
+  (`cad/ops/robot_form.rs:picks`: motors from `GET /motors` only, bodies,
+  joints). Selection-seeded forms always reseed when opened again; Edit
+  joint and Battery/control refuse until the description is current at the
+  shown revision (`precheck`). *Why:* RoboCAD's dialogs fill their
+  `QComboBox`es from the document; nothing is computed or filled in.
+  *Revisit if* the kit gains a searchable picker.
+- **Robot and Materials are sections of the right dock** (`Part::Robot`,
+  `Part::Materials` in `cad/panel.rs`), beside the inspector's sections.
+  *Why:* RoboCAD docks both in its right dock area under the properties
+  panel, tabbed together (ui/app.py:182-195), and the native right dock
+  already holds the inspector's sections. *Rejected:* separate floating panels for each.
+  *Revisit if* the dock gets too long to use.
+- **One stress rule.** `sim_domain_robot::stress_results::link_colours`
+  (log scale over 3 decades, blue at 0.1 % of yield → red at yield) is
+  used by Robot mode (`robot/stress.rs`) and by the CAD overlay
+  (`cad/results/overlay.rs:paint`, on display-mesh vertex colours only).
+  *Why:* the same results must look the same in both modes of one window.
+  *Rejected:* copying RoboCAD's linear rule into CAD mode, which would
+  make CAD and Robot disagree. *Revisit if* the user prefers RoboCAD's
+  linear scale; change it in `link_colours` for both.
+- **Exports are written natively.** `cad/results/export.rs` runs
+  `GET /physical` (never `path=`) on a `Pool::Dedicated` job and writes the
+  file atomically here; one at a time, and the live link's request queues
+  latest-wins. Leaving CAD is refused while an export runs or is queued.
+  *Why:* a job can be cancelled before the write and reports progress;
+  RoboCAD's `path=` would write from inside RoboCAD with no cancel.
+  *Revisit if* RoboCAD's export becomes cancellable.
+- **Live link in the app.** `cad/results/link.rs`: no process is started;
+  the first written export switches this window to Robot mode
+  (`WindowAction::Switch`), later saves re-export and bump the registry's
+  Robot entry (same id), which Robot mode reads on its next entry.
+  *Rejected:* starting `sim-spatial --robot` as simbridge does, which
+  would be a second window. simbridge's watch-and-run stays for RoboCAD's
+  own window.
+- **Exact measurement** is one `GET /nodes/{id}` per selected node on a
+  `Pool::Dedicated` job, combined as RoboCAD's `analysis.selection_properties`,
+  60 s limit, cancelled by any edit or selection change
+  (`cad/inspector/exact.rs`). A cancel stops waiting only: the request
+  already sent finishes in RoboCAD. *Rejected:* a RoboCAD child process,
+  which only RoboCAD's window can start.
+- **Keys.** Ctrl+Shift+J is bound to `robot.add_joint`; Ctrl+Shift+M stays
+  Select Same Material and `robot.add_motor` is unbound (see Key clashes).
+- **Known residual.** A REST `cad_run ops.set_joint` with only some params
+  sends RoboCAD's dialog defaults for the rest (the window's form always
+  seeds every field from the joint); REST callers should pass every field.
+
+### Key clashes
+
+| Key | RoboCAD | Native | Why |
+|---|---|---|---|
+| Ctrl+Shift+M | listed on `robot.add_motor`, but pressing it runs Select Same Material | Select Same Material; `robot.add_motor` unbound (menus, palette, the Robot panel's button, `system_ui`) | keeps RoboCAD's live behaviour |
+| Ctrl+Shift+J | listed on `robot.add_joint`, never bound | starts the joint tool | nothing else in CAD mode reads it; USER_GUIDE.md:375 documents it |
+
+The Space radial is unchanged: RoboCAD's view and selection radials
+(ui/app.py:1095-1101) have no robot tools. The full table is
+`cad/keys.rs`' module doc (`cad/surfaces/registry.rs` marks which keys
+are `bound`).
+
+### Reading trace (materials → Apply → joint from selection → add motor → export → Robot mode)
+
+1. **Materials panel.** `cad/materials/panel.rs:draw` lists
+   `cad/materials/mod.rs:list` (the `/doc` materials), filtered by
+   `matches`. A click or double-click is read by `panel.rs:input`, which
+   writes `CadAction::CadMaterials` (`cad_materials`).
+2. **Apply.** `cad/materials/mod.rs:handle` → `apply`: the shared
+   selection's CAD nodes, refused by name when empty, then
+   `cad/actions.rs:edit_at` (`commit_refusal`, then `edit`) →
+   `CadClient::set_material` (`POST /ops/set_material`), one undo step.
+3. **Joint from selection.** The Robot panel's "Joint from selection…"
+   (`cad/robot/panel.rs:buttons`) invokes `robot.joint_dialog`
+   (`cad/ops/invoke.rs:invoke`); `cad/ops/robot_form.rs:seed` presets
+   it from the selection and the active plane, and `picks` fills the
+   combo boxes. OK → `cad/ops/form.rs:submit` → `cad/ops/mod.rs:run` →
+   `prepare` (`commit_refusal`; `cad/ops/args.rs:build` →
+   `cad/ops/robot_args.rs:build`) → `start` → `robot_args.rs:send`
+   (`add_joint`), and `started` records `selects_created` so the new
+   joint becomes the selection (`cad/sync/mod.rs:finish_edit`,
+   `receive`).
+4. **Add motor from library.** `robot.add_motor` opens "Add motor" with the
+   motors from `GET /motors` (`cad/robot/data.rs:sync`); with the motor
+   tool, `cad/robot/tools.rs:motor_pick` takes the face clicked
+   (`tools_click.rs:click` → `CadMeshes::face_at`) and runs the entry
+   (`cad/ops/mod.rs:run_entry`) → `add_motor`.
+5. **Export physical.** `sim.export_physical` → `cad/results/mod.rs:handle`
+   → `cad/results/export.rs:request` (refused while one runs) → `start`: a
+   `Pool::Dedicated` job calls `CadClient::physical_model(flex, planar)`
+   and `write_model` writes it atomically; `poll` lands it.
+6. **Robot mode reloads.** With the live link on (`cad/results/link.rs:toggle`),
+   each settled save (`saved`) requests the link's export; when it lands,
+   `link.rs:receive` → `after_write`: the first time it sets `switch_to`,
+   written as `WindowAction::Switch` (`switch_action`) for
+   `app::switch::handle`; later it `follow`s: the registry's Robot entry is
+   bumped (same id, revision + 1), and Robot mode reads the file when next
+   entered.
+
+### Tests (windowless)
+
+- `cad/robot/panel_tests.rs`: `a_row_press_and_rest_cad_select_give_the_same_selection`,
+  the summary/tree/margins text, `a_joint_rows_double_click_opens_edit_joint`,
+  the controls round-tripping through REST.
+- `cad/robot/tools_tests.rs`, `cad/robot/glyphs_tests.rs`: motor shaft
+  direction, joint axis, a face pick at another revision refused,
+  validation, the library rows, glyph shapes and cache key.
+- `cad/inspector/physical_tests.rs`: the exact measurement cancelled by a
+  selection change and by an edit (each saying why), its combined result,
+  joint physics payloads, override marks, the results line.
+- `cad/materials/tests.rs`: rows and search, controls through REST, the
+  New dialog, properties sending only changes.
+- `cad/results/tests.rs`: `the_live_link_requests_the_robot_reload_through_the_switch_and_registry`,
+  `the_live_links_first_switch_is_kept_when_the_switch_would_be_refused`
+  (the refusal path), the export queue, the atomic write,
+  `the_cad_overlay_and_robot_mode_share_one_colour_rule`.
+- `cad/surfaces/tests.rs`: `the_physical_rows_run_native_actions`,
+  `every_robot_tool_row_runs_in_the_catalogue`.
+- `cad/ops/robot_tests.rs`: every robot entry, picks, presets, Edit joint's
+  rename, the power dialog's order, prechecks, reseeding, the created
+  node becoming the selection.
+- `crates/sim-runtime/src/cad_client/robot_tests.rs` and
+  `physical_tests.rs`: tolerant reads and RoboCAD's signatures, including
+  `physical_model_asks_for_flex_and_planar_and_never_a_path` and
+  `results_nodes_reads_margins_and_blocks_per_node`.
+- `cad/tests/test_api_physical_routes.py`: `/results/nodes` empty, with
+  margins, blocks and yield strength, print-study blocks left out of the
+  margins; the planar hint only when asked.
+
+### Found by reading and fixed
+
+- `sim_domain_robot::stress_results`: a hotspot's cells and stresses
+  fell out of step when a stress was null.
+- Edges → faces converted an edge picked at an older revision against the
+  new topology; it is now refused by name, and box-select and Alt+click
+  menu items carry their topology revision too
+  (`cad/selection/mod.rs:edges_to_faces`, `box_items`, `menu_revision`).
+- `switch_blockers` and the sketch refusals told people to use REST
+  commands (`cad_save`, `cad_refresh`) in window text.
+- The power dialog could reset joint targets when the control read
+  failed (it is now refused until the reads are current).
+- `api.py`'s docstring called the physical export simrobot v3; it is v4
+  (`physical.py` `SCHEMA_VERSION = 4`).
+
+### Deliberately different (summary)
+
+18 rows, each with its reason in the ledger: the exact measurement (a job,
+not a child process; cancel stops waiting); joint physics values the model
+lacks shown empty, not 0.0; the colour as an "r, g, b" field; no
+drag-and-drop of a material; only changed engineering properties sent,
+with no copy of RoboCAD's `_ENG` table; glyph sizing, dots and no pose
+hiding; the stress overlay's shared log rule; the motor tool's dialog
+staying open beside the view; the Robot panel's summary (no "(n s run)"),
+tree (no glyphs; Detail and Margin as lines) and issues ("Error:" and
+"Warning:"); motors in id order; validation in the status line and issue
+list; the motor library as a panel; the power dialog's JSON targets and
+precheck; export as a native job with atomic write; the live link inside
+this window; and the key bindings.
+
+### Verification checklist
+
+Nothing above was compiled or run. To do in the verification pass:
+
+- [ ] `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- [ ] `cargo test -p sim-spatial --lib` (including
+  `app::tests::source_files_stay_small` and the registry cross-check).
+- [ ] `cargo test -p sim-runtime cad_client`.
+- [ ] `cargo test -p sim-domain-robot`.
+- [ ] `cd cad && .venv/bin/pytest -q tests/test_api_physical_routes.py`
+  (then the whole RoboCAD suite).
+- [ ] In the window, [docs/cad-checklist.md](../cad-checklist.md) Part G
+  side by side with RoboCAD: the materials panel and dialogs, the
+  inspector's physical rows and exact measurement, the Robot panel's row
+  click and double-click, each robot tool and dialog, the motor library,
+  load results with the stress overlay, apply identification, both
+  exports, and the live link opening Robot mode and reloading it after a
+  save.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -4754,7 +5001,14 @@ exact section, saved views, isolate/hide/show all, per-node tessellation
 tolerance and the file workflows (new, open, save as, import with units,
 export, drawing, render) with three api.py gap routes; it is written and
 reviewed by reading (78553886, 9b1e5eec, f15766ea), and verified at
-bcf0c56c. Next: cad-physical-inspect.
+bcf0c56c. The sixth, **cad-physical-inspect** (2026-10-01, see
+[CAD physical properties](#cad-physical-properties-2026-10-01)), added
+the materials panel, the inspector's physical rows, the Robot panel with
+its tools and dialogs, results and the stress overlay, physical export and
+the live link into Robot mode, with two api.py gap routes
+(`GET /results/nodes`, `GET /physical?planar=1`); it is written and
+reviewed by reading (3fb34225, f26842fa and uncommitted review fixes) and
+pending verification. Next: cad-print.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -4853,26 +5107,34 @@ by the parity harness. Planned order:
    the autosave interval and failure report, `/capture` and `/screenshot`,
    the Blender link, web share and SpaceMouse. The camera work also
    replaced every other mode's orbit camera with the shared one.
-5. **cad-physical-inspect** (82 rows). The materials panel and engineering
+5. **cad-physical-inspect** (82 rows). *Done 2026-10-01 pending
+   verification; see [CAD physical properties](#cad-physical-properties-2026-10-01).
+   64 `done-by-reading`, 18 `deliberately different`; both gaps closed by
+   new routes: `GET /results/nodes` (per-node results, margins and yield
+   strength; cad-print's print overlay reuses it for its per-node
+   results) and `GET /physical?planar=1`.* As planned: the materials panel and engineering
    properties, colour, the Robot panel (summary, tree, margins, issues),
    motor, joint, sensor and cable tools and dialogs, joint editing and
    joint-physics overrides, battery/control/uncertainty, the exact
    multi-selection measurement, physical export, results and
    identification, the stress overlay, and the live simulation link (on
-   save, export `simrobot.json` through `/physical?path=` and reload robot
-   mode in this app). Routes: `GET /robot`, `GET /motors`, `/sensors`,
+   save, export `simrobot.json` and reload robot mode in this app; as
+   built, the viewer reads `GET /physical` without `path=` and writes the
+   file itself on a job). Routes: `GET /robot`, `GET /motors`, `/sensors`,
    `/cables`, `PUT /battery|control|uncertainty`, `GET/POST /materials`,
    `GET /physical`, `GET /results`, `POST /results/load`,
    `POST /identification/apply`, `/actuator-profiles`,
    `POST /ops/add_joint|set_joint|add_motor|attach_motor|set_joint_physics|set_material_props`.
-   Gaps: per-node results (inspector line, stress overlay, margins) and
-   the planar export variant. Port `results_margins` or add a route first.
+   Gaps (closed, see above): per-node results (inspector line, stress
+   overlay, margins) and the planar export variant.
 6. **cad-print** (33 rows). Wall check, validate, overhang shading,
    fastener and clearance tools, split for printing, strength, plan,
    strength-or-split, assembly guide, coupons, and the job list with
    progress and cancel. Routes: `GET /nodes/{id}/thin|validate`,
    `/print/*`, `POST /ops/fastener_hole|clearance|print_split`. Gap: the
-   print overlay's per-node results (shared with 5).
+   print overlay's per-node results (shared with 5), closed by
+   cad-physical-inspect's `GET /results/nodes`, whose `nodes` keep the
+   print-study blocks (only its `margins` leave them out).
 7. **cad-organize** (108 rows; planned as cad-annotations). Outliner
    organization (search, groups, drag-and-drop, move to group, active
    group, inline rename, multi-select), comments and threads with pins and
@@ -4983,9 +5245,13 @@ The Director re-ranks with evidence, but this is the default:
    [Documents, selection and annotations](#documents-selection-and-annotations-2026-10-01))
    gave every mode one document registry, one selection and one
    annotations service, which cad-physical-inspect's inspector builds on.
-   Next: **cad-physical-inspect**.
+   **cad-physical-inspect** (2026-10-01; see
+   [CAD physical properties](#cad-physical-properties-2026-10-01)) is done
+   pending verification (written and reviewed by reading in 3fb34225,
+   f26842fa and uncommitted review fixes; nothing compiled or run).
+   Next: **cad-print**.
    Remaining, in order (§9 "Later CAD epics"):
-   cad-physical-inspect, cad-print, cad-organize, cad-experiments-motion.
+   cad-print, cad-organize, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
    each.

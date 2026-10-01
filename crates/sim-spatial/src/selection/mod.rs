@@ -40,6 +40,7 @@ use bevy::prelude::*;
 use serde::Serialize;
 use serde_json::{Value, json};
 use sim_api::Outcome;
+use sim_inspect::selection::SelectionTarget;
 use sim_runtime::cad_client::SelectionItem;
 
 /// What can be selected.
@@ -91,6 +92,16 @@ impl Item {
             (Item::Link { name: a, .. }, Item::Link { name: b, .. }) => a == b,
             _ => self == other,
         }
+    }
+}
+
+/// An inspection target's items (`SelectionTarget::None`: none), in id order.
+pub fn target_items(target: &SelectionTarget) -> Vec<Item> {
+    match target {
+        SelectionTarget::None => Vec::new(),
+        SelectionTarget::Components { ids } => ids.iter().map(|id| Item::Component { id: id.clone() }).collect(),
+        SelectionTarget::Ports { ids } => ids.iter().map(|id| Item::Port { id: id.clone() }).collect(),
+        SelectionTarget::Nets { ids } => ids.iter().map(|id| Item::Net { id: id.clone() }).collect(),
     }
 }
 
@@ -201,6 +212,31 @@ impl Selection {
     /// The component ids selected in `document`, in order.
     pub fn components(&self, document: DocumentId) -> Vec<String> {
         self.of(document).filter_map(|s| if let Item::Component { id } = &s.item { Some(id.clone()) } else { None }).collect()
+    }
+    /// `document`'s items as an inspection target (`sim_inspect`'s shape:
+    /// one kind, the first item's; None when nothing of those kinds is
+    /// selected). What Inspect, the builder scene, notes and the selection
+    /// link exchange.
+    pub fn target(&self, document: DocumentId) -> SelectionTarget {
+        let mut first = None;
+        let mut ids = std::collections::BTreeSet::new();
+        for s in self.of(document) {
+            let (kind, id) = match &s.item {
+                Item::Component { id } => ("component", id),
+                Item::Port { id } => ("port", id),
+                Item::Net { id } => ("net", id),
+                _ => continue,
+            };
+            if *first.get_or_insert(kind) == kind {
+                ids.insert(id.clone());
+            }
+        }
+        match first {
+            None => SelectionTarget::None,
+            Some("component") => SelectionTarget::Components { ids },
+            Some("port") => SelectionTarget::Ports { ids },
+            Some(_) => SelectionTarget::Nets { ids },
+        }
     }
     /// The robot link selected in `document` (the first).
     pub fn link(&self, document: DocumentId) -> Option<usize> {

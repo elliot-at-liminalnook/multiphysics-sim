@@ -259,6 +259,11 @@ fn arg(entry: &OpEntry, a: &Arg, r: &Resolved, g: &Group, values: &Map<String, V
             face_ref(node, *g.faces.first().ok_or_else(missing)?)
         }
         Arg::FaceB => r.faces.get(1).map(|(n, f)| face_ref(n, *f)).ok_or_else(missing)?,
+        Arg::Keyed(key, name) => {
+            let mut m = Map::new();
+            m.insert((*key).to_string(), param(entry, values, name)?.clone());
+            Value::Object(m)
+        }
         Arg::Plane(name, fallback) => match param(entry, values, name)?.as_str() {
             Some("active") => env.plane.map_or_else(|| Value::from(fallback.arg()), |p| p.arg_or(*fallback)),
             Some(named) => Value::from(named),

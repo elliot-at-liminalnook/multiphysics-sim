@@ -230,10 +230,14 @@ pub enum CadAction {
     /// Edit a sketch with RoboCAD's sketch calls (`[method, [args…],
     /// {kwargs}?]`, kernel/sketch.py's names; curves by index), checked by
     /// `cad_client::SketchCall` (a refusal names the call and the
-    /// argument): one `POST /nodes/{node}/sketch`, or without `node` one new
-    /// sketch on `plane` ("xy" | "xz" | "yz" | a plane node id; the active
-    /// plane when absent, else XY) carrying the calls. `revision`: RoboCAD's
-    /// revision the indices were read at; refused by name when it changed.
+    /// argument): one `POST /nodes/{node}/sketch`; without `node`, the
+    /// sketch RoboCAD's sketch tools pick on `plane` ("xy" | "xz" | "yz" |
+    /// a plane node id; the active plane when absent, else XY; tools.py:675-686:
+    /// the selected sketch on that plane, else the first visible one), or one
+    /// new sketch on it carrying the calls (`POST /nodes {"kind": "sketch"}`).
+    /// The sketch tools' finished shapes are this action. `revision`:
+    /// RoboCAD's revision the points and indices were read at; refused by
+    /// name when it changed.
     CadSketch {
         #[serde(default)]
         node: Option<String>,

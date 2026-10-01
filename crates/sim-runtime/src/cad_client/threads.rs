@@ -53,7 +53,6 @@ pub struct ThreadAnchor {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnchorStatus {
-    #[default]
     Attached,
     /// The part's geometry changed since the pin was placed.
     NeedsReview,
@@ -61,7 +60,9 @@ pub enum AnchorStatus {
     Missing,
     /// An experiment-evidence thread (no part).
     Evidence,
-    /// A state this client does not know.
+    /// A state this client does not know, or none read (the default: a
+    /// missing or malformed status never reads as attached).
+    #[default]
     #[serde(other)]
     Unknown,
 }
@@ -125,7 +126,7 @@ pub struct CadThread {
     pub evidence: Option<Value>,
     /// As stored; absent on older threads (their parts are implied:
     /// [`CadThread::linked_parts`] has them either way).
-    #[serde(deserialize_with = "lenient")]
+    #[serde(deserialize_with = "lenient_opt_items")]
     pub part_refs: Option<Vec<PartRef>>,
     pub inspection_view: Option<Value>,
     /// The anchored part's name, "Deleted part" or "Experiment evidence".
@@ -141,9 +142,25 @@ impl CadThread {
     }
 }
 
+/// `deserialize_with` for an optional list: absent or `null` is `None`
+/// (not stored); a list keeps the items that parse; anything else is `None`.
+fn lenient_opt_items<'de, D, T>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: serde::de::DeserializeOwned,
+{
+    let value = <Value as Deserialize>::deserialize(deserializer)?;
+    Ok(match value {
+        Value::Array(items) => Some(items.into_iter().filter_map(|v| serde_json::from_value(v).ok()).collect()),
+        _ => None,
+    })
+}
+
 /// `POST /threads`' body (`create_thread`): a part, a point (mm) and the
 /// first message; the face index picked (as `GET /nodes/{id}/faces`
 /// numbers them) and RoboCAD's camera are optional, as are linked parts.
+/// `create_thread`'s `evidence` and `inspection_view` are deliberately not
+/// sent: evidence threads belong to cad-experiments-motion.
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct NewThread {
     pub node_id: String,

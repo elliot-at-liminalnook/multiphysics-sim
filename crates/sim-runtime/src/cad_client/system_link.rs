@@ -12,6 +12,8 @@
 //!   "path", "error", "link"}`, or `{"state": "current" | "changed",
 //!   "path" (resolved), "link", "now"}`. A read: it changes nothing (the op
 //!   route still answers RoboCAD's history beside it).
+//!
+//! The other three are RoboCAD edits: use a client with [`super::EDIT_TIMEOUT`].
 use super::{CadClient, CadError, OpResult};
 use crate::hardware_client::lenient;
 use serde::{Deserialize, Serialize};

@@ -51,3 +51,14 @@ def test_image_route_refuses_other_nodes(served):
         client.get(f"/nodes/{box}/image")
     with pytest.raises(RuntimeError, match="→ 404: no node nope"):
         client.get("/nodes/nope/image")
+
+
+def test_image_route_refuses_missing_or_unreadable_bytes(served):
+    doc, ref, _, _, client = served
+    name = doc.nodes[ref].name
+    doc.nodes[ref].image["data"] = None  # an archive without image/<id> (Document.load)
+    with pytest.raises(RuntimeError, match=f"→ 404: {name} has no stored image bytes"):
+        client.get(f"/nodes/{ref}/image")
+    doc.nodes[ref].image["data"] = b"not an image"
+    with pytest.raises(RuntimeError, match="→ 422: .*the stored image cannot be read"):
+        client.get(f"/nodes/{ref}/image")

@@ -1324,9 +1324,14 @@ class Service:
         n = self.node(nid)
         if n.image is None:
             raise ApiError(404, f"{n.name} is not a reference image")
-        data = n.image["data"]
-        with Image.open(io.BytesIO(data)) as image:
-            fmt, (width, height) = (image.format or "").lower(), image.size
+        data = n.image.get("data")
+        if not data:
+            raise ApiError(404, f"{n.name} has no stored image bytes")
+        try:
+            with Image.open(io.BytesIO(data)) as image:
+                fmt, (width, height) = (image.format or "").lower(), image.size
+        except (OSError, ValueError) as e:
+            raise ApiError(422, f"{n.name}: the stored image cannot be read: {e}")
         return {"id": n.id, "revision": self.doc.revision, "format": fmt, "width_px": width, "height_px": height,
                 "bytes": len(data), "data": base64.b64encode(data).decode("ascii")}
 

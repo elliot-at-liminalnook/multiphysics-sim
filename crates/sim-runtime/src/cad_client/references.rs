@@ -14,6 +14,11 @@
 //! - `GET /nodes/{id}/image` (the cad-organize gap route, read-only): the
 //!   stored bytes, base64, with their format and pixel size.
 //!
+//! The writes are RoboCAD edits: use a client with [`super::EDIT_TIMEOUT`].
+//! Images are fetched whole; the loopback transport caps an answer at
+//! 64 MiB, so stored bytes over about 48 MiB (base64 adds a third) cannot
+//! be read through [`CadClient::reference_image`].
+//!
 //! A reference image node's placement is `NodeDetail::image` ([`ImagePlacement::of`]):
 //! `node_detail` strips the bytes and writes the plane as `Plane.to_json`.
 use super::{CadClient, CadError, NodeDetail, OpResult, node_route};
@@ -36,12 +41,13 @@ impl Default for PlaneJson {
     }
 }
 impl PlaneJson {
-    /// `Plane.y_axis`: normal × x_axis, normalised.
+    /// `Plane.y_axis`: normal × x_axis through `v_unit` (kernel/base.py:
+    /// below a length of 1e-12 it is (0, 0, 1)).
     pub fn y_axis(&self) -> [f64; 3] {
         let (n, x) = (self.normal, self.x_axis);
         let c = [n[1] * x[2] - n[2] * x[1], n[2] * x[0] - n[0] * x[2], n[0] * x[1] - n[1] * x[0]];
         let len = (c[0] * c[0] + c[1] * c[1] + c[2] * c[2]).sqrt();
-        if len > 0.0 { [c[0] / len, c[1] / len, c[2] / len] } else { [0.0, 1.0, 0.0] }
+        if len < 1e-12 { [0.0, 0.0, 1.0] } else { [c[0] / len, c[1] / len, c[2] / len] }
     }
     /// `Plane.to_world(u, v)`.
     pub fn to_world(&self, u: f64, v: f64) -> [f64; 3] {

@@ -1,0 +1,499 @@
+//! Scene sync (SimSync): the file watch, installing loaded models (physical
+//! or planar), run frames onto the link meshes, the camera orbit and
+//! viewport, selection highlight and inspector scrolling.
+use super::*;
+
+/// UI thread, FILE mode: stats the opened file every `source::POLL`;
+/// a changed stat writes the one Reload action (trigger watch), applied next frame.
+pub(super) fn watch(mut view: ResMut<RobotView>, mut out: MessageWriter<crate::app::actions::Act<RobotAction>>) {
+    let idle = view.load.is_none();
+    let due = match view.source.as_mut() {
+        Some(s) if idle => s.poll(std::time::Instant::now()),
+        _ => false,
+    };
+    if due {
+        // A refusal (a check already in flight) is retried by the next poll.
+        out.write(crate::app::actions::Act::quiet(RobotAction::Reload { trigger: ReloadTrigger::Watch }));
+    }
+}
+
+/// Takes the worker's result (a preset open, or a FILE open/reload from
+/// `robot_source`); spawns meshes and the link list on a model to apply.
+/// A failed or unchanged reload returns before anything is despawned.
+pub(super) fn receive(
+    mut commands: Commands,
+    old: Query<Entity, Or<(With<LinkMesh>, With<LinkRow>)>>,
+    mut view: ResMut<RobotView>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    materials: Res<Materials>,
+    root: Single<Entity, With<RobotRoot>>,
+    list: Single<Entity, With<ListRoot>>,
+    mut orbit: Single<&mut RobotOrbit>,
+    mut redraw: MessageWriter<bevy::window::RequestRedraw>,
+    fonts: Res<UiFonts>,
+) {
+    let started = match view.status {
+        Status::Loading(t) => t,
+        _ => std::time::Instant::now(),
+    };
+    // `reload`: the trigger and the worker's seconds when a FILE reload replaces a displayed model.
+    let (result, reload) = if let Some(load) = view.load.as_ref() {
+        let Some(result) = load.poll() else {
+            redraw.write(bevy::window::RequestRedraw);
+            return;
+        };
+        view.load = None;
+        (result, None)
+    } else {
+        let Some(source) = view.source.as_mut() else { return };
+        let Some((trigger, mut checked)) = source.take() else {
+            if source.busy().is_some() {
+                redraw.write(bevy::window::RequestRedraw);
+            }
+            return;
+        };
+        let seconds = checked.seconds;
+        let results = checked.results.take();
+        let was_failing = source.failing.is_some();
+        let settled = source.settle(trigger, checked, source::now_utc());
+        if let Some(r) = results {
+            // Read by the same worker; its status is always judged against the displayed model.
+            view.stress.set(r);
+        }
+        let Some(source) = view.source.as_mut() else { return };
+        let Some(loaded) = settled else {
+            // Unchanged, or failed: the displayed model, meshes, run and selection stay.
+            let failing = source.failing.clone();
+            match (failing, view.model.is_some() || view.planar.is_some()) {
+                (Some(e), false) => view.status = Status::Error(e),
+                (Some(_), true) => view.notice = Some(format!("{} reload failed: showing the last good model (see header)", if trigger == ReloadTrigger::Watch { "watched" } else { "manual" })),
+                (None, _) if trigger == ReloadTrigger::Manual => view.notice = Some("manual reload: file unchanged (same sha256); nothing replaced".into()),
+                (None, _) if was_failing => view.notice = Some("the file on disk matches the displayed model again (same sha256); nothing replaced".into()),
+                // A watch that finds identical bytes (a touch, an atomic same-content rewrite) stays quiet.
+                (None, _) => {}
+            }
+            return;
+        };
+        // The first successful load (open, or a watch after a failed open) is not a reload.
+        let reload = (view.model.is_some() || view.planar.is_some()).then_some((trigger, seconds));
+        match loaded {
+            FileModel::Physical(loaded) => (Ok((*loaded, None)), reload),
+            FileModel::Planar(loaded) => {
+                let k = Kit { f: &fonts };
+                install_planar(&mut commands, &old, &mut view, *list, &k, *loaded, reload, started);
+                return;
+            }
+        }
+    };
+    // A reopened robot (REST robot_preset) or a reloaded file replaces the previous meshes and rows.
+    for entity in &old {
+        commands.entity(entity).despawn();
+    }
+    let (loaded, preset) = match result {
+        Ok(l) => l,
+        Err(e) => {
+            view.status = Status::Error(e);
+            return;
+        }
+    };
+    let mut lo = Vec3::splat(f32::INFINITY);
+    let mut hi = Vec3::splat(f32::NEG_INFINITY);
+    let to_display = |p: Vec3| Vec3::new(p.x, p.z, -p.y);
+    for (i, (link, geometry)) in loaded.model.links.iter().zip(&loaded.geometry).enumerate() {
+        let com = Vec3::new(link.com[0] as f32, link.com[1] as f32, link.com[2] as f32);
+        let Some(g) = geometry else { continue };
+        for p in &g.positions {
+            let w = to_display(com + Vec3::from_array(*p));
+            lo = lo.min(w);
+            hi = hi.max(w);
+        }
+        let count = g.positions.len() as u32;
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, g.positions.clone());
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, g.normals.clone());
+        mesh.insert_indices(Indices::U32((0..count).collect()));
+        let entity = commands
+            .spawn((Mesh3d(meshes.add(mesh)), MeshMaterial3d(materials.normal.clone()), Transform::from_translation(com), Visibility::default(), LinkMesh(i), Pickable::default()))
+            .observe(actions::pick_link)
+            .id();
+        commands.entity(*root).add_child(entity);
+    }
+    if lo.x.is_finite() {
+        orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
+        if reload.is_none() {
+            orbit.focus = (lo + hi) / 2.0;
+        }
+    }
+    // A reload keeps the user's camera.
+    orbit.home = reload.is_none();
+    view.triangles = loaded.geometry.iter().map(|g| g.as_ref().map_or(0, |g| g.triangles())).collect();
+    // New meshes are painted (or not) for the stress overlay by `stress_paint`.
+    view.stress.revision += 1;
+    let k = Kit { f: &fonts };
+    let rows: Vec<Entity> = loaded
+        .model
+        .links
+        .iter()
+        .enumerate()
+        .map(|(i, l)| {
+            let name = if view.triangles[i] > 0 { l.name.clone() } else { format!("{}  (no collision geometry)", l.name) };
+            // A one-line selectable row; `highlight` sets its `Tint` from the selection
+            // (`view.selected` still indexes the previous model here).
+            commands
+                .spawn((
+                    Button,
+                    RobotAction::SelectLink { index: i, name: l.name.clone() },
+                    LinkRow(i),
+                    Tint::selectable(false),
+                    AccessibleLabel::new(name.as_str()),
+                    Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)), flex_shrink: 0.0, ..default() },
+                    BackgroundColor(Color::NONE),
+                    children![k.text(name.as_str(), size::ITEM, TEXT, 0)],
+                ))
+                .id()
+        })
+        .collect();
+    commands.entity(*list).add_children(&rows);
+    // A file's previous run context is discarded (its thread stops) and the
+    // fresh one continues its generation; a preset opens a new view.
+    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
+    // A reload that turns a planar (v2) file into a physical one: the planar run
+    // is joined off the UI thread; its speed and contacts choice carry over.
+    let planar = view.planar.take().map(|p| (p.run.speed_scale(), p.contacts, p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == planar::PlanarPhase::Running, p));
+    let previous = view.run.take();
+    let (mut run, mut run_reset) = match preset {
+        Some(Opened::Preset(run)) => (RunController::spawn_preset(std::sync::Arc::new(run)), false),
+        Some(Opened::Recorded(run)) => (RunController::spawn_recorded(std::sync::Arc::new(run)), false),
+        // Replacing a planar run: the physical run continues its generation (older frames stay stale).
+        None => match (planar.as_ref(), previous) {
+            (Some((_, _, _, p)), None) => (RunController::spawn_at(loaded.model.clone(), p.run.generation() + 1), false),
+            (_, previous) => RunController::replace(previous, loaded.model.clone()),
+        },
+    };
+    if let Some((speed, contacts, had_run, replaced)) = planar {
+        crate::jobs::drop_off_thread(replaced, "the planar v2 run");
+        run_reset |= had_run;
+        if speed != run.speed_scale() {
+            let _ = run.speed(SpeedRequest::Set { scale: speed });
+        }
+        let flags = run.overlays();
+        if flags.contacts != contacts {
+            let _ = run.set_overlays(OverlayFlags { contacts, ..flags });
+        }
+    }
+    let generation = run.generation();
+    view.run = Some(run);
+    view.selected = kept.as_ref().and_then(|n| loaded.model.links.iter().position(|l| &l.name == n));
+    view.model = Some(loaded.model);
+    view.notes = loaded.notes;
+    view.cad_link = Some(loaded.cad_link);
+    view.pose_dirty = true;
+    view.run_message = None;
+    view.status = Status::Loaded { seconds: match reload {
+        Some((_, s)) => s,
+        None => started.elapsed().as_secs_f64(),
+    } };
+    if let Some((trigger, _)) = reload {
+        let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
+        let run = if run_reset { "run reset" } else { "no run to reset" };
+        let selection = match (&kept, view.selected) {
+            (Some(n), Some(_)) => format!("; selection kept: {n}"),
+            (Some(n), None) => format!("; selection cleared: link `{n}` is not in the new file"),
+            (None, _) => String::new(),
+        };
+        view.notice = Some(format!("reloaded: {reason}; {run}; generation {generation}{selection}"));
+        if let Some(s) = view.source.as_mut() {
+            s.run_reset = Some(run_reset);
+        }
+    }
+    view.ui_revision += 1;
+    view.panels_ready = true;
+}
+
+/// Installs a planar (v2) file from `receive` (`robot_source`'s loaded
+/// outcome): the previous meshes and rows go, a previous physical run (or
+/// planar run) is joined off the UI thread, the v3 state is cleared and a
+/// planar run thread starts (it builds at once and waits paused at t = 0).
+/// The selection is kept by body/link name; speed and contacts carry over.
+#[allow(clippy::too_many_arguments)]
+fn install_planar(
+    commands: &mut Commands,
+    old: &Query<Entity, Or<(With<LinkMesh>, With<LinkRow>)>>,
+    view: &mut RobotView,
+    list: Entity,
+    k: &Kit<'_>,
+    loaded: planar::PlanarLoaded,
+    reload: Option<(ReloadTrigger, f64)>,
+    started: std::time::Instant,
+) {
+    for entity in old {
+        commands.entity(entity).despawn();
+    }
+    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
+    let (mut speed, mut contacts, mut generation, mut run_reset, mut joint) = (1.0, true, 0, false, (0, None));
+    // A planar file that was running keeps running after a reload (the CAD
+    // scene's edit, save, watch loop): the new run is started once built.
+    let mut resume = false;
+    if let Some(run) = view.run.take() {
+        (speed, contacts, run_reset) = (run.speed_scale(), run.overlays().contacts, run.has_run_state());
+        generation = run.generation() + 1;
+        crate::jobs::drop_off_thread(run, "the robot run (replaced by a planar v2 file)");
+    }
+    if let Some(p) = view.planar.take() {
+        (speed, contacts, joint) = (p.run.speed_scale(), p.contacts, (p.selected_joint, p.selected_joint_name().map(str::to_string)));
+        run_reset = p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == planar::PlanarPhase::Running;
+        resume = p.run.phase() == planar::PlanarPhase::Running;
+        generation = p.run.generation() + 1;
+        crate::jobs::drop_off_thread(p, "the planar v2 run");
+    }
+    // The v3 state: nothing of it describes a planar file.
+    view.model = None;
+    view.triangles.clear();
+    view.notes = FileNotes::default();
+    view.cad_link = None;
+    view.mirror = None;
+    view.graphs_visible = false;
+    if view.stress.enabled {
+        view.stress.enabled = false;
+        view.stress.revision += 1;
+    }
+    let rows: Vec<Entity> = loaded
+        .model
+        .bodies
+        .iter()
+        .enumerate()
+        .map(|(i, b)| {
+            let name = if b.ground { format!("{}  (ground: fixed root)", b.name) } else { b.name.clone() };
+            commands
+                .spawn((
+                    Button,
+                    RobotAction::SelectLink { index: i, name: b.name.clone() },
+                    LinkRow(i),
+                    Tint::selectable(false),
+                    AccessibleLabel::new(name.as_str()),
+                    Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)), flex_shrink: 0.0, ..default() },
+                    BackgroundColor(Color::NONE),
+                    children![k.text(name.as_str(), size::ITEM, TEXT, 0)],
+                ))
+                .id()
+        })
+        .collect();
+    commands.entity(list).add_children(&rows);
+    view.selected = kept.as_ref().and_then(|n| loaded.model.bodies.iter().position(|b| &b.name == n));
+    let mut planar = PlanarView::new(loaded, generation, speed, contacts, reload.is_none());
+    // Carried by name: the new file's joint order may differ (resolved in planar_sync once built).
+    (planar.selected_joint, planar.pending_joint) = joint;
+    // Queued behind the build on the run thread, so it starts once built (a failed build ignores it).
+    if resume {
+        let _ = planar.run.act(RunAction::Start);
+    }
+    view.planar = Some(planar);
+    view.run_message = None;
+    view.pose_dirty = false;
+    view.status = Status::Loaded { seconds: reload.map_or_else(|| started.elapsed().as_secs_f64(), |(_, s)| s) };
+    if let Some((trigger, _)) = reload {
+        let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
+        let run = match (run_reset, resume) {
+            (_, true) => "run reset; it runs again from t = 0 once the new build is ready",
+            (true, false) => "run reset",
+            (false, false) => "no run to reset",
+        };
+        let selection = match (&kept, view.selected) {
+            (Some(n), Some(_)) => format!("; selection kept: {n}"),
+            (Some(n), None) => format!("; selection cleared: `{n}` is not a body of the new file"),
+            (None, _) => String::new(),
+        };
+        view.notice = Some(format!("reloaded ({}): {reason}; {run}; generation {generation}{selection}", planar::FORMAT_NAME));
+        if let Some(s) = view.source.as_mut() {
+            s.run_reset = Some(run_reset);
+        }
+    }
+    view.ui_revision += 1;
+    view.panels_ready = true;
+}
+
+/// SimSync, a planar (v2) file: takes the planar run thread's latest frame
+/// (never one of an older generation), keeps the window redrawing while
+/// frames are expected, and frames the camera on the first built frame of an
+/// open (front view of the working plane) or a reload (extent only).
+pub(super) fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
+    // Checked through a shared borrow first: a physical view is not marked changed.
+    if view.planar.is_none() {
+        return;
+    }
+    let Some(p) = view.planar.as_mut() else { return };
+    p.run.poll();
+    if p.run.active() {
+        redraw.write(bevy::window::RequestRedraw);
+    }
+    // Every frame: also clamps a carried index when the old run had no built frame to name it.
+    p.resolve_pending_joint();
+    let Some(move_focus) = p.frame_camera else { return };
+    let Some((lo, hi)) = p.run.frame().filter(|f| f.built).and_then(planar::bounds) else { return };
+    p.frame_camera = None;
+    orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
+    if move_focus {
+        orbit.focus = (lo + hi) / 2.0;
+        // Looking along −Z: x right, y up, as the plane is drawn.
+        orbit.yaw = 0.0;
+        orbit.pitch = 0.12;
+        orbit.home = true;
+    }
+}
+
+/// Takes the run thread's latest frame (stale generations are discarded in
+/// `RunController::poll`) and poses the link meshes from it; with no frame of
+/// the current generation the static assembly pose is shown.
+pub(super) fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut Transform)>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
+    let Some(run) = view.run.as_mut() else { return };
+    let changed = run.poll();
+    let active = run.active();
+    if active {
+        redraw.write(bevy::window::RequestRedraw);
+    }
+    if !changed && !view.pose_dirty {
+        return;
+    }
+    view.pose_dirty = false;
+    // The leg mirror's pose, else a loaded gait preview's, else the run's latest accepted frame.
+    let poses = match view.mirror.as_ref() {
+        Some(m) => Some(m.poses.as_slice()),
+        None => view.run.as_ref().and_then(|r| r.display_poses()),
+    };
+    let Some(model) = view.model.as_ref() else { return };
+    for (link, mut transform) in &mut links {
+        let (p, q) = match poses.and_then(|f| f.get(link.0)).and_then(|p| p.as_ref()) {
+            Some((p, q)) => (Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32), Quat::from_xyzw(q.x as f32, q.y as f32, q.z as f32, q.w as f32)),
+            None => {
+                let c = model.links[link.0].com;
+                (Vec3::new(c[0] as f32, c[1] as f32, c[2] as f32), Quat::IDENTITY)
+            }
+        };
+        if transform.translation != p || transform.rotation != q {
+            transform.translation = p;
+            transform.rotation = q;
+        }
+    }
+}
+
+pub(super) fn orbit(
+    buttons: Res<ButtonInput<MouseButton>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut motion: MessageReader<MouseMotion>,
+    mut wheel: MessageReader<MouseWheel>,
+    window: Single<&Window>,
+    camera: Single<(&mut Transform, &mut RobotOrbit)>,
+    view: Res<RobotView>,
+) {
+    let drag = motion.read().fold(Vec2::ZERO, |sum, e| sum + e.delta);
+    let zoom = wheel.read().fold(0.0, |sum, e| sum + match e.unit {
+        MouseScrollUnit::Line => e.y,
+        MouseScrollUnit::Pixel => e.y * 0.02,
+    });
+    let (mut transform, mut orbit) = camera.into_inner();
+    if orbit.home {
+        orbit.radius = orbit.extent * 3.2;
+        orbit.home = false;
+    }
+    let dock = if view.graphs_visible { DOCK } else { 0.0 };
+    let in_scene = window.cursor_position().is_some_and(|p| p.x > LEFT && p.x < window.width() - RIGHT && p.y > TOP && p.y < window.height() - dock);
+    if in_scene {
+        let pan = buttons.pressed(MouseButton::Middle) || (buttons.pressed(MouseButton::Right) && (keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight)));
+        if pan {
+            let shift = (transform.right() * -drag.x + transform.up() * drag.y) * orbit.radius * 0.0015;
+            orbit.focus += shift;
+        } else if buttons.pressed(MouseButton::Right) {
+            orbit.yaw -= drag.x * 0.007;
+            orbit.pitch = (orbit.pitch + drag.y * 0.007).clamp(-1.4, 1.4);
+        }
+        orbit.radius = (orbit.radius * (-zoom * 0.12).exp()).clamp(orbit.extent * 0.3, orbit.extent * 20.0);
+    }
+    let horizontal = orbit.pitch.cos() * orbit.radius;
+    let eye = orbit.focus + Vec3::new(orbit.yaw.sin() * horizontal, orbit.pitch.sin() * orbit.radius, orbit.yaw.cos() * horizontal);
+    let target = Transform::from_translation(eye).looking_at(orbit.focus, Vec3::Y);
+    if *transform != target {
+        *transform = target;
+    }
+}
+
+pub(super) fn viewport(window: Single<&Window>, view: Res<RobotView>, mut camera: Single<&mut Camera, With<RobotOrbit>>) {
+    let scale = window.scale_factor();
+    let width = (window.width() - LEFT - RIGHT).max(1.0);
+    let height = (window.height() - TOP - if view.graphs_visible { DOCK } else { 0.0 }).max(1.0);
+    let viewport = Viewport { physical_position: UVec2::new((LEFT * scale) as u32, (TOP * scale) as u32), physical_size: UVec2::new((width * scale) as u32, (height * scale) as u32), ..default() };
+    if camera.viewport.as_ref().is_none_or(|old| old.physical_size != viewport.physical_size || old.physical_position != viewport.physical_position) {
+        camera.viewport = Some(viewport);
+    }
+}
+
+/// The one selection, shown in 3D and in the list (a selectable `Tint`);
+/// the current section's tab and the run buttons' enabled state (their
+/// `Look`s are painted by `ui_kit::repaint_buttons`).
+pub(super) fn highlight(
+    view: Res<RobotView>,
+    materials: Res<Materials>,
+    mut meshes: Query<(&LinkMesh, &mut MeshMaterial3d<StandardMaterial>)>,
+    mut rows: Query<(&LinkRow, &mut Tint)>,
+    mut tabs: Query<(&TabButton, &mut Look)>,
+    mut runs: Query<(&RunButton, &mut Enabled)>,
+) {
+    for (button, enabled) in &mut runs {
+        let ok = match &view.planar {
+            Some(p) => p.run.check(button.0).is_ok(),
+            None => view.run.as_ref().is_some_and(|r| r.check(button.0).is_ok()),
+        };
+        enable(enabled, ok);
+    }
+    for (tab, mut look) in &mut tabs {
+        look.set_if_neq(Look::Tab(view.section == tab.0));
+    }
+    for (link, mut material) in &mut meshes {
+        let mirrored = view.mirror.as_ref().is_some_and(|m| m.tinted.contains(&link.0));
+        let want = match (view.selected == Some(link.0), view.stress.painting()) {
+            (true, false) => &materials.selected,
+            (false, _) if mirrored => &materials.mirrored,
+            (false, false) => &materials.normal,
+            (true, true) => &materials.stress_selected,
+            (false, true) => &materials.stress,
+        };
+        if material.0 != *want {
+            material.0 = want.clone();
+        }
+    }
+    for (row, mut tint) in &mut rows {
+        tint.set_if_neq(Tint::selectable(view.selected == Some(row.0)));
+    }
+}
+
+/// A kit button's `Enabled` flag (dims it and drops its hover), written only on a change.
+pub(super) fn enable(mut flag: Mut<Enabled>, on: bool) {
+    if flag.0 != on {
+        flag.0 = on;
+    }
+}
+
+/// Wheel over the inspector, or a requested offset (reset on selection and
+/// section changes); reports the laid-out offset and its maximum back to REST.
+/// While the Leg calibration panel covers the inspector, the wheel is the panel's (`hardware::panel`).
+pub(super) fn scroll(
+    mut view: ResMut<RobotView>,
+    mut wheel: MessageReader<MouseWheel>,
+    window: Single<&Window>,
+    panel: Single<(&mut ScrollPosition, &ComputedNode), With<InspectorScroll>>,
+    hardware: Option<Res<hardware::Hardware>>,
+) {
+    let (mut position, node) = panel.into_inner();
+    let delta = wheel_delta(&mut wheel, 24.0);
+    let max = ((node.content_size().y - node.size().y) * node.inverse_scale_factor()).max(0.0);
+    let covered = hardware.is_some_and(|h| h.open);
+    if delta != 0.0 && !covered && window.cursor_position().is_some_and(|p| p.x >= window.width() - RIGHT && p.y > TOP) {
+        view.scroll_to = Some((position.y - delta).clamp(0.0, max));
+    }
+    if let Some(y) = view.scroll_to.take() {
+        position.y = y.clamp(0.0, max);
+    }
+    if view.scroll != position.y || view.scroll_max != max {
+        view.scroll = position.y;
+        view.scroll_max = max;
+    }
+}

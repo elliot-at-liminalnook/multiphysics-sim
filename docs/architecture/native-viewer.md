@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (measured 2026-09-30, after ui-kit)
+## Where it is today (measured 2026-09-30, after ui-kit; hardware front end added the same day)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -28,17 +28,22 @@ duplicates physics.
   sim-spatial, also used by `--headless`) and **one REST poll**
   (`app::actions::serve`, Input): every mode's commands, each tagged with
   its `modes`; one dispatch (`app::route::route`) refuses a command of
-  another mode by name. The capability list (92 entries, the same as
-  before) is generated from the action registry
-  (`app::actions::capabilities`); no hand-written list is left. Place mode
-  answers `state`, `camera` and `screenshot`.
+  another mode by name. The capability list (97 entries: the action
+  layer's 92 plus the hardware front end's 5, `hardware_status`,
+  `hardware_stop`, `hardware_export`, `hardware_gaits` and `hardware`) is
+  generated from the action registry (`app::actions::capabilities`); no
+  hand-written list is left. Place mode answers `state`, `camera` and
+  `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
   verified at 90c65c86: every intent is a typed action
   (`WindowAction`, `InspectAction`, `SystemAction` carrying the builder's
   `BuildAction`, `LessonCommand` carrying `LessonAction`, `RobotAction`,
-  `PlaceAction`) written as a Bevy Message (`Act<A>`) by buttons, keys,
+  `PlaceAction`, and since the hardware front end `HardwareAction`, part of
+  Robot mode) written as a Bevy Message (`Act<A>`) by buttons, keys,
   `system_ui` and REST in Input and applied by one system per action type
   in Actions. REST waits on reply tokens (`app::actions::Replies`).
+  `Origin` has four variants: `Rest`, `Ui`, `Quiet` and `SystemUi` (a
+  `system_ui` activation one mode passes on to another action type).
 - **The shared pipeline sets** `ViewerSet` Input → Actions → JobResults →
   SimSync → Present are configured once (`app::ModesPlugin`). Input holds
   the REST poll and every button and key mapping; Actions the apply
@@ -53,14 +58,25 @@ duplicates physics.
   Verified at ae80a137.
 - **Bevy structure:** 7 plugins (`CorePlugin`, `ModesPlugin`,
   `SpatialViewerPlugin`, `BuilderPlugin`, `LearnPlugin`, `RobotPlugin`,
-  `PlacePlugin`), one `States` enum and two computed states, one set
-  enum, 6 action Message types (`Act<A>`). 14 `MessageReader` and 35
-  `MessageWriter` sites; 10 `On<…>` sites (pointer picks, drags,
-  screenshots). `Interaction` is named 86 times in 16 files and `KeyCode`
-  133 times in 10 files; the press, key and pick sites only map input to
-  actions or style hover (swept 2026-09-30).
+  `PlacePlugin`; the hardware panel is part of `RobotPlugin`, so the count
+  is unchanged), one `States` enum and two computed states, one set
+  enum, 7 action Message types (`Act<A>`; `Act<HardwareAction>` is the
+  seventh). Site counts, re-measured 2026-09-30 after the hardware front
+  end with `grep -rn` over `crates/sim-spatial/src` (lines, comments
+  included): 18 `MessageReader<` lines (16 at 4bc03789 by the same grep; 2
+  in `robot/hardware/`) and 46 `MessageWriter<` lines (37 at 4bc03789; 8
+  in `robot/hardware/`, 1 in `robot/actions.rs`); 10 `On<` lines (pointer
+  picks, drags, screenshots; unchanged). `KeyCode` appears 146 times in 11
+  files (133 in 10 before, same `grep -ow` method) and `Interaction` as a
+  word 83 times in 19 files (76 in 17 at 4bc03789 by that method). The
+  earlier figures (14 `MessageReader` and 35 `MessageWriter` sites,
+  `Interaction` 86 times in 16 files) were measured before the hardware
+  code by a narrower method that could not be reproduced; they stand as
+  measured before. The press, key and pick sites only map input to actions
+  or style hover (swept 2026-09-30; the hardware panel's `buttons`,
+  `jog_buttons`, `keys`, `window_loss` and `sliders` only write actions).
 - **One UI kit** (`src/ui_kit/`, see [UI kit](#ui-kit-2026-09-30)), done
-  2026-09-30, pending verification: tokens defined once (`ui_kit/theme.rs`),
+  2026-09-30, verified at 4bc03789: tokens defined once (`ui_kit/theme.rs`),
   one widget builder (`Kit`: text, header, button in every `Look`, tab strip,
   chip, segment, section, property row, list item, text-entry styling, dock,
   scroll area, slider on `bevy_ui_widgets::Slider`, pointer surface, chart
@@ -82,16 +98,43 @@ duplicates physics.
   area is given) and feature drawings (the schematic canvas, lesson cards,
   playheads, masks, sketch dots, markers, 3D labels, cards the kit has no
   widget for); see the UI kit section.
-- **Large files:** `robot_run.rs` (2,597 lines), `builder.rs` (2,453),
-  `lesson/mod.rs` (2,373) and `robot.rs` (2,205). UI files after ui-kit:
+- **Hardware front end** (§8, see
+  [Hardware front end](#hardware-front-end-2026-09-30)), done 2026-09-30
+  pending the user's hardware checklist: the Leg calibration panel is a
+  dock in Robot mode (`robot/hardware/`, built by `RobotPlugin`), opened by
+  the header's "Leg calibration" button or `--hardware URL`. It talks to
+  the unchanged `serve_actuator_calibration` and `serve_motor_bench` through
+  one typed loopback client, `sim_runtime::hardware_client`. Every intent is
+  a `HardwareAction`, and anything that starts, changes or arms motion is
+  refused by name from REST and `system_ui`. STOP goes out on its own
+  connection from a Dedicated job, never behind the link thread. Focus
+  loss, panel close, leaving Robot mode and closing the window stop any
+  drive (wider than the page's rule), as does the link's drop; closing the
+  window also writes STOP synchronously. Not compiled yet: the
+  verification pass builds and tests it. The panel also holds the leg mirror
+  (blue-tinted suspended robot) and live motor sync. The feature-by-feature
+  ledger is [docs/hardware-parity.md](../hardware-parity.md), and the
+  operator's steps are [docs/hardware-checklist.md](../hardware-checklist.md).
+- **Large files:** `robot_run.rs` (2,646 lines), `builder.rs` (2,453),
+  `lesson/mod.rs` (2,373) and `robot.rs` (2,232). UI files after ui-kit:
   `builder/ui.rs` 1,395 (was 1,684), `lesson/ui.rs` 1,158, `lib.rs` 1,294
   (was 1,411), `app/switcher.rs` 84; `ui_kit/` 903 lines (`widgets.rs` 346,
   `theme.rs` 199, `tests.rs` 157, `slider.rs` 85, `mod.rs` 71, `scroll.rs`
   45). The action modules are
-  under 700 lines each (`lesson/actions.rs` 670, `builder/actions.rs` 661,
-  `robot/actions.rs` 634, `app/actions.rs` 490, `inspect.rs` 412,
-  `builder/system_actions.rs` 395); `app/switch.rs` is 806, `app/tests.rs`
-  364, `app/route.rs` 75, `rest.rs` 140.
+  under 710 lines each (`hardware/actions.rs` 709, `robot/actions.rs` 689,
+  `lesson/actions.rs` 670, `builder/actions.rs` 661, `app/actions.rs` 513,
+  `inspect.rs` 412, `builder/system_actions.rs` 395); `app/switch.rs` is
+  850, `chart.rs` 183, `app/tests.rs` 364, `app/route.rs` 75, `rest.rs` 140.
+  The hardware front end (wc -l, 2026-09-30): `robot/hardware/` 8,049 lines
+  in 21 files (`sync.rs` 765, `session.rs` 733 plus `session/sequences.rs`
+  381 and `session/buttons.rs` 147, `mirror.rs` 741, `actions.rs` 709,
+  `view.rs` 705, `panel.rs` 630, `handlers.rs` 524, `sync_panel.rs` 346,
+  `link.rs` 344, `panel_sections.rs` 291, `settings.rs` 285, `mod.rs` 222,
+  `motion_view.rs` 205, `mirror_panel.rs` 187, `dial.rs` 145; tests
+  `session/tests.rs` 267, `view/tests.rs` 156, `sync/tests.rs` 150,
+  `mirror/tests.rs` 116) and `sim-runtime/src/hardware_client/` 2,175 lines
+  (`tests.rs` 653, `calibration.rs` 613, `http.rs` 349, `mod.rs` 268,
+  `bench.rs` 186, `token.rs` 106).
 - **What already works well, to keep:**
   - typed actions with one validated handler per action type
   - generation-stamped frames
@@ -509,10 +552,10 @@ Paths below are `crates/sim-spatial/src/`.
     `builder::ui_api::tests`, `builder::replay_tests`, `robot_run::tests`,
     `rest::tests` and the lib.rs `keyboard`/`pick_part` test;
   - a reading check of the launch trace above against the built code.
-- **Not yet verified.** Nothing here has been built or run yet. The
-  switcher's placement over each mode's panels, the robot link picking the
-  core now enables, and a live switch between every pair of modes in a
-  window are unverified until screenshots are on.
+- **Verified at 7da1216e** (see "Where it is today"): built and tested as
+  listed above. The switcher's placement over each mode's panels, the robot
+  link picking the core now enables, and a live switch between every pair
+  of modes in a window stay unverified until screenshots are on.
 
 ## Action layer (2026-09-30)
 
@@ -735,7 +778,8 @@ Paths are `crates/sim-spatial/src/`.
     `ResMut<Messages<Act<A>>>`; `#[derive(Resource)]` on the generic
     `InFlight<A>`; `MessageWriter` in the `pick_link` observer;
     `World::write_message` in `serve`.
-- **Not yet verified.** Nothing here has been built or run.
+- **Verified at 90c65c86** (see "Where it is today" and the epic order):
+  built and tested as listed above.
 
 ## UI kit (2026-09-30)
 
@@ -892,7 +936,7 @@ crate, 377 kept) were removed, freeing about 31 GiB (49 GiB free after).
 
 ### Verification checklist
 
-Nothing in this batch has been compiled or run. The verification pass should:
+The verification pass ran the following (verified at 4bc03789, below):
 
 - `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
   warnings (first compile of the kit: check `use<>` bounds, `AccessibleLabel`
@@ -920,6 +964,458 @@ Nothing in this batch has been compiled or run. The verification pass should:
   - Switcher: a mode segment (`ModeButton` → `switcher_clicks` →
     `WindowAction::Switch`).
   - Place: no buttons or sliders (keys and fly camera only).
+- **Verified at 4bc03789**, after the fixes in 9b6aa068, 801f12c5 and
+  4bc03789.
+
+## Hardware front end (2026-09-30)
+
+Batch hardware-front-end (epic order item 6, §8) built the Leg calibration
+panel: a native front end, feature for feature, over the browser's
+`web/viewer/calibration-ui.mjs` (with `actuator-motion-view.mjs`),
+`calibration-mirror.mjs` and `hardware-sync.mjs`. The hardware servers did
+not change. The ledger is [docs/hardware-parity.md](../hardware-parity.md);
+the operator's steps are [docs/hardware-checklist.md](../hardware-checklist.md).
+Paths are `crates/sim-spatial/src/` unless they name another crate.
+
+### Shape
+
+Every name below was checked with `grep 'fn <name>'` (or the type's
+definition) against the final code.
+
+- `sim-runtime/src/hardware_client/`: the one typed loopback client.
+  - `mod.rs`: the contract (loopback, headers, token hand-off, errors, body
+    order), `ClientError`, `Json`/`Body` (`Body::text`), `js_number`,
+    `encode_uri_component`, the tolerant deserializers `lenient` and
+    `lenient_items`, and the constants `CONNECT_TIMEOUT` (500 ms),
+    `REQUEST_TIMEOUT` (10 s), `STOP_TIMEOUT` (12 s), `CALIBRATION_MAX_BODY`
+    (4096) and `MOTOR_BENCH_MAX_BODY` (8192).
+  - `http.rs`: `Endpoint::parse` (127.0.0.1 or localhost only),
+    `Client::new`, `for_kind` (the body limit), `with_timeout` (at least
+    1 ms), `get`, `post`, `get_as`, `post_as`, `page`, `send_only` (written,
+    answer never read), `exchange` (a non-2xx answer's `error`, else
+    "Request failed (HTTP {status})"), `new_client_id`.
+  - `token.rs`: `discover`, `from_page`, `read_file` and `connect`.
+  - `calibration.rs`: the status types (tolerant: every field defaults, a
+    malformed or null section reads as its default) and one builder per
+    command body the page posts (`command`, `stop`, `select`, …, `jog`,
+    `gait_path`; `Input::members`).
+  - `bench.rs`: `serve_motor_bench`'s `/config`, `/status`, `/live/open`
+    (`open`), `/live/sample` (`sample`) and `/stop` (`stop`);
+    `SessionResult::summary`.
+- `robot/hardware/`, built by `RobotPlugin` (`hardware::build`):
+  - `mod.rs`: `Hardware` (the resource, present only in Robot mode;
+    `Hardware::new`, `target`, `url`), `HardwareConfig`/`ServerTarget` (the
+    launch flags, kept in `app::switch::Documents`), `Section`
+    (`open_initially`), `MirrorDisplay`.
+  - `actions.rs`: `HardwareAction` (every intent), `starts_motion` and
+    `remote_refusal`, the REST form (`wire::Command`, `parse`),
+    `Preferences` (read once in `build`), the lifecycle `enter` (OnEnter
+    Robot: connects with `--hardware`) and `leave` (OnExit Robot: calls
+    `stop_immediate` and `LiveSync::stop_ours` directly, keeps the
+    preferences, then drops the state off the UI thread), `stop_immediate`,
+    `connect`, the input systems `buttons`, `jog_buttons`, `keys` (Q/A
+    hold-to-move, Z/Escape), `window_loss` (`WindowFocused` false →
+    `Loss { FocusLost }`, `WindowCloseRequested` → `Loss { Leaving }`) and
+    `sliders`, then `apply` in `ViewerSet::Actions` and `poll_jobs` in
+    JobResults.
+  - `handlers.rs`: one handler per intent, `handle`; `remote_check` (a
+    remote action whose control is disabled now is refused with its
+    reason), `loss`, `post_stop_on_leave`, `close`, `gait_play`, `export`,
+    `start_export`, `write_export`, `load_gaits`, `gaits_json`.
+  - `link.rs`: `Link::spawn` (one `jobs::RunThread` "hardware-link" per
+    connection, join bound zero), `Link::send`, `Link::snapshot`,
+    `LinkCommand` (one per page handler; `Stopped { epoch }`), `Inputs`
+    (with `speed_reset`), `LinkSnapshot` (generation-stamped, `read_at` for
+    `stale`; `compiled_gait` is a field), `drive_active`, the page's
+    periods, and `stop_now` (the immediate STOP job; returns the epoch it
+    bumped to).
+  - `session.rs`: the page's state machine on the link thread: `run`,
+    `Session::handle`, `render` (the page's render-time rules:
+    `merge_warnings`, `leg_frame`, the leg gait's end, learning complete),
+    `stop`, `stopped_locally`, `select_motor`, `update`, `begin`, `move_`,
+    `release`, `set_disabled`, `poll`, `next_deadline`, `run_due`,
+    `shutdown`, `stop_after_dropped`, `interrupted`, `time_of_day`.
+    - `session/buttons.rs`: `target`, `capture`, `reset`, `flip`, `sweep`,
+      `learn`, `raw_step`.
+    - `session/sequences.rs`: `sweep_all`/`sweep_all_tick`, `tune`/
+      `tune_tick`, `campaign`/`campaign_tick`, `load_gaits`, `gait_play`/
+      `start_gait`, `gait_lease` (its own Dedicated job), `gait_toggle`,
+      `gait_scale`, `gait_stop`, `end_gait`, `sim_frame`/`leg_frame`.
+  - `view.rs`: the page's `render()` rules as pure functions of the
+    snapshot and the form: `render`, `render_gait`, `status_line`, `chips`,
+    `angle`, `fraction`, `speed`, `outside_pose`, `stats_rows`,
+    `gait_option_label`, `fixed` (JavaScript `toFixed`), `js_num`,
+    `PanelView::block`, and `status_json` (REST `hardware_status`).
+  - `dial.rs` (`needle_end`, `rasterize`) and `motion_view.rs`
+    (`comparison`, `update`): the dial and the command-vs-motion chart.
+  - `panel.rs`: `spawn` (the dock: `FocusPolicy::Block`, the accessible
+    label), `panel_view`, `control_list`, `controls` (the `hardware:<name>`
+    list for `system_ui`), `connection_line`, `scroll`, `refresh`;
+    `panel_sections.rs`: `top_bar`, `body`, `section`, `chips`, `gaits`,
+    `stats`, `runs`, `chart_labels`.
+  - `mirror.rs` (`Mirror::prepare`, `update`, `follow_gait`, `poll`,
+    `alignment_angle`, `gait_bindings`, `record`, `worker_failed`, `apply`,
+    `SceneId`, `worker`) and `mirror_panel.rs` (`mirror_sync`, which drives
+    begin/prepare, updates and gait sampling every frame; `mirror_panel`,
+    `fill`): the suspended robot posed from the encoders through
+    `sim_runtime::kinematic_mirror::KinematicMirror` on a jobs worker,
+    written into `RobotView::mirror`.
+  - `sync.rs` (`LiveSync::connect`, `start`, `stop`, `stop_ours`, `poll`,
+    `poll_status`, `on_frame`, `watch_run`; `live_input`, `sample_from`,
+    `source_text`, `legs`, `mapping`, `distinct`, `banner_text`,
+    `reading_lines`, `apply`, `drain`, `worker`) and `sync_panel.rs`
+    (`sync_frames`, `sync_panel`, `row_title`, `rms_and_saturation`,
+    `charts`, `chart_note_of`, `sync_overlay`, `sync_texts`): Real motor
+    sync against `serve_motor_bench`.
+  - `settings.rs`: the free functions `load` and `path`, and the method
+    `Settings::save` (an Io job), the preferences file.
+- Outside the folder: `app/actions.rs` (`Origin::SystemUi`,
+  `Action::accepts`, `Call::remote`, the registry entry "hardware"),
+  `robot/actions.rs` (`apply`: `system_ui` passes `hardware:<name>` on,
+  refuses motion by name and a disabled control with "{id} is disabled:
+  {why}", and lists the controls; `motion_keys`: A is given to the panel
+  while it is open; `check`: Run refused while mirroring), `robot.rs`
+  (`setup`: the header button; `highlight`: `RobotView::mirror` drawn
+  instead of the run's frame, the blue `Materials::mirrored`; `scroll`: the
+  inspector ignores the wheel while the panel covers it), `robot_run.rs`
+  (`MotorTargets.done`, the frame's episode end), `chart.rs`
+  (`rasterize_fixed`, fixed axes for the sync charts), `main.rs` (the four
+  flags), `app/switch.rs` (`Documents::hardware`).
+
+### Decisions
+
+- **Token hand-off: read it from the page the server serves.** The
+  calibration server's `calibration-token` meta; the bench's
+  `const token='…'` in `/` or the `motor-bridge-token` meta of `/walking/`;
+  or `--hardware-token-file` / `--motor-bench-token-file`. *Why:* the least
+  invasive choice, with no server change at all. Any local process that can
+  reach the loopback port can already read the page, so it grants nothing
+  new. *Rejected:* a 0600 token file written by the server (a server
+  change, on hardware code the checklist would then have to requalify).
+  *Revisit if* the servers stop injecting the token into their pages, or
+  bind beyond loopback.
+- **Loopback means 127.0.0.1.** `Endpoint::parse` accepts
+  `http://127.0.0.1:PORT` and `http://localhost:PORT` (connected as
+  127.0.0.1) and refuses `[::1]` and every other host. *Why:* both servers
+  bind IPv4 127.0.0.1 only and require `Host: 127.0.0.1:PORT`; `[::1]`
+  could never connect. *Revisit if* a server binds IPv6.
+- **STOP on its own connection.** A `jobs::Pool::Dedicated` job with
+  `complete_on_drop`, never queued behind the link thread, with
+  `STOP_TIMEOUT` 12 s. The link thread also sends STOP when its channel
+  closes. *Why:* the link thread can sit up to 8 s in one request (a select
+  proving watchdogs, a hardware reply), and the server latches its stop
+  flags when it parses the request, so a second connection lands at once;
+  the server answers a STOP only after its worker finishes, up to 8 s, so a
+  shorter timeout would report a STOP that worked as failed. *Rejected:*
+  STOP as a `LinkCommand` (waits behind the request in flight), or a
+  persistent second socket (both servers close after each answer).
+  *Revisit if* the servers gain a streaming control channel.
+- **STOP ordering on the link.** `stop_now` returns the epoch it bumped to
+  and the UI sends `LinkCommand::Stopped { epoch }`; while the shared epoch
+  is ahead of the last one the link applied, it sends nothing but `stop`
+  (`STOP_PENDING`). A `select`, `motion_start`, `sweep_all`, `gait_start`,
+  `tune` or `campaign` that succeeded but whose answer is dropped because
+  STOP arrived while it was in flight is followed by a `stop` at once
+  (`stop_after_dropped`). *Why:* the server may parse such a request after
+  the UI's STOP (a `select` clears the stop latch), and nothing else would
+  end what it energized; a second STOP pressed before the first was
+  applied must stay pending. *Rejected:* the page's rule alone (drop the
+  answer), which can leave the motor driving. *Revisit if* the server
+  orders requests by sequence across connections.
+- **Gait lease on its own job.** Each `gait_update` is posted from its own
+  Dedicated job with a 1 s timeout, at most one in flight. *Why:* the
+  server ends a leg gait after 1.5 s without an update, and a request on
+  the link thread may wait up to 8 s. *Revisit if* the lease period
+  changes.
+- **Loss of control stops any drive.** `WindowFocused` false, panel close,
+  leaving Robot mode and closing the window stand for the page's
+  `visibilitychange`, close/toggle and `pagehide`. Unlike the page's
+  `loss()` (ready, starting or a session), any drive stops:
+  `link::drive_active` also counts busy, sweep-all, tuning, campaigning and
+  a leg gait. `Loss::Leaving` always stops. Closing the window also writes
+  STOP synchronously with `Client::send_only` (`post_stop_on_leave`, the
+  keepalive equivalent; at most the 500 ms connect timeout and a loopback
+  write, once). Live sync stops on every loss, but only a session this
+  viewer opened (`LiveSync::stop_ours`); the operator's Stop motors and
+  STOP use `LiveSync::stop`, which also ends a session the bench reports
+  from elsewhere. *Why:* the page leaves a leg gait, tune, campaign or
+  sweep-all driving after the tab is hidden; that is unsafe with nobody
+  watching (AGENTS.md). *Revisit if* the panel is ever shown in a second
+  window.
+- **`Origin::SystemUi`.** A `system_ui` activation that robot mode passes on
+  to `HardwareAction`. It is remote like `Rest`, but its REST command was
+  already answered by robot mode's handler, so its outcome is dropped; for
+  that reason robot mode refuses a disabled control itself ("{id} is
+  disabled: {why}"). *Why:* the refusal rule has to see that the intent
+  came from automation; `Origin::Ui` would have let `system_ui` start
+  motion. *Rejected:* `Origin::Rest` with a dummy reply token (a second
+  answer to one command), or a separate `system_ui` feature for hardware (a
+  second controls list beside robot mode's). *Revisit if* other modes start
+  passing activations on.
+- **Refusal rule.** `HardwareAction::starts_motion` actions from
+  `Origin::Rest` or `Origin::SystemUi` are refused with "hardware `{name}`
+  starts, changes or arms motion and needs an operator at the window: REST
+  and system_ui may read status, list gaits, export, connect, change the
+  mirror's display and STOP only". Refused: select, set disabled
+  (enable/disable), sweep all, hold others, jog press/release, speed,
+  target and its commit, capture, reset poses, clear lower/upper, sweep,
+  learn, the tune/campaign/gait confirmations, tune, campaign, gait
+  select/mode/speed/effort/play, drive mode, PWM ceiling, flip, raw step
+  value, raw step, and live sync's leg/motor/polarity/scale/start.
+  Allowed: toggle/close panel, connect, sections, status, STOP, loss,
+  export, load gaits, gait stop, the mirror's display settings, sync
+  connect and sync stop. Robot mode refuses them when a `hardware:<name>`
+  control is activated, and the hardware handler refuses them again.
+  *Why:* AGENTS.md: drive motors only with the operator present; the
+  confirmations and drive settings arm or shape motion, so automation may
+  not set them either. *Revisit if* an operator-presence signal other than
+  a local pointer or key exists.
+- **`Action::accepts`.** The registry reads an action type's accepted REST
+  commands from `A::accepts()` (default: its own serde variants).
+  `HardwareAction` names its REST form, `wire::Command`. *Why:* the
+  hardware REST form (`hardware_status`, …, `hardware {action}`) is not the
+  action enum's own serde form, and the registry test cross-checks
+  `accepts` against `commands`. *Revisit if* more action types need a
+  separate REST form (then make it the rule).
+- **A is given to the panel while it is open.** `robot::actions::motion_keys`
+  drops A from WASD while `Hardware::open`; W, S and D still steer. *Why:*
+  the page's capture-phase handler takes Q/A from the robot viewer the same
+  way, and A is the lower jog. *Revisit if* robot mode's steering keys
+  change.
+- **Run refused while mirroring.** `robot::actions::check` refuses
+  `Run { Start }` while `RobotView::mirror` is set (`mirror::MIRRORING`).
+  *Why:* the page's `setPlaying` refuses to play while mirroring, and the
+  mirror's poses replace the run's frame. *Revisit if* the mirror is drawn
+  as a second robot instead.
+- **Placement: a dock in Robot mode, not a mode.** The dock blocks the
+  pointer (`FocusPolicy::Block`) and takes the wheel while open, so nothing
+  reaches the inspector under it. *Why:* the mirror and live sync need Robot
+  mode's robot and run, and STOP-on-leave is then the mode's own exit.
+  *Rejected:* a Hardware mode (it would duplicate robot loading and lose
+  the mirror's robot). *Revisit if* the hardware UI grows beyond the leg
+  fixture.
+- **Export location.** Download calibration writes
+  `<server output>/viewer-exports/leg-calibration-<unix_ms>.json` (create_new,
+  never overwritten) and shows the path; REST `hardware_export` answers it.
+  *Why:* the viewer has no downloads folder, and the server's output
+  directory is where the calibration's own versions live. *Revisit if* a
+  native save dialog is added to the kit.
+- **Preferences file, read once.** `$SIM_SPATIAL_PREFERENCES`, else
+  `~/.config/sim-spatial/hardware-preferences.json`, replaces the pages'
+  localStorage (`calibration-drive-mode`, `calibration-hold-others`,
+  `calibration-mirror-v1`, `walking-hardware-map-v1`). It holds operator
+  preferences only, never calibration data. It is read once when the app
+  is built (`actions::Preferences`), so entering Robot mode reads no file
+  on the UI thread; saves go to an Io job. Unknown or missing fields take
+  their defaults, a stored sign is clamped to ±1. *Why:* the nearest
+  native equivalent, and testable through the env override. *Revisit if*
+  Bevy's app settings (0.19) are adopted for the viewer's other
+  preferences.
+- **Warnings stamped in UTC.** *Why:* the viewer carries no timezone
+  database; a local offset guessed without one could be wrong. *Revisit if*
+  a timezone crate is added for another reason.
+- **Stale status shown as stale** (a native addition). A status older than
+  2.4 s (four idle polls) is marked stale, never shown as live, and the
+  motion controls are blocked. *Why:* the page silently keeps the last
+  answer; the native link publishes a timestamp, so it can say so.
+  *Revisit if* the poll periods change.
+- **No free-text number fields.** The PWM ceiling (0–100 in 0.1 steps) and
+  the raw step (−4095..4095) are a slider/stepper, not the page's number
+  fields. *Why:* the kit has no validated number entry, and a control that
+  can only hold valid values makes the page's `reportValidity` checks hold
+  by construction. *Revisit if* the kit gains a numeric field.
+- **Honest labels where the page prints 0.** A missing gait statistic
+  prints "— ms"/"—%", a null governor limit or tracking error "—", and an
+  empty limits object no "Limits: " line, where the page's arithmetic on
+  `null` prints 0 (`view::stats_rows`, `render_gait`, `rounded`). *Why:*
+  AGENTS.md: label missing values honestly; a missing measurement is not a
+  measured zero. *Revisit if* the server stops writing `null`.
+- **`toFixed` exactly.** `view::fixed` rounds an exact binary tie away from
+  zero, as JavaScript does, and leaves every other value to `format!`
+  (which already rounds the exact binary value). *Why:* the texts must
+  match the page digit for digit. *Revisit if* none.
+- **Live sync off the UI thread, newest sample wins.** `/status` is polled
+  on its own Dedicated job; samples go through the sync RunThread, which
+  drains its queue and keeps only the newest (`drain`, `Outbox`); `/stop`
+  is posted on its own job whenever a session may be open, and again when
+  an open lands after a stop. The run's episode end is the frame's
+  `MotorTargets.done`. *Why:* a slow poll must not delay a sample or a
+  STOP; a STOP during `/live/open` must not let the open outlive it.
+  *Revisit if* the bench gains a streaming channel.
+
+### Deviations
+
+Every `deliberately-different` row of the ledger, in short:
+
+- the panel connects to a server instead of being served by it (CAL-01);
+- a stale-status marker (CAL-11, addition);
+- an answer without `error` reads "Request failed (HTTP {status})", for the
+  calibration page's "Request failed" and the sync page's `r.statusText`
+  (CAL-15, SYNC-31; `hc/http.rs` `exchange`);
+- loss of control stops any drive, not only a ready or moving motor
+  (CAL-30);
+- a disabled motor's chip reads "⊘ Knee 1", not a strike-through (CAL-36,
+  `view.rs` `chips`);
+- warning times in UTC (CAL-52);
+- no Space/Enter on a focused jog button: kit buttons take no keyboard
+  focus, Q/A are the keyboard path (CAL-58);
+- no gait tooltip: the summary is in REST `hardware_gaits` only (CAL-110,
+  `handlers.rs` `gaits_json`);
+- PWM ceiling and raw step as slider/stepper (CAL-134, CAL-138);
+- preferences in a file (CAL-140, MIR-05, SYNC-09);
+- export to `viewer-exports/` (CAL-141);
+- the aria-labels of the × button, the chip group, the warnings, the radios,
+  the dial and the control-mode select have no `AccessibleLabel` (CAL-146);
+  checkboxes, the gait select, radios and the statistics table are kit
+  chips, segments and lines (CAL-151);
+- "—" where the page prints 0 for missing statistics, limits and gait
+  errors; no bare "Limits: " line; the recent-runs heading falls back to the
+  path, not "undefined" (CAL-148, CAL-149, CAL-150);
+- without a bench configured, the sync section explains how to start it
+  (SYNC-01);
+- sync is a section of the Leg calibration panel, not of the walking page's
+  inspector (SYNC-03);
+- live sync also stops on focus loss, panel close and mode exit, only for a
+  session this viewer opened (SYNC-32), and a STOP during `/live/open` is
+  re-posted when the open lands (SYNC-33).
+
+### Review findings
+
+Five reviews read the batch (client, link, panel, mirror and sync, docs).
+Every finding and its disposition; locations are files in this section's
+Shape.
+
+- **Client** (`hardware_client`):
+  - STOP timeout too short (3 s) for a server that answers STOP only after
+    its worker finishes (up to 8 s): fixed, `STOP_TIMEOUT` 12 s (`mod.rs`).
+  - `[::1]` accepted though both servers bind IPv4 127.0.0.1 only: fixed,
+    refused (`http.rs` `Endpoint::parse`); `localhost` connects as
+    127.0.0.1.
+  - No request body limit: fixed, 4096 bytes for the calibration server and
+    8192 for the bench before connecting (`Client::for_kind`,
+    `checked_body`; `token.rs` `connect` sets it).
+  - Null gait values from the server: fixed, read as missing by tolerant
+    fields (`lenient`, `lenient_items` in `mod.rs`; `calibration.rs`) and
+    shown as "—" (`view.rs` `rounded`).
+  - A zero timeout was an error from `std::net`: fixed, clamped to 1 ms
+    (`Client::with_timeout`).
+- **Link** (`link.rs`, `session.rs`):
+  - Double-STOP race (a second STOP's pending state cleared by the first
+    `Stopped`): fixed, `stop_now` returns the epoch and
+    `LinkCommand::Stopped { epoch }` (`Session::stop_applied`).
+  - An answer dropped because STOP arrived while it was in flight could
+    leave a motor energized: fixed, `stop_after_dropped` after a dropped
+    `select`, `motion_start`, `sweep_all`, `gait_start`, `tune` or
+    `campaign`.
+  - STOP timeout on the link's own STOPs: fixed, `STOP_TIMEOUT` (`stop`,
+    `shutdown`, `stop_after_dropped`).
+  - Loss checked only ready/starting/run: fixed, `link::drive_active` on
+    both the UI (`handlers.rs` `loss`) and the link (`Session::handle`,
+    `shutdown`).
+  - Speed-reset race (an `Inputs` sent before the UI saw a sweep's speed
+    reset put the old speed back): fixed, `Inputs::speed_reset`
+    (`Session::handle`, `actions.rs` `poll_jobs`).
+  - Gait lease could expire behind a slow request on the link thread:
+    fixed, `gait_lease` on its own Dedicated job, 1 s timeout.
+  - Dropping the link joined a thread that may wait `STOP_TIMEOUT`: fixed,
+    join bound zero (`Link::spawn`), dropped off the UI thread.
+- **Panel** (`actions.rs`, `handlers.rs`, `panel.rs`, `view.rs`):
+  - A leg gait was not stopped on loss: fixed (`drive_active` counts a leg
+    gait).
+  - Live sync kept running after the panel closed: fixed, every loss calls
+    `LiveSync::stop_ours` (`handlers.rs` `loss`).
+  - Clicks fell through the dock to the inspector: fixed,
+    `FocusPolicy::Block` (`panel.rs` `spawn`); the inspector's wheel is
+    ignored while the panel covers it (`robot.rs` `scroll`).
+  - `toFixed` ties rounded to even: fixed, `view.rs` `fixed`.
+  - The gait's Stop for a leg gait waited behind the link: fixed, it goes
+    through `stop_immediate` first (`handlers.rs` `handle`, `GaitStop`).
+  - A `system_ui` activation of a disabled control read as success (its
+    outcome is dropped): fixed, robot mode refuses it with "{id} is
+    disabled: {why}" (`robot/actions.rs` `apply`).
+  - Window close relied on a detached job that may die with the process:
+    fixed, STOP also written synchronously with `Client::send_only`
+    (`handlers.rs` `post_stop_on_leave`), and `leave` calls
+    `stop_immediate` and `stop_ours` directly.
+  - Preferences were read from disk on entering Robot mode (UI thread):
+    fixed, read once at app build (`actions::Preferences`).
+  - Parity texts where the page prints 0 or "undefined" (missing
+    statistics, limits and gait errors; the empty limits line; the
+    recent-runs heading): kept as deliberate differences (honest labels;
+    CAL-148, CAL-149, CAL-150).
+- **Mirror and sync** (`mirror.rs`, `mirror_panel.rs`, `sync.rs`,
+  `sync_panel.rs`, `settings.rs`):
+  - STOP while `/live/open` was in flight could be overtaken by the open:
+    fixed, an open that lands after a stop is deactivated and `/stop`
+    posted again (`LiveSync::poll`); STOP is never gated on local state
+    (`LiveSync::stop`, `may_be_open`).
+  - `/status` polled on the sample thread: fixed, its own Dedicated job
+    (`poll_status`).
+  - Samples could queue behind a slow post: fixed, the newest wins
+    (`drain`, `Outbox`).
+  - Settings file work on the UI thread: fixed, read once at app build
+    and saved by `Settings::save` on an Io job.
+  - Scene identity (which loaded run the mirror poses): fixed, `SceneId`
+    (`Weak::ptr_eq` on the preset or recording).
+  - A dead mirror worker went unnoticed: fixed, reported ("Mirror
+    unavailable: Mirror worker failed", `worker_failed`) and replaced on
+    the next begin (`Mirror::prepare`).
+  - A re-begin flashed the run's frame: fixed, the shown poses are kept and
+    only the tint changes (`mirror_sync`).
+  - `frame.done` read from the run's phase: fixed, `MotorTargets.done`
+    (`live_input`).
+  - Settings bindings with missing fields failed the whole file, and a
+    stored sign could be any number: fixed, tolerant bindings and the
+    polarity clamped to ±1 (`settings.rs` `sign`).
+  - Sync charts on a moving scale dropped points: fixed,
+    `chart::rasterize_fixed` with fixed axes.
+  - Doc names: fixed in the module docs.
+- **Docs** (this section, §8, the ledger, the checklist, README,
+  consolidation §6): every native function name reconciled with the code;
+  the refusal rule written out in full everywhere; the checklist's kill
+  steps (HW-14, HW-16) no longer move focus away first; HW-05, HW-04, HW-01,
+  HW-13 (SYNC-29) corrected; stale placeholders removed; the ledger
+  recounted (275 rows). All fixed.
+- **Rejected:** none of substance. Kept as deliberate differences: the
+  panel parity texts above (CAL-148, CAL-149, CAL-150).
+
+### Verification checklist
+
+The hardware front end has not been compiled yet: the verification pass
+builds and tests it. No hardware has been driven. The verification pass
+should:
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
+  warnings;
+- `cargo test -p sim-runtime hardware_client` (body bytes against the pages'
+  `JSON.stringify`, `js_number`, `encode_uri_component`, loopback refusal
+  including `[::1]`, body limits, token discovery from saved pages,
+  tolerant status parsing);
+- `cargo test -p sim-spatial --lib`, in particular `app::tests` (97
+  capabilities; every capability parses into its action; `accepts`
+  cross-checked against each type's commands),
+  `robot::actions::tests` (every listed control, `hardware:<name>`
+  included, fits a registered pattern; argument errors unchanged),
+  `jobs::tests::threads_are_started_only_in_jobs`,
+  `ui_kit::tests::ui_colours_come_from_the_kit`, and the
+  `robot::hardware` tests (`panel::tests`, `handlers::tests`,
+  `settings` tests, `view::tests`, `session::tests` against a fake server,
+  `sync::tests`, `mirror::tests`, `dial` and `motion_view` tests);
+- `cargo check -p sim-app`;
+- reading traces of STOP, each to a `stop` request on its own connection:
+  the Stop button (`hardware::actions::buttons` → `apply` →
+  `handlers::handle` → `actions::stop_immediate` → `link::stop_now`), Z and
+  Escape (`keys`), REST `hardware_stop`, `system_ui` `hardware:stop`
+  (`robot::actions::apply` → `Origin::SystemUi` → `apply`), focus loss
+  (`window_loss` → `Loss { FocusLost }` → `handlers::loss`), panel close
+  (`handlers::close`), window close (`window_loss` → `Loss { Leaving }` →
+  `loss` → `stop_immediate` and `post_stop_on_leave`), and leaving Robot
+  mode (`actions::leave` → `stop_immediate`, `LiveSync::stop_ours`, then
+  the link's drop → `Session::shutdown`);
+- move the ledger's rows to `done` as they are built and tested, and
+  recount them by status;
+- **never drive hardware**: the hardware steps are the user's
+  ([docs/hardware-checklist.md](../hardware-checklist.md)).
 
 ## Target shape
 
@@ -941,7 +1437,7 @@ Nothing in this batch has been compiled or run. The verification pass should:
   handler. What survives a switch: the builder, the display-model library,
   the fonts, the REST server, the documents each mode reopens, and the
   workspace root. Selection and annotations are still per mode (§7);
-  `sim-app` is not folded in (epic 6).
+  `sim-app` is not folded in (epic order item 11).
 
 ### 2. Plugins and ordered system sets
 
@@ -999,7 +1495,7 @@ Nothing in this batch has been compiled or run. The verification pass should:
 - `sim_api` capabilities are generated from the action registry
   (`app::actions::registry`), and a lib test checks the registry against
   what each action type parses, so the REST surface can't drift from the
-  UI. *Status:* done 2026-09-30, pending verification.
+  UI. *Status:* done 2026-09-30, verified at 90c65c86.
 
 ### 4. One background-work abstraction
 
@@ -1096,22 +1592,116 @@ started before the `App` (tests, `--validate-only`, headless) and
 
 ### 8. Hardware front end in the native viewer
 
-*Decided 2026-09-30.* The browser's calibration and hardware pages
-(`web/viewer/calibration-ui.mjs`, `hardware-sync.mjs`,
-`calibration-mirror.mjs`) move into a `sim-spatial` panel with exact feature
-parity.
+*Decided 2026-09-30; built 2026-09-30 (batch hardware-front-end, see
+[Hardware front end](#hardware-front-end-2026-09-30)), pending the user's
+hardware checklist.* The browser's calibration and hardware pages
+(`web/viewer/calibration-ui.mjs` with `actuator-motion-view.mjs`,
+`calibration-mirror.mjs`, `hardware-sync.mjs`) have a native front end in
+`sim-spatial` with exact feature parity, ledgered row by row in
+[docs/hardware-parity.md](../hardware-parity.md).
 
-- **The hardware layer doesn't move.** It is already Rust
-  (`serve_actuator_calibration.rs`: serial bus, watchdog, playback lease,
-  encoder policy). The panel is a new front end over it, through a shared
-  client, not a second implementation.
+- **Placement.** A dock inside Robot mode, not a mode of its own: the
+  mirror poses Robot mode's own robot, live sync streams the targets of
+  Robot mode's own run, and the page lived beside the robot viewer too. The
+  header's "Leg calibration" button shows it; `--hardware URL` opens and
+  connects it at launch. `robot/hardware/` is built by `RobotPlugin`; its
+  `Hardware` resource exists only while Robot mode is entered.
+- **One client** (`sim_runtime::hardware_client`, shared crate, not the
+  viewer):
+  - loopback only (`Endpoint::parse` accepts `http://127.0.0.1:PORT` and
+    `http://localhost:PORT`, connected as 127.0.0.1; `[::1]` and anything
+    else is refused before a byte is sent: both servers bind IPv4
+    127.0.0.1). Plain HTTP/1.1, one request per connection, with a 500 ms
+    connect timeout and read and write timeouts (10 s for ordinary requests,
+    longer than the server's own 8 s hardware wait; 12 s for STOP, which the
+    server answers only after its worker finishes, up to 8 s), and the
+    servers' body limits (4096 bytes calibration, 8192 bench) checked before
+    connecting;
+  - the pages' headers: `Host` the server's own origin, `X-Control-Token`,
+    `X-Client-Id` (a 36-character UUID per panel, as one per tab),
+    `Content-Type: application/json`; no `Origin` or `Sec-Fetch-Site`;
+  - bodies with their members in the page's order and numbers written as
+    JavaScript writes them (`Body`, `js_number`), so each request is the
+    page's `JSON.stringify` byte for byte;
+  - a non-2xx answer surfaces the server's `error` field verbatim
+    (`ClientError::Server`), as the pages show `v.error`; without one it
+    reads "Request failed (HTTP {status})".
+- **Token hand-off.** The token is read from the page the server already
+  serves, as the browser receives it: the calibration server's
+  `<meta name="calibration-token">`, the bench's `const token='…'` in `/`
+  or the `motor-bridge-token` meta of `/walking/`. Or it comes from a file
+  the operator names (`--hardware-token-file`, `--motor-bench-token-file`).
+  No server changed.
+- **Refusal rule and origins.** Every intent is a `HardwareAction`.
+  `HardwareAction::starts_motion` (actions.rs) is refused when it comes
+  from `Origin::Rest` or `Origin::SystemUi`, with "hardware `{name}`
+  starts, changes or arms motion and needs an operator at the window: REST
+  and system_ui may read status, list gaits, export, connect, change the
+  mirror's display and STOP only": select, set disabled (enable/disable),
+  sweep all, hold others, jog press/release, speed, target and its commit,
+  capture, reset poses, clear lower/upper, sweep, learn, the
+  tune/campaign/gait confirmations, tune, campaign, gait
+  select/mode/speed/effort/play, drive mode, PWM ceiling, flip, raw step
+  value, raw step, and live sync's leg/motor/polarity/scale/start. Motion
+  needs a pointer or key in the window, with the operator there. Allowed
+  from automation: toggle/close panel, connect, sections, status, STOP,
+  loss, export, load gaits, gait stop, the mirror's display settings, sync
+  connect and sync stop (REST `hardware_status`, `hardware_stop`,
+  `hardware_export`, `hardware_gaits`, `hardware {action}`; `system_ui`
+  `hardware:<name>`). A `system_ui` activation of a hardware control that
+  is disabled now is refused with "{id} is disabled: {why}"
+  (`robot/actions.rs` `apply`).
+- **STOP paths.**
+  - *Immediate.* The Stop button, Z, Escape, REST `hardware_stop` and
+    `system_ui` `hardware:stop` post `stop` on a fresh connection from a
+    `jobs::Pool::Dedicated` job with `complete_on_drop` (`link::stop_now`).
+    It never queues behind the link thread, which may be waiting on a select
+    that proves the watchdogs, or on a reply the server waits up to 8 s for.
+    The server latches its stop flags when it parses the request. The job
+    draws its sequence from the link's shared counter, and the UI bumps the
+    link's epoch first, so answers already in flight are dropped as the page
+    drops them.
+  - *Loss of control* (the page's `loss()`, widened). Bevy
+    `WindowFocused` false (the page's `visibilitychange`), panel close (×
+    or the header toggle), leaving Robot mode (`actions::leave`) and
+    closing the window (`WindowCloseRequested`, the page's `pagehide`)
+    stop drive on the same immediate path whenever anything may drive
+    (`link::drive_active`: ready, starting, a session, busy, sweep-all,
+    tuning, campaigning, a leg gait), not only when a motor is ready,
+    starting or in a session as the page checks; leaving always stops. Live
+    sync stops on every loss, but only a session this viewer opened
+    (`LiveSync::stop_ours`).
+  - *Link drop.* When the link's channel closes (reconnect, mode exit,
+    window close), the link thread sends STOP before it returns.
+  - *Keepalive equivalence.* The page marks STOP `keepalive` so it outlives
+    the tab. The native equivalent is `complete_on_drop` on its own thread
+    (the request finishes even if the panel or the mode goes away first)
+    and, when the window closes, a STOP written synchronously with
+    `Client::send_only` (`handlers::post_stop_on_leave`; the bench's `/stop`
+    likewise when `LiveSync` drops), since the process may end before a
+    job connects.
+  - *Underneath.* The servers' leases (1.5 s motion and gait leases on the
+    calibration server, 0.9 s on the bench) and the FPGA's command and
+    telemetry watchdogs still stop the motors if the viewer dies without
+    sending anything.
+- **What stays in the servers.** The serial bus, the one hardware worker,
+  leases, sequence and owner checks, watchdog proofs, the FPGA supervisor
+  and taught travel windows, the feedback controller, tuning, the campaign,
+  gait playback on the leg and live streaming. Nothing in the viewer opens a
+  serial port or computes a motor command. The mirror uses the shared
+  `sim_runtime::kinematic_mirror`, and gait sampling uses the shared
+  `sim_runtime::gait_playback`, as the page's worker does.
 - **Safety stays underneath the UI.** The FPGA supervisor, taught travel
-  windows, watchdogs and STOP are unchanged and hold whatever the UI does. STOP
-  must be reachable from every screen of the panel.
-- **Agents never drive hardware.** They build and verify by reading, and each
-  hardware epic ends with a hardware checklist the user runs with the operator
-  present (jog, teach, STOP, watchdog trip, lease loss). The browser pages stay
-  until the user has run that checklist.
+  windows, watchdogs and STOP are unchanged and hold whatever the UI does.
+  STOP sits in the panel's top bar, which never scrolls, so it is reachable
+  from every section.
+- **Agents never drive hardware.** They build and verify by reading. This
+  epic ends with [docs/hardware-checklist.md](../hardware-checklist.md),
+  which the user runs with the operator present (connect, select, jog,
+  teach, STOP from every section, focus loss and mode exit, sweeps, tune,
+  campaign, gait, mirror, advanced settings, live sync, watchdog trip and
+  lease loss, export, REST refusal). The browser pages stay until the user
+  has signed that checklist off.
 
 ### 9. CAD in Rust
 
@@ -1194,10 +1784,14 @@ The Director re-ranks with evidence, but this is the default:
 4. **Action layer.** *Done 2026-09-30, verified at 90c65c86 (batch
    action-layer; see [Action layer](#action-layer-2026-09-30)).* Unify
    buttons, `system_ui` and REST onto typed actions.
-5. **UI kit.** *Done 2026-09-30, pending verification (batch ui-kit; see
+5. **UI kit.** *Done 2026-09-30, verified at 4bc03789 (batch ui-kit; see
    [UI kit](#ui-kit-2026-09-30)).* Build it on Bevy's widgets, then move
    headers, inspectors, tabs, docks and charts onto it.
-6. **Hardware front end** (§8). The calibration and hardware panel in
+6. **Hardware front end** (§8). *Done 2026-09-30 pending the user's
+   hardware checklist ([docs/hardware-checklist.md](../hardware-checklist.md);
+   batch hardware-front-end; see
+   [Hardware front end](#hardware-front-end-2026-09-30)).* The calibration
+   and hardware panel in
    `sim-spatial`, over the existing Rust calibration layer, ending with the
    user's hardware checklist.
 7. **CAD mode** (§9 phase 1). RoboCAD's workflows in `sim-spatial` over its

@@ -820,7 +820,7 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   command mapping only. Controllers and motion clocks remain in Rust/Rhai"),
   and `sim-web` `EnvironmentSimulation` / `EmbeddedSimulation`
   (`crates/sim-web/src/lib.rs:75,143`). Hardware mirroring:
-  `web/viewer/hardware-sync.mjs` (FPGA bridge, token gated). `sim-app --scene cad`
+  `web/viewer/hardware-sync.mjs` (FPGA bridge, token gated) (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off). `sim-app --scene cad`
   arrow keys set joint targets directly (`cad_app.rs:keyboard`). That is joint
   jogging, not motion requests through a walking controller.
 - **Reusable layer:** `sim_runtime::{session, embedded, environment, walking_task, steered_reference}`,
@@ -901,15 +901,14 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
       servo target vs measured joint angle: native since T13 (below).
       Observation panels beyond these two charts, arbitrary channel picking or
       pinning, and a time cursor/scrub on the charts are still browser only.
-    - Hardware sync and mirroring (`hardware-sync.mjs`), which are never
-      driven from here.
-    - Calibration UI.
+    - ~~Hardware sync and mirroring (`hardware-sync.mjs`)~~ (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off): the
+      Leg calibration panel's Real motor sync and Simulated leg mirror.
+    - ~~Calibration UI~~ (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off): robot mode's Leg calibration panel.
     - ~~Gait playback~~ as a *kinematic preview* on a preset's scene: native
-      since T16 (§2i). Still browser or CLI only: evaluating and tuning gaits
-      (`gait_lab evaluate|tune`, the leaderboard), and **leg-driving gait
-      playback**, which is hardware (`serve_actuator_calibration` bindings,
-      server gait start). That stays in the calibration UI and is never
-      driven from the native viewer.
+      since T16 (§2i). Still CLI only: evaluating and tuning gaits
+      (`gait_lab evaluate|tune`, the leaderboard). **Leg-driving gait
+      playback** (`serve_actuator_calibration` bindings, server gait start)
+      is in the Leg calibration panel (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off).
     - Presets in `sim-web` modes other than `embedded`, and presets whose
       inputs live only under ignored `runs/`.
     - Realtime walking. Native detailed physics runs at about 0.04–0.07×
@@ -1003,8 +1002,8 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
 - **Dependencies:** a native host for `EmbeddedSession`/environment on a
   worker thread, a robot scene renderer (links as CAD meshes), and a key →
   typed motion-channel mapping ported from `motion-commands.mjs`, including the
-  heartbeat and zero-on-release. Hardware sync stays out of scope (never
-  driven by this work).
+  heartbeat and zero-on-release. Hardware sync stays out of scope for this
+  workflow; it is in the Leg calibration panel (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off).
 - **Acceptance evidence:** a REST motion-command equivalent of holding W
   (a REST-issued command is not a key press). `state` shows the controller's
   commanded velocity and increasing body x. Screenshots are taken before and
@@ -1457,8 +1456,7 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   refinement, FPGA, power and motor-response review remain in
   `sim-viewer --experiments` (`experiments_ui/{refinement, fpga_ui, motor_response_ui, power_ui}.rs`).
   Browser calibration panel (`web/viewer/calibration-ui.mjs`, token gated,
-  talks to `serve_actuator_calibration.rs`, which drives hardware and is out of
-  scope). `web/motor-bench/`. The sim-spatial lesson bench page only asks a
+  talks to `serve_actuator_calibration.rs`, which drives hardware) (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off; robot mode's Leg calibration panel). `web/motor-bench/`. The sim-spatial lesson bench page only asks a
   calibration server named by `SIM_BENCH_URL` (`lesson/extras.rs:193,520`).
 - **Reusable layer:** `sim_runtime::{actuator_registry, part_fit, acquisition::calibration, controller_refinement::{calibration, calibration_data, evidence, fpga_review, motor_response}}`,
   `sim_domain_robot::actuator_profile`.
@@ -1499,8 +1497,8 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   shell (use the CLI and the promotion path); only the first mismatch per model
   is reported (the library returns the first); calibration review and FPGA
   review still live in `sim-viewer --experiments`; the hardware calibration
-  server (`serve_actuator_calibration.rs`, browser calibration panel) stays
-  external and is not migrated; joint limits for a checked consumer are not
+  server (`serve_actuator_calibration.rs`) stays external and unchanged, and
+  its browser calibration panel has a native front end (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off); joint limits for a checked consumer are not
   shown. Controls were activated with REST `system_ui` (the same handlers as a
   click) and the sidebar was positioned with `system_ui scroll` (commit
   12c744b3; OS-injected wheel events did not reach the window), so pointer
@@ -1610,8 +1608,8 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   WASM workspace (`web/`, `sim-web`) stays the teleoperation and walking
   surface until workflow g is shown natively, and it remains a supported
   compatibility target afterwards. Hardware calibration and sync
-  (`calibration-ui.mjs`, `hardware-sync.mjs`) stay in the browser. They are
-  hardware paths and are not migrated in this effort.
+  (`calibration-ui.mjs`, `hardware-sync.mjs`) (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off): the Leg
+  calibration panel in robot mode, over the unchanged servers.
 - **sim-app `--scene cad`: fallback only** (batch cad-simulate-native).
   RoboCAD's Simulate (`SimLink`) and `python -m robocad.simbridge` open
   `sim-spatial --robot` through `simbridge.viewer_command` (§2b, §6). sim-app
@@ -1852,8 +1850,9 @@ unknown-id error).
      seek, speed (≤1×) and stop through one `RobotAction::Gait` (§2i).
    - *Verified in T16.3* (`.claude-pair/captures/T16-gait-preview/`,
      capture.json ok=true, 30 assertions; §2i).
-   - *Still not done:* launching evaluations or tuning, leg-driving playback
-     (hardware, calibration UI), a path text field, speeds above 1×.
+   - *Still not done:* launching evaluations or tuning, a path text field,
+     speeds above 1×. Leg-driving playback is in the Leg calibration panel
+     (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off).
 9. **Done — robot file watch and CAD reload** (b; batch robot-cad-reload,
    T17.1–T17.2; commit 0a1b8251 and the T17.2 doc commit).
    - *Done:* `--robot FILE` watches its file (0.5 s stat, sha256 and parse on
@@ -2154,21 +2153,59 @@ watched (`source_file.watching=false`). A CAD round trip: run RoboCAD
 `cad/`), edit, then export to the opened path (`GET /physical?path=FILE`); the
 viewer reloads by itself.
 
+Leg calibration in the native viewer (2026-09-30, batch
+hardware-front-end; pending the user's hardware checklist). Robot mode has a
+**Leg calibration** panel with the browser calibration page's features:
+motor select, hold-to-move, teach, sweeps, tune, campaign, gait playback on
+the leg, the leg mirror, Advanced, export and Real motor sync. It is a front
+end over the unchanged Rust servers. Start the calibration server as today
+(examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/README.md),
+then:
+
+```
+cargo run -p sim-spatial -- --robot-preset robot-measured-400hz --hardware http://127.0.0.1:4194
+```
+Alternatively, open any preset, press the header's **Leg calibration** and
+press **Connect** (it uses `http://127.0.0.1:4194`). The token is read from
+the server's own page; `--hardware-token-file FILE` gives it instead. For
+live sync, start `serve_motor_bench` and add `--motor-bench
+http://127.0.0.1:4180` (`--motor-bench-token-file FILE`). Motion needs a key
+or pointer in the window: REST (`hardware_status`, `hardware_stop`,
+`hardware_export`, `hardware_gaits`, `hardware {action}`) and `system_ui`
+`hardware:<name>` may read status, list gaits, export, connect, change the
+mirror's display and STOP. Anything that starts, changes or arms motion is
+refused by name (`HardwareAction::starts_motion`: select, enable/disable,
+sweep all, hold others, jog, speed, target, capture, reset and clear, sweep,
+learn, the tune/campaign/gait confirmations, tune, campaign, gait
+select/mode/speed/effort/play, drive mode, PWM ceiling, flip, raw step, and
+live sync's leg/motor/polarity/scale/start) with "hardware `{name}` starts,
+changes or arms motion and needs an operator at the window: REST and
+system_ui may read status, list gaits, export, connect, change the mirror's
+display and STOP only"; a `system_ui` activation of a disabled hardware
+control is refused with "{id} is disabled: {why}". Focus loss, closing the
+panel or the window and leaving Robot mode stop any drive (also a tune,
+campaign, sweep-all or leg gait, which the page leaves running), and live
+sync if this viewer opened it. Not compiled or run yet. The ledger is `docs/hardware-parity.md`; the operator's
+steps are `docs/hardware-checklist.md`. The browser page at the server's URL
+stays available until that checklist is signed off.
+
 Separate apps are still needed for the schematic and experiments
 (`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-app`), CAD
-(`cad/run.sh`), and calibration, hardware sync, scrubbing of live-run or
+(`cad/run.sh`), and scrubbing of live-run or
 replay history (recorded presets play back natively, §2h), observation panels beyond the two robot-mode charts, and realtime walking
-(browser, `web/README.md`; §2g lists what native preset runs lack). Gait
-evaluation and tuning stay in the `gait_lab` CLI; leg-driving gait playback
-stays in the calibration UI (hardware).
+(browser, `web/README.md`; §2g lists what native preset runs lack).
+Calibration and hardware sync have the native panel above, with the browser
+pages kept until the hardware checklist is signed off. Gait evaluation and
+tuning stay in the `gait_lab` CLI; leg-driving gait playback is in the
+Leg calibration panel (and still in the browser calibration page).
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,
 where FILE may be a system, simrobot, lesson directory or gait-lab output, opened
 in one window with modes and tabs. The FILE launch exists now for systems,
-simrobots, lessons and places (above); gait-lab output and switching modes
-within one window do not. RoboCAD runs as a CAD service (its window is
-still used for geometry authoring), and the browser remains for realtime
-walking and hardware calibration.
+simrobots, lessons and places (above); gait-lab output does not. RoboCAD
+runs as a CAD service (its window is still used for geometry authoring), and
+the browser remains for realtime walking, and for hardware calibration until
+the hardware checklist is signed off.
 
 ## Stale or unverified claims found in docs
 

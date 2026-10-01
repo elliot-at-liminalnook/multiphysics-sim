@@ -36,8 +36,9 @@ driven on a physical leg through an FPGA.
   cloud machines. Gaits are also readable YAML files, so an LLM can write,
   score and refine them.
 - **Real hardware in the loop.** HX-30HM servos behind an FPGA safety bridge,
-  a browser calibration panel, and a registry of measured motor models. What
-  the bench measures is what the simulator uses.
+  a calibration panel (native in the viewer's Robot mode, and in the
+  browser), and a registry of measured motor models. What the bench measures
+  is what the simulator uses.
 - **Printable parts.** Split CAD parts to fit the printer and join them with
   pins, heat-set inserts or dovetails; check strength across the print layers
   under loads read from a running simulation; choose print direction and
@@ -66,6 +67,29 @@ cad/run.sh examples/components/quadruped-parametric/model/robot.rcad   # CAD edi
 
 The browser workspace is built and served as described in
 [web/README.md](web/README.md).
+
+### Leg calibration in the native viewer
+
+Start the calibration server as today
+([fixture README](examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/README.md)),
+then open Robot mode connected to it:
+
+```sh
+cargo run -p sim-spatial -- --robot-preset robot-measured-400hz --hardware http://127.0.0.1:4194
+```
+
+Or press **Leg calibration** in the robot header and press **Connect**. Add
+`--motor-bench http://127.0.0.1:4180` for live motor sync with
+`serve_motor_bench`. REST and `system_ui` may read status, list gaits,
+export, connect, change the mirror's display and STOP; anything that starts,
+changes or arms motion (selecting or enabling a motor, jogging, speeds,
+sweeps, tune, campaign, gait choice and play, drive settings, the safety
+confirmations, raw step, live sync's mapping and start) is refused by name
+and needs the operator at the window. Losing window focus, closing the panel
+or the window, and leaving Robot mode stop any drive. The panel is not
+compiled or run yet; see the [parity ledger](docs/hardware-parity.md). The
+browser page at the server's URL stays available until the
+[hardware checklist](docs/hardware-checklist.md) is signed off.
 
 ## Principles
 

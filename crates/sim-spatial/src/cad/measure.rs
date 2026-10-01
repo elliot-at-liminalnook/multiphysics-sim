@@ -268,10 +268,19 @@ pub(super) fn tool(
         return;
     }
     let hit = ray_hit(&doc, &mut cast, &view, cursor, &bodies);
+    let shown = doc.shown_revision();
+    if doc.select_mode == SelectMode::Face
+        && let Some(h) = &hit
+        && meshes.drawn_revision(&h.node).is_some_and(|r| r != shown)
+    {
+        let name = doc.node_name(&h.node);
+        doc.show(Err(format!("{name} is being redrawn for revision {shown}; press again in a moment")));
+        return;
+    }
     let drawn = || topology.ready().filter(|(id, _)| meshes.shown(id)).map(|(id, t)| (id.as_str(), &**t));
     let item = match doc.select_mode {
         SelectMode::Body => hit.as_ref().map(|h| SelectionItem(h.node.clone(), "body".into(), 0)),
-        SelectMode::Face => hit.as_ref().and_then(|h| Some(SelectionItem(h.node.clone(), "face".into(), meshes.face_of(&h.node, h.triangle?)?))),
+        SelectMode::Face => hit.as_ref().and_then(|h| Some(SelectionItem(h.node.clone(), "face".into(), meshes.face_at(&h.node, h.triangle?, shown)?))),
         SelectMode::Edge => nearest_edge(&view, cursor, drawn()).map(|(n, i)| SelectionItem(n, "edge".into(), i)),
         SelectMode::Vertex => nearest_vertex(&view, cursor, drawn()).map(|(n, i)| SelectionItem(n, "vertex".into(), i)),
         SelectMode::Point => None,

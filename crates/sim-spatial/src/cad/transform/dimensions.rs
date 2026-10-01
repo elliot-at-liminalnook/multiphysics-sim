@@ -53,6 +53,10 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
 /// The selection's live dimensions.
 pub fn live(doc: &CadDocument, topology: Option<&CadTopology>, meshes: Option<&CadMeshes>) -> Vec<Field> {
     let Some(topology) = topology else { return Vec::new() };
+    // Indices first seen at an older revision may name other faces now (an edit can renumber them): no live field to commit against.
+    if super::selection_revision(doc) != doc.shown_revision() {
+        return Vec::new();
+    }
     let mut out = Vec::new();
     let refs: Vec<(String, &FaceInfo)> = doc.selected_of("face").into_iter().filter_map(|(node, index)| topology.get(&node)?.faces.iter().find(|f| f.index == index).map(|f| (node, f))).collect();
     for (node, f) in &refs {
@@ -164,7 +168,13 @@ pub(super) fn double_click(
     }
     *last = None;
     let Some(hit) = ray_hit(&doc, &mut cast, &view, cursor, &bodies) else { return };
-    let Some(face) = hit.triangle.and_then(|t| meshes.face_of(&hit.node, t)) else { return };
+    let shown = doc.shown_revision();
+    if meshes.drawn_revision(&hit.node).is_some_and(|r| r != shown) {
+        let name = doc.node_name(&hit.node);
+        doc.show(Err(format!("{name} is being redrawn for revision {shown}; double-click again in a moment")));
+        return;
+    }
+    let Some(face) = hit.triangle.and_then(|t| meshes.face_at(&hit.node, t, shown)) else { return };
     let Some(t) = topology.get(&hit.node) else {
         let name = doc.node_name(&hit.node);
         doc.show(Err(format!("The faces of {name} are still loading; double-click again in a moment")));

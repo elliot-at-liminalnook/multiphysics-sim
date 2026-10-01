@@ -3,8 +3,11 @@
 use super::*;
 
 /// Status line and the sectioned inspector.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn panels(
     view: Res<RobotView>,
+    selection: Res<Selection>,
+    registry: Res<DocumentRegistry>,
     mut title: Single<&mut Text, (With<TitleText>, Without<StatusText>, Without<Inspector>, Without<RunText>)>,
     mut status: Single<&mut Text, (With<StatusText>, Without<Inspector>, Without<RunText>, Without<TitleText>)>,
     mut inspector: Single<&mut Text, (With<Inspector>, Without<StatusText>, Without<RunText>, Without<TitleText>)>,
@@ -96,14 +99,15 @@ pub(super) fn panels(
     if status.0 != line {
         status.0 = line;
     }
+    let link = picked::link(&selection, &registry);
     let body = match &view.model {
         None => view.planar.as_ref().map_or(String::new(), |p| {
             let watch = view.source.as_ref().map(file_watch_text).unwrap_or_default();
-            planar::inspector_text(p, &view.section.label().to_lowercase(), view.selected, &watch)
+            planar::inspector_text(p, &view.section.label().to_lowercase(), link, &watch)
         }),
         Some(m) => match view.section {
-            Section::Link => link_text(&view, m),
-            Section::Joints => joints_text(&view, m),
+            Section::Link => link_text(&view, m, link),
+            Section::Joints => joints_text(&view, m, link),
             Section::Drives => drives_text(&view, m),
             Section::Source => source_text(&view, m),
         },

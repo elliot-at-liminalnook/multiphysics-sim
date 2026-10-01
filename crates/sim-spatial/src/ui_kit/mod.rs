@@ -88,6 +88,7 @@ pub(crate) mod pie;
 mod scroll;
 mod slider;
 mod theme;
+pub(crate) mod threads;
 mod widgets;
 #[cfg(test)]
 mod tests;

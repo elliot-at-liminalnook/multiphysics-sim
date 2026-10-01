@@ -1,6 +1,7 @@
 //! The Notes tab: discussion header, messages, the reply composer and the
-//! agent card.
+//! agent card, drawn with the kit's thread panel (`ui_kit::threads`).
 use super::*;
+use crate::ui_kit::threads;
 
 pub(super) fn discussion_header(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
     use discussion::Action as A;
@@ -11,12 +12,7 @@ pub(super) fn discussion_header(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder
             r.spawn(action("‹ All notes",A::List,Look::Ghost));r.spawn(action("More",A::More,Look::Ghost));
         });
         body.spawn(k.text(&t.title,19.,TEXT,2));
-        body.spawn(wrap()).with_children(|r|{
-            for target in &t.targets {
-                if target.missing {r.spawn(k.text(format!("{} · missing",target.label), size::DETAIL, WARN, 0));}
-                else {r.spawn(action(&format!("↗ {}",target.path),A::Target(target.path.clone()),Look::Chip(false)));}
-            }
-        });
+        threads::anchors(body,k,&NotesHost{b},&t.targets);
         body.spawn(wrap()).with_children(|r|{
             r.spawn(action("Show on model",A::Show("context".into()),Look::Ghost));
             if t.resolved{r.spawn(k.text("Resolved", size::DETAIL, OK, 1));}
@@ -55,14 +51,14 @@ pub(super) fn discussion_header(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder
     }
 }
 
-/// System discussions drawn with the shared annotation views.
+/// System discussions drawn with the shared thread panel.
 struct NotesHost<'a> { b: &'a Builder }
-impl crate::annotate::Host<sim_system::display::Target> for NotesHost<'_> {
+impl threads::Host<sim_system::display::Target> for NotesHost<'_> {
     type Action = BuildAction;
     fn open(&self, thread: &str) -> BuildAction { BuildAction::Discussion(discussion::Action::Open(thread.into())) }
-    fn menu(&self, comment: &str) -> BuildAction { BuildAction::Discussion(discussion::Action::CommentMore(comment.into())) }
-    fn edit(&self, comment: &str) -> BuildAction { BuildAction::Discussion(discussion::Action::Edit(comment.into())) }
-    fn delete(&self, comment: &str) -> BuildAction { BuildAction::Discussion(discussion::Action::DeleteComment(comment.into())) }
+    fn menu(&self, comment: &str) -> Option<BuildAction> { Some(BuildAction::Discussion(discussion::Action::CommentMore(comment.into()))) }
+    fn edit(&self, comment: &str) -> Option<BuildAction> { Some(BuildAction::Discussion(discussion::Action::Edit(comment.into()))) }
+    fn delete(&self, comment: &str) -> Option<BuildAction> { Some(BuildAction::Discussion(discussion::Action::DeleteComment(comment.into()))) }
     fn anchor(&self, t: &sim_system::display::Target) -> Option<BuildAction> { Some(BuildAction::Discussion(discussion::Action::Target(t.path.clone()))) }
     fn anchor_text(&self, t: &sim_system::display::Target) -> String { t.path.clone() }
     fn link(&self, c: &sim_system::display::Comment, link: &sim_markdown::Link) -> Option<BuildAction> {
@@ -73,16 +69,18 @@ impl crate::annotate::Host<sim_system::display::Target> for NotesHost<'_> {
     fn badge(&self, thread: &str) -> Option<String> { self.b.agent_badge(thread) }
 }
 
-pub(super) fn discussion_content(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
+/// The open thread's messages, the draft prompt, or the list (`selected`:
+/// the builder's selected names, for "Only selected parts").
+pub(super) fn discussion_content(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder,selected:&BTreeSet<String>){
     let host=NotesHost{b};
     if let Some(t)=b.discussion.selected.as_ref().and_then(|id|b.document.discussions.threads.get(id)){
-        crate::annotate::messages(body,k,&host,t,b.discussion.comment_menu.as_deref());
+        threads::messages(body,k,&host,t,b.discussion.comment_menu.as_deref());
     }else if b.input.as_ref().is_some_and(|i|i.purpose==Purpose::Comment){
         body.spawn(k.text("What would you like to discuss?",14.,SUBTLE,0));
     }else{
-        let paths:Vec<_>=b.selected.iter().map(|n|b.full_path(n)).collect();
+        let paths:Vec<_>=selected.iter().map(|n|b.full_path(n)).collect();
         let shown=b.document.discussions.threads.values().filter(|t|(!b.discussion.open_only||!t.resolved)&&(!b.discussion.selected_only||t.targets.iter().any(|r|paths.iter().any(|p|p==&r.path||r.path.starts_with(&format!("{p}/"))))));
-        let count=crate::annotate::list(body,k,&host,shown);
+        let count=threads::list(body,k,&host,shown);
         if count==0{body.spawn(k.text("No notes here yet", size::TITLE, TEXT, 1));body.spawn(k.text("Add a note, then click the part you want to talk about.", size::ITEM, SUBTLE, 0));}
     }
 }
@@ -90,23 +88,15 @@ pub(super) fn discussion_content(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builde
 pub(super) fn discussion_composer(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder){
     use discussion::Action as A;
     let input=b.input.as_ref().filter(|i|matches!(i.purpose,Purpose::Comment|Purpose::CommentAuthor|Purpose::ThreadTitle));
-    let focused=input.is_some();
     let special=input.is_some_and(|i|i.purpose!=Purpose::Comment);
-    let shown=input.map(|i|i.buffer.as_str()).unwrap_or("");
     let label=if input.is_some_and(|i|i.purpose==Purpose::CommentAuthor){"Your name"}else if input.is_some_and(|i|i.purpose==Purpose::ThreadTitle){"Note title"}else if b.discussion.editing.is_some(){"Edit message"}else if b.discussion.selected.is_none(){"Write a note"}else{"Reply"};
-    body.spawn(k.text(label, size::SMALL, SUBTLE, 1));
+    let submit=if special||b.discussion.editing.is_some(){"Save"}else if b.discussion.selected.is_none(){"Post note"}else{"Post reply"};
     // A persistent footer keeps the reply field in reach while messages scroll.
-    // A multi-line text area (taller, 14 px), not the kit's one-line `input`.
-    body.spawn((Button,BuildAction::Discussion(A::Reply),Tint::RAISED,Node{ border_radius: BorderRadius::all(Val::Px(7.)),min_height:Val::Px(if special{36.}else{76.}),max_height:Val::Px(180.),overflow:Overflow::clip(),padding:UiRect::all(Val::Px(10.)),border:UiRect::all(Val::Px(1.)),..default()},BackgroundColor(RAISED),BorderColor::all(if focused{ACCENT}else{BORDER}))).with_children(|field|{
-        field.spawn(k.text(if focused{format!("{shown}|")}else{"Write a reply…".into()},14.,if focused{TEXT}else{FAINT},0));
+    threads::composer(body,k,threads::Composer{
+        label,draft:input.map(|i|i.buffer.as_str()),placeholder:"Write a reply…",min_height:if special{36.}else{76.},
+        focus:BuildAction::Discussion(A::Reply),submit:BuildAction::Discussion(A::Submit),submit_label:submit,cancel:BuildAction::Discussion(A::CancelDraft),
+        author:Some((b.discussion.author.as_str(),BuildAction::Discussion(A::Author))),error:b.discussion.error.as_deref(),
     });
-    body.spawn(Node{justify_content:JustifyContent::SpaceBetween,align_items:AlignItems::Center,..default()}).with_children(|r|{
-        if focused {r.spawn(k.button("Cancel",BuildAction::Discussion(A::CancelDraft),Look::Ghost,true));}
-        else{r.spawn(k.button(&b.discussion.author,BuildAction::Discussion(A::Author),Look::Ghost,true));}
-        if focused{r.spawn(k.button(if special||b.discussion.editing.is_some(){"Save"}else if b.discussion.selected.is_none(){"Post note"}else{"Post reply"},BuildAction::Discussion(A::Submit),Look::Primary,!shown.trim().is_empty()));}
-    });
-    if let Some(error)=&b.discussion.error{body.spawn(k.text(error, size::DETAIL, WARN, 0));}
-    if focused{body.spawn(k.text("Enter to post · Shift+Enter for a new line", 10.5, FAINT, 0));}
 }
 
 fn agent_card(body:&mut ChildSpawnerCommands,k:&Kit,b:&Builder,id:&str){

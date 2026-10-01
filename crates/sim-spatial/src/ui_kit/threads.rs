@@ -1,21 +1,25 @@
-//! Reusable annotation views for any host: a thread list, a thread's
-//! messages and a reply composer, generic over the anchor type
-//! (`sim_annotate::Anchor`) and the host's action component. The builder's
-//! Notes tab (system discussions) and the lesson margin (lesson threads)
-//! draw with these; hosts own persistence, drafts and what a click does.
+//! The one thread panel (native-viewer.md §7): a thread list, a thread's
+//! messages, anchor chips, an inline thread card and the reply composer,
+//! generic over the anchor type (`sim_annotate::Anchor`) and the host's
+//! action component. The builder's Notes tab (system discussions), the
+//! lesson margin (lesson notes) and Inspect's notes panel draw with these;
+//! the threads come from `crate::annotations` sources, and hosts own the
+//! drafts and what a press means.
+use super::{ACCENT, ACCENT_BG, BORDER, FAINT, HOVER_BG, Kit, Look, RAISED, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use crate::builder::ui::markdown_theme;
-use crate::ui_kit::{ACCENT, ACCENT_BG, BORDER, FAINT, HOVER_BG, Kit, Look, RAISED, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use bevy::prelude::*;
 use sim_annotate::{Anchor, Comment, Thread};
 
-/// What the host does when a view element is clicked.
+/// What the host does when a part of the panel is pressed.
 pub(crate) trait Host<A: Anchor> {
     type Action: Component + Clone;
+    /// Opening a thread (a card, a title).
     fn open(&self, thread: &str) -> Self::Action;
-    fn menu(&self, comment: &str) -> Self::Action;
-    fn edit(&self, comment: &str) -> Self::Action;
-    fn delete(&self, comment: &str) -> Self::Action;
-    /// Clicking an anchor chip (None: not clickable).
+    /// A comment's "···" menu (None: comments have no menu).
+    fn menu(&self, comment: &str) -> Option<Self::Action>;
+    fn edit(&self, comment: &str) -> Option<Self::Action>;
+    fn delete(&self, comment: &str) -> Option<Self::Action>;
+    /// Pressing an anchor chip (None: not pressable).
     fn anchor(&self, anchor: &A) -> Option<Self::Action>;
     /// A Markdown link inside a comment body.
     fn link(&self, comment: &Comment<A>, link: &sim_markdown::Link) -> Option<Self::Action>;
@@ -31,9 +35,13 @@ pub(crate) trait Host<A: Anchor> {
     fn selected(&self, _thread: &str) -> bool {
         false
     }
+    /// The thread's own colour (a card's frame and title), if it has one.
+    fn color(&self, _thread: &str) -> Option<Color> {
+        None
+    }
 }
 
-/// Anchor chips: clickable when attached, marked missing otherwise.
+/// Anchor chips: pressable when attached, marked missing otherwise.
 pub(crate) fn anchors<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &Kit, host: &H, anchors: &[A]) {
     if anchors.is_empty() {
         return;
@@ -46,7 +54,9 @@ pub(crate) fn anchors<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k:
                     r.spawn(k.chip(&format!("↗ {text}"), action, false, true));
                 }
                 None => {
-                    r.spawn(k.text(if a.missing() { format!("{text} · missing") } else { text }, size::DETAIL, if a.missing() { WARN } else { SUBTLE }, 0));
+                    // A missing anchor is named by its own label (what the
+                    // source last called it), as each host showed it before.
+                    r.spawn(k.text(if a.missing() { format!("{} · missing", a.label()) } else { text }, size::DETAIL, if a.missing() { WARN } else { SUBTLE }, 0));
                 }
             }
         }
@@ -59,6 +69,7 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
     for t in threads {
         count += 1;
         let selected = host.selected(&t.id);
+        let edge = host.color(&t.id).unwrap_or(ACCENT);
         body.spawn((
             Button,
             host.open(&t.id),
@@ -66,7 +77,7 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
             if selected { Tint::new(ACCENT_BG, HOVER_BG) } else { Tint::RAISED },
             Node { border_radius: BorderRadius::all(Val::Px(7.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(7.), padding: UiRect::all(Val::Px(12.)), flex_shrink: 0., border: UiRect::left(Val::Px(if selected { 2. } else { 0. })), ..default() },
             BackgroundColor(if selected { ACCENT_BG } else { RAISED }),
-            BorderColor::all(ACCENT),
+            BorderColor::all(edge),
         ))
         .with_children(|card| {
             card.spawn(k.text(format!("{count}  {}{}", t.title, if t.resolved { "  · resolved" } else { "" }), 14., TEXT, 2));
@@ -77,7 +88,9 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
             card.spawn(k.text(places.join(" · "), size::DETAIL, ACCENT, 0));
             if let Some(c) = t.comments.last() {
                 card.spawn(k.text(sim_markdown::parse(&c.body).plain().chars().take(90).collect::<String>(), size::BODY, SUBTLE, 0));
-                card.spawn(k.text(format!("{} message{} · {}", t.comments.len(), if t.comments.len() == 1 { "" } else { "s" }, sim_annotate::relative_time(&c.created_at)), 10.5, FAINT, 0));
+                if !c.created_at.is_empty() {
+                    card.spawn(k.text(format!("{} message{} · {}", t.comments.len(), if t.comments.len() == 1 { "" } else { "s" }, sim_annotate::relative_time(&c.created_at)), 10.5, FAINT, 0));
+                }
             }
         });
     }
@@ -85,26 +98,65 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
 }
 
 /// Every comment of a thread: author, time, Markdown body, link chips and
-/// (for the comment whose menu is open) edit/delete.
+/// (for the comment whose menu is open) edit and delete. A comment without
+/// an author or a time (an Inspect note's text) shows only its body and links.
 pub(crate) fn messages<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &Kit, host: &H, thread: &Thread<A>, menu: Option<&str>) {
     for c in &thread.comments {
         body.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(7.), padding: UiRect::bottom(Val::Px(8.)), flex_shrink: 0., ..default() }).with_children(|message| {
-            message.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|r| {
-                r.spawn(k.text(&c.author, size::ITEM, TEXT, 2));
-                r.spawn(k.button("···", host.menu(&c.id), Look::Ghost, true));
-            });
-            message.spawn(k.text(format!("{}{}", sim_annotate::relative_time(&c.created_at), if c.edited_at.is_some() { " · edited" } else { "" }), 10.5, FAINT, 0));
+            if !c.author.is_empty() {
+                message.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|r| {
+                    r.spawn(k.text(&c.author, size::ITEM, TEXT, 2));
+                    if let Some(action) = host.menu(&c.id) {
+                        r.spawn(k.button("···", action, Look::Ghost, true));
+                    }
+                });
+            }
+            if !c.created_at.is_empty() {
+                message.spawn(k.text(format!("{}{}", sim_annotate::relative_time(&c.created_at), if c.edited_at.is_some() { " · edited" } else { "" }), 10.5, FAINT, 0));
+            }
             let parsed = sim_markdown::parse(&c.body);
             crate::markdown::render(message, &parsed, &markdown_theme(k), |link| host.link(c, link));
             anchors(message, k, host, &c.links);
             if menu == Some(c.id.as_str()) {
                 message.spawn(wrap()).with_children(|r| {
-                    r.spawn(k.button("Edit", host.edit(&c.id), Look::Ghost, true));
-                    r.spawn(k.button("Delete", host.delete(&c.id), Look::Danger, true));
+                    if let Some(action) = host.edit(&c.id) {
+                        r.spawn(k.button("Edit", action, Look::Ghost, true));
+                    }
+                    if let Some(action) = host.delete(&c.id) {
+                        r.spawn(k.button("Delete", action, Look::Danger, true));
+                    }
                 });
             }
         });
     }
+}
+
+/// A whole thread inline (short threads listed with their messages, as
+/// Inspect's notes): a card framed in the thread's colour, its title
+/// (pressing it opens the thread) and every message.
+pub(crate) fn card<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &Kit, host: &H, thread: &Thread<A>) {
+    let color = host.color(&thread.id).unwrap_or(ACCENT);
+    body.spawn((
+        Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, padding: UiRect::all(Val::Px(10.)), row_gap: Val::Px(5.), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+        BorderColor::all(color),
+        BackgroundColor(RAISED),
+    ))
+    .with_children(|card| {
+        // The title keeps the thread's colour, so it is a tinted row rather
+        // than a kit button (whose label colour comes from its look).
+        card.spawn((
+            Button,
+            host.open(&thread.id),
+            Tint::CLEAR,
+            bevy::ui::prelude::AccessibleLabel::new(thread.title.as_str()),
+            Node { border_radius: BorderRadius::all(Val::Px(4.)), padding: UiRect::axes(Val::Px(4.), Val::Px(2.)), ..default() },
+            BackgroundColor(Color::NONE),
+        ))
+        .with_children(|b| {
+            b.spawn(k.text(&thread.title, 15., color, 2));
+        });
+        messages(card, k, host, thread, None);
+    });
 }
 
 /// A reply field that shows the draft (with a caret) while focused.
@@ -112,6 +164,8 @@ pub(crate) struct Composer<'a, Act> {
     pub label: &'a str,
     pub draft: Option<&'a str>,
     pub placeholder: &'a str,
+    /// The field's least height (a one-line name or title field is shorter).
+    pub min_height: f32,
     pub focus: Act,
     pub submit: Act,
     pub submit_label: &'a str,
@@ -123,11 +177,12 @@ pub(crate) fn composer<Act: Component + Clone>(body: &mut ChildSpawnerCommands, 
     let focused = c.draft.is_some();
     let shown = c.draft.unwrap_or("");
     body.spawn(k.text(c.label, size::SMALL, SUBTLE, 1));
+    // A multi-line text area (taller, 14 px), not the kit's one-line `input`.
     body.spawn((
         Button,
         c.focus,
         Tint::RAISED,
-        Node { border_radius: BorderRadius::all(Val::Px(7.)), min_height: Val::Px(64.), max_height: Val::Px(180.), overflow: Overflow::clip(), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
+        Node { border_radius: BorderRadius::all(Val::Px(7.)), min_height: Val::Px(c.min_height), max_height: Val::Px(180.), overflow: Overflow::clip(), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
         BackgroundColor(RAISED),
         BorderColor::all(if focused { ACCENT } else { BORDER }),
     ))

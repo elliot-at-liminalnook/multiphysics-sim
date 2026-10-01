@@ -40,6 +40,7 @@
 use super::{BasePlane, Finish, Readout, SketchShape, SketchSpec, SketchTarget};
 use crate::cad::document::CadDocument;
 use crate::cad::ops::{Built, Env, OpEntry};
+use crate::cad::selection::CadItems;
 use crate::cad::transform::round6;
 use serde_json::{Map, Value};
 use sim_runtime::cad_client::{PlaneFrame, SketchCall, Uv};
@@ -205,7 +206,7 @@ pub(crate) fn target(doc: &CadDocument, env: &Env, plane_arg: &Value, frame: Pla
             }),
         }
     };
-    for id in doc.selected_nodes() {
+    for id in env.selection.nodes() {
         if let Some(n) = state.nodes.iter().find(|n| n.id == id && n.kind == "sketch")
             && on_plane(&n.id, &n.name)?
         {

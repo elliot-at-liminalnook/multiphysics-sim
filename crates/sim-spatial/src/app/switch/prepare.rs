@@ -1,10 +1,12 @@
 //! What a switch needs before it can happen: the blockers that refuse
 //! leaving the current mode, and the target mode's document (already in the
 //! window, or a load off the UI thread).
+use super::sources::{cad_target, exhibit_of, inspect_paths, lessons_of, path_of, source_document};
 use super::{Arrival, Document, Documents, ModeSwitch, Work};
 use crate::app::ViewerMode;
 use crate::builder::Builder;
 use crate::cad::{CadDocument, CadTarget};
+use crate::document::DocumentRegistry;
 use crate::jobs::{Job, Pool};
 use crate::lesson::Learn;
 use crate::place_view::PlaceView;
@@ -108,16 +110,17 @@ pub(super) fn needs(mode: ViewerMode) -> String {
 /// Why a switch to `target` with no document would be refused: the mode
 /// has no document in the window and nothing to reopen (Build: no builder;
 /// Lessons: no lesson open or remembered; Robot, Place, CAD: none
-/// remembered). None for Inspect (it falls back to the example assembly)
-/// and Phenomena (its exhibits are compiled in). Pure: reads the world only.
+/// remembered in the document registry). None for Inspect (it falls back
+/// to the example assembly) and Phenomena (its exhibits are compiled in).
+/// Pure: reads the world only.
 pub(super) fn missing_document(world: &World, target: ViewerMode) -> Option<String> {
-    let docs = world.resource::<Documents>();
+    let registry = world.resource::<DocumentRegistry>();
     let missing = match target {
         ViewerMode::Build => !world.contains_resource::<Builder>(),
-        ViewerMode::Lessons => !world.contains_resource::<Learn>() && docs.lessons.is_none(),
-        ViewerMode::Robot => docs.robot.is_none(),
-        ViewerMode::Place => docs.place.is_none(),
-        ViewerMode::Cad => docs.cad.is_none(),
+        ViewerMode::Lessons => !world.contains_resource::<Learn>() && registry.source(target).and_then(lessons_of).is_none(),
+        ViewerMode::Robot => registry.source(target).and_then(source_document).is_none(),
+        ViewerMode::Place => registry.source(target).and_then(path_of).is_none(),
+        ViewerMode::Cad => registry.source(target).and_then(cad_target).is_none(),
         ViewerMode::Inspect | ViewerMode::Phenomena => false,
     };
     missing.then(|| format!("{} mode needs {}; this window has none open yet.", target.label(), wants(target)))
@@ -128,9 +131,12 @@ fn registry() -> sim_core::BehaviorRegistry {
     sim_runtime::system_registry_in(crate::workspace::get().as_ref())
 }
 
-/// The target mode's document: what the window already has, or a load.
+/// The target mode's document: what the window already has (or parked), a
+/// load, or what the document registry remembers for it.
 pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) -> Result<Prepared, String> {
     let docs = world.resource::<Documents>();
+    let registered = world.resource::<DocumentRegistry>();
+    let remembered = registered.source(request.mode);
     let target = request.mode;
     let path = match &request.document {
         None => None,
@@ -143,12 +149,13 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
     let in_family = current.builder_family();
     match target {
         ViewerMode::Inspect => {
-            if path.is_none() && docs.parked_inspect.is_some() {
-                return Ok(Prepared::Now(Box::new(Arrival { unpark_inspect: true, document: json!(docs.inspect.as_ref().map(|(d, _)| d)), ..Default::default() })));
+            let assembly = remembered.and_then(inspect_paths);
+            if path.is_none() && registered.is_parked(ViewerMode::Inspect) {
+                return Ok(Prepared::Now(Box::new(Arrival { unpark: Some(ViewerMode::Inspect), document: json!(assembly.as_ref().map(|(d, _)| d)), ..Default::default() })));
             }
             let (description, spatial) = match &path {
                 Some(p) => crate::inspect_pair(p)?,
-                None => docs.inspect.clone().unwrap_or_else(crate::default_inspect_paths),
+                None => assembly.unwrap_or_else(crate::default_inspect_paths),
             };
             let what = description.display().to_string();
             let job = Job::spawn(Pool::Compute, 0, format!("{what}: the inspect loader"), move |_| {
@@ -170,7 +177,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
                         }
                         // A lesson's sandbox builder (no Open) is replaced by the file below.
                     }
-                    _ => return Ok(Prepared::Now(Box::new(Arrival { unpark_builder: !in_family, document: json!(b.path()), ..Default::default() }))),
+                    _ => return Ok(Prepared::Now(Box::new(Arrival { unpark: (!in_family).then_some(ViewerMode::Build), document: json!(b.path()), ..Default::default() }))),
                 }
             }
             let path = path.ok_or_else(|| needs(ViewerMode::Build))?;
@@ -191,11 +198,11 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
                 if let Some(p) = path.as_ref().filter(|p| !crate::builder::open::same_file(p, &l.dir)) {
                     return Err(format!("lessons from {} are open in this window; leave lessons before opening {}", l.dir.display(), p.display()));
                 }
-                return Ok(Prepared::Now(Box::new(Arrival { unpark_builder: !in_family, document: json!(l.dir), ..Default::default() })));
+                return Ok(Prepared::Now(Box::new(Arrival { unpark: (!in_family).then_some(ViewerMode::Build), document: json!(l.dir), ..Default::default() })));
             }
             let (dir, slug) = match path {
                 Some(p) => (p, None),
-                None => docs.lessons.clone().ok_or_else(|| needs(ViewerMode::Lessons))?,
+                None => remembered.and_then(lessons_of).ok_or_else(|| needs(ViewerMode::Lessons))?,
             };
             if crate::launch::classify(&dir) != Ok(crate::launch::LaunchKind::Lessons) {
                 return Err(format!("{}: not a lessons folder (no <slug>/lesson.md entries)", dir.display()));
@@ -203,13 +210,13 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
             let library = docs.library.clone()?;
             let what = dir.display().to_string();
             let job = Job::spawn(Pool::Compute, 0, format!("{what}: the lessons loader"), move |_| {
-                let (learn, builder, scene, warning) = crate::lesson::open_lessons(dir.clone(), slug.clone(), library, registry())?;
-                Ok(Box::new(Arrival { learn: Some(learn), builder: Some(builder), scene: Some(scene), document: json!({"dir": dir, "warning": warning}), lessons: Some((dir, slug)), ..Default::default() }))
+                let (learn, builder, scene, warning) = crate::lesson::open_lessons(dir.clone(), slug, library, registry())?;
+                Ok(Box::new(Arrival { learn: Some(learn), builder: Some(builder), scene: Some(scene), document: json!({"dir": dir, "warning": warning}), ..Default::default() }))
             });
             Ok(Prepared::Load(what, Work::Job(job)))
         }
         ViewerMode::Robot => {
-            let document = request.document.clone().or_else(|| docs.robot.clone()).ok_or_else(|| needs(ViewerMode::Robot))?;
+            let document = request.document.clone().or_else(|| remembered.and_then(source_document)).ok_or_else(|| needs(ViewerMode::Robot))?;
             let view = match &document {
                 Document::Path(p) => {
                     if !p.to_string_lossy().ends_with(".simrobot.json") {
@@ -229,7 +236,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
             Ok(Prepared::Load(document.describe(), Work::Robot(Box::new(view))))
         }
         ViewerMode::Place => {
-            let dir = path.or_else(|| docs.place.clone()).ok_or_else(|| needs(ViewerMode::Place))?;
+            let dir = path.or_else(|| remembered.and_then(path_of)).ok_or_else(|| needs(ViewerMode::Place))?;
             let what = dir.display().to_string();
             let job = Job::spawn(Pool::Compute, 0, format!("{what}: the place loader"), move |_| {
                 let place = PlaceView::open(dir.clone())?;
@@ -258,15 +265,15 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
                     }
                     CadTarget::File(p)
                 }
-                _ => docs.cad.clone().unwrap_or_else(|| CadTarget::Service(sim_runtime::cad_client::DEFAULT_URL.into())),
+                _ => remembered.and_then(cad_target).unwrap_or_else(|| CadTarget::Service(sim_runtime::cad_client::DEFAULT_URL.into())),
             };
             Ok(Prepared::Now(Box::new(Arrival { document: target.json(), cad: Some(CadDocument::new(target)), ..Default::default() })))
         }
         // Nothing to load: the exhibits are compiled in. The run thread
         // builds them on OnEnter (`phenomena::enter`), off the UI thread,
-        // opening `Documents::exhibit`.
+        // opening the exhibit its registry entry names (`arrive` reopens it).
         ViewerMode::Phenomena => match &request.document {
-            None => Ok(Prepared::Now(Box::new(Arrival { document: json!({"exhibit": docs.exhibit}), ..Default::default() }))),
+            None => Ok(Prepared::Now(Box::new(Arrival { document: json!({"exhibit": exhibit_of(registered)}), ..Default::default() }))),
             Some(d) => Err(format!("phenomena mode takes no document ({} given): it opens the built-in exhibits; choose an exhibit in its gallery", d.describe())),
         },
     }

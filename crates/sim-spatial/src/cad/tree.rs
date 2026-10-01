@@ -21,6 +21,7 @@ use crate::ui_kit::{ACCENT, ACCENT_BG, DANGER, FAINT, Kit, SUBTLE, TEXT, Tint, W
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
+use sim_runtime::cad_client::SelectionItem;
 use std::fmt::Write;
 
 /// Indent per tree level (px).
@@ -39,7 +40,7 @@ fn empty_state(doc: &CadDocument) -> Option<(String, Color)> {
             },
         });
     }
-    doc.rows().is_empty().then(|| ("The document has no nodes.".to_string(), SUBTLE))
+    doc.rows(&[]).is_empty().then(|| ("The document has no nodes.".to_string(), SUBTLE))
 }
 
 /// A tree row: its node id and its accessible label without the selection.
@@ -58,7 +59,7 @@ pub(super) struct EyeChip;
 /// click or an edit does not respawn a large tree.
 pub(super) fn key(doc: &CadDocument) -> String {
     let mut key = format!("{:?}\n", empty_state(doc).map(|s| s.0));
-    for r in doc.rows() {
+    for r in doc.rows(&[]) {
         let _ = writeln!(key, "{}|{}|{}|{}|{}|{}|{}|{}", r.id, r.depth, r.kind, r.name, r.effective_visible, r.visible, r.locked, r.disabled);
     }
     key
@@ -71,13 +72,13 @@ fn row_label(base: &str, selected: bool) -> String {
 /// Restyle the spawned rows for the current selection (fill, left edge,
 /// accessible label) and enable their visibility chips while edits can be
 /// sent. Rows spawned this frame are drawn that way already.
-pub(super) fn highlight(commands: &mut Commands, doc: &CadDocument, rows: &mut Query<(Entity, &TreeRowId, &mut Tint, &mut BorderColor, &AccessibleLabel)>, eyes: &mut Query<&mut Enabled, With<EyeChip>>) {
+pub(super) fn highlight(commands: &mut Commands, doc: &CadDocument, selection: &[SelectionItem], rows: &mut Query<(Entity, &TreeRowId, &mut Tint, &mut BorderColor, &AccessibleLabel)>, eyes: &mut Query<&mut Enabled, With<EyeChip>>) {
     let editable = Enabled(edit_blocked(doc).is_none());
     for mut enabled in eyes.iter_mut() {
         enabled.set_if_neq(editable);
     }
     for (entity, row, mut tint, mut edge, label) in rows.iter_mut() {
-        let selected = doc.selection.iter().any(|s| s.0 == row.id);
+        let selected = selection.iter().any(|s| s.0 == row.id);
         tint.set_if_neq(Tint::selectable(selected));
         edge.set_if_neq(BorderColor::all(if selected { ACCENT } else { Color::NONE }));
         let text = row_label(&row.label, selected);
@@ -100,14 +101,14 @@ fn eye(visible: bool, disabled: bool, effective: bool) -> &'static str {
     }
 }
 
-/// The rows.
-pub(super) fn build(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
+/// The rows (`selection`: the shared selection's CAD items).
+pub(super) fn build(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
     if let Some((text, color)) = empty_state(doc) {
         p.spawn((k.text(text, size::SMALL, color, 0), Node { margin: UiRect::all(Val::Px(6.0)), ..default() }));
         return;
     }
     let editable = edit_blocked(doc).is_none();
-    for row in doc.rows() {
+    for row in doc.rows(selection) {
         let mut flags = vec![row.kind.clone()];
         if row.locked {
             flags.push("locked".to_string());
@@ -118,7 +119,7 @@ pub(super) fn build(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
         let label = format!("{}, {}", row.name, flags.join(", "));
         p.spawn((
             Button,
-            CadButton(CadAction::CadSelect { ids: vec![row.id.clone()], items: Vec::new(), extend: false, toggle: false }),
+            CadButton(CadAction::CadSelect { ids: vec![row.id.clone()], items: Vec::new(), extend: false, toggle: false, picked_at: None }),
             Tint::selectable(row.selected),
             AccessibleLabel::new(row_label(&label, row.selected)),
             TreeRowId { id: row.id.clone(), label },

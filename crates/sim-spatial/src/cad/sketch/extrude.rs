@@ -145,10 +145,10 @@ fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
     doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).map(|n| n.kind.as_str())
 }
 
-/// [`source`] over the document's selection items as they are (RoboCAD's
+/// [`source`] over the shared selection's CAD items as they are (RoboCAD's
 /// `activate` loops `selection.items`, ui/tools.py:837-840).
-fn selection_source(doc: &CadDocument, sketches: Option<&CadSketches>) -> ExtrudeSource {
-    let items: Vec<&str> = doc.selection.iter().map(|SelectionItem(node, _, _)| node.as_str()).collect();
+fn selection_source(doc: &CadDocument, selection: &[SelectionItem], sketches: Option<&CadSketches>) -> ExtrudeSource {
+    let items: Vec<&str> = selection.iter().map(|SelectionItem(node, _, _)| node.as_str()).collect();
     source(doc, &items, sketches)
 }
 
@@ -238,7 +238,7 @@ fn source_plane(doc: &CadDocument, source: &ExtrudeSource, sketches: Option<&Cad
 /// `Flow::Extrude` starts: RoboCAD's `ExtrudeTool.activate` (the source;
 /// the height 10). Never refused: RoboCAD refuses at apply.
 pub(in crate::cad) fn begin(doc: &mut CadDocument, env: &Env, revolve: bool) -> Result<(), String> {
-    let source = selection_source(doc, env.sketches);
+    let source = selection_source(doc, env.selection, env.sketches);
     doc.ops.extrude = Some(ExtrudeState { revolve, source, height: START_HEIGHT, drag: None });
     Ok(())
 }
@@ -344,6 +344,7 @@ fn pointer(
     nodes: Query<(), With<Node>>,
     mut out: MessageWriter<Act<CadAction>>,
     mut state: Local<Pointer>,
+    selection: crate::cad::selection::CadSelection,
 ) {
     let (Some(mut doc), Some(view)) = (doc, view) else { return };
     let state = &mut *state;
@@ -369,10 +370,11 @@ fn pointer(
     // status when the tool starts or the selection changes, with no edit in
     // flight, and not when it is the sketch last named or the last known
     // source (see `Pointer`); a press on it is refused by the run anyway.
-    tool.source = selection_source(&doc, sketches);
-    let fresh = state.selection.as_ref() != Some(&doc.selection);
+    let selection = selection.items();
+    tool.source = selection_source(&doc, &selection, sketches);
+    let fresh = state.selection.as_ref() != Some(&selection);
     if fresh {
-        state.selection = Some(doc.selection.clone());
+        state.selection = Some(selection);
     }
     match &tool.source {
         ExtrudeSource::Reading(id) if fresh && doc.edit.is_none() && state.announced.as_ref() != Some(id) => {
@@ -665,9 +667,8 @@ mod tests {
         assert_eq!(source(&doc, &ids(&["sk1", "s1"]), None), ExtrudeSource::Node("s1".into()));
         // The last matching item wins, a node selected again included (RoboCAD loops `selection.items`).
         assert_eq!(source(&doc, &["s1", "c1", "s1"], None), ExtrudeSource::Node("s1".into()));
-        let mut picked = model();
-        picked.selection = vec![SelectionItem("s1".into(), "face".into(), 2), SelectionItem("c1".into(), "body".into(), 0), SelectionItem("s1".into(), "face".into(), 3)];
-        assert_eq!(selection_source(&picked, None), ExtrudeSource::Node("s1".into()));
+        let picked = [SelectionItem("s1".into(), "face".into(), 2), SelectionItem("c1".into(), "body".into(), 0), SelectionItem("s1".into(), "face".into(), 3)];
+        assert_eq!(selection_source(&model(), &picked, None), ExtrudeSource::Node("s1".into()));
 
         let tree = document(vec![node("hidden", "sketch", "Hidden", false), node("empty", "sketch", "Empty", true), node("sk2", "sketch", "Sketch 2", true), node("b1", "body", "Body", true)]);
         let mut cache = CadSketches::default();
@@ -702,8 +703,8 @@ mod tests {
     #[test]
     fn begin_takes_the_source_and_never_refuses() {
         let mut doc = model();
-        doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0), SelectionItem("c1".into(), "body".into(), 0)];
-        begin(&mut doc, &Env::default(), false).unwrap();
+        let selection = [SelectionItem("b1".into(), "body".into(), 0), SelectionItem("c1".into(), "body".into(), 0)];
+        begin(&mut doc, &Env { selection: &selection, ..Default::default() }, false).unwrap();
         assert_eq!(doc.ops.extrude, Some(ExtrudeState { revolve: false, source: ExtrudeSource::Node("c1".into()), height: START_HEIGHT, drag: None }));
         let mut bare = document(Vec::new());
         begin(&mut bare, &Env::default(), true).unwrap();

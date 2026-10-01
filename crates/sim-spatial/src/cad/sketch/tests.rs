@@ -12,7 +12,6 @@ use super::interact::{Step, begin, finish_action, finish_check, press, readout, 
 use super::specs::{self, from_points, from_values, spec, target};
 use super::*;
 use crate::app::actions::{Call, Origin, Replies};
-use crate::app::switch::Documents;
 use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::{CadTarget, Connection};
 use crate::cad::ops::{Built, Env, FormState, Resolved, entry};
@@ -59,12 +58,12 @@ const SQUARE: [[f64; 2]; 4] = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0
 
 /// Run one action through CAD mode's one handler as a click would.
 fn apply(doc: &mut CadDocument, sketches: Option<&CadSketches>, action: &CadAction) -> Outcome {
-    let mut documents = Documents::default();
+    let mut shared = crate::cad::selection::Fixture::new();
     let mut plane = CadActivePlane::default();
     let mut continuation = Value::Null;
     let mut replies = Replies::default();
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc, meshes: None, topology: None, view: None, documents: &mut documents, plane: &mut plane, sketches, display: None, views: None, files: None, camera: Vec::new() };
+    let mut cx = Cx { doc, shared: shared.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches, display: None, views: None, files: None, camera: Vec::new() };
     crate::cad::actions::handle(action, &mut call, &mut cx)
 }
 
@@ -256,18 +255,17 @@ fn a_shape_goes_to_the_selected_then_the_first_visible_sketch_on_its_plane() {
     let mut doc = document("http://127.0.0.1:8420", nodes);
     let c = cache(&[("k1", xy, vec![]), ("k2", xy, vec![]), ("k3", PlaneFrame::XZ, vec![])]);
     let env = Env { sketches: Some(&c), ..Default::default() };
-    let to = |doc: &CadDocument, frame| target(doc, &env, &json!("xy"), frame);
+    let to = |doc: &CadDocument, selection: &[SelectionItem], frame| target(doc, &Env { selection, ..env }, &json!("xy"), frame);
     // Nothing selected: the first visible sketch on the plane, in tree order.
-    assert_eq!(to(&doc, xy), Ok(SketchTarget::Node("k1".into())));
+    assert_eq!(to(&doc, &[], xy), Ok(SketchTarget::Node("k1".into())));
     // A selected sketch on the plane wins; one on another plane does not count.
-    doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0), SelectionItem("k3".into(), "body".into(), 0), SelectionItem("k2".into(), "body".into(), 0)];
-    assert_eq!(to(&doc, xy), Ok(SketchTarget::Node("k2".into())));
-    assert_eq!(to(&doc, PlaneFrame::XZ), Ok(SketchTarget::Node("k3".into())));
+    let picked = [SelectionItem("b1".into(), "body".into(), 0), SelectionItem("k3".into(), "body".into(), 0), SelectionItem("k2".into(), "body".into(), 0)];
+    assert_eq!(to(&doc, &picked, xy), Ok(SketchTarget::Node("k2".into())));
+    assert_eq!(to(&doc, &picked, PlaneFrame::XZ), Ok(SketchTarget::Node("k3".into())));
     // A hidden sketch is not picked unless selected; no sketch on the plane: a new one there.
-    doc.selection.clear();
     doc.doc.as_mut().unwrap().nodes[0].effective_visible = false;
-    assert_eq!(to(&doc, xy), Ok(SketchTarget::Node("k2".into())));
-    assert_eq!(to(&doc, PlaneFrame::YZ), Ok(SketchTarget::New { plane: json!("xy") }));
+    assert_eq!(to(&doc, &[], xy), Ok(SketchTarget::Node("k2".into())));
+    assert_eq!(to(&doc, &[], PlaneFrame::YZ), Ok(SketchTarget::New { plane: json!("xy") }));
     // A sketch not read at the shown revision: refused, not guessed.
     let partial = cache(&[("k1", xy, vec![])]);
     let env = Env { sketches: Some(&partial), ..Default::default() };
@@ -293,16 +291,15 @@ fn the_target_waits_only_for_the_candidates_in_robocads_order() {
     let err = target(&doc, &env, &json!("xy"), xy).unwrap_err();
     assert!(err.contains("sketch Later is still being read"), "{err}");
     // A selected sketch is a candidate even hidden: unread, it refuses first.
-    doc.selection = vec![SelectionItem("k2".into(), "body".into(), 0)];
-    let env = Env { sketches: Some(&only_k1), ..Default::default() };
+    let k2 = [SelectionItem("k2".into(), "body".into(), 0)];
+    let env = Env { selection: &k2, sketches: Some(&only_k1), ..Default::default() };
     let err = target(&doc, &env, &json!("xy"), xy).unwrap_err();
     assert!(err.contains("sketch Hidden is still being read"), "{err}");
     // Read on the plane, the selected hidden sketch wins.
     let both = cache(&[("k1", xy, vec![]), ("k2", xy, vec![])]);
-    let env = Env { sketches: Some(&both), ..Default::default() };
+    let env = Env { selection: &k2, sketches: Some(&both), ..Default::default() };
     assert_eq!(target(&doc, &env, &json!("xy"), xy), Ok(SketchTarget::Node("k2".into())));
     // No candidate at all (nothing selected, every sketch hidden): a new sketch, nothing waited for.
-    doc.selection.clear();
     for n in &mut doc.doc.as_mut().unwrap().nodes {
         n.effective_visible = false;
     }
@@ -402,11 +399,14 @@ fn fillet_corners_sends_only_the_corners_robocad_rounds() {
 #[test]
 fn sketch_edits_work_on_the_selected_or_first_visible_sketch() {
     let nodes = vec![node("b1", "body", "Bracket", true), node("k1", "sketch", "Profile", true), node("k2", "sketch", "Other", true)];
-    let mut doc = document("http://127.0.0.1:8420", nodes);
+    let doc = document("http://127.0.0.1:8420", nodes);
     let c = cache(&[("k1", PlaneFrame::XY, vec![polyline(&SQUARE, true), line([0.0; 2], [5.0, 5.0])]), ("k2", PlaneFrame::XY, vec![line([0.0; 2], [1.0, 0.0])])]);
     let env = Env { sketches: Some(&c), ..Default::default() };
     let r = Resolved::default();
-    let run = |doc: &CadDocument, id: &str, edit, values: Value| edits::calls(entry(id).unwrap(), edit, &r, values.as_object().unwrap(), doc, &env);
+    let k2 = [SelectionItem("k2".into(), "body".into(), 0)];
+    let picked = Env { selection: &k2, ..env };
+    let run_with = |env: &Env, doc: &CadDocument, id: &str, edit, values: Value| edits::calls(entry(id).unwrap(), edit, &r, values.as_object().unwrap(), doc, env);
+    let run = |doc: &CadDocument, id: &str, edit, values: Value| run_with(&env, doc, id, edit, values);
     let built = run(&doc, "sketch.offset", SketchEdit::Offset, json!({"distance": 1.5})).unwrap();
     assert_eq!(built, Built::Sketch { target: SketchTarget::Node("k1".into()), calls: vec![SketchCall::Offset { curve: 0, distance: 1.5 }, SketchCall::Offset { curve: 1, distance: 1.5 }], label: "Offset curves".into() });
     let Built::Sketch { calls, label, .. } = run(&doc, "sketch.fillet", SketchEdit::FilletCorners, json!({"radius": 2.0})).unwrap() else { panic!() };
@@ -414,8 +414,7 @@ fn sketch_edits_work_on_the_selected_or_first_visible_sketch() {
     let Built::Sketch { calls, .. } = run(&doc, "sketch.join", SketchEdit::Join, json!({})).unwrap() else { panic!() };
     assert_eq!(calls, vec![SketchCall::Join { curves: vec![0, 1] }]);
     // The selected sketch wins; one curve has nothing to join.
-    doc.selection = vec![SelectionItem("k2".into(), "body".into(), 0)];
-    assert!(run(&doc, "sketch.join", SketchEdit::Join, json!({})).unwrap_err().contains("Nothing to join: Other has 1 curve(s)"));
+    assert!(run_with(&picked, &doc, "sketch.join", SketchEdit::Join, json!({})).unwrap_err().contains("Nothing to join: Other has 1 curve(s)"));
     // No sketch at all: RoboCAD's "Select a sketch".
     let bare = document("http://127.0.0.1:8420", vec![node("b1", "body", "Bracket", true)]);
     assert_eq!(run(&bare, "sketch.offset", SketchEdit::Offset, json!({"distance": 1.0})).unwrap_err(), "Select a sketch");

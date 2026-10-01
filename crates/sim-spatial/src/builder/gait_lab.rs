@@ -470,7 +470,7 @@ mod tests {
         assert!(b.gait_reports_request(None).unwrap_err().contains("Still reading"));
         wait(&mut b);
         assert_eq!(b.gait_lab.last.as_ref().unwrap().0, seq);
-        let state = b.state_json();
+        let state = b.state_json(&Default::default());
         let g = &state["gait_reports"];
         let entries = g["entries"].as_array().unwrap();
         assert_eq!(entries.len(), 2);
@@ -488,6 +488,6 @@ mod tests {
         let e = b.gait_lab.error.clone().unwrap();
         assert!(e.contains(&missing.display().to_string()), "{e}");
         assert_eq!(b.gait_lab.shown.as_ref().unwrap().listing.root, screen.display().to_string());
-        assert_eq!(b.state_json()["gait_reports"]["entries"].as_array().unwrap().len(), 2);
+        assert_eq!(b.state_json(&Default::default())["gait_reports"]["entries"].as_array().unwrap().len(), 2);
     }
 }

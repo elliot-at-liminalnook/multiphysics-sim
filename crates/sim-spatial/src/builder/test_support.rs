@@ -15,3 +15,13 @@ impl Builder {
         self.run.as_ref().map(|_| self.running())
     }
 }
+
+/// The shared selection and a document registry with the builder's file
+/// open as the Build document (what the window's Build arrival makes), for
+/// tests that drive a builder without an `App`.
+#[cfg(test)]
+pub(crate) fn test_selection(b: &Builder) -> (Selection, DocumentRegistry) {
+    let mut registry = DocumentRegistry::default();
+    registry.open(ViewerMode::Build, crate::document::DocumentKind::System, crate::document::Source::path(b.path()));
+    (Selection::default(), registry)
+}

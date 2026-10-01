@@ -432,7 +432,7 @@ fn pointer(
                 state.menu_at = None;
                 let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies, clip);
                 if let Some(item) = items.into_iter().next().filter(|i| i.1 == mode.name()) {
-                    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![item], extend: false, toggle: true }));
+                    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![item], extend: false, toggle: true, picked_at: Some(doc.shown_revision()) }));
                 }
             } else {
                 let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies, clip);
@@ -441,9 +441,9 @@ fn pointer(
                 if alt && items.len() > 1 {
                     out.write(Act::ui(CadAction::CadCandidates { items, extend: shift, toggle: ctrl }));
                 } else if let Some(item) = items.into_iter().next() {
-                    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![item], extend: shift, toggle: ctrl }));
+                    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![item], extend: shift, toggle: ctrl, picked_at: Some(doc.shown_revision()) }));
                 } else if !(shift || ctrl) {
-                    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: Vec::new(), extend: false, toggle: false }));
+                    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: Vec::new(), extend: false, toggle: false, picked_at: None }));
                 }
             }
         }

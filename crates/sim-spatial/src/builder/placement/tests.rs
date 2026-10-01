@@ -497,7 +497,8 @@ fn actual_bevy_drag_start_and_end_observers_keep_selected_group_identity() {
             pointer::{Location, PointerId},
         };
         use bevy::camera::{ManualTextureViewHandle, NormalizedRenderTarget};
-        b.selected = BTreeSet::from(["a".into(), "assembly".into()]);
+        let (mut selection, mut documents) = super::super::test_support::test_selection(&b);
+        Picked::new(&mut selection, &mut documents).set(["a".to_string(), "assembly".to_string()]).unwrap();
         let index = s
             .spatial
             .parts
@@ -507,6 +508,8 @@ fn actual_bevy_drag_start_and_end_observers_keep_selected_group_identity() {
         let mut app = App::new();
         app.insert_resource(b)
             .insert_resource(s)
+            .insert_resource(selection)
+            .insert_resource(documents)
             .add_observer(start_part)
             .add_observer(end_drag);
         let entity = app.world_mut().spawn(Part { index }).id();

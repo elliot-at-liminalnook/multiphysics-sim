@@ -7,6 +7,7 @@ use crate::cad::actions::Dimension;
 use crate::cad::document::{CadDocument, CadTool};
 use crate::cad::mesh::CadMeshes;
 use crate::cad::topology::CadTopology;
+use sim_runtime::cad_client::SelectionItem;
 use bevy::prelude::Vec3;
 
 /// How a numeric field is read: a length (bare numbers mm), an angle
@@ -85,7 +86,7 @@ impl Field {
 /// catalogue parameter form is open (`CadDocument::ops.form`): the form
 /// holds the keyboard and Tab then (RoboCAD's `ctx.numeric` is replaced by
 /// the operation's fields while its tool or dialog is up).
-pub fn fields(doc: &CadDocument, topology: Option<&CadTopology>, meshes: Option<&CadMeshes>) -> Vec<Field> {
+pub fn fields(doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>, meshes: Option<&CadMeshes>) -> Vec<Field> {
     if doc.ops.form.is_some() {
         return Vec::new();
     }
@@ -97,7 +98,7 @@ pub fn fields(doc: &CadDocument, topology: Option<&CadTopology>, meshes: Option<
         CadTool::Measure => Vec::new(),
         CadTool::Select => match &doc.tool_state.dimension {
             Some(entry) => vec![entry.field.clone()],
-            None => super::dimensions::live(doc, topology, meshes),
+            None => super::dimensions::live(doc, selection, topology, meshes),
         },
     }
 }

@@ -110,7 +110,8 @@ fn kind_text(kind: &InstanceKind) -> String {
     }
 }
 
-pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>, panels: Query<Entity, With<BuilderPanel>>, scene: Res<SpatialScene>, fonts: Option<Res<UiFonts>>, buttons: Res<ButtonInput<MouseButton>>, scrolls:Query<(&ScrollPosition,&Scroll)>) {
+#[allow(clippy::too_many_arguments)]
+pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>, panels: Query<Entity, With<BuilderPanel>>, scene: Res<SpatialScene>, fonts: Option<Res<UiFonts>>, buttons: Res<ButtonInput<MouseButton>>, scrolls:Query<(&ScrollPosition,&Scroll)>, selection: Res<Selection>, registry: Res<DocumentRegistry>) {
     let Some(fonts) = fonts else { return };
     // Keep the pressed palette entity alive until its drag or click finishes.
     if buttons.pressed(MouseButton::Left) && builder.input.is_none() { return; }
@@ -126,12 +127,14 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     }
     let k = Kit::new(&fonts);
     let b = &*builder;
-    toolbar(&mut commands, &k, b);
-    sidebar(&mut commands, &k, b, note_scroll, side_scroll);
-    inspector(&mut commands, &k, b, &scene);
+    // The shared selection's instance names at this level (`picked`).
+    let selected = picked::names(&selection, &registry);
+    toolbar(&mut commands, &k, b, &selected);
+    sidebar(&mut commands, &k, b, note_scroll, side_scroll, &selected);
+    inspector(&mut commands, &k, b, &scene, &selected);
     graph_dock(&mut commands, &k, b);
     let started = std::time::Instant::now();
-    schematic::pane(&mut commands, &k, b);
+    schematic::pane(&mut commands, &k, b, &selected);
     let schematic_ms = started.elapsed().as_secs_f64() * 1e3;
     status_bar(&mut commands, &k, b, &scene);
     if builder.schematic.visible {
@@ -139,8 +142,8 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     }
 }
 
-fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
-    let single = b.only_selected();
+fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTreeSet<String>) {
+    let single = picked::only(selected);
     let subsystem = single.as_ref().is_some_and(|n| matches!(b.spec(n).map(|s| s.kind), Some(InstanceKind::Subsystem { .. })));
     let running = b.running();
     let (time, speed) = b.run.as_ref().and_then(|r| r.worker.shared().lock().ok().map(|s| (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.speed))).unwrap_or((0., 0.));
@@ -171,7 +174,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
                     seg.spawn(k.segment("Connect", BuildAction::SetMode(Mode::Connect), b.mode == Mode::Connect, true));
                 });
                 mid.spawn(divider());
-                mid.spawn(k.button("Group", BuildAction::Group, Look::Secondary, !b.selected.is_empty()));
+                mid.spawn(k.button("Group", BuildAction::Group, Look::Secondary, !selected.is_empty()));
                 mid.spawn(k.button("Ungroup", BuildAction::Ungroup, Look::Secondary, subsystem));
                 mid.spawn(k.button("Swap", BuildAction::Swap, Look::Secondary, single.is_some()));
                 mid.spawn(divider());
@@ -202,7 +205,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder) {
         });
 }
 
-fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_scroll: f32) {
+fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_scroll: f32, selected: &BTreeSet<String>) {
     commands
         .spawn((k.dock(Dock::Left { top: TOPBAR, bottom: STATUSBAR, width: LEFT_WIDTH }, Node { flex_direction: FlexDirection::Column, ..default() }), BuilderPanel))
         .with_children(|side| {
@@ -216,7 +219,7 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_
             });
             if b.tab==Tab::Discussions {
                 side.spawn(Node{padding:UiRect::all(Val::Px(16.)),row_gap:Val::Px(10.),flex_direction:FlexDirection::Column,flex_shrink:0.,..default()}).with_children(|header|discussion_header(header,k,b));
-                side.spawn((k.scroll_area(Node{padding:UiRect::axes(Val::Px(16.),Val::Px(8.)),row_gap:Val::Px(14.),flex_direction:FlexDirection::Column,flex_grow:1.,min_height:Val::Px(0.),..default()}, note_scroll),Scroll::Left)).with_children(|body|discussion_content(body,k,b));
+                side.spawn((k.scroll_area(Node{padding:UiRect::axes(Val::Px(16.),Val::Px(8.)),row_gap:Val::Px(14.),flex_direction:FlexDirection::Column,flex_grow:1.,min_height:Val::Px(0.),..default()}, note_scroll),Scroll::Left)).with_children(|body|discussion_content(body,k,b,selected));
                 if b.discussion.selected.is_some()||b.input.as_ref().is_some_and(|i|matches!(i.purpose,Purpose::Comment|Purpose::CommentAuthor|Purpose::ThreadTitle)) {
                     // A footer pinned under the scrolling messages (no kit widget for an in-flow footer).
                     side.spawn((Node{padding:UiRect::all(Val::Px(14.)),row_gap:Val::Px(8.),flex_direction:FlexDirection::Column,flex_shrink:0.,border:UiRect::top(Val::Px(1.)),..default()},BorderColor::all(BORDER),BackgroundColor(BAR))).with_children(|footer|discussion_composer(footer,k,b));
@@ -229,7 +232,7 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_
             ))
             .with_children(|body| match b.tab {
                 Tab::Library => library_tab(body, k, b),
-                Tab::Outline => outline_tab(body, k, b),
+                Tab::Outline => outline_tab(body, k, b, selected),
                 Tab::References => references_tab(body, k, b),
                 Tab::Studies => studies_tab(body, k, b),
                 Tab::Systems => systems_tab(body, k, b),

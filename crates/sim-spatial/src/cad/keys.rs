@@ -88,6 +88,7 @@
 //! them (status line), as their menu entries do.
 use super::actions::CadAction;
 use super::document::{CadDocument, CadInputFocus};
+use super::selection::CadSelection;
 use super::surfaces::registry::{self, COMMANDS, Command, Resolved};
 use crate::app::actions::Act;
 use bevy::prelude::*;
@@ -303,6 +304,7 @@ pub(super) fn keys(
     windows: Query<&Window, With<PrimaryWindow>>,
     doc: Option<ResMut<CadDocument>>,
     mut out: MessageWriter<Act<CadAction>>,
+    selection: CadSelection,
 ) {
     let Some(keys) = keys else { return };
     let Some(mut chord) = chord else { return };
@@ -342,8 +344,9 @@ pub(super) fn keys(
     };
     let cursor = windows.single().ok().and_then(Window::cursor_position);
     // The panel's own controls: an action command is ready when its button is.
-    let own = super::panel::own_controls(&doc);
-    match registry::ready(cmd, &doc, &own) {
+    let selection = selection.items();
+    let own = super::panel::own_controls(&doc, &selection);
+    match registry::ready(cmd, &doc, &selection, &own) {
         Ok(()) => {
             let action = match registry::resolve(cmd) {
                 Resolved::Surface(opens) => CadAction::CadSurface { surface: opens.surface(cursor.map(|p| [p.x, p.y])) },
@@ -352,7 +355,7 @@ pub(super) fn keys(
             out.write(Act::ui(action));
         }
         // Delete/Backspace with nothing selected stays silent.
-        Err(_) if cmd.id == "edit.delete" && doc.selection.is_empty() => {}
+        Err(_) if cmd.id == "edit.delete" && selection.is_empty() => {}
         Err(why) => doc.show(Err(registry::status_line(cmd, &why))),
     }
 }

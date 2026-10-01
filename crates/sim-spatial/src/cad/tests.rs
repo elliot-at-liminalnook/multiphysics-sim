@@ -14,6 +14,11 @@ fn node(id: &str, parent: Option<&str>, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: "body".into(), name: name.into(), parent: parent.map(str::to_string), visible: true, effective_visible: true, ..Default::default() }
 }
 
+/// The document's selection (the shared selection's CAD items): b1 as a body.
+fn selected() -> Vec<SelectionItem> {
+    vec![SelectionItem("b1".into(), "body".into(), 0)]
+}
+
 /// A connected document with a group, two bodies (one selected), two
 /// materials, an undo step and one GUI registry command.
 fn document() -> CadDocument {
@@ -28,7 +33,6 @@ fn document() -> CadDocument {
         revision: 4,
         ..Default::default()
     });
-    doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
     doc.commands = Some(Ok([("view.fit".to_string(), CommandInfo { label: "Fit view".into(), category: "View".into(), keys: json!("Home") })].into_iter().collect()));
     doc
 }
@@ -36,7 +40,7 @@ fn document() -> CadDocument {
 #[test]
 fn every_cad_control_fits_a_pattern_and_round_trips_through_rest() {
     let doc = document();
-    let controls = super::panel::controls(&doc);
+    let controls = super::panel::controls(&doc, &selected());
     let patterns = <CadAction as Action>::controls();
     let ids: Vec<&str> = controls.iter().map(|c| c.id.as_str()).collect();
     for expected in ["cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:b1", "cad:visible:b2", "cad:locked:b1", "cad:disabled:b1", "cad:material:b1:al6061", "cad:command:view.fit", "cad:mode:face", "cad:mode:point", "cad:select_all", "cad:invert_selection", "cad:select_same_material", "cad:edges_to_faces", "cad:tool:move", "cad:tool:push_pull", "cad:tool:measure", "cad:cancel"] {
@@ -54,21 +58,21 @@ fn every_cad_control_fits_a_pattern_and_round_trips_through_rest() {
     assert!(find("cad:redo").ready.is_err());
     assert!(find("cad:undo").ready.is_ok() && find("cad:undo").label.contains("Move"));
     // A tree row and a 3D pick write the same selection.
-    assert_eq!(find("cad:node:b2").action, CadAction::CadSelect { ids: vec!["b2".into()], items: Vec::new(), extend: false, toggle: false });
+    assert_eq!(find("cad:node:b2").action, CadAction::CadSelect { ids: vec!["b2".into()], items: Vec::new(), extend: false, toggle: false, picked_at: None });
 }
 
 #[test]
 fn edits_are_refused_while_one_is_in_flight_or_disconnected() {
     let mut doc = document();
     doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
-    let controls = super::panel::controls(&doc);
+    let controls = super::panel::controls(&doc, &selected());
     for id in ["cad:undo", "cad:save", "cad:delete", "cad:visible:b1", "cad:locked:b1"] {
         let c = controls.iter().find(|c| c.id == id).unwrap();
         assert!(c.ready.as_ref().is_err_and(|e| e.contains("in flight") && e.contains("Patch Bracket")), "{id}: {:?}", c.ready);
     }
     doc.edit = None;
     doc.connection = Connection::Lost { error: "RoboCAD GET /: connect: refused".into(), since: std::time::Instant::now() };
-    let controls = super::panel::controls(&doc);
+    let controls = super::panel::controls(&doc, &selected());
     for id in ["cad:undo", "cad:save", "cad:delete", "cad:visible:b1", "cad:physical"] {
         let c = controls.iter().find(|c| c.id == id).unwrap();
         assert!(c.ready.is_err(), "{id} is enabled while the connection is lost");

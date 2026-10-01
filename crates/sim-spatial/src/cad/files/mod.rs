@@ -245,8 +245,8 @@ pub(crate) fn absolute(path: &str, what: &str) -> Result<String, String> {
 }
 
 /// What the document supplies to export defaults.
-fn export_context(doc: &CadDocument, display: Option<&crate::cad::display::CadDisplay>) -> formats::Context {
-    let sketch = doc.selected_nodes().into_iter().find(|id| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == *id)).is_some_and(|n| n.kind == "sketch"));
+fn export_context(doc: &CadDocument, selection: &[sim_runtime::cad_client::SelectionItem], display: Option<&crate::cad::display::CadDisplay>) -> formats::Context {
+    let sketch = crate::cad::selection::CadItems::nodes(selection).into_iter().find(|id| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == *id)).is_some_and(|n| n.kind == "sketch"));
     let title = doc_path(doc).and_then(|p| std::path::Path::new(&p).file_name().map(|f| f.to_string_lossy().into_owned())).unwrap_or_else(|| "untitled".into());
     let section = display.filter(|d| d.section.enabled).and_then(|d| d.section.plane).map(|p| json!({"origin": p.origin, "normal": p.normal, "x_axis": p.x_axis}));
     formats::Context { sketch, title, section }
@@ -426,7 +426,7 @@ pub(crate) fn import_args(path: &str, unit: Option<&str>) -> Result<(String, Opt
 /// Opens the path form of `kind` (export: with `format` chosen).
 fn open_form(cx: &mut Cx, kind: form::Kind, format: Option<&str>) -> Result<Value, String> {
     let (dir, stem) = start_dir(cx.doc);
-    let context = export_context(cx.doc, cx.display.as_deref());
+    let context = export_context(cx.doc, &cx.shared.items(), cx.display.as_deref());
     // The form has the keyboard: the other fields' typing ends.
     cx.doc.tool_state.numeric.focus = None;
     cx.doc.tool_state.numeric.began = None;
@@ -456,7 +456,7 @@ fn export(args: &ExportArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
         Ok(p) => return done(Err(format!("{what}: {p} does not end in .{} (RoboCAD names the format by the extension)", fmt.extensions.join(" or .")))),
         Err(e) => return done(Err(e)),
     };
-    let context = export_context(cx.doc, cx.display.as_deref());
+    let context = export_context(cx.doc, &cx.shared.items(), cx.display.as_deref());
     let settings = match formats::settings(fmt, &args.settings, &context) {
         Ok(s) => s,
         Err(e) => return done(Err(format!("{what} to {path}: {e}"))),

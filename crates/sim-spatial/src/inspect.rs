@@ -6,6 +6,8 @@
 //! server calls directly ([`serve_headless`]).
 use super::*;
 use crate::app::actions::{self, Act, Call, InFlight, Replies, Spec, spec};
+use crate::document::{DocumentId, DocumentRegistry};
+use crate::selection::{Selection, SelectionAction, target_items};
 use bevy::ecs::message::Messages;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -87,8 +89,44 @@ impl actions::Action for InspectAction {
     }
 }
 
-pub(crate) fn state(scene: &SpatialScene, camera: &Orbit) -> Value {
-    json!({"description_id":scene.description.id,"selection":scene.selection,"display":scene.state,
+/// Inspect mode's selection as its handler writes it: the shared
+/// [`Selection`]'s items of the Inspect document. Without one (Build and
+/// Lessons, whose spatial view shows the builder's or the lesson's
+/// selection), `select` and `display` set only what the view shows, as before.
+pub(crate) struct Owner<'a> {
+    pub selection: &'a mut Selection,
+    pub registry: &'a DocumentRegistry,
+    pub document: DocumentId,
+}
+impl<'a> Owner<'a> {
+    /// Inspect's document, when it is open.
+    pub fn inspect(selection: &'a mut Selection, registry: &'a DocumentRegistry) -> Option<Self> {
+        registry.current(ViewerMode::Inspect).map(|(document, _)| Owner { selection, registry, document })
+    }
+}
+
+/// What is selected, as `state`, `render` metadata and the link report it:
+/// the Inspect document's items, else (Build, Lessons) what the view shows.
+fn selected(scene: &SpatialScene, owner: Option<&Owner>) -> SelectionTarget {
+    owner.map_or_else(|| scene.shown.clone(), |o| o.selection.target(o.document))
+}
+
+/// Inspect's selection adapter (REST `select`, the connection buttons,
+/// Clear, Escape, Shift-click): `target` is checked against the assembly as
+/// `set_selection` resolves it (so a refusal reads as before), applied to the
+/// shared selection as a set, and projected to the view.
+/// Also the notes' adapter (a note's targets, a link, a saved view).
+pub(crate) fn select(scene: &mut SpatialScene, owner: Option<&mut Owner>, target: &SelectionTarget) -> Result<(), String> {
+    let Some(owner) = owner else {
+        return scene.set_selection(target.clone()).map_err(|e| e.to_string());
+    };
+    target.resolve(&scene.description).map_err(|e| e.to_string())?;
+    owner.selection.apply(owner.registry, &SelectionAction::set(owner.document, target_items(target)))?;
+    scene.set_selection(owner.selection.target(owner.document)).map_err(|e| e.to_string())
+}
+
+pub(crate) fn state(scene: &SpatialScene, camera: &Orbit, selection: &SelectionTarget) -> Value {
+    json!({"description_id":scene.description.id,"selection":selection,"display":scene.state,
         "camera":camera_json(camera),
         "annotations_revision":scene.note_document().revision,"annotation_emphasis":scene.note_hover,"annotation_error":scene.note_error,"parts_visible":scene.parts_visible,"compact":scene.compact,"live_status":scene.live_status(),"live_error":scene.live.error})
 }
@@ -102,17 +140,19 @@ fn camera_json(camera: &Orbit) -> Value {
 }
 
 /// The one handler of the spatial view's actions. `window` is None
-/// headless; `task` is the scene `render` in flight.
-pub(crate) fn handle(scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Option<sim_api::ImageTask>, window: Option<&Window>, action: &InspectAction, call: &mut Call) -> Outcome {
+/// headless; `task` is the scene `render` in flight; `owner` is Inspect's
+/// selection (None in Build and Lessons).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn handle(scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Option<sim_api::ImageTask>, window: Option<&Window>, owner: Option<&mut Owner>, action: &InspectAction, call: &mut Call) -> Outcome {
     match action {
-        InspectAction::Annotations { action } => notes::api(scene, camera, action.clone(), &mut *call.continuation),
+        InspectAction::Annotations { action } => notes::api(scene, camera, owner, action.clone(), &mut *call.continuation),
         InspectAction::Render { options } => {
             // Its render was dropped with the scene it was capturing (the scope was left).
             if !call.continuation.is_null() && task.is_none() {
                 return Outcome::Done(Err("render dropped: the scene it was capturing was left".into()));
             }
             if task.is_none() {
-                let snapshot = match capture(scene, camera, options) {
+                let snapshot = match capture(scene, camera, &selected(scene, owner.as_deref()), options) {
                     Ok(s) => s,
                     Err(e) => return Outcome::Done(Err(e)),
                 };
@@ -133,25 +173,37 @@ pub(crate) fn handle(scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Op
             }
             Outcome::Done(Ok(Value::Null))
         }
-        other => Outcome::Done(execute(scene, camera, other)),
+        other => Outcome::Done(execute(scene, camera, owner, other)),
     }
 }
 
 /// The spatial view's synchronous actions; REST gets `state` back.
-fn execute(scene: &mut SpatialScene, camera: &mut Orbit, action: &InspectAction) -> sim_api::Result {
+fn execute(scene: &mut SpatialScene, camera: &mut Orbit, mut owner: Option<&mut Owner>, action: &InspectAction) -> sim_api::Result {
     match action {
         InspectAction::Annotations { .. } | InspectAction::Render { .. } | InspectAction::FlyTo => {
             return Err("render requires the asynchronous image dispatcher".into());
         }
-        InspectAction::State => return Ok(state(scene, camera)),
+        InspectAction::State => return Ok(state(scene, camera, &selected(scene, owner.as_deref()))),
         InspectAction::Description => return Ok(json!(scene.description)),
         InspectAction::Spatial => return Ok(json!(scene.spatial)),
         InspectAction::Animation => return Ok(json!(scene.animation)),
         InspectAction::Measurements => return Ok(json!(scene.frame())),
-        InspectAction::Select { target } => scene.set_selection(target.clone()).map_err(|e| e.to_string())?,
+        InspectAction::Select { target } => select(scene, owner.as_deref_mut(), target)?,
         InspectAction::Display { action } => {
             let fit = matches!(action, SpatialCommand::SetExploded { .. });
-            scene.apply(action.clone()).map_err(|e| e.to_string())?;
+            match (action, owner.as_deref_mut()) {
+                // The parts list, keys 1-9 and a click: the view's own check
+                // (a part to show), then the shared selection.
+                (SpatialCommand::Select { component }, Some(owner)) => {
+                    scene.state.apply(&scene.spatial, action.clone()).map_err(|e| e.to_string())?;
+                    select(scene, Some(owner), &SelectionTarget::component(component.clone()))?;
+                }
+                (SpatialCommand::ClearSelection, Some(owner)) => {
+                    scene.state.apply(&scene.spatial, action.clone()).map_err(|e| e.to_string())?;
+                    select(scene, Some(owner), &SelectionTarget::None)?;
+                }
+                _ => scene.apply(action.clone()).map_err(|e| e.to_string())?,
+            }
             camera.home |= fit;
         }
         InspectAction::Camera { focus, radius, yaw, pitch } => {
@@ -188,10 +240,11 @@ fn execute(scene: &mut SpatialScene, camera: &mut Orbit, action: &InspectAction)
             scene.state.apply(&spatial, command.clone()).map_err(|e| e.to_string())?;
         }
     }
-    Ok(state(scene, camera))
+    Ok(state(scene, camera, &selected(scene, owner.as_deref())))
 }
 
 /// Actions: the spatial view's one apply system (Inspect, Build, Lessons).
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn apply(
     mut messages: ResMut<Messages<Act<InspectAction>>>,
     mut in_flight: ResMut<InFlight<InspectAction>>,
@@ -200,11 +253,23 @@ pub(crate) fn apply(
     camera: Option<Single<&mut Orbit>>,
     rest: Option<ResMut<crate::rest::Rest>>,
     window: Option<Single<&Window>>,
+    (selection, registry, mode): (Option<ResMut<Selection>>, Option<Res<DocumentRegistry>>, Option<Res<State<ViewerMode>>>),
 ) {
     let (Some(mut scene), Some(mut camera)) = (scene, camera) else {
         // No scene yet: answer rather than leave a caller waiting.
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the spatial view has no scene".into())));
         return;
+    };
+    if messages.is_empty() && in_flight.is_empty() {
+        return;
+    }
+    // Inspect's selection is the shared one (without states, as in tests, a
+    // registry with an open Inspect document means inspect mode).
+    let inspect = mode.is_none_or(|m| *m.get() == ViewerMode::Inspect);
+    let mut selection = selection;
+    let mut owner = match (selection.as_deref_mut(), registry.as_deref()) {
+        (Some(selection), Some(registry)) if inspect => Owner::inspect(selection, registry),
+        _ => None,
     };
     let mut no_task = None;
     let mut rest = rest;
@@ -214,7 +279,7 @@ pub(crate) fn apply(
     };
     let window = window.as_deref().copied();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
-        let outcome = handle(&mut scene, &mut camera, &mut *task, window, action, call);
+        let outcome = handle(&mut scene, &mut camera, &mut *task, window, owner.as_mut(), action, call);
         if call.origin == actions::Origin::Ui {
             match (action, &outcome) {
                 // The notes panel shows its own error.
@@ -279,15 +344,23 @@ pub(crate) fn publish(
     builder: Option<Res<builder::Builder>>,
     learn: Option<Res<crate::lesson::Learn>>,
     mode: Res<State<ViewerMode>>,
+    (selection, registry): (Option<Res<Selection>>, Option<Res<DocumentRegistry>>),
 ) {
     let Some(mut rest) = rest else { return };
     let mode = *mode.get();
     // The builder stays in the window in inspect mode, but inspect does not serve it.
     let family = mode.builder_family();
-    publish_json(&mut rest.0, &scene, &camera, builder.as_deref().filter(|_| family), learn.as_deref().filter(|_| family), mode);
+    // Inspect's selection is the shared one; Build and Lessons show theirs.
+    let document = registry.as_deref().filter(|_| mode == ViewerMode::Inspect).and_then(|r| r.current(ViewerMode::Inspect));
+    let selected = match (selection.as_deref(), document) {
+        (Some(selection), Some((document, _))) => selection.target(document),
+        _ => scene.shown.clone(),
+    };
+    publish_json(&mut rest.0, &scene, &camera, &selected, builder.as_deref().filter(|_| family), learn.as_deref().filter(|_| family), mode);
 }
 
-fn publish_json(server: &mut sim_api::Server, scene: &SpatialScene, camera: &Orbit, builder: Option<&builder::Builder>, learn: Option<&crate::lesson::Learn>, mode: ViewerMode) {
+#[allow(clippy::too_many_arguments)]
+fn publish_json(server: &mut sim_api::Server, scene: &SpatialScene, camera: &Orbit, selected: &SelectionTarget, builder: Option<&builder::Builder>, learn: Option<&crate::lesson::Learn>, mode: ViewerMode) {
     if !server.snapshot_due() {
         return;
     }
@@ -297,7 +370,7 @@ fn publish_json(server: &mut sim_api::Server, scene: &SpatialScene, camera: &Orb
     if let Some(l) = learn {
         server.publish("lesson", crate::lesson::actions::state(l));
     }
-    let mut shown = state(scene, camera);
+    let mut shown = state(scene, camera, selected);
     shown["viewer_mode"] = json!(mode.name());
     server.publish("state", shown);
     server.publish("annotations", json!(scene.note_document()));
@@ -310,7 +383,8 @@ fn publish_json(server: &mut sim_api::Server, scene: &SpatialScene, camera: &Orb
 /// same dispatch and the same handler, answered synchronously. The
 /// dispatch refuses what needs a window (`viewer_mode`, the shared
 /// camera's `camera_*`), and `system_ui` controls list no `camera:*`.
-pub(crate) fn serve_headless(server: &mut sim_api::Server, scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Option<sim_api::ImageTask>) {
+/// `owner` is the headless server's own selection and Inspect document.
+pub(crate) fn serve_headless(server: &mut sim_api::Server, scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Option<sim_api::ImageTask>, mut owner: Option<Owner>) {
     let mode = ViewerMode::Inspect;
     server.poll(|command, continuation, cancelled| {
         let outcome = match crate::app::route::route(mode, false, command) {
@@ -318,7 +392,7 @@ pub(crate) fn serve_headless(server: &mut sim_api::Server, scene: &mut SpatialSc
             Ok(feature) if feature.name == "inspect" => match <InspectAction as actions::Action>::parse(command) {
                 Ok(action) => {
                     let mut replies = Replies::default();
-                    handle(scene, camera, task, None, &action, &mut Call { origin: actions::Origin::Rest(actions::Reply::HEADLESS), continuation, cancelled, replies: &mut replies })
+                    handle(scene, camera, task, None, owner.as_mut(), &action, &mut Call { origin: actions::Origin::Rest(actions::Reply::HEADLESS), continuation, cancelled, replies: &mut replies })
                 }
                 Err(e) => Outcome::Done(Err(e)),
             },
@@ -331,10 +405,12 @@ pub(crate) fn serve_headless(server: &mut sim_api::Server, scene: &mut SpatialSc
         };
         crate::app::route::annotate_for(mode, false, command, outcome)
     });
-    publish_json(server, scene, camera, None, None, mode);
+    let selected = selected(scene, owner.as_ref());
+    publish_json(server, scene, camera, &selected, None, None, mode);
 }
 
-pub(crate) fn capture(scene: &SpatialScene, camera: &Orbit, options: &sim_render::physical::Options) -> Result<sim_render::physical::Snapshot, String> {
+/// `selected` is what the metadata reports as the selection.
+pub(crate) fn capture(scene: &SpatialScene, camera: &Orbit, selected: &SelectionTarget, options: &sim_render::physical::Options) -> Result<sim_render::physical::Snapshot, String> {
     options.size.validate()?;
     if options.parts.iter().any(|id| !scene.spatial.parts.iter().any(|p| &p.id == id || &p.component == id)) {
         return Err("unknown component or part in render filter".into());
@@ -390,7 +466,7 @@ pub(crate) fn capture(scene: &SpatialScene, camera: &Orbit, options: &sim_render
         // The view's heading now (in the trackball its stored yaw/pitch are stale).
         yaw: camera.turntable().0,
         pitch: camera.turntable().1,
-        metadata: json!({"annotations":scene.note_document(),"source_description_id":scene.description.id,"selection":scene.selection,"frame":scene.frame().map(|f|json!({"run_id":f.run_id,"generation":f.generation,"sequence":f.sequence,"step":f.step,"time":f.time})),"live_status":scene.live_status(),"geometry":"illustrative display primitives; not source CAD solids"}),
+        metadata: json!({"annotations":scene.note_document(),"source_description_id":scene.description.id,"selection":selected,"frame":scene.frame().map(|f|json!({"run_id":f.run_id,"generation":f.generation,"sequence":f.sequence,"step":f.step,"time":f.time})),"live_status":scene.live_status(),"geometry":"illustrative display primitives; not source CAD solids"}),
     })
 }
 
@@ -413,12 +489,67 @@ mod tests {
         let before = json!(scene.description);
         let mut camera = Orbit { focus: Vec3::ZERO, radius: 1., yaw: 0., pitch: 0., home: false, ..Default::default() };
         let id = scene.spatial.parts[0].component.clone();
+        let (mut selection, mut registry) = (Selection::default(), DocumentRegistry::default());
+        let document = registry.open(ViewerMode::Inspect, crate::document::DocumentKind::Assembly, crate::document::Source::path("motor-thermal.description.json")).id;
         for (name, args) in [("select", json!({"target":{"kind":"components","ids":[id]}})), ("display", json!({"action":{"kind":"hide_selected"}}))] {
-            execute(&mut scene, &mut camera, &parse(name, args)).unwrap();
+            execute(&mut scene, &mut camera, Owner::inspect(&mut selection, &registry).as_mut(), &parse(name, args)).unwrap();
         }
         assert!(scene.state.hidden.contains(&id));
-        assert!(execute(&mut scene, &mut camera, &parse("camera", json!({"focus":[0,0,0],"radius":-1,"yaw":0,"pitch":0}))).is_err());
+        // The shared selection owns it; the view shows it; `state` reports it.
+        assert_eq!(selection.components(document), vec![id.clone()]);
+        assert_eq!(scene.shown, SelectionTarget::component(id.clone()));
+        let shown = execute(&mut scene, &mut camera, Owner::inspect(&mut selection, &registry).as_mut(), &parse("state", json!({}))).unwrap();
+        assert_eq!(shown["selection"], json!({"kind":"components","ids":[id]}));
+        assert!(execute(&mut scene, &mut camera, None, &parse("camera", json!({"focus":[0,0,0],"radius":-1,"yaw":0,"pitch":0}))).is_err());
         assert_eq!(camera.radius, 1.);
         assert_eq!(json!(scene.description), before);
+    }
+
+    /// An unknown id is refused with `set_selection`'s words and leaves the
+    /// shared selection as it was; `display` clear_selection clears it.
+    #[test]
+    fn rest_select_refuses_unknown_ids_and_display_clears_the_shared_selection() {
+        let expected = scene().set_selection(SelectionTarget::component("no-such-component")).unwrap_err().to_string();
+        let mut scene = scene();
+        let mut camera = Orbit::default();
+        let (mut selection, mut registry) = (Selection::default(), DocumentRegistry::default());
+        let document = registry.open(ViewerMode::Inspect, crate::document::DocumentKind::Assembly, crate::document::Source::path("a.description.json")).id;
+        let id = scene.spatial.parts[0].component.clone();
+        execute(&mut scene, &mut camera, Owner::inspect(&mut selection, &registry).as_mut(), &parse("display", json!({"action":{"kind":"select","component":id}}))).unwrap();
+        assert_eq!(selection.components(document), vec![id.clone()]);
+        let refused = execute(&mut scene, &mut camera, Owner::inspect(&mut selection, &registry).as_mut(), &parse("select", json!({"target":{"kind":"components","ids":["no-such-component"]}}))).unwrap_err();
+        assert_eq!(refused, expected);
+        assert_eq!(selection.components(document), vec![id]);
+        execute(&mut scene, &mut camera, Owner::inspect(&mut selection, &registry).as_mut(), &parse("display", json!({"action":{"kind":"clear_selection"}}))).unwrap();
+        assert!(selection.is_empty_for(document));
+        assert_eq!(scene.shown, SelectionTarget::None);
+        assert!(scene.details.components.is_empty());
+    }
+
+    /// A reload whose assembly lost a selected component drops that item by
+    /// name and keeps the others, restamped; the view shows what is left.
+    #[test]
+    fn a_reload_drops_items_the_assembly_no_longer_has() {
+        let mut scene = scene();
+        let mut camera = Orbit::default();
+        let (mut selection, mut registry) = (Selection::default(), DocumentRegistry::default());
+        let source = crate::document::Source::path("a.description.json");
+        let document = registry.open(ViewerMode::Inspect, crate::document::DocumentKind::Assembly, source.clone()).id;
+        let ids: Vec<String> = scene.description.components.keys().take(2).cloned().collect();
+        assert_eq!(ids.len(), 2, "the fixture has two components");
+        execute(&mut scene, &mut camera, Owner::inspect(&mut selection, &registry).as_mut(), &parse("select", json!({"target":{"kind":"components","ids":ids}}))).unwrap();
+        let mut seen = None;
+        crate::inspect_view::projection::project(&mut scene, &mut selection, &registry, &mut seen);
+        // The same assembly again, without the first component.
+        let opened = registry.open(ViewerMode::Inspect, crate::document::DocumentKind::Assembly, source);
+        assert!(opened.reload && opened.id == document);
+        let mut reloaded = scene;
+        reloaded.description.components.remove(&ids[0]);
+        let dropped = crate::inspect_view::projection::project(&mut reloaded, &mut selection, &registry, &mut seen);
+        assert_eq!(dropped, vec![format!("component {}", ids[0])]);
+        assert_eq!(selection.dropped, dropped);
+        assert_eq!(selection.components(document), vec![ids[1].clone()]);
+        assert!(selection.of(document).all(|s| s.revision == 1));
+        assert_eq!(reloaded.shown, SelectionTarget::component(ids[1].clone()));
     }
 }

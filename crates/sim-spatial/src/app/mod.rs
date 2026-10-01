@@ -174,7 +174,13 @@ pub struct Launch {
     pub mode: ViewerMode,
     /// The one REST server (`rest::bind`).
     pub api: sim_api::Server,
+    /// The launch configuration (library, models, presets, hardware).
     pub documents: switch::Documents,
+    /// The document registry with the launch's choices: the initial mode's
+    /// document open, other given documents (`--exhibit`) remembered.
+    /// Inserted before the plugins, so `selection::build`'s `init_resource`
+    /// keeps it.
+    pub registry: crate::document::DocumentRegistry,
     pub models: crate::models::ModelLibrary,
     pub scene: Option<crate::SpatialScene>,
     pub link: Option<crate::SelectionLink>,
@@ -189,13 +195,14 @@ pub struct Launch {
 /// The one app: every mode's plugin under its state, the core, and the
 /// initial mode's documents. Returns when the window closes.
 pub fn run(launch: Launch) {
-    let Launch { mode, api, documents, models, scene, link, builder, learn, robot, place, cad } = launch;
+    let Launch { mode, api, documents, registry, models, scene, link, builder, learn, robot, place, cad } = launch;
     let compact = scene.as_ref().is_some_and(|s| s.compact);
     let mut app = App::new();
     app.add_plugins(CorePlugin { initial: mode, compact })
         .insert_resource(crate::rest::Rest(api, None))
         .insert_resource(models)
-        .insert_resource(documents);
+        .insert_resource(documents)
+        .insert_resource(registry);
     if let Some(scene) = scene {
         app.insert_resource(scene);
     }

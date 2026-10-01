@@ -6,7 +6,7 @@
 //! Presentation only: the layout is never written to the document or the
 //! file. The pane keeps no selection of its own; each box activates
 //! `BuildAction::SchematicSelect`, which runs the Outline's selection path,
-//! and the highlight is projected from `Builder::selected`.
+//! and the highlight is projected from the shared selection (`picked`).
 //! Layouts are keyed by (description id, revision, level). A newer key
 //! cancels the pending job, and a layout for an old key is only ever shown
 //! dimmed under a "Stale" label with its boxes disabled.
@@ -300,7 +300,7 @@ macro_rules! rgb {
 
 /// Draw the pane (called from the panel rebuild, so it redraws only when
 /// the layout, the selection, the key or the window changed).
-pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
+pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTreeSet<String>) {
     let s = &b.schematic;
     if !s.visible || s.pane[0] <= 0. {
         return;
@@ -316,7 +316,7 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder) {
         (Some(l), pending, true, None) => (format!("Stale: showing revision {}{} · {}", l.key.revision, if l.key.level != level { format!(" of {}", if l.key.level.is_empty() { "the top level" } else { &l.key.level }) } else { String::new() }, if pending { "laying out the current one…" } else if b.compile_error.is_some() { "the current revision does not compile" } else if b.job.is_some() || b.scene_dirty { "waiting for the compile…" } else { "laying out the current one…" }), WARN),
         (Some(l), _, false, None) => (format!("Revision {} · {} nodes · {} unrouted · {:.0} ms", l.key.revision, l.layout.nodes.len(), l.layout.unrouted.len(), l.layout_ms), SUBTLE),
     };
-    let highlighted = s.highlighted(&b.selected);
+    let highlighted = s.highlighted(selected);
     // A pane beside the inspector (right of the viewport, under the toolbar):
     // no kit dock sits inset from the window edge, so it is placed here.
     commands
@@ -450,7 +450,7 @@ mod tests {
 
     /// The pane's layout comes from the shared sim_diagram path on a worker,
     /// one node per instance at the level; a schematic activation runs the
-    /// same dispatch as a click and sets `Builder::selected`; an edit marks
+    /// same dispatch as a click and sets the shared selection; an edit marks
     /// the shown layout stale until the new revision is compiled and laid
     /// out; a level change re-lays out; the file is never written by it.
     #[test]
@@ -469,6 +469,8 @@ mod tests {
         let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, "Review"));
         let mut scene = SpatialScene::for_builder(compiled.description.clone(), spatial).unwrap();
         let mut orbit = Orbit { focus: Vec3::ZERO, radius: 0.5, yaw: 0.5, pitch: 0.5, home: false, ..Default::default() };
+        let (mut selection, mut documents) = super::super::test_support::test_selection(&b);
+        let mut pick = Picked::new(&mut selection, &mut documents);
         let tick = |b: &mut Builder| {
             let level = b.level.clone();
             b.schematic.tick(b.document.revision, &level);
@@ -498,22 +500,22 @@ mod tests {
         assert_eq!(laid.key, Key { description_id: compiled.description.id.clone(), revision: rev1, level: String::new() });
         assert_eq!(laid.layout.nodes.len(), at_level(&b).len(), "one node per instance at the level");
         assert_eq!(laid.instances.values().cloned().collect::<BTreeSet<_>>(), at_level(&b));
-        let state = b.state_json()["schematic"].clone();
+        let state = pick.state(&b)["schematic"].clone();
         assert_eq!((state["stale"].as_bool(), state["pending"].as_bool(), state["node_count"].as_u64()), (Some(false), Some(false), Some(at_level(&b).len() as u64)));
         assert!(laid.layout.nets.len() > 0 && state["unrouted"].as_u64().is_some());
 
-        // Schematic activation = the shared selection path; the highlight follows Builder.selected.
+        // Schematic activation = the shared selection path; the highlight follows the shared selection.
         for name in ["motor", "gearbox"] {
-            dispatch(&mut b, &mut scene, &mut orbit, BuildAction::SchematicSelect(name.into()));
-            assert_eq!(b.selected, BTreeSet::from([name.to_string()]));
-            let state = b.state_json();
+            dispatch(&mut b, &mut scene, &mut orbit, &mut pick, BuildAction::SchematicSelect(name.into()));
+            assert_eq!(pick.names(), BTreeSet::from([name.to_string()]));
+            let state = pick.state(&b);
             assert_eq!(state["selected"], serde_json::json!([name]));
             let lit: Vec<_> = state["schematic"]["nodes"].as_array().unwrap().iter().filter(|n| n["highlighted"] == true).map(|n| n["instance"].as_str().unwrap().to_string()).collect();
             assert_eq!(lit, vec![name.to_string()]);
         }
         // A 3D click sets the same selection the schematic highlights.
-        click_part(&mut b, "drum", false);
-        assert_eq!(b.schematic.highlighted(&b.selected).iter().map(|n| b.schematic.laid().unwrap().instances[n].clone()).collect::<Vec<_>>(), vec!["drum".to_string()]);
+        click_part(&mut b, &mut pick, "drum", false);
+        assert_eq!(b.schematic.highlighted(&pick.names()).iter().map(|n| b.schematic.laid().unwrap().instances[n].clone()).collect::<Vec<_>>(), vec!["drum".to_string()]);
         assert_eq!(std::fs::read(&path).unwrap(), original, "laying out and selecting never write the file");
 
         // An edit: stale (old layout, not current) until compiled and laid out again.
@@ -521,7 +523,7 @@ mod tests {
         let rev2 = b.document.revision;
         assert!(rev2 > rev1);
         tick(&mut b);
-        let state = b.state_json()["schematic"].clone();
+        let state = pick.state(&b)["schematic"].clone();
         assert_eq!((state["stale"].as_bool(), state["laid_out"]["revision"].as_u64(), state["current"]["revision"].as_u64()), (Some(true), Some(rev1), Some(rev2)));
         assert!(!b.schematic.pending(), "waits for the compile of the new revision");
         let compiled2 = compile(&b);

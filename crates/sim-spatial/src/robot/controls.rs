@@ -24,7 +24,8 @@ pub(super) fn overlay_on(view: &RobotView, kind: &str) -> bool {
 /// two bodies, so selecting either one reaches it, and no second (joint)
 /// selection state is needed. Joints without a servo target stay listed,
 /// disabled with the reason.
-pub(super) fn jog_joints(view: &RobotView) -> Vec<(String, f64)> {
+/// `link`: the selected link (`picked::link`).
+pub(super) fn jog_joints(view: &RobotView, link: Option<usize>) -> Vec<(String, f64)> {
     if let Some(p) = &view.planar {
         // A planar file: every simulated joint (planar models are small), by built order.
         return p.joint_names().iter().map(|j| (j.clone(), JOG_STEP_RAD)).collect();
@@ -33,7 +34,7 @@ pub(super) fn jog_joints(view: &RobotView) -> Vec<(String, f64)> {
         // A preset's joints are driven by its declared controller: no servo-target jog.
         return Vec::new();
     }
-    let (Some(m), Some(i)) = (view.model.as_ref(), view.selected) else { return Vec::new() };
+    let (Some(m), Some(i)) = (view.model.as_ref(), link) else { return Vec::new() };
     let Some(l) = m.links.get(i) else { return Vec::new() };
     touching(m, &l.name).filter(|(_, j)| j.kind != "fixed" && !j.is_loop()).map(|(_, j)| (j.name.clone(), if j.kind == "prismatic" { JOG_STEP_M } else { JOG_STEP_RAD })).collect()
 }
@@ -71,9 +72,12 @@ const REPLAY_BUTTONS: usize = 5;
 
 /// Jog rows for the joints touching the selected link: the joint's servo
 /// state and −/+ buttons (the same `RobotAction::Jog` as `system_ui` jog:*).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn jog_panel(
     mut commands: Commands,
     view: Res<RobotView>,
+    selection: Res<Selection>,
+    registry: Res<DocumentRegistry>,
     fonts: Res<UiFonts>,
     root: Single<Entity, With<JogRoot>>,
     mut shown: Local<Option<Vec<String>>>,
@@ -81,7 +85,7 @@ pub(super) fn jog_panel(
     mut buttons: Query<(&RobotAction, &mut Enabled), With<JogButton>>,
 ) {
     let k = Kit { f: &fonts };
-    let joints = jog_joints(&view);
+    let joints = jog_joints(&view, picked::link(&selection, &registry));
     let names: Vec<String> = joints.iter().map(|(j, _)| j.clone()).collect();
     if shown.as_ref() != Some(&names) {
         commands.entity(*root).despawn_related::<Children>();

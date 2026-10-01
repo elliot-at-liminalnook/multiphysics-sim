@@ -218,6 +218,7 @@ pub(super) fn drag(
     hover: Option<Res<HoverMap>>,
     nodes: Query<(), With<Node>>,
     mut out: MessageWriter<Act<CadAction>>,
+    selection: crate::cad::selection::CadSelection,
 ) {
     let (Some(mut doc), Some(view)) = (doc, view) else { return };
     if !is_transform(doc.tool) {
@@ -267,7 +268,8 @@ pub(super) fn drag(
 
     // Not dragging: the pivot follows the selection; the handle under the pointer lights.
     let waiting = doc.tool_state.preview.is_some();
-    let p = pivot(&doc, meshes.as_deref());
+    let selection = selection.items();
+    let p = pivot(&doc, &selection, meshes.as_deref());
     if doc.tool_state.pivot != p {
         doc.tool_state.pivot = p;
     }
@@ -289,7 +291,7 @@ pub(super) fn drag(
     let Some(start) = drag_point(&view, c, doc.tool, handle, origin, axis, back) else { return };
     // RoboCAD's Ops.transform skips locked nodes: previewing them would show a move that never lands.
     let locked = |id: &String| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| &n.id == id)).is_some_and(|n| n.locked);
-    let ids: Vec<String> = doc.selected_nodes().into_iter().filter(|id| !locked(id)).collect();
+    let ids: Vec<String> = crate::cad::selection::CadItems::nodes(selection.as_slice()).into_iter().filter(|id| !locked(id)).collect();
     if ids.is_empty() {
         doc.show(Err("Every selected node is locked; RoboCAD would not move it (unlock it first)".into()));
         return;

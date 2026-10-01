@@ -99,13 +99,13 @@ fn menus_put_general_window_and_tools_in_help() {
     }
     assert_eq!(registry::menu_of("Modify"), "Modify");
     let doc = document();
-    let own = own_controls(&doc);
-    let help: Vec<String> = entries(&Surface::Menu { category: "Help".into() }, &doc, &own).into_iter().map(|e| e.id).collect();
+    let own = own_controls(&doc, &[]);
+    let help: Vec<String> = entries(&Surface::Menu { category: "Help".into() }, &doc, &[], &own).into_iter().map(|e| e.id).collect();
     for id in ["command_palette", "components.show", "tool.select", "tool.move", "tool.set_pivot", "numeric.entry", "help.guide", "help.logs"] {
         assert!(help.contains(&id.to_string()), "{id} is not in Help: {help:?}");
     }
     // Registry order within a menu.
-    let file: Vec<String> = entries(&Surface::Menu { category: "File".into() }, &doc, &own).into_iter().map(|e| e.id).collect();
+    let file: Vec<String> = entries(&Surface::Menu { category: "File".into() }, &doc, &[], &own).into_iter().map(|e| e.id).collect();
     assert_eq!(file.first().map(String::as_str), Some("reference.import"));
     assert_eq!(file.get(1).map(String::as_str), Some("file.new"));
 }
@@ -119,7 +119,7 @@ fn readiness_refuses_with_the_entrys_refusal() {
             Needs::Nodes { min, .. } | Needs::Edges { min, .. } | Needs::Faces { min } => min > 0,
             _ => true,
         };
-        let r = registry::readiness(e, &doc);
+        let r = registry::readiness(e, &doc, &[]);
         // An interaction is started to pick (its refusals come when it runs); viewer state needs nothing.
         let started = matches!(e.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_));
         if started || !needs_something {
@@ -129,16 +129,16 @@ fn readiness_refuses_with_the_entrys_refusal() {
         }
     }
     // Later epics and deliberately different commands refuse by name.
-    let own = own_controls(&doc);
+    let own = own_controls(&doc, &[]);
     let front = registry::command("view.front").unwrap();
-    assert_eq!(registry::ready(front, &doc, &own), Ok(()), "a named view runs since cad-views-export");
+    assert_eq!(registry::ready(front, &doc, &[], &own), Ok(()), "a named view runs since cad-views-export");
     let draft = registry::command("inspect.draft").unwrap();
-    assert!(registry::ready(draft, &doc, &own).is_err_and(|e| e.starts_with("Draft-angle shading is not ported: ")));
+    assert!(registry::ready(draft, &doc, &[], &own).is_err_and(|e| e.starts_with("Draft-angle shading is not ported: ")));
     let guide = registry::command("help.guide").unwrap();
-    assert_eq!(registry::ready(guide, &doc, &own), Err("User guide is not ported: RoboCAD shows only a path; the viewer's docs live in the repository".to_string()));
+    assert_eq!(registry::ready(guide, &doc, &[], &own), Err("User guide is not ported: RoboCAD shows only a path; the viewer's docs live in the repository".to_string()));
     // An action command is ready as its button: nothing to redo.
-    assert!(registry::ready(registry::command("edit.redo").unwrap(), &doc, &own).is_err());
-    assert!(registry::ready(registry::command("edit.undo").unwrap(), &doc, &own).is_ok());
+    assert!(registry::ready(registry::command("edit.redo").unwrap(), &doc, &[], &own).is_err());
+    assert!(registry::ready(registry::command("edit.undo").unwrap(), &doc, &[], &own).is_ok());
 }
 
 #[test]
@@ -173,8 +173,8 @@ fn keys_parse() {
 #[test]
 fn the_palette_shows_robocads_key_conflict() {
     let doc = document();
-    let own = own_controls(&doc);
-    let list = super::palette::palette_entries(&doc, &own);
+    let own = own_controls(&doc, &[]);
+    let list = super::palette::palette_entries(&doc, &[], &own);
     let same = list.iter().position(|e| e.id == "edit.select_same_material").unwrap();
     let motor = list.iter().position(|e| e.id == "robot.add_motor").unwrap();
     assert_eq!(conflicts(&list).get("ctrl+shift+m"), Some(&vec![same, motor]));
@@ -184,12 +184,11 @@ fn the_palette_shows_robocads_key_conflict() {
 
 #[test]
 fn the_context_menu_offers_make_unique_for_instances() {
-    let mut doc = document();
-    let ids = |doc: &CadDocument| entries(&Surface::Context { at: None }, doc, &own_controls(doc)).into_iter().map(|e| e.id).collect::<Vec<_>>();
+    let doc = document();
+    let ids = |doc: &CadDocument, sel: &[SelectionItem]| entries(&Surface::Context { at: None }, doc, sel, &own_controls(doc, sel)).into_iter().map(|e| e.id).collect::<Vec<_>>();
     // RoboCAD's 14 first and unchanged, then the native Sketch section's 13.
-    assert_eq!(ids(&doc), CONTEXT.iter().chain(SKETCH_CONTEXT.iter()).map(|s| s.to_string()).collect::<Vec<_>>());
-    doc.selection = vec![SelectionItem("i1".into(), "body".into(), 0)];
-    let with = ids(&doc);
+    assert_eq!(ids(&doc, &[]), CONTEXT.iter().chain(SKETCH_CONTEXT.iter()).map(|s| s.to_string()).collect::<Vec<_>>());
+    let with = ids(&doc, &[SelectionItem("i1".into(), "body".into(), 0)]);
     assert_eq!(with.len(), CONTEXT.len() + SKETCH_CONTEXT.len() + 1);
     assert_eq!(with.last().map(String::as_str), Some(MAKE_UNIQUE.0));
 }
@@ -200,7 +199,7 @@ fn the_context_menus_sketch_section_is_robocads_sketch_tools() {
     let tools: Vec<&str> = COMMANDS.iter().filter(|c| c.category == "Sketch" && !["sketch.offset", "sketch.fillet", "sketch.join"].contains(&c.id)).map(|c| c.id).collect();
     assert_eq!(tools, SKETCH_CONTEXT.to_vec());
     let doc = document();
-    let list = entries(&Surface::Context { at: None }, &doc, &own_controls(&doc));
+    let list = entries(&Surface::Context { at: None }, &doc, &[], &own_controls(&doc, &[]));
     for (e, id) in list[CONTEXT.len()..].iter().zip(SKETCH_CONTEXT) {
         assert_eq!(e.id, id);
         assert_eq!(e.action, CadAction::CadInvoke { id: id.to_string() });
@@ -220,9 +219,8 @@ fn with_form(mut doc: CadDocument) -> CadDocument {
 
 #[test]
 fn every_surfaces_control_round_trips_through_rest() {
-    let mut doc = with_form(document());
-    doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
-    let all = crate::cad::panel::controls(&doc);
+    let doc = with_form(document());
+    let all = crate::cad::panel::controls(&doc, &[SelectionItem("b1".into(), "body".into(), 0)]);
     let patterns = <CadAction as Action>::controls();
     let ids: Vec<&str> = all.iter().map(|c| c.id.as_str()).collect();
     for expected in ["cad:op:tool.fillet", "cad:op:view.front", "cad:op:command_palette", "cad:surface:palette", "cad:surface:view_radial", "cad:surface:select_radial", "cad:surface:context", "cad:surface:closed", "cad:menu:File", "cad:menu:Help", "cad:delete"] {
@@ -329,12 +327,12 @@ fn every_cad_sketch_command_runs_through_the_catalogue() {
 #[test]
 fn the_toolbars_sketch_and_extrude_buttons_are_enabled_operations() {
     let doc = document();
-    let own = own_controls(&doc);
+    let own = own_controls(&doc, &[]);
     for id in ["sketch.rectangle", "sketch.circle", "sketch.slot", "tool.extrude"] {
         assert!(TOOLBAR.contains(&id), "{id}");
         let c = registry::command(id).unwrap();
         assert!(matches!(registry::resolve(c), Resolved::Op(e) if e.id == id), "{id}");
-        assert_eq!(registry::ready(c, &doc, &own), Ok(()), "{id}");
+        assert_eq!(registry::ready(c, &doc, &[], &own), Ok(()), "{id}");
     }
 }
 
@@ -343,14 +341,14 @@ fn the_toolbars_sketch_and_extrude_buttons_are_enabled_operations() {
 #[test]
 fn menus_and_palette_list_the_cad_sketch_commands_in_robocads_order() {
     let doc = document();
-    let own = own_controls(&doc);
-    let menu = |category: &str| entries(&Surface::Menu { category: category.into() }, &doc, &own).into_iter().map(|e| e.id).collect::<Vec<_>>();
+    let own = own_controls(&doc, &[]);
+    let menu = |category: &str| entries(&Surface::Menu { category: category.into() }, &doc, &[], &own).into_iter().map(|e| e.id).collect::<Vec<_>>();
     let epic = |category: &str| SKETCH_EPIC.iter().filter(|(id, ..)| registry::command(id).unwrap().category == category).map(|(id, ..)| id.to_string()).collect::<Vec<_>>();
     let create = menu("Create");
     assert_eq!(create, ["tool.box", "tool.box_center", "tool.cylinder", "tool.sphere", "tool.extrude", "tool.revolve", "tool.sweep", "tool.pipe", "tool.loft", "tool.fill", "components.make"].map(String::from).to_vec());
     assert_eq!(menu("Sketch"), epic("Sketch"));
     assert_eq!(menu("Planes"), epic("Planes"));
-    let palette: Vec<String> = super::palette::palette_entries(&doc, &own).into_iter().map(|e| e.id).filter(|id| SKETCH_EPIC.iter().any(|(s, ..)| s == id)).collect();
+    let palette: Vec<String> = super::palette::palette_entries(&doc, &[], &own).into_iter().map(|e| e.id).filter(|id| SKETCH_EPIC.iter().any(|(s, ..)| s == id)).collect();
     assert_eq!(palette, SKETCH_EPIC.map(|(id, ..)| id.to_string()).to_vec());
 }
 
@@ -360,19 +358,19 @@ fn menus_and_palette_list_the_cad_sketch_commands_in_robocads_order() {
 #[test]
 fn system_ui_reaches_every_cad_sketch_command_as_a_click_does() {
     let mut doc = document();
-    let all = crate::cad::panel::controls(&doc);
+    let all = crate::cad::panel::controls(&doc, &[]);
     for (id, label, _) in SKETCH_EPIC {
         let control = all.iter().find(|c| c.id == format!("cad:op:{id}")).unwrap_or_else(|| panic!("cad:op:{id} is not listed"));
         assert_eq!((control.label.as_str(), &control.action), (label, &CadAction::CadInvoke { id: id.to_string() }), "{id}");
     }
-    let own = own_controls(&doc);
-    let planes = entries(&Surface::Menu { category: "Planes".into() }, &doc, &own);
+    let own = own_controls(&doc, &[]);
+    let planes = entries(&Surface::Menu { category: "Planes".into() }, &doc, &[], &own);
     let menu_entry = planes.iter().find(|e| e.id == "tool.plane_xy").unwrap();
     let control = all.iter().find(|c| c.id == "cad:op:tool.plane_xy").unwrap();
     assert_eq!(control.action, menu_entry.action, "activate and a click write the same action");
     assert_eq!(rest_form(&control.action), json!({"command": "cad_invoke", "id": "tool.plane_xy"}));
     doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
-    let all = crate::cad::panel::controls(&doc);
+    let all = crate::cad::panel::controls(&doc, &[]);
     let ready = |id: &str| all.iter().find(|c| c.id == format!("cad:op:{id}")).unwrap().ready.clone();
     if crate::cad::ops::entry("tool.plane_xy").is_some_and(|e| matches!(e.flow, Flow::View(_))) {
         assert_eq!(ready("tool.plane_xy"), Ok(()));
@@ -401,12 +399,12 @@ fn the_views_export_rows_run_natively() {
     use crate::cad::views::{ViewsArgs, ViewsOp};
     use crate::camera::{CameraAction, ViewPreset};
     let doc = document();
-    let own = own_controls(&doc);
+    let own = own_controls(&doc, &[]);
     for c in COMMANDS.iter().filter(|c| c.id.starts_with("view.") || c.id.starts_with("inspect.") || c.id.starts_with("bridge.")) {
         assert_ne!(c.native, Native::Later("cad-views-export"), "{} is still left for later", c.id);
     }
     for (label, id) in VIEW_RADIAL {
-        let e = entries(&Surface::ViewRadial { at: None }, &doc, &own).into_iter().find(|e| e.id == id).unwrap();
+        let e = entries(&Surface::ViewRadial { at: None }, &doc, &[], &own).into_iter().find(|e| e.id == id).unwrap();
         assert_eq!(e.ready, Ok(()), "{label} ({id})");
     }
     let resolved = |id: &str| registry::resolve(registry::command(id).unwrap());
@@ -426,11 +424,10 @@ fn the_views_export_rows_run_natively() {
         assert!(matches!(resolved(id), Resolved::Different(why) if why.starts_with("RoboCAD-GUI-only")), "{id}");
     }
     // Isolate and Hide need a selection; Show All does not.
-    let ready = |doc: &CadDocument, id: &str| registry::ready(registry::command(id).unwrap(), doc, &own_controls(doc));
-    assert!(ready(&doc, "view.isolate").is_err() && ready(&doc, "view.hide").is_err());
-    assert_eq!(ready(&doc, "view.show_all"), Ok(()));
-    let mut picked = document();
-    picked.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
+    let ready = |sel: &[SelectionItem], id: &str| registry::ready(registry::command(id).unwrap(), &doc, sel, &own_controls(&doc, sel));
+    assert!(ready(&[], "view.isolate").is_err() && ready(&[], "view.hide").is_err());
+    assert_eq!(ready(&[], "view.show_all"), Ok(()));
+    let picked = [SelectionItem("b1".into(), "body".into(), 0)];
     assert_eq!((ready(&picked, "view.isolate"), ready(&picked, "view.hide")), (Ok(()), Ok(())));
 }
 

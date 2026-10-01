@@ -3,12 +3,14 @@
 //! cursor over the 3D view, the first surface under it and point markers.
 use super::{PivotRule, PushTarget, ToolGizmos};
 use crate::cad::document::CadDocument;
+use crate::cad::selection::{CadItems, CadSelection};
 use crate::cad::mesh::{CadBody, CadMeshes};
 use crate::cad::topology::CadTopology;
 use crate::cad::view::CadView;
 use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::ray_cast::{MeshRayCast, MeshRayCastSettings, RayCastVisibility};
 use bevy::prelude::*;
+use sim_runtime::cad_client::SelectionItem;
 use std::collections::HashSet;
 
 /// The nodes `ids` and everything under them in the shown tree (the drawn
@@ -27,9 +29,10 @@ pub(in crate::cad) fn preview_bodies(doc: &CadDocument, ids: &[String]) -> Vec<S
     out
 }
 
-/// The transform tools' pivot (see the module doc's pivot rule).
-pub fn pivot(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Option<(Vec3, PivotRule)> {
-    let ids = doc.selected_nodes();
+/// The transform tools' pivot (see the module doc's pivot rule) for
+/// `selection` (the shared selection's CAD items).
+pub fn pivot(doc: &CadDocument, selection: &[SelectionItem], meshes: Option<&CadMeshes>) -> Option<(Vec3, PivotRule)> {
+    let ids = selection.nodes();
     let first = ids.first()?;
     let node = doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| &n.id == first));
     if let Some(p) = node.and_then(|n| n.pivot.as_deref())
@@ -58,20 +61,20 @@ pub fn pivot(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Option<(Vec3, Piv
     lo.x.is_finite().then(|| ((lo + hi) / 2.0, PivotRule::BoundsCentre))
 }
 
-/// The shown revision the current selection was first seen at
-/// ([`track_selection`]); the shown revision when not tracked yet.
-pub(in crate::cad) fn selection_revision(doc: &CadDocument) -> u64 {
+/// The shown revision `selection` (the shared selection's CAD items) was
+/// first seen at ([`track_selection`]); the shown revision when not tracked yet.
+pub(in crate::cad) fn selection_revision(doc: &CadDocument, selection: &[SelectionItem]) -> u64 {
     match &doc.tool_state.selection_seen {
-        Some((items, revision)) if *items == doc.selection => *revision,
+        Some((items, revision)) if items.as_slice() == selection => *revision,
         _ => doc.shown_revision(),
     }
 }
 
 /// The first selected face as a push/pull target, at the revision the
 /// selection was seen at (described from the topology when that is the shown one).
-pub(in crate::cad) fn face_target(doc: &CadDocument, topology: Option<&CadTopology>) -> Option<PushTarget> {
-    let (node, face) = doc.selected_of("face").into_iter().next()?;
-    let revision = selection_revision(doc);
+pub(in crate::cad) fn face_target(doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>) -> Option<PushTarget> {
+    let (node, face) = selection.of_kind("face").into_iter().next()?;
+    let revision = selection_revision(doc, selection);
     let info = if revision == doc.shown_revision() { topology.and_then(|t| t.get(&node)).and_then(|t| t.faces.iter().find(|f| f.index == face)).cloned() } else { None };
     Some(PushTarget { node, face, revision, info })
 }
@@ -79,13 +82,15 @@ pub(in crate::cad) fn face_target(doc: &CadDocument, topology: Option<&CadTopolo
 /// SimSync: remember the shown revision each new selection appeared at, so
 /// a face index from it is not used against renumbered faces after an
 /// edit. Approximate: a selection RoboCAD remaps during an edit is dated
-/// when the viewer adopts it.
-pub(in crate::cad) fn track_selection(doc: Option<ResMut<CadDocument>>) {
+/// when the viewer adopts it. A derived cache of the shared selection's CAD
+/// items (the one selection owns them), compared by value.
+pub(in crate::cad) fn track_selection(doc: Option<ResMut<CadDocument>>, selection: CadSelection) {
     let Some(mut doc) = doc else { return };
-    if doc.tool_state.selection_seen.as_ref().is_some_and(|(items, _)| *items == doc.selection) {
+    let items = selection.items();
+    if doc.tool_state.selection_seen.as_ref().is_some_and(|(seen, _)| *seen == items) {
         return;
     }
-    let seen = (doc.selection.clone(), doc.shown_revision());
+    let seen = (items, doc.shown_revision());
     doc.tool_state.selection_seen = Some(seen);
 }
 

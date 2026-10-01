@@ -40,7 +40,7 @@ pub(super) fn library_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder)
     }
 }
 
-pub(super) fn outline_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
+pub(super) fn outline_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, selected: &BTreeSet<String>) {
     let definition_id = b.definition_id().unwrap_or_else(|| b.document.root.clone());
     let Some(d) = b.document.definitions.get(&definition_id) else { return };
     let shared = Resolver::new(&b.document, &b.registry).placements(&definition_id);
@@ -58,7 +58,7 @@ pub(super) fn outline_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder)
     for (name, spec) in &d.instances {
         let title = if spec.label.is_empty() { name.clone() } else { format!("{}  ", spec.label) };
         let subtitle = format!("{name}  ·  {}", kind_text(&spec.kind));
-        body.spawn(k.item(&b.icon(&spec.kind), &title, &subtitle, category(domain_of(&spec.kind)), BuildAction::Select(name.clone()), b.selected.contains(name)));
+        body.spawn(k.item(&b.icon(&spec.kind), &title, &subtitle, category(domain_of(&spec.kind)), BuildAction::Select(name.clone()), selected.contains(name)));
     }
     if !d.ports.is_empty() {
         body.spawn(k.section("Boundary ports"));

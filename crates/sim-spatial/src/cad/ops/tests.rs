@@ -268,16 +268,17 @@ fn primitives_follow_the_primitive_tool() {
 
 #[test]
 fn resolve_refuses_with_robocad_messages() {
-    let mut doc = document();
-    doc.selection = vec![item("b1", "body", 0)];
-    assert_eq!(resolve(op("modify.union"), &doc, &Env::default(), None), Err("Select the target body first, then the tools".to_string()));
-    assert_eq!(resolve(op("modify.region"), &doc, &Env::default(), None), Err("Select exactly two bodies".to_string()));
-    assert_eq!(resolve(op("tool.thicken"), &doc, &Env::default(), None), Err("Select a sheet".to_string()), "a body is not a sheet");
+    let doc = document();
+    let b1 = [item("b1", "body", 0)];
+    let selected = Env { selection: &b1, ..Default::default() };
+    assert_eq!(resolve(op("modify.union"), &doc, &selected, None), Err("Select the target body first, then the tools".to_string()));
+    assert_eq!(resolve(op("modify.region"), &doc, &selected, None), Err("Select exactly two bodies".to_string()));
+    assert_eq!(resolve(op("tool.thicken"), &doc, &selected, None), Err("Select a sheet".to_string()), "a body is not a sheet");
     let edges = [item("b1", "edge", 0), item("b2", "edge", 1)];
     assert_eq!(resolve(op("tool.full_round"), &doc, &Env::default(), Some(&edges)), Err("Select two edges of the same body".to_string()));
     let ok = [item("b1", "edge", 0), item("b1", "edge", 1)];
     assert_eq!(resolve(op("tool.full_round"), &doc, &Env::default(), Some(&ok)).unwrap().edges, vec![("b1".to_string(), 0), ("b1".to_string(), 1)]);
-    assert_eq!(resolve(op("tool.fillet"), &doc, &Env::default(), None), Err("Select one or more edges first".to_string()));
+    assert_eq!(resolve(op("tool.fillet"), &doc, &selected, None), Err("Select one or more edges first".to_string()));
     assert_eq!(resolve(op("edit.delete"), &doc, &Env::default(), Some(&[item("zz", "body", 0)])), Err("no node zz in the shown tree".to_string()));
     // Kinds filter as RoboCAD's handlers do; the order is the selection's.
     let picked = [item("i1", "body", 0), item("s1", "body", 0), item("b1", "face", 3)];
@@ -292,14 +293,15 @@ fn resolve_refuses_with_robocad_messages() {
 #[test]
 fn a_selection_seen_at_an_older_revision_is_refused() {
     let mut doc = document();
-    doc.selection = vec![item("b1", "face", 2)];
-    doc.tool_state.selection_seen = Some((doc.selection.clone(), 3));
-    let err = resolve(op("tool.remove_fillets"), &doc, &Env::default(), None).unwrap_err();
+    let face = vec![item("b1", "face", 2)];
+    let selected = Env { selection: &face, ..Default::default() };
+    doc.tool_state.selection_seen = Some((face.clone(), 3));
+    let err = resolve(op("tool.remove_fillets"), &doc, &selected, None).unwrap_err();
     assert!(err.contains("revision 3") && err.contains("reselect"), "{err}");
     // A body operation does not read face indices.
-    assert!(resolve(op("edit.delete"), &doc, &Env::default(), None).is_ok());
-    doc.tool_state.selection_seen = Some((doc.selection.clone(), 4));
-    assert!(resolve(op("tool.remove_fillets"), &doc, &Env::default(), None).is_ok());
+    assert!(resolve(op("edit.delete"), &doc, &selected, None).is_ok());
+    doc.tool_state.selection_seen = Some((face.clone(), 4));
+    assert!(resolve(op("tool.remove_fillets"), &doc, &selected, None).is_ok());
 }
 
 #[test]
@@ -631,9 +633,9 @@ fn a_created_plane_waits_for_the_tree_that_shows_it() {
     let p1 = |frame: Option<PlaneFrame>| Some(ActivePlane::Node { id: "p1".into(), frame });
     // The edit answered; the shown tree (revision 4) lacks p1: active, being read, kept.
     doc.ops.plane_created = Some("p1".into());
-    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    follow(&mut doc, &mut plane, Some(&sketches), &[], &mut seen);
     assert_eq!((plane.plane.clone(), doc.status.clone()), (p1(None), Some(Ok("Active plane set".to_string()))));
-    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    follow(&mut doc, &mut plane, Some(&sketches), &[], &mut seen);
     assert_eq!(plane.plane, p1(None), "the refetch has not landed: kept");
     assert!(plane.frame_or_xy().unwrap_err().contains("being read"));
     // The refetch lands at revision 5 with p1 and its frame.
@@ -649,26 +651,26 @@ fn a_created_plane_waits_for_the_tree_that_shows_it() {
     };
     set_tree(&mut doc, 5, true);
     sketches.insert("p1", 5, Geometry::Plane(Some(raised)));
-    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    follow(&mut doc, &mut plane, Some(&sketches), &[], &mut seen);
     assert_eq!(plane.plane, p1(Some(raised)));
     // An edit moves the tree to 6 and p1 is refetched: no old frame for operations, the last one drawn.
     set_tree(&mut doc, 6, true);
     sketches.insert("other", 6, Geometry::Plane(None));
-    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    follow(&mut doc, &mut plane, Some(&sketches), &[], &mut seen);
     assert_eq!(plane.plane, p1(None));
     assert!(plane.frame().unwrap_err().contains("p1"));
     let quads = plane_draw::wanted(&doc, &plane, &sketches);
     assert_eq!((quads.len(), quads[0].frame, quads[0].active), (1, raised, true));
     // A tree without p1 after it was shown: dropped by name.
     set_tree(&mut doc, 7, false);
-    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    follow(&mut doc, &mut plane, Some(&sketches), &[], &mut seen);
     assert_eq!(plane.plane, None);
     assert!(matches!(&doc.status, Some(Ok(s)) if s.contains("p1") && s.contains("no longer in the document")), "{:?}", doc.status);
     // A created node whose tree moved past the adoption revision without it is dropped too.
     doc.ops.plane_created = Some("p2".into());
-    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    follow(&mut doc, &mut plane, Some(&sketches), &[], &mut seen);
     assert!(matches!(&plane.plane, Some(ActivePlane::Node { id, .. }) if id == "p2"));
     set_tree(&mut doc, 8, false);
-    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    follow(&mut doc, &mut plane, Some(&sketches), &[], &mut seen);
     assert_eq!(plane.plane, None);
 }

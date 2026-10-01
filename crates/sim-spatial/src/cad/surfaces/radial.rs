@@ -24,6 +24,7 @@ use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::panel::own_controls;
+use crate::cad::selection::CadSelection;
 use crate::ui_kit::Kit;
 use crate::ui_kit::pie::{SIDE, index_at};
 use bevy::prelude::*;
@@ -52,7 +53,7 @@ pub(super) fn spawn(commands: &mut Commands, k: &Kit, open: &Open, list: &[Entry
 }
 
 /// Input: hover, and a press or release running the entry under the pointer (see the module doc).
-pub(super) fn input(doc: Option<ResMut<CadDocument>>, buttons: Option<Res<ButtonInput<MouseButton>>>, windows: Query<&Window, With<PrimaryWindow>>, mut held: Local<RadialHeld>, mut out: MessageWriter<Act<CadAction>>) {
+pub(super) fn input(doc: Option<ResMut<CadDocument>>, buttons: Option<Res<ButtonInput<MouseButton>>>, windows: Query<&Window, With<PrimaryWindow>>, mut held: Local<RadialHeld>, mut out: MessageWriter<Act<CadAction>>, selection: CadSelection) {
     let (Some(mut doc), Some(buttons)) = (doc, buttons) else { return };
     let Some(open) = doc.ops.surface.clone().filter(|o| matches!(o.surface, Surface::ViewRadial { .. } | Surface::SelectRadial { .. })) else {
         if held.seen.is_some() {
@@ -66,8 +67,9 @@ pub(super) fn input(doc: Option<ResMut<CadDocument>>, buttons: Option<Res<Button
         held.seen = Some(tag);
         held.ignore = buttons.get_pressed().copied().collect();
     }
-    let own = own_controls(&doc);
-    let list = entries(&open.surface, &doc, &own);
+    let selection = selection.items();
+    let own = own_controls(&doc, &selection);
+    let list = entries(&open.surface, &doc, &selection, &own);
     let centre = Vec2::from(open.at);
     let cursor = windows.single().ok().and_then(Window::cursor_position);
     let hover = cursor.and_then(|c| index_at(centre, c, list.len()));

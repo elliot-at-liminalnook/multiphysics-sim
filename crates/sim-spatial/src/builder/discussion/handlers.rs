@@ -1,8 +1,9 @@
 //! Discussion handlers: inspector actions, hover highlighting, starting a
-//! draft on a clicked surface, and submitting drafts.
+//! draft on a clicked surface, and submitting drafts. What is selected is
+//! the shared selection (`pick`).
 use super::*;
 
-pub(in crate::builder) fn act(b: &mut Builder, scene: &mut SpatialScene, o: &mut Orbit, action: Action) {
+pub(in crate::builder) fn act(b: &mut Builder, scene: &mut SpatialScene, o: &mut Orbit, pick: &mut Picked, action: Action) {
     if matches!(action, Action::Reply)
         && b.input
             .as_ref()
@@ -17,7 +18,7 @@ pub(in crate::builder) fn act(b: &mut Builder, scene: &mut SpatialScene, o: &mut
         {
             b.commit_input();
         } else {
-            submit(b, scene, o);
+            submit(b, scene, o, pick);
         }
         return;
     }
@@ -66,7 +67,7 @@ pub(in crate::builder) fn act(b: &mut Builder, scene: &mut SpatialScene, o: &mut
         }
         Action::New => {
             b.discussion.reset_scroll = true;
-            b.discussion.draft_targets = b.selected.iter().map(|n| b.full_path(n)).collect();
+            b.discussion.draft_targets = pick.names().iter().map(|n| b.full_path(n)).collect();
             if b.discussion.draft_targets.is_empty() {
                 b.status = "Select parts or a group first.".into();
                 return;
@@ -129,13 +130,14 @@ pub(in crate::builder) fn act(b: &mut Builder, scene: &mut SpatialScene, o: &mut
         }
         Action::Delete => selected.map(|id| Request::Delete { id }),
         Action::DeleteComment(comment) => selected.map(|id| Request::DeleteComment { id, comment }),
+        // A thread deleted elsewhere is refused by the request, not a panic here.
         Action::Resolve => selected.map(|id| Request::Resolve {
-            resolved: !b.document.discussions.threads[&id].resolved,
+            resolved: !b.document.discussions.threads.get(&id).is_some_and(|t| t.resolved),
             id,
         }),
         Action::LinkSelection => selected.map(|id| Request::Link {
             id,
-            targets: b.selected.iter().map(|n| b.full_path(n)).collect(),
+            targets: pick.names().iter().map(|n| b.full_path(n)).collect(),
         }),
         Action::Pin => selected.map(|id| Request::Pin {
             id,
@@ -146,7 +148,7 @@ pub(in crate::builder) fn act(b: &mut Builder, scene: &mut SpatialScene, o: &mut
         Action::Back => Some(Request::Back),
     };
     if let Some(r) = request {
-        let result = b.discussion_request(r, None, scene, o);
+        let result = b.discussion_request(r, None, scene, o, pick);
         b.report(result);
     }
     b.panel_dirty = true;
@@ -214,7 +216,7 @@ pub(crate) fn begin_surface(b: &mut Builder, scene: &SpatialScene, index: usize,
     b.panel_dirty = true;
 }
 
-pub(in crate::builder) fn submit(b: &mut Builder, scene: &mut SpatialScene, o: &mut Orbit) {
+pub(in crate::builder) fn submit(b: &mut Builder, scene: &mut SpatialScene, o: &mut Orbit, pick: &mut Picked) {
     b.discussion.error = None;
     let Some(input) = b.input.as_ref() else {
         return;
@@ -257,20 +259,14 @@ pub(in crate::builder) fn submit(b: &mut Builder, scene: &mut SpatialScene, o: &
         }
     } else {
         Request::Create {
-            title: body
-                .lines()
-                .next()
-                .unwrap_or("Discussion")
-                .chars()
-                .take(80)
-                .collect(),
+            title: annotations::first_line(&body, "Discussion"),
             body,
             author: b.discussion.author.clone(),
             targets: b.discussion.draft_targets.clone(),
             pin_m: b.discussion.draft_pin.or(Some([0.; 3])),
         }
     };
-    match b.discussion_request(request, None, scene, o) {
+    match b.discussion_request(request, None, scene, o, pick) {
         Ok(value) => {
             b.discussion.selected = value["thread"]["id"]
                 .as_str()

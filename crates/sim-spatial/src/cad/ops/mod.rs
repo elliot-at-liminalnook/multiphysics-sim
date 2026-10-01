@@ -396,24 +396,26 @@ pub struct OpsState {
     pub polygon_sides_sent: Option<(u64, u32)>,
 }
 
-/// What a run reads besides the document: the caches and the active plane
-/// (each None where the caller has none: a windowless test, REST before
-/// the first frame).
+/// What a run reads besides the document: the shared selection's CAD
+/// items (read once by the handler or system; empty in a test that sets
+/// none), the caches and the active plane (each None where the caller has
+/// none: a windowless test, REST before the first frame).
 #[derive(Clone, Copy, Default)]
 pub(crate) struct Env<'a> {
+    pub selection: &'a [SelectionItem],
     pub topology: Option<&'a CadTopology>,
     pub view: Option<&'a CadView>,
     pub plane: Option<&'a CadActivePlane>,
     pub sketches: Option<&'a CadSketches>,
 }
 impl Cx<'_> {
-    /// What a run reads besides the document.
-    pub(in crate::cad) fn env(&self) -> Env<'_> {
-        Env { topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches }
+    /// What a run reads besides the document (`selection`: `cx.shared.items()`).
+    pub(in crate::cad) fn env<'s>(&'s self, selection: &'s [SelectionItem]) -> Env<'s> {
+        Env { selection, topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches }
     }
     /// The document to change, and what the run reads, borrowed apart.
-    pub(in crate::cad) fn split(&mut self) -> (&mut CadDocument, Env<'_>) {
-        (&mut *self.doc, Env { topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches })
+    pub(in crate::cad) fn split<'s>(&'s mut self, selection: &'s [SelectionItem]) -> (&'s mut CadDocument, Env<'s>) {
+        (&mut *self.doc, Env { selection, topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches })
     }
 }
 
@@ -452,7 +454,9 @@ fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
         Flow::View(act) => Outcome::Done(Ok(super::sketch::plane::view_act(&mut *cx.doc, &mut *cx.plane, act))),
         Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) => {
             end_tool(call, cx);
-            let (doc, env) = cx.split();
+            let selection = cx.shared.items();
+            let mode_before = cx.doc.select_mode;
+            let (doc, env) = cx.split(&selection);
             doc.ops.active = Some(entry.id);
             doc.ops.place = None;
             doc.ops.sketch = None;
@@ -475,18 +479,28 @@ fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
                 Flow::PlanePick(mode) => super::sketch::plane::begin(doc, mode),
                 _ => Ok(()),
             };
-            if let Err(e) = started {
-                form_cancel(doc);
-                // The reason, not form_cancel's "Cancelled …", stays on the status line.
-                doc.show(Err(e.clone()));
-                return Outcome::Done(Err(e));
+            let outcome = match started {
+                Err(e) => {
+                    form_cancel(doc);
+                    // The reason, not form_cancel's "Cancelled …", stays on the status line.
+                    doc.show(Err(e.clone()));
+                    Outcome::Done(Err(e))
+                }
+                Ok(()) => {
+                    doc.show(Ok(entry.hint.to_string()));
+                    Outcome::Done(Ok(answer))
+                }
+            };
+            // A plane tool sets the selection mode (`sketch::plane::begin`): pushed with the items.
+            if cx.doc.select_mode != mode_before {
+                super::selection::publish(cx.doc, cx.shared.view());
             }
-            doc.show(Ok(entry.hint.to_string()));
-            Outcome::Done(Ok(answer))
+            outcome
         }
         Flow::Form => {
             // RoboCAD's handlers check the selection before their dialog opens.
-            if let Err(e) = resolve::resolve(entry, cx.doc, &cx.env(), None) {
+            let selection = cx.shared.items();
+            if let Err(e) = resolve::resolve(entry, cx.doc, &cx.env(&selection), None) {
                 return Outcome::Done(Err(e));
             }
             // The dialog replaces an active pick or place tool's form, so
@@ -508,7 +522,7 @@ fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
             // the mode is set directly and the selection is kept.
             if doc.select_mode != mode {
                 doc.select_mode = mode;
-                super::selection::publish(doc);
+                super::selection::publish(doc, cx.shared.view());
             }
             doc.ops.active = Some(entry.id);
             doc.ops.place = None;
@@ -544,11 +558,12 @@ fn end_tool(call: &mut Call, cx: &mut Cx) {
 
 /// `CadRun`: refused by name with nothing sent, else one edit job (or a read).
 fn run(entry: &'static OpEntry, params: &Map<String, Value>, items: Option<&[SelectionItem]>, revision: Option<u64>, call: &mut Call, cx: &mut Cx) -> Outcome {
-    let prepared = prepare(cx.doc, &cx.env(), entry, params, items, revision);
+    let selection = cx.shared.items();
+    let prepared = prepare(cx.doc, &cx.env(&selection), entry, params, items, revision);
     match prepared {
         // Viewer state: applied here, never an edit.
         Ok(Built::View(act)) => Outcome::Done(Ok(super::sketch::plane::view_act(&mut *cx.doc, &mut *cx.plane, act))),
-        Ok(built) => start(entry, built, items.is_some(), call, cx.doc),
+        Ok(built) => start(entry, built, items.is_some(), &selection, call, cx.doc),
         Err(e) => Outcome::Done(Err(e)),
     }
 }
@@ -594,8 +609,9 @@ fn prepare(doc: &CadDocument, env: &Env, entry: &OpEntry, params: &Map<String, V
 /// Send what was built: the calls in order inside one edit job (RoboCAD's
 /// handler loop; each call its own RoboCAD undo step; the first error stops
 /// the rest and is reported verbatim with how many had run), a paste, or a read.
-/// `explicit`: the items were given (REST), not the selection.
-fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call, doc: &mut CadDocument) -> Outcome {
+/// `explicit`: the items were given (REST), not the selection (`selection`:
+/// the shared selection's CAD items the run read).
+fn start(entry: &'static OpEntry, built: Built, explicit: bool, selection: &[SelectionItem], call: &mut Call, doc: &mut CadDocument) -> Outcome {
     let outcome = match built {
         Built::Edit { calls, label } => {
             let n = calls.len();
@@ -634,7 +650,7 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call,
         }
     };
     if !matches!(outcome, Outcome::Done(Err(_))) {
-        started(doc, entry, explicit);
+        started(doc, entry, explicit, selection);
     }
     outcome
 }
@@ -664,18 +680,18 @@ pub(in crate::cad) fn send_sketch(doc: &mut CadDocument, call: &mut Call, target
 }
 
 /// After an edit started: where RoboCAD's handler clears the selection,
-/// the edit notes the selection now, and `sync::finish_edit` clears it once
-/// the edit succeeds (RoboCAD clears after its Ops call returns: a failed
+/// the edit notes the selection now (`selection`: the shared selection's
+/// CAD items), and `sync::receive` clears the shared selection
+/// (`Op::Clear`) once the edit succeeds (RoboCAD clears after its Ops call returns: a failed
 /// fillet keeps the picks), unless the run named its items (`explicit`,
 /// REST): the user's selection was not what it ran on; a form-flow
 /// operation's form closes (RoboCAD's dialog has returned); a pick or place
 /// tool keeps its form and stays active.
-fn started(doc: &mut CadDocument, entry: &OpEntry, explicit: bool) {
-    if entry.clears_selection && !explicit && !doc.selection.is_empty() {
-        let selection = doc.selection.clone();
-        if let Some(edit) = doc.edit.as_mut() {
-            edit.clear_selection = Some(selection);
-        }
+fn started(doc: &mut CadDocument, entry: &OpEntry, explicit: bool, selection: &[SelectionItem]) {
+    if entry.clears_selection && !explicit && !selection.is_empty()
+        && let Some(edit) = doc.edit.as_mut()
+    {
+        edit.clear_selection = Some(selection.to_vec());
     }
     if entry.activates_plane
         && let Some(edit) = doc.edit.as_mut()

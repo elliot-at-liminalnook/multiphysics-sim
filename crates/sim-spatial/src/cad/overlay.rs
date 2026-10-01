@@ -37,6 +37,7 @@ use super::document::{CadDocument, SelectMode};
 use super::mesh::{CadMeshes, CadRoot};
 use super::panel::{CadButton, control, controls};
 use super::pick::PickState;
+use super::selection::CadSelection;
 use super::topology::CadTopology;
 use super::view::CadView;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
@@ -225,7 +226,8 @@ fn draw(gizmos: &mut Gizmos<CadHighlightGizmos>, view: &CadView, meshes: &CadMes
 }
 
 /// Present: the hovered item, the selected sub-body items, and the vertex marks of vertex mode.
-fn highlights(doc: Option<Res<CadDocument>>, meshes: Option<Res<CadMeshes>>, topology: Option<Res<CadTopology>>, view: Option<Res<CadView>>, mut gizmos: Gizmos<CadHighlightGizmos>, mut outlines: Local<Outlines>) {
+#[allow(clippy::too_many_arguments)]
+fn highlights(doc: Option<Res<CadDocument>>, meshes: Option<Res<CadMeshes>>, topology: Option<Res<CadTopology>>, view: Option<Res<CadView>>, mut gizmos: Gizmos<CadHighlightGizmos>, mut outlines: Local<Outlines>, selection: CadSelection) {
     let (Some(doc), Some(meshes), Some(view)) = (doc, meshes, view) else { return };
     if !view.valid {
         return;
@@ -249,7 +251,7 @@ fn highlights(doc: Option<Res<CadDocument>>, meshes: Option<Res<CadMeshes>>, top
             }
         }
     }
-    for item in doc.selection.iter().filter(|i| i.1 != "body") {
+    for item in selection.items().iter().filter(|i| i.1 != "body") {
         draw(&mut gizmos, &view, &meshes, topology, &mut outlines, item, SELECTED);
     }
     if let Some(item) = &doc.hover {
@@ -261,7 +263,7 @@ fn highlights(doc: Option<Res<CadDocument>>, meshes: Option<Res<CadMeshes>>, top
 const COMMANDS: [(&str, &str); 4] = [("cad:select_all", "Select All"), ("cad:invert_selection", "Invert"), ("cad:select_same_material", "Same Material"), ("cad:edges_to_faces", "Edges → Faces")];
 
 /// Present: the selection strip, rebuilt when the document's revision changes.
-fn strip(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<CadSelectStrip>>, mut last: Local<Option<(Entity, u64, u64)>>) {
+fn strip(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<CadSelectStrip>>, mut last: Local<Option<(Entity, u64, u64)>>, selection: CadSelection) {
     let Some(doc) = doc else { return };
     let root = match roots.iter().next() {
         Some(root) => root,
@@ -296,7 +298,7 @@ fn strip(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFon
     }
     *last = Some(stamp);
     let k = Kit::new(&fonts);
-    let all = controls(&doc);
+    let all = controls(&doc, &selection.items());
     commands.entity(root).despawn_related::<Children>();
     commands.entity(root).with_children(|p| {
         p.spawn(k.segments()).with_children(|s| {
@@ -318,7 +320,7 @@ fn strip(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFon
 
 /// Present: the Alt menu while `CadDocument.candidates` is set.
 #[allow(clippy::too_many_arguments)]
-fn menu(mut commands: Commands, doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, state: Res<PickState>, fonts: Res<UiFonts>, menus: Query<Entity, With<CadMenu>>, mut last: Local<Option<(Entity, u64, u64)>>) {
+fn menu(mut commands: Commands, doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, state: Res<PickState>, fonts: Res<UiFonts>, menus: Query<Entity, With<CadMenu>>, mut last: Local<Option<(Entity, u64, u64)>>, selection: CadSelection) {
     let open = doc.as_ref().is_some_and(|d| d.candidates.is_some());
     let existing = menus.iter().next();
     let Some(doc) = doc.filter(|_| open) else {
@@ -361,7 +363,7 @@ fn menu(mut commands: Commands, doc: Option<Res<CadDocument>>, view: Option<Res<
     }
     *last = Some(stamp);
     let k = Kit::new(&fonts);
-    let entries: Vec<_> = controls(&doc).into_iter().filter(|c| c.id.starts_with("cad:candidate:")).collect();
+    let entries: Vec<_> = controls(&doc, &selection.items()).into_iter().filter(|c| c.id.starts_with("cad:candidate:")).collect();
     commands.entity(menu).despawn_related::<Children>();
     commands.entity(menu).with_children(|p| {
         p.spawn(k.note("Select which (Escape closes)"));

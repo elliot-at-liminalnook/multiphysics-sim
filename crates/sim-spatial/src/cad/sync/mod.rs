@@ -30,14 +30,19 @@ pub(super) use launch::{accept_served, serves};
 pub(crate) use selection::push_selection;
 pub(super) use selection::adopt_selection;
 #[cfg(test)]
-pub(super) use selection::selection_body;
+pub(super) use selection::{finish_selection, selection_body};
 
 use super::document::{CadDocument, Connected, Connection, EditDone, PollCommand, PollSnapshot};
+use super::selection::{Shared, View};
 use super::CadTarget;
+use crate::document::DocumentRegistry;
 use crate::jobs::{Job, Pool, RunThread};
+use crate::selection::Selection;
 use bevy::prelude::*;
 use launch::{log_tail, self_start};
-use selection::{detail, finish_selection};
+use selection::detail;
+#[cfg(not(test))]
+use selection::finish_selection;
 use serde_json::Value;
 use sim_runtime::cad_client::{CadClient, EDIT_TIMEOUT, SelectionItem, service};
 use std::sync::mpsc::{Receiver, RecvTimeoutError, TryRecvError};
@@ -88,6 +93,7 @@ pub(crate) fn start(doc: &mut CadDocument) {
     // and selection are adopted, not compared with the old service's.
     doc.doc_key = None;
     doc.remote_selection.clear();
+    doc.selection_read = false;
     // A desktop window's mode is adopted afresh from the new connection.
     doc.remote_mode = None;
     doc.selection_pushed_at = None;
@@ -219,7 +225,7 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
 /// OnEnter(ModeScope::Cad): connect the document the switch (or the launch)
 /// installed; without one, the target CAD mode last showed, else RoboCAD's
 /// default URL.
-pub(crate) fn enter(mut commands: Commands, doc: Option<ResMut<CadDocument>>, documents: Option<Res<crate::app::switch::Documents>>) {
+pub(crate) fn enter(mut commands: Commands, doc: Option<ResMut<CadDocument>>, registry: Option<Res<DocumentRegistry>>) {
     match doc {
         Some(mut doc) => {
             if doc.connect.is_none() && doc.client.is_none() {
@@ -227,7 +233,7 @@ pub(crate) fn enter(mut commands: Commands, doc: Option<ResMut<CadDocument>>, do
             }
         }
         None => {
-            let target = documents.and_then(|d| d.cad.clone()).unwrap_or_else(|| CadTarget::Service(sim_runtime::cad_client::DEFAULT_URL.into()));
+            let target = registry.as_deref().and_then(|r| r.source(crate::app::ViewerMode::Cad)).and_then(crate::app::switch::sources::cad_target).unwrap_or_else(|| CadTarget::Service(sim_runtime::cad_client::DEFAULT_URL.into()));
             let mut doc = CadDocument::new(target);
             start(&mut doc);
             commands.insert_resource(doc);
@@ -235,16 +241,44 @@ pub(crate) fn enter(mut commands: Commands, doc: Option<ResMut<CadDocument>>, do
     }
 }
 
-/// JobResults: everything that came back from RoboCAD this frame.
-pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>) {
+/// JobResults: everything that came back from RoboCAD this frame, and the
+/// shared selection's changes pushed to RoboCAD (`selection::publish_changes`).
+/// The selection and the registry are borrowed mutably only by the steps
+/// that change them (a new snapshot, an answered edit), so their change
+/// detection is not tripped every frame.
+pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Selection>, mut registry: ResMut<DocumentRegistry>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>) {
     let Some(mut doc) = doc else { return };
     let doc = &mut *doc;
+    if super::selection::cad_id(&registry).is_none() {
+        super::selection::ensure_registered(&mut registry, &mut selection, &doc.target);
+    }
+    // A change another writer made since (an `Act<SelectionAction>` this
+    // frame) is pushed before RoboCAD's selection is read, so a push in
+    // flight keeps the poll's older read from overwriting it.
+    super::selection::publish_changes(doc, View { selection: &*selection, registry: &*registry });
     let busy = finish_connect(doc);
     watch_child(doc);
-    take_snapshot(doc);
-    finish_edit(doc);
-    finish_selection(doc);
-    detail(doc);
+    if snapshot_ready(doc) {
+        take_snapshot(doc, &mut Shared { selection: &mut *selection, registry: &mut *registry });
+    }
+    let target = doc.target.clone();
+    // RoboCAD's handler cleared the selection after its Ops call returned
+    // (`ops::started` noted which); a selection changed meanwhile is the
+    // user's newer one and is kept. Cleared through the shared selection.
+    if let Some(cleared) = finish_edit(doc)
+        && (View { selection: &*selection, registry: &*registry }).items() == cleared
+        && let Err(e) = (Shared { selection: &mut *selection, registry: &mut *registry }).clear()
+    {
+        warn!("CAD: the selection was not cleared after the edit: {e}");
+    }
+    // A Save As retargeted the document: the registry's entry names the saved file (same id).
+    if doc.target != target {
+        registry.set_source(crate::app::ViewerMode::Cad, super::selection::source(&doc.target));
+    }
+    finish_selection(doc, View { selection: &*selection, registry: &*registry });
+    // A re-check after a new tree or an op's clear: pushed once.
+    super::selection::publish_changes(doc, View { selection: &*selection, registry: &*registry });
+    detail(doc, View { selection: &*selection, registry: &*registry });
     finish_physical(doc);
     // Keep frames coming while something is outstanding (an unfocused
     // window otherwise steps only on its low-power timer).
@@ -333,8 +367,13 @@ fn watch_child(doc: &mut CadDocument) {
     doc.touch();
 }
 
+/// Whether the poll worker has published a snapshot not yet taken.
+fn snapshot_ready(doc: &CadDocument) -> bool {
+    doc.poll.as_ref().is_some_and(|poll| poll.lock().seq > doc.seen_poll)
+}
+
 /// The poll worker's newest snapshot, once.
-fn take_snapshot(doc: &mut CadDocument) {
+fn take_snapshot(doc: &mut CadDocument, shared: &mut Shared) {
     let Some(poll) = &doc.poll else { return };
     let snapshot = {
         let s = poll.lock();
@@ -390,14 +429,10 @@ fn take_snapshot(doc: &mut CadDocument) {
         }
         None => {}
     }
-    // Our selection lost a deleted node's items: pushed once the snapshot is applied.
-    let mut pruned = false;
-    if let Some(tree) = snapshot.doc {
-        // A deleted node's items leave the selection (and the hover, the Alt menu).
+    if let Some(tree) = &snapshot.doc {
+        // A deleted node's hover and Alt-menu items go (the selection's are
+        // re-checked below, once staleness is known).
         let known = |i: &SelectionItem| tree.nodes.iter().any(|n| n.id == i.0);
-        let before = doc.selection.len();
-        doc.selection.retain(known);
-        pruned = doc.selection.len() != before;
         if doc.hover.as_ref().is_some_and(|h| !known(h)) {
             doc.hover = None;
         }
@@ -407,6 +442,9 @@ fn take_snapshot(doc: &mut CadDocument) {
                 doc.candidates = None;
             }
         }
+    }
+    let new_tree = snapshot.doc.is_some();
+    if let Some(tree) = snapshot.doc {
         doc.doc = Some(tree);
         doc.doc_key = snapshot.doc_key;
         changed = true;
@@ -435,6 +473,20 @@ fn take_snapshot(doc: &mut CadDocument) {
         doc.stale = stale;
         changed = true;
     }
+    // A new tree: the registry follows RoboCAD's revision and the shared
+    // selection's CAD items are re-checked (`selection::follow_tree`): body
+    // items restamped, sub-body items kept at the revision they were picked
+    // at, a deleted node's items dropped and named while the tree is
+    // current (kept while it is behind RoboCAD's revision, for the next
+    // tree to settle). The change is pushed once (`publish_changes`).
+    if new_tree && let Some(tree) = &doc.doc {
+        let dropped = super::selection::follow_tree(shared, doc.shown_revision(), tree, doc.stale.is_none());
+        if !dropped.is_empty() {
+            // Named, as every mode names the items a re-check drops.
+            doc.show(Err(format!("No longer selected (not in the document now): {}", dropped.join(", "))));
+            changed = true;
+        }
+    }
     // RoboCAD's selection (all its items) and, from a desktop window, its
     // mode: adopted when they changed there, unless our own push is in
     // flight or the read predates its answer (`adopt_selection`). A failed
@@ -455,29 +507,26 @@ fn take_snapshot(doc: &mut CadDocument) {
         if doc.selection_error.take().is_some() {
             changed = true;
         }
-        changed |= adopt_selection(doc, sent, selection);
+        changed |= adopt_selection(doc, shared, sent, selection);
     }
     if changed {
         doc.touch();
-    }
-    // RoboCAD (a headless service keeps whatever was pushed) is told the
-    // pruned selection when it still differs from its copy.
-    if pruned && doc.connected() {
-        crate::cad::selection::publish(doc);
     }
 }
 
 /// The edit in flight has answered: its outcome line, the REST caller's
 /// answer, and a refetch (RoboCAD's dirty flag is unknown until it lands).
-fn finish_edit(doc: &mut CadDocument) {
-    let Some(edit) = &doc.edit else { return };
-    let Some(result) = edit.job.poll() else { return };
+/// Returns the selection RoboCAD cleared after a successful edit that
+/// clears it (`receive` clears the shared selection if it is still that one).
+fn finish_edit(doc: &mut CadDocument) -> Option<Vec<SelectionItem>> {
+    let Some(edit) = &doc.edit else { return None };
+    let Some(result) = edit.job.poll() else { return None };
     let generation = edit.job.generation();
     let (clear_selection, activates_plane, retarget) = doc.edit.take().map_or((None, false, None), |e| (e.clear_selection, e.activates_plane, e.retarget));
     let seq = doc.edit_seq;
     if generation != doc.generation {
         crate::cad::sketch::specs::polygon_edit_done(doc, seq, false);
-        return;
+        return None;
     }
     let answer = result.map(|EditDone { message, result }| (message, result));
     // A polygon sent with sides: its count is the remembered one once RoboCAD took it.
@@ -501,16 +550,10 @@ fn finish_edit(doc: &mut CadDocument) {
         doc.target = super::document::CadTarget::File(path);
     }
     // RoboCAD's handler clears the selection after its Ops call returned
-    // (`ops::started` noted which); a failed edit keeps the picks, and a
-    // selection changed meanwhile is the user's newer one and is kept.
-    if answer.is_ok()
-        && let Some(cleared) = clear_selection
-        && !cleared.is_empty()
-        && doc.selection == cleared
-    {
-        doc.selection.clear();
-        crate::cad::selection::publish(doc);
-    }
+    // (`ops::started` noted which); a failed edit keeps the picks. `receive`
+    // clears the shared selection (`Op::Clear`) unless it changed meanwhile,
+    // and pushes it once (`publish_changes`).
+    let cleared = clear_selection.filter(|c| answer.is_ok() && !c.is_empty());
     if std::mem::take(&mut doc.edit_waited) {
         let seq = doc.edit_seq;
         // Only recent answers are kept: one whose REST caller went away is not collected.
@@ -519,6 +562,7 @@ fn finish_edit(doc: &mut CadDocument) {
     }
     refresh(doc, true);
     doc.touch();
+    cleared
 }
 
 /// Ask the poll worker for `/doc` now; the next `GET /` it sends follows

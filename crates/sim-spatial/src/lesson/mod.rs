@@ -11,7 +11,8 @@
 //! - "Open in builder" shows the builder on the sandbox; "‹ lesson" comes
 //!   back, and the scene re-records if the copy changed.
 //! - Lesson notes are `sim_annotate` threads anchored to quoted text or to
-//!   scene parts (`sim_lesson::LessonAnchor`), in `lesson.md.annotations.json`.
+//!   scene parts (`sim_lesson::LessonAnchor`), in `lesson.md.annotations.json`,
+//!   edited through the annotations service (`threads`, `crate::annotations`).
 use crate::app::actions::Act;
 use crate::builder::Builder;
 use crate::{Orbit, SpatialScene};
@@ -38,6 +39,8 @@ mod opening;
 pub(crate) mod practice;
 pub(crate) mod actions;
 mod scene_view;
+mod selection;
+mod threads;
 mod ui;
 mod watch;
 
@@ -652,6 +655,9 @@ impl Plugin for LearnPlugin {
                 .run_if(open()),
         );
         app.add_systems(Update, (extras::live_equations, extras::track_blocks, apply_settings, frames::step).after(ui::rebuild).in_set(crate::app::ViewerSet::SimSync).run_if(open()));
+        // The page's pick follows the shared selection (Lessons only: in Build
+        // the builder shows it).
+        app.add_systems(Update, selection::follow.before(playback).in_set(crate::app::ViewerSet::SimSync).run_if(in_state(crate::app::ViewerMode::Lessons).and(resource_exists::<Learn>)));
     }
 }
 

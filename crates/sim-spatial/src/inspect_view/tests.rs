@@ -153,3 +153,69 @@ fn mesh_click_and_list_button_resolve_the_same_source_identity() {
         "holding a button must not repeatedly toggle"
     );
 }
+
+/// A primary click on `part`, as the picking backend sends it.
+fn click(app: &mut App, camera: Entity, part: Entity) {
+    let window = app.world_mut().spawn_empty().id();
+    let click = Pointer::new(
+        PointerId::Mouse,
+        Location { target: RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
+        Click { button: PointerButton::Primary, hit: HitData::new(camera, 0.1, None, None), duration: std::time::Duration::from_millis(50), count: 1 },
+        part,
+    );
+    app.world_mut().trigger(click);
+}
+
+/// Inspect's click, parts row and REST `select` write the one shared
+/// selection (the Inspect document's items) through the same handler, and
+/// the view shows it; Escape clears it.
+#[test]
+fn click_parts_row_and_rest_select_make_the_same_shared_selection() {
+    use crate::document::{DocumentKind, DocumentRegistry, Source};
+    use crate::selection::{Item, Selection};
+    let scene = fixture();
+    let id = scene.spatial.parts[1].component.clone();
+    let mut registry = DocumentRegistry::default();
+    let document = registry.open(ViewerMode::Inspect, DocumentKind::Assembly, Source::path("motor-thermal.description.json")).id;
+    let mut app = App::new();
+    app.insert_resource(scene).insert_resource(ButtonInput::<KeyCode>::default()).init_resource::<app::actions::Replies>().init_resource::<Selection>().insert_resource(registry);
+    app::actions::register::<inspect::InspectAction>(&mut app);
+    app.add_systems(Update, (inspect::input, inspect::apply, projection::project_selection).chain());
+    let camera = app.world_mut().spawn(Orbit::default()).id();
+    let part = app.world_mut().spawn(Part { index: 1 }).observe(pick_part).id();
+    let selected = |app: &App| app.world().resource::<Selection>().all().to_vec();
+    let shown = |app: &App| app.world().resource::<SpatialScene>().shown.clone();
+    let escape = |app: &mut App| {
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::Escape);
+        app.update();
+        let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+        keys.release(KeyCode::Escape);
+        keys.clear();
+        assert!(app.world().resource::<Selection>().is_empty_for(document));
+        assert_eq!(app.world().resource::<SpatialScene>().shown, SelectionTarget::None);
+    };
+
+    click(&mut app, camera, part);
+    app.update();
+    let clicked = selected(&app);
+    assert_eq!(clicked.len(), 1);
+    assert_eq!((&clicked[0].item, clicked[0].document, clicked[0].revision), (&Item::Component { id: id.clone() }, document, 0));
+    assert_eq!(shown(&app), SelectionTarget::component(id.clone()));
+    assert_eq!(app.world().resource::<SpatialScene>().state.selected.as_ref(), Some(&id));
+    escape(&mut app);
+
+    // REST `select`, parsed as the server parses it, through the same handler.
+    let command = sim_api::Command { command: "select".into(), args: serde_json::json!({"target": {"kind": "components", "ids": [id]}}) };
+    let rest = <inspect::InspectAction as app::actions::Action>::parse(&command).unwrap();
+    app.world_mut().write_message(app::actions::Act::quiet(rest));
+    app.update();
+    assert_eq!(selected(&app), clicked);
+    assert_eq!(shown(&app), SelectionTarget::component(id.clone()));
+    escape(&mut app);
+
+    // The parts list's row.
+    app.world_mut().spawn((Button, Interaction::Pressed, inspect::InspectAction::Display { action: SpatialCommand::Select { component: id.clone() } }));
+    app.update();
+    assert_eq!(selected(&app), clicked);
+    assert_eq!(shown(&app), SelectionTarget::component(id));
+}

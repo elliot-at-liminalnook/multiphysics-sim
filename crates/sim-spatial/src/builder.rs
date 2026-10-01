@@ -16,6 +16,9 @@ use sim_runtime::run_history::Fidelity;
 use sim_runtime::system_builder;
 use sim_system::library::{self, Alternative};
 use sim_system::{Command as SystemCommand, InstanceKind, InstanceSpec, ReferenceView, Resolver, SystemDocument, SystemStore, Terminal};
+use crate::document::DocumentRegistry;
+use crate::selection::Selection;
+use picked::Picked;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, mpsc};
@@ -163,8 +166,9 @@ pub struct Builder {
     checked: f64,
     /// Instance path whose definition is being edited ("" = top level).
     pub level: String,
-    /// Selected instance names at `level`.
-    pub selected: BTreeSet<String>,
+    /// `Selection::changed` when the panels and highlight last followed it
+    /// (`picked::track`); the selection itself is the shared one (`picked`).
+    seen_selection: Option<u64>,
     palette: Vec<PaletteItem>,
     filter: String,
     page: usize,
@@ -335,7 +339,7 @@ impl Builder {
             document,
             checked: 0.,
             level: String::new(),
-            selected: BTreeSet::new(),
+            seen_selection: None,
             palette: Vec::new(),
             filter: String::new(),
             page: 0,
@@ -468,13 +472,9 @@ impl Builder {
         self.panel_dirty = true;
     }
 
-    pub fn select(&mut self, names: Vec<String>) {
-        self.selected = names.into_iter().collect();
-        self.alternatives = None;
-        self.scene_dirty = true;
-        self.panel_dirty = true;
-    }
-    pub fn state_json(&self) -> serde_json::Value {
+    /// `system_state`; `selected` is the builder's selection (`picked::names`;
+    /// a REST answer uses `Picked::state`).
+    pub fn state_json(&self, selected: &BTreeSet<String>) -> serde_json::Value {
         serde_json::json!({
             "workspace":crate::workspace::json(),
             "reference":self.reference.json(),
@@ -496,7 +496,7 @@ impl Builder {
             "revision": self.document.revision,
             "level": self.level,
             "definition": self.definition_id(),
-            "selected": self.selected,
+            "selected": selected,
             "status": self.status,
             "findings": self.findings,
             "compile_error": self.compile_error,
@@ -512,7 +512,7 @@ impl Builder {
             "gait_reports": self.gait_reports_json(),
             "actuator_view": self.actuator_view,
             "calibration_review": self.calibration_json(),
-            "schematic": self.schematic.json(self.document.revision, &self.level, &self.selected),
+            "schematic": self.schematic.json(self.document.revision, &self.level, selected),
             "history": self.store.history(),
         })
     }
@@ -538,7 +538,7 @@ impl Plugin for BuilderPlugin {
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
+            (frame_timing, watch, agent::tick, reference::tick, text_input.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
                 // Docks and home requests reach the shared camera before it is placed.
                 .before(crate::inspect_view::sync_camera)
@@ -577,6 +577,7 @@ pub(crate) mod schematic;
 mod background;
 mod drafts;
 mod editing;
+pub(crate) mod picked;
 mod live_run;
 mod rebuild;
 mod studies;

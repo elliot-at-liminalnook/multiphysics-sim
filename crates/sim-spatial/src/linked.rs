@@ -1,28 +1,63 @@
 use super::*;
+use crate::document::DocumentRegistry;
+use crate::selection::{Selection, SelectionAction, target_items};
 use crate::ui_kit::ACCENT;
 use sim_inspect::selection::native::SelectionClient;
 
+/// Inspect's selection link with a schematic peer (`--schematic`,
+/// `--selection-link`): it exchanges Inspect's shared selection.
 #[derive(Resource)]
 pub struct SelectionLink(pub SelectionClient);
+
+/// One exchange with the linked peer: Inspect's selection (the shared
+/// selection's items of the Inspect document) goes out; a different target
+/// from the peer is checked against the assembly (an unknown id is refused,
+/// as `set_selection` refused it) and applied as a set, stamped current.
+/// Without the Inspect document the view's projection is exchanged, and the
+/// peer's target is returned for the caller to show (as before).
+pub(crate) fn exchange(link: &mut SelectionLink, scene: &SpatialScene, owner: Option<(&mut Selection, &DocumentRegistry)>) -> Result<Option<SelectionTarget>, String> {
+    let document = owner.as_ref().and_then(|(_, registry)| registry.current(ViewerMode::Inspect)).map(|(document, _)| document);
+    match (owner, document) {
+        (Some((selection, registry)), Some(document)) => {
+            let mine = selection.target(document);
+            let peer = link.0.exchange(mine.clone()).map_err(|e| e.to_string())?;
+            if peer != mine {
+                peer.resolve(&scene.description).map_err(|e| e.to_string())?;
+                selection.apply(registry, &SelectionAction::set(document, target_items(&peer)))?;
+            }
+            Ok(None)
+        }
+        _ => {
+            let peer = link.0.exchange(scene.shown.clone()).map_err(|e| e.to_string())?;
+            Ok((peer != scene.shown).then_some(peer))
+        }
+    }
+}
 #[derive(Component)]
 pub(super) struct LinkStatus;
 #[derive(Component)]
 pub(super) struct NetHub(pub String);
 
+/// SimSync: the link's exchange (Inspect's selection; the projection
+/// shows what the peer chose) and its status label.
 pub(super) fn sync_link(
     mut scene: ResMut<SpatialScene>,
     link: Option<ResMut<SelectionLink>>,
+    selection: Option<ResMut<Selection>>,
+    registry: Option<Res<DocumentRegistry>>,
     mut labels: Query<&mut Text, With<LinkStatus>>,
 ) {
     let Some(mut link) = link else { return };
-    match link.0.exchange(scene.selection.clone()) {
-        Ok(target) if target != scene.selection => {
+    let mut selection = selection;
+    let owner = selection.as_deref_mut().zip(registry.as_deref());
+    match exchange(&mut link, &scene, owner) {
+        Ok(Some(target)) => {
             if let Err(e) = scene.set_selection(target) {
                 error!("{e}");
             }
         }
         Err(e) => error!("{e}"),
-        _ => {}
+        Ok(None) => {}
     }
     let status = link.0.status("schematic");
     for mut label in &mut labels {
@@ -114,8 +149,9 @@ pub(super) fn update_nets(
         }
     }
 }
+/// The inspector for what is shown (a group, ports or nets).
 pub(super) fn selection_inspector(scene: &SpatialScene) -> Option<String> {
-    let (title, ids) = match &scene.selection {
+    let (title, ids) = match &scene.shown {
         SelectionTarget::Nets { ids } => ("CONNECTION", ids),
         SelectionTarget::Ports { ids } => ("PORT", ids),
         SelectionTarget::Components { ids } if ids.len() > 1 => ("COMPONENT GROUP", ids),

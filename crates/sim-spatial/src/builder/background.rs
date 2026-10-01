@@ -2,10 +2,12 @@
 //! finished in the background, and frame timing.
 use super::*;
 
-/// Install a system opened in the background (scene, annotations, models follow it).
-pub(super) fn open_system(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, models: Option<ResMut<crate::models::ModelLibrary>>) {
-    if builder.open.job.is_some() {
-        builder.finish_open(&mut scene, models.map(|m| m.into_inner()));
+/// Install a system opened in the background (scene, annotations, models
+/// follow it); the Build document becomes the new file and the old one's
+/// selection items go (`picked::follow_open`).
+pub(super) fn open_system(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, models: Option<ResMut<crate::models::ModelLibrary>>, mut selection: ResMut<Selection>, mut registry: ResMut<DocumentRegistry>) {
+    if builder.open.job.is_some() && builder.finish_open(&mut scene, models.map(|m| m.into_inner())) {
+        picked::follow_open(&mut selection, &mut registry, builder.path());
     }
 }
 

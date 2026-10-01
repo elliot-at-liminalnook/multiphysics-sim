@@ -54,6 +54,7 @@ use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadInputFocus};
 use crate::cad::panel::{CadButton, NameDraft, edit_blocked, patch};
+use crate::cad::selection::{CadItems, CadSelection};
 use crate::cad::transform::num;
 use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, size, wrap};
 use bevy::input::ButtonState;
@@ -405,6 +406,7 @@ pub(in crate::cad) fn entry(
     focus: Option<ResMut<CadInputFocus>>,
     name: Option<ResMut<NameDraft>>,
     mut out: MessageWriter<Act<CadAction>>,
+    selection: CadSelection,
 ) {
     let Some(mut doc) = doc else {
         events.clear();
@@ -448,7 +450,7 @@ pub(in crate::cad) fn entry(
             name.refusal = None;
         }
     } else if draft.is_some() {
-        let selected = doc.selected().map(str::to_string);
+        let selected = selection.items().first_node().map(str::to_string);
         let elsewhere = !on_field && buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left));
         if naming || elsewhere || draft.as_ref().is_some_and(|d| selected.as_deref() != Some(d.node.as_str())) {
             draft = None;

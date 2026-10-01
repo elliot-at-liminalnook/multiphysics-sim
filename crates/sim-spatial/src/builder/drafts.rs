@@ -9,7 +9,19 @@ impl Builder {
         self.panel_dirty = true;
     }
 
+    /// Commit the open draft (a draft that needs the selection, Position or
+    /// Rename, is committed through [`Builder::commit_picking`]).
     pub(super) fn commit_input(&mut self) {
+        self.commit(None);
+    }
+
+    /// Commit the open draft with the selection: Position moves the selected
+    /// instances, Rename selects the new name.
+    pub(super) fn commit_picking(&mut self, pick: &mut Picked) {
+        self.commit(Some(pick));
+    }
+
+    fn commit(&mut self, mut pick: Option<&mut Picked>) {
         let original=self.input.clone();
         let Some(TextInput { purpose, buffer }) = self.input.take() else { return };
         self.panel_dirty = true;
@@ -20,7 +32,7 @@ impl Builder {
             Purpose::GridSpacing=>text.parse::<f32>().map_err(|_|"Enter spacing in metres".into()).and_then(|spacing_m|{let mut grid=self.grid();grid.spacing_m=spacing_m;self.set_grid(grid)}),
             Purpose::GridOrigin|Purpose::Position=>{
                 let p: Result<Vec<f32>,_>=text.split_whitespace().map(str::parse).collect();
-                match p {Ok(p) if p.len()==3=>{let position=[p[0],p[1],p[2]];if purpose==Purpose::GridOrigin {let mut grid=self.grid();grid.origin_m=position;self.set_grid(grid)}else{self.display_move(self.selected.iter().cloned().collect(),position,false,false,None).map(|_|())}},_=>Err("Enter three coordinates in metres: x y z".into())}
+                match p {Ok(p) if p.len()==3=>{let position=[p[0],p[1],p[2]];if purpose==Purpose::GridOrigin {let mut grid=self.grid();grid.origin_m=position;self.set_grid(grid)}else{match pick.as_deref() {Some(pick)=>self.display_move(pick.names().into_iter().collect(),position,false,false,None).map(|_|()),None=>Err("Position moves the selection: commit it from the inspector".into())}}},_=>Err("Enter three coordinates in metres: x y z".into())}
             }
 
             Purpose::Filter => {
@@ -42,8 +54,10 @@ impl Builder {
             }
             Purpose::Rename(name) => {
                 let r = self.apply("Rename", vec![SystemCommand::RenameInstance { at: self.level.clone(), name, new_name: text.clone() }]).map(|_| ());
-                if r.is_ok() {
-                    self.selected = BTreeSet::from([text]);
+                // The renamed instance stays selected under its new name.
+                if let (Ok(()), Some(pick)) = (&r, pick.as_deref_mut()) {
+                    pick.sync(self);
+                    let _ = pick.set([text]);
                 }
                 r
             }

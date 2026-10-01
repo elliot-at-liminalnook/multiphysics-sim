@@ -220,7 +220,7 @@ pub(super) fn tool(
     }
     let Some(face) = hit.triangle.and_then(|t| meshes.face_at(&hit.node, t, shown)) else { return };
     // RoboCAD: the selection becomes the pressed face.
-    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![SelectionItem(hit.node.clone(), "face".into(), face)], extend: false, toggle: false }));
+    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![SelectionItem(hit.node.clone(), "face".into(), face)], extend: false, toggle: false, picked_at: Some(shown) }));
     let info = topology.get(&hit.node).and_then(|t| t.faces.iter().find(|f| f.index == face).cloned());
     doc.tool_state.push = Some(Target { node: hit.node.clone(), face, revision: shown, info: info.clone() });
     let Some(info) = info else {

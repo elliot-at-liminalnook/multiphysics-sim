@@ -3,7 +3,7 @@
 //! the shared `sim-system` commands and runs it on the shared runtime in a
 //! background thread; it contains no physics of its own.
 mod animation;
-pub(crate) mod annotate;
+pub(crate) mod annotations;
 pub(crate) mod camera;
 pub mod app;
 pub(crate) mod inspect;

@@ -313,7 +313,7 @@ mod tests {
         assert!(!check.is_current() && check.issue.is_none());
         let m = check.models.iter().find_map(|m| m.mismatch.as_ref()).unwrap();
         assert!(m.have_hash.is_some() && m.accepted_hash.is_some() && m.have_hash != m.accepted_hash, "{m:?}");
-        let state = b.state_json();
+        let state = b.state_json(&Default::default());
         assert_eq!(state["actuators"]["checks"][0]["models"][0]["status"], "stale");
         assert!(state["actuators"]["registry"]["families"].as_array().unwrap().iter().any(|f| f["parameters"].as_array().unwrap().iter().any(|p| p["uncertainty"].is_null())));
 

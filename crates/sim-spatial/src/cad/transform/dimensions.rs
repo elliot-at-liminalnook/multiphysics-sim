@@ -19,6 +19,7 @@ use crate::cad::actions::{CadAction, Dimension};
 use crate::cad::document::{CadDocument, CadTool, SelectMode};
 use crate::cad::measure::{face_angle, face_distance, parallel};
 use crate::cad::mesh::{CadBody, CadMeshes};
+use crate::cad::selection::CadItems;
 use crate::cad::topology::{CadTopology, NodeTopology};
 use crate::cad::view::CadView;
 use bevy::picking::hover::HoverMap;
@@ -50,15 +51,15 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-/// The selection's live dimensions.
-pub fn live(doc: &CadDocument, topology: Option<&CadTopology>, meshes: Option<&CadMeshes>) -> Vec<Field> {
+/// The live dimensions of `selection` (the shared selection's CAD items).
+pub fn live(doc: &CadDocument, selection: &[SelectionItem], topology: Option<&CadTopology>, meshes: Option<&CadMeshes>) -> Vec<Field> {
     let Some(topology) = topology else { return Vec::new() };
     // Indices first seen at an older revision may name other faces now (an edit can renumber them): no live field to commit against.
-    if super::selection_revision(doc) != doc.shown_revision() {
+    if super::selection_revision(doc, selection) != doc.shown_revision() {
         return Vec::new();
     }
     let mut out = Vec::new();
-    let refs: Vec<(String, &FaceInfo)> = doc.selected_of("face").into_iter().filter_map(|(node, index)| topology.get(&node)?.faces.iter().find(|f| f.index == index).map(|f| (node, f))).collect();
+    let refs: Vec<(String, &FaceInfo)> = selection.of_kind("face").into_iter().filter_map(|(node, index)| topology.get(&node)?.faces.iter().find(|f| f.index == index).map(|f| (node, f))).collect();
     for (node, f) in &refs {
         let name = doc.node_name(node);
         let radius = f.radius.filter(|r| *r != 0.0);
@@ -87,7 +88,7 @@ pub fn live(doc: &CadDocument, topology: Option<&CadTopology>, meshes: Option<&C
         }
     }
     if let Some(meshes) = meshes {
-        for (node, index) in doc.selected_of("edge") {
+        for (node, index) in selection.of_kind("edge") {
             let Some(t) = topology.get(&node) else { continue };
             let Some(r) = t.edges.iter().find(|e| e.index == index).and_then(|e| e.radius).filter(|r| *r != 0.0) else { continue };
             let faces = crate::cad::selection::faces_of_edge(meshes, topology, &node, index);
@@ -120,10 +121,10 @@ pub fn edit_at(t: &NodeTopology, node: &str, face: i64) -> Option<Field> {
 
 /// Keep a double-clicked entry only while its face is the selection (once
 /// the click's selection has landed), the tool is Select and the revision
-/// is the one it was read at.
-pub fn keep_entry(doc: &mut CadDocument) {
+/// is the one it was read at (`selection`: the shared selection's CAD items).
+pub fn keep_entry(doc: &mut CadDocument, selection: &[SelectionItem]) {
     let Some(entry) = &doc.tool_state.dimension else { return };
-    let here = doc.selection.len() == 1 && doc.selection[0] == SelectionItem(entry.node.clone(), "face".into(), entry.face);
+    let here = selection.len() == 1 && selection[0] == SelectionItem(entry.node.clone(), "face".into(), entry.face);
     let matched = entry.matched;
     let keep = doc.tool == CadTool::Select && entry.revision == doc.shown_revision() && (here || !matched);
     if !keep {
@@ -182,7 +183,7 @@ pub(super) fn double_click(
         return;
     };
     // RoboCAD selects the face either way.
-    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![SelectionItem(hit.node.clone(), "face".into(), face)], extend: false, toggle: false }));
+    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![SelectionItem(hit.node.clone(), "face".into(), face)], extend: false, toggle: false, picked_at: Some(shown) }));
     let Some(field) = edit_at(t, &hit.node, face) else { return };
     let revision = doc.shown_revision();
     doc.tool_state.dimension = Some(Entry { node: hit.node, face, revision, field, matched: false });

@@ -99,11 +99,11 @@ pub(super) fn recordable(scene: &SpatialScene, pinned: &[String]) -> Vec<String>
 }
 
 /// The observables the dock shows now.
-fn plotted(builder: &Builder, scene: &SpatialScene) -> Vec<(String, bool)> {
+fn plotted(builder: &Builder, scene: &SpatialScene, only: Option<String>) -> Vec<(String, bool)> {
     if !builder.graphs.pinned.is_empty() {
         return builder.graphs.pinned.iter().map(|p| (p.clone(), true)).collect();
     }
-    if let Some(name) = builder.only_selected() {
+    if let Some(name) = only {
         let found = candidates(scene, &builder.full_path(&name));
         // One chart per quantity kind reads better than three speeds.
         let mut kinds = BTreeSet::new();
@@ -124,7 +124,7 @@ fn plotted(builder: &Builder, scene: &SpatialScene) -> Vec<(String, bool)> {
     recordable(scene, &[]).into_iter().take(3).map(|id| (id, false)).collect()
 }
 
-pub(super) fn update(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mut images: ResMut<Assets<Image>>) {
+pub(super) fn update(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mut images: ResMut<Assets<Image>>, selection: Res<Selection>, registry: Res<DocumentRegistry>) {
     let dock = if builder.graphs.visible { DOCK } else { 0. };
     if scene.builder_dock != dock {
         scene.builder_dock = dock;
@@ -145,7 +145,7 @@ pub(super) fn update(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: R
         return;
     }
     builder.graphs.drawn_study = None;
-    let ids = plotted(&builder, &scene);
+    let ids = plotted(&builder, &scene, picked::only(&picked::names(&selection, &registry)));
     let mut charts = Vec::new();
     for (slot, (id, pinned)) in ids.iter().enumerate().take(MAX_CHARTS) {
         let Some(o) = scene.description.observables.get(id) else { continue };

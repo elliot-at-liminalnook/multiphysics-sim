@@ -52,7 +52,7 @@ fn calibration_review_loads_tracked_archive_and_names_bad_paths() {
     assert!(b.calibration_request(None).unwrap_err().contains("Still loading"));
     wait(&mut b);
     b.set_calibration_filter(Some(SplitFilter::HeldOut), Some(OutcomeFilter::Pass));
-    let state = b.state_json();
+    let state = b.state_json(&Default::default());
     let c = &state["calibration_review"];
     assert_eq!(c["phase"], "loaded");
     assert_eq!(c["path"], dir.display().to_string());

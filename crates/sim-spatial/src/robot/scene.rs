@@ -33,6 +33,8 @@ pub(super) fn receive(
     rules: Single<&crate::camera::OrbitRules, With<RobotCamera>>,
     mut redraw: MessageWriter<bevy::window::RequestRedraw>,
     fonts: Res<UiFonts>,
+    mut selection: ResMut<Selection>,
+    mut registry: ResMut<DocumentRegistry>,
 ) {
     let started = match view.status {
         Status::Loading(t) => t,
@@ -82,7 +84,7 @@ pub(super) fn receive(
             FileModel::Physical(loaded) => (Ok((*loaded, None)), reload),
             FileModel::Planar(loaded) => {
                 let k = Kit { f: &fonts };
-                install_planar(&mut commands, &old, &mut view, *list, &k, *loaded, reload, started);
+                install_planar(&mut commands, &old, &mut view, *list, &k, *loaded, reload, started, (&mut *selection, &mut *registry));
                 return;
             }
         }
@@ -145,7 +147,7 @@ pub(super) fn receive(
         .map(|(i, l)| {
             let name = if view.triangles[i] > 0 { l.name.clone() } else { format!("{}  (no collision geometry)", l.name) };
             // A one-line selectable row; `highlight` sets its `Tint` from the selection
-            // (`view.selected` still indexes the previous model here).
+            // (found again by name below; until then it indexes the previous model).
             commands
                 .spawn((
                     Button,
@@ -163,7 +165,6 @@ pub(super) fn receive(
     commands.entity(*list).add_children(&rows);
     // A file's previous run context is discarded (its thread stops) and the
     // fresh one continues its generation; a preset opens a new view.
-    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
     // A reload that turns a planar (v2) file into a physical one: the planar run
     // is joined off the UI thread; its speed and contacts choice carry over.
     let planar = view.planar.take().map(|p| (p.run.speed_scale(), p.contacts, p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == planar::PlanarPhase::Running, p));
@@ -190,7 +191,8 @@ pub(super) fn receive(
     }
     let generation = run.generation();
     view.run = Some(run);
-    view.selected = kept.as_ref().and_then(|n| loaded.model.links.iter().position(|l| &l.name == n));
+    // The selected link is kept by name across a reload (`picked::reloaded`).
+    let kept = picked::reloaded(&mut selection, &mut registry, reload.is_some(), |n| loaded.model.links.iter().position(|l| l.name == n));
     view.model = Some(loaded.model);
     view.notes = loaded.notes;
     view.cad_link = Some(loaded.cad_link);
@@ -203,12 +205,12 @@ pub(super) fn receive(
     if let Some((trigger, _)) = reload {
         let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
         let run = if run_reset { "run reset" } else { "no run to reset" };
-        let selection = match (&kept, view.selected) {
-            (Some(n), Some(_)) => format!("; selection kept: {n}"),
-            (Some(n), None) => format!("; selection cleared: link `{n}` is not in the new file"),
-            (None, _) => String::new(),
+        let note = match &kept {
+            Some((n, true)) => format!("; selection kept: {n}"),
+            Some((n, false)) => format!("; selection cleared: link `{n}` is not in the new file"),
+            None => String::new(),
         };
-        view.notice = Some(format!("reloaded: {reason}; {run}; generation {generation}{selection}"));
+        view.notice = Some(format!("reloaded: {reason}; {run}; generation {generation}{note}"));
         if let Some(s) = view.source.as_mut() {
             s.run_reset = Some(run_reset);
         }
@@ -232,11 +234,11 @@ fn install_planar(
     loaded: planar::PlanarLoaded,
     reload: Option<(ReloadTrigger, f64)>,
     started: std::time::Instant,
+    (selection, registry): (&mut Selection, &mut DocumentRegistry),
 ) {
     for entity in old {
         commands.entity(entity).despawn();
     }
-    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
     let (mut speed, mut contacts, mut generation, mut run_reset, mut joint) = (1.0, true, 0, false, (0, None));
     // A planar file that was running keeps running after a reload (the CAD
     // scene's edit, save, watch loop): the new run is started once built.
@@ -286,7 +288,8 @@ fn install_planar(
         })
         .collect();
     commands.entity(list).add_children(&rows);
-    view.selected = kept.as_ref().and_then(|n| loaded.model.bodies.iter().position(|b| &b.name == n));
+    // The selected link or body is kept by name across a reload (`picked::reloaded`).
+    let kept = picked::reloaded(selection, registry, reload.is_some(), |n| loaded.model.bodies.iter().position(|b| b.name == n));
     let mut planar = PlanarView::new(loaded, generation, speed, contacts, reload.is_none());
     // Carried by name: the new file's joint order may differ (resolved in planar_sync once built).
     (planar.selected_joint, planar.pending_joint) = joint;
@@ -305,12 +308,12 @@ fn install_planar(
             (true, false) => "run reset",
             (false, false) => "no run to reset",
         };
-        let selection = match (&kept, view.selected) {
-            (Some(n), Some(_)) => format!("; selection kept: {n}"),
-            (Some(n), None) => format!("; selection cleared: `{n}` is not a body of the new file"),
-            (None, _) => String::new(),
+        let note = match &kept {
+            Some((n, true)) => format!("; selection kept: {n}"),
+            Some((n, false)) => format!("; selection cleared: `{n}` is not a body of the new file"),
+            None => String::new(),
         };
-        view.notice = Some(format!("reloaded ({}): {reason}; {run}; generation {generation}{selection}", planar::FORMAT_NAME));
+        view.notice = Some(format!("reloaded ({}): {reason}; {run}; generation {generation}{note}", planar::FORMAT_NAME));
         if let Some(s) = view.source.as_mut() {
             s.run_reset = Some(run_reset);
         }
@@ -411,6 +414,8 @@ pub(super) fn wanted_area(graphs_visible: bool) -> ViewArea {
 /// `Look`s are painted by `ui_kit::repaint_buttons`).
 pub(super) fn highlight(
     view: Res<RobotView>,
+    selection: Res<Selection>,
+    registry: Res<DocumentRegistry>,
     materials: Res<Materials>,
     mut meshes: Query<(&LinkMesh, &mut MeshMaterial3d<StandardMaterial>)>,
     mut rows: Query<(&LinkRow, &mut Tint)>,
@@ -427,9 +432,10 @@ pub(super) fn highlight(
     for (tab, mut look) in &mut tabs {
         look.set_if_neq(Look::Tab(view.section == tab.0));
     }
+    let selected = picked::link(&selection, &registry);
     for (link, mut material) in &mut meshes {
         let mirrored = view.mirror.as_ref().is_some_and(|m| m.tinted.contains(&link.0));
-        let want = match (view.selected == Some(link.0), view.stress.painting()) {
+        let want = match (selected == Some(link.0), view.stress.painting()) {
             (true, false) => &materials.selected,
             (false, _) if mirrored => &materials.mirrored,
             (false, false) => &materials.normal,
@@ -441,7 +447,7 @@ pub(super) fn highlight(
         }
     }
     for (row, mut tint) in &mut rows {
-        tint.set_if_neq(Tint::selectable(view.selected == Some(row.0)));
+        tint.set_if_neq(Tint::selectable(selected == Some(row.0)));
     }
 }
 

@@ -73,6 +73,7 @@ impl Builder {
         expected_revision: Option<u64>,
         scene: &mut SpatialScene,
         orbit: &mut Orbit,
+        pick: &mut Picked,
     ) -> Result<serde_json::Value, String> {
         if expected_revision.is_some_and(|r| r != self.document.revision) {
             return Err("stale system revision; read system_state".into());
@@ -88,14 +89,14 @@ impl Builder {
                 // The "‹ lesson" control never gets here: `system_actions` sends it
                 // to the mode switch, as its button does (`activates_lessons`).
                 let c = self.activated(&id, ui_revision)?;
-                dispatch(self, scene, orbit, c.action);
+                dispatch(self, scene, orbit, pick, c.action);
             }
-            UiAction::Tab { tab } => dispatch(self, scene, orbit, BuildAction::Tab(tab)),
+            UiAction::Tab { tab } => dispatch(self, scene, orbit, pick, BuildAction::Tab(tab)),
             UiAction::Mode { mode } => {
                 if self.input.is_some() {
                     return Err("finish or cancel the current draft first".into());
                 }
-                dispatch(self, scene, orbit, BuildAction::SetMode(mode));
+                dispatch(self, scene, orbit, pick, BuildAction::SetMode(mode));
             }
             UiAction::OpenThread { id } => {
                 if !self.document.discussions.threads.contains_key(&id) {
@@ -105,6 +106,7 @@ impl Builder {
                     self,
                     scene,
                     orbit,
+                    pick,
                     BuildAction::Discussion(discussion::Action::Open(id)),
                 );
             }
@@ -120,7 +122,7 @@ impl Builder {
                     if self.instance_for_component(&component).is_none() {
                         return Err("part is outside the current level; use system_level".into());
                     }
-                    click_part(self, &component, add);
+                    click_part(self, pick, &component, add);
                 }
             }
             UiAction::Annotate { target, pin_m } => {
@@ -150,9 +152,9 @@ impl Builder {
                         self.input.as_ref().unwrap().purpose,
                         Purpose::Comment | Purpose::ThreadTitle
                     ) {
-                        discussion::submit(self, scene, orbit);
+                        discussion::submit(self, scene, orbit, pick);
                     } else {
-                        self.commit_input();
+                        self.commit_picking(pick);
                     }
                 }
             }
@@ -163,7 +165,7 @@ impl Builder {
                         "draft changed; read system_state.ui.draft before cancelling".into(),
                     );
                 }
-                discussion::act(self, scene, orbit, discussion::Action::CancelDraft);
+                discussion::act(self, scene, orbit, pick, discussion::Action::CancelDraft);
             }
             UiAction::Scroll { offset_y } => {
                 if !offset_y.is_finite() {
@@ -176,7 +178,7 @@ impl Builder {
         if let Some(e) = &self.action_error {
             return Err(e.clone());
         }
-        Ok(self.state_json())
+        Ok(pick.state(self))
     }
     fn begin_annotation_target(
         &mut self,
@@ -218,6 +220,8 @@ pub(super) fn collect(
     controls: Query<(Entity, &BuildAction, Option<&Enabled>), With<Button>>,
     children: Query<&Children>,
     texts: Query<&Text>,
+    selection: Res<Selection>,
+    registry: Res<DocumentRegistry>,
 ) {
     if b.panel_dirty {
         return;
@@ -267,7 +271,7 @@ pub(super) fn collect(
             .or_insert(candidate);
     }
     let digest = hash(
-        &serde_json::json!({"revision":b.document.revision,"level":b.level,"selected":b.selected,"tab":b.tab,"mode":b.mode,"controls":items}),
+        &serde_json::json!({"revision":b.document.revision,"level":b.level,"selected":picked::names(&selection, &registry),"tab":b.tab,"mode":b.mode,"controls":items}),
     );
     if digest != b.ui_api.digest {
         b.ui_api.revision += 1;
@@ -311,6 +315,8 @@ mod tests {
             home: false,
             ..Default::default()
         };
+        let (mut selection, mut documents) = super::super::test_support::test_selection(&b);
+        let mut pick = Picked::new(&mut selection, &mut documents);
         b.ui_request(
             UiAction::Mode {
                 mode: Mode::Connect,
@@ -318,6 +324,7 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         b.ui_request(
@@ -329,10 +336,11 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         assert_eq!(b.port_menu.as_deref(), Some("motor"));
-        assert!(b.selected.contains("motor"));
+        assert!(pick.names().contains("motor"));
         let before = b.document.clone();
         b.ui_request(
             UiAction::Annotate {
@@ -342,6 +350,7 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         assert_eq!(b.tab, Tab::Discussions);
@@ -354,7 +363,8 @@ mod tests {
                 },
                 None,
                 &mut scene,
-                &mut orbit
+                &mut orbit,
+                &mut pick
             )
             .is_err()
         );
@@ -369,6 +379,7 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         let id = b.discussion.selected.clone().unwrap();
@@ -388,12 +399,13 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         assert_eq!(b.tab, Tab::Discussions);
         // Actual ECS controls are discoverable; disabled and stale controls fail.
         let mut app = App::new();
-        app.insert_resource(b);
+        app.insert_resource(b).insert_resource(Selection::default()).insert_resource(crate::document::DocumentRegistry::default());
         app.add_systems(Update, collect);
         app.world_mut().spawn((
             Button,
@@ -419,7 +431,8 @@ mod tests {
                 },
                 None,
                 &mut scene,
-                &mut orbit
+                &mut orbit,
+                &mut pick
             )
             .is_err()
         );
@@ -432,7 +445,8 @@ mod tests {
                 },
                 None,
                 &mut scene,
-                &mut orbit
+                &mut orbit,
+                &mut pick
             )
             .is_err()
         );
@@ -444,6 +458,7 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         assert_eq!(b.input.as_ref().unwrap().purpose, Purpose::Comment);
@@ -456,6 +471,7 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         assert!(
@@ -465,7 +481,8 @@ mod tests {
                 },
                 None,
                 &mut scene,
-                &mut orbit
+                &mut orbit,
+                &mut pick
             )
             .is_err()
         );
@@ -477,6 +494,7 @@ mod tests {
             None,
             &mut scene,
             &mut orbit,
+            &mut pick,
         )
         .unwrap();
         assert!(b.input.is_none());

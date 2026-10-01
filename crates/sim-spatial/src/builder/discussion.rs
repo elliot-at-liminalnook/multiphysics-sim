@@ -1,7 +1,13 @@
-//! Builder discussions: shared persisted commands, local drafts and reversible inspection.
+//! System discussions: the builder's thread adapter for
+//! `crate::annotations` (`sim_system::display` threads, saved inside the
+//! system document by the builder's own save path, undone with the system's
+//! undo), the `system_discussions` request, local drafts and reversible
+//! inspection of what a thread is about.
 use super::*;
+use crate::annotations::{self, Committed, ThreadOp, ThreadSource};
 use serde::{Deserialize, Serialize};
-use sim_system::display::{Comment, Target, Thread};
+use sim_annotate::ThreadCommand;
+use sim_system::display::{Target, Thread};
 
 #[derive(Default)]
 pub(super) struct Editor {
@@ -18,7 +24,9 @@ pub(super) struct Editor {
     pub error: Option<String>,
     pub editing: Option<String>,
     pub original_body: Option<String>,
-    pub prior: Option<(sim_inspect::annotations::PhysicalView, SelectionTarget)>,
+    /// What an inspection replaced, for Back: the camera, the builder's
+    /// selected names and what the scene showed.
+    pub prior: Option<(sim_inspect::annotations::PhysicalView, BTreeSet<String>, SelectionTarget)>,
 }
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -120,22 +128,6 @@ pub enum Request {
 fn context() -> String {
     "context".into()
 }
-pub(super) fn stamp() -> String {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs()
-        .to_string()
-}
-fn uid(prefix: &str) -> String {
-    format!(
-        "{prefix}-{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos()
-    )
-}
 fn view(scene: &SpatialScene, o: &Orbit) -> sim_inspect::annotations::PhysicalView {
     // The view's heading now: in the trackball the stored yaw/pitch are stale,
     // and the saved view is a turntable pose (`restore` cuts to it).
@@ -177,6 +169,47 @@ pub fn selection(scene: &SpatialScene, paths: &[String]) -> SelectionTarget {
         SelectionTarget::Components { ids }
     }
 }
+/// System discussions as a thread source: the builder's document holds
+/// them, each edit is one system command through the builder's store (one
+/// undo step), and an anchor is an instance by lineage.
+pub(in crate::builder) struct SystemThreads<'a> {
+    pub b: &'a mut Builder,
+}
+impl ThreadSource for SystemThreads<'_> {
+    type Anchor = Target;
+    const THREAD_ID: &'static str = "thread";
+    const COMMENT_ID: &'static str = "comment";
+    fn threads(&self) -> BTreeMap<String, Thread> {
+        self.b.document.discussions.threads.clone()
+    }
+    fn thread(&self, id: &str) -> Option<Thread> {
+        self.b.document.discussions.threads.get(id).cloned()
+    }
+    /// The same instance, by identity rather than by name.
+    fn same(a: &Target, b: &Target) -> bool {
+        a.lineage == b.lineage
+    }
+    /// `sim_system`'s thread commands validate with the same shared
+    /// function (and bind lineage first); their errors keep their wording.
+    fn validate(&self, _thread: &Thread) -> Result<(), String> {
+        Ok(())
+    }
+    fn commit(&mut self, label: &str, command: ThreadCommand<Target>) -> Result<Committed, String> {
+        let command = match command {
+            ThreadCommand::PutThread { thread } => SystemCommand::PutThread { thread },
+            ThreadCommand::DeleteThread { id } => SystemCommand::DeleteThread { id },
+            ThreadCommand::AddComment { thread, comment } => SystemCommand::AddComment { thread, comment },
+            ThreadCommand::Undo | ThreadCommand::Redo => return Err("system discussions are undone with the system's Undo".into()),
+            edit => {
+                let thread = annotations::subject(&edit).and_then(|id| self.thread(id)).ok_or("unknown thread")?;
+                SystemCommand::PutThread { thread: annotations::edited(thread, edit)? }
+            }
+        };
+        self.b.apply(label, vec![command])?;
+        Ok(Committed::Done)
+    }
+}
+
 impl Builder {
     fn targets(&self, paths: Vec<String>) -> Result<Vec<Target>, String> {
         paths
@@ -184,20 +217,21 @@ impl Builder {
             .map(|p| sim_system::display::bind(&self.document, p).map_err(|e| e.to_string()))
             .collect()
     }
+    /// `system_discussions` (and the Notes tab's actions): reads answer at
+    /// once; edits are `ThreadOp`s through the annotations service.
     pub(crate) fn discussion_request(
         &mut self,
         request: Request,
         expected: Option<u64>,
         scene: &mut SpatialScene,
         orbit: &mut Orbit,
+        pick: &mut Picked,
     ) -> Result<serde_json::Value, String> {
         use serde_json::json;
         if expected.is_some_and(|r| r != self.document.revision) {
             return Err("stale discussion revision; read system_discussions again".into());
         }
-        let mut commands = vec![];
-        let mut changed = None;
-        match request {
+        let op = match request {
             Request::List {
                 target,
                 resolved,
@@ -221,16 +255,22 @@ impl Builder {
                 return Ok(json!({"highlighted":scene.note_hover}));
             }
             Request::Back => {
-                if let Some((v, s)) = self.discussion.prior.take() {
+                if let Some((v, names, shown)) = self.discussion.prior.take() {
                     restore(scene, orbit, v);
-                    let _ = scene.set_selection(s);
+                    if pick.document().is_some() {
+                        let _ = pick.set(names);
+                    }
+                    let _ = scene.set_selection(shown);
+                    // The exact parts restored stay shown: `picked::track`
+                    // would re-project whole instances over them.
+                    self.seen_selection = Some(pick.selection.changed);
                 }
                 self.panel_dirty = true;
                 return Ok(json!({"restored":true}));
             }
             Request::InspectTarget { target } => {
-                self.inspect(scene, orbit, &[target], true)?;
-                return Ok(json!({"selection":scene.selection}));
+                self.inspect(scene, orbit, pick, &[target], true)?;
+                return Ok(json!({"selection":scene.shown}));
             }
             Request::Show { id, mode } => {
                 let t = self
@@ -248,9 +288,9 @@ impl Builder {
                     .collect::<Vec<_>>();
                 match mode.as_str() {
                     "highlight" => scene.note_hover = selection(scene, &paths),
-                    "parts" => self.inspect(scene, orbit, &paths, true)?,
+                    "parts" => self.inspect(scene, orbit, pick, &paths, true)?,
                     "context" => {
-                        self.inspect(scene, orbit, &paths, false)?;
+                        self.inspect(scene, orbit, pick, &paths, false)?;
                         if let Some(v) = t.view {
                             restore(scene, orbit, v);
                         }
@@ -262,7 +302,12 @@ impl Builder {
                     self.tab = Tab::Discussions;
                 }
                 self.panel_dirty = true;
-                return Ok(json!({"selection":scene.selection,"mode":mode}));
+                return Ok(json!({"selection":scene.shown,"mode":mode}));
+            }
+            Request::ImportLegacy => {
+                self.import_notes(scene)?;
+                self.panel_dirty = true;
+                return Ok(json!({"revision":self.document.revision,"thread":null}));
             }
             Request::Create {
                 title,
@@ -271,26 +316,8 @@ impl Builder {
                 author,
                 pin_m,
             } => {
-                let id = uid("thread");
                 let links = self.inline_links(&body)?;
-                let t = Thread {
-                    id: id.clone(),
-                    title,
-                    targets: self.targets(targets)?,
-                    resolved: false,
-                    comments: vec![Comment {
-                        id: uid("comment"),
-                        author,
-                        body,
-                        created_at: stamp(),
-                        edited_at: None,
-                        links,
-                    }],
-                    pin_m,
-                    view: Some(view(scene, orbit)),
-                };
-                changed = Some(id);
-                commands.push(SystemCommand::PutThread { thread: t });
+                ThreadOp::Create { title, targets: self.targets(targets)?, body, author, links, pin_m, view: Some(view(scene, orbit)) }
             }
             Request::Reply {
                 id,
@@ -300,121 +327,20 @@ impl Builder {
             } => {
                 let mut refs = self.targets(links)?;
                 refs.extend(self.inline_links(&body)?);
-                commands.push(SystemCommand::AddComment {
-                    thread: id.clone(),
-                    comment: Comment {
-                        id: uid("comment"),
-                        author,
-                        body,
-                        created_at: stamp(),
-                        edited_at: None,
-                        links: refs,
-                    },
-                });
-                changed = Some(id);
+                ThreadOp::Reply { thread: id, body, author, links: refs }
             }
-            Request::Delete { id } => commands.push(SystemCommand::DeleteThread { id }),
-            Request::ImportLegacy => {
-                for note in scene.note_document().notes.values() {
-                    let id = format!("legacy-{}", note.id);
-                    if self.document.discussions.threads.contains_key(&id) {
-                        continue;
-                    }
-                    let details = note
-                        .targets
-                        .resolve(&scene.description)
-                        .map_err(|e| e.to_string())?;
-                    let targets = self.targets(details.components.into_iter().collect())?;
-                    let links = note
-                        .links
-                        .iter()
-                        .filter_map(|l| match &l.target {
-                            sim_inspect::annotations::LinkTarget::Selection { target } => {
-                                target.resolve(&scene.description).ok()
-                            }
-                            _ => None,
-                        })
-                        .flat_map(|d| d.components)
-                        .collect();
-                    commands.push(SystemCommand::PutThread {
-                        thread: Thread {
-                            id,
-                            title: note.label.clone(),
-                            targets,
-                            resolved: false,
-                            comments: vec![Comment {
-                                id: uid("legacy-comment"),
-                                author: "Legacy note".into(),
-                                body: if note.text.is_empty() {
-                                    note.label.clone()
-                                } else {
-                                    note.text.clone()
-                                },
-                                created_at: stamp(),
-                                edited_at: None,
-                                links: self.targets(links)?,
-                            }],
-                            pin_m: None,
-                            view: None,
-                        },
-                    });
-                }
+            Request::Delete { id } => ThreadOp::Delete { thread: id },
+            Request::EditComment { id, comment, body } => {
+                let links = self.inline_links(&body)?;
+                ThreadOp::EditComment { thread: id, comment, body, links: Some(links) }
             }
-            edit => {
-                let id = match &edit {
-                    Request::EditComment { id, .. }
-                    | Request::DeleteComment { id, .. }
-                    | Request::Resolve { id, .. }
-                    | Request::Link { id, .. }
-                    | Request::Pin { id, .. }
-                    | Request::Title { id, .. } => id,
-                    _ => unreachable!(),
-                };
-                let mut t = self
-                    .document
-                    .discussions
-                    .threads
-                    .get(id)
-                    .cloned()
-                    .ok_or("unknown thread")?;
-                match edit {
-                    Request::EditComment { comment, body, .. } => {
-                        let links = self.inline_links(&body)?;
-                        let c = t
-                            .comments
-                            .iter_mut()
-                            .find(|c| c.id == comment)
-                            .ok_or("unknown comment")?;
-                        c.body = body;
-                        c.links = links;
-                        c.edited_at = Some(stamp());
-                    }
-                    Request::DeleteComment { comment, .. } => {
-                        let old = t.comments.len();
-                        t.comments.retain(|c| c.id != comment);
-                        if old == t.comments.len() {
-                            return Err("unknown comment".into());
-                        }
-                    }
-                    Request::Resolve { resolved, .. } => t.resolved = resolved,
-                    Request::Link { targets, .. } => {
-                        for target in self.targets(targets)? {
-                            if !t.targets.iter().any(|r| r.lineage == target.lineage) {
-                                t.targets.push(target);
-                            }
-                        }
-                    }
-                    Request::Pin { pin_m, .. } => t.pin_m = pin_m,
-                    Request::Title { title, .. } => t.title = title,
-                    _ => unreachable!(),
-                }
-                changed = Some(t.id.clone());
-                commands.push(SystemCommand::PutThread { thread: t });
-            }
-        }
-        if !commands.is_empty() {
-            self.apply("Edit discussion", commands)?;
-        }
+            Request::DeleteComment { id, comment } => ThreadOp::DeleteComment { thread: id, comment },
+            Request::Resolve { id, resolved } => ThreadOp::Resolve { thread: id, resolved },
+            Request::Link { id, targets } => ThreadOp::Link { thread: id, targets: self.targets(targets)? },
+            Request::Pin { id, pin_m } => ThreadOp::Pin { thread: id, pin_m },
+            Request::Title { id, title } => ThreadOp::Retitle { thread: id, title },
+        };
+        let changed = annotations::apply(&mut SystemThreads { b: self }, "Edit discussion", op)?.thread;
         if self.input.is_none() {
             if let Some(id) = &changed {
                 self.discussion.selected = Some(id.clone());
@@ -424,6 +350,46 @@ impl Builder {
         Ok(
             json!({"revision":self.document.revision,"thread":changed.as_ref().and_then(|id|self.document.discussions.threads.get(id))}),
         )
+    }
+    /// "Import existing notes": each Inspect note of the scene's sidecar not
+    /// imported yet becomes a thread on its parts (one undo step).
+    fn import_notes(&mut self, scene: &SpatialScene) -> Result<(), String> {
+        let mut commands = vec![];
+        for note in scene.note_document().notes.values() {
+            let id = format!("legacy-{}", note.id);
+            if self.document.discussions.threads.contains_key(&id) {
+                continue;
+            }
+            let details = note
+                .targets
+                .resolve(&scene.description)
+                .map_err(|e| e.to_string())?;
+            let targets = self.targets(details.components.into_iter().collect())?;
+            let links = note
+                .links
+                .iter()
+                .filter_map(|l| match &l.target {
+                    sim_inspect::annotations::LinkTarget::Selection { target } => {
+                        target.resolve(&scene.description).ok()
+                    }
+                    _ => None,
+                })
+                .flat_map(|d| d.components)
+                .collect();
+            let comment = annotations::comment(
+                "legacy-comment",
+                "Legacy note".into(),
+                if note.text.is_empty() { note.label.clone() } else { note.text.clone() },
+                self.targets(links)?,
+            );
+            commands.push(SystemCommand::PutThread {
+                thread: Thread { id, title: note.label.clone(), targets, resolved: false, comments: vec![comment], pin_m: None, view: None },
+            });
+        }
+        if !commands.is_empty() {
+            self.apply("Edit discussion", commands)?;
+        }
+        Ok(())
     }
     fn inline_links(&self, body: &str) -> Result<Vec<Target>, String> {
         let mut paths = vec![];
@@ -440,10 +406,15 @@ impl Builder {
         }
         self.targets(paths)
     }
+    /// Frame (and with `isolate`, show only) the parts under `paths`: the
+    /// builder's selection becomes the instances at its level that hold them
+    /// (the shared selection), the scene shows exactly those parts, and the
+    /// first inspection keeps what it replaced for Back.
     fn inspect(
         &mut self,
         scene: &mut SpatialScene,
         o: &mut Orbit,
+        pick: &mut Picked,
         paths: &[String],
         isolate: bool,
     ) -> Result<(), String> {
@@ -455,7 +426,7 @@ impl Builder {
             return Err("linked parts are missing".into());
         }
         if self.discussion.prior.is_none() {
-            self.discussion.prior = Some((view(scene, o), scene.selection.clone()));
+            self.discussion.prior = Some((view(scene, o), pick.names(), scene.shown.clone()));
         }
         let mut center = Vec3::ZERO;
         let mut count = 0.;
@@ -487,7 +458,17 @@ impl Builder {
                 .cloned()
                 .collect();
         }
+        if pick.document().is_some() {
+            let names: BTreeSet<String> = paths.iter().filter_map(|p| self.instance_for_component(p)).collect();
+            if !names.is_empty() {
+                pick.set(names)?;
+            }
+        }
         scene.set_selection(target).map_err(|e| e.to_string())?;
+        // The exact linked parts stay shown: `picked::track` would
+        // re-project whole instances over them.
+        self.seen_selection = Some(pick.selection.changed);
+        self.panel_dirty = true;
         Ok(())
     }
 }

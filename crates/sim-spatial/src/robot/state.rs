@@ -92,7 +92,6 @@ impl RobotView {
             triangles: Vec::new(),
             notes: FileNotes::default(),
             cad_link: None,
-            selected: None,
             section: Section::Link,
             scroll: 0.0,
             scroll_max: 0.0,
@@ -122,14 +121,15 @@ impl RobotView {
         }
         self.model.as_ref()?.links.get(i).map(|l| l.name.as_str())
     }
-    pub fn state_json(&self) -> Value {
+    /// `robot_state`; `link` is the selected link (`picked::link`).
+    pub fn state_json(&self, link: Option<usize>) -> Value {
         let (status, error, seconds) = match &self.status {
             Status::Loading(_) => ("loading", None, None),
             Status::Loaded { seconds } => ("loaded", None, Some(*seconds)),
             Status::Error(e) => ("error", Some(e.clone()), None),
         };
         if let Some(p) = &self.planar {
-            return self.planar_state_json(p, status, error, seconds);
+            return self.planar_state_json(p, status, error, seconds, link);
         }
         let links: Vec<Value> = self
             .model
@@ -137,7 +137,7 @@ impl RobotView {
             .flat_map(|m| m.links.iter().enumerate())
             .map(|(i, l)| json!({"index": i, "name": l.name, "has_mesh": self.triangles.get(i).is_some_and(|t| *t > 0), "triangles": self.triangles.get(i).copied().unwrap_or(0)}))
             .collect();
-        let selected = self.selected.and_then(|i| {
+        let selected = link.and_then(|i| {
             let m = self.model.as_ref()?;
             let l = m.links.get(i)?;
             let material = m.materials.get(&l.material);
@@ -171,7 +171,7 @@ impl RobotView {
         let jog = self.run.as_ref().filter(|r| r.preset().is_none() && r.recorded().is_none()).map(|r| {
             let m = r.model();
             let joints: Vec<Value> = m.joints.iter().filter(|j| j.kind != "fixed" && !j.is_loop()).map(|j| r.jog_json(&j.name)).collect();
-            let selected: Vec<String> = jog_joints(self).into_iter().map(|(j, _)| j).collect();
+            let selected: Vec<String> = jog_joints(self, link).into_iter().map(|(j, _)| j).collect();
             json!({"label": JOG_LABEL, "semantics": JOG_SEMANTICS, "control_mode": m.control.mode, "trajectory_keyframes": m.control.trajectory.len(),
                 "step_rad": JOG_STEP_RAD, "step_m": JOG_STEP_M, "selected_link_joints": selected, "joints": joints, "last_apply_error": r.jog_error()})
         });
@@ -190,7 +190,7 @@ impl RobotView {
         // Kept out of the literal above: serde_json's json! hits the default
         // recursion limit with every key in one macro call.
         out["format"] = json!(format);
-        out["graphs"] = self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(self.selected, self.graphs_visible));
+        out["graphs"] = self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(link, self.graphs_visible));
         // Run-thread overlays (robot_overlay); null until loaded.
         out["overlays"] = self.run.as_ref().map_or(Value::Null, RunController::overlays_json);
         // The recorded timeline (robot_recorded); absent unless a recorded preset is loaded.
@@ -209,8 +209,8 @@ impl RobotView {
     /// `robot_state` for a planar (v2) file: the shared fields, `format`
     /// (version, name, fidelity, build warnings), the planar summary and run,
     /// and every v3-only block null with `unavailable` naming why.
-    fn planar_state_json(&self, p: &PlanarView, status: &str, error: Option<String>, seconds: Option<f64>) -> Value {
-        let planar = p.json(self.selected);
+    fn planar_state_json(&self, p: &PlanarView, status: &str, error: Option<String>, seconds: Option<f64>, link: Option<usize>) -> Value {
+        let planar = p.json(link);
         let selected = planar["selected_body"].clone();
         let f = p.run.frame().filter(|f| f.built);
         let jog: Vec<Value> = f.map(|f| f.joint_names.iter().enumerate().map(|(i, n)| json!({"index": i, "name": n, "angle_rad": f.joint_angles.get(i), "target_rad": f.targets.get(i)})).collect::<Vec<Value>>()).unwrap_or_default();

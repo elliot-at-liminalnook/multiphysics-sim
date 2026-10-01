@@ -35,6 +35,8 @@ use crate::app::ModeScope;
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::panel::{CadButton, own_controls};
+use crate::cad::selection::CadSelection;
+use sim_runtime::cad_client::SelectionItem;
 use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, Look, RIGHT_WIDTH, SURFACE, TEXT, TOPBAR, UiFonts, WHEEL_LINE, size, wheel_delta};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
@@ -143,8 +145,8 @@ pub(super) fn describe(cmd: &Command, ready: &Result<(), String>) -> String {
 
 /// What the toolbar shows, as a comparable text (the open menu is not in
 /// it: the tabs are lit in place).
-fn key(doc: &CadDocument) -> String {
-    format!("{:?}", (doc.generation, doc.revision, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), &doc.selection, doc.edit.is_some(), doc.connected()))
+fn key(doc: &CadDocument, selection: &[SelectionItem]) -> String {
+    format!("{:?}", (doc.generation, doc.revision, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), selection, doc.edit.is_some(), doc.connected()))
 }
 
 /// Present: the menu tabs (spawned once, then the open menu's tab lit in
@@ -158,25 +160,27 @@ pub(super) fn refresh(
     mut menu_tabs: Query<(&MenuTab, &mut Look, &mut CadButton)>,
     tools: Query<Entity, With<ToolRow>>,
     mut last: Local<Option<(Entity, String)>>,
+    selection: CadSelection,
 ) {
     let (Some(doc), Ok((tabs, spawned)), Ok(tools)) = (doc, tabs.single(), tools.single()) else { return };
+    let selection = selection.items();
     let k = Kit::new(&fonts);
     if spawned.is_none_or(|c| c.is_empty()) {
         commands.entity(tabs).with_children(|p| menus::tabs(p, &k, &doc));
     } else {
         menus::light(&doc, &mut menu_tabs);
     }
-    let stamp = (tools, key(&doc));
+    let stamp = (tools, key(&doc, &selection));
     if (*last).as_ref() == Some(&stamp) {
         return;
     }
     *last = Some(stamp);
-    let own = own_controls(&doc);
+    let own = own_controls(&doc, &selection);
     commands.entity(tools).despawn_related::<Children>();
     commands.entity(tools).with_children(|p| {
         for id in TOOLBAR {
             let Some(cmd) = registry::command(id) else { continue };
-            let ready = registry::ready(cmd, &doc, &own);
+            let ready = registry::ready(cmd, &doc, &selection, &own);
             let on = checkable(id) && lit(&doc, cmd);
             p.spawn(k.chip(cmd.label, CadButton(CadAction::CadInvoke { id: id.to_string() }), on, ready.is_ok())).insert(Hint(describe(cmd, &ready)));
         }

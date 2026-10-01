@@ -1,24 +1,43 @@
 //! Phenomena mode (native-viewer.md "Fold in sim-app"): the gallery of
-//! `sim_phenomena::exhibits`, formerly `sim-app`'s default scene, as a mode
-//! of the one app.
+//! `sim_phenomena::exhibits`, formerly `sim-app`'s default scene
+//! (`crates/sim-app/src/phenomena_app.rs`), as a mode of the one app.
 //!
-//! - **Run thread.** A `jobs::RunThread` ("phenomena-run") owns every
-//!   `Box<dyn Exhibit>` and advances the current one on simulation time with
-//!   sim-app's rules (`phenomena_app.rs` `advance()`): real time clamped to
+//! - [`run`]: the run thread (`jobs::RunThread` "phenomena-run") builds and
+//!   owns every `Box<dyn Exhibit>` and advances the current one on its own
+//!   clock with sim-app's rules (`run::Pacing::step`: real time clamped to
 //!   0.05 s per tick, × the exhibit's `time_scale()` × the speed; a gridded
-//!   exhibit takes whole grid steps and carries the remainder. It publishes
+//!   exhibit takes whole grid steps and carries the remainder). It publishes
 //!   generation-stamped frames (`jobs::Stamped`): shapes, readouts, knob,
 //!   signal and its strip chart, verdict, time and the exhibit's error.
-//! - **Actions.** Every intent is a [`PhenomenaAction`], from keys, kit
-//!   buttons and the knob slider, `system_ui` and REST, applied by one
-//!   system in `ViewerSet::Actions`.
+//! - [`gallery`]: `Gallery`, the mode's resource: the run thread, the
+//!   generation the UI asked for (older frames are never applied), the
+//!   shown frame, the controls and `phenomena_state`.
+//! - [`actions`]: [`PhenomenaAction`] and its one handler (Actions), from
+//!   keys, kit buttons, the knob slider, `system_ui` and REST; the REST
+//!   snapshot (Present).
+//! - [`keys`]: sim-app's bindings (Input). [`scene`]: cameras, light, the
+//!   entity pool and gizmos, the orbit. [`panel`]: the kit docks.
 //! - **Teardown.** Entities go by `DespawnOnExit<ModeScope>`; [`leave`]
-//!   (OnExit, registered by `app::switch`) removes the gallery, whose drop
-//!   closes the run thread's channel and joins it within `jobs::JOIN_BOUND`.
-use crate::app::actions::{self, PHENOMENA, Spec, spec};
+//!   (OnExit, registered by `app::switch`) removes the gallery, remembers its
+//!   exhibit in `Documents::exhibit` and drops it off the UI thread (its run
+//!   thread joins within `jobs::JOIN_BOUND` there), and removes the pool and
+//!   panel state.
+mod actions;
+mod gallery;
+mod keys;
+mod panel;
+mod run;
+mod scene;
+#[cfg(test)]
+mod tests;
+
+pub use actions::PhenomenaAction;
+pub(crate) use gallery::Gallery;
+
+use crate::app::switch::Documents;
+use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use bevy::prelude::*;
 use serde::Deserialize;
-use serde_json::{Map, Value, json};
 
 /// An exhibit as `--exhibit`, `phenomena_select` and `Documents::exhibit`
 /// name it: a 1-based number, or a title fragment (case-insensitive; the
@@ -56,81 +75,72 @@ impl ExhibitRef {
     }
 }
 
-/// Every intent of phenomena mode. REST commands keep their JSON shape
-/// (`{"command": name, ...args}`).
-#[derive(Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
-pub enum PhenomenaAction {
-    /// `state` (as every mode answers it): the same as `phenomena_state`.
-    State,
-    /// The gallery as shown: exhibits, current, knob, readouts, verdict,
-    /// signal, time, speed, paused, error, frame generation.
-    PhenomenaState,
-    /// Open an exhibit by number or title fragment (digits 1–0, the list).
-    PhenomenaSelect { exhibit: ExhibitRef },
-    /// The next exhibit, wrapping (`]`, N, Tab).
-    PhenomenaNext,
-    /// The previous exhibit, wrapping (`[`, P, Shift+Tab).
-    PhenomenaPrevious,
-    /// Set the knob to `value`, or nudge it by `steps` knob steps (←/→ one,
-    /// Shift five); exactly one. Clamped to the knob's range and rounded to
-    /// its step, as sim-app did.
-    PhenomenaKnob {
-        #[serde(default)]
-        value: Option<f64>,
-        #[serde(default)]
-        steps: Option<f64>,
-    },
-    /// Rebuild the exhibit's simulation at its current knob (R).
-    PhenomenaReset,
-    /// Pause or run (`paused`; absent toggles, as Space does).
-    PhenomenaPause {
-        #[serde(default)]
-        paused: Option<bool>,
-    },
-    /// Set the speed to `speed`, or double (`steps` 1, ↑) or halve (`steps`
-    /// −1, ↓) it; exactly one. Clamped to [1/64, 64].
-    PhenomenaSpeed {
-        #[serde(default)]
-        speed: Option<f64>,
-        #[serde(default)]
-        steps: Option<i32>,
-    },
-    /// `system_ui` in phenomena mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
-    SystemUi(Map<String, Value>),
-}
-
-impl actions::Action for PhenomenaAction {
-    fn commands() -> Vec<Spec> {
-        vec![
-            spec("state", PHENOMENA, json!({}), "Phenomena mode: the same answer as phenomena_state, plus viewer_mode."),
-            spec("phenomena_state", PHENOMENA, json!({}), "Phenomena mode: the gallery as this window shows it: exhibits (number, title), current (1-based number, title, summary), knob (label, unit, min, max, step, value), readouts (label, value, unit), verdict, signal (label, value), chart (samples at 30 Hz of real time, the last 1800), time and time_unit (the exhibit's own clock), speed, paused, error (the exhibit's simulation error verbatim, or null; the run stops until reset or another exhibit) and generation (bumped by every select, knob change and reset; older frames are never shown)."),
-            spec("phenomena_select", PHENOMENA, json!({"exhibit": 1}), "Phenomena mode: open an exhibit by 1-based number or by title fragment (case-insensitive, the first title containing it), the same rule as --exhibit. The chart restarts; the error clears. Refused, naming the reason, for a number out of range or a fragment no title contains."),
-            spec("phenomena_next", PHENOMENA, json!({}), "Phenomena mode: the next exhibit (wraps), as the ] / N / Tab keys."),
-            spec("phenomena_previous", PHENOMENA, json!({}), "Phenomena mode: the previous exhibit (wraps), as the [ / P / Shift+Tab keys."),
-            spec("phenomena_knob", PHENOMENA, json!({"value": 1.0}), "Phenomena mode: set the exhibit's one knob to value, or nudge it by steps knob steps (the ←/→ keys send ±1, with Shift ±5); exactly one of the two. Clamped to the knob's [min, max] and rounded to its step; the exhibit rebuilds its simulation at the new value and the chart restarts."),
-            spec("phenomena_reset", PHENOMENA, json!({}), "Phenomena mode: rebuild the exhibit's simulation at its current knob (the R key); the chart restarts and the error clears."),
-            spec("phenomena_pause", PHENOMENA, json!({}), "Phenomena mode: pause or run (paused: true | false; absent toggles, as the Space key)."),
-            spec("phenomena_speed", PHENOMENA, json!({"steps": 1}), "Phenomena mode: the speed multiplier on the exhibit's own time scale: speed (absolute), or steps (1 doubles, -1 halves, as the ↑/↓ keys); exactly one. Clamped to [1/64, 64]. Real time per tick is clamped to 0.05 s, so a slow frame never jumps the simulation."),
-            spec("system_ui", PHENOMENA, json!({"action": {"operation": "controls"}}), "Phenomena mode: its controls (phenomena:exhibit:<n> for each exhibit, phenomena:next, phenomena:previous, phenomena:reset, phenomena:pause, phenomena:speed_up, phenomena:speed_down, phenomena:knob_up, phenomena:knob_down), each with enabled and disabled_reason, then the mode switcher's mode:* controls; activate {id} writes the same action a click does."),
-        ]
-    }
-    fn controls() -> &'static [&'static str] {
-        &["phenomena:exhibit:<n>", "phenomena:next", "phenomena:previous", "phenomena:reset", "phenomena:pause", "phenomena:speed_up", "phenomena:speed_down", "phenomena:knob_up", "phenomena:knob_down"]
+/// What phenomena mode needs without a window (the switch test runs it with
+/// `ModesPlugin` on MinimalPlugins + StatesPlugin): the action and its
+/// handler, the gallery (its run thread) started on entering, its frames
+/// taken (JobResults) and the REST snapshot. Leaving is `leave`, registered
+/// by `app::switch`.
+pub struct PhenomenaCorePlugin;
+impl Plugin for PhenomenaCorePlugin {
+    fn build(&self, app: &mut App) {
+        crate::app::actions::register::<PhenomenaAction>(app);
+        app.add_systems(OnEnter(ModeScope::Phenomena), enter).add_systems(
+            Update,
+            (actions::apply.in_set(ViewerSet::Actions), receive.in_set(ViewerSet::JobResults), actions::publish.in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Phenomena)),
+        );
     }
 }
 
-/// Phenomena mode: its action, run thread, keys, panels and scene.
+/// Phenomena mode in the window: the core, the 3D view, the keys and the panels.
 pub struct PhenomenaPlugin;
 impl Plugin for PhenomenaPlugin {
     fn build(&self, app: &mut App) {
-        actions::register::<PhenomenaAction>(app);
+        app.add_plugins(PhenomenaCorePlugin)
+            .add_systems(OnEnter(ModeScope::Phenomena), (scene::setup, panel::setup))
+            .add_systems(
+                Update,
+                (
+                    (keys::keys, panel::buttons, panel::slider).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input),
+                    (scene::orbit, scene::viewport, panel::scroll).chain().in_set(ViewerSet::SimSync),
+                    (scene::render, panel::rebuild, panel::refresh, panel::chart).chain().in_set(ViewerSet::Present),
+                )
+                    .run_if(in_state(ViewerMode::Phenomena)),
+            );
     }
 }
 
-/// OnExit(ModeScope::Phenomena), registered by `app::switch`: the gallery
-/// (its run thread) is removed and the exhibit remembered in
-/// `Documents::exhibit`.
+/// OnEnter(ModeScope::Phenomena): the gallery, its run thread building the
+/// exhibits off the UI thread and opening `Documents::exhibit` (`--exhibit`'s
+/// text, or the number remembered on leaving; an unknown one opens exhibit 1
+/// and says so in the frame's notice).
+fn enter(mut commands: Commands, documents: Res<Documents>) {
+    commands.insert_resource(Gallery::open(documents.exhibit.clone()));
+}
+
+/// JobResults: the newest frame at or after the requested generation.
+fn receive(gallery: Option<ResMut<Gallery>>) {
+    if let Some(mut gallery) = gallery {
+        gallery.receive();
+    }
+}
+
+/// OnExit(ModeScope::Phenomena), registered by `app::switch`: the gallery is
+/// removed, its exhibit remembered in `Documents::exhibit` (as its 1-based
+/// number; unchanged if the exhibits were never built) and the gallery
+/// dropped off the UI thread with `jobs::drop_off_thread`: its run thread
+/// checks its channel between ticks and so joins within `jobs::JOIN_BOUND`,
+/// but one `Exhibit::advance` call (a heavy exhibit at ×64) or the exhibits'
+/// construction can outlast that bound, and the switch must never wait on
+/// it. The pool's meshes and the panel state go too. At window close the
+/// World's drop drops the gallery in place: `RunThread`'s drop waits at most
+/// `JOIN_BOUND`, then detaches the thread (jobs/run_thread.rs `Drop`).
 pub(crate) fn leave(world: &mut World) {
-    let _ = world;
+    if let Some(gallery) = world.remove_resource::<Gallery>() {
+        if let Some(number) = gallery.shown_number() {
+            world.resource_mut::<Documents>().exhibit = Some(number.to_string());
+        }
+        crate::jobs::drop_off_thread(gallery, "the phenomena gallery");
+    }
+    world.remove_resource::<scene::Pool>();
+    world.remove_resource::<panel::Panels>();
 }

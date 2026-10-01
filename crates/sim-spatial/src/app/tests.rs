@@ -434,3 +434,93 @@ fn pending_actions_are_carried_until_they_answer_and_a_cancel_reaches_them() {
     actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| sim_api::Outcome::Pending);
     assert!(in_flight.is_empty() && messages.is_empty());
 }
+
+/// Phenomena mode's commands go to its action type in phenomena mode, and
+/// are refused by name elsewhere.
+#[test]
+fn phenomena_commands_route_to_phenomena_mode_only() {
+    let command = |name: &str| sim_api::Command { command: name.into(), args: json!({}) };
+    for name in ["phenomena_select", "phenomena_state", "state", "system_ui", "phenomena_next"] {
+        assert_eq!(route::route(ViewerMode::Phenomena, true, &command(name)).map(|f| f.name), Ok("phenomena"), "{name}");
+    }
+    // mode:* stays the switcher's in phenomena mode too.
+    let mode = sim_api::Command { command: "system_ui".into(), args: json!({"action": {"operation": "activate", "id": "mode:build"}}) };
+    assert_eq!(route::route(ViewerMode::Phenomena, true, &mode).map(|f| f.name), Ok("window"));
+    let e = match route::route(ViewerMode::Build, true, &command("phenomena_next")) {
+        Err(e) => e,
+        Ok(f) => panic!("phenomena_next in build mode went to {}", f.name),
+    };
+    assert!(e.contains("`phenomena_next`") && e.contains("phenomena mode") && e.contains("active mode is build"), "{e}");
+}
+
+/// Build → Phenomena → Build: entering starts the gallery (its run thread
+/// builds the built-in exhibits, opening `Documents::exhibit`), a REST
+/// command waits for the run thread and answers the new state, and leaving
+/// removes the gallery and phenomena-scoped entities and remembers the
+/// exhibit, while the builder and the shared resources stay.
+#[test]
+fn build_phenomena_build_runs_the_gallery_and_remembers_the_exhibit() {
+    use crate::phenomena::{Gallery, PhenomenaAction};
+    let dir = std::env::temp_dir().join(format!("mode-switch-phenomena-{}", std::process::id()));
+    let (board, builder, scene) = self::board(&dir);
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_resource(builder)
+        .insert_resource(scene)
+        .insert_resource(crate::models::ModelLibrary::default())
+        .insert_resource(crate::rest::Rest(crate::rest::bind(0).unwrap(), None))
+        .add_plugins((ModesPlugin { initial: ViewerMode::Build }, crate::phenomena::PhenomenaCorePlugin));
+    app.update();
+    assert_eq!(mode(&app), ViewerMode::Build);
+    app.world_mut().resource_mut::<Documents>().exhibit = Some("2".into());
+
+    // Refused: phenomena mode takes no document.
+    let seq = submit(&mut app, ViewerMode::Phenomena, Some(Document::Path(board.clone())));
+    assert!(settle(&mut app, seq).unwrap_err().contains("takes no document"));
+    assert_eq!(mode(&app), ViewerMode::Build);
+
+    let seq = submit(&mut app, ViewerMode::Phenomena, None);
+    assert_eq!(settle(&mut app, seq).unwrap()["mode"], "phenomena");
+    assert_eq!(mode(&app), ViewerMode::Phenomena);
+    assert_eq!(*app.world().resource::<State<ModeScope>>().get(), ModeScope::Phenomena);
+    assert!(app.world().contains_resource::<Gallery>());
+    assert!(app.world().contains_resource::<Builder>(), "the builder stays in the window");
+    let shape = app.world_mut().spawn(Transform::default()).id();
+    app.update();
+    assert_eq!(scoped(&mut app, shape), Some(ModeScope::Phenomena));
+
+    // The exhibits are built on the run thread (not this one); --exhibit 2 opens the second.
+    let started = std::time::Instant::now();
+    while app.world().resource::<Gallery>().ready().is_none() {
+        assert!(started.elapsed().as_secs() < 300, "the exhibits were not built in 300 s: {}", app.world().resource::<Gallery>().not_ready());
+        app.update();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    assert_eq!(app.world().resource::<Gallery>().ready().map(|f| f.current), Some(1));
+
+    // A REST command waits for the run thread and answers the state it made.
+    let act = |app: &mut App, action: PhenomenaAction| {
+        let reply = app.world_mut().resource_mut::<Replies>().open();
+        app.world_mut().write_message(Act { action, origin: Origin::Rest(reply) });
+        reply
+    };
+    let reply = act(&mut app, PhenomenaAction::PhenomenaNext);
+    let state = settle(&mut app, reply).unwrap();
+    assert_eq!(state["current"]["number"], 3, "{state}");
+    assert_eq!(state["generation"], 2);
+    let reply = act(&mut app, PhenomenaAction::PhenomenaSelect { exhibit: crate::phenomena::ExhibitRef::Number(999) });
+    let e = settle(&mut app, reply).unwrap_err();
+    assert!(e.contains("exhibit 999 is out of range"), "{e}");
+
+    // Phenomena → Build: the gallery and its entities go; the exhibit is remembered.
+    let seq = submit(&mut app, ViewerMode::Build, None);
+    settle(&mut app, seq).unwrap();
+    assert_eq!(mode(&app), ViewerMode::Build);
+    assert!(!app.world().contains_resource::<Gallery>(), "the gallery (its run thread) is removed");
+    assert!(app.world().get_entity(shape).is_err(), "phenomena-scoped entities are despawned on exit");
+    let world = app.world();
+    assert_eq!(world.resource::<Builder>().path(), board.as_path());
+    assert!(world.contains_resource::<SpatialScene>() && world.contains_resource::<crate::models::ModelLibrary>() && world.contains_resource::<crate::rest::Rest>());
+    assert_eq!(world.resource::<Documents>().exhibit.as_deref(), Some("3"), "phenomena mode reopens the exhibit it showed");
+    std::fs::remove_dir_all(&dir).ok();
+}

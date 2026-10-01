@@ -35,7 +35,8 @@
 //! - `text` (`text/`): the one text field (`TextField`, `FieldId`, added
 //!   with `TextFieldApp::add_text_field`), the one focus (Bevy's
 //!   `InputFocus`), the one input system, `FieldMsg` (Changed, Submit,
-//!   Cancel, Tab, Blur) for owners, `TextFocus` (focus, set, blur), the
+//!   Cancel, Tab, Arrow, Blur) for owners, `TextFocus` (focus, set,
+//!   release, blur), the
 //!   `typing` run condition / `Typing` parameter, and `release_held`
 //! - `dock(Dock::{Top, Bottom, Left, Right, Under}, layout: Node)`: a docked panel
 //! - `scroll_area(layout: Node, offset: f32)`; `wheel_delta(&mut MessageReader<MouseWheel>, line_px) -> f32`
@@ -57,7 +58,7 @@
 //!   (`form.rs`, RoboCAD's input dialogs and `ArrayDialog`): labelled fields
 //!   with their evaluation or error under them (as the CAD numeric bar),
 //!   choice segments, checkbox chips, OK and Cancel. Pure:
-//!   `form::evaluate(kind, text)` and `text::TextDraft::key(key, chord)`.
+//!   `form::evaluate(kind, text)` and `text::TextDraft::key(key, chord, filter)`.
 //!
 //! - `path_field(parent, &PathView, hit: Fn(PathHit) -> A)` and
 //!   `path_listing(parent, path, listing, hit)` (`path_field.rs`): the one

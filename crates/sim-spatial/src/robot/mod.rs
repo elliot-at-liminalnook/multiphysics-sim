@@ -185,17 +185,18 @@ impl Plugin for RobotPlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<RobotAction>(app);
         hardware::build(app);
+        panel_ui::add_field(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
             .init_resource::<RobotPanelUi>()
             .add_systems(OnEnter(ModeScope::Robot), setup)
-            .add_systems(OnExit(ModeScope::Robot), (|mut commands: Commands| {
+            .add_systems(OnExit(ModeScope::Robot), |mut commands: Commands| {
                 commands.remove_resource::<Materials>();
-            }, panel_ui::leave))
+            })
             .add_systems(
                 Update,
                 (
                     // Keys and buttons write robot actions after REST's, as the old chain applied them.
-                    // The gait path field first: a key it takes this frame is not also a robot key (`RobotPanelUi::typing`).
+                    // The gait path field first: a press that focuses it this frame already stops robot keys (`ui_kit::text::Typing`).
                     (panel_ui::gait_path_input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
                         .chain()
                         .after(crate::app::actions::serve)

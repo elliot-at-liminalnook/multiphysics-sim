@@ -164,7 +164,7 @@ fn entering_lessons_from_build_refuses_on_a_draft_and_keeps_a_live_run() {
     let e = settle(&mut app, reply).unwrap_err();
     assert!(e.contains("Not switching to Lessons mode") && e.contains("text field draft") && e.contains("Build mode stays"), "{e}");
     assert_eq!(mode(&app), ViewerMode::Build);
-    assert!(app.world().resource::<Builder>().typing(), "the draft is kept");
+    assert!(app.world().resource::<Builder>().test_draft_open(), "the draft is kept");
     // The switcher shows the same refusal.
     assert!(matches!(&app.world().resource::<super::switch::Switcher>().message, Some(Err(m)) if m.contains("text field draft")));
     app.world_mut().resource_mut::<Builder>().test_drop_draft();

@@ -12,37 +12,45 @@
 //!   keystroke's evaluation (`sim_runtime::units::evaluate`): "= 20.3 mm",
 //!   or the evaluator's error naming the token in the danger colour with a
 //!   red border (RoboCAD's red border).
-//! - **Keys** ([`entry`], Input): Tab opens the entry on the first field
+//! - **Keys** ([`entry`], Input), on the kit's one text field
+//!   ([`NUMERIC`], `ui_kit::text`; `Numeric::focus` is the row it edits):
+//!   Tab opens the entry on the first field when no field has the keyboard
 //!   (RoboCAD routes Tab itself, app.py:483-486) and cycles fields while
 //!   open; a press on a field focuses it; typing replaces the text first
-//!   (RoboCAD's `selectAll`), then edits it; Enter writes
-//!   `CadNumeric {values}` when every field evaluates (else the entry stays
-//!   open showing the error); its commit carries the shown revision of
-//!   the moment the entry gained focus (`Numeric::began`), so it is refused
-//!   by name when RoboCAD's document changed while the values were typed; Escape cancels the entry; a press elsewhere
-//!   ends it. `CadInputFocus` is true while a field is focused and in the
-//!   frame the entry ends, so CAD keys are not typed into twice. The
-//!   inspector's name field and this bar never hold the keyboard together:
-//!   focusing a field drops the name draft, and starting a name draft ends
-//!   the entry.
+//!   (RoboCAD's `selectAll`), then edits it, each keystroke evaluated;
+//!   Enter writes `CadNumeric {values}` when every field evaluates (else
+//!   the entry stays open showing the error); its commit carries the shown
+//!   revision of the moment the entry gained focus (`Numeric::began`), so
+//!   it is refused by name when RoboCAD's document changed while the
+//!   values were typed; Escape cancels the entry; a press elsewhere, or
+//!   another field taking the keyboard, ends it.
 //! - **Fields** ([`sync`], SimSync): rebuilt from the tool and selection;
 //!   a new set resets the drafts to RoboCAD's opening values (move 0 mm,
 //!   rotate 0°, scale 1, distance 0 mm, a live dimension's current value).
 use super::actions::CadAction;
-use super::document::{CadDocument, CadInputFocus, CadTool};
+use super::document::{CadDocument, CadTool};
 use super::mesh::CadMeshes;
-use super::panel::{CadButton, NameDraft};
+use super::panel::CadButton;
 use super::selection::CadSelection;
 use super::topology::CadTopology;
 use super::transform::{DimensionEntry, Field, FieldCommit, fields, hint, keep_entry, mode_label};
 use sim_runtime::cad_client::SelectionItem;
 use crate::app::actions::Act;
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use crate::ui_kit::{BORDER, DANGER, FAINT, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, UiFonts, VALUE, above_strip, size};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
+
+/// The numeric bar's field: one kit field for every row (the row is
+/// `Numeric::focus`).
+pub(in crate::cad) const NUMERIC: FieldId = FieldId("cad.numeric");
+
+/// The numeric field as the kit spawns it (`panel::build`): a focused row's
+/// text is selected (RoboCAD's `selectAll`); a press elsewhere ends it.
+pub(in crate::cad) fn field() -> TextField {
+    TextField::new("Numeric entry").select_on_focus()
+}
 
 /// RoboCAD's `numeric.hint` (ui/strings.py:17).
 pub const ENTRY_HINT: &str = "Tab: type an exact value  •  Enter: confirm  •  Esc: cancel";
@@ -58,9 +66,12 @@ pub struct Numeric {
     pub texts: Vec<String>,
     /// Each text's evaluation (the value, or the evaluator's error).
     pub results: Vec<Result<f64, String>>,
-    /// The field with the keyboard.
+    /// The row the open entry edits: set only together with the kit's
+    /// focus on [`NUMERIC`] and cleared when the entry ends (other parts
+    /// read it as "the numeric bar has the keyboard"; one that clears it
+    /// ends the entry: [`entry`] then takes the kit's focus away).
     pub focus: Option<usize>,
-    /// The focused text is selected: the next character replaces it.
+    /// The focused text is selected (the kit's draft, mirrored for drawing).
     pub select_all: bool,
     /// Focus the first field once the fields are rebuilt (a double-clicked dimension).
     pub focus_request: bool,
@@ -121,8 +132,10 @@ type FieldsKey = (u64, CadTool, Vec<SelectionItem>, Option<DimensionEntry>, u64,
 
 /// SimSync: the fields follow the tool and the selection (see the module
 /// doc). They are recomputed only when what they come from changes (live
-/// dimensions walk the selected edges' tessellation: not every frame).
-pub(super) fn sync(doc: Option<ResMut<CadDocument>>, topology: Option<Res<CadTopology>>, meshes: Option<Res<CadMeshes>>, mut cache: Local<Option<(FieldsKey, Vec<Field>, String)>>, selection: CadSelection) {
+/// dimensions walk the selected edges' tessellation: not every frame). A
+/// new set ends an open entry; a focus request (a double-clicked
+/// dimension, REST's numeric entry) gives the first row the keyboard.
+pub(super) fn sync(doc: Option<ResMut<CadDocument>>, topology: Option<Res<CadTopology>>, meshes: Option<Res<CadMeshes>>, mut cache: Local<Option<(FieldsKey, Vec<Field>, String)>>, selection: CadSelection, mut text: TextFocus) {
     let Some(mut doc) = doc else { return };
     let selection = selection.items();
     if doc.tool_state.dimension.is_some() {
@@ -149,6 +162,7 @@ pub(super) fn sync(doc: Option<ResMut<CadDocument>>, topology: Option<Res<CadTop
         s.key = key;
         s.focus = None;
         s.select_all = false;
+        text.blur(NUMERIC);
     }
     if request {
         s.focus_request = false;
@@ -156,18 +170,9 @@ pub(super) fn sync(doc: Option<ResMut<CadDocument>>, topology: Option<Res<CadTop
             s.focus = Some(0);
             s.select_all = true;
             s.began = Some(shown);
+            text.focus_draft(NUMERIC, TextDraft::new(s.texts.first().cloned().unwrap_or_default(), true));
         }
     }
-}
-
-/// Type `text` into field `i` (replacing a selected text).
-fn type_text(s: &mut Numeric, i: usize, text: &str) {
-    if s.select_all {
-        s.texts[i].clear();
-        s.select_all = false;
-    }
-    s.texts[i].push_str(text);
-    reevaluate(s, i);
 }
 
 fn reevaluate(s: &mut Numeric, i: usize) {
@@ -177,29 +182,77 @@ fn reevaluate(s: &mut Numeric, i: usize) {
     }
 }
 
-/// Input: the numeric entry's keys and field presses (see the module doc).
-#[allow(clippy::too_many_arguments)]
+/// Input: the numeric entry's field messages, field presses and the Tab
+/// that opens it (see the module doc).
 pub(super) fn entry(
     doc: Option<ResMut<CadDocument>>,
     presses: Query<(&Interaction, &FieldButton), Changed<Interaction>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
-    buttons: Option<Res<ButtonInput<MouseButton>>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    draft: Option<ResMut<NameDraft>>,
+    mut msgs: MessageReader<FieldMsg>,
+    mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
+    chord: Option<Res<super::keys::Chord>>,
 ) {
     let Some(mut doc) = doc else {
-        events.clear();
+        msgs.clear();
         return;
     };
-    // The name field holds the keyboard (`panel::name_entry` ran first this frame).
-    let others = focus.as_ref().is_some_and(|f| f.0);
-    let naming = draft.as_ref().is_some_and(|d| d.editing.is_some());
     let n = doc.tool_state.numeric.fields.len().min(doc.tool_state.numeric.texts.len());
     let shown = doc.shown_revision();
+    // The field's messages (read before writing: a `DerefMut` marks the
+    // document changed).
+    for m in msgs.read().filter(|m| m.field == NUMERIC) {
+        let row = doc.tool_state.numeric.focus.filter(|i| *i < n);
+        match (&m.event, row) {
+            // Each keystroke is evaluated at once (the live preview reads `results`).
+            (FieldEvent::Changed(d), Some(i)) => {
+                let s = &mut doc.tool_state.numeric;
+                s.texts[i] = d.text.clone();
+                s.select_all = d.select_all;
+                reevaluate(s, i);
+            }
+            (FieldEvent::Submit(typed), Some(i)) => {
+                let s = &mut doc.tool_state.numeric;
+                if s.texts[i] != *typed {
+                    s.texts[i] = typed.clone();
+                }
+                s.results = s.fields.iter().zip(&s.texts).map(|(f, t)| f.kind.evaluate(t)).collect();
+                // RoboCAD's `values()`: an error keeps the entry open.
+                if s.results.iter().all(Result::is_ok) {
+                    out.write(Act::ui(CadAction::CadNumeric { values: s.texts.clone() }));
+                    s.focus = None;
+                    // The fields reopen with their opening values (RoboCAD re-places the gizmo).
+                    s.key.clear();
+                    text.blur(NUMERIC);
+                }
+            }
+            (FieldEvent::Cancel, _) => {
+                let s = &mut doc.tool_state.numeric;
+                s.focus = None;
+                s.began = None;
+                s.key.clear();
+            }
+            // Tab cycles the rows forward (Shift+Tab too, as before the kit), the next text selected.
+            (FieldEvent::Tab { .. }, Some(i)) => {
+                let s = &mut doc.tool_state.numeric;
+                let next = (i + 1) % n;
+                s.focus = Some(next);
+                s.select_all = true;
+                text.focus_draft(NUMERIC, TextDraft::new(s.texts[next].clone(), true));
+            }
+            // A press elsewhere or another field's focus ends the entry
+            // (unless this system gave the field the keyboard again since).
+            (FieldEvent::Blur, _) if !text.focused(NUMERIC) && doc.tool_state.numeric.focus.is_some() => {
+                let s = &mut doc.tool_state.numeric;
+                s.focus = None;
+                s.began = None;
+            }
+            // A row that is gone (the fields were rebuilt): the entry ends.
+            (FieldEvent::Changed(_) | FieldEvent::Submit(_) | FieldEvent::Tab { .. }, None) => text.blur(NUMERIC),
+            (FieldEvent::Blur | FieldEvent::Arrow { .. }, _) => {}
+        }
+    }
     let mut started = false;
-    let mut ended = false;
     for (interaction, button) in &presses {
         if *interaction == Interaction::Pressed && button.0 < n {
             let s = &mut doc.tool_state.numeric;
@@ -208,88 +261,32 @@ pub(super) fn entry(
             }
             s.focus = Some(button.0);
             s.select_all = true;
+            text.focus_draft(NUMERIC, TextDraft::new(s.texts[button.0].clone(), true));
             started = true;
         }
     }
-    let focused = doc.tool_state.numeric.focus.is_some();
-    if focused && !started && (naming || buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left))) {
-        // A press elsewhere, or a name draft that just started, ends the entry.
-        doc.tool_state.numeric.focus = None;
-        doc.tool_state.numeric.began = None;
-        ended = true;
-    }
-    if started
-        && naming
-        && let Some(mut draft) = draft
-    {
-        draft.editing = None;
-        draft.refusal = None;
-    }
-    let tab = keys.as_ref().is_some_and(|k| k.just_pressed(KeyCode::Tab));
-    if !focused && !started && !others && n > 0 && tab {
+    // Tab opens the entry: a CAD key, so not while any field has the
+    // keyboard (the kit consumes a focused field's Tab anyway) nor in a
+    // frame a pending two-step key owns (`keys::gate`, which runs first).
+    let tab = keys.as_ref().is_some_and(|k| k.just_pressed(KeyCode::Tab)) && !chord.is_some_and(|c| c.gated());
+    if tab && !started && !text.typing() && doc.tool_state.numeric.focus.is_none() && n > 0 {
         let s = &mut doc.tool_state.numeric;
         s.focus = Some(0);
         s.select_all = true;
         s.began = Some(shown);
-        started = true;
+        text.focus_draft(NUMERIC, TextDraft::new(s.texts[0].clone(), true));
     }
-    if started || doc.tool_state.numeric.focus.is_none() {
-        // Keys pressed before the field took the keyboard are not its text.
-        events.clear();
-    } else {
-        let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        for e in typed {
-            let s = &mut doc.tool_state.numeric;
-            let Some(i) = s.focus.filter(|i| *i < n) else {
-                s.focus = None;
-                ended = true;
-                break;
-            };
-            match &e.logical_key {
-                Key::Enter => {
-                    s.results = s.fields.iter().zip(&s.texts).map(|(f, t)| f.kind.evaluate(t)).collect();
-                    // RoboCAD's `values()`: an error keeps the entry open.
-                    if s.results.iter().all(Result::is_ok) {
-                        out.write(Act::ui(CadAction::CadNumeric { values: s.texts.clone() }));
-                        s.focus = None;
-                        // The fields reopen with their opening values (RoboCAD re-places the gizmo).
-                        s.key.clear();
-                        ended = true;
-                    }
-                    break;
-                }
-                Key::Escape => {
-                    s.focus = None;
-                    s.began = None;
-                    s.key.clear();
-                    ended = true;
-                    break;
-                }
-                Key::Tab => {
-                    s.focus = Some((i + 1) % n);
-                    s.select_all = true;
-                }
-                Key::Backspace => {
-                    if s.select_all {
-                        s.texts[i].clear();
-                        s.select_all = false;
-                    } else {
-                        s.texts[i].pop();
-                    }
-                    reevaluate(s, i);
-                }
-                Key::Space if !chord => type_text(s, i, " "),
-                Key::Character(c) if !chord && !c.chars().any(char::is_control) => type_text(s, i, c.as_str()),
-                _ => {}
-            }
-        }
+    // The kit's focus and `Numeric::focus` move together: a part that
+    // cleared `focus` (an opened surface or form, Escape's `CadCancel`)
+    // ended the entry, and a row that is gone ends it.
+    let open = doc.tool_state.numeric.focus;
+    if open.is_none_or(|i| i >= n) && text.focused(NUMERIC) {
+        text.blur(NUMERIC);
     }
-    if let Some(mut focus) = focus
-        && (doc.tool_state.numeric.focus.is_some() || ended)
-        && !focus.0
-    {
-        focus.0 = true;
+    if open.is_some() && !text.focused(NUMERIC) {
+        let s = &mut doc.tool_state.numeric;
+        s.focus = None;
+        s.began = None;
     }
 }
 

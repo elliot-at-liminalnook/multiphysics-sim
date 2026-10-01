@@ -135,7 +135,7 @@ impl Plugin for PlacePlugin {
         app.add_systems(OnEnter(ModeScope::Place), setup).add_systems(
             Update,
             (
-                keys.after(actions::serve).in_set(ViewerSet::Input),
+                keys.after(actions::serve).in_set(ViewerSet::Input).run_if(not(crate::ui_kit::text::typing)),
                 apply.in_set(ViewerSet::Actions),
                 publish.in_set(ViewerSet::Present),
                 viewport.in_set(ViewerSet::Present),
@@ -271,7 +271,8 @@ fn apply(
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| Outcome::Done(execute(&mut view, &mut t, &mut fly, &mut markers, &mut help, action)));
 }
 
-/// Input: keys 1–9 jump to a station (`camera {station}`), P and H toggle.
+/// Input: keys 1–9 jump to a station (`camera {station}`), P and H toggle;
+/// not while a kit text field has the keyboard (`ui_kit::text::typing`).
 fn keys(keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<Act<PlaceAction>>) {
     let digits = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9];
     for (i, k) in digits.iter().enumerate() {

@@ -10,8 +10,8 @@
 //! - [`OrbitRules`]: the mode's feel (drag rate, pitch limit, zoom limits,
 //!   framing, zoom to the cursor, RoboCAD's extra gestures) and its
 //!   per-frame input gate (`enabled`, `zoom_modifier`, `reduced_motion`,
-//!   `keys`, `alt_left`, `typing`), which the mode updates as data; the
-//!   module holds no mode code.
+//!   `keys`, `alt_left`), which the mode updates as data; the module holds
+//!   no mode code.
 //! - [`ViewArea`]: where the 3D view draws (the whole window, between the
 //!   mode's docks, or inside a lesson card); the module sets the camera's
 //!   viewport from it and starts gestures only inside it.
@@ -35,14 +35,17 @@
 //! numpad's, so REST can send them too (`camera_orbit {"degrees": …}`,
 //! `camera_pan`).
 //!
-//! Two gate fields keep these from fighting the mode's own tools, each a
-//! separate, single-purpose flag rather than `enabled` (which stops every
-//! gesture): `typing` (a text field has the keyboard: no camera key is
-//! read, numpad or arrow; the pointer gestures still work) and `alt_left`
-//! (the mode's left-button owner leaves Alt+left-drag to the camera; false
-//! while a tool owns the left button). CAD writes both every frame in
-//! SimSync from `CadInputFocus` and its active tool, so the keys (Input)
-//! read last frame's value: one frame behind a focus change.
+//! Typing is not a rule: while a kit text field has the keyboard (the one
+//! focus, `ui_kit::text`), no camera key is read (numpad, arrows, the fly
+//! camera's W/A/S/D/Q/E): [`input::keys`] runs under the shared
+//! `not(typing)` condition and [`fly::fly`] checks `Typing`, so a mode
+//! writes nothing for it. The pointer gestures still work, and their
+//! modifier variants (Shift, Alt, Ctrl/Cmd held) are read while typing.
+//! One gate field keeps RoboCAD's gestures from fighting the mode's own
+//! tools, a single-purpose flag rather than `enabled` (which stops every
+//! gesture): `alt_left` (the mode's left-button owner leaves Alt+left-drag
+//! to the camera; false while a tool owns the left button). CAD writes it
+//! every frame in SimSync from its active tool.
 //!
 //! The display frame is Bevy's (Y up). RoboCAD's model frame is Z up: CAD
 //! and Robot mode hang their models from a root rotated −90° about X
@@ -188,9 +191,6 @@ pub struct OrbitRules {
     /// mode's tool owns the left button (CAD: any tool but Select, or a
     /// catalogue interaction or command surface open).
     pub alt_left: bool,
-    /// A text field of the mode has the keyboard: no camera key (numpad
-    /// or arrow) is read. Pointer gestures are not affected.
-    pub typing: bool,
 }
 
 impl Default for OrbitRules {
@@ -210,7 +210,6 @@ impl Default for OrbitRules {
             keys: true,
             robocad_gestures: false,
             alt_left: true,
-            typing: false,
         }
     }
 }
@@ -467,7 +466,8 @@ pub enum CameraSet {
 }
 
 /// The shared camera: `CameraAction` registered once, its apply system in
-/// Actions, the numpad keys in Input, and in SimSync the viewport, the
+/// Actions, the numpad keys in Input (not while a kit text field has the
+/// keyboard: `ui_kit::text::typing`), and in SimSync the viewport, the
 /// gestures and the step that places the camera. A mode orders its own
 /// SimSync work against [`CameraSet`] (for example CAD's view snapshot runs
 /// after `CameraSet::Place`).
@@ -476,7 +476,7 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         actions::register::<CameraAction>(app);
         app.configure_sets(Update, (CameraSet::Viewport, CameraSet::Navigate, CameraSet::Place).chain().in_set(ViewerSet::SimSync))
-            .add_systems(Update, input::keys.after(actions::serve).in_set(ViewerSet::Input))
+            .add_systems(Update, input::keys.after(actions::serve).in_set(ViewerSet::Input).run_if(not(crate::ui_kit::text::typing)))
             .add_systems(Update, apply::apply.in_set(ViewerSet::Actions))
             .add_systems(Update, viewport::viewport.in_set(CameraSet::Viewport))
             .add_systems(Update, input::navigate.in_set(CameraSet::Navigate))

@@ -1,7 +1,7 @@
 //! Robot mode's input systems: the buttons, keys and 3D-view clicks that
 //! write [`RobotAction`] (applied by [`super::apply`]).
 use super::*;
-use crate::robot::panel_ui::RobotPanelUi;
+use crate::ui_kit::text::Typing;
 
 /// Input: a pressed button's action (tabs, links, run, speed, reload,
 /// overlays, graphs, jog, motion, recording, replay, recorded and gait).
@@ -27,16 +27,17 @@ pub(in crate::robot) fn buttons(clicks: Query<(&Interaction, &RobotAction), Chan
 /// here. Closing the panel sends nothing: a still-held A drives again only
 /// on a fresh press (a jog's A never becomes a strafe).
 ///
-/// While the gait path field has the keyboard (`RobotPanelUi::typing`) no key
-/// is read; when it takes the keyboard with physical keys driving, zero is
-/// requested once (as losing the window's focus does), so a held key whose
-/// release the field takes does not keep the robot moving.
+/// While a kit text field has the keyboard (`ui_kit::text::Typing`: the gait
+/// path field, the document picker's) no key is read; when one takes the
+/// keyboard with physical keys driving, zero is requested once (as losing the
+/// window's focus does), so a held key whose release the field takes does not
+/// keep the robot moving.
 #[allow(clippy::too_many_arguments)]
 pub(in crate::robot) fn motion_keys(
     keys: Res<ButtonInput<KeyCode>>,
     view: Res<RobotView>,
     hardware: Option<Res<crate::robot::hardware::Hardware>>,
-    ui: Res<RobotPanelUi>,
+    text: Typing,
     mut was_open: Local<bool>,
     mut was_typing: Local<bool>,
     mut out: MessageWriter<Act<RobotAction>>,
@@ -46,7 +47,7 @@ pub(in crate::robot) fn motion_keys(
     // Not `panel && !replace(..)`: the replace must run when the panel closes too.
     let opened = !std::mem::replace(&mut *was_open, panel) && panel;
     let map: Vec<(KeyCode, char)> = ALL.into_iter().filter(|(_, k)| !(panel && *k == 'a')).collect();
-    let typing = ui.typing();
+    let typing = text.get();
     let typing_started = !std::mem::replace(&mut *was_typing, typing) && typing;
     let Some(run) = view.run.as_ref().filter(|r| r.motion_keys_active()) else { return };
     if typing {
@@ -80,9 +81,9 @@ fn chord(keys: &ButtonInput<KeyCode>) -> bool {
 /// (`SelectJoint`), ↑/↓ move its target while held (the same `RobotAction::Jog`
 /// as the jog buttons; ±0.01 rad, Shift ±0.05 rad) and S stress (refused by
 /// name, as key H). C (contacts) and =/− (speed) are robot mode's own keys.
-pub(in crate::robot) fn planar_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, ui: Res<RobotPanelUi>, mut out: MessageWriter<Act<RobotAction>>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
+pub(in crate::robot) fn planar_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, typing: Typing, mut out: MessageWriter<Act<RobotAction>>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
     let Some(p) = view.planar.as_ref() else { return };
-    if chord(&keys) || ui.typing() {
+    if chord(&keys) || typing.get() {
         return;
     }
     if keys.just_pressed(KeyCode::Space) {
@@ -117,15 +118,15 @@ pub(in crate::robot) fn planar_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<R
 }
 
 /// Input: key G, the same `RobotAction::ToggleGraphs` as the Graphs button and `system_ui` graphs:toggle.
-pub(in crate::robot) fn graph_key(keys: Res<ButtonInput<KeyCode>>, ui: Res<RobotPanelUi>, mut out: MessageWriter<Act<RobotAction>>) {
-    if !chord(&keys) && !ui.typing() && keys.just_pressed(KeyCode::KeyG) {
+pub(in crate::robot) fn graph_key(keys: Res<ButtonInput<KeyCode>>, typing: Typing, mut out: MessageWriter<Act<RobotAction>>) {
+    if !chord(&keys) && !typing.get() && keys.just_pressed(KeyCode::KeyG) {
         out.write(Act::ui(RobotAction::ToggleGraphs));
     }
 }
 
 /// Input: keys C / J / F / H, the same `RobotAction::Overlay` as the inspector buttons and `system_ui` overlay:*.
-pub(in crate::robot) fn overlay_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, ui: Res<RobotPanelUi>, mut out: MessageWriter<Act<RobotAction>>) {
-    if chord(&keys) || ui.typing() {
+pub(in crate::robot) fn overlay_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, typing: Typing, mut out: MessageWriter<Act<RobotAction>>) {
+    if chord(&keys) || typing.get() {
         return;
     }
     for (kind, _, key) in OVERLAYS {
@@ -137,8 +138,8 @@ pub(in crate::robot) fn overlay_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<
 
 /// Input: keys =/+ and − (main row and numpad), the same `RobotAction::Speed` as the header
 /// −/+ buttons, `system_ui` run:speed_* and REST robot_speed. A refusal at ×8 / ×0.125 shows in the header.
-pub(in crate::robot) fn speed_keys(keys: Res<ButtonInput<KeyCode>>, ui: Res<RobotPanelUi>, mut out: MessageWriter<Act<RobotAction>>) {
-    if chord(&keys) || ui.typing() {
+pub(in crate::robot) fn speed_keys(keys: Res<ButtonInput<KeyCode>>, typing: Typing, mut out: MessageWriter<Act<RobotAction>>) {
+    if chord(&keys) || typing.get() {
         return;
     }
     let speed = if keys.any_just_pressed([KeyCode::Equal, KeyCode::NumpadAdd]) {

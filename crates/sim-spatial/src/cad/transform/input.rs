@@ -3,7 +3,7 @@
 use super::cursor_in_view;
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus, CadTool};
+use crate::cad::document::{CadDocument, CadTool};
 use crate::cad::ops::{Flow, entry};
 use crate::cad::view::CadView;
 use bevy::picking::hover::HoverMap;
@@ -56,18 +56,16 @@ pub(in crate::cad) fn restore_cursor(mut commands: Commands, windows: Query<(Ent
 }
 
 /// Input: G, R, S, D, Shift+D, M and Escape as the tool controls'
-/// actions (`panel::controls`: cad:tool:<tool>, cad:cancel), ignored while
-/// a text field has the keyboard (`CadInputFocus`; the numeric bar's own
-/// Tab, Enter and Escape are `numeric::entry`'s), and while a catalogue
+/// actions (`panel::controls`: cad:tool:<tool>, cad:cancel). Registered
+/// under `keys::free`: not while a text field has the keyboard (the kit
+/// consumes a typing field's keys; the numeric bar's own Tab, Enter and
+/// Escape are its own) or a two-step key owns the frame, and ignored while a catalogue
 /// form, command surface or interaction is open (`CadDocument::ops`): the
 /// surfaces' key system turns Escape into closing the surface or
 /// cancelling the form then (`CadSurface` closed, `CadFormCancel`), and a
 /// tool key would change the tool under the op's form.
-pub(in crate::cad) fn keys(keys: Option<Res<ButtonInput<KeyCode>>>, focus: Option<Res<CadInputFocus>>, doc: Option<ResMut<CadDocument>>, mut out: MessageWriter<Act<CadAction>>, selection: crate::cad::selection::CadSelection) {
+pub(in crate::cad) fn keys(keys: Option<Res<ButtonInput<KeyCode>>>, doc: Option<ResMut<CadDocument>>, mut out: MessageWriter<Act<CadAction>>, selection: crate::cad::selection::CadSelection) {
     let Some(keys) = keys else { return };
-    if focus.is_some_and(|f| f.0) {
-        return;
-    }
     let Some(mut doc) = doc else { return };
     if doc.ops.form.is_some() || doc.ops.surface.is_some() || doc.ops.active.is_some() {
         return;

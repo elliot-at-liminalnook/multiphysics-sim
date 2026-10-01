@@ -6,7 +6,8 @@
 //!
 //! - **When**: CAD mode, the Select tool, the pointer over the 3D view and
 //!   not over a UI node (`HoverMap`, `scene::over_ui`), no text
-//!   field focused (`CadInputFocus`). While the Alt menu is open a press in
+//!   field focused (the kit's `typing`) and no two-step key owning the
+//!   frame (`keys::Held`). While the Alt menu is open a press in
 //!   the 3D view only closes it (as a Qt popup) and nothing is hovered.
 //! - **Click** (press and release within 6 px, RoboCAD's Manhattan
 //!   distance): body mode picks `[id, "body", 0]`; face and point modes
@@ -62,7 +63,7 @@
 //!   depth under the cursor only (a recorded approximation).
 use super::actions::CadAction;
 use super::display::{CadDisplay, SectionPlane};
-use super::document::{CadDocument, CadInputFocus, CadTool, SelectMode};
+use super::document::{CadDocument, CadTool, SelectMode};
 use super::mesh::{CadBody, CadMeshes};
 use super::ops::Flow;
 use super::topology::{CadTopology, NodeTopology};
@@ -150,15 +151,17 @@ pub(super) fn build(app: &mut App) {
     app.init_resource::<PickState>()
         .add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(PickState::default()))
         .add_systems(OnExit(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(PickState::default()))
-        // After every system that sets `CadInputFocus` this frame (the name
-        // field, the inspector's editors, the numeric bar), so a click reads
-        // the focus as it stands.
+        // After the systems that give a field the keyboard from a key this
+        // frame (the form's and the numeric bar's Tab; the surfaces' chain,
+        // with the two-step key gate, runs before the numeric bar), so a
+        // click reads the keyboard as it stands. A press elsewhere has
+        // already taken it from a field (the kit, PreUpdate; the form, its
+        // own input), so that press picks.
         .add_systems(
             Update,
             pointer
                 .after(crate::app::actions::serve)
-                .after(super::panel::name_entry)
-                .after(super::inspector::editor_entry)
+                .after(super::keys::gate)
                 .after(super::numeric::entry)
                 .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),
@@ -354,7 +357,8 @@ fn pointer(
     keys: Res<ButtonInput<KeyCode>>,
     hover_map: Option<Res<HoverMap>>,
     nodes: Query<(), With<Node>>,
-    (doc, meshes, topology, view, focus, display): (Option<Res<CadDocument>>, Option<Res<CadMeshes>>, Option<Res<CadTopology>>, Option<Res<CadView>>, Option<Res<CadInputFocus>>, Option<Res<CadDisplay>>),
+    (doc, meshes, topology, view, display): (Option<Res<CadDocument>>, Option<Res<CadMeshes>>, Option<Res<CadTopology>>, Option<Res<CadView>>, Option<Res<CadDisplay>>),
+    keyboard: super::keys::Held,
     mut state: ResMut<PickState>,
     mut ray_cast: MeshRayCast,
     bodies: Query<&CadBody>,
@@ -372,7 +376,7 @@ fn pointer(
     if let Some(p) = cursor {
         state.last = p;
     }
-    let focused = focus.is_some_and(|f| f.0);
+    let focused = keyboard.get();
     // A catalogue op's interaction (cad-modify): a placement owns the left
     // drag (`ops::interact`); a pick-then-form tool's click toggles one item
     // of its kind (RoboCAD's `EdgeTool.press`), also while its form has the keyboard.

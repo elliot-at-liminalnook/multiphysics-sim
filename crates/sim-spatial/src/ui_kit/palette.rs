@@ -5,7 +5,9 @@
 //! keys is bound to another entry too.
 //!
 //! No intent logic: the caller passes the entries and one action
-//! component per row; [`rank`] and [`conflicts`] are pure.
+//! component per row; [`rank`] and [`conflicts`] are pure. The search
+//! text is the caller's kit text field's (`ui_kit::text`): the caller
+//! passes its draft as the query, drawn with `Kit::input`.
 //!
 //! Ported exactly, including RoboCAD's quirks: the "every character is
 //! somewhere" match is not a subsequence test (order is ignored), and an

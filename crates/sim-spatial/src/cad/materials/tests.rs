@@ -2,7 +2,8 @@
 //! the controls' REST round trip, the dialogs' values and where they came
 //! from, and what OK sends (only the changed keys, in SI).
 use super::form::{self, Origin, Print, Submit};
-use super::{MaterialsArgs, MaterialsOp, controls_of, list, matches, row_label, specs};
+use super::panel::{self, FORM, SEARCH};
+use super::{Focus, MaterialsArgs, MaterialsOp, controls_of, list, matches, row_label, specs};
 use crate::app::actions::{Action, control_matches};
 use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadTarget, Connection};
@@ -134,19 +135,41 @@ fn engineering_properties_show_their_origin_and_send_only_changes() {
     assert!(form::submit(&f).unwrap_err().contains("not a printed material"));
 }
 
-/// Opening a dialog takes the keyboard from the other fields; a properties
-/// dialog opened before RoboCAD's physical model arrived takes its
-/// defaults when it lands, keeping a typed field, once.
+/// Opening a dialog takes the keyboard from the other fields (the kit's
+/// one focus: the panel's input gives it to the dialog's first field and
+/// the field that had it is told); a properties dialog opened before
+/// RoboCAD's physical model arrived takes its defaults when it lands,
+/// keeping a typed field, once.
 #[test]
 fn a_properties_dialog_takes_the_keyboard_and_the_defaults_when_they_land() {
+    use crate::app::actions::Act;
+    use crate::cad::numeric::NUMERIC;
+    use crate::ui_kit::text::{FieldEvent, FieldMsg, TextDraft, TextEntryPlugin, TextFieldApp, TextFocus, Typing};
+    use bevy::ecs::message::Messages;
+    use bevy::ecs::system::RunSystemOnce;
+    use bevy::prelude::App;
     let mut doc = document();
-    doc.tool_state.numeric.focus = Some(1);
-    doc.tool_state.numeric.began = Some(4);
     let m = pla(&doc);
     let opened = form::properties_form(&doc, &m);
     super::open(&mut doc, opened);
-    assert_eq!((doc.tool_state.numeric.focus, doc.tool_state.numeric.began), (None, None));
-    assert!(doc.materials.claimed && doc.tool_state.inspector_edit.is_none() && doc.physical_edit.draft.is_none());
+    assert!(doc.materials.claimed && doc.materials.focus == Some(Focus::Field(0)));
+    let first = doc.materials.form.as_ref().unwrap().texts[0].clone();
+    // The numeric bar has the keyboard when the dialog opens.
+    let mut app = App::new();
+    app.add_plugins(TextEntryPlugin)
+        .add_message::<Act<CadAction>>()
+        .add_text_field(NUMERIC, crate::cad::numeric::field())
+        .add_text_field(SEARCH, panel::search_field())
+        .add_text_field(FORM, panel::form_field());
+    app.world_mut().run_system_once(|mut t: TextFocus| assert!(t.focus(NUMERIC, "5"))).unwrap();
+    app.insert_resource(doc);
+    app.world_mut().run_system_once(panel::input).unwrap();
+    assert!(app.world_mut().run_system_once(|t: Typing| t.focused(FORM)).unwrap(), "the dialog's field has the keyboard");
+    assert_eq!(app.world_mut().run_system_once(|t: TextFocus| t.draft(FORM).cloned()).unwrap(), Some(TextDraft::new(first, true)), "its first row, selected");
+    let told: Vec<FieldMsg> = app.world_mut().resource_mut::<Messages<FieldMsg>>().drain().collect();
+    assert!(told.iter().any(|m| m.field == NUMERIC && m.event == FieldEvent::Blur), "the numeric bar is told: {told:?}");
+    let mut doc = app.world_mut().remove_resource::<CadDocument>().unwrap();
+    assert!(!doc.materials.claimed && doc.materials.focus == Some(Focus::Field(0)) && doc.materials.select_all);
     assert!(super::wants_physical(&doc), "the dialog reads the physical model");
     assert_eq!(super::refilled_form(&doc), None, "nothing has landed");
     form::set(doc.materials.form.as_mut().unwrap(), "poisson", "0.4").unwrap();

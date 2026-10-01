@@ -1,16 +1,23 @@
 //! The path field (window-first-usability): the one way to type a path in
 //! the window. A text input, the typed directory's matching entries (read
 //! off the UI thread by [`request`] on a `jobs::Latest`), `~/` expansion,
-//! "..", an optional submit button, and accessible labels. CAD's path form
-//! (`cad::files::form`) and the mode switcher's document picker
-//! (`app::picker`) both use it.
+//! "..", an optional submit button, and accessible labels. The mode
+//! switcher's document picker (`app::picker`) draws it; CAD's path form
+//! (`cad::files::form`) shares its listing (`Listing`, [`request`],
+//! [`receive`]).
 //!
-//! No intent logic: the caller owns the draft (`form::TextDraft` keys),
-//! the listing job and what a submit means; [`PathHit`] says which part was
-//! pressed and the caller passes one action component per part. The pure
+//! No intent logic: the text is the caller's kit text field's
+//! (`ui_kit::text`: the one input system edits its draft, and the caller
+//! passes the shown draft in [`PathView`]), and the caller owns the listing
+//! job and what a submit means; [`PathHit`] says which part was pressed and
+//! the caller passes one action component per part. The input and every
+//! button under it (the listing's entries, "..", the submit button) are
+//! tagged `KitInput`: a press on them is part of the field, so it does not
+//! take the keyboard from it (picking a directory keeps typing). The pure
 //! helpers ([`expand`], [`dir_of`], [`file_of`], [`listing_key`], [`pick`],
 //! [`up`], [`list`]) are tested without a window.
 use super::Kit;
+use super::text::KitInput;
 use super::theme::*;
 use crate::jobs::{Latest, Pool};
 use bevy::prelude::*;
@@ -206,7 +213,7 @@ impl Kit<'_> {
                     ..default()
                 }));
                 if let Some(label) = view.submit {
-                    line.spawn(self.button(label, hit(PathHit::Submit), Look::Primary, view.submit_enabled));
+                    line.spawn((self.button(label, hit(PathHit::Submit), Look::Primary, view.submit_enabled), KitInput));
                 }
             });
             self.path_listing(cell, view.text, view.listing, &hit);
@@ -234,11 +241,11 @@ impl Kit<'_> {
         }
         parent.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), flex_shrink: 0.0, ..default() }).with_children(|list| {
             if listing.dir != "/" {
-                list.spawn(self.button("..", hit(PathHit::Up), Look::Ghost, true));
+                list.spawn((self.button("..", hit(PathHit::Up), Look::Ghost, true), KitInput));
             }
             for (i, (entry, is_dir)) in listing.entries.iter().enumerate().filter(|(_, (n, _))| narrows(n)).take(SHOWN) {
                 let label = if *is_dir { format!("{entry}/") } else { entry.clone() };
-                list.spawn(self.button(&label, hit(PathHit::Entry(i)), Look::Ghost, true));
+                list.spawn((self.button(&label, hit(PathHit::Entry(i)), Look::Ghost, true), KitInput));
             }
         });
         // Entries past MAX_LISTED were never read, so they only count

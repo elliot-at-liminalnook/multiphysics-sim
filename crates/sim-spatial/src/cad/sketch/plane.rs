@@ -44,7 +44,7 @@ use super::{ActivePlane, BasePlane, CadActivePlane, CadSketches, PlaneMode, Plan
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus, SelectMode};
+use crate::cad::document::{CadDocument, SelectMode};
 use crate::cad::mesh::{CadBody, CadMeshes};
 use crate::cad::ops::{Flow, entry};
 use crate::cad::selection::{CadItems, CadSelection};
@@ -278,7 +278,8 @@ struct Picker {
 #[allow(clippy::too_many_arguments)]
 fn picks(
     doc: Option<ResMut<CadDocument>>,
-    (view, topology, meshes, plane, sketches, focus): (Option<Res<CadView>>, Option<Res<CadTopology>>, Option<Res<CadMeshes>>, Option<Res<CadActivePlane>>, Option<Res<CadSketches>>, Option<Res<CadInputFocus>>),
+    (view, topology, meshes, plane, sketches): (Option<Res<CadView>>, Option<Res<CadTopology>>, Option<Res<CadMeshes>>, Option<Res<CadActivePlane>>, Option<Res<CadSketches>>),
+    keyboard: crate::cad::keys::Held,
     windows: Query<&Window, With<PrimaryWindow>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
     hover: Option<Res<HoverMap>>,
@@ -293,7 +294,8 @@ fn picks(
     // The surface as this frame's Input saw it: an outside press closed it in Actions, before this system.
     let surface_was_open = std::mem::replace(&mut state.surface_open, doc.ops.surface.is_some());
     let Some((id, mode)) = plane_tool(&doc) else { return };
-    let focused = focus.is_some_and(|f| f.0);
+    // Not while a text field has the keyboard or a two-step key owns the frame.
+    let focused = keyboard.get();
     let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !surface_was_open && doc.ops.surface.is_none() && !focused;
     if !pressed || !view.valid {
         return;

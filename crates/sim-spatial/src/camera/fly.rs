@@ -1,7 +1,8 @@
 //! Place mode's first-person fly camera (moved from `place_view.rs`): the
 //! [`Fly`] state (yaw, pitch, speed), its rotation ([`orientation`]) and the
 //! continuous input ([`fly`], `CameraSet::Place`): W/A/S/D move on the
-//! level, Q/E down/up, Shift ×3, the right (or left) button held turns the
+//! level, Q/E down/up, Shift ×3 (none of them while a kit text field has
+//! the keyboard: `ui_kit::text::Typing`), the right (or left) button held turns the
 //! view with the mouse, and the wheel scales the speed. Fly is first-person,
 //! not orbit state: it has no focus to orbit, and the orbit gestures
 //! (`input::navigate`) do not touch it. Place mode's actions (`camera`,
@@ -20,6 +21,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::ui_kit::SWITCHER_STRIP;
+use crate::ui_kit::text::Typing;
 
 /// The fly camera's heading and speed (Place mode).
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
@@ -46,7 +48,10 @@ pub(crate) fn orientation(fly: &Fly) -> Quat {
 /// Pointer input belongs to the view only: the wheel is ignored over the
 /// switcher strip (`ui_kit::SWITCHER_STRIP`), and a drag turns the view
 /// only if its first button went down in the view ([`in_view`]); `drag`
-/// holds that answer until every button is up (None: none held).
+/// holds that answer until every button is up (None: none held). While a
+/// kit text field has the keyboard the keys do not move it (a typed "w" is
+/// held in `ButtonInput` too: the kit consumes only its press); the mouse
+/// look and the wheel still work.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn fly(
     window: Option<Single<&Window, With<PrimaryWindow>>>,
@@ -59,6 +64,7 @@ pub(super) fn fly(
     mut motion_seen: Local<MessageCursor<MouseMotion>>,
     mut wheel_seen: Local<MessageCursor<MouseWheel>>,
     mut q: Query<(&mut Transform, &mut Fly)>,
+    typing: Typing,
 ) {
     let (Some(time), Some(keys), Some(buttons), Some(motion), Some(wheel)) = (time, keys, buttons, motion, wheel) else { return };
     let pointer_in_view = in_view(window.as_deref().copied());
@@ -90,6 +96,9 @@ pub(super) fn fly(
         fly.speed = (fly.speed * if w.y > 0.0 { 1.15 } else { 1.0 / 1.15 }).clamp(0.05, 8.0);
     }
     t.rotation = orientation(&fly);
+    if typing.get() {
+        return;
+    }
     let (forward, right) = (*t.forward(), *t.right());
     let flat = Vec3::new(forward.x, 0.0, forward.z).normalize_or_zero();
     let mut d = Vec3::ZERO;

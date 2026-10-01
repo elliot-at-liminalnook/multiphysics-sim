@@ -24,7 +24,7 @@ use crate::cad::document::{CadDocument, EditDone};
 use crate::cad::materials::{MaterialsArgs, MaterialsOp};
 use crate::cad::selection::CadItems;
 use crate::cad::sync::value;
-use crate::ui_kit::form::TextDraft;
+use crate::ui_kit::text::TextDraft;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
@@ -315,18 +315,13 @@ pub(in crate::cad) fn physical_specs() -> Vec<Spec> {
     )]
 }
 
-/// CadPlugin: the physical rows' typing (Input). After the name field (it
-/// resets `CadInputFocus` each frame) and before the editors, so the
-/// command surfaces, the picks and the CAD keys (all after the editors)
-/// see the focus set here.
+/// CadPlugin: the physical rows' field and their typing (Input).
 pub(in crate::cad) fn build_physical(app: &mut App) {
-    app.add_systems(
+    use crate::ui_kit::text::TextFieldApp;
+    app.add_text_field(super::entry::PHYSICAL, super::entry::field()).add_systems(
         Update,
         super::entry::entry
             .after(crate::app::actions::serve)
-            .after(crate::cad::panel::name_entry)
-            .before(super::editor_entry)
-            .before(crate::cad::numeric::entry)
             .before(crate::cad::keys::keys)
             .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),

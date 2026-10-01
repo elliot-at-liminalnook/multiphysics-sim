@@ -132,7 +132,7 @@ pub(crate) enum BuildAction {
     /// comment draft pinned at `world` (display metres) on part `index`, else
     /// the same selection as `system_ui` `click_part` (`add`: shift held).
     PickPart { index: usize, component: String, add: bool, world: Option<[f32; 3]> },
-    /// Enter in an open text draft (`text_input`): post a comment or thread
+    /// Enter in an open text draft (its kit field, `drafts::sync_field`): post a comment or thread
     /// title, else commit the field. Not a button, so not a `system_ui` control.
     SubmitDraft,
     /// Escape in an open text draft: drop it.
@@ -609,9 +609,11 @@ pub(super) fn buttons(
     }
 }
 
-/// Input: build mode's keys, as the same actions as their buttons.
+/// Input: build mode's keys, as the same actions as their buttons. Not run
+/// while a kit field has the keyboard (`BuilderPlugin`); an open draft also
+/// stops them in the frame before its field is refocused (`drafts::sync_field`).
 pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, builder: Res<Builder>, selection: Res<Selection>, registry: Res<DocumentRegistry>, mut out: MessageWriter<Act<SystemAction>>) {
-    if builder.drag.is_some() || builder.typing() {
+    if builder.drag.is_some() || builder.input.is_some() {
         return;
     }
     let mut send = |action: BuildAction| {

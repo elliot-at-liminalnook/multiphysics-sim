@@ -43,7 +43,9 @@ use sim_runtime::cad_client::{Material, SelectionItem};
 
 pub(in crate::cad) use panel::{draw, key};
 
-/// Which of the panel's fields has the keyboard.
+/// Which of the panel's fields has the keyboard (mirrored from the kit's
+/// focus on `panel::SEARCH` and `panel::FORM`; a dialog row is the one the
+/// form field edits).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Focus {
     /// "Search materials…".
@@ -60,21 +62,21 @@ pub struct MaterialsState {
     /// The current material (RoboCAD's list `currentItem`).
     pub(crate) current: Option<String>,
     pub(crate) form: Option<MaterialForm>,
+    /// The field with the keyboard, as [`panel`]'s input mirrors the kit's
+    /// focus (`cad_state.materials.typing` and the drawing read it); the
+    /// handler clears it when it closes the dialog, and the input then
+    /// takes the kit's focus away.
     pub(crate) focus: Option<Focus>,
-    /// The focused field's text is selected (the next key replaces it).
+    /// The focused field's text is selected (the kit's draft, mirrored).
     pub(crate) select_all: bool,
-    /// A dialog opened (and took the keyboard) since [`panel`]'s input last
-    /// ran: it ends the name field's draft, which the handler cannot reach.
+    /// A dialog opened since [`panel`]'s input last ran: the input gives
+    /// its first field the keyboard (the handler cannot reach the kit's focus).
     pub(crate) claimed: bool,
 }
 
 impl MaterialsState {
-    /// A field of this panel has the keyboard.
-    pub(crate) fn typing(&self) -> bool {
-        self.focus.is_some()
-    }
-    /// Another field took the keyboard.
-    pub(crate) fn end_typing(&mut self) {
+    /// The dialog closed: its field no longer has the keyboard.
+    fn closed(&mut self) {
         self.focus = None;
         self.select_all = false;
     }
@@ -209,22 +211,18 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
             if doc.materials.form.take().is_none() {
                 return done(Err("no material dialog is open".into()));
             }
-            doc.materials.end_typing();
+            doc.materials.closed();
             doc.touch();
             done(Ok(json!({"message": "Closed the dialog; nothing was sent."})))
         }
     }
 }
 
-/// Open a dialog with its first field focused (RoboCAD's dialog focus).
-/// One field holds the keyboard: the physical rows' draft, the editors'
-/// and the numeric bar's focus end here; the name field's in [`panel`]'s
-/// input (`claimed`).
+/// Open a dialog with its first field focused (RoboCAD's dialog focus):
+/// [`panel`]'s input gives it the kit's keyboard (`claimed`), which takes
+/// it from whichever field had it.
 fn open(doc: &mut CadDocument, form: MaterialForm) -> Value {
-    doc.physical_edit.draft = None;
-    doc.tool_state.inspector_edit = None;
-    doc.tool_state.numeric.focus = None;
-    doc.tool_state.numeric.began = None;
+    // A numeric entry requested this frame would take the dialog's keyboard.
     doc.tool_state.numeric.focus_request = false;
     doc.materials.form = Some(form);
     doc.materials.focus = Some(Focus::Field(0));
@@ -305,7 +303,7 @@ fn submit(doc: &mut CadDocument, call: &mut Call) -> Outcome {
         }
         _ => {
             doc.materials.form = None;
-            doc.materials.end_typing();
+            doc.materials.closed();
         }
     }
     doc.touch();
@@ -379,19 +377,14 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
     )]
 }
 
-/// CadPlugin: the panel's typing and clicks (Input: after the name field,
-/// which resets `CadInputFocus`, and the physical rows, before the editors
-/// and everything ordered after them, which honour the focus set here),
-/// and the dialog (Present).
+/// CadPlugin: the panel's fields, its typing and clicks (Input), and the
+/// dialog (Present).
 pub(in crate::cad) fn build(app: &mut App) {
-    app.add_systems(
+    use crate::ui_kit::text::TextFieldApp;
+    app.add_text_field(panel::SEARCH, panel::search_field()).add_text_field(panel::FORM, panel::form_field()).add_systems(
         Update,
         panel::input
             .after(crate::app::actions::serve)
-            .after(crate::cad::panel::name_entry)
-            .after(crate::cad::inspector::physical_entry)
-            .before(crate::cad::inspector::editor_entry)
-            .before(crate::cad::numeric::entry)
             .before(crate::cad::keys::keys)
             .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),

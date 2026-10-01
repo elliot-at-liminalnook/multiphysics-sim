@@ -291,11 +291,6 @@ pub struct Candidates {
     pub revision: Option<u64>,
 }
 
-/// True while one of CAD mode's text fields has the keyboard (D2's panel
-/// sets it): CAD mode's keys (`keys`) are ignored meanwhile.
-#[derive(Resource, Default)]
-pub struct CadInputFocus(pub bool);
-
 /// A finished connect: the client, the first health, and whether this
 /// window started the service (its process is in the document's
 /// [`ChildSlot`] already).

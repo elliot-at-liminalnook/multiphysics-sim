@@ -12,35 +12,42 @@
 //!   (`ui_kit::slider_held`) and only when the time changes.
 //! - **Compiled gait path.** The kit path field ("Open a compiled gait")
 //!   writes `RobotAction::Gait {Open {source: Path}}`, the action REST
-//!   `robot_gait {path}` parses into. Typing is input editing
-//!   (`form::TextDraft`): Enter submits, Escape or a press elsewhere ends
-//!   it. While it has the keyboard, robot mode's keys (`actions::keys`) are
-//!   ignored and the shared camera's keys are gated (`OrbitRules::typing`).
-//!   The field refuses the keyboard while the Leg calibration panel is shown
-//!   (its Q/A hold-to-move and Z/Escape STOP keys are read whatever has
-//!   focus) or the document picker is open, and gives it up when either
-//!   opens or the field itself is gone. The directory listing is read on
+//!   `robot_gait {path}` parses into. It is the kit field [`GAIT_PATH`]
+//!   (`ui_kit::text`): Enter submits, Escape or a press elsewhere ends it.
+//!   While it has the keyboard, robot mode's keys (`actions::keys`) and the
+//!   shared camera's keys are not read (`ui_kit::text::typing`). The field
+//!   refuses the keyboard while the Leg calibration panel is shown (its Q/A
+//!   hold-to-move and Z STOP keys are read whatever has focus) or the
+//!   document picker is open, and gives it up when either opens or the
+//!   field itself is gone. The directory listing is read on
 //!   `Pool::Io` (`path_field::request`); the UI thread never reads a
 //!   directory. "Open" is enabled without touching the filesystem
 //!   (`open_enabled`); the file's existence is checked once per submit.
 use super::*;
 use crate::app::actions::Act;
 use crate::jobs::Latest;
-use crate::ui_kit::form::{DraftKey, TextDraft};
 use crate::ui_kit::path_field::{self, Listing, PathHit, PathView};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::KeyboardInput;
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFieldApp, TextFocus, Typing};
 
 /// The suffixes the gait path field lists.
 const GAIT_SUFFIXES: [&str; 1] = ["json"];
 const GAIT_FIELD_LABEL: &str = "Open a compiled gait (compiled.json)";
 const HARDWARE_HAS_KEYS: &str = "The Leg calibration panel is open and its keys (Q/A move, Z/Escape STOP) stay live: close it to type a path.";
 
-/// The gait path field's draft and focus.
+/// The gait path field (one-line, not sticky: a press elsewhere ends it).
+pub(crate) const GAIT_PATH: FieldId = FieldId("robot.gait_path");
+
+/// Spawn the gait path field (`RobotPlugin`).
+pub(super) fn add_field(app: &mut App) {
+    app.add_message::<FieldMsg>().add_text_field(GAIT_PATH, TextField::new(GAIT_FIELD_LABEL));
+}
+
+/// The gait path field's text (the kit field's draft, followed here for
+/// the listing and Open) and notice. Whether it has the keyboard is the
+/// kit's (`Typing::focused(GAIT_PATH)`).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(super) struct GaitPathDraft {
     pub draft: TextDraft,
-    pub focused: bool,
     /// Why the last submit or focus press did nothing.
     pub notice: Option<String>,
     /// The listing key last asked for (`path_field::listing_key`).
@@ -48,7 +55,7 @@ pub(super) struct GaitPathDraft {
 }
 
 /// Robot mode's UI-only state (kept across robot documents in the window;
-/// the field's focus ends when robot mode is left).
+/// the kit takes the field's keyboard when robot mode is left).
 #[derive(Resource, Default)]
 pub(super) struct RobotPanelUi {
     /// The Replay block lists every recording, not only the five most recent.
@@ -60,10 +67,6 @@ pub(super) struct RobotPanelUi {
     listed_rev: u64,
 }
 impl RobotPanelUi {
-    /// The gait path field has the keyboard: robot mode's keys and the camera keys are not read.
-    pub(super) fn typing(&self) -> bool {
-        self.gait_path.focused
-    }
     /// The listing of the directory the typed path names, when it is the one asked for now.
     fn listing(&self) -> Option<&Listing> {
         let (key, _) = path_field::listing_key(&self.gait_path.draft.text, &GAIT_SUFFIXES)?;
@@ -174,33 +177,48 @@ pub(super) fn recorded_seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bev
     }
 }
 
-/// Input: the gait path field's presses and keys (see the module doc).
+/// Input: the gait path field's presses and its kit field's messages (see
+/// the module doc). Typing (`Changed`) is followed into the draft (the
+/// listing follows it); Enter (`Submit`) or the Open button submits, and an
+/// accepted path takes the keyboard away; Escape (`Cancel`) and a press
+/// elsewhere (`Blur`) have already taken it.
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(super) fn gait_path_input(
     mut ui: ResMut<RobotPanelUi>,
     view: Res<RobotView>,
     parts: Query<(&Interaction, &GaitPathPart), Changed<Interaction>>,
-    keys: Res<ButtonInput<KeyCode>>,
-    mouse: Res<ButtonInput<MouseButton>>,
-    mut events: MessageReader<KeyboardInput>,
+    // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
+    mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     hardware: Option<Res<crate::robot::hardware::Hardware>>,
     (roots, picker): (Query<(), With<GaitPathRoot>>, Option<Res<crate::app::picker::Picker>>),
-    mut cameras: Query<&mut OrbitRules, With<RobotCamera>>,
     mut out: MessageWriter<Act<RobotAction>>,
 ) {
+    let events: Vec<FieldEvent> = field.p0().read().filter(|m| m.field == GAIT_PATH).map(|m| m.event.clone()).collect();
+    let mut text = field.p1();
     let before = ui.gait_path.clone();
     let mut f = before.clone();
+    let mut focused = text.focused(GAIT_PATH);
     let panel_open = hardware.is_some_and(|h| h.open);
     // The document picker has the window (and its own path field) while open.
     let picker_open = picker.is_some_and(|p| p.open.is_some());
-    let (mut on_field, mut started, mut submit) = (false, false, false);
+    let mut submit = false;
+    // This frame's typing (the kit read it in PreUpdate, before these presses).
+    for event in events {
+        match event {
+            FieldEvent::Changed(draft) => {
+                f.draft = draft;
+                f.notice = None;
+            }
+            FieldEvent::Submit(_) => submit = true,
+            FieldEvent::Cancel | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } | FieldEvent::Blur => {}
+        }
+    }
     for (interaction, part) in &parts {
         if *interaction != Interaction::Pressed {
             continue;
         }
-        on_field = true;
         match part.0 {
-            PathHit::Field if !f.focused => {
+            PathHit::Field if !focused => {
                 if picker_open {
                     continue;
                 }
@@ -208,12 +226,10 @@ pub(super) fn gait_path_input(
                     f.notice = Some(HARDWARE_HAS_KEYS.into());
                     continue;
                 }
-                f.focused = true;
                 f.draft.select_all = true;
                 f.notice = None;
                 // Read the directory again: files may have appeared since.
                 f.asked = None;
-                started = true;
                 // An empty field starts in the workspace root (a compiled.json may be relative to it).
                 if f.draft.text.is_empty()
                     && let Ok(root) = &view.root
@@ -221,6 +237,7 @@ pub(super) fn gait_path_input(
                     f.draft.text = format!("{}/", root.display().to_string().trim_end_matches('/'));
                     f.draft.select_all = false;
                 }
+                focused = text.focus_draft(GAIT_PATH, f.draft.clone());
             }
             PathHit::Field => {}
             PathHit::Entry(i) => {
@@ -240,31 +257,10 @@ pub(super) fn gait_path_input(
             PathHit::Submit => submit = true,
         }
     }
-    // A press elsewhere, the Leg calibration panel or the document picker
-    // opening, or the field going away (another view's inspector) ends the typing.
-    if f.focused && ((!on_field && mouse.just_pressed(MouseButton::Left)) || panel_open || picker_open || roots.is_empty()) {
-        f.focused = false;
-    }
-    if started || !f.focused {
-        // Keys pressed before the field took the keyboard are not its text.
-        events.clear();
-    } else {
-        let chord = keys.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]);
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        for e in typed {
-            match f.draft.key(&e.logical_key, chord) {
-                DraftKey::Enter => {
-                    submit = true;
-                    break;
-                }
-                DraftKey::Escape => {
-                    f.focused = false;
-                    break;
-                }
-                DraftKey::Edited => f.notice = None,
-                DraftKey::Tab | DraftKey::Ignored => {}
-            }
-        }
+    // The Leg calibration panel or the document picker opening, or the field
+    // going away (another view's inspector), ends the typing.
+    if focused && (panel_open || picker_open || roots.is_empty()) {
+        text.blur(GAIT_PATH);
     }
     if submit {
         match open_action(&f.draft.text) {
@@ -272,24 +268,20 @@ pub(super) fn gait_path_input(
             Some(action) => match check(&view, &action) {
                 Ok(()) => {
                     out.write(Act::ui(action));
-                    f.focused = false;
+                    text.blur(GAIT_PATH);
                     f.notice = None;
                 }
                 Err(why) => f.notice = Some(why),
             },
         }
     }
+    // A listing pick or Up edits the field's draft too (no change: nothing written).
+    text.set(GAIT_PATH, f.draft.clone());
     // The listing follows the typed directory (read on Pool::Io).
     let ask = path_field::listing_key(&f.draft.text, &GAIT_SUFFIXES).filter(|(key, _)| f.asked.as_deref() != Some(key.as_str()));
     if let Some((key, dir)) = ask {
         f.asked = Some(key.clone());
         path_field::request(&mut ui.listing, "robot gait path listing", key, dir, GAIT_SUFFIXES.iter().map(|s| s.to_string()).collect());
-    }
-    // The shared camera reads no key while the field types.
-    for mut rules in &mut cameras {
-        if rules.typing != f.focused {
-            rules.typing = f.focused;
-        }
     }
     if f != before {
         ui.gait_path = f;
@@ -309,26 +301,27 @@ pub(super) fn receive_listing(mut ui: ResMut<RobotPanelUi>) {
 
 /// Present: the gait path field, rebuilt when its draft, focus, listing or
 /// submit state changes (or its root is new).
-pub(super) fn gait_path_draw(mut commands: Commands, ui: Res<RobotPanelUi>, view: Res<RobotView>, fonts: Res<UiFonts>, roots: Query<Entity, With<GaitPathRoot>>, mut last: Local<Option<(Entity, GaitPathDraft, u64, bool)>>) {
+pub(super) fn gait_path_draw(mut commands: Commands, ui: Res<RobotPanelUi>, typing: Typing, view: Res<RobotView>, fonts: Res<UiFonts>, roots: Query<Entity, With<GaitPathRoot>>, mut last: Local<Option<(Entity, GaitPathDraft, bool, u64, bool)>>) {
     let Ok(root) = roots.single() else {
         *last = None;
         return;
     };
     let f = &ui.gait_path;
+    let focused = typing.focused(GAIT_PATH);
     // No filesystem access and no formatting per frame: the draft (whose text
-    // selects the listing), the listing's revision and the Open state are the key.
+    // selects the listing), the focus, the listing's revision and the Open state are the key.
     let enabled = open_enabled(&view, &f.draft.text);
-    if last.as_ref().is_some_and(|(e, d, rev, en)| *e == root && d == f && *rev == ui.listed_rev && *en == enabled) {
+    if last.as_ref().is_some_and(|(e, d, foc, rev, en)| *e == root && d == f && *foc == focused && *rev == ui.listed_rev && *en == enabled) {
         return;
     }
-    *last = Some((root, f.clone(), ui.listed_rev, enabled));
+    *last = Some((root, f.clone(), focused, ui.listed_rev, enabled));
     let listing = ui.listing();
     let k = Kit { f: &fonts };
     let field = PathView {
         label: GAIT_FIELD_LABEL,
         text: &f.draft.text,
         placeholder: "/path/to/compiled.json, or relative to the workspace root",
-        focused: f.focused,
+        focused,
         selected: f.draft.select_all,
         submit: Some("Open"),
         submit_enabled: enabled,
@@ -341,11 +334,4 @@ pub(super) fn gait_path_draw(mut commands: Commands, ui: Res<RobotPanelUi>, view
             p.spawn(k.text(notice.clone(), size::CAPTION, WARN, 0));
         }
     });
-}
-
-/// OnExit(Robot): the field gives up the keyboard.
-pub(super) fn leave(mut ui: ResMut<RobotPanelUi>) {
-    if ui.gait_path.focused {
-        ui.gait_path.focused = false;
-    }
 }

@@ -44,7 +44,7 @@ use crate::cad::document::{CadDocument, EditDone};
 use crate::cad::sync::value;
 use crate::camera::{CameraAction, Orbit};
 use crate::jobs::{Job, Pool};
-use crate::ui_kit::form::TextDraft;
+use crate::ui_kit::text::TextDraft;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -67,7 +67,9 @@ pub(crate) enum ViewField {
     Fov,
 }
 
-/// The field being typed, its draft and why its last Enter sent nothing.
+/// The field being typed (while the kit's field `panel::VIEWS` has the
+/// keyboard), its draft (mirrored from the kit's) and why its last Enter
+/// sent nothing.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Typing {
     pub field: ViewField,
@@ -91,6 +93,9 @@ pub struct CadViews {
     /// The new view's name as typed (kept while the field is not focused).
     pub(crate) new_name: String,
     pub(crate) typing: Option<Typing>,
+    /// `typing` was opened by the handler (`open_fov`): the panel's input
+    /// gives it the kit's keyboard.
+    pub(crate) focus_request: bool,
     /// The view last restored or saved (RoboCAD's current list item).
     pub(crate) selected: Option<String>,
     /// RoboCAD's panel feedback line ("Showing: …").
@@ -368,7 +373,8 @@ pub(in crate::cad) fn open_fov(cx: &mut Cx) -> Outcome {
     let Some(views) = cx.views.as_deref_mut() else { return Outcome::Done(Err(NO_WINDOW.into())) };
     let degrees = views.camera.map(|c| panel::fov_text(c.fov.to_degrees()));
     let text = degrees.clone().unwrap_or_else(|| "40".into());
-    views.typing = Some(Typing { field: ViewField::Fov, draft: TextDraft { text, select_all: true }, error: None });
+    views.typing = Some(Typing { field: ViewField::Fov, draft: TextDraft::new(text, true), error: None });
+    views.focus_request = true;
     Outcome::Done(Ok(json!({"field_of_view": degrees, "message": "Type the field of view in degrees (5–120) and press Enter."})))
 }
 
@@ -448,18 +454,14 @@ pub(super) fn snapshot(cameras: Query<(&Orbit, &Camera)>, views: Option<ResMut<C
 /// CadPlugin: this part's systems and resources (inserted on entering CAD
 /// mode; removed by `cad::clear`).
 pub(in crate::cad) fn build(app: &mut App) {
-    app.add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(CadViews::default()))
+    use crate::ui_kit::text::TextFieldApp;
+    app.add_text_field(panel::VIEWS, panel::text_field())
+        .add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(CadViews::default()))
         .add_systems(
             Update,
             (
-                // After the name field and the inspector's editors (which
-                // reset `CadInputFocus`), before the chord gate and every
-                // CAD key reader, which honour the focus set here.
                 panel::input
                     .after(crate::app::actions::serve)
-                    .after(crate::cad::panel::name_entry)
-                    .after(crate::cad::inspector::editor_entry)
-                    .before(crate::cad::keys::gate)
                     .before(crate::cad::keys::keys)
                     .in_set(ViewerSet::Input),
                 sync.after(crate::cad::sync::receive).in_set(ViewerSet::JobResults),

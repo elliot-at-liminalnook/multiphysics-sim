@@ -384,6 +384,7 @@ pub(super) fn scroll(
     let scale = window.scale_factor();
     if delta != 0.0 {
         if let Some(p) = window.cursor_position() {
+            // Cmd/Ctrl+wheel zooms the scene card, typing or not (the camera reads gesture modifiers while typing).
             let zooming = (keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight) || keys.pressed(KeyCode::SuperLeft) || keys.pressed(KeyCode::SuperRight)) && scene.learn_view.is_some_and(|v| v.visible.contains(p * scale));
             if !zooming && p.y > TOPBAR && p.y < window.height() - STATUSBAR - SWITCHER_STRIP {
                 let which = if p.x < LEFT_WIDTH {

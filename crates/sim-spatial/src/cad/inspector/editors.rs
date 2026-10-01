@@ -6,17 +6,17 @@
 //! its transform (`{"transform": {"translation", "axis", "angle_deg",
 //! "scale"}}`).
 //!
-//! - **Typing** follows the name field's pattern (`panel::name_entry`): a
-//!   press on a value opens a draft of it (its text selected, so typing
-//!   replaces it), Enter evaluates it with RoboCAD's unit expressions
+//! - **Typing** is the kit's one text field ([`EDITOR`], `ui_kit::text`;
+//!   `ToolState::inspector_edit` is the value it edits, its text mirrored
+//!   from the kit's draft): a press on a value gives it the keyboard with a
+//!   draft of it (its text selected, so typing replaces it), Enter evaluates it with RoboCAD's unit expressions
 //!   (`sim_runtime::units::evaluate`: lengths default to mm, the angle to
 //!   degrees, the axis and scale are plain numbers; a vector is three
 //!   expressions separated by commas) and writes one `CadPatch`, the
 //!   existing one-edit path (one RoboCAD undo step); an error keeps the
 //!   draft open with the evaluator's message naming the component, the
 //!   token and its position. Escape, a press elsewhere, another node
-//!   selected or the name field opening drop it. `CadInputFocus` is true
-//!   while a draft is open and in the frame it ends.
+//!   selected or another field taking the keyboard drop it.
 //! - **A transform edit sends the whole transform**: RoboCAD's
 //!   `Transform.from_json` fills absent keys with its defaults, so one
 //!   changed component is sent with the other three as RoboCAD last
@@ -52,16 +52,24 @@
 use super::{field, node};
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus};
-use crate::cad::panel::{CadButton, NameDraft, edit_blocked, patch};
+use crate::cad::document::CadDocument;
+use crate::cad::panel::{CadButton, edit_blocked, patch};
 use crate::cad::selection::{CadItems, CadSelection};
 use crate::cad::transform::num;
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, size, wrap};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use serde_json::{Value, json};
 use sim_runtime::cad_client::NodeSummary;
+
+/// The inspector's value editors' field: one kit field for every editor
+/// (the value is `ToolState::inspector_edit`).
+pub(in crate::cad) const EDITOR: FieldId = FieldId("cad.inspector.edit");
+
+/// The editors' field as the kit spawns it (`inspector::build`).
+pub(in crate::cad) fn editor_field() -> TextField {
+    TextField::new("Inspector value").select_on_focus()
+}
 
 /// The node kinds whose transform RoboCAD applies (instances, reference meshes and images).
 pub const PLACED_KINDS: [&str; 3] = ["instance", "mesh", "image"];
@@ -382,150 +390,109 @@ pub(super) fn editors(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, 
     }
 }
 
-/// Type `text` into the draft (replacing a selected text).
-fn type_text(d: &mut EditDraft, text: &str) {
-    if d.select_all {
-        d.text.clear();
-        d.select_all = false;
-    }
-    d.text.push_str(text);
-    d.error = None;
+/// The `CadPatch` an Enter of draft `d` writes: None when the value is
+/// unchanged, else the edit; Err why nothing is sent (shown under the field).
+fn enter(doc: &CadDocument, n: &NodeSummary, d: &EditDraft) -> Result<Option<CadAction>, String> {
+    // The tolerance has no shown value (`current_text` is ""): an empty Enter is evaluated, so it names what to type.
+    let unchanged = d.key != EditKey::Tessellation && d.text.trim() == current_text(n, d.key);
+    let result = if unchanged { Ok(None) } else { patch_for(n, d.key, &d.text, d.original).map(Some) };
+    // The transform is sent whole, its untouched components as read when
+    // the draft opened: refused once RoboCAD's document has moved on since
+    // (or the shown one is stale).
+    let blocked = if matches!(d.key, EditKey::Pivot | EditKey::Tessellation) { edit_blocked(doc) } else { doc.commit_refusal(Some(d.began)) };
+    result.and_then(|action| match blocked {
+        Some(why) if action.is_some() => Err(format!("Not sent: {why}. Enter again once it clears, or Escape and reopen the field for the current values.")),
+        _ => Ok(action),
+    })
 }
 
-/// Input: the editors' drafts (see the module doc). After the name field
-/// (`panel::name_entry`, which resets `CadInputFocus` when it has no
-/// draft) and before the numeric bar and the CAD keys, which honour the
-/// focus set here.
-#[allow(clippy::too_many_arguments)]
+/// Input: the editors' drafts (see the module doc).
 pub(in crate::cad) fn entry(
     doc: Option<ResMut<CadDocument>>,
     presses: Query<(&Interaction, &EditField), Changed<Interaction>>,
-    keys: Option<Res<ButtonInput<KeyCode>>>,
-    buttons: Option<Res<ButtonInput<MouseButton>>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    name: Option<ResMut<NameDraft>>,
+    mut msgs: MessageReader<FieldMsg>,
+    mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
     selection: CadSelection,
 ) {
     let Some(mut doc) = doc else {
-        events.clear();
+        msgs.clear();
         return;
     };
     let before = doc.tool_state.inspector_edit.clone();
     let mut draft = before.clone();
-    let mut started = false;
-    let mut ended = false;
-    // A press on an editor's field (the open one keeps its draft).
-    let mut on_field = false;
-    for (interaction, f) in &presses {
-        if *interaction != Interaction::Pressed {
-            continue;
+    for m in msgs.read().filter(|m| m.field == EDITOR) {
+        match &m.event {
+            FieldEvent::Changed(t) => {
+                if let Some(d) = draft.as_mut() {
+                    d.text = t.text.clone();
+                    d.select_all = t.select_all;
+                    d.error = None;
+                }
+            }
+            FieldEvent::Submit(typed) => {
+                let Some(d) = draft.as_mut() else {
+                    text.blur(EDITOR);
+                    continue;
+                };
+                d.text = typed.clone();
+                let Some(n) = node(&doc, &d.node) else {
+                    draft = None;
+                    text.blur(EDITOR);
+                    continue;
+                };
+                match enter(&doc, n, d) {
+                    Ok(action) => {
+                        if let Some(action) = action {
+                            out.write(Act::ui(action));
+                        }
+                        draft = None;
+                        text.blur(EDITOR);
+                    }
+                    Err(why) => d.error = Some(why),
+                }
+            }
+            FieldEvent::Cancel => draft = None,
+            // A press elsewhere or another field's focus (unless this
+            // system gave the field the keyboard again since).
+            FieldEvent::Blur if !text.focused(EDITOR) => draft = None,
+            FieldEvent::Blur | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } => {}
         }
-        on_field = true;
-        if draft.as_ref().is_some_and(|d| d.node == f.node && d.key == f.key) {
+    }
+    let mut started = false;
+    for (interaction, f) in &presses {
+        // A press on the open editor keeps its draft.
+        if *interaction != Interaction::Pressed || draft.as_ref().is_some_and(|d| d.node == f.node && d.key == f.key) {
             continue;
         }
         let Some(n) = node(&doc, &f.node) else { continue };
-        draft = Some(EditDraft {
-            node: f.node.clone(),
-            key: f.key,
-            text: current_text(n, f.key),
-            select_all: true,
-            error: None,
-            began: doc.shown_revision(),
-            original: current_vector(n, f.key),
-        });
-        started = true;
+        let opened = current_text(n, f.key);
+        let original = current_vector(n, f.key);
+        if text.focus_draft(EDITOR, TextDraft::new(opened.clone(), true)) {
+            draft = Some(EditDraft { node: f.node.clone(), key: f.key, text: opened, select_all: true, error: None, began: doc.shown_revision(), original });
+            started = true;
+        }
     }
-    let naming = name.as_ref().is_some_and(|d| d.editing.is_some());
-    if started {
-        // One field holds the keyboard: the numeric entry and a name draft end.
-        if doc.tool_state.numeric.focus.is_some() {
-            doc.tool_state.numeric.focus = None;
-            doc.tool_state.numeric.began = None;
-        }
-        if naming && let Some(mut name) = name {
-            name.editing = None;
-            name.refusal = None;
-        }
-    } else if draft.is_some() {
+    // Another node selected drops the draft.
+    if !started && let Some(d) = draft.as_ref() {
         let selected = selection.items().first_node().map(str::to_string);
-        let elsewhere = !on_field && buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left));
-        if naming || elsewhere || draft.as_ref().is_some_and(|d| selected.as_deref() != Some(d.node.as_str())) {
+        if selected.as_deref() != Some(d.node.as_str()) {
             draft = None;
-            ended = true;
+            text.blur(EDITOR);
         }
     }
-    if started || draft.is_none() || doc.ops.surface.is_some() {
-        // Keys pressed before the field took the keyboard are not its text;
-        // an open command surface (palette, menu, radial) has the keyboard,
-        // and the draft waits unchanged until it closes.
-        events.clear();
-    } else {
-        let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        for e in typed {
-            let Some(d) = draft.as_mut() else { break };
-            match &e.logical_key {
-                Key::Enter => {
-                    let Some(n) = node(&doc, &d.node) else {
-                        draft = None;
-                        ended = true;
-                        break;
-                    };
-                    // The tolerance has no shown value (`current_text` is ""): an empty Enter is evaluated, so it names what to type.
-                    let unchanged = d.key != EditKey::Tessellation && d.text.trim() == current_text(n, d.key);
-                    let result = if unchanged { Ok(None) } else { patch_for(n, d.key, &d.text, d.original).map(Some) };
-                    // The transform is sent whole, its untouched components
-                    // as read when the draft opened: refused once RoboCAD's
-                    // document has moved on since (or the shown one is stale).
-                    let blocked = if matches!(d.key, EditKey::Pivot | EditKey::Tessellation) { edit_blocked(&doc) } else { doc.commit_refusal(Some(d.began)) };
-                    match result.and_then(|action| match blocked {
-                        Some(why) if action.is_some() => Err(format!("Not sent: {why}. Enter again once it clears, or Escape and reopen the field for the current values.")),
-                        _ => Ok(action),
-                    }) {
-                        Ok(action) => {
-                            if let Some(action) = action {
-                                out.write(Act::ui(action));
-                            }
-                            draft = None;
-                            ended = true;
-                        }
-                        Err(why) => d.error = Some(why),
-                    }
-                    break;
-                }
-                Key::Escape => {
-                    draft = None;
-                    ended = true;
-                    break;
-                }
-                Key::Backspace => {
-                    if d.select_all {
-                        d.text.clear();
-                        d.select_all = false;
-                    } else {
-                        d.text.pop();
-                    }
-                    d.error = None;
-                }
-                Key::Space if !chord => type_text(d, " "),
-                Key::Character(c) if !chord && !c.chars().any(char::is_control) => type_text(d, c.as_str()),
-                _ => {}
-            }
-        }
+    // The kit's focus is the record: a draft whose field lost the keyboard
+    // without a message read here (or one a handler cleared) ends.
+    if draft.is_some() && !text.focused(EDITOR) {
+        draft = None;
+    }
+    if draft.is_none() {
+        text.blur(EDITOR);
     }
     if draft != before {
         doc.tool_state.inspector_edit = draft;
         // The panels refresh on the document's revision.
         doc.touch();
-    }
-    if let Some(mut focus) = focus
-        && (doc.tool_state.inspector_edit.is_some() || ended)
-        && !focus.0
-    {
-        focus.0 = true;
     }
 }
 

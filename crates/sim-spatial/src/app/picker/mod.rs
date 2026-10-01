@@ -12,17 +12,29 @@
 //!   (`Pool::Io`) when the picker opens; the UI thread reads no file.
 //! - **The path field** ("Open file…", the kit's `path_field`): a typed
 //!   path (`~/` expanded; for CAD an http(s) URL too) with its directory's
-//!   listing, read on `Pool::Io` when the directory changes.
+//!   listing, read on `Pool::Io` when the directory changes. Its text is
+//!   the kit text field [`PATH`] (`ui_kit::text`): the one input system
+//!   types into it, and whether it has the keyboard is the kit's focus
+//!   (`InputFocus`), nothing of the picker's. [`Picker::draft`] mirrors it
+//!   for `system_ui` and REST (edits arrive as `Changed`; the picker's own
+//!   changes reach the field through [`sync`]). Opening the picker gives
+//!   it the keyboard (so no field underneath types while the modal is up);
+//!   it is sticky: a press on the listing, "..", Open or the sections keeps
+//!   typing; Tab gives the keyboard up (Tab again, or a press on the field,
+//!   takes it back, selected); Escape, closing and a mode switch end it.
 //! - **Choices are switches**: an entry, the path field's Open (and Enter)
 //!   write the same `WindowAction::Switch` that `viewer_mode {mode, path |
 //!   preset | url}` builds ([`Picker::choice`], [`Picker::typed`]); there
 //!   is no second switch path. A refused choice keeps the picker open and
 //!   shows the switcher's refusal as its status line.
 //! - **Closing**: when the window's mode changes (the choice succeeded, or
-//!   another mode was chosen in the switcher), on Close and on Escape.
-//! - **Modal** ([`keys`], PreUpdate after input): while open, keys and the
-//!   wheel go to the picker only; the keyboard and wheel messages are
-//!   cleared and the held keys released (not reset, so a held W or Q/A
+//!   another mode was chosen in the switcher), on Close and on Escape; the
+//!   path field gives up the keyboard.
+//! - **Modal** ([`keys`], PreUpdate after the kit's input system): while
+//!   open, keys and the wheel go to the picker only; it reads no keyboard
+//!   message (the field's text is the kit's), its Enter / Escape / Tab
+//!   without the field come from the key states, then the wheel messages
+//!   are cleared and the held keys released (not reset, so a held W or Q/A
 //!   underneath sees its release and stops), so no mode shortcut fires
 //!   underneath. It does not open over robot mode's Leg calibration panel,
 //!   whose STOP must stay reachable.
@@ -36,8 +48,10 @@
 //!   giving another one is refused, naming both, as the builder's and robot
 //!   mode's controls refuse a stale listing.
 mod discover;
+mod modal;
 
 pub(crate) use discover::discover;
+pub(crate) use modal::{keys, sync};
 
 use super::actions::Act;
 use super::recent;
@@ -45,18 +59,24 @@ use super::switch::{Document, ModeSwitch, Switcher, WindowAction};
 use super::{Persistent, ViewerMode};
 use crate::builder::ui_api::Enabled;
 use crate::jobs::{Latest, Pool};
-use crate::ui_kit::form::{DraftKey, TextDraft};
-use crate::ui_kit::text::release_held;
 use crate::ui_kit::path_field::{self, Listing, PathHit, PathView};
 use crate::ui_kit::picker::{PickHit, PickerEntry, PickerSection};
+use crate::ui_kit::text::{FieldId, TextDraft, TextField, TextFocus, Typing};
 use crate::ui_kit::{DANGER, Kit, SUBTLE, UiFonts};
-use bevy::ecs::message::{MessageCursor, Messages};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardFocusLost, KeyboardInput};
-use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
+use bevy::input_focus::InputFocus;
 use bevy::prelude::*;
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
+
+/// The path field ("Open file…"): the kit text field the picker's path is typed in.
+pub(crate) const PATH: FieldId = FieldId("picker.path");
+
+/// [`PATH`] as `switch::build` adds it: selected when it takes the
+/// keyboard, sticky (a press on the picker keeps typing: see the module
+/// doc).
+pub(crate) fn path_text_field() -> TextField {
+    TextField::new("Open file…").select_on_focus().sticky()
+}
 
 /// One document the picker offers.
 #[derive(Clone, Debug, PartialEq)]
@@ -92,10 +112,9 @@ pub(crate) struct Picker {
     pub(crate) from: Option<ViewerMode>,
     /// Why it opened (its subtitle).
     pub(crate) reason: String,
-    /// The path field's draft.
+    /// The path field's draft: the kit field [`PATH`]'s, mirrored (its
+    /// `Changed` edits; the picker's own changes reach it by [`sync`]).
     pub(crate) draft: TextDraft,
-    /// The path field has the keyboard.
-    pub(crate) focused: bool,
     /// The sections' scroll offset (px).
     pub(crate) scroll: f32,
     sources: Latest<Sources>,
@@ -106,6 +125,10 @@ pub(crate) struct Picker {
     /// The draft is still the examples folder it started in, not a choice:
     /// Enter and Open don't submit it (Lessons and Place take folders).
     prefilled: bool,
+    /// The path was typed or set since opening: discovery's start folder
+    /// no longer fills it (the field has the keyboard from the start, so
+    /// its focus can't say whether something was typed).
+    edited: bool,
     /// The switcher's revision when it opened: a later outcome (a refused
     /// choice, a load in progress) is its status line.
     pub(crate) opened_revision: u64,
@@ -215,6 +238,7 @@ impl Picker {
     pub(crate) fn set_text(&mut self, text: String) {
         self.draft = TextDraft { text, select_all: false };
         self.prefilled = false;
+        self.edited = true;
         self.follow_listing();
         self.revision += 1;
     }
@@ -313,6 +337,7 @@ pub(crate) fn activate(world: &mut World, id: &str, text: Option<&str>, ui_revis
     match id {
         "picker:close" => {
             picker.close();
+            blur_path(world);
             Ok(Activation::Closed(mode))
         }
         "picker:path" => {
@@ -345,6 +370,17 @@ pub(crate) fn activate(world: &mut World, id: &str, text: Option<&str>, ui_revis
     }
 }
 
+/// The path field gives up the keyboard (a close from `system_ui`).
+fn blur_path(world: &mut World) {
+    let path = world.query::<(Entity, &FieldId)>().iter(world).find(|(_, f)| **f == PATH).map(|(e, _)| e);
+    if let Some(path) = path
+        && let Some(mut focus) = world.get_resource_mut::<InputFocus>()
+        && focus.get() == Some(path)
+    {
+        focus.clear();
+    }
+}
+
 // --- Systems ---
 
 /// A clickable part of the picker.
@@ -367,6 +403,7 @@ pub(crate) fn receive(
     mode: Option<Res<State<ViewerMode>>>,
     hardware: Option<Res<crate::robot::hardware::Hardware>>,
     switch: Option<ResMut<Switcher>>,
+    mut text: TextFocus,
     mut watched: Local<Option<u64>>,
 ) {
     let Some(mut picker) = picker else { return };
@@ -390,6 +427,8 @@ pub(crate) fn receive(
         || mode.is_some_and(|mode| picker.from != Some(*mode.get()))
     {
         picker.close();
+        // Now, not at the next frame's `sync`: the Leg panel's keys run under `not(typing)`.
+        text.blur(PATH);
         return;
     }
     let picker = &mut *picker;
@@ -400,12 +439,13 @@ pub(crate) fn receive(
             sections: vec![Section { title: "Documents".into(), empty: format!("Could not look for documents: {e}"), choices: Vec::new() }],
             start_dir: None,
         });
-        // The path field starts in the examples, unless something was typed.
+        // The path field starts in the examples, unless something was typed
+        // (selected while it has the keyboard, as a focus selects it).
         if picker.draft.text.is_empty()
-            && !picker.focused
+            && !picker.edited
             && let Some(dir) = &sources.start_dir
         {
-            picker.draft = TextDraft { text: dir.clone(), select_all: false };
+            picker.draft = TextDraft { text: dir.clone(), select_all: text.focused(PATH) };
             picker.prefilled = true;
             picker.follow_listing();
         }
@@ -419,7 +459,7 @@ pub(crate) fn receive(
 }
 
 /// Input: a press on the picker (an entry, the path field's parts, Close).
-pub(crate) fn clicks(picker: Option<ResMut<Picker>>, parts: Query<(&Interaction, &PickerPart, Option<&Enabled>), Changed<Interaction>>, mut out: MessageWriter<Act<WindowAction>>) {
+pub(crate) fn clicks(picker: Option<ResMut<Picker>>, parts: Query<(&Interaction, &PickerPart, Option<&Enabled>), Changed<Interaction>>, mut text: TextFocus, mut out: MessageWriter<Act<WindowAction>>) {
     let Some(mut picker) = picker else { return };
     if picker.open.is_none() {
         return;
@@ -435,183 +475,31 @@ pub(crate) fn clicks(picker: Option<ResMut<Picker>>, parts: Query<(&Interaction,
                 }
             }
             PickHit::Path(PathHit::Field) => {
-                picker.focused = true;
                 picker.draft.select_all = true;
+                let draft = picker.draft.clone();
+                text.focus_draft(PATH, draft);
                 picker.revision += 1;
             }
             PickHit::Path(PathHit::Entry(i)) => {
                 let pick = picker.current_listing().and_then(|l| l.entries.get(i).map(|(name, is_dir)| path_field::pick(&picker.draft.text, &l.dir, name, *is_dir, false)));
-                if let Some(text) = pick {
-                    picker.set_text(text);
+                if let Some(path) = pick {
+                    picker.set_text(path);
                 }
             }
             PickHit::Path(PathHit::Up) => {
-                let text = path_field::up(&picker.draft.text, false);
-                picker.set_text(text);
+                let path = path_field::up(&picker.draft.text, false);
+                picker.set_text(path);
             }
             PickHit::Path(PathHit::Submit) => {
                 if let Some(request) = picker.typed() {
                     out.write(Act::ui(WindowAction::Switch(request)));
                 }
             }
-            PickHit::Close => picker.close(),
-        }
-    }
-}
-
-/// The input messages and states the picker reads and then clears.
-#[derive(Default)]
-pub(crate) struct Cursors {
-    keys: Option<MessageCursor<KeyboardInput>>,
-    wheel: Option<MessageCursor<MouseWheel>>,
-    focus: Option<MessageCursor<KeyboardFocusLost>>,
-    /// The Control/Super keys held, followed from the keyboard messages
-    /// while open (the picker releases `ButtonInput<KeyCode>` every frame,
-    /// so its state can't say whether Cmd is held); equal to its pressed
-    /// ones while closed.
-    modifiers: Vec<KeyCode>,
-}
-
-/// The keys that make a typed key a chord (Cmd+V pastes, not "v").
-const CHORD_KEYS: [KeyCode; 4] = [KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight];
-
-/// PreUpdate, after Bevy's input systems: while the picker is open, its
-/// keys (typing into the focused draft; Enter submits, Escape closes, Tab
-/// focuses the field; a key is a chord when a Control/Super key is held at
-/// its message, followed in message order by [`Cursors`]) and the wheel
-/// (its sections), then every keyboard and wheel message is cleared and
-/// the key states released, so nothing underneath sees them.
-///
-/// Safety: the key states are released, never reset ([`release_held`]): a
-/// reset would forget a held key without a release, so a robot walking on
-/// a held W, or a hardware jog on a held Q/A, would never see the release
-/// and keep moving. The picker does not open over robot mode's Leg
-/// calibration panel (`switch::start` refuses), because it would cover the
-/// panel's STOP button and take its Z/Escape keys.
-///
-/// Closed, it only keeps its cursors at the newest message and its
-/// modifiers equal to the held Control/Super keys.
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn keys(
-    picker: Option<ResMut<Picker>>,
-    keyboard: Option<ResMut<Messages<KeyboardInput>>>,
-    wheel: Option<ResMut<Messages<MouseWheel>>>,
-    focus_lost: Option<Res<Messages<KeyboardFocusLost>>>,
-    codes: Option<ResMut<ButtonInput<KeyCode>>>,
-    logical: Option<ResMut<ButtonInput<Key>>>,
-    mut cursors: Local<Cursors>,
-    mut lists: Query<&mut ScrollPosition, With<PickerList>>,
-    mut out: MessageWriter<Act<WindowAction>>,
-) {
-    let open = picker.as_ref().is_some_and(|p| p.open.is_some());
-    let (Some(mut picker), true) = (picker, open) else {
-        // Closed: what arrives from now on is the picker's once it opens.
-        if let Some(keyboard) = &keyboard {
-            cursors.keys = Some(keyboard.get_cursor_current());
-        }
-        if let Some(wheel) = &wheel {
-            cursors.wheel = Some(wheel.get_cursor_current());
-        }
-        if let Some(focus_lost) = &focus_lost {
-            cursors.focus = Some(focus_lost.get_cursor_current());
-        }
-        cursors.modifiers = codes.as_ref().map_or_else(Vec::new, |k| CHORD_KEYS.into_iter().filter(|c| k.pressed(*c)).collect());
-        return;
-    };
-    let cursors = &mut *cursors;
-    // The window lost the keyboard: a held modifier's release will not arrive.
-    if let Some(messages) = &focus_lost {
-        let cursor = cursors.focus.get_or_insert_with(|| messages.get_cursor_current());
-        if cursor.read(messages).count() > 0 {
-            cursors.modifiers.clear();
-        }
-    }
-    // Each pressed key with whether a modifier was held at it (in message order).
-    let mut typed: Vec<(Key, bool)> = Vec::new();
-    if let Some(messages) = &keyboard {
-        let cursor = cursors.keys.get_or_insert_with(|| messages.get_cursor_current());
-        for e in cursor.read(messages) {
-            let modifier = CHORD_KEYS.contains(&e.key_code);
-            match e.state {
-                ButtonState::Pressed if modifier => {
-                    if !cursors.modifiers.contains(&e.key_code) {
-                        cursors.modifiers.push(e.key_code);
-                    }
-                }
-                ButtonState::Released if modifier => cursors.modifiers.retain(|c| *c != e.key_code),
-                ButtonState::Pressed => typed.push((e.logical_key.clone(), !cursors.modifiers.is_empty())),
-                ButtonState::Released => {}
+            PickHit::Close => {
+                picker.close();
+                text.blur(PATH);
             }
         }
-    }
-    let delta: f32 = match &wheel {
-        Some(messages) => {
-            let cursor = cursors.wheel.get_or_insert_with(|| messages.get_cursor_current());
-            cursor
-                .read(messages)
-                .map(|e| match e.unit {
-                    MouseScrollUnit::Line => e.y * crate::ui_kit::WHEEL_LINE,
-                    MouseScrollUnit::Pixel => e.y,
-                })
-                .sum()
-        }
-        None => 0.0,
-    };
-    let (mut submit, mut close) = (false, false);
-    for (key, chord) in typed {
-        if submit || close {
-            break;
-        }
-        if picker.focused {
-            let mut draft = picker.draft.clone();
-            match draft.key(&key, chord) {
-                DraftKey::Edited => picker.set_text_selected(draft),
-                DraftKey::Enter => submit = true,
-                DraftKey::Escape => close = true,
-                DraftKey::Tab => {
-                    picker.focused = false;
-                    picker.revision += 1;
-                }
-                DraftKey::Ignored => {}
-            }
-        } else {
-            match key {
-                Key::Enter => submit = true,
-                Key::Escape => close = true,
-                Key::Tab => {
-                    picker.focused = true;
-                    picker.draft.select_all = true;
-                    picker.revision += 1;
-                }
-                _ => {}
-            }
-        }
-    }
-    if close {
-        picker.close();
-    } else if submit && let Some(request) = picker.typed() {
-        out.write(Act::ui(WindowAction::Switch(request)));
-    }
-    if delta != 0.0 {
-        for mut position in &mut lists {
-            // `ui_kit::clamp_scroll_positions` clamps the far end after layout.
-            position.y = (position.y - delta).max(0.0);
-            picker.scroll = position.y;
-        }
-    }
-    // Modal: nothing underneath sees these keys or the wheel, and every
-    // held key is released (never reset: see the doc above).
-    if let Some(mut codes) = codes {
-        release_held(&mut *codes);
-    }
-    if let Some(mut logical) = logical {
-        release_held(&mut *logical);
-    }
-    if let Some(mut keyboard) = keyboard {
-        keyboard.clear();
-    }
-    if let Some(mut wheel) = wheel {
-        wheel.clear();
     }
 }
 
@@ -620,6 +508,7 @@ impl Picker {
     fn set_text_selected(&mut self, draft: TextDraft) {
         self.draft = draft;
         self.prefilled = false;
+        self.edited = true;
         self.follow_listing();
         self.revision += 1;
     }
@@ -628,12 +517,14 @@ impl Picker {
 /// Present: the picker over the window (a backdrop that leaves the switcher
 /// strip usable), rebuilt when anything it shows changes; despawned when
 /// closed. `Persistent`, so the mode scope's sweep leaves it alone.
-pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: Option<Res<Switcher>>, fonts: Res<UiFonts>, roots: Query<Entity, With<PickerRoot>>, mut last: Local<Option<String>>) {
+pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: Option<Res<Switcher>>, typing: Typing, fonts: Res<UiFonts>, roots: Query<Entity, With<PickerRoot>>, mut last: Local<Option<String>>) {
     let open = picker.as_deref().filter(|p| p.open.is_some());
     // A later outcome of the switcher (a refused choice, a load in progress) is the status line.
     let status = open.zip(switch.as_deref()).and_then(|(p, s)| (s.revision > p.opened_revision).then(|| s.message.clone()).flatten());
-    // Every change the picker shows bumps its revision (not the scroll offset, which is the node's own).
-    let key = open.map(|p| format!("{:?}|{}|{status:?}", p.open, p.revision));
+    // Every change the picker shows bumps its revision (not the scroll offset,
+    // which is the node's own); the field's focus is the kit's.
+    let focused = typing.focused(PATH);
+    let key = open.map(|p| format!("{:?}|{}|{focused}|{status:?}", p.open, p.revision));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;
@@ -667,8 +558,8 @@ pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: 
         label: "Open file…",
         text: &picker.draft.text,
         placeholder: &placeholder,
-        focused: picker.focused,
-        selected: picker.focused && picker.draft.select_all,
+        focused,
+        selected: focused && picker.draft.select_all,
         submit: Some("Open"),
         submit_enabled: picker.typed().is_some(),
         listing: picker.current_listing(),

@@ -524,7 +524,8 @@ fn context(cx: &Cx) -> SectionContext {
 /// CadPlugin: this part's systems and resources (inserted on entering CAD
 /// mode; `CadDisplay` is removed by `cad::clear`, the caches by OnExit here).
 pub(in crate::cad) fn build(app: &mut App) {
-    app.add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| {
+    use crate::ui_kit::text::TextFieldApp;
+    app.add_text_field(entry::SECTION, entry::field()).add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| {
         commands.insert_resource(CadDisplay::default());
         commands.insert_resource(section::Derived::default());
         commands.insert_resource(section::ExactJob::default());
@@ -543,16 +544,9 @@ pub(in crate::cad) fn build(app: &mut App) {
         Update,
         (
             ui::cube_press.in_set(ViewerSet::Input),
-            // As the saved views panel's fields: after the name field and the
-            // inspector's editors (which reset `CadInputFocus`), before the
-            // numeric bar's Tab, the chord gate and every CAD key reader, which
-            // honour the focus set here.
+            // The offset field's messages and presses (the kit's one text field).
             entry::input
                 .after(crate::app::actions::serve)
-                .after(crate::cad::panel::name_entry)
-                .after(crate::cad::inspector::editor_entry)
-                .before(crate::cad::numeric::entry)
-                .before(crate::cad::keys::gate)
                 .before(crate::cad::keys::keys)
                 .in_set(ViewerSet::Input),
             section::exact_jobs.in_set(ViewerSet::JobResults),

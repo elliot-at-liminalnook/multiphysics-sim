@@ -4,8 +4,9 @@
 //! clickable. The mode switcher opens it for a mode that has no document
 //! (`app::picker`).
 //!
-//! No intent logic: the caller owns the sections, the draft and the
-//! listing, and passes one action component per part through
+//! No intent logic: the caller owns the sections and the listing, the
+//! path's text is the caller's kit text field's (`ui_kit::text`, shown
+//! through `PathView`), and the caller passes one action component per part through
 //! [`PickHit`]; it decides what each press means.
 use super::Kit;
 use super::path_field::{PathHit, PathView};

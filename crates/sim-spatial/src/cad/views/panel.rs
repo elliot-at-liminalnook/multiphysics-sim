@@ -11,28 +11,38 @@
 //! The same panel shows RoboCAD's `view.fov` entry ("Field of view",
 //! degrees 5–120, one decimal) while it is open, also with the views hidden.
 //!
-//! Typing follows the inspector editors' pattern (`inspector::editors`): a
-//! press on a field gives it the keyboard (ending the name field's, the
-//! numeric bar's and the display toolbar's section offset), Enter submits (a refusal stays under the field), Escape
-//! or a press elsewhere ends it; `CadInputFocus` is set while a field has
-//! the keyboard and in the frame it ends.
+//! Typing is the kit's one text field ([`VIEWS`], `ui_kit::text`; one kit
+//! field for every field of the panel, `CadViews::typing` naming which one
+//! it edits, its draft mirrored and the last refusal): a press on a field
+//! gives it the keyboard, Enter submits (a refusal stays under the field),
+//! Escape or a press elsewhere ends it. A field the handler opens (`view.fov`)
+//! takes the keyboard at the next input (`CadViews::focus_request`).
 use super::{CadViews, Typing, ViewField, ViewsArgs, ViewsOp, controls_of, convert};
 use crate::app::ModeScope;
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus};
+use crate::cad::document::CadDocument;
 use crate::builder::ui_api::Enabled;
-use crate::cad::panel::{CadButton, NameDraft};
+use crate::cad::panel::CadButton;
 use crate::camera::CameraAction;
-use crate::ui_kit::form::{DraftKey, FieldKind, FieldValue, TextDraft, Unit, evaluate};
+use crate::ui_kit::form::{FieldKind, FieldValue, Unit, evaluate};
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use crate::ui_kit::{BORDER, DANGER, FAINT, Kit, Look, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, UiFonts, above_strip, size, wrap};
 use bevy::ecs::message::Messages;
-use bevy::input::ButtonState;
-use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
 use sim_runtime::cad_client::check_view_name;
+
+/// The panel's field: one kit field for every field of the panel (which
+/// one is `CadViews::typing`).
+pub(in crate::cad) const VIEWS: FieldId = FieldId("cad.views");
+
+/// The panel's field as the kit spawns it (`views::build`); each field
+/// opens with its own selection (`focus_draft`).
+pub(super) fn text_field() -> TextField {
+    TextField::new("Saved view")
+}
 
 /// RoboCAD's `view.fov` dialog: `QInputDialog.getDouble(…, 5, 120, 1)`.
 const FOV: FieldKind = FieldKind::Number { unit: Unit::Angle, min: Some(5.0), max: Some(120.0), decimals: 1 };
@@ -90,129 +100,117 @@ fn submit(t: &Typing, doc: &CadDocument, views: &CadViews) -> Result<Option<Subm
     }
 }
 
-/// Input: the panel's fields (see the module doc).
-#[allow(clippy::too_many_arguments)]
-pub(super) fn input(
-    views: Option<ResMut<CadViews>>,
-    doc: Option<ResMut<CadDocument>>,
-    presses: Query<(&Interaction, &ViewInput, Option<&Enabled>), Changed<Interaction>>,
-    keys: Option<Res<ButtonInput<KeyCode>>>,
-    mouse: Option<Res<ButtonInput<MouseButton>>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    name: Option<ResMut<NameDraft>>,
-    mut out: MessageWriter<Act<CadAction>>,
-    mut camera_out: Option<ResMut<Messages<Act<CameraAction>>>>,
-    section_offset: Option<ResMut<crate::cad::display::entry::SectionEntry>>,
-) {
-    let (Some(mut views), Some(mut doc)) = (views, doc) else {
-        events.clear();
-        return;
-    };
-    let before = views.typing.clone();
-    let mut typing = before.clone();
-    let (mut started, mut ended, mut on_field) = (false, false, false);
-    for (interaction, f, enabled) in &presses {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
-            continue;
-        }
-        on_field = true;
-        if typing.as_ref().is_some_and(|t| t.field == f.0) {
-            continue;
-        }
-        let (text, select_all) = match &f.0 {
-            ViewField::New => (views.new_name.clone(), false),
-            ViewField::Rename(id) => (views.shown(&doc).iter().find(|v| v.id == *id).map(|v| v.name.clone()).unwrap_or_default(), true),
-            ViewField::Fov => (views.camera.map(|c| fov_text(c.fov.to_degrees())).unwrap_or_default(), true),
-        };
-        typing = Some(Typing { field: f.0.clone(), draft: TextDraft { text, select_all }, error: None });
-        started = true;
-    }
-    if started {
-        // One field holds the keyboard: the name field and the numeric entry end.
-        if let Some(mut name) = name
-            && name.editing.is_some()
-        {
-            name.editing = None;
-            name.refusal = None;
-        }
-        if doc.tool_state.numeric.focus.is_some() {
-            doc.tool_state.numeric.focus = None;
-            doc.tool_state.numeric.began = None;
-        }
-        // And the display toolbar's section offset field.
-        if let Some(mut offset) = section_offset
-            && offset.typing.is_some()
-        {
-            offset.typing = None;
-        }
-    } else if typing.is_some() && !on_field && mouse.as_ref().is_some_and(|m| m.just_pressed(MouseButton::Left)) {
-        typing = None;
-        ended = true;
-    }
-    if started || typing.is_none() || doc.ops.surface.is_some() {
-        // Keys pressed before the field took the keyboard are not its text;
-        // an open command surface has the keyboard meanwhile.
-        events.clear();
-    } else {
-        let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        for e in typed {
-            let Some(t) = typing.as_mut() else { break };
-            match t.draft.key(&e.logical_key, chord) {
-                DraftKey::Enter => {
-                    match submit(t, &doc, &views) {
-                        Ok(action) => {
-                            match action {
-                                Some(Submit::Cad(a)) => {
-                                    out.write(Act::ui(a));
-                                }
-                                Some(Submit::Camera(a)) => {
-                                    if let Some(camera) = camera_out.as_mut() {
-                                        camera.write(Act::ui(a));
-                                    }
-                                }
-                                None => {}
-                            }
-                            // The new view's name stays until RoboCAD answers the save, cleared only on success (`views::settle_save`),
-                            // with this frame's keystrokes (settle_save compares it with the sent name).
-                            if matches!(t.field, ViewField::New) {
-                                views.new_name = t.draft.text.clone();
-                            }
-                            typing = None;
-                            ended = true;
-                        }
-                        Err(why) => t.error = Some(why),
-                    }
-                    break;
-                }
-                DraftKey::Escape => {
-                    if matches!(t.field, ViewField::New) {
-                        views.new_name = t.draft.text.clone();
-                    }
-                    typing = None;
-                    ended = true;
-                    break;
-                }
-                DraftKey::Edited => t.error = None,
-                DraftKey::Tab | DraftKey::Ignored => {}
-            }
-        }
-    }
-    // The new view's name is kept while its field is not focused.
-    if let Some(Typing { field: ViewField::New, draft, .. }) = &typing
+/// The new view's name is kept while its field is not focused.
+fn keep_name(views: &mut ResMut<CadViews>, typing: Option<&Typing>) {
+    if let Some(Typing { field: ViewField::New, draft, .. }) = typing
         && views.new_name != draft.text
     {
         views.new_name = draft.text.clone();
     }
+}
+
+/// Input: the panel's fields (see the module doc).
+pub(super) fn input(
+    views: Option<ResMut<CadViews>>,
+    doc: Option<Res<CadDocument>>,
+    presses: Query<(&Interaction, &ViewInput, Option<&Enabled>), Changed<Interaction>>,
+    mut msgs: MessageReader<FieldMsg>,
+    mut text: TextFocus,
+    mut out: MessageWriter<Act<CadAction>>,
+    mut camera_out: Option<ResMut<Messages<Act<CameraAction>>>>,
+) {
+    let (Some(mut views), Some(doc)) = (views, doc) else {
+        msgs.clear();
+        return;
+    };
+    let before = views.typing.clone();
+    let mut typing = before.clone();
+    // A field the handler opened (`open_fov`) takes the keyboard; this
+    // frame's events were the field's previous draft's, so they are dropped.
+    let requested = views.focus_request;
+    if requested {
+        views.focus_request = false;
+        if let Some(t) = &typing {
+            text.focus_draft(VIEWS, t.draft.clone());
+        }
+    }
+    for m in msgs.read().filter(|m| m.field == VIEWS && !requested) {
+        match &m.event {
+            FieldEvent::Changed(d) => {
+                if let Some(t) = typing.as_mut() {
+                    t.draft = d.clone();
+                    t.error = None;
+                }
+            }
+            FieldEvent::Submit(typed) => {
+                let Some(t) = typing.as_mut() else {
+                    text.blur(VIEWS);
+                    continue;
+                };
+                t.draft.text = typed.clone();
+                match submit(t, &doc, &views) {
+                    Ok(action) => {
+                        match action {
+                            Some(Submit::Cad(a)) => {
+                                out.write(Act::ui(a));
+                            }
+                            Some(Submit::Camera(a)) => {
+                                if let Some(camera) = camera_out.as_mut() {
+                                    camera.write(Act::ui(a));
+                                }
+                            }
+                            None => {}
+                        }
+                        // The new view's name stays until RoboCAD answers the save, cleared only on success (`views::settle_save`),
+                        // with this frame's keystrokes (settle_save compares it with the sent name).
+                        keep_name(&mut views, typing.as_ref());
+                        typing = None;
+                        text.blur(VIEWS);
+                    }
+                    Err(why) => t.error = Some(why),
+                }
+            }
+            FieldEvent::Cancel => {
+                keep_name(&mut views, typing.as_ref());
+                typing = None;
+            }
+            // A press elsewhere or another field's focus (unless this
+            // system gave the field the keyboard again since).
+            FieldEvent::Blur if !text.focused(VIEWS) => {
+                keep_name(&mut views, typing.as_ref());
+                typing = None;
+            }
+            FieldEvent::Blur | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } => {}
+        }
+    }
+    for (interaction, f, enabled) in &presses {
+        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) || typing.as_ref().is_some_and(|t| t.field == f.0) {
+            continue;
+        }
+        let (shown, select_all) = match &f.0 {
+            ViewField::New => (views.new_name.clone(), false),
+            ViewField::Rename(id) => (views.shown(&doc).iter().find(|v| v.id == *id).map(|v| v.name.clone()).unwrap_or_default(), true),
+            ViewField::Fov => (views.camera.map(|c| fov_text(c.fov.to_degrees())).unwrap_or_default(), true),
+        };
+        let draft = TextDraft::new(shown, select_all);
+        if text.focus_draft(VIEWS, draft.clone()) {
+            keep_name(&mut views, typing.as_ref());
+            typing = Some(Typing { field: f.0.clone(), draft, error: None });
+        }
+    }
+    // The kit's focus is the record: a field that lost the keyboard
+    // without a message read here ends, and one the handler closed (the
+    // panel hidden) gives the keyboard back.
+    if typing.is_some() && !text.focused(VIEWS) {
+        keep_name(&mut views, typing.as_ref());
+        typing = None;
+    }
+    if typing.is_none() {
+        text.blur(VIEWS);
+    }
+    keep_name(&mut views, typing.as_ref());
     if typing != before {
         views.typing = typing;
-    }
-    if let Some(mut focus) = focus
-        && (views.typing.is_some() || ended)
-        && !focus.0
-    {
-        focus.0 = true;
     }
 }
 

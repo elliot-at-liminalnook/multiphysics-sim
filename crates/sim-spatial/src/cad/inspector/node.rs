@@ -13,7 +13,7 @@ use sim_runtime::cad_client::{FaceInfo, SelectionItem};
 
 pub(in crate::cad) fn name_key(doc: &CadDocument, selection: &[SelectionItem], draft: &NameDraft) -> String {
     let sel = selection.first_node();
-    format!("{:?}", (sel, sel.and_then(|id| node(doc, id)).map(|n| (&n.name, &n.kind)), &draft.editing, &draft.refusal))
+    format!("{:?}", (sel, sel.and_then(|id| node(doc, id)).map(|n| (&n.name, &n.kind)), draft.editing(), &draft.refusal))
 }
 
 /// The inspector's head: the node's name (editable), kind and id.
@@ -27,8 +27,8 @@ pub(in crate::cad) fn name(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         return;
     };
     k.header(p, &n.name, &format!("{} · {}", n.kind, n.id));
-    let editing = draft.editing.as_ref().filter(|(edit, _)| edit == id);
-    let shown = editing.map_or(n.name.as_str(), |(_, text)| text.as_str());
+    let editing = draft.editing().filter(|(edit, _)| *edit == id);
+    let shown = editing.map_or(n.name.as_str(), |(_, text)| text);
     p.spawn(k.input(shown, "Name", NameField { id: id.to_string(), name: n.name.clone() }, editing.is_some()));
     match (editing, &draft.refusal) {
         (Some(_), Some(why)) => {

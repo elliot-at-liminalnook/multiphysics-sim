@@ -12,10 +12,12 @@
 //! desktop window serves the document, from its `/commands` (a user's
 //! `~/.robocad/keymap.json` included).
 //!
-//! While it is open the palette has the keyboard (`CadInputFocus`):
-//! typing edits the query (`TextDraft`), Up and Down move the highlight,
-//! Enter runs the highlighted row, Escape closes it (`surfaces::input`); a
-//! click on a row runs it. Running writes `CadInvoke { id }` and closes
+//! While it is open its search field ([`PALETTE`], a kit text field) has
+//! the keyboard: typing edits the query (re-ranked, the highlight back on
+//! the first row), Enter runs the highlighted row, Escape closes it, and so
+//! does the field losing the keyboard (a mode switch, another field); a
+//! click on a row runs it; Up and Down move the highlight (the field's
+//! `FieldEvent::Arrow`). Running writes `CadInvoke { id }` and closes
 //! the palette (a command that opens another surface replaces it); a
 //! disabled row shows why on the status line and the palette stays open.
 use super::registry::{self, COMMANDS, Command, Resolved};
@@ -23,23 +25,28 @@ use super::{POPUP_Z, PopupScroll, Surface, SurfaceEntry, SurfaceRoot};
 use crate::app::ModeScope;
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus};
-use crate::cad::panel::{Control, NameDraft, own_controls};
+use crate::cad::document::CadDocument;
+use crate::cad::panel::{Control, own_controls};
 use crate::cad::selection::CadSelection;
 use sim_runtime::cad_client::SelectionItem;
-use crate::ui_kit::form::{DraftKey, TextDraft};
 use crate::ui_kit::palette::{PaletteEntry, rank};
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextFocus};
 use crate::ui_kit::{Kit, LEFT_WIDTH, TOPBAR};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
+use bevy::ecs::system::ParamSet;
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
 
-/// The palette's search field (always focused while it is open).
+/// The palette's search field's press action (it has the keyboard while
+/// the palette is open).
 #[derive(Component, Clone, Copy, Debug, Default)]
 pub(super) struct PaletteField;
+
+/// The palette's search field (`ui_kit::text`): sticky, so a press on a row
+/// does not take the keyboard from it (a press outside the popup closes the
+/// palette, `surfaces::input`).
+pub(in crate::cad) const PALETTE: FieldId = FieldId("cad.palette");
 
 /// The palette's width (RoboCAD's dialog minimum, as the kit draws it).
 const WIDTH: f32 = 520.0;
@@ -117,60 +124,48 @@ pub(super) fn spawn(commands: &mut Commands, k: &Kit, doc: &CadDocument, selecti
         });
 }
 
-/// Input: the palette's keys while it is open (see the module doc).
-#[allow(clippy::too_many_arguments)]
+/// Input: the palette's search field while it is open (see the module doc).
 pub(super) fn input(
     doc: Option<ResMut<CadDocument>>,
-    keys: Option<Res<ButtonInput<KeyCode>>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    draft: Option<ResMut<NameDraft>>,
+    // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
+    mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
     mut was_open: Local<bool>,
     selection: CadSelection,
 ) {
+    let events: Vec<FieldEvent> = field.p0().read().filter(|m| m.field == PALETTE).map(|m| m.event.clone()).collect();
     let open = doc.as_deref().and_then(|d| d.ops.surface.as_ref()).and_then(|o| match &o.surface {
         Surface::Palette { query } => Some((query.clone(), o.highlight.unwrap_or(0))),
         _ => None,
     });
+    let mut text = field.p1();
     let (Some(mut doc), Some((query, highlight))) = (doc, open) else {
-        events.clear();
-        // The frame it closes is still the palette's (its Escape or Enter is no CAD key).
+        // Closed (or replaced by another surface): the field gives the keyboard back.
         if std::mem::take(&mut *was_open) {
-            hold(focus);
+            text.blur(PALETTE);
         }
         return;
     };
-    hold(focus);
     if !*was_open {
-        // Keys pressed before it opened (its own Ctrl+Space or Shift+F) are not its text.
+        // Opened: the search field takes the keyboard (keys pressed before,
+        // its own Ctrl+Space or Shift+F, are not its text: the kit read them
+        // before the field had it). Taking it ends any other field's entry.
         *was_open = true;
-        events.clear();
-        // The palette has the keyboard: the name field's draft ends, as the
-        // form's fields end it (`surfaces::handle` ends the numeric bar's entry).
-        if let Some(mut draft) = draft
-            && draft.editing.is_some()
-        {
-            draft.editing = None;
-            draft.refusal = None;
-        }
+        text.focus(PALETTE, query);
         return;
     }
-    let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-    if typed.is_empty() {
-        return;
-    }
-    let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
     let selection = selection.items();
     let own = own_controls(&doc, &selection);
-    let mut rows = ranked(&doc, &selection, &own, &query);
-    let (mut text, mut at) = (query.clone(), highlight);
-    for e in typed {
-        match &e.logical_key {
-            Key::ArrowUp => at = at.saturating_sub(1),
-            Key::ArrowDown => at = (at + 1).min(rows.len().saturating_sub(1)),
-            Key::Enter => {
-                if let Some((cmd, _)) = rows.get(at) {
+    let (mut query_now, mut at) = (query.clone(), highlight);
+    for event in events {
+        match event {
+            FieldEvent::Changed(draft) => {
+                query_now = draft.text;
+                at = 0;
+            }
+            FieldEvent::Submit(_) => {
+                let rows = ranked(&doc, &selection, &own, &query_now);
+                if let Some((cmd, _)) = rows.get(at.min(rows.len().saturating_sub(1))) {
                     let entry = row_entry(cmd, &doc, &selection, &own);
                     match entry.refusal {
                         None => {
@@ -184,30 +179,28 @@ pub(super) fn input(
                 }
                 break;
             }
-            key => {
-                let mut draft = TextDraft { text: text.clone(), select_all: false };
-                if draft.key(key, chord) == DraftKey::Edited {
-                    text = draft.text;
-                    at = 0;
-                    rows = ranked(&doc, &selection, &own, &text);
-                }
+            // Escape closes it (the kit has taken the keyboard away); so
+            // does losing the keyboard to another field or a mode switch.
+            FieldEvent::Cancel | FieldEvent::Blur => {
+                out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
+                break;
             }
+            FieldEvent::Tab { .. } => {}
+            // ↑/↓ move the highlight (RoboCAD's list keys).
+            FieldEvent::Arrow { up: true } => at = at.saturating_sub(1),
+            FieldEvent::Arrow { up: false } => at = (at + 1).min(ranked(&doc, &selection, &own, &query_now).len().saturating_sub(1)),
         }
     }
-    if (text != query || at != highlight)
+    // The query set from outside (`CadSurface { palette { query } }` while
+    // open) is the field's draft too.
+    if text.draft(PALETTE).is_some_and(|d| d.text != query_now) {
+        text.set(PALETTE, TextDraft::new(query_now.clone(), false));
+    }
+    if (query_now != query || at != highlight)
         && let Some(o) = doc.ops.surface.as_mut()
         && matches!(o.surface, Surface::Palette { .. })
     {
-        o.surface = Surface::Palette { query: text };
+        o.surface = Surface::Palette { query: query_now };
         o.highlight = Some(at);
-    }
-}
-
-/// The palette holds the keyboard this frame.
-fn hold(focus: Option<ResMut<CadInputFocus>>) {
-    if let Some(mut focus) = focus
-        && !focus.0
-    {
-        focus.0 = true;
     }
 }

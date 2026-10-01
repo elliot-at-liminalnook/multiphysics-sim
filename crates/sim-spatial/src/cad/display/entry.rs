@@ -1,11 +1,12 @@
 //! The section offset entry in the display toolbar (RoboCAD's Section
 //! tool's Tab field: `NumericField("offset", 0.0)`, whose commit moves the
-//! plane that far along its normal). Typing follows the saved views
-//! panel's pattern (`views::panel::input`): a press on the field gives it
-//! the keyboard (ending the name field's, the numeric bar's and the saved
-//! views panel's), Enter writes `CadSection {offset}` (a refusal stays
-//! under the field), Escape or a press elsewhere ends it; `CadInputFocus`
-//! is set while the field has the keyboard and in the frame it ends.
+//! plane that far along its normal), on the kit's one text field
+//! ([`SECTION`], `ui_kit::text`): a press on the field gives it the
+//! keyboard with "0" selected, Enter writes `CadSection {offset}` (a
+//! refusal stays under the field), Escape or a press elsewhere ends it, and
+//! so does hiding the section (the field is drawn only while it is on).
+//! `SectionEntry::typing` is its draft (mirrored from the kit's, for the
+//! toolbar) and the last refusal, set while the field has the keyboard.
 //!
 //! RoboCAD's other two Section tool gestures are not bound here: R (rotate
 //! 90° about Z) is the Rotate tool's key and Tab the numeric bar's
@@ -19,13 +20,18 @@ use super::{CadDisplay, SectionArgs};
 use crate::app::actions::Act;
 use crate::builder::ui_api::Enabled;
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus};
-use crate::cad::panel::NameDraft;
-use crate::cad::views::CadViews;
-use crate::ui_kit::form::{DraftKey, FieldKind, FieldValue, TextDraft, Unit, evaluate};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::KeyboardInput;
+use crate::ui_kit::form::{FieldKind, FieldValue, Unit, evaluate};
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use bevy::prelude::*;
+
+/// The section offset field.
+pub(in crate::cad) const SECTION: FieldId = FieldId("cad.section.offset");
+
+/// The offset field as the kit spawns it (`display::build`): it opens at
+/// "0", selected.
+pub(super) fn field() -> TextField {
+    TextField::new("Section offset").placeholder("offset, e.g. 5 or 2 cm").select_on_focus()
+}
 
 /// A length in mm as the numeric bar reads it (unit expressions: "5",
 /// "2 cm", "1/4 in").
@@ -61,102 +67,75 @@ pub fn offset_action(text: &str) -> Result<Option<CadAction>, String> {
 }
 
 /// Input: the offset field (see the module doc).
-#[allow(clippy::too_many_arguments)]
 pub(super) fn input(
     entry: Option<ResMut<SectionEntry>>,
-    doc: Option<ResMut<CadDocument>>,
     presses: Query<(&Interaction, Option<&Enabled>), (Changed<Interaction>, With<OffsetInput>)>,
-    keys: Option<Res<ButtonInput<KeyCode>>>,
-    mouse: Option<Res<ButtonInput<MouseButton>>>,
-    mut events: MessageReader<KeyboardInput>,
-    (focus, name, views, display): (Option<ResMut<CadInputFocus>>, Option<ResMut<NameDraft>>, Option<ResMut<CadViews>>, Option<Res<CadDisplay>>),
+    mut msgs: MessageReader<FieldMsg>,
+    mut text: TextFocus,
+    display: Option<Res<CadDisplay>>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
-    let (Some(mut entry), Some(mut doc)) = (entry, doc) else {
-        events.clear();
+    let Some(mut entry) = entry else {
+        msgs.clear();
         return;
     };
     let before = entry.typing.clone();
     let mut typing = before.clone();
-    let (mut started, mut ended, mut on_field) = (false, false, false);
-    for (interaction, enabled) in &presses {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
-            continue;
-        }
-        on_field = true;
-        if typing.is_none() {
-            // RoboCAD's field opens at 0.
-            typing = Some(OffsetTyping { draft: TextDraft { text: "0".into(), select_all: true }, error: None });
-            started = true;
+    for m in msgs.read().filter(|m| m.field == SECTION) {
+        match &m.event {
+            FieldEvent::Changed(d) => {
+                if let Some(t) = typing.as_mut() {
+                    t.draft = d.clone();
+                    t.error = None;
+                }
+            }
+            FieldEvent::Submit(typed) => {
+                let Some(t) = typing.as_mut() else {
+                    text.blur(SECTION);
+                    continue;
+                };
+                t.draft.text = typed.clone();
+                match offset_action(typed) {
+                    Ok(action) => {
+                        if let Some(a) = action {
+                            out.write(Act::ui(a));
+                        }
+                        typing = None;
+                        text.blur(SECTION);
+                    }
+                    Err(why) => t.error = Some(why),
+                }
+            }
+            FieldEvent::Cancel => typing = None,
+            // A press elsewhere or another field's focus (unless this
+            // system gave the field the keyboard again since).
+            FieldEvent::Blur if !text.focused(SECTION) => typing = None,
+            FieldEvent::Blur | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } => {}
         }
     }
-    if started {
-        // One field holds the keyboard.
-        if let Some(mut name) = name
-            && name.editing.is_some()
-        {
-            name.editing = None;
-            name.refusal = None;
+    for (interaction, enabled) in &presses {
+        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) || typing.is_some() {
+            continue;
         }
-        if doc.tool_state.numeric.focus.is_some() {
-            doc.tool_state.numeric.focus = None;
-            doc.tool_state.numeric.began = None;
+        // RoboCAD's field opens at 0.
+        let draft = TextDraft::new("0", true);
+        if text.focus_draft(SECTION, draft.clone()) {
+            typing = Some(OffsetTyping { draft, error: None });
         }
-        if let Some(mut views) = views
-            && views.typing.is_some()
-        {
-            views.typing = None;
-        }
-    } else if typing.is_some() && !on_field && mouse.as_ref().is_some_and(|m| m.just_pressed(MouseButton::Left)) {
-        typing = None;
-        ended = true;
     }
     // The field is shown only while the section is on: it cannot keep the keyboard once hidden.
     if typing.is_some() && !display.as_ref().is_some_and(|d| d.section.enabled) {
         typing = None;
-        ended = true;
-        started = false;
     }
-    if started || typing.is_none() || doc.ops.surface.is_some() {
-        // Keys pressed before the field took the keyboard are not its text;
-        // an open command surface has the keyboard meanwhile.
-        events.clear();
-    } else {
-        let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        for e in typed {
-            let Some(t) = typing.as_mut() else { break };
-            match t.draft.key(&e.logical_key, chord) {
-                DraftKey::Enter => {
-                    match offset_action(&t.draft.text) {
-                        Ok(action) => {
-                            if let Some(a) = action {
-                                out.write(Act::ui(a));
-                            }
-                            typing = None;
-                            ended = true;
-                        }
-                        Err(why) => t.error = Some(why),
-                    }
-                    break;
-                }
-                DraftKey::Escape => {
-                    typing = None;
-                    ended = true;
-                    break;
-                }
-                DraftKey::Edited => t.error = None,
-                DraftKey::Tab | DraftKey::Ignored => {}
-            }
-        }
+    // The kit's focus is the record: a field that lost the keyboard without
+    // a message read here ends; a field without a draft gives it back.
+    if typing.is_some() && !text.focused(SECTION) {
+        typing = None;
+    }
+    if typing.is_none() {
+        text.blur(SECTION);
     }
     if typing != before {
         entry.typing = typing;
-    }
-    if let Some(mut focus) = focus
-        && (entry.typing.is_some() || ended)
-        && !focus.0
-    {
-        focus.0 = true;
     }
 }

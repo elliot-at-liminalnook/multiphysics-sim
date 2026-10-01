@@ -19,7 +19,8 @@
 //!   ([`release_held`], the hardware-safety rule), blurs a field on a press
 //!   elsewhere or a mode switch, and writes [`FieldMsg`]s.
 //! - **Owners** read [`FieldMsg`] as data (`Changed`, `Submit`, `Cancel`,
-//!   `Tab`, `Blur`) and act through [`TextFocus`] (`focus`, `set`, `blur`).
+//!   `Tab`, `Arrow`, `Blur`) and act through [`TextFocus`] (`focus`,
+//!   `focus_draft`, `set`, `release`, `blur`).
 //!   The kit has no intent logic: what a submitted text means is the owner's.
 //!
 //! Bevy's `EditableText` is not used (the decision and its API facts are in
@@ -31,9 +32,10 @@ pub(crate) mod input;
 #[cfg(test)]
 mod tests;
 
-pub(crate) use draft::{DraftKey, TextDraft};
+pub(crate) use draft::TextDraft;
 pub(crate) use input::release_held;
 
+use bevy::a11y::AccessibilityNode;
 use bevy::ecs::system::SystemParam;
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
@@ -94,10 +96,6 @@ impl TextField {
         self.placeholder = placeholder.into();
         self
     }
-    pub(crate) fn filter(mut self, filter: fn(char) -> bool) -> Self {
-        self.filter = Some(filter);
-        self
-    }
     pub(crate) fn select_on_focus(mut self) -> Self {
         self.select_on_focus = true;
         self
@@ -134,6 +132,9 @@ pub(crate) enum FieldEvent {
     Cancel,
     /// Tab ([`TabKey::Emit`]); Shift+Tab is `back`.
     Tab { back: bool },
+    /// ↑ (`up`) or ↓, which a one-line draft does not use: a list under
+    /// the field (the command palette) moves its highlight.
+    Arrow { up: bool },
     /// The field lost the keyboard other than by Escape or its owner's
     /// [`TextFocus::blur`]: a press elsewhere, a mode switch, another
     /// field's focus, or Bevy focusing a non-field entity.
@@ -148,12 +149,11 @@ pub(crate) struct FieldMsg {
 }
 impl Message for FieldMsg {}
 
-/// The one typing check: a kit text field has the keyboard. Read-only,
-/// so panels that draw a field read its draft through it too.
+/// The one typing check: a kit text field has the keyboard (read-only).
 #[derive(SystemParam)]
 pub(crate) struct Typing<'w, 's> {
     focus: Option<Res<'w, InputFocus>>,
-    fields: Query<'w, 's, (&'static FieldId, &'static TextField)>,
+    fields: Query<'w, 's, &'static FieldId, With<TextField>>,
 }
 impl Typing<'_, '_> {
     /// A text field has the keyboard.
@@ -162,15 +162,11 @@ impl Typing<'_, '_> {
     }
     /// The field that has the keyboard.
     pub(crate) fn field(&self) -> Option<FieldId> {
-        self.focus.as_ref().and_then(|f| f.get()).and_then(|e| self.fields.get(e).ok()).map(|(id, _)| *id)
+        self.focus.as_ref().and_then(|f| f.get()).and_then(|e| self.fields.get(e).ok()).copied()
     }
     /// `id` has the keyboard.
     pub(crate) fn focused(&self, id: FieldId) -> bool {
         self.field() == Some(id)
-    }
-    /// `id`'s working draft.
-    pub(crate) fn draft(&self, id: FieldId) -> Option<&TextDraft> {
-        self.fields.iter().find(|(f, _)| **f == id).map(|(_, t)| &t.draft)
     }
 }
 
@@ -181,12 +177,14 @@ pub(crate) fn typing(typing: Typing) -> bool {
 }
 
 /// Owners' access to their fields: focus, set and blur by [`FieldId`].
-/// One per system (it holds `InputFocus` mutably).
+/// One per system (it holds `InputFocus` and the fields mutably); it
+/// writes `Blur` through `Commands`, so a `MessageReader<FieldMsg>` may sit
+/// beside it.
 #[derive(SystemParam)]
 pub(crate) struct TextFocus<'w, 's> {
     focus: Option<ResMut<'w, InputFocus>>,
     fields: Query<'w, 's, (Entity, &'static FieldId, &'static mut TextField)>,
-    out: MessageWriter<'w, FieldMsg>,
+    commands: Commands<'w, 's>,
 }
 impl TextFocus<'_, '_> {
     fn entity(&self, id: FieldId) -> Option<Entity> {
@@ -224,7 +222,7 @@ impl TextFocus<'_, '_> {
         if let Some(previous) = self.focused_entity().filter(|e| *e != entity)
             && let Ok((_, &field, _)) = self.fields.get(previous)
         {
-            self.out.write(FieldMsg { field, event: FieldEvent::Blur });
+            self.commands.write_message(FieldMsg { field, event: FieldEvent::Blur });
         }
         if let Ok((_, _, mut field)) = self.fields.get_mut(entity) {
             field.draft = draft;
@@ -243,6 +241,21 @@ impl TextFocus<'_, '_> {
             && field.draft != draft
         {
             field.draft = draft;
+        }
+    }
+
+    /// Take the keyboard from whichever field has it (not from a sticky
+    /// one unless `sticky_too`), telling it (`Blur`): a popup that holds
+    /// the keyboard while open (CAD's menus and radials).
+    pub(crate) fn release(&mut self, sticky_too: bool) {
+        let Some(entity) = self.focused_entity() else { return };
+        let Ok((_, &field, text)) = self.fields.get(entity) else { return };
+        if text.sticky && !sticky_too {
+            return;
+        }
+        self.commands.write_message(FieldMsg { field, event: FieldEvent::Blur });
+        if let Some(focus) = self.focus.as_mut() {
+            focus.clear();
         }
     }
 
@@ -266,9 +279,26 @@ impl TextFieldApp for App {
         let world = self.world_mut();
         let exists = world.query::<&FieldId>().iter(world).any(|f| *f == id);
         if !exists {
-            world.spawn((id, field));
+            // Its own accessibility node (no role: the `accesskit` crate is
+            // not a dependency): `InputFocus` names this entity, and Bevy
+            // skips AccessKit updates while the focus has no node.
+            let mut node = AccessibilityNode::default();
+            node.set_label(field.label.as_str());
+            if !field.placeholder.is_empty() {
+                node.set_placeholder(field.placeholder.as_str());
+            }
+            world.spawn((id, field, node));
         }
         self
+    }
+}
+
+/// PostUpdate: a field's accessibility node carries its draft as its value.
+fn follow_accessibility(mut fields: Query<(&TextField, &mut AccessibilityNode), Changed<TextField>>) {
+    for (field, mut node) in &mut fields {
+        if node.value() != Some(field.draft.text.as_str()) {
+            node.set_value(field.draft.text.as_str());
+        }
     }
 }
 
@@ -284,6 +314,7 @@ impl Plugin for TextEntryPlugin {
             .init_resource::<InputFocus>()
             .init_resource::<ButtonInput<KeyCode>>()
             .init_resource::<ButtonInput<Key>>()
-            .add_systems(PreUpdate, input::keys.after(bevy::input::InputSystems).after(bevy::ui::UiSystems::Focus));
+            .add_systems(PreUpdate, input::keys.after(bevy::input::InputSystems).after(bevy::ui::UiSystems::Focus))
+            .add_systems(PostUpdate, follow_accessibility.before(bevy::a11y::AccessibilitySystems::Update));
     }
 }

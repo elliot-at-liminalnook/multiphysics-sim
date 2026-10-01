@@ -429,13 +429,7 @@ pub(crate) fn import_args(path: &str, unit: Option<&str>) -> Result<(String, Opt
 fn open_form(cx: &mut Cx, kind: form::Kind, format: Option<&str>) -> Result<Value, String> {
     let (dir, stem) = start_dir(cx.doc);
     let context = export_context(cx.doc, &cx.shared.items(), cx.display.as_deref());
-    // The form has the keyboard: the other fields' typing ends.
-    cx.doc.tool_state.numeric.focus = None;
-    cx.doc.tool_state.numeric.began = None;
-    cx.doc.tool_state.inspector_edit = None;
-    if let Some(f) = cx.doc.ops.form.as_mut() {
-        f.focus = None;
-    }
+    // The form's field takes the keyboard (`form::input`), which ends any other field's entry.
     let files = files(cx)?;
     let form = FileForm::new(kind, &dir, &stem, format, &context, &files.export_settings)?;
     let shown = form.json();
@@ -581,19 +575,16 @@ pub(in crate::cad) fn command_action(id: &str) -> Option<CadAction> {
 }
 
 /// CadPlugin: `CadFiles` on entering CAD mode (removed by `cad::clear`;
-/// write jobs complete on drop), the form's input (after the name field,
-/// which resets `CadInputFocus`, and before every reader of it), the jobs'
+/// write jobs complete on drop), the form's text field and input (before
+/// the CAD keys, so the frame's keys see its field typing), the jobs'
 /// results, the form and the progress strip.
 pub(in crate::cad) fn build(app: &mut App) {
+    use crate::ui_kit::text::{TextField, TextFieldApp};
+    app.add_text_field(form::FILES, TextField::new("Path form field").sticky());
     app.add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(CadFiles::default())).add_systems(
         Update,
         (
-            form::input
-                .after(crate::app::actions::serve)
-                .after(crate::cad::panel::name_entry)
-                .before(crate::cad::inspector::editor_entry)
-                .before(crate::cad::keys::keys)
-                .in_set(ViewerSet::Input),
+            form::input.after(crate::app::actions::serve).before(crate::cad::keys::keys).in_set(ViewerSet::Input),
             // Before the edits' results: a finished edit's status line (`sync::finish_edit`) is
             // the one `views::sync` reads as a view save's answer (found by review).
             jobs::receive.before(crate::cad::sync::receive).in_set(ViewerSet::JobResults),

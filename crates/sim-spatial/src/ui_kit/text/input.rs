@@ -71,6 +71,7 @@ enum Outcome {
     Submit,
     Cancel,
     Tab { back: bool },
+    Arrow { up: bool },
     Ignored,
 }
 
@@ -90,6 +91,8 @@ fn apply(field: &mut TextField, key: &Key, command: bool, shift: bool) -> Outcom
             Outcome::Edited
         }
         Key::Escape => Outcome::Cancel,
+        Key::ArrowUp if !command => Outcome::Arrow { up: true },
+        Key::ArrowDown if !command => Outcome::Arrow { up: false },
         Key::Tab => match field.tab {
             TabKey::Emit => Outcome::Tab { back: shift },
             TabKey::Indent => {
@@ -97,7 +100,7 @@ fn apply(field: &mut TextField, key: &Key, command: bool, shift: bool) -> Outcom
                 Outcome::Edited
             }
         },
-        key => match field.draft.key_filtered(key, command, field.filter) {
+        key => match field.draft.key(key, command, field.filter) {
             DraftKey::Edited => Outcome::Edited,
             _ => Outcome::Ignored,
         },
@@ -110,19 +113,22 @@ fn apply(field: &mut TextField, key: &Key, command: bool, shift: bool) -> Outcom
 /// 1. A field that lost the keyboard to a non-field entity (a Bevy
 ///    widget's press) is told ([`FieldEvent::Blur`]).
 /// 2. A left press not on a kit input ([`KitInput`]) takes the keyboard
-///    from a non-sticky field, and a mode switch from any field (`Blur`).
+///    from a non-sticky field, and a mode switch from any field that had
+///    it before the switch (`Blur`).
 /// 3. A field that gained the keyboard since the last run: every held key
 ///    is released ([`release_held`]), so a robot walking on a held W or a
 ///    hardware jog on a held Q/A stops (its release reaches the systems
 ///    underneath once, a same-frame release kept).
 /// 4. The focused field's keys: typing edits its draft (`Changed`), Enter
 ///    submits (`Submit`, as [`EnterKey`] reads it), Escape cancels
-///    (`Cancel`; the keyboard is taken away), Tab is `Tab` or an indent.
+///    (`Cancel`; the keyboard is taken away), Tab is `Tab` or an indent,
+///    ↑/↓ are `Arrow` (a list under the field moves its highlight).
 ///    The frame's later keys after a Submit, Cancel or Tab are dropped (as
 ///    every field's own loop did). Every key the field used, and every key
 ///    pressed without Command/Control, is consumed (`clear_just_pressed`),
 ///    so no mode key sees it; Command/Control chords the field ignores pass
-///    through (CAD's Cmd+Z while typing).
+///    through to readers not gated on typing (today every mode's key map is
+///    gated, CAD's chords included, so none reads them while a field types).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn keys(
     mut events: MessageReader<KeyboardInput>,
@@ -158,7 +164,10 @@ pub(crate) fn keys(
     // 2. A press elsewhere, or a mode switch.
     if let Some(entity) = current {
         let pressed_elsewhere = mouse.as_ref().is_some_and(|m| m.just_pressed(MouseButton::Left)) && !presses.iter().any(|i| *i == Interaction::Pressed) && fields.get(entity).is_ok_and(|(_, f)| !f.sticky);
-        let switched = mode.as_ref().is_some_and(|m| m.is_changed());
+        // Only a field that had the keyboard before the switch: the state
+        // changes after PreUpdate, so a field focused after the transition
+        // (a kept builder draft returning) is the new mode's.
+        let switched = mode.as_ref().is_some_and(|m| m.is_changed()) && *last == Some(entity);
         if pressed_elsewhere || switched {
             focus.clear();
             current = None;
@@ -207,6 +216,9 @@ pub(crate) fn keys(
         match outcome {
             Outcome::Edited => changed = true,
             Outcome::Ignored => {}
+            Outcome::Arrow { up } => {
+                out.write(FieldMsg { field: id, event: FieldEvent::Arrow { up } });
+            }
             Outcome::Submit => {
                 out.write(FieldMsg { field: id, event: FieldEvent::Submit(field.draft.text.clone()) });
                 ended = true;

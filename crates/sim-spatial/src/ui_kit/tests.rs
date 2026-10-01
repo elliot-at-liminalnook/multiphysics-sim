@@ -299,30 +299,30 @@ fn form_fields_evaluate() {
 #[test]
 fn text_drafts_edit_as_the_numeric_bar() {
     use bevy::input::keyboard::Key;
-    use form::{DraftKey, TextDraft};
+    use super::text::draft::{DraftKey, TextDraft};
     let ch = |s: &str| Key::Character(s.into());
     let mut d = TextDraft { text: "10".into(), select_all: true };
-    assert_eq!(d.key(&ch("5"), false), DraftKey::Edited);
+    assert_eq!(d.key(&ch("5"), false, None), DraftKey::Edited);
     assert_eq!(d, TextDraft { text: "5".into(), select_all: false });
-    assert_eq!(d.key(&ch("0"), false), DraftKey::Edited);
-    assert_eq!(d.key(&Key::Space, false), DraftKey::Edited);
+    assert_eq!(d.key(&ch("0"), false, None), DraftKey::Edited);
+    assert_eq!(d.key(&Key::Space, false, None), DraftKey::Edited);
     assert_eq!(d.text, "50 ");
-    assert_eq!(d.key(&Key::Backspace, false), DraftKey::Edited);
+    assert_eq!(d.key(&Key::Backspace, false, None), DraftKey::Edited);
     assert_eq!(d.text, "50");
-    assert_eq!(d.key(&ch("c"), true), DraftKey::Ignored);
-    assert_eq!(d.key(&Key::Space, true), DraftKey::Ignored);
-    assert_eq!(d.key(&ch("\u{8}"), false), DraftKey::Ignored);
-    assert_eq!(d.key(&Key::Enter, false), DraftKey::Enter);
-    assert_eq!(d.key(&Key::Tab, false), DraftKey::Tab);
-    assert_eq!(d.key(&Key::Escape, false), DraftKey::Escape);
+    assert_eq!(d.key(&ch("c"), true, None), DraftKey::Ignored);
+    assert_eq!(d.key(&Key::Space, true, None), DraftKey::Ignored);
+    assert_eq!(d.key(&ch("\u{8}"), false, None), DraftKey::Ignored);
+    assert_eq!(d.key(&Key::Enter, false, None), DraftKey::Enter);
+    assert_eq!(d.key(&Key::Tab, false, None), DraftKey::Tab);
+    assert_eq!(d.key(&Key::Escape, false, None), DraftKey::Escape);
     assert_eq!(d.text, "50");
     d.select_all = true;
-    assert_eq!(d.key(&Key::Backspace, false), DraftKey::Edited);
+    assert_eq!(d.key(&Key::Backspace, false, None), DraftKey::Edited);
     assert_eq!(d, TextDraft::default());
-    assert_eq!(d.key(&Key::Backspace, false), DraftKey::Ignored);
+    assert_eq!(d.key(&Key::Backspace, false, None), DraftKey::Ignored);
     // Typing a selected text's own character over it is an edit: the selection clears.
     let mut d = TextDraft { text: "5".into(), select_all: true };
-    assert_eq!(d.key(&ch("5"), false), DraftKey::Edited);
+    assert_eq!(d.key(&ch("5"), false, None), DraftKey::Edited);
     assert_eq!(d, TextDraft { text: "5".into(), select_all: false });
 }
 
@@ -510,4 +510,12 @@ fn document_picker_spawns_labelled_buttons() {
     assert_eq!(part(PickHit::Path(PathHit::Entry(1))), ("board.system.json", true, Some(true)));
     assert_eq!(part(PickHit::Close), ("Close", true, Some(true)));
     assert_eq!(found.len(), 8, "{found:?}");
+    // The path field's parts are kit inputs (a press on them keeps the field
+    // typing); the picker's own entries and Close are not.
+    let mut inputs = world.query_filtered::<&Part, With<super::text::KitInput>>();
+    let kit: Vec<PickHit> = inputs.iter(&world).map(|p| p.0).collect();
+    for hit in [PickHit::Path(PathHit::Field), PickHit::Path(PathHit::Submit), PickHit::Path(PathHit::Up), PickHit::Path(PathHit::Entry(0)), PickHit::Path(PathHit::Entry(1))] {
+        assert!(kit.contains(&hit), "{hit:?} is a kit input: {kit:?}");
+    }
+    assert_eq!(kit.len(), 5, "{kit:?}");
 }

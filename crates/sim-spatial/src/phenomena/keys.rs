@@ -4,27 +4,35 @@
 //! (Shift: five); R reset; Space pause or run; ↑/↓ double or halve the
 //! speed. Each writes the same `PhenomenaAction` its button, `system_ui`
 //! control and REST command do; refusals (the exhibits are still being
-//! built) show in the header's status line.
+//! built) show in the header's status line. Not read while a kit text
+//! field has the keyboard (`PhenomenaPlugin` runs it under
+//! `not(ui_kit::text::typing)`).
 //!
 //! One deliberate difference: nothing is read while Control, Command
 //! (Super) or Alt is held, so Cmd+Tab (switching applications on macOS) or
 //! a system shortcut never also switches the exhibit. sim-app read the
 //! keys whatever the modifiers.
 //!
-//! Clashes, checked by reading: keys active in every mode are none.
-//! `app::CorePlugin`, `app::switcher` and `ui_kit` read no key (grep
-//! `KeyCode` finds none in `app/` or `ui_kit/`); the spatial view's keys
-//! (`lib.rs`, `inspect::input`) run only under `SpatialScreen`, the
-//! builder's and lessons' under `ModeScope::Builder`, robot's (and its
-//! hardware panel's) and place's only in their modes, CAD's only in CAD
-//! mode. Bevy's own: `DefaultPlugins` with this crate's features adds
-//! `InputFocusPlugin` and `InputDispatchPlugin` (bevy_internal
-//! default_plugins.rs) but not `TabNavigationPlugin`, so Tab moves no focus;
-//! `UiWidgetsPlugins` adds the slider's keyboard handler
-//! (`slider_on_key_input`, ←/→/Home/End), which only acts on a focused
-//! slider, and nothing in bevy_ui_widgets 0.19.1's slider.rs sets
-//! `InputFocus` on a press (focus stays on the window, set by
-//! `set_initial_focus`), so the knob slider never takes the arrows.
+//! Clashes, checked by reading: keys active in every mode are none. Text
+//! has one focus, Bevy's `InputFocus`, held only by a kit text field
+//! (`ui_kit::text`): its one input system types into the field and consumes
+//! the keys it used, and every mode's key map (this one included) runs
+//! under the shared `not(typing)` gate, so a typed key never reaches one.
+//! The document picker (`app::picker`) is modal while open: it reads no
+//! keyboard message and releases the held keys. The spatial view's keys
+//! (`inspect::input`) run only under `SpatialScreen`, the builder's and
+//! lessons' under `ModeScope::Builder`, robot's (and its hardware panel's)
+//! and place's only in their modes, CAD's only in CAD mode. Bevy's own:
+//! `DefaultPlugins` with this crate's features adds `InputFocusPlugin` and
+//! `InputDispatchPlugin` (bevy_internal default_plugins.rs) but not
+//! `TabNavigationPlugin`, so Tab moves no focus; `EditableTextInputPlugin`'s
+//! observer acts only on a focused entity with `EditableText`, and none
+//! exists (kit fields have none); `UiWidgetsPlugins` adds the slider's
+//! keyboard handler (`slider_on_key_input`, ←/→/Home/End), which only acts
+//! on a focused slider, and nothing in bevy_ui_widgets 0.19.1's slider.rs
+//! sets `InputFocus` on a press (focus stays on the window, set by
+//! `set_initial_focus`, or a kit field), so the knob slider never takes
+//! the arrows.
 use super::ExhibitRef;
 use super::actions::PhenomenaAction;
 use super::gallery::Gallery;

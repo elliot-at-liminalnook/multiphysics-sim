@@ -3,9 +3,15 @@
 //! generic over the anchor type (`sim_annotate::Anchor`) and the host's
 //! action component. The builder's Notes tab (system discussions), the
 //! lesson margin (lesson notes) and Inspect's notes panel draw with these;
-//! the threads come from `crate::annotations` sources, and hosts own the
-//! drafts and what a press means.
+//! the threads come from `crate::annotations` sources, and hosts own what
+//! a press means. A reply's text is the host's kit text field's
+//! (`ui_kit::text`): the host passes its draft to [`Composer`]. The
+//! composer's text area and its Cancel / submit buttons are tagged
+//! `KitInput`, so pressing them does not take the keyboard from the field
+//! (the host decides: Post submits the draft, Cancel ends it).
+use super::text::KitInput;
 use super::{ACCENT, ACCENT_BG, BORDER, FAINT, HOVER_BG, Kit, Look, RAISED, SUBTLE, TEXT, Tint, WARN, size, wrap};
+use bevy::ui::prelude::AccessibleLabel;
 use crate::builder::ui::markdown_theme;
 use bevy::prelude::*;
 use sim_annotate::{Anchor, Comment, Thread};
@@ -159,7 +165,8 @@ pub(crate) fn card<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &K
     });
 }
 
-/// A reply field that shows the draft (with a caret) while focused.
+/// A reply field that shows the draft (the host's kit text field's, with a
+/// caret) while focused.
 pub(crate) struct Composer<'a, Act> {
     pub label: &'a str,
     pub draft: Option<&'a str>,
@@ -181,6 +188,8 @@ pub(crate) fn composer<Act: Component + Clone>(body: &mut ChildSpawnerCommands, 
     body.spawn((
         Button,
         c.focus,
+        KitInput,
+        AccessibleLabel::new(if focused && !shown.is_empty() { format!("{}: {shown}", c.label) } else { c.label.to_string() }),
         Tint::RAISED,
         Node { border_radius: BorderRadius::all(Val::Px(7.)), min_height: Val::Px(c.min_height), max_height: Val::Px(180.), overflow: Overflow::clip(), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
         BackgroundColor(RAISED),
@@ -191,8 +200,8 @@ pub(crate) fn composer<Act: Component + Clone>(body: &mut ChildSpawnerCommands, 
     });
     body.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, flex_shrink: 0., ..default() }).with_children(|r| {
         if focused {
-            r.spawn(k.button("Cancel", c.cancel, Look::Ghost, true));
-            r.spawn(k.button(c.submit_label, c.submit, Look::Primary, !shown.trim().is_empty()));
+            r.spawn((k.button("Cancel", c.cancel, Look::Ghost, true), KitInput));
+            r.spawn((k.button(c.submit_label, c.submit, Look::Primary, !shown.trim().is_empty()), KitInput));
         } else if let Some((name, action)) = c.author {
             r.spawn(k.button(name, action, Look::Ghost, true));
         }

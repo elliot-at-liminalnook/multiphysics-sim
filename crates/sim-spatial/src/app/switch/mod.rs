@@ -78,6 +78,7 @@ pub(crate) use arrival::{arrive, finish_load};
 use leave::{hide_lessons, leave_builder, leave_cad, leave_inspect, leave_place, leave_robot, show_lessons};
 use prepare::{Prepared, leaving_blockers, missing_document, prepare};
 use super::picker::{self, Picker};
+use crate::ui_kit::text::TextFieldApp;
 
 /// The document a mode opens with when it has none of its own yet.
 #[derive(Clone, Debug, PartialEq)]
@@ -328,8 +329,15 @@ pub(crate) fn build(app: &mut App) {
         .init_resource::<Replies>()
         .init_resource::<Documents>()
         .init_resource::<Picker>()
-        // Modal keys: after Bevy's input systems, before anything reads them.
-        .add_systems(PreUpdate, picker::keys.after(bevy::input::InputSystems))
+        // The picker's path field (the kit's; `UiKitPlugin` adds the input
+        // system, the windowless tests only its message).
+        .add_message::<crate::ui_kit::text::FieldMsg>()
+        .add_text_field(picker::PATH, picker::path_text_field())
+        // Modal keys: after Bevy's input systems and the kit's (which types
+        // into the path field first), before anything reads them; the
+        // picker's own draft changes reach the field before the kit types.
+        .add_systems(PreUpdate, picker::sync.before(crate::ui_kit::text::input::keys))
+        .add_systems(PreUpdate, picker::keys.after(bevy::input::InputSystems).after(crate::ui_kit::text::input::keys))
         .add_systems(Update, picker::clicks.in_set(ViewerSet::Input))
         .add_systems(Update, picker::receive.in_set(ViewerSet::JobResults))
         .add_systems(Update, (actions::serve, lesson_screen_requests).chain().in_set(ViewerSet::Input))

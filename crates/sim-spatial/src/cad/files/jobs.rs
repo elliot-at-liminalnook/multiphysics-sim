@@ -79,7 +79,12 @@ pub(super) fn named(label: &str, e: &CadError) -> String {
 /// The outcome, also logged (a write whose owner is gone still reports).
 pub(super) fn logged(label: &str, result: Result<Value, String>) -> Result<Value, String> {
     match &result {
-        Ok(v) => bevy::log::info!("{}", v.get("message").and_then(Value::as_str).unwrap_or(label)),
+        Ok(v) => {
+            // Outside the macro: tracing's expansion brings its own `Value`
+            // trait into scope, which shadows serde_json's.
+            let message = v.get("message").and_then(Value::as_str).unwrap_or(label);
+            bevy::log::info!("{message}");
+        }
         Err(e) => bevy::log::warn!("{e}"),
     }
     result
@@ -158,7 +163,7 @@ fn open_created(cx: &mut Cx, call: &mut Call, path: String) -> Outcome {
             Outcome::Done(Ok(json!({"created": path, "opened": v.get("opened"), "generation": v.get("generation"), "message": message})))
         }
         Outcome::Done(Err(e)) => Outcome::Done(Err(format!("Created {path}, but did not open it: {e}"))),
-        Outcome::Pending => Outcome::Pending,
+        other => other,
     }
 }
 

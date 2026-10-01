@@ -436,6 +436,13 @@ pub struct OpsState {
     /// The sketch edit in flight that sends a polygon with sides: its
     /// `CadDocument::edit_seq` and the count (`sketch::specs::note_polygon_sides`).
     pub polygon_sides_sent: Option<(u64, u32)>,
+    /// The edit in flight that creates a robot node RoboCAD's handler then
+    /// selects (add motor, joint, sensor, cable: `selection.set_nodes([id])`,
+    /// ui/app.py:1561, :1655, :1665, ui/tools.py:1283): its
+    /// `CadDocument::edit_seq` and the selection when it started. Once it
+    /// succeeds, `sync::finish_edit` makes the node it answers the
+    /// selection, if the selection is still that one.
+    pub selects_created: Option<(u64, Vec<SelectionItem>)>,
 }
 
 /// What a run reads besides the document: the shared selection's CAD
@@ -640,6 +647,9 @@ fn started(doc: &mut CadDocument, entry: &OpEntry, explicit: bool, selection: &[
     {
         edit.activates_plane = true;
     }
+    // RoboCAD's handler selects the node it created once its Ops call returned
+    // (not for a REST run naming its own items: the user's selection was not its input).
+    doc.ops.selects_created = (doc.edit.is_some() && !explicit && matches!(entry.shape, Shape::Robot(RobotCall::AddMotor | RobotCall::AddJoint | RobotCall::Sensor | RobotCall::Cable))).then(|| (doc.edit_seq, selection.to_vec()));
     // A placed primitive is finished (RoboCAD's `commit` resets the stage).
     if matches!(entry.flow, Flow::Place(_)) {
         doc.ops.place = None;

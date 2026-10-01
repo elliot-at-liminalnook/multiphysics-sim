@@ -63,6 +63,9 @@ pub struct MaterialsState {
     pub(crate) focus: Option<Focus>,
     /// The focused field's text is selected (the next key replaces it).
     pub(crate) select_all: bool,
+    /// A dialog opened (and took the keyboard) since [`panel`]'s input last
+    /// ran: it ends the name field's draft, which the handler cannot reach.
+    pub(crate) claimed: bool,
 }
 
 impl MaterialsState {
@@ -214,12 +217,42 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
 }
 
 /// Open a dialog with its first field focused (RoboCAD's dialog focus).
+/// One field holds the keyboard: the physical rows' draft, the editors'
+/// and the numeric bar's focus end here; the name field's in [`panel`]'s
+/// input (`claimed`).
 fn open(doc: &mut CadDocument, form: MaterialForm) -> Value {
+    doc.physical_edit.draft = None;
+    doc.tool_state.inspector_edit = None;
+    doc.tool_state.numeric.focus = None;
+    doc.tool_state.numeric.began = None;
+    doc.tool_state.numeric.focus_request = false;
     doc.materials.form = Some(form);
     doc.materials.focus = Some(Focus::Field(0));
     doc.materials.select_all = true;
+    doc.materials.claimed = true;
     doc.touch();
     form_json(doc)
+}
+
+/// Whether an open dialog reads RoboCAD's physical model now: a material
+/// properties dialog whose values were read at the shown revision (its
+/// defaults come from that model; `inspector::refresh` fetches it).
+pub(in crate::cad) fn wants_physical(doc: &CadDocument) -> bool {
+    doc.materials.form.as_ref().is_some_and(|f| matches!(f.kind, FormKind::Properties { .. }) && f.began == doc.shown_revision())
+}
+
+/// The open properties dialog with the defaults RoboCAD's physical model
+/// now reports at the revision it was opened at (typed fields kept), or
+/// None when that changes nothing (`inspector::refresh` stores it).
+pub(in crate::cad) fn refilled_form(doc: &CadDocument) -> Option<MaterialForm> {
+    let f = doc.materials.form.as_ref()?;
+    let FormKind::Properties { id, .. } = &f.kind else { return None };
+    let landed = doc.physical.as_ref().is_some_and(|(r, res)| *r == f.began && res.is_ok());
+    if f.began != doc.shown_revision() || !landed {
+        return None;
+    }
+    let m = find(doc, id)?;
+    form::refill(f, form::properties_form(doc, &m))
 }
 
 /// Apply to selection: one `set_material` over the nodes.

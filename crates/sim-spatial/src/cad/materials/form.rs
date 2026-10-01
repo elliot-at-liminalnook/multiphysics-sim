@@ -13,7 +13,9 @@
 //! sets one ("set in this document"), else the physical model's value at
 //! the shown revision ("RoboCAD's default"), else nothing ("not
 //! reported"); no default is copied into this window. Each field says
-//! which.
+//! which. The model is fetched for the shown revision while the dialog is
+//! open (`inspector::refresh`), and the dialog takes its defaults when it
+//! lands ([`refill`]), keeping what was typed.
 //!
 //! **What OK sends.** One `set_material_props(id, …)` with only the
 //! fields whose text changed, in RoboCAD's SI units (the dialog's GPa and
@@ -190,6 +192,27 @@ pub(crate) fn properties_form(doc: &CadDocument, m: &Material) -> MaterialForm {
     MaterialForm { kind: FormKind::Properties { id: m.id.clone(), name: m.name.clone() }, fields, opened: texts.clone(), texts, values, error: None, began: doc.shown_revision(), print }
 }
 
+/// `old` reopened as `fresh` (the same dialog read again at the same
+/// revision, once RoboCAD's physical model arrived): fresh fields, origins
+/// and opening values, with every field typed into keeping its text, and
+/// the last refusal. None when nothing the dialog opened with changed.
+pub(crate) fn refill(old: &MaterialForm, mut fresh: MaterialForm) -> Option<MaterialForm> {
+    if fresh.kind != old.kind || fresh.fields.len() != old.fields.len() || fresh.texts.len() != old.texts.len() {
+        return None;
+    }
+    if fresh.fields == old.fields && fresh.opened == old.opened && fresh.values == old.values && fresh.print == old.print {
+        return None;
+    }
+    for (i, (text, opened)) in old.texts.iter().zip(&old.opened).enumerate() {
+        if text.trim() != opened.trim() {
+            fresh.texts[i] = text.clone();
+        }
+    }
+    fresh.error = old.error.clone();
+    fresh.began = old.began;
+    Some(fresh)
+}
+
 /// Whether OK can be pressed: every filled field reads as its kind.
 pub(crate) fn ok_ready(form: &MaterialForm) -> Result<(), String> {
     for (f, text) in form.fields.iter().zip(&form.texts) {
@@ -279,7 +302,7 @@ pub(crate) fn submit(form: &MaterialForm) -> Result<Submit, String> {
             }
             Print::Default => Map::from_iter([("anisotropy_z".to_string(), json!(v))]),
             Print::NotPrinted => return Err(format!("{name} is not a printed material: RoboCAD keeps no print anisotropy for it")),
-            Print::Unknown => return Err(format!("RoboCAD has not reported whether {name} is printed: fetch the physical model (Physical in the toolbar) to edit its anisotropy")),
+            Print::Unknown => return Err(format!("RoboCAD has not reported whether {name} is printed: its physical model (fetched while this dialog is open) does not list it yet, so its anisotropy cannot be edited here")),
         };
         props.insert("print".into(), Value::Object(block));
     }

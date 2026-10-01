@@ -369,6 +369,10 @@ pub(super) fn edges_to_faces(doc: &mut CadDocument, shared: &mut Shared, meshes:
         }
         let picked = stamps.iter().find(|(i, _)| i.0 == *node && i.1 == "edge" && i.2 == *edge).map(|(_, r)| *r);
         if let Some(r) = picked.filter(|r| *r != topo.revision) {
+            // Picked at the shown tree while the topology still lags it: the refetch fixes it.
+            if r == doc.shown_revision() {
+                return Err(format!("Edges → faces: the topology of {name} is from revision {}, the tree from revision {r}; wait for the refetch", topo.revision));
+            }
             return Err(format!("Edges → faces: edge {edge} of {name} was picked at revision {r}, its topology is from revision {}; pick the edge again", topo.revision));
         }
         if !topo.edges.iter().any(|e| e.index == *edge) {

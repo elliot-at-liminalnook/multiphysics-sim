@@ -13,14 +13,17 @@
 //!   the link's centre of mass; RoboCAD places them at `cells·1e3 + com·1e3`
 //!   (world mm). Each mesh vertex `v` (mm, RoboCAD's frame) is therefore
 //!   passed as `v·1e-3 − com`, `com` from the block (m), else the node's
-//!   mass centroid (`GET /nodes/{id}`, mm → m), else the origin, as RoboCAD
-//!   falls back. Yield: the node material's yield strength, else the
+//!   mass centroid (`GET /nodes/{id}`, mm → m), else (the node has no
+//!   body, so no mass block) the origin, as RoboCAD falls back. When that
+//!   read fails or the window is not connected the body is not coloured:
+//!   its error names the node in the panel, and it is tried again once the
+//!   connection's generation or state changes (a reconnect). Yield: the node material's yield strength, else the
 //!   largest cell stress (at least 1 Pa; RoboCAD takes the largest sampled
 //!   vertex stress, which is at most that).
 //! - **Display only**: the colours are a vertex attribute on the drawn mesh
 //!   asset (the geometry and RoboCAD are untouched), computed on a job
 //!   keyed by (document generation, the body's mesh asset, the node's
-//!   results), and removed when the overlay goes off. `mesh::highlight`
+//!   results; a failed one also by the connection), and removed when the overlay goes off. `mesh::highlight`
 //!   draws a coloured body in a white material ([`StressPaint::painted`]).
 use super::{ROBOCAD_SCALE, controls_of, link_active, staleness};
 use crate::app::ModeScope;
@@ -73,6 +76,9 @@ struct Paint {
     /// The colours are on `mesh`.
     done: bool,
     error: Option<String>,
+    /// (generation, connected) when the job started: a failed paint is
+    /// tried again when this changes (a reconnect).
+    tried: (u64, bool),
 }
 
 /// The overlay's paint per body (window only).
@@ -115,11 +121,12 @@ pub(super) fn paint(
     mut assets: ResMut<Assets<Mesh>>,
     bodies: Query<(&CadBody, &Mesh3d)>,
     changed: Query<(), (With<CadBody>, Changed<Mesh3d>)>,
-    mut last: Local<Option<(u64, u64, bool)>>,
+    mut last: Local<Option<(u64, u64, bool, bool)>>,
 ) {
     let (Some(doc), Some(mut paint)) = (doc, paint) else { return };
     let busy = paint.bodies.values().any(|p| p.job.is_some());
-    let key = (doc.generation, doc.revision, doc.results.overlay);
+    let connection = (doc.generation, doc.connected());
+    let key = (doc.generation, doc.revision, doc.results.overlay, connection.1);
     if !busy && *last == Some(key) && changed.is_empty() && paint.generation == doc.generation {
         return;
     }
@@ -148,6 +155,7 @@ pub(super) fn paint(
         if let Some(p) = paint.bodies.get_mut(&body.id)
             && p.mesh == id
             && p.inputs == inputs
+            && (p.error.is_none() || p.tried == connection)
         {
             let landed = p.job.as_ref().and_then(Job::poll);
             if let Some(result) = landed {
@@ -165,7 +173,8 @@ pub(super) fn paint(
                             paint.epoch += 1;
                         }
                     }
-                    Err(e) => p.error = Some(format!("{}: {e}", body.id)),
+                    // The job's errors name the node.
+                    Err(e) => p.error = Some(e),
                 }
             }
             continue;
@@ -185,14 +194,14 @@ pub(super) fn paint(
         let job = Job::spawn(pool, doc.generation, "cad stress colours", move |ctx| {
             let com = match job_inputs.com_m {
                 Some(c) => c,
-                None => centroid_m(client.as_ref(), &node),
+                None => centroid_m(client.as_ref(), &node)?,
             };
             if ctx.cancelled() {
-                return Err("superseded".into());
+                return Err(format!("node {node}: superseded"));
             }
             Ok(cad_colours(&job_inputs, com, &positions))
         });
-        paint.bodies.insert(body.id.clone(), Paint { mesh: id, inputs, job: Some(job), done: false, error: None });
+        paint.bodies.insert(body.id.clone(), Paint { mesh: id, inputs, job: Some(job), done: false, error: None, tried: connection });
     }
     // Bodies no longer drawn.
     let gone: Vec<String> = paint.bodies.keys().filter(|k| !seen.contains(k.as_str())).cloned().collect();
@@ -206,14 +215,18 @@ pub(super) fn paint(
     }
 }
 
-/// Node `id`'s mass centroid (m) from `GET /nodes/{id}` (mm), else the
-/// origin, as RoboCAD falls back without a body.
-fn centroid_m(client: Option<&sim_runtime::cad_client::CadClient>, id: &str) -> [f64; 3] {
-    let centroid = client.and_then(|c| c.node(id).ok()).and_then(|d| d.mass).map(|m| m.centroid).filter(|c| c.len() == 3);
-    match centroid {
+/// Node `id`'s mass centroid (m) from `GET /nodes/{id}` (mm); the origin
+/// when RoboCAD's answer has no mass centroid (a node without a body, as
+/// RoboCAD falls back). Not connected, or the read failed: an error naming
+/// the node (the body stays uncoloured; the paint is tried again on reconnect).
+fn centroid_m(client: Option<&sim_runtime::cad_client::CadClient>, id: &str) -> Result<[f64; 3], String> {
+    let client = client.ok_or_else(|| format!("node {id}'s centre of mass could not be read: not connected to RoboCAD; it is coloured once the window reconnects"))?;
+    let detail = client.node(id).map_err(|e| format!("node {id}'s centre of mass could not be read from RoboCAD: {e}"))?;
+    let centroid = detail.mass.map(|m| m.centroid).filter(|c| c.len() == 3);
+    Ok(match centroid {
         Some(c) => [c[0].unwrap_or(0.0) * 1e-3, c[1].unwrap_or(0.0) * 1e-3, c[2].unwrap_or(0.0) * 1e-3],
         None => [0.0; 3],
-    }
+    })
 }
 
 /// The results panel's root.

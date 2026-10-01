@@ -496,3 +496,20 @@ fn a_pick_fields_choices_are_form_controls() {
     let patterns = <CadAction as Action>::controls();
     assert!(patterns.iter().any(|p| actions::control_matches(p, "cad:form:set:parent:-")));
 }
+
+/// cad-physical-inspect: no row is left for that epic; every robot
+/// dialog row is a catalogue operation, and every `Do::Physical` id has an
+/// action (`robot::command_action`, which `Do::action` would panic without).
+#[test]
+fn the_physical_rows_run_native_actions() {
+    for c in COMMANDS.iter() {
+        assert_ne!(c.native, Native::Later("cad-physical-inspect"), "{} is still left for later", c.id);
+        if let Native::Action(super::registry::Do::Physical(id)) = c.native {
+            assert_eq!(id, c.id, "a physical row names its own id");
+            assert!(crate::cad::robot::command_action(id).is_some(), "{id}: robot::command_action has no action");
+        }
+    }
+    for id in ["robot.add_motor", "robot.add_joint", "robot.joint_dialog", "robot.infer", "robot.assign_motor", "robot.fixed", "robot.ground", "robot.add_sensor", "robot.add_cable", "robot.power"] {
+        assert!(matches!(registry::resolve(registry::command(id).unwrap()), Resolved::Op(e) if e.id == id), "{id} is not a catalogue operation");
+    }
+}

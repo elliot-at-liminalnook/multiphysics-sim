@@ -1317,7 +1317,11 @@ class Service:
             if n.results:
                 material = self.doc.materials.get(n.material or "")
                 nodes[n.id] = {"results": n.results, "yield_strength_pa": material.props().get("yield_strength") if material else None}
-        return {"revision": self.doc.revision, "path": res.get("path"), "loaded": res.get("loaded"), "stale": res.get("stale"), "provenance": res.get("provenance"), "margins": results_margins(self.doc), "nodes": nodes}
+        return {"revision": self.doc.revision, "path": res.get("path"), "loaded": res.get("loaded"), "stale": res.get("stale"), "provenance": res.get("provenance"),
+                # results_margins files any section but links and joints as a
+                # motor; a print study's block (section "print") is no robot margin.
+                "margins": {i: m for i, m in results_margins(self.doc).items() if self.doc.nodes[i].results.get("section") in ("links", "joints", "motors")},
+                "nodes": nodes}
 
     def add_material(self, spec: dict):
         from .commands import SetMaterialDef
@@ -1548,7 +1552,9 @@ def make_handler(service: Service):
             if head == "results":
                 if len(parts) > 1 and parts[1] == "load":
                     return self._send(200, run(lambda: s.ops.load_results(body["path"])))
-                if len(parts) > 1 and parts[1] == "nodes" and method == "GET":
+                if len(parts) > 1 and parts[1] == "nodes":
+                    if method != "GET":
+                        raise ApiError(405, f"{method} /results/nodes: read-only (GET)")
                     return self._send(200, run(s.results_nodes))
                 return self._send(200, run(lambda: s.doc.results or {}))
             if head == "identification":

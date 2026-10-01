@@ -62,8 +62,10 @@ pub(super) fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
             if let Err(e) = resolve::resolve(entry, cx.doc, &cx.env(&selection), None) {
                 return Outcome::Done(Err(e));
             }
-            // RoboCAD's checks before a robot dialog opens ("add a motor and a joint first").
-            if let Some(why) = robot_form::precheck(entry, cx.doc) {
+            // RoboCAD's checks before a robot dialog opens ("add a motor and
+            // a joint first"), and that the description it is filled from is
+            // the shown revision's (the form's `began`, which its OK checks).
+            if let Some(why) = robot_form::precheck(entry, cx.doc, &selection) {
                 return Outcome::Done(Err(why));
             }
             // The dialog replaces an active pick or place tool's form, so

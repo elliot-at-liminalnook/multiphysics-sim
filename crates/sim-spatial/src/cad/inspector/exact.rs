@@ -14,10 +14,17 @@
 //! timeout is clamped to what remains. The run is stamped ([`Stamp`]) with
 //! the document generation, the shown revision, the edit sequence and the
 //! selected nodes; [`cancel_reason`] (the rule [`sync`] applies each frame)
-//! drops it, cancelling the job, on any edit (one sent from here, or a
-//! newer revision shown) and on any selection change, and the status line
-//! says why. A value RoboCAD sent as null is an error naming it, never a
-//! number.
+//! drops it on any edit (one sent from here, or a newer revision shown) and
+//! on any selection change, and the status line says why. A value RoboCAD
+//! sent as null is an error naming it, never a number.
+//!
+//! **Cancel stops waiting; it does not stop RoboCAD.** Deliberately
+//! different from RoboCAD's own window, which kills its measuring child
+//! process: RoboCAD's service has no killable measurement route, so
+//! cancel, the 60 s limit, an edit or a selection change drop the job (no
+//! further `GET /nodes/{id}` is sent and its answer is ignored), but the
+//! request already sent finishes in RoboCAD, under its document lock, and
+//! may delay the next edit or read until it does. The status texts say so.
 use crate::cad::document::CadDocument;
 use crate::cad::selection::{CadItems, CadSelection};
 use crate::jobs::{Ctx, Job, Pool};
@@ -81,7 +88,8 @@ impl Measured {
     }
 }
 
-/// A run in flight: what it answers for and its job (dropping it cancels it).
+/// A run in flight: what it answers for and its job (dropping it stops
+/// the waiting; RoboCAD finishes the request already sent).
 pub(crate) struct ExactRun {
     pub stamp: Stamp,
     job: Job<Measured>,
@@ -122,6 +130,9 @@ impl ExactState {
     }
 }
 
+/// What every stop says: only the waiting stops (see the module doc).
+const SENT: &str = "This window stopped waiting; the request already sent finishes in RoboCAD and its answer is ignored.";
+
 /// Why a run stamped `then` no longer answers for `now` (None: it does).
 pub(crate) fn cancel_reason(then: &Stamp, now: &Stamp) -> Option<&'static str> {
     if then.generation != now.generation {
@@ -143,7 +154,7 @@ pub(crate) fn settle(state: &mut ExactState, now: &Stamp) -> bool {
     let mut changed = false;
     if let Some(why) = state.run.as_ref().and_then(|r| cancel_reason(&r.stamp, now)) {
         state.run = None;
-        state.status = Some((now.clone(), format!("Exact measurements cancelled: {why}.")));
+        state.status = Some((now.clone(), format!("Exact measurements cancelled: {why}. {SENT}")));
         changed = true;
     }
     if state.result.as_ref().is_some_and(|(s, _)| s != now) {
@@ -200,18 +211,20 @@ pub(crate) fn start(doc: &mut CadDocument, selection: &[SelectionItem]) -> Resul
     Ok(json!({"message": "Calculating exact measurements… You can keep working.", "nodes": nodes, "limit_s": LIMIT.as_secs()}))
 }
 
-/// Stop the run in flight.
+/// Stop waiting for the run in flight (RoboCAD finishes the request
+/// already sent; see the module doc).
 pub(crate) fn cancel(doc: &mut CadDocument) -> Result<Value, String> {
     let Some(run) = doc.physical_edit.exact.run.take() else { return Err("no exact measurement is running".into()) };
-    doc.physical_edit.exact.status = Some((run.stamp, "Exact measurements cancelled.".into()));
+    let message = format!("Exact measurements cancelled. {SENT}");
+    doc.physical_edit.exact.status = Some((run.stamp, message.clone()));
     doc.touch();
-    Ok(json!({"message": "Exact measurements cancelled."}))
+    Ok(json!({"message": message}))
 }
 
 /// The job: one `GET /nodes/{id}` per node within RoboCAD's limit.
 fn measure(client: &CadClient, ids: &[String], ctx: &Ctx) -> Result<Measured, String> {
     let deadline = Instant::now() + LIMIT;
-    let expired = || format!("calculation stopped at RoboCAD's {} s limit; try a smaller selection", LIMIT.as_secs());
+    let expired = || format!("stopped waiting at RoboCAD's {} s limit (the request already sent finishes in RoboCAD); try a smaller selection", LIMIT.as_secs());
     let mut blocks = Vec::new();
     for id in ids {
         if ctx.cancelled() {

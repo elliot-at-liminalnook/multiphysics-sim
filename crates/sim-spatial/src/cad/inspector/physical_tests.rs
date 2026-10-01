@@ -151,6 +151,23 @@ fn rows_show_robocads_values_and_override_marks() {
     assert_eq!(row(JointField::Clearance, &Map::new(), None).text, "");
 }
 
+/// RoboCAD's `drive.get('width_rad', over.get('backlash'))`: a drive
+/// block's null width stays unmeasured; the scalar `backlash` override is
+/// read only when the block has no `width_rad` key.
+#[test]
+fn drive_backlash_falls_back_to_the_scalar_only_without_a_width_key() {
+    let null_width = object(json!({"drive_backlash": {"width_rad": null, "provenance": "unmeasured", "reference": "Not measured"}}));
+    let scalar = object(json!({"backlash": 0.01}));
+    let drive = row(JointField::DriveBacklash, &null_width, Some(Some(&scalar)));
+    assert_eq!((drive.label.as_str(), drive.text.as_str()), ("Drive backlash (°; unmeasured)", ""));
+    let no_key = object(json!({"drive_backlash": {"reference": "Fixture note"}}));
+    let drive = row(JointField::DriveBacklash, &no_key, Some(Some(&scalar)));
+    assert_eq!((drive.label.as_str(), drive.text.as_str()), ("Drive backlash (°; estimated)", "0.57296"));
+    assert_eq!(drive.note.as_deref(), Some("Fixture note"));
+    let drive = row(JointField::DriveBacklash, &Map::new(), Some(Some(&scalar)));
+    assert_eq!(drive.text, "0.57296", "no drive block at all: the scalar");
+}
+
 #[test]
 fn the_results_line_and_g_format_are_robocads() {
     let r = json!({"section": "links", "peak_stress_pa": 12345678.0, "yield_margin": 3.14159, "tg_margin_c": 20.0, "max_deflection_m": null});

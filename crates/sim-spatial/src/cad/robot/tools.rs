@@ -425,7 +425,8 @@ fn joint_pick(args: &RobotArgs, cx: &mut Cx) -> Outcome {
             let three = |v: [f64; 3]| v.map(ops::g).join(", ");
             let preset = [("parent", picks.parent.clone().unwrap_or_default()), ("child", picks.child.clone().unwrap_or_default()), ("pivot", three(pivot)), ("axis", three(axis))];
             let opened = ops::open_preset(doc, &env, "robot.joint_dialog", &preset);
-            if opened.is_ok() {
+            // A pick the dialog could not take (a motor body) keeps its status line.
+            if opened.as_ref().is_ok_and(|o| o["dropped"].as_array().is_none_or(Vec::is_empty)) {
                 doc.show(Ok("Joint: check the joint dialog and press OK to add it".to_string()));
             }
             Outcome::Done(opened)

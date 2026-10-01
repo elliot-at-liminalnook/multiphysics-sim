@@ -133,3 +133,32 @@ fn engineering_properties_show_their_origin_and_send_only_changes() {
     form::set(&mut f, "anisotropy_z", "0.5").unwrap();
     assert!(form::submit(&f).unwrap_err().contains("not a printed material"));
 }
+
+/// Opening a dialog takes the keyboard from the other fields; a properties
+/// dialog opened before RoboCAD's physical model arrived takes its
+/// defaults when it lands, keeping a typed field, once.
+#[test]
+fn a_properties_dialog_takes_the_keyboard_and_the_defaults_when_they_land() {
+    let mut doc = document();
+    doc.tool_state.numeric.focus = Some(1);
+    doc.tool_state.numeric.began = Some(4);
+    let m = pla(&doc);
+    let opened = form::properties_form(&doc, &m);
+    super::open(&mut doc, opened);
+    assert_eq!((doc.tool_state.numeric.focus, doc.tool_state.numeric.began), (None, None));
+    assert!(doc.materials.claimed && doc.tool_state.inspector_edit.is_none() && doc.physical_edit.draft.is_none());
+    assert!(super::wants_physical(&doc), "the dialog reads the physical model");
+    assert_eq!(super::refilled_form(&doc), None, "nothing has landed");
+    form::set(doc.materials.form.as_mut().unwrap(), "poisson", "0.4").unwrap();
+    // A model for another revision is not this dialog's.
+    doc.physical = Some((3, Ok(json!({"materials": {"pla": {"youngs_modulus": 3.5e9, "poisson": 0.36}}}))));
+    assert_eq!(super::refilled_form(&doc), None);
+    doc.physical = Some((4, Ok(json!({"materials": {"pla": {"youngs_modulus": 3.5e9, "poisson": 0.36}}}))));
+    let f = super::refilled_form(&doc).expect("the defaults landed");
+    let at = |key: &str| f.fields.iter().position(|x| x.key == key).unwrap();
+    assert_eq!((f.texts[at("youngs_modulus")].as_str(), f.fields[at("youngs_modulus")].origin), ("3.5", Origin::Default));
+    assert_eq!((f.texts[at("poisson")].as_str(), f.opened[at("poisson")].as_str()), ("0.4", "0.36"), "the typed text is kept");
+    assert_eq!(f.texts[at("yield_strength")], "42", "the override still wins");
+    doc.materials.form = Some(f);
+    assert_eq!(super::refilled_form(&doc), None, "once");
+}

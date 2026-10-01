@@ -88,3 +88,14 @@ def test_physical_planar_hint_only_when_asked(served):
     assert planar["planar"] == {"normal": [0.0, -1.0, 0.0], "origin": [0.0, 0.0, 0.0]}
     assert client.get("/physical?flex=0&planar=0")["planar"] is None
     assert len(planar["links"]) == len(plain["links"])
+
+
+def test_results_nodes_skips_print_study_blocks_in_margins(served):
+    """A print study's per-node block (section "print") is no robot margin:
+    results_margins would file it as a motor's; the route leaves it out of
+    margins but still lists the node's block."""
+    doc, ids, client = served
+    doc.nodes[ids["ground"]].results = {"section": "print", "result_dir": "x"}
+    got = client.get("/results/nodes")
+    assert ids["ground"] not in got["margins"]
+    assert got["nodes"][ids["ground"]]["results"]["section"] == "print"

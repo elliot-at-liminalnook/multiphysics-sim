@@ -201,7 +201,7 @@ pub(crate) fn target(doc: &CadDocument, env: &Env, plane_arg: &Value, frame: Pla
         match env.sketches.and_then(|c| c.sketch(id)) {
             Some(g) => Ok(g.plane.is_some_and(|p| p.same(&frame, 1e-9))),
             None => Err(match env.sketches.and_then(|c| c.error(id)) {
-                Some(e) => format!("sketch {name} could not be read from RoboCAD ({e}); Refresh (cad_refresh) and try again"),
+                Some(e) => format!("sketch {name} could not be read from RoboCAD ({e}); press Refresh and try again"),
                 None => format!("sketch {name} is still being read from RoboCAD; try again"),
             }),
         }

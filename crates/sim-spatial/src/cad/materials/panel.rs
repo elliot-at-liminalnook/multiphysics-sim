@@ -16,8 +16,8 @@
 //!   Escape ends it; in the dialog Tab moves to the next field, Enter is
 //!   OK and Escape Cancel (also with no field focused: the dialog owns the
 //!   keyboard while open). A press elsewhere ends the typing. Opening a
-//!   field ends the name field's, the editors', the numeric bar's and the
-//!   physical rows' drafts. `CadInputFocus` is set while a field has the
+//!   field, or a dialog opening (`claimed`), ends the name field's, the
+//!   editors', the numeric bar's and the physical rows' drafts. `CadInputFocus` is set while a field has the
 //!   keyboard, while the dialog is open and in the frame typing ends.
 use super::form::{self, FormKind};
 use super::{Focus, MaterialsArgs, MaterialsOp, controls_of, list, matches, row_label};
@@ -201,7 +201,12 @@ pub(in crate::cad) fn input(
         at = None;
         ended = true;
     }
-    if started {
+    // A dialog opened by the handler since (`open`) took the keyboard too.
+    let claimed = doc.materials.claimed;
+    if claimed {
+        doc.materials.claimed = false;
+    }
+    if started || claimed {
         // One field holds the keyboard.
         if doc.tool_state.numeric.focus.is_some() {
             doc.tool_state.numeric.focus = None;
@@ -221,7 +226,7 @@ pub(in crate::cad) fn input(
             name.refusal = None;
         }
     }
-    if started || doc.ops.surface.is_some() {
+    if started || claimed || doc.ops.surface.is_some() {
         // Keys pressed before the field took the keyboard are not its text;
         // an open command surface has the keyboard meanwhile.
         events.clear();
@@ -319,7 +324,7 @@ pub(in crate::cad) fn input(
 fn form_key(doc: &CadDocument) -> Option<String> {
     let f = doc.materials.form.as_ref()?;
     let ids: Vec<String> = list(doc).into_iter().map(|m| m.id).collect();
-    Some(format!("{:?}", (doc.generation, f, doc.materials.focus, doc.materials.select_all, doc.edit_refusal(), ids)))
+    Some(format!("{:?}", (doc.generation, f, doc.materials.focus, doc.materials.select_all, doc.edit_refusal(), ids, doc.physical_job.is_some())))
 }
 
 /// Present: the dialog, rebuilt when what it shows changes (its scroll offset kept).
@@ -381,7 +386,10 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, f: &form::Ma
             }
         }
         FormKind::Properties { .. } => {
-            p.spawn(k.note("Each field names where its value comes from. OK sends only the fields you changed, in SI, as one undo step; RoboCAD reports its defaults in its physical model, for materials the model uses (Physical in the toolbar fetches it)."));
+            if doc.physical_job.is_some() {
+                p.spawn(k.caption("Fetching RoboCAD's physical model…"));
+            }
+            p.spawn(k.note("Each field names where its value comes from. OK sends only the fields you changed, in SI, as one undo step. RoboCAD reports its defaults in its physical model, for the materials the model uses; it is fetched for this revision while the dialog is open."));
         }
     }
 }

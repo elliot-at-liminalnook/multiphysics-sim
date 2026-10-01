@@ -26,7 +26,8 @@
 //! handler, controls and state), [`rows`] (the physical rows RoboCAD's
 //! properties panel shows: colour, the joint and its physics overrides,
 //! the results line, exact measurements, material properties), [`entry`]
-//! (their typing) and [`exact`] (the exact-measurement job).
+//! (their typing), [`exact`] (the exact-measurement job) and [`refresh`]
+//! (the physical model fetched again for each revision while it is shown).
 mod editors;
 mod entry;
 mod exact;
@@ -34,6 +35,7 @@ mod node;
 mod physical_edit;
 #[cfg(test)]
 mod physical_tests;
+mod refresh;
 mod rows;
 mod sections;
 

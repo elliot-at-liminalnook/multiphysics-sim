@@ -6,7 +6,7 @@ use super::args::{Built, build};
 use super::form::{form_json, open_form_with};
 use super::robot_args::{Done, NO_FACE, Plan};
 use super::*;
-use crate::cad::document::{CadTarget, Connection};
+use crate::cad::document::{CadTarget, Connection, Edit};
 use crate::cad::robot::data::Bundle;
 use crate::cad::sketch::{ActivePlane, BasePlane, CadActivePlane};
 use sim_runtime::cad_client::{Battery, CadClient, DocState, Health, MotorSpec, NodeResults, NodeSummary, RobotJoint, RobotMotor, RobotSummary};
@@ -198,7 +198,7 @@ fn the_motor_tool_sends_add_motor_with_the_pick() {
     // A combo box is on its first entry: the library's first motor; mount "(pick by clicking a face)".
     let t = texts_of(&doc);
     assert_eq!((t["spec"].as_str(), t["mount_on"].as_str(), t["cut"].as_str()), ("ds3218", "", "true"));
-    assert_eq!(note(e, &doc.ops.form.as_ref().unwrap().texts, &doc).as_deref(), Some(", 0×0×0 mm, shaft Ø0×0 mm, no mount holes, 0 rad/s no-load, 0 V. "));
+    assert_eq!(note(e, &doc.ops.form.as_ref().unwrap().texts, &doc).as_deref(), Some(", 0×0×0 mm, shaft Ø0×0 mm, no mount holes, 0 rad/s no-load, 5 V. "));
     // OK without a click: nothing to place.
     let values_ = values(e, &drafts(&doc)).unwrap();
     assert_eq!(build(e, &Resolved::default(), &values_, &doc, &Env::default()), Err(NO_FACE.to_string()));
@@ -229,7 +229,7 @@ fn assign_fix_ground_sensor_and_cable_call_as_robocad() {
     let p = plan(e, &Resolved::default(), &drafts(&doc), &doc);
     assert_eq!((p.calls[0].name, p.calls[0].args.clone()), ("attach_motor", vec![json!("j1"), json!("m1"), json!(1.0)]));
     assert_eq!(p.done, Done::Say("Servo now drives hip".into()));
-    assert_eq!(robot_form::precheck(e, &doc), None);
+    assert_eq!(robot_form::precheck(e, &doc, &selection), None);
     // Fix together: one connect_fixed per child, the first is the parent.
     let e = op("robot.fixed");
     let r = Resolved { nodes: vec!["b1".into(), "b2".into(), "b3".into()], ..Default::default() };
@@ -309,5 +309,101 @@ fn assign_motor_refuses_before_its_dialog_without_motors_or_joints() {
     if let Some(Ok(s)) = doc.robot.data.bundle.as_mut().map(|b| b.summary.as_mut()) {
         s.motors.clear();
     }
-    assert_eq!(robot_form::precheck(op("robot.assign_motor"), &doc), Some("add a motor and a joint first".to_string()));
+    assert_eq!(robot_form::precheck(op("robot.assign_motor"), &doc, &[]), Some("add a motor and a joint first".to_string()));
+}
+
+#[test]
+fn power_and_edit_joint_refuse_until_the_description_is_read_at_the_shown_revision() {
+    let joint = [SelectionItem("j1".into(), "body".into(), 0)];
+    let (power, edit) = (op("robot.power"), op("ops.set_joint"));
+    let doc = document();
+    assert_eq!((robot_form::precheck(power, &doc, &[]), robot_form::precheck(edit, &doc, &joint)), (None, None));
+    // A read from an older revision: both refuse by name, and so does the power dialog's OK.
+    let mut old = document();
+    old.robot.data.key = Some((old.generation, 3));
+    let reading = "the robot description is still being read (revision 4); try again in a moment".to_string();
+    assert_eq!(robot_form::precheck(power, &old, &[]), Some(reading.clone()));
+    assert_eq!(robot_form::precheck(edit, &old, &joint), Some(reading.clone()));
+    let mut given = Map::new();
+    for (k, v) in [("cells", "3"), ("chemistry", "lipo"), ("capacity_ah", "1"), ("period_s", "0.02"), ("latency_s", "0.004"), ("targets", "{}"), ("dimension", "0.15"), ("friction", "0.2")] {
+        given.insert(k.to_string(), json!(v));
+    }
+    let values_ = values(power, &given).unwrap();
+    assert_eq!(build(power, &Resolved::default(), &values_, &old, &Env::default()), Err(reading));
+    // A failed battery read is not "no battery": the dialog does not open (its OK would delete it).
+    let mut failed = document();
+    if let Some(b) = failed.robot.data.bundle.as_mut() {
+        b.battery = Err("HTTP 500".into());
+    }
+    assert_eq!(robot_form::precheck(power, &failed, &[]), Some("RoboCAD's battery setting could not be read, so the current one is not known: HTTP 500".to_string()));
+    // A failed control read: OK would reset every target left out.
+    let mut failed = document();
+    if let Some(b) = failed.robot.data.bundle.as_mut() {
+        b.control = Err("HTTP 500".into());
+    }
+    assert!(build(power, &Resolved::default(), &values_, &failed, &Env::default()).is_err_and(|e| e.contains("control loop setting could not be read")));
+    // A joint the description does not have (added since it was read, under the same revision's tree).
+    let mut unknown = document();
+    if let Some(Ok(s)) = unknown.robot.data.bundle.as_mut().map(|b| b.summary.as_mut()) {
+        s.joints.clear();
+    }
+    assert_eq!(robot_form::precheck(edit, &unknown, &joint), Some("hip is not in RoboCAD's robot description at revision 4, so its values are not known".to_string()));
+}
+
+#[test]
+fn selection_seeded_forms_are_seeded_again_each_time_they_open() {
+    let mut doc = document();
+    if let Some(d) = doc.doc.as_mut() {
+        d.nodes.push(node("j2", "joint", "knee"));
+    }
+    if let Some(Ok(s)) = doc.robot.data.bundle.as_mut().map(|b| b.summary.as_mut()) {
+        s.joints.push(RobotJoint { id: "j2".into(), name: "knee".into(), kind: "prismatic".into(), parent: Some("b3".into()), child: "b2".into(), lower: Some(-5.0), upper: Some(5.0), gear_ratio: 1.0, ..Default::default() });
+    }
+    let e = op("ops.set_joint");
+    let hip = [SelectionItem("j1".into(), "body".into(), 0)];
+    open_form_with(&mut doc, e, Some(&Env { selection: &hip, ..Default::default() }));
+    super::form::form_set(&mut doc, "damping", &json!("0.3")).unwrap();
+    // Opened again for the knee while the hip's form is open: the knee's values, none of the hip's drafts.
+    let knee = [SelectionItem("j2".into(), "body".into(), 0)];
+    open_form_with(&mut doc, e, Some(&Env { selection: &knee, ..Default::default() }));
+    let t = texts_of(&doc);
+    assert_eq!((t["name"].as_str(), t["type"].as_str(), t["lower"].as_str(), t["damping"].as_str()), ("knee", "prismatic", "-5", "0"));
+    // A form that is not preset from the selection keeps its drafts.
+    let m = op("ops.mount_motor");
+    open_form_with(&mut doc, m, Some(&Env::default()));
+    super::form::form_set(&mut doc, "body", &json!("b2")).unwrap();
+    open_form_with(&mut doc, m, Some(&Env::default()));
+    assert_eq!(texts_of(&doc)["body"], "b2");
+}
+
+#[test]
+fn robot_adds_note_the_selection_to_replace_with_the_created_node() {
+    let mut doc = document();
+    let selection = [body("b2")];
+    let in_flight = || Edit { label: "Sensor imu on Plate".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None };
+    doc.edit = Some(in_flight());
+    doc.edit_seq = 7;
+    started(&mut doc, op("robot.add_sensor"), false, &selection);
+    assert_eq!(doc.ops.selects_created, Some((7, selection.to_vec())));
+    // A REST run naming its own items leaves the user's selection alone.
+    started(&mut doc, op("robot.add_sensor"), true, &selection);
+    assert_eq!(doc.ops.selects_created, None);
+    // Other robot edits leave the selection as it is.
+    started(&mut doc, op("robot.assign_motor"), false, &selection);
+    assert_eq!(doc.ops.selects_created, None);
+    for id in ["robot.add_motor", "robot.joint_dialog", "robot.add_cable"] {
+        started(&mut doc, op(id), false, &selection);
+        assert!(doc.ops.selects_created.is_some(), "{id}");
+    }
+}
+
+#[test]
+fn a_joint_tool_pick_the_dialog_cannot_take_is_named() {
+    let mut doc = document();
+    // The motor body m1 clicked as the child: not one of the dialog's bodies.
+    let preset = [("parent", "b1".to_string()), ("child", "m1".to_string()), ("pivot", "0, 0, 0".to_string()), ("axis", "0, 0, 1".to_string())];
+    let opened = open_preset(&mut doc, &Env::default(), "robot.joint_dialog", &preset).unwrap();
+    assert_eq!(opened["dropped"], json!(["Servo is not one of the dialog's choices (a motor is not a link), so the child was not preset: choose it in the dialog"]));
+    assert_eq!(texts_of(&doc)["parent"], "b1");
+    assert!(doc.status.as_ref().is_some_and(|s| s.as_ref().is_err_and(|e| e.starts_with("Robot: joint from the two selected bodies…: Servo is not"))));
 }

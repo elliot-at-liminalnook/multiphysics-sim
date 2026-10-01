@@ -246,7 +246,9 @@ pub(crate) fn own_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Ve
             // RoboCAD's text: "name: kind #i", without "#i" for a body.
             let index = if item.1 == "body" { String::new() } else { format!(" #{}", item.2) };
             let label = format!("{}: {}{index}", doc.node_name(&item.0), item.1);
-            add(format!("cad:candidate:{n}"), label, CadAction::CadSelect { ids: Vec::new(), items: vec![item.clone()], extend: c.extend, toggle: c.toggle, picked_at: c.revision }, Ok(()));
+            // No picked_at: `selection::select` stamps a menu choice with the
+            // menu's revision (`menu_revision`) and closes a stale menu.
+            add(format!("cad:candidate:{n}"), label, CadAction::CadSelect { ids: Vec::new(), items: vec![item.clone()], extend: c.extend, toggle: c.toggle, picked_at: None }, Ok(()));
         }
     }
     // Tools (RoboCAD's tool.*): activating one only changes the view; its

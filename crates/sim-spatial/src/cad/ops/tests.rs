@@ -573,6 +573,48 @@ fn primitives_are_placed_on_the_active_plane() {
     assert!(err.contains("p1"), "{err}");
 }
 
+/// Without an anchor a primitive is placed at the active plane's origin
+/// (RoboCAD's `anchor = self.p0 or plane.origin`, ui/tools.py:524), not at
+/// the projection of the world origin.
+#[test]
+fn primitives_without_an_anchor_sit_at_the_plane_origin() {
+    let doc = document();
+    let r = Resolved::default();
+    let raised = active(ActivePlane::Node { id: "p1".into(), frame: Some(PlaneFrame { origin: [5.0, 6.0, 7.0], ..PlaneFrame::XY }) });
+    let env = Env { plane: Some(&raised), ..Default::default() };
+    let run = |id: &str, given_: &[(&str, Value)]| calls(build(op(id), &r, &values(op(id), &given(given_)).unwrap(), &doc, &env).unwrap()).remove(0);
+    for id in ["tool.box", "tool.box_center", "tool.cylinder", "tool.sphere"] {
+        assert!(op(id).params.last().is_some_and(|p| p.default.is_empty()), "{id}: the anchor is optional");
+    }
+    let c = run("tool.box", &[]);
+    assert_eq!((c.name, c.args), ("box_three_point", vec![json!([5.0, 6.0, 7.0]), json!([25.0, 6.0, 7.0]), json!([5.0, 26.0, 7.0]), json!(10.0)]));
+    let c = run("tool.box_center", &[]);
+    assert_eq!(c.args[0], json!([-5.0, -4.0, 7.0]), "centred on the plane origin");
+    let c = run("tool.cylinder", &[]);
+    assert_eq!((c.name, c.args), ("cylinder", vec![json!([5.0, 6.0, 7.0]), json!([0.0, 0.0, 1.0]), json!(5.0), json!(10.0)]));
+    let c = run("tool.sphere", &[]);
+    assert_eq!(c.args, vec![json!([5.0, 6.0, 7.0]), json!(5.0)]);
+    // An anchor given is still projected onto the plane (the sphere's kept), and an empty one is the origin.
+    let c = run("tool.box", &[("corner", json!([1, 2, 50]))]);
+    assert_eq!(c.args[0], json!([1.0, 2.0, 7.0]));
+    let c = run("tool.sphere", &[("center", json!([1, 2, 50]))]);
+    assert_eq!(c.args[0], json!([1.0, 2.0, 50.0]));
+    let c = run("tool.cylinder", &[("base", json!(""))]);
+    assert_eq!(c.args[0], json!([5.0, 6.0, 7.0]));
+}
+
+/// RoboCAD's midplane takes exactly two picks (ui/tools.py:1096-1098): a third face is refused by name.
+#[test]
+fn the_midplane_takes_exactly_two_faces() {
+    let doc = document();
+    let mid = op("tool.plane_mid");
+    let r = Resolved { nodes: vec!["b1".into(), "b2".into()], faces: vec![("b1".into(), 2), ("b2".into(), 5), ("b2".into(), 6)], ..Default::default() };
+    let err = build(mid, &r, &values(mid, &Map::new()).unwrap(), &doc, &Env::default()).unwrap_err();
+    assert!(err.contains("exactly two faces") && err.contains("3 selected"), "{err}");
+    let two = Resolved { faces: r.faces[..2].to_vec(), ..r.clone() };
+    assert!(build(mid, &two, &Map::new(), &doc, &Env::default()).is_ok());
+}
+
 /// A plane tool's new node is adopted before the shown tree has it (the
 /// edit only requests a refetch): kept until a tree shows it, then
 /// dropped once a tree lacks it. Its frame is the shown revision's only

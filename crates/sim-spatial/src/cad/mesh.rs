@@ -47,6 +47,7 @@ pub struct CadBody {
 pub(super) struct CadRoot;
 
 /// Built off the UI thread: the mesh's attributes and its bounds (mm, RoboCAD's frame).
+#[derive(Debug)]
 pub struct Built {
     pub positions: Vec<[f32; 3]>,
     pub normals: Vec<[f32; 3]>,
@@ -229,11 +230,12 @@ pub fn build(id: &str, mesh: &MeshData) -> Result<Built, String> {
     Ok(Built { positions, normals, indices, min, max })
 }
 
-fn bevy_mesh(built: &Built) -> Mesh {
+/// Moves the built vectors in: no copy on the UI thread.
+fn bevy_mesh(built: Built) -> Mesh {
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, built.positions.clone());
-    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, built.normals.clone());
-    mesh.insert_indices(Indices::U32(built.indices.clone()));
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, built.positions);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, built.normals);
+    mesh.insert_indices(Indices::U32(built.indices));
     mesh
 }
 
@@ -320,8 +322,8 @@ pub(super) fn sync(
         let Building { id, revision: at, .. } = meshes.building.swap_remove(i);
         match result {
             Ok(built) => {
-                let handle = assets.add(bevy_mesh(&built));
                 let bounds = Some((built.min, built.max));
+                let handle = assets.add(bevy_mesh(built));
                 let existing = meshes.entries.get(&id).and_then(|e| e.entity);
                 let entity = match existing {
                     Some(e) => {
@@ -468,7 +470,9 @@ mod tests {
 
     #[test]
     fn display_frame_is_z_up_millimetres() {
-        assert_eq!(display(Vec3::new(1000.0, 2000.0, 3000.0)), Vec3::new(1.0, 3.0, -2.0));
+        // mm × 0.001 is not exact in f32 (3000 → 3.0000002).
+        let d = display(Vec3::new(1000.0, 2000.0, 3000.0));
+        assert!((d - Vec3::new(1.0, 3.0, -2.0)).length() < 1e-5, "{d:?}");
         let t = root_transform();
         let p = t.transform_point(Vec3::new(1000.0, 2000.0, 3000.0));
         assert!((p - Vec3::new(1.0, 3.0, -2.0)).length() < 1e-5, "{p:?}");

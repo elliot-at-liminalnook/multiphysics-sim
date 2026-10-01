@@ -26,7 +26,7 @@ def main():
             url = json.loads((root / "dashboard.json").read_text())["url"]
             if not url.startswith("http://127.0.0.1:"):
                 return None
-            with urlopen(url + "/api/state", timeout=2) as response:
+            with urlopen(url + "/api/ping", timeout=5) as response:
                 if json.load(response)["workspace"] == expected:
                     return url
         except (OSError, ValueError, KeyError):
@@ -49,7 +49,7 @@ def main():
             process = subprocess.Popen([sys.executable, str(Path(__file__).parent / "dashboard.py"),
                 "--state", str(root), "--port", port], stdin=subprocess.DEVNULL,
                 stdout=log, stderr=log, start_new_session=True)
-        deadline = time.monotonic() + 10
+        deadline = time.monotonic() + 30
         while not url and process.poll() is None and time.monotonic() < deadline:
             time.sleep(.15)
             url = existing()

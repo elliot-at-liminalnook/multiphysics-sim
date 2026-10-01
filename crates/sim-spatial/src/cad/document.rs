@@ -319,6 +319,10 @@ pub struct CadDocument {
     /// The active tool's own state: its target, pivot, the revision its
     /// preview began at, the numeric fields (`transform::ToolState`).
     pub tool_state: super::transform::ToolState,
+    /// The op catalogue's state: the open form, the active interaction,
+    /// the open command surface, the last copy and the analysis overlays
+    /// (cad-modify, `ops`).
+    pub ops: super::ops::OpsState,
     /// Why the poll's last `GET /selection` failed (None once one succeeds):
     /// RoboCAD's own selection changes are not seen meanwhile.
     pub selection_error: Option<String>,
@@ -422,6 +426,7 @@ impl CadDocument {
             candidates: None,
             tool: CadTool::Select,
             tool_state: Default::default(),
+            ops: Default::default(),
             selection_error: None,
             detail: None,
             commands: None,

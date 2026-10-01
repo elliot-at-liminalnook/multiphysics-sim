@@ -44,6 +44,9 @@
 //! (`builder::ui_api::collect`); interactive widgets carry an
 //! `AccessibleLabel`. Outside this module, no `Tint` struct literal and no
 //! `Color::srgb` literal equal to a token (`tests::ui_colours_come_from_the_kit`).
+pub(crate) mod form;
+pub(crate) mod palette;
+pub(crate) mod pie;
 mod scroll;
 mod slider;
 mod theme;

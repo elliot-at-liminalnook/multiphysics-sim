@@ -199,6 +199,37 @@ pub enum CadAction {
         #[serde(default)]
         kwargs: Map<String, Value>,
     },
+    /// Invoke catalogue operation `id` (`ops::CATALOGUE`, RoboCAD's command
+    /// id) as its menu entry, toolbar button, palette row or key does: an
+    /// immediate one runs at once on the selection with its defaults, a
+    /// form one opens its parameter form, a pick or place one becomes the
+    /// active interaction with its form beside the view.
+    CadInvoke { id: String },
+    /// Run catalogue operation `id` with `params` (each a number, a unit
+    /// expression as its field takes it, a choice's option, a bool, or
+    /// `[x, y, z]`; absent ones take RoboCAD's defaults) on `items`
+    /// (RoboCAD's `[node, kind, index]`; the selection when absent).
+    /// `revision`: RoboCAD's revision the values and picks were made at;
+    /// refused by name when it changed. One edit on a job.
+    CadRun {
+        id: String,
+        #[serde(default)]
+        params: Map<String, Value>,
+        #[serde(default)]
+        items: Option<Vec<SelectionItem>>,
+        #[serde(default)]
+        revision: Option<u64>,
+    },
+    /// Set the open form's parameter `name` (a choice's option, a
+    /// checkbox's bool, or a field's text).
+    CadFormSet { name: String, value: Value },
+    /// The open form's OK: its values evaluated, then `CadRun`.
+    CadFormSubmit,
+    /// The open form's Cancel (and Escape): closes it and ends its interaction.
+    CadFormCancel,
+    /// Open a command surface (the palette, a category's menu, the context
+    /// menu, the view or selection-mode radial) or close it (`closed`).
+    CadSurface { surface: super::surfaces::Surface },
     /// Refetch the document now.
     CadRefresh,
     /// Frame the native camera on everything, or on node `id` (display only:
@@ -390,6 +421,8 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             let (name, args, kwargs) = (name.clone(), args.clone(), kwargs.clone());
             edit(doc, call, format!("Op {name}"), move |c| c.op(&name, &args, &kwargs).map(|r| EditDone { message: format!("Ran {name}"), result: value(&r) }))
         }
+        CadAction::CadInvoke { .. } | CadAction::CadRun { .. } | CadAction::CadFormSet { .. } | CadAction::CadFormSubmit | CadAction::CadFormCancel => super::ops::handle(action, call, cx),
+        CadAction::CadSurface { .. } => super::surfaces::handle(action, call, cx),
         CadAction::CadRefresh => done(Ok(refresh(doc))),
         CadAction::CadFit { id } => done(fit(doc, cx.meshes.as_deref_mut(), id.as_deref())),
         CadAction::CadPhysical => done(sync::fetch_physical(doc).map(|()| json!({"message": "Fetching RoboCAD's physical description (GET /physical?flex=0); it shows in cad_state.physical."}))),
@@ -571,6 +604,12 @@ pub(super) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadCommand { id } => json!({"command": "cad_command", "id": id}),
         CadAction::CadOp { name, args, kwargs } => json!({"command": "cad_op", "name": name, "args": args, "kwargs": kwargs}),
         CadAction::CadOpen { path, url } => json!({"command": "cad_open", "path": path, "url": url}),
+        CadAction::CadInvoke { id } => json!({"command": "cad_invoke", "id": id}),
+        CadAction::CadRun { id, params, items, revision } => json!({"command": "cad_run", "id": id, "params": params, "items": items, "revision": revision}),
+        CadAction::CadFormSet { name, value } => json!({"command": "cad_form_set", "name": name, "value": value}),
+        CadAction::CadFormSubmit => json!({"command": "cad_form_submit"}),
+        CadAction::CadFormCancel => json!({"command": "cad_form_cancel"}),
+        CadAction::CadSurface { surface } => json!({"command": "cad_surface", "surface": surface}),
         CadAction::State => json!({"command": "state"}),
         CadAction::CadState => json!({"command": "cad_state"}),
         CadAction::SystemUi(args) => json!({"command": "system_ui", "action": args.get("action")}),

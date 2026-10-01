@@ -35,18 +35,21 @@
 //! thread (the poll joins) and [`clear`]s the other resources; entities go
 //! by `DespawnOnExit`.
 mod actions;
+mod analysis_overlay;
 mod document;
 mod inspector;
 mod keys;
 mod measure;
 mod mesh;
 mod numeric;
+mod ops;
 mod overlay;
 mod panel;
 mod pick;
 mod scene;
 mod selection;
 mod snap;
+mod surfaces;
 mod sync;
 mod topology;
 mod transform;
@@ -60,6 +63,8 @@ mod tests;
 pub use actions::{CadAction, Dimension, MeasurePick};
 pub use document::{CadDocument, CadInputFocus, CadTarget, CadTool, Candidates, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 pub use mesh::{BODY_KINDS, CadBody, CadMeshes, MeshCounts};
+pub use ops::{FormState, OpsState};
+pub use surfaces::Surface;
 pub use topology::{CadTopology, NodeTopology};
 pub use view::CadView;
 

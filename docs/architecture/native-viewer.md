@@ -2406,8 +2406,10 @@ and reviewed by reading, pending its verification pass. Paths are
   `candidates_at`, i.e. `CadMeshes::face_at` and the topology at the shown
   revision; no box select while the tool is active); the cursor snap
   (`OpsState::cursor_snap`: `snap::snap` only, RoboCAD's `viewport.snap`
-  rule, every 33 ms at most, candidates cached by epochs) for "Set pivot
-  at cursor snap". A placement's base and Tab anchor lie on z = 0 (a
+  rule, every 33 ms at most, candidates cached by epochs; it carries the
+  shown revision it was snapped at and is cleared when that revision moves
+  on, the pointer leaves the window or the search finds nothing, so a stale
+  snap is refused by name, never sent) for "Set pivot at cursor snap". A placement's base and Tab anchor lie on z = 0 (a
   sphere keeps its centre); the anchor is the form's last field, so Tab
   reaches width or diameter first as in RoboCAD. `topology::wanted` loads every
   drawn body's topology while an op is active.

@@ -30,7 +30,8 @@ pub(super) struct Resolved {
     pub view_dir: Option<[f64; 3]>,
     /// The snapped point under the pointer (mm).
     pub snap: Option<[f64; 3]>,
-    /// The shown revision the picks are read against.
+    /// The revision the picks and values were read at: the shown one,
+    /// or the run's `revision` when given (`ops::prepare` sets it).
     pub revision: u64,
 }
 
@@ -53,7 +54,7 @@ pub(super) fn resolve(entry: &OpEntry, doc: &CadDocument, topology: Option<&CadT
     let explicit = items.is_some();
     let items: &[SelectionItem] = items.unwrap_or(&doc.selection);
     let shown = doc.shown_revision();
-    let mut r = Resolved { view_dir: view.filter(|v| v.valid).map(|v| mm(-view_back(v))), snap: doc.ops.cursor_snap, revision: shown, ..Default::default() };
+    let mut r = Resolved { view_dir: view.filter(|v| v.valid).map(|v| mm(-view_back(v))), snap: doc.ops.cursor_snap.filter(|(at, _)| *at == shown).map(|(_, p)| p), revision: shown, ..Default::default() };
     for SelectionItem(node, kind, index) in items {
         if !doc.has_node(node) {
             return Err(format!("no node {node} in the shown tree"));

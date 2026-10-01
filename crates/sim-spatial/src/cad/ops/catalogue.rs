@@ -679,7 +679,7 @@ pub(crate) static CATALOGUE: &[OpEntry] = &[
         args: &[Arg::Node, Arg::Param("components")],
         kwargs: &[("expected_revision", Arg::Revision)],
         refusal: "Select the one body to extract components from",
-        source: "commands.py:826 (indices from GET /nodes/{id}/solids at expected_revision, the shown revision; refusal ours)",
+        source: "commands.py:826 (indices from GET /nodes/{id}/solids at expected_revision: a REST run must pass the revision it read them at; a form sends the revision it opened at; refusal ours)",
         ..BASE
     },
     OpEntry {

@@ -333,6 +333,20 @@ fn explicit_face_and_edge_items_need_their_revision() {
 }
 
 #[test]
+fn extract_components_sends_the_revision_its_caller_read_at() {
+    let doc = document();
+    let extract = op("ops.extract_components");
+    let body = [item("b1", "body", 0)];
+    let components = given(&[("components", json!("{\"part\": [0]}"))]);
+    let err = prepare(&doc, None, None, extract, &components, Some(&body), None).unwrap_err();
+    assert!(err.contains("pass revision"), "{err}");
+    let err = prepare(&doc, None, None, extract, &components, Some(&body), Some(3)).unwrap_err();
+    assert!(err.contains("revision 3") && err.contains("nothing was sent"), "{err}");
+    let sent = calls(prepare(&doc, None, None, extract, &components, Some(&body), Some(4)).unwrap());
+    assert_eq!(sent[0].kwargs.get("expected_revision"), Some(&json!(4)));
+}
+
+#[test]
 fn when_gates_read_the_canonical_option_and_refuse_what_does_not_apply() {
     let array = op("tool.array");
     let v = values(array, &given(&[("kind", json!("Radial"))])).unwrap();

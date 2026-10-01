@@ -44,7 +44,9 @@
 //!   ray cast). Recomputed at most every 33 ms (RoboCAD's hover timer) and
 //!   only when the pointer, the view or the candidates changed; the
 //!   candidates are cached by the topology's and meshes' epochs, as the
-//!   measure tool's.
+//!   measure tool's. It carries the shown revision it was snapped at and
+//!   is cleared when that revision moves on, when the pointer leaves the
+//!   window, or when the search under the pointer finds nothing.
 use super::{Flow, Primitive, entry};
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
@@ -314,6 +316,18 @@ fn pointer(
     };
     let cursor = if view.valid { cursor_in_view(windows.single().ok(), &view, hover.as_deref(), &nodes) } else { None };
 
+    // The cursor snap is never sent stale: one snapped at an older shown
+    // revision, or kept after the pointer left the window (or the view is
+    // not drawn), is cleared and searched again once the pointer is back
+    // over the view. Over a panel inside the window (a menu, the palette)
+    // it is kept: a menu entry or key invoking "Set pivot at cursor snap"
+    // reads the point the pointer last had over the view.
+    let shown = doc.shown_revision();
+    let off_window = windows.single().ok().is_none_or(|w| w.cursor_position().is_none());
+    if doc.ops.cursor_snap.is_some_and(|(at, _)| at != shown || off_window || !view.valid) {
+        doc.ops.cursor_snap = None;
+        state.snap_stale = true;
+    }
     // "Set pivot at cursor snap": coalesced to one search per 33 ms.
     if let Some(c) = cursor
         && (state.snap_stale || state.snap_at.is_none_or(|(at, _)| at != c))
@@ -323,8 +337,9 @@ fn pointer(
         } else {
             state.snap_at = Some((c, Instant::now()));
             state.snap_stale = false;
-            let point = cursor_snap(&view, c, candidates);
-            if point.is_some() && doc.ops.cursor_snap != point {
+            // Nothing snapped here: the last point is not this cursor's.
+            let point = cursor_snap(&view, c, candidates).map(|p| (shown, p));
+            if doc.ops.cursor_snap != point {
                 doc.ops.cursor_snap = point;
             }
         }

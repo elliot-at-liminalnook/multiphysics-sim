@@ -80,7 +80,7 @@ pub(super) fn window_loss(mut focus: MessageReader<bevy::window::WindowFocused>,
 
 /// What the slider input last held.
 #[derive(Default)]
-struct HeldSlider {
+pub(super) struct HeldSlider {
     which: Option<PanelSlider>,
     /// A target was sent during this hold (its release is the page's `change`).
     moved_target: bool,

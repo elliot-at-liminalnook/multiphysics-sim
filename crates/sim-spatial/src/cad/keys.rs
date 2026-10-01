@@ -54,7 +54,8 @@
 //!
 //! | Key | Commands | Resolution |
 //! |---|---|---|
-//! | Ctrl+Shift+M | `edit.select_same_material` (keymap), `robot.add_motor` (inline) | RoboCAD binds only the keymap's: Same Material runs; the palette shows RoboCAD's own conflict warning |
+//! | Ctrl+Shift+M | `edit.select_same_material` (keymap), `robot.add_motor` (inline) | RoboCAD binds only the keymap's: Same Material runs; the palette shows RoboCAD's own conflict warning; `robot.add_motor` stays unbound (its menu entry, palette row and the Robot panel's button start it) |
+//! | Ctrl+Shift+J | `robot.add_joint` (inline only in RoboCAD, never bound there) | bound here deliberately (cad-physical-inspect): no other command or system reads it in CAD mode (J join, Shift+J unjoin differ by modifiers; Robot mode's J joint frames is another mode's); RoboCAD's USER_GUIDE.md:375 documents the key |
 //! | Ctrl+Space | `command_palette` | macOS takes Command+Space (Spotlight); Control+Space or Shift+F opens it |
 //! | Ctrl+H | `tool.fastener` (cad-print) | macOS's app menu takes Command+H (hide); Control+H reaches the refusal |
 //! | Ctrl+M | `tool.mirror` | a macOS app menu binding Command+M (minimise) would take it; winit's default menu has none; Control+M always works |
@@ -83,6 +84,7 @@
 //! | Space | `view.radial` | typed as a space while a text field has the keyboard |
 //! | Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`: its first field, then the next); during a placement drag `ops::interact` also reads it to copy the base point into the form's anchor field; else the numeric bar's (`numeric::entry`) |
 //! | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), fit | no other reader in CAD mode |
+//! | Left press in the 3D view with a robot click tool active | the motor and joint tools (`robot::tools`'s click system) | Ctrl (Command) on the joint tool's first click is the world (`JointTool`); Alt+left is the orbit, not a pick |
 //!
 //! Commands of later epics keep their keys so a press says which epic owns
 //! them (status line), as their menu entries do.

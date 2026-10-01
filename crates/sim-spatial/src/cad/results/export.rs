@@ -1,0 +1,241 @@
+//! Physical export (RoboCAD's `sim_export_physical`, `sim_export` and
+//! `_export_in_background`): `GET /physical?flex=…&planar=…` on a
+//! `Pool::Dedicated` job, the answer written atomically (a temporary file
+//! beside the target, then a rename) by the same job, so a cancel or a
+//! failure never leaves a partial model and the `.rcad` is never written.
+//!
+//! - **One at a time.** A second request while one runs is refused with
+//!   RoboCAD's text, "a model export is already running"; the live link's
+//!   request queues instead (RoboCAD's `queue=True`: the latest wins) and
+//!   starts when the running one ends.
+//! - **Progress**: "exporting {label} in the background… n s" in the status
+//!   line, refreshed once a second.
+//! - **Cancel** drops the job: nothing is written. RoboCAD's request itself
+//!   cannot be aborted (it derives the model to the end; api.py has no
+//!   cancel route), only its answer is discarded. Leaving CAD mode drops
+//!   the document and with it a running export, the same way.
+use super::ResultsState;
+use crate::cad::document::CadDocument;
+use crate::jobs::{Job, Pool};
+use serde_json::{Value, json};
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
+
+/// How long the export request may take: RoboCAD's `export_snapshot`
+/// allows its child process an hour; a little more here.
+pub(crate) const EXPORT_TIMEOUT: Duration = Duration::from_secs(3700);
+/// RoboCAD's refusal of a second export.
+pub(crate) const RUNNING: &str = "a model export is already running";
+
+/// One export to make.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ExportRequest {
+    pub path: PathBuf,
+    pub flex: bool,
+    pub planar: bool,
+    /// RoboCAD's label: "physical model", "simulation model", "live simulation model".
+    pub label: String,
+    /// The live link's (queued while another runs, and Robot mode follows it).
+    pub link: bool,
+}
+
+/// What a finished export wrote: the model's link count and flexible links.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Written {
+    pub links: usize,
+    pub flexible: usize,
+}
+
+/// The export in flight.
+pub(crate) struct Running {
+    pub request: ExportRequest,
+    pub job: Job<Written>,
+    pub started: Instant,
+    /// Whole seconds last shown in the status line.
+    pub shown: u64,
+}
+
+/// The exports: the running one, the queued live-link one, the last outcome.
+#[derive(Default)]
+pub(crate) struct Exports {
+    pub running: Option<Running>,
+    pub queued: Option<ExportRequest>,
+    /// The last outcome: (label, path, Ok(message) | Err(message)).
+    pub last: Option<(String, PathBuf, Result<String, String>)>,
+    /// The last model written (what "Show in Robot mode" opens without a link).
+    pub written: Option<PathBuf>,
+}
+
+impl Exports {
+    pub(crate) fn json(&self) -> Value {
+        let req = |r: &ExportRequest| json!({"label": r.label, "path": r.path, "flex": r.flex, "planar": r.planar, "link": r.link});
+        json!({
+            "running": self.running.as_ref().map(|r| {
+                let mut v = req(&r.request);
+                v["seconds"] = json!(r.started.elapsed().as_secs());
+                v
+            }),
+            "queued": self.queued.as_ref().map(req),
+            "last": self.last.as_ref().map(|(label, path, r)| match r {
+                Ok(m) => json!({"label": label, "path": path, "ok": true, "message": m}),
+                Err(e) => json!({"label": label, "path": path, "ok": false, "message": e}),
+            }),
+            "written": self.written,
+        })
+    }
+}
+
+/// The file an export writes for a typed path: as typed when it ends in
+/// `.json`, else with `.simrobot.json` appended (RoboCAD's "Sim model
+/// (*.simrobot.json)" filter), so the `.rcad` is never the target.
+pub(crate) fn model_file(path: &str) -> PathBuf {
+    if path.ends_with(".json") { PathBuf::from(path) } else { PathBuf::from(format!("{path}.simrobot.json")) }
+}
+
+/// Whether `request` starts now (`Ok(Some(request))`), was queued
+/// (`Ok(None)`: the live link's while another runs, the latest wins) or is
+/// refused with RoboCAD's text.
+pub(crate) fn admit(exports: &mut Exports, request: ExportRequest) -> Result<Option<ExportRequest>, String> {
+    if exports.running.is_none() {
+        return Ok(Some(request));
+    }
+    if request.link {
+        exports.queued = Some(request);
+        return Ok(None);
+    }
+    Err(RUNNING.into())
+}
+
+/// An export asked for (a button, the form, the live link).
+pub(crate) fn request(doc: &mut CadDocument, request: ExportRequest) -> Result<Value, String> {
+    let label = request.label.clone();
+    match admit(&mut doc.results.exports, request)? {
+        None => {
+            let message = format!("{label}: queued; it starts when the running export ends");
+            doc.show(Ok(message.clone()));
+            Ok(json!({"queued": true, "message": message}))
+        }
+        Some(request) => {
+            let path = request.path.clone();
+            start(doc, request)?;
+            Ok(json!({"started": true, "path": path, "message": format!("exporting {label} in the background…")}))
+        }
+    }
+}
+
+/// Starts `request` now (nothing may be running).
+fn start(doc: &mut CadDocument, request: ExportRequest) -> Result<(), String> {
+    if !doc.connected() {
+        return Err(format!("not connected to RoboCAD: {}", doc.connection_line().0));
+    }
+    let client = doc.client.clone().ok_or("not connected to RoboCAD")?.with_timeout(EXPORT_TIMEOUT);
+    let (path, flex, planar) = (request.path.clone(), request.flex, request.planar);
+    let job = Job::spawn(Pool::Dedicated, doc.generation, format!("RoboCAD export: {}", request.label), move |ctx| {
+        let model = client.physical_model(flex, planar).map_err(|e| e.to_string())?;
+        // A cancel before the write leaves no file (RoboCAD's request had run to the end).
+        if ctx.cancelled() {
+            return Err("cancelled".into());
+        }
+        write_model(&path, &model)
+    });
+    doc.show(Ok(format!("exporting {} in the background…", request.label)));
+    doc.results.exports.running = Some(Running { request, job, started: Instant::now(), shown: 0 });
+    Ok(())
+}
+
+/// Python's truthiness of a JSON value (`export_worker`'s `l.get("flex")`).
+fn truthy(v: &Value) -> bool {
+    match v {
+        Value::Null => false,
+        Value::Bool(b) => *b,
+        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
+        Value::String(s) => !s.is_empty(),
+        Value::Array(a) => !a.is_empty(),
+        Value::Object(o) => !o.is_empty(),
+    }
+}
+
+/// Writes `model` to `path` through a temporary file beside it and a
+/// rename (`export_worker`'s `os.replace`); the summary RoboCAD prints.
+pub(crate) fn write_model(path: &Path, model: &Value) -> Result<Written, String> {
+    let links = model["links"].as_array().ok_or_else(|| format!("RoboCAD's answer is not a physical model (no links list); nothing was written to {}", path.display()))?;
+    let written = Written { links: links.len(), flexible: links.iter().filter(|l| l.get("flex").is_some_and(truthy)).count() };
+    let bytes = serde_json::to_vec(model).map_err(|e| format!("{}: {e}", path.display()))?;
+    let tmp = PathBuf::from(format!("{}.{}.tmp", path.display(), std::process::id()));
+    if let Err(e) = std::fs::write(&tmp, &bytes) {
+        let _ = std::fs::remove_file(&tmp);
+        return Err(format!("{}: {e}", tmp.display()));
+    }
+    if let Err(e) = std::fs::rename(&tmp, path) {
+        let _ = std::fs::remove_file(&tmp);
+        return Err(format!("{}: {e}", path.display()));
+    }
+    Ok(written)
+}
+
+/// `op: export_cancel`.
+pub(crate) fn cancel(doc: &mut CadDocument) -> Result<Value, String> {
+    let Some(running) = doc.results.exports.running.take() else { return Err("no export is running".into()) };
+    // Dropping the job cancels it: the answer is discarded and nothing is written.
+    drop(running.job);
+    let message = format!("{} export cancelled", running.request.label);
+    doc.results.exports.last = Some((running.request.label.clone(), running.request.path.clone(), Err(message.clone())));
+    doc.show(Ok(message.clone()));
+    // A queued live-link export starts now, as RoboCAD starts the pending one.
+    let next = start_queued(doc);
+    Ok(json!({"cancelled": running.request.label, "message": message, "note": "RoboCAD's request was already sent and runs to the end; its answer is discarded and nothing is written", "started": next}))
+}
+
+/// Starts the queued export, if any; its label, or the reason it could not start.
+fn start_queued(doc: &mut CadDocument) -> Option<Value> {
+    let next = doc.results.exports.queued.take()?;
+    let label = next.label.clone();
+    Some(match start(doc, next) {
+        Ok(()) => json!(label),
+        Err(e) => {
+            doc.show(Err(format!("{label} export not started: {e}")));
+            json!({"label": label, "error": e})
+        }
+    })
+}
+
+/// What a finished export means for the live link: (written model, link export).
+pub(crate) struct Landed {
+    pub path: PathBuf,
+    pub link: bool,
+}
+
+/// JobResults: the running export's progress line (once a second) and its
+/// outcome; the queued one then starts. Returns a model written now.
+pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
+    let results: &mut ResultsState = &mut doc.results;
+    let running = results.exports.running.as_mut()?;
+    let Some(outcome) = running.job.poll() else {
+        let seconds = running.started.elapsed().as_secs();
+        if seconds != running.shown {
+            running.shown = seconds;
+            let line = format!("exporting {} in the background… {seconds} s", running.request.label);
+            doc.show(Ok(line));
+        }
+        return None;
+    };
+    let Running { request, .. } = results.exports.running.take()?;
+    let (label, path) = (request.label.clone(), request.path.clone());
+    let landed = match outcome {
+        Ok(w) => {
+            let message = format!("{label} written: {} ({} links, {} flexible)", path.display(), w.links, w.flexible);
+            doc.show(Ok(message.clone()));
+            doc.results.exports.last = Some((label, path.clone(), Ok(message)));
+            doc.results.exports.written = Some(path.clone());
+            Some(Landed { path, link: request.link })
+        }
+        Err(e) => {
+            let message = format!("{label} export failed: {e}");
+            doc.show(Err(message.clone()));
+            doc.results.exports.last = Some((label, path, Err(message)));
+            None
+        }
+    };
+    start_queued(doc);
+    landed
+}

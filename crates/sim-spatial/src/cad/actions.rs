@@ -285,6 +285,18 @@ pub enum CadAction {
     CadExport(super::files::ExportArgs),
     /// `GET /render` (headless) to a PNG file, on a job.
     CadRender(super::files::RenderArgs),
+    /// cad-physical-inspect: the Robot panel (shown or hidden, refreshed),
+    /// RoboCAD's "Robot: validate" and the motor library (`robot`).
+    CadRobot(super::robot::RobotArgs),
+    /// cad-physical-inspect: the materials panel (search, apply to the
+    /// selection, a new material, engineering properties; `materials`).
+    CadMaterials(super::materials::MaterialsArgs),
+    /// cad-physical-inspect: the inspector's physical rows (colour, joint
+    /// physics overrides, the exact measurement; `inspector::physical`).
+    CadInspector(super::inspector::InspectorArgs),
+    /// cad-physical-inspect: results and identification, the stress
+    /// overlay, physical export and the live link (`results`).
+    CadResults(super::results::ResultsArgs),
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
 }
@@ -476,6 +488,10 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadDisplay(_) | CadAction::CadSection(_) => super::display::handle(action, call, cx),
         CadAction::CadViews(_) => super::views::handle(action, call, cx),
         CadAction::CadFile(_) | CadAction::CadExport(_) | CadAction::CadRender(_) => super::files::handle(action, call, cx),
+        CadAction::CadRobot(_) => super::robot::handle(action, call, cx),
+        CadAction::CadMaterials(_) => super::materials::handle(action, call, cx),
+        CadAction::CadInspector(_) => super::inspector::handle_physical(action, call, cx),
+        CadAction::CadResults(_) => super::results::handle(action, call, cx),
         CadAction::SystemUi(args) => system_ui(call, cx, args),
     }
 }
@@ -491,6 +507,19 @@ pub(super) fn edit(doc: &mut CadDocument, call: &mut Call, label: String, work: 
         }
         Ok(_) => Outcome::Done(Ok(Value::Null)),
     }
+}
+
+/// One edit through [`edit`], refused by name with nothing sent when
+/// `CadDocument::commit_refusal(began)` names a reason: an edit in flight,
+/// not connected, the shown document behind RoboCAD's, or RoboCAD's
+/// revision changed since `began` (the revision a form opened, a row was
+/// read or a pick was made at; None checks only the first three). The one
+/// helper cad-physical-inspect's panels, forms and inspector rows commit through.
+pub(super) fn edit_at(doc: &mut CadDocument, call: &mut Call, began: Option<u64>, label: String, work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
+    if let Some(why) = doc.commit_refusal(began) {
+        return Outcome::Done(Err(why));
+    }
+    edit(doc, call, label, work)
 }
 
 /// A REST caller's edit: RoboCAD's answer (or error) verbatim once it lands.
@@ -624,6 +653,11 @@ fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
     out.extend(super::display::controls(cx));
     out.extend(super::views::controls(cx));
     out.extend(super::files::controls(cx));
+    // cad-physical-inspect: cad:robot:*, cad:materials:*, cad:inspect:*, cad:results:*.
+    out.extend(super::robot::controls(cx));
+    out.extend(super::materials::controls(cx));
+    out.extend(super::inspector::physical_controls(cx));
+    out.extend(super::results::controls(cx));
     out
 }
 

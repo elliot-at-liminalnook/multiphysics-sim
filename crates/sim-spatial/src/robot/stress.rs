@@ -11,7 +11,7 @@ use sim_domain_robot::stress_results::{self, Hotspot};
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
-pub const RULE: &str = "read-only: <stem>.simresult.json beside the opened .simrobot.json (sim_runtime::physical::results_path), read on a worker with every open, watched or manual reload check of the model file and when the stress overlay is switched on (a results file written later is picked up by toggling stress or Reload). Status: current when the results' provenance.physical_hash equals the loaded model's source.physical_hash, stale when both exist and differ, no recorded hash when either is absent. Each vertex of a link with hotspot cells takes the nearest cell's peak stress normalised by the link material's yield (sim_domain_robot::stress_results::stress_colour, the shared rule); links without cells keep the normal colour. A missing or invalid file colours nothing.";
+pub const RULE: &str = "read-only: <stem>.simresult.json beside the opened .simrobot.json (sim_runtime::physical::results_path), read on a worker with every open, watched or manual reload check of the model file and when the stress overlay is switched on (a results file written later is picked up by toggling stress or Reload). Status: current when the results' provenance.physical_hash equals the loaded model's source.physical_hash, stale when both exist and differ, no recorded hash when either is absent. Each vertex of a link with hotspot cells takes the nearest cell's peak stress normalised by the link material's yield (sim_domain_robot::stress_results::link_colours, the shared rule); links without cells keep the normal colour. A missing or invalid file colours nothing.";
 
 /// What the worker found at the results path.
 #[derive(Clone, Debug)]
@@ -69,7 +69,7 @@ impl StressResults {
         let link = model.links.get(index)?;
         let hotspot = Hotspot::from_results(self.parsed()?, &link.name)?;
         let yield_strength = model.material_of(link).yield_strength;
-        Some(positions.iter().map(|p| stress_results::stress_colour(&hotspot, yield_strength, [p[0] as f64, p[1] as f64, p[2] as f64])).collect())
+        Some(stress_results::link_colours(&hotspot, yield_strength, positions.iter().map(|p| [p[0] as f64, p[1] as f64, p[2] as f64])))
     }
     /// `robot_state.overlays.stress` (without `enabled`, added by the caller).
     pub fn json(&self, model: &PhysicalModel) -> Value {

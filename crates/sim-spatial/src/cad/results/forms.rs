@@ -1,0 +1,426 @@
+//! The path form of this part (RoboCAD's `QFileDialog`s: "Load simulation
+//! results", "Apply identification", "Export physical model", "Export
+//! simulation model"; and "Apply actuator profiles", which RoboCAD has no
+//! dialog for): a modal kit form with one path row, the directory's
+//! matching files from a `Pool::Io` listing (the kit path field's,
+//! `ui_kit::path_field`), OK and Cancel, as `cad::files::form` does it.
+//!
+//! - **Defaults** ([`default_path`]): load, `<stem>.simresult.json` beside
+//!   the document (RoboCAD's rule; RoboCAD falls back to the folder when
+//!   that file is missing, which needs a stat: here the listing says
+//!   whether it is there); identification and profiles, the document's
+//!   folder; export, `<stem>.simrobot.json` beside the document.
+//! - **Drafts are input editing**: typing changes the form only; OK (or
+//!   Enter) writes the one action a caller sends with the path, Cancel (or
+//!   Escape) `form_cancel`. A refusal comes back into the form's `error`
+//!   ([`settled`]); an accepted request closes it.
+//! - **Modal**: a dimmed backdrop takes every click and the form holds
+//!   `CadInputFocus` while open, ending the other fields' drafts.
+use super::{ExportKind, ResultsArgs, ResultsOp, doc_path, model_path};
+use crate::app::ModeScope;
+use crate::app::actions::{Act, Call};
+use crate::app::{ViewerMode, ViewerSet};
+use crate::builder::ui_api::Enabled;
+use crate::cad::actions::{CadAction, Cx};
+use crate::cad::document::{CadDocument, CadInputFocus};
+use crate::cad::panel::NameDraft;
+use crate::ui_kit::form::{DraftKey, FieldKind, FormHit, FormRow, TextDraft};
+use crate::ui_kit::path_field::{self, PathHit};
+use crate::ui_kit::{DANGER, Kit, SUBTLE, UiFonts, WARN, size};
+use bevy::input::ButtonState;
+use bevy::input::keyboard::{Key, KeyboardInput};
+use bevy::prelude::*;
+use serde_json::{Value, json};
+use sim_api::Outcome;
+use std::path::Path;
+
+/// What the form is for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FormKind {
+    Load,
+    Identify,
+    Export(ExportKind),
+    Profiles,
+}
+impl FormKind {
+    /// RoboCAD's dialog title.
+    pub(crate) fn title(self) -> &'static str {
+        match self {
+            FormKind::Load => "Load simulation results",
+            FormKind::Identify => "Apply identification",
+            FormKind::Export(ExportKind::Physical) => "Export physical model",
+            FormKind::Export(ExportKind::Simulation) => "Export simulation model",
+            FormKind::Profiles => "Apply actuator profiles",
+        }
+    }
+    /// The path row's label: RoboCAD's file filter.
+    fn label(self) -> &'static str {
+        match self {
+            FormKind::Load => "Simulation results (*.simresult.json)",
+            FormKind::Identify => "Fit / results (*.json)",
+            FormKind::Export(_) => "Sim model (*.simrobot.json)",
+            FormKind::Profiles => "Actuator profiles (*.json, the profiles object)",
+        }
+    }
+    /// The listing's suffixes.
+    fn suffixes(self) -> &'static [&'static str] {
+        match self {
+            FormKind::Export(_) => &["simrobot.json"],
+            _ => &["json"],
+        }
+    }
+    /// The form writes the file (an export).
+    fn writes(self) -> bool {
+        matches!(self, FormKind::Export(_))
+    }
+    fn name(self) -> &'static str {
+        match self {
+            FormKind::Load => "load",
+            FormKind::Identify => "identify",
+            FormKind::Export(ExportKind::Physical) => "export_physical",
+            FormKind::Export(ExportKind::Simulation) => "export",
+            FormKind::Profiles => "profiles",
+        }
+    }
+}
+
+/// The open form.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct PathForm {
+    pub kind: FormKind,
+    pub draft: TextDraft,
+    /// The path row has the keyboard.
+    pub focused: bool,
+    /// Why OK sent nothing, or RoboCAD's refusal.
+    pub error: Option<String>,
+    /// The listing last asked for (`path_field::listing_key`).
+    pub listing_asked: Option<String>,
+}
+
+/// The path a form of `kind` starts with (see the module doc); `home` is
+/// the folder used without a document path.
+pub(crate) fn default_path(kind: FormKind, doc: Option<&Path>, home: &str) -> String {
+    let folder = |d: &Path| format!("{}/", d.display().to_string().trim_end_matches('/'));
+    let dir = doc.and_then(Path::parent).filter(|d| d.is_absolute()).map(folder).unwrap_or_else(|| format!("{}/", home.trim_end_matches('/')));
+    match (kind, doc) {
+        (FormKind::Load, Some(p)) => p.with_extension("simresult.json").display().to_string(),
+        (FormKind::Export(_), Some(p)) => model_path(p).display().to_string(),
+        (FormKind::Export(_), None) => format!("{dir}untitled.simrobot.json"),
+        _ => dir,
+    }
+}
+
+impl PathForm {
+    pub(crate) fn new(kind: FormKind, doc: Option<&Path>) -> Self {
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/".into());
+        let text = default_path(kind, doc, &home);
+        PathForm { kind, draft: TextDraft { text, select_all: false }, focused: true, error: None, listing_asked: None }
+    }
+    fn text(&self) -> &str {
+        self.draft.text.trim()
+    }
+    /// OK can be pressed: a file name.
+    fn ok_ready(&self) -> bool {
+        let p = self.text();
+        !p.is_empty() && !p.ends_with('/')
+    }
+    /// The listing this path asks for now.
+    fn listing_key(&self) -> Option<(String, String)> {
+        path_field::listing_key(self.text(), self.kind.suffixes())
+    }
+    /// The action OK writes: the op with the path.
+    pub(crate) fn action(&self) -> Result<CadAction, String> {
+        if !self.ok_ready() {
+            return Err(format!("{}: type a file name", self.kind.title()));
+        }
+        let path = Some(self.text().to_string());
+        let args = match self.kind {
+            FormKind::Load => ResultsArgs { op: ResultsOp::Load, path, ..Default::default() },
+            FormKind::Identify => ResultsArgs { op: ResultsOp::Identify, path, ..Default::default() },
+            FormKind::Profiles => ResultsArgs { op: ResultsOp::Profiles, path, ..Default::default() },
+            FormKind::Export(kind) => ResultsArgs { op: ResultsOp::Export, path, kind: Some(kind), ..Default::default() },
+        };
+        Ok(CadAction::CadResults(args))
+    }
+    pub(crate) fn json(&self) -> Value {
+        json!({"kind": self.kind.name(), "title": self.kind.title(), "label": self.kind.label(), "path": self.draft.text, "focused": self.focused, "error": self.error, "ok_ready": self.ok_ready()})
+    }
+}
+
+/// Opens the form of `kind` (ending the other fields' typing, and the file
+/// form: one modal at a time).
+pub(in crate::cad) fn open(cx: &mut Cx, kind: FormKind) -> Result<Value, String> {
+    cx.doc.tool_state.numeric.focus = None;
+    cx.doc.tool_state.numeric.began = None;
+    cx.doc.tool_state.inspector_edit = None;
+    if let Some(f) = cx.doc.ops.form.as_mut() {
+        f.focus = None;
+    }
+    if let Some(files) = cx.files.as_deref_mut() {
+        files.form = None;
+    }
+    let form = PathForm::new(kind, doc_path(cx.doc).as_deref());
+    let shown = form.json();
+    cx.doc.results.form = Some(form);
+    cx.doc.touch();
+    Ok(json!({"opened": shown}))
+}
+
+/// After an op the form may have sent: an accepted one closes the form of
+/// its kind; a refusal stays in it.
+pub(in crate::cad) fn settled(cx: &mut Cx, kind: FormKind, outcome: Outcome) -> Outcome {
+    let doc = &mut *cx.doc;
+    if let Some(form) = doc.results.form.as_mut().filter(|f| f.kind == kind) {
+        match &outcome {
+            Outcome::Done(Err(e)) => form.error = Some(e.clone()),
+            _ => doc.results.form = None,
+        }
+        doc.touch();
+    }
+    outcome
+}
+
+/// `form_set`, `form_submit`, `form_cancel`.
+pub(in crate::cad) fn handle(args: &ResultsArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
+    let done = Outcome::Done;
+    let Some(form) = cx.doc.results.form.clone() else { return done(Err("no results form is open (load, identify, profiles or export without a path opens one)".into())) };
+    match args.op {
+        ResultsOp::FormSet => {
+            let Some(text) = &args.text else { return done(Err("form_set needs text (the path)".into())) };
+            if let Some(f) = cx.doc.results.form.as_mut() {
+                f.draft = TextDraft { text: text.clone(), select_all: false };
+                f.error = None;
+            }
+            cx.doc.touch();
+            done(Ok(json!({"form": cx.doc.results.form.as_ref().map(PathForm::json)})))
+        }
+        ResultsOp::FormSubmit => match form.action() {
+            Ok(action) => super::handle(&action, call, cx),
+            Err(e) => {
+                if let Some(f) = cx.doc.results.form.as_mut() {
+                    f.error = Some(e.clone());
+                }
+                cx.doc.touch();
+                done(Err(e))
+            }
+        },
+        _ => {
+            cx.doc.results.form = None;
+            cx.doc.touch();
+            done(Ok(json!({"closed": form.kind.title()})))
+        }
+    }
+}
+
+/// A clickable part of the form.
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
+pub(super) enum Part {
+    Form(FormHit),
+    Path(PathHit),
+}
+
+/// The form's root (the backdrop).
+#[derive(Component)]
+pub(super) struct ResultsFormRoot;
+
+/// Input: the open form's clicks and keys (see the module doc).
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
+pub(super) fn input(
+    doc: Option<ResMut<CadDocument>>,
+    parts: Query<(&Interaction, &Part, Option<&Enabled>), Changed<Interaction>>,
+    keys: Option<Res<ButtonInput<KeyCode>>>,
+    mut events: MessageReader<KeyboardInput>,
+    focus: Option<ResMut<CadInputFocus>>,
+    name: Option<ResMut<NameDraft>>,
+    mut out: MessageWriter<Act<CadAction>>,
+    (section, views, files): (Option<ResMut<crate::cad::display::entry::SectionEntry>>, Option<ResMut<crate::cad::views::CadViews>>, Option<Res<crate::cad::files::CadFiles>>),
+) {
+    let Some(mut doc) = doc else { return };
+    let Some(before) = doc.results.form.clone() else { return };
+    // The file form opened over this one has the keyboard.
+    if files.is_some_and(|f| f.form.is_some()) {
+        return;
+    }
+    let mut form = before.clone();
+    // Modal: the form has the keyboard; the other fields' drafts end.
+    if let Some(mut focus) = focus
+        && !focus.0
+    {
+        focus.0 = true;
+    }
+    if let Some(mut name) = name
+        && name.editing.is_some()
+    {
+        name.editing = None;
+        name.refusal = None;
+    }
+    if let Some(mut section) = section.filter(|s| s.typing.is_some()) {
+        section.typing = None;
+    }
+    if let Some(mut views) = views.filter(|v| v.typing.is_some()) {
+        views.typing = None;
+    }
+    if doc.tool_state.numeric.focus.is_some() {
+        doc.tool_state.numeric.focus = None;
+    }
+    if doc.tool_state.inspector_edit.is_some() {
+        doc.tool_state.inspector_edit = None;
+    }
+    if doc.ops.form.as_ref().is_some_and(|f| f.focus.is_some())
+        && let Some(f) = doc.ops.form.as_mut()
+    {
+        f.focus = None;
+    }
+    let (mut submit, mut close) = (false, false);
+    for (interaction, part, enabled) in &parts {
+        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
+            continue;
+        }
+        match *part {
+            Part::Form(FormHit::Field(_)) => {
+                form.focused = true;
+                form.draft.select_all = true;
+                // Keys pressed before the field took the keyboard are not its text.
+                events.clear();
+            }
+            Part::Form(FormHit::Ok) => submit = true,
+            Part::Form(FormHit::Cancel) => close = true,
+            Part::Form(_) => {}
+            Part::Path(PathHit::Entry(i)) => {
+                // Only the listing drawn for this path: an older one never fills it.
+                if let Some(listing) = doc.results.listed.as_ref().filter(|l| before.listing_key().is_some_and(|(key, _)| key == l.key))
+                    && let Some((entry, is_dir)) = listing.entries.get(i)
+                {
+                    form.draft = TextDraft { text: path_field::pick(&form.draft.text, &listing.dir, entry, *is_dir, form.kind.writes()), select_all: false };
+                    form.error = None;
+                }
+            }
+            Part::Path(PathHit::Up) => {
+                form.draft = TextDraft { text: path_field::up(&form.draft.text, form.kind.writes()), select_all: false };
+                form.error = None;
+            }
+            Part::Path(PathHit::Field | PathHit::Submit) => {}
+        }
+    }
+    let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
+    let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
+    for e in typed {
+        if submit || close {
+            break;
+        }
+        if !form.focused {
+            match &e.logical_key {
+                Key::Enter => submit = true,
+                Key::Escape => close = true,
+                Key::Tab => {
+                    form.focused = true;
+                    form.draft.select_all = true;
+                }
+                _ => {}
+            }
+            continue;
+        }
+        let mut draft = form.draft.clone();
+        match draft.key(&e.logical_key, chord) {
+            DraftKey::Edited => {
+                form.draft = draft;
+                form.error = None;
+            }
+            DraftKey::Enter => submit = true,
+            DraftKey::Escape => close = true,
+            DraftKey::Tab | DraftKey::Ignored => {}
+        }
+    }
+    if close {
+        out.write(Act::ui(super::ResultsArgs::of(ResultsOp::FormCancel)));
+    } else if submit {
+        match form.action() {
+            Ok(action) => {
+                out.write(Act::ui(action));
+            }
+            Err(e) => form.error = Some(e),
+        }
+    }
+    // The directory listing follows the path (read on Pool::Io; landed by `link::receive`).
+    if let Some((key, dir)) = form.listing_key()
+        && form.listing_asked.as_deref() != Some(key.as_str())
+    {
+        form.listing_asked = Some(key.clone());
+        let exts: Vec<String> = form.kind.suffixes().iter().map(|s| s.to_string()).collect();
+        path_field::request(&mut doc.results.listing, "cad results listing", key, dir, exts);
+    }
+    if form != before
+        && let Some(f) = doc.results.form.as_mut()
+        && f.kind == form.kind
+    {
+        *f = form;
+    }
+}
+
+/// Present: the form, rebuilt when it or its listing changes; despawned when it closes.
+pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<ResultsFormRoot>>, mut last: Local<Option<String>>) {
+    let form = doc.as_deref().and_then(|d| d.results.form.as_ref());
+    let listed = doc.as_deref().and_then(|d| d.results.listed.as_ref());
+    let key = form.map(|f| format!("{f:?}{listed:?}"));
+    let shown = roots.iter().next().is_some();
+    if key == *last && shown == key.is_some() {
+        return;
+    }
+    *last = key;
+    for root in &roots {
+        commands.entity(root).despawn();
+    }
+    let Some(form) = form else { return };
+    let k = Kit::new(&fonts);
+    let title = form.kind.title();
+    let rows = [FormRow { label: form.kind.label(), kind: FieldKind::Text, text: &form.draft.text, focused: form.focused, optional: false, selected: form.focused && form.draft.select_all, picks: &[] }];
+    // Covering the switcher strip too: a switch would drop the typed path.
+    commands.spawn((k.backdrop(title, true), ResultsFormRoot, DespawnOnExit(ModeScope::Cad))).with_children(|backdrop| {
+        k.form(backdrop, title, &rows, form.ok_ready(), Some(460.0), Part::Form, |p| footer(p, &k, form, listed));
+    });
+}
+
+/// Under the buttons: the refusal, whether the file is there, and the directory's files.
+fn footer(p: &mut ChildSpawnerCommands, k: &Kit, form: &PathForm, listed: Option<&path_field::Listing>) {
+    if let Some(error) = &form.error {
+        p.spawn(k.text(error.clone(), size::SMALL, DANGER, 0));
+    }
+    let key = form.listing_key();
+    let listing = listed.filter(|l| key.as_ref().is_some_and(|(want, _)| *want == l.key));
+    let file = path_field::file_of(form.text());
+    if let Some(l) = listing.filter(|_| !file.is_empty()) {
+        let exists = l.entries.iter().any(|(n, d)| !d && n == file);
+        match (form.kind.writes(), exists) {
+            (true, true) => {
+                p.spawn(k.text(format!("{file} exists: it will be replaced."), size::SMALL, WARN, 0));
+            }
+            (false, false) => {
+                p.spawn(k.text(format!("{file} is not in {}.", l.dir), size::SMALL, WARN, 0));
+            }
+            _ => {}
+        }
+    }
+    if form.kind == FormKind::Profiles {
+        p.spawn(k.text("RoboCAD checks the profiles through the actuator registry and refuses them by name.", size::SMALL, SUBTLE, 0));
+    }
+    k.path_listing(p, form.text(), listing, &Part::Path);
+}
+
+/// CadPlugin: the form's input (after the name field, which resets
+/// `CadInputFocus`, before every reader of it) and its drawing.
+pub(super) fn build(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            input
+                .after(crate::app::actions::serve)
+                .after(crate::cad::panel::name_entry)
+                .before(crate::cad::inspector::editor_entry)
+                .before(crate::cad::keys::gate)
+                .before(crate::cad::keys::keys)
+                .in_set(ViewerSet::Input),
+            draw.in_set(ViewerSet::Present),
+        )
+            .run_if(in_state(ViewerMode::Cad)),
+    );
+}

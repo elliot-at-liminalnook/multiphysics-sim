@@ -383,6 +383,10 @@ fn pointer(
         Some(Flow::PickThenForm(mode)) => Some(mode),
         _ => None,
     };
+    // A robot click tool (cad-physical-inspect, `robot::tools`) takes the
+    // click itself; selection here neither selects, clears nor box-selects.
+    // Hover stays, as RoboCAD's tools keep it.
+    let robot_tool = matches!(flow, Some(Flow::RobotPick(_)));
     // An open command surface takes the press that closes it (as a Qt popup does).
     let usable = view.valid && doc.tool == CadTool::Select && (!focused || pick_kind.is_some()) && !placing && doc.ops.surface.is_none();
     let in_view = cursor.is_some_and(|p| view.contains(p)) && !super::scene::over_ui(hover_map.as_deref(), &nodes);
@@ -420,10 +424,12 @@ fn pointer(
             state.band = None;
             if std::mem::take(&mut state.dragging) {
                 // RoboCAD's pick-then-form tools pick on press only: no box select.
-                if pick_kind.is_none() && !state.alt_drag {
+                if pick_kind.is_none() && !robot_tool && !state.alt_drag {
                     let rect = [start.x.min(at.x), start.y.min(at.y), start.x.max(at.x), start.y.max(at.y)];
                     out.write(Act::ui(CadAction::CadBoxSelect { rect, extend: shift || ctrl }));
                 }
+            } else if robot_tool {
+                state.menu_at = None;
             } else if let Some(mode) = pick_kind {
                 // RoboCAD's `EdgeTool.press` (ShellTool's too): the hit toggles when it is
                 // of the tool's kind; anything else, or empty space, changes nothing. The

@@ -83,6 +83,10 @@ pub(super) enum Part {
     Inspector,
     Physical,
     Attributes,
+    /// cad-physical-inspect: RoboCAD's Robot dock and Materials dock, as
+    /// sections of the right dock (`robot::panel`, `materials`).
+    Robot,
+    Materials,
     History,
     Commands,
     Status,
@@ -242,7 +246,7 @@ pub(crate) fn own_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Ve
             // RoboCAD's text: "name: kind #i", without "#i" for a body.
             let index = if item.1 == "body" { String::new() } else { format!(" #{}", item.2) };
             let label = format!("{}: {}{index}", doc.node_name(&item.0), item.1);
-            add(format!("cad:candidate:{n}"), label, CadAction::CadSelect { ids: Vec::new(), items: vec![item.clone()], extend: c.extend, toggle: c.toggle, picked_at: None }, Ok(()));
+            add(format!("cad:candidate:{n}"), label, CadAction::CadSelect { ids: Vec::new(), items: vec![item.clone()], extend: c.extend, toggle: c.toggle, picked_at: c.revision }, Ok(()));
         }
     }
     // Tools (RoboCAD's tool.*): activating one only changes the view; its
@@ -316,7 +320,7 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
         .with_children(|right| {
             right.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), InspectorScroll)).with_children(|area| {
                 area.spawn(Node { padding: UiRect::all(Val::Px(14.0)), ..column(4.0) }).with_children(|body| {
-                    for part in [Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::History, Part::Commands] {
+                    for part in [Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::History, Part::Commands] {
                         body.spawn((column(4.0), CadList::new(part)));
                     }
                 });
@@ -545,6 +549,8 @@ fn refresh(
                 Part::Inspector => super::inspector::inspector(p, &k, doc, &selection, topology),
                 Part::Physical => super::inspector::physical(p, &k, doc, &selection),
                 Part::Attributes => super::inspector::attributes(p, &k, doc, &selection),
+                Part::Robot => super::robot::panel::draw(p, &k, doc, &selection),
+                Part::Materials => super::materials::draw(p, &k, doc, &selection),
                 Part::History => super::inspector::history(p, &k, doc),
                 Part::Commands => super::inspector::commands(p, &k, doc, &selection),
             },
@@ -564,6 +570,8 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
         Part::Inspector => super::inspector::inspector_key(doc, selection, topology),
         Part::Physical => super::inspector::physical_key(doc, selection),
         Part::Attributes => super::inspector::attributes_key(doc, selection),
+        Part::Robot => super::robot::panel::key(doc, selection),
+        Part::Materials => super::materials::key(doc, selection),
         Part::History => format!("{:?}", doc.doc.as_ref().map(|d| &d.history)),
         Part::Commands => super::inspector::commands_key(doc),
     }

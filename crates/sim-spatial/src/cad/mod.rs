@@ -29,6 +29,13 @@
 //!   display only; each commit is one RoboCAD Ops call through
 //!   `actions::edit`.
 //!
+//! - `robot`, `materials`, `results` and the inspector's physical rows
+//!   (cad-physical-inspect, native-viewer.md "CAD physical properties"):
+//!   the Robot panel and robot tools and glyphs over `GET /robot`, the
+//!   materials panel, joint and material edits, results with the stress
+//!   overlay, physical export and the live link to Robot mode. Every edit
+//!   is one RoboCAD call through `actions::edit_at`.
+//!
 //! Teardown is the one-app pattern: `app::switch`'s OnExit(ModeScope::Cad)
 //! removes the document, releases its self-started service at once
 //! (`CadDocument::release_child`: stopped, also while still starting, or
@@ -43,6 +50,7 @@ mod document;
 mod files;
 mod inspector;
 mod keys;
+mod materials;
 mod measure;
 mod mesh;
 mod numeric;
@@ -51,6 +59,8 @@ mod overlay;
 mod panel;
 mod pick;
 mod rest_form;
+mod results;
+mod robot;
 mod scene;
 mod selection;
 mod sketch;
@@ -118,6 +128,9 @@ impl Plugin for CadCorePlugin {
                 )
                     .run_if(in_state(ViewerMode::Cad)),
             )
+            // cad-physical-inspect, windowless parts: the robot description's
+            // reads, the exact measurement and the results and export jobs.
+            .add_plugins((robot::CoreParts, inspector::CoreParts, results::CoreParts))
             // At window close, a self-started service is stopped (or left running with unsaved edits).
             // After ExitSystems, which writes AppExit in Last: before it, the
             // message would be read only on a frame that never comes, and the
@@ -172,6 +185,13 @@ impl Plugin for CadPlugin {
         files::build(app);
         // window-first-usability: the attach-URL field of an unconnected document.
         attach::build(app);
+        // cad-physical-inspect: the Robot panel, robot tools and glyphs, the
+        // materials panel, the inspector's physical rows' input, the stress
+        // overlay and the result, export and live-link forms.
+        robot::build(app);
+        materials::build(app);
+        inspector::build_physical(app);
+        results::build(app);
     }
 }
 

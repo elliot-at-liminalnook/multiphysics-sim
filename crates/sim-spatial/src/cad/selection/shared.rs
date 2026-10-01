@@ -111,6 +111,11 @@ impl CadSelection<'_> {
             _ => Vec::new(),
         }
     }
+    /// The shared selection's change count (`Selection::changed`; 0 without
+    /// one): a display caches what it derives from the items by it.
+    pub(crate) fn changed(&self) -> u64 {
+        self.selection.as_deref().map_or(0, |s| s.changed)
+    }
 }
 
 /// A read of the shared selection and the registry (changes nothing).

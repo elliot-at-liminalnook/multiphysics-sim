@@ -115,7 +115,9 @@ fn every_entry_builds_calls_to_its_route() {
     for e in CATALOGUE {
         // The cad-sketch shapes read the sketch cache, the active plane and
         // clicked points: their builders are tested in `sketch::tests`.
-        if matches!(e.shape, Shape::Sketch(_) | Shape::SketchEdit(_) | Shape::Extrude { .. } | Shape::View(_)) {
+        // The robot shapes read the robot description and the picks' lists:
+        // their builders are tested in `robot_tests`.
+        if matches!(e.shape, Shape::Sketch(_) | Shape::SketchEdit(_) | Shape::Extrude { .. } | Shape::View(_) | Shape::Robot(_)) {
             continue;
         }
         // A sample for each parameter without a default (REST-only Ops methods).
@@ -131,6 +133,7 @@ fn every_entry_builds_calls_to_its_route() {
                     FieldKind::Choice { options } => options[0].to_string(),
                     FieldKind::Check => "false".to_string(),
                     FieldKind::Text => "text".to_string(),
+                    FieldKind::Pick { .. } => "b1".to_string(),
                 };
                 (p.name.to_string(), Value::String(text))
             })

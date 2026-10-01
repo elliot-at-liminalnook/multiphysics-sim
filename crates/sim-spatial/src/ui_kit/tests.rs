@@ -288,6 +288,10 @@ fn form_fields_evaluate() {
     assert!(evaluate(&FieldKind::Check, "maybe").is_err());
     assert_eq!(evaluate(&FieldKind::Json, r#"{"a": 1}"#), Ok(FieldValue::Json(serde_json::json!({"a": 1}))));
     assert!(evaluate(&FieldKind::Json, "{").is_err());
+    // A pick is its key, trimmed; nothing chosen is an error (the caller leaves an optional one out).
+    let pick = FieldKind::Pick { source: "bodies" };
+    assert_eq!(evaluate(&pick, " b1 "), Ok(FieldValue::Text("b1".into())));
+    assert!(evaluate(&pick, "").is_err());
 }
 
 /// A draft edits as the numeric bar's entry: typing replaces a selected
@@ -332,13 +336,16 @@ fn modify_widgets_spawn() {
     let mut world = World::new();
     let entries = vec![command("cad:mirror", "Mirror", "Modify", &["M"]), command("cad:move", "Move", "Edit", &["m"])];
     let rows = palette::rank(&entries, "");
+    let picks = [(String::new(), "(world)".to_string()), ("b1".to_string(), "Bracket".to_string())];
     let fields = [
-        form::FormRow { label: "Count", kind: form::FieldKind::Number { unit: form::Unit::Count, min: Some(1.0), max: Some(10.0), decimals: 0 }, text: "3", focused: true, optional: false, selected: true },
-        form::FormRow { label: "Spacing", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "1, 2", focused: false, optional: false, selected: false },
-        form::FormRow { label: "Kind", kind: form::FieldKind::Choice { options: &["rectangular", "radial"] }, text: "radial", focused: false, optional: false, selected: false },
-        form::FormRow { label: "Merge into one body", kind: form::FieldKind::Check, text: "true", focused: false, optional: false, selected: false },
-        form::FormRow { label: "Components", kind: form::FieldKind::Json, text: "{}", focused: false, optional: false, selected: false },
-        form::FormRow { label: "Axis", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "", focused: false, optional: true, selected: false },
+        form::FormRow { label: "Count", kind: form::FieldKind::Number { unit: form::Unit::Count, min: Some(1.0), max: Some(10.0), decimals: 0 }, text: "3", focused: true, optional: false, selected: true, picks: &[] },
+        form::FormRow { label: "Spacing", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "1, 2", focused: false, optional: false, selected: false, picks: &[] },
+        form::FormRow { label: "Kind", kind: form::FieldKind::Choice { options: &["rectangular", "radial"] }, text: "radial", focused: false, optional: false, selected: false, picks: &[] },
+        form::FormRow { label: "Merge into one body", kind: form::FieldKind::Check, text: "true", focused: false, optional: false, selected: false, picks: &[] },
+        form::FormRow { label: "Components", kind: form::FieldKind::Json, text: "{}", focused: false, optional: false, selected: false, picks: &[] },
+        form::FormRow { label: "Axis", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "", focused: false, optional: true, selected: false, picks: &[] },
+        form::FormRow { label: "Parent", kind: form::FieldKind::Pick { source: "bodies_or_world" }, text: "b1", focused: false, optional: true, selected: false, picks: &picks },
+        form::FormRow { label: "Child", kind: form::FieldKind::Pick { source: "bodies" }, text: "", focused: false, optional: false, selected: false, picks: &[] },
     ];
     let pie = {
         let mut commands = world.commands();

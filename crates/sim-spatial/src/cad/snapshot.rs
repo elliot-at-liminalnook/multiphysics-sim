@@ -70,7 +70,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
         "selection": selection,
         "select_mode": doc.select_mode,
         "hover": doc.hover,
-        "candidates": doc.candidates.as_ref().map(|c| json!({"items": c.items, "extend": c.extend, "toggle": c.toggle})),
+        "candidates": doc.candidates.as_ref().map(|c| json!({"items": c.items, "extend": c.extend, "toggle": c.toggle, "revision": c.revision})),
         "selection_error": doc.selection_error,
         "tool": doc.tool,
         "tool_state": super::transform::state_json(doc),
@@ -93,6 +93,11 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     state["display"] = parts.display.map_or(Value::Null, super::display::state_json);
     state["views"] = super::views::state_json(parts.views, doc);
     state["files"] = parts.files.map_or(Value::Null, super::files::state_json);
+    // cad-physical-inspect: the robot description and panel, materials, the inspector's physical rows, results.
+    state["robot"] = super::robot::state_json(doc);
+    state["materials"] = super::materials::state_json(doc, selection);
+    state["inspector_physical"] = super::inspector::physical_state_json(doc);
+    state["results"] = super::results::state_json(doc);
     state
 }
 

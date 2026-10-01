@@ -2,8 +2,9 @@
 //! `getInt` prompts and its `ArrayDialog`, ui/widgets.py:1024-1063): a
 //! titled panel of labelled fields and OK / Cancel. Numeric fields are
 //! evaluated on every keystroke with RoboCAD's unit expressions
-//! (`sim_runtime::units`), and an error names the bad token. Choice and
-//! checkbox fields are clickable.
+//! (`sim_runtime::units`), and an error names the bad token. Choice,
+//! pick (a list filled at run time: bodies, joints, motors) and checkbox
+//! fields are clickable.
 //!
 //! No intent logic: the caller owns the drafts and passes one action
 //! component per clickable part (`FormHit`); [`evaluate`] and
@@ -48,6 +49,12 @@ pub(crate) enum FieldKind {
     Json,
     /// Plain text as typed (RoboCAD's `QInputDialog.getText`: "Text to sketch:").
     Text,
+    /// One of a list the caller fills at run time (RoboCAD's `QComboBox`
+    /// of bodies, joints or motors): the text is the chosen entry's key;
+    /// `source` names the list (the caller resolves it, `FormRow::picks`).
+    /// An empty key is a choice only where the list offers it ("(world)",
+    /// "(none)"); the caller leaves an empty optional field out.
+    Pick { source: &'static str },
 }
 
 /// A field's evaluated value.
@@ -98,6 +105,10 @@ pub(crate) fn evaluate(kind: &FieldKind, text: &str) -> Result<FieldValue, Strin
         },
         FieldKind::Json => serde_json::from_str::<Value>(text).map(FieldValue::Json).map_err(|e| e.to_string()),
         FieldKind::Text => Ok(FieldValue::Text(text.to_string())),
+        FieldKind::Pick { .. } => match text.trim() {
+            "" => Err("choose one".to_string()),
+            key => Ok(FieldValue::Text(key.to_string())),
+        },
     }
 }
 
@@ -172,6 +183,9 @@ pub(crate) struct FormRow<'a> {
     pub optional: bool,
     /// The focused field's text is selected (the next key replaces it).
     pub selected: bool,
+    /// A `FieldKind::Pick` field's choices as (key, label), in order;
+    /// empty for every other kind. `FormHit::Option(i, k)` names `picks[k]`.
+    pub picks: &'a [(String, String)],
 }
 
 /// What a click on a form part means; the caller turns each into its action component.
@@ -179,7 +193,7 @@ pub(crate) struct FormRow<'a> {
 pub(crate) enum FormHit {
     /// Field `i` takes the keyboard.
     Field(usize),
-    /// Field `i`'s choice option `option`.
+    /// Field `i`'s choice option `option` (a `Pick` field's `picks[option]`).
     Option(usize, usize),
     /// Field `i`'s checkbox.
     Check(usize),
@@ -291,6 +305,23 @@ impl Kit<'_> {
                         strip.spawn(self.segment(option, hit(FormHit::Option(i, k)), current == Some(FieldValue::Choice(k)), true));
                     }
                 });
+            }
+            FieldKind::Pick { .. } => {
+                cell.spawn(self.text(row.label, size::CAPTION, SUBTLE, 1));
+                // RoboCAD's combo box as a wrapped row of chips, the chosen one on.
+                if row.picks.is_empty() {
+                    cell.spawn(self.text("(nothing to choose from yet)", size::CAPTION, FAINT, 0));
+                    return;
+                }
+                let current = row.text.trim();
+                cell.spawn(super::wrap()).with_children(|strip| {
+                    for (k, (key, label)) in row.picks.iter().enumerate() {
+                        strip.spawn(self.chip(label, hit(FormHit::Option(i, k)), key == current, true));
+                    }
+                });
+                if !current.is_empty() && !row.picks.iter().any(|(key, _)| key == current) {
+                    cell.spawn(self.text(format!("{current} is not one of these"), size::CAPTION, DANGER, 0));
+                }
             }
             FieldKind::Check => {
                 // RoboCAD's checkbox carries its own label ("As live instances").

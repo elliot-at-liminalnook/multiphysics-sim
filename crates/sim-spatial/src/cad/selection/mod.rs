@@ -26,6 +26,13 @@
 //! - **Status**: as RoboCAD's `selection_changed`, "n selected" (or the
 //!   empty status, "Ready") after a selection change; "Selection mode: m"
 //!   after a mode switch.
+//! - **Revisions**: an item with an index carries the shown revision it
+//!   was computed at into `Selection::apply`, which refuses it by name when
+//!   CAD's document has since moved on: a 3D pick (`picked_at`), a box
+//!   select's edges and vertices (their topology's revision), an Alt-menu
+//!   choice (the revision the menu was gathered at, `Candidates::revision`)
+//!   and edges → faces (the topology's revision; an edge picked at another
+//!   revision than the topology's is refused before converting).
 //!
 //! Deliberate differences from RoboCAD (recorded):
 //! - Edges → faces: RoboCAD asks its kernel (`faces_of_edge`), which has no
@@ -201,16 +208,27 @@ pub(super) fn op(extend: bool, toggle: bool) -> Op {
 /// at; its face, edge, vertex, point and curve items carry it (their
 /// indices belong to it), so one picked against a tree that has since
 /// advanced is refused by name. Body items name a node, not an index, and
-/// are stamped with the current revision.
+/// are stamped with the current revision. A choice from the open Alt menu
+/// (no `picked_at`, one item of the menu, the menu's extend and toggle: what
+/// its `cad:candidate:<n>` control writes) carries the revision the menu
+/// was gathered at ([`menu_revision`]); refused that way, the stale menu
+/// closes.
 pub(super) fn select(doc: &mut CadDocument, shared: &mut Shared, ids: &[String], items: &[SelectionItem], extend: bool, toggle: bool, picked_at: Option<u64>) -> Result<Value, String> {
     let mut wanted: Vec<SelectionItem> = ids.iter().map(|id| SelectionItem(id.clone(), "body".into(), 0)).collect();
     wanted.extend(items.iter().cloned());
     validate(doc, &wanted)?;
+    let menu = if picked_at.is_none() && ids.is_empty() { menu_revision(doc, items, extend, toggle) } else { None };
+    let picked_at = picked_at.or(menu);
     let stamped = wanted.into_iter().map(|i| {
         let revision = if i.1 == "body" { None } else { picked_at };
         (i, revision)
     });
-    shared.apply(op(extend, toggle), stamped)?;
+    if let Err(e) = shared.apply(op(extend, toggle), stamped) {
+        if menu.is_some() && doc.candidates.take().is_some() {
+            doc.touch();
+        }
+        return Err(e);
+    }
     doc.candidates = None;
     selection_status(doc, shared);
     let pushed = publish(doc, shared.view());
@@ -246,9 +264,20 @@ fn candidates(doc: &mut CadDocument, items: &[SelectionItem], extend: bool, togg
         return Ok(json!({"candidates": 0, "message": "the Alt menu is closed"}));
     }
     validate(doc, items)?;
-    doc.candidates = Some(super::document::Candidates { items: items.to_vec(), extend, toggle });
+    // Gathered against the shown tree (the window's Alt click; a REST list names it too).
+    let revision = Some(doc.shown_revision());
+    doc.candidates = Some(super::document::Candidates { items: items.to_vec(), extend, toggle, revision });
     doc.touch();
     Ok(json!({"candidates": items.len(), "controls": (0..items.len()).map(|n| format!("cad:candidate:{n}")).collect::<Vec<_>>()}))
+}
+
+/// The revision the open Alt menu was gathered at, when `items` is one of
+/// its entries chosen as its control chooses it (the menu's extend and
+/// toggle); None otherwise.
+fn menu_revision(doc: &CadDocument, items: &[SelectionItem], extend: bool, toggle: bool) -> Option<u64> {
+    let c = doc.candidates.as_ref()?;
+    let [item] = items else { return None };
+    (c.extend == extend && c.toggle == toggle && c.items.contains(item)).then_some(c.revision).flatten()
 }
 
 /// The visible selectable nodes (walk order) as body items, optionally
@@ -310,7 +339,8 @@ pub(super) fn same_material(doc: &mut CadDocument, shared: &mut Shared) -> Resul
 }
 
 /// `CadEdgesToFaces`: RoboCAD's `convert_edges_to_faces` from the drawn
-/// tessellation (see the module doc); the mode becomes face.
+/// tessellation (see the module doc); the mode becomes face. The faces
+/// carry the topology's revision.
 pub(super) fn edges_to_faces(doc: &mut CadDocument, shared: &mut Shared, meshes: Option<&CadMeshes>, topology: Option<&CadTopology>) -> Result<Value, String> {
     let edges = shared.items().of_kind("edge");
     if edges.is_empty() {
@@ -319,7 +349,9 @@ pub(super) fn edges_to_faces(doc: &mut CadDocument, shared: &mut Shared, meshes:
     let (Some(meshes), Some(topology)) = (meshes, topology) else {
         return Err("Edges → faces needs RoboCAD's tessellation and topology, which this window does not hold (no 3D view)".to_string());
     };
-    let mut faces: Vec<SelectionItem> = Vec::new();
+    // The revision each selected edge was picked at (its index belongs to it).
+    let stamps = shared.id().map_or_else(Vec::new, |id| shared.selection.cad_stamped(id));
+    let mut faces: Vec<(SelectionItem, Option<u64>)> = Vec::new();
     for (node, edge) in &edges {
         let name = doc.node_name(node);
         let Some(topo) = topology.get(node) else {
@@ -335,18 +367,23 @@ pub(super) fn edges_to_faces(doc: &mut CadDocument, shared: &mut Shared, meshes:
             Some(r) if r == topo.revision => {}
             r => return Err(format!("Edges → faces: the drawn tessellation of {name} is from revision {}, its topology from revision {}; wait for the refetch", r.map_or("none".to_string(), |r| r.to_string()), topo.revision)),
         }
+        let picked = stamps.iter().find(|(i, _)| i.0 == *node && i.1 == "edge" && i.2 == *edge).map(|(_, r)| *r);
+        if let Some(r) = picked.filter(|r| *r != topo.revision) {
+            return Err(format!("Edges → faces: edge {edge} of {name} was picked at revision {r}, its topology is from revision {}; pick the edge again", topo.revision));
+        }
         if !topo.edges.iter().any(|e| e.index == *edge) {
             return Err(format!("Edges → faces: {name} has no edge {edge} at revision {}", topo.revision));
         }
         for f in faces_of_edge(meshes, topology, node, *edge) {
-            let item = SelectionItem(node.clone(), "face".into(), f);
+            // Converted at the topology's revision: refused by name if the tree has moved on.
+            let item = (SelectionItem(node.clone(), "face".into(), f), Some(topo.revision));
             if !faces.contains(&item) {
                 faces.push(item);
             }
         }
     }
     let n = faces.len();
-    shared.set(faces)?;
+    shared.apply(Op::Set, faces)?;
     doc.select_mode = SelectMode::Face;
     doc.hover = None;
     doc.candidates = None;
@@ -465,9 +502,11 @@ fn inside(rect: [f32; 4], p: Vec2) -> bool {
 }
 
 /// What box select finds in `rect` (sorted `[x0, y0, x1, y1]`) in the
-/// current mode (RoboCAD's `_box_select`), in tree order, and the drawn
-/// nodes whose topology is not loaded yet (edge and vertex modes).
-pub(super) fn box_items(doc: &CadDocument, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, rect: [f32; 4]) -> (Vec<SelectionItem>, Vec<String>) {
+/// current mode (RoboCAD's `_box_select`), in tree order, each with the
+/// revision its index belongs to (an edge or vertex: its topology's; a
+/// body names no index: None), and the drawn nodes whose topology is not
+/// loaded yet (edge and vertex modes).
+pub(super) fn box_items(doc: &CadDocument, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, rect: [f32; 4]) -> (Vec<(SelectionItem, Option<u64>)>, Vec<String>) {
     let bounds: HashMap<&str, (Vec3, Vec3)> = meshes.body_bounds().collect();
     let mut found = Vec::new();
     let mut pending = Vec::new();
@@ -485,13 +524,13 @@ pub(super) fn box_items(doc: &CadDocument, meshes: &CadMeshes, topology: Option<
                 if doc.select_mode == SelectMode::Vertex {
                     for v in &topo.vertices {
                         if v.point.is_some_and(|p| projected_inside(point(&p))) {
-                            found.push(SelectionItem(node.id.clone(), "vertex".into(), v.index));
+                            found.push((SelectionItem(node.id.clone(), "vertex".into(), v.index), Some(topo.revision)));
                         }
                     }
                 } else {
                     for e in &topo.edges {
                         if !e.points.is_empty() && e.points.iter().all(|p| projected_inside(point(p))) {
-                            found.push(SelectionItem(node.id.clone(), "edge".into(), e.index));
+                            found.push((SelectionItem(node.id.clone(), "edge".into(), e.index), Some(topo.revision)));
                         }
                     }
                 }
@@ -499,7 +538,7 @@ pub(super) fn box_items(doc: &CadDocument, meshes: &CadMeshes, topology: Option<
             SelectMode::Body | SelectMode::Face | SelectMode::Point => {
                 let corners = [lo.x, hi.x].into_iter().flat_map(|x| [lo.y, hi.y].into_iter().flat_map(move |y| [lo.z, hi.z].into_iter().map(move |z| Vec3::new(x, y, z))));
                 if corners.into_iter().all(projected_inside) {
-                    found.push(SelectionItem(node.id.clone(), "body".into(), 0));
+                    found.push((SelectionItem(node.id.clone(), "body".into(), 0), None));
                 }
             }
         }
@@ -516,7 +555,9 @@ pub(super) fn box_select(doc: &mut CadDocument, shared: &mut Shared, meshes: &Ca
     let sorted = [rect[0].min(rect[2]), rect[1].min(rect[3]), rect[0].max(rect[2]), rect[1].max(rect[3])];
     let (found, pending) = box_items(doc, meshes, topology, view, sorted);
     let n = found.len();
-    shared.apply(op(extend, false), found.into_iter().map(|i| (i, None)))?;
+    // Edges and vertices carry their topology's revision: a box over a
+    // topology the shown tree has moved past is refused by name.
+    shared.apply(op(extend, false), found)?;
     doc.candidates = None;
     selection_status(doc, shared);
     let pushed = publish(doc, shared.view());

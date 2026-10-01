@@ -30,10 +30,15 @@
 mod args;
 mod catalogue;
 mod form;
+mod invoke;
 pub(crate) mod kinds;
 pub(super) mod interact;
 mod resolve;
+mod robot_args;
+mod robot_form;
 mod state;
+#[cfg(test)]
+mod robot_tests;
 #[cfg(test)]
 mod tests;
 
@@ -41,17 +46,21 @@ pub(crate) use args::{Built, history};
 pub(crate) use catalogue::CATALOGUE;
 pub(in crate::cad) use form::form_cancel;
 pub(crate) use resolve::Resolved;
+pub(crate) use robot_args::RobotCall;
+pub(in crate::cad) use robot_form::{g, note, open_preset, picks};
 pub(in crate::cad) use state::state_json;
 
 use super::actions::{CadAction, Cx};
-use super::document::{CadDocument, CadTool, EditDone, SelectMode};
+use super::document::{CadDocument, EditDone, SelectMode};
 use super::sketch::{CadActivePlane, CadSketches, PlaneMode, SketchEdit, SketchShape, SketchTarget, ViewAct};
 use super::sync::value;
 use super::topology::CadTopology;
 use super::view::CadView;
 use crate::app::actions::Call;
 use crate::ui_kit::form::{FieldKind, FieldValue};
-use form::{form_set, open_form, submit};
+use form::{form_set, submit};
+#[cfg(test)]
+use form::open_form;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
 use sim_runtime::cad_client::SelectionItem;
@@ -111,6 +120,37 @@ pub(crate) enum Flow {
     /// Viewer state only (the active plane, 2D snapping): no RoboCAD call,
     /// so never refused for an edit in flight.
     View(ViewAct),
+    /// RoboCAD's `MotorTool` and `JointTool` (cad-physical-inspect): clicks
+    /// in the 3D view (`robot::tools`, `CadRobot {op: pick}`); the motor
+    /// tool's form holds the Add motor dialog's values, each face click is
+    /// one run; the joint tool's third click opens `robot.joint_dialog`.
+    RobotPick(RobotTool),
+}
+
+/// RoboCAD's robot click tools (ui/tools.py:1244-1361).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum RobotTool {
+    /// `MotorTool`: click a face; the motor is placed there.
+    Motor,
+    /// `JointTool`: the parent body (Ctrl-click: the world), the child, then an axis face.
+    Joint,
+}
+impl RobotTool {
+    /// The selection mode the tool sets when it starts (`activate`).
+    pub(crate) fn mode(self) -> SelectMode {
+        match self {
+            RobotTool::Motor => SelectMode::Face,
+            RobotTool::Joint => SelectMode::Body,
+        }
+    }
+    /// The status line when the tool starts: the motor tool's hint, the
+    /// joint tool's first prompt (`JointTool.activate`, ui/tools.py:1314).
+    pub(crate) fn status(self, entry: &OpEntry) -> &'static str {
+        match self {
+            RobotTool::Motor => entry.hint,
+            RobotTool::Joint => "Joint: click the parent body (Ctrl-click for the world)",
+        }
+    }
 }
 
 /// RoboCAD's `PrimitiveTool` kinds.
@@ -213,6 +253,8 @@ pub(crate) enum Shape {
     Extrude { revolve: bool },
     /// Viewer state (`Flow::View`).
     View(ViewAct),
+    /// A robot dialog's or tool's calls (`robot_args`, cad-physical-inspect).
+    Robot(RobotCall),
 }
 
 /// One typed parameter: its argument name, RoboCAD's label or prompt,
@@ -431,7 +473,7 @@ fn unknown(id: &str) -> String {
 /// `CadFormSubmit`, `CadFormCancel`), from `actions::handle`.
 pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     match action {
-        CadAction::CadInvoke { id } => invoke(id, call, cx),
+        CadAction::CadInvoke { id } => invoke::invoke(id, call, cx),
         CadAction::CadRun { id, params, items, revision } => match entry(id) {
             None => Outcome::Done(Err(unknown(id))),
             Some(e) => run(e, params, items.as_deref(), *revision, call, cx),
@@ -444,115 +486,14 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     }
 }
 
-/// `CadInvoke`: what RoboCAD's command does when its menu entry, button or
-/// key fires (its handler in ui/app.py, or `set_tool`).
-fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
-    let Some(entry) = entry(id) else { return super::surfaces::invoke_command(id, call, cx) };
-    match entry.flow {
-        Flow::Immediate | Flow::AtCursorSnap => run(entry, &Map::new(), None, None, call, cx),
-        // Viewer state: no RoboCAD call, nothing to refuse.
-        Flow::View(act) => Outcome::Done(Ok(super::sketch::plane::view_act(&mut *cx.doc, &mut *cx.plane, act))),
-        Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) => {
-            end_tool(call, cx);
-            let selection = cx.shared.items();
-            let mode_before = cx.doc.select_mode;
-            let (doc, env) = cx.split(&selection);
-            doc.ops.active = Some(entry.id);
-            doc.ops.place = None;
-            doc.ops.sketch = None;
-            doc.ops.extrude = None;
-            doc.ops.plane_picks.clear();
-            // A sketch or extrude tool's Tab fields (RoboCAD's numeric bar);
-            // a plane tool has none (RoboCAD's `PlaneTool` only picks).
-            let answer = if entry.params.is_empty() || matches!(entry.flow, Flow::PlanePick(_)) {
-                doc.ops.form = None;
-                json!({"active": entry.id})
-            } else {
-                open_form(doc, entry)
-            };
-            // Each interaction's own start, after its form opened (it may set
-            // drafts: the polygon's remembered sides, the text field's focus):
-            // its state, the selection mode a plane tool sets, an extrude's source.
-            let started = match entry.flow {
-                Flow::Sketch(shape) => super::sketch::interact::begin(doc, shape),
-                Flow::Extrude { revolve } => super::sketch::extrude::begin(doc, &env, revolve),
-                Flow::PlanePick(mode) => super::sketch::plane::begin(doc, mode),
-                _ => Ok(()),
-            };
-            let outcome = match started {
-                Err(e) => {
-                    form_cancel(doc);
-                    // The reason, not form_cancel's "Cancelled …", stays on the status line.
-                    doc.show(Err(e.clone()));
-                    Outcome::Done(Err(e))
-                }
-                Ok(()) => {
-                    doc.show(Ok(entry.hint.to_string()));
-                    Outcome::Done(Ok(answer))
-                }
-            };
-            // A plane tool sets the selection mode (`sketch::plane::begin`): pushed with the items.
-            if cx.doc.select_mode != mode_before {
-                super::selection::publish(cx.doc, cx.shared.view());
-            }
-            outcome
-        }
-        Flow::Form => {
-            // RoboCAD's handlers check the selection before their dialog opens.
-            let selection = cx.shared.items();
-            if let Err(e) = resolve::resolve(entry, cx.doc, &cx.env(&selection), None) {
-                return Outcome::Done(Err(e));
-            }
-            // The dialog replaces an active pick or place tool's form, so
-            // that tool ends as its Cancel ends it (`form_cancel`, less the
-            // status line): a tool left active without its form would keep
-            // taking clicks with no form to run them.
-            let doc = &mut *cx.doc;
-            doc.ops.active = None;
-            doc.ops.place = None;
-            doc.ops.sketch = None;
-            doc.ops.extrude = None;
-            doc.ops.plane_picks.clear();
-            Outcome::Done(Ok(open_form(doc, entry)))
-        }
-        Flow::PickThenForm(mode) => {
-            end_tool(call, cx);
-            let doc = &mut *cx.doc;
-            // As RoboCAD's EdgeTool/ShellTool.activate (ui/tools.py:946, :999):
-            // the mode is set directly and the selection is kept.
-            if doc.select_mode != mode {
-                doc.select_mode = mode;
-                super::selection::publish(doc, cx.shared.view());
-            }
-            doc.ops.active = Some(entry.id);
-            doc.ops.place = None;
-            doc.ops.sketch = None;
-            doc.ops.extrude = None;
-            doc.ops.plane_picks.clear();
-            let answer = open_form(doc, entry);
-            doc.show(Ok(entry.hint.to_string()));
-            Outcome::Done(Ok(answer))
-        }
-        Flow::Place(_) => {
-            end_tool(call, cx);
-            let doc = &mut *cx.doc;
-            doc.ops.active = Some(entry.id);
-            doc.ops.place = None;
-            doc.ops.sketch = None;
-            doc.ops.extrude = None;
-            doc.ops.plane_picks.clear();
-            let answer = open_form(doc, entry);
-            doc.show(Ok(entry.hint.to_string()));
-            Outcome::Done(Ok(answer))
-        }
-    }
-}
 
-/// RoboCAD's `set_tool` replaces the active tool: a transform tool's live
-/// work ends and Select becomes the tool before a pick or place operation starts.
-fn end_tool(call: &mut Call, cx: &mut Cx) {
-    if cx.doc.tool != CadTool::Select {
-        let _ = super::transform::handle(&CadAction::CadTool { tool: CadTool::Select }, call, cx);
+/// `CadRun` of catalogue entry `id` from another CAD part (the robot click
+/// tools' picks): `params` as `CadRun` takes them, `revision` the one the
+/// pick was made at (refused by name when RoboCAD's document changed since).
+pub(in crate::cad) fn run_entry(id: &str, params: &Map<String, Value>, revision: Option<u64>, call: &mut Call, cx: &mut Cx) -> Outcome {
+    match entry(id) {
+        None => Outcome::Done(Err(unknown(id))),
+        Some(e) => run(e, params, None, revision, call, cx),
     }
 }
 
@@ -637,6 +578,7 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, selection: &[Sel
             c.paste(&clip).map(|p| EditDone { message: format!("Pasted {} item(s)", p.pasted.len()), result: value(&p) })
         }),
         Built::Sketch { target, calls, label } => send_sketch(doc, call, target, calls, label),
+        Built::Robot(plan) => robot_args::send(doc, call, plan),
         // Applied by `run` before `start`.
         Built::View(_) => return Outcome::Done(Err("viewer state is not sent to RoboCAD".into())),
         Built::Read(read) => {

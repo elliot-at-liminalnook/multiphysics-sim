@@ -240,8 +240,12 @@ fn every_capability_parses_into_its_action_and_every_parsed_command_is_registere
             registered.entry(feature.action).or_default().insert(spec.name);
         }
         let names = (feature.accepts)();
-        assert!(!names.is_empty(), "{}: its parser lists no commands", feature.name);
-        accepted.entry(feature.action).or_default().extend(names);
+        // An action type with no REST command of its own (the selection,
+        // whose commands are each mode's adapters) accepts none either.
+        assert!(!names.is_empty() || (feature.commands)().is_empty(), "{}: its parser lists no commands", feature.name);
+        if !names.is_empty() {
+            accepted.entry(feature.action).or_default().extend(names);
+        }
     }
     assert_eq!(registered, accepted, "registered commands (left) and parsed commands (right), by action type");
     // Each (mode, command) has one action type.

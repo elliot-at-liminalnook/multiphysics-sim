@@ -245,6 +245,8 @@ impl Plugin for ModesPlugin {
             .configure_sets(Update, (ViewerSet::Input, ViewerSet::Actions, ViewerSet::JobResults, ViewerSet::SimSync, ViewerSet::Present).chain())
             .add_systems(Last, scope_new_entities);
         switch::build(app);
+        // The one selection and the document registry (native-viewer.md §7).
+        crate::selection::build(app);
     }
 }
 

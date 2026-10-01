@@ -9,6 +9,8 @@ pub mod app;
 pub(crate) mod inspect;
 mod inspect_view;
 pub(crate) mod chart;
+pub mod document;
+pub mod selection;
 pub mod builder;
 pub mod cad;
 pub mod jobs;

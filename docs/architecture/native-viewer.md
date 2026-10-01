@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; window-first-usability verified at cd30ef6d (sim-spatial lib 368 passed, 1 ignored; bins 4; build of lib, tests and bins without sim-spatial warnings), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
+## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -28,7 +28,7 @@ duplicates physics.
   switcher, `system_ui` `mode:*`, REST `viewer_mode`), through one handler
   (`app::switch::handle`). Verified at 7da1216e.
 - **Window-first** (window-first-usability, 2026-10-01, verified at
-  cd30ef6d): every mode's document can be opened in the window. A mode
+  aa34ef48: lib 369 passed, 1 ignored; bins 4/4; workspace check clean): every mode's document can be opened in the window. A mode
   chosen in the switcher with no document opens the document picker
   (`app/picker/`); the switcher sits in a reserved strip every dock ends
   above (`ui_kit::SWITCHER_STRIP`); no window text tells a person to use

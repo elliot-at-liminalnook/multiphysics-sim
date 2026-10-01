@@ -3,7 +3,8 @@
 //! and Tab values), line chaining, a press refused before it is taken, the
 //! polygon's remembered sides, which sketch a shape goes to
 //! (tools.py:675-686), the corner-fillet simulation, the sketch edits and
-//! the `cad_sketch` refusals. "Sends nothing" is checked where it is
+//! the `cad_sketch` refusals, the target's candidate order, a plane node
+//! without a valid frame and a sketch read with dropped curves. "Sends nothing" is checked where it is
 //! decided: no edit started (`CadDocument::edit`), no action returned.
 use super::cache::Geometry;
 use super::edits::{self, fillet_corner, fillet_plan};
@@ -130,7 +131,7 @@ fn the_rows_follow_robocads_needed_counts_in_shape_order() {
 #[test]
 fn clicks_build_robocads_calls_for_every_shape() {
     let a = [0.0, 0.0];
-    let calls = |shape, pts: &[[f64; 2]]| from_points(shape, pts, "Hi").unwrap();
+    let calls = |shape, pts: &[[f64; 2]]| from_points(shape, pts, "Hi", 6).unwrap();
     assert_eq!(calls(SketchShape::Line, &[a, [10.0, 5.0]]), vec![SketchCall::Line { a, b: [10.0, 5.0] }]);
     // A rectangle from its two corners in any order: the lower corner and the sizes.
     let r = calls(SketchShape::Rectangle, &[[10.0, 5.0], a]);
@@ -144,9 +145,10 @@ fn clicks_build_robocads_calls_for_every_shape() {
     assert_eq!(calls(SketchShape::Arc3pt, &tri), vec![SketchCall::ArcThreePoint { a: tri[0], b: tri[1], c: tri[2] }]);
     // Two of three points build nothing yet; collinear ones are the kernel's error.
     assert!(calls(SketchShape::Circle3pt, &tri[..2]).is_empty());
-    assert!(from_points(SketchShape::Arc3pt, &[a, [1.0, 1.0], [2.0, 2.0]], "").unwrap_err().contains("collinear"));
-    // The polygon's sides are RoboCAD's remembered count (none sent); rotation toward the second click.
-    assert_eq!(calls(SketchShape::Polygon, &[a, [10.0, 0.0]]), vec![SketchCall::Polygon { center: a, radius: 10.0, sides: None, rotation: 0.0 }]);
+    assert!(from_points(SketchShape::Arc3pt, &[a, [1.0, 1.0], [2.0, 2.0]], "", 6).unwrap_err().contains("collinear"));
+    // The polygon carries the viewer's remembered count (what its preview draws); rotation toward the second click.
+    assert_eq!(calls(SketchShape::Polygon, &[a, [10.0, 0.0]]), vec![SketchCall::Polygon { center: a, radius: 10.0, sides: Some(6), rotation: 0.0 }]);
+    assert_eq!(from_points(SketchShape::Polygon, &[a, [10.0, 0.0]], "", 8).unwrap(), vec![SketchCall::Polygon { center: a, radius: 10.0, sides: Some(8), rotation: 0.0 }]);
     // The slot's width: twice the third click's distance from the axis; 4 before it.
     assert_eq!(calls(SketchShape::Slot, &[a, [10.0, 0.0], [5.0, 3.0]]), vec![SketchCall::Slot { a, b: [10.0, 0.0], width: 6.0 }]);
     assert_eq!(calls(SketchShape::Slot, &[a, [10.0, 0.0]]), vec![SketchCall::Slot { a, b: [10.0, 0.0], width: 4.0 }]);
@@ -194,7 +196,7 @@ fn a_finished_line_is_one_cad_sketch_and_the_next_line_starts_at_its_end() {
     let mut s = SketchState::new(SketchShape::Line);
     s.points = vec![[0.0, 0.0, 0.0], [10.0, 0.0, 0.0]];
     s.began = 4;
-    let action = finish_action(SketchShape::Line, &s, &PlaneFrame::XY, &json!("xy")).unwrap().unwrap();
+    let action = finish_action(SketchShape::Line, &s, &PlaneFrame::XY, &json!("xy"), 6).unwrap().unwrap();
     let line = SketchCall::Line { a: [0.0, 0.0], b: [10.0, 0.0] };
     assert_eq!(action, CadAction::CadSketch { node: None, plane: Some("xy".into()), calls: vec![line.to_json()], revision: Some(4) });
     assert!(reset_after_finish(spec(SketchShape::Line), &mut s));
@@ -205,7 +207,7 @@ fn a_finished_line_is_one_cad_sketch_and_the_next_line_starts_at_its_end() {
     // A text click without text is refused (nothing sent).
     let mut t = SketchState::new(SketchShape::Text);
     t.points = vec![[0.0; 3]];
-    assert!(finish_action(SketchShape::Text, &t, &PlaneFrame::XY, &json!("xy")).unwrap_err().contains("type the text"));
+    assert!(finish_action(SketchShape::Text, &t, &PlaneFrame::XY, &json!("xy"), 6).unwrap_err().contains("type the text"));
     // RoboCAD's readouts.
     assert_eq!(readout(Readout::Size, [0.0, 0.0], [-20.0, 10.0]), format!("{} × {}", fl(20.0), fl(10.0)));
     assert_eq!(readout(Readout::Radius, [0.0, 0.0], [3.0, 4.0]), format!("radius {}", fl(5.0)));
@@ -219,10 +221,24 @@ fn the_polygon_remembers_its_sides() {
     form(&mut doc);
     begin(&mut doc, SketchShape::Polygon).unwrap();
     assert_eq!(doc.ops.form.as_ref().unwrap().texts[1], "6", "RoboCAD's 6 at first");
-    specs::remember_polygon_sides(&mut doc, &[SketchCall::Polygon { center: [0.0; 2], radius: 5.0, sides: Some(8), rotation: 0.0 }]);
-    // A click-built polygon (sides None) leaves the count as it was.
-    specs::remember_polygon_sides(&mut doc, &[SketchCall::Polygon { center: [0.0; 2], radius: 5.0, sides: None, rotation: 0.0 }]);
+    let eight = [SketchCall::Polygon { center: [0.0; 2], radius: 5.0, sides: Some(8), rotation: 0.0 }];
+    assert_eq!(specs::polygon_sides_after(&eight), Some(8));
+    assert_eq!(specs::polygon_sides_after(&[SketchCall::Polygon { center: [0.0; 2], radius: 5.0, sides: None, rotation: 0.0 }]), None);
+    // A polygon edit that fails, or another edit finishing, leaves the count as it was.
+    specs::note_polygon_sides(&mut doc, Some(8), 1);
+    specs::polygon_edit_done(&mut doc, 1, false);
+    assert_eq!((doc.ops.polygon_sides, doc.ops.polygon_sides_sent), (None, None));
+    specs::note_polygon_sides(&mut doc, Some(8), 2);
+    specs::polygon_edit_done(&mut doc, 3, true);
+    assert_eq!((doc.ops.polygon_sides, doc.ops.polygon_sides_sent), (None, None));
+    // It follows once the polygon's edit succeeds; the clicked polygon then carries it.
+    specs::note_polygon_sides(&mut doc, specs::polygon_sides_after(&eight), 4);
+    specs::polygon_edit_done(&mut doc, 4, true);
     assert_eq!(doc.ops.polygon_sides, Some(8));
+    let mut p = SketchState::new(SketchShape::Polygon);
+    p.points = vec![[0.0; 3], [5.0, 0.0, 0.0]];
+    let Some(CadAction::CadSketch { calls, .. }) = finish_action(SketchShape::Polygon, &p, &PlaneFrame::XY, &json!("xy"), doc.ops.polygon_sides.unwrap_or(6)).unwrap() else { panic!("no action") };
+    assert_eq!(SketchCall::from_json(&calls[0]).unwrap(), SketchCall::Polygon { center: [0.0; 2], radius: 5.0, sides: Some(8), rotation: 0.0 });
     form(&mut doc);
     begin(&mut doc, SketchShape::Polygon).unwrap();
     assert_eq!(doc.ops.form.as_ref().unwrap().texts[1], "8");
@@ -256,6 +272,109 @@ fn a_shape_goes_to_the_selected_then_the_first_visible_sketch_on_its_plane() {
     let partial = cache(&[("k1", xy, vec![])]);
     let env = Env { sketches: Some(&partial), ..Default::default() };
     assert!(target(&doc, &env, &json!("xy"), xy).unwrap_err().contains("still being read"));
+}
+
+/// Only the candidates `_ensure_sketch` would look at, in its order, need
+/// their geometry read: selected sketches, then visible ones in tree
+/// order; the first unread candidate refuses by name, and a hidden sketch
+/// that is not selected is never waited for.
+#[test]
+fn the_target_waits_only_for_the_candidates_in_robocads_order() {
+    let xy = PlaneFrame::XY;
+    let nodes = vec![node("k1", "sketch", "Profile", true), node("k2", "sketch", "Hidden", false), node("k3", "sketch", "Later", true)];
+    let mut doc = document("http://127.0.0.1:8420", nodes);
+    // k2 (hidden, unselected) and k3 (after the match) are unread: k1 is taken without waiting.
+    let only_k1 = cache(&[("k1", xy, vec![])]);
+    let env = Env { sketches: Some(&only_k1), ..Default::default() };
+    assert_eq!(target(&doc, &env, &json!("xy"), xy), Ok(SketchTarget::Node("k1".into())));
+    // k1 on another plane: k3 is the next candidate, unread: refused by its name.
+    let k1_xz = cache(&[("k1", PlaneFrame::XZ, vec![])]);
+    let env = Env { sketches: Some(&k1_xz), ..Default::default() };
+    let err = target(&doc, &env, &json!("xy"), xy).unwrap_err();
+    assert!(err.contains("sketch Later is still being read"), "{err}");
+    // A selected sketch is a candidate even hidden: unread, it refuses first.
+    doc.selection = vec![SelectionItem("k2".into(), "body".into(), 0)];
+    let env = Env { sketches: Some(&only_k1), ..Default::default() };
+    let err = target(&doc, &env, &json!("xy"), xy).unwrap_err();
+    assert!(err.contains("sketch Hidden is still being read"), "{err}");
+    // Read on the plane, the selected hidden sketch wins.
+    let both = cache(&[("k1", xy, vec![]), ("k2", xy, vec![])]);
+    let env = Env { sketches: Some(&both), ..Default::default() };
+    assert_eq!(target(&doc, &env, &json!("xy"), xy), Ok(SketchTarget::Node("k2".into())));
+    // No candidate at all (nothing selected, every sketch hidden): a new sketch, nothing waited for.
+    doc.selection.clear();
+    for n in &mut doc.doc.as_mut().unwrap().nodes {
+        n.effective_visible = false;
+    }
+    let none = CadSketches::default();
+    let env = Env { sketches: Some(&none), ..Default::default() };
+    assert_eq!(target(&doc, &env, &json!("xy"), xy), Ok(SketchTarget::New { plane: json!("xy") }));
+}
+
+/// A plane node read without a valid `plane` is said so by name, not
+/// "still being read": the cache, the active plane's frame and label, a
+/// named plane and a sketch press.
+#[test]
+fn a_plane_node_without_a_valid_frame_is_named_not_reading() {
+    let doc = document("http://127.0.0.1:8420", vec![node("p1", "plane", "Datum", true)]);
+    let mut c = CadSketches::default();
+    c.insert("p1", 4, Geometry::Plane(None));
+    let err = c.plane_state("p1").unwrap().unwrap_err();
+    assert!(err.contains("node p1 has no valid plane frame"), "{err}");
+    assert_eq!(c.plane_state("p2"), None, "not read: no state");
+    // The active plane: marked as the cache sync marks it.
+    let mut active = CadActivePlane { plane: Some(ActivePlane::Node { id: "p1".into(), frame: None }), ..Default::default() };
+    assert!(active.frame().unwrap_err().contains("being read"), "unmarked: still reading");
+    active.unusable = cache::unusable(&active, &c);
+    let err = active.frame_or_xy().unwrap_err();
+    assert!(err.contains("node p1 has no valid plane frame"), "{err}");
+    assert_eq!(active.label(&doc), "Datum (no valid plane frame)");
+    // A mark left from another node is not this one's.
+    let other = CadActivePlane { plane: Some(ActivePlane::Node { id: "p2".into(), frame: None }), unusable: active.unusable.clone(), ..Default::default() };
+    assert!(other.frame().unwrap_err().contains("being read"));
+    // `cad_sketch` on the named plane, and a sketch press on the active one.
+    let env = Env { sketches: Some(&c), ..Default::default() };
+    let err = edits::shape_target(Some("p1"), &doc, &env).unwrap_err();
+    assert!(err.contains("plane Datum") && err.contains("no valid plane frame"), "{err}");
+    let env = Env { sketches: Some(&c), plane: Some(&active), ..Default::default() };
+    let err = edits::shape_target(None, &doc, &env).unwrap_err();
+    assert!(err.contains("no valid plane frame"), "{err}");
+    let mut s = SketchState::new(SketchShape::Text);
+    s.text = "Hi".into();
+    let Step::Wait(why) = press(spec(SketchShape::Text), &mut s, [0.0; 3], &doc, &env, &json!("p1")) else { panic!("the press was taken") };
+    assert!(why.contains("no valid plane frame") && !why.contains("being read"), "{why}");
+    // A valid frame read later clears it.
+    c.insert("p1", 4, Geometry::Plane(Some(PlaneFrame::XZ)));
+    assert_eq!(c.plane_state("p1"), Some(Ok(PlaneFrame::XZ)));
+    assert_eq!(cache::unusable(&active, &c), None);
+}
+
+/// Curves the read dropped (no kind) make the viewer's indices wrong: the
+/// edits and a `cad_sketch` call naming curves refuse by name, nothing sent.
+#[test]
+fn a_sketch_with_dropped_curves_refuses_index_edits() {
+    let mut doc = document("http://127.0.0.1:8420", vec![node("k1", "sketch", "Profile", true)]);
+    let mut c = CadSketches::default();
+    let g = SketchGeometry { name: "Profile".into(), plane: Some(PlaneFrame::XY), curves: vec![polyline(&SQUARE, true), line([0.0; 2], [5.0, 5.0])] };
+    c.insert_read("k1", 4, Geometry::Sketch(Arc::new(g)), 1);
+    assert_eq!((c.dropped("k1"), c.dropped("k2")), (1, 0));
+    let env = Env { sketches: Some(&c), ..Default::default() };
+    let r = Resolved::default();
+    let run = |id: &str, edit, values: Value| edits::calls(entry(id).unwrap(), edit, &r, values.as_object().unwrap(), &doc, &env);
+    for (id, edit, values, what) in [
+        ("sketch.offset", SketchEdit::Offset, json!({"distance": 1.0}), "Offset curves"),
+        ("sketch.fillet", SketchEdit::FilletCorners, json!({"radius": 2.0}), "Fillet corners"),
+        ("sketch.join", SketchEdit::Join, json!({}), "Join curves"),
+    ] {
+        let err = run(id, edit, values).unwrap_err();
+        assert!(err.starts_with(&format!("{what} refused: 1 curve(s) of Profile could not be read")), "{err}");
+    }
+    let sketch = |calls: Vec<Value>| CadAction::CadSketch { node: Some("k1".into()), plane: None, calls, revision: None };
+    let err = refused(apply(&mut doc, Some(&c), &sketch(vec![json!(["line", [[0, 0], [1, 1]]]), json!(["offset", [0, 1.0]])])));
+    assert!(err.contains("cad_sketch call 2 (offset) refused") && err.contains("Profile"), "{err}");
+    assert!(doc.edit.is_none(), "no edit started");
+    // Nothing dropped: no refusal.
+    assert_eq!(edits::dropped_refusal(&Env { sketches: Some(&CadSketches::default()), ..Default::default() }, "k1", "Profile", "x"), Ok(()));
 }
 
 #[test]
@@ -343,7 +462,7 @@ fn a_press_that_cannot_be_sent_is_not_taken_and_keeps_the_points() {
     doc.stale = None;
     assert_eq!(press(line, &mut s, [20.0, 0.0, 0.0], &doc, &env, &xy), Step::Finish);
     assert_eq!((s.points.len(), s.began, s.chained), (2, 4, false));
-    let action = finish_action(SketchShape::Line, &s, &PlaneFrame::XY, &xy).unwrap().unwrap();
+    let action = finish_action(SketchShape::Line, &s, &PlaneFrame::XY, &xy, 6).unwrap().unwrap();
     assert!(matches!(action, CadAction::CadSketch { revision: Some(4), .. }), "{action:?}");
 
     // A rectangle: an edit in flight or a stale document at the completing press keeps its first point.

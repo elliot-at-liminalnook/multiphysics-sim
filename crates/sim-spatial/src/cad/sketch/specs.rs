@@ -29,13 +29,20 @@
 //! - The text tool with empty text is refused ("type the text"); RoboCAD
 //!   sketches no outlines and records an empty undo step.
 //! - Plane coordinates are rounded to 1e-6 mm as the other tools send.
+//! - A clicked polygon sends its side count (`sides`: the viewer's
+//!   remembered count, the one its preview draws); RoboCAD's `_build`
+//!   passes none and its kernel uses the process-wide
+//!   `Sketch.last_polygon_sides`, which REST calls from other clients also
+//!   move. Sending it keeps the preview and the result the same; RoboCAD's
+//!   kernel still records it (`polygon` sets `last_polygon_sides`). The
+//!   viewer's count follows a polygon sent with sides once its edit succeeds
+//!   ([`note_polygon_sides`], [`polygon_edit_done`]).
 use super::{BasePlane, Finish, Readout, SketchShape, SketchSpec, SketchTarget};
 use crate::cad::document::CadDocument;
 use crate::cad::ops::{Built, Env, OpEntry};
 use crate::cad::transform::round6;
 use serde_json::{Map, Value};
 use sim_runtime::cad_client::{PlaneFrame, SketchCall, Uv};
-use std::collections::HashMap;
 
 const fn row(shape: SketchShape, finish: Finish, chains: bool, readout: Readout, text_form: bool) -> SketchSpec {
     SketchSpec { shape, finish, chains, readout, text_form }
@@ -90,9 +97,10 @@ fn collinear(a: Uv, b: Uv, c: Uv) -> Result<(), String> {
 /// RoboCAD's `_build` (tools.py:728-760) on plane points: the calls of
 /// the shape these points make (none when `_build` adds nothing yet: a
 /// three-point shape with fewer than three, a spline with fewer than two).
-/// The polygon's sides are left to RoboCAD's `Sketch.last_polygon_sides`
-/// (`_build` passes none). Err: three collinear points.
-pub(crate) fn from_points(shape: SketchShape, pts: &[Uv], text: &str) -> Result<Vec<SketchCall>, String> {
+/// The polygon carries `polygon_sides` (the viewer's remembered count,
+/// `OpsState::polygon_sides`, 6 at first: what the preview draws), where
+/// `_build` passes none (module doc). Err: three collinear points.
+pub(crate) fn from_points(shape: SketchShape, pts: &[Uv], text: &str, polygon_sides: u32) -> Result<Vec<SketchCall>, String> {
     let Some(&a) = pts.first() else { return Ok(Vec::new()) };
     let b = if pts.len() > 1 { pts[pts.len() - 1] } else { a };
     let angle = |p: Uv, q: Uv| (q[1] - p[1]).atan2(q[0] - p[0]).to_degrees();
@@ -107,7 +115,7 @@ pub(crate) fn from_points(shape: SketchShape, pts: &[Uv], text: &str) -> Result<
             Some(if shape == SketchShape::Circle3pt { SketchCall::CircleThreePoint { a: pts[0], b: pts[1], c: pts[2] } } else { SketchCall::ArcThreePoint { a: pts[0], b: pts[1], c: pts[2] } })
         }
         SketchShape::Circle3pt | SketchShape::Arc3pt => None,
-        SketchShape::Polygon => Some(SketchCall::Polygon { center: a, radius: dist(a, b), sides: None, rotation: angle(a, b) }),
+        SketchShape::Polygon => Some(SketchCall::Polygon { center: a, radius: dist(a, b), sides: Some(polygon_sides), rotation: angle(a, b) }),
         SketchShape::Slot => {
             let width = if pts.len() < 3 {
                 4.0
@@ -181,31 +189,33 @@ pub(crate) fn from_values(shape: SketchShape, anchor: Uv, values: &Map<String, V
 /// sent: the first selected node that is a sketch on `frame` (selection
 /// order), else the first visible sketch on it in the shown tree's walk
 /// order, else a new sketch on `plane_arg`. Planes compare as RoboCAD's
-/// dataclass `==` (`PlaneFrame::same`, 1e-9 after JSON). Refused, rather
-/// than guessed, while any sketch's geometry is not read at the shown
-/// revision.
+/// dataclass `==` (`PlaneFrame::same`, 1e-9 after JSON). The candidates
+/// are looked at in that order, each needing its geometry read at the
+/// shown revision: the first one not read refuses (rather than guessing
+/// past it); a hidden sketch that is not selected is never a candidate,
+/// so it is never waited for. A sketch whose plane is malformed is on no plane.
 pub(crate) fn target(doc: &CadDocument, env: &Env, plane_arg: &Value, frame: PlaneFrame) -> Result<SketchTarget, String> {
     let Some(state) = &doc.doc else { return Err("the model tree is still being read from RoboCAD; try again".into()) };
-    let mut planes: HashMap<&str, Option<PlaneFrame>> = HashMap::new();
-    for n in state.nodes.iter().filter(|n| n.kind == "sketch") {
-        match env.sketches.and_then(|c| c.sketch(&n.id)) {
-            Some(g) => {
-                planes.insert(n.id.as_str(), g.plane);
-            }
-            None => {
-                if let Some(e) = env.sketches.and_then(|c| c.error(&n.id)) {
-                    return Err(format!("sketch {} could not be read from RoboCAD ({e}); Refresh (cad_refresh) and try again", n.name));
-                }
-                return Err("sketch planes are still being read from RoboCAD; try again".into());
-            }
+    let on_plane = |id: &str, name: &str| -> Result<bool, String> {
+        match env.sketches.and_then(|c| c.sketch(id)) {
+            Some(g) => Ok(g.plane.is_some_and(|p| p.same(&frame, 1e-9))),
+            None => Err(match env.sketches.and_then(|c| c.error(id)) {
+                Some(e) => format!("sketch {name} could not be read from RoboCAD ({e}); Refresh (cad_refresh) and try again"),
+                None => format!("sketch {name} is still being read from RoboCAD; try again"),
+            }),
+        }
+    };
+    for id in doc.selected_nodes() {
+        if let Some(n) = state.nodes.iter().find(|n| n.id == id && n.kind == "sketch")
+            && on_plane(&n.id, &n.name)?
+        {
+            return Ok(SketchTarget::Node(id));
         }
     }
-    let on_plane = |id: &str| planes.get(id).copied().flatten().is_some_and(|p| p.same(&frame, 1e-9));
-    if let Some(id) = doc.selected_nodes().into_iter().find(|id| on_plane(id.as_str())) {
-        return Ok(SketchTarget::Node(id));
-    }
-    if let Some(n) = state.nodes.iter().find(|n| n.kind == "sketch" && n.effective_visible && on_plane(n.id.as_str())) {
-        return Ok(SketchTarget::Node(n.id.clone()));
+    for n in state.nodes.iter().filter(|n| n.kind == "sketch" && n.effective_visible) {
+        if on_plane(&n.id, &n.name)? {
+            return Ok(SketchTarget::Node(n.id.clone()));
+        }
     }
     Ok(SketchTarget::New { plane: plane_arg.clone() })
 }
@@ -219,10 +229,21 @@ pub(crate) fn polygon_sides_after(calls: &[SketchCall]) -> Option<u32> {
     })
 }
 
-/// Record the side count a sent polygon leaves in RoboCAD
-/// (`OpsState::polygon_sides`, the polygon tool's `sides` field default).
-pub(crate) fn remember_polygon_sides(doc: &mut CadDocument, calls: &[SketchCall]) {
-    if let Some(n) = polygon_sides_after(calls)
+/// A sketch edit `seq` (`CadDocument::edit_seq`) just started: note the
+/// side count its calls leave (`polygon_sides_after`), for
+/// [`polygon_edit_done`] (`ops::send_sketch`). None clears the note.
+pub(crate) fn note_polygon_sides(doc: &mut CadDocument, sides: Option<u32>, seq: u64) {
+    doc.ops.polygon_sides_sent = sides.map(|n| (seq, n));
+}
+
+/// Edit `seq` ended (`sync::finish_edit`): when it succeeded and was the
+/// noted polygon edit, its side count becomes the remembered one
+/// (`OpsState::polygon_sides`: the polygon tool's `sides` field default,
+/// its clicks and preview). The note goes either way.
+pub(crate) fn polygon_edit_done(doc: &mut CadDocument, seq: u64, ok: bool) {
+    if let Some((at, n)) = doc.ops.polygon_sides_sent.take()
+        && ok
+        && at == seq
         && doc.ops.polygon_sides != Some(n)
     {
         doc.ops.polygon_sides = Some(n);

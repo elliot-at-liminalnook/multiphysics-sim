@@ -60,9 +60,20 @@
 //!   to the cursor; cleared when the shape or the tool ends.
 //! - **Preview** (`preview::draw`, Present): display only.
 //!
-//! The polygon's Tab sides are remembered when its calls are sent
-//! (`specs::remember_polygon_sides`, called by `ops::send_sketch`, the one
-//! path every sketch call takes: `cad_sketch` and the form's OK alike).
+//! The polygon's side count: a clicked polygon is sent with the viewer's
+//! remembered count (`OpsState::polygon_sides`, 6 at first), the one its
+//! preview draws (`specs` module doc: RoboCAD's `_build` passes none). A
+//! polygon sent with sides (clicked, the form's OK or `cad_sketch`) becomes
+//! the remembered count once its edit succeeds (`specs::note_polygon_sides`
+//! in `ops::send_sketch`, the one path every sketch call takes;
+//! `specs::polygon_edit_done` in `sync::finish_edit`).
+//!
+//! Deliberately different, recorded: RoboCAD's `SketchTool.deactivate`
+//! (tools.py:658-660) turns `plane_snapping` off when a sketch tool ends,
+//! whatever it was before the tool. Here the tool never changes the 2D
+//! snap toggle (`CadActivePlane::snap_2d`): its own snap always uses the
+//! active plane (as RoboCAD's `press`/`hover` pass `plane=`), and the
+//! user's toggle stays as the user left it when the tool ends.
 use super::specs::{self, local, spec};
 use super::{BasePlane, CadActivePlane, CadSketches, Finish, Readout, SketchShape, SketchSpec, SketchState};
 use crate::app::actions::Act;
@@ -150,12 +161,14 @@ fn form_text(doc: &CadDocument) -> String {
 }
 
 /// What happened at a finish: the action to write, or the error to show.
-pub(crate) fn finish_action(shape: SketchShape, s: &SketchState, frame: &PlaneFrame, plane_arg: &Value) -> Result<Option<CadAction>, String> {
+/// `polygon_sides`: the remembered count (`OpsState::polygon_sides`, 6 at
+/// first), the one the preview draws.
+pub(crate) fn finish_action(shape: SketchShape, s: &SketchState, frame: &PlaneFrame, plane_arg: &Value, polygon_sides: u32) -> Result<Option<CadAction>, String> {
     let uv: Vec<Uv> = s.points.iter().map(|p| local(frame, *p)).collect();
     if spec(shape).text_form && s.text.is_empty() {
         return Err("type the text to sketch first (the form's \"Text to sketch:\" field), then click where it starts".into());
     }
-    let calls = specs::from_points(shape, &uv, &s.text)?;
+    let calls = specs::from_points(shape, &uv, &s.text, polygon_sides)?;
     if calls.is_empty() {
         return Ok(None);
     }
@@ -352,7 +365,7 @@ pub(super) fn pointer(
         }
     };
     if finish && let Ok(f) = &frame {
-        match finish_action(shape, &s, f, &plane_arg) {
+        match finish_action(shape, &s, f, &plane_arg, doc.ops.polygon_sides.unwrap_or(6)) {
             Ok(Some(action)) => {
                 out.write(Act::ui(action));
             }

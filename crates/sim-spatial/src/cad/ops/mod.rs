@@ -388,8 +388,12 @@ pub struct OpsState {
     /// plane (`sync::finish_edit` sets it; `sketch::plane::sync` takes it).
     pub plane_created: Option<String>,
     /// The polygon tool's last side count (RoboCAD's
-    /// `Sketch.last_polygon_sides`; None: its 6).
+    /// `Sketch.last_polygon_sides`; None: its 6): set once a polygon sent
+    /// with sides succeeds (`sketch::specs::polygon_edit_done`).
     pub polygon_sides: Option<u32>,
+    /// The sketch edit in flight that sends a polygon with sides: its
+    /// `CadDocument::edit_seq` and the count (`sketch::specs::note_polygon_sides`).
+    pub polygon_sides_sent: Option<(u64, u32)>,
 }
 
 /// What a run reads besides the document: the caches and the active plane
@@ -640,17 +644,23 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call,
 /// one path every sketch shape and sketch edit takes (`cad_sketch` too);
 /// the caller has checked `CadDocument::commit_refusal`.
 pub(in crate::cad) fn send_sketch(doc: &mut CadDocument, call: &mut Call, target: SketchTarget, calls: Vec<sim_runtime::cad_client::SketchCall>, label: String) -> Outcome {
-    // The polygon tool's side count follows what was sent (RoboCAD's
-    // `Sketch.last_polygon_sides`).
-    super::sketch::specs::remember_polygon_sides(doc, &calls);
     let message = label.clone();
-    super::actions::edit(doc, call, label, move |c| {
+    // The polygon tool's side count follows a polygon sent with sides once
+    // its edit succeeds (RoboCAD's `Sketch.last_polygon_sides`; `sync::finish_edit`).
+    let sides = super::sketch::specs::polygon_sides_after(&calls);
+    let before = doc.edit_seq;
+    let outcome = super::actions::edit(doc, call, label, move |c| {
         let detail = match &target {
             SketchTarget::Node(id) => c.edit_sketch(id, &calls)?,
             SketchTarget::New { plane } => c.create_sketch(plane, &calls, None)?,
         };
         Ok(EditDone { message, result: value(&detail) })
-    })
+    });
+    if doc.edit.is_some() && doc.edit_seq != before {
+        let seq = doc.edit_seq;
+        super::sketch::specs::note_polygon_sides(doc, sides, seq);
+    }
+    outcome
 }
 
 /// After an edit started: where RoboCAD's handler clears the selection,

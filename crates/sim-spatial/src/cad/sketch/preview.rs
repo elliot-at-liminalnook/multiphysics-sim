@@ -136,12 +136,13 @@ pub(crate) fn preview_curves(calls: &[SketchCall], last_sides: u32) -> Vec<Sketc
 }
 
 /// The preview's polylines (mm, RoboCAD's frame): the calls `_build`
-/// makes from `points` (plane coordinates) with the cursor appended.
+/// makes from `points` (plane coordinates) with the cursor appended; a
+/// polygon with `last_sides`, as the finished one is sent (`finish_action`).
 pub(crate) fn preview_lines(shape: super::SketchShape, points: &[Uv], cursor: Uv, text: &str, last_sides: u32, frame: &PlaneFrame) -> Vec<Vec<[f64; 3]>> {
     let mut pts = points.to_vec();
     pts.push(cursor);
     // RoboCAD's `hover` swallows a builder error (collinear points): no preview.
-    let Ok(calls) = from_points(shape, &pts, text) else { return Vec::new() };
+    let Ok(calls) = from_points(shape, &pts, text, last_sides) else { return Vec::new() };
     preview_curves(&calls, last_sides).iter().map(|c| c.sample(SAMPLES).into_iter().map(|p| frame.to_world(p[0], p[1], 0.0)).collect()).collect()
 }
 

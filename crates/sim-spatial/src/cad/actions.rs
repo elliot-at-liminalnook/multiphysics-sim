@@ -324,7 +324,7 @@ fn refresh(doc: &mut CadDocument) -> Value {
     }
     // Bodies whose mesh failed are fetched again (`mesh::sync`).
     doc.mesh_retry += 1;
-    sync::refresh(doc);
+    sync::refresh(doc, false);
     json!({"message": "Refetching RoboCAD's document."})
 }
 

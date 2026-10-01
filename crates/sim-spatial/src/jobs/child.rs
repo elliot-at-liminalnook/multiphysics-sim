@@ -43,8 +43,8 @@ impl ChildProcess {
 
     /// Non-blocking: None while the process runs; once it has exited (it is
     /// then reaped), "{name} exited ({status})" on this and every later call.
-    /// A failed check is reported too ("could not check whether {name} is
-    /// running: {e}"), and repeated the same way.
+    /// A failed check is logged and answers None (possibly running), so a
+    /// service that may hold unsaved edits is never taken for exited.
     pub fn exited(&mut self) -> Option<String> {
         if self.exit.is_some() {
             return self.exit.clone();
@@ -57,9 +57,11 @@ impl ChildProcess {
                 self.exit = Some(format!("{} exited ({status})", self.name));
                 self.exit.clone()
             }
+            // Unknown is treated as running, and not remembered: a process
+            // that may hold unsaved work must not be taken for exited.
             Err(e) => {
-                self.exit = Some(format!("could not check whether {} is running: {e}", self.name));
-                self.exit.clone()
+                bevy::log::warn!("could not check whether {} (pid {}) is running: {e}", self.name, self.id);
+                None
             }
         }
     }

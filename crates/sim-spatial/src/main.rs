@@ -218,6 +218,10 @@ fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<
         }
         return Ok(());
     }
+    // A malformed or non-loopback URL is refused here, as viewer_mode {url} refuses it, not shown as a lost window.
+    if let CadTarget::Service(url) = &target {
+        sim_runtime::cad_client::CadClient::new(url).map_err(|e| e.to_string())?;
+    }
     let mut documents = documents(args);
     documents.cad = Some(target.clone());
     let models = model_library(args);

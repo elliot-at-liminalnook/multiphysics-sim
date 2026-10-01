@@ -787,7 +787,10 @@ pub(crate) fn arrive(world: &mut World) {
     if let Some(cad) = cad {
         world.resource_mut::<Documents>().cad = Some(cad.target.clone());
         // Not expected (CAD mode is entered from another mode, whose exit took the old one); a guard.
-        if let Some(old) = world.remove_resource::<CadDocument>() {
+        // Its self-started service is released like leave_cad's, so unsaved edits are kept.
+        if let Some(mut old) = world.remove_resource::<CadDocument>() {
+            // release_child logs the URL of a service it leaves running.
+            old.release_child("the replaced CAD document");
             crate::jobs::drop_off_thread(old, "the replaced CAD document");
         }
         world.insert_resource(cad);

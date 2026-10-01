@@ -64,7 +64,10 @@ impl Plugin for CadCorePlugin {
                     .run_if(in_state(ViewerMode::Cad)),
             )
             // At window close, a self-started service is stopped (or left running with unsaved edits).
-            .add_systems(Last, sync::on_exit);
+            // After ExitSystems, which writes AppExit in Last: before it, the
+            // message would be read only on a frame that never comes, and the
+            // dropped World would kill a dirty service instead of detaching it.
+            .add_systems(Last, sync::on_exit.after(bevy::window::ExitSystems));
     }
 }
 

@@ -6,7 +6,7 @@
 //!   beside the view): the source by RoboCAD's `activate` rule ([`source`]).
 //!   Never refused: RoboCAD refuses at apply ("Select a sketch or closed
 //!   curve first"); `invoke` shows the hint.
-//! - **Source** ([`source`]): the last selected node whose kind is sketch,
+//! - **Source** ([`source`]): the last selection item's node of kind sketch,
 //!   curve or sheet; else the first effectively visible sketch with curves
 //!   in the shown tree. A sketch's curves are known only once the sketch
 //!   cache (`CadSketches`) has read it at the shown revision: an unread
@@ -130,8 +130,10 @@ pub struct ExtrudeState {
 pub(in crate::cad) fn build(app: &mut App) {
     app.add_systems(
         Update,
-        // After the camera snapshot (this frame's view) and the mesh sync, as the other CAD tools.
-        pointer.after(crate::cad::view::update).after(crate::cad::mesh::sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+        // After the camera snapshot (this frame's view), the mesh sync and the
+        // sketch cache and active plane (`cache::sync` then `plane::sync`), so
+        // a press never reads the previous revision's sketch or plane.
+        pointer.after(crate::cad::view::update).after(crate::cad::mesh::sync).after(crate::cad::sketch::plane::sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
     )
     .add_systems(Update, draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
@@ -143,26 +145,22 @@ fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
     doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).map(|n| n.kind.as_str())
 }
 
-/// The selected nodes, each once, in selection order (RoboCAD's `Selection.nodes()`).
-fn selected_nodes(items: &[SelectionItem]) -> Vec<String> {
-    let mut out: Vec<String> = Vec::new();
-    for SelectionItem(node, _, _) in items {
-        if !out.contains(node) {
-            out.push(node.clone());
-        }
-    }
-    out
+/// [`source`] over the document's selection items as they are (RoboCAD's
+/// `activate` loops `selection.items`, ui/tools.py:837-840).
+fn selection_source(doc: &CadDocument, sketches: Option<&CadSketches>) -> ExtrudeSource {
+    let items: Vec<&str> = doc.selection.iter().map(|SelectionItem(node, _, _)| node.as_str()).collect();
+    source(doc, &items, sketches)
 }
 
 /// RoboCAD's `ExtrudeTool.activate` source rule (ui/tools.py:837-842) on
-/// the selected nodes `nodes` (selection order): the last of kind sketch,
-/// curve or sheet; else the first effectively visible sketch with curves
+/// the selection items' nodes `nodes` (selection order, a node once per
+/// item): the last item of kind sketch, curve or sheet wins; else the first effectively visible sketch with curves
 /// (`n.sketch.curves`), its curves read from `sketches` at the shown
 /// revision. An unread (or unreadable) sketch met before one with curves is
 /// `Reading`: the rule cannot be decided without it.
-pub fn source(doc: &CadDocument, nodes: &[String], sketches: Option<&CadSketches>) -> ExtrudeSource {
-    if let Some(id) = nodes.iter().rev().find(|n| kind_of(doc, n).is_some_and(|k| SOURCE_KINDS.contains(&k))) {
-        return ExtrudeSource::Node(id.clone());
+pub fn source<S: AsRef<str>>(doc: &CadDocument, nodes: &[S], sketches: Option<&CadSketches>) -> ExtrudeSource {
+    if let Some(id) = nodes.iter().map(AsRef::<str>::as_ref).rev().find(|n| kind_of(doc, n).is_some_and(|k| SOURCE_KINDS.contains(&k))) {
+        return ExtrudeSource::Node(id.to_string());
     }
     let Some(state) = &doc.doc else { return ExtrudeSource::Nothing };
     for n in state.nodes.iter().filter(|n| n.kind == "sketch" && n.effective_visible) {
@@ -240,8 +238,7 @@ fn source_plane(doc: &CadDocument, source: &ExtrudeSource, sketches: Option<&Cad
 /// `Flow::Extrude` starts: RoboCAD's `ExtrudeTool.activate` (the source;
 /// the height 10). Never refused: RoboCAD refuses at apply.
 pub(in crate::cad) fn begin(doc: &mut CadDocument, env: &Env, revolve: bool) -> Result<(), String> {
-    let nodes = selected_nodes(&doc.selection);
-    let source = source(doc, &nodes, env.sketches);
+    let source = selection_source(doc, env.sketches);
     doc.ops.extrude = Some(ExtrudeState { revolve, source, height: START_HEIGHT, drag: None });
     Ok(())
 }
@@ -254,7 +251,10 @@ fn number(values: &Map<String, Value>, name: &str) -> Result<f64, String> {
 
 /// `Shape::Extrude`: RoboCAD's `ExtrudeTool._apply` (ui/tools.py:910-924)
 /// on the run's selection (`r.nodes`, the selection or a REST run's items):
-/// the source by [`source`]; the boolean from `values["boolean"]` against
+/// the source by [`source`] (known gap: `r.nodes` holds each node once, at
+/// its first item, so a node selected again later, e.g. [s1 face, c1, s1
+/// face], loses to c1 here where RoboCAD's last item wins; `Resolved` does
+/// not carry the raw items); the boolean from `values["boolean"]` against
 /// [`body_under_selection`], "new" with no target when there is none
 /// (RoboCAD's `mods & Shift and target`). Extrude: `extrude(source,
 /// distance, None, taper, False, op, target)`; revolve: `revolve(source,
@@ -305,12 +305,15 @@ struct Pointer {
     /// A command surface was open at the end of the last frame's SimSync,
     /// i.e. when this frame's Input saw the press.
     surface_open: bool,
-    /// The unread sketch the status last named. Kept while the fallback
-    /// source resolves (so the same sketch re-read at a later revision,
-    /// e.g. after the run's own edit, does not overwrite the run's
-    /// message); cleared when the selection supplies the source or the
-    /// tool ends.
+    /// The sketch the status last named as unread, or the last known
+    /// source: that sketch re-read at a later revision (e.g. after the
+    /// run's own edit) is not news. Cleared when the tool ends.
     announced: Option<String>,
+    /// The selection last looked at (None when the tool is not active).
+    /// An unread sketch is announced only on the tool's first frame or a
+    /// selection change, never when a new revision alone makes the source
+    /// unread: that would overwrite a finished edit's status.
+    selection: Option<Vec<SelectionItem>>,
 }
 
 /// RoboCAD's readout for a revolve press: its release revolves 360°.
@@ -355,25 +358,29 @@ fn pointer(
             doc.tool_state.readout = None;
         }
         state.announced = None;
+        state.selection = None;
         return;
     };
     let sketches = sketches.as_deref();
     let mut tool = before.clone();
     tool.revolve = revolve;
 
-    // The source follows the selection; an unread sketch is named once in
-    // the status (not again when the same sketch is re-read at a new
-    // revision, which would overwrite the run's own message).
-    let selected = selected_nodes(&doc.selection);
-    tool.source = source(&doc, &selected, sketches);
+    // The source follows the selection. An unread sketch is named in the
+    // status when the tool starts or the selection changes, with no edit in
+    // flight, and not when it is the sketch last named or the last known
+    // source (see `Pointer`); a press on it is refused by the run anyway.
+    tool.source = selection_source(&doc, sketches);
+    let fresh = state.selection.as_ref() != Some(&doc.selection);
+    if fresh {
+        state.selection = Some(doc.selection.clone());
+    }
     match &tool.source {
-        ExtrudeSource::Reading(id) if state.announced.as_ref() != Some(id) => {
+        ExtrudeSource::Reading(id) if fresh && doc.edit.is_none() && state.announced.as_ref() != Some(id) => {
             let why = unread(&doc, id, sketches);
             doc.show(Ok(format!("{} • {why}", e.hint)));
             state.announced = Some(id.clone());
         }
-        // The selection supplies the source: a later fallback is news again.
-        ExtrudeSource::Node(id) if selected.contains(id) => state.announced = None,
+        ExtrudeSource::Node(id) if state.announced.as_ref() != Some(id) => state.announced = Some(id.clone()),
         _ => {}
     }
 
@@ -656,7 +663,11 @@ mod tests {
         let ids = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
         assert_eq!(source(&doc, &ids(&["c1", "sk1", "b1"]), None), ExtrudeSource::Node("sk1".into()));
         assert_eq!(source(&doc, &ids(&["sk1", "s1"]), None), ExtrudeSource::Node("s1".into()));
-        assert_eq!(selected_nodes(&[SelectionItem("s1".into(), "face".into(), 2), SelectionItem("c1".into(), "body".into(), 0), SelectionItem("s1".into(), "face".into(), 3)]), ids(&["s1", "c1"]));
+        // The last matching item wins, a node selected again included (RoboCAD loops `selection.items`).
+        assert_eq!(source(&doc, &["s1", "c1", "s1"], None), ExtrudeSource::Node("s1".into()));
+        let mut picked = model();
+        picked.selection = vec![SelectionItem("s1".into(), "face".into(), 2), SelectionItem("c1".into(), "body".into(), 0), SelectionItem("s1".into(), "face".into(), 3)];
+        assert_eq!(selection_source(&picked, None), ExtrudeSource::Node("s1".into()));
 
         let tree = document(vec![node("hidden", "sketch", "Hidden", false), node("empty", "sketch", "Empty", true), node("sk2", "sketch", "Sketch 2", true), node("b1", "body", "Body", true)]);
         let mut cache = CadSketches::default();

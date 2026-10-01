@@ -3,7 +3,8 @@
 //!
 //! - **Tool** (M): the pointer snaps as RoboCAD's (`snap::snap_on`: the
 //!   drawn bodies' and visible sketches' candidates, projected onto the
-//!   active plane while 2D snapping is on); hovering shows
+//!   active plane while 2D snapping is on; a press is refused while that
+//!   plane node's frame is being read); hovering shows
 //!   the snap marker and the readout ("vertex  (x, y, z)"; with a first pick
 //!   held, "12.5 mm  (vertex)"). A press picks: the item under the cursor in
 //!   the selection mode (a face or body by ray cast, an edge or vertex
@@ -267,6 +268,11 @@ pub(super) fn tool(
         doc.tool_state.readout = Some(readout);
     }
     if !buttons.is_some_and(|b| b.just_pressed(MouseButton::Left)) {
+        return;
+    }
+    // The hover skips projection while the active plane node is being read; a press refuses (no off-plane point).
+    if let Err(why) = snap::press_snap_plane(plane.as_deref()) {
+        doc.show(Err(why));
         return;
     }
     let hit = ray_hit(&doc, &mut cast, &view, cursor, &bodies);

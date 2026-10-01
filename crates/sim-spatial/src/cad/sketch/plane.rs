@@ -33,7 +33,10 @@
 //!   writes one `CadRun` (faces as `items` with the revision they were
 //!   picked at; points as the "x, y, z" parameters a, b, c; the camera's
 //!   direction is the view's at the run, `Arg::ViewDir`), clears the picks
-//!   and stays active, as RoboCAD's tool does. A face pick from an older
+//!   and stays active, as RoboCAD's tool does. A run that `commit_refusal`
+//!   would refuse is not sent: the earlier picks are kept and the reason
+//!   shown. A point pick while 2D snapping is on and the active plane node
+//!   is being read is refused (`snap::press_snap_plane`). A face pick from an older
 //!   revision is dropped before the next is added (its index may name
 //!   another face now). The picks are drawn as markers ([`draw`], Present).
 //! - [`state_json`]: `cad_state.plane`.
@@ -63,8 +66,9 @@ const SET: &str = "Active plane set";
 pub(in crate::cad) fn build(app: &mut App) {
     app.add_systems(
         Update,
-        // After this frame's camera snapshot and the drawn bodies (the picks read both).
-        picks.after(crate::cad::view::update).after(crate::cad::mesh::sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+        // After this frame's camera snapshot, the drawn bodies and the sketch
+        // cache and active plane (`cache::sync` then `sync`): the picks read all of them.
+        picks.after(crate::cad::view::update).after(crate::cad::mesh::sync).after(sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
     )
     .add_systems(Update, draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
@@ -315,25 +319,40 @@ fn picks(
                 Some((_, c)) => c,
                 None => &[],
             };
-            // RoboCAD's `ctx.snap(pos)`: no Alt, the active plane only with 2D snapping on.
-            let on = snap::snap_plane(plane.as_deref());
+            // RoboCAD's `ctx.snap(pos)`: no Alt, the active plane only with 2D
+            // snapping on (refused while that plane node is being read).
+            let on = match snap::press_snap_plane(plane.as_deref()) {
+                Ok(on) => on,
+                Err(why) => {
+                    doc.show(Err(why));
+                    return;
+                }
+            };
             let Some(s) = snap::snap_on(&view, cursor, candidates, false, on.as_ref()) else { return };
             // The f64 point: a vertex or sketch endpoint exactly as RoboCAD gave it.
             PlanePick::Point(s.exact)
         }
     };
-    let ops = &mut doc.ops;
     // A face picked at an older revision may name another face now.
-    ops.plane_picks.retain(|p| !matches!(p, PlanePick::Face { revision, .. } if *revision != shown));
-    ops.plane_picks.push(pick);
-    let n = ops.plane_picks.len();
-    match run_for(id, mode, &ops.plane_picks) {
+    doc.ops.plane_picks.retain(|p| !matches!(p, PlanePick::Face { revision, .. } if *revision != shown));
+    let mut next = doc.ops.plane_picks.clone();
+    next.push(pick);
+    let n = next.len();
+    match run_for(id, mode, &next) {
         Some(run) => {
+            // A run that would be refused (edit in flight, not connected, stale,
+            // faces from another revision) keeps the earlier picks: the last is picked again.
+            let faces = matches!(mode, PlaneMode::Face | PlaneMode::Mid);
+            if let Some(why) = doc.commit_refusal(faces.then_some(shown)) {
+                doc.show(Err(format!("{why} (picks so far kept: {} of {}; pick the last again)", n - 1, needed(mode))));
+                return;
+            }
             // The tool stays active with no picks (RoboCAD's `self.picks = []`).
-            ops.plane_picks.clear();
+            doc.ops.plane_picks.clear();
             out.write(Act::ui(run));
         }
         None => {
+            doc.ops.plane_picks = next;
             let hint = entry(id).map_or("", |e| e.hint);
             doc.show(Ok(format!("{hint} ({n} of {})", needed(mode))));
         }

@@ -5,9 +5,10 @@
 //! serial chains of links hanging off it through the joints, servos on
 //! every joint held to the CAD pose by a PD loop on the seam, and
 //! compliant point contacts under the root and at every chain tip — and
-//! runs it. The viewer (`sim-app --scene cad --model file`) draws the
-//! outlines in their simulated poses and rebuilds whenever the file
-//! changes, which closes the loop: edit in CAD, save, watch.
+//! runs it. The viewer (`sim-spatial --robot FILE`, robot mode) builds it
+//! through [`build_planar`] on its run thread, draws the outlines in their
+//! simulated poses and rebuilds whenever the file changes, which closes the
+//! loop: edit in CAD, save, watch.
 
 use crate::world::{damped_runtime, registry};
 pub use super::cad_physical::{run_physical, BuildOptions, PhysicalRobot};
@@ -490,6 +491,18 @@ impl CadRobot {
     }
 }
 
+/// The PD gains every planar (v2) build uses: bandwidth (Hz) and damping
+/// ratio of each joint's hold, sized by the inertia it carries.
+pub const PLANAR_BANDWIDTH_HZ: f64 = 6.0;
+pub const PLANAR_DAMPING_RATIO: f64 = 1.0;
+
+/// The one planar (v2) build every caller shares (the viewer, [`AnyRobot::load`]
+/// and [`run_file`]): [`CadRobot::build`] against the shared registry with
+/// [`PLANAR_BANDWIDTH_HZ`] and [`PLANAR_DAMPING_RATIO`].
+pub fn build_planar(model: CadModel) -> Result<CadRobot, String> {
+    CadRobot::build(model, &registry(), PLANAR_BANDWIDTH_HZ, PLANAR_DAMPING_RATIO)
+}
+
 /// Either generation of exported model: the planar summary (v2) or the
 /// physical description (v3).
 pub enum AnyRobot {
@@ -507,13 +520,12 @@ pub fn file_version(path: &str) -> Result<u32, String> {
 
 impl AnyRobot {
     pub fn load(path: &str, opts: &BuildOptions) -> Result<Self, String> {
-        let registry = registry();
         if file_version(path)? >= 3 {
             let model = PhysicalModel::load(path)?;
-            Ok(Self::Physical(PhysicalRobot::build(model, &registry, opts)?))
+            Ok(Self::Physical(PhysicalRobot::build(model, &registry(), opts)?))
         } else {
             let model = CadModel::load(path)?;
-            Ok(Self::Planar(CadRobot::build(model, &registry, 6.0, 1.0)?))
+            Ok(Self::Planar(build_planar(model)?))
         }
     }
     pub fn advance(&mut self, duration: f64) -> Result<(), String> {
@@ -561,8 +573,7 @@ pub fn run_file(path: &str, seconds: f64) -> Result<String, String> {
         return run_physical(path, seconds, &BuildOptions::default(), None);
     }
     let model = CadModel::load(path)?;
-    let registry = registry();
-    let mut robot = CadRobot::build(model, &registry, 6.0, 1.0)?;
+    let mut robot = build_planar(model)?;
     let mut lines = vec![format!("{} bodies, {} joints, root `{}`{}", robot.model.bodies.len(), robot.joint_names.len(), robot.model.bodies[robot.root].name, if robot.root_fixed { " (fixed)" } else { "" })];
     let steps = (seconds / 0.1).ceil() as usize;
     for k in 0..=steps {

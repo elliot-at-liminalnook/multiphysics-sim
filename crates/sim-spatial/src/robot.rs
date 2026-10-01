@@ -8,6 +8,10 @@
 //! the preset's shared EmbeddedEnvironment/EmbeddedSession (`robot_preset`).
 //! A FILE is watched and reloaded on change or Reload (`robot_source`); a
 //! reload replaces the model and starts a fresh run context.
+//! A planar (v2) FILE, which `PhysicalModel` refuses, is read as
+//! sim-phenomena's `CadModel` by the shared version rule and run through the
+//! shared planar build on its own run thread (`robot_planar`); every action
+//! without a v2 meaning is refused naming it.
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
 use crate::ui_kit::{ACCENT, Corner, DANGER, Dock, Kit, Look, SUBTLE, TEXT, Tint, UiFonts, WARN, size, wheel_delta, wrap};
@@ -30,7 +34,8 @@ use sim_domain_robot::cad_link::{self, CadLinkStatus};
 use crate::robot_preset::{Preset, PresetRun, RecordedRun};
 use crate::robot_motion;
 use crate::robot_recording;
-use crate::robot_source::{self, SourceWatch, Trigger as ReloadTrigger};
+use crate::robot_source::{self, FileModel, SourceWatch, Trigger as ReloadTrigger};
+use crate::robot_planar::{self, PlanarView};
 use crate::robot_stress::{self, StressOverlay};
 use crate::robot_gait::{self, GaitAction, GaitSource};
 use crate::robot_playback::{self, RecordedAction};
@@ -86,9 +91,10 @@ pub struct FileNotes {
     pub uncertainty: Value,
 }
 
-/// The shared loader plus triangulation, file notes and the CAD link status
-/// (which hashes the CAD file); called on the worker thread (and by
-/// `--validate-only`). Errors name the path.
+/// The shared physical (v3+) loader plus triangulation, file notes and the
+/// CAD link status (which hashes the CAD file); a planar (v2) file is refused
+/// here by `PhysicalModel::parse` ([`load_file`] / [`load_file_bytes`] accept
+/// both and are what `--robot FILE` uses). Errors name the path.
 pub fn load(path: &Path) -> Result<Loaded, String> {
     let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     load_bytes(path, &bytes)
@@ -104,6 +110,30 @@ pub fn load_bytes(path: &Path, bytes: &[u8]) -> Result<Loaded, String> {
     let raw: Value = serde_json::from_str(&text).map_err(|e| format!("{name}: {e}"))?;
     Ok(loaded(model, &raw, path))
 }
+
+/// The `--robot FILE` loader (the first open and every reload, `robot_source`):
+/// a JSON object whose version (`simrobot_version`, the shared rule) is below
+/// `FIRST_PHYSICAL_VERSION` is a planar (v2) summary, read as sim-phenomena's
+/// `CadModel` from the same bytes (`robot_planar::load_bytes`); anything else
+/// goes through [`load_bytes`] (`PhysicalModel`), so its errors are unchanged.
+pub fn load_file_bytes(path: &Path, bytes: &[u8]) -> Result<FileModel, String> {
+    if let Ok(raw @ Value::Object(_)) = serde_json::from_slice::<Value>(bytes) {
+        if sim_domain_robot::model::simrobot_version(&raw) < sim_domain_robot::model::FIRST_PHYSICAL_VERSION {
+            return robot_planar::load_bytes(path, bytes, &raw).map(|p| FileModel::Planar(Box::new(p)));
+        }
+    }
+    load_bytes(path, bytes).map(|l| FileModel::Physical(Box::new(l)))
+}
+/// [`load_file_bytes`] on the file at `path` (`--validate-only` for either version).
+pub fn load_file(path: &Path) -> Result<FileModel, String> {
+    let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    load_file_bytes(path, &bytes)
+}
+
+/// `robot_state.format` for a physical model (a v3+ file or a preset scene's robot).
+pub const PHYSICAL_FORMAT_NAME: &str = "physical v3";
+/// Shown for a planar file's pose (`robot_state.pose`).
+pub const PLANAR_POSE: &str = "planar v2: outlines from the planar run thread's latest frame (CadRobot::outlines, see planar.frame); t = 0 of each generation is the CAD pose";
 
 /// The loader's second half, shared by a `.simrobot.json` file and a preset
 /// scene's `robot` (`raw` is that robot's JSON as stored; `path` is the file
@@ -205,6 +235,9 @@ pub struct RobotView {
     /// poses are drawn instead of the run's frame and its leg is tinted blue;
     /// Run is refused (the page's `setPlaying` refuses to play while mirroring).
     mirror: Option<hardware::MirrorDisplay>,
+    /// `--robot FILE` with a planar (v2) file: its summary and planar run
+    /// (`model` and `run` are None then; `selected` indexes its bodies).
+    planar: Option<PlanarView>,
 }
 impl RobotView {
     /// Starts the worker load; the window opens without waiting for it.
@@ -313,9 +346,18 @@ impl RobotView {
             notice: None,
             stress: StressOverlay::default(),
             mirror: None,
+            planar: None,
         }
     }
+    /// A planar (v2) file is displayed (`robot_planar`).
+    pub(crate) fn is_planar(&self) -> bool {
+        self.planar.is_some()
+    }
+    /// The selected link's name (a body's for a planar file).
     fn link_name(&self, i: usize) -> Option<&str> {
+        if let Some(p) = &self.planar {
+            return p.loaded.model.bodies.get(i).map(|b| b.name.as_str());
+        }
         self.model.as_ref()?.links.get(i).map(|l| l.name.as_str())
     }
     pub fn state_json(&self) -> Value {
@@ -324,6 +366,9 @@ impl RobotView {
             Status::Loaded { seconds } => ("loaded", None, Some(*seconds)),
             Status::Error(e) => ("error", Some(e.clone()), None),
         };
+        if let Some(p) = &self.planar {
+            return self.planar_state_json(p, status, error, seconds);
+        }
         let links: Vec<Value> = self
             .model
             .iter()
@@ -368,7 +413,8 @@ impl RobotView {
             json!({"label": JOG_LABEL, "semantics": JOG_SEMANTICS, "control_mode": m.control.mode, "trajectory_keyframes": m.control.trajectory.len(),
                 "step_rad": JOG_STEP_RAD, "step_m": JOG_STEP_M, "selected_link_joints": selected, "joints": joints, "last_apply_error": r.jog_error()})
         });
-        let mut out = json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds,
+        let format = m.map(|m| json!({"version": m.version, "name": PHYSICAL_FORMAT_NAME, "model": "sim_domain_robot::PhysicalModel (run by sim_runtime::physical::PhysicalRobot for --robot FILE)"}));
+        let mut out = json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds, "format": format,
             "link_count": m.map(|m| m.links.len()), "links": links, "selected": selected,
             "joints": joints, "motors": motors, "transmissions": m.map(|m| &m.transmissions), "battery": m.and_then(|m| m.battery.as_ref()),
             "actuator_profiles": profiles, "uncertainty": m.map(|_| &self.notes.uncertainty), "uncertainty_parsed": m.map(|m| &m.uncertainty), "identification": m.map(|m| &m.identification),
@@ -393,6 +439,28 @@ impl RobotView {
             o.insert("stress".into(), stress);
         }
         out
+    }
+    /// `robot_state` for a planar (v2) file: the shared fields, `format`
+    /// (version, name, fidelity, build warnings), the planar summary and run,
+    /// and every v3-only block null with `unavailable` naming why.
+    fn planar_state_json(&self, p: &PlanarView, status: &str, error: Option<String>, seconds: Option<f64>) -> Value {
+        let planar = p.json(self.selected);
+        let selected = planar["selected_body"].clone();
+        let f = p.run.frame().filter(|f| f.built);
+        let jog: Vec<Value> = f.map(|f| f.joint_names.iter().enumerate().map(|(i, n)| json!({"index": i, "name": n, "angle_rad": f.joint_angles.get(i), "target_rad": f.targets.get(i)})).collect::<Vec<Value>>()).unwrap_or_default();
+        let refusals: serde_json::Map<String, Value> = robot_planar::UNAVAILABLE.iter().map(|(k, why)| (k.to_string(), json!(why))).collect();
+        json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds,
+            "format": p.format_json(), "planar": planar, "link_count": Value::Null, "links": [], "selected": selected,
+            "joints": Value::Null, "motors": Value::Null, "transmissions": Value::Null, "battery": Value::Null, "actuator_profiles": Value::Null, "uncertainty": Value::Null,
+            "uncertainty_parsed": Value::Null, "identification": Value::Null, "materials": Value::Null, "source": Value::Null, "cad_link": Value::Null,
+            "source_file": self.source.as_ref().map(|s| s.json(true)), "notice": self.notice,
+            "provenance_rule": "a planar v2 summary carries no per-value provenance: masses, centres, planar inertias and outlines are RoboCAD's geometry-derived export values, shown as stored",
+            "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
+            "pose": PLANAR_POSE, "read_only": true, "stepped": f.is_some_and(|f| f.steps > 0), "run": p.run.json(),
+            "jog": {"label": "planar v2 joint target", "rule": robot_planar::JOG_RULE, "selected_joint": p.selected_joint_name(), "joints": jog},
+            "preset": Value::Null, "motion": Value::Null, "recording": Value::Null, "recordings": Value::Null, "replay": Value::Null, "gait_preview": Value::Null,
+            "graphs": {"visible": false, "available": false, "reason": robot_planar::GRAPHS}, "overlays": p.overlays_json(), "unavailable": refusals,
+            "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
     }
 }
 
@@ -437,6 +505,10 @@ const OVERLAYS: [(&str, &str, KeyCode); 4] =
     [("contacts", "Contacts", KeyCode::KeyC), ("joints", "Joint frames", KeyCode::KeyJ), ("deflections", "Deflections", KeyCode::KeyF), ("stress", "Stress", KeyCode::KeyH)];
 const STRESS_PRESET: &str = "the stress overlay is not available for presets: it reads the .simresult.json beside a --robot FILE model (sim_runtime::physical::results_path); a preset scene has no results file";
 fn overlay_on(view: &RobotView, kind: &str) -> bool {
+    if let Some(p) = &view.planar {
+        // A planar file draws only the chain-tip contacts.
+        return kind == "contacts" && p.contacts;
+    }
     let flags = view.run.as_ref().map_or_else(OverlayFlags::default, RunController::overlays);
     match kind {
         "contacts" => flags.contacts,
@@ -451,6 +523,10 @@ fn overlay_on(view: &RobotView, kind: &str) -> bool {
 /// selection state is needed. Joints without a servo target stay listed,
 /// disabled with the reason.
 fn jog_joints(view: &RobotView) -> Vec<(String, f64)> {
+    if let Some(p) = &view.planar {
+        // A planar file: every simulated joint (planar models are small), by built order.
+        return p.joint_names().iter().map(|j| (j.clone(), JOG_STEP_RAD)).collect();
+    }
     if view.preset.is_some() {
         // A preset's joints are driven by its declared controller: no servo-target jog.
         return Vec::new();
@@ -617,9 +693,9 @@ impl Plugin for RobotPlugin {
                 Update,
                 (
                     // Keys and buttons write robot actions after REST's, as the old chain applied them.
-                    (actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::buttons).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input),
+                    (actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input),
                     actions::apply.in_set(ViewerSet::Actions),
-                    (watch, receive, stress_paint, apply_frames, scroll, orbit, viewport, highlight).chain().in_set(ViewerSet::SimSync),
+                    (watch, receive, stress_paint, apply_frames, planar_sync, scroll, orbit, viewport, highlight).chain().in_set(ViewerSet::SimSync),
                     (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),
@@ -646,7 +722,8 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     // UI over the whole window; the 3D camera only draws the middle viewport.
     commands.spawn((Camera2d, Camera { order: 3, clear_color: ClearColorConfig::None, ..default() }, IsDefaultUiCamera));
     commands.spawn((DirectionalLight { illuminance: 9000.0, shadow_maps_enabled: false, ..default() }, Transform::from_xyz(1.0, 2.0, 1.5).looking_at(Vec3::ZERO, Vec3::Y)));
-    // Z-up model frame shown in Bevy's Y-up frame (as sim-app does).
+    // Z-up model frame shown in Bevy's Y-up frame: model (x, y, z) → display (x, z, −y)
+    // (a planar v2 file's working plane is the model's XZ plane, drawn at display z = 0, `robot_planar::display`).
     commands.spawn((Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)), Visibility::default(), RobotRoot));
     let file = view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
     // The header: title and status line (both rewritten by `panels`).
@@ -812,7 +889,7 @@ fn receive(
         let Some(loaded) = settled else {
             // Unchanged, or failed: the displayed model, meshes, run and selection stay.
             let failing = source.failing.clone();
-            match (failing, view.model.is_some()) {
+            match (failing, view.model.is_some() || view.planar.is_some()) {
                 (Some(e), false) => view.status = Status::Error(e),
                 (Some(_), true) => view.notice = Some(format!("{} reload failed: showing the last good model (see header)", if trigger == ReloadTrigger::Watch { "watched" } else { "manual" })),
                 (None, _) if trigger == ReloadTrigger::Manual => view.notice = Some("manual reload: file unchanged (same sha256); nothing replaced".into()),
@@ -823,8 +900,15 @@ fn receive(
             return;
         };
         // The first successful load (open, or a watch after a failed open) is not a reload.
-        let reload = view.model.is_some().then_some((trigger, seconds));
-        (Ok((*loaded, None)), reload)
+        let reload = (view.model.is_some() || view.planar.is_some()).then_some((trigger, seconds));
+        match loaded {
+            FileModel::Physical(loaded) => (Ok((*loaded, None)), reload),
+            FileModel::Planar(loaded) => {
+                let k = Kit { f: &fonts };
+                install_planar(&mut commands, &old, &mut view, *list, &k, *loaded, reload, started);
+                return;
+            }
+        }
     };
     // A reopened robot (REST robot_preset) or a reloaded file replaces the previous meshes and rows.
     for entity in &old {
@@ -897,14 +981,28 @@ fn receive(
     commands.entity(*list).add_children(&rows);
     // A file's previous run context is discarded (its thread stops) and the
     // fresh one continues its generation; a preset opens a new view.
+    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
+    // A reload that turns a planar (v2) file into a physical one: the planar run
+    // is joined off the UI thread; its speed and contacts choice carry over.
+    let planar = view.planar.take().map(|p| (p.run.speed_scale(), p.contacts, p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == robot_planar::PlanarPhase::Running, p));
     let previous = view.run.take();
-    let (run, run_reset) = match preset {
+    let (mut run, mut run_reset) = match preset {
         Some(Opened::Preset(run)) => (RunController::spawn_preset(std::sync::Arc::new(run)), false),
         Some(Opened::Recorded(run)) => (RunController::spawn_recorded(std::sync::Arc::new(run)), false),
         None => RunController::replace(previous, loaded.model.clone()),
     };
+    if let Some((speed, contacts, had_run, replaced)) = planar {
+        crate::jobs::drop_off_thread(replaced, "the planar v2 run");
+        run_reset |= had_run;
+        if speed != run.speed_scale() {
+            let _ = run.speed(SpeedRequest::Set { scale: speed });
+        }
+        let flags = run.overlays();
+        if flags.contacts != contacts {
+            let _ = run.set_overlays(OverlayFlags { contacts, ..flags });
+        }
+    }
     let generation = run.generation();
-    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
     view.run = Some(run);
     view.selected = kept.as_ref().and_then(|n| loaded.model.links.iter().position(|l| &l.name == n));
     view.model = Some(loaded.model);
@@ -931,6 +1029,122 @@ fn receive(
     }
     view.ui_revision += 1;
     view.panels_ready = true;
+}
+
+/// Installs a planar (v2) file from `receive` (`robot_source`'s loaded
+/// outcome): the previous meshes and rows go, a previous physical run (or
+/// planar run) is joined off the UI thread, the v3 state is cleared and a
+/// planar run thread starts (it builds at once and waits paused at t = 0).
+/// The selection is kept by body/link name; speed and contacts carry over.
+#[allow(clippy::too_many_arguments)]
+fn install_planar(
+    commands: &mut Commands,
+    old: &Query<Entity, Or<(With<LinkMesh>, With<LinkRow>)>>,
+    view: &mut RobotView,
+    list: Entity,
+    k: &Kit<'_>,
+    loaded: robot_planar::PlanarLoaded,
+    reload: Option<(ReloadTrigger, f64)>,
+    started: std::time::Instant,
+) {
+    for entity in old {
+        commands.entity(entity).despawn();
+    }
+    let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
+    let (mut speed, mut contacts, mut generation, mut run_reset, mut joint) = (1.0, true, 0, false, 0);
+    if let Some(run) = view.run.take() {
+        (speed, contacts, run_reset) = (run.speed_scale(), run.overlays().contacts, run.has_run_state());
+        generation = run.generation() + 1;
+        crate::jobs::drop_off_thread(run, "the robot run (replaced by a planar v2 file)");
+    }
+    if let Some(p) = view.planar.take() {
+        (speed, contacts, joint) = (p.run.speed_scale(), p.contacts, p.selected_joint);
+        run_reset = p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == robot_planar::PlanarPhase::Running;
+        generation = p.run.generation() + 1;
+        crate::jobs::drop_off_thread(p, "the planar v2 run");
+    }
+    // The v3 state: nothing of it describes a planar file.
+    view.model = None;
+    view.triangles.clear();
+    view.notes = FileNotes::default();
+    view.cad_link = None;
+    view.mirror = None;
+    view.graphs_visible = false;
+    if view.stress.enabled {
+        view.stress.enabled = false;
+        view.stress.revision += 1;
+    }
+    let rows: Vec<Entity> = loaded
+        .model
+        .bodies
+        .iter()
+        .enumerate()
+        .map(|(i, b)| {
+            let name = if b.ground { format!("{}  (ground: fixed root)", b.name) } else { b.name.clone() };
+            commands
+                .spawn((
+                    Button,
+                    RobotAction::SelectLink { index: i, name: b.name.clone() },
+                    LinkRow(i),
+                    Tint::selectable(false),
+                    AccessibleLabel::new(name.as_str()),
+                    Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)), flex_shrink: 0.0, ..default() },
+                    BackgroundColor(Color::NONE),
+                    children![k.text(name.as_str(), size::ITEM, TEXT, 0)],
+                ))
+                .id()
+        })
+        .collect();
+    commands.entity(list).add_children(&rows);
+    view.selected = kept.as_ref().and_then(|n| loaded.model.bodies.iter().position(|b| &b.name == n));
+    let mut planar = PlanarView::new(loaded, generation, speed, contacts, reload.is_none());
+    planar.selected_joint = joint;
+    view.planar = Some(planar);
+    view.run_message = None;
+    view.pose_dirty = false;
+    view.status = Status::Loaded { seconds: reload.map_or_else(|| started.elapsed().as_secs_f64(), |(_, s)| s) };
+    if let Some((trigger, _)) = reload {
+        let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
+        let run = if run_reset { "run reset" } else { "no run to reset" };
+        let selection = match (&kept, view.selected) {
+            (Some(n), Some(_)) => format!("; selection kept: {n}"),
+            (Some(n), None) => format!("; selection cleared: `{n}` is not a body of the new file"),
+            (None, _) => String::new(),
+        };
+        view.notice = Some(format!("reloaded ({}): {reason}; {run}; generation {generation}{selection}", robot_planar::FORMAT_NAME));
+        if let Some(s) = view.source.as_mut() {
+            s.run_reset = Some(run_reset);
+        }
+    }
+    view.ui_revision += 1;
+    view.panels_ready = true;
+}
+
+/// SimSync, a planar (v2) file: takes the planar run thread's latest frame
+/// (never one of an older generation), keeps the window redrawing while
+/// frames are expected, and frames the camera on the first built frame of an
+/// open (front view of the working plane) or a reload (extent only).
+fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
+    // Checked through a shared borrow first: a physical view is not marked changed.
+    if view.planar.is_none() {
+        return;
+    }
+    let Some(p) = view.planar.as_mut() else { return };
+    p.run.poll();
+    if p.run.active() {
+        redraw.write(bevy::window::RequestRedraw);
+    }
+    let Some(move_focus) = p.frame_camera else { return };
+    let Some((lo, hi)) = p.run.frame().filter(|f| f.built).and_then(robot_planar::bounds) else { return };
+    p.frame_camera = None;
+    orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
+    if move_focus {
+        orbit.focus = (lo + hi) / 2.0;
+        // Looking along −Z: x right, y up, as the plane is drawn.
+        orbit.yaw = 0.0;
+        orbit.pitch = 0.12;
+        orbit.home = true;
+    }
 }
 
 /// Takes the run thread's latest frame (stale generations are discarded in
@@ -1030,7 +1244,11 @@ fn highlight(
     mut runs: Query<(&RunButton, &mut Enabled)>,
 ) {
     for (button, enabled) in &mut runs {
-        enable(enabled, view.run.as_ref().is_some_and(|r| r.check(button.0).is_ok()));
+        let ok = match &view.planar {
+            Some(p) => p.run.check(button.0).is_ok(),
+            None => view.run.as_ref().is_some_and(|r| r.check(button.0).is_ok()),
+        };
+        enable(enabled, ok);
     }
     for (tab, mut look) in &mut tabs {
         look.set_if_neq(Look::Tab(view.section == tab.0));
@@ -1105,12 +1323,18 @@ fn panels(
     let heading = match &view.preset {
         Some(p) if p.is_recorded() => format!("Robot preset — {} ({})  ·  {}", p.label, p.id, crate::robot_preset::RECORDED_LABEL),
         Some(p) => format!("Robot preset — {} ({})  ·  files read-only", p.label, p.id),
+        None if view.planar.is_some() => format!("Robot — {}  ·  {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default(), robot_planar::HEADER_LABEL),
         None => format!("Robot — {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()),
     };
     if title.0 != heading {
         title.0 = heading;
     }
     let run_line = match &view.run {
+        // A planar (v2) file: its own run thread (`robot_planar`).
+        None if view.planar.is_some() => {
+            let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {}", clip(m, 60)));
+            view.planar.as_ref().map_or(String::new(), |p| format!("{}{refused}", robot_planar::run_line(p)))
+        }
         None => String::new(),
         Some(r) if r.recorded().is_some() => {
             let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {}", clip(m, 60)));
@@ -1162,13 +1386,23 @@ fn panels(
                 },
             }
         }
-        (Status::Loaded { .. }, None) => String::new(),
+        (Status::Loaded { seconds }, None) => match (&view.planar, view.source.as_ref().filter(|s| s.failing.is_some())) {
+            (None, _) => String::new(),
+            (Some(_), Some(s)) => format!("SHOWING LAST GOOD MODEL (loaded {}) · reload failed: {} (full error in Source)", s.loaded_at.as_deref().unwrap_or("—"), clip(s.failing.as_deref().unwrap_or_default(), 70)),
+            (Some(p), None) => {
+                let notice = view.notice.as_ref().map_or(String::new(), |n| format!("{} · ", clip(n, 90)));
+                format!("{notice}{} · {} bodies · {} joints in file · loaded in {seconds:.2} s · {}", view.path.display(), p.loaded.model.bodies.len(), p.loaded.model.joints.len(), robot_planar::HEADER_LABEL)
+            }
+        },
     };
     if status.0 != line {
         status.0 = line;
     }
     let body = match &view.model {
-        None => String::new(),
+        None => view.planar.as_ref().map_or(String::new(), |p| {
+            let watch = view.source.as_ref().map(file_watch_text).unwrap_or_default();
+            robot_planar::inspector_text(p, &view.section.label().to_lowercase(), view.selected, &watch)
+        }),
         Some(m) => match view.section {
             Section::Link => link_text(&view, m),
             Section::Joints => joints_text(&view, m),
@@ -1289,7 +1523,8 @@ fn jog_panel(
         let mut rows = Vec::new();
         if !joints.is_empty() {
             rows.push(commands.spawn(k.section("Jog")).id());
-            rows.push(commands.spawn(k.text(JOG_LABEL, size::CAPTION, SUBTLE, 0)).id());
+            let label = if view.planar.is_some() { "planar v2 joint target (PD hold in the planar build) · ←/→ select · ↑/↓ move (Shift ×5)" } else { JOG_LABEL };
+            rows.push(commands.spawn(k.text(label, size::CAPTION, SUBTLE, 0)).id());
         }
         for (joint, step) in &joints {
             let button = |sign: f64, text: &str| {
@@ -1309,7 +1544,21 @@ fn jog_panel(
         commands.entity(*root).add_children(&rows);
         *shown = Some(names);
     }
-    if let Some(r) = &view.run {
+    if let Some(p) = &view.planar {
+        let f = p.run.frame().filter(|f| f.built);
+        for (joint, mut text) in &mut texts {
+            let i = p.joint_names().iter().position(|n| n == &joint.0);
+            let selected = if i.is_some() && i == Some(p.selected_joint) { "▸ " } else { "" };
+            let values = match (i, f) {
+                (Some(i), Some(f)) => format!("angle {:+.3} · target {:+.3} rad", f.joint_angles.get(i).copied().unwrap_or(f64::NAN), f.targets.get(i).copied().unwrap_or(f64::NAN)),
+                _ => "—".into(),
+            };
+            let line = format!("{selected}{} · {values}", joint.0);
+            if text.0 != line {
+                text.0 = line;
+            }
+        }
+    } else if let Some(r) = &view.run {
         for (joint, mut text) in &mut texts {
             let line = format!("{} · {}", joint.0, jog_line(r, &joint.0));
             if text.0 != line {
@@ -1891,7 +2140,10 @@ fn file_watch_text(s: &SourceWatch) -> String {
 
 /// The speed buttons: dimmed when refused (at a limit, or no robot), the middle one shows ×scale.
 fn speed_panel(view: Res<RobotView>, mut buttons: Query<(&RobotAction, &mut Enabled, &SpeedLabel, &Children), With<SpeedButton>>, mut labels: Query<&mut Text>) {
-    let scale = view.run.as_ref().map_or(1.0, RunController::speed_scale);
+    let scale = match &view.planar {
+        Some(p) => p.run.speed_scale(),
+        None => view.run.as_ref().map_or(1.0, RunController::speed_scale),
+    };
     for (action, enabled, shows_scale, children) in &mut buttons {
         enable(enabled, check(&view, action).is_ok());
         if !shows_scale.0 {
@@ -1920,6 +2172,8 @@ fn overlay_panel(
     let run = view.run.as_ref();
     let available = run.is_some_and(|r| r.check_overlays().is_ok());
     for (b, l, mut action, mut look, mut node, children) in &mut buttons {
+        // A planar file: only the contacts chip (chain tips) has a meaning; the others are hidden (their refusals are in system_ui and REST).
+        let available = if view.planar.is_some() { b.0 == "contacts" } else { available };
         let next = overlay_toggle(&view, b.0);
         if *action != next {
             *action = next;
@@ -1943,7 +2197,10 @@ fn overlay_panel(
         }
     }
     let t = match run {
-        None => String::new(),
+        None => view.planar.as_ref().map_or(String::new(), |p| {
+            let tips = p.run.frame().filter(|f| f.built).map_or("—".into(), |f| f.tips.len().to_string());
+            format!("Overlays · planar v2: {tips} chain-tip contact points (red dots; C) · joint frames, deflections and stress need a v3 export")
+        }),
         Some(r) => match r.check_overlays() {
             Err(_) => "Overlays (contacts, joint frames, deflections): not available for presets".into(),
             Ok(()) => match r.frame() {
@@ -2027,6 +2284,7 @@ fn stress_label(pa: f64) -> String {
 /// status against the loaded model, peak per link and the colour scale.
 fn stress_panel(view: Res<RobotView>, mut line: Single<&mut Text, With<StressText>>) {
     let t = match (&view.source, view.model.as_ref()) {
+        (Some(_), None) if view.planar.is_some() => "Stress: needs a v3 physical export (`sim-cad run` writes a .simresult.json only for v3 files)".to_string(),
         (None, _) if view.run.is_some() => "Stress: not available for presets (no .simresult.json)".to_string(),
         (None, _) | (_, None) => String::new(),
         (Some(_), Some(m)) if view.stress.enabled => match view.stress.results.as_ref() {
@@ -2160,6 +2418,11 @@ fn overlay_gizmo_config() -> GizmoConfig {
 
 /// Floor grid and the selected link's centre of mass.
 fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, mut gizmos: Gizmos, mut overlay: Gizmos<OverlayGizmos>) {
+    if let Some(p) = &view.planar {
+        // A planar file: outlines, centres of mass and chain tips from the planar run's latest frame.
+        robot_planar::draw(p, view.selected, &mut gizmos);
+        return;
+    }
     let Some(model) = &view.model else { return };
     // Run-thread overlays (`--robot FILE`), only from an accepted frame of the current
     // generation, mapped model → display through RobotRoot like the link meshes.

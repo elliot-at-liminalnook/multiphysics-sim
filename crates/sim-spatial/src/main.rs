@@ -288,9 +288,21 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
 }
 fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
     if args.validate_only {
-        let loaded = sim_spatial::robot::load(path)?;
-        let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
-        println!("Validated {} with {} links ({drawn} with collision geometry).", path.display(), loaded.model.links.len());
+        match sim_spatial::robot::load_file(path)? {
+            sim_spatial::robot_source::FileModel::Physical(loaded) => {
+                let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
+                println!("Validated {} with {} links ({drawn} with collision geometry).", path.display(), loaded.model.links.len());
+            }
+            // A planar v2 summary: built through sim-phenomena's shared planar build, as robot mode's run thread builds it.
+            sim_spatial::robot_source::FileModel::Planar(p) => {
+                let (bodies, joints) = (p.model.bodies.len(), p.model.joints.len());
+                let robot = sim_phenomena::scenarios::cad_robot::build_planar(p.model)?;
+                println!("Validated {} as a planar v2 summary: {bodies} bodies, {joints} joints in file, {} simulated, root `{}`{} (sim-phenomena's planar build, not the v3 physical model).", path.display(), robot.joint_names.len(), robot.model.bodies[robot.root].name, if robot.root_fixed { " (fixed)" } else { "" });
+                for w in &robot.warnings {
+                    println!("warning: {w}");
+                }
+            }
+        }
         return Ok(());
     }
     let view = sim_spatial::robot::RobotView::open(path.to_path_buf()).with_presets(args.robot_presets.clone());

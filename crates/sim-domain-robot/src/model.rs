@@ -1176,12 +1176,13 @@ pub struct PlanarHint {
 }
 
 /// The first simrobot version that is a physical (3-D) description. Older
-/// files are the planar summary that only `sim-app --scene cad` opens.
+/// files are the planar summary, which `sim-spatial --robot FILE` runs through
+/// sim-phenomena's planar build (`cad_robot::build_planar`), not this model.
 pub const FIRST_PHYSICAL_VERSION: u32 = 3;
 
 /// The one simrobot version rule: the `version` field, or 2 when absent
-/// (RoboCAD's planar exports predate the field). sim-app's cad scene
-/// dispatches on it and [`PhysicalModel::parse`] refuses below
+/// (RoboCAD's planar exports predate the field). sim-spatial robot mode and
+/// sim-phenomena's `cad_robot` dispatch on it and [`PhysicalModel::parse`] refuses below
 /// [`FIRST_PHYSICAL_VERSION`].
 pub fn simrobot_version(value: &serde_json::Value) -> u32 {
     value.get("version").and_then(|v| v.as_u64()).unwrap_or(2) as u32
@@ -1210,7 +1211,7 @@ impl PhysicalModel {
                 return Err(format!(
                     "simrobot file has {found}: this is the planar (v2) simrobot format, and the physical model \
                      (sim-spatial robot mode, sim-cad, sim-runtime) needs version >= {FIRST_PHYSICAL_VERSION}. \
-                     Open it with `sim-app --scene cad --model FILE`, or re-export it from RoboCAD, whose physical export writes version {FIRST_PHYSICAL_VERSION} or later"
+                     Open it with `sim-spatial --robot FILE` (which runs it through sim-phenomena's planar v2 build), or re-export it from RoboCAD, whose physical export writes version {FIRST_PHYSICAL_VERSION} or later"
                 ));
             }
         }
@@ -1292,7 +1293,7 @@ mod version_tests {
     fn planar_v2_is_refused_by_name_and_v3_parses() {
         for (text, found) in [(r#"{"format":"simrobot","version":2,"bodies":[]}"#, "version 2"), (r#"{"bodies":[]}"#, "no `version` (read as 2)")] {
             let err = PhysicalModel::parse(text).err().expect("planar file must be refused");
-            for needle in [found, "planar (v2)", "version >= 3", "sim-app --scene cad --model FILE", "RoboCAD"] {
+            for needle in [found, "planar (v2)", "version >= 3", "sim-spatial --robot FILE", "planar v2 build", "RoboCAD"] {
                 assert!(err.contains(needle), "{needle:?} missing from {err}");
             }
         }

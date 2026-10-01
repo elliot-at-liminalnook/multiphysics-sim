@@ -125,17 +125,16 @@ pub fn log_tail(path: &Path, max_bytes: usize) -> String {
 pub fn wait_until_live(client: &CadClient, deadline: Instant, mut alive: impl FnMut() -> Result<(), String>, cancelled: impl Fn() -> bool) -> Result<Health, String> {
     let started = Instant::now();
     let probe = client.clone().with_timeout(client.timeout.min(POLL_TIMEOUT));
-    let mut last = String::from("no answer yet");
     loop {
         if cancelled() {
             return Err("cancelled".into());
         }
         alive()?;
-        match probe.health() {
+        let last = match probe.health() {
             Ok(health) if health.ok => return Ok(health),
-            Ok(_) => last = "the server answered, but not as RoboCAD (no \"ok\": true)".into(),
-            Err(e) => last = e.to_string(),
-        }
+            Ok(_) => String::from("the server answered, but not as RoboCAD (no \"ok\": true)"),
+            Err(e) => e.to_string(),
+        };
         let now = Instant::now();
         if now >= deadline {
             alive()?;

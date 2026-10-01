@@ -26,6 +26,13 @@ pub const MAX_BYTES: usize = 4_194_304;
 #[cfg(not(target_arch = "wasm32"))]
 pub use native::*;
 
+/// The browser build has no file system: callers that save (lesson edits,
+/// progress, narration) compile and get this error instead of writing.
+#[cfg(target_arch = "wasm32")]
+pub fn write_atomic(path: &std::path::Path, _bytes: &[u8]) -> Result<(), String> {
+    Err(format!("cannot write {} in the browser build (no file system)", path.display()))
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
     use super::*;

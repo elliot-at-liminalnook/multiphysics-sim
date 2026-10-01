@@ -15,7 +15,7 @@
 //! hover never shows it either).
 use super::specs::{from_points, local};
 use crate::cad::document::CadDocument;
-use crate::cad::sketch::{BasePlane, CadActivePlane};
+use crate::cad::sketch::{ActivePlane, BasePlane, CadActivePlane, CadSketches};
 use crate::cad::transform::ToolGizmos;
 use crate::cad::view::CadView;
 use bevy::prelude::*;
@@ -154,16 +154,25 @@ pub(super) struct Drawn {
 
 /// Present: the shape in progress, drawn while points are clicked
 /// (RoboCAD's `hover` returns without points). Display only.
-pub(super) fn draw(doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, plane: Option<Res<CadActivePlane>>, mut gizmos: Gizmos<ToolGizmos>, mut drawn: Local<Drawn>) {
+pub(super) fn draw(doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, plane: Option<Res<CadActivePlane>>, sketches: Option<Res<CadSketches>>, mut gizmos: Gizmos<ToolGizmos>, mut drawn: Local<Drawn>) {
     let (Some(doc), Some(view)) = (doc, view) else { return };
     let Some(s) = doc.ops.sketch.as_ref().filter(|s| s.in_progress()) else { return };
     let Some(cursor) = s.cursor else { return };
     if !view.valid || !doc.ops.active.is_some_and(|id| id == format!("sketch.{}", s.shape.name())) {
         return;
     }
+    // While a plane node's frame is re-read after an edit, its last frame
+    // keeps the preview drawn (display only; a finish is refused until read).
+    let last = || match plane.as_deref().and_then(|p| p.plane.as_ref()) {
+        Some(ActivePlane::Node { id, .. }) => sketches.as_deref().and_then(|c| c.plane_last(id)),
+        _ => None,
+    };
     let frame = match plane.as_deref().map(CadActivePlane::frame_or_xy) {
         Some(Ok(f)) => f,
-        Some(Err(_)) => return,
+        Some(Err(_)) => match last() {
+            Some(f) => f,
+            None => return,
+        },
         None => BasePlane::Xy.frame(),
     };
     let sides = doc.ops.polygon_sides.unwrap_or(6);

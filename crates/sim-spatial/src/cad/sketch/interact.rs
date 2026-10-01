@@ -18,16 +18,37 @@
 //!   candidates, and projected onto the plane; it is the preview's last
 //!   point (`SketchState::cursor`). A left press (over the 3D view, no
 //!   command surface open or just closed by it, no text field keeping the
-//!   keyboard) appends the point; the first records the shown revision
-//!   (`began`). When the shape has its `needed` points (`Finish::Points`)
-//!   its calls (`specs::from_points` on plane coordinates) go out as ONE
-//!   `CadSketch { node: None, plane, calls, revision: began }` (the action
-//!   picks the sketch, tools.py:675-686, and refuses by name when the
-//!   document changed since); the points reset, a line keeps its last
-//!   point (lines chain; the chained point's segment takes the revision of
-//!   its next press). The spline finishes on Enter (no text field focused)
-//!   or a double-click with at least two points. Escape is `CadCancel`
-//!   (`ops::form_cancel` drops the shape; nothing is sent).
+//!   keyboard) appends the point ([`press`]); the first records the shown
+//!   revision (`began`). When the shape has its `needed` points
+//!   (`Finish::Points`) its calls (`specs::from_points` on plane
+//!   coordinates) go out as ONE `CadSketch { node: None, plane, calls,
+//!   revision: began }` (the action picks the sketch, tools.py:675-686,
+//!   and refuses by name when the document changed since); the points
+//!   reset, a line keeps its last point (lines chain, `SketchState::chained`;
+//!   the chained point's segment takes the revision of its next press).
+//!   The spline finishes on Enter (no text field focused) or a
+//!   double-click with at least two points ([`finish_check`]). Escape is
+//!   `CadCancel` (`ops::form_cancel` drops the shape; nothing is sent).
+//! - **Refused before it is taken** (recorded decision; RoboCAD's GUI calls
+//!   its kernel synchronously, so it has no such case): the action is
+//!   handled a frame later, and a finished shape it refused would already
+//!   be gone from the tool (fast chained lines were silently lost). So a
+//!   press that records `began` (the first point, or the one after a
+//!   chained point), a press that completes the shape, and the spline's
+//!   finish are checked first, with the action's own checks:
+//!   `CadDocument::commit_refusal` (an edit in flight, not connected, the
+//!   shown document stale or behind RoboCAD's revision, the revision
+//!   changed since `began`) and, when it completes, the plane and the
+//!   target sketch (`edits::shape_target`: the active plane node's frame
+//!   and every sketch read at the shown revision). Refused, the point is
+//!   not added, the shape's points are kept, nothing is sent, and the
+//!   status line says "Sketch line not sent: <why>; click again when
+//!   RoboCAD has caught up". One case cannot catch up: RoboCAD's revision
+//!   moved since the shape's earlier first click (its points were made
+//!   against geometry that is gone); then the shape's points are dropped
+//!   and the message says to click it again. An edit that starts between
+//!   the check and the action's arrival (the next frame's Actions) still
+//!   refuses the action by name.
 //! - **Double-click**: Qt delivers a double-click instead of the second
 //!   press (RoboCAD's `double`), so a second press within [`DOUBLE_CLICK`]
 //!   and [`DOUBLE_DISTANCE`] of the first is not a press for any tool; it
@@ -49,7 +70,7 @@ use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadInputFocus};
 use crate::cad::mesh::CadMeshes;
-use crate::cad::ops::{Flow, entry};
+use crate::cad::ops::{Env, Flow, entry};
 use crate::cad::snap::{self, Candidate};
 use crate::cad::topology::CadTopology;
 use crate::cad::transform::{cursor_in_view, fa, fl};
@@ -142,17 +163,82 @@ pub(crate) fn finish_action(shape: SketchShape, s: &SketchState, frame: &PlaneFr
 }
 
 /// RoboCAD's `_finish` (tools.py:768): the points reset; a line keeps its
-/// last point (lines chain). True when a point was kept.
+/// last point (lines chain: `chained`). True when a point was kept.
 pub(crate) fn reset_after_finish(tool: &SketchSpec, s: &mut SketchState) -> bool {
     let last = s.points.last().copied();
     s.points.clear();
-    match last {
+    s.chained = match last {
         Some(p) if tool.chains => {
             s.points.push(p);
             true
         }
         _ => false,
+    };
+    s.chained
+}
+
+/// What a press (or the spline's finish) did to the shape.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum Step {
+    /// The point was added; the shape needs more.
+    Added,
+    /// The shape is complete and can be sent now: [`finish_action`].
+    Finish,
+    /// Refused for now (see the module doc): nothing added, the points
+    /// kept, nothing sent; the message to show.
+    Wait(String),
+    /// RoboCAD's revision moved since the shape's first click: its points
+    /// were dropped; the message to show.
+    Dropped(String),
+}
+
+/// The checks a press that records `began` or completes the shape (or the
+/// spline's finish) makes before it is taken (the module doc): None when
+/// it may be taken.
+#[allow(clippy::too_many_arguments)]
+fn refusal(shape: SketchShape, s: &mut SketchState, began: u64, stamps: bool, completes: bool, doc: &CadDocument, env: &Env, plane_arg: &Value) -> Option<Step> {
+    let name = shape.name();
+    if let Some(why) = doc.commit_refusal(Some(began)) {
+        // `began` stamped now, or a passing refusal (an edit in flight, stale): it catches up.
+        if stamps || doc.commit_refusal(None).is_some() {
+            let what = if completes { "not sent" } else { "point not taken" };
+            return Some(Step::Wait(format!("Sketch {name} {what}: {why}; click again when RoboCAD has caught up")));
+        }
+        s.points.clear();
+        s.chained = false;
+        let now = doc.health.as_ref().map_or_else(|| doc.shown_revision().to_string(), |h| h.revision.to_string());
+        return Some(Step::Dropped(format!("Sketch {name} not sent: RoboCAD's document changed since its first point was clicked (revision {began}, now {now}); its points are dropped: click the {name} again")));
     }
+    if completes && let Err(why) = super::edits::shape_target(plane_arg.as_str(), doc, env) {
+        return Some(Step::Wait(format!("Sketch {name} not sent: {why}; click again when RoboCAD has caught up")));
+    }
+    None
+}
+
+/// A left press at `p` (snapped onto the plane): the pointer's step,
+/// windowless. A press after an empty or chained shape records `began`
+/// (the shown revision now); it and a completing press are checked first
+/// (the module doc). Taken, the point is added and the chain cleared.
+pub(crate) fn press(tool: &SketchSpec, s: &mut SketchState, p: [f64; 3], doc: &CadDocument, env: &Env, plane_arg: &Value) -> Step {
+    let stamps = s.points.is_empty() || s.chained;
+    let began = if stamps { doc.shown_revision() } else { s.began };
+    let completes = matches!(tool.finish, Finish::Points(n) if s.points.len() + 1 >= n);
+    if (stamps || completes)
+        && let Some(step) = refusal(tool.shape, s, began, stamps, completes, doc, env, plane_arg)
+    {
+        return step;
+    }
+    s.began = began;
+    s.chained = false;
+    s.points.push(p);
+    if completes { Step::Finish } else { Step::Added }
+}
+
+/// The spline's Enter or double-click with at least two points: checked
+/// as a completing press (the module doc).
+pub(crate) fn finish_check(tool: &SketchSpec, s: &mut SketchState, doc: &CadDocument, env: &Env, plane_arg: &Value) -> Step {
+    let began = s.began;
+    refusal(tool.shape, s, began, false, true, doc, env, plane_arg).unwrap_or(Step::Finish)
 }
 
 /// The pointer's state across frames.
@@ -167,8 +253,6 @@ pub(super) struct Pointer {
     surface_open: bool,
     /// The last press that counted, for the double-click.
     last_press: Option<(Vec2, Instant)>,
-    /// A line's chained point is in `points`: the next press records `began`.
-    rebase: bool,
 }
 
 /// SimSync: the sketch tool's snapped cursor, presses, finishes and readout
@@ -203,7 +287,6 @@ pub(super) fn pointer(
             doc.tool_state.readout = None;
         }
         state.last_press = None;
-        state.rebase = false;
         return;
     };
     let tool = spec(shape);
@@ -221,15 +304,16 @@ pub(super) fn pointer(
     let cursor = if view.valid { cursor_in_view(windows.single().ok(), &view, hover.as_deref(), &nodes) } else { None };
     let alt = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]));
     let snapped: Option<[f64; 3]> = match (&frame, cursor) {
-        (Ok(f), Some(c)) => snap::snap_on(&view, c, candidates, alt, Some(f)).map(|s| f.project([f64::from(s.point.x), f64::from(s.point.y), f64::from(s.point.z)])),
+        // The f64 snap (`Snap::exact`, projected onto the plane): a point snapped onto an existing one coincides with it.
+        (Ok(f), Some(c)) => snap::snap_on(&view, c, candidates, alt, Some(f)).map(|s| s.exact),
         _ => None,
     };
     // A text field keeping the keyboard after this frame's Input (a press in
     // the view ends the form's typing first, so that press counts).
     let typing = doc.ops.form.as_ref().is_some_and(|f| f.focus.is_some()) || doc.tool_state.numeric.focus.is_some() || doc.tool_state.inspector_edit.is_some();
     let open = surface_was_open || doc.ops.surface.is_some();
-    let press = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !open && !typing;
-    let press_at = cursor.filter(|_| press);
+    let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !open && !typing;
+    let press_at = cursor.filter(|_| pressed);
     let enter = keys.as_ref().is_some_and(|k| k.any_just_pressed([KeyCode::Enter, KeyCode::NumpadEnter])) && !focus.as_ref().is_some_and(|f| f.0) && !open;
     let now = Instant::now();
     let double = press_at.is_some_and(|c| state.last_press.is_some_and(|(p, t)| now.duration_since(t) <= DOUBLE_CLICK && p.distance(c) <= DOUBLE_DISTANCE));
@@ -245,30 +329,28 @@ pub(super) fn pointer(
     if snapped.is_some() {
         s.cursor = snapped;
     }
-    let mut finish = false;
+    let env = Env { topology: topology.as_deref(), view: Some(&*view), plane: plane.as_deref(), sketches: sketches.as_deref() };
+    let mut step = Step::Added;
     let mut error: Option<String> = None;
     if press_at.is_some() && !double {
         match (&frame, snapped) {
-            (Ok(_), Some(p)) => {
-                if s.points.is_empty() || state.rebase {
-                    s.began = doc.shown_revision();
-                    state.rebase = false;
-                }
-                s.points.push(p);
-                if let Finish::Points(n) = tool.finish
-                    && s.points.len() >= n
-                {
-                    finish = true;
-                }
-            }
+            (Ok(_), Some(p)) => step = press(tool, &mut s, p, &doc, &env, &plane_arg),
             (Err(e), _) => error = Some(e.clone()),
             _ => {}
         }
     }
     // RoboCAD's `double` and `key` (Enter): a spline with at least two points.
     if tool.finish == Finish::EnterOrDouble && (double || enter) && s.points.len() >= 2 {
-        finish = true;
+        step = finish_check(tool, &mut s, &doc, &env, &plane_arg);
     }
+    let finish = match step {
+        Step::Finish => true,
+        Step::Added => false,
+        Step::Wait(e) | Step::Dropped(e) => {
+            error = Some(e);
+            false
+        }
+    };
     if finish && let Ok(f) = &frame {
         match finish_action(shape, &s, f, &plane_arg) {
             Ok(Some(action)) => {
@@ -277,9 +359,7 @@ pub(super) fn pointer(
             Ok(None) => {}
             Err(e) => error = Some(e),
         }
-        if reset_after_finish(tool, &mut s) {
-            state.rebase = true;
-        }
+        reset_after_finish(tool, &mut s);
     }
     let text = match (&frame, s.points.first(), s.cursor) {
         (Ok(f), Some(a), Some(b)) => Some(readout(tool.readout, local(f, *a), local(f, b))),

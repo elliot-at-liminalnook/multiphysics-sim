@@ -268,14 +268,25 @@ pub struct SketchState {
     pub cursor: Option<[f64; 3]>,
     /// The text tool's text (its "Text to sketch:" field).
     pub text: String,
+    /// `points` is only the last sent line's end, kept so the next line
+    /// starts there (RoboCAD's chaining, tools.py:768): set when a line
+    /// chains, cleared by the next press that is taken. Its segment's
+    /// `began` is stamped by that press.
+    pub chained: bool,
 }
 impl SketchState {
     pub fn new(shape: SketchShape) -> Self {
-        SketchState { shape, points: Vec::new(), began: 0, cursor: None, text: String::new() }
+        SketchState { shape, points: Vec::new(), began: 0, cursor: None, text: String::new(), chained: false }
     }
-    /// A shape is in progress: at least one point clicked.
+    /// A shape is in progress: at least one point clicked (a chained
+    /// point included: the preview and the readout start from it).
     pub fn in_progress(&self) -> bool {
         !self.points.is_empty()
+    }
+    /// Clicked points that were not sent: any point but a lone chained one
+    /// (that point is the end of a line already sent).
+    pub fn unsent(&self) -> bool {
+        self.points.len() > usize::from(self.chained)
     }
 }
 
@@ -298,9 +309,11 @@ pub enum SketchTarget {
     New { plane: Value },
 }
 
-/// Why the shape in progress blocks leaving CAD mode (`switch::leaving_blockers`).
+/// Why the shape in progress blocks leaving CAD mode (`switch::leaving_blockers`):
+/// clicked points not sent. A lone chained point (the last line's end,
+/// already sent) loses nothing, so it does not block.
 pub fn blocker(doc: &CadDocument) -> Option<String> {
-    let s = doc.ops.sketch.as_ref().filter(|s| s.in_progress())?;
+    let s = doc.ops.sketch.as_ref().filter(|s| s.unsent())?;
     Some(format!("a sketch {} is in progress ({} point(s) clicked): finish it or press Escape", s.shape.name(), s.points.len()))
 }
 

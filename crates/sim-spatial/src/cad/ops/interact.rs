@@ -57,6 +57,9 @@
 //!   snapped at and is cleared when that revision moves on, when the
 //!   pointer leaves the window, or when the search under the pointer finds
 //!   nothing.
+//! - The placement's points and the cursor snap are the snap's f64
+//!   `Snap::exact` (a vertex or sketch endpoint exactly as RoboCAD gave
+//!   it), never its f32 drawing point.
 use super::{Flow, Primitive, entry};
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
@@ -132,10 +135,6 @@ struct Pointer {
 
 fn vec3(p: [f64; 3]) -> Vec3 {
     Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32)
-}
-
-fn arr(p: Vec3) -> [f64; 3] {
-    [f64::from(p.x), f64::from(p.y), f64::from(p.z)]
 }
 
 /// The op whose placement is active, and its primitive.
@@ -285,7 +284,7 @@ fn height_at(view: &CadView, cursor: Vec2, p1: Vec3, n: Vec3, back: Vec3, snap_g
 /// The cursor snap at `cursor`: RoboCAD's `viewport.snap` (see the module
 /// doc), on the active plane only while 2D snapping is on (`plane`).
 fn cursor_snap(view: &CadView, cursor: Vec2, candidates: &[Candidate], plane: Option<&PlaneFrame>) -> Option<[f64; 3]> {
-    snap::snap_on(view, cursor, candidates, false, plane).map(|s| arr(s.point))
+    snap::snap_on(view, cursor, candidates, false, plane).map(|s| s.exact)
 }
 
 /// The catalogue's name of a placement's anchor parameter.
@@ -389,7 +388,7 @@ fn pointer(
     let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !surface_was_open && doc.ops.surface.is_none();
     let down = buttons.as_ref().is_some_and(|b| b.pressed(MouseButton::Left));
     // RoboCAD's `ctx.snap(pos, suppress, plane=active_plane)`: on the placement's plane.
-    let snapped = |c: Vec2, f: &PlaneFrame| snap::snap_on(&view, c, candidates, alt, Some(f)).map(|s| arr(s.point));
+    let snapped = |c: Vec2, f: &PlaneFrame| snap::snap_on(&view, c, candidates, alt, Some(f)).map(|s| s.exact);
 
     let before = doc.ops.place.clone();
     let mut place = before.clone();

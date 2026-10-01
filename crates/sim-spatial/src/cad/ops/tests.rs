@@ -571,3 +571,61 @@ fn primitives_are_placed_on_the_active_plane() {
     let err = build(op("tool.box"), &r, &values(op("tool.box"), &Map::new()).unwrap(), &doc, &Env { plane: Some(&reading), ..Default::default() }).unwrap_err();
     assert!(err.contains("p1"), "{err}");
 }
+
+/// A plane tool's new node is adopted before the shown tree has it (the
+/// edit only requests a refetch): kept until a tree shows it, then
+/// dropped once a tree lacks it. Its frame is the shown revision's only
+/// (operations refuse while it is refetched); the quad draws the last read.
+#[test]
+fn a_created_plane_waits_for_the_tree_that_shows_it() {
+    use crate::cad::sketch::cache::Geometry;
+    use crate::cad::sketch::plane::{Seen, follow};
+    use crate::cad::sketch::{CadSketches, plane_draw};
+    let mut doc = document();
+    let mut plane = CadActivePlane { generation: doc.generation, ..Default::default() };
+    let mut seen = Seen::default();
+    let mut sketches = CadSketches::default();
+    let p1 = |frame: Option<PlaneFrame>| Some(ActivePlane::Node { id: "p1".into(), frame });
+    // The edit answered; the shown tree (revision 4) lacks p1: active, being read, kept.
+    doc.ops.plane_created = Some("p1".into());
+    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    assert_eq!((plane.plane.clone(), doc.status.clone()), (p1(None), Some(Ok("Active plane set".to_string()))));
+    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    assert_eq!(plane.plane, p1(None), "the refetch has not landed: kept");
+    assert!(plane.frame_or_xy().unwrap_err().contains("being read"));
+    // The refetch lands at revision 5 with p1 and its frame.
+    let raised = PlaneFrame { origin: [0.0, 0.0, 5.0], ..PlaneFrame::XY };
+    let set_tree = |doc: &mut CadDocument, revision: u64, with_p1: bool| {
+        let state = doc.doc.as_mut().unwrap();
+        state.nodes.retain(|n| n.id != "p1");
+        if with_p1 {
+            state.nodes.push(node("p1", "plane", "Plane 1"));
+        }
+        state.revision = revision;
+        doc.doc_key = Some((None, revision));
+    };
+    set_tree(&mut doc, 5, true);
+    sketches.insert("p1", 5, Geometry::Plane(Some(raised)));
+    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    assert_eq!(plane.plane, p1(Some(raised)));
+    // An edit moves the tree to 6 and p1 is refetched: no old frame for operations, the last one drawn.
+    set_tree(&mut doc, 6, true);
+    sketches.insert("other", 6, Geometry::Plane(None));
+    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    assert_eq!(plane.plane, p1(None));
+    assert!(plane.frame().unwrap_err().contains("p1"));
+    let quads = plane_draw::wanted(&doc, &plane, &sketches);
+    assert_eq!((quads.len(), quads[0].frame, quads[0].active), (1, raised, true));
+    // A tree without p1 after it was shown: dropped by name.
+    set_tree(&mut doc, 7, false);
+    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    assert_eq!(plane.plane, None);
+    assert!(matches!(&doc.status, Some(Ok(s)) if s.contains("p1") && s.contains("no longer in the document")), "{:?}", doc.status);
+    // A created node whose tree moved past the adoption revision without it is dropped too.
+    doc.ops.plane_created = Some("p2".into());
+    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    assert!(matches!(&plane.plane, Some(ActivePlane::Node { id, .. }) if id == "p2"));
+    set_tree(&mut doc, 8, false);
+    follow(&mut doc, &mut plane, Some(&sketches), &mut seen);
+    assert_eq!(plane.plane, None);
+}

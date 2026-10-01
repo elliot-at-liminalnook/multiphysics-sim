@@ -231,6 +231,9 @@ class ArgConverter:
                 return [self.face(x) for x in v]
             return self.face(v)
         if "EdgeRef" in ann or name in ("edge_a", "edge_b", "edges"):
+            # `fill(edges: str | Body)`: a node id names the boundary itself.
+            if isinstance(v, str) and "EdgeRef" not in ann:
+                return v
             if isinstance(v, list):
                 return [self.edge(x) for x in v]
             return self.edge(v)

@@ -218,12 +218,14 @@ impl SketchCurve {
     }
     /// The polyline RoboCAD's viewport draws for the curve
     /// (viewport.py:922-939): `Curve.sample(n)`, and a slot's stadium
-    /// outline closed (35 points as `io.exporters._slot_points` plus the
-    /// first again, with the caps outward as the kernel's slot: see
-    /// `slot_points`). Plane coordinates.
+    /// outline closed (the 34 points of `io.exporters._slot_points` plus
+    /// the first again: 35, with the caps outward as the kernel's slot:
+    /// see `slot_points`). Plane coordinates.
     /// Where Python would raise (a line with fewer than two points, a
     /// circle without a center, a slot without two points) the curve's
-    /// points as stored; `n` 0 samples as 1 (Python divides by it).
+    /// points as stored; `n` 0 samples as 1 for the circle, arc, ellipse
+    /// and control curve (Python divides by it; an interpolated spline,
+    /// which Python samples per span, differs from Python at `n` 0).
     pub fn sample(&self, n: usize) -> Vec<[f64; 2]> {
         let n = n.max(1);
         match self.kind.as_str() {

@@ -4,10 +4,15 @@
 //! - [`sync`] (SimSync, core, after the cache): the active plane belongs
 //!   to one document generation (reset when it changes); a plane tool's new
 //!   plane node becomes active once its edit succeeds (`ops.plane_created`,
-//!   status "Active plane set", RoboCAD's `set_active_plane(pid)`); a plane
-//!   node's frame is filled from the cache at the shown revision and kept
-//!   while it is refetched; a plane node gone from the shown tree is
-//!   dropped with a status naming it; a read error is shown once.
+//!   status "Active plane set", RoboCAD's `set_active_plane(pid)`). The
+//!   edit only requests a `/doc` refetch, so the new node is not in the
+//!   shown tree yet: it is kept until the shown tree has shown it, or the
+//!   shown revision moved past the one it was adopted at without it. A
+//!   plane node's frame is the cache's at the shown revision only (None,
+//!   "(reading)", while it is refetched: operations never decide with an
+//!   old revision's frame; `plane_draw` draws the last read meanwhile). A
+//!   plane node that was shown and is gone from the shown tree is dropped
+//!   with a status naming it; a read error is shown once.
 //! - **Selecting a plane node makes it active** (native addition, recorded:
 //!   RoboCAD has no such gesture; its plane nodes become active only when a
 //!   plane tool creates them). When the selection changes to exactly one
@@ -49,6 +54,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::{Map, Value, json};
 use sim_runtime::cad_client::SelectionItem;
+use std::ops::DerefMut;
 
 /// RoboCAD's status line when the active plane is set (app.py:1026).
 const SET: &str = "Active plane set";
@@ -70,6 +76,9 @@ pub(in crate::cad) struct Seen {
     selection: Option<Vec<SelectionItem>>,
     /// The plane node and revision whose read error was last shown.
     reported: Option<(String, u64)>,
+    /// A plane tool's new node and the shown revision it was adopted at,
+    /// until the shown tree has shown it.
+    unseen: Option<(String, u64)>,
 }
 
 /// The node's kind in the shown tree.
@@ -80,8 +89,14 @@ fn kind<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
 /// SimSync (core, after `cache::sync`): reset on a new generation, adopt a
 /// plane tool's new node, fill and drop node frames, follow a selected plane node.
 pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMut<CadActivePlane>>, sketches: Option<Res<super::CadSketches>>, mut seen: Local<Seen>) {
-    let (Some(mut doc), Some(mut plane)) = (doc, plane) else { return };
-    let sketches = sketches.as_deref();
+    let (Some(doc), Some(plane)) = (doc, plane) else { return };
+    follow(doc, plane, sketches.as_deref(), &mut seen);
+}
+
+/// [`sync`]'s work, over anything that derefs to the resources (`ResMut`
+/// in the system, so a frame that changes nothing marks nothing changed;
+/// plain references in tests).
+pub(in crate::cad) fn follow(mut doc: impl DerefMut<Target = CadDocument>, mut plane: impl DerefMut<Target = CadActivePlane>, sketches: Option<&CadSketches>, seen: &mut Seen) {
     if plane.generation != doc.generation {
         *plane = CadActivePlane { generation: doc.generation, ..default() };
         *seen = Seen::default();
@@ -91,6 +106,7 @@ pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMu
         && let Some(id) = doc.ops.plane_created.take()
     {
         let frame = sketches.and_then(|s| s.plane(&id));
+        seen.unseen = Some((id.clone(), doc.shown_revision()));
         plane.plane = Some(ActivePlane::Node { id, frame });
         doc.show(Ok(SET.to_string()));
     }
@@ -107,16 +123,30 @@ pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMu
             doc.show(Ok(SET.to_string()));
         }
     }
-    let Some(ActivePlane::Node { id, frame }) = &plane.plane else { return };
-    let id = id.clone();
-    // A plane node gone from the shown tree is no longer the active plane.
-    if doc.doc.is_some() && !doc.has_node(&id) {
-        plane.plane = None;
-        doc.show(Ok(format!("The active plane (node {id}) is no longer in the document: no plane is active (XY is used)")));
+    let Some(ActivePlane::Node { id, frame }) = &plane.plane else {
+        seen.unseen = None;
         return;
+    };
+    let id = id.clone();
+    let shown = doc.shown_revision();
+    if doc.doc.is_some() && doc.has_node(&id) {
+        // The shown tree has shown it: from now on its absence means it is gone.
+        if seen.unseen.as_ref().is_some_and(|(u, _)| *u == id) {
+            seen.unseen = None;
+        }
+    } else if doc.doc.is_some() {
+        // A plane tool's new node waits for the refetch that shows it.
+        let waiting = seen.unseen.as_ref().is_some_and(|(u, at)| *u == id && shown <= *at);
+        if !waiting {
+            // Shown and now gone (or a newer tree still lacks it): no longer the active plane.
+            seen.unseen = None;
+            plane.plane = None;
+            doc.show(Ok(format!("The active plane (node {id}) is no longer in the document: no plane is active (XY is used)")));
+            return;
+        }
     }
-    // Its frame at the shown revision; the last one is kept until the refetch lands.
-    let next = sketches.and_then(|s| s.plane(&id).or_else(|| frame.and(s.plane_last(&id))));
+    // Its frame at the shown revision only (decisions never use an old revision's frame).
+    let next = sketches.and_then(|s| s.plane(&id));
     if next != *frame {
         plane.plane = Some(ActivePlane::Node { id: id.clone(), frame: next });
     }
@@ -124,7 +154,7 @@ pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMu
     if next.is_none()
         && let Some(error) = sketches.and_then(|s| s.error(&id))
     {
-        let at = (id.clone(), doc.shown_revision());
+        let at = (id.clone(), shown);
         if seen.reported.as_ref() != Some(&at) {
             let message = format!("The active plane {} could not be read from RoboCAD: {error}", doc.node_name(&id));
             seen.reported = Some(at);
@@ -288,7 +318,8 @@ fn picks(
             // RoboCAD's `ctx.snap(pos)`: no Alt, the active plane only with 2D snapping on.
             let on = snap::snap_plane(plane.as_deref());
             let Some(s) = snap::snap_on(&view, cursor, candidates, false, on.as_ref()) else { return };
-            PlanePick::Point([f64::from(s.point.x), f64::from(s.point.y), f64::from(s.point.z)])
+            // The f64 point: a vertex or sketch endpoint exactly as RoboCAD gave it.
+            PlanePick::Point(s.exact)
         }
     };
     let ops = &mut doc.ops;

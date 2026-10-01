@@ -414,10 +414,12 @@ impl SketchCall {
     /// Refuse what RoboCAD's REST would fail on before any geometry,
     /// naming the call and the argument: a curve index at or past `curves`
     /// (the curve count when the call runs, if known); `join` and
-    /// `circle_tangent` without curves, `join` naming a curve twice,
-    /// `circle_tangent` without a radius and fewer than three curves
-    /// (`KernelError`); a polygon of fewer than three sides (0 would mean
-    /// "the last sides" to RoboCAD); a degree or span count of 0.
+    /// `circle_tangent` without curves, `circle_tangent` without a radius
+    /// and fewer than three curves (`KernelError`); a degree or span count
+    /// of 0. Stricter than RoboCAD, also refused: `join` naming a curve
+    /// twice (RoboCAD would build a polyline that doubles back) and a
+    /// polygon of fewer than three sides (0 would mean "the last sides" to
+    /// RoboCAD).
     pub fn check(&self, curves: Option<usize>) -> Result<(), String> {
         use SketchCall::*;
         let name = self.name();

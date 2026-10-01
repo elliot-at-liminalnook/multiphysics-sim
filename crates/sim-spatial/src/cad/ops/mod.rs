@@ -473,6 +473,8 @@ fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
             };
             if let Err(e) = started {
                 form_cancel(doc);
+                // The reason, not form_cancel's "Cancelled …", stays on the status line.
+                doc.show(Err(e.clone()));
                 return Outcome::Done(Err(e));
             }
             doc.show(Ok(entry.hint.to_string()));

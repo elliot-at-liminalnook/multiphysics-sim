@@ -9,7 +9,9 @@ use super::*;
 /// `CadFormSubmit`: the open form's drafts as `CadRun` parameters. A form
 /// flow's run is refused when RoboCAD's revision changed since the form
 /// opened; a pick or place tool's form stays open across its runs, so its
-/// picks carry their own guard (the selection's revision) instead.
+/// picks carry their own guard (the selection's revision) instead, and a
+/// sketch tool's Tab values anchored at a clicked point carry that click's
+/// (`SketchState::began`).
 pub(super) fn submit(call: &mut Call, cx: &mut Cx) -> Outcome {
     let Some(form) = cx.doc.ops.form.clone() else { return Outcome::Done(Err("no form is open".into())) };
     let Some(entry) = entry(form.op) else {
@@ -21,15 +23,22 @@ pub(super) fn submit(call: &mut Call, cx: &mut Cx) -> Outcome {
     let text_of = |q: &Param| Value::String(entry.params.iter().position(|x| x.name == q.name).and_then(|i| form.texts.get(i)).cloned().unwrap_or_default());
     let mut params: Map<String, Value> = entry.params.iter().zip(&form.texts).filter(|(p, _)| gate(entry, p, text_of).unwrap_or(true)).map(|(p, t)| (p.name.to_string(), Value::String(t.clone()))).collect();
     // A sketch tool's Tab values are anchored at its first clicked point
-    // (RoboCAD's `SketchTool.commit`: `self.points[0]`, else the plane origin).
+    // (RoboCAD's `SketchTool.commit`: `self.points[0]`, else the plane
+    // origin), and refused by name when RoboCAD's document changed since
+    // that click (`began`). A chained point is the end of the line just
+    // sent (whose own edit moved the revision): it is a point on the plane,
+    // not a pick of geometry that may be gone, so it carries no guard.
     let sketching = matches!(entry.flow, Flow::Sketch(_));
+    let mut clicked: Option<u64> = None;
     if sketching
         && params.get("anchor").is_none_or(|a| a.as_str().is_some_and(str::is_empty))
-        && let Some(p) = cx.doc.ops.sketch.as_ref().and_then(|s| s.points.first())
+        && let Some(s) = cx.doc.ops.sketch.as_ref()
+        && let Some(p) = s.points.first()
     {
         params.insert("anchor".into(), Value::String(p.map(crate::cad::transform::num).join(", ")));
+        clicked = (!s.chained).then_some(s.began);
     }
-    let revision = if entry.flow == Flow::Form { Some(form.began) } else { None };
+    let revision = if entry.flow == Flow::Form { Some(form.began) } else { clicked };
     let outcome = run(entry, &params, None, revision, call, cx);
     // RoboCAD's `commit` clears the clicked points after its edit.
     if sketching
@@ -37,6 +46,7 @@ pub(super) fn submit(call: &mut Call, cx: &mut Cx) -> Outcome {
         && let Some(s) = cx.doc.ops.sketch.as_mut()
     {
         s.points.clear();
+        s.chained = false;
         s.cursor = None;
     }
     if let Outcome::Done(Err(e)) = &outcome {
@@ -100,8 +110,9 @@ pub(in crate::cad) fn form_cancel(doc: &mut CadDocument) -> Value {
     let form = doc.ops.form.take().map(|f| f.op);
     let active = doc.ops.active.take();
     let place = doc.ops.place.take().is_some();
-    // A sketch shape, an extrude drag or plane picks end with nothing sent.
-    let sketch = doc.ops.sketch.take().is_some_and(|s| s.in_progress());
+    // A sketch shape, an extrude drag or plane picks end with nothing sent
+    // (a lone chained point was sent with its line: no shape in progress).
+    let sketch = doc.ops.sketch.take().is_some_and(|s| s.unsent());
     doc.ops.extrude = None;
     doc.ops.plane_picks.clear();
     if form.is_none() && active.is_none() && !place {

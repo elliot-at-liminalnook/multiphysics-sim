@@ -13,7 +13,7 @@
 //! - `entry`: the toolbar's section offset field (the Section tool's Tab
 //!   offset), and why R, Tab and the plane drag are not bound natively.
 //!
-//! **Decisions** (native-viewer.md "CAD views and export"):
+//! **Decisions** (native-viewer.md "Shared camera and CAD views"):
 //! - **Grid**: drawn as retained gizmo lines as RoboCAD's `_draw_grid` does
 //!   (10 mm step, ±20 steps on the model's XY plane, every 5th line major,
 //!   red X, green Y and blue Z axes), not with `bevy_dev_tools`'

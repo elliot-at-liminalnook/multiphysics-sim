@@ -9,8 +9,6 @@ use crate::app::ViewerMode;
 use bevy::prelude::*;
 use serde_json::{Value, json};
 
-/// `cad_state`: the document as this window shows it. Nothing is invented:
-/// absent values are null.
 /// cad-views-export's parts of `cad_state` (None without CAD mode's window).
 #[derive(Clone, Copy, Default)]
 pub(in crate::cad) struct Parts<'a> {
@@ -24,6 +22,8 @@ impl<'a> Parts<'a> {
     }
 }
 
+/// `cad_state`: the document as this window shows it. Nothing is invented:
+/// absent values are null.
 pub(in crate::cad) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>, plane: Option<&CadActivePlane>, parts: Parts) -> Value {
     let connection = match &doc.connection {
         Connection::Connecting { what, since } => json!({"state": "connecting", "what": what, "seconds": since.elapsed().as_secs()}),

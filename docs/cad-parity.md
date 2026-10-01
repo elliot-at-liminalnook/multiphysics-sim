@@ -33,6 +33,10 @@ the user's real models and the user agrees to retire the Python path.
 feature. *Native target* is the symbol that implements it in this epic
 (`cad::…` is `crates/sim-spatial/src/cad/…`; `CadClient` is
 `sim_runtime::cad_client::CadClient`), or the later epic that owns it.
+The cad-views-export rows name a `file:function` instead: `camera/…` and
+`cad/…` are relative to `crates/sim-spatial/src/`, `main.rs` is
+`crates/sim-spatial/src/main.rs`, and `crates/sim-runtime/src/cad_client/…`
+is written in full; a backticked symbol after a path is in that file.
 
 **REST route values.** Three forms are used:
 
@@ -42,22 +46,28 @@ feature. *Native target* is the symbol that implements it in this epic
 - **none: needs a Python route**: nothing in `api.py` reaches the feature
   (or reaches it only through a GUI command, which opens RoboCAD's dialogs
   or uses its clipboard or viewport). These rows are flagged and listed at
-  the end: 17 rows, 17 distinct gaps (24 rows and 22 gaps until the
-  cad-modify epic added routes for copy and paste with placement, control
-  points, the curvature comb and the continuity check).
+  the end: 15 rows, 15 distinct gaps (17 and 17 until the
+  cad-views-export epic added `POST /save/thumbnail` and
+  `GET /import/units`; 24 rows and 22 gaps until the cad-modify epic added
+  routes for copy and paste with placement, control points, the curvature
+  comb and the continuity check).
 - `n/a (display)`: purely the viewer's own presentation (camera, cursor,
   theme). No RoboCAD state is involved and no route is needed.
 
 **Status legend.**
 
-- `done-by-reading`: the cad-mode, cad-select-transform, cad-modify or
-  cad-sketch epic implements it (native-viewer.md, CAD mode section; "CAD
-  selection and transform"; "CAD modify"; "CAD sketch"). It is built and
-  tested in that epic's verification pass and moves to `done` only when
-  the user's checklist ([cad-checklist.md](cad-checklist.md)) passes.
-  Nothing is `done` yet: no epic's checklist has been signed off, and
-  cad-sketch has not been compiled or run at all.
+- `done-by-reading`: the cad-mode, cad-select-transform, cad-modify,
+  cad-sketch or cad-views-export epic implements it (native-viewer.md, CAD
+  mode section; "CAD selection and transform"; "CAD modify"; "CAD
+  sketch"; "Shared camera and CAD views"). It is built and tested in that epic's
+  verification pass and moves to `done` only when the user's checklist
+  ([cad-checklist.md](cad-checklist.md)) passes. Nothing is `done` yet: no
+  epic's checklist has been signed off (cad-sketch was verified at
+  cc7ac194), and cad-views-export has not been through its verification
+  pass.
 - `later-epic: <name>`: owned by a later CAD epic (see "Epics" below).
+  No row of an epic that has been worked is left open: every
+  `later-epic` row names an epic not yet started.
 - `deliberately different: <reason>`: the native viewer differs on purpose,
   for the reason given.
 
@@ -76,7 +86,7 @@ The later epics are `cad-select-transform` and
 it is renamed because it also takes the outliner's organization features, which no other epic
 fits. The `cad-select-transform` epic (2026-10-01) has mapped its rows to
 native code (sub-body selection, the transform tools, push/pull, the
-numeric bar, live dimensions, snapping and measure); one row stays open
+numeric bar, live dimensions, snapping and measure); none stays open
 (see "Counts"). The `cad-modify` epic (2026-10-01) is done by reading: its
 116 rows map to native code (the op catalogue `cad::ops`, the command
 surfaces `cad::surfaces`, the keys `cad::keys`, the analysis overlays
@@ -100,6 +110,29 @@ array, draft) and 9 stay `deliberately different` for reasons that remain
 snaps, the toolbar's and context menu's additions, `POST /nodes` for
 solids). Its one Python change fixes `Service.edit_sketch`'s curve
 indices (see "Edit a sketch with a call list"); it closed no flagged gap.
+The `cad-views-export` epic (2026-10-01) is done by reading: its 112
+rows map to native code: the shared camera (`camera/`: orbit, pan, zoom
+to the cursor, RoboCAD's Shift+middle and Alt+left orbit, Alt snap and
+arrow keys, presets, ortho and field of view, trackball, focus), the display state
+(`cad/display/`: display modes and edges, grid, build plate and
+overhangs, view cube, high contrast, curve nodes, the section preview,
+its offset field and the exact section), saved views (`cad/views/`),
+isolate, hide and show all (`cad/ops/catalogue/view.rs`), the
+tessellation tolerance and file workflows (`cad/files/`: new, open, save
+and save as with the thumbnail, import with RoboCAD's unit guess, every
+export format, the drawing, render), 79 `done-by-reading` and 33
+`deliberately different`, each with its reason; none stays open (the six
+rows left open at 9b1e5eec were closed by f15766ea: 4 became
+`done-by-reading`, the save thumbnail, Shift+middle and Alt+left orbit,
+the Alt snap and the arrow keys; 2 `deliberately different`, curve nodes
+drawn but not picked, and the section offset typed in the toolbar with
+no plane drag, R or Tab). It re-assessed the rows of earlier epics that waited for it: the
+per-node tessellation tolerance (cad-mode) and the view radial (cad-modify)
+became `done-by-reading`; the right-click menu, the toolbar, the Save As
+row and the navigation footer keep their status with updated text. Its
+three new routes in `api.py` (`POST /new`, `POST /save/thumbnail`, `GET
+/import/units`, pytests `cad/tests/test_api_files.py`) closed two flagged
+gaps (the save thumbnail and the mesh-unit guess); New needed no gap.
 
 **Every Ops method is already reachable natively, but only by REST.** The
 `cad_op` REST command (`CadAction::CadOp` → `CadClient::op`) can call any
@@ -111,13 +144,13 @@ the feature is later, not that it cannot be reached at all.
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | Open a `.rcad` by path ("Open…", `file.open`; RoboCAD opens it through the nonmodal loader in a new window) | ui/app.py:284, ui/app.py:1326-1335, ui/model_loading.py:279 | none for a new service: the viewer starts `python -m robocad.api PATH --port N` (api.py:1390-1405). `POST /open` (api.py:966) is GUI-only and opens another RoboCAD window | `cad::actions::CadAction::CadOpen { path }` → `cad::sync` connect job (`sim_runtime::cad_client::service::service_command`, `wait_until_live`, `jobs::ChildProcess`) | done-by-reading |
-| The open-file dialog "Open" filtered to "robocad (*.rcad)" | ui/app.py:1332-1335 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Open from the command line (`.rcad` argument; other files are imported after load) | ui/app.py:1962-1978, ui/load_process.py:44-46 | `POST /import` for the extra files | cad-views-export epic | later-epic: cad-views-export |
+| The open-file dialog "Open" filtered to "robocad (*.rcad)" | ui/app.py:1332-1335 | n/a (display) | File > Open… and Ctrl+O → `cad/files/mod.rs:open_form` → `cad/files/form.rs:FileForm` (a modal kit path form pre-filled with the document's directory, listing its `.rcad` files from a `Pool::Io` job, `cad/files/jobs.rs:list`) | deliberately different: a kit path form instead of the system's file dialog: rfd is not in the workspace, and a native dialog's macOS main-thread requirement cannot be verified without building and running (`cad/files/mod.rs` module doc) |
+| Open from the command line (`.rcad` argument; other files are imported after load) | ui/app.py:1962-1978, ui/load_process.py:44-46 | `POST /import` for the extra files | `main.rs:take_file` → `CadTarget::File` (one `.rcad` FILE argument; or `--cad-url`) | deliberately different: the viewer takes one file argument; other files are imported after it opens, with File > Import… (`cad/files/mod.rs:file`, `FileOp::Import`) |
 | Attach to a running RoboCAD (each window serves REST from 8420 up; `ROBOCAD_API_PORT`) | ui/app.py:1783-1795 | `GET /` (api.py:387) | `CadAction::CadOpen { url }` (loopback only; never stopped) | done-by-reading |
-| New ("New", `file.new`: an empty document in a new window) | ui/app.py:283 | none needed: a headless service starts on no path (api.py:1398) | cad-views-export epic (`service_command` takes a document path today) | later-epic: cad-views-export |
-| Save ("Save", `file.save`; with no path it falls through to Save As) | ui/app.py:285, ui/app.py:1337-1342 | `POST /save` (api.py:957; answers 400 "no path" for a never-saved document) | `CadAction::CadSave { path: None }` → `CadClient::save`; key Ctrl/Cmd+S in `cad::keys` | done-by-reading |
-| Save writes `thumbnail.png` from the viewport into the `.rcad` | ui/app.py:1340, ui/app.py:1352-1362 | none: needs a Python route (`Service.save`, api.py:962, calls `doc.save(p)` with no thumbnail) | cad-views-export epic | later-epic: cad-views-export |
-| Save As… ("Save As…", `file.save_as`; appends `.rcad`) | ui/app.py:286, ui/app.py:1344-1350 | `POST /save {"path"}` | `CadAction::CadSave { path: Some }` (REST `cad_save`); the save-as dialog belongs to cad-views-export | done-by-reading |
+| New ("New", `file.new`: an empty document in a new window) | ui/app.py:283 | `POST /new {"path"}` (api.py `Service.new_file`, added with cad-views-export: creates the `.rcad` exclusively, `open(path, "xb")`, then saves an empty document over it, so an existing file is never replaced (409)) | File > New and Ctrl+N → `cad/files/mod.rs:file` (`FileOp::New`: the path form; `cad_open`'s rule, `CadDocument::switch_blockers`, checked before RoboCAD writes the file; then `crates/sim-runtime/src/cad_client/files.rs:CadClient::new_file` on a `Pool::Dedicated` job, then `CadOpen` of the new file, `jobs::Then::Open`: `cad/files/jobs.rs:receive` for a click, `cad/files/jobs.rs:wait` → `open_created` for a REST caller, whose answer is the open's outcome) | deliberately different: New names its file first and opens it in this window under `cad_open`'s rule (a self-started service with unsaved edits is refused; an attached RoboCAD keeps its edits): CAD mode shows one document, served by a headless service from its file; RoboCAD opens an untitled window, so its New never loses edits |
+| Save ("Save", `file.save`; with no path it falls through to Save As) | ui/app.py:285, ui/app.py:1337-1342 | `POST /save` (api.py:957; answers 400 "no path" for a never-saved document); since f15766ea the viewer sends `POST /save/thumbnail` instead, as RoboCAD's desktop Save writes the thumbnail too | `CadAction::CadSave { path: None }` (Ctrl/Cmd+S in `cad::keys`, `cad:save`, REST `cad_save`) → `cad/actions.rs` CadSave arm → `cad/files/mod.rs:save` → `crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail` | done-by-reading |
+| Save writes `thumbnail.png` from the viewport into the `.rcad` | ui/app.py:1340, ui/app.py:1352-1362 | `POST /save/thumbnail {"path"?}` (api.py `Service.save_with_thumbnail`, added with cad-views-export: the window's thumbnail, or headless the snapshot renderer at 256 × 192) | every save: Save (Ctrl/Cmd+S, `cad:save`, REST `cad_save`: `CadAction::CadSave`, `cad/actions.rs` CadSave arm) and Save As… (`cad/files/mod.rs:file`, `FileOp::SaveAs`) both go through `cad/files/mod.rs:save` → `crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail`; the status line says whether RoboCAD could draw the thumbnail | done-by-reading |
+| Save As… ("Save As…", `file.save_as`; appends `.rcad`) | ui/app.py:286, ui/app.py:1344-1350 | `POST /save {"path"}`; the viewer sends `POST /save/thumbnail {"path"}` (since cad-views-export; REST `cad_save {path}` too since f15766ea) | File > Save As… and Ctrl+Shift+S open the path form (`cad/files/mod.rs:file`, `FileOp::SaveAs`: absolute, `~/` expanded, appends `.rcad`) → `cad/files/mod.rs:save` → `CadClient::save_with_thumbnail`; REST `cad_save {path}` is `CadAction::CadSave { path: Some }` → `cad/files/mod.rs:absolute` (absolute, `~/` expanded; no `.rcad` appended) → the same `save`; a self-started document follows the saved file (`Edit::retarget`, set on the edit that save started) | done-by-reading |
 | Quit ("Quit", `file.quit` → window close) | ui/app.py:290 | n/a (display) | the viewer's own window | deliberately different: one native app with modes; leaving CAD mode is the app's mode switch, not a RoboCAD window close |
 | Window title "robocad — name *" (dirty marker) | ui/app.py:126-127, ui/app.py:1820 | `GET /` (`path`, `dirty`) | `cad::panel` header (path and dirty from `Health`) | done-by-reading |
 | Several documents at once (`WINDOWS`; New and Open add windows) | ui/app.py:65, ui/app.py:121 | n/a (display) | one RoboCAD document per CAD mode (`CadDocument`) | deliberately different: CAD mode shows one document; another RoboCAD window can still be attached by URL |
@@ -129,10 +162,10 @@ the feature is later, not that it cannot be reached at all.
 | "User guide" (`help.guide`: a message box with the path of USER_GUIDE.md) | ui/app.py:430, ui/app.py:1875-1877 | n/a (display) | docs/architecture/native-viewer.md and this ledger | deliberately different: RoboCAD shows only a path; the viewer's docs live in the repository |
 | "Open diagnostics folder" (`help.logs`) | ui/app.py:431, ui/app.py:1879-1883 | none needed | the self-started service's stderr log (`service::log_path`), whose tail is quoted in connection errors | deliberately different: the viewer reports the log of the service it started; RoboCAD's own session logs stay in RoboCAD |
 | Dark stylesheet | ui/app.py:44-57 | n/a (display) | the UI kit's theme | deliberately different: the native UI kit owns the look (native-viewer.md "UI kit") |
-| High-Contrast Theme (`view.high_contrast`, kept in QSettings) | ui/app.py:317, ui/app.py:1085-1093, ui/viewport.py:287 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| 3Dconnexion SpaceMouse (buttons mapped in `~/.robocad/spacemouse.json`) | ui/app.py:1885-1918 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
+| High-Contrast Theme (`view.high_contrast`, kept in QSettings) | ui/app.py:317, ui/app.py:1085-1093, ui/viewport.py:287 | n/a (display) | `view.high_contrast` (View menu), the toolbar's Contrast chip (`cad/display/ui.rs:toolbar`) → `cad/display/mod.rs:apply_display` (toggle); drawn by `cad/display/draw.rs:lights` (background 0.98, 0.98, 0.99), `draw_grid` and `draw_edges` (black edges) | deliberately different: only the 3D view changes (background, grid, edges): the UI kit's colour tokens are constants, so RoboCAD's stylesheet swap has no counterpart; not kept between launches (RoboCAD keeps it in QSettings) |
+| 3Dconnexion SpaceMouse (buttons mapped in `~/.robocad/spacemouse.json`) | ui/app.py:1885-1918 | n/a (display) | none | deliberately different: RoboCAD polls `pyspacemouse` when it is installed (ui/app.py:1885-1918); Bevy 0.19.1 has no 6-DoF input (bevy_input reads keyboards, mice, touch and gamepads) and no HID crate is in the workspace, so it needs a new dependency; the same motions are the shared camera's actions (`camera_orbit`, `camera_pan`, `camera_zoom`) |
 | Drop image files on the viewport: they become references | ui/app.py:243-245, ui/app.py:1801-1803 | `POST /ops/import_references` | cad-organize epic | later-epic: cad-organize |
-| "Preferences…" (`edit.preferences`): grid step | ui/app.py:300, ui/app.py:1491-1494 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
+| "Preferences…" (`edit.preferences`): grid step | ui/app.py:300, ui/app.py:1491-1494 | n/a (display) | none: the grid keeps RoboCAD's default step (`cad/display/mod.rs:GRID_STEP_MM`, 10 mm) | deliberately different: RoboCAD's Preferences dialog sets its desktop autosave timer, which a headless service does not have, and its viewport grid step; the native grid keeps the 10 mm default (`cad/surfaces/registry.rs` `PREFERENCES`) |
 | Shutdown on close: cancel component jobs, picks and measurements; stop autosave, the export child, pose, bridge, API and sim link | ui/app.py:1935-1959 | n/a | the self-started service is stopped when the document closes (`jobs::ChildProcess::stop`; an attached RoboCAD is never stopped) | done-by-reading |
 
 ## Autosave and unsaved-edit rules
@@ -142,14 +175,14 @@ the feature is later, not that it cannot be reached at all.
 | Background autosave every N s (default 120 s, from QSettings) while dirty; the archive is captured on the Qt thread and written by a worker | ui/app.py:103-112, ui/app.py:129-161 | `GET /autosave` (api.py:390; GUI only, 409 headless) | `cad::panel` autosave indicator from `CadClient::autosave` (GUI only) | done-by-reading |
 | The autosave path `<name>.autosave.rcad` | document.py:640-643 | `GET /autosave` (`path`) | `cad::panel` (GUI only) | done-by-reading |
 | "Autosaved to …" status | ui/app.py:1858-1859 | `GET /autosave` (`saved_revision`) | `cad::panel` autosave indicator | done-by-reading |
-| "Autosave failed: …" status | ui/app.py:145-146, ui/app.py:160-161 | none: needs a Python route (`Service.autosave`, api.py:390-399, does not report a failed write) | cad-views-export epic | later-epic: cad-views-export |
-| Start a recovery save now | api.py:390-393 | `POST /autosave` (GUI only) | cad-views-export epic | later-epic: cad-views-export |
-| Preferences: autosave interval ("Autosave interval (seconds):") | ui/app.py:300, ui/app.py:1486-1490 | none: needs a Python route (GUI: `POST /commands/edit.preferences` opens the Qt dialogs) | cad-views-export epic | later-epic: cad-views-export |
+| "Autosave failed: …" status | ui/app.py:145-146, ui/app.py:160-161 | none: needs a Python route (`Service.autosave`, api.py:390-399, does not report a failed write) | attached to RoboCAD's window: the autosave indicator from `GET /autosave` (`cad::panel`) | deliberately different: a headless service never autosaves (only RoboCAD's window starts autosave, ui/app.py:112), so there is no failure to report; attached to a window, RoboCAD shows its own failure status |
+| Start a recovery save now | api.py:390-393 | `POST /autosave` (GUI only) | none | deliberately different: `POST /autosave` is GUI-only (409 headless) and the viewer never saves for the user; Save and Save As write the file |
+| Preferences: autosave interval ("Autosave interval (seconds):") | ui/app.py:300, ui/app.py:1486-1490 | none: needs a Python route (GUI: `POST /commands/edit.preferences` opens the Qt dialogs) | none | deliberately different: the interval sets RoboCAD's desktop autosave timer, which a headless service does not have (`cad/surfaces/registry.rs` `PREFERENCES`) |
 | A headless service never autosaves: `Document.start_autosave` is called only by the window (ui/app.py:112) | document.py:645-660, api.py:1390-1405 | none | CAD mode must not lose a self-started document's edits; see the next three rows | done-by-reading |
 | Replacing a self-started document that has unsaved edits | n/a (RoboCAD opens new windows instead) | `GET /` (`dirty`) | `CadAction::CadOpen` is refused, naming the reason ("…has unsaved edits in the RoboCAD service this window started…: save first") | done-by-reading |
 | Leaving CAD mode while an edit is in flight | n/a | n/a | refused, naming the edit (`cad::document::Edit`, `app::switch::leaving_blockers`) | done-by-reading |
-| Closing with unsaved changes: "Unsaved changes" / "Save before closing?" (Save, Discard, Cancel); a failed or cancelled save keeps the window | ui/app.py:1920-1934 | `GET /` (`dirty`), `POST /save` | `CadDocument::switch_blockers` (leaving CAD mode or `cad_open` is refused while a self-started service has unsaved edits, or while its saved state can't be confirmed); `CadDocument::release_child` and `sync::on_exit` (closing the window detaches a dirty self-started service, leaves it running and logs its URL; a clean one is stopped); an attached RoboCAD is never stopped and keeps its edits | deliberately different: the viewer never saves for the user, so there is no Save/Discard prompt; it refuses to leave, or keeps the service running, instead of losing edits |
-| The viewer never writes the `.rcad` itself | n/a | `POST /save` only | `cad::document` (module doc), `CadAction::CadSave` | done-by-reading |
+| Closing with unsaved changes: "Unsaved changes" / "Save before closing?" (Save, Discard, Cancel); a failed or cancelled save keeps the window | ui/app.py:1920-1934 | `GET /` (`dirty`), `POST /save` (the viewer: `POST /save/thumbnail`) | `CadDocument::switch_blockers` (leaving CAD mode or `cad_open` is refused while a self-started service has unsaved edits, or while its saved state can't be confirmed); `CadDocument::release_child` and `sync::on_exit` (closing the window detaches a dirty self-started service, leaves it running and logs its URL; a clean one is stopped); an attached RoboCAD is never stopped and keeps its edits | deliberately different: the viewer never saves for the user, so there is no Save/Discard prompt; it refuses to leave, or keeps the service running, instead of losing edits |
+| The viewer never writes the `.rcad` itself | n/a | `POST /save/thumbnail` (and `POST /new`, which RoboCAD writes) only | `cad::document` (module doc), `CadAction::CadSave`, `cad/files/mod.rs:save` | done-by-reading |
 
 ## Load progress and cancel
 
@@ -161,7 +194,7 @@ the feature is later, not that it cannot be reached at all.
 | "Could not open model" with the error and the diagnostics path | ui/model_loading.py:360-369 | n/a | `Connection::Lost` with the error verbatim and the tail of the service's stderr log | done-by-reading |
 | "The CAD file changed while reading/loading" | ui/model_loading.py:115-117, ui/model_loading.py:147-149 | n/a | n/a | deliberately different: the headless service uses `Document.load` (api.py:1398), which has no such check |
 | Disposable display cache keyed by archive hash (`~/Library/Caches/robocad/display`) | ui/model_loading.py:30-99, ui/model_loading.py:102-151 | n/a | `cad::mesh` caches meshes in memory by (node id, revision) | deliberately different: the native cache lives in memory only; RoboCAD's cache files are left alone |
-| `POST /open` returns a `load_id`; poll and cancel through `/loads/{id}` | api.py:966-985, ui/model_loading.py:297-307 | `POST /open`, `GET/DELETE /loads/{id}` (GUI only) | `CadClient::open`, `load_status`, `cancel_load` exist; the UI is cad-views-export | later-epic: cad-views-export |
+| `POST /open` returns a `load_id`; poll and cancel through `/loads/{id}` | api.py:966-985, ui/model_loading.py:297-307 | `POST /open`, `GET/DELETE /loads/{id}` (GUI only) | File > Open… → `cad/files/mod.rs:file` (`FileOp::Open` → `CadAction::CadOpen`: a self-started headless service on the file); `crates/sim-runtime/src/cad_client/mod.rs:CadClient::open`, `load_status` and `cancel_load` stay client calls, unused | deliberately different: `POST /open` opens another RoboCAD window (409 headless) and never replaces the document; CAD mode starts its own headless service on the file instead (see "Headless versus GUI-only routes") |
 
 ## Edit and history
 
@@ -225,15 +258,15 @@ the feature is later, not that it cannot be reached at all.
 | Double-click a name to rename it in place | ui/widgets.py:256, ui/widgets.py:341-352 | `PATCH /nodes/{id} {"name"}` | cad-organize epic (the REST rename is done: see "Edit and history") | later-epic: cad-organize |
 | Drag rows into a group, or before a sibling | ui/widgets.py:251-252, ui/widgets.py:366-381 | `POST /ops/move_nodes`; `PATCH /nodes/{id} {"parent", "index"}` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Fit in view" ("Fit in view: names" / "No geometry to frame in this selection") | ui/widgets.py:397-401, ui/widgets.py:408 | n/a (display) | `CadAction::CadFit { id }` (native camera) | done-by-reading |
-| Context menu "Isolate" | ui/widgets.py:410 | `POST /ops/isolate` | cad-views-export epic | later-epic: cad-views-export |
-| Context menu "Hide" / "Show" (whole selection, one undo step) | ui/widgets.py:411-412 | `POST /ops/set_visible` | cad-views-export epic (single nodes: the visibility toggle above) | later-epic: cad-views-export |
+| Context menu "Isolate" | ui/widgets.py:410 | `POST /ops/isolate` | View > Isolate, `/` and the 3D view's right-click "Isolate" → `cad/ops/catalogue/view.rs:ENTRIES` (`view.isolate`: `POST /ops/isolate` on the selected nodes) | deliberately different: offered in the View menu, on `/` and in the 3D view's right-click menu: the native tree has no context menu (the outliner's menu belongs to cad-organize) |
+| Context menu "Hide" / "Show" (whole selection, one undo step) | ui/widgets.py:411-412 | `POST /ops/set_visible` | Hide: View > Hide, H and the 3D view's right-click "Hide" → `cad/ops/catalogue/view.rs:ENTRIES` (`view.hide`: `POST /ops/set_visible` with false, one undo step); Show: the tree's per-node visibility toggle, or Show All | deliberately different: the native tree has no context menu (the outliner's menu belongs to cad-organize), so there is no "Show" of a whole selection; Hide is in the View menu, on H and in the 3D view's right-click menu |
 | Context menu "Lock" / "Unlock" (whole selection) | ui/widgets.py:413-414 | `POST /ops/set_locked` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Group selection…" | ui/widgets.py:415 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Move to group" ▸ "Top level" and every group path ("A / B") | ui/widgets.py:416-430 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Make unique (bake instance)" | ui/widgets.py:431 | `POST /ops/make_unique` | `cad::surfaces::context_menu`: `registry::MAKE_UNIQUE` ("Make unique (bake instance)") is added to the 3D view's right-click menu while an instance is selected (`context_menu::instance_selected`) → `CadInvoke { modify.make_unique }` → `cad::ops` catalogue `modify.make_unique` (instances only, one call per node) | deliberately different: offered in the 3D view's right-click menu: the native tree has no context menu (the outliner's menu belongs to cad-organize) |
 | Context menu "Set as active group"; "Clear active group"; registry "Set selected group as active" (`group.set_active`) | ui/widgets.py:432-435, ui/app.py:427 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Delete" | ui/widgets.py:434 | `DELETE /nodes/{id}`; `POST /ops/delete` | the panel's Delete (`cad:delete` → `CadInvoke { edit.delete }`: every selected node in one `POST /ops/delete` since cad-modify); REST `cad_delete` (`CadAction::CadDelete`, one node) | done-by-reading |
-| Context menu "Show all" | ui/widgets.py:436 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
+| Context menu "Show all" | ui/widgets.py:436 | `POST /ops/show_all` | View > Show All and Alt+H → `cad/ops/catalogue/view.rs:ENTRIES` (`view.show_all`: `POST /ops/show_all`) | deliberately different: offered in the View menu and on Alt+H: the native tree has no context menu (the outliner's menu belongs to cad-organize) |
 | "Group selection" (`group.group`) | ui/app.py:428 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 
 ## Inspector (properties)
@@ -248,7 +281,7 @@ inspector shows as returned.
 | "Calculate exact measurements" (a separate process over the whole selection: size, volume, area, mass, centroid; 60 s limit; cancelled by any edit or selection change) | ui/widgets.py:456-462, ui/widgets.py:566-633 | `GET /nodes/{id}` per node (combined natively) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | Live dimensions of the selected faces and edges, editable | ui/widgets.py:505-509, ui/app.py:654-691 | `GET /nodes/{id}/faces`, `/edges`; `POST /ops/set_diameter`, `set_distance`, `set_angle` | `cad::transform::dimensions::live` as `cad::numeric` fields; Enter → `CadAction::CadSetDimension` → `cad::transform::commit::dimension_call` | done-by-reading |
 | "Material" dropdown "name (density g/cm³)", applied to the selection | ui/widgets.py:465-468, ui/widgets.py:491-503, ui/widgets.py:723-728 | `PATCH /nodes/{id} {"material"}`; `GET /doc` (`materials`) | `cad::inspector` material choice → `CadPatch` | done-by-reading |
-| "Tessellation tolerance (mm)" (0.005–2.0; RoboCAD's panel sets it without undo) | ui/widgets.py:469-476, ui/widgets.py:730-735 | `PATCH /nodes/{id} {"tessellation_tolerance"}` (undoable) | cad-views-export epic | later-epic: cad-views-export |
+| "Tessellation tolerance (mm)" (0.005–2.0; RoboCAD's panel sets it without undo) | ui/widgets.py:469-476, ui/widgets.py:730-735 | `PATCH /nodes/{id} {"tessellation_tolerance"}` (undoable) | `cad/inspector/editors.rs:patch_for` (the inspector's "Tessellation tolerance (mm)" field: 0.005–2 mm, three decimals; one `PATCH /nodes/{id} {"tessellation_tolerance"}`); meshes refetched at the node's own tolerance (`cad/mesh.rs:sync`) | deliberately different: it patches the inspected node as one undo step, like every inspector edit (RoboCAD's spin box writes every selected node directly, without undo), and the field opens empty because RoboCAD reports no node's current value |
 | Joint physics overrides: "Radial clearance (mm)", "Wobble (°)", "Drive backlash (°; provenance)" ("Unmeasured"), "Coulomb friction (mN·m)", "Viscous (mN·m·s)", "Radial stiffness (N/m)", "Flex patch radius (mm)", the source line, and "*" for overridden values | ui/widgets.py:510-544, ui/widgets.py:635-679 | `GET /physical?flex=0` (joint `physics`, physical.py:552); `POST /ops/set_joint_physics` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | "Results: key value, …" for the selected node | ui/widgets.py:545-549 | none: needs a Python route (`Node.results` is not in `node_detail`; `GET /results` returns only the whole file, mapped to nodes in physical.py:999-1024) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | "Material properties…" ("name: engineering properties" dialog) | ui/widgets.py:550-552, ui/widgets.py:681-713 | `POST /ops/set_material_props` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
@@ -298,50 +331,50 @@ inspector shows as returned.
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | Tessellated bodies, sheets, instances and meshes in their node or material colour | ui/viewport.py:397-430, ui/viewport.py:693-812, ui/viewport.py:1617-1633 | `GET /nodes/{id}/mesh?tolerance=` | `cad::mesh` (fetch, Compute build, `CadBody` entities, display only) | done-by-reading |
-| Tessellation at the node's `tessellation_tolerance` | ui/viewport.py:265-268, ui/widgets.py:469-476 | `GET /nodes/{id}/mesh?tolerance=` | `cad::mesh` uses `MESH_TOLERANCE` (0.1 mm, api.py's default) | deliberately different: one fixed display tolerance in this epic; the per-node tolerance belongs to cad-views-export |
+| Tessellation at the node's `tessellation_tolerance` | ui/viewport.py:265-268, ui/widgets.py:469-476 | `GET /nodes/{id}/mesh?tolerance=` | `cad/mesh.rs:sync` asks `GET /nodes/{id}/mesh` with `crates/sim-runtime/src/cad_client/mod.rs:NODE_TOLERANCE` (0), which RoboCAD's `mesh_of` reads as the node's own tolerance (since cad-views-export; before, a fixed 0.1 mm) | done-by-reading |
 | Z-up world, lights | ui/viewport.py:41-75, ui/viewport.py:568-588 | n/a (display) | `cad::scene` (Z-up root, light) | done-by-reading |
 | Display "shaded" | ui/viewport.py:260, ui/viewport.py:693-760 | n/a (display) | `cad::mesh` shaded bodies | done-by-reading |
-| Display "shaded with edges" (RoboCAD's default) | ui/viewport.py:282, ui/viewport.py:761-786 | B-rep edge polylines: see the row below | cad-views-export epic | later-epic: cad-views-export |
-| Display "wireframe" | ui/viewport.py:260, ui/viewport.py:765-775 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Display "xray" | ui/viewport.py:260, ui/viewport.py:732-760 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Display "matcap" (procedural clay) | ui/viewport.py:260, ui/viewport.py:700-707, ui/viewport.py:1682-1703 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Display "render" (three lights, ground shadow) | ui/viewport.py:260, ui/viewport.py:336-337, ui/viewport.py:708, ui/viewport.py:879-904 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "Next display mode" (`view.mode_next`) and "Display: …" (`view.mode.shaded`, `view.mode.shaded_edges`, `view.mode.wireframe`, `view.mode.xray`, `view.mode.matcap`, `view.mode.render`) | ui/app.py:307-309, ui/app.py:1042-1048 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| B-rep edge polylines (display edges, edge picking, curve nodes) | ui/viewport.py:1634-1672, ui/viewport.py:906-920 | `GET /nodes/{id}/edges?samples=N` (api.py:625-638: each edge's `points`, as `kernel.sample_edges`); `/mesh` has no curves | cad-views-export epic (display edges and curve nodes); edge picking is `cad::pick` and `cad::topology` (cad-select-transform) | later-epic: cad-views-export |
+| Display "shaded with edges" (RoboCAD's default) | ui/viewport.py:282, ui/viewport.py:761-786 | B-rep edge polylines: see the row below | `cad/display/draw.rs:edges_sync` (each drawn body's `GET /nodes/{id}/edges?samples=24` on `Pool::Dedicated`, or `CadTopology`'s) and `lines` → `draw_edges` (RoboCAD's 0.08, 0.08, 0.1, cut by the section plane); the default mode (`cad/display/mod.rs:CadDisplay`) | done-by-reading |
+| Display "wireframe" | ui/viewport.py:260, ui/viewport.py:765-775 | n/a (display) | `cad/display/draw.rs:derive_material` (`MaterialLook::Wireframe`: a transparent copy that stays pickable) and `draw_edges` (0.6 × colour + 0.3; a mesh node shows its triangle sides) | done-by-reading |
+| Display "xray" | ui/viewport.py:260, ui/viewport.py:732-760 | n/a (display) | `cad/display/draw.rs:derive_material` (`MaterialLook::Xray`: alpha 0.35, blended) and `draw_edges` | done-by-reading |
+| Display "matcap" (procedural clay) | ui/viewport.py:260, ui/viewport.py:700-707, ui/viewport.py:1682-1703 | n/a (display) | `cad/display/draw.rs:derive_material` (`MaterialLook::Matcap`) | deliberately different: approximated without a custom shader: the colour times RoboCAD's clay tint (235/225/210), fully rough, lit by the view-following headlight; RoboCAD's sampled sphere image and its rim term are not reproduced |
+| Display "render" (three lights, ground shadow) | ui/viewport.py:260, ui/viewport.py:336-337, ui/viewport.py:708, ui/viewport.py:879-904 | n/a (display) | `cad/display/draw.rs:lights` (the headlight casts shadows; RoboCAD's fill and back lights) | deliberately different: no ground shadow (Bevy has no shadow-catcher material) and the ambient is not lowered; bodies shadow each other |
+| "Next display mode" (`view.mode_next`) and "Display: …" (`view.mode.shaded`, `view.mode.shaded_edges`, `view.mode.wireframe`, `view.mode.xray`, `view.mode.matcap`, `view.mode.render`) | ui/app.py:307-309, ui/app.py:1042-1048 | n/a (display) | `cad/surfaces/registry.rs:DisplayCmd::action` → `cad/display/mod.rs:apply_display` (`next` in RoboCAD's order, or `mode`): Z, the View menu, the view radial's Mode, the toolbar's six modes (`cad/display/ui.rs:toolbar`), REST `cad_display`, `system_ui` `cad:display:*` | done-by-reading |
+| B-rep edge polylines (display edges, edge picking, curve nodes) | ui/viewport.py:1634-1672, ui/viewport.py:906-920 | `GET /nodes/{id}/edges?samples=N` (api.py:625-638: each edge's `points`, as `kernel.sample_edges`); `/mesh` has no curves | display edges: `cad/display/draw.rs:edges_sync` and `draw_edges` (bodies, sheets, instances; a mesh node shows its triangle sides); edge picking: `cad::pick` and `cad::topology` (cad-select-transform); curve nodes: `cad/display/draw.rs:edges_sync` fetches every visible `curve` node's `GET /nodes/{id}/edges?samples=32` (`curve_nodes`, `fetch_edges` with `CURVE_SAMPLES`, in every display mode) and `lines` draws them as 2 px gizmo polylines in RoboCAD's colours (`curve_color`: 1.0, 0.65, 0.2 selected, else the node's colour, else 0.35, 0.8, 1.0), cut by the section plane | deliberately different: curve nodes are drawn but not pickable in the 3D view (RoboCAD's 8 px curve pick pass is not ported); pick them in the tree |
 | Sketch curves drawn on their planes | ui/viewport.py:922-939 | `GET /nodes/{id}` (its `sketch` field, so dropped curves are counted) | `cad::sketch::display` (`shown`: every `effective_visible` sketch node; `lines`: each curve's `SketchCurve::sample(48)` through the sketch's own plane, from `CadSketches::sketch_last`; `draw`, Present: orange (1.0, 0.65, 0.2) when selected, else blue (0.35, 0.8, 1.0), 2 px over the bodies); the geometry from `cad::sketch::cache::sync` (`CadClient::sketch`, one Dedicated job per node, by (node, revision)) | deliberately different: a slot's caps bulge outward, as the kernel's solid does (`sim_runtime::cad_client::SketchCurve::sample`); RoboCAD's viewport turns them inward (`io/exporters.py` `_slot_points` sweeps the other way: a RoboCAD display bug, see the notes below) |
 | Construction planes (translucent quads; the active plane is brighter) | ui/viewport.py:635-657 | `GET /doc`, `GET /nodes/{id}` (`plane`) | `cad::sketch::plane_draw` (`wanted`, `quads`: every visible plane node with its frame read (`CadSketches::plane_last`), a ±60 mm square filled (0.3, 0.6, 0.9) at alpha 0.18 when it is the active plane, else 0.08; `outlines`: alpha 0.8, else 0.4); frames from `cad::sketch::cache` | deliberately different: the active plane is drawn even when no visible plane node is it (XY, XZ, YZ or a hidden node), so the plane the tools work on is always shown; RoboCAD draws plane nodes only |
 | Reference images textured on their planes | ui/viewport.py:659-691 | none: needs a Python route (`node_detail` strips the image bytes, api.py:128-130) | cad-organize epic | later-epic: cad-organize |
 | Joint glyphs, motor shaft axes, sensor triads and sagging cable arcs | ui/viewport.py:971-1021 | `GET /nodes/{id}` (`joint`, `robot`) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Orbit (right-drag, Alt+left-drag, Shift+middle-drag; turntable) | ui/viewport.py:1480-1512, ui/viewport.py:79-86 | n/a (display) | `cad::scene` orbits on right-drag (middle or Shift+right-drag pans, the wheel zooms); Alt+left and Shift+middle orbit are cad-views-export | later-epic: cad-views-export |
-| Pan (Shift+right-drag, middle-drag) | ui/viewport.py:1489-1497, ui/viewport.py:88-91 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
+| Orbit (right-drag, Alt+left-drag, Shift+middle-drag; turntable) | ui/viewport.py:1480-1512, ui/viewport.py:79-86 | n/a (display) | `camera/input.rs:navigate` → `camera/orbit.rs:Orbit::rotate` (turntable, 89.5° pitch limit, `cad/scene.rs:rules`): right-drag, and with `OrbitRules::robocad_gestures` (true only in CAD, `cad/scene.rs:rules`) Shift+middle-drag (`camera/input.rs:drag_kind`) and Alt+left-drag once it moves past `camera/input.rs:ALT_DRAG_SLOP` (6 px), gated by `cad/scene.rs:gate` to the Select tool with no catalogue interaction or command surface; `cad::pick` no longer box-selects an Alt drag, and an Alt click still opens the candidates menu (RoboCAD's own Alt+left orbit never fires: see the notes at the end) | done-by-reading |
+| Pan (Shift+right-drag, middle-drag) | ui/viewport.py:1489-1497, ui/viewport.py:88-91 | n/a (display) | `camera/input.rs:navigate` → `camera/orbit.rs:Orbit::pan` on middle-drag or Shift+right-drag | done-by-reading |
 | Wheel zoom | ui/viewport.py:1553-1569 | n/a (display) | `cad::scene` zoom | done-by-reading |
-| Wheel zoom toward the point under the cursor | ui/viewport.py:97-103, ui/viewport.py:1559-1563 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "Toggle orbit: turntable / trackball" (`view.orbit_mode`) | ui/app.py:310, ui/app.py:1050-1057 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Hold Alt while right-orbiting to snap to an axis view | ui/viewport.py:1494-1495, ui/viewport.py:116-120 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Arrow keys orbit 10° (Ctrl: 90°, Shift: pan) | ui/viewport.py:1535-1551 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
+| Wheel zoom toward the point under the cursor | ui/viewport.py:97-103, ui/viewport.py:1559-1563 | n/a (display) | `camera/input.rs:navigate` → `cursor_anchor` (the point under the cursor on the plane through the focus, facing the view) → `camera/orbit.rs:Orbit::zoom` (the eye scales about it, as RoboCAD's `Camera.zoom`); on in CAD (`cad/scene.rs:rules`, `zoom_to_cursor`) | done-by-reading |
+| "Toggle orbit: turntable / trackball" (`view.orbit_mode`) | ui/app.py:310, ui/app.py:1050-1057 | n/a (display) | `view.orbit_mode` (View menu) → `CameraAction::OrbitMode` → `camera/orbit.rs:Orbit::set_trackball` (starts from the current view; back to the nearest turntable heading) | done-by-reading |
+| Hold Alt while right-orbiting to snap to an axis view | ui/viewport.py:1494-1495, ui/viewport.py:116-120 | n/a (display) | `camera/input.rs:navigate`: Alt with a right-drag orbit (`drag_kind` → `DragKind::OrbitSnap`) rotates, then `camera/orbit.rs:Orbit::snap_to_axis` (yaw to a multiple of 90°, pitch to ±89.5° beyond ±45°, else level), after every orbit step while Alt is held, as RoboCAD's `snap_orthographic` | done-by-reading |
+| Arrow keys orbit 10° (Ctrl: 90°, Shift: pan) | ui/viewport.py:1535-1551 | n/a (display) | `camera/input.rs:keys` → `arrow_action` while `OrbitRules::robocad_gestures` (CAD) and no text field has the keyboard (`typing`): `CameraAction::Orbit { degrees }` by 10° (Ctrl/Cmd 90°), or with Shift `CameraAction::Pan` by 4 px per degree (RoboCAD's `pan(-dx × 4, dy × 4)`), applied by `camera/apply.rs:handle` | done-by-reading |
 | "Fit All" (`view.fit`, Home) | ui/app.py:301, ui/viewport.py:443-447 | n/a (display) | `CadAction::CadFit { id: None }` → `cad::scene`; key Home | done-by-reading |
-| "Focus Selection" (`view.focus`, F; includes a group's descendants) | ui/app.py:302, ui/viewport.py:449-474 | n/a (display) | cad-views-export epic (`CadFit { id }` already frames one node) | later-epic: cad-views-export |
-| "View front" (`view.front`) | ui/app.py:303-304, ui/viewport.py:110-114 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "View back" (`view.back`) | ui/app.py:303-304 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "View top" (`view.top`) | ui/app.py:303-304 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "View bottom" (`view.bottom`) | ui/app.py:303-304 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "View right" (`view.right`) | ui/app.py:303-304 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "View left" (`view.left`) | ui/app.py:303-304 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "View iso" (`view.iso`) | ui/app.py:303-304 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "Orthographic" (`view.ortho`) | ui/app.py:305, ui/app.py:1034-1036 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "Set field of view…" (`view.fov`, 5–120°) | ui/app.py:311, ui/app.py:1059-1063 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| View cube in the corner; a click sets that view; a second click shows the opposite | ui/viewport.py:1134-1196, ui/viewport.py:1458-1468 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "Grid" (`view.grid`; 10 mm step; drawn on XY) | ui/app.py:306, ui/app.py:1038-1040, ui/viewport.py:590-620 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "Build Plate Preview" (`view.build_plate`: 220 × 220 mm plate; turns overhang shading on) | ui/app.py:316, ui/app.py:1072-1077, ui/viewport.py:622-633 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| "Section Analysis" (`view.section`; Section tool: clip plane, drag along its normal, Tab offset, R rotates 90° about Z) | ui/app.py:315, ui/app.py:1065-1070, ui/tools.py:1158-1207, ui/viewport.py:538-542 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Section outline from display triangles (never the kernel); picks respect the clip | ui/section_preview.py:6-55, ui/viewport.py:941-969, ui/viewport.py:1260-1261 | n/a (display); exact B-rep sections: `GET /nodes/{id}/section` | cad-views-export epic | later-epic: cad-views-export |
-| "Isolate" (`view.isolate`) | ui/app.py:312, commands.py:402 | `POST /ops/isolate` | cad-views-export epic | later-epic: cad-views-export |
-| "Show All" (`view.show_all`) | ui/app.py:313, commands.py:415 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
-| "Hide" (`view.hide`, the selection) | ui/app.py:314 | `POST /ops/set_visible` | cad-views-export epic (one node: the tree toggle) | later-epic: cad-views-export |
+| "Focus Selection" (`view.focus`, F; includes a group's descendants) | ui/app.py:302, ui/viewport.py:449-474 | n/a (display) | F, View > Focus Selection → `cad/surfaces/registry.rs:focus` (frames the selected nodes and their descendants; Fit All with nothing selected) | done-by-reading |
+| "View front" (`view.front`) | ui/app.py:303-304, ui/viewport.py:110-114 | n/a (display) | 1 (`cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`); the View menu; the view cube; the view radial for front, top, right and iso) → `CameraAction::View { front }` → `camera/orbit.rs:Orbit::preset` (RoboCAD's yaw and pitch table, `camera/mod.rs:ViewPreset::robocad_degrees`; a cut, as `Camera.set_view`) | done-by-reading |
+| "View back" (`view.back`) | ui/app.py:303-304 | n/a (display) | Ctrl+1 (`cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`); the View menu; the view cube; the view radial for front, top, right and iso) → `CameraAction::View { back }` → `camera/orbit.rs:Orbit::preset` (RoboCAD's yaw and pitch table, `camera/mod.rs:ViewPreset::robocad_degrees`; a cut, as `Camera.set_view`) | done-by-reading |
+| "View top" (`view.top`) | ui/app.py:303-304 | n/a (display) | 7 (`cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`); the View menu; the view cube; the view radial for front, top, right and iso) → `CameraAction::View { top }` → `camera/orbit.rs:Orbit::preset` (RoboCAD's yaw and pitch table, `camera/mod.rs:ViewPreset::robocad_degrees`; a cut, as `Camera.set_view`) | done-by-reading |
+| "View bottom" (`view.bottom`) | ui/app.py:303-304 | n/a (display) | Ctrl+7 (`cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`); the View menu; the view cube; the view radial for front, top, right and iso) → `CameraAction::View { bottom }` → `camera/orbit.rs:Orbit::preset` (RoboCAD's yaw and pitch table, `camera/mod.rs:ViewPreset::robocad_degrees`; a cut, as `Camera.set_view`) | done-by-reading |
+| "View right" (`view.right`) | ui/app.py:303-304 | n/a (display) | 3 (`cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`); the View menu; the view cube; the view radial for front, top, right and iso) → `CameraAction::View { right }` → `camera/orbit.rs:Orbit::preset` (RoboCAD's yaw and pitch table, `camera/mod.rs:ViewPreset::robocad_degrees`; a cut, as `Camera.set_view`) | done-by-reading |
+| "View left" (`view.left`) | ui/app.py:303-304 | n/a (display) | Ctrl+3 (`cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`); the View menu; the view cube; the view radial for front, top, right and iso) → `CameraAction::View { left }` → `camera/orbit.rs:Orbit::preset` (RoboCAD's yaw and pitch table, `camera/mod.rs:ViewPreset::robocad_degrees`; a cut, as `Camera.set_view`) | done-by-reading |
+| "View iso" (`view.iso`) | ui/app.py:303-304 | n/a (display) | 0 (`cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`); the View menu; the view cube; the view radial for front, top, right and iso) → `CameraAction::View { iso }` → `camera/orbit.rs:Orbit::preset` (RoboCAD's yaw and pitch table, `camera/mod.rs:ViewPreset::robocad_degrees`; a cut, as `Camera.set_view`) | done-by-reading |
+| "Orthographic" (`view.ortho`) | ui/app.py:305, ui/app.py:1034-1036 | n/a (display) | 5, View > Orthographic, the view radial's Ortho → `CameraAction::Projection` (toggle) → `camera/orbit.rs:Orbit::projection` (ortho height 2 × distance × tan(fov / 2), as RoboCAD's) | done-by-reading |
+| "Set field of view…" (`view.fov`, 5–120°) | ui/app.py:311, ui/app.py:1059-1063 | n/a (display) | View > Set field of view… → `cad/views/mod.rs:open_fov` (the "Field of view" entry, degrees 5–120, one decimal, `cad/views/panel.rs:input`) → `CameraAction::Fov` (`camera/apply.rs:handle`) | done-by-reading |
+| View cube in the corner; a click sets that view; a second click shows the opposite | ui/viewport.py:1134-1196, ui/viewport.py:1458-1468 | n/a (display) | `cad/display/ui.rs:toolbar` (the cube net) and `cube_press` → `cube_action` (`CameraAction::View`, or `Opposite` when the camera is already at that face); the lit face is `facing` | deliberately different: a 3 × 3 net of kit buttons (Top; Left, Front, Right; Iso, Bottom, Back) in the display panel instead of a shaded 3D cube; the clicks behave as RoboCAD's |
+| "Grid" (`view.grid`; 10 mm step; drawn on XY) | ui/app.py:306, ui/app.py:1038-1040, ui/viewport.py:590-620 | n/a (display) | Ctrl+G, View > Grid, the view radial's Grid, the toolbar's Grid chip → `cad/display/mod.rs:apply_display` (toggle) → `cad/display/draw.rs:draw_grid` (10 mm, ±20 steps on the model's XY, every 5th line major, red X, green Y and blue Z axes) | done-by-reading |
+| "Build Plate Preview" (`view.build_plate`: 220 × 220 mm plate; turns overhang shading on) | ui/app.py:316, ui/app.py:1072-1077, ui/viewport.py:622-633 | n/a (display) | Ctrl+Shift+B, Print > Build Plate Preview, the Plate chip → `cad/display/draw.rs:quads` (220 × 220 mm) and `cad/display/section.rs:overhangs` (45°, built by `preview` on `Pool::Compute`) | done-by-reading |
+| "Section Analysis" (`view.section`; Section tool: clip plane, drag along its normal, Tab offset, R rotates 90° about Z) | ui/app.py:315, ui/app.py:1065-1070, ui/tools.py:1158-1207, ui/viewport.py:538-542 | n/a (display) | Ctrl+Shift+X, Inspect > Section Analysis, the Section chip → `cad/display/mod.rs:apply_section` (toggle; starts on XZ through the bodies' centre, `default_plane`); the toolbar's X, Y, Z chips (through the bodies' centre) and Rotate (`SectionPlane::rotated`); the offset along the normal: the display toolbar's offset field (`cad/display/entry.rs:input`, `offset_action`: a length expression such as "5" or "2 cm"; Enter writes `CadSection {offset}`) and REST `cad_section {"offset"}` | deliberately different: the offset is typed in the toolbar's field and the plane turned by the Rotate chip; R and Tab are not bound (R is the Rotate tool's key, Tab the numeric bar's), and dragging the plane is not bound (a left drag in the 3D view is the Select tool's box selection or the Alt orbit, and the plane quad covers the model) |
+| Section outline from display triangles (never the kernel); picks respect the clip | ui/section_preview.py:6-55, ui/viewport.py:941-969, ui/viewport.py:1260-1261 | n/a (display); exact B-rep sections: `GET /nodes/{id}/section` | `cad/display/section.rs:preview` (clipped copies of the display triangles on `Pool::Compute`, in RoboCAD's triangle order, so a pick on the kept part names the right face and the removed part is never hit) and `segments` (the outline); exact: `exact_jobs` → `crates/sim-runtime/src/cad_client/section.rs:CadClient::section` (`system_ui` `cad:section:exact`, REST `cad_section {"exact"}`) | done-by-reading |
+| "Isolate" (`view.isolate`) | ui/app.py:312, commands.py:402 | `POST /ops/isolate` | /, View > Isolate, the 3D view's right-click menu → `cad/ops/catalogue/view.rs:ENTRIES` (`view.isolate`: `POST /ops/isolate` on the selected nodes, one undo step) | deliberately different: refused by name with nothing selected ("Select the nodes to isolate"); RoboCAD's runs and hides everything |
+| "Show All" (`view.show_all`) | ui/app.py:313, commands.py:415 | `POST /ops/show_all` | Alt+H, View > Show All → `cad/ops/catalogue/view.rs:ENTRIES` (`view.show_all`: `POST /ops/show_all`, one undo step) | done-by-reading |
+| "Hide" (`view.hide`, the selection) | ui/app.py:314 | `POST /ops/set_visible` | H, View > Hide, the 3D view's right-click menu → `cad/ops/catalogue/view.rs:ENTRIES` (`view.hide`: `POST /ops/set_visible` with false on the selected nodes, one undo step) | deliberately different: refused by name with nothing selected ("Select the nodes to hide"); RoboCAD's pushes an empty undo step |
 | Stress overlay (`view.stress` "Toggle stress overlay (from loaded results)" and `print.overlay` "Strength overlay on/off"; blue 0 → red at yield) | ui/app.py:399, ui/app.py:422, ui/app.py:1695-1698, ui/viewport.py:826-877 | none: needs a Python route (per-node `results.hotspot`; see the inspector's "Results" row) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| "Draft-angle shading" (`inspect.draft`, pull +Z) | ui/app.py:403, ui/app.py:1304-1317 | `GET /nodes/{id}/mesh` (derived natively) | cad-views-export epic | later-epic: cad-views-export |
-| "Normal-direction shading" (`inspect.normals`, which switches to xray) | ui/app.py:404, ui/app.py:1319-1322 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Overlay: "tool · mode" and the tool hint; footer "Right-drag orbit · Shift+right-drag pan · Wheel zoom · F focus \| n ms/frame" | ui/viewport.py:1198-1223 | n/a (display) | "tool · mode" and the hint: `cad::numeric` head (`cad::transform::mode_label`, `cad::transform::hint`), at the bottom of the 3D view, with the navigation line (`cad::numeric::NAVIGATION`: this view's own orbit, pan, zoom and Home fit) | deliberately different: no ms/frame readout (frame timing belongs to the diagnostics overlay, see native-viewer.md "Bevy features to use"), and the navigation names this view's keys (Home fits; RoboCAD's F focus is cad-views-export) |
+| "Draft-angle shading" (`inspect.draft`, pull +Z) | ui/app.py:403, ui/app.py:1304-1317 | `GET /nodes/{id}/mesh` (derived natively) | none (`cad/surfaces/registry.rs` `DRAFT_SHADING`) | deliberately different: RoboCAD colours each selected body's triangles by draft against +Z (`analysis.draft_angle_colors`); no route serves those colours and the native meshes carry no per-triangle colours to draw them |
+| "Normal-direction shading" (`inspect.normals`, which switches to xray) | ui/app.py:404, ui/app.py:1319-1322 | n/a (display) | `inspect.normals` (Inspect menu) → `DisplayCmd::Mode(Xray)` (`cad/surfaces/registry.rs`), as RoboCAD's `normal_shading` switches to xray | done-by-reading |
+| Overlay: "tool · mode" and the tool hint; footer "Right-drag orbit · Shift+right-drag pan · Wheel zoom · F focus \| n ms/frame" | ui/viewport.py:1198-1223 | n/a (display) | "tool · mode" and the hint: `cad::numeric` head (`cad::transform::mode_label`, `cad::transform::hint`), at the bottom of the 3D view, with the navigation line (`cad::numeric::NAVIGATION`: this view's own orbit, pan, zoom and Home fit) | deliberately different: no ms/frame readout (frame timing belongs to the diagnostics overlay, see native-viewer.md "Bevy features to use"), and the navigation names this view's keys ("Right-drag orbit · Shift+right-drag or middle-drag pan · Wheel zoom · Home fit"; F focuses the selection since cad-views-export, `cad/surfaces/registry.rs:focus`, but the line does not list it) |
 | Frame time, display triangle counts | ui/viewport.py:561-566, api.py:1222-1228 | `GET /performance` | the viewer's own frame statistics | deliberately different: the viewer measures its own frames; RoboCAD's numbers describe RoboCAD's window |
 
 ## Tools
@@ -388,8 +421,8 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Snapping: vertices, edge midpoints, centres, sketch endpoints, grid, plane, free; Alt suppresses; readout "kind (x, y, z)" | ui/viewport.py:1369-1435, ui/app.py:557-560 | `GET /nodes/{id}/vertices`, `GET /nodes/{id}/edges`, `GET /nodes/{id}` (sketch field) | `cad::snap::snap_on` (`candidates`: vertices, edge midpoints, edge centres; `sketch_candidates`: the visible sketches' endpoints; then the 10 mm grid in plane coordinates; then the plane or free; projected onto the active plane while 2D snapping is on or a sketch or placement tool passes its plane; Alt suppresses), readout `Snap::readout`; used by `cad::measure::tool`, the cursor snap, placement, the plane tools and the sketch tools | deliberately different: centre snaps work here (RoboCAD reads a `centers` attribute its items lack, so its never fire) |
 | Gizmo drawing and hit testing | ui/viewport.py:1060-1132 | n/a (display) | `cad::transform::gizmo::draw` and `hit_test` (RoboCAD's 90 px handles; centre within 10 px, axes and rings within 14 px), CAD mode's own rather than Bevy's `TransformGizmoPlugin` (reasons in cad/transform/mod.rs) | done-by-reading |
 | Tool cursors (arrow, size-all, crosshair) | ui/app.py:519-523 | n/a (display) | `cad::transform::tool_cursor` (arrow, move, crosshair over the 3D view; `restore_cursor` on leaving CAD mode) | done-by-reading |
-| Tools toolbar (Select, Annotate, Saved Views, References, Pose, Experiments, Move, Rotate, Scale, Box, Cylinder, Sphere, Rectangle, Circle, Slot, Extrude, Push/Pull, Fillet, Shell, Union, Subtract, Fastener, Measure, Section, Validate; tools checkable) | ui/app.py:440-447, ui/app.py:527-529 | n/a (display) | `cad::surfaces::toolbar` (`registry::TOOLBAR`, RoboCAD's 25 entries in order, under the menu bar's tabs; each a kit chip with `CadButton(CadInvoke { id })` and `Enabled` from `registry::ready`; the `tool.*` and `sketch.*` entries lit while that tool or op is active, `toolbar::checkable` and `lit`; a hint under the hovered button names its keys and why it cannot run); Rectangle, Circle, Slot and Extrude are catalogue ops (cad-sketch) | deliberately different: the entries owned by later epics (Annotate, Saved Views, References, Pose, Experiments, Fastener, Section, Validate) are shown disabled with the hint naming the epic; Rectangle, Circle and Slot light while their sketch tool is active (RoboCAD checks only `tool.*`, app.py:445-446); the row scrolls sideways where Qt folds its overflow behind "»"; the hint stands in for Qt's tooltips (the kit has no tooltip widget) |
-| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | `cad::surfaces::context_menu` (a right press and release without a drag over the 3D view → `CadSurface { context { at } }`; `registry::CONTEXT`, RoboCAD's 14 entries in order, then a "Sketch" section of the 13 sketch tools in registry order, `registry::SKETCH_CONTEXT`; each enabled by `registry::ready`; a click → `CadInvoke`, then `CadSurface { closed }`) | deliberately different: Annotate and Comments panel (cad-organize), Isolate and Hide (cad-views-export) are shown disabled, naming their epic; the "Sketch" section is a native addition after RoboCAD's 14 (RoboCAD's menu has no sketch tools); the outliner's "Make unique (bake instance)" is added while an instance is selected |
+| Tools toolbar (Select, Annotate, Saved Views, References, Pose, Experiments, Move, Rotate, Scale, Box, Cylinder, Sphere, Rectangle, Circle, Slot, Extrude, Push/Pull, Fillet, Shell, Union, Subtract, Fastener, Measure, Section, Validate; tools checkable) | ui/app.py:440-447, ui/app.py:527-529 | n/a (display) | `cad::surfaces::toolbar` (`registry::TOOLBAR`, RoboCAD's 25 entries in order, under the menu bar's tabs; each a kit chip with `CadButton(CadInvoke { id })` and `Enabled` from `registry::ready`; the `tool.*` and `sketch.*` entries lit while that tool or op is active, `toolbar::checkable` and `lit`; a hint under the hovered button names its keys and why it cannot run); Rectangle, Circle, Slot and Extrude are catalogue ops (cad-sketch) | deliberately different: the entries owned by later epics (Annotate, References, Pose, Experiments, Fastener, Validate) are shown disabled with the hint naming the epic (Saved Views and Section run since cad-views-export: `Do::SavedViews`, `DisplayCmd::Section`); Rectangle, Circle and Slot light while their sketch tool is active (RoboCAD checks only `tool.*`, app.py:445-446); the row scrolls sideways where Qt folds its overflow behind "»"; the hint stands in for Qt's tooltips (the kit has no tooltip widget) |
+| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | `cad::surfaces::context_menu` (a right press and release without a drag over the 3D view → `CadSurface { context { at } }`; `registry::CONTEXT`, RoboCAD's 14 entries in order, then a "Sketch" section of the 13 sketch tools in registry order, `registry::SKETCH_CONTEXT`; each enabled by `registry::ready`; a click → `CadInvoke`, then `CadSurface { closed }`) | deliberately different: Annotate and Comments panel (cad-organize) are shown disabled, naming their epic (Isolate and Hide run since cad-views-export: `cad/ops/catalogue/view.rs:ENTRIES`); the "Sketch" section is a native addition after RoboCAD's 14 (RoboCAD's menu has no sketch tools); the outliner's "Make unique (bake instance)" is added while an instance is selected |
 | Double-click a face: its dimension goes into the numeric bar | ui/tools.py:185-196, ui/app.py:693-713 | `GET /nodes/{id}/faces`; `POST /ops/set_diameter`, `set_distance` | `cad::transform::dimensions::double_click` (`edit_at`: a cylinder's diameter, or a planar face's distance to the opposite face) → the focused `cad::numeric` field; face mode only | deliberately different: face mode only. In body mode the second click's pick (on release) re-selects the body, so a face entry would be overwritten; switch to face mode (Shift+B) first. RoboCAD picks a face temporarily in body mode (tools.py:185-196) |
 | Escape cancels the tool and returns to Select | ui/app.py:487-497, ui/tools.py:103-105 | n/a | Escape → `CadAction::CadCancel` → `cad::transform::cancel` (`activate(Select)`) | done-by-reading |
 
@@ -480,7 +513,7 @@ that difference.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "View radial menu" (`view.radial`, Space: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit) | ui/app.py:318, ui/app.py:1095-1097 | n/a (display) | `cad::surfaces::radial` on `ui_kit::pie` (`registry::VIEW_RADIAL`: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit), opened at the pointer by Space (`cad::keys` → `CadSurface { view_radial }`) or REST `cad_surface` | deliberately different: every entry but Fit belongs to cad-views-export (the native camera has no named views yet) and is shown disabled, saying so |
+| "View radial menu" (`view.radial`, Space: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit) | ui/app.py:318, ui/app.py:1095-1097 | n/a (display) | `cad::surfaces::radial` on `ui_kit::pie` (`registry::VIEW_RADIAL`: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit), opened at the pointer by Space (`cad::keys` → `CadSurface { view_radial }`) or REST `cad_surface`; since cad-views-export every entry runs through the registry (Front, Top, Right, Iso: `CameraAction::View`; Ortho: `CameraAction::Projection`; Grid and Mode: `cad/display/mod.rs:apply_display`; Fit: `CadFit`) | done-by-reading |
 | "Selection-mode radial menu" (`select.mode_radial`, Q: Body, Face, Edge, Vertex, Point) | ui/app.py:321, ui/app.py:1099-1101 | `PUT /selection {"mode"}` | `cad::surfaces::radial` (`registry::SELECT_RADIAL`: Body, Face, Edge, Vertex, Point → `CadInvoke { select.<mode> }` → `CadSelectMode`, pushed with `PUT /selection {"mode"}`), opened at the pointer by Q (`cad::keys`) or REST `cad_surface` | done-by-reading |
 | The pie widget (opens at the cursor; hover highlights; release or click runs; Escape closes) | ui/widgets.py:821-882 | n/a (display) | `ui_kit::pie` (`Kit::pie`, `index_at`: the entry under the pointer's angle, none in the 18 px dead centre; `slot`: the first straight up, then clockwise) and `cad::surfaces::radial::input` (a press inside or a release runs the entry and closes the pie; a press outside or Escape closes it) | deliberately different: the entries are kit buttons of RoboCAD's 92 × 44 size with the kit's 5 px corner radius (rounded rectangles, not RoboCAD's ellipses), so hover, disabled and label styling are the kit's |
 
@@ -639,34 +672,34 @@ that difference.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Saved Views" dock (`view.saved_views`) and its hint | ui/app.py:280, ui/saved_views.py:9-17 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| View name "View name, e.g. Worm drive cutaway" and "Save current view" | ui/saved_views.py:18-28, ui/saved_views.py:82-87 | `POST /views {"name", "state"}` (headless needs `state`) | cad-views-export epic (the native camera written in RoboCAD's state schema, saved_views.py:55-62) | later-epic: cad-views-export |
-| List "name / Orthographic or Perspective · Cutaway"; empty text | ui/saved_views.py:29-37, ui/saved_views.py:64-76 | `GET /views` | cad-views-export epic | later-epic: cad-views-export |
-| "Restore view" and double-click (camera, section, grid, pins, display mode) | ui/saved_views.py:33, ui/saved_views.py:89-96, saved_views.py:65-80 | `GET /views/{id}` (state); `POST /views/{id}/restore` moves only RoboCAD's own window | cad-views-export epic | later-epic: cad-views-export |
-| "Replace with current" | ui/saved_views.py:40, ui/saved_views.py:98-102 | `PATCH /views/{id} {"state"}` | cad-views-export epic | later-epic: cad-views-export |
-| "Rename…" ("Rename saved view" / "View name:") | ui/saved_views.py:41, ui/saved_views.py:104-109 | `PATCH /views/{id} {"name"}` | cad-views-export epic | later-epic: cad-views-export |
-| "Delete" | ui/saved_views.py:41, ui/saved_views.py:111-115 | `DELETE /views/{id}` | cad-views-export epic | later-epic: cad-views-export |
-| Feedback "Saved inside this CAD file · edits support Undo" | ui/saved_views.py:50-52 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
+| "Saved Views" dock (`view.saved_views`) and its hint | ui/app.py:280, ui/saved_views.py:9-17 | n/a (display) | `view.saved_views` (View menu) → `CadViews` panel toggle → `cad/views/panel.rs:draw` (a floating kit panel over the 3D view's lower right) | deliberately different: a floating panel with a Restore view button on every row instead of a dock whose list restores on double-click; its hint says "Restore returns to one" |
+| View name "View name, e.g. Worm drive cutaway" and "Save current view" | ui/saved_views.py:18-28, ui/saved_views.py:82-87 | `POST /views {"name", "state"}` (headless needs `state`) | `cad/views/panel.rs:body` (the name field, "View name, e.g. Worm drive cutaway", and "Save current view") → `cad/views/mod.rs:handle` (`ViewsOp::Save`: `cad/views/convert.rs:capture` of the camera and display, the name checked as RoboCAD's) → `crates/sim-runtime/src/cad_client/views.rs:CadClient::save_view` | done-by-reading |
+| List "name / Orthographic or Perspective · Cutaway"; empty text | ui/saved_views.py:29-37, ui/saved_views.py:64-76 | `GET /views` | `cad/views/panel.rs:body` (name, then `cad/views/convert.rs:details`: "Orthographic" or "Perspective", " · Cutaway"; RoboCAD's empty text) from `cad/views/mod.rs:sync` (`GET /views` on a job at each revision) | done-by-reading |
+| "Restore view" and double-click (camera, section, grid, pins, display mode) | ui/saved_views.py:33, ui/saved_views.py:89-96, saved_views.py:65-80 | `GET /views/{id}` (state); `POST /views/{id}/restore` moves only RoboCAD's own window | "Restore view" on each row → `cad/views/mod.rs:restore` (`CameraAction::Set`, a cut; `cad/views/convert.rs:apply_display`: grid, display mode, comment pins, section) from the listed state; no double-click (see the dock row) | done-by-reading |
+| "Replace with current" | ui/saved_views.py:40, ui/saved_views.py:98-102 | `PATCH /views/{id} {"state"}` | `cad/views/mod.rs:handle` (`ViewsOp::Replace`: `cad/views/convert.rs:capture`) → `crates/sim-runtime/src/cad_client/views.rs:CadClient::update_view` (state only) | done-by-reading |
+| "Rename…" ("Rename saved view" / "View name:") | ui/saved_views.py:41, ui/saved_views.py:104-109 | `PATCH /views/{id} {"name"}` | "Rename…" types into the row's own field (`cad/views/panel.rs:input`) → `ViewsOp::Rename` → `crates/sim-runtime/src/cad_client/views.rs:CadClient::update_view` (name only) | done-by-reading |
+| "Delete" | ui/saved_views.py:41, ui/saved_views.py:111-115 | `DELETE /views/{id}` | `ViewsOp::Delete` → `crates/sim-runtime/src/cad_client/views.rs:CadClient::delete_view` | done-by-reading |
+| Feedback "Saved inside this CAD file · edits support Undo" | ui/saved_views.py:50-52 | n/a (display) | `cad/views/panel.rs:body` (the feedback line; RoboCAD's text until an action reports) | done-by-reading |
 
 ## Export, import and drawings
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Import…" (`file.import`; STEP, IGES, STL, OBJ, 3MF, FBX, PLY, glTF, SVG onto the active plane, PNG/JPG as references) | ui/app.py:287, ui/app.py:1364-1390 | `POST /import {"path", "unit"}` | cad-views-export epic | later-epic: cad-views-export |
-| Mesh units dialog ("Units of the file" / "This format carries no unit. What are the numbers in?") with a guessed default | ui/widgets.py:897-914, ui/app.py:1378-1384 | `POST /import {"unit"}`; the guess: none: needs a Python route (`importers.mesh_units_guess`) | cad-views-export epic | later-epic: cad-views-export |
-| "Export…" (`file.export`; the last path is remembered) | ui/app.py:288, ui/app.py:1392-1397 | `POST /export {"format", "path", "settings", "ids"}` | cad-views-export epic (`CadClient::export` exists) | later-epic: cad-views-export |
-| STL: Format binary/ascii, Unit, Chord tolerance (mm), Angular tolerance (°) | ui/widgets.py:927-931, ui/app.py:1405-1410 | `POST /export {"format": "stl"}` | cad-views-export epic | later-epic: cad-views-export |
-| 3MF: Chord tolerance, "Write colours", "Write names" | ui/widgets.py:932-935, ui/app.py:1411-1416 | `POST /export {"format": "3mf"}` | cad-views-export epic | later-epic: cad-views-export |
-| STEP: Schema AP203/AP214/AP242, "Write names", "Write colours" | ui/widgets.py:944-947, ui/app.py:1417-1423 | `POST /export {"format": "step"}` | cad-views-export epic | later-epic: cad-views-export |
-| IGES | ui/app.py:1424-1426 | `POST /export {"format": "iges"}` | cad-views-export epic | later-epic: cad-views-export |
-| OBJ: Chord tolerance, Scale, Up axis Z/Y, "Quads where possible", "N-gons where possible", "Write MTL", "Write UVs" | ui/widgets.py:936-943, ui/app.py:1427-1432 | `POST /export {"format": "obj"}` | cad-views-export epic | later-epic: cad-views-export |
-| Sketch SVG ("Select a sketch to export as SVG") | ui/app.py:1433-1438 | `POST /export {"format": "svg", "settings": {"sketch"}}` | cad-views-export epic | later-epic: cad-views-export |
-| Export options remembered per format (QSettings `export_settings`) | ui/app.py:78, ui/app.py:1403, ui/app.py:1441, ui/widgets.py:917-985 | n/a (viewer preferences) | cad-views-export epic | later-epic: cad-views-export |
-| Export blocked by validation ("Export blocked") and "Exported: path (n warning(s))" | ui/app.py:1442-1444, ui/strings.py:21 | `POST /export` (422 with the reason; `warnings`) | cad-views-export epic | later-epic: cad-views-export |
-| "Export drawing (SVG)…" (`file.export_drawing`, Ctrl+Shift+D: front, top, right, iso, and "Section A-A" while the section is on) | ui/app.py:289, ui/app.py:1446-1456 | `POST /export {"format": "drawing", "settings": {"views", "section", "title"}}` | cad-views-export epic | later-epic: cad-views-export |
-| "Live link: start (Blender)" / "Live link: stop" (`bridge.start`, `bridge.stop`; websocket) | ui/app.py:405-406, ui/app.py:1497-1509 | none: needs a Python route (GUI: `POST /commands/bridge.start`) | cad-views-export epic | later-epic: cad-views-export |
-| "Web share: publish viewer…" (`bridge.share`; one HTML file) | ui/app.py:407, ui/app.py:1511-1517 | none: needs a Python route (GUI: `POST /commands/bridge.share` opens a save dialog) | cad-views-export epic | later-epic: cad-views-export |
-| Software render of any view to PNG | api.py:830-894 | `GET /render?view&w&h&mode&section&ids&highlight&labels&edges&focus` | cad-views-export epic (the viewer captures its own frames) | later-epic: cad-views-export |
+| "Import…" (`file.import`; STEP, IGES, STL, OBJ, 3MF, FBX, PLY, glTF, SVG onto the active plane, PNG/JPG as references) | ui/app.py:287, ui/app.py:1364-1390 | `POST /import {"path", "unit"}` | File > Import… and Ctrl+I → `cad/files/mod.rs:file` (`FileOp::Import`: `import_args` checks the extension against `IMPORT_EXTENSIONS`; one edit → `crates/sim-runtime/src/cad_client/files.rs:CadClient::import`) | deliberately different: everything goes through `POST /import`, which takes no plane, so an SVG and a PNG/JPG land on XY (`importers.import_svg`, `import_image`); RoboCAD's desktop puts them on the active plane, images through `Ops.import_references` |
+| Mesh units dialog ("Units of the file" / "This format carries no unit. What are the numbers in?") with a guessed default | ui/widgets.py:897-914, ui/app.py:1378-1384 | `POST /import {"unit"}`; the guess: `GET /import/units?path=` (api.py `Service.mesh_units`, added with cad-views-export) | the import form's "Units of the mesh file" choice (mm, cm, m, in, ft): as soon as the path names a mesh, `cad/files/form.rs:input` asks RoboCAD's guess once per path (`FileForm::ask_guess`, which empties the unit) → `FileOp::GuessUnit` → `crates/sim-runtime/src/cad_client/files.rs:CadClient::mesh_units` on a job; `cad/files/jobs.rs:receive` → `FileForm::guessed` fills the unit unless it was chosen by hand; OK stays disabled, saying why (`FileForm::unit_missing`), until a guess landed or a unit was chosen; `cad/files/form.rs:footer` shows the guess and a "Guess unit" button that asks again | deliberately different: the unit is a row of the import path form, guessed once the path names a mesh, rather than a second dialog opened after RoboCAD has read the file (the path form opens before a file is named) |
+| "Export…" (`file.export`; the last path is remembered) | ui/app.py:288, ui/app.py:1392-1397 | `POST /export {"format", "path", "settings", "ids"}` | File > Export… and Ctrl+E → `cad/files/mod.rs:export` (the export form when the format or path is missing, `open_form`) | deliberately different: the form starts in the document's directory with the document's name (`start_dir`), not at the last export path |
+| STL: Format binary/ascii, Unit, Chord tolerance (mm), Angular tolerance (°) | ui/widgets.py:927-931, ui/app.py:1405-1410 | `POST /export {"format": "stl"}` | `cad/files/formats.rs:FORMATS` (`stl`: Format, Unit, Chord tolerance (mm), Angular tolerance (°), the dialog's ranges and defaults, checked by `settings`) → `cad/files/mod.rs:export` | done-by-reading |
+| 3MF: Chord tolerance, "Write colours", "Write names" | ui/widgets.py:932-935, ui/app.py:1411-1416 | `POST /export {"format": "3mf"}` | `cad/files/formats.rs:FORMATS` (`3mf`: Chord tolerance, Write colours, Write names) → `cad/files/mod.rs:export` | done-by-reading |
+| STEP: Schema AP203/AP214/AP242, "Write names", "Write colours" | ui/widgets.py:944-947, ui/app.py:1417-1423 | `POST /export {"format": "step"}` | `cad/files/formats.rs:FORMATS` (`step`: Schema AP203/AP214/AP242, Write names, Write colours) → `cad/files/mod.rs:export` | done-by-reading |
+| IGES | ui/app.py:1424-1426 | `POST /export {"format": "iges"}` | `cad/files/formats.rs:FORMATS` (`iges`, no settings) → `cad/files/mod.rs:export` | done-by-reading |
+| OBJ: Chord tolerance, Scale, Up axis Z/Y, "Quads where possible", "N-gons where possible", "Write MTL", "Write UVs" | ui/widgets.py:936-943, ui/app.py:1427-1432 | `POST /export {"format": "obj"}` | `cad/files/formats.rs:FORMATS` (`obj`: Chord tolerance, Scale, Up axis, Quads, N-gons, Write MTL, Write UVs) → `cad/files/mod.rs:export` | done-by-reading |
+| Sketch SVG ("Select a sketch to export as SVG") | ui/app.py:1433-1438 | `POST /export {"format": "svg", "settings": {"sketch"}}` | `cad/files/formats.rs:FORMATS` (`svg`: the sketch node id, the selected sketch by default, `cad/files/mod.rs:export_context`) → `cad/files/mod.rs:export` | done-by-reading |
+| Export options remembered per format (QSettings `export_settings`) | ui/app.py:78, ui/app.py:1403, ui/app.py:1441, ui/widgets.py:917-985 | n/a (viewer preferences) | `CadFiles::export_settings` (`cad/files/mod.rs:export` stores each format's settings; the form starts from them) | deliberately different: remembered per format for the CAD mode session, not kept between launches (RoboCAD keeps them in QSettings) |
+| Export blocked by validation ("Export blocked") and "Exported: path (n warning(s))" | ui/app.py:1442-1444, ui/strings.py:21 | `POST /export` (422 with the reason; `warnings`) | `cad/files/mod.rs:export` (RoboCAD's 422 reason named through `cad/files/jobs.rs:named`; "Exported FORMAT to PATH (n warning(s): …)") | done-by-reading |
+| "Export drawing (SVG)…" (`file.export_drawing`, Ctrl+Shift+D: front, top, right, iso, and "Section A-A" while the section is on) | ui/app.py:289, ui/app.py:1446-1456 | `POST /export {"format": "drawing", "settings": {"views", "section", "title"}}` | File > Export drawing (SVG)… and Ctrl+Shift+D → `cad/files/mod.rs:export` (`drawing`: views front, top, right, iso; the title; the section tool's plane while it is on, `export_context`) | done-by-reading |
+| "Live link: start (Blender)" / "Live link: stop" (`bridge.start`, `bridge.stop`; websocket) | ui/app.py:405-406, ui/app.py:1497-1509 | none: needs a Python route (GUI: `POST /commands/bridge.start`) | none (`cad/surfaces/registry.rs` `BLENDER_LINK`) | deliberately different: RoboCAD-GUI-only: the Blender live link is a websocket server inside RoboCAD's desktop window; a headless service has no route for it and the native viewer has no Blender bridge |
+| "Web share: publish viewer…" (`bridge.share`; one HTML file) | ui/app.py:407, ui/app.py:1511-1517 | none: needs a Python route (GUI: `POST /commands/bridge.share` opens a save dialog) | none (`cad/surfaces/registry.rs` `WEB_SHARE`) | deliberately different: RoboCAD-GUI-only: web share writes one HTML viewer through a desktop save dialog; no headless route serves it (export a mesh with File > Export… instead) |
+| Software render of any view to PNG | api.py:830-894 | `GET /render?view&w&h&mode&section&ids&highlight&labels&edges&focus` | `cad/files/mod.rs:render` (REST `cad_render`, `system_ui` `cad:file:render` "Render (PNG)…": the render form, `render_request` checks the query, `crates/sim-runtime/src/cad_client/files.rs:CadClient::render` on a `Pool::Dedicated` job writes the PNG) | done-by-reading |
 
 ## REST routes
 
@@ -737,7 +770,7 @@ calls. Who uses each route, by reading:
 | Document state: path, dirty, roots, active group, nodes, materials, selection, view, history, document_id, revision | api.py:1129-1130, api.py:401-402 | `GET /doc` | `CadClient::doc` (`cad::sync` poll) | done-by-reading |
 | Undo and redo labels | api.py:1131-1132, api.py:472-473 | `GET /history` | `CadClient::history` | done-by-reading |
 | Autosave status | api.py:1133-1134, api.py:390-399 | `GET /autosave` (GUI only) | `CadClient::autosave` → `cad::panel` | done-by-reading |
-| Start a recovery save | api.py:1133-1134, api.py:392-393 | `POST /autosave` (GUI only) | cad-views-export epic | later-epic: cad-views-export |
+| Start a recovery save | api.py:1133-1134, api.py:392-393 | `POST /autosave` (GUI only) | none | deliberately different: `POST /autosave` is GUI-only (409 headless) and the viewer never saves for the user; Save and Save As write the file |
 | Node summaries (`?kind=`) | api.py:1137-1138, api.py:532-533 | `GET /nodes` | `CadClient::nodes` | done-by-reading |
 | Create box, cylinder, sphere, sketch, plane, group, instance or measure (client) | api.py:1139-1140, api.py:541-571 | `POST /nodes` | the catalogue creates boxes, cylinders, spheres and instances through `POST /ops/box`, `/ops/box_three_point`, `/ops/cylinder`, `/ops/sphere` and `/ops/instance` (`tool.box`, `tool.box_center`, `tool.cylinder`, `tool.sphere`, `tool.instance`, `ops.box`), the Ops methods `POST /nodes` itself calls (api.py `Service.create`); sketches through `POST /nodes {"kind": "sketch", "plane", "calls"}` (`CadClient::create_sketch` from `ops::send_sketch`); planes through the plane tools' `POST /ops/plane_*` | deliberately different: the viewer calls the Ops methods directly for solids and planes (one route family, `POST /ops/*`); groups belong to cad-organize, measure nodes to cad-select-transform's `POST /ops/add_measurement` |
 | Node detail | api.py:1143-1144, api.py:102-133 | `GET /nodes/{id}` | `CadClient::node` → `cad::inspector` | done-by-reading |
@@ -749,7 +782,7 @@ calls. Who uses each route, by reading:
 | Vertices | api.py:1161-1162, api.py:629-631 | `GET /nodes/{id}/vertices` | `CadClient::vertices` → `cad::topology` | done-by-reading |
 | Display mesh (vertices, triangles, triangle_face, face_count; 404 "no mesh") | api.py:1163-1164, api.py:633-637 | `GET /nodes/{id}/mesh?tolerance=` | `CadClient::mesh` → `cad::mesh` | done-by-reading |
 | Validation report | api.py:1165-1166, api.py:639-642 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
-| Exact B-rep section outline | api.py:1167-1168, api.py:644-647 | `GET /nodes/{id}/section?plane=` | cad-views-export epic | later-epic: cad-views-export |
+| Exact B-rep section outline | api.py:1167-1168, api.py:644-647 | `GET /nodes/{id}/section?plane=` | `crates/sim-runtime/src/cad_client/section.rs:CadClient::section` from `cad/display/section.rs:exact_jobs` (planes the route takes: xy, xz, yz through the origin, or a plane node, `cad/display/mod.rs:exact_query`) | done-by-reading |
 | Thin walls | api.py:1169-1170, api.py:649-651 | `GET /nodes/{id}/thin?threshold=` | cad-print epic | later-epic: cad-print |
 | A sketch's curves | api.py:1171-1174, api.py:117-118 | `GET /nodes/{id}/sketch`; `GET /nodes/{id}` (its `sketch`, the same `Sketch.to_json`) | `CadClient::sketch` (`SketchGeometry::from_value`, tolerant: unknown or malformed curves are counted, not fatal); `cad::sketch::cache` (`CadSketches`, by (node, revision), Dedicated jobs) reads `CadClient::node` and `SketchGeometry::from_value` on its `sketch`, keeping the dropped count (`CadSketches::dropped`: the sketch edits and a `cad_sketch` call naming curve indices refuse by name when it is non-zero); plane nodes' frames through `CadClient::node` and `plane_of` (`CadSketches::plane_state`: a plane read without a valid frame is "node X has no valid plane frame", not "still being read") | done-by-reading |
 | Edit a sketch with a call list | api.py:1172-1173, api.py:661-685 | `POST /nodes/{id}/sketch` | `CadClient::edit_sketch` (`SketchCall::to_json`, `calls_body`) from `ops::send_sketch`, the one path every sketch tool, edit and REST `cad_sketch` (`CadAction::CadSketch` → `sketch::edits::sketch_action`) takes | done-by-reading (api.py `Service.edit_sketch` now maps curve indices before turning two-number lists into points: a join of two curves, trim or extend with two, `circle_tangent` and `arc_tangent` failed through REST before; `cad/tests/test_api_sketch_calls.py`) |
@@ -777,21 +810,21 @@ calls. Who uses each route, by reading:
 | Video export state | api.py:303-304 | `GET /motion/export` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Start a video export | api.py:306-312 | `POST /motion/export` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Cancel a video export | api.py:305 | `DELETE /motion/export` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| List saved views | api.py:1199-1201, api.py:799 | `GET /views` | cad-views-export epic | later-epic: cad-views-export |
-| Save a view (headless needs `state`) | api.py:800-806 | `POST /views` | cad-views-export epic | later-epic: cad-views-export |
-| Read a saved view | api.py:817-818 | `GET /views/{id}` | cad-views-export epic | later-epic: cad-views-export |
-| Rename or replace a saved view | api.py:819-822 | `PATCH /views/{id}` | cad-views-export epic | later-epic: cad-views-export |
-| Delete a saved view | api.py:823-825 | `DELETE /views/{id}` | cad-views-export epic | later-epic: cad-views-export |
-| Restore a saved view in RoboCAD's window | api.py:810-816 | `POST /views/{id}/restore` (GUI only) | cad-views-export epic (the viewer restores its own camera from `GET /views/{id}`) | later-epic: cad-views-export |
-| Software render PNG (client) | api.py:1202-1203, api.py:830-894 | `GET /render` | cad-views-export epic | later-epic: cad-views-export |
+| List saved views | api.py:1199-1201, api.py:799 | `GET /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::views` (`cad/views/mod.rs:sync`) | done-by-reading |
+| Save a view (headless needs `state`) | api.py:800-806 | `POST /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::save_view` (`cad/views/mod.rs:handle`) | done-by-reading |
+| Read a saved view | api.py:817-818 | `GET /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::view` (restore applies the listed state, `cad/views/mod.rs:restore`) | done-by-reading |
+| Rename or replace a saved view | api.py:819-822 | `PATCH /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::update_view` (`cad/views/mod.rs:handle`) | done-by-reading |
+| Delete a saved view | api.py:823-825 | `DELETE /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::delete_view` (`cad/views/mod.rs:handle`) | done-by-reading |
+| Restore a saved view in RoboCAD's window | api.py:810-816 | `POST /views/{id}/restore` (GUI only) | `cad/views/mod.rs:restore` (this window's camera and display) | deliberately different: the route is GUI-only (409 headless) and moves RoboCAD's own camera, not this one |
+| Software render PNG (client) | api.py:1202-1203, api.py:830-894 | `GET /render` | `crates/sim-runtime/src/cad_client/files.rs:CadClient::render` (`cad/files/mod.rs:render`) | done-by-reading |
 | RoboCAD viewport screenshot (client) | api.py:1204-1205, api.py:945-954 | `GET /screenshot` (GUI only) | the viewer's own capture | deliberately different: the native viewport is captured by the viewer, not by RoboCAD |
 | Temporary-camera capture PNG | api.py:1206-1207, api.py:896-943 | `POST /capture` (GUI only) | the viewer's own capture | deliberately different: same reason as `/screenshot` |
-| Save (`{"path"}` saves as) | api.py:1208-1209, api.py:957-964 | `POST /save` | `CadClient::save` (`CadAction::CadSave`) | done-by-reading |
+| Save (`{"path"}` saves as) | api.py:1208-1209, api.py:957-964 | `POST /save` | `CadClient::save` remains a client call, unused by CAD mode since f15766ea: `CadAction::CadSave` (Save, and `cad_save {path}` to save as) sends the same save with RoboCAD's thumbnail, `POST /save/thumbnail` (`crates/sim-runtime/src/cad_client/files.rs:CadClient::save_with_thumbnail`, `cad/files/mod.rs:save`) | done-by-reading |
 | Open a file in a new RoboCAD window (headless 409) | api.py:1210-1211, api.py:966-972 | `POST /open` (GUI only) | `CadClient::open` exists; CAD mode opens files by starting its own service | deliberately different: CAD mode starts a headless service on the file rather than asking RoboCAD for another window |
-| Load status | api.py:1212-1213, api.py:974-985 | `GET /loads/{id}` (GUI only) | cad-views-export epic (`CadClient::load_status`) | later-epic: cad-views-export |
-| Cancel a load | api.py:1212-1213, api.py:978-983 | `DELETE /loads/{id}` (GUI only) | cad-views-export epic (`CadClient::cancel_load`) | later-epic: cad-views-export |
-| Export STL, 3MF, STEP, IGES, OBJ, sketch SVG or drawing | api.py:1214-1215, api.py:987-1019 | `POST /export` | cad-views-export epic (`CadClient::export`) | later-epic: cad-views-export |
-| Import a file | api.py:1216-1217, api.py:1021-1036 | `POST /import` | cad-views-export epic | later-epic: cad-views-export |
+| Load status | api.py:1212-1213, api.py:974-985 | `GET /loads/{id}` (GUI only) | `crates/sim-runtime/src/cad_client/mod.rs:CadClient::load_status` (unused) | deliberately different: `POST /open` opens another RoboCAD window (409 headless) and never replaces the document; CAD mode starts its own headless service on the file instead (see "Headless versus GUI-only routes") |
+| Cancel a load | api.py:1212-1213, api.py:978-983 | `DELETE /loads/{id}` (GUI only) | `crates/sim-runtime/src/cad_client/mod.rs:CadClient::cancel_load` (unused) | deliberately different: `POST /open` opens another RoboCAD window (409 headless) and never replaces the document; CAD mode starts its own headless service on the file instead (see "Headless versus GUI-only routes") |
+| Export STL, 3MF, STEP, IGES, OBJ, sketch SVG or drawing | api.py:1214-1215, api.py:987-1019 | `POST /export` | `crates/sim-runtime/src/cad_client/mod.rs:CadClient::export` (`cad/files/mod.rs:export`) | done-by-reading |
+| Import a file | api.py:1216-1217, api.py:1021-1036 | `POST /import` | `crates/sim-runtime/src/cad_client/files.rs:CadClient::import` (`cad/files/mod.rs:file`) | done-by-reading |
 | Robot summary: joints, motors, DoF, ground, issues | api.py:1218-1219 | `GET /robot` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | Motor library | api.py:1220-1221 | `GET /motors` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | Frame time and display triangles (GUI); revision and node count | api.py:1222-1228 | `GET /performance` | the viewer's own frame statistics | deliberately different: the viewer measures its own frames |
@@ -843,8 +876,8 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `move_nodes` | commands.py:377 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
 | `move_node` | commands.py:395 | `PATCH /nodes/{id} {"parent", "index"}` | cad-organize epic | later-epic: cad-organize |
 | `set_active_group` | commands.py:398 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
-| `isolate` | commands.py:402 | `POST /ops/isolate` | cad-views-export epic | later-epic: cad-views-export |
-| `show_all` | commands.py:415 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
+| `isolate` | commands.py:402 | `POST /ops/isolate` | `cad/ops/catalogue/view.rs:ENTRIES` (`view.isolate`, route `isolate`) | done-by-reading |
+| `show_all` | commands.py:415 | `POST /ops/show_all` | `cad/ops/catalogue/view.rs:ENTRIES` (`view.show_all`, route `show_all`) | done-by-reading |
 | `box` | commands.py:419 | `POST /ops/box`; `POST /nodes` | `cad::ops` catalogue `tool.box` and `tool.box_center` (both send `Ops.box`), and the REST-only `ops.box` via `ops::handle`/`args::build` | done-by-reading |
 | `box_center` | commands.py:422 | `POST /ops/box_center` | `cad::ops` catalogue `ops.box_center` (REST `cad_invoke`/`cad_run`, with its form) via `ops::handle`/`args::build` | done-by-reading |
 | `box_three_point` | commands.py:426 | `POST /ops/box_three_point` | `cad::ops` catalogue `ops.box_three_point` (REST, with its form; every parameter required) via `ops::handle`/`args::build` | done-by-reading |
@@ -938,10 +971,10 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `import_references` | references.py:11 | `POST /ops/import_references` | cad-organize epic | later-epic: cad-organize |
 | `update_reference` | references.py:31 | `POST /ops/update_reference` | cad-organize epic | later-epic: cad-organize |
 | `calibrate_reference` | references.py:65 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
-| `saved_views` | saved_views.py:104 | `GET /views` | cad-views-export epic | later-epic: cad-views-export |
-| `save_view` | saved_views.py:107 | `POST /views` | cad-views-export epic | later-epic: cad-views-export |
-| `update_saved_view` | saved_views.py:116 | `PATCH /views/{id}` | cad-views-export epic | later-epic: cad-views-export |
-| `delete_saved_view` | saved_views.py:124 | `DELETE /views/{id}` | cad-views-export epic | later-epic: cad-views-export |
+| `saved_views` | saved_views.py:104 | `GET /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::views` | done-by-reading |
+| `save_view` | saved_views.py:107 | `POST /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::save_view` | done-by-reading |
+| `update_saved_view` | saved_views.py:116 | `PATCH /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::update_view` | done-by-reading |
+| `delete_saved_view` | saved_views.py:124 | `DELETE /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::delete_view` | done-by-reading |
 | `threads` | annotations.py:216 | `GET /threads` | cad-organize epic | later-epic: cad-organize |
 | `thread` | annotations.py:228 | `GET /threads/{id}` | cad-organize epic | later-epic: cad-organize |
 | `create_thread` | annotations.py:233 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
@@ -974,13 +1007,13 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | `command_palette`: Ctrl+Space, Shift+F | keymap.json:3 | `GET /commands` | `cad::keys` → `CadSurface { palette }` at the pointer (`registry::Opens::Palette`) | deliberately different: on macOS Command+Space is Spotlight's, so Control+Space or Shift+F opens it (`cad::keys` clash table) |
-| `file.new`: Ctrl+N | keymap.json:4 | n/a | cad-views-export epic | later-epic: cad-views-export |
-| `file.open`: Ctrl+O | keymap.json:4 | n/a | cad-views-export epic | later-epic: cad-views-export |
-| `file.save`: Ctrl+S | keymap.json:4 | `POST /save` | `cad::keys` → `CadAction::CadSave` | done-by-reading |
-| `file.save_as`: Ctrl+Shift+S | keymap.json:4 | `POST /save {"path"}` | cad-views-export epic | later-epic: cad-views-export |
-| `file.import`: Ctrl+I | keymap.json:4 | `POST /import` | cad-views-export epic | later-epic: cad-views-export |
-| `file.export`: Ctrl+E | keymap.json:4 | `POST /export` | cad-views-export epic | later-epic: cad-views-export |
-| `file.export_drawing`: Ctrl+Shift+D | keymap.json:4 | `POST /export` | cad-views-export epic | later-epic: cad-views-export |
+| `file.new`: Ctrl+N | keymap.json:4 | n/a | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `Do::File` → `cad/files/mod.rs:command_action` (`CadFile { new }`: the path form) | done-by-reading |
+| `file.open`: Ctrl+O | keymap.json:4 | n/a | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `cad/files/mod.rs:command_action` (`CadFile { open }`: the path form) | done-by-reading |
+| `file.save`: Ctrl+S | keymap.json:4 | `POST /save` (the viewer: `POST /save/thumbnail`) | `cad::keys` → `CadAction::CadSave` → `cad/files/mod.rs:save` | done-by-reading |
+| `file.save_as`: Ctrl+Shift+S | keymap.json:4 | `POST /save {"path"}` (the viewer: `POST /save/thumbnail {"path"}`) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `cad/files/mod.rs:command_action` (`CadFile { save_as }`: the path form) | done-by-reading |
+| `file.import`: Ctrl+I | keymap.json:4 | `POST /import` | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `cad/files/mod.rs:command_action` (`CadFile { import }`: the path form) | done-by-reading |
+| `file.export`: Ctrl+E | keymap.json:4 | `POST /export` | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `cad/files/mod.rs:command_action` (`CadExport`: the export form) | done-by-reading |
+| `file.export_drawing`: Ctrl+Shift+D | keymap.json:4 | `POST /export` | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `cad/files/mod.rs:command_action` (`CadExport { drawing }`: the export form) | done-by-reading |
 | `edit.undo`: Ctrl+Z | keymap.json:5 | `POST /undo` | `cad::keys` → `CadAction::CadUndo` | done-by-reading |
 | `edit.redo`: Ctrl+Shift+Z | keymap.json:5 | `POST /redo` | `cad::keys` → `CadAction::CadRedo` | done-by-reading |
 | `edit.delete`: Delete, Backspace | keymap.json:5 | `POST /ops/delete {"args": [[ids]]}` | `cad::keys` → `CadInvoke { edit.delete }` → `cad::ops` catalogue `edit.delete` (every selected node in one step since cad-modify; silent on an empty selection, as RoboCAD) | done-by-reading |
@@ -990,22 +1023,22 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `edit.invert`: Ctrl+Shift+I | keymap.json:5 | `PUT /selection` | `cad::keys` → `CadAction::CadInvertSelection` | done-by-reading |
 | `edit.select_same_material`: Ctrl+Shift+M (`robot.add_motor` lists the same key, unbound; see below) | keymap.json:5 | `PUT /selection` | `cad::keys` → `CadAction::CadSelectSameMaterial` | done-by-reading |
 | `view.fit`: Home | keymap.json:6 | n/a (display) | `cad::keys` → `CadAction::CadFit` | done-by-reading |
-| `view.focus`: F | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.front`: 1 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.back`: Ctrl+1 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.top`: 7 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.bottom`: Ctrl+7 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.right`: 3 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.left`: Ctrl+3 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.iso`: 0 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.ortho`: 5 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.grid`: Ctrl+G | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.mode_next`: Z | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.isolate`: / | keymap.json:6 | `POST /ops/isolate` | cad-views-export epic | later-epic: cad-views-export |
-| `view.show_all`: Alt+H | keymap.json:6 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
-| `view.hide`: H | keymap.json:6 | `POST /ops/set_visible` | cad-views-export epic | later-epic: cad-views-export |
-| `view.section`: Ctrl+Shift+X | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.build_plate`: Ctrl+Shift+B | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
+| `view.focus`: F | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `cad/surfaces/registry.rs:focus` | done-by-reading |
+| `view.front`: 1 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::View { front }` (`camera/orbit.rs:Orbit::preset`) | done-by-reading |
+| `view.back`: Ctrl+1 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::View { back }` (`camera/orbit.rs:Orbit::preset`) | done-by-reading |
+| `view.top`: 7 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::View { top }` (`camera/orbit.rs:Orbit::preset`) | done-by-reading |
+| `view.bottom`: Ctrl+7 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::View { bottom }` (`camera/orbit.rs:Orbit::preset`) | done-by-reading |
+| `view.right`: 3 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::View { right }` (`camera/orbit.rs:Orbit::preset`) | done-by-reading |
+| `view.left`: Ctrl+3 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::View { left }` (`camera/orbit.rs:Orbit::preset`) | done-by-reading |
+| `view.iso`: 0 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::View { iso }` (`camera/orbit.rs:Orbit::preset`) | done-by-reading |
+| `view.ortho`: 5 | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CameraAction::Projection` (toggle) | done-by-reading |
+| `view.grid`: Ctrl+G | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `DisplayCmd::Grid` → `cad/display/mod.rs:apply_display` | done-by-reading |
+| `view.mode_next`: Z | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `DisplayCmd::Next` → `cad/display/mod.rs:apply_display` | done-by-reading |
+| `view.isolate`: / | keymap.json:6 | `POST /ops/isolate` | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CadInvoke { view.isolate }` → `cad/ops/catalogue/view.rs:ENTRIES` (the keypad's divide is `/`) | done-by-reading |
+| `view.show_all`: Alt+H | keymap.json:6 | `POST /ops/show_all` | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CadInvoke { view.show_all }` → `cad/ops/catalogue/view.rs:ENTRIES` (the physical H with Alt, so macOS's Option+H reaches it) | done-by-reading |
+| `view.hide`: H | keymap.json:6 | `POST /ops/set_visible` | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `CadInvoke { view.hide }` → `cad/ops/catalogue/view.rs:ENTRIES` | done-by-reading |
+| `view.section`: Ctrl+Shift+X | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `DisplayCmd::Section` → `cad/display/mod.rs:apply_section` (toggle) | done-by-reading |
+| `view.build_plate`: Ctrl+Shift+B | keymap.json:6 | n/a (display) | `cad/keys.rs:keys` (matched against `cad/surfaces/registry.rs:COMMANDS`) → `DisplayCmd::BuildPlate` → `cad/display/mod.rs:apply_display` | done-by-reading |
 | `view.radial`: Space | keymap.json:6 | n/a (display) | `cad::keys` → `CadSurface { view_radial }` at the pointer (typed as a space while a text field has the keyboard) | done-by-reading |
 | `select.body`: B | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Body }` | done-by-reading |
 | `select.face`: Shift+B | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Face }` | done-by-reading |
@@ -1067,10 +1100,12 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted from the tables above (2026-10-01, after the cad-sketch epic: its
-60 rows were mapped to native code, 35 `done-by-reading` and 25
-`deliberately different`, and 6 earlier rows that waited for the active
-plane became `done-by-reading`) with this script, run from the repository
+Recounted from the tables above (2026-10-01, after the cad-views-export
+epic and its review fixes in f15766ea: of its 112 rows, 79 became
+`done-by-reading` and 33 `deliberately different`; none stays open;
+2 earlier `deliberately different` rows that waited for it, the per-node
+tessellation tolerance and the view radial, became `done-by-reading`) with
+this script, run from the repository
 root; it splits each row on its unescaped `|`, takes the status cell and
 counts it by its leading status (up to its reason), skipping header rows
 and the count tables themselves:
@@ -1091,73 +1126,94 @@ print(dict(rows), sum(rows.values())); print(dict(epics))
 PY
 ```
 
-There are 773 rows. (After cad-modify the counts were 245 done by reading,
-458 later and 70 deliberately different; after cad-select-transform 168,
-574 and 31; cad-select-transform's 63 rows were 55 and 8.)
+There are 773 rows. (Before f15766ea's review fixes the cad-views-export
+counts were 363 done by reading, 292 later (6 of them cad-views-export's
+own open rows) and 118 deliberately different; after cad-sketch 286, 398
+and 89; after cad-modify 245, 458 and 70; after cad-select-transform
+168, 574 and 31; cad-select-transform's 63 rows were 55 and 8.) The
+epic's own split was counted by pairing each row of the ledger at
+f15766ea (`git show f15766ea:docs/cad-parity.md`, the same ledger as at
+9b1e5eec: neither commit changed it) with the same row now, in order and
+checked to be in the same section, through the same row parser, and
+counting the new status of every row that was `later-epic:
+cad-views-export`: 79 and 33 of 112 (it was 75, 31 and 6 open before
+f15766ea); no other row changed status except the 2 named above.
 
 | Status | Rows |
 |---|---|
 | done | 0 |
-| done-by-reading | 286 |
-| later-epic | 398 |
-| deliberately different | 89 |
+| done-by-reading | 367 |
+| later-epic | 286 |
+| deliberately different | 120 |
 | **total** | **773** |
 
 | Later epic | Rows |
 |---|---|
-| cad-views-export | 112 |
 | cad-organize | 108 |
 | cad-physical-inspect | 82 |
 | cad-experiments-motion | 63 |
 | cad-print | 33 |
-| **total** | **398** |
+| **total** | **286** |
 
 Some rows repeat a feature from another angle: as a UI feature, as a REST
 route, as an Ops method and as a key. The ledger checks each of those
 surfaces separately. By script, every one of the 183 registry command ids,
 the 77 keymap ids and the 134 public Ops methods appears in a row. Other
-counts: 81 rows are `n/a (display)` and 17 are flagged.
+counts: 81 rows are `n/a (display)` and 15 are flagged.
 
-No row is blank or `todo`, and no cad-select-transform, cad-modify or
-cad-sketch row is open. Nothing is `done`, because no epic's rows have been
-moved to `done` yet: cad-mode, cad-select-transform and cad-modify were
-built and tested in their verification passes and await the user's
-checklist; cad-sketch is written and reviewed by reading, pending its
+No row is blank or `todo`, and no cad-select-transform, cad-modify,
+cad-sketch or cad-views-export row is open. Nothing
+is `done`, because no epic's rows have been moved to `done` yet:
+cad-mode, cad-select-transform, cad-modify and cad-sketch were built and
+tested in their verification passes and await the user's checklist;
+cad-views-export is written and reviewed by reading, pending its
 verification pass. The verification passes and the checklist move rows to
 `done`.
 
 ## Rows flagged "none: needs a Python route"
 
-There are 17 flagged rows covering 17 distinct gaps. Each gap needs one of
+There are 15 flagged rows covering 15 distinct gaps. Each gap needs one of
 two things before the native viewer can reach the feature headless:
 
 - a new route in `cad/robocad/api.py`, a RoboCAD change outside this epic;
 - a Rust port, gated by the parity harness.
 
-No route at all (15):
+No route at all (13):
 
-1. Save with the viewport thumbnail (`thumbnail.png`). `/save` writes none.
-2. Report a failed autosave. `/autosave` does not report one.
-3. Set the autosave interval preference.
-4. Per-node simulation results (`Node.results`) for the inspector's
+1. Report a failed autosave. `/autosave` does not report one.
+   `deliberately different` since cad-views-export: a headless service
+   never autosaves.
+2. Set the autosave interval preference. `deliberately different` since
+   cad-views-export: it is RoboCAD's desktop timer.
+3. Per-node simulation results (`Node.results`) for the inspector's
    "Results" line.
-5. The stress overlay's per-node hotspot colours (same data as 4).
-6. The print overlay's per-node results (same data as 4).
-7. The Robot panel's margins (`results_margins`, same data as 4).
-8. Reference image pixels in the viewport.
-9. The reference list's preview (same data as 8).
-10. The planar ("x–z") simulation export.
-11. Run review's captured CAD replay (captured document and poses).
-12. Candidate review's proposed geometry.
-13. Pose kinematics without a desktop window.
-14. Geometry-rule recipes for system components
+4. The stress overlay's per-node hotspot colours (same data as 3).
+5. The print overlay's per-node results (same data as 3).
+6. The Robot panel's margins (`results_margins`, same data as 3).
+7. Reference image pixels in the viewport.
+8. The reference list's preview (same data as 7).
+9. The planar ("x–z") simulation export.
+10. Run review's captured CAD replay (captured document and poses).
+11. Candidate review's proposed geometry.
+12. Pose kinematics without a desktop window.
+13. Geometry-rule recipes for system components
     (`component_derivation.RECIPES`).
-15. The mesh-unit guess on import (`importers.mesh_units_guess`).
 
 No longer a gap: B-rep edge polylines (edge display, edge picking and
 curve nodes). RoboCAD now serves them as `GET /nodes/{id}/edges?samples=N`
 (api.py:625-638, 2026-10-01); edge picking uses it (cad-select-transform),
-and edge display stays with cad-views-export.
+and edge display, curve nodes included (drawn, not picked), is
+`cad/display/draw.rs:edges_sync` since cad-views-export.
+
+No longer gaps since cad-views-export (2026-10-01; routes added to
+`api.py` `Service`, pytests `cad/tests/test_api_files.py`): the save
+thumbnail (`POST /save/thumbnail`, `Service.save_with_thumbnail`: the
+window's thumbnail, or headless the snapshot renderer at 256 × 192;
+every native save uses it, Save and Save As alike) and the
+mesh-unit guess (`GET /import/units?path=`, `Service.mesh_units`,
+read-only). The same epic added `POST /new` (`Service.new_file`: an empty
+`.rcad`, created exclusively so an existing file is never replaced),
+which no flagged row needed.
 
 No longer gaps since cad-modify (2026-10-01; routes added to `api.py`
 `Service`, pytests `cad/tests/test_api_clipboard.py`,
@@ -1172,10 +1228,11 @@ found by reading: `POST /ops/cut` takes a cutter node id
 grid of points (`test_api_control_points_set.py`); both were refused
 before.
 
-GUI-only through `POST /commands/{id}`, with no headless route (2):
+GUI-only through `POST /commands/{id}`, with no headless route (2;
+both `deliberately different` since cad-views-export):
 
-16. Blender live link start and stop.
-17. Web share.
+14. Blender live link start and stop.
+15. Web share.
 
 ## Headless versus GUI-only routes
 
@@ -1195,7 +1252,7 @@ PATH`, api.py:1390-1405), so it matters which routes need RoboCAD's window:
 - `/autosave` (GET and POST) is GUI-only (409 headless; api.py:390-392). A
   headless service never autosaves at all (only ui/app.py:112 starts
   autosave), so a self-started document's unsaved edits exist only in that
-  process until `POST /save`.
+  process until a save (`POST /save`; the viewer sends `POST /save/thumbnail`).
 - `/view`, `/view/fit`, `/screenshot`, `/capture`,
   `/views/{id}/restore`, `/threads/{id}/show`, `/motion` playback and
   export, and `/component-jobs/{id}` need the window. `GET /view` answers
@@ -1217,7 +1274,8 @@ PATH`, api.py:1390-1405), so it matters which routes need RoboCAD's window:
 
 A headless service never autosaves, and stopping it would lose unsaved
 edits. The viewer never saves for the user, so: leaving CAD mode or opening
-another document is refused while a service this window started reports
+another document (`cad_open`, File > Open… and File > New, one rule:
+`CadDocument::switch_blockers`; there is no discard) is refused while a service this window started reports
 `dirty`, or its saved state can't be confirmed (not connected while the
 process still runs, or an edit in flight or just finished); closing the window detaches such a
 service (`ChildProcess::detach`) instead of stopping it and logs its URL,
@@ -1285,3 +1343,13 @@ service is stopped and reaped. An attached RoboCAD is never stopped.
   - `edit_sketch` through REST records the label "Sketch (API)" for every
     call list, so RoboCAD's history cannot tell a REST rectangle from a
     REST offset.
+
+- Found with cad-views-export (2026-10-01):
+  - RoboCAD's Alt+left-drag orbit never fires: `mouseMoveEvent` orbits on
+    Alt+left only while `_tool_dragging` is false (ui/viewport.py:1488),
+    but every left press is emitted as a tool "press" whose handler sets
+    `_tool_dragging = True` (ui/app.py:540-542) until the release, so the
+    drag goes to the tool instead (unless the pose panel is active, where
+    `_on_drag` returns first). The native viewer orbits on Alt+left-drag
+    past 6 px, as viewport.py's own comment (ui/viewport.py:1485-1487)
+    describes it (USER_GUIDE.md:266-270 lists only right-drag orbit).

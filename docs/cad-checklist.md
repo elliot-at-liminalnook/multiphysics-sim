@@ -5,17 +5,21 @@ This checklist closes the first CAD epic (**cad-mode**, §9 phase 1 of
 "CAD mode (2026-09-30)"), the second (**cad-select-transform**: sub-body
 selection and the direct tools, Part C), the third (**cad-modify**: the
 operation catalogue and the command surfaces, Part D, section "CAD modify
-(2026-10-01)") and the fourth (**cad-sketch**: the active plane, the plane
+(2026-10-01)"), the fourth (**cad-sketch**: the active plane, the plane
 tools, the sketch tools and the solids made from sketches, Part E, section
-"CAD sketch (2026-10-01)"). cad-mode, cad-select-transform and cad-modify
-were built and tested in their verification passes; cad-sketch was written
-and checked only by reading: **Part E has not been compiled or run yet**
-(its verification pass builds and tests it). Each step is done once in the native viewer and once in
-RoboCAD's own window, so you can compare them. The feature-by-feature ledger
-is [cad-parity.md](cad-parity.md); its `done-by-reading` rows are the ones
-these steps show. Everything else in RoboCAD (views and export,
-physical inspection, printing, experiments, motion, comments, …) is a later
-CAD epic and stays in RoboCAD's window.
+"CAD sketch (2026-10-01)") and the fifth (**cad-views-export**: the shared
+camera, display modes, grid, build plate, view cube, section, isolate and
+hide, saved views, the tessellation tolerance, and new, open, save as,
+import, export and render, Part F). cad-mode, cad-select-transform,
+cad-modify and cad-sketch (at cc7ac194) were built and tested in their
+verification passes; cad-views-export was written and checked only by
+reading: **Part F has not been through its verification pass yet**. Each
+step is done once in the native viewer and once in RoboCAD's own window,
+so you can compare them. The feature-by-feature ledger is
+[cad-parity.md](cad-parity.md); its `done-by-reading` rows are the ones
+these steps show. Everything else in RoboCAD (physical inspection,
+printing, experiments, motion, comments, …) is a later CAD epic and stays
+in RoboCAD's window.
 
 **RoboCAD stays the reference.** Nothing here changes it, its command layer
 or the `.rcad` format. The viewer never writes a `.rcad` file itself.
@@ -56,7 +60,7 @@ or the `.rcad` format. The viewer never writes a `.rcad` file itself.
 | CAD-08 Undo / redo | **Undo {label}** / **Redo {label}**, or Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z (`cad_undo`, `cad_redo`). History in the inspector lists RoboCAD's labels | Edit ▸ Undo / Redo | Same labels; each patch from CAD-07 is one undo step |
 | CAD-09 Delete | Select a node, **Delete** or Delete/Backspace (not while typing a name). `cad_delete` | Delete | The node goes; undo brings it back |
 | CAD-10 Unsaved edits | After an edit, the top bar says "Unsaved edits". Press the switcher's **Build** | (n/a) | Refused: "… has unsaved edits in the RoboCAD service this window started …: save first"; CAD mode stays |
-| CAD-11 Save | **Save** or Cmd/Ctrl+S (`cad_save`; `{"path":"…"}` saves as). The top bar returns to "Saved" | File ▸ Save | The file on disk changed (RoboCAD wrote it); reopening it in RoboCAD shows the edits |
+| CAD-11 Save | **Save** or Cmd/Ctrl+S (`cad_save`; `{"path":"/abs/file.rcad"}` saves as: an absolute path or `~/…`, a relative one is refused naming why). The top bar returns to "Saved"; the status line says "Saved … with its thumbnail". Then `unzip -l` the file | File ▸ Save, then the same `unzip -l` | The file on disk changed (RoboCAD wrote it, through `POST /save/thumbnail`); both archives hold `thumbnail.png`; reopening it in RoboCAD shows the edits; after `cad_save {"path"}` the left dock names the new file (a self-started document follows it) |
 | CAD-12 Leave | Switcher **Build** now succeeds; the RoboCAD service process is gone (`ps` with the pid from the left dock). Switch back to **CAD**: it starts a new service on the same file | (n/a) | No `robocad.api` process is left behind |
 
 ## Part B: attached to RoboCAD's window
@@ -211,10 +215,66 @@ label.
 | CAD-97 A shape in progress blocks leaving | Click two points of a slot, then the switcher's **Build**: refused "a sketch slot is in progress (2 point(s) clicked): finish it or press Escape". After a line the chained point counts too. Escape, then **Build** succeeds (with no unsaved edits, or after saving) | (n/a: RoboCAD has one window; changing tool drops the points) | Refused while points are clicked; nothing sent |
 | CAD-98 Undo through the epic | Ctrl/Cmd+Z through CAD-79 to CAD-93 | Edit ▸ Undo through the same edits | Each plane, shape, sketch edit and solid is one step in RoboCAD's history (a new sketch adds its "Sketch" step), and each undo reverses exactly one |
 
+## Part F: views, display, saved views and files (cad-views-export)
+
+Set up as in Part C and D: the viewer on one copy, RoboCAD's own window on
+a second copy, the same node selected in both; also copy two files to
+import:
+
+```sh
+cp examples/actuators/hx30hm/fixture-draft/print-kit.step examples/actuators/hx30hm/fixture-draft/cap.stl /tmp/cad-check/
+```
+
+Menus are named as both menu bars show them (View, Inspect, Print, File).
+The camera and display are each window's own: nothing in CAD-99 to
+CAD-111 or CAD-129 changes the document or the other window (CAD-130
+adds one curve node, undone before the next step). `cad_state.display`,
+`cad_state.views` and `cad_state.files` show the viewer's display state,
+saved views and file jobs; `camera_state` shows its camera. Steps that
+edit (CAD-112 to CAD-117) are undone in both before the next step. The
+files written in CAD-118 to CAD-126 go to `/tmp/cad-check/`; the viewer's
+file commands take an absolute path (or `~/…`) typed into its path form.
+
+| Step | Native viewer | RoboCAD | Pass when |
+|---|---|---|---|
+| CAD-99 Orbit, pan, zoom to the cursor | Right-drag orbits (turntable; the view stops short of straight down, 89.5°); middle-drag or Shift+right-drag pans; the wheel zooms toward the point under the cursor: put the cursor on a corner of a part and roll in. REST `camera_orbit {"dx":100,"dy":0}`, `camera_pan`, `camera_zoom {"factor":0.8,"at":[x,y]}` | The same drags and wheel over the same corner | The model turns, slides and zooms the same way and at a similar rate; the corner under the cursor stays under it while zooming in both. RoboCAD's other gestures are CAD-129 |
+| CAD-100 Named views | 1 front, 3 right, 7 top, 0 iso; Ctrl/Cmd+1 back, Ctrl/Cmd+3 left, Ctrl/Cmd+7 bottom (the keypad's digits too); also View ▸ View front … View iso, and Space's view radial (Front, Top, Right, Iso). `camera_view {"view":"front"}` | The same keys and View menu entries | Each key shows the same side of the model in both, at the same distance and focus (RoboCAD's yaw and pitch table); the Ctrl views are the opposite sides |
+| CAD-101 Focus selection | Select one part, press F (View ▸ Focus Selection); select a group: F frames it and its children; select nothing: F frames everything (as Home) | The same selections and F | The same part (or group) fills the view in both |
+| CAD-102 Orthographic and field of view | 5 (View ▸ Orthographic, the radial's Ortho) toggles orthographic; View ▸ Set field of view… opens "Field of view" at the lower right: type 30, Enter (5–120, one decimal; out-of-range is refused under the field). `camera_projection`, `camera_fov {"degrees":30}` | 5; View ▸ Set field of view… (Degrees: 30) | Orthographic has no perspective in both and keeps the model's size on screen; at 30° both show the same narrower perspective |
+| CAD-103 Trackball | View ▸ Toggle orbit: turntable / trackball, then right-drag across the top of the model; toggle back. `camera_orbit_mode`, `camera_state` (`mode`) | The same command (status "Orbit: trackball") and drag | The model tumbles freely (it can roll past upside down) in both; back in turntable the view returns to the nearest upright heading |
+| CAD-104 View cube | The cube net at the top right of the 3D view (Top; Left, Front, Right; Iso, Bottom, Back; the face you look at is lit): click Front, then Front again; click Iso. The **Cube** chip hides and shows it | Click the cube's front face, then again; click a corner | The first click shows the front, the second the back (RoboCAD's opposite), in both. The native cube is a net of buttons, not a shaded 3D cube (recorded) |
+| CAD-105 Display modes | Z cycles Shaded → Shaded + edges → Wireframe → X-ray → Matcap → Render → Shaded; View ▸ Display: shaded … Display: render and the display panel's six buttons choose one. `cad_display {"mode":"wireframe"}`, `{"next":true}` | Z; View ▸ Display: … | Same order and the same look for shaded, shaded with edges (dark B-rep edges), wireframe and xray (translucent with edges). Matcap is approximated (clay tint, no sphere image) and Render has no ground shadow (both recorded); Inspect ▸ Normal-direction shading switches both to xray |
+| CAD-106 Grid | Ctrl/Cmd+G (View ▸ Grid, the **Grid** chip, the radial's Grid). `cad_display {"toggle":"grid"}` | Ctrl+G | The same 10 mm grid on the model's XY plane, ±200 mm, every 5th line darker, red X, green Y and blue Z axes, shown and hidden together |
+| CAD-107 Build plate and overhangs | Ctrl/Cmd+Shift+B (Print ▸ Build Plate Preview, the **Plate** chip) | Ctrl+Shift+B | The same 220 × 220 mm plate; the same downward faces are shaded red as overhangs (45°) in both; off again in both |
+| CAD-108 High contrast | View ▸ High-Contrast Theme (the **Contrast** chip) | View ▸ High-Contrast Theme | The 3D view turns light with a lighter grid and black edges in both. Only the viewer's 3D view changes (its panels keep their colours) and the setting is not kept after a restart (both recorded) |
+| CAD-109 Section preview | Ctrl/Cmd+Shift+X (Inspect ▸ Section Analysis, the **Section** chip) | Ctrl+Shift+X | Both start on XZ through the middle of the model (in Y); the same side of the plane is cut away in both and the cut is outlined in red; hovering and picking never select the removed part; the same key turns it off |
+| CAD-110 Section plane | With the section on: the panel's **X**, **Y** and **Z** chips (planes through the model's centre), then **Rotate**; click the toolbar's offset field ("offset, e.g. 5 or 2 cm"), type 5, Enter: the plane moves 5 mm along its normal; then `0.5 cm`, Enter; `abc` is refused under the field. `cad_section {"offset":5}`; `cad_section {"axis":"z","offset":10}` | Tab, type 5, Enter; drag the plane; R | The same cuts for the same planes and offsets in both; Rotate and R turn the plane 90° about Z the same way. In the viewer R stays the Rotate tool, Tab the numeric bar, and a left drag on the plane box-selects (or Alt-orbits) rather than moving it (recorded) |
+| CAD-111 Exact section | Section on Z at offset 0 (`cad_section {"axis":"z","offset":0}`), select a body, run `system_ui` `cad:section:exact` ("Exact section of …") or `cad_section {"exact":"<id>"}` | `curl 'http://127.0.0.1:<RoboCAD port>/nodes/<id>/section?plane=xy'` | A yellow exact outline appears over the red preview outline and follows the B-rep; on any plane other than xy, xz, yz through the origin or a plane node it is refused, naming why (RoboCAD's route takes only those); after an edit to the body it is re-read |
+| CAD-112 Isolate | Select one part, press `/` (View ▸ Isolate, right-click ▸ Isolate); then Ctrl/Cmd+Z | `/`; Edit ▸ Undo | Everything but the part, its children and parents is hidden in both; one undo step "Isolate" brings it back. With nothing selected the viewer refuses "Select the nodes to isolate" (RoboCAD hides everything; recorded) |
+| CAD-113 Hide and Show All | Select two parts, press H (View ▸ Hide, right-click ▸ Hide); then Alt/Option+H (View ▸ Show All); undo both | H; Alt+H; Edit ▸ Undo twice | H hides the selection as one step ("Hide"); Show All shows every node ("Show all"); the tree shows the same visibility; each undo reverses one. With nothing selected the viewer refuses "Select the nodes to hide" (recorded) |
+| CAD-114 Save a view | View ▸ Saved Views opens the panel at the lower right: set a view (front, ortho, section on, grid off, wireframe), type "Front cutaway" in "View name, e.g. Worm drive cutaway", **Save current view**. `cad_views {"op":"save","name":"Front cutaway"}` | View ▸ Saved Views: the same view, the same name, Save current view | Both list "Front cutaway / Orthographic · Cutaway"; "Saved inside this CAD file · edits support Undo"; a blank or 121-character name is refused before anything is sent; one undo step in RoboCAD's history ("Save view") |
+| CAD-115 Rename, replace, delete | On the row: **Rename…** (type "Front A-A", Enter), turn the camera, **Replace with current**, then **Delete**; Ctrl/Cmd+Z after each. `cad_views {"op":"rename","id":"…","name":"…"}`, `"replace"`, `"delete"` | Rename…, Replace with current, Delete; Edit ▸ Undo | Each is one undo step with RoboCAD's label ("Update saved view", "Delete saved view") and each undo restores the list as it was, in both |
+| CAD-116 Restore, across both | Save a view in the viewer and Save the file; open that copy in RoboCAD and Restore it there. Save a view in RoboCAD, save, open that copy in the viewer: **Restore view**. Compare `unzip -p <file>.rcad manifest.json` (`saved_views`) | Restore view (or double-click the row) | A view saved in either one restores in the other with the same direction, distance, orthographic or perspective, field of view, display mode, grid and section; the `saved_views` entries have the same keys. The viewer restores with a button, not a double-click (recorded) |
+| CAD-117 Tessellation tolerance | Select a curved body; in the inspector type 0.5 in "Tessellation tolerance (mm)", Enter; then 0.01; then Ctrl/Cmd+Z | The properties panel's "Tessellation tolerance (mm)" spin box, 0.5, then 0.01 | At 0.5 both draw the same visible facets; at 0.01 both are smooth; the viewer's change is one undo step ("Set attributes"), RoboCAD's panel records none, and the viewer's field opens empty (RoboCAD reports no current value; recorded) |
+| CAD-118 File ▸ New | File ▸ New (Ctrl/Cmd+N): the path form proposes `untitled.rcad` in the document's folder; type `/tmp/cad-check/new.rcad`, OK. Try again with the same path | File ▸ New | The viewer writes the empty file, then opens it (the progress strip and status line say so); an existing path is refused ("exists: choose a new file name") and left untouched. With unsaved edits in a service this window started, New is refused before any file is written (CAD-127). REST `cad_file {"op":"new","path":"/tmp/cad-check/new2.rcad"}` answers only once the new file is open (its answer names `created` and `opened`). RoboCAD opens an untitled window instead (recorded) |
+| CAD-119 File ▸ Open | File ▸ Open… (Ctrl/Cmd+O): the form lists the folder's `.rcad` files; click `turntable.rcad`, OK | File ▸ Open… | The same document opens in both; `..` and folder rows move through folders; a relative path is refused, naming why |
+| CAD-120 File ▸ Save As | File ▸ Save As… (Ctrl/Cmd+Shift+S): `/tmp/cad-check/copy` (no extension), OK. Then `unzip -l /tmp/cad-check/copy.rcad` | File ▸ Save As… `/tmp/cad-check/copy-rc`, then the same `unzip -l` | Both append `.rcad`; both archives hold `thumbnail.png` (a headless service draws the viewer's with RoboCAD's snapshot renderer); the left dock names the new file, and leaving and re-entering CAD mode reopens `copy.rcad`. Plain Save writes the thumbnail too (CAD-11) |
+| CAD-121 Import STEP | File ▸ Import… (Ctrl/Cmd+I): `/tmp/cad-check/print-kit.step`, OK; then undo | File ▸ Import… the same file; Edit ▸ Undo | The same new nodes, volumes and face counts; one undo step removes them in both. (An SVG or an image lands on XY in the viewer, on the active plane in RoboCAD: recorded) |
+| CAD-122 Import a mesh with units | File ▸ Import… and type `/tmp/cad-check/cap.stl`: as soon as the path names the mesh, the form adds "Units of the mesh file" (empty), says "Asking RoboCAD for its guess…", then "RoboCAD's guess: … (largest extent …)" and fills the unit; OK is disabled, saying why, until then. OK. Then repeat, choosing `in` before the guess lands (the guess no longer replaces it); **Guess unit** asks again | File ▸ Import…: "Units of the file" / "This format carries no unit. What are the numbers in?" with its guess preselected | The guess is the same unit in both; the imported mesh has the same size for the same unit in both (inches 25.4× millimetres); no mesh is imported in a unit nobody picked or RoboCAD guessed. The viewer's unit is a row of its path form, not a second dialog (recorded) |
+| CAD-123 Export STL, 3MF, OBJ with settings | File ▸ Export… (Ctrl/Cmd+E): Format `stl`, File `/tmp/cad-check/v.stl`, Format binary, Unit mm, Chord tolerance (mm) 0.05, Angular tolerance (°) 20; OK. Then `3mf` (Write colours, Write names) and `obj` (Scale, Up axis, Quads, N-gons, Write MTL, Write UVs) | File ▸ Export… the same files (`r.stl`, …) with the same values in its dialog | Each file is written (status "Exported … to …"); the viewer's and RoboCAD's files of each format import back into RoboCAD with the same triangles and size; a value outside a field's range is refused naming the setting; reopening the form starts from the last values sent for that format during the session (RoboCAD remembers them across launches; recorded) |
+| CAD-124 Export STEP, IGES, sketch SVG | Format `step` (Schema AP214, Write names, Write colours), `iges`, and `svg` with a sketch selected (Sketch (node id) is filled; draw one as in Part E if the model has none) | The same three exports | The STEP and IGES files import back into RoboCAD with the same bodies and volumes; the SVGs show the same curves; an export RoboCAD blocks names its reason |
+| CAD-125 Export drawing | File ▸ Export drawing (SVG)… (Ctrl/Cmd+Shift+D) with the section on: Front, Top, Right and Isometric view checked, Title, "Section A-A (the section tool's plane)" checked; OK | File ▸ Export drawing (SVG)… with the section on | The same four views and a "Section A-A" view, titled with the document's file name by default, in both SVGs |
+| CAD-126 Render | `system_ui` `cad:file:render` ("Render (PNG)…") or `cad_render {"path":"/tmp/cad-check/v.png","view":"iso","w":1200,"h":900}` | `curl -o /tmp/cad-check/r.png 'http://127.0.0.1:<RoboCAD port>/render?view=iso&w=1200&h=900'` | Both PNGs show the same view of the model; a size outside 16–8192 px or a path without `.png` is refused before anything is sent; the window never stalls while it renders |
+| CAD-127 Unsaved edits | In Part A (a service this window started) make an edit, then File ▸ Open… or New: the form says in red "Not now: … has unsaved edits …: save first", and OK is refused naming the reason; New writes no file. There is no discard button. Save (Ctrl/Cmd+S), then OK opens. Attached to RoboCAD's window (Part B), with an edit unsaved there: the form notes in amber that RoboCAD keeps its edits and this window then shows the other file; OK opens it. `cad_open` and `cad_file {"op":"open"}` follow the same rule | File ▸ Open… or New with unsaved edits: another window opens and the edits stay; close the window: "Unsaved changes" / "Save before closing?" with Save, Discard, Cancel | Nothing is lost in either: the viewer refuses rather than replace a self-started service's unsaved edits, and an attached RoboCAD keeps its own; the refusals name the document and what to do |
+| CAD-128 The camera in the other modes | Switch to **Robot**, **Phenomena**, **Build** and a lesson with a 3D card (`--lessons DIR`). In each: right-drag orbits, middle or Shift+right-drag pans, the wheel zooms toward the focus (in a lesson card only with Ctrl/Cmd held, so the page scrolls); the numpad's 1/3/7 (Ctrl: opposite), 9, 5, 0 and `.`; Home returns to the mode's home view; a lesson's spinning card keeps spinning; `camera_spin {"rate":0.5}` then `{"rate":0}` | (n/a: compare with a build of 1b00d789, before the shared camera) | The orbit rate, pitch limits, zoom limits, home view, glide (or cut) to home and spin of each mode feel as they did before; a drag that starts on a side dock never moves the camera; RoboCAD's gestures (CAD-129) are CAD's only: Shift+middle still pans and the arrow keys are not camera keys in these modes |
+| CAD-129 RoboCAD's camera gestures | In CAD mode with the Select tool: Shift+middle-drag orbits (a plain middle-drag still pans); Alt+right-drag orbits and snaps to the nearest axis view at every step (pitch level or ±89.5°, yaw a multiple of 90°); Alt/Option+left-drag orbits once it moves more than about 6 px, while an Alt+click on overlapping parts still opens the candidates menu and an Alt drag never box-selects; the arrow keys orbit 10° (Ctrl/Cmd: 90°), Shift+arrows pan; with a text field focused (the numeric bar, the inspector, the offset field) the arrows leave the camera alone. `camera_orbit {"degrees":[10,0]}` | The same drags and keys in RoboCAD's viewport | The same turns, snaps and pans in both, at the same steps. RoboCAD's own Alt+left-drag does not orbit (its tool takes the press, ui/app.py:542; recorded in the ledger's notes), so compare the viewer's with right-drag |
+| CAD-130 Curve nodes | Select a body and run Modify ▸ Silhouette onto active plane (CAD-95): a "Silhouette" curve node appears in the tree. Toggle its visibility; select it in the tree; switch display modes (Z); turn the section on across it | The same silhouette in RoboCAD's window | The curve is drawn in both, 2 px, light blue (or the node's colour), orange while selected, in every display mode, cut by the section plane, gone while hidden. Clicking the curve in the viewer's 3D view does not select it (RoboCAD's 8 px curve pick is not ported; select it in the tree; recorded) |
+
 ## Known differences (deliberate)
 
 - RoboCAD asks Save/Discard/Cancel when closing; the viewer never saves for
-  you. It refuses to leave CAD mode while a service it started has unsaved
+  you and has no discard. It refuses to leave CAD mode, or to open or
+  create another file, while a service it started has unsaved
   edits, and if the window closes it leaves that service running and logs
   its URL (attach with `--cad-url` and save).
 - The viewer's camera and fit are its own; they never move RoboCAD's view or
@@ -265,6 +325,22 @@ label.
   outlines without the taper; the extrude source follows the
   selection while the tool is active; a sketch shape in progress refuses
   leaving CAD mode.
+- cad-views-export (each recorded in cad-parity.md with its reason): file
+  commands use the viewer's path form, not the system's file dialog; New
+  names its file first and opens it in this window, under the open rule
+  (refused over a self-started service's unsaved edits); the mesh unit is
+  a row of the import form, filled by RoboCAD's guess; an imported SVG or image lands on XY; export
+  settings are remembered for the session and the form starts in the
+  document's folder; the view cube is a net of buttons; matcap is
+  approximated and render has no ground shadow; high contrast changes only
+  the 3D view and is not kept; the tessellation field patches the
+  inspected node with undo and opens empty; Isolate and Hide refuse an
+  empty selection; Saved Views is a floating panel with a Restore button
+  per row; the Blender live link, web share, draft-angle shading, the
+  Preferences dialog, recovery saves and the SpaceMouse are not ported;
+  curve nodes are drawn but not picked in the 3D view; the section offset
+  is the toolbar's field (no plane drag, R or Tab in the 3D view). No
+  cad-views-export row is open.
 
 ## Sign-off
 

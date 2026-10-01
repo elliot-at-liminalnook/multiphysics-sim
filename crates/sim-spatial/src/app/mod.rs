@@ -2,7 +2,8 @@
 //!
 //! - **One `App`**, built by [`run`] and nowhere else. Launch flags only
 //!   choose the initial [`ViewerMode`] and its documents ([`Launch`]).
-//! - **Modes are states.** [`ViewerMode`] is the Bevy state; two computed
+//! - **Modes are states.** [`ViewerMode`] (Inspect, Build, Lessons, Robot,
+//!   Place, Cad) is the Bevy state; two computed
 //!   states follow it: [`ModeScope`] (what a mode's entities and resources
 //!   live for: Build and Lessons share one scope, the lesson screen being
 //!   drawn over the builder's scene) and [`SpatialScreen`] (the spatial
@@ -50,10 +51,13 @@ pub enum ViewerMode {
     Robot,
     /// A scanned place (`sim-place build` directory).
     Place,
+    /// A RoboCAD document (`*.rcad`), shown and edited through RoboCAD's
+    /// REST service (native-viewer.md §9 phase 1; `crate::cad`).
+    Cad,
 }
 
 impl ViewerMode {
-    pub const ALL: [ViewerMode; 5] = [ViewerMode::Inspect, ViewerMode::Build, ViewerMode::Lessons, ViewerMode::Robot, ViewerMode::Place];
+    pub const ALL: [ViewerMode; 6] = [ViewerMode::Inspect, ViewerMode::Build, ViewerMode::Lessons, ViewerMode::Robot, ViewerMode::Place, ViewerMode::Cad];
     /// The REST and `system_ui` name (`mode:<name>`).
     pub fn name(self) -> &'static str {
         match self {
@@ -62,6 +66,7 @@ impl ViewerMode {
             ViewerMode::Lessons => "lessons",
             ViewerMode::Robot => "robot",
             ViewerMode::Place => "place",
+            ViewerMode::Cad => "cad",
         }
     }
     pub fn label(self) -> &'static str {
@@ -71,6 +76,7 @@ impl ViewerMode {
             ViewerMode::Lessons => "Lessons",
             ViewerMode::Robot => "Robot",
             ViewerMode::Place => "Place",
+            ViewerMode::Cad => "CAD",
         }
     }
     pub fn parse(name: &str) -> Result<Self, String> {
@@ -94,6 +100,7 @@ pub enum ModeScope {
     Builder,
     Robot,
     Place,
+    Cad,
 }
 impl ComputedStates for ModeScope {
     type SourceStates = ViewerMode;
@@ -105,6 +112,7 @@ impl ComputedStates for ModeScope {
             ViewerMode::Build | ViewerMode::Lessons => ModeScope::Builder,
             ViewerMode::Robot => ModeScope::Robot,
             ViewerMode::Place => ModeScope::Place,
+            ViewerMode::Cad => ModeScope::Cad,
         })
     }
 }
@@ -159,12 +167,14 @@ pub struct Launch {
     pub learn: Option<crate::lesson::Learn>,
     pub robot: Option<crate::robot::RobotView>,
     pub place: Option<crate::place_view::PlaceView>,
+    /// CAD mode's document (the RoboCAD service to attach to or start).
+    pub cad: Option<crate::cad::CadDocument>,
 }
 
 /// The one app: every mode's plugin under its state, the core, and the
 /// initial mode's documents. Returns when the window closes.
 pub fn run(launch: Launch) {
-    let Launch { mode, api, documents, models, scene, link, builder, learn, robot, place } = launch;
+    let Launch { mode, api, documents, models, scene, link, builder, learn, robot, place, cad } = launch;
     let compact = scene.as_ref().is_some_and(|s| s.compact);
     let mut app = App::new();
     app.add_plugins(CorePlugin { initial: mode, compact })
@@ -189,6 +199,9 @@ pub fn run(launch: Launch) {
     if let Some(place) = place {
         app.insert_resource(place);
     }
+    if let Some(cad) = cad {
+        app.insert_resource(cad);
+    }
     app.add_plugins((
         ModesPlugin { initial: mode },
         crate::SpatialViewerPlugin,
@@ -196,6 +209,7 @@ pub fn run(launch: Launch) {
         crate::lesson::LearnPlugin,
         crate::robot::RobotPlugin,
         crate::place_view::PlacePlugin,
+        crate::cad::CadPlugin,
     ))
     .run();
 }
@@ -266,6 +280,7 @@ fn look(mode: ViewerMode, compact: bool) -> Look {
             min: None,
             winit: WinitSettings { focused_mode: UpdateMode::Continuous, unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(100)) },
         },
+        ViewerMode::Cad => Look { title: "Systems — CAD (RoboCAD document)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive() },
     }
 }
 

@@ -8,6 +8,7 @@ pub mod app;
 pub(crate) mod inspect;
 pub(crate) mod chart;
 pub mod builder;
+pub mod cad;
 pub mod jobs;
 pub mod launch;
 pub mod lesson;

@@ -30,6 +30,9 @@
 //! - **No file writes by accident**: [`CadClient::physical`] never passes
 //!   `path` (RoboCAD would write the description to that file).
 pub mod files;
+pub mod physical;
+pub mod robot;
+pub mod robot_ops;
 pub mod section;
 pub mod service;
 pub mod sketch;
@@ -37,6 +40,10 @@ pub mod types;
 pub mod views;
 #[cfg(test)]
 mod files_tests;
+#[cfg(test)]
+mod physical_tests;
+#[cfg(test)]
+mod robot_tests;
 #[cfg(test)]
 mod section_tests;
 #[cfg(test)]
@@ -50,6 +57,9 @@ pub use sketch::{PlaneFrame, SKETCH_CALLS, SketchCall, SketchCurve, SketchGeomet
 pub use types::*;
 // cad-views-export: saved views, sections, files/export/render.
 pub use files::*;
+pub use physical::*;
+pub use robot::*;
+pub use robot_ops::*;
 pub use section::*;
 pub use views::*;
 
@@ -380,7 +390,7 @@ impl CadClient {
         self.get("/autosave")
     }
     /// `GET /physical?flex=1|0`: the physical assembly description
-    /// (simrobot v3, SI). Never passes `path`: RoboCAD would write a file.
+    /// (simrobot v4, SI). Never passes `path`: RoboCAD would write a file.
     pub fn physical(&self, flex: bool) -> Result<Value, CadError> {
         self.get(if flex { "/physical?flex=1" } else { "/physical?flex=0" })
     }

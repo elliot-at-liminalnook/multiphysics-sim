@@ -136,8 +136,9 @@ fn clipping_a_unit_cube_keeps_robocads_side_and_triangle_order() {
         let [a, b, c] = cut.triangles[t];
         assert!(a == b && b == c, "{:?}", cut.triangles[t]);
     }
-    // Nothing kept lies above the plane; the bottom stays whole.
-    for tri in &cut.triangles {
+    // Nothing kept lies above the plane (a removed triangle collapses onto
+    // one of its own points, drawn as nothing); the bottom stays whole.
+    for tri in cut.triangles.iter().filter(|[a, b, c]| !(a == b && b == c)) {
         for i in tri {
             assert!(cut.vertices[*i as usize][2] <= 0.5 + 1e-12);
         }

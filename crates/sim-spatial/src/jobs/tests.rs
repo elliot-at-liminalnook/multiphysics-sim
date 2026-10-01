@@ -363,7 +363,10 @@ fn has_segment(line: &str, needle: &str) -> bool {
 /// mode hands to `ChildProcess::spawn`) does not appear here at all.
 #[test]
 fn processes_are_started_only_in_jobs() {
-    const BUILDS: &[(&str, usize, &str)] = &[("main.rs", 2, "the linked sim-viewer window's command (build and inspect modes), started with jobs::spawn_detached")];
+    const BUILDS: &[(&str, usize, &str)] = &[
+        ("main.rs", 2, "the linked sim-viewer window's command (build and inspect modes), started with jobs::spawn_detached"),
+        ("cad/lifecycle_tests.rs", 1, "test-only stand-in services and kill probes, handed to jobs::ChildProcess::spawn"),
+    ];
     // Built so this file never contains the needles literally.
     let runners = [[".spawn", "()"].concat(), [".output", "()"].concat()];
     let new = ["Command", "::new("].concat();

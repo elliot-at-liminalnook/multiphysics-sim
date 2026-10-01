@@ -336,6 +336,10 @@ pub(super) fn edges_to_faces(doc: &mut CadDocument, meshes: Option<&CadMeshes>, 
 /// not loaded or has no such edge. Part D's live dimensions use it.
 pub(super) fn faces_of_edge(meshes: &CadMeshes, topology: &CadTopology, node: &str, edge: i64) -> Vec<i64> {
     let (Some(mesh), Some(topo)) = (meshes.mesh_data(node), topology.get(node)) else { return Vec::new() };
+    // A polyline of one revision against another revision's tessellation names the wrong faces.
+    if meshes.drawn_revision(node) != Some(topo.revision) {
+        return Vec::new();
+    }
     let Some(info) = topo.edges.iter().find(|e| e.index == edge) else { return Vec::new() };
     faces_along(mesh, &info.points)
 }
@@ -400,7 +404,10 @@ pub(super) fn faces_along(mesh: &MeshData, polyline: &[[f64; 3]]) -> Vec<i64> {
     let tolerance = sag + MESH_TOLERANCE + EDGE_FACE_EPSILON;
     let parallel = (EDGE_FACE_PARALLEL.acos() + turn).min(std::f64::consts::FRAC_PI_2).cos();
     let near = |p: DVec3| polyline_distance(p, &points) <= tolerance;
-    let on: Vec<bool> = vertices.iter().map(|v| near(*v)).collect();
+    // The polyline's bounds widened by the tolerance: vertices outside can't be near, so most skip the distance (box selects of many edges stay quick).
+    let (lo, hi) = points.iter().fold((DVec3::splat(f64::INFINITY), DVec3::splat(f64::NEG_INFINITY)), |(lo, hi), p| (lo.min(*p), hi.max(*p)));
+    let (lo, hi) = (lo - DVec3::splat(tolerance), hi + DVec3::splat(tolerance));
+    let on: Vec<bool> = vertices.iter().map(|v| v.cmpge(lo).all() && v.cmple(hi).all() && near(*v)).collect();
     let mut faces: Vec<i64> = Vec::new();
     for (t, tri) in mesh.triangles.iter().enumerate() {
         let Some(&face) = mesh.triangle_face.get(t) else { continue };
@@ -489,10 +496,16 @@ pub(super) fn box_select(doc: &mut CadDocument, meshes: &CadMeshes, topology: Op
     let pushed = publish(doc);
     let mut out = answer(doc, pushed);
     out["found"] = json!(n);
-    if !pending.is_empty() {
-        let names: Vec<String> = pending.iter().map(|id| doc.node_name(id)).collect();
+    // A failed fetch is retried only on the next revision or cad_refresh: name it, not "loading".
+    let (failed, loading): (Vec<&String>, Vec<&String>) = pending.iter().partition(|id| topology.and_then(|t| t.error(id)).is_some());
+    if !loading.is_empty() {
+        let names: Vec<String> = loading.iter().map(|id| doc.node_name(id)).collect();
         out["not_loaded"] = json!(names);
         out["note"] = json!("the topology of these drawn bodies is still loading; they were not tested");
+    }
+    if !failed.is_empty() {
+        let errors: Vec<Value> = failed.iter().map(|id| json!({"node": doc.node_name(id), "error": topology.and_then(|t| t.error(id)).unwrap_or_default()})).collect();
+        out["not_fetched"] = json!(errors);
     }
     Ok(out)
 }

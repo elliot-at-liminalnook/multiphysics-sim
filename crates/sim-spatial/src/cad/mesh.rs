@@ -173,6 +173,12 @@ impl CadMeshes {
         self.mesh_data(id)?.triangle_face.get(triangle).copied().filter(|f| *f >= 0)
     }
 
+    /// [`Self::face_of`], only while node `id`'s drawn mesh is from revision
+    /// `shown`: a lagging tessellation's triangles index older faces.
+    pub fn face_at(&self, id: &str, triangle: usize, shown: u64) -> Option<i64> {
+        (self.drawn_revision(id) == Some(shown)).then(|| self.face_of(id, triangle)).flatten()
+    }
+
     /// Every drawn body's bounds (mm, RoboCAD's frame): box select's test.
     pub fn body_bounds(&self) -> impl Iterator<Item = (&str, (Vec3, Vec3))> {
         self.entries.iter().filter(|(_, e)| e.entity.is_some()).filter_map(|(id, e)| e.bounds.map(|b| (id.as_str(), b)))

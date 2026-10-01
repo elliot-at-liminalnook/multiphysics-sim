@@ -101,6 +101,8 @@ struct HoverKey {
     topology: u64,
     meshes: u64,
     view: u64,
+    /// The shown revision (a lock or visibility edit changes what may be hovered).
+    revision: u64,
 }
 
 /// A drawn, visible, unlocked node for the screen search: id, topology, bounds (mm).
@@ -166,7 +168,8 @@ fn surface_item(doc: &CadDocument, meshes: &CadMeshes, hit: &Hit) -> Option<Sele
     if doc.select_mode == SelectMode::Body || is_mesh(doc, &hit.id) {
         Some(SelectionItem(hit.id.clone(), "body".into(), 0))
     } else {
-        hit.triangle.and_then(|t| meshes.face_of(&hit.id, t)).map(|f| SelectionItem(hit.id.clone(), doc.select_mode.name().into(), f))
+        // Nothing while the mesh is being redrawn for a newer revision (its face indices are the old revision's).
+        hit.triangle.and_then(|t| meshes.face_at(&hit.id, t, doc.shown_revision())).map(|f| SelectionItem(hit.id.clone(), doc.select_mode.name().into(), f))
     }
 }
 
@@ -366,8 +369,9 @@ fn pointer(
                 out.write(Act::ui(CadAction::CadBoxSelect { rect, extend: shift || ctrl }));
             } else {
                 let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies);
+                // Only an Alt+click's menu opens at the pointer (a REST cad_candidates opens at the view's corner).
+                state.menu_at = (alt && items.len() > 1).then_some(at);
                 if alt && items.len() > 1 {
-                    state.menu_at = Some(at);
                     out.write(Act::ui(CadAction::CadCandidates { items, extend: shift, toggle: ctrl }));
                 } else if let Some(item) = items.into_iter().next() {
                     out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![item], extend: shift, toggle: ctrl }));
@@ -390,7 +394,7 @@ fn pointer(
         }
         return;
     };
-    let key = HoverKey { cursor, mode: doc.select_mode, topology: topology.as_ref().map_or(0, |t| t.epoch), meshes: meshes.epoch, view: state.view_stamp };
+    let key = HoverKey { cursor, mode: doc.select_mode, topology: topology.as_ref().map_or(0, |t| t.epoch), meshes: meshes.epoch, view: state.view_stamp, revision: doc.shown_revision() };
     if state.hover_key != Some(key) {
         if state.hover_at.is_some_and(|t| t.elapsed() < HOVER_PERIOD) {
             // Coalesced: searched on a later frame.

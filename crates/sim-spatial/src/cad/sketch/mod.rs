@@ -6,8 +6,8 @@
 //!   (RoboCAD's `viewport.active_plane`; its `PUT /view` is GUI-only), and
 //!   the 2D snap toggle (`viewport.plane_snapping`). Never sent to RoboCAD
 //!   except as the plane argument of an operation that uses it.
-//! - [`cache`]: sketch geometry (`GET /nodes/{id}/sketch`) and plane-node
-//!   frames (`GET /nodes/{id}`), by (node, revision), on jobs.
+//! - [`cache`]: sketch geometry and plane-node frames (`GET /nodes/{id}`'s
+//!   `sketch` and `plane`), by (node, revision), on jobs.
 //! - `plane`, `plane_draw`: the plane's systems (the selected plane node,
 //!   the plane tools' picks, the header line) and the translucent quads.
 //! - `specs`, `interact`, `preview`, `display`, `edits`: the 13 sketch
@@ -94,18 +94,30 @@ pub struct CadActivePlane {
     pub snap_2d: bool,
     /// The document generation the plane belongs to.
     pub generation: u64,
+    /// A plane node read at the shown revision without a valid frame: its
+    /// id and why (`cache::sync` keeps it from `CadSketches::plane_state`).
+    /// Keyed by the node, so a mark left from another node is ignored.
+    pub unusable: Option<(String, String)>,
 }
 
 impl CadActivePlane {
     /// The active plane's frame: Ok(None) with no active plane; Err naming
-    /// the node while a plane node's frame is not read yet.
+    /// the node while a plane node's frame is not read yet, or when it was
+    /// read without a valid frame ([`Self::unusable`]).
     pub fn frame(&self) -> Result<Option<PlaneFrame>, String> {
         match &self.plane {
             None => Ok(None),
             Some(ActivePlane::Base(b)) => Ok(Some(b.frame())),
             Some(ActivePlane::Node { frame: Some(f), .. }) => Ok(Some(*f)),
-            Some(ActivePlane::Node { id, frame: None }) => Err(format!("the active plane (node {id}) is still being read from RoboCAD; try again in a moment")),
+            Some(ActivePlane::Node { id, frame: None }) => Err(match self.unusable_why(id) {
+                Some(why) => format!("the active plane: {why}; make another plane active"),
+                None => format!("the active plane (node {id}) is still being read from RoboCAD; try again in a moment"),
+            }),
         }
+    }
+    /// Why plane node `id` has no frame although it was read, if it is marked so.
+    fn unusable_why(&self, id: &str) -> Option<&str> {
+        self.unusable.as_ref().filter(|(u, _)| u == id).map(|(_, why)| why.as_str())
     }
     /// RoboCAD's `self.ctx.active_plane()`: the active plane, else XY.
     pub fn frame_or_xy(&self) -> Result<PlaneFrame, String> {
@@ -128,7 +140,11 @@ impl CadActivePlane {
             Some(ActivePlane::Base(b)) => b.label().to_string(),
             Some(ActivePlane::Node { id, frame }) => {
                 let name = doc.node_name(id);
-                if frame.is_some() { name } else { format!("{name} (reading)") }
+                match frame {
+                    Some(_) => name,
+                    None if self.unusable_why(id).is_some() => format!("{name} (no valid plane frame)"),
+                    None => format!("{name} (reading)"),
+                }
             }
         }
     }

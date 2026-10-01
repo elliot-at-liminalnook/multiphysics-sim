@@ -19,6 +19,10 @@
 //!   its vertex with 9 arc points, so a later corner sees the new
 //!   neighbours), and sends only the corners RoboCAD would fillet.
 //! - **Join** ("Join curves"): all curves into one when there are two or more.
+//! - **Unreadable curves**: a sketch read with curves dropped (no kind,
+//!   `CadSketches::dropped`) has a shorter list than RoboCAD's, so its
+//!   indices are not RoboCAD's: the three edits, and a `cad_sketch` call
+//!   that names curves by index, are refused by name ([`dropped_refusal`]).
 //!
 //! Deliberately different, recorded: RoboCAD records an undo step for a
 //! join of one curve, an offset of an empty sketch or a fillet with no
@@ -46,6 +50,38 @@ pub(crate) fn selected_sketch(doc: &CadDocument) -> Option<String> {
     let state = doc.doc.as_ref()?;
     let is_sketch = |id: &str| state.nodes.iter().any(|n| n.id == id && n.kind == "sketch");
     doc.selected_nodes().into_iter().find(|id| is_sketch(id.as_str())).or_else(|| state.nodes.iter().find(|n| n.kind == "sketch" && n.effective_visible).map(|n| n.id.clone()))
+}
+
+/// Why sketch `id`'s curve indices cannot be used: its read dropped curves.
+pub(crate) fn dropped_refusal(env: &Env, id: &str, name: &str, what: &str) -> Result<(), String> {
+    match env.sketches.map_or(0, |c| c.dropped(id)) {
+        0 => Ok(()),
+        n => Err(format!(
+            "{what} refused: {n} curve(s) of {name} could not be read (no kind), so the viewer's curve indices are not RoboCAD's; Refresh (cad_refresh), or edit {name} in RoboCAD"
+        )),
+    }
+}
+
+/// A call that names curves by index (the edits and the tangent constructors).
+fn names_curves(call: &SketchCall) -> bool {
+    use SketchCall::*;
+    matches!(
+        call,
+        CircleTangent { .. }
+            | ArcTangent { .. }
+            | Remove { .. }
+            | Reverse { .. }
+            | SplitAt { .. }
+            | Trim { .. }
+            | Extend { .. }
+            | FilletCorner { .. }
+            | Offset { .. }
+            | Join { .. }
+            | Unjoin { .. }
+            | InsertVertex { .. }
+            | RemoveVertex { .. }
+            | Rebuild { .. }
+    )
 }
 
 /// Sketch `id`'s geometry at the shown revision, or why it is not there.
@@ -145,6 +181,12 @@ pub(crate) fn calls(entry: &OpEntry, edit: SketchEdit, r: &Resolved, values: &Ma
     let name = doc.node_name(&id);
     let g = read(env, &id, &name)?;
     let n = g.curves.len();
+    let what = match edit {
+        SketchEdit::Offset => "Offset curves",
+        SketchEdit::FilletCorners => "Fillet corners",
+        SketchEdit::Join => "Join curves",
+    };
+    dropped_refusal(env, &id, &name, what)?;
     let (calls, label) = match edit {
         SketchEdit::Offset => {
             let d = number(entry, values, "distance")?;
@@ -176,7 +218,8 @@ pub(crate) fn calls(entry: &OpEntry, edit: SketchEdit, r: &Resolved, values: &Ma
 
 /// A plane argument as RoboCAD's `ArgConverter.plane` reads it (api.py:199-207):
 /// "xy" | "xz" | "yz" (any case), or a plane node of the shown tree, with its
-/// frame (read at the shown revision).
+/// frame (read at the shown revision; refused by name when it was read
+/// without a valid frame).
 fn named_plane(name: &str, doc: &CadDocument, env: &Env) -> Result<(Value, PlaneFrame), String> {
     let lower = name.to_ascii_lowercase();
     if let Some(b) = [BasePlane::Xy, BasePlane::Xz, BasePlane::Yz].into_iter().find(|b| b.arg() == lower) {
@@ -184,8 +227,9 @@ fn named_plane(name: &str, doc: &CadDocument, env: &Env) -> Result<(Value, Plane
     }
     let node = doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == name));
     match node {
-        Some(n) if n.kind == "plane" => match env.sketches.and_then(|c| c.plane(name)) {
-            Some(f) => Ok((Value::from(name), f)),
+        Some(n) if n.kind == "plane" => match env.sketches.and_then(|c| c.plane_state(name)) {
+            Some(Ok(f)) => Ok((Value::from(name), f)),
+            Some(Err(why)) => Err(format!("plane {}: {why}", n.name)),
             None => Err(match env.sketches.and_then(|c| c.error(name)) {
                 Some(e) => format!("plane {} ({name}) could not be read from RoboCAD ({e}); Refresh (cad_refresh) and try again", n.name),
                 None => format!("plane {} ({name}) is still being read from RoboCAD; try again", n.name),
@@ -242,6 +286,11 @@ fn prepare(node: Option<&str>, plane: Option<&str>, calls: &[Value], doc: &CadDo
             (target, curves)
         }
     };
+    if let SketchTarget::Node(id) = &target
+        && let Some((i, c)) = parsed.iter().enumerate().find(|(_, c)| names_curves(c))
+    {
+        dropped_refusal(env, id, &doc.node_name(id), &format!("cad_sketch call {} ({})", i + 1, c.name()))?;
+    }
     check_calls(&parsed, curves).map_err(|e| format!("cad_sketch: {e}"))?;
     let where_ = match &target {
         SketchTarget::Node(id) => doc.node_name(id),

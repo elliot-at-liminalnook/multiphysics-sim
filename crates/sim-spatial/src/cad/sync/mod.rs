@@ -474,10 +474,14 @@ fn finish_edit(doc: &mut CadDocument) {
     let Some(result) = edit.job.poll() else { return };
     let generation = edit.job.generation();
     let (clear_selection, activates_plane) = doc.edit.take().map_or((None, false), |e| (e.clear_selection, e.activates_plane));
+    let seq = doc.edit_seq;
     if generation != doc.generation {
+        crate::cad::sketch::specs::polygon_edit_done(doc, seq, false);
         return;
     }
     let answer = result.map(|EditDone { message, result }| (message, result));
+    // A polygon sent with sides: its count is the remembered one once RoboCAD took it.
+    crate::cad::sketch::specs::polygon_edit_done(doc, seq, answer.is_ok());
     // A plane tool's new plane node becomes the active plane (the op's
     // answer is `{"result": id, …}`); `sketch::plane::sync` applies it.
     if activates_plane

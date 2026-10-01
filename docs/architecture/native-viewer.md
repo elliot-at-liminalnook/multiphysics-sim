@@ -168,8 +168,11 @@ duplicates physics.
   interaction, sketch offset/fillet corners/join and the `cad_sketch` REST
   command, extrude and revolve with Shift/Ctrl/Alt booleans, sweep, pipe,
   loft and fill; the plane-dependent cad-modify operations and the
-  primitives now follow the active plane. One recorded Python fix
-  (`Service.edit_sketch`'s curve indices). Re-measured 2026-10-01: `cad/`
+  primitives now follow the active plane. Recorded Python fixes:
+  `Service.edit_sketch`'s curve indices, `ArgConverter` passing a node id
+  through for `fill`, the kernel's `fill_hole` (`Shape()`, found by test in
+  the verification pass), and named 4xx refusals with a rolled-back failed
+  sketch create (verification pass). Re-measured 2026-10-01: `cad/`
   is 21,893 lines in 75 files (`find crates/sim-spatial/src/cad -name '*.rs' | xargs wc -l`,
   tests included; `sketch/` 3,148 in 11; `ops/` 4,032 in 17); the
   catalogue has 84 entries (`grep -c 'id: "' crates/sim-spatial/src/cad/ops/catalogue/*.rs`
@@ -2988,7 +2991,8 @@ compiled or run yet (see the verification checklist). Paths are
   `SketchSpec` per shape: points `needed`, `Finish::Points(n)` or
   `EnterOrDouble`, `chains`, `Readout`, `text_form`). `specs::from_points`
   is RoboCAD's `_build`, `from_values` its `commit`, `target` its
-  `_ensure_sketch`, `calls` the Tab path; `remember_polygon_sides` is
+  `_ensure_sketch`, `calls` the Tab path; `note_polygon_sides` (in `ops::send_sketch`) and
+  `polygon_edit_done` (in `sync::finish_edit`, on success only) are
   `Sketch.last_polygon_sides`. `sketch/interact.rs`: one pointer system
   for all 13 (`begin`, `pointer`, `finish_action`, `reset_after_finish`,
   `readout`; double-click `DOUBLE_CLICK` 400 ms and `DOUBLE_DISTANCE`
@@ -3278,7 +3282,7 @@ Function names, not line numbers (fixes may follow the verification pass).
   → `edits::prepare` (`SketchCall::from_json`; `specs::target`: the
   selected sketch on the plane, else the first visible one, else
   `SketchTarget::New`; `check_calls`) → `ops::send_sketch`
-  (`specs::remember_polygon_sides`) → `actions::edit` →
+  (`specs::note_polygon_sides`) → `actions::edit` →
   `CadClient::create_sketch` → `POST /nodes {"kind": "sketch", "plane":
   "<plane node id>", "calls": [["rectangle", …]]}` (RoboCAD's
   `Service.create`: `Ops.new_sketch`, then `edit_sketch`, label "Sketch
@@ -3690,8 +3694,9 @@ e0996878 (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units
 added the active plane and 2D snapping, the four plane tools, the 13
 sketch tools on one data-driven interaction, the sketch edits and the
 `cad_sketch` REST command, extrude, revolve, sweep, pipe, loft and fill,
-with one recorded Python fix (`Service.edit_sketch` maps curve indices
-first); it is written and reviewed by reading, pending its verification
+with recorded Python fixes (`Service.edit_sketch` maps curve indices
+first; `ArgConverter` passes `fill`'s node id; the verification pass fixed
+`fill_hole` and made sketch refusals 4xx with a rolled-back failed create); it is written and reviewed by reading, pending its verification
 pass. Next: that pass, then cad-views-export.
 
 #### Later CAD epics (planned 2026-09-30)

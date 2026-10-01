@@ -66,7 +66,7 @@ pub(super) fn motion_buttons() -> [(&'static str, &'static str, MotionRequest); 
         ("motion:stop", "Stop (X)", MotionRequest::Stop),
     ]
 }
-/// Replay buttons shown in the inspector (the rest are in system_ui and REST).
+/// Replay buttons shown in the inspector until "More recordings…" expands the list to every recording.
 const REPLAY_BUTTONS: usize = 5;
 
 /// Jog rows for the joints touching the selected link: the joint's servo
@@ -144,7 +144,8 @@ pub(super) fn motion_panel(
     fonts: Res<UiFonts>,
     root: Single<Entity, With<MotionRoot>>,
     mut shown: Local<bool>,
-    mut listed: Local<Option<Vec<String>>>,
+    ui: Res<RobotPanelUi>,
+    mut listed: Local<Option<(Vec<String>, bool)>>,
     replay_list: Query<Entity, With<ReplayList>>,
     mut text: Query<(&mut Text, Has<RecordingText>, Has<ReplayText>), Or<(With<MotionText>, With<RecordingText>, With<ReplayText>)>>,
     mut buttons: Query<(&RobotAction, &mut Enabled), With<MotionButton>>,
@@ -181,12 +182,15 @@ pub(super) fn motion_panel(
         *shown = true;
     }
     if let (Some(r), Ok(list)) = (view.run.as_ref(), replay_list.single()) {
-        // The most recent recordings first; rebuilt only when the listed files change.
-        let files: Vec<String> = r.recordings().iter().rev().take(REPLAY_BUTTONS).map(|l| l.file.clone()).collect();
-        if listed.as_ref() != Some(&files) {
+        // The most recent recordings first (all of them when expanded); rebuilt only when the listed files change.
+        let expanded = ui.recordings_expanded;
+        let count = if expanded { r.recordings().len() } else { REPLAY_BUTTONS };
+        let files: Vec<String> = r.recordings().iter().rev().take(count).map(|l| l.file.clone()).collect();
+        let key = (files, expanded);
+        if listed.as_ref() != Some(&key) {
             commands.entity(list).despawn_related::<Children>();
             let mut rows = Vec::new();
-            for l in r.recordings().iter().rev().take(REPLAY_BUTTONS) {
+            for l in r.recordings().iter().rev().take(count) {
                 let summary = l.meta.as_ref().map_or("no sidecar".to_string(), |m| format!("{} steps{}{}", m["completed_steps"], if m["replayable"] == false { " · diagnostic" } else { "" }, m["note"].as_str().map_or(String::new(), |n| format!(" · {}", clip(n, 30)))));
                 let row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
                 let b = button(&mut commands, RobotAction::Replay { file: Some(l.file.clone()), path: None }, "Replay");
@@ -195,12 +199,15 @@ pub(super) fn motion_panel(
                 rows.push(row);
             }
             let more = r.recordings().len().saturating_sub(REPLAY_BUTTONS);
-            let note = if r.recordings().is_empty() { "no saved recordings for this preset yet".to_string() } else if more > 0 { format!("{more} older in robot_state.recordings (system_ui replay:<file>, REST robot_replay)") } else { String::new() };
-            if !note.is_empty() {
-                rows.push(commands.spawn(k.text(note, size::DETAIL, SUBTLE, 0)).id());
+            if r.recordings().is_empty() {
+                rows.push(commands.spawn(k.text("no saved recordings for this preset yet", size::DETAIL, SUBTLE, 0)).id());
+            } else if more > 0 {
+                // Every recording is replayable from the window: the toggle lists the older ones too.
+                let label = if expanded { format!("Fewer recordings (the {REPLAY_BUTTONS} most recent)") } else { format!("More recordings… ({more} older)") };
+                rows.push(commands.spawn(k.button(&label, PanelToggle::Recordings, Look::Ghost, true)).id());
             }
             commands.entity(list).add_children(&rows);
-            *listed = Some(files);
+            *listed = Some(key);
         }
     }
     if let Some(r) = view.run.as_ref() {
@@ -220,7 +227,8 @@ pub(super) fn motion_panel(
 /// transport (Start, Step −1, Play, Pause, Step +1) and the timeline line. Each
 /// button is the same `RobotAction::Recorded` as `system_ui` recorded:* and REST
 /// `robot_recorded`, enabled per the handler's check. Speed is the header's
-/// −/×/+ (the same scale); seek to a time is REST/system_ui only (no slider idiom here).
+/// −/×/+ (the same scale); the seek slider under the transport is the same
+/// `Recorded {Seek {t}}` (`panel_ui::recorded_seek` writes it while held).
 pub(super) fn recorded_panel(
     mut commands: Commands,
     view: Res<RobotView>,
@@ -229,6 +237,8 @@ pub(super) fn recorded_panel(
     mut shown: Local<bool>,
     mut text: Query<&mut Text, With<RecordedText>>,
     mut buttons: Query<(&RobotAction, &mut Enabled), With<RecordedButton>>,
+    mut seek: Query<(&mut bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction), With<RecordedSeek>>,
+    mut fill: Query<&mut Node, With<RecordedSeekFill>>,
 ) {
     let Some(p) = view.run.as_ref().and_then(|r| r.playback()) else {
         // Switched to a view without a recorded timeline (an embedded preset):
@@ -242,7 +252,7 @@ pub(super) fn recorded_panel(
     if !*shown {
         let k = Kit { f: &fonts };
         let header = commands.spawn(k.section("Recorded")).id();
-        let label = commands.spawn(k.text(format!("{} · speed: header −/×/+ · seek: REST robot_recorded", crate::robot::preset::RECORDED_LABEL), size::CAPTION, SUBTLE, 0)).id();
+        let label = commands.spawn(k.text(format!("{} · speed: header −/×/+ · seek: press or drag the timeline", crate::robot::preset::RECORDED_LABEL), size::CAPTION, SUBTLE, 0)).id();
         let row = commands.spawn(wrap()).id();
         for (_, name, action) in RECORDED_TRANSPORT {
             let action = RobotAction::Recorded { action };
@@ -250,9 +260,33 @@ pub(super) fn recorded_panel(
             let b = commands.spawn((k.button(name, action, Look::Secondary, enabled), RecordedButton)).id();
             commands.entity(row).add_child(b);
         }
+        // The timeline: a kit slider over the capture's frame times (fill = the shown time).
+        let at = seek_fraction(&p.timeline().times, p.timeline().t);
+        let bar = commands
+            .spawn(Node { align_items: AlignItems::Center, padding: UiRect::vertical(Val::Px(4.0)), flex_shrink: 0.0, ..default() })
+            .with_children(|r| {
+                // The Timebar look grows along this row (the kit sets its node).
+                r.spawn(k.slider(crate::ui_kit::SliderLook::Timebar, at, RecordedSeek, "Recorded timeline")).with_children(|t| {
+                    t.spawn((Node { border_radius: BorderRadius::all(Val::Px(5.0)), width: Val::Percent(at * 100.0), height: Val::Percent(100.0), ..default() }, BackgroundColor(ACCENT), RecordedSeekFill, Pickable::IGNORE));
+                });
+            })
+            .id();
         let line = commands.spawn((k.text("", size::CAPTION, TEXT, 0), RecordedText)).id();
-        commands.entity(*root).add_children(&[header, label, row, line]);
+        commands.entity(*root).add_children(&[header, label, row, bar, line]);
         *shown = true;
+    }
+    // The slider follows the shown time unless it is held (then it is the pointer's).
+    let at = seek_fraction(&p.timeline().times, p.timeline().t);
+    for (mut value, pressed, interaction) in &mut seek {
+        if !crate::ui_kit::slider_held(pressed, interaction) && (value.0 - at).abs() > 1e-4 {
+            value.0 = at;
+        }
+    }
+    for mut node in &mut fill {
+        let width = Val::Percent(at * 100.0);
+        if node.width != width {
+            node.width = width;
+        }
     }
     let want = recorded_line(p);
     for mut t in &mut text {
@@ -269,15 +303,16 @@ pub(super) fn recorded_panel(
 /// report speed, status verbatim), the transport, and the truthful labels. Every
 /// button is the same `RobotAction::Gait` as `system_ui` gait:* and REST
 /// `robot_gait`, enabled per the handler's check. `--robot FILE` has no scene, so
-/// nothing is shown there. Robot mode has no text-field idiom, so an explicit
-/// compiled.json path is REST-only (`robot_gait {path}`), as a replay path is.
+/// nothing is shown there. Under the reports, the kit path field opens an
+/// explicit compiled.json (`panel_ui`: the same `Gait {Open {source: Path}}`
+/// as `robot_gait {path}`).
 pub(super) fn gait_panel(
     mut commands: Commands,
     view: Res<RobotView>,
     fonts: Res<UiFonts>,
     root: Single<Entity, With<GaitRoot>>,
     mut shown: Local<bool>,
-    mut listed: Local<Option<Vec<String>>>,
+    mut listed: Local<Option<(Vec<String>, Vec<String>, Option<String>)>>,
     list: Query<Entity, With<GaitList>>,
     mut text: Query<(&mut Text, Has<GaitError>), Or<(With<GaitText>, With<GaitError>)>>,
     mut buttons: Query<(&mut RobotAction, &mut Enabled, Option<&GaitSeekButton>), With<GaitButton>>,
@@ -313,15 +348,20 @@ pub(super) fn gait_panel(
         }
         let status = commands.spawn((k.text("", size::CAPTION, TEXT, 0), GaitText)).id();
         let error = commands.spawn((k.text("", size::CAPTION, DANGER, 0), GaitError)).id();
-        let list_header = commands.spawn(k.text("Tracked gait reports (report speed · status, verbatim) — click to open. A compiled.json path: REST robot_gait {path} (no path field here).", size::DETAIL, SUBTLE, 0)).id();
+        let list_header = commands.spawn(k.text("Tracked gait reports (report speed · status, verbatim): click one to open it, or open any compiled.json with the path field below.", size::DETAIL, SUBTLE, 0)).id();
         let reports = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }, GaitList)).id();
-        commands.entity(*root).add_children(&[header, label, status, error, transport, speed, list_header, reports]);
+        // Filled by `panel_ui::gait_path_draw`.
+        let path = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), margin: UiRect::top(Val::Px(6.0)), ..default() }, GaitPathRoot)).id();
+        commands.entity(*root).add_children(&[header, label, status, error, transport, speed, list_header, reports, path]);
         *shown = true;
     }
     if let Ok(list) = list.single() {
-        // Rebuilt only when the offered reports change.
-        let names: Vec<String> = g.reports().iter().map(|r| r.name.clone()).collect();
-        if listed.as_ref() != Some(&names) {
+        // Rebuilt only when the offered reports (or, with none offered, the
+        // reasons) or the listing error change; compared without allocating.
+        let offered = g.reports();
+        let skipped: &[String] = if offered.is_empty() { g.skipped() } else { &[] };
+        let same = listed.as_ref().is_some_and(|(n, s, e)| n.len() == offered.len() && n.iter().zip(offered).all(|(n, r)| *n == r.name) && s.as_slice() == skipped && e.as_deref() == g.list_error());
+        if !same {
             commands.entity(list).despawn_related::<Children>();
             let mut rows = Vec::new();
             for r in g.reports() {
@@ -334,14 +374,21 @@ pub(super) fn gait_panel(
             }
             let note = match g.list_error() {
                 Some(e) => format!("listing failed: {e}"),
-                None if names.is_empty() => "no tracked gait report with an existing compiled gait (robot_state.gait_preview.reports_skipped says why)".into(),
+                None if offered.is_empty() && skipped.is_empty() => "no tracked gait report with an existing compiled gait".into(),
+                // The reasons each report was skipped (the listing's own words).
+                None if offered.is_empty() => {
+                    let reasons: Vec<String> = skipped.iter().take(SKIPPED_SHOWN).map(|s| format!("• {}", clip(s, 120))).collect();
+                    let more = skipped.len().saturating_sub(SKIPPED_SHOWN);
+                    let more = if more > 0 { format!("\n… and {more} more") } else { String::new() };
+                    format!("no tracked gait report with an existing compiled gait; skipped:\n{}{more}", reasons.join("\n"))
+                }
                 None => String::new(),
             };
             if !note.is_empty() {
                 rows.push(commands.spawn(k.text(note, size::DETAIL, SUBTLE, 0)).id());
             }
             commands.entity(list).add_children(&rows);
-            *listed = Some(names);
+            *listed = Some((offered.iter().map(|r| r.name.clone()).collect(), skipped.to_vec(), g.list_error().map(str::to_string)));
         }
     }
     let r = view.run.as_ref().expect("gait preview implies a run");
@@ -361,6 +408,9 @@ pub(super) fn gait_panel(
         enable(enabled, check(&view, &action).is_ok());
     }
 }
+
+/// Skipped reports shown under an empty report list.
+const SKIPPED_SHOWN: usize = 6;
 
 /// The Gait preview status lines (rounded, so they only change with the pose).
 fn gait_line(r: &RunController, g: &gait::GaitPreview) -> String {

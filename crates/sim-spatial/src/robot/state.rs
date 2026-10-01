@@ -65,11 +65,11 @@ impl RobotView {
         let mut blockers = Vec::new();
         if let Some(run) = &self.run {
             if let Some(path) = run.save_pending() {
-                blockers.push(format!("recording {} is being written: wait for robot_state.recording", path.display()));
+                blockers.push(format!("recording {} is being written: wait until the Save recording line in the Motion block shows it saved", path.display()));
             }
             let replay = run.replay_state();
             if replay.phase == ReplayPhase::Replaying {
-                blockers.push(format!("{} is replaying: wait or cancel it (replay:cancel)", replay.path.as_ref().map(|p| p.display().to_string()).unwrap_or_else(|| "a recording".into())));
+                blockers.push(format!("{} is replaying: wait, or press Cancel replay in the Replay block", replay.path.as_ref().map(|p| p.display().to_string()).unwrap_or_else(|| "a recording".into())));
             }
         }
         blockers

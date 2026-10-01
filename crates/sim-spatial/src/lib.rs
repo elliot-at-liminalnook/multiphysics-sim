@@ -26,6 +26,9 @@ mod notes;
 pub mod rest;
 pub mod workspace;
 pub(crate) mod ui_kit;
+/// Window text names the window's controls, never REST (window-first-usability).
+#[cfg(test)]
+mod copy_guard_tests;
 // The crate root's imports below also serve the modules that glob-import it
 // (`use super::*` in linked, inspect, animation, notes, view, physics_view,
 // builder and rest).

@@ -314,6 +314,10 @@ impl GaitPreview {
     pub fn speed_scale(&self) -> f64 {
         self.state.clock.speed_scale
     }
+    /// Why tracked reports were not offered (`reports_skipped` in [`Self::json`]).
+    pub fn skipped(&self) -> &[String] {
+        &self.skipped
+    }
     /// Why the listing failed, if it did.
     pub fn list_error(&self) -> Option<&str> {
         self.list_error.as_deref()

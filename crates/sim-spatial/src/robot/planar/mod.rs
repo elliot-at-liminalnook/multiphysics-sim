@@ -56,7 +56,7 @@ pub const GAIT: &str = "planar v2 file: gait preview is not available (it poses 
 pub const RECORDED: &str = "planar v2 file: the recorded timeline is not available (it plays a recorded preset's capture)";
 pub const JOINT_FRAMES: &str = "planar v2 file: the joint-frame overlay is not available (it reads PhysicalRobot::joint_frames; it needs a v3 export)";
 pub const DEFLECTIONS: &str = "planar v2 file: the deflection overlay is not available (it reads PhysicalRobot::deflections of flexible links; it needs a v3 export)";
-pub const GRAPHS: &str = "planar v2 file: graphs are not available (robot_graphs charts a PhysicalRobot run's or a preset session's frames; no planar series is defined; it needs a v3 export)";
+pub const GRAPHS: &str = "planar v2 file: graphs are not available (they chart a PhysicalRobot run's or a preset session's frames; no planar series is defined; it needs a v3 export)";
 /// Refusal of the stress overlay (keys S and H) for a planar file.
 pub const STRESS: &str = "planar v2 file: the stress overlay is not available (stress needs a v3 physical export: `sim-cad run` writes a .simresult.json only for v3 files)";
 /// Why the hardware mirror cannot pose a planar file (for `robot::hardware::mirror::scene_of`).

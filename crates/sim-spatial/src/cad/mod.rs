@@ -37,6 +37,7 @@
 //! by `DespawnOnExit`.
 mod actions;
 mod analysis_overlay;
+mod attach;
 mod display;
 mod document;
 mod files;
@@ -169,6 +170,8 @@ impl Plugin for CadPlugin {
         display::build(app);
         views::build(app);
         files::build(app);
+        // window-first-usability: the attach-URL field of an unconnected document.
+        attach::build(app);
     }
 }
 

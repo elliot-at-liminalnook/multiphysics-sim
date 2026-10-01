@@ -369,7 +369,7 @@ pub(in crate::cad) fn open_fov(cx: &mut Cx) -> Outcome {
     let degrees = views.camera.map(|c| panel::fov_text(c.fov.to_degrees()));
     let text = degrees.clone().unwrap_or_else(|| "40".into());
     views.typing = Some(Typing { field: ViewField::Fov, draft: TextDraft { text, select_all: true }, error: None });
-    Outcome::Done(Ok(json!({"field_of_view": degrees, "message": "Type the field of view in degrees (5–120) and press Enter; camera_fov {\"degrees\": d} does the same from REST."})))
+    Outcome::Done(Ok(json!({"field_of_view": degrees, "message": "Type the field of view in degrees (5–120) and press Enter."})))
 }
 
 /// The save in flight, once its edit ended (`sync::finish_edit`, run by

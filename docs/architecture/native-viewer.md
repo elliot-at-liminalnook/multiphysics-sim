@@ -27,6 +27,15 @@ duplicates physics.
   mode and document; the user switches modes in the window (the mode
   switcher, `system_ui` `mode:*`, REST `viewer_mode`), through one handler
   (`app::switch::handle`). Verified at 7da1216e.
+- **Documents, selection, annotations** (unified-selection-document,
+  2026-10-01, done pending verification): one document registry
+  (`document/`), one selection (`selection/`) that every mode reads, and one
+  annotations service (`annotations/`) with one thread panel
+  (`ui_kit/threads.rs`); see
+  [Documents, selection and annotations](#documents-selection-and-annotations-2026-10-01).
+  No REST command was added or renamed (392 `spec(`/`c("` entries before
+  and after); sim-spatial has 399 `#[test]` functions (374 at aa34ef48,
+  counted with `grep -rh '#\[test\]' crates/sim-spatial/src | wc -l`).
 - **Window-first** (window-first-usability, 2026-10-01, verified at
   aa34ef48: lib 369 passed, 1 ignored; bins 4/4; workspace check clean): every mode's document can be opened in the window. A mode
   chosen in the switcher with no document opens the document picker
@@ -4151,6 +4160,190 @@ viewer processes can still race (last rename wins, losing at most the
 other's newest entry, never corrupting the file), which is accepted for
 a convenience list.
 
+## Documents, selection and annotations (2026-10-01)
+
+*Batch unified-selection-document, delivering §7. Done pending
+verification: written and checked by reading; nothing was built or run in
+the batch.* Every mode now reads one document registry, one selection and
+one annotations service, in place of per-mode fields. No REST command was
+added or renamed, and no argument shape or on-disk format changed.
+
+### Module map
+
+| Module | What it owns |
+|---|---|
+| `document/` | `DocumentRegistry`: one entry per mode's document. Each entry has an id (`DocumentId`, never reused), `DocumentKind`, `Source` (a path, an assembly, a lessons folder and lesson, a preset, a URL or an exhibit), a revision, the owning mode, a `Presence` (open, parked or remembered) and the parked scene. `open` of the same source is a reload: the same id and revision + 1. Another source gets a new id and reports the id it replaced. |
+| `app/switch/sources.rs` | The registry as the switch uses it: `Document`/`CadTarget` ↔ `Source` conversions, `open` (which forgets a replaced document's selection items), `ensure_open`, `left`, and `Documents::json`. That JSON keeps `viewer_mode {}`'s old `documents` keys and shapes, plus `registry`. |
+| `app::switch::Documents` | Launch configuration only: `library`, `models`, `presets` and `hardware`. The launch's documents are registry entries (`Launch::registry`). |
+| `selection/` | `Selection`: typed items (`Item::Component`, `Port`, `Net`, `Link {index, name}`, `Cad([node, kind, index])`), each with its document and the revision it was picked at, plus a change counter and the `dropped` labels. `SelectionAction {op: Set/Add/Toggle/Remove/Clear, document, items}` is validated by `Selection::apply`, which refuses by name an item picked at another revision. One system, `apply_actions`, applies it in `ViewerSet::Actions`; it is registered as feature `selection`, with no REST command of its own. `revalidate` / `revalidate_all` re-check a document's items after it advances. |
+| `builder/picked.rs` | Build's view of the selection (`Picked`): builder instance names at the builder's level under the Build entry. `sync` copies `document.revision` to the registry and drops removed instances by name. `track` (SimSync) re-projects the scene highlight in Build. |
+| `robot/picked.rs` | Robot's link (`Item::Link`) under the Robot entry. It is re-found by name on a reload, which bumps the revision. |
+| `cad/selection/shared.rs` | CAD's items under the CAD entry (`Shared`, `View`, the `CadSelection` system param, `follow_tree`). The RoboCAD echo state (`remote_selection`, `remote_mode`, `selection_pushed_at`, `selection_again`, `published_selection`, `selection_read`) stays in `CadDocument`. |
+| `inspect_view/projection.rs` | Inspect's items shown on the scene (`SpatialScene::shown`, a display projection only) and re-checked after a reload. `inspect::select` is Inspect's one adapter, used by REST `select`/`display`, clicks, Escape, the link and notes. |
+| `lesson/selection.rs` | A lesson pick shared as the Build document's instance (`share`), and dropped when the Build selection moves elsewhere (`follow`). |
+| `annotations/` | The one thread service: `ThreadSource` (an anchor adapter over `sim_annotate::Anchor`), `ThreadOp` (create, reply, post, edit, delete comment, resolve, delete, retitle, link, pin, undo, redo), `apply`, which lowers an op to one `ThreadCommand`, validates and commits it, and the shared helpers. |
+| `ui_kit/threads.rs` | The one thread panel (replaces `annotate.rs`): `Host`, `anchors`, `list`, `messages`, `card`, `composer`. |
+| Adapters | `notes.rs` + `notes/panel.rs` (Inspect notes: `NoteAnchor`, `InspectNotes`, format `sim_inspect::annotations`), `builder/discussion.rs` (`SystemThreads`, `sim_system::display`), `lesson/threads.rs` (`LessonThreads`, lesson sidecars). Each keeps its own file format and I/O. |
+
+### Decisions
+
+- **Selection items carry `(DocumentId, revision)`; items of several
+  documents coexist.** Each mode's selection survives a switch, as before.
+  A replaced document's items are forgotten. *Rejected:* one document's
+  items at a time, which would lose Build's selection on a visit to
+  Inspect. *Revisit if* cross-document selection is needed.
+- **No REST command of its own for `SelectionAction`.** Each mode's
+  existing command (`select`, `display`, `system_select`, the builder
+  `system_ui` rows and picks, robot `system_ui` `link:<i>` /
+  `clear_selection`, `cad_select` and its siblings) is the adapter. It
+  checks the mode's own rules, then calls `Selection::apply` in its
+  handler, so the answer reports the new state in the same frame. The
+  registry cross-check test accepts an action type with no commands.
+  *Rejected:* a new generic `selection` REST command, which would be a
+  new user feature.
+- **`system_select` refuses unknown names**, naming them, as its help text
+  already documented (found by reading).
+- **Builder items are instance names at the builder's level**, as
+  `Builder.selected` held them. Lesson picks are stored the same way
+  (`builder.instance_for_component`), while `learn.picked` keeps the full
+  path for the lesson page.
+- **CAD sub-body items keep the revision they were picked at.** Body items
+  are restamped on a new tree, and items naming a node absent from a
+  current tree are dropped and named in the status line (kept while the
+  tree is behind RoboCAD's revision). 3D picks send `picked_at`, the shown
+  revision; REST cannot set it. CAD's existing stale-revision and
+  in-flight refusals are unchanged.
+- **The RoboCAD echo stays in `CadDocument`.** An adopted RoboCAD
+  selection is recorded as published, so it is never pushed back, unless
+  a change was already pending from the same snapshot (a prune), which is
+  then pushed once. `publish_changes` runs in JobResults, after Actions,
+  so a change from any writer is pushed once, one push at a time.
+- **The picker's index check uses `picker_revision`**, a key of its own on
+  each `picker:<mode>:<n>` control: the controls answer's `ui_revision` is
+  the mode's own, which generic clients send back. *Rejected:* checking
+  `ui_revision`, which refused every valid entry (found in review).
+- **Not document items:** the selected discussion thread, gait-lab entry,
+  calibration trial and planar joint are list choices and stay where they
+  were.
+- **Annotation file I/O stays where it was off the UI thread.** The two
+  sidecars (Inspect notes, lesson notes) keep `sim_annotate::store::Store`,
+  the shared crate's own background worker with locked multi-process
+  transactions and idle re-reads. Its stores are created in the loaders'
+  `jobs` (inspect loader, lessons loader). System discussions are saved
+  with the system document by the builder's save path. *Rejected:* moving
+  `Store`'s edits onto `Pool::Io` jobs, which would need a second edit path
+  for the shared crate's transactions. *Revisit if* `Store` moves into
+  `jobs`.
+- **Inspect notes are shown as one-message threads.** Replies, comment
+  deletes and resolving a note are refused, naming the reason. Saved
+  views and navigation stay `notes::Command`. The note format is lossless
+  through `as_thread`/`as_note`.
+- **Small visual changes:** Inspect notes render Markdown; the builder
+  composer hint gains "· Esc cancels"; a missing anchor chip shows its
+  label.
+- **The builder highlight is re-projected without recompiling the
+  scene.** It is re-projected on a selection change, on entering Build,
+  and after a compile, but not in Lessons, where the lesson page draws its
+  own. A discussion's exact-part highlight is kept (its `seen_selection`
+  is recorded).
+
+### Found by reading and fixed
+
+- `notes::update` marked `SpatialScene` changed every frame, so the
+  systems that skip an unchanged scene ran every frame.
+- Builder Resolve indexed `threads[&id]` and could panic on a thread
+  deleted elsewhere.
+- In review (five reviewers by area):
+  - **CAD:**
+    - a struct literal in an `if let` chain would not compile;
+    - dropped items were never named;
+    - an adopted read hid a same-snapshot prune from RoboCAD.
+  - **Picker:** the `ui_revision` collision.
+  - **Inspect:** the link exchange ran before the launch's `--select` was
+    adopted.
+  - **Build:**
+    - entering Build did not re-project;
+    - a rebuild in Lessons projected over the lesson highlight;
+    - a discussion's part highlight was overwritten;
+    - a new sandbox builder kept the old names;
+    - dropped names were not shown.
+  - **Lessons:** a `lesson_notes` `submitted` could become null.
+  - **Notes:** a duplicate Inspect selection adapter.
+
+### Reading trace (Build click → Inspect → REST select → note → reload)
+
+1. **A click on a component in Build.** `inspect_view/scene.rs`
+   `pick_part` writes `BuildAction::PickPart`. The builder's apply system
+   calls `click_part` with a `Picked`, which writes
+   `SelectionAction::set(build_doc, [Item::Component{name}])` through
+   `Selection::apply`. `picked::track` (SimSync) sees `Selection.changed`
+   move and projects the instance's parts onto `scene.shown`, so
+   `update_parts` paints them.
+2. **Switch to Inspect.** `app::switch::handle` → `prepare` → `enter`.
+   `leave_builder` (OnExit Builder scope) parks the builder scene on the
+   Build entry (`DocumentRegistry::park`). `arrive` (OnEnter Inspect)
+   opens or unparks the Inspect entry through `sources::open`. The Build
+   item stays in `Selection` under the Build id.
+3. **REST `select {"target":{"kind":"components","ids":["x"]}}`.**
+   `InspectAction::Select` → `inspect::handle` → `inspect::select`. It
+   checks with `target.resolve` (the same refusal text as before), applies
+   `SelectionAction::set(inspect_doc, target_items(..))`, projects to
+   `shown`, and `state.selection` reports `selection.target(inspect_doc)`.
+4. **A note on the selection.** The notes panel's New
+   (`notes/panel.rs` `clicks`) reads `selection.target(inspect_doc)` as
+   the note's targets and writes `InspectAction::Annotations`.
+   `notes::api` → the `InspectNotes` adapter → `annotations::apply` →
+   `Store::submit`, written by the store's worker to
+   `<description>.annotations.json` in the unchanged format.
+5. **Reload keeps the note.** `viewer_mode {mode: inspect, path}` with the
+   same assembly loads on a Compute job (`prepare`, which connects the same
+   sidecar path). `arrive` → `sources::open` sees the same `Source::Assembly`:
+   a reload, same id, revision + 1. `projection::project` re-checks the
+   items (restamped if the id still exists, otherwise dropped and named),
+   and the new store reads the sidecar, so the note is listed again.
+
+### Tests (windowless)
+
+- **Selection core** (`selection/tests.rs`): the ops, a stale-revision
+  refusal by name, re-checks that restamp, keep or drop (links re-found
+  by name), the apply system answering REST, and the inspection-target
+  round trip.
+- **Same Selection from the UI path and from REST:**
+  - Build: `builder/picked/tests.rs`;
+  - Robot: `robot/actions/tests.rs`;
+  - Inspect: `inspect_view/tests.rs` `click_parts_row_and_rest_select_make_the_same_shared_selection`;
+  - CAD: `cad/selection/tests.rs` `cad_select_and_a_selection_action_give_the_same_selection`.
+- **Stale and dropped items:**
+  - CAD `picks_carry_their_revision_and_a_new_tree_rechecks_them`;
+  - Inspect `a_reload_drops_items_the_assembly_no_longer_has`;
+  - builder: a removed instance is dropped by name.
+- **CAD echo:** `cad/selection/tests.rs` `the_selection_echo_does_not_loop`.
+- **Annotation formats** (`annotations/tests.rs`): the committed
+  `examples/systems-viewer/evidence/rest-api/*/discussion.annotations.json`
+  go note → thread → note; `lessons/motor-torque-speed/lesson.md.annotations.json`
+  round-trips as JSON; system discussions round-trip in a system document;
+  add, reply and resolve through the service match the hand-built commands.
+- **Registry:**
+  - `document/tests.rs`: reload ids and revisions;
+  - `app/tests.rs` `a_reopened_document_keeps_its_id_and_a_new_one_gets_a_new_id`
+    and `a_parked_inspect_scene_comes_back_through_the_registry`.
+- **Picker:** `app/picker_tests.rs` `a_stale_picker_index_is_refused_naming_both_revisions`.
+
+The Lessons share/follow and the link exchange have no windowless test:
+the lessons need a full `Builder`, and `SelectionClient::connect` starts
+a worker on a session directory.
+
+### Verification checklist
+
+- [ ] `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- [ ] `cargo test -p sim-spatial --lib --bins` (including
+  `app::tests::source_files_stay_small`, the registry cross-check and
+  the copy guard).
+- [ ] `cargo test -p sim-inspect`.
+- [ ] `cargo test -p sim-system`.
+- [ ] `grep -rn "selected: BTreeSet<String>\|pub selected: Option<usize>\|pub selection: Vec<SelectionItem>\|pub selection: SelectionTarget" crates/sim-spatial/src`
+  finds nothing.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -4173,7 +4366,9 @@ a convenience list.
   by `DespawnOnExit<ModeScope>` and the scopes' `OnExit`, and one switch
   handler. What survives a switch: the builder, the display-model library,
   the fonts, the REST server, the documents each mode reopens, and the
-  workspace root. Selection and annotations are still per mode (§7).
+  workspace root. Since unified-selection-document (2026-10-01) the document
+  registry, the one selection and the annotations service also survive a
+  switch (§7).
   `sim-app` is folded in (epic order item 11, see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)): there is one viewer
   binary and one Bevy app.
@@ -4339,6 +4534,11 @@ started before the `App` (tests, `--validate-only`, headless) and
 - One document resource per open file, with a revision number.
 - One selection model, and one annotations and discussions service. Every mode
   uses them.
+- *Status:* done 2026-10-01 pending verification (batch
+  unified-selection-document; see
+  [Documents, selection and annotations](#documents-selection-and-annotations-2026-10-01)):
+  `document::DocumentRegistry`, `selection::Selection` with
+  `SelectionAction`, and `annotations` with the `ui_kit::threads` panel.
 
 ### 8. Hardware front end in the native viewer
 
@@ -4778,6 +4978,11 @@ The Director re-ranks with evidence, but this is the default:
    is verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4;
    `cad_client` 65; `units` 29; RoboCAD pytests 396; sim-web wasm check
    without errors; see [Verification result](#verification-result-bcf0c56c)).
+   Before it, the structural **unified-selection-document** (§7,
+   2026-10-01, done pending verification; see
+   [Documents, selection and annotations](#documents-selection-and-annotations-2026-10-01))
+   gave every mode one document registry, one selection and one
+   annotations service, which cad-physical-inspect's inspector builds on.
    Next: **cad-physical-inspect**.
    Remaining, in order (§9 "Later CAD epics"):
    cad-physical-inspect, cad-print, cad-organize, cad-experiments-motion.

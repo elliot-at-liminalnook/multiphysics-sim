@@ -211,7 +211,22 @@ impl Kit<'_> {
     /// this shows `shown` (or the placeholder), with a caret while `focused`.
     /// A press on it is `action` (typically "focus this field").
     pub(crate) fn input<A: Component>(&self, shown: &str, placeholder: &str, action: A, focused: bool) -> impl Bundle + use<A> {
+        self.input_selectable(shown, placeholder, action, focused, false)
+    }
+
+    /// [`Kit::input`] whose text can be shown selected (`selected`, while
+    /// `focused`: the next key replaces it): the text on the accent fill,
+    /// without the caret.
+    pub(crate) fn input_selectable<A: Component>(&self, shown: &str, placeholder: &str, action: A, focused: bool, selected: bool) -> impl Bundle + use<A> {
         let empty = shown.is_empty();
+        let marked = focused && selected && !empty;
+        let line = if empty && !focused {
+            placeholder.to_string()
+        } else if focused && !marked {
+            format!("{shown}|")
+        } else {
+            shown.to_string()
+        };
         (
             Button,
             action,
@@ -220,7 +235,7 @@ impl Kit<'_> {
             Node { border_radius: BorderRadius::all(Val::Px(5.)), padding: UiRect::axes(Val::Px(10.), Val::Px(7.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
             BorderColor::all(if focused { ACCENT } else { BORDER }),
             BackgroundColor(RAISED),
-            children![self.text(if empty && !focused { placeholder.to_string() } else if focused { format!("{shown}|") } else { shown.to_string() }, size::BODY, if empty && !focused { FAINT } else { TEXT }, 0)],
+            children![(self.text(line, size::BODY, if empty && !focused { FAINT } else { TEXT }, 0), BackgroundColor(if marked { ACCENT_BG } else { Color::NONE }))],
         )
     }
 

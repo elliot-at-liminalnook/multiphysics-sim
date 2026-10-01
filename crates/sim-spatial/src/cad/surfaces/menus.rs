@@ -13,7 +13,7 @@ use super::{Open, Surface};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::panel::CadButton;
-use crate::ui_kit::Kit;
+use crate::ui_kit::{Kit, Look};
 use bevy::prelude::*;
 
 /// The menu bar's row (a press on it does not close the open menu: its tabs switch menus).
@@ -34,12 +34,34 @@ pub(super) fn open_menu(doc: &CadDocument) -> Option<&str> {
     }
 }
 
-/// The menu tabs (into the bar's `Tabs`).
+/// What a press on `category`'s tab writes: open its menu, or close it when open.
+fn tab_action(category: &str, on: bool) -> CadAction {
+    CadAction::CadSurface { surface: if on { Surface::Closed } else { Surface::Menu { category: category.to_string() } } }
+}
+
+/// The menu tabs (into the bar's `Tabs`), spawned once; [`light`] keeps
+/// them current.
 pub(super) fn tabs(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     let open = open_menu(doc);
     for category in CATEGORIES {
         let on = open == Some(category);
-        let surface = if on { Surface::Closed } else { Surface::Menu { category: category.to_string() } };
-        p.spawn(k.tab(category, CadButton(CadAction::CadSurface { surface }), on)).insert((MenuTab(category), Hint(format!("{category} menu"))));
+        p.spawn(k.tab(category, CadButton(tab_action(category, on)), on)).insert((MenuTab(category), Hint(format!("{category} menu"))));
+    }
+}
+
+/// The open menu's tab lit, the others not, in place (`repaint_buttons`
+/// restyles a changed `Look`); each tab's press opens or closes its menu.
+/// Only what differs is written, so nothing is marked changed each frame.
+pub(super) fn light(doc: &CadDocument, tabs: &mut Query<(&MenuTab, &mut Look, &mut CadButton)>) {
+    let open = open_menu(doc);
+    for (tab, mut look, mut button) in tabs.iter_mut() {
+        let on = open == Some(tab.0);
+        if *look != Look::Tab(on) {
+            *look = Look::Tab(on);
+        }
+        let action = tab_action(tab.0, on);
+        if button.0 != action {
+            button.0 = action;
+        }
     }
 }

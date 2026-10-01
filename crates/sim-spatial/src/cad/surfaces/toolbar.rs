@@ -12,17 +12,21 @@
 //! the active interaction or open form (`ops.active`, `ops.form`). Entries
 //! owned by a later epic are disabled, the hint naming the epic.
 //!
-//! The bar has a fixed height ([`COMMAND_BAR`]); the toolbar row scrolls
-//! sideways with the wheel when it is wider than the view (RoboCAD's Qt
-//! toolbar folds its overflow behind a "»" button instead).
-use super::menus::{self, MenuRow, Tabs};
+//! The bar has a fixed height ([`COMMAND_BAR`]); the menu row and the
+//! toolbar row each scroll sideways with the wheel when wider than the view
+//! (RoboCAD's Qt toolbar folds its overflow behind a "»" button instead).
+//!
+//! The menu tabs are spawned once and lit in place (their `Look` and
+//! action), so the open menu's popup (`surfaces::draw`, later in the same
+//! chain) is placed under a tab that has been laid out.
+use super::menus::{self, MenuRow, MenuTab, Tabs};
 use super::registry::{self, Command, Resolved, TOOLBAR};
 use super::{SurfaceRoot, over_popup, rect_of, shortcut_keys};
 use crate::app::ModeScope;
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::panel::{CadButton, own_controls};
-use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, RIGHT_WIDTH, SURFACE, TEXT, TOPBAR, UiFonts, WHEEL_LINE, size, wheel_delta};
+use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, Look, RIGHT_WIDTH, SURFACE, TEXT, TOPBAR, UiFonts, WHEEL_LINE, size, wheel_delta};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
@@ -72,7 +76,7 @@ pub(super) fn spawn(mut commands: Commands, fonts: Res<UiFonts>) {
             DespawnOnExit(ModeScope::Cad),
         ))
         .with_children(|bar| {
-            bar.spawn((Node { height: Val::Px(36.0), align_items: AlignItems::Center, overflow: Overflow::clip(), flex_shrink: 0.0, ..default() }, MenuRow)).with_children(|row| {
+            bar.spawn((Node { height: Val::Px(36.0), align_items: AlignItems::Center, overflow: Overflow::scroll_x(), flex_shrink: 0.0, ..default() }, ScrollPosition::DEFAULT, MenuRow)).with_children(|row| {
                 row.spawn((Node { align_items: AlignItems::Center, column_gap: Val::Px(2.0), flex_shrink: 0.0, ..default() }, Tabs));
             });
             bar.spawn((Node { height: Val::Px(30.0), align_items: AlignItems::Center, column_gap: Val::Px(4.0), overflow: Overflow::scroll_x(), flex_shrink: 0.0, ..default() }, ScrollPosition::DEFAULT, ToolRow));
@@ -122,23 +126,36 @@ pub(super) fn describe(cmd: &Command, ready: &Result<(), String>) -> String {
     out
 }
 
-/// What the bar shows, as a comparable text.
+/// What the toolbar shows, as a comparable text (the open menu is not in
+/// it: the tabs are lit in place).
 fn key(doc: &CadDocument) -> String {
-    format!("{:?}", (doc.generation, doc.revision, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), menus::open_menu(doc), &doc.selection, doc.edit.is_some(), doc.connected()))
+    format!("{:?}", (doc.generation, doc.revision, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), &doc.selection, doc.edit.is_some(), doc.connected()))
 }
 
-/// Present: the menu tabs and the toolbar, rebuilt when what they show changes.
+/// Present: the menu tabs (spawned once, then the open menu's tab lit in
+/// place) and the toolbar, rebuilt when what it shows changes.
 #[allow(clippy::type_complexity)]
-pub(super) fn refresh(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, tabs: Query<Entity, With<Tabs>>, tools: Query<Entity, With<ToolRow>>, mut last: Local<Option<(Entity, Entity, String)>>) {
-    let (Some(doc), Ok(tabs), Ok(tools)) = (doc, tabs.single(), tools.single()) else { return };
-    let stamp = (tabs, tools, key(&doc));
+pub(super) fn refresh(
+    mut commands: Commands,
+    doc: Option<Res<CadDocument>>,
+    fonts: Res<UiFonts>,
+    tabs: Query<(Entity, Option<&Children>), With<Tabs>>,
+    mut menu_tabs: Query<(&MenuTab, &mut Look, &mut CadButton)>,
+    tools: Query<Entity, With<ToolRow>>,
+    mut last: Local<Option<(Entity, String)>>,
+) {
+    let (Some(doc), Ok((tabs, spawned)), Ok(tools)) = (doc, tabs.single(), tools.single()) else { return };
+    let k = Kit::new(&fonts);
+    if spawned.is_none_or(|c| c.is_empty()) {
+        commands.entity(tabs).with_children(|p| menus::tabs(p, &k, &doc));
+    } else {
+        menus::light(&doc, &mut menu_tabs);
+    }
+    let stamp = (tools, key(&doc));
     if (*last).as_ref() == Some(&stamp) {
         return;
     }
     *last = Some(stamp);
-    let k = Kit::new(&fonts);
-    commands.entity(tabs).despawn_related::<Children>();
-    commands.entity(tabs).with_children(|p| menus::tabs(p, &k, &doc));
     let own = own_controls(&doc);
     commands.entity(tools).despawn_related::<Children>();
     commands.entity(tools).with_children(|p| {
@@ -173,8 +190,15 @@ pub(super) fn hint(changed: Query<(), (Changed<Interaction>, With<Hint>)>, all: 
     }
 }
 
-/// Input: the wheel over the toolbar row scrolls it sideways (not under an open popup, whose wheel it is).
-pub(super) fn scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<PrimaryWindow>>, popups: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>, mut rows: Query<(&mut ScrollPosition, &ComputedNode, &UiGlobalTransform), With<ToolRow>>) {
+/// Input: the wheel over the menu row or the toolbar row scrolls it
+/// sideways (not under an open popup, whose wheel it is).
+#[allow(clippy::type_complexity)]
+pub(super) fn scroll(
+    mut wheel: MessageReader<MouseWheel>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    popups: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>,
+    mut rows: Query<(&mut ScrollPosition, &ComputedNode, &UiGlobalTransform), Or<(With<ToolRow>, With<MenuRow>)>>,
+) {
     let delta = wheel_delta(&mut wheel, WHEEL_LINE);
     if delta == 0.0 {
         return;

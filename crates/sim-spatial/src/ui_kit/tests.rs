@@ -257,6 +257,12 @@ fn form_fields_evaluate() {
     assert!(close(evaluate(&number(Unit::Angle), "45deg"), 45.0));
     assert!(close(evaluate(&number(Unit::Angle), "pi rad"), 180.0));
     assert!(close(evaluate(&number(Unit::Count), "50/2"), 25.0));
+    assert!(close(evaluate(&number(Unit::Count), "1e1"), 10.0));
+    // A count takes no unit: "2cm" is not 20, and the error names the token.
+    let unit = evaluate(&number(Unit::Count), "2cm").unwrap_err();
+    assert!(unit.contains("'cm'") && unit.contains("no unit"), "{unit}");
+    assert!(evaluate(&number(Unit::Count), "3 * 2 in").unwrap_err().contains("'in'"));
+    assert!(evaluate(&number(Unit::Count), "90deg").unwrap_err().contains("'deg'"));
     assert!(evaluate(&number(Unit::Length), "2 +").is_err());
     let count = FieldKind::Number { unit: Unit::Count, min: Some(1.0), max: Some(500.0), decimals: 0 };
     assert_eq!(evaluate(&count, "3"), Ok(FieldValue::Number(3.0)));
@@ -326,18 +332,22 @@ fn modify_widgets_spawn() {
     let entries = vec![command("cad:mirror", "Mirror", "Modify", &["M"]), command("cad:move", "Move", "Edit", &["m"])];
     let rows = palette::rank(&entries, "");
     let fields = [
-        form::FormRow { label: "Count", kind: form::FieldKind::Number { unit: form::Unit::Count, min: Some(1.0), max: Some(10.0), decimals: 0 }, text: "3", focused: true },
-        form::FormRow { label: "Spacing", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "1, 2", focused: false },
-        form::FormRow { label: "Kind", kind: form::FieldKind::Choice { options: &["rectangular", "radial"] }, text: "radial", focused: false },
-        form::FormRow { label: "Merge into one body", kind: form::FieldKind::Check, text: "true", focused: false },
-        form::FormRow { label: "Components", kind: form::FieldKind::Json, text: "{}", focused: false },
+        form::FormRow { label: "Count", kind: form::FieldKind::Number { unit: form::Unit::Count, min: Some(1.0), max: Some(10.0), decimals: 0 }, text: "3", focused: true, optional: false, selected: true },
+        form::FormRow { label: "Spacing", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "1, 2", focused: false, optional: false, selected: false },
+        form::FormRow { label: "Kind", kind: form::FieldKind::Choice { options: &["rectangular", "radial"] }, text: "radial", focused: false, optional: false, selected: false },
+        form::FormRow { label: "Merge into one body", kind: form::FieldKind::Check, text: "true", focused: false, optional: false, selected: false },
+        form::FormRow { label: "Components", kind: form::FieldKind::Json, text: "{}", focused: false, optional: false, selected: false },
+        form::FormRow { label: "Axis", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "", focused: false, optional: true, selected: false },
     ];
     let pie = {
         let mut commands = world.commands();
         let pie = k.pie(&mut commands, Vec2::new(400.0, 300.0), "View radial menu", vec![("Top".to_string(), Marker, true), ("Front".to_string(), Marker, false)], Some(0));
         commands.spawn(Node::default()).with_children(|p| {
-            k.palette(p, "", &rows, &entries, 0, Marker, |_| Marker);
-            k.form(p, "Array", &fields, false, |_| Marker);
+            k.palette(p, "", "Type a command\u{2026}", "Command palette search", &rows, &entries, 0, Marker, |_| Marker, ());
+            k.form(p, "Array", &fields, false, None, |_| Marker, |_| {});
+            k.form(p, "Array", &fields[..1], true, Some(340.0), |_| Marker, |p| {
+                p.spawn(Node::default());
+            });
         });
         pie
     };

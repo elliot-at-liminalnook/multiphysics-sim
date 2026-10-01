@@ -95,8 +95,14 @@ pub(crate) fn evaluate(kind: &FieldKind, text: &str) -> Result<FieldValue, Strin
 }
 
 /// One number as `unit` reads it (the numeric bar's mapping,
-/// `cad::transform::FieldKind::evaluate`); a count must be whole.
+/// `cad::transform::FieldKind::evaluate`); a count must be whole and has no
+/// unit (the evaluator would scale "2cm" to 20).
 fn number(unit: Unit, text: &str) -> Result<f64, String> {
+    if unit == Unit::Count
+        && let Some((token, at)) = unit_token(text)
+    {
+        return Err(format!("'{token}' at {at}: a count takes no unit"));
+    }
     let v = match unit {
         Unit::Length => sim_runtime::units::evaluate(text, false, Some("mm")),
         Unit::Angle => sim_runtime::units::evaluate(text, true, None),
@@ -107,6 +113,33 @@ fn number(unit: Unit, text: &str) -> Result<f64, String> {
         return Err(format!("a count must be a whole number (got {v})"));
     }
     Ok(v)
+}
+
+/// The first length or angle unit named in `text`, with its character
+/// position in the trimmed text (as the evaluator counts positions). Names
+/// are scanned as `sim_runtime::units` tokenizes them (ASCII letters, `_`,
+/// `µ`, `°`, `"`, `'`); an exponent's `e` ("1e3") reads as the constant `e`,
+/// which is no unit.
+fn unit_token(text: &str) -> Option<(String, usize)> {
+    use sim_runtime::units::{ANGLE_UNITS, LENGTH_UNITS};
+    let is_name = |c: char| c.is_ascii_alphabetic() || matches!(c, '_' | '\u{b5}' | '\u{b0}' | '"' | '\'');
+    let chars: Vec<char> = text.trim().chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        if !is_name(chars[i]) {
+            i += 1;
+            continue;
+        }
+        let start = i;
+        while i < chars.len() && is_name(chars[i]) {
+            i += 1;
+        }
+        let name: String = chars[start..i].iter().collect();
+        if LENGTH_UNITS.iter().chain(ANGLE_UNITS).any(|(u, _)| *u == name) {
+            return Some((name, start));
+        }
+    }
+    None
 }
 
 /// A number as the form shows it under its field: "1.5 mm", "45°", "3".
@@ -126,6 +159,11 @@ pub(crate) struct FormRow<'a> {
     /// The draft as typed (a choice's option, "true"/"false" for a checkbox).
     pub text: &'a str,
     pub focused: bool,
+    /// The field may be left empty (its default is empty and the caller
+    /// leaves it out): empty, it is neither evaluated nor shown as an error.
+    pub optional: bool,
+    /// The focused field's text is selected (the next key replaces it).
+    pub selected: bool,
 }
 
 /// What a click on a form part means; the caller turns each into its action component.
@@ -196,9 +234,13 @@ impl TextDraft {
 impl Kit<'_> {
     /// The form: `title`, one row per field (label, field or options,
     /// the evaluation or error under a numeric field), then OK (enabled
-    /// when `ok_enabled`) and Cancel. `hit` gives each clickable part's
-    /// action component. Accessible labels name each field and button.
-    pub(crate) fn form<A: Component>(&self, parent: &mut ChildSpawnerCommands, title: &str, rows: &[FormRow], ok_enabled: bool, hit: impl Fn(FormHit) -> A) {
+    /// when `ok_enabled`) and Cancel, then whatever `footer` spawns (a
+    /// refusal, a hint) inside the same panel. `hit` gives each clickable
+    /// part's action component. The panel is the form's frame, `width` wide
+    /// (at least 320 px when `None`). Accessible labels name each field and
+    /// button.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn form<A: Component>(&self, parent: &mut ChildSpawnerCommands, title: &str, rows: &[FormRow], ok_enabled: bool, width: Option<f32>, hit: impl Fn(FormHit) -> A, footer: impl FnOnce(&mut ChildSpawnerCommands)) {
         // The numeric bar's panel (cad/numeric.rs `spawn`).
         parent
             .spawn((
@@ -208,7 +250,8 @@ impl Kit<'_> {
                     padding: UiRect::all(Val::Px(12.0)),
                     border: UiRect::all(Val::Px(1.0)),
                     border_radius: BorderRadius::all(Val::Px(6.0)),
-                    min_width: Val::Px(320.0),
+                    width: width.map_or(Val::Auto, Val::Px),
+                    min_width: if width.is_some() { Val::Auto } else { Val::Px(320.0) },
                     ..default()
                 },
                 BackgroundColor(SURFACE),
@@ -224,6 +267,7 @@ impl Kit<'_> {
                     buttons.spawn(self.button("OK", hit(FormHit::Ok), Look::Primary, ok_enabled));
                     buttons.spawn(self.button("Cancel", hit(FormHit::Cancel), Look::Secondary, true));
                 });
+                footer(panel);
             });
     }
 
@@ -248,10 +292,16 @@ impl Kit<'_> {
             }
             FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json => {
                 cell.spawn(self.text(row.label, size::CAPTION, SUBTLE, 1));
+                // An empty optional field is left out, not an error.
+                if row.optional && row.text.is_empty() {
+                    let mut input = cell.spawn(self.input_selectable(row.text, "(optional)", hit(FormHit::Field(i)), row.focused, row.selected));
+                    input.insert(AccessibleLabel::new(row.label));
+                    return;
+                }
                 let result = evaluate(&row.kind, row.text);
                 {
                     // The kit input labels itself with its text; the field is named by its label.
-                    let mut input = cell.spawn(self.input(row.text, row.label, hit(FormHit::Field(i)), row.focused));
+                    let mut input = cell.spawn(self.input_selectable(row.text, row.label, hit(FormHit::Field(i)), row.focused, row.selected));
                     input.insert(AccessibleLabel::new(row.label));
                     if result.is_err() {
                         // RoboCAD's red border (cad/numeric.rs `body`).

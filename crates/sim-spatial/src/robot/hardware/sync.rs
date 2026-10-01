@@ -16,14 +16,26 @@
 //!   session is or may be open (active, opening, stopping, bench busy), and
 //!   again if an open lands after a stop. Dropping [`LiveSync`] (the page's
 //!   `pagehide`) also writes it at once with `Client::send_only`.
+//!   [`LiveSync::post_stop_on_leave`] is the same synchronous write for the
+//!   window closing (`handlers.rs` calls it before the process exits).
+//! - **Start is gated on the run**: a session opens only when the run is
+//!   already running or `RunController::check(RunAction::Start)` accepts
+//!   Start; a refused Start (a recorded preset, a replay or a cancelled partial
+//!   replay, a gait preview holding the run, an ended or failed run) is shown
+//!   as the status and no `/live/open` is posted, so the motors never hold the
+//!   initial target while the simulation stands still.
 //! - **Stop rules** (the page's): Stop motors; the run paused or reset;
-//!   input that is no longer live (a replay, a recorded preset, the episode
-//!   ended, no named targets); a failed sample post; a failed poll.
+//!   input that is no longer live (a replay in progress or a run a replay
+//!   replaced, a recorded preset, a gait preview holding the run, the episode
+//!   ended, no named targets); a failed sample post; a failed poll. Native
+//!   additions: the run failed or ended without a done frame, and Start not
+//!   seen running within [`START_GRACE`].
 //! - Preferences: the page's `walking-hardware-map-v1` is
 //!   `settings::SyncSettings`, saved on every change and at start.
 use super::actions::HardwareAction;
 use super::mirror::SceneId;
 use super::settings::{SyncBinding, SyncSettings, sign};
+use super::view::fixed;
 use super::{Hardware, ServerTarget};
 use crate::jobs::{Job, Pool, RunThread};
 use crate::robot::{RobotAction, RobotView};
@@ -50,6 +62,15 @@ pub const CHART_IDLE: &str = "Connect motors to compare tracking while steering 
 pub const NO_BENCH: &str = "Start serve_motor_bench and launch with --motor-bench http://127.0.0.1:PORT (add --motor-bench-token-file FILE if its page does not carry the token).";
 /// Deliberately refused (the page's `play()` silently does nothing while it mirrors).
 pub const MIRROR_ON: &str = "Turn the leg mirror off first: the simulation cannot run while it mirrors the real leg.";
+/// The run failed while a session was open (native: the page's run cannot fail).
+pub const RUN_FAILED: &str = "Simulation failed";
+/// The run did not reach Running within [`START_GRACE`] of the session's Start.
+pub const NOT_STARTED: &str = "Simulation did not start";
+/// How long after a session's Start the run may take to report Running
+/// before the session is stopped (a Start the run thread refused or lost).
+pub const START_GRACE: Duration = Duration::from_secs(2);
+/// The write timeout of [`LiveSync::post_stop_on_leave`] (the connect timeout is the client's 500 ms).
+pub const LEAVE_STOP_TIMEOUT: Duration = Duration::from_millis(500);
 
 pub enum SyncCommand {
     /// The newest live sample (`latest`).
@@ -115,6 +136,10 @@ pub struct LiveSync {
     /// The run a session started on (generation, preset identity) and whether it has been seen running since.
     started_run: Option<(u64, Option<SceneId>)>,
     was_running: bool,
+    /// When this session asked the run to Start (cleared once it is seen running).
+    start_sent: Option<Instant>,
+    /// The synchronous leave STOP was written (Drop does not write it again).
+    left: std::sync::atomic::AtomicBool,
     /// Bumped when the section's structure changes (connection, leg, rows, enabled state).
     pub revision: u64,
     /// Bumped when the charts must be redrawn.
@@ -154,6 +179,8 @@ impl LiveSync {
             stops_posted: 0,
             started_run: None,
             was_running: false,
+            start_sent: None,
+            left: std::sync::atomic::AtomicBool::new(false),
             revision: 1,
             samples_revision: 1,
         }
@@ -282,14 +309,31 @@ impl LiveSync {
 
     /// The run's pause and reset rules (`setPlaying(false)` → `stop('Simulation paused')`, reset).
     pub fn watch_run(&mut self, view: &RobotView) {
+        if self.engaged() {
+            self.watch(run_seen(view), Instant::now());
+        }
+    }
+
+    /// [`Self::watch_run`] on what was read from the run.
+    fn watch(&mut self, seen: RunSeen, now: Instant) {
         if !self.engaged() {
             return;
         }
-        let running = view.run.as_ref().is_some_and(|r| r.phase() == Phase::Running);
-        if run_key(view) != self.started_run {
+        let running = seen.phase == Some(Phase::Running);
+        if running {
+            self.start_sent = None;
+        }
+        if seen.key != self.started_run {
             self.stop("Simulation reset");
         } else if self.was_running && !running {
             self.stop("Simulation paused");
+        } else if seen.phase == Some(Phase::Failed) {
+            self.stop(RUN_FAILED);
+        } else if let Err(e) = seen.live {
+            // Not live any more without a new frame (a gait preview, a replay, the run ended).
+            self.stop(&e);
+        } else if self.start_sent.is_some_and(|at| now.saturating_duration_since(at) > START_GRACE) {
+            self.stop(NOT_STARTED);
         }
         self.was_running = running;
     }
@@ -306,32 +350,42 @@ impl LiveSync {
             self.state_text(MIRROR_ON);
             return Ok(());
         }
-        let checked = sample_from(view.and_then(live_input), self.seq).and_then(|initial| distinct(&self.rows).map(|()| initial));
-        let initial = match checked {
+        let input = view.map_or_else(StartInput::none, |v| StartInput::of(v, self.seq));
+        self.start_with(input, run, Instant::now());
+        Ok(())
+    }
+
+    /// The body of `hw-start` on what was read from the run: the page's
+    /// checks (`currentSample()`, distinct motors), then the run's own Start
+    /// check, all through the page's error path (status, pause, no session).
+    fn start_with(&mut self, input: StartInput, run: &mut dyn FnMut(RobotAction), now: Instant) {
+        let checked = input.initial.and_then(|initial| distinct(&self.rows).map(|()| initial)).and_then(|initial| input.start.map(|send| (initial, send)));
+        let (initial, send_start) = match checked {
             Ok(i) => i,
             Err(e) => {
                 self.preparing = false;
                 self.active = false;
                 self.state_text(e);
                 run(RobotAction::Run { action: RunAction::Pause });
-                return Ok(());
+                return;
             }
         };
-        let source = view.map(source_text).unwrap_or_default();
         let bindings: Vec<bench::Binding> = self.rows.iter().map(|b| bench::Binding { coordinate: b.coordinate.clone(), motor_id: b.motor_id, polarity: b.polarity }).collect();
         self.preparing = true;
         self.state_text("Starting bounded motor session…");
-        let view = view.expect("sample_from needs a view");
-        self.started_run = run_key(view);
-        self.was_running = view.run.as_ref().is_some_and(|r| r.phase() == Phase::Running);
-        if !self.was_running {
+        self.started_run = input.key;
+        self.was_running = input.running;
+        self.start_sent = None;
+        // A new session: leaving writes its STOP again.
+        self.left.store(false, std::sync::atomic::Ordering::SeqCst);
+        if send_start {
+            self.start_sent = Some(now);
             run(RobotAction::Run { action: RunAction::Start });
         }
-        let body = bench::open(&bindings, self.amplitude, &source, &initial);
+        let body = bench::open(&bindings, self.amplitude, &input.source, &initial);
         if let Some(t) = self.thread.as_ref() {
             let _ = t.send(SyncCommand::Open { body, last_sent: initial.sequence });
         }
-        Ok(())
     }
 
     /// A session is or may be open on the bench: ours (open, opening, stopping) or the bench busy.
@@ -461,6 +515,10 @@ impl LiveSync {
                         self.readings = reading_lines(&self.samples, &self.rows);
                     }
                     if !s.active && !self.preparing {
+                        // Completed or stopped elsewhere: the sync thread posts no further sample.
+                        if let Some(t) = self.thread.as_ref() {
+                            let _ = t.send(SyncCommand::Deactivate);
+                        }
                         self.active = false;
                         self.stopping = false;
                         pause = true;
@@ -507,6 +565,10 @@ impl LiveSync {
         self.samples_revision += 1;
         let (generation, worker_client) = (self.generation, client.clone());
         let initial = SyncShared { generation, ..Default::default() };
+        // Never another thread here (connect needs no config), but never join one on the UI thread.
+        if let Some(old) = self.thread.take() {
+            crate::jobs::drop_off_thread(old, "hardware-sync");
+        }
         self.thread = Some(RunThread::spawn("hardware-sync", initial, move |rx, out| worker(worker_client, rx, out)));
         self.client = Some(client);
         self.config = Some(config);
@@ -525,15 +587,37 @@ impl LiveSync {
     }
 }
 
+impl LiveSync {
+    /// The window is closing (the page's `pagehide`, a keepalive fetch): when
+    /// this viewer owns the bench session, the bench STOP is written at once
+    /// on its own connection and never answered ([`Client::send_only`]). It
+    /// blocks the calling thread for at most the client's 500 ms connect
+    /// timeout plus a loopback write bounded by [`LEAVE_STOP_TIMEOUT`]; once
+    /// per LiveSync (Drop does not write it again). No-op otherwise.
+    pub fn post_stop_on_leave(&self) {
+        if !self.ours() || self.left.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            return;
+        }
+        let Some(client) = self.client.as_ref() else { return };
+        if let Err(e) = client.clone().with_timeout(LEAVE_STOP_TIMEOUT).send_only(bench::STOP, &bench::stop()) {
+            // A later exit path (the drop at teardown) tries once more.
+            self.left.store(false, std::sync::atomic::Ordering::SeqCst);
+            bevy::log::warn!("motor bench STOP on leaving could not be written: {e} (the STOP job and the FPGA watchdog remain)");
+        }
+    }
+}
+
 impl Drop for LiveSync {
-    /// Leaving Robot mode or the window closing (`pagehide`, a keepalive fetch): STOP written
-    /// at once, unanswered (blocks at most the connect timeout and a loopback write), and on a job.
+    /// Leaving Robot mode or the window closing: STOP written at once
+    /// ([`LiveSync::post_stop_on_leave`]) and on a job; the sync thread (which
+    /// may be mid-post) is released off the UI thread.
     fn drop(&mut self) {
         if self.ours() {
-            if let Some(client) = self.client.as_ref() {
-                let _ = client.send_only(bench::STOP, &bench::stop());
-            }
+            self.post_stop_on_leave();
             drop(self.post_stop());
+        }
+        if let Some(thread) = self.thread.take() {
+            crate::jobs::drop_off_thread(thread, "hardware-sync");
         }
     }
 }
@@ -542,6 +626,54 @@ impl Drop for LiveSync {
 fn run_key(view: &RobotView) -> Option<(u64, Option<SceneId>)> {
     let run = view.run.as_ref()?;
     Some((run.generation(), run.preset().map(|p| SceneId::Preset(Arc::downgrade(p)))))
+}
+
+/// What `start` reads from the run.
+struct StartInput {
+    /// `currentSample()`.
+    initial: Result<bench::Sample, String>,
+    source: String,
+    key: Option<(u64, Option<SceneId>)>,
+    /// The run reports Running.
+    running: bool,
+    /// Whether to send Start (false when already running or requested), or why the run refuses it.
+    start: Result<bool, String>,
+}
+impl StartInput {
+    fn none() -> Self {
+        Self { initial: Err(NOT_LIVE.into()), source: String::new(), key: None, running: false, start: Err(NOT_LIVE.into()) }
+    }
+    fn of(view: &RobotView, seq: u64) -> Self {
+        let r = view.run.as_ref();
+        let running = r.is_some_and(|r| r.phase() == Phase::Running);
+        // Pause is accepted exactly when Start was requested and still holds (a run starting to build counts).
+        let requested = running || r.is_some_and(|r| r.check(RunAction::Pause).is_ok());
+        let start = match r {
+            None => Err(NOT_LIVE.into()),
+            Some(_) if requested => Ok(false),
+            Some(r) => r.check(RunAction::Start).map(|()| true),
+        };
+        Self { initial: sample_from(live_input(view), seq), source: source_text(view), key: run_key(view), running, start }
+    }
+}
+
+/// What the stop rules read from the run each frame.
+struct RunSeen {
+    key: Option<(u64, Option<SceneId>)>,
+    phase: Option<Phase>,
+    /// The latest frame still counts as live input (`currentSample()` without a new sample).
+    live: Result<(), String>,
+}
+fn run_seen(view: &RobotView) -> RunSeen {
+    RunSeen { key: run_key(view), phase: view.run.as_ref().map(|r| r.phase()), live: sample_from(live_input(view), 0).map(|_| ()) }
+}
+
+/// The page's `snapshot().live` (`!playback`): a preset's own physics run,
+/// not a recorded preset, not a replay in progress or a run a replay
+/// replaced (until Reset), and no gait preview loaded or loading.
+pub fn live_run(recorded: bool, preset: bool, replay: ReplayPhase, replaced: bool, gait_holds: bool) -> bool {
+    let replay_run = replay == ReplayPhase::Replaying || (replaced && replay != ReplayPhase::Idle);
+    !recorded && preset && !replay_run && !gait_holds
 }
 
 /// The page's `snapshot()` (viewer.js:428), from the run's accepted frame.
@@ -557,7 +689,9 @@ pub struct LiveInput<'a> {
 pub fn live_input(view: &RobotView) -> Option<LiveInput<'_>> {
     let run = view.run.as_ref()?;
     let frame = run.frame()?;
-    let live = run.recorded().is_none() && run.preset().is_some() && run.replay_state().phase != ReplayPhase::Replaying;
+    let replay = run.replay_state();
+    let gait_holds = run.gait_preview().is_some_and(|g| g.holds().is_some());
+    let live = live_run(run.recorded().is_some(), run.preset().is_some(), replay.phase, replay.replaced, gait_holds);
     // `done` is the frame's (the page's `frame.done`), not the run's phase.
     let (coordinates, targets, done) = frame.motor_targets.as_ref().map_or((&[][..], &[][..], false), |t| (t.coordinates.as_slice(), t.targets_rad.as_slice(), t.done));
     Some(LiveInput { live, coordinates, targets, time_s: frame.time, done })
@@ -631,8 +765,9 @@ pub fn reading_lines(samples: &[bench::LiveSample], rows: &[SyncBinding]) -> Str
         .map(|b| match samples.iter().rev().find(|p| p.id == b.motor_id) {
             None => format!("ID {}: waiting", b.motor_id),
             Some(p) => {
-                let age = p.live_source.as_ref().map(|_| format!(" · input age {} ms", p.input_age_s().map_or("NaN".into(), |a| format!("{:.0}", a * 1000.0)))).unwrap_or_default();
-                format!("ID {}: {:.2}° · {:.1} V · {} °C{age}", b.motor_id, p.measured_deg(), p.telemetry.voltage_v, p.telemetry.temperature_c)
+                // `toFixed` (ties away from zero), not `format!` (ties to even).
+                let age = p.live_source.as_ref().map(|_| format!(" · input age {} ms", p.input_age_s().map_or("NaN".into(), |a| fixed(a * 1000.0, 0)))).unwrap_or_default();
+                format!("ID {}: {}° · {} V · {} °C{age}", b.motor_id, fixed(p.measured_deg(), 2), fixed(p.telemetry.voltage_v, 1), p.telemetry.temperature_c)
             }
         })
         .collect::<Vec<_>>()

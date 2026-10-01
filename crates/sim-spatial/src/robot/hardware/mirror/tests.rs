@@ -114,3 +114,28 @@ fn stored_signs_are_clamped() {
     m.set_roles(roles());
     assert_eq!(m.settings.bindings[&1].polarity, -1);
 }
+
+#[test]
+fn mirror_angles_round_as_to_fixed() {
+    // 128 counts = 11.25°: `toFixed(1)` gives "11.3" (ties away from zero); `format!` would give "11.2".
+    assert_eq!(degrees_text(128.0 * std::f64::consts::TAU / COUNTS), "11.3");
+    assert_eq!(degrees_text(-128.0 * std::f64::consts::TAU / COUNTS), "-11.3");
+    let mut m = mirror();
+    let mut doc = CalibrationDoc::default();
+    doc.axes.insert(1, Axis { role: "belt/hip".into(), reference: Some(1000), ..Default::default() });
+    let mut state = Status { calibration: Some(doc), ..Default::default() };
+    state.samples.insert(1, Telemetry { position_raw: 1128, ..Default::default() });
+    m.update(&state, false);
+    assert!(m.text.starts_with("belt/hip: 11.3° from its alignment pose"), "{}", m.text);
+}
+
+#[test]
+fn a_replaced_worker_is_released_off_the_ui_thread() {
+    let mut m = mirror();
+    // A worker blocked mid-solve for longer than JOIN_BOUND.
+    m.worker = Some(crate::jobs::RunThread::spawn("hardware-mirror", MirrorShared::default(), |_rx, _| std::thread::sleep(std::time::Duration::from_millis(600))));
+    let started = Instant::now();
+    m.release_worker();
+    assert!(m.worker.is_none());
+    assert!(started.elapsed() < crate::jobs::JOIN_BOUND, "{:?}", started.elapsed());
+}

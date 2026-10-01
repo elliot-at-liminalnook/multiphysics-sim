@@ -1,13 +1,13 @@
 //! The page's sequenced handlers: sweep all (:168-195), tune (:203-210),
 //! campaign (:274-281) and gait playback (:240-270). The page's `while`
-//! loops with `sleep`s are ticks run from [`Session::run_due`].
-use super::{COMMAND, LEASE_RETRY, LEASE_TIMEOUT, Session, SweepAll};
-use crate::jobs::{Job, Pool};
+//! loops with `sleep`s are ticks run from [`Session::run_due`]. The leg
+//! gait's lease (`gait_update`) is the beat's ([`super::beat`]): it follows
+//! the published gait's scale and pause state.
+use super::{Session, SweepAll};
 use crate::robot::hardware::actions::GaitMode;
-use crate::robot::hardware::link::{CAMPAIGN_TICK, GAIT_HEARTBEAT, GaitRun, Intent, SWEEP_ALL_TICK, TUNE_TICK};
+use crate::robot::hardware::link::{CAMPAIGN_TICK, GaitRun, Intent, SWEEP_ALL_TICK, TUNE_TICK};
 use sim_runtime::hardware_client::calibration::{self, GaitBinding, GaitEntry, Gaits};
 use std::sync::Arc;
-use std::sync::atomic::Ordering::SeqCst;
 use std::time::Instant;
 
 impl Session {
@@ -286,19 +286,19 @@ impl Session {
                 return Err("STOP was pressed while the gait was starting.".into());
             }
             self.adopt(status);
-            self.next_lease = Instant::now() + GAIT_HEARTBEAT;
+            // The beat's first lease update follows a lease period after
+            // the gait is published (the page's `setInterval(…, 300)`).
             self.snap.ready = false;
         }
         Ok(run)
     }
-    /// Pause / Resume :250.
+    /// Pause / Resume :250. For a leg gait the beat posts `gait_update`
+    /// with the new state at once (the plan changed).
     pub(in crate::robot::hardware) fn gait_toggle(&mut self) {
         self.sim_frame();
         let Some(run) = self.snap.gait.as_mut() else { return };
         run.playing = !run.playing;
-        if run.leg {
-            self.gait_lease();
-        }
+        self.sync_beat();
         self.render();
     }
     /// The gait's Stop :267.
@@ -310,55 +310,21 @@ impl Session {
             self.stop();
         }
     }
-    /// The playback speed slider :268.
+    /// The playback speed slider :268 (a leg gait's `gait_update` as for Pause).
     pub(in crate::robot::hardware) fn gait_scale(&mut self) {
         // Time played so far counts at the old speed.
         self.sim_frame();
         let scale = self.inputs.gait_speed_percent / 100.0;
         let Some(run) = self.snap.gait.as_mut() else { return };
         run.scale = scale;
-        if run.leg {
-            self.gait_lease();
-        }
+        self.sync_beat();
         self.render();
     }
-    /// `api('command',{action:'gait_update',…}).catch(()=>{})`: the lease
-    /// heartbeat and the pause/speed changes (errors ignored, as the page).
-    ///
-    /// Posted from its own `Pool::Dedicated` job, not this thread: the
-    /// server ends the leg gait when no update arrives for 1.5 s, and a
-    /// request here may wait up to 8 s for the hardware. At most one is in
-    /// flight; while one is, this one is not sent and the lease deadline is
-    /// pulled in to [`LEASE_RETRY`], so the newest scale and pause state
-    /// follow as soon as it answers (one after the other, never reordered).
-    /// Nothing is sent while a STOP is pending, also by a job that starts
-    /// after one was posted.
-    pub(in crate::robot::hardware) fn gait_lease(&mut self) {
-        let Some((scale, playing)) = self.snap.gait.as_ref().filter(|g| g.leg).map(|g| (g.scale, g.playing)) else { return };
-        if self.interrupted() {
-            return;
-        }
-        // `poll` takes a finished job's result (ignored, as the page's
-        // `.catch`); the handle is then replaced at once below.
-        if self.lease.as_ref().is_some_and(|job| job.poll().is_none()) {
-            self.next_lease = self.next_lease.min(Instant::now() + LEASE_RETRY);
-            return;
-        }
-        let body = calibration::gait_update(scale, playing);
-        let client = self.client.clone().with_timeout(LEASE_TIMEOUT);
-        let (epoch, seen) = (self.epoch.clone(), self.seen_epoch);
-        self.lease = Some(Job::spawn(Pool::Dedicated, 0, "hardware gait lease", move |ctx| {
-            if ctx.cancelled() || epoch.load(SeqCst) != seen {
-                return Ok(());
-            }
-            client.post(COMMAND, &body).map(|_| ()).map_err(|e| e.to_string())
-        }));
-    }
     /// `endGait()` :241 (the mirror stops showing the gait when `gait` is
-    /// None). The lease update handle is dropped (a job not yet sending sends nothing).
+    /// None); the beat stops renewing the lease.
     pub(in crate::robot::hardware) fn end_gait(&mut self) {
         self.snap.gait = None;
-        self.lease = None;
+        self.sync_beat();
     }
     /// `gaitFrame` :244 for a sim-only gait: its clock advances by wall time × scale while playing.
     pub(in crate::robot::hardware) fn sim_frame(&mut self) {

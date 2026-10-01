@@ -5,11 +5,12 @@
 //! page's texts and its order of effects. The sequenced handlers (sweep all,
 //! tune, campaign, gait playback) are in [`sequences`].
 //!
-//! - **Serial, not concurrent.** The page's handlers, its status poll and its
-//!   heartbeat interleave at `await`s; here they run one at a time, so the
-//!   page's `busy`/`starting`/`heartbeatBusy` guards never see another
-//!   handler mid-request (they are kept where the page checks them). Its
-//!   `setTimeout`/`setInterval`/`sleep` loops are deadlines ([`Session::next_deadline`]).
+//! - **Serial, not concurrent.** The page's handlers and its status poll
+//!   interleave at `await`s; here they run one at a time, so the page's
+//!   `busy`/`starting` guards never see another handler mid-request (they
+//!   are kept where the page checks them). Its `setTimeout`/`setInterval`/
+//!   `sleep` loops are deadlines ([`Session::next_deadline`]). The two
+//!   heartbeats are the exception: they run concurrently, on the beat (below).
 //! - **Epoch.** Where the page captures `const e=epoch` and later checks
 //!   `e===epoch`, the shared atomic is read; the UI bumps it for an
 //!   immediate STOP ([`super::link::stop_now`]) and the session where the
@@ -26,20 +27,28 @@
 //!   (a command queued between them still sends nothing). The session's own
 //!   bumps made while a STOP is pending ([`Session::own_bumps`]) count as
 //!   applied once every earlier epoch is.
-//! - **Gait lease.** Each `gait_update` is posted from its own
-//!   `Pool::Dedicated` job ([`Session::gait_lease`]), at most one at a time,
-//!   so the server's 1.5 s lease never waits behind a slow request here.
+//! - **Heartbeats off this thread.** The `motion_update` heartbeat and the
+//!   leg gait's lease `gait_update` are posted by the beat ([`beat`], one
+//!   `jobs::RunThread`, "hardware-beat"), so a request here that waits up to
+//!   8 s for the hardware never lets the server's 1.5 s motion or gait lease
+//!   lapse. The session tells it what to carry ([`Session::sync_beat`], on
+//!   every publish and command) and asks for an immediate `motion_update`
+//!   where the page awaits `update()` ([`Session::update`]); `capture_hold`,
+//!   checked against the same per-session sequence, goes through the beat
+//!   too, so that domain has one sender. The beat sends nothing while a STOP
+//!   is pending, and its periodic failures are acted on here
+//!   ([`Session::beat_failure`]) only if their run and epoch still hold.
 use super::actions::Direction;
-use super::link::{GAIT_HEARTBEAT, HEARTBEAT, Inputs, Intent, LinkCommand, LinkSnapshot, POLL_ACTIVE, POLL_IDLE};
-use crate::jobs::Job;
+use super::link::{HEARTBEAT, Inputs, Intent, LinkCommand, LinkSnapshot, POLL_ACTIVE, POLL_IDLE};
 use serde_json::Value;
 use sim_runtime::hardware_client::calibration::{self, Axis, Input, Status, SweepSample};
-use sim_runtime::hardware_client::{Body, Client, STOP_TIMEOUT};
+use sim_runtime::hardware_client::{Body, CONNECT_TIMEOUT, Client, STOP_TIMEOUT};
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicU64, Ordering::SeqCst};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+mod beat;
 mod buttons;
 mod sequences;
 #[cfg(test)]
@@ -52,12 +61,9 @@ const GAIT_FRAME: Duration = Duration::from_millis(20);
 /// Why a request was not sent: the UI posted STOP and its `Stopped` has not
 /// reached the link thread yet.
 pub(super) const STOP_PENDING: &str = "STOP was pressed; this request was not sent.";
-/// How soon a gait lease update is retried when the previous one is still
-/// in flight (a pause or speed change must not wait a whole lease period).
-const LEASE_RETRY: Duration = Duration::from_millis(20);
-/// The timeout of one gait lease update: well inside the server's 1.5 s
-/// lease, so a hung one is given up in time for the next to renew it.
-const LEASE_TIMEOUT: Duration = Duration::from_millis(1000);
+/// Why a request through the beat failed: the beat ended, or did not answer
+/// within [`Session::beat_wait`] (a heartbeat failure: the session stops).
+const BEAT_GONE: &str = "The heartbeat sender did not answer.";
 
 /// The link thread's body: handles commands in arrival order and the page's
 /// periodic work between them; when the channel closes, sends STOP if
@@ -106,16 +112,19 @@ pub(super) struct Session {
     /// The session's own bumps above `seen_epoch` (made while a STOP was
     /// pending); `seen_epoch` moves over them once the STOPs before them are applied.
     own_bumps: BTreeSet<u64>,
-    /// The gait lease update in flight (`gait_update`), if any.
-    lease: Option<Job<()>>,
+    /// The heartbeat sender ([`beat`]); None once [`Session::shutdown`] dropped it.
+    beat: Option<beat::Handle>,
+    /// The plan last sent to the beat.
+    plan: beat::Plan,
+    /// How long [`Session::update`] waits for the beat's answer: a periodic
+    /// send in flight and then this one, each within the client's timeout.
+    beat_wait: Duration,
     sweep_all: Option<SweepAll>,
     sweep_all_runs: u64,
     /// The page's `gaitRun.last` (a sim-only gait's clock).
     gait_last: Instant,
     plays: u64,
     next_poll: Instant,
-    next_heartbeat: Instant,
-    next_lease: Instant,
     next_frame: Instant,
     next_tune: Instant,
     next_campaign: Instant,
@@ -125,7 +134,14 @@ impl Session {
     pub(super) fn new(client: Client, generation: u64, sequence: Arc<AtomicU64>, epoch: Arc<AtomicU64>, shared: Arc<Mutex<LinkSnapshot>>) -> Self {
         let now = Instant::now();
         let seen_epoch = epoch.load(SeqCst);
-        Session {
+        let beat = beat::spawn(client.clone(), sequence.clone(), epoch.clone());
+        // The beat may be finishing a periodic request (a heartbeat, or a
+        // gait lease) before it sends this one: each costs up to the connect
+        // timeout plus its read deadline. A margin on top, so a slow but
+        // working server is never taken for a dead beat (that would stop
+        // the session).
+        let beat_wait = 2 * (client.timeout + CONNECT_TIMEOUT) + beat::LEASE_TIMEOUT + CONNECT_TIMEOUT + Duration::from_secs(1);
+        let mut session = Session {
             client,
             sequence,
             epoch,
@@ -134,19 +150,21 @@ impl Session {
             inputs: Inputs::default(),
             seen_epoch,
             own_bumps: BTreeSet::new(),
-            lease: None,
+            beat: Some(beat),
+            plan: beat::Plan::default(),
+            beat_wait,
             sweep_all: None,
             sweep_all_runs: 0,
             gait_last: now,
             plays: 0,
             // The page polls once at load.
             next_poll: now,
-            next_heartbeat: now + HEARTBEAT,
-            next_lease: now + GAIT_HEARTBEAT,
             next_frame: now + GAIT_FRAME,
             next_tune: now,
             next_campaign: now,
-        }
+        };
+        session.sync_beat();
+        session
     }
 
     // ---- plumbing ----
@@ -156,6 +174,67 @@ impl Session {
         self.snap.revision += 1;
         self.snap.sweep_all = self.sweep_all.is_some();
         *self.shared.lock().unwrap_or_else(|p| p.into_inner()) = self.snap.clone();
+        self.sync_beat();
+    }
+    /// What the heartbeats carry now: the motion session (`update()`'s
+    /// `run!=null&&ready`, on the chosen motor, with `input()`), the leg
+    /// gait's scale and pause state, and the epochs applied.
+    fn beat_plan(&self) -> beat::Plan {
+        let motion = match (self.snap.run, self.snap.id) {
+            (Some(run), Some(id)) if self.snap.ready => Some(beat::MotionBeat { id, run, input: self.input() }),
+            _ => None,
+        };
+        let gait = self.snap.gait.as_ref().filter(|g| g.leg).map(|g| beat::GaitBeat { scale: g.scale, playing: g.playing });
+        beat::Plan { seen_epoch: self.seen_epoch, motion, gait }
+    }
+    /// Sends the beat the current plan if it changed.
+    pub(super) fn sync_beat(&mut self) {
+        let plan = self.beat_plan();
+        if plan == self.plan {
+            return;
+        }
+        if let Some(beat) = &self.beat {
+            let _ = beat.send(beat::Beat::Plan(plan.clone()));
+        }
+        self.plan = plan;
+    }
+    /// The page's `await send('motion_update', …)` in `update()`: the beat
+    /// sends it at once with the current plan, in order with its periodic
+    /// ones; `Ok` also when it sent nothing (a STOP posted meanwhile). A
+    /// beat that is gone or does not answer within [`Session::beat_wait`]
+    /// is a heartbeat failure.
+    fn beat_now(&mut self) -> Result<(), String> {
+        self.sync_beat();
+        let Some(beat) = &self.beat else { return Ok(()) };
+        let (tx, rx) = mpsc::channel();
+        if beat.send(beat::Beat::Now(tx)).is_err() {
+            return Err(BEAT_GONE.into());
+        }
+        rx.recv_timeout(self.beat_wait).unwrap_or_else(|_| Err(BEAT_GONE.into()))
+    }
+    /// `api('command', body)` for a request the server checks against the
+    /// motion session's sequence (`capture_hold`): posted by the beat, so it
+    /// cannot overtake or be overtaken by a heartbeat. Refused, unsent,
+    /// while a STOP is pending (here, and by the beat if one is posted meanwhile).
+    fn send_in_session(&mut self, build: beat::Build) -> Result<Value, String> {
+        if self.interrupted() {
+            return Err(STOP_PENDING.into());
+        }
+        self.sync_beat();
+        let Some(beat) = &self.beat else { return Err(BEAT_GONE.into()) };
+        let (tx, rx) = mpsc::channel();
+        if beat.send(beat::Beat::Post(build, tx)).is_err() {
+            return Err(BEAT_GONE.into());
+        }
+        rx.recv_timeout(self.beat_wait).unwrap_or_else(|_| Err(BEAT_GONE.into()))
+    }
+    /// A periodic heartbeat the server refused: the same handling as a
+    /// failed `update()`, if its run and epoch still hold.
+    fn beat_failure(&mut self) {
+        let failure = self.beat.as_ref().and_then(|b| b.lock().take());
+        if let Some(f) = failure {
+            self.motion_failed(f.run, f.epoch, f.error);
+        }
     }
     /// The page's `++sequence`.
     fn seq(&self) -> u64 {
@@ -419,6 +498,8 @@ impl Session {
                 }
             }
         }
+        // `Inputs` changes what the heartbeat carries without a publish.
+        self.sync_beat();
     }
 
     /// The local half of `stop()` :125: a leg gait ends, sweep all ends, the
@@ -490,16 +571,25 @@ impl Session {
         self.snap.busy = false;
         self.render();
     }
-    /// `update()` :133-145: the heartbeat, and every intent change.
+    /// `update()` :133-145 on an intent change: the beat sends
+    /// `motion_update` with the new plan at once and this waits for it (the
+    /// page's `await update()`). The periodic heartbeat is the beat's own;
+    /// its failures come here through [`Session::beat_failure`]. Unlike the
+    /// page's `heartbeatBusy`, a change while a heartbeat is in flight is
+    /// not dropped: it follows that heartbeat.
     pub(super) fn update(&mut self) {
-        let (Some(r), Some(id)) = (self.snap.run, self.snap.id) else { return };
+        let (Some(r), Some(_)) = (self.snap.run, self.snap.id) else { return };
         // A pending STOP ends the session; don't answer it with a heartbeat failure.
         if !self.snap.ready || self.interrupted() {
             return;
         }
         let e = self.epoch_now();
-        let input = self.input();
-        let Err(err) = self.send(calibration::motion_update(id, self.seq(), r, &input)) else { return };
+        let Err(err) = self.beat_now() else { return };
+        self.motion_failed(r, e, err);
+    }
+    /// `update()`'s `catch` :136-143 for a heartbeat of run `r` sent under
+    /// epoch `e` that failed with `err`.
+    fn motion_failed(&mut self, r: u64, e: u64, err: String) {
         if e != self.epoch_now() || Some(r) != self.snap.run {
             return;
         }
@@ -646,11 +736,9 @@ impl Session {
     /// The earliest periodic work due.
     pub(super) fn next_deadline(&self) -> Instant {
         let mut due = self.next_poll;
-        if self.snap.run.is_some() && self.snap.ready {
-            due = due.min(self.next_heartbeat);
-        }
-        if self.leg_gait() {
-            due = due.min(self.next_lease);
+        // The beat's failures are taken at least as often as it sends.
+        if self.plan.motion.is_some() {
+            due = due.min(Instant::now() + HEARTBEAT);
         }
         if let Some(run) = &self.sweep_all {
             due = due.min(run.next);
@@ -666,21 +754,14 @@ impl Session {
         }
         due
     }
-    /// Runs the periodic work due at `now`.
+    /// Runs the periodic work due at `now`: a periodic heartbeat failure
+    /// the beat recorded, the status poll and the sequences' ticks. The
+    /// heartbeats themselves (`heartbeat()` :325, the gait lease :261) are
+    /// the beat's.
     pub(super) fn run_due(&mut self, now: Instant) {
+        self.beat_failure();
         if now >= self.next_poll {
             self.poll();
-        }
-        // `heartbeat()` :325: `update()` every 100 ms (it returns at once without a session).
-        if now >= self.next_heartbeat {
-            self.update();
-            self.next_heartbeat = Instant::now() + HEARTBEAT;
-        }
-        if self.leg_gait() && now >= self.next_lease {
-            self.next_lease = Instant::now() + GAIT_HEARTBEAT;
-            // Skipped while a STOP is pending; retried sooner while the
-            // previous update is in flight.
-            self.gait_lease();
         }
         if self.sweep_all.as_ref().is_some_and(|r| now >= r.next) {
             self.sweep_all_tick();
@@ -696,6 +777,7 @@ impl Session {
             self.publish();
             self.next_frame = Instant::now() + GAIT_FRAME;
         }
+        self.sync_beat();
     }
     /// [`super::link::drive_active`] on this session's state.
     fn drive_active(&mut self) -> bool {
@@ -705,8 +787,14 @@ impl Session {
     /// The channel closed (the link dropped): the page's `loss()` on
     /// `pagehide`, widened ([`super::link::drive_active`]), with the short
     /// STOP timeout so the thread ends promptly. Sent also while a STOP is
-    /// pending (the UI's STOP may not have reached the server).
+    /// pending (the UI's STOP may not have reached the server). The beat is
+    /// dropped first: its channel closes and it sends nothing more.
     fn shutdown(&mut self) {
+        // Silence the beat before it goes: a beat mid-`run_due` checks the
+        // epoch before each send, so no heartbeat can renew the lease
+        // ahead of the STOP below.
+        self.bump_epoch();
+        self.beat = None;
         let active = self.drive_active();
         if let Some(id) = self.snap.id
             && active

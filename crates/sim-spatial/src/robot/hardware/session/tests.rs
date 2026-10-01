@@ -1,7 +1,10 @@
 //! The session against an in-process fake calibration server (plain HTTP on
 //! 127.0.0.1:0, served from a `jobs::Pool::Dedicated` job): no window, no
 //! hardware. Each test drives [`Session`]'s handlers directly, except the
-//! disconnect test, which runs [`run`] on the test thread.
+//! disconnect test, which runs [`run`] on the test thread. The heartbeats
+//! come from the session's beat thread, as in the viewer; the fake answers
+//! each connection on its own job, as the real server does, so a request it
+//! holds does not hold the others.
 use super::*;
 use crate::jobs::{Job, Pool};
 use serde_json::json;
@@ -10,7 +13,8 @@ use std::io::{ErrorKind, Read, Write};
 use std::net::{IpAddr, Ipv4Addr, TcpListener, TcpStream};
 
 type Handler = Arc<dyn Fn(&str, &Value) -> Result<Value, String> + Send + Sync>;
-type Log = Arc<Mutex<Vec<(String, Value)>>>;
+/// (path, body, when it was parsed) of every request, in arrival order.
+type Log = Arc<Mutex<Vec<(String, Value, Instant)>>>;
 
 /// The fake server; dropping it cancels its job, which ends its accept loop.
 struct Fake {
@@ -28,7 +32,16 @@ impl Fake {
         let job = Job::spawn(Pool::Dedicated, 0, "fake calibration server", move |ctx| {
             while !ctx.cancelled() {
                 match listener.accept() {
-                    Ok((stream, _)) => answer(stream, &handler, &served),
+                    Ok((stream, _)) => {
+                        let (handler, served) = (handler.clone(), served.clone());
+                        let request = Job::spawn(Pool::Dedicated, 0, "fake calibration request", move |_| {
+                            answer(stream, &handler, &served);
+                            Ok(())
+                        });
+                        // Runs to its end when the handle is dropped (a
+                        // cancelled dedicated job may never start).
+                        drop(request.complete_on_drop());
+                    }
                     Err(e) if e.kind() == ErrorKind::WouldBlock => std::thread::sleep(Duration::from_millis(1)),
                     Err(e) => return Err(e.to_string()),
                 }
@@ -43,7 +56,11 @@ impl Fake {
     }
     /// (path, body) of every request so far; a GET's body is null.
     fn requests(&self) -> Vec<(String, Value)> {
-        self.log.lock().unwrap().clone()
+        self.log.lock().unwrap().iter().map(|(p, b, _)| (p.clone(), b.clone())).collect()
+    }
+    /// The commands posted so far, with when each arrived.
+    fn timed_commands(&self) -> Vec<(Value, Instant)> {
+        self.log.lock().unwrap().iter().filter(|(p, _, _)| p == COMMAND).map(|(_, b, t)| (b.clone(), *t)).collect()
     }
     /// The commands posted so far.
     fn commands(&self) -> Vec<Value> {
@@ -81,7 +98,7 @@ fn answer(mut stream: TcpStream, handler: &Handler, log: &Log) {
     }
     let path = head.split_whitespace().nth(1).unwrap_or("").to_string();
     let body: Value = if length > 0 { serde_json::from_slice(&data[end..end + length]).unwrap_or(Value::Null) } else { Value::Null };
-    log.lock().unwrap().push((path.clone(), body.clone()));
+    log.lock().unwrap().push((path.clone(), body.clone(), Instant::now()));
     let (status, reply) = match handler(path.as_str(), &body) {
         Ok(v) => (200, v),
         Err(e) => (400, json!({ "error": e })),
@@ -107,6 +124,27 @@ fn motor_server(enabled: u8) -> Handler {
     })
 }
 
+/// The actions of `commands`, in order.
+fn actions(commands: &[Value]) -> Vec<String> {
+    commands.iter().map(|c| c["action"].as_str().unwrap_or("").to_string()).collect()
+}
+/// The sequences of the sequenced `commands`, in arrival order.
+fn sequences(commands: &[Value]) -> Vec<u64> {
+    commands.iter().filter_map(|c| c["sequence"].as_u64()).collect()
+}
+
+impl Session {
+    /// Returns once the beat has handled everything sent to it so far,
+    /// including a heartbeat it was sending.
+    fn beat_flush(&self) {
+        let (tx, rx) = mpsc::channel();
+        if let Some(b) = &self.beat {
+            b.send(beat::Beat::Flush(tx)).expect("beat running");
+            rx.recv_timeout(Duration::from_secs(5)).expect("beat answers");
+        }
+    }
+}
+
 fn session(fake: &Fake, epoch: Arc<AtomicU64>) -> (Session, Arc<Mutex<LinkSnapshot>>) {
     let shared = Arc::new(Mutex::new(LinkSnapshot::default()));
     (Session::new(fake.client(), 1, Arc::new(AtomicU64::new(0)), epoch, shared.clone()), shared)
@@ -120,12 +158,18 @@ fn select_press_and_heartbeat_carry_the_run_and_increasing_sequences() {
     assert!(s.snap.ready && !s.snap.busy, "{:?}", s.snap.state.message);
     s.handle(LinkCommand::Press { direction: Direction::Upper });
     assert_eq!((s.snap.run, s.snap.intent), (Some(7), Intent::Upper));
-    // The 100 ms heartbeat.
+    // An intent change's `update()`, then the beat's own 100 ms heartbeats.
     s.update();
+    std::thread::sleep(Duration::from_millis(350));
+    s.beat_flush();
     let commands = fake.commands();
-    let actions: Vec<&str> = commands.iter().map(|c| c["action"].as_str().unwrap()).collect();
-    assert_eq!(actions, ["select", "motion_start", "motion_update", "motion_update"]);
-    let sequences: Vec<u64> = commands.iter().map(|c| c["sequence"].as_u64().unwrap()).collect();
+    let actions = actions(&commands);
+    assert_eq!(actions[..3], ["select", "motion_start", "motion_update"], "{actions:?}");
+    assert!(actions[2..].iter().all(|a| a == "motion_update"), "{actions:?}");
+    // The press's and the update's, and at least two periodic ones (100 ms after each answer).
+    assert!(actions.len() >= 6, "{actions:?}");
+    let sequences = sequences(&commands);
+    assert_eq!(sequences.len(), commands.len(), "every command carries a sequence");
     assert!(sequences.windows(2).all(|w| w[0] < w[1]), "{sequences:?}");
     for heartbeat in &commands[2..] {
         assert_eq!((heartbeat["run_id"].as_u64(), heartbeat["motion"].as_str(), heartbeat["id"].as_u64()), (Some(7), Some("upper"), Some(1)));
@@ -143,12 +187,19 @@ fn stopped_clears_the_session_and_a_pending_stop_sends_nothing() {
     s.handle(LinkCommand::Select { id: 1 });
     s.handle(LinkCommand::Press { direction: Direction::Lower });
     assert_eq!(s.snap.run, Some(7));
-    let sent = fake.commands().len();
-    // The UI's immediate STOP: epoch bumped, `Stopped` still queued.
+    // The UI's immediate STOP: epoch bumped, `Stopped` still queued. A
+    // heartbeat the beat was already sending is let finish (it went before the STOP).
     let stopped = epoch.fetch_add(1, SeqCst) + 1;
     assert!(s.interrupted());
+    s.beat_flush();
+    let sent = fake.commands().len();
     s.update();
     s.handle(LinkCommand::Release);
+    s.handle(LinkCommand::Capture { boundary: crate::robot::hardware::actions::Boundary::Upper, reference_joint_rad: None });
+    assert_eq!(s.snap.state.capture_message.as_deref(), Some(STOP_PENDING));
+    // Several heartbeat periods: the beat sends nothing either.
+    std::thread::sleep(Duration::from_millis(350));
+    s.beat_flush();
     assert_eq!(fake.commands().len(), sent, "no heartbeat while a STOP is pending");
     s.handle(LinkCommand::Stopped { epoch: stopped });
     assert!(!s.interrupted());
@@ -264,4 +315,162 @@ fn drive_active_counts_every_driving_sequence() {
         set(&mut s);
         assert!(drive_active(&s), "{s:?}");
     }
+}
+
+#[test]
+fn heartbeats_keep_the_lease_while_the_link_thread_waits_and_a_pending_stop_silences_them() {
+    let epoch = Arc::new(AtomicU64::new(0));
+    let bump = epoch.clone();
+    let pressed: Arc<Mutex<Option<Instant>>> = Arc::default();
+    let marked = pressed.clone();
+    let motor = motor_server(1);
+    // The gait list is held 1.6 s, longer than the server's 1.5 s motion
+    // lease; 1 s in, the UI's STOP is pressed (its own request goes on
+    // another connection, not to this fake).
+    let handler: Handler = Arc::new(move |path: &str, body: &Value| -> Result<Value, String> {
+        if path == "/calibration/gaits" {
+            std::thread::sleep(Duration::from_millis(1000));
+            bump.fetch_add(1, SeqCst);
+            *marked.lock().unwrap() = Some(Instant::now());
+            std::thread::sleep(Duration::from_millis(600));
+            return Ok(json!({ "gaits": [] }));
+        }
+        motor(path, body)
+    });
+    let fake = Fake::start(handler);
+    let (mut s, _) = session(&fake, epoch.clone());
+    s.handle(LinkCommand::Select { id: 1 });
+    s.handle(LinkCommand::Press { direction: Direction::Upper });
+    assert_eq!(s.snap.run, Some(7), "{:?}", s.snap.state.message);
+    let asked = Instant::now();
+    s.handle(LinkCommand::LoadGaits);
+    assert!(asked.elapsed() >= Duration::from_millis(1600), "the link thread waited on the gait list");
+    assert!(s.snap.gaits_loaded, "{:?}", s.snap.gait_notice);
+    let stop_at = pressed.lock().unwrap().expect("STOP pressed");
+    s.beat_flush();
+    let timed = fake.timed_commands();
+
+    // Until the STOP, a heartbeat about every 100 ms, never a gap near the lease.
+    let beats: Vec<Instant> = timed.iter().filter(|(c, t)| c["action"] == "motion_update" && *t >= asked && *t < stop_at).map(|(_, t)| *t).collect();
+    assert!(beats.len() >= 5, "{} heartbeats in 1 s", beats.len());
+    let mut last = asked;
+    for t in beats.iter().chain([&stop_at]) {
+        assert!(t.duration_since(last) < Duration::from_millis(500), "a {:?} gap between heartbeats", t.duration_since(last));
+        last = *t;
+    }
+    // After it, at most the heartbeat already being sent when STOP was pressed.
+    let after: Vec<&Value> = timed.iter().filter(|(_, t)| *t >= stop_at).map(|(c, _)| c).collect();
+    assert!(after.len() <= 1 && after.iter().all(|c| c["action"] == "motion_update"), "{after:?}");
+
+    // Every request carries a larger sequence than the one before it, and
+    // every heartbeat the run, the motor and the intent.
+    let commands: Vec<Value> = timed.into_iter().map(|(c, _)| c).collect();
+    let sequences = sequences(&commands);
+    assert_eq!(sequences.len(), commands.len(), "every command carries a sequence");
+    assert!(sequences.windows(2).all(|w| w[0] < w[1]), "{sequences:?}");
+    for heartbeat in commands.iter().filter(|c| c["action"] == "motion_update") {
+        assert_eq!((heartbeat["run_id"].as_u64(), heartbeat["id"].as_u64(), heartbeat["motion"].as_str()), (Some(7), Some(1), Some("upper")));
+    }
+
+    // While the STOP is pending nothing is sent: not an intent change, not
+    // a pose, not the beat's periodic heartbeat.
+    let sent = commands.len();
+    s.update();
+    s.handle(LinkCommand::Release);
+    s.handle(LinkCommand::Capture { boundary: crate::robot::hardware::actions::Boundary::Lower, reference_joint_rad: None });
+    std::thread::sleep(Duration::from_millis(350));
+    s.beat_flush();
+    assert_eq!(fake.commands().len(), sent, "{:?}", &fake.commands()[sent..]);
+    // Once applied, the session is over and the beat stays quiet.
+    s.handle(LinkCommand::Stopped { epoch: epoch.load(SeqCst) });
+    assert!(!s.interrupted());
+    assert_eq!((s.snap.run, s.snap.ready), (None, false));
+    std::thread::sleep(Duration::from_millis(250));
+    s.beat_flush();
+    assert_eq!(fake.commands().len(), sent);
+}
+
+#[test]
+fn a_heartbeat_the_server_refuses_ends_the_session_on_the_link_thread() {
+    let refuse = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let refusing = refuse.clone();
+    let motor = motor_server(1);
+    let handler: Handler = Arc::new(move |path: &str, body: &Value| -> Result<Value, String> {
+        if body["action"] == "motion_update" && refusing.load(SeqCst) {
+            return Err("Sweep browser lease expired; start again explicitly".into());
+        }
+        motor(path, body)
+    });
+    let fake = Fake::start(handler);
+    let (mut s, _) = session(&fake, Arc::default());
+    s.handle(LinkCommand::Select { id: 1 });
+    s.handle(LinkCommand::Press { direction: Direction::Lower });
+    assert_eq!(s.snap.run, Some(7));
+    refuse.store(true, SeqCst);
+    // Only the beat's failure is under test (a status poll would replace the message).
+    s.next_poll = Instant::now() + Duration::from_secs(60);
+    // The beat's next periodic heartbeat is refused; the link thread takes
+    // the failure on its next pass and stops, as the page's `update()` does.
+    std::thread::sleep(Duration::from_millis(250));
+    s.beat_flush();
+    s.run_due(Instant::now());
+    assert_eq!((s.snap.run, s.snap.ready), (None, false));
+    assert_eq!(s.snap.state.message.as_deref(), Some("Sweep browser lease expired; start again explicitly"));
+    let actions = actions(&fake.commands());
+    assert!(actions.contains(&"stop".to_string()), "{actions:?}");
+}
+
+/// Waits until `worker` has handled everything sent to it so far.
+fn flush(worker: &beat::Handle) {
+    let (tx, rx) = mpsc::channel();
+    worker.send(beat::Beat::Flush(tx)).expect("beat running");
+    rx.recv_timeout(Duration::from_secs(5)).expect("beat answers");
+}
+
+#[test]
+fn the_gait_lease_renews_on_its_period_at_once_on_a_change_and_never_during_a_stop() {
+    let handler: Handler = Arc::new(|_: &str, body: &Value| -> Result<Value, String> {
+        match body["action"].as_str() {
+            Some("gait_update") => Ok(json!({ "ok": true })),
+            other => Err(format!("unexpected {other:?}")),
+        }
+    });
+    let fake = Fake::start(handler);
+    let (sequence, epoch) = (Arc::new(AtomicU64::new(0)), Arc::new(AtomicU64::new(0)));
+    let worker = beat::spawn(fake.client(), sequence.clone(), epoch.clone());
+    let plan = |seen_epoch: u64, scale: f64, playing: bool| beat::Plan { seen_epoch, motion: None, gait: Some(beat::GaitBeat { scale, playing }) };
+    worker.send(beat::Beat::Plan(plan(0, 1.0, true))).unwrap();
+    // Every 300 ms (the first a period after the gait started).
+    std::thread::sleep(Duration::from_millis(1000));
+    let periodic = fake.commands().len();
+    assert!((2..=4).contains(&periodic), "{periodic} lease updates in 1 s");
+    // A pause goes at once, not a period later.
+    let paused = Instant::now();
+    worker.send(beat::Beat::Plan(plan(0, 0.5, false))).unwrap();
+    std::thread::sleep(Duration::from_millis(150));
+    flush(&worker);
+    let timed = fake.timed_commands();
+    let at_once = |(c, t): &(Value, Instant)| *t >= paused && t.duration_since(paused) < Duration::from_millis(100) && c["speed_scale"].as_f64() == Some(0.5) && c["playing"] == false;
+    assert!(timed.iter().any(at_once), "{timed:?}");
+    // A STOP pending (the epoch ahead of the plan's): nothing.
+    epoch.fetch_add(1, SeqCst);
+    std::thread::sleep(Duration::from_millis(100));
+    flush(&worker);
+    let held = fake.commands().len();
+    std::thread::sleep(Duration::from_millis(700));
+    flush(&worker);
+    assert_eq!(fake.commands().len(), held, "no lease update while a STOP is pending");
+    // Applied (the plan caught up): renewed again.
+    worker.send(beat::Beat::Plan(plan(1, 0.5, false))).unwrap();
+    std::thread::sleep(Duration::from_millis(400));
+    flush(&worker);
+    assert!(fake.commands().len() > held, "the lease is renewed once the STOP is applied");
+    // The lease carries no sequence: the shared counter is untouched.
+    assert_eq!(sequence.load(SeqCst), 0);
+    // Dropping the handle ends it: nothing more is sent.
+    drop(worker);
+    std::thread::sleep(Duration::from_millis(100));
+    let ended = fake.commands().len();
+    std::thread::sleep(Duration::from_millis(700));
+    assert_eq!(fake.commands().len(), ended);
 }

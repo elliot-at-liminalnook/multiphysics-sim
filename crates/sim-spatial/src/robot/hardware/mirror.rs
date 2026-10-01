@@ -22,6 +22,7 @@ use super::actions::{Align, GaitMode, HardwareAction};
 use super::link::GaitRun;
 use super::settings::{MirrorBinding, MirrorSettings, sign};
 use super::Hardware;
+use super::view::fixed;
 use crate::robot_preset::{PresetRun, RecordedRun};
 use bevy::math::DQuat;
 use serde_json::{Value, json};
@@ -360,7 +361,9 @@ impl Mirror {
         };
         let id = source.id();
         if self.scene_id.as_ref() != Some(&id) || self.worker.as_ref().is_none_or(|w| w.finished()) {
-            // A new scene, or no live worker: a new worker (the old one is dropped with a bounded join).
+            // A new scene, or no live worker: a new worker. The old one may be mid-solve, so it is
+            // released off the UI thread (RunThread's drop waits up to JOIN_BOUND).
+            self.release_worker();
             self.scene_id = Some(id);
             self.shown = false;
             self.coordinates = None;
@@ -417,13 +420,20 @@ impl Mirror {
     /// The worker is gone (a panic: the UI holds its channel open): settle what was in
     /// flight, end the display, show the page's worker error; the next begin respawns it.
     fn worker_failed(&mut self) {
-        self.worker = None;
+        self.release_worker();
         self.loading = false;
         self.coordinates = None;
         self.pending = None;
         (self.pose_done, self.sample_done, self.gait_number, self.gait_ready) = (self.pose_sent, self.sample_sent, None, false);
         self.error = Some(WORKER_FAILED.into());
         self.end();
+    }
+
+    /// Drops the worker (if any) off the UI thread.
+    fn release_worker(&mut self) {
+        if let Some(old) = self.worker.take() {
+            crate::jobs::drop_off_thread(old, "hardware-mirror");
+        }
     }
 
     /// `update(state, force)` (:76-100): called on every new server state.
@@ -468,7 +478,7 @@ impl Mirror {
             };
             let delta = sign(binding.polarity) as f64 * (raw - reference as f64) * std::f64::consts::TAU / COUNTS;
             values[i] = Self::saved_angle(axis, c) + delta;
-            lines.push(format!("{role}: {:.1}° from its alignment pose", delta.to_degrees()));
+            lines.push(format!("{role}: {}° from its alignment pose", degrees_text(delta)));
         }
         if !force && self.pending.as_ref() == Some(&values) {
             return;
@@ -621,6 +631,20 @@ impl Mirror {
         }
         (out, skipped)
     }
+}
+
+impl Drop for Mirror {
+    /// Leaving Robot mode drops the mirror with its worker, which may be mid-solve.
+    fn drop(&mut self) {
+        self.release_worker();
+    }
+}
+
+/// The mirror line's angle (:94): `(delta * 180 / Math.PI).toFixed(1)`, in the
+/// page's operation order and with `toFixed`'s ties away from zero
+/// (128 counts = 11.25° shows "11.3").
+pub fn degrees_text(delta_rad: f64) -> String {
+    fixed(delta_rad * 180.0 / std::f64::consts::PI, 1)
 }
 
 /// The mirror's actions (the section's controls): each saves the

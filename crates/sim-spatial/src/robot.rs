@@ -417,7 +417,7 @@ impl RobotView {
                 "step_rad": JOG_STEP_RAD, "step_m": JOG_STEP_M, "selected_link_joints": selected, "joints": joints, "last_apply_error": r.jog_error()})
         });
         let format = m.map(|m| json!({"version": m.version, "name": physical_format_name(m.version), "model": "sim_domain_robot::PhysicalModel (run by sim_runtime::physical::PhysicalRobot for --robot FILE)"}));
-        let mut out = json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds, "format": format,
+        let mut out = json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds,
             "link_count": m.map(|m| m.links.len()), "links": links, "selected": selected,
             "joints": joints, "motors": motors, "transmissions": m.map(|m| &m.transmissions), "battery": m.and_then(|m| m.battery.as_ref()),
             "actuator_profiles": profiles, "uncertainty": m.map(|_| &self.notes.uncertainty), "uncertainty_parsed": m.map(|m| &m.uncertainty), "identification": m.map(|m| &m.identification),
@@ -427,7 +427,11 @@ impl RobotView {
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
             "pose": if recorded.is_some() { RECORDED_POSE } else if previewing { GAIT_POSE } else if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()),
             "recordings": self.run.as_ref().map(|r| r.recordings_json()), "replay": self.run.as_ref().map(|r| r.replay_json()), "gait_preview": self.run.as_ref().map(|r| r.gait_json()),
-            "graphs": self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(self.selected, self.graphs_visible)), "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
+            "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
+        // Kept out of the literal above: serde_json's json! hits the default
+        // recursion limit with every key in one macro call.
+        out["format"] = json!(format);
+        out["graphs"] = self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(self.selected, self.graphs_visible));
         // Run-thread overlays (robot_overlay); null until loaded.
         out["overlays"] = self.run.as_ref().map_or(Value::Null, RunController::overlays_json);
         // The recorded timeline (robot_recorded); absent unless a recorded preset is loaded.
@@ -452,18 +456,21 @@ impl RobotView {
         let f = p.run.frame().filter(|f| f.built);
         let jog: Vec<Value> = f.map(|f| f.joint_names.iter().enumerate().map(|(i, n)| json!({"index": i, "name": n, "angle_rad": f.joint_angles.get(i), "target_rad": f.targets.get(i)})).collect::<Vec<Value>>()).unwrap_or_default();
         let refusals: serde_json::Map<String, Value> = robot_planar::UNAVAILABLE.iter().map(|(k, why)| (k.to_string(), json!(why))).collect();
-        json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds,
-            "format": p.format_json(), "planar": planar, "link_count": Value::Null, "links": [], "selected": selected,
-            "joints": Value::Null, "motors": Value::Null, "transmissions": Value::Null, "battery": Value::Null, "actuator_profiles": Value::Null, "uncertainty": Value::Null,
-            "uncertainty_parsed": Value::Null, "identification": Value::Null, "materials": Value::Null, "source": Value::Null, "cad_link": Value::Null,
+        let mut out = json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds,
+            "format": p.format_json(), "planar": planar, "links": [], "selected": selected,
             "source_file": self.source.as_ref().map(|s| s.json(true)), "notice": self.notice,
             "provenance_rule": "a planar v2 summary carries no per-value provenance: masses, centres, planar inertias and outlines are RoboCAD's geometry-derived export values, shown as stored",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
             "pose": PLANAR_POSE, "read_only": true, "stepped": f.is_some_and(|f| f.steps > 0), "run": p.run.json(),
             "jog": {"label": "planar v2 joint target", "rule": robot_planar::JOG_RULE, "selected_joint": p.selected_joint_name(), "joints": jog},
-            "preset": Value::Null, "motion": Value::Null, "recording": Value::Null, "recordings": Value::Null, "replay": Value::Null, "gait_preview": Value::Null,
             "graphs": {"visible": false, "available": false, "reason": robot_planar::GRAPHS}, "overlays": p.overlays_json(), "unavailable": refusals,
-            "ui_revision": self.ui_revision, "controls_ready": self.panels_ready})
+            "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
+        // The v3-only blocks, null (kept out of the literal: json! hits the default recursion limit with every key in one call).
+        for key in ["link_count", "joints", "motors", "transmissions", "battery", "actuator_profiles", "uncertainty", "uncertainty_parsed", "identification", "materials", "source", "cad_link",
+            "preset", "motion", "recording", "recordings", "replay", "gait_preview"] {
+            out[key] = Value::Null;
+        }
+        out
     }
 }
 

@@ -59,7 +59,7 @@ pub(crate) fn dropped_refusal(env: &Env, id: &str, name: &str, what: &str) -> Re
     match env.sketches.map_or(0, |c| c.dropped(id)) {
         0 => Ok(()),
         n => Err(format!(
-            "{what} refused: {n} curve(s) of {name} could not be read (no kind), so the viewer's curve indices are not RoboCAD's; Refresh (cad_refresh), or edit {name} in RoboCAD"
+            "{what} refused: {n} curve(s) of {name} could not be read (no kind), so the viewer's curve indices are not RoboCAD's; press Refresh, or edit {name} in RoboCAD"
         )),
     }
 }
@@ -93,7 +93,7 @@ fn read<'a>(env: &Env<'a>, id: &str, name: &str) -> Result<&'a Arc<SketchGeometr
         return Ok(g);
     }
     Err(match cache.error(id) {
-        Some(e) => format!("{name} could not be read from RoboCAD ({e}); Refresh (cad_refresh) and try again"),
+        Some(e) => format!("{name} could not be read from RoboCAD ({e}); press Refresh and try again"),
         None => format!("{name} is still being read from RoboCAD; try again"),
     })
 }
@@ -233,7 +233,7 @@ fn named_plane(name: &str, doc: &CadDocument, env: &Env) -> Result<(Value, Plane
             Some(Ok(f)) => Ok((Value::from(name), f)),
             Some(Err(why)) => Err(format!("plane {}: {why}", n.name)),
             None => Err(match env.sketches.and_then(|c| c.error(name)) {
-                Some(e) => format!("plane {} ({name}) could not be read from RoboCAD ({e}); Refresh (cad_refresh) and try again", n.name),
+                Some(e) => format!("plane {} ({name}) could not be read from RoboCAD ({e}); press Refresh and try again", n.name),
                 None => format!("plane {} ({name}) is still being read from RoboCAD; try again", n.name),
             }),
         },

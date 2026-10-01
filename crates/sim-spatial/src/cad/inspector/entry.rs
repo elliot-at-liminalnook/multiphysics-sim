@@ -5,9 +5,9 @@
 //! `CadInspector` stamped with the revision the draft opened at (an
 //! unchanged value sends nothing); an error, or an edit that cannot be
 //! sent now, keeps the draft open with the reason. Escape, a press
-//! elsewhere, another node selected, or another field taking the keyboard
-//! (the name field, the editors, the materials panel, which ends this one
-//! when it starts) ends it. One field holds the keyboard: opening a draft
+//! elsewhere, another node selected, an open materials dialog, or another
+//! field taking the keyboard (the name field, the editors, the materials
+//! panel, which ends this one when it starts) ends it. One field holds the keyboard: opening a draft
 //! ends the name field's, the editors', the numeric bar's and the materials
 //! panel's typing. `CadInputFocus` is set while a draft is open and in the
 //! frame it ends.
@@ -101,7 +101,9 @@ pub(in crate::cad) fn entry(
         let elsewhere = !on_field && buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left));
         // The editors opened a draft since (they run after this system).
         let editors = doc.tool_state.inspector_edit.is_some();
-        if naming || elsewhere || editors || selected.as_deref() != Some(node.as_str()) {
+        // A materials dialog is modal: it has the keyboard while open.
+        let dialog = doc.materials.form.is_some();
+        if naming || elsewhere || editors || dialog || selected.as_deref() != Some(node.as_str()) {
             draft = None;
             ended = true;
         }

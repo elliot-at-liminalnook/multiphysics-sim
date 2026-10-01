@@ -185,23 +185,32 @@ impl CadDocument {
 
     /// What leaving CAD mode (or replacing this document) would lose: an
     /// edit in flight, or unsaved edits in a service this window started
-    /// (it stops when the document closes; the viewer never saves for you).
+    /// (it stops when the document closes; the viewer never saves for you),
+    /// or a model export running or queued (cad-physical-inspect: it is
+    /// dropped with the document, nothing written).
     pub(crate) fn switch_blockers(&self) -> Vec<String> {
         let mut blockers = Vec::new();
         if let Some(label) = self.edit_label() {
             blockers.push(format!("a CAD edit is in flight: {label}"));
+        }
+        let exports = &self.results.exports;
+        if let Some(running) = &exports.running {
+            blockers.push(format!("a model export is running: {} to {}; wait or cancel it", running.request.label, running.request.path.display()));
+        }
+        if let Some(queued) = &exports.queued {
+            blockers.push(format!("a model export is queued: {} to {}; wait for it, or stop the live link", queued.label, queued.path.display()));
         }
         if self.edit.is_none() && self.child_may_hold_edits() {
             let name = self.document_name();
             let pid = self.child.pid().map_or_else(String::new, |p| format!(" (pid {p})"));
             match self.unsaved() {
                 Some(false) => {}
-                Some(true) => blockers.push(format!("{name} has unsaved edits in the RoboCAD service this window started{pid}, which stops when CAD mode closes: save first (cad_save or the Save button)")),
+                Some(true) => blockers.push(format!("{name} has unsaved edits in the RoboCAD service this window started{pid}, which stops when CAD mode closes: save first (the Save button)")),
                 None if !self.connected() => blockers.push(format!(
-                    "{name} may have unsaved edits in the RoboCAD service this window started{pid}, and its saved state can't be confirmed while the window is not connected to it ({}); that service stops when CAD mode closes: Refresh (cad_refresh) to reconnect and save first, or stop that process yourself to discard its edits",
+                    "{name} may have unsaved edits in the RoboCAD service this window started{pid}, and its saved state can't be confirmed while the window is not connected to it ({}); that service stops when CAD mode closes: press Refresh to reconnect and save first, or stop that process yourself to discard its edits",
                     self.connection_line().0
                 )),
-                None => blockers.push(format!("{name} may have unsaved edits in the RoboCAD service this window started{pid} (an edit just finished and RoboCAD's state is being refetched), which stops when CAD mode closes: wait a moment, or save first (cad_save or the Save button)")),
+                None => blockers.push(format!("{name} may have unsaved edits in the RoboCAD service this window started{pid} (an edit just finished and RoboCAD's state is being refetched), which stops when CAD mode closes: wait a moment, or save first (the Save button)")),
             }
         }
         blockers

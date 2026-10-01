@@ -69,10 +69,13 @@ pub(super) fn open_form(doc: &mut CadDocument, entry: &'static OpEntry) -> Value
 /// Open `entry`'s form (as `open_form`), with RoboCAD's presets where its dialog takes them from
 /// the document and the selection (`env`; `robot_form::seed`: a robot
 /// dialog's bodies, joint, motor, battery and control values): a form
-/// opened anew is seeded, the drafts of the same form are kept.
+/// opened anew is seeded, the drafts of the same form are kept, except a
+/// form preset from the selection or the robot description
+/// (`robot_form::reseeds`), which is seeded again each time it opens.
 pub(super) fn open_form_with(doc: &mut CadDocument, entry: &'static OpEntry, env: Option<&Env>) -> Value {
+    let reseed = env.is_some() && super::robot_form::reseeds(entry.id);
     let texts = match &doc.ops.form {
-        Some(f) if f.op == entry.id && f.texts.len() == entry.params.len() => f.texts.clone(),
+        Some(f) if f.op == entry.id && f.texts.len() == entry.params.len() && !reseed => f.texts.clone(),
         _ => {
             let mut texts: Vec<String> = entry.params.iter().map(|p| p.default.to_string()).collect();
             if let Some(env) = env {

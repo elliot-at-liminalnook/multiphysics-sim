@@ -19,6 +19,8 @@
 //!   backlash (°; provenance)" with "Unmeasured" when RoboCAD has no width,
 //!   and its reference; RoboCAD's source line. A value the physical model
 //!   lacks is left empty, never filled in (RoboCAD's panel shows 0 then).
+//!   The model is fetched again for each shown revision while a joint is
+//!   inspected ([`super::refresh`]).
 //! - **Results**: RoboCAD's "Results: key value, …" from the node's loaded
 //!   results block (`GET /results/nodes`), and "Material properties…".
 //!
@@ -108,7 +110,12 @@ pub(crate) fn row(field: JointField, phys: &Map<String, Value>, over: Option<Opt
         }
         JointField::DriveBacklash => {
             let drive = sub(o, "drive_backlash").or_else(|| sub(Some(phys), "drive_backlash"));
-            let width = number(drive, "width_rad").or_else(|| number(o, "backlash"));
+            // A drive block's width_rad, even null (declared unmeasured),
+            // wins; the scalar `backlash` only when the block has no key.
+            let width = match drive.and_then(|d| d.get("width_rad")) {
+                Some(v) => v.as_f64(),
+                None => number(o, "backlash"),
+            };
             let provenance = drive.and_then(|d| d.get("provenance")).and_then(Value::as_str).map_or_else(|| if width.is_some() { "estimated".to_string() } else { "unmeasured".to_string() }, str::to_string);
             let reference = drive.and_then(|d| d.get("reference")).and_then(Value::as_str).unwrap_or("No drive-backlash provenance supplied");
             Row { label: format!("Drive backlash (°; {provenance})"), text: width.map(|w| py_g(w.to_degrees(), 5)).unwrap_or_default(), note: Some(reference.to_string()) }
@@ -210,7 +217,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, sel
         button(r, k, &controls, "cad:inspect:exact", Look::Secondary);
         button(r, k, &controls, "cad:inspect:exact-cancel", Look::Ghost);
     });
-    p.spawn(k.caption("Volume, area and mass from RoboCAD's exact geometry, off this window's thread (up to 60 s); any edit or selection change cancels it."));
+    p.spawn(k.caption("Volume, area and mass from RoboCAD's exact geometry, off this window's thread (up to 60 s). Cancel, an edit or a selection change stops waiting; the request already sent finishes in RoboCAD."));
     let Some(n) = selection.first_node().and_then(|id| node(doc, id)) else { return };
     p.spawn(k.section("Colour"));
     input_row(p, k, doc, &n.id, RowField::Color, "Colour (r, g, b; 0–1)", &colour_text(n), "material colour: type r, g, b");
@@ -281,7 +288,7 @@ fn physics_missing(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
             return;
         }
         _ => {
-            p.spawn(k.caption("RoboCAD infers joint physics in its physical model: fetch it for this revision to see and edit the values."));
+            p.spawn(k.caption("RoboCAD infers joint physics in its physical model, fetched for each revision while a joint is inspected; fetch it again if it did not arrive."));
         }
     }
     let ready = doc.connected();

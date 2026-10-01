@@ -262,14 +262,15 @@ pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Se
         take_snapshot(doc, &mut Shared { selection: &mut *selection, registry: &mut *registry });
     }
     let target = doc.target.clone();
-    // RoboCAD's handler cleared the selection after its Ops call returned
-    // (`ops::started` noted which); a selection changed meanwhile is the
-    // user's newer one and is kept. Cleared through the shared selection.
-    if let Some(cleared) = finish_edit(doc)
-        && (View { selection: &*selection, registry: &*registry }).items() == cleared
-        && let Err(e) = (Shared { selection: &mut *selection, registry: &mut *registry }).clear()
+    // RoboCAD's handler cleared the selection, or selected the robot node
+    // it created, after its Ops call returned (`ops::started` noted which);
+    // a selection changed meanwhile is the user's newer one and is kept.
+    // Set through the shared selection.
+    if let Some((was, now)) = finish_edit(doc)
+        && (View { selection: &*selection, registry: &*registry }).items() == was
+        && let Err(e) = (Shared { selection: &mut *selection, registry: &mut *registry }).set(now)
     {
-        warn!("CAD: the selection was not cleared after the edit: {e}");
+        warn!("CAD: the selection was not changed after the edit: {e}");
     }
     // A Save As retargeted the document: the registry's entry names the saved file (same id).
     if doc.target != target {
@@ -516,14 +517,19 @@ fn take_snapshot(doc: &mut CadDocument, shared: &mut Shared) {
 
 /// The edit in flight has answered: its outcome line, the REST caller's
 /// answer, and a refetch (RoboCAD's dirty flag is unknown until it lands).
-/// Returns the selection RoboCAD cleared after a successful edit that
-/// clears it (`receive` clears the shared selection if it is still that one).
-fn finish_edit(doc: &mut CadDocument) -> Option<Vec<SelectionItem>> {
+/// Returns, after a successful edit that changes the selection, the
+/// selection when it started and the one RoboCAD's handler leaves:
+/// nothing (an op that clears it) or the robot node it created (add motor,
+/// joint, sensor, cable: `OpsState::selects_created`). `receive` sets the
+/// shared selection to it if the selection is still the first.
+fn finish_edit(doc: &mut CadDocument) -> Option<(Vec<SelectionItem>, Vec<SelectionItem>)> {
     let Some(edit) = &doc.edit else { return None };
     let Some(result) = edit.job.poll() else { return None };
     let generation = edit.job.generation();
     let (clear_selection, activates_plane, retarget) = doc.edit.take().map_or((None, false, None), |e| (e.clear_selection, e.activates_plane, e.retarget));
     let seq = doc.edit_seq;
+    // The note goes with its edit, whatever the outcome.
+    let selects = doc.ops.selects_created.take().filter(|(at, _)| *at == seq).map(|(_, was)| was);
     if generation != doc.generation {
         crate::cad::sketch::specs::polygon_edit_done(doc, seq, false);
         return None;
@@ -551,9 +557,17 @@ fn finish_edit(doc: &mut CadDocument) -> Option<Vec<SelectionItem>> {
     }
     // RoboCAD's handler clears the selection after its Ops call returned
     // (`ops::started` noted which); a failed edit keeps the picks. `receive`
-    // clears the shared selection (`Op::Clear`) unless it changed meanwhile,
-    // and pushes it once (`publish_changes`).
-    let cleared = clear_selection.filter(|c| answer.is_ok() && !c.is_empty());
+    // clears the shared selection (a set to nothing) unless it changed
+    // meanwhile, and pushes it once (`publish_changes`).
+    let cleared = clear_selection.filter(|c| answer.is_ok() && !c.is_empty()).map(|c| (c, Vec::new()));
+    // The created node's id is the first call's answer (`{"result": id}`;
+    // a joint with damping answers both calls, the add first).
+    let created = answer.as_ref().ok().and_then(|(_, r)| match r {
+        Value::Array(calls) => calls.first(),
+        one => Some(one),
+    });
+    let created = created.and_then(|r| r.get("result")).and_then(Value::as_str).map(|id| vec![SelectionItem(id.to_string(), "body".into(), 0)]);
+    let changed = selects.zip(created).or(cleared);
     if std::mem::take(&mut doc.edit_waited) {
         let seq = doc.edit_seq;
         // Only recent answers are kept: one whose REST caller went away is not collected.
@@ -562,7 +576,7 @@ fn finish_edit(doc: &mut CadDocument) -> Option<Vec<SelectionItem>> {
     }
     refresh(doc, true);
     doc.touch();
-    cleared
+    changed
 }
 
 /// Ask the poll worker for `/doc` now; the next `GET /` it sends follows

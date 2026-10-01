@@ -93,6 +93,75 @@ fn the_live_link_requests_the_robot_reload_through_the_switch_and_registry() {
     assert!(doc.results.switch_to.is_none() && registry.entry(ViewerMode::Robot).is_none());
 }
 
+/// The live link's first switch goes through the switch's own refusal:
+/// while another export runs (one started from the queue) or is queued,
+/// `CadDocument::switch_blockers` names it, so the switch is not sent, the
+/// request is kept and the status line says why; "Show in Robot mode" is
+/// refused too. Once nothing blocks, the next written link model switches.
+#[test]
+fn the_live_links_first_switch_is_kept_when_the_switch_would_be_refused() {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    let model = model_path(Path::new(RCAD));
+    doc.results.link = Some(PathBuf::from(RCAD));
+    doc.results.link_switch = true;
+    doc.results.link_seeded = true;
+    let other = request(false, "physical model");
+    doc.results.exports.running = Some(landed(other.clone(), doc.generation));
+    let blockers = doc.switch_blockers();
+    assert!(blockers.iter().any(|b| b.starts_with("a model export is running: physical model to ") && b.ends_with("; wait or cancel it")), "{blockers:?}");
+    assert!(blockers.iter().all(|b| !b.contains("cad_")), "no REST wording: {blockers:?}");
+    assert!(link::switch_refusal(&doc).is_some());
+    let show = link::show(&mut doc).unwrap_err();
+    assert!(show.contains("a model export is running") && show.contains("wait for it or cancel it"), "{show}");
+    // The link's model lands meanwhile: no switch, the request kept, the refusal shown.
+    let mut registry = DocumentRegistry::default();
+    let landing = export::Landed { path: model.clone(), link: true };
+    link::after_write(&mut doc, &mut registry, None, &landing);
+    assert!(doc.results.switch_to.is_none() && doc.results.link_switch, "the request is kept");
+    let Some(Err(status)) = &doc.status else { panic!("the refusal is on the status line: {:?}", doc.status) };
+    assert!(status.contains("Robot mode was not opened") && status.contains("a model export is running"), "{status}");
+    assert_eq!(registry.entry(ViewerMode::Robot).map(|e| e.source.clone()), Some(Source::path(&model)), "the Robot entry follows meanwhile");
+    // A queued export blocks as well.
+    doc.results.exports.queued = Some(request(true, "live simulation model"));
+    assert!(doc.switch_blockers().iter().any(|b| b.starts_with("a model export is queued: live simulation model to ")));
+    // Nothing blocks any more: the next written link model switches.
+    doc.results.exports.running = None;
+    doc.results.exports.queued = None;
+    assert!(doc.switch_blockers().is_empty() && link::switch_refusal(&doc).is_none());
+    link::after_write(&mut doc, &mut registry, None, &landing);
+    assert_eq!(doc.results.switch_to.as_deref(), Some(model.as_path()));
+    assert!(!doc.results.link_switch);
+}
+
+/// A save settles on what was recorded when it started: the link's
+/// `.rcad` then (a Save As moves it with the document), and only as the
+/// same edit of the same connection.
+#[test]
+fn a_save_settles_on_the_link_recorded_when_it_started() {
+    let moved = "/work/arm/renamed.rcad";
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    doc.results.link = Some(PathBuf::from(RCAD));
+    doc.edit_seq = 1;
+    super::note_save(&mut doc, Some(moved));
+    assert!(matches!(&doc.results.waiting, Some(super::Noted { seq: 1, what: super::Waiting::Save { linked: Some(l), .. }, .. }) if l == Path::new(RCAD)));
+    // RoboCAD's path moved before the save settled: the link still follows.
+    doc.target = CadTarget::File(PathBuf::from(moved));
+    doc.status = Some(Ok("Saved".into()));
+    super::settle(&mut doc);
+    assert!(doc.results.waiting.is_none());
+    assert_eq!(doc.results.link.as_deref(), Some(Path::new(moved)));
+    // An answer from an older connection (generation changed): not a success.
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    doc.results.link = Some(PathBuf::from(RCAD));
+    doc.edit_seq = 1;
+    super::note_save(&mut doc, Some(moved));
+    doc.generation += 1;
+    doc.status = Some(Ok("an older line".into()));
+    super::settle(&mut doc);
+    assert!(doc.results.waiting.is_none());
+    assert_eq!(doc.results.link.as_deref(), Some(Path::new(RCAD)), "nothing re-exported or moved");
+}
+
 /// One export at a time: a second is refused with RoboCAD's text; the
 /// live link's queues behind it, the latest wins.
 #[test]
@@ -119,12 +188,17 @@ fn an_export_writes_atomically() {
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("robot.simrobot.json");
     let model = json!({"version": 4, "links": [{"name": "a", "flex": {"modes": 2}}, {"name": "b", "flex": null}, {"name": "c"}]});
-    assert_eq!(export::write_model(&path, &model), Ok(Written { links: 3, flexible: 1 }));
+    assert_eq!(export::write_model(&path, &model, &|| false), Ok(Written { links: 3, flexible: 1 }));
     let back: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
     assert_eq!(back, model);
     let left: Vec<_> = std::fs::read_dir(&dir).unwrap().filter_map(Result::ok).map(|e| e.file_name()).collect();
     assert_eq!(left.len(), 1, "no temporary file left: {left:?}");
-    assert!(export::write_model(&path, &json!({"error": "x"})).is_err());
+    assert!(export::write_model(&path, &json!({"error": "x"}), &|| false).is_err());
+    // Cancelled just before the rename: the model stays as it was and no temporary file is left.
+    assert_eq!(export::write_model(&path, &json!({"links": []}), &|| true), Err("cancelled".to_string()));
+    let back: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    assert_eq!(back, model);
+    assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 1, "the cancelled write's temporary file is deleted");
     let _ = std::fs::remove_dir_all(&dir);
 }
 

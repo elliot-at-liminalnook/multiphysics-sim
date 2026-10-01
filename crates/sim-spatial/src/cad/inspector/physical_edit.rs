@@ -311,7 +311,7 @@ pub(in crate::cad) fn physical_specs() -> Vec<Spec> {
         "cad_inspector",
         CAD,
         json!({"op": "joint_physics", "id": "j1", "field": "clearance", "value": "0.2"}),
-        "CAD mode: the inspector's physical rows, as RoboCAD's properties panel (cad_state.inspector_physical). op: exact (RoboCAD's \"Calculate exact measurements\": GET /nodes/{id} per selected node on a job, combined as RoboCAD combines them: size, volume, area, mass, centroid; 60 s limit; cancelled by any edit or selection change), exact_cancel, color (id?, color [r, g, b] 0–1: PATCH /nodes/{id} {\"color\"}), material_color (id?: colour null, the material's), joint_physics (id? a joint, field clearance | wobble | drive_backlash | coulomb | viscous | radial_stiffness | flex_patch_radius, value the row's text in its unit: mm, °, mN·m, mN·m·s, N/m; empty drive_backlash declares it unmeasured, empty flex_patch_radius restores RoboCAD's inference: one POST /ops/set_joint_physics in SI). id defaults to the first selected node; revision (optional) is RoboCAD's revision the value was read at. Each edit is one RoboCAD undo step; refused by name while one is in flight. system_ui lists cad:inspect:<id>.",
+        "CAD mode: the inspector's physical rows, as RoboCAD's properties panel (cad_state.inspector_physical). op: exact (RoboCAD's \"Calculate exact measurements\": GET /nodes/{id} per selected node on a job, combined as RoboCAD combines them: size, volume, area, mass, centroid; 60 s limit; any edit or selection change cancels it), exact_cancel (cancel, the limit, an edit or a selection change stop waiting; the request already sent finishes in RoboCAD and its answer is ignored), color (id?, color [r, g, b] 0–1: PATCH /nodes/{id} {\"color\"}), material_color (id?: colour null, the material's), joint_physics (id? a joint, field clearance | wobble | drive_backlash | coulomb | viscous | radial_stiffness | flex_patch_radius, value the row's text in its unit: mm, °, mN·m, mN·m·s, N/m; empty drive_backlash declares it unmeasured, empty flex_patch_radius restores RoboCAD's inference: one POST /ops/set_joint_physics in SI). id defaults to the first selected node; revision (optional) is RoboCAD's revision the value was read at. Each edit is one RoboCAD undo step; refused by name while one is in flight. system_ui lists cad:inspect:<id>.",
     )]
 }
 
@@ -334,10 +334,14 @@ pub(in crate::cad) fn build_physical(app: &mut App) {
 }
 
 /// CadCorePlugin's windowless part: the exact measurement's poll and its
-/// cancel rule (`exact::sync`).
+/// cancel rule (`exact::sync`), and the physical model's refetch for an
+/// inspected joint or an open material properties dialog (`refresh::sync`).
 pub(crate) struct CoreParts;
 impl Plugin for CoreParts {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, exact::sync.after(crate::cad::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
+        app.add_systems(
+            Update,
+            (exact::sync, super::refresh::sync).after(crate::cad::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)),
+        );
     }
 }

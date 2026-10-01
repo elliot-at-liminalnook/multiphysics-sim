@@ -7,9 +7,18 @@
 //!   `SimLink.export` does (no flexible links, the x–z planar hint, label
 //!   "live simulation model", queued behind a running export: the latest
 //!   wins). When that first model is written this window switches to Robot
-//!   mode on it, as RoboCAD launches its viewer.
+//!   mode on it, as RoboCAD launches its viewer. That switch is checked
+//!   against the switch's own refusal (`CadDocument::switch_blockers` and
+//!   the sketch blocker, what the mode switch checks when leaving CAD mode)
+//!   first: when it would be refused (another export started from the
+//!   queue, an edit in flight, unsaved edits in a self-started service…)
+//!   the request is kept (`link_switch`), the status line names the
+//!   refusal, and the switch is made after the next export of the link's
+//!   model (the next save's).
 //! - **Each successful save** (`files::save`, noticed by `note_save` and
-//!   settled once RoboCAD answered) exports it again. When written, the
+//!   settled once RoboCAD answered) exports it again, when the link was on
+//!   for this document as the save started (recorded then: a Save As may
+//!   have moved RoboCAD's path by the time it settles). When written, the
 //!   document registry's Robot entry follows (the same file again: its
 //!   revision is bumped; another document there is replaced by this one,
 //!   remembered), so Robot mode opens the new model the next time it is
@@ -17,7 +26,9 @@
 //!   on every save. Robot mode is never the active mode while a save happens
 //!   here (one mode at a time), so there is no in-place reload to request.
 //! - **Show in Robot mode** switches on request (the link's model, else
-//!   the last export written).
+//!   the last export written). While an export runs it is refused ("wait
+//!   for it or cancel it"): the switch would drop the export with the
+//!   document, and the model on disk is still the previous one.
 //! - The link outlives the document ([`LiveLink`], kept across mode
 //!   switches): it watches a `.rcad` path, so returning to CAD mode on the
 //!   same file keeps it on. simbridge's own watch-and-run stays for
@@ -76,15 +87,17 @@ pub(crate) fn toggle(doc: &mut CadDocument, open: Option<bool>) -> Result<Value,
 }
 
 /// A save of this document succeeded: the link's model is exported again
-/// (a Save As moves the link with the document, as RoboCAD's follows `doc.path`).
-pub(crate) fn saved(doc: &mut CadDocument, path: Option<String>) {
-    if !link_active(doc) {
+/// when the link watched this document as the save started (`linked`,
+/// recorded by `note_save`); a Save As (`path`) moves the link with the
+/// document, as RoboCAD's follows `doc.path`. A link stopped or pointed
+/// elsewhere while the save ran stays as it is now.
+pub(crate) fn saved(doc: &mut CadDocument, path: Option<String>, linked: Option<PathBuf>) {
+    let Some(was) = linked else { return };
+    if doc.results.link.as_ref() != Some(&was) {
         return;
     }
-    if let Some(p) = path {
-        doc.results.link = Some(PathBuf::from(p));
-    }
-    let Some(rcad) = doc.results.link.clone() else { return };
+    let rcad = path.map_or(was, PathBuf::from);
+    doc.results.link = Some(rcad.clone());
     if let Err(e) = export::request(doc, link_request(&rcad)) {
         doc.show(Err(format!("Live link: the model was not exported after the save: {e}")));
     }
@@ -100,24 +113,55 @@ pub(crate) fn shown_model(doc: &CadDocument) -> Result<PathBuf, String> {
     doc.results.exports.written.clone().filter(|p| p.to_string_lossy().ends_with(".simrobot.json")).ok_or_else(|| "no model exported yet: export the simulation model or start the live link first".to_string())
 }
 
+/// What "Show in Robot mode" would open now, or why not: refused while an
+/// export runs (leaving CAD mode would drop it, and the file on disk is
+/// still the previous model).
+pub(crate) fn show_target(doc: &CadDocument) -> Result<PathBuf, String> {
+    if let Some(running) = &doc.results.exports.running {
+        return Err(format!("a model export is running: {} to {}; wait for it or cancel it, then show it in Robot mode", running.request.label, running.request.path.display()));
+    }
+    shown_model(doc)
+}
+
+/// Why leaving CAD mode now would be refused: the mode switch's own CAD
+/// checks (`switch::prepare::leaving_blockers` for a CAD → Robot switch).
+pub(crate) fn switch_refusal(doc: &CadDocument) -> Option<String> {
+    let mut blockers = doc.switch_blockers();
+    blockers.extend(crate::cad::sketch_blocker(doc));
+    (!blockers.is_empty()).then(|| blockers.join("; "))
+}
+
 /// `op: show_robot`.
 pub(crate) fn show(doc: &mut CadDocument) -> Result<Value, String> {
-    let model = shown_model(doc)?;
+    let model = show_target(doc)?;
     doc.results.switch_to = Some(model.clone());
     Ok(json!({"switching": "robot", "model": model, "message": format!("Switching to Robot mode on {}", model.display())}))
 }
 
 /// A link model was written: the switch to make (the first after toggling
-/// on), or the registry's Robot entry follows it ([`follow`]).
+/// on), or the registry's Robot entry follows it ([`follow`]). A switch
+/// the mode switch would refuse ([`switch_refusal`]) is not sent: the
+/// request is kept for the next written link model, the entry follows this
+/// one, and the status line says why.
 pub(crate) fn after_write(doc: &mut CadDocument, registry: &mut DocumentRegistry, selection: Option<&mut Selection>, landed: &Landed) {
     if !landed.link || !link_active(doc) || doc.results.link.as_deref().map(model_path).as_deref() != Some(landed.path.as_path()) {
         return;
     }
-    if std::mem::take(&mut doc.results.link_switch) {
-        doc.results.switch_to = Some(landed.path.clone());
-    } else {
-        follow(registry, selection, &landed.path);
+    if doc.results.link_switch {
+        match switch_refusal(doc) {
+            None => {
+                doc.results.link_switch = false;
+                doc.results.switch_to = Some(landed.path.clone());
+                return;
+            }
+            Some(why) => {
+                // The link's own queued export may have just started (`export::poll` starts it before this).
+                let when = if doc.results.exports.running.is_some() { "when the export now running is written" } else { "when the link's model is next exported (the next save)" };
+                doc.show(Err(format!("Live link: {} written, but Robot mode was not opened: {why}. It opens {when}, or use Show in Robot mode", landed.path.display())))
+            }
+        }
     }
+    follow(registry, selection, &landed.path);
 }
 
 /// The Robot entry shows `model` next: the same file again is a reload

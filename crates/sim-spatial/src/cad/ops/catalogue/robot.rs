@@ -15,7 +15,8 @@ use crate::ui_kit::form::Unit;
 
 /// The joint dialog's fields (`JointDialog`, ui/widgets.py:1132-1231), in
 /// its order. Limits are typed in degrees (millimetres for a prismatic
-/// joint) and sent in radians (metres as typed); pivot and axis as typed.
+/// joint) and sent in radians (a prismatic joint's in millimetres, as
+/// typed); pivot and axis as typed.
 const JOINT: &[Param] = &[
     p("type", "Type", pick("joint_types"), "revolute"),
     p("parent", "Parent", pick("bodies_or_world"), ""),

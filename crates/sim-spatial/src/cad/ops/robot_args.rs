@@ -26,6 +26,7 @@ use crate::cad::sync::value;
 use crate::cad::transform::{OpCall, num, round6};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
+use sim_runtime::cad_client::RobotSummary;
 
 /// Which robot handler a catalogue entry is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -266,8 +267,11 @@ pub(super) fn build(entry: &OpEntry, which: RobotCall, r: &Resolved, values: &Ma
 /// The revolute, continuous and prismatic joints by name (`robot_power`,
 /// ui/app.py:1670), from RoboCAD's robot description; None before it is read.
 pub(super) fn motion_joints(doc: &CadDocument) -> Option<Vec<String>> {
-    let s = doc.robot.data.summary()?;
-    Some(s.joints.iter().filter(|j| matches!(j.kind.as_str(), "revolute" | "continuous" | "prismatic")).map(|j| j.name.clone()).collect())
+    doc.robot.data.summary().map(motion_of)
+}
+
+fn motion_of(s: &RobotSummary) -> Vec<String> {
+    s.joints.iter().filter(|j| matches!(j.kind.as_str(), "revolute" | "continuous" | "prismatic")).map(|j| j.name.clone()).collect()
 }
 
 /// `PowerDialog.apply` (ui/widgets.py:1515-1523): the battery (or none),
@@ -296,17 +300,22 @@ fn power(entry: &OpEntry, values: &Map<String, Value>, doc: &CadDocument) -> Res
         let deg = v.as_f64().filter(|x| x.is_finite()).ok_or_else(|| format!("targets: {name} must be a number of degrees (got {v})"))?;
         targets.insert(name.clone(), json!(deg.to_radians()));
     }
-    if let Some(joints) = motion_joints(doc) {
-        if let Some(bad) = given.keys().find(|k| !joints.contains(k)) {
-            return Err(format!("targets: {bad} is not a revolute, continuous or prismatic joint (the joints: {})", if joints.is_empty() { "none".to_string() } else { joints.join(", ") }));
-        }
-        let current = doc.robot.data.control().map(|c| c.targets.clone()).unwrap_or_default();
-        for j in joints {
-            if !targets.contains_key(&j) {
-                // The dialog's prefilled line: f"{math.degrees(target):g}", read back.
-                let deg: f64 = super::robot_form::g(current.get(&j).copied().unwrap_or(0.0).to_degrees()).parse().unwrap_or(0.0);
-                targets.insert(j, json!(deg.to_radians()));
-            }
+    // `set_control` replaces every target: the ones left out are sent as
+    // the dialog's prefilled lines, so the joints and their current targets
+    // must be RoboCAD's at the shown revision. Before that read has landed
+    // (or when it failed) nothing is sent, rather than resetting them to 0.
+    let summary = super::robot_form::description(doc)?;
+    let control = super::robot_form::read(doc, "control loop setting", doc.robot.data.bundle.as_ref().map(|b| &b.control))?;
+    let joints = motion_of(summary);
+    if let Some(bad) = given.keys().find(|k| !joints.contains(k)) {
+        return Err(format!("targets: {bad} is not a revolute, continuous or prismatic joint (the joints: {})", if joints.is_empty() { "none".to_string() } else { joints.join(", ") }));
+    }
+    for j in joints {
+        if !targets.contains_key(&j) {
+            // The dialog's prefilled line: f"{math.degrees(target):g}", read back.
+            let target = control.as_ref().and_then(|c| c.targets.get(&j).copied()).unwrap_or(0.0);
+            let deg: f64 = super::robot_form::g(target.to_degrees()).parse().unwrap_or(0.0);
+            targets.insert(j, json!(deg.to_radians()));
         }
     }
     let (period, latency) = (number(entry, values, "period_s")?, number(entry, values, "latency_s")?);

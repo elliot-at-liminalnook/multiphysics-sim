@@ -19,6 +19,7 @@ use crate::cad::document::CadDocument;
 use crate::cad::transform::num;
 use crate::ui_kit::form::FieldKind;
 use serde_json::{Map, Value, json};
+use sim_runtime::cad_client::{RobotSummary, SelectionItem};
 
 /// RoboCAD's `JOINT_TYPES` with `JOINT_TYPE_HINTS` (robotics.py:22, ui/widgets.py:1065-1071).
 const JOINT_TYPES: [(&str, &str); 7] = [
@@ -111,19 +112,74 @@ fn hinted(list: &[(&str, &str)]) -> Vec<(String, String)> {
     list.iter().map(|(k, hint)| (k.to_string(), format!("{k}: {hint}").trim_end().to_string())).collect()
 }
 
+/// "The robot description is still being read" at the shown revision.
+fn reading(doc: &CadDocument) -> String {
+    format!("the robot description is still being read (revision {}); try again in a moment", doc.shown_revision())
+}
+
+/// RoboCAD's robot description as read at the shown revision, or why it
+/// cannot be relied on now (still being read, not connected, or the read
+/// failed): a dialog prefilled from an older or failed read would send
+/// that revision's values, or RoboCAD's defaults, over the current ones.
+pub(super) fn description(doc: &CadDocument) -> Result<&RobotSummary, String> {
+    let data = &doc.robot.data;
+    if !data.current(doc) {
+        return Err(if doc.connected() { reading(doc) } else { "the robot description cannot be read: not connected to RoboCAD".to_string() });
+    }
+    match data.bundle.as_ref().map(|b| &b.summary) {
+        Some(Ok(s)) => Ok(s),
+        Some(Err(e)) => Err(format!("RoboCAD's robot description could not be read: {e}")),
+        None => Err(reading(doc)),
+    }
+}
+
+/// One of the description's reads beside the summary (`field`: the
+/// bundle's, e.g. its battery), at the shown revision, or why not: a
+/// failed read is not "none set", so nothing is filled in from it.
+pub(super) fn read<'a, T>(doc: &'a CadDocument, what: &str, field: Option<&'a Result<T, String>>) -> Result<&'a T, String> {
+    description(doc)?;
+    match field {
+        Some(Ok(v)) => Ok(v),
+        Some(Err(e)) => Err(format!("RoboCAD's {what} could not be read, so the current one is not known: {e}")),
+        None => Err(reading(doc)),
+    }
+}
+
 /// RoboCAD's refusal before a dialog opens: "add a motor and a joint
-/// first" (ui/app.py:1607-1609), or why the lists are not known yet.
-pub(super) fn precheck(entry: &OpEntry, doc: &CadDocument) -> Option<String> {
-    if entry.id != "robot.assign_motor" {
-        return None;
+/// first" (ui/app.py:1607-1609), or why the values the dialog is filled
+/// from are not known (`selection`: the shared selection's CAD items).
+/// The power dialog shows the document's battery, control loop and
+/// uncertainty, and OK sends all three: a read that failed or predates the
+/// shown revision would delete the battery or reset the targets. The Edit
+/// joint dialog shows the selected joint as the description has it.
+pub(super) fn precheck(entry: &OpEntry, doc: &CadDocument, selection: &[SelectionItem]) -> Option<String> {
+    let bundle = || doc.robot.data.bundle.as_ref();
+    let ready = match entry.id {
+        "robot.assign_motor" => description(doc).map(|_| ()),
+        "robot.power" => description(doc).and_then(|_| {
+            read(doc, "battery setting", bundle().map(|b| &b.battery))?;
+            read(doc, "control loop setting", bundle().map(|b| &b.control))?;
+            read(doc, "uncertainty setting", bundle().map(|b| &b.uncertainty)).map(|_| ())
+        }),
+        "ops.set_joint" => description(doc).and_then(|s| match selection.iter().map(|i| i.0.as_str()).find(|id| kind_of(doc, id) == Some("joint")) {
+            Some(id) if !s.joints.iter().any(|j| j.id == id) => Err(format!("{} is not in RoboCAD's robot description at revision {}, so its values are not known", doc.node_name(id), doc.shown_revision())),
+            // No joint selected: `resolve` refused it already.
+            _ => Ok(()),
+        }),
+        _ => return None,
+    };
+    if let Err(why) = ready {
+        return Some(why);
     }
-    if doc.robot.data.summary().is_none() {
-        return Some(match doc.robot.data.summary_error() {
-            Some(e) => format!("RoboCAD's robot description could not be read: {e}"),
-            None => "RoboCAD's robot description is still being read; try again in a moment".to_string(),
-        });
-    }
-    (picks("motors_placed", doc).is_empty() || picks("joints", doc).is_empty()).then(|| "add a motor and a joint first".to_string())
+    (entry.id == "robot.assign_motor" && (picks("motors_placed", doc).is_empty() || picks("joints", doc).is_empty())).then(|| "add a motor and a joint first".to_string())
+}
+
+/// The forms preset from the selection or the description (`seed`): each
+/// opening starts from RoboCAD's presets again, as RoboCAD builds its
+/// dialog anew, so Edit joint opened for another joint never shows the
+/// previous one's values.
+pub(super) fn reseeds(id: &str) -> bool {
+    matches!(id, "ops.set_joint" | "robot.joint_dialog" | "robot.assign_motor" | "robot.add_sensor" | "robot.add_cable" | "robot.power")
 }
 
 /// Parameter `name`'s draft index.
@@ -297,12 +353,16 @@ pub(in crate::cad) fn note(entry: &OpEntry, texts: &[String], doc: &CadDocument)
 
 /// Open catalogue form `id` anew, seeded ([`seed`]), with `preset` drafts
 /// over it where each is one of its field's choices (a combo box's
-/// `findData`): the joint tool's parent, child, pivot and axis. As
-/// `cad_state.ops.form` shows it.
+/// `findData`): the joint tool's parent, child, pivot and axis. A pick
+/// that is not one of its field's choices (a motor clicked as a body: a
+/// motor is not a link) leaves the field as seeded, and the status line
+/// and the answer's `dropped` name it (RoboCAD's dialog drops it silently).
+/// As `cad_state.ops.form` shows it.
 pub(in crate::cad) fn open_preset(doc: &mut CadDocument, env: &Env, id: &str, preset: &[(&str, String)]) -> Result<Value, String> {
     let entry = super::entry(id).ok_or_else(|| format!("{id} is not in the catalogue"))?;
     doc.ops.form = None;
     super::form::open_form_with(doc, entry, Some(env));
+    let mut dropped: Vec<String> = Vec::new();
     let allowed: Vec<(usize, String)> = preset
         .iter()
         .filter_map(|(name, text)| {
@@ -311,6 +371,12 @@ pub(in crate::cad) fn open_preset(doc: &mut CadDocument, env: &Env, id: &str, pr
                 FieldKind::Pick { source } => picks(source, doc).iter().any(|(k, _)| k == text),
                 _ => true,
             };
+            if !ok {
+                // Why, from what the pick is: a motor (once the robot description names it), or not a body here.
+                let motor = doc.robot.data.summary().is_some_and(|s| s.motors.iter().any(|m| m.id == *text));
+                let why = if motor { "a motor is not a link" } else { "not a body or sheet in the shown tree" };
+                dropped.push(format!("{} is not one of the dialog's choices ({why}), so the {} was not preset: choose it in the dialog", doc.node_name(text), entry.params[i].label.to_lowercase()));
+            }
             ok.then(|| (i, text.clone()))
         })
         .collect();
@@ -321,6 +387,9 @@ pub(in crate::cad) fn open_preset(doc: &mut CadDocument, env: &Env, id: &str, pr
             }
         }
     }
+    if !dropped.is_empty() {
+        doc.show(Err(format!("{}: {}", entry.label, dropped.join("; "))));
+    }
     doc.touch();
-    Ok(json!({"opened": entry.id, "form": super::form::form_json(doc)}))
+    Ok(json!({"opened": entry.id, "form": super::form::form_json(doc), "dropped": dropped}))
 }

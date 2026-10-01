@@ -14,7 +14,7 @@ struct Args {
     /// cad/.venv/bin/python and stopped when the document closes). Detected by
     /// name or directory structure only; anything else is an error. Presets
     /// stay on --robot-preset.
-    #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link", "cad_url"])]
+    #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link", "cad_url", "phenomena"])]
     file: Option<PathBuf>,
     /// Shared discussion and saved-view sidecar.
     #[arg(long)]
@@ -119,6 +119,16 @@ struct Args {
     /// unsaved edits stay in that service.
     #[arg(long, value_name = "URL", conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot", "robot_preset"])]
     cad_url: Option<String>,
+    /// Phenomena mode: the live gallery of the built-in exhibits
+    /// (`sim_phenomena::exhibits`; sim-app's former default scene). Each
+    /// exhibit runs on its own run thread on simulation time.
+    #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot", "robot_preset", "cad_url"])]
+    phenomena: bool,
+    /// The exhibit phenomena mode opens: a 1-based number or a title
+    /// fragment (the first title containing it, case-insensitive). Default:
+    /// $PHENOMENA_EXHIBIT, else the first.
+    #[arg(long, value_name = "N|TITLE", requires = "phenomena")]
+    exhibit: Option<String>,
     /// Lesson to open first (slug); default: the first in reading order.
     /// Requires lessons mode (--lessons DIR or a lessons FILE).
     #[arg(long)]
@@ -227,6 +237,31 @@ fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<
     let models = model_library(args);
     let cad = sim_spatial::cad::CadDocument::new(target);
     open_window(args, |api| sim_spatial::Launch { cad: Some(cad), ..launch(sim_spatial::ViewerMode::Cad, api, documents, models) })
+}
+
+/// Phenomena mode: the built-in exhibits; nothing to load before the window
+/// opens (the run thread builds them). `--validate-only` builds them here,
+/// lists them and resolves `--exhibit`.
+fn phenomena_mode(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
+    // sim-app's environment variable still names the first exhibit.
+    let exhibit = args.exhibit.clone().or_else(|| std::env::var("PHENOMENA_EXHIBIT").ok().filter(|v| !v.trim().is_empty()));
+    if args.validate_only {
+        let exhibits = sim_phenomena::exhibits::all();
+        let titles: Vec<&str> = exhibits.iter().map(|e| e.title()).collect();
+        let current = match &exhibit {
+            Some(e) => sim_spatial::phenomena::ExhibitRef::parse(e).resolve(&titles)?,
+            None => 0,
+        };
+        for (i, title) in titles.iter().enumerate() {
+            println!("{}{:2} {title}", if i == current { "▸" } else { " " }, i + 1);
+        }
+        println!("Validated {} exhibits; phenomena mode would open {} ({}).", titles.len(), current + 1, titles[current]);
+        return Ok(());
+    }
+    let mut documents = documents(args);
+    documents.exhibit = exhibit;
+    let models = model_library(args);
+    open_window(args, |api| launch(sim_spatial::ViewerMode::Phenomena, api, documents, models))
 }
 
 fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
@@ -364,6 +399,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if let Some(url) = args.cad_url.clone() {
         return cad_mode(&args, sim_spatial::cad::CadTarget::Service(url));
+    }
+    if args.phenomena {
+        return phenomena_mode(&args);
     }
     if let Some(dir) = args.place.clone() {
         if args.validate_only {

@@ -14,6 +14,7 @@ pub mod launch;
 pub mod lesson;
 mod linked;
 pub mod models;
+pub mod phenomena;
 pub mod place_view;
 pub mod robot;
 pub mod robot_gait;

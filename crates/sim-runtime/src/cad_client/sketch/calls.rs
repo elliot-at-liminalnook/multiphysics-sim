@@ -188,6 +188,20 @@ impl<'a> Bound<'a> {
     }
 }
 
+/// A number argument of a [`SketchCall`], for the finiteness check.
+enum Num<'a> {
+    Number(f64),
+    Point(Uv),
+    Points(&'a [Uv]),
+}
+
+/// Twice the signed area of the triangle a, b, c: kernel/sketch.py's
+/// `circumcircle` denominator `d`, which it refuses ("the three points are
+/// collinear") when `abs(d) < 1e-12`.
+fn circumcircle_denominator(a: Uv, b: Uv, c: Uv) -> f64 {
+    2.0 * (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1]))
+}
+
 /// A curve index: a non-negative JSON integer (not `1.0`).
 fn index_of(v: &Value) -> Option<usize> {
     v.as_u64().and_then(|x| usize::try_from(x).ok())
@@ -411,19 +425,78 @@ impl SketchCall {
             _ => Vec::new(),
         }
     }
+    /// Each number and point argument by its parameter name.
+    fn number_args(&self) -> Vec<(&'static str, Num<'_>)> {
+        use Num::{Number as N, Point as P, Points as Ps};
+        use SketchCall::*;
+        match self {
+            Line { a, b } | CircleTwoPoint { a, b } => vec![("a", P(*a)), ("b", P(*b))],
+            Polyline { points, .. } | Spline { points, .. } | ControlCurve { points, .. } => vec![("points", Ps(&points[..]))],
+            Circle { center, radius } => vec![("center", P(*center)), ("radius", N(*radius))],
+            CircleThreePoint { a, b, c } | ArcThreePoint { a, b, c } | RectangleThreePoint { a, b, c } => vec![("a", P(*a)), ("b", P(*b)), ("c", P(*c))],
+            CircleTangent { radius, near, .. } => {
+                let mut v = vec![("near", P(*near))];
+                if let Some(r) = radius {
+                    v.insert(0, ("radius", N(*r)));
+                }
+                v
+            }
+            Ellipse { center, radius_x, radius_y, rotation } => vec![("center", P(*center)), ("radius_x", N(*radius_x)), ("radius_y", N(*radius_y)), ("rotation", N(*rotation))],
+            Arc { center, radius, start_deg, end_deg } => vec![("center", P(*center)), ("radius", N(*radius)), ("start_deg", N(*start_deg)), ("end_deg", N(*end_deg))],
+            ArcTangent { end, .. } => vec![("end", P(*end))],
+            Rectangle { corner, size } => vec![("corner", P(*corner)), ("size", P(*size))],
+            RectangleCenter { center, size } => vec![("center", P(*center)), ("size", P(*size))],
+            Polygon { center, radius, rotation, .. } => vec![("center", P(*center)), ("radius", N(*radius)), ("rotation", N(*rotation))],
+            Slot { a, b, width } => vec![("a", P(*a)), ("b", P(*b)), ("width", N(*width))],
+            Spiral { center, start_radius, end_radius, turns } => vec![("center", P(*center)), ("start_radius", N(*start_radius)), ("end_radius", N(*end_radius)), ("turns", N(*turns))],
+            Text { origin, height, .. } => vec![("origin", P(*origin)), ("height", N(*height))],
+            SplitAt { point, .. } | InsertVertex { point, .. } => vec![("point", P(*point))],
+            Trim { click, .. } => vec![("click", P(*click))],
+            FilletCorner { radius, .. } => vec![("radius", N(*radius))],
+            Offset { distance, .. } => vec![("distance", N(*distance))],
+            Remove { .. } | Reverse { .. } | Extend { .. } | Join { .. } | Unjoin { .. } | RemoveVertex { .. } | Rebuild { .. } => Vec::new(),
+        }
+    }
+    /// A non-finite number or point coordinate, refused as
+    /// [`SketchCall::from_json`] words it.
+    fn check_finite(&self) -> Result<(), String> {
+        let name = self.name();
+        let point = |p: &Uv| p.iter().all(|x| x.is_finite());
+        for (arg, value) in self.number_args() {
+            match value {
+                Num::Number(x) if !x.is_finite() => return Err(format!("{name}: argument {arg} must be a finite number (got {x})")),
+                Num::Point(p) if !point(&p) => return Err(format!("{name}: argument {arg} must be a point [u, v] of two finite numbers (got [{}, {}])", p[0], p[1])),
+                Num::Points(list) => {
+                    if let Some((k, p)) = list.iter().enumerate().find(|(_, p)| !point(p)) {
+                        return Err(format!("{name}: argument {arg}[{k}] must be a point [u, v] of two finite numbers (got [{}, {}])", p[0], p[1]));
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
     /// Refuse what RoboCAD's REST would fail on before any geometry,
     /// naming the call and the argument: a curve index at or past `curves`
     /// (the curve count when the call runs, if known); `join` and
     /// `circle_tangent` without curves, `circle_tangent` without a radius
     /// and fewer than three curves (`KernelError`); a degree or span count
-    /// of 0. Stricter than RoboCAD, also refused: `join` naming a curve
+    /// of 0; a non-finite number or point coordinate (as
+    /// [`SketchCall::from_json`] refuses it); `circle_three_point` and
+    /// `arc_three_point` through three collinear (or coincident) points,
+    /// with kernel/sketch.py `circumcircle`'s tolerance. Stricter than
+    /// RoboCAD, also refused: `join` naming a curve
     /// twice (RoboCAD would build a polyline that doubles back) and a
     /// polygon of fewer than three sides (0 would mean "the last sides" to
     /// RoboCAD).
     pub fn check(&self, curves: Option<usize>) -> Result<(), String> {
         use SketchCall::*;
         let name = self.name();
+        self.check_finite()?;
         match self {
+            CircleThreePoint { a, b, c } | ArcThreePoint { a, b, c } if circumcircle_denominator(*a, *b, *c).abs() < 1e-12 => {
+                return Err(format!("{name}: arguments a, b and c are collinear (no circle passes through [{}, {}], [{}, {}] and [{}, {}])", a[0], a[1], b[0], b[1], c[0], c[1]));
+            }
             Join { curves: list } | CircleTangent { curves: list, .. } if list.is_empty() => return Err(format!("{name}: argument curves must name at least one curve")),
             Join { curves: list } => {
                 if let Some((k, i)) = list.iter().enumerate().find(|&(k, i)| list[..k].contains(i)) {

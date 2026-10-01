@@ -233,6 +233,8 @@ class ArgConverter:
         if "EdgeRef" in ann or name in ("edge_a", "edge_b", "edges"):
             # `fill(edges: str | Body)`: a node id names the boundary itself.
             if isinstance(v, str) and "EdgeRef" not in ann:
+                if v not in self.doc.nodes:
+                    raise ApiError(404, f"no node {v}")
                 return v
             if isinstance(v, list):
                 return [self.edge(x) for x in v]
@@ -584,7 +586,21 @@ class Service:
         elif kind == "sketch":
             nid = ops.new_sketch(self.conv.plane(spec.get("plane", "xy")), name or "Sketch")
             if spec.get("calls"):
-                self.edit_sketch(nid, spec["calls"])
+                try:
+                    self.edit_sketch(nid, spec["calls"])
+                except (ApiError, KernelError, ValueError, TypeError, IndexError) as error:
+                    # A refused call leaves no empty sketch behind: undo the
+                    # "Sketch" step and drop it from the redo stack (new_sketch's
+                    # push cleared that stack, so the step is all it holds).
+                    stack = ops.stack
+                    if stack.undo_stack and stack.undo_stack[-1].label == "Sketch":
+                        stack.undo()
+                        if stack.redo_stack:
+                            stack.redo_stack.pop()
+                    self._refresh()
+                    if isinstance(error, ApiError):
+                        raise
+                    raise ApiError(422, str(error))
         elif kind == "plane":
             nid = ops._add_plane(self.conv.plane(spec["plane"]), name or "Plane")
         elif kind == "group":
@@ -820,6 +836,11 @@ class Service:
             raise ApiError(400, f"{n.name} is not a sketch")
 
         def fn(sk: Sketch):
+            def curve(i: int):
+                if not -len(sk.curves) <= i < len(sk.curves):
+                    raise ApiError(400, f"curve index {i} out of range ({len(sk.curves)} curves)")
+                return sk.curves[i]
+
             for call in calls:
                 method, args = call[0], call[1] if len(call) > 1 else []
                 kwargs = call[2] if len(call) > 2 else {}
@@ -830,19 +851,22 @@ class Service:
                 args, curve_args = list(args), set()
                 ints = lambda a: isinstance(a, list) and all(isinstance(i, int) for i in a)
                 if method in ("trim", "extend", "split_at", "fillet_corner", "offset", "reverse", "remove", "unjoin", "rebuild", "insert_vertex", "remove_vertex", "arc_tangent") and args and isinstance(args[0], int):
-                    args[0] = sk.curves[args[0]]
+                    args[0] = curve(args[0])
                     curve_args.add(0)
                 if method in ("trim", "extend") and len(args) > 1 and ints(args[1]):
-                    args[1] = [sk.curves[i] for i in args[1]]
+                    args[1] = [curve(i) for i in args[1]]
                     curve_args.add(1)
                 if method in ("join", "circle_tangent") and args and ints(args[0]):
-                    args[0] = [sk.curves[i] for i in args[0]]
+                    args[0] = [curve(i) for i in args[0]]
                     curve_args.add(0)
                 args = [a if i in curve_args else tuple(a) if isinstance(a, list) and len(a) == 2 and all(isinstance(x, (int, float)) for x in a) else ([tuple(p) for p in a] if isinstance(a, list) and a and isinstance(a[0], list) else a) for i, a in enumerate(args)]
                 target = sk
                 getattr(target, method)(*args, **kwargs)
 
-        self.ops.edit_sketch(n.id, fn, label="Sketch (API)")
+        try:
+            self.ops.edit_sketch(n.id, fn, label="Sketch (API)")
+        except (KernelError, ValueError, TypeError) as error:
+            raise ApiError(422, str(error))
         self._refresh()
         return node_detail(self.doc, n)
 

@@ -5,7 +5,9 @@ edge-reference converter, which refused a node id ("an edge is {node,
 edge}"). Edge references for `fillet(node_id, edges: Sequence[EdgeRef])`
 still convert. Headless, through the service the REST route calls."""
 
-from robocad.api import Service
+import pytest
+
+from robocad.api import ApiError, Service
 from robocad.document import Document
 
 
@@ -25,3 +27,11 @@ def test_fillet_edges_still_convert_from_node_edge_refs():
     answer = service.op("fillet", [box, [{"node": box, "edge": 0}], 1.0], {})
     assert answer["result"] == box
     assert answer["history"]["undo"][-1] == "Fillet"
+
+
+def test_fill_of_an_unknown_node_id_is_404():
+    service = Service(Document())
+    with pytest.raises(ApiError) as refused:
+        service.op("fill", ["no-such-node"], {})
+    assert refused.value.status == 404
+    assert "no-such-node" in str(refused.value)

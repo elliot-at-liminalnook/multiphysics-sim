@@ -8,7 +8,7 @@ lists a REST client (the native viewer's `SketchCall::to_json`) sends."""
 
 import pytest
 
-from robocad.api import Service
+from robocad.api import ApiError, Service
 from robocad.document import Document
 
 
@@ -89,3 +89,54 @@ def test_points_still_become_points():
     _, _, curves = _sketch([["rectangle", [[0, 0], [20, 10]]], ["polyline", [[[0, 0], [5, 5]], True]]])
     assert curves[0]["points"] == [[0, 0], [20, 0], [20, 10], [0, 10]] and curves[0]["closed"]
     assert curves[1]["points"] == [[0, 0], [5, 5]] and curves[1]["closed"]
+
+
+def test_circle_tangent_to_two_curves_with_a_radius():
+    # Two perpendicular lines through the origin: the r = 5 circle in the
+    # first quadrant touches both at (5, 0) and (0, 5), centred at (5, 5).
+    calls = [
+        ["line", [[0, 0], [20, 0]]],
+        ["line", [[0, 0], [0, 20]]],
+        ["circle_tangent", [[0, 1], 5, [4, 6]]],
+    ]
+    _, _, curves = _sketch(calls)
+    assert len(curves) == 3
+    circle = curves[2]
+    assert circle["kind"] == "circle"
+    assert _pt(circle["center"], (5, 5), tol=1e-2)
+    assert circle["radius"] == pytest.approx(5)
+
+
+def test_create_with_a_refused_call_leaves_no_sketch():
+    # Collinear points have no circumcircle: the create is refused (422) and
+    # neither the empty sketch nor its "Sketch" undo step remains.
+    service = Service(Document())
+    service.create({"kind": "box", "corner": [0, 0, 0], "size": [1, 1, 1]})
+    nodes, history = set(service.doc.nodes), service.history()
+    with pytest.raises(ApiError) as refused:
+        service.create({"kind": "sketch", "plane": "xy", "calls": [["circle_three_point", [[0, 0], [1, 1], [2, 2]]]]})
+    assert refused.value.status == 422
+    assert "collinear" in str(refused.value)
+    assert set(service.doc.nodes) == nodes
+    assert service.history() == history
+
+
+def test_kernel_refusal_is_422_and_changes_nothing():
+    service, nid, _ = _sketch([["circle", [[0, 0], 10]]])
+    history = service.history()
+    with pytest.raises(ApiError) as refused:
+        service.edit_sketch(nid, [["extend", [0, []]]])
+    assert refused.value.status == 422
+    assert len(service.doc.nodes[nid].sketch.curves) == 1
+    assert service.history() == history
+
+
+def test_out_of_range_curve_index_is_400():
+    service, nid, _ = _sketch([["line", [[0, 0], [10, 0]]]])
+    # Python's negative indices (from the end) still work; past either end is refused.
+    assert service.edit_sketch(nid, [["reverse", [-1]]])["sketch"]["curves"][0]["points"] == [[10, 0], [0, 0]]
+    for index in (1, -2):
+        with pytest.raises(ApiError) as refused:
+            service.edit_sketch(nid, [["reverse", [index]]])
+        assert refused.value.status == 400
+        assert f"curve index {index} out of range" in str(refused.value)

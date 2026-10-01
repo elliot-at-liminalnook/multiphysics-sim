@@ -229,6 +229,34 @@ impl CadClient {
             Err(e) => Err(e),
         }
     }
+    /// `GET /nodes/{id}/faces`: the body's faces in kernel order (`index`
+    /// is the face's index in `[node, "face", index]` and
+    /// `triangle_face`). A node without geometry is a 404 ("X has no
+    /// geometry", [`CadError::not_found`]).
+    pub fn faces(&self, id: &str) -> Result<Vec<FaceInfo>, CadError> {
+        self.get(&format!("{}/faces", node_route(id)))
+    }
+    /// `GET /nodes/{id}/edges`, or `/edges?samples=N` with each edge's
+    /// sampled polyline in `points` (N points along a curve, 2 along a
+    /// line; RoboCAD accepts 2..=256 and answers 400 otherwise). A node
+    /// without geometry is a 404 as for [`CadClient::faces`].
+    pub fn edges(&self, id: &str, samples: Option<u32>) -> Result<Vec<EdgeInfo>, CadError> {
+        let route = match samples {
+            Some(n) => format!("{}/edges?samples={n}", node_route(id)),
+            None => format!("{}/edges", node_route(id)),
+        };
+        self.get(&route)
+    }
+    /// `GET /nodes/{id}/vertices`. A node without geometry is a 404 as for
+    /// [`CadClient::faces`].
+    pub fn vertices(&self, id: &str) -> Result<Vec<VertexInfo>, CadError> {
+        self.get(&format!("{}/vertices", node_route(id)))
+    }
+    /// `GET /nodes/{id}/solids`: the solid inventory of the node's body
+    /// (an empty list for a node without geometry; 404 for an unknown id).
+    pub fn solids(&self, id: &str) -> Result<Solids, CadError> {
+        self.get(&format!("{}/solids", node_route(id)))
+    }
     /// `GET /ops`: each callable op's name and Python signature.
     pub fn ops(&self) -> Result<BTreeMap<String, String>, CadError> {
         self.get("/ops")

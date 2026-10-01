@@ -664,3 +664,109 @@ fn an_edit_that_times_out_may_still_apply() {
     server.join().unwrap();
     assert_eq!(EDIT_TIMEOUT, Duration::from_secs(130));
 }
+
+/// A planar face as `face_json` writes it (axis fields null), and a
+/// cylindrical one with an unknown field.
+const FACES: &str = r#"[{"kind": "plane", "centroid": [10.0, 5.0, 5.0], "normal": [0.0, 0.0, 1.0], "area": 200.0, "axis_point": null, "axis_dir": null, "radius": null, "point": [10.0, 5.0, 5.0], "index": 0}, {"kind": "cylinder", "centroid": [40.0, 0.0, 3.0], "normal": [1.0, 0.0, 0.0], "area": 150.796, "axis_point": [40.0, 0.0, 0.0], "axis_dir": [0.0, 0.0, 1.0], "radius": 4.0, "point": [44.0, 0.0, 3.0], "index": 1, "later": {"x": 1}}]"#;
+
+/// A line and a circle as `edge_json` writes them, without samples.
+const EDGES: &str = r#"[{"index": 0, "kind": "line", "midpoint": [10.0, 0.0, 0.0], "length": 20.0, "start": [0.0, 0.0, 0.0], "end": [20.0, 0.0, 0.0], "center": null, "radius": null}, {"index": 1, "kind": "circle", "midpoint": [36.0, 0.0, 6.0], "length": 25.133, "start": [44.0, 0.0, 6.0], "end": [44.0, 0.0, 6.0], "center": [40.0, 0.0, 6.0], "radius": 4.0}]"#;
+
+/// The same with `?samples=3`: `points` last; the circle's second point is
+/// malformed (dropped) and its third non-finite (dropped).
+const SAMPLED_EDGES: &str = r#"[{"index": 0, "kind": "line", "midpoint": [10.0, 0.0, 0.0], "length": 20.0, "start": [0.0, 0.0, 0.0], "end": [20.0, 0.0, 0.0], "center": null, "radius": null, "points": [[0.0, 0.0, 0.0], [20.0, 0.0, 0.0]]}, {"index": 1, "kind": "circle", "midpoint": [36.0, 0.0, 6.0], "length": 25.133, "start": [44.0, 0.0, 6.0], "end": [44.0, 0.0, 6.0], "center": [40.0, 0.0, 6.0], "radius": 4.0, "points": [[44.0, 0.0, 6.0], [36.0, "x", 6.0], [NaN, 0.0, 6.0], [44.0, 0.0, 6.0]]}]"#;
+
+#[test]
+fn faces_edges_vertices_and_solids_as_api_writes_them() {
+    let (c, server) = serve(vec![
+        ok(FACES),
+        ok(EDGES),
+        ok(SAMPLED_EDGES),
+        ok(r#"[{"index": 0, "point": [0.0, 0.0, 0.0]}, {"index": 1, "point": [20.0, 0.0, 0.0]}]"#),
+        ok(r#"{"node_id": "a1b2c3d4e5f6", "revision": 9, "units": "mm", "solids": [{"index": 0, "bbox_min": [0.0, 0.0, 0.0], "bbox_max": [20.0, 10.0, 5.0]}]}"#),
+        ok(r#"{"node_id": "0123456789ab", "revision": 9, "units": "mm", "solids": []}"#),
+    ]);
+    let port = c.endpoint.port;
+    let faces = c.faces("a1b2c3d4e5f6").unwrap();
+    let plane = FaceInfo { index: 0, kind: "plane".into(), centroid: Some([10.0, 5.0, 5.0]), normal: Some([0.0, 0.0, 1.0]), area: Some(200.0), axis_point: None, axis_dir: None, radius: None, point: Some([10.0, 5.0, 5.0]) };
+    assert_eq!(faces[0], plane);
+    assert_eq!((faces[1].index, faces[1].kind.as_str(), faces[1].radius), (1, "cylinder", Some(4.0)));
+    assert_eq!((faces[1].axis_point, faces[1].axis_dir), (Some([40.0, 0.0, 0.0]), Some([0.0, 0.0, 1.0])));
+    let edges = c.edges("a1b2c3d4e5f6", None).unwrap();
+    let line = EdgeInfo { index: 0, kind: "line".into(), midpoint: Some([10.0, 0.0, 0.0]), length: Some(20.0), start: Some([0.0; 3]), end: Some([20.0, 0.0, 0.0]), center: None, radius: None, points: vec![] };
+    assert_eq!(edges[0], line);
+    assert_eq!((edges[1].kind.as_str(), edges[1].center, edges[1].radius, edges[1].points.len()), ("circle", Some([40.0, 0.0, 6.0]), Some(4.0), 0));
+    let sampled = c.edges("a1b2c3d4e5f6", Some(3)).unwrap();
+    assert_eq!(sampled[0], EdgeInfo { points: vec![[0.0; 3], [20.0, 0.0, 0.0]], ..line });
+    assert_eq!(sampled[1].points, vec![[44.0, 0.0, 6.0], [44.0, 0.0, 6.0]]);
+    assert_eq!(sampled[1].center, Some([40.0, 0.0, 6.0]));
+    let vertices = c.vertices("a1b2c3d4e5f6").unwrap();
+    assert_eq!(vertices, vec![VertexInfo { index: 0, point: Some([0.0; 3]) }, VertexInfo { index: 1, point: Some([20.0, 0.0, 0.0]) }]);
+    let solids = c.solids("a1b2c3d4e5f6").unwrap();
+    assert_eq!((solids.node_id.as_str(), solids.revision, solids.units.as_str(), solids.solids.len()), ("a1b2c3d4e5f6", 9, "mm", 1));
+    assert_eq!(solids.solids[0]["bbox_max"], json!([20.0, 10.0, 5.0]));
+    assert!(c.solids("0123456789ab").unwrap().solids.is_empty());
+    let seen = server.join().unwrap();
+    assert_request(&seen[0], "GET /nodes/a1b2c3d4e5f6/faces HTTP/1.1", port, None);
+    assert_request(&seen[1], "GET /nodes/a1b2c3d4e5f6/edges HTTP/1.1", port, None);
+    assert_request(&seen[2], "GET /nodes/a1b2c3d4e5f6/edges?samples=3 HTTP/1.1", port, None);
+    assert_request(&seen[3], "GET /nodes/a1b2c3d4e5f6/vertices HTTP/1.1", port, None);
+    assert_request(&seen[4], "GET /nodes/a1b2c3d4e5f6/solids HTTP/1.1", port, None);
+    assert_request(&seen[5], "GET /nodes/0123456789ab/solids HTTP/1.1", port, None);
+}
+
+#[test]
+fn topology_tolerates_nulls_and_non_finite_values() {
+    // Null or non-finite (bare NaN/Infinity, read as null) reads as None,
+    // as does a malformed vector; nothing is filled in.
+    let face = r#"[{"kind": "bspline", "centroid": null, "normal": [NaN, 0.0, 1.0], "area": NaN, "axis_point": null, "axis_dir": null, "radius": null, "point": [1.0, 2.0], "index": 4}]"#;
+    let edge = r#"[{"index": 2, "kind": "bspline", "midpoint": [1.0, 1.0, 1.0], "length": Infinity, "start": null, "end": [0, 0, 0], "center": null, "radius": null, "points": "none"}]"#;
+    let (c, server) = serve(vec![ok(face), ok(edge), ok(r#"[{"index": 0, "point": [NaN, 0.0, 0.0]}]"#)]);
+    let f = &c.faces("n1").unwrap()[0];
+    assert_eq!((f.index, f.kind.as_str(), f.centroid, f.normal, f.area, f.point), (4, "bspline", None, None, None, None));
+    let e = &c.edges("n1", None).unwrap()[0];
+    assert_eq!((e.length, e.start, e.end, e.midpoint), (None, None, Some([0.0; 3]), Some([1.0; 3])));
+    assert!(e.points.is_empty());
+    assert_eq!(c.vertices("n1").unwrap(), vec![VertexInfo { index: 0, point: None }]);
+    server.join().unwrap();
+}
+
+#[test]
+fn topology_routes_encode_the_id_and_report_no_geometry() {
+    let no_geometry = || Answer::Json(404, r#"{"error": "Sketch has no geometry"}"#.into());
+    let (c, server) = serve(vec![no_geometry(), no_geometry(), no_geometry(), no_geometry(), Answer::Json(404, r#"{"error": "no node a/b c"}"#.into())]);
+    let port = c.endpoint.port;
+    let e = c.faces("a/b c").unwrap_err();
+    assert!(e.not_found(), "{e:?}");
+    assert_eq!(e, CadError { method: "GET", route: "/nodes/a%2Fb%20c/faces".into(), status: Some(404), message: "Sketch has no geometry".into() });
+    assert!(c.edges("a/b c", None).unwrap_err().not_found());
+    assert_eq!(c.edges("a/b c", Some(24)).unwrap_err().route, "/nodes/a%2Fb%20c/edges?samples=24");
+    assert!(c.vertices("a/b c").unwrap_err().not_found());
+    assert!(c.solids("a/b c").unwrap_err().not_found());
+    let seen = server.join().unwrap();
+    assert_request(&seen[0], "GET /nodes/a%2Fb%20c/faces HTTP/1.1", port, None);
+    assert_request(&seen[1], "GET /nodes/a%2Fb%20c/edges HTTP/1.1", port, None);
+    assert_request(&seen[2], "GET /nodes/a%2Fb%20c/edges?samples=24 HTTP/1.1", port, None);
+    assert_request(&seen[3], "GET /nodes/a%2Fb%20c/vertices HTTP/1.1", port, None);
+    assert_request(&seen[4], "GET /nodes/a%2Fb%20c/solids HTTP/1.1", port, None);
+}
+
+#[test]
+fn moded_selection_headless_and_with_a_window() {
+    let (c, server) = serve(vec![
+        // Headless: set_selection answers `selection()`, which has no mode.
+        ok(r#"{"items": [["n1", "face", 2]]}"#),
+        ok(r#"{"items": [["n1", "face", 2]]}"#),
+        // A desktop window writes the viewport's mode.
+        ok(r#"{"items": [["n1", "edge", 5]], "mode": "edge"}"#),
+    ]);
+    let port = c.endpoint.port;
+    let face = [SelectionItem("n1".into(), "face".into(), 2)];
+    assert_eq!(c.set_selection(&face, Some("face")).unwrap(), Selection { items: face.to_vec(), mode: None });
+    assert_eq!(c.selection().unwrap(), Selection { items: face.to_vec(), mode: None });
+    assert_eq!(c.selection().unwrap(), Selection { items: vec![SelectionItem("n1".into(), "edge".into(), 5)], mode: Some("edge".into()) });
+    let seen = server.join().unwrap();
+    assert_request(&seen[0], "PUT /selection HTTP/1.1", port, Some(r#"{"items":[["n1","face",2]],"mode":"face"}"#));
+    assert_request(&seen[1], "GET /selection HTTP/1.1", port, None);
+    assert_request(&seen[2], "GET /selection HTTP/1.1", port, None);
+}

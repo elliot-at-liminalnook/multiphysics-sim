@@ -22,13 +22,17 @@
 //! - **Modal**: a dimmed backdrop takes every click, and the form holds
 //!   `CadInputFocus` while open (set after `panel::name_entry` resets it,
 //!   before every reader), ending the other fields' drafts.
-//! - **Listing**: the path's directory and the operation's extensions are
-//!   read on `Pool::Io` when they change; a directory entry descends (a
-//!   write keeps the file name typed), a file entry fills the path, ".."
-//!   goes up. A write onto a listed file says it will be replaced (Qt's
-//!   save dialog asks the same); New says RoboCAD refuses to replace it.
+//! - **Listing**: the kit path field's (`ui_kit::path_field`, the one way
+//!   to enter a path): the path's directory and the operation's extensions
+//!   are read on `Pool::Io` when they change (`path_field::request`), and
+//!   `Kit::path_listing` draws them under the form; a directory entry
+//!   descends (a write keeps the file name typed), a file entry fills the
+//!   path, ".." goes up (`path_field::pick`/`up`). A write onto a listed
+//!   file says it will be replaced (Qt's save dialog asks the same); New
+//!   says RoboCAD refuses to replace it. The path input itself stays a kit
+//!   form row.
 use super::formats::{self, DRAWING_VIEWS, FORMAT_IDS, Kind as SettingKind};
-use super::{CadFiles, ExportArgs, FileArgs, FileOp, RenderArgs, jobs};
+use super::{CadFiles, ExportArgs, FileArgs, FileOp, RenderArgs};
 use crate::app::ModeScope;
 use crate::app::actions::Act;
 use crate::builder::ui_api::Enabled;
@@ -36,12 +40,11 @@ use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadInputFocus};
 use crate::cad::panel::NameDraft;
 use crate::ui_kit::form::{DraftKey, FieldKind, FieldValue, FormHit, FormRow, TextDraft, Unit, evaluate};
-use crate::ui_kit::{BAR, DANGER, FAINT, Kit, Look, SUBTLE, UiFonts, WARN, size};
+use crate::ui_kit::path_field::{self, PathHit};
+use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, UiFonts, WARN, size};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
-use bevy::ui::FocusPolicy;
-use bevy::ui::prelude::AccessibleLabel;
 use serde_json::{Map, Value, json};
 use sim_runtime::cad_client::{IMPORT_EXTENSIONS, IMPORT_UNITS, MESH_EXTENSIONS, RENDER_MODES, RENDER_VIEWS, extension};
 use std::collections::BTreeMap;
@@ -99,26 +102,6 @@ fn text_of(kind: SettingKind, v: &Value) -> String {
         (_, Value::String(s)) => s.clone(),
         (_, other) => other.to_string(),
     }
-}
-
-/// The directory part of `path` with a trailing `/` (`~/` expanded).
-fn dir_of(path: &str) -> String {
-    let path = match (path.strip_prefix("~/"), std::env::var("HOME")) {
-        (Some(rest), Ok(home)) => format!("{}/{rest}", home.trim_end_matches('/')),
-        _ => path.to_string(),
-    };
-    if path.ends_with('/') {
-        return path;
-    }
-    match std::path::Path::new(&path).parent().map(|p| p.display().to_string()) {
-        Some(p) if !p.is_empty() => format!("{}/", p.trim_end_matches('/')),
-        _ => "/".into(),
-    }
-}
-
-/// The file name part of `path` (after the last `/`).
-fn file_of(path: &str) -> &str {
-    path.rsplit('/').next().unwrap_or("")
 }
 
 impl FileForm {
@@ -299,7 +282,7 @@ impl FileForm {
     pub(crate) fn unit_missing(&self) -> Option<String> {
         let mesh = self.import_mesh()?;
         (!IMPORT_UNITS.contains(&self.text("unit"))).then(|| {
-            let name = file_of(&mesh);
+            let name = path_field::file_of(&mesh);
             format!("Choose the units of {name} ({}), or wait for RoboCAD's guess: a mesh file has no units, and RoboCAD's import asks for them", IMPORT_UNITS.join(", "))
         })
     }
@@ -324,15 +307,11 @@ impl FileForm {
         }
     }
 
-    /// The listing the path asks for: (key, directory, extensions); None
-    /// for a path that is not absolute.
-    pub(crate) fn listing_key(&self) -> Option<(String, String, Vec<&'static str>)> {
-        let dir = dir_of(self.text("path").trim());
-        if !std::path::Path::new(&dir).is_absolute() {
-            return None;
-        }
-        let exts = self.extensions();
-        Some((format!("{dir}|{}", exts.join(",")), dir, exts))
+    /// The listing the path asks for: (key, directory) of the path's
+    /// directory and [`Self::extensions`]; None for a path that is not
+    /// absolute (`path_field::listing_key`).
+    pub(crate) fn listing_key(&self) -> Option<(String, String)> {
+        path_field::listing_key(self.text("path"), &self.extensions())
     }
 
     /// Whether this form writes its file (a listed file of that name is replaced).
@@ -343,18 +322,14 @@ impl FileForm {
     /// A listing entry clicked: a directory descends (a write keeps the
     /// typed file name), a file fills the path.
     pub(crate) fn pick(&mut self, dir: &str, name: &str, is_dir: bool) {
-        let keep = if self.writes() { file_of(self.text("path")).to_string() } else { String::new() };
-        let dir = dir.trim_end_matches('/');
-        let path = if is_dir { format!("{dir}/{name}/{keep}") } else { format!("{dir}/{name}") };
+        let path = path_field::pick(self.text("path"), dir, name, is_dir, self.writes());
         self.set("path", path);
     }
 
     /// "..": the parent of the path's directory, keeping the file name of a write.
     pub(crate) fn up(&mut self) {
-        let keep = if self.writes() { file_of(self.text("path")).to_string() } else { String::new() };
-        let dir = dir_of(self.text("path").trim());
-        let parent = std::path::Path::new(dir.trim_end_matches('/')).parent().map_or_else(|| "/".to_string(), |p| p.display().to_string());
-        self.set("path", format!("{}/{keep}", parent.trim_end_matches('/')));
+        let path = path_field::up(self.text("path"), self.writes());
+        self.set("path", path);
     }
 
     /// The action OK writes, with every value. Err: a field that does not
@@ -439,10 +414,10 @@ pub(super) enum Hit {
     Form(FormHit),
     /// "Guess unit" (a mesh import).
     Guess,
-    /// A listing entry, by index.
-    Entry(usize),
-    /// "..": the parent directory.
-    Up,
+    /// A part of the kit path listing: an entry (by its index in
+    /// `Listing::entries`) or "..". The path input is a form row, so its
+    /// `Field` and `Submit` are never drawn here.
+    Path(PathHit),
 }
 
 /// The form's root (the backdrop).
@@ -540,16 +515,17 @@ pub(super) fn input(
             Hit::Form(FormHit::Ok) => submit = true,
             Hit::Form(FormHit::Cancel) => close = true,
             Hit::Guess => guess = true,
-            Hit::Entry(i) => {
+            Hit::Path(PathHit::Entry(i)) => {
                 // Only the listing drawn for this path (as the footer shows it):
                 // a newer path's older listing never fills the path.
-                if let Some(listing) = files.listed.as_ref().filter(|l| before.listing_key().is_some_and(|(key, ..)| key == l.key))
+                if let Some(listing) = files.listed.as_ref().filter(|l| before.listing_key().is_some_and(|(key, _)| key == l.key))
                     && let Some((entry, is_dir)) = listing.entries.get(i)
                 {
                     form.pick(&listing.dir, entry, *is_dir);
                 }
             }
-            Hit::Up => form.up(),
+            Hit::Path(PathHit::Up) => form.up(),
+            Hit::Path(PathHit::Field | PathHit::Submit) => {}
         }
     }
     let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
@@ -605,11 +581,12 @@ pub(super) fn input(
         out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::GuessUnit, path: Some(mesh), ..Default::default() })));
     }
     // The directory listing follows the path (read on Pool::Io).
-    if let Some((key, dir, exts)) = form.listing_key()
+    if let Some((key, dir)) = form.listing_key()
         && form.listing_asked.as_deref() != Some(key.as_str())
     {
         form.listing_asked = Some(key.clone());
-        jobs::request_listing(&mut files, key, dir, exts);
+        let exts: Vec<String> = form.extensions().iter().map(|s| s.to_string()).collect();
+        path_field::request(&mut files.listing, "cad file listing", key, dir, exts);
     }
     if form != before
         && let Some(f) = files.form.as_mut()
@@ -618,9 +595,6 @@ pub(super) fn input(
         *f = form;
     }
 }
-
-/// Entries the form lists.
-const SHOWN: usize = 12;
 
 /// Present: the form, rebuilt when it, its listing, the unit guess or the
 /// document's saved state changes; despawned when it closes.
@@ -648,19 +622,11 @@ pub(super) fn draw(mut commands: Commands, files: Option<Res<CadFiles>>, doc: Op
         })
         .collect();
     let title = form.title();
-    commands
-        .spawn((
-            Node { position_type: PositionType::Absolute, left: Val::Px(0.0), right: Val::Px(0.0), top: Val::Px(0.0), bottom: Val::Px(0.0), justify_content: JustifyContent::Center, align_items: AlignItems::Center, ..default() },
-            BackgroundColor(BAR.with_alpha(0.55)),
-            FocusPolicy::Block,
-            GlobalZIndex(50),
-            AccessibleLabel::new(title.clone()),
-            FileFormRoot,
-            DespawnOnExit(ModeScope::Cad),
-        ))
-        .with_children(|backdrop| {
-            k.form(backdrop, &title, &form_rows, form.ok_ready(), Some(460.0), |h| FilePart(Hit::Form(h)), |p| footer(p, &k, files, form, rule.as_ref()));
-        });
+    // The kit's modal backdrop, covering the switcher strip too: a switch
+    // would lose the form's typed values (`leaving_blockers` do not check it).
+    commands.spawn((k.backdrop(&title, true), FileFormRoot, DespawnOnExit(ModeScope::Cad))).with_children(|backdrop| {
+        k.form(backdrop, &title, &form_rows, form.ok_ready(), Some(460.0), |h| FilePart(Hit::Form(h)), |p| footer(p, &k, files, form, rule.as_ref()));
+    });
 }
 
 /// New and open under `cad_open`'s rule, as it stands: Err (why OK will
@@ -705,14 +671,11 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, files: &CadFiles, form: &FileFo
         }
         p.spawn(k.button("Guess unit", FilePart(Hit::Guess), Look::Secondary, true));
     }
-    let Some(listing) = files.listed.as_ref().filter(|l| form.listing_key().is_some_and(|(key, ..)| key == l.key)) else {
-        if form.listing_key().is_none() {
-            p.spawn(k.text("Type an absolute path (~/ works) to list its directory.", size::SMALL, FAINT, 0));
-        }
-        return;
-    };
-    let file = file_of(path);
-    let exists = !file.is_empty() && listing.entries.iter().any(|(n, d)| !d && n == file);
+    // The listing drawn is only the one this path asks for now.
+    let key = form.listing_key();
+    let listing = files.listed.as_ref().filter(|l| key.as_ref().is_some_and(|(want, _)| *want == l.key));
+    let file = path_field::file_of(path);
+    let exists = listing.is_some_and(|l| !file.is_empty() && l.entries.iter().any(|(n, d)| !d && n == file));
     match (form.kind, exists) {
         (Kind::File(FileOp::New), true) => {
             p.spawn(k.text(format!("{file} exists: RoboCAD refuses to replace it; choose a new name."), size::SMALL, DANGER, 0));
@@ -722,24 +685,5 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, files: &CadFiles, form: &FileFo
         }
         _ => {}
     }
-    // The typed file name narrows the entries (a case-insensitive prefix).
-    let prefix = file.to_lowercase();
-    let narrows = |n: &String| n.to_lowercase().starts_with(&prefix);
-    p.spawn(k.caption(format!("In {}", listing.dir)));
-    if let Some(e) = &listing.error {
-        p.spawn(k.text(e.clone(), size::SMALL, FAINT, 0));
-    }
-    p.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }).with_children(|list| {
-        if listing.dir != "/" {
-            list.spawn(k.button("..", FilePart(Hit::Up), Look::Ghost, true));
-        }
-        for (i, (entry, is_dir)) in listing.entries.iter().enumerate().filter(|(_, (n, _))| narrows(n)).take(SHOWN) {
-            let label = if *is_dir { format!("{entry}/") } else { entry.clone() };
-            list.spawn(k.button(&label, FilePart(Hit::Entry(i)), Look::Ghost, true));
-        }
-    });
-    let more = listing.entries.iter().filter(|(n, _)| narrows(n)).count().saturating_sub(SHOWN) + listing.more;
-    if more > 0 {
-        p.spawn(k.text(format!("{more} more: type to narrow the path."), size::SMALL, FAINT, 0));
-    }
+    k.path_listing(p, path, listing, &|h| FilePart(Hit::Path(h)));
 }

@@ -254,18 +254,19 @@ fn popups_are_kept_inside_the_window() {
     let window = Vec2::new(1280.0, 720.0);
     // Room below: where asked, rows capped at 550 px.
     assert_eq!(super::popup_place(Vec2::new(400.0, 100.0), window), (400.0, 100.0, 550.0, 872.0));
-    // Low in the window: rows fit what is left above the bottom edge.
+    // Low in the window: rows fit what is left above the switcher strip
+    // (720 - 40 strip - 8 edge - 10 chrome = 662 px).
     let (_, top, rows, _) = super::popup_place(Vec2::new(400.0, 400.0), window);
-    assert_eq!((top, rows), (400.0, 302.0));
+    assert_eq!((top, rows), (400.0, 262.0));
     // Near the bottom: moved up so 160 px of rows fit.
     let (_, top, rows, _) = super::popup_place(Vec2::new(400.0, 650.0), window);
-    assert_eq!((top, rows), (542.0, 160.0));
+    assert_eq!((top, rows), (502.0, 160.0));
     // Near the right edge: moved left so its least width fits.
     let (left, _, _, max_width) = super::popup_place(Vec2::new(1250.0, 100.0), window);
     assert_eq!((left, max_width), (1052.0, 220.0));
     // A window shorter than the least rows: pinned at the top edge.
     let (_, top, rows, _) = super::popup_place(Vec2::new(10.0, 50.0), Vec2::new(400.0, 120.0));
-    assert_eq!((top, rows), (8.0, 94.0));
+    assert_eq!((top, rows), (8.0, 54.0));
 }
 
 /// The cad-sketch epic's commands: (id, RoboCAD's label, its keys), in

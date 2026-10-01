@@ -230,20 +230,30 @@ fn the_file_forms_rows_units_guess_and_listing_picks() {
     assert_eq!((r.path.as_deref(), r.view.as_deref(), r.w, r.h, r.edges, r.labels), (Some("/work/turntable-iso.png"), Some("iso"), Some(1200), Some(900), Some(true), Some(false)));
 }
 
+/// The form's listing is the kit path field's: its key is the path's
+/// directory and the operation's extensions, a relative path asks none,
+/// and the kit's reader lists those extensions (any case) and directories.
 #[test]
-fn listing_reads_matching_files_and_directories() {
+fn the_forms_listing_is_the_kit_path_fields() {
+    let cx = Context::default();
+    let none = BTreeMap::new();
+    let open = FileForm::new(Kind::File(FileOp::Open), "/work/", "turntable", None, &cx, &none).unwrap();
+    assert_eq!(open.listing_key(), Some(("/work/|rcad".to_string(), "/work/".to_string())));
+    let export = FileForm::new(Kind::Export, "/work/", "turntable", Some("stl"), &cx, &none).unwrap();
+    assert_eq!(export.listing_key().map(|k| k.0).as_deref(), Some("/work/|stl"));
+    let mut relative = open.clone();
+    relative.set("path", "work/turntable.rcad".into());
+    assert_eq!(relative.listing_key(), None);
     let dir = std::env::temp_dir().join(format!("cad-files-listing-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("Sub")).unwrap();
-    for f in ["b.rcad", "A.rcad", "notes.txt", ".hidden.rcad"] {
+    for f in ["b.rcad", "A.RCAD", "notes.txt", ".hidden.rcad"] {
         std::fs::write(dir.join(f), b"x").unwrap();
     }
-    let listing = super::jobs::list("k".into(), dir.display().to_string(), &["rcad"]);
+    let listing = crate::ui_kit::path_field::list("k".into(), dir.display().to_string(), &["rcad"]);
     let _ = std::fs::remove_dir_all(&dir);
     assert_eq!(listing.error, None);
-    assert_eq!(listing.entries, vec![("Sub".to_string(), true), ("A.rcad".to_string(), false), ("b.rcad".to_string(), false)]);
-    let missing = super::jobs::list("k".into(), "/no/such/dir/for/cad".into(), &["rcad"]);
-    assert!(missing.error.unwrap().starts_with("/no/such/dir/for/cad: "));
+    assert_eq!(listing.entries, vec![("Sub".to_string(), true), ("A.RCAD".to_string(), false), ("b.rcad".to_string(), false)]);
 }
 
 #[test]

@@ -135,7 +135,7 @@ pub(super) fn scroll_inspector(
 ) {
     let delta = ui_kit::wheel_delta(&mut wheel, 24.0);
     if window.cursor_position().is_some_and(|p| {
-        p.x >= window.width() - scene.right() && p.y > TOP && p.y < window.height() - BOTTOM
+        p.x >= window.width() - scene.right() && p.y > TOP && p.y < window.height() - scene.bottom()
     }) {
         panel.y = (panel.y - delta).max(0.0);
     }

@@ -11,7 +11,7 @@
 //! cancels the pending job, and a layout for an old key is only ever shown
 //! dimmed under a "Stale" label with its boxes disabled.
 use super::*;
-use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, TEXT, TOPBAR, Tint, WARN, size};
+use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, SWITCHER_STRIP, TEXT, TOPBAR, Tint, WARN, size};
 use sim_diagram::{Layout, layout as diagram_layout, projection, style};
 use std::sync::atomic::AtomicBool;
 
@@ -257,7 +257,7 @@ pub(super) fn update(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScen
         (Some(w), true) => pane_width(w).round(),
         _ => 0.,
     };
-    let height = window.as_ref().map(|w| (w.height() - TOPBAR - STATUSBAR - scene.builder_dock).max(120.).round()).unwrap_or(0.);
+    let height = window.as_ref().map(|w| (w.height() - TOPBAR - STATUSBAR - SWITCHER_STRIP - scene.builder_dock).max(120.).round()).unwrap_or(0.);
     if scene.builder_side != width {
         scene.builder_side = width;
         b.panel_dirty = true;

@@ -134,7 +134,7 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
             keys: true,
             ..default()
         },
-        ViewArea::Docks { left: LEFT, right: RIGHT, top: TOP, bottom: if view.graphs_visible { DOCK } else { 0.0 } },
+        super::scene::wanted_area(view.graphs_visible),
         RobotCamera,
     ));
     // UI over the whole window; the 3D camera only draws the middle viewport.
@@ -220,7 +220,7 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
         .insert_children(0, &[tab_strip, overlay_root]);
     // Graph dock under the 3D view (filled by `graph_dock`).
     commands.spawn((
-        k.dock(Dock::Under { left: LEFT, right: RIGHT, height: DOCK }, Node { padding: UiRect::all(Val::Px(10.0)), column_gap: Val::Px(10.0), display: Display::None, ..default() }),
+        k.dock(Dock::Under { left: LEFT, right: RIGHT, bottom: 0.0, height: DOCK }, Node { padding: UiRect::all(Val::Px(10.0)), column_gap: Val::Px(10.0), display: Display::None, ..default() }),
         GraphDock,
     ));
 }

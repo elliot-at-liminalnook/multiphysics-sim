@@ -4,7 +4,7 @@
 //! # ui_kit contract
 //!
 //! Tokens (`theme`): layout `TOPBAR`, `STATUSBAR`, `LEFT_WIDTH`,
-//! `RIGHT_WIDTH`; colours `BAR`, `SURFACE`, `RAISED`, `HOVER_BG`, `BORDER`,
+//! `RIGHT_WIDTH`, `SWITCHER_STRIP` (with `above_strip`), `MODAL_Z`; colours `BAR`, `SURFACE`, `RAISED`, `HOVER_BG`, `BORDER`,
 //! `TEXT`, `SUBTLE`, `FAINT`, `VALUE`, `ACCENT`, `ACCENT_HOVER`, `ACCENT_BG`,
 //! `ON_ACCENT`, `WARN`, `DANGER`, `DANGER_HOVER`, `DANGER_EDGE`, `OK`; type
 //! sizes `size::{TITLE, PRODUCT, ITEM, BODY, SMALL, CAPTION, DETAIL,
@@ -52,7 +52,25 @@
 //!   choice segments, checkbox chips, OK and Cancel. Pure:
 //!   `form::evaluate(kind, text)` and `form::TextDraft::key(key, chord)`.
 //!
-//! The pie, palette and form hold no intent logic: the caller owns the
+//! - `path_field(parent, &PathView, hit: Fn(PathHit) -> A)` and
+//!   `path_listing(parent, path, listing, hit)` (`path_field.rs`): the one
+//!   path entry (input, submit, the directory's matching entries, "..",
+//!   `~/` expansion). Pure: `expand`, `dir_of`, `file_of`, `matches`,
+//!   `listing_key`, `pick`, `up`, `list` (call on `Pool::Io`), and
+//!   `request`/`receive` over a `jobs::Latest<Listing>`.
+//! - `backdrop(label, cover_strip)` (at `MODAL_Z`, above the pie; `cover_strip`
+//!   true for a modal holding unsaved drafts, so the switcher can't be clicked)
+//!   and `document_picker(parent, title, subtitle, status,
+//!   sections: &[PickerSection], path: &PathView, scroll, list, hit: Fn(PickHit) -> A)`
+//!   (`picker.rs`): a modal panel of titled sections of entries and a path field.
+//!
+//! Layout reservation: `SWITCHER_STRIP` (theme) is the mode switcher's strip
+//! along the window's bottom. `dock` adds it to every bottom edge
+//! (`Dock::Bottom`, `Left`, `Right`, `Under`; `dock_rect` is the pure
+//! layout), `Dock::Strip` is the strip itself, and other bottom-anchored
+//! nodes use `above_strip(px)`. Modes never add their own switcher room.
+//!
+//! The pie, palette, form, path field and picker hold no intent logic: the caller owns the
 //! open state, the drafts, the query and the selection, passes one action
 //! component per clickable part, and decides what each press means.
 //!
@@ -64,6 +82,8 @@
 //! `Color::srgb` literal equal to a token (`tests::ui_colours_come_from_the_kit`).
 pub(crate) mod form;
 pub(crate) mod palette;
+pub(crate) mod path_field;
+pub(crate) mod picker;
 pub(crate) mod pie;
 mod scroll;
 mod slider;

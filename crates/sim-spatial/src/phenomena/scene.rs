@@ -12,7 +12,7 @@
 use super::gallery::Gallery;
 use super::panel::CHART_HEIGHT;
 use crate::app::ModeScope;
-use crate::ui_kit::{LEFT_WIDTH, RIGHT_WIDTH, TOPBAR};
+use crate::ui_kit::{LEFT_WIDTH, RIGHT_WIDTH, SWITCHER_STRIP, TOPBAR};
 use crate::camera::{Framing, Orbit, OrbitRules, Pose, RadiusLimits, ViewArea};
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::prelude::*;
@@ -69,7 +69,7 @@ pub(super) fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         },
         // Between the header, exhibit list, inspector and chart strip (the
         // whole window when they leave no room).
-        ViewArea::Docks { left: LEFT_WIDTH, right: RIGHT_WIDTH, top: TOPBAR, bottom: CHART_HEIGHT },
+        ViewArea::Docks { left: LEFT_WIDTH, right: RIGHT_WIDTH, top: TOPBAR, bottom: CHART_HEIGHT + SWITCHER_STRIP },
         DespawnOnExit(ModeScope::Phenomena),
     ));
     // UI over the whole window, drawn after the 3D view.

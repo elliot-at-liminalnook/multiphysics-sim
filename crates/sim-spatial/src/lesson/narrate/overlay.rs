@@ -30,7 +30,7 @@ pub(in crate::lesson) fn overlay(
     let scale = window.scale_factor();
     let rect_of = |node: &ComputedNode, gt: &UiGlobalTransform| Rect::from_center_size(gt.translation / scale, node.size() / scale);
     let block_rect = |id: &str| blocks.iter().find(|(b, n, _)| b.0 == id && n.size().y > 0.).map(|(_, n, g)| rect_of(n, g));
-    let page = Rect::new(LEFT_WIDTH, TOPBAR, window.width() - RIGHT_WIDTH, window.height() - STATUSBAR);
+    let page = Rect::new(LEFT_WIDTH, TOPBAR, window.width() - RIGHT_WIDTH, window.height() - STATUSBAR - crate::ui_kit::SWITCHER_STRIP);
     let mut items: Vec<(u8, Rect, String)> = Vec::new(); // 0 highlight, 1 box, 2 arrow
     if let (true, Some(n)) = (learn.active, &learn.narration) {
         let m = &n.marks;

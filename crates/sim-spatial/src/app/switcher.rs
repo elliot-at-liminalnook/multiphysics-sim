@@ -1,40 +1,59 @@
-//! The mode switcher: one small row of buttons in every mode, one of the
-//! entry points of the mode switch (with `system_ui` `mode:*`, REST
-//! `viewer_mode`, the builder's Lessons button and the lesson screen's
+//! The mode switcher: one strip along the window's bottom in every mode,
+//! one of the entry points of the mode switch (with `system_ui` `mode:*`,
+//! REST `viewer_mode`, the builder's Lessons button and the lesson screen's
 //! toggles), all writing the same `WindowAction::Switch`.
+//!
+//! Layout (window-first-usability): the switcher is the kit's
+//! `Dock::Strip`, the `SWITCHER_STRIP` px every mode's docks end above, so
+//! it never covers a mode's panels. The last outcome message is on the
+//! left; it wraps within the strip and is clipped to two lines, with the
+//! full text kept as the message's `AccessibleLabel`. The mode segments are
+//! on the right.
 use super::actions::Act;
 use super::switch::{Documents, ModeSwitch, Switcher, WindowAction};
 use super::{Persistent, ViewerMode};
-use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, UiFonts, size};
+use crate::ui_kit::{DANGER, Dock, Kit, Look, SUBTLE, UiFonts, size};
 use bevy::prelude::*;
+use bevy::ui::prelude::AccessibleLabel;
 
 #[derive(Component)]
 pub(crate) struct ModeButton(ViewerMode);
 #[derive(Component)]
 pub(crate) struct SwitchMessage;
 
-/// Startup: the switcher, above every mode's panels. The top of each mode
-/// is full (toolbars and run controls), so it sits in the bottom-right
-/// corner; its last message (refusals name the reason) is shown above it.
-/// The modes are kit segments, the current one chosen.
+/// Two caption lines (default line height 1.2 × `size::CAPTION` = 13.8 px
+/// each): the message box clips anything longer.
+const MESSAGE_HEIGHT: f32 = 28.0;
+
+/// Startup: the switcher strip, above every mode's panels (z 40). The
+/// message takes the free width on the left; the modes are kit segments on
+/// the right, the current one chosen. The strip blocks picking (no
+/// `Pickable` override), like any dock.
 pub(crate) fn spawn_switcher(mut commands: Commands, fonts: Res<UiFonts>, mode: Res<State<ViewerMode>>) {
     let k = Kit::new(&fonts);
     let current = *mode.get();
     commands
         .spawn((
             Persistent,
-            // Floats in the bottom-right corner over every mode (layout only).
-            Node { position_type: PositionType::Absolute, right: Val::Px(8.0), bottom: Val::Px(6.0), max_width: Val::Px(560.0), flex_direction: FlexDirection::Column, align_items: AlignItems::FlexEnd, row_gap: Val::Px(3.0), ..default() },
+            k.dock(Dock::Strip, Node { flex_direction: FlexDirection::Row, align_items: AlignItems::Center, padding: UiRect::axes(Val::Px(10.0), Val::Px(0.0)), column_gap: Val::Px(12.0), ..default() }),
             GlobalZIndex(40),
-            Pickable::IGNORE,
         ))
-        .with_children(|root| {
-            root.spawn((k.text("", size::CAPTION, SUBTLE, 0), SwitchMessage, Pickable::IGNORE));
-            // A translucent backdrop: the switcher floats over the 3D views.
-            root.spawn((k.segments(), BackgroundColor(crate::view::BACKDROP.with_alpha(0.85)))).with_children(|row| {
-                for mode in ViewerMode::ALL {
-                    row.spawn(k.button(mode.label(), ModeButton(mode), Look::Segment(mode == current), true));
-                }
+        .with_children(|strip| {
+            // The message box: the free width, at most two lines, clipped.
+            strip
+                .spawn((Node { flex_grow: 1.0, flex_shrink: 1.0, flex_basis: Val::Px(0.0), min_width: Val::Px(0.0), max_height: Val::Px(MESSAGE_HEIGHT), overflow: Overflow::clip(), ..default() }, Pickable::IGNORE))
+                .with_children(|clip| {
+                    clip.spawn((k.text("", size::CAPTION, SUBTLE, 0), Node { max_width: Val::Percent(100.0), ..default() }, SwitchMessage, AccessibleLabel::new(""), Pickable::IGNORE));
+                });
+            // The segments keep their content width: a holder that never
+            // shrinks (the message box takes any shortfall), so the kit's
+            // segments style stays the kit's.
+            strip.spawn(Node { flex_shrink: 0.0, ..default() }).with_children(|holder| {
+                holder.spawn(k.segments()).with_children(|row| {
+                    for mode in ViewerMode::ALL {
+                        row.spawn(k.button(mode.label(), ModeButton(mode), Look::Segment(mode == current), true));
+                    }
+                });
             });
         });
 }
@@ -49,8 +68,9 @@ pub(crate) fn switcher_clicks(buttons: Query<(&Interaction, &ModeButton), Change
     }
 }
 
-/// Present: the active mode highlighted, the last outcome shown.
-pub(crate) fn update_switcher(mode: Res<State<ViewerMode>>, switch: Res<Switcher>, mut buttons: Query<(&ModeButton, &mut Look)>, mut message: Query<(&mut Text, &mut TextColor), With<SwitchMessage>>) {
+/// Present: the active mode highlighted, the last outcome shown (and
+/// given in full as the message's accessible label).
+pub(crate) fn update_switcher(mut commands: Commands, mode: Res<State<ViewerMode>>, switch: Res<Switcher>, mut buttons: Query<(&ModeButton, &mut Look)>, mut message: Query<(Entity, &mut Text, &mut TextColor), With<SwitchMessage>>) {
     for (button, mut look) in &mut buttons {
         look.set_if_neq(Look::Segment(button.0 == *mode.get()));
     }
@@ -62,9 +82,11 @@ pub(crate) fn update_switcher(mode: Res<State<ViewerMode>>, switch: Res<Switcher
         Some(Err(text)) => (text.clone(), DANGER),
         None => (String::new(), SUBTLE),
     };
-    for (mut text, mut text_colour) in &mut message {
+    for (entity, mut text, mut text_colour) in &mut message {
         if text.0 != line {
             text.0 = line.clone();
+            // `AccessibleLabel` is immutable: re-insert it to update it.
+            commands.entity(entity).insert(AccessibleLabel::new(line.clone()));
         }
         if text_colour.0 != colour {
             text_colour.0 = colour;

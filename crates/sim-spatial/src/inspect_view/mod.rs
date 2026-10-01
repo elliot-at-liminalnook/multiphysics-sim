@@ -215,8 +215,11 @@ impl SpatialScene {
     pub(crate) fn top(&self) -> f32 {
         if self.builder_mode { ui_kit::TOPBAR } else { TOP }
     }
+    /// The docks' bottom edge from the window's bottom: the status bar (and
+    /// Build's graph dock) above the switcher strip (`SWITCHER_STRIP`), so
+    /// the viewport and hit tests end where the docks do.
     pub(crate) fn bottom(&self) -> f32 {
-        if self.builder_mode { ui_kit::STATUSBAR + self.builder_dock } else { BOTTOM }
+        ui_kit::SWITCHER_STRIP + if self.builder_mode { ui_kit::STATUSBAR + self.builder_dock } else { BOTTOM }
     }
     pub(crate) fn representatives(&self) -> Vec<(String, String)> {
         let mut seen = std::collections::BTreeSet::new();

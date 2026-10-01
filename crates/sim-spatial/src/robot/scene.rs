@@ -394,11 +394,16 @@ pub(super) fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkM
 
 /// SimSync, before `CameraSet::Viewport`: the 3D view draws between the
 /// list, the inspector and the header, above the graph dock when it is
-/// shown (the shared camera falls back to the whole window when they leave
-/// no room).
+/// shown and the switcher strip (the shared camera falls back to the whole
+/// window when they leave no room).
 pub(super) fn view_area(view: Res<RobotView>, mut area: Single<&mut ViewArea, With<RobotCamera>>) {
-    let want = ViewArea::Docks { left: LEFT, right: RIGHT, top: TOP, bottom: if view.graphs_visible { DOCK } else { 0.0 } };
-    area.set_if_neq(want);
+    area.set_if_neq(wanted_area(view.graphs_visible));
+}
+
+/// The view area for the graph dock shown or not: the docks end above the
+/// switcher strip (`ui_kit::SWITCHER_STRIP`), so the viewport does too.
+pub(super) fn wanted_area(graphs_visible: bool) -> ViewArea {
+    ViewArea::Docks { left: LEFT, right: RIGHT, top: TOP, bottom: crate::ui_kit::SWITCHER_STRIP + if graphs_visible { DOCK } else { 0.0 } }
 }
 
 /// The one selection, shown in 3D and in the list (a selectable `Tint`);
@@ -461,7 +466,7 @@ pub(super) fn scroll(
     let delta = wheel_delta(&mut wheel, 24.0);
     let max = ((node.content_size().y - node.size().y) * node.inverse_scale_factor()).max(0.0);
     let covered = hardware.is_some_and(|h| h.open);
-    if delta != 0.0 && !covered && window.cursor_position().is_some_and(|p| p.x >= window.width() - RIGHT && p.y > TOP) {
+    if delta != 0.0 && !covered && window.cursor_position().is_some_and(|p| p.x >= window.width() - RIGHT && p.y > TOP && p.y < window.height() - crate::ui_kit::SWITCHER_STRIP) {
         view.scroll_to = Some((position.y - delta).clamp(0.0, max));
     }
     if let Some(y) = view.scroll_to.take() {

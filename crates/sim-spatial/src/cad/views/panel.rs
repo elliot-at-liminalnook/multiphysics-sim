@@ -25,7 +25,7 @@ use crate::builder::ui_api::Enabled;
 use crate::cad::panel::{CadButton, NameDraft};
 use crate::camera::CameraAction;
 use crate::ui_kit::form::{DraftKey, FieldKind, FieldValue, TextDraft, Unit, evaluate};
-use crate::ui_kit::{BORDER, DANGER, FAINT, Kit, Look, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, UiFonts, size, wrap};
+use crate::ui_kit::{BORDER, DANGER, FAINT, Kit, Look, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, UiFonts, above_strip, size, wrap};
 use bevy::ecs::message::Messages;
 use bevy::input::ButtonState;
 use bevy::input::keyboard::KeyboardInput;
@@ -251,7 +251,7 @@ pub(super) fn draw(mut commands: Commands, views: Option<Res<CadViews>>, doc: Op
             Node {
                 position_type: PositionType::Absolute,
                 right: Val::Px(RIGHT_WIDTH + 8.0),
-                bottom: Val::Px(STATUSBAR + 8.0),
+                bottom: above_strip(STATUSBAR + 8.0),
                 width: Val::Px(320.0),
                 max_height: Val::Percent(70.0),
                 flex_direction: FlexDirection::Column,

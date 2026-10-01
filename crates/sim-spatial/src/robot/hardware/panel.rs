@@ -28,7 +28,7 @@ use super::view::{self, Form, PanelView};
 use super::{Hardware, Section};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
-use crate::ui_kit::{DANGER, Kit, Look, OK, UiFonts, WARN, slider_held, wheel_delta};
+use crate::ui_kit::{DANGER, Kit, Look, OK, SWITCHER_STRIP, UiFonts, WARN, slider_held, wheel_delta};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
@@ -335,7 +335,7 @@ fn scroll(hw: Option<Res<Hardware>>, mut wheel: MessageReader<MouseWheel>, windo
         return;
     }
     let Ok(window) = windows.single() else { return };
-    if window.cursor_position().is_some_and(|p| p.x >= window.width() - WIDTH && p.y > super::super::TOP) {
+    if window.cursor_position().is_some_and(|p| p.x >= window.width() - WIDTH && p.y > super::super::TOP && p.y < window.height() - SWITCHER_STRIP) {
         for mut position in &mut areas {
             position.0.y = (position.0.y - delta).max(0.0);
         }

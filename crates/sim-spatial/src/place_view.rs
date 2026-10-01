@@ -138,6 +138,7 @@ impl Plugin for PlacePlugin {
                 keys.after(actions::serve).in_set(ViewerSet::Input),
                 apply.in_set(ViewerSet::Actions),
                 publish.in_set(ViewerSet::Present),
+                viewport.in_set(ViewerSet::Present),
             )
                 .run_if(in_state(ViewerMode::Place)),
         );
@@ -286,6 +287,25 @@ fn keys(keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<Act<PlaceAction>
     }
 }
 
+/// Present: the walkthrough draws above the switcher strip
+/// (`ui_kit::SWITCHER_STRIP`), as every mode's 3D view ends where its
+/// docks do; written only on a change (`Viewport` has no `PartialEq`).
+fn viewport(window: Option<Single<&Window, With<bevy::window::PrimaryWindow>>>, mut camera: Query<&mut Camera, With<Fly>>) {
+    let Some(window) = window else { return };
+    let Ok(mut camera) = camera.single_mut() else { return };
+    let size = window.physical_size();
+    let strip = (crate::ui_kit::SWITCHER_STRIP * window.scale_factor()).round() as u32;
+    let wanted = (size.x >= 1 && size.y > strip + 1).then(|| bevy::camera::Viewport { physical_position: UVec2::ZERO, physical_size: UVec2::new(size.x, size.y - strip), ..default() });
+    let same = match (&camera.viewport, &wanted) {
+        (Some(a), Some(b)) => a.physical_position == b.physical_position && a.physical_size == b.physical_size,
+        (None, None) => true,
+        _ => false,
+    };
+    if !same {
+        camera.viewport = wanted;
+    }
+}
+
 /// Present: `/v1/state`, at most every 100 ms.
 fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<PlaceView>, camera: Single<(&Transform, &Fly)>) {
     let Some(mut rest) = rest else { return };
@@ -320,7 +340,10 @@ fn setup(mut commands: Commands, fonts: Res<crate::ui_kit::UiFonts>, mut meshes:
         commands.spawn((Mesh3d(post.clone()), MeshMaterial3d(blue.clone()), Transform::from_translation(*s + Vec3::Y * 0.1), PhotoMarker));
     }
     commands.spawn((Camera3d::default(), bevy::core_pipeline::tonemapping::Tonemapping::None, Projection::Perspective(PerspectiveProjection { fov: 75f32.to_radians(), near: 0.01, ..default() }), Transform::from_translation(info.start).looking_to(info.look, Vec3::Y), Fly { yaw: 0.0, pitch: -0.25, speed: 0.8 }));
-    // The help line floats over the top-left of the walkthrough (the whole window is the view).
+    // UI over the whole window (the help line, the switcher strip); the
+    // walkthrough's camera draws above the strip (`viewport`).
+    commands.spawn((Camera2d, Camera { order: 3, clear_color: ClearColorConfig::None, ..default() }, IsDefaultUiCamera));
+    // The help line floats over the top-left of the walkthrough.
     let k = crate::ui_kit::Kit::new(&fonts);
     commands.spawn((
         k.text(format!("{}\nW/A/S/D move | Q/E down/up | Shift faster | drag to look | wheel: speed | 1-9: stations | P: photo markers | H: help", info.description), 14.0, crate::ui_kit::TEXT, 0),

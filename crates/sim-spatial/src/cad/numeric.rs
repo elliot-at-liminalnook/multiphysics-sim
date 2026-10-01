@@ -36,7 +36,7 @@ use super::topology::CadTopology;
 use super::transform::{DimensionEntry, Field, FieldCommit, fields, hint, keep_entry, mode_label};
 use sim_runtime::cad_client::SelectionItem;
 use crate::app::actions::Act;
-use crate::ui_kit::{BORDER, DANGER, FAINT, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, UiFonts, VALUE, size};
+use crate::ui_kit::{BORDER, DANGER, FAINT, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, UiFonts, VALUE, above_strip, size};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
@@ -92,7 +92,7 @@ pub(super) fn spawn(mut commands: Commands) {
                 position_type: PositionType::Absolute,
                 left: Val::Px(LEFT_WIDTH + 8.0),
                 right: Val::Px(RIGHT_WIDTH + 8.0),
-                bottom: Val::Px(STATUSBAR + 8.0),
+                bottom: above_strip(STATUSBAR + 8.0),
                 flex_direction: FlexDirection::Column,
                 row_gap: Val::Px(6.0),
                 padding: UiRect::all(Val::Px(8.0)),

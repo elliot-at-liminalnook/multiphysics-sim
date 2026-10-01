@@ -11,6 +11,22 @@ pub(crate) const TOPBAR: f32 = 52.0;
 pub(crate) const STATUSBAR: f32 = 30.0;
 pub(crate) const LEFT_WIDTH: f32 = 300.0;
 pub(crate) const RIGHT_WIDTH: f32 = 330.0;
+/// The mode switcher's strip along the window's bottom edge
+/// (window-first-usability): reserved once here. Every `Dock` ends above
+/// it (`Kit::dock` adds it), `Dock::Strip` is the strip itself, and any
+/// other bottom-anchored node offsets by it ([`above_strip`]), so nothing
+/// a mode draws lies under the switcher or its message.
+pub(crate) const SWITCHER_STRIP: f32 = 40.0;
+
+/// A bottom offset `px` above the switcher strip (for bottom-anchored
+/// nodes that are not docks: floating bars, toasts, pages).
+pub(crate) fn above_strip(px: f32) -> Val {
+    Val::Px(px + SWITCHER_STRIP)
+}
+
+/// The `GlobalZIndex` of a modal backdrop (`Kit::backdrop`): above every
+/// panel, the switcher strip (40) and the radial pie (45).
+pub(crate) const MODAL_Z: i32 = 50;
 
 // Palette: dark neutral surfaces, one accent, semantic warning/danger/ok.
 pub(crate) const BAR: Color = Color::srgb(0.071, 0.086, 0.106);

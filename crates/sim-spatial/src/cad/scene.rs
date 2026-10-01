@@ -25,7 +25,7 @@ use super::document::{CadDocument, CadInputFocus, CadTool};
 use super::mesh::{CadMaterials, CadMeshes, CadRoot, root_transform};
 use crate::camera::{Framing, Orbit, OrbitRules, RadiusLimits, ViewArea};
 use bevy::window::PrimaryWindow;
-use crate::ui_kit::{LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, TOPBAR};
+use crate::ui_kit::{LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SWITCHER_STRIP, TOPBAR};
 use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::MeshPickingCamera;
 use bevy::picking::pointer::PointerId;
@@ -70,8 +70,8 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
             orbit,
             rules(),
             // The 3D view draws between the panel's docks (top bar, model tree,
-            // inspector, status bar), so framing centres the bodies where they can be seen.
-            ViewArea::Docks { left: LEFT_WIDTH, right: RIGHT_WIDTH, top: TOPBAR, bottom: STATUSBAR },
+            // inspector, status bar, switcher strip), so framing centres the bodies where they can be seen.
+            ViewArea::Docks { left: LEFT_WIDTH, right: RIGHT_WIDTH, top: TOPBAR, bottom: STATUSBAR + SWITCHER_STRIP },
         ))
         // A headlight: the light follows the view, so every face the camera sees is lit.
         .with_children(|camera| {

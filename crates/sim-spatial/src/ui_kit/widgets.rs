@@ -18,20 +18,39 @@ pub(crate) struct Kit<'a> {
     pub(crate) f: &'a UiFonts,
 }
 
-/// Which window edge a dock panel sits on, with its extent.
+/// Which window edge a dock panel sits on, with its extent. Bottoms are
+/// measured from the top of the switcher strip (`SWITCHER_STRIP`, added by
+/// [`Kit::dock`]): `bottom: 0.0` ends a column just above it.
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum Dock {
     /// Toolbar across the top: `height` tall. Background BAR, bottom border.
     Top { height: f32 },
-    /// Status bar across the bottom. Background BAR, top border.
+    /// Status bar across the bottom, just above the switcher strip. Background BAR, top border.
     Bottom { height: f32 },
     /// Left column between `top` and `bottom`, `width` wide. SURFACE, right border.
     Left { top: f32, bottom: f32, width: f32 },
     /// Right column. SURFACE, left border.
     Right { top: f32, bottom: f32, width: f32 },
-    /// A strip along the bottom of the middle view, between `left` and `right`
-    /// (the graph docks). BAR, top border.
-    Under { left: f32, right: f32, height: f32 },
+    /// A strip along the bottom of the middle view, between `left` and
+    /// `right`, `bottom` above the switcher strip (the graph docks). BAR, top border.
+    Under { left: f32, right: f32, bottom: f32, height: f32 },
+    /// The switcher strip itself (`app::switcher` only): the window's
+    /// bottom `SWITCHER_STRIP` px, full width. BAR, top border.
+    Strip,
+}
+
+/// Where a dock sits: (left, right, top, bottom, width, height), `None`
+/// where the edge is free. Pure, so the layout test reads it without a window.
+pub(crate) fn dock_rect(dock: Dock) -> [Option<f32>; 6] {
+    let s = SWITCHER_STRIP;
+    match dock {
+        Dock::Top { height } => [Some(0.), Some(0.), Some(0.), None, None, Some(height)],
+        Dock::Bottom { height } => [Some(0.), Some(0.), None, Some(s), None, Some(height)],
+        Dock::Left { top, bottom, width } => [Some(0.), None, Some(top), Some(bottom + s), Some(width), None],
+        Dock::Right { top, bottom, width } => [None, Some(0.), Some(top), Some(bottom + s), Some(width), None],
+        Dock::Under { left, right, bottom, height } => [Some(left), Some(right), None, Some(bottom + s), None, Some(height)],
+        Dock::Strip => [Some(0.), Some(0.), None, Some(0.), None, Some(s)],
+    }
 }
 
 /// A corner of a chart image, for its axis labels.
@@ -248,12 +267,24 @@ impl Kit<'_> {
     /// layout (direction, padding, gaps, alignment, overflow); the kit sets
     /// the position, size, background and border for the edge.
     pub(crate) fn dock(&self, dock: Dock, layout: Node) -> impl Bundle + use<> {
-        let (node, background) = match dock {
-            Dock::Top { height } => (Node { position_type: PositionType::Absolute, left: Val::Px(0.), right: Val::Px(0.), top: Val::Px(0.), height: Val::Px(height), border: UiRect::bottom(Val::Px(1.)), ..layout }, BAR),
-            Dock::Bottom { height } => (Node { position_type: PositionType::Absolute, left: Val::Px(0.), right: Val::Px(0.), bottom: Val::Px(0.), height: Val::Px(height), border: UiRect::top(Val::Px(1.)), ..layout }, BAR),
-            Dock::Left { top, bottom, width } => (Node { position_type: PositionType::Absolute, left: Val::Px(0.), top: Val::Px(top), bottom: Val::Px(bottom), width: Val::Px(width), border: UiRect::right(Val::Px(1.)), ..layout }, SURFACE),
-            Dock::Right { top, bottom, width } => (Node { position_type: PositionType::Absolute, right: Val::Px(0.), top: Val::Px(top), bottom: Val::Px(bottom), width: Val::Px(width), border: UiRect::left(Val::Px(1.)), ..layout }, SURFACE),
-            Dock::Under { left, right, height } => (Node { position_type: PositionType::Absolute, left: Val::Px(left), right: Val::Px(right), bottom: Val::Px(0.), height: Val::Px(height), border: UiRect::top(Val::Px(1.)), ..layout }, BAR),
+        let [left, right, top, bottom, width, height] = dock_rect(dock);
+        let (border, background) = match dock {
+            Dock::Top { .. } => (UiRect::bottom(Val::Px(1.)), BAR),
+            Dock::Bottom { .. } | Dock::Under { .. } | Dock::Strip => (UiRect::top(Val::Px(1.)), BAR),
+            Dock::Left { .. } => (UiRect::right(Val::Px(1.)), SURFACE),
+            Dock::Right { .. } => (UiRect::left(Val::Px(1.)), SURFACE),
+        };
+        // Free edges keep the layout's own value (Auto unless it sets one).
+        let node = Node {
+            position_type: PositionType::Absolute,
+            left: left.map_or(layout.left, Val::Px),
+            right: right.map_or(layout.right, Val::Px),
+            top: top.map_or(layout.top, Val::Px),
+            bottom: bottom.map_or(layout.bottom, Val::Px),
+            width: width.map_or(layout.width, Val::Px),
+            height: height.map_or(layout.height, Val::Px),
+            border,
+            ..layout
         };
         (node, BackgroundColor(background), BorderColor::all(BORDER))
     }

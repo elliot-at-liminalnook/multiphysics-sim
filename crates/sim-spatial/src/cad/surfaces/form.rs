@@ -71,7 +71,7 @@ pub(crate) fn shown(entry: &OpEntry, texts: &[String]) -> Vec<usize> {
 
 /// A field typed into (not a choice or a checkbox).
 fn is_text(kind: &FieldKind) -> bool {
-    matches!(kind, FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json)
+    matches!(kind, FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json | FieldKind::Text)
 }
 
 /// The first shown text field of the open form (a parameter index).

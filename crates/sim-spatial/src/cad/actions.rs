@@ -227,6 +227,22 @@ pub enum CadAction {
     CadFormSubmit,
     /// The open form's Cancel (and Escape): closes it and ends its interaction.
     CadFormCancel,
+    /// Edit a sketch with RoboCAD's sketch calls (`[method, [args…],
+    /// {kwargs}?]`, kernel/sketch.py's names; curves by index), checked by
+    /// `cad_client::SketchCall` (a refusal names the call and the
+    /// argument): one `POST /nodes/{node}/sketch`, or without `node` one new
+    /// sketch on `plane` ("xy" | "xz" | "yz" | a plane node id; the active
+    /// plane when absent, else XY) carrying the calls. `revision`: RoboCAD's
+    /// revision the indices were read at; refused by name when it changed.
+    CadSketch {
+        #[serde(default)]
+        node: Option<String>,
+        #[serde(default)]
+        plane: Option<String>,
+        calls: Vec<Value>,
+        #[serde(default)]
+        revision: Option<u64>,
+    },
     /// Open a command surface (the palette, a category's menu, the context
     /// menu, the view or selection-mode radial) or close it (`closed`).
     CadSurface { surface: super::surfaces::Surface },
@@ -249,6 +265,7 @@ pub enum CadAction {
 
 use super::document::{CadDocument, CadTarget, Connection, EditDone};
 use super::mesh::CadMeshes;
+use super::sketch::{CadActivePlane, CadSketches};
 use super::sync::{self, value};
 use super::topology::CadTopology;
 use super::view::CadView;
@@ -274,13 +291,15 @@ pub(super) fn apply(
     mut topology: Option<ResMut<CadTopology>>,
     view: Option<Res<CadView>>,
     mut documents: ResMut<Documents>,
+    mut plane: ResMut<CadActivePlane>,
+    sketches: Option<Res<CadSketches>>,
 ) {
     let Some(mut doc) = doc else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("CAD mode has no document open".into())));
         return;
     };
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
-        let mut cx = Cx { doc: &mut *doc, meshes: meshes.as_deref_mut(), topology: topology.as_deref_mut(), view: view.as_deref(), documents: &mut *documents };
+        let mut cx = Cx { doc: &mut *doc, meshes: meshes.as_deref_mut(), topology: topology.as_deref_mut(), view: view.as_deref(), documents: &mut *documents, plane: &mut *plane, sketches: sketches.as_deref() };
         let outcome = handle(action, call, &mut cx);
         match call.origin {
             Origin::Rest(_) => outcome,
@@ -306,6 +325,10 @@ pub(super) struct Cx<'a> {
     /// The camera as last drawn (None without a window).
     pub view: Option<&'a CadView>,
     pub documents: &'a mut Documents,
+    /// The active plane and 2D snapping (cad-sketch; display state).
+    pub plane: &'a mut CadActivePlane,
+    /// Sketch geometry and plane frames (None without CAD mode's caches).
+    pub sketches: Option<&'a CadSketches>,
 }
 
 /// One action, from any entry point.
@@ -317,7 +340,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     let done = |r: Result<Value, String>| Outcome::Done(r);
     let doc = &mut *cx.doc;
     match action {
-        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, cx.meshes.as_deref()))),
+        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, cx.meshes.as_deref(), Some(&*cx.plane)))),
         CadAction::CadOpen { path, url } => done(open(doc, cx.documents, path.as_ref(), url.as_deref())),
         CadAction::CadSelect { .. }
         | CadAction::CadSelectMode { .. }
@@ -377,7 +400,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             let (name, args, kwargs) = (name.clone(), args.clone(), kwargs.clone());
             edit(doc, call, format!("Op {name}"), move |c| c.op(&name, &args, &kwargs).map(|r| EditDone { message: format!("Ran {name}"), result: value(&r) }))
         }
-        CadAction::CadInvoke { .. } | CadAction::CadRun { .. } | CadAction::CadFormSet { .. } | CadAction::CadFormSubmit | CadAction::CadFormCancel => super::ops::handle(action, call, cx),
+        CadAction::CadInvoke { .. } | CadAction::CadRun { .. } | CadAction::CadFormSet { .. } | CadAction::CadFormSubmit | CadAction::CadFormCancel | CadAction::CadSketch { .. } => super::ops::handle(action, call, cx),
         CadAction::CadSurface { .. } => super::surfaces::handle(action, call, cx),
         CadAction::CadRefresh => done(Ok(refresh(doc))),
         CadAction::CadFit { id } => done(fit(doc, cx.meshes.as_deref_mut(), id.as_deref())),
@@ -565,6 +588,7 @@ pub(super) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadFormSet { name, value } => json!({"command": "cad_form_set", "name": name, "value": value}),
         CadAction::CadFormSubmit => json!({"command": "cad_form_submit"}),
         CadAction::CadFormCancel => json!({"command": "cad_form_cancel"}),
+        CadAction::CadSketch { node, plane, calls, revision } => json!({"command": "cad_sketch", "node": node, "plane": plane, "calls": calls, "revision": revision}),
         CadAction::CadSurface { surface } => json!({"command": "cad_surface", "surface": surface}),
         CadAction::State => json!({"command": "state"}),
         CadAction::CadState => json!({"command": "cad_state"}),
@@ -583,7 +607,7 @@ fn system_ui(call: &mut Call, cx: &mut Cx, args: &Map<String, Value>) -> Outcome
                 .into_iter()
                 .map(|(id, label, action, ready)| json!({"id": id, "label": label, "enabled": ready.is_ok(), "disabled_reason": ready.err(), "action": rest_form(&action)}))
                 .collect();
-            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, cx.meshes.as_deref())})))
+            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, cx.meshes.as_deref(), Some(&*cx.plane))})))
         }
         Some("activate") => {
             let Some(id) = action["id"].as_str() else { return Outcome::Done(Err("system_ui activate needs an id; request controls".into())) };
@@ -600,7 +624,7 @@ fn system_ui(call: &mut Call, cx: &mut Cx, args: &Map<String, Value>) -> Outcome
 
 /// `cad_state`: the document as this window shows it. Nothing is invented:
 /// absent values are null.
-pub(super) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Value {
+pub(super) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>, plane: Option<&CadActivePlane>) -> Value {
     let connection = match &doc.connection {
         Connection::Connecting { what, since } => json!({"state": "connecting", "what": what, "seconds": since.elapsed().as_secs()}),
         Connection::Connected => json!({"state": "connected"}),
@@ -660,14 +684,15 @@ pub(super) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Value
     });
     // Outside the macro: one more key there would pass json!'s recursion limit.
     state["ops"] = super::ops::state_json(doc);
+    state["plane"] = plane.map_or(Value::Null, |p| super::sketch::plane::state_json(doc, p));
     state
 }
 
 /// Present: `/v1/state` (with `viewer_mode`) and `/v1/cad_state`, at most every 100 ms.
-pub(super) fn publish(rest: Option<ResMut<crate::rest::Rest>>, doc: Option<Res<CadDocument>>, meshes: Option<Res<CadMeshes>>) {
+pub(super) fn publish(rest: Option<ResMut<crate::rest::Rest>>, doc: Option<Res<CadDocument>>, meshes: Option<Res<CadMeshes>>, plane: Option<Res<CadActivePlane>>) {
     let (Some(mut rest), Some(doc)) = (rest, doc) else { return };
     if rest.0.snapshot_due() {
-        let state = state_json(&doc, meshes.as_deref());
+        let state = state_json(&doc, meshes.as_deref(), plane.as_deref());
         let mut shown = state.clone();
         shown["viewer_mode"] = json!(ViewerMode::Cad.name());
         rest.0.publish("cad_state", state);

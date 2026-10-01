@@ -6,16 +6,14 @@
 //! faces in `Selection.edges()`/`faces()` order (:224-228). A selection
 //! that does not fit is refused with the entry's message (RoboCAD's
 //! `self.error(…)`), naming nothing sent.
-use super::{Needs, OpEntry};
+use super::{Env, Needs, OpEntry};
 use crate::cad::document::CadDocument;
-use crate::cad::topology::CadTopology;
 use crate::cad::transform::{mm, selection_revision, view_back};
-use crate::cad::view::CadView;
 use sim_runtime::cad_client::SelectionItem;
 
 /// What an operation runs on.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(super) struct Resolved {
+pub(crate) struct Resolved {
     /// The selected nodes, each once, in selection order; for a
     /// `Needs::Nodes` with kinds, only the nodes of those kinds (RoboCAD's
     /// handlers filter: thicken takes sheets, make unique instances).
@@ -41,7 +39,7 @@ pub(super) fn reads_indices(needs: Needs) -> bool {
 }
 
 /// The node's kind in the shown tree (None when unknown or no tree is shown).
-pub(super) fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
+pub(crate) fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
     doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).map(|n| n.kind.as_str())
 }
 
@@ -50,7 +48,8 @@ pub(super) fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
 /// the selection's face or edge indices were read at an older revision,
 /// when an index does not exist in the shown topology, or when the
 /// selection does not fit `entry.needs` (`entry.refusal`).
-pub(super) fn resolve(entry: &OpEntry, doc: &CadDocument, topology: Option<&CadTopology>, view: Option<&CadView>, items: Option<&[SelectionItem]>) -> Result<Resolved, String> {
+pub(super) fn resolve(entry: &OpEntry, doc: &CadDocument, env: &Env, items: Option<&[SelectionItem]>) -> Result<Resolved, String> {
+    let (topology, view) = (env.topology, env.view);
     let explicit = items.is_some();
     let items: &[SelectionItem] = items.unwrap_or(&doc.selection);
     let shown = doc.shown_revision();

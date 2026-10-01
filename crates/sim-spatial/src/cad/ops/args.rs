@@ -8,7 +8,9 @@
 //! `{"translation"}`, counts as integers. Labels are RoboCAD's history
 //! label (the Ops method's `_edit`/`_new`/`Composite` label) and the subject.
 use super::resolve::{Resolved, kind_of};
-use super::{Arg, Fan, Needs, OpEntry, Param, Primitive, Shape};
+use super::{Arg, Env, Fan, Needs, OpEntry, Param, Primitive, Shape};
+use crate::cad::sketch::{SketchTarget, ViewAct};
+use sim_runtime::cad_client::SketchCall;
 use crate::cad::analysis_overlay::Read;
 use crate::cad::document::CadDocument;
 use crate::cad::mesh::BODY_KINDS;
@@ -16,9 +18,10 @@ use crate::cad::transform::{OpCall, fa, face_ref, fl, num, round6};
 use crate::ui_kit::form::{FieldKind, Unit};
 use serde_json::{Map, Value, json};
 
-/// What a run sends: Ops calls in one edit job, a paste, or a read-only read.
+/// What a run sends: Ops calls in one edit job, a paste, a sketch's
+/// calls, a read-only read, or viewer state (no RoboCAD call).
 #[derive(Clone, Debug, PartialEq)]
-pub(super) enum Built {
+pub(crate) enum Built {
     /// The Ops calls, in order (one per node for `Fan::PerNode`), and the
     /// edit's label (the header's and the refusal's name for it).
     Edit { calls: Vec<OpCall>, label: String },
@@ -26,16 +29,21 @@ pub(super) enum Built {
     Paste { clip: Value, label: String },
     /// A read drawn as an overlay, or the copy.
     Read(Read),
+    /// One `POST /nodes/{id}/sketch` on `Node`, or one `POST /nodes
+    /// {"kind": "sketch", "plane", "calls"}` for `New` (cad-sketch).
+    Sketch { target: SketchTarget, calls: Vec<SketchCall>, label: String },
+    /// Viewer state: the active plane or 2D snapping (`Flow::View`).
+    View(ViewAct),
 }
 
 /// An edge as RoboCAD's `ArgConverter.edge` takes it (api.py:166-176).
-pub(super) fn edge_ref(node: &str, edge: i64) -> Value {
+pub(crate) fn edge_ref(node: &str, edge: i64) -> Value {
     json!({"node": node, "edge": edge})
 }
 
 /// RoboCAD's history label for an Ops route (its `_edit`/`_new`/`Composite`
 /// label, commands.py), or "" for a route not listed.
-pub(super) fn history(route: &str) -> &'static str {
+pub(crate) fn history(route: &str) -> &'static str {
     match route {
         "delete" => "Delete",                                   // commands.py:331 RemoveNodes("Delete")
         "set_pivot" => "Pivot",                                 // :352
@@ -76,6 +84,13 @@ pub(super) fn history(route: &str) -> &'static str {
         "set_control_points" => "Move control points",          // :865
         "raise_degree" => "Raise degree",                       // :868
         "rebuild_face" => "Rebuild face",                       // :871
+        "extrude" => "Extrude",                                 // :487 (_apply_boolean label)
+        "revolve" => "Revolve",                                 // :491
+        "sweep" => "Sweep",                                     // :496
+        "pipe" => "Pipe",                                       // :500
+        "loft" => "Loft",                                       // :505
+        "fill" => "Fill",                                       // :509
+        "plane_from_face" | "plane_three_points" | "plane_two_points_camera" | "plane_midplane" => "Plane", // :892-895 (_add_plane)
         _ => "",
     }
 }
@@ -219,7 +234,7 @@ fn joined(head: String, parts: &[String]) -> String {
 }
 
 /// One argument's JSON.
-fn arg(entry: &OpEntry, a: &Arg, r: &Resolved, g: &Group, values: &Map<String, Value>) -> Result<Value, String> {
+fn arg(entry: &OpEntry, a: &Arg, r: &Resolved, g: &Group, values: &Map<String, Value>, env: &Env) -> Result<Value, String> {
     let missing = || entry.refusal.to_string();
     Ok(match a {
         Arg::Node => json!(g.node.as_ref().ok_or_else(missing)?),
@@ -243,6 +258,12 @@ fn arg(entry: &OpEntry, a: &Arg, r: &Resolved, g: &Group, values: &Map<String, V
             let node = g.node.as_ref().ok_or_else(missing)?;
             face_ref(node, *g.faces.first().ok_or_else(missing)?)
         }
+        Arg::FaceB => r.faces.get(1).map(|(n, f)| face_ref(n, *f)).ok_or_else(missing)?,
+        Arg::Plane(name, fallback) => match param(entry, values, name)?.as_str() {
+            Some("active") => env.plane.map_or_else(|| Value::from(fallback.arg()), |p| p.arg_or(*fallback)),
+            Some(named) => Value::from(named),
+            None => return Err(format!("{name} must be active, xy, xz or yz")),
+        },
         Arg::OtherNode => json!(r.other.as_ref().ok_or_else(missing)?),
         Arg::Param(name) => param(entry, values, name)?.clone(),
         Arg::Const(text) => serde_json::from_str::<Value>(text).map_err(|e| format!("{}: constant {text} is not JSON: {e}", entry.id))?,
@@ -261,7 +282,7 @@ fn arg(entry: &OpEntry, a: &Arg, r: &Resolved, g: &Group, values: &Map<String, V
 }
 
 /// The calls of a `Plain` or `Chamfer` entry.
-fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument) -> Result<Built, String> {
+fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument, env: &Env) -> Result<Built, String> {
     let groups = groups(entry, r);
     if groups.is_empty() {
         return Err(entry.refusal.to_string());
@@ -291,13 +312,13 @@ fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
     let mut history_name = history(entry.route).to_string();
     let mut calls = Vec::with_capacity(groups.len());
     for g in &groups {
-        let mut args = entry.args.iter().map(|a| arg(entry, a, r, g, values)).collect::<Result<Vec<Value>, String>>()?;
+        let mut args = entry.args.iter().map(|a| arg(entry, a, r, g, values, env)).collect::<Result<Vec<Value>, String>>()?;
         if let Some((spec, ..)) = &spec {
             args.push(spec.clone());
         }
         let mut kwargs = Map::new();
         for (name, a) in entry.kwargs {
-            kwargs.insert((*name).to_string(), arg(entry, a, r, g, values)?);
+            kwargs.insert((*name).to_string(), arg(entry, a, r, g, values, env)?);
         }
         // Boolean's history label is its op, capitalised (commands.py:585).
         if entry.route == "boolean"
@@ -350,7 +371,8 @@ fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
 
 /// The Array dialog (ui/app.py:920-941): `array_rect(ids, count, spacing=|extent=, as_instances, merge)`
 /// or `array_radial(ids, count, axis_point, axis_dir, total_angle, as_instances, merge)`.
-fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument) -> Result<Built, String> {
+fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument, env: &Env) -> Result<Built, String> {
+    let _ = env; // P2: the radial array's plane defaults to the active plane.
     if r.nodes.is_empty() {
         return Err(entry.refusal.to_string());
     }
@@ -402,7 +424,8 @@ fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
 /// ui/tools.py:522-529): the box's and the cylinder's base lie on the XY
 /// plane (z = 0; the native viewer has no other plane until cad-sketch);
 /// the sphere keeps its centre.
-fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>) -> Result<Built, String> {
+fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>, env: &Env) -> Result<Built, String> {
+    let _ = env; // P2: placed on the active plane.
     let r3 = |v: [f64; 3]| [round6(v[0]), round6(v[1]), round6(v[2])];
     let call = match primitive {
         Primitive::BoxCorner | Primitive::BoxCentre => {
@@ -444,11 +467,15 @@ fn last_of(doc: &CadDocument, r: &Resolved, has: impl Fn(&str) -> bool) -> Optio
 
 /// Build what `entry` sends on the resolved selection with `values`
 /// (`super::values`), keyed by `entry.shape`.
-pub(super) fn build(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument) -> Result<Built, String> {
+pub(super) fn build(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument, env: &Env) -> Result<Built, String> {
     match entry.shape {
-        Shape::Plain | Shape::Chamfer => plain(entry, r, values, doc),
-        Shape::Array => array(entry, r, values, doc),
-        Shape::Place(primitive) => place(entry, primitive, values),
+        Shape::Plain | Shape::Chamfer => plain(entry, r, values, doc, env),
+        Shape::Array => array(entry, r, values, doc, env),
+        Shape::Place(primitive) => place(entry, primitive, values, env),
+        Shape::Sketch(shape) => crate::cad::sketch::specs::calls(entry, shape, values, doc, env),
+        Shape::SketchEdit(edit) => crate::cad::sketch::edits::calls(entry, edit, r, values, doc, env),
+        Shape::Extrude { revolve } => crate::cad::sketch::extrude::calls(entry, revolve, r, values, doc, env),
+        Shape::View(act) => Ok(Built::View(act)),
         Shape::Copy => {
             if r.nodes.is_empty() {
                 return Err(entry.refusal.to_string());

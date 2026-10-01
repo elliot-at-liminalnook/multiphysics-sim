@@ -1726,8 +1726,10 @@ Rejected or recorded: `p.is_file()` on the UI thread in `prepare`/
 self-started service can orphan RoboCAD experiment workers in their own
 process groups (no CAD-mode route starts one; a later epic that does must
 stop it gracefully); service logs (`robocad-api-<pid>-<port>.log` in the
-temp dir) are kept for diagnosis; `wait_until_live` accepts any RoboCAD
-that answers on the chosen port (the `free_port` race is narrow).
+temp dir) are kept for diagnosis. A self-started service is accepted
+only when `GET /` reports `app: "robocad"` serving the opened file
+(`sync::serves`), so another service that took the chosen port in the
+`free_port` race is refused rather than edited.
 
 ### Verification checklist
 

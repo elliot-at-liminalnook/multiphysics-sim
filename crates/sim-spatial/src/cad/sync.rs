@@ -68,6 +68,9 @@ pub(crate) fn start(doc: &mut CadDocument) {
     doc.log = None;
     doc.seen_poll = 0;
     doc.detail_key = None;
+    // A restarted service may report the same revision: the old physical
+    // description could include edits that died with the old service.
+    doc.physical = None;
     doc.dirty_known_at = None;
     // A new connection (perhaps a restarted service on the same file, whose
     // manifest restores the same document id and revision): its first tree
@@ -103,6 +106,13 @@ pub(crate) fn start(doc: &mut CadDocument) {
     doc.shown_seconds = 0;
     doc.connect = Some(job);
     doc.touch();
+}
+
+/// Whether `health` is RoboCAD serving `document` (compared canonically,
+/// so /tmp and /private/tmp agree).
+fn serves(health: &sim_runtime::cad_client::Health, document: &Path) -> bool {
+    let canonical = |p: &Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+    health.app == "robocad" && health.path.as_deref().is_some_and(|p| canonical(Path::new(p)) == canonical(document))
 }
 
 /// What a connect job says when the document closed its child slot.
@@ -142,6 +152,19 @@ fn self_start(path: &Path, slot: &ChildSlot, ctx: &Ctx) -> Result<Connected, Str
         || ctx.cancelled() || slot.closed(),
     );
     let stopped = ctx.cancelled() || slot.closed();
+    // The port was free when chosen, but another service could have bound it
+    // before this child did: only RoboCAD serving this document is accepted.
+    let live = live.and_then(|health| {
+        if serves(&health, &document) {
+            return Ok(health);
+        }
+        Err(format!(
+            "{url} answered as {} serving {}, not RoboCAD serving {}: another service took the port",
+            if health.app.is_empty() { "an unknown service" } else { health.app.as_str() },
+            health.path.as_deref().unwrap_or("a new document"),
+            document.display()
+        ))
+    });
     match live {
         Ok(health) if !stopped => Ok(Connected { client, health, self_started: true }),
         result => {
@@ -238,7 +261,8 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
                 fetch = Some((doc, registry, autosave));
             }
         }
-        refresh = again;
+        // A Refresh pending on a tick whose `GET /` failed is kept for the next.
+        refresh = again || (refresh && health.is_err());
         seq += 1;
         let mut snapshot = lock(shared);
         snapshot.seq = seq;
@@ -414,8 +438,11 @@ fn take_snapshot(doc: &mut CadDocument) {
             }
             if doc.connection != Connection::Connected && doc.child_exit.is_none() {
                 if matches!(doc.connection, Connection::Lost { .. }) {
-                    // Back from Lost: meshes that failed meanwhile are fetched again.
+                    // Back from Lost: meshes and a node detail that failed meanwhile are fetched again.
                     doc.mesh_retry += 1;
+                    if matches!(doc.detail, Some((_, _, Err(_)))) {
+                        doc.detail_key = None;
+                    }
                 }
                 doc.connection = Connection::Connected;
                 changed = true;
@@ -514,24 +541,37 @@ fn finish_edit(doc: &mut CadDocument) {
     doc.status = Some(answer.as_ref().map(|(m, _)| m.clone()).map_err(Clone::clone));
     if std::mem::take(&mut doc.edit_waited) {
         let seq = doc.edit_seq;
+        // Only recent answers are kept: one whose REST caller went away is not collected.
+        doc.edit_results.retain(|s, _| *s + 8 > seq);
         doc.edit_results.insert(seq, answer.map(|(message, result)| serde_json::json!({"message": message, "result": result})));
     }
-    refresh(doc);
+    refresh(doc, true);
     doc.touch();
 }
 
 /// Ask the poll worker for `/doc` now; the next `GET /` it sends follows
 /// this call, so `health.dirty` is known again once that snapshot is read.
-pub(crate) fn refresh(doc: &mut CadDocument) {
+///
+/// `after_edit`: the saved state becomes unknown until then. A plain
+/// refresh (`cad_refresh`) leaves it known, unless an edit's refetch is
+/// already pending, which it moves to its own later snapshot.
+pub(crate) fn refresh(doc: &mut CadDocument, after_edit: bool) {
+    let track = after_edit || doc.dirty_known_at.is_some();
     // Without a poll to ask, the saved state stays unknown until a reconnect
     // (`start` resets it): never fall back to a `dirty` read before an edit.
     let Some(poll) = &doc.poll else {
-        doc.dirty_known_at = Some(u64::MAX);
+        if track {
+            doc.dirty_known_at = Some(u64::MAX);
+        }
         return;
     };
     // The snapshot being fetched now may predate this call; the one after it does not.
     let published = poll.lock().seq;
-    doc.dirty_known_at = Some(if poll.send(PollCommand::Refresh).is_ok() { published + 2 } else { u64::MAX });
+    let sent = poll.send(PollCommand::Refresh).is_ok();
+    if track {
+        doc.dirty_known_at = Some(if sent { published + 2 } else { u64::MAX });
+    }
+    doc.touch();
 }
 
 /// The selection push has answered: RoboCAD now holds our selection. A

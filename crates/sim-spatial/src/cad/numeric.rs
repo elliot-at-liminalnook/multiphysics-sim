@@ -324,11 +324,15 @@ pub(super) fn refresh(mut commands: Commands, doc: Option<Res<CadDocument>>, fon
     }
 }
 
-/// The tool label, the hint and the tool strip.
+/// The 3D view's navigation, as RoboCAD's viewport footer lists its own.
+const NAVIGATION: &str = "Right-drag orbit · Shift+right-drag or middle-drag pan · Wheel zoom · Home fit";
+
+/// The tool label, the hint, the navigation line and the tool strip.
 fn head(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     p.spawn(Node { column_gap: Val::Px(10.0), align_items: AlignItems::Center, flex_wrap: FlexWrap::Wrap, ..default() }).with_children(|row| {
         row.spawn(k.text(mode_label(doc), size::SMALL, TEXT, 2));
-        row.spawn((k.text(hint(doc.tool), size::CAPTION, SUBTLE, 0), Node { flex_shrink: 1.0, min_width: Val::Px(0.0), ..default() }));
+        row.spawn((k.text(hint(doc.tool), size::CAPTION, SUBTLE, 0), Node { flex_shrink: 1.0, min_width: Val::Px(0.0), ..default() }));        // RoboCAD's viewport footer, with this view's own navigation (scene.rs orbit; Home fits).
+        row.spawn((k.text(NAVIGATION, size::CAPTION, FAINT, 0), Node { flex_shrink: 1.0, min_width: Val::Px(0.0), ..default() }));
     });
     p.spawn(k.segments()).with_children(|strip| {
         for c in super::panel::controls(doc).into_iter().filter(|c| c.id.starts_with("cad:tool:")) {

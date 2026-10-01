@@ -162,7 +162,7 @@ duplicates physics.
   `document.rs` became `document/` 774 in three files and
   `transform/mod.rs` 460).
   **cad-sketch** (2026-10-01, see [CAD sketch](#cad-sketch-2026-10-01)),
-  written and reviewed by reading, pending its verification pass: the
+  verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean): the
   active plane (XY/XZ/YZ or a plane node, display state) and 2D snapping,
   the four plane tools, the 13 sketch tools on one data-driven
   interaction, sketch offset/fillet corners/join and the `cad_sketch` REST
@@ -3696,8 +3696,8 @@ sketch tools on one data-driven interaction, the sketch edits and the
 `cad_sketch` REST command, extrude, revolve, sweep, pipe, loft and fill,
 with recorded Python fixes (`Service.edit_sketch` maps curve indices
 first; `ArgConverter` passes `fill`'s node id; the verification pass fixed
-`fill_hole` and made sketch refusals 4xx with a rolled-back failed create); it is written and reviewed by reading, pending its verification
-pass. Next: that pass, then cad-views-export.
+`fill_hole` and made sketch refusals 4xx with a rolled-back failed create); it is verified at cc7ac194
+(sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean). Next: cad-views-export.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -3755,7 +3755,7 @@ by the parity harness. Planned order:
    epic added `POST /clipboard/copy`, `POST /clipboard/paste` and `GET
    /nodes/{id}/control_points|curvature_comb|continuity`).
 3. **cad-sketch** (60 rows). *Written 2026-10-01 and reviewed by reading,
-   pending its verification pass (see [CAD sketch](#cad-sketch-2026-10-01)):
+   verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean) (see [CAD sketch](#cad-sketch-2026-10-01)):
    35 rows done by reading, 25 deliberately different, none open; 6
    earlier rows that waited for the active plane became done by reading.*
    The active plane, construction planes (from a
@@ -3903,8 +3903,8 @@ The Director re-ranks with evidence, but this is the default:
    see [CAD modify](#cad-modify-2026-10-01)) is verified at e0996878
    (sim-spatial lib 252 passed, 1 ignored; bins 4; `cad_client` 33; `units` 29; api pytests 48; sim-web wasm check clean).
    **cad-sketch** (2026-10-01; see [CAD sketch](#cad-sketch-2026-10-01))
-   is done pending verification: written and reviewed by reading, its
-   verification pass still to build and test it. Next: **cad-views-export**.
+   is verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean).
+   Next: **cad-views-export**.
    Remaining, in order (§9 "Later CAD epics"): cad-views-export,
    cad-physical-inspect, cad-print, cad-organize, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).

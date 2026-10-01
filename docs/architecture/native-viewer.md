@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-09-30 after fold-sim-app; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e)
+## Where it is today (re-measured 2026-10-01 after cad-select-transform; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform written and reviewed by reading, pending its verification pass)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -40,7 +40,9 @@ duplicates physics.
   running server). Phenomena mode adds 10 (`state`, `system_ui` and the 8
   `phenomena_*` commands): 122 in all, re-counted 2026-09-30 from the
   `spec(`/`c(` entries: 121 in the nine action types' `commands()` plus
-  the switcher's `system_ui` (`WindowAction::switcher_commands`). Place mode
+  the switcher's `system_ui` (`WindowAction::switcher_commands`).
+  cad-select-transform adds 16 CAD commands (31 `spec(` entries in
+  `cad/actions.rs`, re-counted 2026-10-01): 138 in all. Place mode
   answers `state`, `camera` and `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
   verified at 90c65c86: every intent is a typed action
@@ -125,6 +127,16 @@ duplicates physics.
   undo/redo, save, registry commands and Ops, every intent a `CadAction`.
   The ledger is [docs/cad-parity.md](../cad-parity.md) (773 rows), the
   side-by-side steps [docs/cad-checklist.md](../cad-checklist.md).
+  Since **cad-select-transform** (2026-10-01, see
+  [CAD selection and transform](#cad-selection-and-transform-2026-10-01)),
+  written and reviewed by reading, pending its verification pass: face,
+  edge, vertex and point selection with hover, box select, the Alt menu
+  and the selection commands; the move/rotate/scale gizmo, push/pull and
+  offset, measure, live dimensions, snapping and the numeric bar with
+  unit expressions (`sim_runtime::units`); each commit one RoboCAD Ops
+  call. `cad/` is 10,397 lines in 30 files (wc -l, 2026-10-01; largest
+  `document.rs` 734, `transform/mod.rs` 737, `panel.rs` 687, `actions.rs`
+  678), `sim-runtime/src/units.rs` 901 (tests included).
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
   verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
@@ -1639,7 +1651,7 @@ a4fe42d3 (see the journal's verification pass).* Paths are
     selection, detail, commands, autosave, physical, edit, status,
     revision), `CadTarget` (`File` or `Service`), `TreeRow`,
     `CadInputFocus`, `switch_blockers`, `leaving_note`, `release_child`.
-  - `sync.rs`: the connect job (`Pool::Dedicated`; a file starts the
+  - `sync.rs` (`sync/` since cad-select-transform): the connect job (`Pool::Dedicated`; a file starts the
     service and waits for `GET /`), the `cad-poll` `RunThread` (every
     500 ms `GET /` and `GET /selection`; `/doc`, `/commands` and (GUI)
     `/autosave` when the document id or revision changes or on Refresh;
@@ -1781,6 +1793,12 @@ only when `GET /` reports `app: "robocad"` serving the opened file
 - Then the user's [docs/cad-checklist.md](../cad-checklist.md).
 
 ### Reading trace (open, select, patch, undo, save)
+
+Line numbers are as of a4fe42d3. Since cad-select-transform, `cad/sync.rs`
+is `cad/sync/` (`mod.rs`; `launch.rs` holds `self_start`; `selection.rs`
+holds `push_selection` and `detail`), the 3D pick is `cad/pick.rs`
+`pointer` and selection is `cad::selection::select` (see
+[CAD selection and transform](#cad-selection-and-transform-2026-10-01)).
 
 - **Open.** `sim-spatial FILE.rcad`: `launch::classify` → `LaunchKind::Cad`
   (main.rs:342) → `cad_mode` (main.rs:205) → `CadDocument::new` →
@@ -2054,8 +2072,208 @@ Rejected or deferred, with reasons:
 ## CAD selection and transform (2026-10-01)
 
 Batch cad-select-transform (default order item 7, §9 phase 1, the first
-half of the planned cad-tools epic; see §9 "Later CAD epics" 1). *In
-progress; this section is completed with the epic.*
+half of the planned cad-tools epic; see §9 "Later CAD epics" 1) brought
+RoboCAD's interactive selection and direct-transform workflows into CAD
+mode. RoboCAD's command layer still does every edit: each drag release or
+numeric Enter is exactly one `POST /ops/*` call, so undo and provenance
+stay RoboCAD's; previews move display transforms and overlays only. The
+ledger rows are in [docs/cad-parity.md](../cad-parity.md) (63 rows: 55
+done by reading, 8 deliberately different; none open), the side-by-side
+steps in [docs/cad-checklist.md](../cad-checklist.md) (CAD-19 to CAD-34).
+**Written and reviewed by reading only; the verification pass builds and
+tests it.** Paths are `crates/sim-spatial/src/cad/` unless they name
+another crate.
+
+### Shape
+
+- **One Python addition** (`cad/robocad/api.py` `Service.edges`): `GET
+  /nodes/{id}/edges?samples=N` (2..256) adds each edge's `points`, the
+  polyline RoboCAD's viewport draws and picks (`kernel.sample_edges`);
+  without the parameter the answer is unchanged. Pytest:
+  `cad/tests/test_api_edge_samples.py`.
+- **sim-runtime**: `cad_client` gains `FaceInfo`, `EdgeInfo` (with
+  `points`), `VertexInfo`, `Solids` and `faces`, `edges(id, samples)`,
+  `vertices`, `solids`; `units` is a port of RoboCAD's `units.evaluate`
+  (`evaluate(text, angle, default_unit) -> Result<f64, UnitError>`,
+  `try_evaluate`, `format_length`, `format_angle`; errors name the token
+  and its character position).
+- **Shared state** (`document.rs`): the selection is RoboCAD's items
+  `[node, kind, index]` (`SelectionItem`), with `select_mode`
+  (`SelectMode`), `hover`, `candidates` (the Alt menu), `tool` (`CadTool`)
+  and `tool_state` (`transform::ToolState`); `commit_refusal(began)` is
+  the one refusal for tool commits (an edit in flight, not connected, the
+  shown document stale, or RoboCAD's revision changed since `began`).
+- **The one handler** (`actions.rs`): `handle(action, call, cx: &mut
+  Cx)` with `Cx { doc, meshes, topology, view, documents }`; the
+  selection variants go to `selection::handle`, the tool variants to
+  `transform::handle`. Every commit goes through `actions::edit` →
+  `sync::start_edit` (a Dedicated job), the same path as Patch and Undo.
+- `view.rs` `CadView`: the camera as matrices (model mm ↔ window pixels,
+  cursor rays in RoboCAD's frame), refreshed in SimSync.
+- `topology.rs` `CadTopology`: faces, edges (24 samples per curved edge,
+  RoboCAD's default) and vertices per (node, revision) on Dedicated jobs
+  (two at a time), for the selected nodes and, in a sub-body mode or a
+  non-Select tool, every drawn body; another revision's data is dropped.
+- `mesh.rs` keeps RoboCAD's tessellation per drawn body (`mesh_data`,
+  `face_of`: Bevy's ray-cast triangle is RoboCAD's triangle, so
+  `triangle_face` names the face), `drawn_revision`, `body_bounds`.
+- **Selection** (`selection/`, `pick.rs`, `overlay.rs`, `keys.rs`,
+  `sync/selection.rs`, `inspector.rs`): modes (B, Shift+B, E, V, P; the
+  mode strip at the 3D view's top left), click (Shift extends, Ctrl
+  toggles, empty space clears), hover (coalesced to 33 ms; edge and
+  vertex searches on a Compute job, newest wins), box select (a kit
+  rubber band past 6 px), the Alt menu (RoboCAD's 7×7 px neighbourhood:
+  nine rays 3 px apart, nearest hit per ray), Select All, Invert, Same
+  Material, Edges → Faces; Bevy gizmo overlays for edges, vertices,
+  hovered and selected items; the inspector's face/edge/vertex/point
+  section. Pushed with `PUT /selection {"items", "mode"}`, adopted from
+  the poll's `GET /selection` (every kind; a GUI's mode).
+- **Tools** (`transform/`, `numeric.rs`, `snap.rs`, `measure.rs`): G/R/S
+  gizmo (RoboCAD's handles: centre within 10 px, axes and rings within
+  14 px; Ctrl snaps 10 mm, 15°, 0.1), D push/pull and Shift+D offset (drag
+  along the normal; non-planar faces offset), M measure (Shift keeps a
+  measure node), Tab numeric entry, Escape cancel; the numeric bar at the
+  3D view's bottom (tool · mode label, hint, navigation line, tool strip,
+  readout, fields evaluated on every keystroke); live dimensions of the
+  selected faces and edges and a double-clicked face's dimension
+  (`set_diameter`, `set_distance`, `set_angle`); snapping (vertex,
+  midpoint, centre within 12 px, then the 10 mm grid on z = 0, else free;
+  Alt suppresses) with its marker and readout; tool cursors.
+- **Preview life** (`transform/preview.rs`): the moved bodies' display
+  transforms follow the drag; after a commit they stay until each body's
+  mesh is drawn from a newer revision (that body then drops the delta),
+  and are reset at once on a failed edit or Escape, so a body is never
+  left offset.
+- `sync.rs` became `sync/` (`mod.rs` connect, poll, edits; `launch.rs`
+  `self_start`, `serves`, `accept_served`; `selection.rs` adoption,
+  pushes, node detail). `lifecycle_tests.rs`: the service lifecycle
+  without a window. `main.rs`: the CLI refusals below.
+
+### Decisions
+
+- **The gizmo is the viewer's own, not Bevy's `TransformGizmoPlugin`.**
+  Read in full (bevy_gizmos-0.19.1 `transform_gizmo.rs`, bevy_gizmos_render-0.19.1
+  `transform_gizmo_render.rs`): its render plugin spawns the handle meshes
+  and an overlay camera once at `Startup` when the plugin's settings exist
+  (`transform_gizmo_render.rs:83-89`), which `app::scope_new_entities`
+  would scope to the first mode and despawn on the first switch, and the
+  overlay camera would draw in every mode; scale is per axis only (RoboCAD's
+  `Ops.transform` scale is uniform); a drag starts on any raw left press
+  (`transform_gizmo.rs:415`), also over a panel; it confines the cursor by
+  default and runs in PostUpdate outside the action order. The native
+  gizmo ports RoboCAD's (tools.py:234-385, viewport.py:1060-1132) on
+  `Gizmos` and `CadView`. *Revisit if* Bevy's gizmo gains uniform scale and
+  mode-scoped spawning.
+- **Picking**: faces by Bevy's `MeshRayCast` on the UI thread (the cost
+  Bevy's own picking backend pays every frame); edges and vertices by a
+  screen-space search, hover's on a Compute job, a click's inline after
+  culling bodies by their projected bounds. Edge/vertex occlusion compares
+  with the first surface along the cursor ray (RoboCAD uses its depth
+  buffer per pixel). Locked nodes are neither picked nor occluding, as in
+  RoboCAD's pick pass. Box select runs inline on release (one projection pass).
+- **Edges → faces** is computed from the drawn tessellation (a face whose
+  triangle side lies along the edge's polyline, within one sagitta plus
+  the mesh tolerance and parallel to it): RoboCAD's `kernel.faces_of_edge`
+  has no route, and the one Python change was reserved for edge polylines.
+- **The selection mode is the viewer's**: a headless RoboCAD stores only
+  the items (api.py `set_selection`) and answers no mode; a desktop
+  RoboCAD's mode is adopted when it changes there. Known limit; no second
+  Python change.
+- **Pivot**: the first selected node's `pivot`, else (one node) its mass
+  centroid from the inspected detail at the shown revision, else the
+  centre of the selected bodies' mesh bounds. RoboCAD uses the
+  selection's mass centroid; multi-node selections differ.
+- **Revisions**: a drag captures RoboCAD's revision at the press, a typed
+  entry when the field takes focus; the commit is refused by name if it
+  changed. A push/pull target's face is found again after an edit
+  (RoboCAD's `match_face` rule) or refused by name.
+- **Keys** (RoboCAD's keymap): B, Shift+B, E, V, P, Ctrl/Cmd+A,
+  Ctrl/Cmd+Shift+I, Ctrl/Cmd+Shift+M, G, R, S, D, Shift+D, M, Tab, Escape.
+  No clash: S and M act only without Ctrl/Cmd (Ctrl+S saves,
+  Ctrl+Shift+M is Same Material); no key is read in every mode.
+- **Deliberately different** (also in the ledger): measure does not copy
+  to the clipboard (the value shows in the bar and REST answers it); Same
+  Material refuses by name without a material; a typed rotation after
+  dragging the X ring turns about X (RoboCAD's `axis_index or 2` turns
+  about Z); the footer has no ms/frame; the double-click dimension needs
+  face mode; the centre snap and the same-edge radius work (both
+  unreachable in RoboCAD, noted in the ledger).
+
+### Review findings (four pair-reviewers by area, then fixes)
+
+Fixed: `topology::sync` wrote `RequestRedraw` unconditionally and would
+panic in the windowless core plugin; preview functions re-exported more
+widely than declared (E0364); test-only re-exports in `sync/mod.rs`
+(unused-import warnings, now `#[cfg(test)]`); a multi-body preview
+double-moved bodies whose new mesh had landed; a push/pull face index
+went stale after an edit; live dimensions rescanned meshes every frame
+(now cached by selection, tool and epochs); a typed entry took its
+revision at Enter; grid snap rounded half away from zero (now half to
+even, as Python); Alt candidates listed occluded bodies; edges → faces
+took the far side of thin walls; adopted selections could name deleted
+nodes and pruning was not pushed; `curve` items were refused from REST but
+adopted from RoboCAD; a hovered body showed nothing; spec texts for
+`cad_state` and `system_ui`; an oversized `samples` gave 500 (now 400); the
+pytest could not fail on the message; tool cursors and the navigation line
+were missing.
+
+Rejected: a blank `?samples=` returns the unsampled answer (`parse_qs`
+drops blank values; the Rust client always sends a number); the lifecycle
+test's pid-reuse window (only on a failure path, 400 ms, sequential pids on
+macOS; a `ps` check would need another process build site); selection
+overlays do not follow a preview (they return when the new meshes land).
+
+### Verification checklist
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- `cargo test -p sim-spatial --lib`, in particular `cad::tests::*`,
+  `cad::selection::tests::*`, `cad::pick::tests`, `cad::overlay::tests`,
+  `cad::transform::tests::*`, `cad::transform::dimensions::tests`,
+  `cad::snap::tests`, `cad::measure::tests`, `cad::view::tests`,
+  `cad::lifecycle_tests::*`, `app::tests::*` (the registry and dispatch
+  cross-check and the CAD switch test), `ui_kit::tests::*`,
+  `jobs::tests::threads_are_started_only_in_jobs` and
+  `jobs::tests::processes_are_started_only_in_jobs`.
+- `cargo test -p sim-spatial --bins` (main.rs: the CLI conflicts).
+- `cargo test -p sim-runtime --lib cad_client` and `cargo test -p
+  sim-runtime --lib units`.
+- `cd cad && .venv/bin/pytest -q tests/test_api_edge_samples.py` (9 passed
+  in 4.85 s on 2026-10-01, the one check run in this epic).
+- `cargo check -p sim-web --target wasm32-unknown-unknown` (units is not
+  cfg-gated; std only).
+- Then the user's [docs/cad-checklist.md](../cad-checklist.md) CAD-19 to CAD-34.
+
+### Reading trace (face pick → push/pull commit → undo)
+
+- **Face pick.** Shift+B (`keys.rs:79` → `cad:mode:face`) →
+  `CadSelectMode` → `selection::handle` (`selection/mod.rs:83`) clears and
+  pushes (`publish` :108 → `sync::push_selection`, `sync/selection.rs:89`,
+  `PUT /selection {"items": [], "mode": "face"}` on a Dedicated job). A
+  click in the Select tool: `pick::pointer` (`pick.rs:308`) →
+  `candidates_at` (:292) → `surface_items` (:182, `MeshRayCast` on
+  `CadBody` → `CadMeshes::face_of`) → `Act::ui(CadSelect {items:
+  [[id, "face", f]]})` (:373) → `actions::apply` → `selection::select`
+  (`selection/mod.rs:182`) → pushed as above; `topology::sync` fetches
+  the body's faces for the inspector and the tool.
+- **Push/pull commit.** D (`transform/mod.rs` `keys`) → `CadTool
+  {push_pull}` → `transform::handle` (`transform/mod.rs:578`) targets the
+  selected face. A drag: `push_pull::tool` (`transform/push_pull.rs:140`)
+  captures RoboCAD's revision at the press, previews a line and the
+  shifted outline (display only); release → `release_action` (:121) →
+  `CadPushPull {node, face, distance, revision}` → `transform::handle`
+  (:582) → `commit::commit` (`transform/commit.rs:234`):
+  `commit_refusal(revision)` (`document.rs:607`), `op_for` (:185) →
+  `push_pull_call` (:106) → `send` (:216) → `actions::edit`
+  (`actions.rs:402`) → `sync::start_edit` (`sync/mod.rs:543`): one `POST
+  /ops/push_pull {"args": [node, {"node", "face"}, distance]}` →
+  RoboCAD's `Ops.push_pull` (one undo step "Push/Pull") → `finish_edit`
+  (`sync/mod.rs:472`) → `refresh` (:498) → the poll refetches `/doc`; the
+  meshes and topology refetch at the new revision; the preview clears
+  when the body's new mesh is drawn (`transform/preview.rs`).
+- **Undo.** Cmd+Z (`keys.rs`) / the Undo button / `cad_undo` →
+  `actions.rs:371` → `edit` → `POST /undo` (RoboCAD undoes "Push/Pull")
+  → as above.
+
 
 ### Disk
 
@@ -2440,7 +2658,13 @@ client. It is written and reviewed by reading; the verification pass builds
 and tests it, and the user's [docs/cad-checklist.md](../cad-checklist.md)
 compares it with RoboCAD step by step. The ledger
 [docs/cad-parity.md](../cad-parity.md) assigns every other RoboCAD feature
-to one of the later epics below.
+to one of the later epics below. The second, **cad-select-transform**
+(2026-10-01, see [CAD selection and transform](#cad-selection-and-transform-2026-10-01)),
+added sub-body selection, the transform gizmo, push/pull and offset,
+measure, live dimensions, snapping and the numeric bar over a Rust port
+of `units.evaluate`, with one read-only Python addition (sampled edge
+polylines); written and reviewed by reading, pending its verification
+pass. Next: cad-modify.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -2627,8 +2851,10 @@ The Director re-ranks with evidence, but this is the default:
    `sim-spatial` over its REST service, in several epics. **cad-mode**
    (2026-09-30; see [CAD mode](#cad-mode-2026-09-30)) is verified at
    a4fe42d3 and awaits the user's [CAD checklist](../cad-checklist.md).
-   **cad-select-transform** (2026-10-01) is in progress. Remaining, in
-   order (§9 "Later CAD epics"): cad-modify (next), cad-sketch,
+   **cad-select-transform** (2026-10-01; see
+   [CAD selection and transform](#cad-selection-and-transform-2026-10-01))
+   is done pending its verification pass. Next: **cad-modify**. Remaining,
+   in order (§9 "Later CAD epics"): cad-modify, cad-sketch,
    cad-views-export, cad-physical-inspect, cad-print, cad-organize,
    cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).

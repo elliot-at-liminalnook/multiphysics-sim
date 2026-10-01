@@ -697,11 +697,12 @@ fn one_client_id_per_process() {
     assert!(first.client_id.bytes().all(|b| b.is_ascii_hexdigit() || b == b'-'));
 }
 
-/// A refusal as both servers make it: read the head in 1024-byte pieces,
-/// answer, close without reading the body. With body bytes unread the
-/// kernel may reset the connection; the server's `error` still surfaces.
-#[test]
-fn a_refusal_before_the_body_surfaces_the_servers_error() {
+/// A server refusing a 3000-byte POST before its body: reads the head in
+/// 1024-byte pieces, answers 403 with `{"error":"Session token required"}`,
+/// and drops the socket with body bytes unread (a reset where the platform
+/// sends one). The answer is written in pieces by `write!` (as both servers
+/// do) or, when `one_write`, as one buffer. The client's error.
+fn refused_before_the_body(one_write: bool) -> ClientError {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let endpoint = Endpoint::loopback(IpAddr::V4(Ipv4Addr::LOCALHOST), listener.local_addr().unwrap().port()).unwrap();
     let server = std::thread::spawn(move || {
@@ -715,11 +716,44 @@ fn a_refusal_before_the_body_surfaces_the_servers_error() {
             data.extend_from_slice(&b[..n]);
         }
         let answer = r#"{"error":"Session token required"}"#;
-        let _ = write!(stream, "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{answer}", answer.len());
-        // Dropped with the body unread (a reset where the platform sends one).
+        if one_write {
+            let text = format!("HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{answer}", answer.len());
+            let _ = stream.write_all(text.as_bytes());
+        } else {
+            let _ = write!(stream, "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{answer}", answer.len());
+        }
+        // Dropped with the body unread.
     });
     let c = client(endpoint);
     let e = c.post(calibration::COMMAND, &body_of(3000)).unwrap_err();
     server.join().unwrap();
+    e
+}
+
+/// A refusal as both servers make it: read the head in 1024-byte pieces,
+/// answer, close without reading the body. With body bytes unread the
+/// kernel may reset the connection; the server's `error` still surfaces.
+///
+/// On macOS the reset also discards what the server had written but not yet
+/// sent: `write!` makes several writes, Nagle holds all but the first until
+/// it is acknowledged, and the reset drops them (a python3 reproduction
+/// received 72 of the 131 bytes, the status line and part of the head, and
+/// then ECONNRESET). No client can read bytes that were never sent, so there
+/// the error must name the status that arrived and why the rest was lost.
+#[test]
+fn a_refusal_before_the_body_surfaces_the_servers_error() {
+    let e = refused_before_the_body(false);
+    let text = e.to_string();
+    #[cfg(not(target_os = "macos"))]
+    assert!(text.contains("Session token required"), "{e:?}");
+    #[cfg(target_os = "macos")]
+    assert!(
+        text.contains("Session token required") || (text.contains("HTTP 403") && text.contains(crate::loopback_http::REFUSAL_LOST)),
+        "{e:?}"
+    );
+
+    // An answer written at once is sent before the reset, and the client
+    // reads it ahead of the reset on every platform.
+    let e = refused_before_the_body(true);
     assert!(e.to_string().contains("Session token required"), "{e:?}");
 }

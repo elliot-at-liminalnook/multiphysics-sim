@@ -4,17 +4,23 @@
 //! ([`LinkCommand`], one per page handler), the form values the page reads
 //! when it sends ([`Inputs`]), and what it publishes ([`LinkSnapshot`]).
 //!
-//! - **Order and sequence.** The thread sends every request itself, one at a
-//!   time, in the order the commands arrive, each `/calibration/command`
-//!   with the next value of the shared sequence counter ([`Link::sequence`]),
+//! - **Order and sequence.** The thread sends every request itself except
+//!   the heartbeats and `capture_hold` (the beat's, below), one at a time,
+//!   in the order the commands arrive, each `/calibration/command` with the
+//!   next value of the shared sequence counter ([`Link::sequence`]),
 //!   which the immediate STOP path draws from too, so sequences only grow.
 //! - **Periods** (the page's): status poll 600 ms, 150 ms while a motion
-//!   session or a leg gait runs (after each answer, as `setTimeout`); the
-//!   `motion_update` heartbeat every 100 ms while a session is open; the
-//!   gait lease `gait_update` every 300 ms while a leg gait runs (each from
-//!   its own job, so a slow request on this thread never lets the server's
-//!   1.5 s lease expire); sweep-all progress every 250 ms, tune 300 ms,
-//!   campaign 500 ms.
+//!   session or a leg gait runs (after each answer, as `setTimeout`);
+//!   sweep-all progress every 250 ms, tune 300 ms, campaign 500 ms. The
+//!   heartbeats are not on this thread: a second `jobs::RunThread`
+//!   ("hardware-beat", `session::beat`) posts `motion_update` 100 ms after
+//!   the previous one answered while a session is open (and at once on an
+//!   intent change, which the link thread waits for), and the gait lease
+//!   `gait_update` every 300 ms while a leg gait runs (and at once on a
+//!   pause or speed change). A slow request on this thread therefore never
+//!   lets the server's 1.5 s motion or gait lease lapse. The beat is the
+//!   only sender of the motion session's sequence domain (`motion_update`,
+//!   `capture_hold`) and sends nothing while a STOP is pending.
 //! - **Epoch.** [`Link::epoch`] is the page's `epoch`: the UI bumps it before
 //!   posting an immediate STOP, so an answer to a request that was in flight
 //!   when STOP was pressed is dropped exactly as the page drops it. Unlike
@@ -28,7 +34,12 @@
 //!   other. The thread is
 //!   never joined: the UI drops the link off its own thread
 //!   (`jobs::drop_off_thread`), and the shutdown STOP may take up to
-//!   `STOP_TIMEOUT`.
+//!   `STOP_TIMEOUT`. The detached thread and the STOP job can die with the
+//!   process, so dropping a [`Link`] whose snapshot says [`drive_active`] also
+//!   writes STOP synchronously first ([`Link::post_stop_sync`], once per link;
+//!   the window-close loss and `AppExit` call it earlier). That covers a mode
+//!   switch (dropped off the UI thread), a reconnect and the process exiting
+//!   (winit's `exiting` clears the world on the main thread, also on Cmd+Q).
 //! - **Staleness.** The snapshot carries when the server's status was last
 //!   read; the panel shows an older one as stale ([`STALE_AFTER`]), never as live.
 use super::actions::{Boundary, Direction, DriveMode, GaitMode};
@@ -275,6 +286,9 @@ pub struct Link {
     pub sequence: Arc<AtomicU64>,
     /// The page's `epoch`, shared: bumped by the UI before an immediate STOP.
     pub epoch: Arc<AtomicU64>,
+    /// [`Link::post_stop_sync`] has written (or tried) its STOP: the exit
+    /// paths (window close, `AppExit`, the drop at teardown) block once, not three times.
+    stop_posted: std::sync::atomic::AtomicBool,
 }
 
 impl Link {
@@ -295,7 +309,7 @@ impl Link {
             super::session::run(thread_client, generation, thread_sequence, thread_epoch, rx, shared)
         })
         .join_bound(Duration::ZERO);
-        Link { thread, client, generation, sequence, epoch }
+        Link { thread, client, generation, sequence, epoch, stop_posted: Default::default() }
     }
     /// Queues one page handler. A link whose thread has ended ignores it
     /// (the panel shows the last snapshot, which goes stale).
@@ -305,6 +319,48 @@ impl Link {
     /// The published snapshot.
     pub fn snapshot(&self) -> LinkSnapshot {
         self.thread.latest(self.generation).unwrap_or_else(|| self.thread.lock().clone())
+    }
+    /// STOP written synchronously on its own connection when a motor is
+    /// known, for when the process may end before the immediate path's job
+    /// (or the link thread's shutdown STOP) runs: the page's `fetch(...,
+    /// {keepalive:true})` on `pagehide`. The request is sent and its answer is
+    /// never read ([`Client::send_only`]); the server latches STOP as soon as
+    /// it parses it. Blocks the caller for at most the 500 ms connect timeout
+    /// (`hardware_client::CONNECT_TIMEOUT`) plus the write of a few hundred
+    /// bytes to loopback (bounded by [`SYNC_STOP_TIMEOUT`]), and runs at most
+    /// once per link, only on exit paths: the window-close loss
+    /// (`handlers::loss`, `Origin::Quiet` only), `AppExit`
+    /// (`actions::stop_on_exit`) and [`Drop`] (off the UI thread on a mode
+    /// switch, on the main thread at process teardown). Uses the shared
+    /// sequence counter, so sequences only grow; a duplicate STOP (the job's,
+    /// the thread's) is harmless.
+    pub fn post_stop_sync(&self, why: &str) {
+        let Some(id) = self.snapshot().id else { return };
+        if self.stop_posted.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        let sequence = self.sequence.fetch_add(1, Ordering::SeqCst) + 1;
+        let client = self.client.clone().with_timeout(SYNC_STOP_TIMEOUT);
+        if let Err(e) = client.send_only(calibration::COMMAND, &calibration::stop(Some(id), sequence)) {
+            // A later exit path (the link's drop at teardown) tries once more.
+            self.stop_posted.store(false, Ordering::SeqCst);
+            bevy::log::warn!("STOP ({why}) could not be written: {e} (the STOP job and the link's own STOP remain)");
+        }
+    }
+}
+
+/// The write timeout of [`Link::post_stop_sync`] (the connect timeout is the client's 500 ms).
+pub const SYNC_STOP_TIMEOUT: Duration = Duration::from_millis(500);
+
+/// A link dropped while its published snapshot says [`drive_active`] writes
+/// STOP synchronously ([`Link::post_stop_sync`]) before its fields drop (the
+/// `RunThread` field, whose drop closes the channel, drops after this runs),
+/// so a process ending right after the drop still stops the motors.
+impl Drop for Link {
+    fn drop(&mut self) {
+        if drive_active(&self.snapshot()) {
+            self.post_stop_sync("the hardware link was dropped");
+        }
     }
 }
 

@@ -28,6 +28,11 @@ impl Session {
         self.render();
     }
     /// The pose buttons :301-304: `capture_hold` in a held session, else `capture`.
+    ///
+    /// `capture_hold` is checked against the session's heartbeat sequence,
+    /// so the beat posts it (in order with the heartbeats, its sequence drawn
+    /// as it is sent); a sequence drawn here could reach the server before a
+    /// heartbeat in flight with a lower one, and either would be refused as stale.
     pub(super) fn capture(&mut self, boundary: Boundary, reference_joint_rad: Option<f64>) {
         let Some(id) = self.snap.id else { return };
         let name = boundary.name();
@@ -35,7 +40,7 @@ impl Session {
         let result = match self.snap.run {
             Some(run) => {
                 let input = self.input();
-                self.send(calibration::capture_hold(id, self.seq(), name, run, &input, joint)).map(|_| ())
+                self.send_in_session(Box::new(move |sequence| calibration::capture_hold(id, sequence, name, run, &input, joint))).map(|_| ())
             }
             None => self.send_status(calibration::capture(id, self.seq(), name, joint)).map(|s| self.adopt(s)),
         };

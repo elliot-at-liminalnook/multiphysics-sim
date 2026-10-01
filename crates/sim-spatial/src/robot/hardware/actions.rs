@@ -9,8 +9,11 @@
 //! ([`HardwareAction::starts_motion`]) is refused when its origin is
 //! `Origin::Rest` or `Origin::SystemUi`, and the refusal names it: motion
 //! needs a pointer or key in the window, with the operator present
-//! (AGENTS.md). Status, gaits, export, STOP and display settings stay
-//! available to automation.
+//! (AGENTS.md). Status, gaits, export, connect, STOP and turning the mirror
+//! on or off stay available to automation. The mirror's bindings (leg, joint,
+//! polarity, alignment) count as motion: Leg/Both gait playback builds its
+//! `gait_start` bindings from them, and "Save sim alignment here" saves the
+//! alignment angle as the motor's reference.
 // Implementation below the enum: the panel part (input systems, apply).
 use crate::app::actions::{self, Spec, spec};
 use serde::{Deserialize, Serialize};
@@ -198,7 +201,8 @@ pub enum HardwareAction {
     RawStepValue { delta: i32 },
     /// "Send raw step".
     RawStep,
-    // ---- mirror (display only) ----
+    // ---- mirror (its bindings also drive a Leg/Both gait: `gait_bindings`) ----
+    /// Show or hide the mirror (display only; allowed from automation).
     MirrorEnabled { on: bool },
     /// "+X", "-X", "+Y" or "-Y".
     MirrorLeg { leg: String },
@@ -237,9 +241,14 @@ impl HardwareAction {
     /// sync; the speed, effort, target, PWM ceiling, drive mode and
     /// hold-others of motion; the operator's safety confirmations (tune,
     /// campaign, gait); enabling a motor; the gait and raw step chosen; and
-    /// the live sync's motor mapping and scale. Allowed from automation:
-    /// reads, export, STOP (and the gait's and live sync's stops), connect,
-    /// showing the panel and its sections, and the mirror's display settings.
+    /// the live sync's motor mapping and scale; and the mirror's bindings
+    /// (leg, joint, polarity, alignment), because `gait_play` builds the
+    /// real leg's `gait_start` bindings from them (`Mirror::gait_bindings`)
+    /// and "Save sim alignment here" saves the alignment angle as the motor's
+    /// reference (`Mirror::alignment_angle`). Allowed from automation: reads,
+    /// export, STOP (and the gait's and live sync's stops), connect, showing
+    /// the panel and its sections, turning the mirror on or off, and a loss
+    /// other than `Loss::Leaving` (refused remotely by `handlers::loss`).
     pub fn starts_motion(&self) -> bool {
         use HardwareAction as H;
         match self {
@@ -273,6 +282,10 @@ impl HardwareAction {
             | H::Flip
             | H::RawStepValue { .. }
             | H::RawStep
+            | H::MirrorLeg { .. }
+            | H::MirrorJoint { .. }
+            | H::MirrorPolarity { .. }
+            | H::MirrorAlign { .. }
             | H::SyncLeg { .. }
             | H::SyncMotor { .. }
             | H::SyncPolarity { .. }
@@ -289,10 +302,6 @@ impl HardwareAction {
             | H::LoadGaits
             | H::GaitStop
             | H::MirrorEnabled { .. }
-            | H::MirrorLeg { .. }
-            | H::MirrorJoint { .. }
-            | H::MirrorPolarity { .. }
-            | H::MirrorAlign { .. }
             | H::SyncConnect
             | H::SyncStop => false,
         }
@@ -301,7 +310,7 @@ impl HardwareAction {
     /// The refusal for a motion action from REST or `system_ui`, naming it.
     pub fn remote_refusal(&self) -> String {
         format!(
-            "hardware `{}` starts, changes or arms motion and needs an operator at the window: REST and system_ui may read status, list gaits, export, connect, change the mirror's display and STOP only",
+            "hardware `{}` starts, changes or arms motion and needs an operator at the window: REST and system_ui may read status, list gaits, export, connect, turn the mirror on or off and STOP only",
             self.name()
         )
     }
@@ -335,7 +344,7 @@ impl actions::Action for HardwareAction {
                 "hardware",
                 r,
                 json!({"action": {"mirror_enabled": {"on": true}}}),
-                "Any Leg calibration panel intent in its serde form (as system_ui lists it). Intents that start, change or arm motion (select, enable, jog, speed, sweep, tune, campaign, gait choice/play, drive settings, the operator's confirmations, raw step, live sync mapping and start, …) are refused from REST by name; STOP, reads, export, connect, sections and the mirror's display settings are allowed.",
+                "Any Leg calibration panel intent in its serde form (as system_ui lists it). Intents that start, change or arm motion (select, enable, jog, speed, sweep, tune, campaign, gait choice/play, drive settings, the operator's confirmations, raw step, live sync mapping and start, the mirror's leg/joint/polarity/alignment bindings that a Leg/Both gait and the saved alignment use, …) are refused from REST by name; STOP, reads, export, connect, sections, turning the mirror on or off (mirror_enabled) and focus_lost/panel_closed losses are allowed (loss leaving is refused: it is the window closing).",
             ),
         ]
     }
@@ -389,7 +398,8 @@ pub(crate) struct Preferences(pub super::settings::Settings);
 /// lifecycle (OnEnter/OnExit of the Robot scope) and the systems: input
 /// mappings in Input (after the REST poll), [`apply`] in Actions (after
 /// robot mode's own, which passes `system_ui` activations on), the job
-/// results in JobResults.
+/// results in JobResults; and [`stop_on_exit`] in `Last`, after Bevy's
+/// exit systems, in every mode (it needs only the `Hardware` resource).
 pub(crate) fn build(app: &mut App) {
     actions::register::<HardwareAction>(app);
     app.insert_resource(Preferences(super::settings::load()));
@@ -401,7 +411,38 @@ pub(crate) fn build(app: &mut App) {
             poll_jobs.in_set(ViewerSet::JobResults),
         )
             .run_if(in_state(ViewerMode::Robot)),
-    );
+    )
+    .add_systems(Last, stop_on_exit.after(bevy::window::ExitSystems));
+}
+
+/// Last, the frame an `AppExit` is written (by Bevy's `exit_on_all_closed`
+/// after the window closed, or by anything else, e.g. a quit from code):
+/// with the panel's state present, STOP on the immediate path, then written
+/// synchronously to the calibration server ([`link::Link::post_stop_sync`],
+/// a no-op when the window-close loss already wrote it or no motor is known)
+/// and to the motor bench (`LiveSync::post_stop_on_leave`, only a session
+/// this viewer opened), because the detached STOP jobs and link thread die
+/// with the process. Runs once; blocks the main thread for at most about
+/// 1 s per server, as the app is exiting anyway.
+///
+/// What remains unguarded: an exit that writes no `AppExit` and never
+/// returns through winit's `exiting` (SIGKILL, a crash or abort, power
+/// loss) skips this, the window-close loss and the link's drop alike. Then
+/// the servers' own leases (the 1.5 s gait lease, the motion session's
+/// heartbeat lease) and the FPGA watchdog stop the motors, but a tune,
+/// campaign or sweep-all, which hold no lease, keeps running server-side
+/// until it ends or someone sends STOP. (Cmd+Q on macOS and the world being
+/// cleared at teardown are covered by the link's `Drop`.)
+fn stop_on_exit(mut exits: MessageReader<bevy::app::AppExit>, hw: Option<ResMut<Hardware>>, mut done: Local<bool>) {
+    if exits.read().count() == 0 || std::mem::replace(&mut *done, true) {
+        return;
+    }
+    let Some(mut hw) = hw else { return };
+    stop_immediate(&mut hw);
+    if let Some(link) = hw.link.as_ref() {
+        link.post_stop_sync("app exit");
+    }
+    hw.sync.post_stop_on_leave();
 }
 
 /// OnEnter(Robot): the panel's state from the launch's servers and the
@@ -521,8 +562,9 @@ fn keys(keys: Res<ButtonInput<KeyCode>>, hw: Option<Res<Hardware>>, mut out: Mes
 
 /// Input: the window losing focus stops drive (the page's
 /// `visibilitychange`), a close request too (`pagehide`; the window is
-/// despawned a frame later, so this frame's apply still runs; its handler
-/// also posts STOP synchronously, `handlers::post_stop_on_leave`).
+/// despawned a frame later, so this frame's apply still runs). The close is
+/// written `Origin::Quiet`, the only origin whose `Loss::Leaving` also
+/// writes STOP synchronously (`handlers::loss`).
 fn window_loss(mut focus: MessageReader<bevy::window::WindowFocused>, mut close: MessageReader<bevy::window::WindowCloseRequested>, hw: Option<Res<Hardware>>, mut out: MessageWriter<Act<HardwareAction>>) {
     let lost = focus.read().filter(|e| !e.focused).count() > 0;
     let closing = close.read().count() > 0;

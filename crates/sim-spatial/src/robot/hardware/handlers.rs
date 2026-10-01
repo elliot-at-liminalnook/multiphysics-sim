@@ -4,10 +4,9 @@
 //! calibration, and the remote-control check.
 use super::actions::{Boundary, Direction, GaitMode, HardwareAction, Loss, connect, stop_immediate};
 use super::link::{self, LinkCommand};
-use sim_runtime::hardware_client::calibration;
 use super::panel::NOT_CONNECTED;
 use super::{Hardware, Section};
-use crate::app::actions::Call;
+use crate::app::actions::{Call, Origin};
 use crate::jobs::{Job, Pool};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
@@ -76,9 +75,15 @@ fn stepped(value: f64, lo: f64, hi: f64, step: f64, name: &str) -> Result<f64, S
 /// JobResults is seen.
 ///
 /// `Loss::Leaving` (the window is closing: the page's `pagehide`) always
-/// stops immediately and, because the detached STOP job may die with the
-/// process, also posts STOP synchronously ([`post_stop_on_leave`]).
-fn loss(hw: &mut Hardware, reason: Loss) {
+/// stops immediately. Only from the window's own close request (`origin`
+/// `Origin::Quiet`, written by `actions::window_loss`) does it also write
+/// STOP synchronously, because the detached STOP job may die with the
+/// process: the calibration server's ([`link::Link::post_stop_sync`]) and
+/// the motor bench's (`LiveSync::post_stop_on_leave`), each blocking the UI
+/// thread for at most about 1 s, once, as the window closes. From REST and
+/// `system_ui` a `Leaving` loss is refused by [`handle`] (nothing is closing;
+/// automation has `hardware_stop`), so automation can never block the UI thread here.
+fn loss(hw: &mut Hardware, reason: Loss, origin: Origin) {
     // Only a live sync this viewer opened; another client's session is not ours to end on a loss.
     hw.sync.stop_ours(match reason {
         Loss::PanelClosed => "Panel closed",
@@ -88,8 +93,11 @@ fn loss(hw: &mut Hardware, reason: Loss) {
     let active = hw.link.as_ref().is_some_and(|l| link::drive_active(&l.snapshot()));
     if reason == Loss::Leaving || active {
         stop_immediate(hw);
-        if reason == Loss::Leaving {
-            post_stop_on_leave(hw);
+        if reason == Loss::Leaving && origin == Origin::Quiet {
+            if let Some(link) = hw.link.as_ref() {
+                link.post_stop_sync("window close");
+            }
+            hw.sync.post_stop_on_leave();
         }
         return;
     }
@@ -100,34 +108,9 @@ fn loss(hw: &mut Hardware, reason: Loss) {
     }
 }
 
-/// The window is closing: STOP written synchronously on its own connection
-/// when a motor is known, in addition to the immediate path's job (which
-/// may be killed with the process before it connects). This is the page's
-/// `fetch(..., {keepalive:true})` on `pagehide`: the request is sent and its
-/// answer is never read ([`Client::send_only`]); the server latches STOP as
-/// soon as it parses the request. It blocks the UI thread for at most the
-/// 500 ms connect timeout (`hardware_client::CONNECT_TIMEOUT`) plus the
-/// write of a few hundred bytes to loopback (bounded by the same 500 ms), and
-/// runs once, on window close only (never per frame, never on a mode switch,
-/// where the process and its STOP job keep running).
-///
-/// [`Client::send_only`]: sim_runtime::hardware_client::Client::send_only
-fn post_stop_on_leave(hw: &Hardware) {
-    let Some(link) = hw.link.as_ref() else { return };
-    let Some(id) = link.snapshot().id else { return };
-    let sequence = link.sequence.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-    let client = link.client.clone().with_timeout(LEAVE_STOP_TIMEOUT);
-    if let Err(e) = client.send_only(calibration::COMMAND, &calibration::stop(Some(id), sequence)) {
-        bevy::log::warn!("STOP on window close could not be written: {e} (the STOP job and the link's own STOP remain)");
-    }
-}
-
-/// The write timeout of [`post_stop_on_leave`] (the connect timeout is the client's 500 ms).
-const LEAVE_STOP_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(500);
-
 /// × and the header toggle closing the panel: drive stops (the mirror ends as `open` goes false).
 fn close(hw: &mut Hardware) {
-    loss(hw, Loss::PanelClosed);
+    loss(hw, Loss::PanelClosed, Origin::Ui);
     hw.open = false;
 }
 
@@ -170,8 +153,11 @@ pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call
             hw.sync.stop("Operator stop");
             done()
         }
+        H::Loss { reason: Loss::Leaving } if call.remote() => Answer::Done(Err(
+            "hardware `loss` leaving is the window closing and is not accepted from REST or system_ui (it would block the UI thread on a synchronous STOP); use hardware_stop".into(),
+        )),
         H::Loss { reason } => {
-            loss(hw, *reason);
+            loss(hw, *reason, call.origin);
             done()
         }
         H::Export => export(hw, call),

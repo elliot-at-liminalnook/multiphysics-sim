@@ -366,7 +366,9 @@ pub(super) fn apply(
         return;
     };
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
+        let synced = hardware.as_ref().is_some_and(|hw| hw.sync.engaged());
         let result = match action {
+            _ if synced && call.remote() && moves_synced_motors(&view, action) => Err(SYNC_REMOTE_REFUSAL.to_string()),
             RobotAction::Activate { id, .. } if id.starts_with("hardware:") => {
                 let found = hardware.as_ref().and_then(|hw| super::hardware::panel::controls(hw).into_iter().find(|(i, ..)| i == id));
                 match found {
@@ -405,6 +407,23 @@ pub(super) fn apply(
     });
 }
 
+/// Why REST and `system_ui` may not steer the run while live motor sync
+/// streams its targets to the bench.
+const SYNC_REMOTE_REFUSAL: &str = "live motor sync is streaming this run's targets to real motors: REST and system_ui may not start, step, jog, drive or change the speed of the run until sync stops (Pause, Reset and STOP stay available)";
+
+/// Whether `action` (or the control it activates) would move the targets
+/// live motor sync streams to the bench: motion requests, jogs, Start and
+/// Step, and the run speed. Pause, Reset, replay and gait preview are not:
+/// each ends the sync session (`hardware::sync`'s stop rules).
+fn moves_synced_motors(view: &RobotView, action: &RobotAction) -> bool {
+    match action {
+        RobotAction::Motion { .. } | RobotAction::Jog { .. } | RobotAction::JogTo { .. } | RobotAction::Speed { .. } => true,
+        RobotAction::Run { action } => matches!(action, RunAction::Start | RunAction::Step),
+        RobotAction::Activate { id, .. } => controls(view).into_iter().find(|(i, _, _)| i == id).is_some_and(|(_, _, a)| !matches!(a, RobotAction::Activate { .. }) && moves_synced_motors(view, &a)),
+        _ => false,
+    }
+}
+
 /// Input: a pressed button's action (tabs, links, run, speed, reload,
 /// overlays, graphs, jog, motion, recording, replay, recorded and gait).
 pub(super) fn buttons(clicks: Query<(&Interaction, &RobotAction), Changed<Interaction>>, mut out: MessageWriter<Act<RobotAction>>) {
@@ -423,15 +442,21 @@ pub(super) fn buttons(clicks: Query<(&Interaction, &RobotAction), Changed<Intera
 ///
 /// While the Leg calibration panel is shown, A is its hold-to-move key
 /// (lower), as the page's capture-phase key handler takes it from WASD; W, S
-/// and D still steer.
-pub(super) fn motion_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, hardware: Option<Res<super::hardware::Hardware>>, mut out: MessageWriter<Act<RobotAction>>) {
+/// and D still steer. The panel opening sends the held keys again without A
+/// (when the physical keys drive), so an A held for WASD when it opened does
+/// not keep the robot strafing: its release is the panel's and is never seen
+/// here. Closing the panel sends nothing: a still-held A drives again only
+/// on a fresh press (a jog's A never becomes a strafe).
+pub(super) fn motion_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, hardware: Option<Res<super::hardware::Hardware>>, mut was_open: Local<bool>, mut out: MessageWriter<Act<RobotAction>>) {
     const ALL: [(KeyCode, char); 4] = [(KeyCode::KeyW, 'w'), (KeyCode::KeyA, 'a'), (KeyCode::KeyS, 's'), (KeyCode::KeyD, 'd')];
     let panel = hardware.is_some_and(|h| h.open);
+    // Not `panel && !replace(..)`: the replace must run when the panel closes too.
+    let opened = !std::mem::replace(&mut *was_open, panel) && panel;
     let map: Vec<(KeyCode, char)> = ALL.into_iter().filter(|(_, k)| !(panel && *k == 'a')).collect();
     let Some(run) = view.run.as_ref().filter(|r| r.motion_keys_active()) else { return };
     let request = if keys.just_pressed(KeyCode::KeyX) {
         Some(MotionRequest::Stop)
-    } else if map.iter().any(|(c, _)| keys.just_pressed(*c) || keys.just_released(*c)) {
+    } else if (opened && run.keys_physical()) || map.iter().any(|(c, _)| keys.just_pressed(*c) || keys.just_released(*c)) {
         let held: Vec<char> = map.iter().filter(|(c, _)| keys.pressed(*c)).map(|(_, k)| *k).collect();
         // A release with only a latched (system_ui/REST) key active leaves that key's request alone.
         let pressed = map.iter().any(|(c, _)| keys.just_pressed(*c));

@@ -18,16 +18,19 @@
 //!   [`actions::apply`], in `ViewerSet::Actions`. Motion-starting actions
 //!   ([`HardwareAction::starts_motion`]: anything that starts, changes or
 //!   arms motion, including the operator's confirmations and drive
-//!   settings) are refused, by name, from REST and `system_ui`
+//!   settings, and the mirror's leg, joint, polarity and alignment
+//!   bindings, which become the Leg/Both gait bindings and the saved
+//!   alignment reference) are refused, by name, from REST and `system_ui`
 //!   (`Origin::Rest`, `Origin::SystemUi`); status, gaits, export, connect,
-//!   sections, the mirror's display and STOP stay available there.
+//!   sections, turning the mirror on or off and STOP stay available there.
 //! - **Link** ([`link`], [`session`]): one `jobs::RunThread`
 //!   ("hardware-link") per connection runs the page's session logic
 //!   (select, hold-to-move, sweeps, tune, campaign, gait on the leg): it
 //!   polls `/calibration/status` (600 ms, 150 ms while a session or leg gait
-//!   runs), sends the `motion_update` heartbeat every 100 ms while a motion
-//!   session is open and the gait lease heartbeat every 300 ms, with one
-//!   increasing sequence, and publishes a generation-stamped
+//!   runs) and, through its own "hardware-beat" worker (so a slow request
+//!   cannot let a lease lapse), the `motion_update` heartbeat every 100 ms
+//!   while a motion session is open and the gait lease every 300 ms, with
+//!   one increasing sequence, and publishes a generation-stamped
 //!   [`link::LinkSnapshot`]. When its channel closes (the link dropped:
 //!   panel reconnect, mode exit, window close) it sends STOP before it
 //!   returns.

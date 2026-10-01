@@ -17,6 +17,7 @@
 //!   samples arrive.
 use super::actions::HardwareAction;
 use super::settings::SyncBinding;
+use super::view::fixed;
 use super::{Hardware, sync};
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
@@ -133,7 +134,7 @@ fn sync_panel(mut commands: Commands, hw: Option<Res<Hardware>>, fonts: Res<UiFo
         let plot = commands.spawn(k.chart_image(handles[slot].clone(), Node { width: Val::Percent(100.0), aspect_ratio: Some(crate::chart::RASTER.0 as f32 / crate::chart::RASTER.1 as f32), flex_shrink: 0.0, ..default() }, true)).id();
         if !c.waiting {
             let labels = [
-                commands.spawn(k.chart_label(format!("±{:.1}°", c.bound), Corner::TopLeft)).id(),
+                commands.spawn(k.chart_label(format!("±{}°", fixed(c.bound, 1)), Corner::TopLeft)).id(),
                 commands.spawn(k.chart_label("0 s", Corner::BottomLeft)).id(),
                 commands.spawn(k.chart_label("12 s", Corner::BottomRight)).id(),
             ];
@@ -183,9 +184,15 @@ pub(crate) fn charts(samples: &[bench::LiveSample], rows: &[SyncBinding]) -> Vec
             let actual: Vec<[f64; 2]> = values.iter().map(|p| [x(p), p.measured_deg()]).collect();
             let target: Vec<[f64; 2]> = values.iter().map(|p| [x(p), p.target_deg()]).collect();
             let bound = actual.iter().chain(&target).map(|p| p[1].abs()).fold(0.5, f64::max) * 1.2;
-            Chart { title, stats: format!("RMS error {rms:.2}° · at drive limit {:.0}%", sat * 100.0), target, actual, bound, waiting: false }
+            Chart { title, stats: stats_text(rms, sat), target, actual, bound, waiting: false }
         })
         .collect()
+}
+
+/// A chart's stats line (:12): `rms.toFixed(2)` and `(sat*100).toFixed(0)`,
+/// ties away from zero as `toFixed` (1 of 8 reads at the limit is "13%").
+pub(crate) fn stats_text(rms: f64, sat: f64) -> String {
+    format!("RMS error {}° · at drive limit {}%", fixed(rms, 2), fixed(sat * 100.0, 0))
 }
 
 /// The chart note (:13) for `retained` samples.

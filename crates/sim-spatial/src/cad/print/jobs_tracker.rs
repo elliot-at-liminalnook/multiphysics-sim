@@ -327,6 +327,8 @@ fn land(doc: &mut CadDocument, stamp: u64, result: Result<Vec<PrintJob>, String>
     let changed = t.jobs != list || t.error.is_some() || !t.listed;
     t.error = None;
     t.listed = true;
+    // A landed list answers a one-shot request made while this poll was in flight.
+    t.once = false;
     t.jobs = list;
     let mut running_line = None;
     let mut ended: Vec<Result<PrintJob, PrintJob>> = Vec::new();

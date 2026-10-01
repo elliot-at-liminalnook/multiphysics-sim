@@ -346,7 +346,9 @@ pub(super) fn fill_from_joint(entry: &OpEntry, doc: &CadDocument, r: &Resolved, 
 
 /// Joint `j`'s values as `ops.set_joint`'s parameters, exact (what
 /// [`fill_from_joint`] fills in): pivot and axis as three numbers, limits
-/// in degrees unless prismatic (the dialog's unit) or empty when unset,
+/// in degrees unless prismatic (the dialog's unit; a rotary limit makes the
+/// dialog's own degree round trip, so it may differ from the stored radians
+/// by one ulp, as RoboCAD's `radians(float(text))` does) or empty when unset,
 /// gear ratio and damping as stored, type, parent, child, motor and name
 /// as their keys and text (empty when unset).
 fn joint_values(j: &RobotJoint) -> Map<String, Value> {

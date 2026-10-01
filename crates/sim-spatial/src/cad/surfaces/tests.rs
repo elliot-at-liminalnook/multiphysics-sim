@@ -124,7 +124,7 @@ fn readiness_refuses_with_the_entrys_refusal() {
         };
         let r = registry::readiness(e, &doc, &[]);
         // An interaction is started to pick (its refusals come when it runs); viewer state needs nothing.
-        let started = matches!(e.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_));
+        let started = matches!(e.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_) | Flow::PrintPick);
         if started || !needs_something {
             assert!(r.is_ok(), "{}: {r:?}", e.id);
         } else {

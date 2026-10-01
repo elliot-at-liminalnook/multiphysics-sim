@@ -98,6 +98,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     state["materials"] = super::materials::state_json(doc, selection);
     state["inspector_physical"] = super::inspector::physical_state_json(doc);
     state["results"] = super::results::state_json(doc);
+    state["print"] = super::print::state_json(doc);
     state
 }
 

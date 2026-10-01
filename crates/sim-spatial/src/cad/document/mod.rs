@@ -87,6 +87,9 @@ pub struct CadDocument {
     /// cad-physical-inspect: results, the stress overlay, physical export
     /// and the live link.
     pub results: super::results::ResultsState,
+    /// cad-print: the checks, the remembered print values, the registry
+    /// and study reads, and RoboCAD's print jobs as last polled.
+    pub print: super::print::PrintState,
     /// The mutating request in flight.
     pub edit: Option<Edit>,
     /// The latest outcome line (Ok message or the refusal / error).
@@ -191,6 +194,7 @@ impl CadDocument {
             materials: Default::default(),
             physical_edit: Default::default(),
             results: Default::default(),
+            print: Default::default(),
             edit: None,
             status: None,
             revision: 0,

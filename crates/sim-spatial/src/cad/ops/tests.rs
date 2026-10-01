@@ -116,8 +116,9 @@ fn every_entry_builds_calls_to_its_route() {
         // The cad-sketch shapes read the sketch cache, the active plane and
         // clicked points: their builders are tested in `sketch::tests`.
         // The robot shapes read the robot description and the picks' lists:
-        // their builders are tested in `robot_tests`.
-        if matches!(e.shape, Shape::Sketch(_) | Shape::SketchEdit(_) | Shape::Extrude { .. } | Shape::View(_) | Shape::Robot(_)) {
+        // their builders are tested in `robot_tests`; the print shapes
+        // (cad-print) read the print study, registry and picks: `print`'s tests.
+        if matches!(e.shape, Shape::Sketch(_) | Shape::SketchEdit(_) | Shape::Extrude { .. } | Shape::View(_) | Shape::Robot(_) | Shape::Print(_)) {
             continue;
         }
         // A sample for each parameter without a default (REST-only Ops methods).

@@ -535,6 +535,8 @@ fn finish_edit(doc: &mut CadDocument) -> Option<(Vec<SelectionItem>, Vec<Selecti
         return None;
     }
     let answer = result.map(|EditDone { message, result }| (message, result));
+    // cad-print: a print start's answer is the job it started (tracked from now on).
+    crate::cad::print::edit_answered(doc, seq, answer.as_ref().ok().map(|(_, r)| r));
     // A polygon sent with sides: its count is the remembered one once RoboCAD took it.
     crate::cad::sketch::specs::polygon_edit_done(doc, seq, answer.is_ok());
     // A plane tool's new plane node becomes the active plane (the op's

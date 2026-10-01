@@ -31,6 +31,7 @@
 //!   `path` (RoboCAD would write the description to that file).
 pub mod files;
 pub mod physical;
+pub mod print;
 pub mod robot;
 pub mod robot_ops;
 pub mod section;
@@ -42,6 +43,8 @@ pub mod views;
 mod files_tests;
 #[cfg(test)]
 mod physical_tests;
+#[cfg(test)]
+mod print_tests;
 #[cfg(test)]
 mod robot_tests;
 #[cfg(test)]
@@ -58,6 +61,7 @@ pub use types::*;
 // cad-views-export: saved views, sections, files/export/render.
 pub use files::*;
 pub use physical::*;
+pub use print::*;
 pub use robot::*;
 pub use robot_ops::*;
 pub use section::*;

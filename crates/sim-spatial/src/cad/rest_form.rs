@@ -70,6 +70,7 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadMaterials(a) => tagged("cad_materials", a),
         CadAction::CadInspector(a) => tagged("cad_inspector", a),
         CadAction::CadResults(a) => tagged("cad_results", a),
+        CadAction::CadPrint(a) => tagged("cad_print", a),
     }
 }
 

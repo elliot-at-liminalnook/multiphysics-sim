@@ -133,8 +133,10 @@ pub(in crate::cad) fn form_cancel(doc: &mut CadDocument) -> Value {
     let sketch = doc.ops.sketch.take().is_some_and(|s| s.unsent());
     doc.ops.extrude = None;
     doc.ops.plane_picks.clear();
-    // A robot click tool's picks so far (the joint tool's parent and child).
+    // A robot click tool's picks so far (the joint tool's parent and child),
+    // and the fastener tool's last click (cad-print).
     doc.robot.tools.reset_picks();
+    doc.print.reset_picks();
     if form.is_none() && active.is_none() && !place {
         return json!({"closed": null});
     }

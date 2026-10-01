@@ -383,10 +383,11 @@ fn pointer(
         Some(Flow::PickThenForm(mode)) => Some(mode),
         _ => None,
     };
-    // A robot click tool (cad-physical-inspect, `robot::tools`) takes the
-    // click itself; selection here neither selects, clears nor box-selects.
+    // A robot click tool (cad-physical-inspect, `robot::tools`) or the
+    // fastener tool (cad-print, `print::fastener_tool`) takes the click
+    // itself; selection here neither selects, clears nor box-selects.
     // Hover stays, as RoboCAD's tools keep it.
-    let robot_tool = matches!(flow, Some(Flow::RobotPick(_)));
+    let robot_tool = matches!(flow, Some(Flow::RobotPick(_) | Flow::PrintPick));
     // An open command surface takes the press that closes it (as a Qt popup does).
     let usable = view.valid && doc.tool == CadTool::Select && (!focused || pick_kind.is_some()) && !placing && doc.ops.surface.is_none();
     let in_view = cursor.is_some_and(|p| view.contains(p)) && !super::scene::over_ui(hover_map.as_deref(), &nodes);

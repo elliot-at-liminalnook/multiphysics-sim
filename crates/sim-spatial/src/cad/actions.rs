@@ -297,6 +297,10 @@ pub enum CadAction {
     /// cad-physical-inspect: results and identification, the stress
     /// overlay, physical export and the live link (`results`).
     CadResults(super::results::ResultsArgs),
+    /// cad-print: RoboCAD's print jobs (the jobs section, cancel), the
+    /// fastener tool's picks and the wall check's points (`print`); the
+    /// print tools and studies are catalogue entries.
+    CadPrint(super::print::PrintArgs),
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
 }
@@ -492,6 +496,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadMaterials(_) => super::materials::handle(action, call, cx),
         CadAction::CadInspector(_) => super::inspector::handle_physical(action, call, cx),
         CadAction::CadResults(_) => super::results::handle(action, call, cx),
+        CadAction::CadPrint(_) => super::print::handle(action, call, cx),
         CadAction::SystemUi(args) => system_ui(call, cx, args),
     }
 }
@@ -658,6 +663,8 @@ fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
     out.extend(super::materials::controls(cx));
     out.extend(super::inspector::physical_controls(cx));
     out.extend(super::results::controls(cx));
+    // cad-print: cad:print:*.
+    out.extend(super::print::controls(cx));
     out
 }
 

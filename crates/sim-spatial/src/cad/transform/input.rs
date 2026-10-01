@@ -14,7 +14,7 @@ use bevy::window::{CursorIcon, PrimaryWindow, SystemCursorIcon};
 /// active (`CadDocument::ops.active` is a pick-then-form, place, plane,
 /// sketch or extrude op: RoboCAD's tools other than Select).
 fn op_picks_in_view(doc: &CadDocument) -> bool {
-    doc.ops.active.and_then(entry).is_some_and(|e| matches!(e.flow, Flow::Place(_) | Flow::PickThenForm(_) | Flow::PlanePick(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::RobotPick(_)))
+    doc.ops.active.and_then(entry).is_some_and(|e| matches!(e.flow, Flow::Place(_) | Flow::PickThenForm(_) | Flow::PlanePick(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::RobotPick(_) | Flow::PrintPick))
 }
 
 /// RoboCAD's tool cursor (app.py:520-522: arrow for Select, size-all for

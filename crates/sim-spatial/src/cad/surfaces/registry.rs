@@ -90,6 +90,9 @@ pub(crate) enum Do {
     /// (validate, the motor library, results, identification, the stress
     /// overlay, physical export, the live link): `robot::command_action(id)`.
     Physical(&'static str),
+    /// A cad-print command that is not a catalogue operation (overhang
+    /// shading, the print jobs panel): `print::command_action(id)`.
+    Print(&'static str),
 }
 impl Do {
     pub(crate) fn action(self) -> CadAction {
@@ -111,6 +114,8 @@ impl Do {
             Do::File(id) => crate::cad::files::command_action(id).unwrap_or_else(|| panic!("{id}: no file action")),
             // Every `Do::Physical` id is one `robot::command_action` maps (`surfaces::tests`).
             Do::Physical(id) => crate::cad::robot::command_action(id).unwrap_or_else(|| panic!("{id}: no physical action")),
+            // Every `Do::Print` id is one `print::command_action` maps (`surfaces::tests`).
+            Do::Print(id) => crate::cad::print::command_action(id).unwrap_or_else(|| panic!("{id}: no print action")),
         }
     }
 }
@@ -364,8 +369,8 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("tool.plane_xz", "Active plane: XZ", "Planes", &[], false, Native::Op),
     c("tool.plane_yz", "Active plane: YZ", "Planes", &[], false, Native::Op),
     c("tool.plane_2d_snap", "Toggle 2D snapping to the active plane", "Planes", &[], false, Native::Op),
-    c("tool.fastener", "Fastener hole…", "Print", &["Ctrl+H"], true, Native::Later("cad-print")),
-    c("tool.clearance", "Clearance offset…", "Print", &["Ctrl+Shift+C"], true, Native::Later("cad-print")),
+    c("tool.fastener", "Fastener hole…", "Print", &["Ctrl+H"], true, Native::Op),
+    c("tool.clearance", "Clearance offset…", "Print", &["Ctrl+Shift+C"], true, Native::Op),
     c("tool.mirror", "Mirror (about active plane)", "Modify", &["Ctrl+M"], true, Native::Op),
     c("tool.mirror_live", "Mirror as live instance", "Modify", &[], false, Native::Op),
     c("components.show", "Components library", "Window", &[], false, Native::Later("cad-organize")),
@@ -410,17 +415,17 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("modify.unjoin", "Unjoin", "Modify", &["Shift+J"], true, Native::Op),
     c("modify.dissolve", "Dissolve redundant topology", "Modify", &[], false, Native::Op),
     c("modify.make_unique", "Make instance unique", "Modify", &[], false, Native::Op),
-    c("print.wall_check", "Wall thickness check…", "Print", &["Ctrl+W"], true, Native::Later("cad-print")),
-    c("print.validate", "Validate for printing", "Print", &["Ctrl+Shift+V"], true, Native::Later("cad-print")),
-    c("print.overhangs", "Toggle overhang shading", "Print", &[], false, Native::Later("cad-print")),
-    c("print.split", "Split selected for printing…", "Print", &[], false, Native::Later("cad-print")),
-    c("print.strength", "Check strength (document's print study)", "Print", &[], false, Native::Later("cad-print")),
-    c("print.plan", "Plan print settings and plates (document's print study)", "Print", &[], false, Native::Later("cad-print")),
-    c("print.strength_split", "Whole or split for strength? (selected part of the print study)", "Print", &[], false, Native::Later("cad-print")),
-    c("print.assembly", "Assembly guide for the selected split…", "Print", &[], false, Native::Later("cad-print")),
-    c("print.coupons", "Test coupons (for the selected split, or the material)…", "Print", &[], false, Native::Later("cad-print")),
+    c("print.wall_check", "Wall thickness check…", "Print", &["Ctrl+W"], true, Native::Op),
+    c("print.validate", "Validate for printing", "Print", &["Ctrl+Shift+V"], true, Native::Op),
+    c("print.overhangs", "Toggle overhang shading", "Print", &[], false, Native::Action(Do::Print("print.overhangs"))),
+    c("print.split", "Split selected for printing…", "Print", &[], false, Native::Op),
+    c("print.strength", "Check strength (document's print study)", "Print", &[], false, Native::Op),
+    c("print.plan", "Plan print settings and plates (document's print study)", "Print", &[], false, Native::Op),
+    c("print.strength_split", "Whole or split for strength? (selected part of the print study)", "Print", &[], false, Native::Op),
+    c("print.assembly", "Assembly guide for the selected split…", "Print", &[], false, Native::Op),
+    c("print.coupons", "Test coupons (for the selected split, or the material)…", "Print", &[], false, Native::Op),
     c("print.overlay", "Strength overlay on/off", "Print", &[], false, Native::Action(Do::Physical("print.overlay"))),
-    c("print.jobs", "Print jobs…", "Print", &[], false, Native::Later("cad-print")),
+    c("print.jobs", "Print jobs…", "Print", &[], false, Native::Action(Do::Print("print.jobs"))),
     c("inspect.curvature", "Curvature comb on selected curve", "Inspect", &[], false, Native::Op),
     c("inspect.continuity", "Continuity check (G0/G1/G2)", "Inspect", &[], false, Native::Op),
     c("inspect.draft", "Draft-angle shading", "Inspect", &[], false, Native::Different(DRAFT_SHADING)),
@@ -520,7 +525,7 @@ fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
 pub(crate) fn readiness(entry: &OpEntry, doc: &CadDocument, selection: &[SelectionItem]) -> Result<(), String> {
     // An interaction is started to pick, click or drag (its own refusals
     // come when it runs); viewer state needs nothing.
-    if matches!(entry.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_)) {
+    if matches!(entry.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_) | Flow::PrintPick) {
         return Ok(());
     }
     let nodes = selection.nodes();

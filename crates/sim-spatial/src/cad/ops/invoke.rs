@@ -65,7 +65,7 @@ pub(super) fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
             // RoboCAD's checks before a robot dialog opens ("add a motor and
             // a joint first"), and that the description it is filled from is
             // the shown revision's (the form's `began`, which its OK checks).
-            if let Some(why) = robot_form::precheck(entry, cx.doc, &selection) {
+            if let Some(why) = robot_form::precheck(entry, cx.doc, &selection).or_else(|| crate::cad::print::precheck(entry, cx.doc, &selection)) {
                 return Outcome::Done(Err(why));
             }
             // The dialog replaces an active pick or place tool's form, so
@@ -98,25 +98,32 @@ pub(super) fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
             doc.show(Ok(entry.hint.to_string()));
             Outcome::Done(Ok(answer))
         }
-        Flow::RobotPick(tool) => {
-            // RoboCAD's `set_tool(MotorTool(…))` / `set_tool(JointTool(…))`:
-            // the tool sets its selection mode (face, or body for the joint
-            // tool's first two clicks) and the picks start over.
+        Flow::RobotPick(_) | Flow::PrintPick => {
+            // RoboCAD's `set_tool(MotorTool(…))` / `set_tool(JointTool(…))` /
+            // `set_tool(FastenerTool(…))` (cad-print): the tool sets its
+            // selection mode (face, or body for the joint tool's first two
+            // clicks) and the picks start over.
+            let (mode, status) = match entry.flow {
+                Flow::RobotPick(tool) => (tool.mode(), tool.status(entry)),
+                // `FastenerTool.activate`: face mode; its hint.
+                _ => (SelectMode::Face, entry.hint),
+            };
             end_tool(call, cx);
             let selection = cx.shared.items();
             let mode_before = cx.doc.select_mode;
             let (doc, env) = cx.split(&selection);
             clear_interactions(doc, Some(entry.id));
-            doc.select_mode = tool.mode();
+            doc.select_mode = mode;
             // The motor tool's form holds the Add motor dialog's values beside
-            // the view while it picks; the joint tool has no fields.
+            // the view while it picks (the fastener tool's the Fastener hole
+            // dialog's); the joint tool has no fields.
             let answer = if entry.params.is_empty() {
                 doc.ops.form = None;
                 json!({"active": entry.id})
             } else {
                 open_form_with(doc, entry, Some(&env))
             };
-            doc.show(Ok(tool.status(entry).to_string()));
+            doc.show(Ok(status.to_string()));
             if cx.doc.select_mode != mode_before {
                 crate::cad::selection::publish(cx.doc, cx.shared.view());
             }
@@ -135,6 +142,7 @@ fn clear_interactions(doc: &mut CadDocument, active: Option<&'static str>) {
     doc.ops.extrude = None;
     doc.ops.plane_picks.clear();
     doc.robot.tools.reset_picks();
+    doc.print.reset_picks();
 }
 
 /// RoboCAD's `set_tool` replaces the active tool: a transform tool's live

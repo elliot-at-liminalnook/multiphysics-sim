@@ -39,6 +39,8 @@ pub(crate) enum Built {
     View(ViewAct),
     /// A robot dialog's or tool's calls (`robot_args`).
     Robot(super::robot_args::Plan),
+    /// A Print menu entry's check, edit or study (`crate::cad::print`).
+    Print(crate::cad::print::Plan),
 }
 
 /// An edge as RoboCAD's `ArgConverter.edge` takes it (api.py:166-176).
@@ -564,6 +566,7 @@ pub(super) fn build(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, 
         Shape::Extrude { revolve } => crate::cad::sketch::extrude::calls(entry, revolve, r, values, doc, env),
         Shape::View(act) => Ok(Built::View(act)),
         Shape::Robot(which) => super::robot_args::build(entry, which, r, values, doc),
+        Shape::Print(which) => crate::cad::print::build_plan(which, entry, r, values, doc, env),
         Shape::Copy => {
             if r.nodes.is_empty() {
                 return Err(entry.refusal.to_string());

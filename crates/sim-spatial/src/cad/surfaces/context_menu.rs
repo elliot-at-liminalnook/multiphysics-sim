@@ -3,6 +3,10 @@
 //! Chamfer, Hollow / shell, Union, Subtract, Mirror, Array…, Measure,
 //! Isolate, Hide, Delete (`registry::CONTEXT`), plus the outliner's "Make
 //! unique (bake instance)" (widgets.py:431) when an instance is selected.
+//! That entry is a deliberate difference: RoboCAD's `_context_menu` lacks
+//! it (it is the outliner's context menu's); it stays here as the
+//! cad-modify row for that outliner entry, since the native outliner has no
+//! context menu yet.
 //! Each entry is enabled by the selection (`registry::ready`: a catalogue
 //! operation's `Needs`, an action's button, a later epic's refusal).
 //!

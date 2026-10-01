@@ -256,7 +256,7 @@ fn form_fields_evaluate() {
     assert!(close(evaluate(&number(Unit::Length), "1in"), 25.4));
     assert!(close(evaluate(&number(Unit::Angle), "45deg"), 45.0));
     assert!(close(evaluate(&number(Unit::Angle), "pi rad"), 180.0));
-    assert!(close(evaluate(&number(Unit::Factor), "50/2"), 25.0));
+    assert!(close(evaluate(&number(Unit::Count), "50/2"), 25.0));
     assert!(evaluate(&number(Unit::Length), "2 +").is_err());
     let count = FieldKind::Number { unit: Unit::Count, min: Some(1.0), max: Some(500.0), decimals: 0 };
     assert_eq!(evaluate(&count, "3"), Ok(FieldValue::Number(3.0)));
@@ -309,6 +309,10 @@ fn text_drafts_edit_as_the_numeric_bar() {
     assert_eq!(d.key(&Key::Backspace, false), DraftKey::Edited);
     assert_eq!(d, TextDraft::default());
     assert_eq!(d.key(&Key::Backspace, false), DraftKey::Ignored);
+    // Typing a selected text's own character over it is an edit: the selection clears.
+    let mut d = TextDraft { text: "5".into(), select_all: true };
+    assert_eq!(d.key(&ch("5"), false), DraftKey::Edited);
+    assert_eq!(d, TextDraft { text: "5".into(), select_all: false });
 }
 
 /// The pie, palette and form spawn (no duplicate component in a bundle).

@@ -35,12 +35,12 @@ pub(super) struct Resolved {
 }
 
 /// Whether the entry reads face or edge indices.
-fn reads_indices(needs: Needs) -> bool {
+pub(super) fn reads_indices(needs: Needs) -> bool {
     matches!(needs, Needs::Edges { .. } | Needs::Faces { .. } | Needs::NodesWithFaces | Needs::FaceThenNode)
 }
 
 /// The node's kind in the shown tree (None when unknown or no tree is shown).
-fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
+pub(super) fn kind_of<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
     doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).map(|n| n.kind.as_str())
 }
 

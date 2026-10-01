@@ -19,9 +19,13 @@
 //!   computes ([`finish_params`]); the op's handler builds the Ops call,
 //!   refuses it by name when the document changed since the press, and
 //!   sends it as one edit. Tab during a drag writes the base's first point
-//!   into the form's anchor field, so OK places the typed sizes there
-//!   (RoboCAD's `commit` anchors at `p0`). Escape is the surfaces' key
-//!   (`CadFormCancel` ends the placement).
+//!   (projected onto the plane, z = 0, except a sphere's centre) into the
+//!   form's anchor field, found by its name ("corner", "center" or
+//!   "base"), so OK places the typed sizes there (RoboCAD's `commit`
+//!   anchors at `p0`). Escape is the surfaces' key (`CadFormCancel` ends
+//!   the placement). While a command surface is open (or was when the
+//!   press came: the press that closes it is applied before this system
+//!   runs) a press only closes it, as `pick` does.
 //! - **The plane** is RoboCAD's default active plane, XY through the
 //!   origin (z = 0): the native viewer has no active plane until
 //!   cad-sketch.
@@ -33,26 +37,25 @@
 //!   the one pick path, `CadMeshes::face_at` and the topology at the shown
 //!   revision).
 //! - **Cursor snap** (`ops.cursor_snap`, display state only): the snap
-//!   under the pointer while it is over the 3D view: a vertex, midpoint
-//!   or centre of the drawn bodies, else the first surface along the
-//!   cursor ray, else the grid or the plane point. Recomputed at most every
-//!   33 ms (RoboCAD's hover timer) and only when the pointer, the view or
-//!   the candidates changed; the candidates are cached by the topology's
-//!   and meshes' epochs, as the measure tool's. RoboCAD's `set_pivot` reads
-//!   `viewport.snap` at the pointer (no surface hit); the surface step here
-//!   is the epic's (a pivot on the face under the pointer).
+//!   under the pointer while it is over the 3D view, as RoboCAD's
+//!   `set_pivot` reads `viewport.snap` at the pointer (`snap::snap`): a
+//!   vertex, midpoint or centre of the drawn bodies within 12 px, else the
+//!   10 mm grid on z = 0, else the plane point (no surface hit, and so no
+//!   ray cast). Recomputed at most every 33 ms (RoboCAD's hover timer) and
+//!   only when the pointer, the view or the candidates changed; the
+//!   candidates are cached by the topology's and meshes' epochs, as the
+//!   measure tool's.
 use super::{Flow, Primitive, entry};
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
-use crate::cad::mesh::{CadBody, CadMeshes};
-use crate::cad::snap::{self, Candidate, GRID_STEP, SnapKind};
+use crate::cad::mesh::CadMeshes;
+use crate::cad::snap::{self, Candidate, GRID_STEP};
 use crate::cad::topology::{CadTopology, NodeTopology};
-use crate::cad::transform::{ToolGizmos, cursor_in_view, fl, num, ray_hit, round6, view_back};
+use crate::cad::transform::{ToolGizmos, cursor_in_view, fl, num, round6, view_back};
 use crate::cad::view::{CadView, ray_plane};
 use bevy::picking::hover::HoverMap;
-use bevy::picking::mesh_picking::ray_cast::MeshRayCast;
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, RequestRedraw};
 use serde_json::{Map, Value};
@@ -103,6 +106,9 @@ struct Pointer {
     snap_stale: bool,
     /// The readout is this module's (cleared when the placement ends).
     readout: bool,
+    /// A command surface was open at the end of the last frame's SimSync,
+    /// i.e. when this frame's Input saw the press.
+    surface_open: bool,
 }
 
 fn vec3(p: [f64; 3]) -> Vec3 {
@@ -253,14 +259,19 @@ fn height_at(view: &CadView, cursor: Vec2, p1: Vec3, back: Vec3, snap_grid: bool
     Some(if h.abs() > 1e-6 { h } else { 0.001 })
 }
 
-/// The cursor snap at `cursor` (see the module doc).
-fn cursor_snap(doc: &CadDocument, view: &CadView, cursor: Vec2, candidates: &[Candidate], cast: &mut MeshRayCast, bodies: &Query<&CadBody>) -> Option<[f64; 3]> {
-    let s = snap::snap(view, cursor, candidates, false)?;
-    let p = match s.kind {
-        SnapKind::Vertex | SnapKind::Midpoint | SnapKind::Center => s.point,
-        SnapKind::Grid | SnapKind::Free => ray_hit(doc, cast, view, cursor, bodies).map_or(s.point, |h| h.point),
-    };
-    Some(arr(p))
+/// The cursor snap at `cursor`: RoboCAD's `viewport.snap` (see the module doc).
+fn cursor_snap(view: &CadView, cursor: Vec2, candidates: &[Candidate]) -> Option<[f64; 3]> {
+    snap::snap(view, cursor, candidates, false).map(|s| arr(s.point))
+}
+
+/// The catalogue's name of a placement's anchor parameter.
+const ANCHORS: [&str; 3] = ["corner", "center", "base"];
+
+/// The anchor Tab writes: RoboCAD's `commit` anchors at `p0` on the plane
+/// (z = 0); a sphere's centre is the point itself.
+fn anchor_text(kind: Primitive, p0: [f64; 3]) -> String {
+    let p = if kind == Primitive::Sphere { p0 } else { [p0[0], p0[1], 0.0] };
+    p.map(num).join(", ")
 }
 
 /// SimSync: the cursor snap, and the placement's presses, drags and height
@@ -276,14 +287,14 @@ fn pointer(
     keys: Option<Res<ButtonInput<KeyCode>>>,
     hover: Option<Res<HoverMap>>,
     nodes: Query<(), With<Node>>,
-    mut cast: MeshRayCast,
-    bodies: Query<&CadBody>,
     mut out: MessageWriter<Act<CadAction>>,
     mut redraw: MessageWriter<RequestRedraw>,
     mut state: Local<Pointer>,
 ) {
     let (Some(mut doc), Some(view)) = (doc, view) else { return };
     let state = &mut *state;
+    // The surface as this frame's Input saw it: an outside press closed it in Actions, before this system.
+    let surface_was_open = std::mem::replace(&mut state.surface_open, doc.ops.surface.is_some());
     // The candidates change only with the topology or the drawn bodies.
     let key = (topology.as_ref().map_or(0, |t| t.epoch), meshes.as_ref().map_or(0, |m| m.epoch));
     if state.cache.as_ref().is_none_or(|(k, _)| *k != key) {
@@ -312,7 +323,7 @@ fn pointer(
         } else {
             state.snap_at = Some((c, Instant::now()));
             state.snap_stale = false;
-            let point = cursor_snap(&doc, &view, c, candidates, &mut cast, &bodies);
+            let point = cursor_snap(&view, c, candidates);
             if point.is_some() && doc.ops.cursor_snap != point {
                 doc.ops.cursor_snap = point;
             }
@@ -334,7 +345,8 @@ fn pointer(
     let alt = held(&[KeyCode::AltLeft, KeyCode::AltRight]);
     let ctrl = held(&[KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight]);
     let tab = keys.as_ref().is_some_and(|k| k.just_pressed(KeyCode::Tab));
-    let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left));
+    // A press while a command surface is open only closes it (as `pick`).
+    let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !surface_was_open && doc.ops.surface.is_none();
     let down = buttons.as_ref().is_some_and(|b| b.pressed(MouseButton::Left));
     let snapped = |c: Vec2| snap::snap(&view, c, candidates, alt).map(|s| arr(s.point));
 
@@ -373,13 +385,14 @@ fn pointer(
             }
         }
     }
-    // Tab during a drag: the form's anchor is the base's first point (RoboCAD's `commit` anchors at p0).
-    let anchor = place.as_ref().filter(|_| tab).map(|p| p.p0.map(num).join(", "));
-    let ours = doc.ops.form.as_ref().is_some_and(|f| f.op == id && !f.texts.is_empty() && Some(&f.texts[0]) != anchor.as_ref());
-    if let (true, Some(text)) = (ours, anchor)
+    // Tab during a drag: the form's anchor (by name) is the base's first point (RoboCAD's `commit` anchors at p0).
+    let anchor = place.as_ref().filter(|_| tab).map(|p| anchor_text(kind, p.p0));
+    let slot = entry(id).and_then(|e| e.params.iter().position(|p| ANCHORS.contains(&p.name)));
+    if let (Some(text), Some(i)) = (anchor, slot)
+        && doc.ops.form.as_ref().is_some_and(|f| f.op == id && f.texts.get(i).is_some_and(|t| *t != text))
         && let Some(form) = doc.ops.form.as_mut()
     {
-        form.texts[0] = text;
+        form.texts[i] = text;
     }
     if finish && let Some(p) = &place {
         out.write(Act::ui(CadAction::CadRun { id: id.to_string(), params: finish_params(kind, p), items: None, revision: Some(state.began) }));

@@ -152,8 +152,9 @@ impl CadDocument {
 
     /// Why a tool's commit cannot be sent now: an edit in flight or no
     /// connection (`edit_refusal`), the shown document behind RoboCAD's
-    /// (`stale`), or RoboCAD's revision changed since the drag or preview
-    /// began at `began` (the preview was computed on geometry that is gone).
+    /// (`stale`), or RoboCAD's revision changed since `began`, when a drag
+    /// or preview began, a form opened or picks were read (they were made
+    /// against geometry that is gone).
     /// Nothing is sent when refused.
     pub(crate) fn commit_refusal(&self, began: Option<u64>) -> Option<String> {
         if let Some(why) = self.edit_refusal() {
@@ -164,7 +165,7 @@ impl CadDocument {
         }
         match (began, self.health.as_ref().map(|h| h.revision)) {
             (Some(began), Some(now)) if began != now || began != self.shown_revision() => {
-                Some(format!("the document changed since the preview began (revision {began}, now {now}); nothing was sent: redo the drag or the entry"))
+                Some(format!("the document changed since these values were taken (revision {began}, now {now}); nothing was sent: redo the drag, the entry or the form"))
             }
             _ => None,
         }

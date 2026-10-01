@@ -7,10 +7,11 @@
 //! ("union"), a chamfer spec `{"distance"[, "angle_deg"]}`, a transform
 //! `{"translation"}`, counts as integers. Labels are RoboCAD's history
 //! label (the Ops method's `_edit`/`_new`/`Composite` label) and the subject.
-use super::resolve::Resolved;
+use super::resolve::{Resolved, kind_of};
 use super::{Arg, Fan, Needs, OpEntry, Param, Primitive, Shape};
 use crate::cad::analysis_overlay::Read;
 use crate::cad::document::CadDocument;
+use crate::cad::mesh::BODY_KINDS;
 use crate::cad::transform::{OpCall, fa, face_ref, fl, num, round6};
 use crate::ui_kit::form::{FieldKind, Unit};
 use serde_json::{Map, Value, json};
@@ -107,7 +108,8 @@ fn group(r: &Resolved, node: Option<String>) -> Group {
 /// The calls' subjects: one per node for `Fan::PerNode` (the nodes owning
 /// the selected edges or faces for an edge or face operation, else the
 /// selected nodes), else one: the first selected edge's or face's node for
-/// an edge or face operation, else the first selected node.
+/// an edge or face operation, else the first selected node; none for an
+/// operation that needs nothing selected (a primitive is not about the selection).
 fn groups(entry: &OpEntry, r: &Resolved) -> Vec<Group> {
     match entry.fan {
         Fan::PerNode => {
@@ -120,6 +122,7 @@ fn groups(entry: &OpEntry, r: &Resolved) -> Vec<Group> {
         }
         Fan::Once => {
             let node = match entry.needs {
+                Needs::Nothing => None,
                 Needs::Edges { .. } => r.edges.first().map(|e| e.0.clone()),
                 Needs::Faces { .. } | Needs::FaceThenNode => r.faces.first().map(|f| f.0.clone()),
                 _ => r.nodes.first().cloned(),
@@ -303,7 +306,10 @@ fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
             let mut c = op.chars();
             history_name = c.next().map(|f| f.to_uppercase().chain(c).collect::<String>()).unwrap_or_default();
         }
+        // An operation that needs nothing selected names no subject (the
+        // selection is not what it acts on).
         let who = match &g.node {
+            _ if entry.needs == Needs::Nothing => String::new(),
             Some(node) if uses(|a| matches!(a, Arg::Node)) => doc.node_name(node),
             _ if uses(|a| matches!(a, Arg::Nodes)) => subject(doc, &r.nodes),
             _ => r.nodes.first().map(|n| doc.node_name(n)).unwrap_or_default(),
@@ -391,8 +397,11 @@ fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
 /// box as `_make_box` (width and depth at least 1e-3; a height within 1e-6
 /// of zero is 1; a negative height extrudes down), the centre box centred
 /// in the plane only, the cylinder as `_finish` (axis ± Z by the height's
-/// sign, radius at least 1e-3), the sphere with radius at least 1e-3. The
-/// anchor's z is kept (RoboCAD's anchor lies on the plane).
+/// sign, radius at least 1e-3), the sphere with radius at least 1e-3.
+/// RoboCAD projects the anchor onto the plane (`plane.to_local(anchor)`,
+/// ui/tools.py:522-529): the box's and the cylinder's base lie on the XY
+/// plane (z = 0; the native viewer has no other plane until cad-sketch);
+/// the sphere keeps its centre.
 fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>) -> Result<Built, String> {
     let r3 = |v: [f64; 3]| [round6(v[0]), round6(v[1]), round6(v[2])];
     let call = match primitive {
@@ -401,14 +410,15 @@ fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>) -> 
             let (w, d, h) = (number(entry, values, "width")?, number(entry, values, "depth")?, number(entry, values, "height")?);
             let (x0, y0) = if primitive == Primitive::BoxCentre { (anchor[0] - w / 2.0, anchor[1] - d / 2.0) } else { (anchor[0], anchor[1]) };
             let height = if h.abs() > 1e-6 { h.abs() } else { 1.0 };
-            let z0 = if h >= 0.0 { anchor[2] } else { anchor[2] - height };
+            let z0 = if h >= 0.0 { 0.0 } else { -height };
             let size = r3([w.max(1e-3), d.max(1e-3), height]);
             let corner = r3([x0, y0, z0]);
             let label = format!("Box {} × {} × {} at {}", fl(size[0]), fl(size[1]), fl(size[2]), pt(corner));
             OpCall { name: entry.route, args: vec![json!(corner), json!(size)], kwargs: Map::new(), label }
         }
         Primitive::Cylinder => {
-            let base = r3(vec3(entry, values, "base")?);
+            let anchor = vec3(entry, values, "base")?;
+            let base = r3([anchor[0], anchor[1], 0.0]);
             let (dia, h) = (number(entry, values, "diameter")?, number(entry, values, "height")?);
             let axis = if h > 0.0 { [0.0, 0.0, 1.0] } else { [0.0, 0.0, -1.0] };
             let radius = round6((dia / 2.0).max(1e-3));
@@ -424,6 +434,12 @@ fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>) -> 
     };
     let label = call.label.clone();
     Ok(Built::Edit { calls: vec![call], label })
+}
+
+/// The last resolved node whose kind in the shown tree passes `has` (a node
+/// of unknown kind, with no tree shown yet, passes; RoboCAD answers for it).
+fn last_of(doc: &CadDocument, r: &Resolved, has: impl Fn(&str) -> bool) -> Option<String> {
+    r.nodes.iter().rev().find(|n| kind_of(doc, n).is_none_or(&has)).cloned()
 }
 
 /// Build what `entry` sends on the resolved selection with `values`
@@ -448,8 +464,17 @@ pub(super) fn build(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, 
             let (node, face) = r.faces.first().cloned().ok_or_else(|| entry.refusal.to_string())?;
             Ok(Built::Read(Read::ControlPoints { node, face }))
         }
-        // RoboCAD draws each selected node's in turn; the last one's stays drawn.
-        Shape::CurvatureComb => Ok(Built::Read(Read::CurvatureComb { node: r.nodes.last().cloned().ok_or_else(|| entry.refusal.to_string())? })),
-        Shape::Continuity => Ok(Built::Read(Read::Continuity { node: r.nodes.last().cloned().ok_or_else(|| entry.refusal.to_string())? })),
+        // RoboCAD draws each selected node's in turn; the last one's stays
+        // drawn. Its comb skips a node with no body: a sketch (app.py:1277-1284).
+        Shape::CurvatureComb => {
+            let node = last_of(doc, r, |k| k == "curve").ok_or_else(|| "Select a curve: a sketch has no body to comb (RoboCAD's comb skips it)".to_string())?;
+            Ok(Built::Read(Read::CurvatureComb { node }))
+        }
+        // The continuity report skips a node with no body (app.py:1287-1290):
+        // bodies, sheets, instances, meshes and curves have one.
+        Shape::Continuity => {
+            let node = last_of(doc, r, |k| BODY_KINDS.contains(&k) || k == "curve").ok_or_else(|| "Select a body: none of the selected nodes has one (a sketch, group or plane has none; RoboCAD's check skips it)".to_string())?;
+            Ok(Built::Read(Read::Continuity { node }))
+        }
     }
 }

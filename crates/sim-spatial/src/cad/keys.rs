@@ -7,8 +7,8 @@
 //! Command on macOS, so Control or Super is accepted for Ctrl.
 //!
 //! A matched command acts only when it is ready (`registry::ready`: a
-//! catalogue operation's selection needs, an action's button state, a later
-//! epic's or a GUI-only command's refusal). Ready, the key writes
+//! catalogue operation's edit gate and selection needs, an action's button
+//! state, a later epic's or a not-ported command's refusal). Ready, the key writes
 //! `CadInvoke { id }`, the value its menu entry, toolbar button, palette row,
 //! `system_ui` control (`cad:op:<id>`) and REST `cad_invoke` write; the
 //! palette and the radials open with `CadSurface` at the pointer instead
@@ -63,7 +63,7 @@
 //! | P, Shift+P, Ctrl+P | select points, sketch polygon (cad-sketch), plane from face (cad-sketch) | exact modifiers |
 //! | Delete, Backspace | `edit.delete` | ignored while a text field (name, numeric bar, palette, form) has the keyboard |
 //! | Space | `view.radial` | typed as a space while a text field has the keyboard |
-//! | Tab | `numeric.entry` | the open form's first field when a pick or place op is active, else the numeric bar's |
+//! | Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`: its first field, then the next); during a placement drag `ops::interact` also reads it to copy the base point into the form's anchor field; else the numeric bar's (`numeric::entry`) |
 //! | digits, J, Q, X, T, L, C, N, /, Home | views (cad-views-export), join, selection radial, extrude, sketch text/line/circle (cad-sketch), annotate (cad-organize), isolate, fit | no other reader in CAD mode |
 //!
 //! Commands of later epics keep their keys so a press says which epic owns

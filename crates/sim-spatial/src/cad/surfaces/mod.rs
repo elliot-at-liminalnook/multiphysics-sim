@@ -23,9 +23,13 @@
 //!   key gate (`keys::gate`). A click on an entry writes its action, then
 //!   `CadSurface { closed }` (unless the entry opens another surface), so the
 //!   action is applied before the surface closes.
-//! - **Escape order**: an open surface closes; else an open form or active
-//!   interaction is cancelled (`CadFormCancel`); else transform's keys
-//!   take it (they skip Escape while either exists).
+//! - **Escape order**: an Escape that ends another text field (the
+//!   inspector's name field or value editors, the numeric bar) is that
+//!   field's alone ([`escape_elsewhere`]); else an open surface closes; else
+//!   an open form or active interaction is cancelled (`CadFormCancel`); else
+//!   transform's keys take it (they skip Escape while either exists).
+//! - **Wheel**: over a menu or context-menu popup it scrolls the popup's
+//!   rows ([`popup_scroll`]); the menus outgrow their 560 px.
 //! - **Present**: [`draw`] rebuilds the open popup (palette, menu, context
 //!   menu, radial) when what it shows changes; `toolbar` and `form` rebuild
 //!   theirs. Every root carries `DespawnOnExit(ModeScope::Cad)`.
@@ -100,13 +104,14 @@ pub struct Open {
 
 use self::registry::{CATEGORIES, Command, Resolved};
 use super::actions::{CadAction, Cx};
-use super::document::CadDocument;
+use super::document::{CadDocument, CadInputFocus};
 use super::panel::{Control, NameDraft};
 use super::view::CadView;
 use crate::app::actions::{Act, Call};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
-use crate::ui_kit::{BORDER, FAINT, Kit, LEFT_WIDTH, Look, SURFACE, TOPBAR, UiFonts, size};
+use crate::ui_kit::{BORDER, FAINT, Kit, LEFT_WIDTH, Look, SURFACE, TOPBAR, UiFonts, WHEEL_LINE, size, wheel_delta};
+use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use bevy::ui::{ComputedNode, FocusPolicy, UiGlobalTransform};
@@ -220,8 +225,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
 
 /// `CadInvoke` of a RoboCAD command id that is not a catalogue operation
 /// (`registry`): its native CAD action (undo, fit, a selection mode, …),
-/// RoboCAD's `POST /commands/{id}` when its desktop window serves the
-/// document, or a refusal naming the epic that owns it or "GUI-only".
+/// or a refusal naming the epic that owns it or why it is not ported.
 pub(super) fn invoke_command(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
     registry::invoke(id, call, cx)
 }
@@ -260,6 +264,10 @@ pub(crate) fn controls(doc: &CadDocument, own: &[Control]) -> Vec<Control> {
 #[derive(Component, Clone, Copy, Debug, Default)]
 pub(crate) struct SurfaceRoot;
 
+/// A menu or context-menu popup's scrolling rows ([`popup_scroll`]).
+#[derive(Component, Clone, Copy, Debug, Default)]
+pub(crate) struct PopupScroll;
+
 /// A clickable entry of a popup: its action, and whether running it
 /// closes the surface; a disabled entry's press shows why.
 #[derive(Component, Clone, Debug)]
@@ -282,10 +290,28 @@ pub(crate) fn rect_of(node: &ComputedNode, transform: &UiGlobalTransform) -> Rec
     Rect::from_center_size(transform.translation * scale, node.size() * scale)
 }
 
-/// Whether the name field or the numeric bar has the keyboard (their
-/// Enter and Escape are theirs).
+/// Whether the name field, an inspector value editor or the numeric bar
+/// has the keyboard (their Enter and Escape are theirs).
 pub(super) fn other_field_focused(doc: &CadDocument, draft: Option<&NameDraft>) -> bool {
-    doc.tool_state.numeric.focus.is_some() || draft.is_some_and(|d| d.editing.is_some())
+    doc.tool_state.numeric.focus.is_some() || doc.tool_state.inspector_edit.is_some() || draft.is_some_and(|d| d.editing.is_some())
+}
+
+/// Whether this frame's Escape belongs to a text field other than the
+/// open form's or palette's. The name field and the inspector's editors run
+/// first and clear their drafts on the Escape that ends them, but leave
+/// `CadInputFocus` set in that frame (`panel::name_entry` resets it each
+/// frame, so a set flag is this frame's); the open palette owns the keyboard.
+pub(super) fn escape_elsewhere(doc: &CadDocument, draft: Option<&NameDraft>, focus: bool) -> bool {
+    if matches!(doc.ops.surface.as_ref().map(|o| &o.surface), Some(Surface::Palette { .. })) {
+        return false;
+    }
+    let form_field = doc.ops.form.as_ref().and_then(|f| f.focus).is_some();
+    other_field_focused(doc, draft) || (focus && !form_field)
+}
+
+/// Whether `cursor` is over an open popup (its wheel is the popup's).
+pub(crate) fn over_popup<'a>(roots: impl IntoIterator<Item = (&'a ComputedNode, &'a UiGlobalTransform)>, cursor: Vec2) -> bool {
+    roots.into_iter().any(|(node, t)| rect_of(node, t).contains(cursor))
 }
 
 // ---- Systems ---------------------------------------------------------------------
@@ -296,11 +322,14 @@ pub(super) fn build(app: &mut App) {
         .add_systems(OnEnter(ModeScope::Cad), toolbar::spawn)
         .add_systems(
             Update,
-            (form::input, palette::input, input, radial::input, context_menu::input, toolbar::scroll, super::keys::gate)
+            (form::input, palette::input, input, radial::input, context_menu::input, popup_scroll, toolbar::scroll, super::keys::gate)
                 .chain()
                 .after(crate::app::actions::serve)
+                // The name field and the inspector's editors clear their
+                // drafts on the Escape that ends them and leave
+                // `CadInputFocus` set that frame, which `input` reads to
+                // leave that Escape to them (`escape_elsewhere`).
                 .after(super::panel::name_entry)
-                // An open inspector editor's Escape and typing are its own.
                 .after(super::inspector::editor_entry)
                 .before(super::numeric::entry)
                 .in_set(ViewerSet::Input)
@@ -322,6 +351,7 @@ fn input(
     keys: Option<Res<ButtonInput<KeyCode>>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     draft: Option<Res<NameDraft>>,
+    focus: Option<Res<CadInputFocus>>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
     let Some(mut doc) = doc else { return };
@@ -354,11 +384,26 @@ fn input(
             out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
         }
     }
-    if keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) {
+    if keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) && !escape_elsewhere(&doc, draft.as_deref(), focus.is_some_and(|f| f.0)) {
         if open.is_some() {
             out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
-        } else if (doc.ops.form.is_some() || doc.ops.active.is_some()) && !other_field_focused(&doc, draft.as_deref()) {
+        } else if doc.ops.form.is_some() || doc.ops.active.is_some() {
             out.write(Act::ui(CadAction::CadFormCancel));
+        }
+    }
+}
+
+/// Input: the wheel over a menu or context-menu popup scrolls its rows
+/// (the layout clamps the far end, `ui_kit::clamp_scroll_positions`).
+fn popup_scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<PrimaryWindow>>, mut areas: Query<(&mut ScrollPosition, &ComputedNode, &UiGlobalTransform), With<PopupScroll>>) {
+    let delta = wheel_delta(&mut wheel, WHEEL_LINE);
+    if delta == 0.0 {
+        return;
+    }
+    let Some(cursor) = windows.single().ok().and_then(Window::cursor_position) else { return };
+    for (mut position, node, transform) in &mut areas {
+        if rect_of(node, transform).contains(cursor) {
+            position.0.y = (position.0.y - delta).max(0.0);
         }
     }
 }
@@ -366,7 +411,11 @@ fn input(
 /// What the open popup shows, as a comparable text.
 fn popup_key(doc: &CadDocument, width: f32) -> Option<String> {
     let open = doc.ops.surface.as_ref()?;
-    Some(format!("{:?}", (doc.generation, doc.revision, open, &doc.selection, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), doc.edit.is_some(), width.round())))
+    // What enables an entry beyond the document: the connection, an edit in
+    // flight, RoboCAD's desktop window and its command list.
+    let commands = doc.commands.as_ref().map(|c| c.as_ref().map(|list| list.len()).ok());
+    let gate = (doc.connected(), doc.edit.is_some(), doc.health.as_ref().map(|h| h.gui), commands);
+    Some(format!("{:?}", (doc.generation, doc.revision, open, &doc.selection, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), gate, width.round())))
 }
 
 /// Present: the open popup (palette, menu, context menu or radial),
@@ -423,10 +472,8 @@ fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, list: &[E
                 left: Val::Px(at.x),
                 top: Val::Px(at.y),
                 min_width: Val::Px(220.0),
-                max_height: Val::Px(560.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Stretch,
-                row_gap: Val::Px(1.0),
                 padding: UiRect::all(Val::Px(4.0)),
                 border: UiRect::all(Val::Px(1.0)),
                 border_radius: BorderRadius::all(Val::Px(6.0)),
@@ -442,13 +489,17 @@ fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, list: &[E
             DespawnOnExit(ModeScope::Cad),
         ))
         .with_children(|p| {
-            if list.is_empty() {
-                p.spawn(k.text("(no commands)", size::CAPTION, FAINT, 0));
-            }
-            for e in list {
-                // Left-aligned rows: the kit button's layout with its content at the start
-                // (`repaint_buttons` restores the look's padding, border and radius).
-                p.spawn(k.button(&e.text(), SurfaceEntry::of(e), Look::Ghost, e.ready.is_ok())).insert(Node { justify_content: JustifyContent::FlexStart, align_items: AlignItems::Center, flex_shrink: 0.0, ..default() });
-            }
+            // 560 px tall at most with the padding and border; the wheel scrolls the rest.
+            let rows = Node { max_height: Val::Px(550.0), flex_direction: FlexDirection::Column, align_items: AlignItems::Stretch, row_gap: Val::Px(1.0), ..default() };
+            p.spawn((k.scroll_area(rows, 0.0), PopupScroll)).with_children(|p| {
+                if list.is_empty() {
+                    p.spawn(k.text("(no commands)", size::CAPTION, FAINT, 0));
+                }
+                for e in list {
+                    // Left-aligned rows: the kit button's layout with its content at the start
+                    // (`repaint_buttons` restores the look's padding, border and radius).
+                    p.spawn(k.button(&e.text(), SurfaceEntry::of(e), Look::Ghost, e.ready.is_ok())).insert(Node { justify_content: JustifyContent::FlexStart, align_items: AlignItems::Center, flex_shrink: 0.0, ..default() });
+                }
+            });
         });
 }

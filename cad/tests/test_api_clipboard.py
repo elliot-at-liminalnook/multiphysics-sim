@@ -86,3 +86,22 @@ def test_paste_refuses_content_that_is_not_robocads(served):
     after = client.get("/")
     assert after["nodes"] == before["nodes"]
     assert client.get("/history") == history
+
+
+def test_failed_paste_after_a_valid_item_leaves_the_document_untouched(served):
+    # The valid first item is added before the bad second one fails; the
+    # cleanup removes it and the revision and dirty flag come back too.
+    doc, client, box, _ = served
+    good = client.post("/clipboard/copy", {"ids": [box]})["items"][0]
+    clip = {"robocad_clipboard": True, "items": [good, {"node": {"name": "X"}, "brep": "zz"}]}
+    doc.dirty = False  # as after a save, so a stray `touch` would show
+    before = client.get("/")
+    history = client.get("/history")
+    with pytest.raises(RuntimeError) as e:
+        client.post("/clipboard/paste", {"clip": clip})
+    status = int(str(e.value).split("→ ", 1)[1].split(":", 1)[0])
+    assert 400 <= status < 600, str(e.value)
+    after = client.get("/")
+    assert after["nodes"] == before["nodes"]
+    assert (after["revision"], after["dirty"]) == (before["revision"], before["dirty"])
+    assert client.get("/history") == history

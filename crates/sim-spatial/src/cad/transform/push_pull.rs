@@ -1,7 +1,8 @@
 //! Push/pull (D) and offset face (Shift+D): RoboCAD's `PushPullTool`
 //! (ui/tools.py:547-632). A left press on a face in the 3D view targets it
 //! (Bevy's `MeshRayCast` on the drawn bodies, the hit triangle mapped to
-//! RoboCAD's face by `CadMeshes::face_of`) and selects it (`CadSelect`, as
+//! RoboCAD's face by `CadMeshes::face_at` at the shown revision; nothing
+//! while the mesh lags it) and selects it (`CadSelect`, as
 //! RoboCAD clears the selection and adds the face). Dragging moves along
 //! the face normal on the plane through the press point that contains the
 //! normal and faces the camera (Ctrl: whole 10 mm steps). The preview is
@@ -206,18 +207,20 @@ pub(super) fn tool(
     }
     let Some(cursor) = cursor_in_view(window, &view, hover.as_deref(), &nodes) else { return };
     let Some(hit) = ray_hit(&doc, &mut cast, &view, cursor, &bodies) else { return };
-    let Some(face) = hit.triangle.and_then(|t| meshes.face_of(&hit.node, t)) else { return };
-    // RoboCAD: the selection becomes the pressed face.
-    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![SelectionItem(hit.node.clone(), "face".into(), face)], extend: false, toggle: false }));
     let name = doc.node_name(&hit.node);
     let shown = doc.shown_revision();
-    // The face index is the drawn tessellation's: while that lags the shown revision it indexes older faces.
-    let drawn = meshes.drawn_revision(&hit.node).unwrap_or(shown);
-    if drawn != shown {
-        doc.tool_state.push = Some(Target { node: hit.node.clone(), face, revision: drawn, info: None });
+    // The face index is the drawn tessellation's: while that lags the shown
+    // revision it indexes older faces, so nothing is selected or targeted
+    // (`face_at` answers only at the shown revision).
+    if meshes.drawn_revision(&hit.node) != Some(shown) {
+        // The earlier target is not what was pressed: Tab must not act on it.
+        doc.tool_state.push = None;
         doc.show(Err(format!("{name} is being redrawn for revision {shown}; press again in a moment")));
         return;
     }
+    let Some(face) = hit.triangle.and_then(|t| meshes.face_at(&hit.node, t, shown)) else { return };
+    // RoboCAD: the selection becomes the pressed face.
+    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![SelectionItem(hit.node.clone(), "face".into(), face)], extend: false, toggle: false }));
     let info = topology.get(&hit.node).and_then(|t| t.faces.iter().find(|f| f.index == face).cloned());
     doc.tool_state.push = Some(Target { node: hit.node.clone(), face, revision: shown, info: info.clone() });
     let Some(info) = info else {

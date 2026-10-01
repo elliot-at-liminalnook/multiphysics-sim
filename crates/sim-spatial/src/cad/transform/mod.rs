@@ -429,13 +429,18 @@ fn activate(cx: &mut Cx, tool: CadTool) -> Value {
 }
 
 /// `CadCancel` (Escape; RoboCAD app.py:487-497): close the Alt menu if it
-/// is open; else end the tool's live work and return to Select; in the
-/// Select tool, clear the selection.
+/// is open; else end an active catalogue pick or placement, or an open
+/// form, exactly as the form's Cancel does (`ops::form_cancel`); else end
+/// the tool's live work and return to Select; in the Select tool, clear
+/// the selection.
 fn cancel(cx: &mut Cx) -> Value {
     if cx.doc.candidates.is_some() {
         cx.doc.candidates = None;
         cx.doc.touch();
         return json!({"closed": "the Alt menu"});
+    }
+    if cx.doc.ops.active.is_some() || cx.doc.ops.form.is_some() {
+        return super::ops::form_cancel(cx.doc);
     }
     if cx.doc.tool != CadTool::Select {
         let from = cx.doc.tool.name();

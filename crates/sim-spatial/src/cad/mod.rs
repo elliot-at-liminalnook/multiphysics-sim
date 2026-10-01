@@ -96,6 +96,8 @@ impl Plugin for CadCorePlugin {
                 (
                     actions::apply.in_set(ViewerSet::Actions),
                     sync::receive.in_set(ViewerSet::JobResults),
+                    // A read's result (copy, control points, comb, continuity), with or without a window.
+                    analysis_overlay::receive.in_set(ViewerSet::JobResults).after(sync::receive),
                     topology::sync.in_set(ViewerSet::SimSync),
                     actions::publish.in_set(ViewerSet::Present),
                 )

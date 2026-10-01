@@ -11,8 +11,9 @@
 //! - **Click** (press and release within 6 px, RoboCAD's Manhattan
 //!   distance): body mode picks `[id, "body", 0]`; face and point modes
 //!   cast Bevy's `MeshRayCast` on the drawn bodies (`CadBody`) and map the
-//!   hit triangle to RoboCAD's face (`CadMeshes::face_of`: Bevy's triangle
-//!   index is RoboCAD's) as `[id, "face", f]` / `[id, "point", f]`; a mesh
+//!   hit triangle to RoboCAD's face (`CadMeshes::face_at` at the shown
+//!   revision: Bevy's triangle index is RoboCAD's; nothing while the mesh
+//!   lags) as `[id, "face", f]` / `[id, "point", f]`; a mesh
 //!   node is always a body item. Edge and vertex modes take the nearest
 //!   sampled edge polyline or vertex within 6 px on screen that is not
 //!   behind the first surface along the cursor ray. Shift extends, Ctrl
@@ -139,7 +140,19 @@ pub(super) fn build(app: &mut App) {
     app.init_resource::<PickState>()
         .add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(PickState::default()))
         .add_systems(OnExit(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(PickState::default()))
-        .add_systems(Update, pointer.after(crate::app::actions::serve).after(super::panel::name_entry).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
+        // After every system that sets `CadInputFocus` this frame (the name
+        // field, the inspector's editors, the numeric bar), so a click reads
+        // the focus as it stands.
+        .add_systems(
+            Update,
+            pointer
+                .after(crate::app::actions::serve)
+                .after(super::panel::name_entry)
+                .after(super::inspector::editor_entry)
+                .after(super::numeric::entry)
+                .in_set(ViewerSet::Input)
+                .run_if(in_state(ViewerMode::Cad)),
+        );
 }
 
 /// One ray hit on a drawn body: node id, triangle, distance along the model ray (mm).

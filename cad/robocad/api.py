@@ -47,8 +47,9 @@ node ids from `/nodes`. Faces/edges are addressed by `{"node": id,
     GET  /materials | POST /materials {"id","name","density","color"}
     GET  /robot                     joints, motors, DoF, ground, validation issues
     GET  /motors                    the actuator library (POST /ops/add_motor to place one)
-    GET  /physical?flex=1           the physical assembly description (simrobot v3, SI)
+    GET  /physical?flex=1[&planar=1]   the physical assembly description (simrobot v4, SI); planar=1 adds the XZ-plane hint
     GET  /results | POST /results/load {"path"}      simulation results (peak stress, margins, temperatures)
+    GET  /results/nodes             {"revision", "path", "loaded", "stale", "provenance", "margins": {id: …}, "nodes": {id: {"results", "yield_strength_pa"}}}  (read-only)
     POST /identification/apply {"path"}              fitted joint parameters from `sim-cad fit`
     POST /sensors {"kind","body","point",...} | POST /cables {"from_body","from_point","to_body","to_point",...}
     PUT  /battery {"cells","chemistry",...} | PUT /control {"period_s","latency_s","targets"} | PUT /uncertainty {...}
@@ -1304,6 +1305,20 @@ class Service:
     def materials(self):
         return [m.to_json() for m in self.doc.materials.values()]
 
+    def results_nodes(self) -> dict:
+        """`GET /results/nodes`: the loaded results per node id (the margins
+        `results_margins` computes, each node's results block and its
+        material's yield strength) at the document's revision. Read-only."""
+        from .physical import results_margins
+
+        res = self.doc.results or {}
+        nodes = {}
+        for n in self.doc.walk():
+            if n.results:
+                material = self.doc.materials.get(n.material or "")
+                nodes[n.id] = {"results": n.results, "yield_strength_pa": material.props().get("yield_strength") if material else None}
+        return {"revision": self.doc.revision, "path": res.get("path"), "loaded": res.get("loaded"), "stale": res.get("stale"), "provenance": res.get("provenance"), "margins": results_margins(self.doc), "nodes": nodes}
+
     def add_material(self, spec: dict):
         from .commands import SetMaterialDef
 
@@ -1513,14 +1528,18 @@ def make_handler(service: Service):
                 return self._send(200,run(performance))
             if head == "physical":
                 flex = q.get("flex", "1") not in ("0", "false")
+                planar = q.get("planar", "0") not in ("0", "false")
                 if s.app is None:
+                    if planar:
+                        from .physical import export_physical_model
+                        return self._send(200, run(lambda: export_physical_model(s.doc, q.get("path"), planar=Plane.xz(), flex=flex)))
                     return self._send(200, run(lambda: s.ops.physical(q.get("path"), flex=flex)))
                 # Desktop: snapshot on the GUI thread, derive in a child process
                 # from this request thread, so the editor stays responsive.
                 from .snapshots import capture
                 from .export_worker import export_snapshot
                 snapshot, source = run(lambda: (capture(s.doc), s.doc.path))
-                return self._send(200, export_snapshot(snapshot, q.get("path"), flex=flex, source_file=source))
+                return self._send(200, export_snapshot(snapshot, q.get("path"), flex=flex, planar=planar, source_file=source))
             if head == "actuator-profiles":
                 if method == "GET":
                     return self._send(200, run(lambda: s.doc.robot_settings.get("actuator_profiles")))
@@ -1529,6 +1548,8 @@ def make_handler(service: Service):
             if head == "results":
                 if len(parts) > 1 and parts[1] == "load":
                     return self._send(200, run(lambda: s.ops.load_results(body["path"])))
+                if len(parts) > 1 and parts[1] == "nodes" and method == "GET":
+                    return self._send(200, run(s.results_nodes))
                 return self._send(200, run(lambda: s.doc.results or {}))
             if head == "identification":
                 return self._send(200, run(lambda: s.ops.apply_identification(body["path"])))

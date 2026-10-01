@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01 after cad-select-transform; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform written and reviewed by reading, pending its verification pass)
+## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify written and reviewed by reading, pending its verification pass)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -129,7 +129,9 @@ duplicates physics.
   side-by-side steps [docs/cad-checklist.md](../cad-checklist.md).
   Since **cad-select-transform** (2026-10-01, see
   [CAD selection and transform](#cad-selection-and-transform-2026-10-01)),
-  written and reviewed by reading, pending its verification pass: face,
+  verified at c0ed9b29 (sim-spatial lib tests 209 passed, 1 ignored; bins
+  4 passed; sim-runtime `cad_client` and `units` 59 passed; api pytests 14
+  passed; sim-web wasm check clean): face,
   edge, vertex and point selection with hover, box select, the Alt menu
   and the selection commands; the move/rotate/scale gizmo, push/pull and
   offset, measure, live dimensions, snapping and the numeric bar with
@@ -2080,9 +2082,11 @@ stay RoboCAD's; previews move display transforms and overlays only. The
 ledger rows are in [docs/cad-parity.md](../cad-parity.md) (63 rows: 55
 done by reading, 8 deliberately different; none open), the side-by-side
 steps in [docs/cad-checklist.md](../cad-checklist.md) (CAD-19 to CAD-34).
-**Written and reviewed by reading only; the verification pass builds and
-tests it.** Paths are `crates/sim-spatial/src/cad/` unless they name
-another crate.
+Written and reviewed by reading, then built and tested in its
+verification pass: verified at c0ed9b29 (sim-spatial lib 209 passed, 1
+ignored; bins 4; sim-runtime `cad_client` and `units` 59; api pytests 14;
+sim-web wasm check clean). Paths are `crates/sim-spatial/src/cad/` unless
+they name another crate.
 
 ### Shape
 
@@ -2677,8 +2681,8 @@ to one of the later epics below. The second, **cad-select-transform**
 added sub-body selection, the transform gizmo, push/pull and offset,
 measure, live dimensions, snapping and the numeric bar over a Rust port
 of `units.evaluate`, with one read-only Python addition (sampled edge
-polylines); written and reviewed by reading, pending its verification
-pass. Next: cad-modify.
+polylines); verified at c0ed9b29 (sim-spatial lib 209 passed, 1 ignored;
+bins 4; `cad_client` and `units` 59; api pytests 14). Next: cad-modify.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -2867,7 +2871,8 @@ The Director re-ranks with evidence, but this is the default:
    a4fe42d3 and awaits the user's [CAD checklist](../cad-checklist.md).
    **cad-select-transform** (2026-10-01; see
    [CAD selection and transform](#cad-selection-and-transform-2026-10-01))
-   is done pending its verification pass. Next: **cad-modify**. Remaining,
+   is verified at c0ed9b29 (sim-spatial lib 209 passed, 1 ignored; bins 4;
+   `cad_client` and `units` 59; api pytests 14). Next: **cad-modify**. Remaining,
    in order (§9 "Later CAD epics"): cad-modify, cad-sketch,
    cad-views-export, cad-physical-inspect, cad-print, cad-organize,
    cad-experiments-motion.

@@ -76,13 +76,7 @@ pub(super) fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
 /// inspector, chart strip).
 pub(super) fn viewport(window: Option<Single<&Window, With<PrimaryWindow>>>, camera: Option<Single<&mut Camera, With<PhenomenaOrbit>>>) {
     let (Some(window), Some(mut camera)) = (window, camera) else { return };
-    let scale = window.scale_factor();
-    let width = (window.width() - LEFT_WIDTH - RIGHT_WIDTH).max(1.0);
-    let height = (window.height() - TOPBAR - CHART_HEIGHT).max(1.0);
-    let viewport = Viewport { physical_position: UVec2::new((LEFT_WIDTH * scale) as u32, (TOPBAR * scale) as u32), physical_size: UVec2::new((width * scale) as u32, (height * scale) as u32), ..default() };
-    // A window narrower than the docks: draw over the whole window rather than outside it.
-    let fits = (viewport.physical_position + viewport.physical_size).cmple(window.physical_size()).all();
-    let want = fits.then_some(viewport);
+    let want = scene_viewport(&window);
     let same = match (&camera.viewport, &want) {
         (Some(a), Some(b)) => a.physical_position == b.physical_position && a.physical_size == b.physical_size,
         (None, None) => true,
@@ -93,9 +87,21 @@ pub(super) fn viewport(window: Option<Single<&Window, With<PrimaryWindow>>>, cam
     }
 }
 
-/// Whether the cursor is over the 3D area between the docks.
+/// The 3D view between the docks; None for a window narrower than the
+/// docks, where it draws over the whole window rather than outside it.
+fn scene_viewport(window: &Window) -> Option<Viewport> {
+    let scale = window.scale_factor();
+    let width = (window.width() - LEFT_WIDTH - RIGHT_WIDTH).max(1.0);
+    let height = (window.height() - TOPBAR - CHART_HEIGHT).max(1.0);
+    let viewport = Viewport { physical_position: UVec2::new((LEFT_WIDTH * scale) as u32, (TOPBAR * scale) as u32), physical_size: UVec2::new((width * scale) as u32, (height * scale) as u32), ..default() };
+    (viewport.physical_position + viewport.physical_size).cmple(window.physical_size()).all().then_some(viewport)
+}
+
+/// Whether the cursor is over the 3D area: between the docks, or anywhere
+/// when the view covers the whole window.
 fn over_scene(window: &Window) -> bool {
-    window.cursor_position().is_some_and(|p| p.x > LEFT_WIDTH && p.x < window.width() - RIGHT_WIDTH && p.y > TOPBAR && p.y < window.height() - CHART_HEIGHT)
+    let whole = scene_viewport(window).is_none();
+    window.cursor_position().is_some_and(|p| whole || (p.x > LEFT_WIDTH && p.x < window.width() - RIGHT_WIDTH && p.y > TOPBAR && p.y < window.height() - CHART_HEIGHT))
 }
 
 /// SimSync: the orbit (navigation only; nothing in the exhibit changes).

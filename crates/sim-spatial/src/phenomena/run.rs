@@ -240,7 +240,9 @@ pub(crate) fn knob_target(knob: &Knob, value: Option<f64>, steps: Option<f64>) -
     // `f64::clamp` panics on an inverted range; an exhibit's knob never has one, but a panic here would end the run thread.
     let v = if knob.min <= knob.max { raw.clamp(knob.min, knob.max) } else { raw };
     // sim-app divided by the step unconditionally (NaN for a zero step).
-    if knob.step > 0.0 { (v / knob.step).round() * knob.step } else { v }
+    // Rounding can step past a bound that is not a multiple of the step (min 0.05, step 0.1): clamp again.
+    let v = if knob.step > 0.0 { (v / knob.step).round() * knob.step } else { v };
+    if knob.min <= knob.max { v.clamp(knob.min, knob.max) } else { v }
 }
 
 /// The speed a `Speed` op asks for (phenomena_app.rs:172–173): `speed`, or

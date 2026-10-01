@@ -26,8 +26,10 @@ pub(crate) struct Gallery {
     /// Bumped whenever `status` changes (the REST snapshot follows it).
     pub(crate) status_revision: u64,
     /// The knob value while its slider is held (a local preview; the release
-    /// commits it as `PhenomenaKnob { value }`).
-    pub(crate) knob_drag: Option<f64>,
+    /// commits it as `PhenomenaKnob { value }`), with the requested
+    /// generation it was taken under: a switch while held (a key, REST)
+    /// rebuilds the panel and must not commit the old exhibit's value.
+    pub(crate) knob_drag: Option<(f64, u64)>,
 }
 
 impl Gallery {

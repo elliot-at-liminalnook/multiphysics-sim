@@ -770,3 +770,77 @@ fn moded_selection_headless_and_with_a_window() {
     assert_request(&seen[1], "GET /selection HTTP/1.1", port, None);
     assert_request(&seen[2], "GET /selection HTTP/1.1", port, None);
 }
+
+#[test]
+fn clipboard_copy_and_paste() {
+    let clip = r#"{"robocad_clipboard": true, "items": [{"node": {"id": "a1", "kind": "body", "name": "Box", "body_kind": "solid"}, "brep": "4442", "sketch": null}]}"#;
+    let (c, server) = serve(vec![
+        ok(clip),
+        ok(r#"{"pasted": ["b2"], "revision": 14, "history": {"undo": ["Box", "Paste"], "redo": []}}"#),
+        ok(r#"{"pasted": []}"#),
+        Answer::Json(400, r#"{"error": "Clipboard has no robocad content"}"#.into()),
+        Answer::Json(404, r#"{"error": "no node zz"}"#.into()),
+    ]);
+    let port = c.endpoint.port;
+    let copied = c.copy_nodes(&["a1".to_string()]).unwrap();
+    assert_eq!(copied, serde_json::from_str::<Value>(clip).unwrap());
+    let pasted = c.paste(&copied).unwrap();
+    assert_eq!(pasted, Pasted { pasted: vec!["b2".into()], revision: Some(14), history: History { undo: vec!["Box".into(), "Paste".into()], redo: vec![] } });
+    let empty = json!({"robocad_clipboard": true, "items": []});
+    assert_eq!(c.paste(&empty).unwrap(), Pasted::default());
+    let e = c.paste(&json!({"items": []})).unwrap_err();
+    assert_eq!(e, CadError { method: "POST", route: "/clipboard/paste".into(), status: Some(400), message: "Clipboard has no robocad content".into() });
+    assert!(c.copy_nodes(&["zz".to_string()]).unwrap_err().not_found());
+    let seen = server.join().unwrap();
+    assert_request(&seen[0], "POST /clipboard/copy HTTP/1.1", port, Some(r#"{"ids":["a1"]}"#));
+    let sent = format!(r#"{{"clip":{}}}"#, serde_json::to_string(&copied).unwrap());
+    assert_request(&seen[1], "POST /clipboard/paste HTTP/1.1", port, Some(&sent));
+    // The clip is sent as given (serde_json's key order, whatever its features).
+    assert_request(&seen[2], "POST /clipboard/paste HTTP/1.1", port, Some(&format!(r#"{{"clip":{}}}"#, serde_json::to_string(&empty).unwrap())));
+    assert_request(&seen[3], "POST /clipboard/paste HTTP/1.1", port, Some(r#"{"clip":{"items":[]}}"#));
+    assert_request(&seen[4], "POST /clipboard/copy HTTP/1.1", port, Some(r#"{"ids":["zz"]}"#));
+}
+
+#[test]
+fn analysis_reads_as_api_writes_them() {
+    let (c, server) = serve(vec![
+        ok(r#"{"node": "a1", "face": 2, "rows": [[[0.0, 0.0, 5.0], [0.0, 10.0, 5.0]], [[20.0, 0.0, 5.0], [20.0, 10.0, 5.0]]]}"#),
+        ok(r#"{"node": "c3", "lines": [[[5.0, 0.0, 0.0], [4.0, 0.0, 0.0]], [[0.0, 5.0, 0.0], [0.0, 4.0, 0.0]]]}"#),
+        ok(r#"{"node": "s4", "lines": []}"#),
+        ok(r#"{"node": "a1", "edges": [{"index": 0, "continuity": "G0", "points": [[0.0, 0.0, 0.0], [20.0, 0.0, 0.0]]}, {"index": 1, "continuity": "boundary", "points": [[1.0, 2.0, 3.0]]}], "counts": {"G0": 1, "G1": 0, "G2": 0, "boundary": 1}}"#),
+    ]);
+    let port = c.endpoint.port;
+    let cp = c.control_points("a1", 2).unwrap();
+    assert_eq!(cp, ControlPoints { node: "a1".into(), face: 2, rows: vec![vec![[0.0, 0.0, 5.0], [0.0, 10.0, 5.0]], vec![[20.0, 0.0, 5.0], [20.0, 10.0, 5.0]]] });
+    let comb = c.curvature_comb("c3").unwrap();
+    assert_eq!(comb, CurvatureComb { node: "c3".into(), lines: vec![[[5.0, 0.0, 0.0], [4.0, 0.0, 0.0]], [[0.0, 5.0, 0.0], [0.0, 4.0, 0.0]]] });
+    assert!(c.curvature_comb("s4").unwrap().lines.is_empty());
+    let cont = c.continuity("a1").unwrap();
+    assert_eq!(cont.edges[0], EdgeContinuity { index: 0, continuity: "G0".into(), points: vec![[0.0; 3], [20.0, 0.0, 0.0]] });
+    assert_eq!((cont.edges[1].index, cont.edges[1].continuity.as_str()), (1, "boundary"));
+    let counts: Vec<(&str, u64)> = cont.counts.iter().map(|(k, v)| (k.as_str(), *v)).collect();
+    assert_eq!(counts, vec![("G0", 1), ("G1", 0), ("G2", 0), ("boundary", 1)]);
+    let seen = server.join().unwrap();
+    assert_request(&seen[0], "GET /nodes/a1/control_points?face=2 HTTP/1.1", port, None);
+    assert_request(&seen[1], "GET /nodes/c3/curvature_comb HTTP/1.1", port, None);
+    assert_request(&seen[2], "GET /nodes/s4/curvature_comb HTTP/1.1", port, None);
+    assert_request(&seen[3], "GET /nodes/a1/continuity HTTP/1.1", port, None);
+}
+
+#[test]
+fn analysis_errors_name_the_route() {
+    let (c, server) = serve(vec![
+        Answer::Json(400, r#"{"error": "face index 9 out of range (0..5)"}"#.into()),
+        Answer::Json(400, r#"{"error": "Box is a body: the curvature comb is drawn on curves and sketches"}"#.into()),
+        Answer::Json(404, r#"{"error": "Sketch has no geometry"}"#.into()),
+    ]);
+    let port = c.endpoint.port;
+    let e = c.control_points("a/b", 9).unwrap_err();
+    assert_eq!(e, CadError { method: "GET", route: "/nodes/a%2Fb/control_points?face=9".into(), status: Some(400), message: "face index 9 out of range (0..5)".into() });
+    assert_eq!(c.curvature_comb("a1").unwrap_err().status, Some(400));
+    assert!(c.continuity("s4").unwrap_err().not_found());
+    let seen = server.join().unwrap();
+    assert_request(&seen[0], "GET /nodes/a%2Fb/control_points?face=9 HTTP/1.1", port, None);
+    assert_request(&seen[1], "GET /nodes/a1/curvature_comb HTTP/1.1", port, None);
+    assert_request(&seen[2], "GET /nodes/s4/continuity HTTP/1.1", port, None);
+}

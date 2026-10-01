@@ -18,10 +18,15 @@ node ids from `/nodes`. Faces/edges are addressed by `{"node": id,
     PATCH /nodes/{id}               {"name", "visible", "locked", "disabled", "material", "color", "pivot", "transform", "parent"}
     DELETE /nodes/{id}
     GET  /nodes/{id}/faces|edges|vertices|mesh|validate|section?plane=…|sketch|thin?threshold=1.2
+    GET  /nodes/{id}/control_points?face=i   {"node", "face", "rows": [[[x,y,z], …], …]}  a face's B-spline poles (read-only)
+    GET  /nodes/{id}/curvature_comb[?scale=5&samples=48]   {"node", "lines": [[[x,y,z],[x,y,z]], …]}  curves and sketches (read-only)
+    GET  /nodes/{id}/continuity     {"node", "edges": [{"index", "continuity": "G0"|"G1"|"G2"|"boundary", "points"}], "counts"}  (read-only)
     POST /nodes/{id}/sketch         {"calls": [["rectangle", [[0,0],[20,10]]], ["circle", [[10,5], 2]]]}  edits a sketch
     POST /ops/{name}                any `Ops` method: {"args": [...], "kwargs": {...}} → its return value
     GET  /ops                       the callable Ops methods and their signatures
     POST /undo | /redo              GET /history
+    POST /clipboard/copy            {"ids": [...]} → {"robocad_clipboard": true, "items": [...]}  "Copy with Placement" (read-only)
+    POST /clipboard/paste           {"clip": {...}} → {"pasted": [ids], "revision", "history"}  one undo step "Paste"
     GET/PUT /selection              {"items": [[node, kind, index], …]}
     GET/PUT /view                   camera and display state (GUI); POST /view/fit
     GET/POST /views                 named views; POST {"name", "state" (optional in GUI)}
@@ -55,6 +60,7 @@ import io
 import json
 import os
 import queue
+import re
 import sys
 import threading
 import time
@@ -216,6 +222,11 @@ class ArgConverter:
                 return [self.edge(x) for x in v]
             return self.edge(v)
         if "Plane" in ann or name in ("plane", "neutral"):
+            # `cut(cutter: str | Body | Plane)`: an id of a node that is not a
+            # plane node names the cutter itself (a sheet, curve or sketch),
+            # as the GUI's "Cut with selection" passes it.
+            if isinstance(v, str) and "str" in re.findall(r"\w+", ann) and v in self.doc.nodes and self.doc.nodes[v].plane is None:
+                return v
             return self.plane(v)
         if "BooleanOp" in ann or name == "op":
             return BooleanOp(v) if isinstance(v, str) else v
@@ -667,6 +678,101 @@ class Service:
         if body is None:
             raise ApiError(404, f"{n.name} has no geometry")
         return body
+
+    # -- clipboard and analysis reads (the GUI's Copy/Paste with Placement,
+    # control points, curvature comb and continuity) -------------------------
+    def copy(self, ids) -> dict:
+        """The GUI's "Copy with Placement" (`Document.copy_nodes`): each
+        node's JSON, B-rep (hex) and sketch, in world placement. Changes
+        nothing; an unknown id is a 404."""
+        if not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
+            raise ApiError(400, "ids must be a list of node ids")
+        return self.doc.copy_nodes([self.node(i).id for i in ids])
+
+    def paste(self, clip) -> dict:
+        """The GUI's "Paste with Placement": the clip's nodes added as one
+        undo step "Paste" (as `MainWindow.paste_with_placement`)."""
+        if not isinstance(clip, dict) or not clip.get("robocad_clipboard") or not isinstance(clip.get("items", []), list):
+            raise ApiError(400, "Clipboard has no robocad content")
+        from .commands import AddNodes
+
+        before = set(self.doc.nodes)
+        try:
+            nodes = self.doc.paste_nodes(clip, keep_placement=True)
+        except Exception as e:
+            # Leave no half-pasted nodes outside the undo stack.
+            for nid in [i for i in self.doc.nodes if i not in before]:
+                self.doc.remove(nid)
+            raise ApiError(422 if isinstance(e, KernelError) else 400, f"Clipboard has no robocad content: {type(e).__name__}: {e}")
+        # Make the paste undoable as one step.
+        for n in nodes:
+            self.doc.remove(n.id)
+        self.ops.stack.push(AddNodes("Paste", nodes))
+        self._refresh()
+        return {"pasted": [n.id for n in nodes], "revision": self.doc.revision, "history": self.history()}
+
+    def control_points(self, nid: str, face) -> dict:
+        """A face's control points (`kernel.control_points`: the B-spline
+        poles, rows along u). Read-only."""
+        body = self._body(nid)
+        faces = self.doc.kernel.faces(body)
+        text = str(face) if face is not None else ""
+        if not re.fullmatch(r"-?\d{1,9}", text):
+            raise ApiError(400, f"face must be a face index, got {face!r}")
+        i = int(text)
+        if not 0 <= i < len(faces):
+            raise ApiError(400, f"face index {i} out of range (0..{len(faces) - 1})")
+        try:
+            rows = self.doc.kernel.control_points(body, faces[i])
+        except KernelError as e:
+            raise ApiError(422, str(e))
+        return {"node": self.node(nid).id, "face": i, "rows": [[list(p) for p in row] for row in rows]}
+
+    def curvature_comb(self, nid: str, scale=None, samples=None) -> dict:
+        """A curve's or sketch's curvature comb (`analysis.curvature_comb`:
+        point → point + normal·curvature·scale), as the GUI draws it. A
+        sketch node holds no body, so (as in the GUI) it has no comb lines.
+        Read-only."""
+        import math
+
+        n = self.node(nid)
+        if n.kind not in ("curve", "sketch"):
+            raise ApiError(400, f"{n.name} is a {n.kind}: the curvature comb is drawn on curves and sketches")
+        try:
+            s = 5.0 if scale is None else float(scale)
+        except ValueError:
+            s = math.nan
+        if not math.isfinite(s):
+            raise ApiError(400, f"scale must be a finite number, got {scale!r}")
+        text = "48" if samples is None else str(samples)
+        if not (text.isascii() and text.isdigit() and len(text) <= 3) or not 2 <= int(text) <= 512:
+            raise ApiError(400, f"samples must be an integer from 2 to 512, got {samples!r}")
+        body = self.doc.resolved_body(n.id)
+        if body is None:
+            return {"node": n.id, "lines": []}
+        from .analysis import curvature_comb
+
+        try:
+            lines = curvature_comb(self.doc.kernel, body, s, int(text))
+        except KernelError as e:
+            raise ApiError(422, str(e))
+        return {"node": n.id, "lines": [[list(a), list(c)] for a, c in lines]}
+
+    def continuity(self, nid: str) -> dict:
+        """Each edge's continuity between its faces (`analysis.continuity_report`)
+        with the polyline the GUI colours (`kernel.sample_edge(e, body, 16)`:
+        16 points along a curve, a line's two ends), and the counts per grade
+        (G0, G1, G2, boundary, as the GUI's status line). Read-only."""
+        body = self._body(nid)
+        from .analysis import continuity_report
+
+        try:
+            rep = continuity_report(self.doc.kernel, body)
+            edges = [{"index": e.index, "continuity": g, "points": [list(p) for p in self.doc.kernel.sample_edge(e, body, 16)]} for e, g in rep]
+        except KernelError as e:
+            raise ApiError(422, str(e))
+        counts = {g: sum(1 for _, x in rep if x == g) for g in ("G0", "G1", "G2", "boundary")}
+        return {"node": self.node(nid).id, "edges": edges, "counts": counts}
 
     # -- sketches -----------------------------------------------------------
     def edit_sketch(self, nid: str, calls: list) -> dict:
@@ -1179,6 +1285,12 @@ def make_handler(service: Service):
                     return self._send(200, run(lambda: s.section(nid, q.get("plane", "xz"))))
                 if sub == "thin":
                     return self._send(200, run(lambda: s.thin(nid, float(q.get("threshold", 1.2)))))
+                if sub == "control_points" and method == "GET":
+                    return self._send(200, run(lambda: s.control_points(nid, q.get("face"))))
+                if sub == "curvature_comb" and method == "GET":
+                    return self._send(200, run(lambda: s.curvature_comb(nid, q.get("scale"), q.get("samples"))))
+                if sub == "continuity" and method == "GET":
+                    return self._send(200, run(lambda: s.continuity(nid)))
                 if sub == "sketch":
                     if method == "POST":
                         return self._send(200, run(lambda: s.edit_sketch(nid, body.get("calls", []))))
@@ -1187,6 +1299,11 @@ def make_handler(service: Service):
                 if len(parts) == 1:
                     return self._send(200, run(s.ops_list))
                 return self._send(200, run(lambda: s.op(parts[1], body.get("args", []), body.get("kwargs", {}))))
+            if head == "clipboard" and len(parts) == 2 and method == "POST":
+                if parts[1] == "copy":
+                    return self._send(200, run(lambda: s.copy(body.get("ids"))))
+                if parts[1] == "paste":
+                    return self._send(200, run(lambda: s.paste(body.get("clip"))))
             if head == "undo":
                 return self._send(200, run(s.undo))
             if head == "redo":

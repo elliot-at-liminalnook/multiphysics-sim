@@ -23,7 +23,8 @@
 //! primitives (`ops::interact`), the plane tools (`sketch::plane`) and the
 //! sketch tools read it. Measure and the cursor snap pass the active plane
 //! only while 2D snapping is on ([`snap_plane`], RoboCAD's
-//! `plane_snapping`); a primitive passes the active plane (or XY) always,
+//! `plane_snapping`; a press refuses while that plane is being read,
+//! [`press_snap_plane`]); a primitive passes the active plane (or XY) always,
 //! as RoboCAD's `PrimitiveTool` passes `want_plane`.
 //!
 //! Deliberately different from RoboCAD, each recorded:
@@ -197,11 +198,21 @@ pub(in crate::cad) fn drawn_candidates(doc: &CadDocument, topology: Option<&CadT
     out
 }
 
-/// The plane a hover or pick snaps onto without a tool's own plane:
-/// RoboCAD's `active_plane if plane_snapping else None`. A plane node whose
-/// frame is still being read gives none.
+/// The plane a pick snaps onto without a tool's own plane: RoboCAD's
+/// `active_plane if plane_snapping else None`. Err (naming the node) while
+/// 2D snapping is on and the active plane node's frame is still being
+/// read: a press refuses with it rather than sending an off-plane point.
+pub(in crate::cad) fn press_snap_plane(plane: Option<&CadActivePlane>) -> Result<Option<PlaneFrame>, String> {
+    match plane.filter(|p| p.snap_2d) {
+        None => Ok(None),
+        Some(p) => p.frame().map_err(|e| format!("2D snapping is on and {e}; nothing was picked")),
+    }
+}
+
+/// [`press_snap_plane`] for a hover (display only): while the frame is
+/// being read the snap is not projected.
 pub(in crate::cad) fn snap_plane(plane: Option<&CadActivePlane>) -> Option<PlaneFrame> {
-    plane.filter(|p| p.snap_2d).and_then(|p| p.frame().ok().flatten())
+    press_snap_plane(plane).ok().flatten()
 }
 
 /// The best snap under window pixel `cursor` (see the module doc), on
@@ -409,5 +420,12 @@ pub(crate) mod tests {
         assert_eq!(snap_plane(Some(&active)), None);
         active.snap_2d = true;
         assert_eq!(snap_plane(Some(&active)), Some(PlaneFrame::XZ));
+        // A plane node still being read: a hover skips projection, a press refuses by name.
+        active.plane = Some(crate::cad::sketch::ActivePlane::Node { id: "p7".into(), frame: None });
+        assert_eq!(snap_plane(Some(&active)), None);
+        let e = press_snap_plane(Some(&active)).unwrap_err();
+        assert!(e.contains("p7") && e.contains("still being read"), "{e}");
+        active.snap_2d = false;
+        assert_eq!(press_snap_plane(Some(&active)), Ok(None));
     }
 }

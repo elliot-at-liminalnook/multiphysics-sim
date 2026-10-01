@@ -28,7 +28,14 @@
 //!   occurrence first"), a component occurrence's transform ("Use
 //!   set_component_overrides with placement for a component occurrence").
 //!   A draft whose edit cannot be sent now (an edit in flight, not
-//!   connected) stays open with the reason.
+//!   connected) stays open with the reason. A transform draft is also
+//!   refused once the shown document is stale or RoboCAD's revision has
+//!   moved since it opened (`CadDocument::commit_refusal`): the components
+//!   it sends untouched were read then.
+//! - **Untouched components keep their full precision**: the field shows
+//!   values rounded to 1e-6, so a vector component whose typed text is
+//!   still its shown text is sent as the value the draft opened with
+//!   (an axis of 0.7071067811865476 is not re-sent as 0.707107).
 use super::{field, node};
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
@@ -83,6 +90,11 @@ pub struct EditDraft {
     pub select_all: bool,
     /// Why the last Enter sent nothing (the evaluator's error, a refusal).
     pub error: Option<String>,
+    /// RoboCAD's revision shown when the draft opened (`shown_revision`).
+    pub began: u64,
+    /// The vector being typed (pivot, translation, axis) as RoboCAD sent
+    /// it, unrounded: a component still showing its rounded text sends this.
+    pub original: Option<[f64; 3]>,
 }
 
 /// An editor's value: a press opens its draft.
@@ -161,6 +173,17 @@ fn pivot_of(n: &NodeSummary) -> Option<[f64; 3]> {
     }
 }
 
+/// The unrounded vector an editor types (None for the angle, the scale,
+/// an unset pivot or an unreadable transform).
+pub fn current_vector(n: &NodeSummary, key: EditKey) -> Option<[f64; 3]> {
+    match key {
+        EditKey::Pivot => pivot_of(n),
+        EditKey::Translation => placement(n).ok().map(|p| p.translation),
+        EditKey::Axis => placement(n).ok().map(|p| p.axis),
+        EditKey::Angle | EditKey::Scale => None,
+    }
+}
+
 /// The text an editor opens with (empty for an unset pivot).
 pub fn current_text(n: &NodeSummary, key: EditKey) -> String {
     match key {
@@ -177,16 +200,22 @@ pub fn current_text(n: &NodeSummary, key: EditKey) -> String {
     }
 }
 
-/// Three comma-separated expressions, each read by `eval`; errors name the component.
-fn vector(text: &str, eval: impl Fn(&str) -> Result<f64, String>) -> Result<[f64; 3], String> {
+/// Three comma-separated expressions, each read by `eval`; errors name the
+/// component. A component typed as `original`'s shown (rounded) text is
+/// `original`'s unrounded value.
+fn vector(text: &str, original: Option<[f64; 3]>, eval: impl Fn(&str) -> Result<f64, String>) -> Result<[f64; 3], String> {
     let parts: Vec<&str> = text.split(',').collect();
     let [x, y, z] = parts.as_slice() else { return Err(format!("type three values x, y, z separated by commas (got {})", parts.len())) };
-    let one = |name: &str, part: &str| eval(part).map_err(|e| format!("{name}: {e}"));
-    Ok([one("x", x.trim())?, one("y", y.trim())?, one("z", z.trim())?])
+    let one = |i: usize, name: &str, part: &str| match original {
+        Some(o) if part == num(o[i]) => Ok(o[i]),
+        _ => eval(part).map_err(|e| format!("{name}: {e}")),
+    };
+    Ok([one(0, "x", x.trim())?, one(1, "y", y.trim())?, one(2, "z", z.trim())?])
 }
 
-/// The typed text as the value sent (see the module doc).
-pub fn evaluate(key: EditKey, text: &str) -> Result<Value, String> {
+/// The typed text as the value sent (see the module doc); `original` is
+/// the draft's unrounded vector (`EditDraft::original`).
+pub fn evaluate(key: EditKey, text: &str, original: Option<[f64; 3]>) -> Result<Value, String> {
     use sim_runtime::units::evaluate as units;
     let length = |t: &str| units(t, false, Some("mm")).map_err(|e| e.to_string());
     let plain = |t: &str| units(t, false, None).map_err(|e| e.to_string());
@@ -195,10 +224,10 @@ pub fn evaluate(key: EditKey, text: &str) -> Result<Value, String> {
             if key == EditKey::Pivot && text.trim().is_empty() {
                 return Err("type the pivot as x, y, z (mm), or press Clear pivot".into());
             }
-            Ok(json!(vector(text, length)?))
+            Ok(json!(vector(text, original, length)?))
         }
         EditKey::Axis => {
-            let a = vector(text, plain)?;
+            let a = vector(text, original, plain)?;
             if a.iter().all(|c| c.abs() < 1e-12) {
                 return Err("the axis must not be the zero vector".into());
             }
@@ -216,12 +245,13 @@ pub fn evaluate(key: EditKey, text: &str) -> Result<Value, String> {
 }
 
 /// The `CadPatch` an Enter writes: the pivot, or the whole transform with
-/// the typed component (refused by name as RoboCAD refuses it).
-pub fn patch_for(n: &NodeSummary, key: EditKey, text: &str) -> Result<CadAction, String> {
+/// the typed component (refused by name as RoboCAD refuses it). `original`
+/// is the draft's unrounded vector (`EditDraft::original`).
+pub fn patch_for(n: &NodeSummary, key: EditKey, text: &str, original: Option<[f64; 3]>) -> Result<CadAction, String> {
     if let Some(why) = refusal(n, key) {
         return Err(why.to_string());
     }
-    let value = evaluate(key, text)?;
+    let value = evaluate(key, text, original)?;
     if key == EditKey::Pivot {
         return Ok(patch(&n.id, "pivot", value));
     }
@@ -343,7 +373,15 @@ pub(in crate::cad) fn entry(
             continue;
         }
         let Some(n) = node(&doc, &f.node) else { continue };
-        draft = Some(EditDraft { node: f.node.clone(), key: f.key, text: current_text(n, f.key), select_all: true, error: None });
+        draft = Some(EditDraft {
+            node: f.node.clone(),
+            key: f.key,
+            text: current_text(n, f.key),
+            select_all: true,
+            error: None,
+            began: doc.shown_revision(),
+            original: current_vector(n, f.key),
+        });
         started = true;
     }
     let naming = name.as_ref().is_some_and(|d| d.editing.is_some());
@@ -365,8 +403,10 @@ pub(in crate::cad) fn entry(
             ended = true;
         }
     }
-    if started || draft.is_none() {
-        // Keys pressed before the field took the keyboard are not its text.
+    if started || draft.is_none() || doc.ops.surface.is_some() {
+        // Keys pressed before the field took the keyboard are not its text;
+        // an open command surface (palette, menu, radial) has the keyboard,
+        // and the draft waits unchanged until it closes.
         events.clear();
     } else {
         let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
@@ -381,9 +421,13 @@ pub(in crate::cad) fn entry(
                         break;
                     };
                     let unchanged = d.text.trim() == current_text(n, d.key);
-                    let result = if unchanged { Ok(None) } else { patch_for(n, d.key, &d.text).map(Some) };
-                    match result.and_then(|action| match edit_blocked(&doc) {
-                        Some(why) if action.is_some() => Err(format!("Not sent: {why}. Enter again once it clears, or Escape.")),
+                    let result = if unchanged { Ok(None) } else { patch_for(n, d.key, &d.text, d.original).map(Some) };
+                    // The transform is sent whole, its untouched components
+                    // as read when the draft opened: refused once RoboCAD's
+                    // document has moved on since (or the shown one is stale).
+                    let blocked = if d.key == EditKey::Pivot { edit_blocked(&doc) } else { doc.commit_refusal(Some(d.began)) };
+                    match result.and_then(|action| match blocked {
+                        Some(why) if action.is_some() => Err(format!("Not sent: {why}. Enter again once it clears, or Escape and reopen the field for the current values.")),
                         _ => Ok(action),
                     }) {
                         Ok(action) => {
@@ -450,23 +494,23 @@ mod tests {
     #[test]
     fn a_typed_component_sends_the_whole_transform_and_the_pivot_alone() {
         let n = instance();
-        let (id, a) = attrs(patch_for(&n, EditKey::Translation, "10, 1in, 0").unwrap());
+        let (id, a) = attrs(patch_for(&n, EditKey::Translation, "10, 1in, 0", None).unwrap());
         assert_eq!(id, "i1");
         assert_eq!(a, json!({"transform": {"translation": [10.0, 25.4, 0.0], "axis": [0.0, 0.0, 1.0], "angle_deg": 0.0, "scale": 1.0}}));
-        let (_, a) = attrs(patch_for(&n, EditKey::Angle, "0.5rad").unwrap());
+        let (_, a) = attrs(patch_for(&n, EditKey::Angle, "0.5rad", None).unwrap());
         assert!((a["transform"]["angle_deg"].as_f64().unwrap() - 28.64788975654116).abs() < 1e-9, "{a}");
         assert_eq!(a["transform"]["translation"], json!([1.0, 2.0, 3.0]));
-        let (_, a) = attrs(patch_for(&n, EditKey::Pivot, "0, 0, 5mm").unwrap());
+        let (_, a) = attrs(patch_for(&n, EditKey::Pivot, "0, 0, 5mm", None).unwrap());
         assert_eq!(a, json!({"pivot": [0.0, 0.0, 5.0]}));
         // Errors name the component; nothing is sent.
-        assert!(patch_for(&n, EditKey::Translation, "1, 2").unwrap_err().contains("three values"));
-        assert!(patch_for(&n, EditKey::Translation, "1, 2 qq, 3").unwrap_err().starts_with("y: "));
-        assert!(patch_for(&n, EditKey::Axis, "0, 0, 0").unwrap_err().contains("zero vector"));
-        assert!(patch_for(&n, EditKey::Scale, "0").unwrap_err().contains("positive"));
-        assert!(patch_for(&n, EditKey::Pivot, " ").unwrap_err().contains("Clear pivot"));
+        assert!(patch_for(&n, EditKey::Translation, "1, 2", None).unwrap_err().contains("three values"));
+        assert!(patch_for(&n, EditKey::Translation, "1, 2 qq, 3", None).unwrap_err().starts_with("y: "));
+        assert!(patch_for(&n, EditKey::Axis, "0, 0, 0", None).unwrap_err().contains("zero vector"));
+        assert!(patch_for(&n, EditKey::Scale, "0", None).unwrap_err().contains("positive"));
+        assert!(patch_for(&n, EditKey::Pivot, " ", None).unwrap_err().contains("Clear pivot"));
         // A transform without one of its keys is not edited (nothing is filled in).
         let partial = NodeSummary { transform: json!({"translation": [0.0, 0.0, 0.0]}), ..instance() };
-        assert!(patch_for(&partial, EditKey::Scale, "2").unwrap_err().contains("axis"));
+        assert!(patch_for(&partial, EditKey::Scale, "2", None).unwrap_err().contains("axis"));
     }
 
     /// RoboCAD's refusals (api.py:575-578): a component member's pivot and
@@ -474,13 +518,34 @@ mod tests {
     #[test]
     fn component_occurrences_are_refused_as_robocad_refuses_them() {
         let occurrence = NodeSummary { component_instance: Some(json!({"component": "c1"})), ..instance() };
-        assert!(patch_for(&occurrence, EditKey::Translation, "0, 0, 0").unwrap_err().contains("set_component_overrides"));
-        assert!(patch_for(&occurrence, EditKey::Pivot, "0, 0, 0").is_ok());
+        assert!(patch_for(&occurrence, EditKey::Translation, "0, 0, 0", None).unwrap_err().contains("set_component_overrides"));
+        assert!(patch_for(&occurrence, EditKey::Pivot, "0, 0, 0", None).is_ok());
         let member = NodeSummary { component_member: Some(json!({"component": "c1"})), ..instance() };
-        assert!(patch_for(&member, EditKey::Pivot, "0, 0, 0").unwrap_err().contains("detach the occurrence"));
+        assert!(patch_for(&member, EditKey::Pivot, "0, 0, 0", None).unwrap_err().contains("detach the occurrence"));
         // Python's truth: an empty object is no flag.
         let empty = NodeSummary { component_member: Some(json!({})), ..instance() };
         assert!(refusal(&empty, EditKey::Scale).is_none());
         assert_eq!(current_text(&instance(), EditKey::Translation), "1, 2, 3");
+    }
+
+    /// The field shows 1e-6-rounded values; a component left as shown is
+    /// sent unrounded, a retyped one as typed.
+    #[test]
+    fn untouched_vector_components_keep_their_full_precision() {
+        let h = std::f64::consts::FRAC_1_SQRT_2;
+        let n = NodeSummary { transform: json!({"translation": [1.0, 2.0, 3.0], "axis": [h, 0.0, h], "angle_deg": 0.0, "scale": 1.0}), ..instance() };
+        let original = current_vector(&n, EditKey::Axis);
+        assert_eq!(original, Some([h, 0.0, h]));
+        assert_eq!(current_text(&n, EditKey::Axis), "0.707107, 0, 0.707107");
+        let (_, a) = attrs(patch_for(&n, EditKey::Axis, "0.707107, 1, 0.707107", original).unwrap());
+        assert_eq!(a["transform"]["axis"], json!([h, 1.0, h]));
+        // A retyped component is the typed value, even when close.
+        let (_, a) = attrs(patch_for(&n, EditKey::Axis, "0.70711, 0, 0.707107", original).unwrap());
+        assert_eq!(a["transform"]["axis"], json!([0.70711, 0.0, h]));
+        // Without the draft's original the shown text is all there is.
+        let (_, a) = attrs(patch_for(&n, EditKey::Axis, "0.707107, 1, 0.707107", None).unwrap());
+        assert_eq!(a["transform"]["axis"], json!([0.707107, 1.0, 0.707107]));
+        assert_eq!(current_vector(&n, EditKey::Angle), None);
+        assert_eq!(current_vector(&instance(), EditKey::Pivot), None);
     }
 }

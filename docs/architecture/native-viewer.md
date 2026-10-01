@@ -10,17 +10,20 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (measured 2026-09-30, after ui-kit; hardware front end added the same day; CAD mode written the same day, not yet built)
+## Where it is today (re-measured 2026-09-30 after fold-sim-app; CAD mode verified at a4fe42d3; fold-sim-app written and reviewed by reading, awaiting its verification pass)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
   [Bevy 0.19.1 migration](#bevy-0191-migration-2026-09-30)). Only
-  `sim-spatial` and `sim-app` depend on Bevy.
+  `sim-spatial` depends on Bevy (sim-app, the other Bevy app, was retired
+  by fold-sim-app; the workspace's default-feature `bevy` entry is now
+  unused).
 - **One app, modes as states** (see [One app](#one-app-2026-09-30)):
   `app::run` is the only `App` builder (`App::new()` appears elsewhere in
   `src/` only in `#[cfg(test)]` code). `ViewerMode` (Inspect, Build,
   Lessons, Robot, Place, and since cad-mode Cad) is a Bevy `States`; the computed states
-  `ModeScope` and `SpatialScreen` follow it. Launch flags choose the initial
+  `ModeScope` and `SpatialScreen` follow it. Since fold-sim-app there are
+  seven modes: Phenomena joined (sim-app's gallery). Launch flags choose the initial
   mode and document; the user switches modes in the window (the mode
   switcher, `system_ui` `mode:*`, REST `viewer_mode`), through one handler
   (`app::switch::handle`). Verified at 7da1216e.
@@ -34,14 +37,16 @@ duplicates physics.
   generated from the action registry (`app::actions::capabilities`); no
   hand-written list is left. CAD mode adds 15 (`state`, `system_ui` and the
   13 `cad_*` commands), 112 in all (counted from the specs, not from a
-  running server). Place mode answers `state`, `camera` and
-  `screenshot`.
+  running server). Phenomena mode adds 10 (`state`, `system_ui` and the 8
+  `phenomena_*` commands): 122 in all, re-counted 2026-09-30 from the
+  `spec(`/`c(` entries of the nine action types' `commands()`. Place mode
+  answers `state`, `camera` and `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
   verified at 90c65c86: every intent is a typed action
   (`WindowAction`, `InspectAction`, `SystemAction` carrying the builder's
   `BuildAction`, `LessonCommand` carrying `LessonAction`, `RobotAction`,
-  `PlaceAction`, and since the hardware front end `HardwareAction`, part of
-  Robot mode) written as a Bevy Message (`Act<A>`) by buttons, keys,
+  `PlaceAction`, since the hardware front end `HardwareAction`, part of
+  Robot mode, then `CadAction` and `PhenomenaAction`) written as a Bevy Message (`Act<A>`) by buttons, keys,
   `system_ui` and REST in Input and applied by one system per action type
   in Actions. REST waits on reply tokens (`app::actions::Replies`).
   `Origin` has four variants: `Rest`, `Ui`, `Quiet` and `SystemUi` (a
@@ -58,12 +63,19 @@ duplicates physics.
   `thread::Builder` sites outside `src/jobs/` (there were 35 in 21 files),
   enforced by the lib test `jobs::tests::threads_are_started_only_in_jobs`.
   Verified at ae80a137.
-- **Bevy structure:** 7 plugins (`CorePlugin`, `ModesPlugin`,
-  `SpatialViewerPlugin`, `BuilderPlugin`, `LearnPlugin`, `RobotPlugin`,
-  `PlacePlugin`; the hardware panel is part of `RobotPlugin`, so the count
-  is unchanged), one `States` enum and two computed states, one set
-  enum, 7 action Message types (`Act<A>`; `Act<HardwareAction>` is the
-  seventh). Site counts, re-measured 2026-09-30 after the hardware front
+- **Bevy structure** (re-measured 2026-09-30 after fold-sim-app with
+  `grep -rn "impl Plugin for"`): 12 plugins (`CorePlugin`, `ModesPlugin`,
+  `UiKitPlugin`, `SpatialViewerPlugin`, `BuilderPlugin`, `LearnPlugin`,
+  `RobotPlugin`, `PlacePlugin`, `CadPlugin` with its window-free
+  `CadCorePlugin`, `PhenomenaPlugin` with `PhenomenaCorePlugin`; the
+  hardware panel is part of `RobotPlugin`), one `States` enum (7 modes) and
+  two computed states, one set enum, 9 action Message types (`Act<A>` for
+  `WindowAction`, `InspectAction`, `SystemAction`, `LessonCommand`,
+  `RobotAction`, `HardwareAction`, `PlaceAction`, `CadAction`,
+  `PhenomenaAction`). Same greps after fold-sim-app: 27
+  `MessageReader<` lines, 57 `MessageWriter<` lines, 11 `On<` lines,
+  `KeyCode` 223 times in 17 files, `Interaction` 94 times in 21 files.
+  The figures below are the hardware front end's. Site counts, re-measured 2026-09-30 after the hardware front
   end with `grep -rn` over `crates/sim-spatial/src` (lines, comments
   included): 18 `MessageReader<` lines (16 at 4bc03789 by the same grep; 2
   in `robot/hardware/`) and 46 `MessageWriter<` lines (37 at 4bc03789; 8
@@ -100,9 +112,9 @@ duplicates physics.
   area is given) and feature drawings (the schematic canvas, lesson cards,
   playheads, masks, sketch dots, markers, 3D labels, cards the kit has no
   widget for); see the UI kit section.
-- **CAD mode** (§9 phase 1, see [CAD mode](#cad-mode-2026-09-30)), written
-  2026-09-30 and not yet compiled or run (the verification pass builds and
-  tests it): `ViewerMode::Cad`, `CadPlugin` (`src/cad/`), a client of
+- **CAD mode** (§9 phase 1, see [CAD mode](#cad-mode-2026-09-30)), built,
+  tested and verified at a4fe42d3 (sim-spatial lib tests 154 passed, 1
+  ignored), pending the user's CAD checklist: `ViewerMode::Cad`, `CadPlugin` (`src/cad/`), a client of
   RoboCAD's REST service through `sim_runtime::cad_client`, which shares one
   loopback HTTP/1.1 transport (`sim_runtime::loopback_http`) with the
   hardware client. A `.rcad` starts RoboCAD's headless service as a
@@ -112,6 +124,17 @@ duplicates physics.
   undo/redo, save, registry commands and Ops, every intent a `CadAction`.
   The ledger is [docs/cad-parity.md](../cad-parity.md) (773 rows), the
   side-by-side steps [docs/cad-checklist.md](../cad-checklist.md).
+- **Phenomena mode and planar v2 robot files** (see
+  [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
+  reviewed by reading, awaiting the verification pass: `ViewerMode::Phenomena`
+  (`src/phenomena/`) runs `sim_phenomena::exhibits` on the "phenomena-run"
+  `RunThread` with sim-app's pacing, `PhenomenaAction` and kit panels; robot
+  mode opens planar v2 `*.simrobot.json` files through
+  `cad_robot::build_planar` on the "robot-run (planar v2)" `RunThread`
+  (`src/robot_planar.rs`). `crates/sim-app` is deleted; its ledger is
+  [docs/sim-app-parity.md](../sim-app-parity.md) (58 rows, none open). Every
+  child process starts in `jobs` (`spawn_detached`, `open_in_browser`,
+  `ChildProcess`), enforced by `jobs::tests::processes_are_started_only_in_jobs`.
 - **Hardware front end** (§8, see
   [Hardware front end](#hardware-front-end-2026-09-30)), done 2026-09-30
   pending the user's hardware checklist: the Leg calibration panel is a
@@ -130,8 +153,11 @@ duplicates physics.
   (blue-tinted suspended robot) and live motor sync. The feature-by-feature
   ledger is [docs/hardware-parity.md](../hardware-parity.md), and the
   operator's steps are [docs/hardware-checklist.md](../hardware-checklist.md).
-- **Large files:** `robot_run.rs` (2,646 lines), `builder.rs` (2,453),
-  `lesson/mod.rs` (2,373) and `robot.rs` (2,232). UI files after ui-kit:
+- **Large files:** `robot_run.rs` (2,647 lines), `robot.rs` (2,514 after
+  fold-sim-app's v2 branches; was 2,232), `builder.rs` (2,453) and
+  `lesson/mod.rs` (2,373); fold-sim-app also left `robot/actions.rs` at 898
+  and `robot_planar.rs` at 826 (tests included), past the 800-line smell,
+  and `app/switch.rs` at 959. Phenomena mode's files are under 600 each. UI files after ui-kit:
   `builder/ui.rs` 1,395 (was 1,684), `lesson/ui.rs` 1,158, `lib.rs` 1,294
   (was 1,411), `app/switcher.rs` 84; `ui_kit/` 903 lines (`widgets.rs` 346,
   `theme.rs` 199, `tests.rs` 157, `slider.rs` 85, `mod.rs` 71, `scroll.rs`
@@ -244,7 +270,8 @@ result formats and state fields).
     progress), run replays.
   - `RunThread`: the builder run session (`LiveRun::spawn`, one constructor
     for what were four spawns), `robot-run`, `robot-gait`, `robot-recorded`
-    (its `PlaybackState` is `Stamped`) and the placement validator (pointer
+    (its `PlaybackState` is `Stamped`), since fold-sim-app "phenomena-run"
+    and "robot-run (planar v2)", and the placement validator (pointer
     moves are commands; the worker drains the channel and validates only the
     newest position; a closed channel never starts a queued one).
   - `ChildProcess` (`jobs/child.rs`, added by cad-mode): owns a child
@@ -256,7 +283,9 @@ result formats and state fields).
   - Helpers: `reap_child` for the linked `sim-viewer` (two sites in
     `main.rs`) and, found by reading, for the `open`/`xdg-open` process of a
     web source link, which was never waited for; `drop_off_thread` for the
-    builder replaced by Open system.
+    builder replaced by Open system. *Since fold-sim-app:* those sites use
+    `jobs::spawn_detached` and `jobs::open_in_browser` (with the lesson's
+    `open_url`), and `reap_child` is private to `jobs`.
 - **Behaviour that changed** (all in failure paths):
   - A panic in a job used to leave its feature waiting forever (compile,
     figures, lesson model, studies) or report "… ended without a result". It
@@ -321,7 +350,7 @@ result formats and state fields).
       `gait_reports` (`last` = `(seq, result)`). Unchanged.
     - Source preview and agent context: `builder/reference.rs:31` (Io; a
       web link's `open` process is reaped with `jobs::reap_child`,
-      `reference.rs:24`) and `builder/agent.rs:159` (Compute, polled at
+      `reference.rs:24`; since fold-sim-app `jobs::open_in_browser`) and `builder/agent.rs:159` (Compute, polled at
       `agent.rs:172`). Unchanged apart from the reaping.
   - *Placement*
     - Drag validator: `builder/placement_worker.rs:15` (RunThread
@@ -363,7 +392,7 @@ result formats and state fields).
     - Stress results reader: `robot_stress.rs:108` (Io), polled at
       `robot_stress.rs:115`. Unchanged.
     - `sim-viewer` children: `main.rs:241` and `main.rs:392` use
-      `jobs::reap_child`.
+      `jobs::reap_child` (since fold-sim-app `jobs::spawn_detached`).
   - *Lessons*
     - Figures: `lesson/practice.rs:26` (Compute); apply `poll_figures`
       `practice.rs:56` (at `lesson/mod.rs:1325`). Unchanged.
@@ -391,7 +420,7 @@ result formats and state fields).
   - `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
     warnings (an unused `mpsc`/`Mutex`/`Arc`/`AtomicBool` import would show
     here);
-  - `cargo check -p sim-app`;
+  - `cargo check -p sim-app` (dropped since fold-sim-app: the crate is retired);
   - `cargo test -p sim-spatial --lib`, in particular `jobs::tests::*`
     (including `threads_are_started_only_in_jobs`),
     `builder::placement_worker::tests`, `builder::placement::tests`,
@@ -563,7 +592,7 @@ Paths below are `crates/sim-spatial/src/`.
 - **What the verification pass must run** (no screenshots):
   - `cargo build -p sim-spatial --lib --tests --bins`, with no sim-spatial
     warnings;
-  - `cargo check -p sim-app`;
+  - `cargo check -p sim-app` (dropped since fold-sim-app: the crate is retired);
   - `cargo test -p sim-spatial --lib`, in particular
     `app::tests::build_robot_build_tears_down_the_robot_and_keeps_shared_state`
     and `app::tests::rest_refuses_commands_of_another_mode_by_name` (new),
@@ -783,7 +812,7 @@ Paths are `crates/sim-spatial/src/`.
   - `cargo test -p sim-spatial --lib` (the tests above, `jobs::tests::*`
     including `threads_are_started_only_in_jobs`, `builder::*::tests`,
     `robot_run::tests`, the lib.rs pick/button test);
-  - `cargo check -p sim-app`;
+  - `cargo check -p sim-app` (dropped since fold-sim-app: the crate is retired);
   - a reading trace, per mode, of one REST command, one button and one key
     to the same handler: Inspect `display` / Explode button / key E →
     `inspect::apply`; Build `system_undo` / an Undo button / Cmd+Z →
@@ -969,7 +998,7 @@ The verification pass ran the following (verified at 4bc03789, below):
   the source guard (`ui_kit::tests::ui_colours_come_from_the_kit`),
   `kit_bundles_spawn`, `looks_paint_the_builder_palette`, the lesson card
   test and the notes panel test;
-- `cargo check -p sim-app`;
+- `cargo check -p sim-app` (dropped since fold-sim-app: the crate is retired);
 - a reading trace per mode of one button, one slider and one scroll area:
   - Build: Toolbar "Run" (`Kit::button` → `Button` + `BuildAction::Run` →
     `builder::actions::buttons` on `Changed<Interaction>` → `Act` →
@@ -1432,7 +1461,7 @@ next section). No hardware has been driven:
   `robot::hardware` tests (`panel::tests`, `handlers::tests`,
   `settings` tests, `view::tests`, `session::tests` against a fake server,
   `sync::tests`, `mirror::tests`, `dial` and `motion_view` tests);
-- `cargo check -p sim-app`;
+- `cargo check -p sim-app` (dropped since fold-sim-app: the crate is retired);
 - reading traces of STOP, each to a `stop` request on its own connection:
   the Stop button (`hardware::actions::buttons` → `apply` →
   `handlers::handle` → `actions::stop_immediate` → `link::stop_now`), Z and
@@ -1561,7 +1590,8 @@ feature-by-feature ledger is [docs/cad-parity.md](../cad-parity.md) (773
 rows: 113 this epic, 637 named later epics, 23 deliberately different, 25
 rows flagged as needing a Python route); the side-by-side steps are
 [docs/cad-checklist.md](../cad-checklist.md). **Written and reviewed by
-reading only; the verification pass builds and tests it.** Paths are
+reading only; the verification pass builds and tests it.** *Verified at
+a4fe42d3 (see the journal's verification pass).* Paths are
 `crates/sim-spatial/src/` unless they name another crate.
 
 ### Shape
@@ -1744,7 +1774,7 @@ only when `GET /` reports `app: "robocad"` serving the opened file
   `threads_are_started_only_in_jobs`), `launch::tests`.
 - `cargo test -p sim-runtime --lib hardware_client` (unchanged requests).
 - `cargo test -p sim-runtime --lib cad_client`.
-- `cargo check -p sim-app`; `cargo check -p sim-web --target
+- `cargo check -p sim-app` (dropped since fold-sim-app: the crate is retired); `cargo check -p sim-web --target
   wasm32-unknown-unknown` (the new modules are `cfg(not(wasm32))`).
 - Then the user's [docs/cad-checklist.md](../cad-checklist.md).
 
@@ -1782,6 +1812,229 @@ only when `GET /` reports `app: "robocad"` serving the opened file
   (app/switch.rs:856) removes the document (the slot's child is stopped,
   or detached if dirty) and `cad::clear`.
 
+## Fold in sim-app (2026-09-30)
+
+Batch fold-sim-app (default order item 11) brought sim-app's last two
+user-facing capabilities into the one app and deleted the crate. There is
+now one viewer binary and one Bevy app. The ledger is
+[docs/sim-app-parity.md](../sim-app-parity.md): 58 rows, 44 done by
+reading, 11 deliberately different, 3 done for v2 and deliberately
+different for v3, none open. **Written and reviewed by reading only; the
+verification pass builds and tests it.** Paths are `crates/sim-spatial/src/`
+unless they name another crate.
+
+### Shape
+
+- **Phenomena mode** (`phenomena/`): `ViewerMode::Phenomena` with
+  `ModeScope::Phenomena`, `PhenomenaPlugin` (keys, panels, scene) over
+  `PhenomenaCorePlugin` (the action, the gallery, its frames and the REST
+  snapshot; no window needed, so the switch test runs it).
+  - `run.rs`: the "phenomena-run" `RunThread` builds and owns every
+    `Box<dyn Exhibit>` (`exhibits::all()` on the thread) and advances the
+    shown one with phenomena_app.rs `advance()`'s rules, factored into the
+    pure `Pacing::step`: real time per ~60 Hz tick clamped to 0.05 s, ×
+    `time_scale()` × speed, whole grid steps with the remainder carried, an
+    error (or panic) kept verbatim until a switch, one chart sample per
+    1/30 s keeping 1800, `SIM_VIEWER_STATS` printed on the thread. Frames
+    are `Stamped`; select, next, previous, knob and reset bump the
+    generation (`Op::switches`) and the UI takes only `latest(requested)`.
+  - `actions.rs`: `PhenomenaAction` (`state`, `phenomena_state`,
+    `phenomena_select`, `phenomena_next`, `phenomena_previous`,
+    `phenomena_knob`, `phenomena_reset`, `phenomena_pause`,
+    `phenomena_speed`, `system_ui`) and its one `apply` in Actions. REST
+    commands that change the exhibit answer Pending until the shown frame
+    includes them, then answer `phenomena_state`.
+  - `keys.rs`: sim-app's bindings (see the ledger's P1–P7).
+  - `panel.rs`: kit docks: exhibit list, title, summary, verdict, the knob
+    slider with range and unit and −/+ buttons, readouts as property rows,
+    time, speed, pause/reset, the error in the danger colour, and the strip
+    chart through `chart::rasterize_span` with `chart_label`s. Real glyphs
+    (IBM Plex Sans); `glyphs` maps only what the font lacks.
+  - `scene.rs`: one camera at sim-app's pose, a shadowed light, one entity
+    pool (sphere, cylinder, cuboid) and gizmos for lines, arrows and
+    polylines, drawn in Present.
+  - `mod.rs` `leave` (OnExit, registered by `app::switch`): the shown
+    exhibit's number goes to `Documents::exhibit`, the gallery is dropped
+    off the UI thread (its run thread joins within `JOIN_BOUND`, or is
+    detached and ends at its next check), the pool and panels go.
+- **Planar v2 files in Robot mode** (`robot_planar.rs`): a v2 file
+  (`simrobot_version` < 3, the shared rule) is read as sim-phenomena's
+  `CadModel` from the bytes the source worker read (`robot.rs`
+  `load_file_bytes`; `robot_source::FileModel::{Physical, Planar}`) and run
+  by the "robot-run (planar v2)" `RunThread`, which builds through
+  `sim_phenomena::scenarios::cad_robot::build_planar` (the one planar build;
+  `AnyRobot::load` and `run_file` call it too) and paces with the CAD
+  scene's rule. The header shows `HEADER_LABEL`; `robot_state.format`
+  carries `{version, name, fidelity}` (`FIDELITY`, stated from
+  `CadRobot::build`), and v3+ files report `physical v<N>`. Run, pause,
+  step, reset, speed, joint select and target, tip contacts, outlines and
+  COM dots, the watch and reload; everything without a v2 meaning is
+  refused by name (`robot_planar::UNAVAILABLE`).
+- **Child processes** (`jobs/child.rs`): `spawn_detached` and
+  `open_in_browser`; `reap_child` is private. The two `sim-viewer` launches,
+  the builder's source links and the lesson's `open_url` use them.
+- **sim-app deleted**: the crate, its workspace member, its Cargo.lock
+  entry and the 51 packages only its default-feature Bevy needed;
+  `sim-runtime/build.rs` and CI no longer name it. RoboCAD's
+  `simbridge.viewer_command` no longer falls back to it.
+
+### Decisions
+
+- **One run thread owns all exhibits** (built there), not one thread per
+  exhibit or a rebuild per selection: switching is instant and the UI
+  never builds an exhibit. Revisit if the exhibits' memory matters.
+- **Light scene background** for Phenomena mode (sim-app's clear colour and
+  ambient, in `app::look`): the exhibits paint with dark ink for a light
+  board. The panels are kit docks with their own surfaces.
+- **Orbit convention**: right-drag rotates, middle or Shift+right-drag pans,
+  wheel zooms, only over the 3D area; sim-app's left-drag orbit is
+  deliberately dropped (left click belongs to the panels). No camera is
+  shared by every mode today, so the mode has its own in that convention.
+- **Chart**: the kit's chart image through `rasterize_span` instead of a 3D
+  gizmo board; `rasterize_span` pads 8 % (sim-app padded 10 %).
+- **Keys**: sim-app's bindings, no clash: nothing outside a mode reads keys
+  (`app/`, `ui_kit/`, the switcher), Bevy's `DefaultPlugins` here add no
+  Tab navigation, and the kit slider handles arrows only when focused.
+  Keys are ignored while Cmd, Ctrl or Alt is held (a deliberate difference).
+- **`PHENOMENA_EXHIBIT`** seeds `Documents::exhibit` at every launch, after
+  `--exhibit`.
+- **REST waits for the frame**: a changing phenomena command answers once
+  the run thread has applied it, with the resulting state.
+- **SIM_VIEWER_STATS** is carried over, measured on the run thread with
+  sim-app's text.
+- **v2 run starts paused at t = 0** when a file opens (sim-app ran at
+  once), but a reload of a running v2 file starts the new run once built,
+  so the CAD edit-save-watch loop keeps moving.
+- **v2 Reset rebuilds the loaded model; Reload re-reads the file** (sim-app's
+  R did the latter); both are actions robot mode already had.
+- **v2 speed** goes through robot mode's `speed_target`, which refuses past
+  ×8 / ×0.125 instead of clamping silently.
+- **v3 keys unchanged**: robot mode's v3 run controls, jog and stress stay
+  buttons, `system_ui` and REST (stress is key H); the arrow keys and Space
+  are bound for v2 files only. Recorded as deliberately different rows.
+- **Function made public / added in shared crates**:
+  `cad_robot::build_planar` with `PLANAR_BANDWIDTH_HZ`/`PLANAR_DAMPING_RATIO`
+  (a refactor of `AnyRobot::load`'s v2 branch, no behaviour change). Message
+  text only: `PhysicalModel::parse`'s v2 refusal names `sim-spatial --robot
+  FILE`, and the planar build's warnings say a dropped joint's child is
+  neither simulated nor drawn (a fixed joint is now named too).
+- **Spawns**: no raw spawn is left outside `jobs`. `main.rs` still builds
+  the two `sim-viewer` `Command`s it hands to `spawn_detached` (allowlisted
+  in `processes_are_started_only_in_jobs` with a count of 2). Their error
+  now reads "Could not open the schematic: could not start sim-viewer:
+  {os error}. …" (one more prefix than before; the OS error is kept).
+- **Cargo.lock** was regenerated by cargo's resolver (`cargo metadata
+  --offline` writes the lock before downloading sources): 51 packages
+  dropped, no version changed.
+- **Tonemapping**: CAD mode's camera now sets `Tonemapping::None` like every
+  other mode (found by reading: without `tonemapping_luts` the default
+  TonyMcMapface samples a placeholder LUT).
+
+### Deviations
+
+- Phenomena exhibits are rebuilt each time the mode is entered (the gallery
+  is a mode resource); leaving during the build cannot cancel it, so it
+  runs to the end on its detached thread.
+- `robot_planar.rs` (826 lines with tests) and `robot/actions.rs` (898) are
+  over the 800-line smell; `robot.rs` grew to 2,514. Splitting them is the
+  split-large-files epic.
+- The workspace `bevy = "0.19.1"` entry stays though nothing uses it.
+
+### Review findings (four pair-reviewers, then fixes)
+
+Fixed:
+- A panic in an exhibit's `time_scale`/`grid`/`signal`/`time` ended the run
+  thread silently with the last frame shown: the whole tick is guarded, and
+  a stopped thread is reported (`phenomena_state.stopped`, the alert line).
+- A click on the knob slider without moving it rebuilt the exhibit.
+- `ExhibitRef::resolve` did not try an out-of-range number as a title
+  fragment, as sim-app did.
+- `PHENOMENA_EXHIBIT` was ignored on a later switch to phenomena mode.
+- Texts that claimed one thread per exhibit, a hard 200 ms join and "the
+  last minute of real time".
+- v2 `FIDELITY` said dropped joints were "treated as fixed"; it now states
+  what the build does (dropped bodies, branch rerooting, 2 ms sampled PD,
+  joint damping, contact parameters, clamp order, ideal sensors, gravity
+  axis).
+- A save in CAD left a running v2 robot paused; a v2 → v3 reload restarted
+  the run generation at 0; v4 files were labelled "physical v3"; v2 keys
+  fired with Cmd/Ctrl chords; `--validate-only` printed warnings twice.
+- The hand-edited Cargo.lock would have failed every `--locked` job.
+- With a v2 file open the leg mirror waited forever; it refuses by name.
+- `lesson/mod.rs` `open_url` left a zombie per opened link.
+
+Rejected or deferred, with reasons:
+- The process scan does not look for `.status()`: it matches unrelated
+  `status()` calls; any new `Command::new(` outside `main.rs` still fails
+  the scan.
+- The doubled error prefix of a failed `sim-viewer` launch is kept: it
+  still names the OS error.
+- `tools/claude-pair/checks.json` still runs `cargo check -p sim-app`: it is
+  the coordinator's configuration, which this epic must not edit
+  (reported to the orchestrator).
+- `sim-runtime/build.rs` hashes `sim-spatial` into the runtime identity
+  although its comment calls UI crates out of scope: unchanged here (it
+  would change the gait-lab fingerprint rule).
+
+### Verification checklist
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- `cargo test -p sim-spatial --lib`, in particular `phenomena::tests::*`,
+  `app::tests::phenomena_commands_route_to_phenomena_mode_only`,
+  `app::tests::build_phenomena_build_runs_the_gallery_and_remembers_the_exhibit`,
+  `app::tests::every_capability_parses_into_its_action_and_every_parsed_command_is_registered`,
+  `app::tests::every_mode_control_resolves_to_a_switch`,
+  `app::tests::rest_refuses_commands_of_another_mode_by_name`,
+  `robot_planar::tests::*`, `robot_source` tests, `robot::actions` tests,
+  `jobs::tests::processes_are_started_only_in_jobs`,
+  `jobs::tests::threads_are_started_only_in_jobs`,
+  `jobs::tests::spawn_detached_keeps_running_reaps_and_names_a_failure`.
+- `cargo test -p sim-domain-robot` (the v2 refusal message test) and
+  `cargo test -p sim-phenomena` (the planar build refactor; CI skips
+  `every_exhibit_runs_in_real_time`).
+- `cargo check --workspace --all-targets --locked` (the regenerated lock).
+- From `cad/`: `.venv/bin/pytest -q tests/test_simbridge.py`.
+- `sim-spatial --phenomena --validate-only` and `sim-spatial --robot
+  <a v2 file> --validate-only` (no window).
+- The reading trace below.
+
+### Reading trace (exhibit select, knob change, v2 open, v2 run)
+
+- **Exhibit select.** Digit key (`phenomena/keys.rs:38`, `DIGITS` :35,
+  writes `PhenomenaSelect` :58), a list row (`panel.rs:250` `buttons`) or
+  REST `phenomena_select` → `phenomena/actions.rs:88` `apply` → `handle`
+  (:111) → `op_for` (:137; resolved against the shown frame's titles at
+  :140) → `gallery.rs:66` `send` (bumps the requested generation) → on the
+  thread `run.rs:366` `run` → `Run::apply` (:274; `Op::Select` :283,
+  `Pacing::switched`) → `Run::frame` (:309) published → JobResults
+  `phenomena/mod.rs:127` → `gallery.rs:77` `receive` (`latest(requested)`)
+  → REST answered by `actions.rs:162` `wait` once the frame includes the
+  command → Present `scene.rs:164` `render`, `panel.rs:429` `refresh`,
+  `panel.rs:556` `chart`.
+- **Knob change.** ←/→ (`keys.rs`) as `PhenomenaKnob {steps}`, the slider's
+  release (`panel.rs:261`, nothing if unchanged) or REST `phenomena_knob`
+  → `apply` → `op_for` (:143) → `send` → `Run::apply` `Op::Knob` (:289) →
+  `knob_target` (`run.rs:234`: clamp, round to the step) →
+  `Exhibit::set_knob` on the thread (a panic is kept as the error) → frame
+  → as above.
+- **v2 open.** `sim-spatial --robot F` (main.rs:384 for a positional file)
+  → `robot_mode` (main.rs:291) → `RobotView::open` → `SourceWatch::open`
+  (`robot_source.rs:138`) → `check` (:85, a Compute job) →
+  `load_file_bytes` (`robot.rs:119`; v2 → `robot_planar::load_bytes`,
+  `robot_planar.rs:91`) → `watch` (`robot.rs:836`) / `receive` (:851) →
+  `FileModel::Planar` (:909) → `install_planar` (:1047) → `PlanarView::new`
+  (:1111) → `PlanarRun::spawn` (`robot_planar.rs:415`) → `Worker::run`
+  (:223) → `build` (:249) → `cad_robot::build_planar`
+  (`sim-phenomena/src/scenarios/cad_robot.rs:506`), paused at t = 0.
+- **v2 run.** Run button, Space (`robot/actions.rs` `planar_keys`) or REST
+  `robot_run` → `robot/actions.rs:495` `apply` → `check_planar` (:110) →
+  `dispatch_planar` (:192) → `PlanarRun::act` (`robot_planar.rs:491`) →
+  `Worker::command` (:322, Start) → `tick` (:300: 0.05 s × speed, 0.02 s
+  grid, one step per tick) → `publish` (:369) → SimSync `planar_sync`
+  (`robot.rs:1146`) → `PlanarRun::poll` (`robot_planar.rs:442`, current
+  generation only) → Present `robot.rs:2439` `draw` →
+  `robot_planar::draw` (`robot_planar.rs:627`).
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -1795,14 +2048,19 @@ only when `GET /` reports `app: "robocad"` serving the opened file
   annotations) survives the switch.
 - `sim-app`'s scenes (phenomena exhibits, CAD view) become modes of this app, or
   are retired once parity is shown by tracing their workflows in code.
+  *Done by fold-sim-app (2026-09-30), pending its verification pass:* the
+  gallery is Phenomena mode, the CAD view's planar v2 files open in Robot
+  mode, and sim-app is deleted ([ledger](../sim-app-parity.md)).
 - *Status:* in place since one-app-modes (see [One app](#one-app-2026-09-30)),
   verified at 7da1216e: `app::run`, `ViewerMode` with the `ModeScope` and
   `SpatialScreen` computed states, setup on each scope's `OnEnter`, teardown
   by `DespawnOnExit<ModeScope>` and the scopes' `OnExit`, and one switch
   handler. What survives a switch: the builder, the display-model library,
   the fonts, the REST server, the documents each mode reopens, and the
-  workspace root. Selection and annotations are still per mode (§7);
-  `sim-app` is not folded in (epic order item 11).
+  workspace root. Selection and annotations are still per mode (§7).
+  `sim-app` is folded in (epic order item 11, see
+  [Fold in sim-app](#fold-in-sim-app-2026-09-30)): there is one viewer
+  binary and one Bevy app.
 
 ### 2. Plugins and ordered system sets
 
@@ -2306,9 +2564,9 @@ The Director re-ranks with evidence, but this is the default:
    user's hardware checklist.
 7. **CAD mode** (§9 phase 1). *In progress.* RoboCAD's workflows in
    `sim-spatial` over its REST service, in several epics. **cad-mode**
-   (2026-09-30; see [CAD mode](#cad-mode-2026-09-30)) is written and awaits
-   its verification pass and the user's [CAD checklist](../cad-checklist.md).
-   Remaining, in order (§9 "Later CAD epics"): cad-tools, cad-sketch,
+   (2026-09-30; see [CAD mode](#cad-mode-2026-09-30)) is verified at
+   a4fe42d3 and awaits the user's [CAD checklist](../cad-checklist.md).
+   Next: **cad-tools**. Remaining, in order (§9 "Later CAD epics"): cad-tools, cad-sketch,
    cad-views-export, cad-physical-inspect, cad-print, cad-organize,
    cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
@@ -2316,6 +2574,8 @@ The Director re-ranks with evidence, but this is the default:
    each.
 10. **OCCT from Rust** (§9 phase 4). Several epics, one kernel area each.
 11. **Fold in `sim-app`.** Bring its scenes in as modes, or retire them.
+    *Done 2026-09-30 pending its verification pass (batch fold-sim-app; see
+    [Fold in sim-app](#fold-in-sim-app-2026-09-30)).*
 
 After that, feature work resumes on the target shape. Split large files while
 they're being touched.

@@ -31,6 +31,9 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
     commands
         .spawn((
             Camera3d::default(),
+            // As every other mode: this crate is built without `tonemapping_luts`, so the
+            // default TonyMcMapface would sample Bevy's placeholder LUT.
+            bevy::core_pipeline::tonemapping::Tonemapping::None,
             // Parts are millimetres shown in metres: the default 0.1 m near plane would cut them.
             Projection::Perspective(PerspectiveProjection { near: 0.001, near_clip_plane: Vec4::new(0.0, 0.0, -1.0, -0.001), ..default() }),
             MeshPickingCamera,

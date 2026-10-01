@@ -130,8 +130,11 @@ pub fn load_file(path: &Path) -> Result<FileModel, String> {
     load_file_bytes(path, &bytes)
 }
 
-/// `robot_state.format` for a physical model (a v3+ file or a preset scene's robot).
-pub const PHYSICAL_FORMAT_NAME: &str = "physical v3";
+/// `robot_state.format.name` for a physical model (a v3+ file or a preset
+/// scene's robot): "physical v{version}", the file's own version (3 or later).
+pub fn physical_format_name(version: u32) -> String {
+    format!("physical v{version}")
+}
 /// Shown for a planar file's pose (`robot_state.pose`).
 pub const PLANAR_POSE: &str = "planar v2: outlines from the planar run thread's latest frame (CadRobot::outlines, see planar.frame); t = 0 of each generation is the CAD pose";
 
@@ -413,7 +416,7 @@ impl RobotView {
             json!({"label": JOG_LABEL, "semantics": JOG_SEMANTICS, "control_mode": m.control.mode, "trajectory_keyframes": m.control.trajectory.len(),
                 "step_rad": JOG_STEP_RAD, "step_m": JOG_STEP_M, "selected_link_joints": selected, "joints": joints, "last_apply_error": r.jog_error()})
         });
-        let format = m.map(|m| json!({"version": m.version, "name": PHYSICAL_FORMAT_NAME, "model": "sim_domain_robot::PhysicalModel (run by sim_runtime::physical::PhysicalRobot for --robot FILE)"}));
+        let format = m.map(|m| json!({"version": m.version, "name": physical_format_name(m.version), "model": "sim_domain_robot::PhysicalModel (run by sim_runtime::physical::PhysicalRobot for --robot FILE)"}));
         let mut out = json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds, "format": format,
             "link_count": m.map(|m| m.links.len()), "links": links, "selected": selected,
             "joints": joints, "motors": motors, "transmissions": m.map(|m| &m.transmissions), "battery": m.and_then(|m| m.battery.as_ref()),
@@ -989,7 +992,11 @@ fn receive(
     let (mut run, mut run_reset) = match preset {
         Some(Opened::Preset(run)) => (RunController::spawn_preset(std::sync::Arc::new(run)), false),
         Some(Opened::Recorded(run)) => (RunController::spawn_recorded(std::sync::Arc::new(run)), false),
-        None => RunController::replace(previous, loaded.model.clone()),
+        // Replacing a planar run: the physical run continues its generation (older frames stay stale).
+        None => match (planar.as_ref(), previous) {
+            (Some((_, _, _, p)), None) => (RunController::spawn_at(loaded.model.clone(), p.run.generation() + 1), false),
+            (_, previous) => RunController::replace(previous, loaded.model.clone()),
+        },
     };
     if let Some((speed, contacts, had_run, replaced)) = planar {
         crate::jobs::drop_off_thread(replaced, "the planar v2 run");
@@ -1052,6 +1059,9 @@ fn install_planar(
     }
     let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
     let (mut speed, mut contacts, mut generation, mut run_reset, mut joint) = (1.0, true, 0, false, 0);
+    // A planar file that was running keeps running after a reload (the CAD
+    // scene's edit, save, watch loop): the new run is started once built.
+    let mut resume = false;
     if let Some(run) = view.run.take() {
         (speed, contacts, run_reset) = (run.speed_scale(), run.overlays().contacts, run.has_run_state());
         generation = run.generation() + 1;
@@ -1060,6 +1070,7 @@ fn install_planar(
     if let Some(p) = view.planar.take() {
         (speed, contacts, joint) = (p.run.speed_scale(), p.contacts, p.selected_joint);
         run_reset = p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == robot_planar::PlanarPhase::Running;
+        resume = p.run.phase() == robot_planar::PlanarPhase::Running;
         generation = p.run.generation() + 1;
         crate::jobs::drop_off_thread(p, "the planar v2 run");
     }
@@ -1099,13 +1110,21 @@ fn install_planar(
     view.selected = kept.as_ref().and_then(|n| loaded.model.bodies.iter().position(|b| &b.name == n));
     let mut planar = PlanarView::new(loaded, generation, speed, contacts, reload.is_none());
     planar.selected_joint = joint;
+    // Queued behind the build on the run thread, so it starts once built (a failed build ignores it).
+    if resume {
+        let _ = planar.run.act(RunAction::Start);
+    }
     view.planar = Some(planar);
     view.run_message = None;
     view.pose_dirty = false;
     view.status = Status::Loaded { seconds: reload.map_or_else(|| started.elapsed().as_secs_f64(), |(_, s)| s) };
     if let Some((trigger, _)) = reload {
         let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
-        let run = if run_reset { "run reset" } else { "no run to reset" };
+        let run = match (run_reset, resume) {
+            (_, true) => "run reset and running again from t = 0",
+            (true, false) => "run reset",
+            (false, false) => "no run to reset",
+        };
         let selection = match (&kept, view.selected) {
             (Some(n), Some(_)) => format!("; selection kept: {n}"),
             (Some(n), None) => format!("; selection cleared: `{n}` is not a body of the new file"),

@@ -195,6 +195,8 @@ pub(crate) fn state_json(g: &Gallery) -> Value {
         "paused": f.paused,
         "error": f.error,
         "notice": f.notice,
+        // The run thread returned (a panic outside the exhibit's guarded calls): the frame shown is its last.
+        "stopped": g.stopped().then(|| "the phenomena run thread has stopped; switch to another mode and back to restart it"),
         "generation": f.generation,
         "requested_generation": g.requested,
         "applied": f.seq,

@@ -120,13 +120,14 @@ struct Args {
     #[arg(long, value_name = "URL", conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot", "robot_preset"])]
     cad_url: Option<String>,
     /// Phenomena mode: the live gallery of the built-in exhibits
-    /// (`sim_phenomena::exhibits`; sim-app's former default scene). Each
-    /// exhibit runs on its own run thread on simulation time.
+    /// (`sim_phenomena::exhibits`; sim-app's former default scene). One run
+    /// thread owns them and advances the shown exhibit on simulation time.
     #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot", "robot_preset", "cad_url"])]
     phenomena: bool,
     /// The exhibit phenomena mode opens: a 1-based number or a title
     /// fragment (the first title containing it, case-insensitive). Default:
-    /// $PHENOMENA_EXHIBIT, else the first.
+    /// $PHENOMENA_EXHIBIT (read at every launch, so a later switch to
+    /// phenomena mode opens it too), else the first.
     #[arg(long, value_name = "N|TITLE", requires = "phenomena")]
     exhibit: Option<String>,
     /// Lesson to open first (slug); default: the first in reading order.
@@ -187,6 +188,9 @@ fn documents(args: &Args) -> sim_spatial::app::switch::Documents {
         documents.models = models;
     }
     documents.presets = args.robot_presets.clone();
+    // The exhibit phenomena mode opens, at launch or on a later switch to it:
+    // --exhibit, else sim-app's environment variable.
+    documents.exhibit = args.exhibit.clone().or_else(|| std::env::var("PHENOMENA_EXHIBIT").ok().filter(|v| !v.trim().is_empty()));
     documents.hardware = sim_spatial::robot::hardware::HardwareConfig {
         calibration: args.hardware.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.hardware_token_file.clone() }),
         bench: args.motor_bench.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.motor_bench_token_file.clone() }),
@@ -243,8 +247,8 @@ fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<
 /// opens (the run thread builds them). `--validate-only` builds them here,
 /// lists them and resolves `--exhibit`.
 fn phenomena_mode(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
-    // sim-app's environment variable still names the first exhibit.
-    let exhibit = args.exhibit.clone().or_else(|| std::env::var("PHENOMENA_EXHIBIT").ok().filter(|v| !v.trim().is_empty()));
+    let documents = documents(args);
+    let exhibit = documents.exhibit.clone();
     if args.validate_only {
         let exhibits = sim_phenomena::exhibits::all();
         let titles: Vec<&str> = exhibits.iter().map(|e| e.title()).collect();
@@ -258,8 +262,6 @@ fn phenomena_mode(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         println!("Validated {} exhibits; phenomena mode would open {} ({}).", titles.len(), current + 1, titles[current]);
         return Ok(());
     }
-    let mut documents = documents(args);
-    documents.exhibit = exhibit;
     let models = model_library(args);
     open_window(args, |api| launch(sim_spatial::ViewerMode::Phenomena, api, documents, models))
 }
@@ -297,10 +299,8 @@ fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
             sim_spatial::robot_source::FileModel::Planar(p) => {
                 let (bodies, joints) = (p.model.bodies.len(), p.model.joints.len());
                 let robot = sim_phenomena::scenarios::cad_robot::build_planar(p.model)?;
-                println!("Validated {} as a planar v2 summary: {bodies} bodies, {joints} joints in file, {} simulated, root `{}`{} (sim-phenomena's planar build, not the v3 physical model).", path.display(), robot.joint_names.len(), robot.model.bodies[robot.root].name, if robot.root_fixed { " (fixed)" } else { "" });
-                for w in &robot.warnings {
-                    println!("warning: {w}");
-                }
+                // The build prints its warnings to stderr itself ("cad model: …").
+                println!("Validated {} as a planar v2 summary: {bodies} bodies, {joints} joints in file, {} simulated, root `{}`{}, {} build warnings (sim-phenomena's planar build, not the v3 physical model).", path.display(), robot.joint_names.len(), robot.model.bodies[robot.root].name, if robot.root_fixed { " (fixed)" } else { "" }, robot.warnings.len());
             }
         }
         return Ok(());

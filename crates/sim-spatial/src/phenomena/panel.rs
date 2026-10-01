@@ -276,7 +276,10 @@ pub(super) fn slider(tracks: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui
         }
         (None, Some(v)) => {
             gallery.knob_drag = None;
-            out.write(Act::ui(PhenomenaAction::PhenomenaKnob { value: Some(v), steps: None }));
+            // A click that leaves the value where it is commits nothing: a knob change rebuilds the exhibit.
+            if v != knob.value {
+                out.write(Act::ui(PhenomenaAction::PhenomenaKnob { value: Some(v), steps: None }));
+            }
         }
         (None, None) => {}
     }
@@ -455,8 +458,10 @@ pub(super) fn refresh(
         (None, None) if failed => (format!("Not available: {}", gallery.not_ready()), DANGER),
         (None, None) => ("Building the exhibits…".to_string(), SUBTLE),
     };
+    let stopped = frame.is_some() && gallery.stopped();
     let alert = frame.and_then(|f| match (&f.error, &f.notice) {
         (Some(e), _) => Some((format!("Simulation error: {}", glyphs(e)), DANGER)),
+        _ if stopped => Some(("The phenomena run thread has stopped: switch to another mode and back to restart it.".to_string(), DANGER)),
         (None, Some(n)) => Some((n.clone(), WARN)),
         (None, None) => None,
     });
@@ -516,7 +521,7 @@ pub(super) fn refresh(
                 }
             }
             Mark::ChartTitle => {
-                let label = frame.map_or_else(|| "Chart".to_string(), |f| format!("{}  ·  the last minute of real time, sampled at 30 Hz", glyphs(f.signal.0)));
+                let label = frame.map_or_else(|| "Chart".to_string(), |f| format!("{}  ·  sampled every 1/30 s of advancing real time, last 1800 samples", glyphs(f.signal.0)));
                 set_text(&mut texts, entity, &label);
             }
             Mark::Verdict | Mark::Value(_) | Mark::ChartLabel(_) => {}

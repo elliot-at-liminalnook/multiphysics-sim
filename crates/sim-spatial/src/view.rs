@@ -120,6 +120,12 @@ pub(crate) fn draw_pins(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut labels
     }
 }
 
+/// A camera's whole render target as a viewport (for a camera drawing
+/// without one).
+fn whole(camera: &Camera) -> Option<Viewport> {
+    camera.physical_target_size().map(|size| Viewport { physical_size: size, ..default() })
+}
+
 /// Place the picture-in-picture camera in the lower-right of the main view,
 /// looking at the inset's part from the main camera's direction.
 #[allow(clippy::type_complexity)]
@@ -134,7 +140,8 @@ pub(crate) fn inset(
     let (main_camera, orbit) = *main;
     let (camera, transform) = &mut *inset;
     let target = scene.directives.inset.clone().and_then(|(path, zoom)| Some((live_bounds(&scene, &path)?, path, zoom)));
-    let viewport = main_camera.viewport.clone().filter(|v| v.physical_size.x > 200 && v.physical_size.y > 150);
+    // The whole window when the docks leave no room (the shared camera then draws without a viewport).
+    let viewport = main_camera.viewport.clone().or_else(|| whole(main_camera)).filter(|v| v.physical_size.x > 200 && v.physical_size.y > 150);
     let (Some(((centre, radius), path, zoom)), Some(v)) = (target, viewport) else {
         if camera.is_active {
             camera.is_active = false;
@@ -281,7 +288,7 @@ pub(crate) fn split(
         *t = pose;
     }
     // Halve the main view; the split camera takes the right half.
-    let Some(v) = main_camera.viewport.clone() else { return };
+    let Some(v) = main_camera.viewport.clone().or_else(|| whole(&main_camera)) else { return };
     if v.physical_size.x < 80 {
         return;
     }

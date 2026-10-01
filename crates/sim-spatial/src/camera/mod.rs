@@ -103,6 +103,10 @@ pub struct Orbit {
     pub glide: Option<Glide>,
     /// Slow circling, rad/s; any user gesture stops it.
     pub spin: f32,
+    /// The mode's perspective near plane and near clip plane, recorded
+    /// while perspective (`orbit::place`) and restored on leaving
+    /// orthographic (CAD 1 mm, Robot and Phenomena Bevy's 0.1 m).
+    pub perspective: Option<(f32, Vec4)>,
 }
 
 impl Default for Orbit {
@@ -120,6 +124,7 @@ impl Default for Orbit {
             home: false,
             glide: None,
             spin: 0.0,
+            perspective: None,
         }
     }
 }

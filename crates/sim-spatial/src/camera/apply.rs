@@ -2,7 +2,7 @@
 //! camera's `system_ui` controls ([`controls`]) and their inverse
 //! ([`control_action`]).
 use super::input::cursor_anchor;
-use super::orbit::aspect;
+use super::orbit::view_aspect;
 use super::{CameraAction, CameraState, Orbit, OrbitMode, OrbitRules, Pose, ViewArea, ViewPreset, state_json};
 use crate::app::actions::{self, Act, InFlight, Replies};
 use bevy::ecs::message::Messages;
@@ -56,7 +56,7 @@ fn checked(state: &CameraState) -> Result<(Pose, Option<f32>, Option<Quat>, f32)
 
 /// One camera action on the mode's orbit camera; the answer is the camera's
 /// state after it (`{"camera": …}`).
-fn handle(action: &CameraAction, orbit: &mut Mut<Orbit>, rules: &OrbitRules, area: &ViewArea, camera: &Camera) -> Result<Value, String> {
+fn handle(action: &CameraAction, orbit: &mut Mut<Orbit>, rules: &OrbitRules, area: &ViewArea, camera: &Camera, window: Option<&Window>) -> Result<Value, String> {
     let mut extra = serde_json::Map::new();
     match action {
         CameraAction::State => return Ok(json!({"camera": state_json(orbit, Some(area))})),
@@ -77,7 +77,8 @@ fn handle(action: &CameraAction, orbit: &mut Mut<Orbit>, rules: &OrbitRules, are
         }
         CameraAction::Fit => {
             orbit.interrupt();
-            orbit.frame(rules, aspect(camera), false);
+            // The view area's aspect, also before the first frame and while the split view halves the viewport.
+            orbit.frame(rules, view_aspect(camera, window, Some(area)), false);
         }
         CameraAction::Home => {
             orbit.interrupt();
@@ -170,14 +171,22 @@ fn handle(action: &CameraAction, orbit: &mut Mut<Orbit>, rules: &OrbitRules, are
 /// Actions: every camera action, on the mode's orbit camera (the active one
 /// when a mode has several). Refusals from a key or click are logged (the
 /// camera has no status line of its own); REST gets them as its answer.
-pub(super) fn apply(mut messages: ResMut<Messages<Act<CameraAction>>>, mut in_flight: ResMut<InFlight<CameraAction>>, mut replies: ResMut<Replies>, mut cameras: Query<(Entity, &mut Orbit, &OrbitRules, &ViewArea, &Camera)>) {
+#[allow(clippy::type_complexity)]
+pub(super) fn apply(
+    mut messages: ResMut<Messages<Act<CameraAction>>>,
+    mut in_flight: ResMut<InFlight<CameraAction>>,
+    mut replies: ResMut<Replies>,
+    mut cameras: Query<(Entity, &mut Orbit, &OrbitRules, &ViewArea, &Camera)>,
+    window: Option<Single<&Window, With<bevy::window::PrimaryWindow>>>,
+) {
+    let window = window.as_deref().copied();
     if messages.is_empty() && in_flight.is_empty() {
         return;
     }
     let target = cameras.iter().find(|(.., camera)| camera.is_active).or_else(|| cameras.iter().next()).map(|(entity, ..)| entity);
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let result = match target.and_then(|e| cameras.get_mut(e).ok()) {
-            Some((_, mut orbit, rules, area, camera)) => handle(action, &mut orbit, rules, area, camera),
+            Some((_, mut orbit, rules, area, camera)) => handle(action, &mut orbit, rules, area, camera, window),
             None => Err(NO_ORBIT.to_string()),
         };
         if let (Err(e), actions::Origin::Ui) = (&result, call.origin) {

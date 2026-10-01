@@ -1,0 +1,741 @@
+//! The suspended simulated leg mirror: the port of
+//! `web/viewer/calibration-mirror.mjs` (`LegMirror`). The real leg's
+//! measured encoders pose the preset's CAD robot, held still and lifted
+//! [`LIFT_M`], through the shared `sim_runtime::kinematic_mirror::KinematicMirror`
+//! on a `jobs::RunThread` ("hardware-mirror", the page's worker). Geometry
+//! only: no forces, contact or motor model, and nothing here commands motors.
+//!
+//! - **Display.** While shown, `mirror_panel` writes the solved poses to
+//!   `RobotView::mirror` (drawn instead of the run's frame) with the mirrored
+//!   leg's links tinted blue (the page's `robotViewer.begin/show/end`), and
+//!   Robot mode refuses Run ([`MIRRORING`]).
+//! - **Latest wins** (the page's `busy`/`queued`, :127-136): the worker drains
+//!   its channel and solves only the newest pose request.
+//! - **Gait sim sampling** (calibration-ui.mjs:241-270): a gait playing in Sim
+//!   or Both mode is sampled on the worker with the shared
+//!   `sim_runtime::gait_playback` (governed when the gait has a governor, as
+//!   `sim-web`'s `GaitPlayer::governed`); in Both the bound leg's motors stay
+//!   on the encoders.
+//! - **Preferences**: the page's `calibration-mirror-v1` is
+//!   `settings::MirrorSettings`, saved on every change.
+use super::actions::{Align, GaitMode, HardwareAction};
+use super::link::GaitRun;
+use super::settings::{MirrorBinding, MirrorSettings, sign};
+use super::Hardware;
+use crate::robot_preset::{PresetRun, RecordedRun};
+use bevy::math::DQuat;
+use serde_json::{Value, json};
+use sim_runtime::gait_playback::{Gait, GovernedGait};
+use sim_runtime::hardware_client::calibration::{Axis, GaitBinding, Status};
+use sim_runtime::kinematic_mirror::KinematicMirror;
+use sim_runtime::session::Scene;
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::{Arc, Mutex, MutexGuard, Weak, mpsc};
+use std::time::Instant;
+
+/// Encoder counts per revolution (calibration-mirror.mjs:4).
+pub const COUNTS: f64 = 4096.0;
+/// Suspension lift (m): the page's `LIFT_M`, shared with the gait preview.
+pub const LIFT_M: f64 = crate::robot_gait::LIFT_M;
+/// CAD motor joints a motor can be bound to, with the panel's labels (:5).
+pub const JOINTS: [(&str, &str); 3] = [("Hip servo output", "Hip swing (belt)"), ("Worm servo output", "Worm drive"), ("Foot servo output", "Foot slide")];
+/// The simulated legs (:25).
+pub const LEGS: [&str; 4] = ["+X", "-X", "+Y", "-Y"];
+/// The section's explanatory paragraph (:28).
+pub const NOTE: &str = "Align each motor once: move the real leg until it matches the simulated leg's alignment pose (CAD home, or mid-travel where the real part cannot reach home), then press Save sim alignment. The pose's joint angle is saved with the alignment. If the simulated part turns the wrong way, flip its sign. The mirrored leg is tinted blue. Geometry only: no simulated forces, contact or motor model.";
+/// Why Run is refused while the mirror is shown (robot/actions.rs `check`).
+pub const MIRRORING: &str = "the leg mirror is showing the real leg on the robot; turn the mirror off (Leg calibration › Simulated leg mirror) to run the simulation";
+/// `--robot FILE` has no scene for the mirror to pose.
+pub const NO_SCENE: &str = "open a robot preset (the mirror poses a scene's robot)";
+const RECORD_NOTE: &str = "Display-only encoder to CAD-joint binding; not promoted to CAD.";
+/// The page's worker error (calibration-mirror.mjs:43), shown as "Mirror unavailable: …".
+pub const WORKER_FAILED: &str = "Mirror worker failed";
+
+/// The page's `DEFAULT_JOINT` (:7): role name → CAD joint (else the hip).
+pub fn default_joint(role: &str) -> &'static str {
+    match role {
+        "knee" => "Foot servo output",
+        "worm" => "Worm servo output",
+        _ => "Hip servo output",
+    }
+}
+/// `defaultAlign` (:13): the printed knee cannot reach CAD home, so it aligns mid-travel.
+pub fn default_align(joint: &str) -> Align {
+    if joint == "Foot servo output" { Align::Mid } else { Align::Home }
+}
+/// `ALIGN` (:12).
+pub fn align_label(align: Align) -> &'static str {
+    match align {
+        Align::Home => "CAD home",
+        Align::Mid => "Mid-travel",
+    }
+}
+
+/// One motor coordinate of the scene (a `MirrorCoordinate`, owned).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Coordinate {
+    pub joint: String,
+    pub home: f64,
+    pub lower: Option<f64>,
+    pub upper: Option<f64>,
+}
+
+/// Where the mirror's scene comes from (a preset's, or a recorded preset's).
+#[derive(Clone)]
+pub enum SceneSource {
+    Preset(Arc<PresetRun>),
+    Recorded(Arc<RecordedRun>),
+}
+impl SceneSource {
+    fn scene(&self) -> &Scene {
+        match self {
+            SceneSource::Preset(p) => &p.scene,
+            SceneSource::Recorded(r) => &r.scene,
+        }
+    }
+    /// Identity of the loaded run (a preset switch or reload is a new one).
+    pub fn id(&self) -> SceneId {
+        match self {
+            SceneSource::Preset(p) => SceneId::Preset(Arc::downgrade(p)),
+            SceneSource::Recorded(r) => SceneId::Recorded(Arc::downgrade(r)),
+        }
+    }
+}
+
+/// A loaded run's identity: equal only for the same allocation (`Weak::ptr_eq`).
+/// The `Weak` holds the allocation (not the scene), so no later run can reuse the address.
+#[derive(Clone)]
+pub enum SceneId {
+    Preset(Weak<PresetRun>),
+    Recorded(Weak<RecordedRun>),
+}
+impl PartialEq for SceneId {
+    fn eq(&self, other: &Self) -> bool {
+        matches!((self, other), (SceneId::Preset(a), SceneId::Preset(b)) if Weak::ptr_eq(a, b)) || matches!((self, other), (SceneId::Recorded(a), SceneId::Recorded(b)) if Weak::ptr_eq(a, b))
+    }
+}
+
+/// The loaded run's scene (Ok(None) while Robot mode loads; Err for
+/// `--robot FILE`, which has no scene).
+pub fn scene_of(view: &crate::robot::RobotView) -> Result<Option<SceneSource>, String> {
+    let Some(run) = view.run.as_ref() else { return Ok(None) };
+    if let Some(p) = run.preset() {
+        return Ok(Some(SceneSource::Preset(p.clone())));
+    }
+    if let Some(r) = run.recorded() {
+        return Ok(Some(SceneSource::Recorded(r.clone())));
+    }
+    Err(NO_SCENE.into())
+}
+/// The loaded model's link names, by index (the order `MirrorDisplay::poses` uses).
+pub fn link_names(view: &crate::robot::RobotView) -> Vec<String> {
+    view.model.as_ref().map(|m| m.links.iter().map(|l| l.name.clone()).collect()).unwrap_or_default()
+}
+
+/// A solved pose, mapped to the loaded links by name.
+#[derive(Clone, Debug)]
+pub struct Solved {
+    pub poses: Vec<Option<([f64; 3], DQuat)>>,
+}
+
+pub enum MirrorCommand {
+    Load { scene: SceneSource, links: Vec<String> },
+    Pose { seq: u64, values: Vec<f64> },
+    Gait { number: u64, compiled: Arc<Value>, name: String },
+    Sample { seq: u64, t: f64, dt: f64, scale: f64, reset: bool },
+}
+
+/// What the worker hands back; the UI takes each result once.
+#[derive(Default)]
+pub struct MirrorShared {
+    coordinates: Option<Result<Vec<Coordinate>, String>>,
+    pose: Option<(u64, Result<(Solved, Vec<String>), String>)>,
+    gait: Option<(u64, Result<(), String>)>,
+    sample: Option<(u64, Result<Vec<(String, f64)>, String>)>,
+}
+
+fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(|p| p.into_inner())
+}
+
+/// The page's `LegMirror` state.
+pub struct Mirror {
+    /// The preferences as read (bindings of motors not yet listed are kept until roles are known).
+    saved: MirrorSettings,
+    /// The page's `this.settings`: bindings for the listed motors only.
+    pub settings: MirrorSettings,
+    /// Motor ID → role, from `state.calibration.axes` (None until the server lists them).
+    roles: Option<BTreeMap<u8, String>>,
+    worker: Option<crate::jobs::RunThread<MirrorCommand, MirrorShared>>,
+    scene_id: Option<SceneId>,
+    coordinates: Option<Vec<Coordinate>>,
+    loading: bool,
+    error: Option<String>,
+    /// The status line's text (without the error override).
+    line: String,
+    /// The text the next solve's status is built from (`this.text`).
+    text: String,
+    /// The values last requested (`this.pending`).
+    pending: Option<Vec<f64>>,
+    pose_sent: u64,
+    pose_done: u64,
+    /// The robot shows the mirror (`mirrorActive`).
+    shown: bool,
+    /// Run the begin procedure again (the page's `begin()` was called).
+    restart: bool,
+    /// Set by `end()`: the panel clears `RobotView::mirror`.
+    ended: bool,
+    /// The last server state given to `update` (`this.last`).
+    last: Option<Status>,
+    /// Gait pose by joint (`this.gait`) and whether the bound leg stays on the encoders.
+    gait: Option<BTreeMap<String, f64>>,
+    gait_real_leg: bool,
+    /// The compiled gait number loaded (or loading) on the worker, and whether it loaded.
+    gait_number: Option<u64>,
+    gait_ready: bool,
+    sampled: bool,
+    sample_sent: u64,
+    sample_done: u64,
+    sample_both: bool,
+    last_sample: Option<Instant>,
+    /// A gait load or sample error (the page shows it in the Gait playback status).
+    gait_notice: Option<String>,
+    /// Bumped when roles or settings change (the panel rebuilds its rows).
+    pub revision: u64,
+}
+
+impl Mirror {
+    pub fn new(saved: &MirrorSettings) -> Self {
+        Self {
+            saved: saved.clone(),
+            settings: MirrorSettings { enabled: saved.enabled, leg: saved.leg.clone(), bindings: BTreeMap::new() },
+            roles: None,
+            worker: None,
+            scene_id: None,
+            coordinates: None,
+            loading: false,
+            error: None,
+            line: String::new(),
+            text: String::new(),
+            pending: None,
+            pose_sent: 0,
+            pose_done: 0,
+            shown: false,
+            restart: false,
+            ended: false,
+            last: None,
+            gait: None,
+            gait_real_leg: true,
+            gait_number: None,
+            gait_ready: false,
+            sampled: false,
+            sample_sent: 0,
+            sample_done: 0,
+            sample_both: false,
+            last_sample: None,
+            gait_notice: None,
+            revision: 1,
+        }
+    }
+
+    /// The motors' roles, once (the page constructs its mirror from the
+    /// first status that lists axes, calibration-ui.mjs:121; :19-22).
+    pub fn set_roles(&mut self, roles: BTreeMap<u8, String>) {
+        if self.roles.is_some() {
+            return;
+        }
+        for (id, role) in &roles {
+            let saved = self.saved.bindings.get(id);
+            let joint = saved.map_or_else(|| default_joint(role).to_string(), |b| b.joint.clone());
+            let binding = MirrorBinding { polarity: saved.map_or(1, |b| sign(b.polarity)), align: saved.map_or_else(|| default_align(&joint), |b| b.align), joint };
+            self.settings.bindings.insert(*id, binding);
+        }
+        self.roles = Some(roles);
+        self.revision += 1;
+    }
+    pub fn roles(&self) -> Option<&BTreeMap<u8, String>> {
+        self.roles.as_ref()
+    }
+    /// The preferences to persist (before roles are known, the saved bindings are kept).
+    pub fn to_save(&self) -> MirrorSettings {
+        let mut s = self.settings.clone();
+        if self.roles.is_none() {
+            s.bindings = self.saved.bindings.clone();
+        }
+        s
+    }
+    pub fn shown(&self) -> bool {
+        self.shown
+    }
+    pub fn busy(&self) -> bool {
+        self.pose_sent > self.pose_done
+    }
+    pub fn coordinates(&self) -> Option<&[Coordinate]> {
+        self.coordinates.as_deref()
+    }
+    /// Work in flight or a gait playing: the panel keeps frames coming until it lands.
+    pub fn working(&self) -> bool {
+        self.busy() || self.loading || self.sample_sent > self.sample_done || self.gait_number.is_some()
+    }
+    pub fn gait_notice(&self) -> Option<&str> {
+        self.gait_notice.as_deref()
+    }
+
+    /// `this.joint(id)`: `"{leg} | {joint}"`.
+    pub fn joint(&self, id: u8) -> Option<String> {
+        self.settings.bindings.get(&id).map(|b| format!("{} | {}", self.settings.leg, b.joint))
+    }
+    fn coordinate(&self, id: u8) -> Option<(usize, &Coordinate)> {
+        let joint = self.joint(id)?;
+        self.coordinates.as_ref()?.iter().enumerate().find(|(_, c)| c.joint == joint)
+    }
+    /// The joint angle to align motor `id` at now (sent with Save sim
+    /// alignment, :53-56); None until the robot model is loaded.
+    pub fn alignment_angle(&self, id: u8) -> Option<f64> {
+        let (_, c) = self.coordinate(id)?;
+        let mid = self.settings.bindings.get(&id).is_some_and(|b| b.align == Align::Mid);
+        Some(match (mid, c.lower, c.upper) {
+            (true, Some(lo), Some(hi)) => (lo + hi) / 2.0,
+            _ => c.home,
+        })
+    }
+    /// `savedAngle` (:58): the joint angle an alignment was captured at (older saves: CAD home).
+    pub fn saved_angle(axis: &Axis, c: &Coordinate) -> f64 {
+        axis.reference_joint_rad.unwrap_or(c.home)
+    }
+
+    /// The status line (`status()`, :47): the error overrides the text.
+    pub fn status_text(&self) -> String {
+        match &self.error {
+            Some(e) => format!("Mirror unavailable: {e}"),
+            None => self.line.clone(),
+        }
+    }
+
+    /// `record()` (:49): the display binding, for exports.
+    pub fn record(&self) -> Value {
+        let s = self.to_save();
+        json!({"enabled": s.enabled, "leg": s.leg, "bindings": s.bindings, "lift_m": LIFT_M, "counts_per_revolution": COUNTS as u32, "note": RECORD_NOTE})
+    }
+
+    /// For `hardware_status`.
+    pub fn state_json(&self) -> Value {
+        json!({"enabled": self.settings.enabled, "leg": self.settings.leg, "shown": self.shown, "status": self.status_text(), "coordinates": self.coordinates.as_ref().map(Vec::len),
+            "busy": self.busy(), "gait": self.gait.is_some(), "gait_real_leg": self.gait_real_leg, "gait_notice": self.gait_notice, "record": self.record()})
+    }
+
+    /// The page's `begin()`: run the begin procedure again at the next frame.
+    pub fn begin(&mut self) {
+        self.restart = true;
+    }
+    /// `robotViewer.end()`: stop showing (the panel clears `RobotView::mirror`).
+    pub fn end(&mut self) {
+        if self.shown {
+            self.ended = true;
+        }
+        self.shown = false;
+    }
+    /// Whether `end()` asked for the display to be cleared (once).
+    pub(crate) fn take_ended(&mut self) -> bool {
+        std::mem::take(&mut self.ended)
+    }
+    /// The begin procedure is due: begun but not shown, or restarted.
+    pub(crate) fn due(&self) -> bool {
+        self.restart || (!self.shown && self.error.is_none())
+    }
+
+    /// The body of the page's `begin()` (:60-74) once the panel is open and
+    /// the mirror enabled: `scene` is the loaded run's scene (Ok(None) while it
+    /// loads; Err for `--robot FILE`). Returns the links to tint when it shows.
+    pub(crate) fn prepare(&mut self, scene: Result<Option<SceneSource>, String>, links: &[String]) -> Option<BTreeSet<usize>> {
+        let restart = std::mem::take(&mut self.restart);
+        let source = match scene {
+            Err(e) => {
+                self.error = Some(e);
+                self.shown = false;
+                return None;
+            }
+            Ok(None) => {
+                self.line = "Waiting for the robot model to load…".into();
+                return None;
+            }
+            Ok(Some(s)) => s,
+        };
+        let id = source.id();
+        if self.scene_id.as_ref() != Some(&id) || self.worker.as_ref().is_none_or(|w| w.finished()) {
+            // A new scene, or no live worker: a new worker (the old one is dropped with a bounded join).
+            self.scene_id = Some(id);
+            self.shown = false;
+            self.coordinates = None;
+            self.loading = false;
+            self.gait_number = None;
+            self.gait_ready = false;
+            self.pending = None;
+            self.pose_done = self.pose_sent;
+            self.sample_done = self.sample_sent;
+            self.worker = Some(crate::jobs::RunThread::spawn("hardware-mirror", MirrorShared::default(), worker));
+        }
+        if self.coordinates.is_none() {
+            if !self.loading || restart {
+                self.line = "Preparing the suspended robot…".into();
+                self.loading = true;
+                self.error = None;
+                self.send(MirrorCommand::Load { scene: source, links: links.to_vec() });
+            }
+            return None;
+        }
+        // Each motor on its own CAD joint, and every joint in the model (:65-67).
+        let joints: BTreeSet<String> = self.settings.bindings.keys().filter_map(|id| self.joint(*id)).collect();
+        if joints.len() != self.settings.bindings.len() {
+            self.error = Some("Bind each motor to a different CAD joint".into());
+            return None;
+        }
+        let coordinates = self.coordinates.as_deref().unwrap_or_default();
+        if let Some(j) = joints.iter().find(|j| !coordinates.iter().any(|c| &c.joint == *j)) {
+            self.error = Some(format!("CAD model has no motor joint {j}"));
+            return None;
+        }
+        self.error = None;
+        if !self.settings.enabled {
+            return None;
+        }
+        let prefix = format!("{} |", self.settings.leg);
+        let tinted = links.iter().enumerate().filter(|(_, n)| n.starts_with(&prefix)).map(|(i, _)| i).collect();
+        self.shown = true;
+        let last = self.last.take().unwrap_or_default();
+        self.update(&last, true);
+        Some(tinted)
+    }
+
+    fn send(&mut self, command: MirrorCommand) -> bool {
+        match self.worker.as_ref().map(|w| w.send(command)) {
+            Some(Ok(())) => true,
+            _ => {
+                self.worker_failed();
+                false
+            }
+        }
+    }
+
+    /// The worker is gone (a panic: the UI holds its channel open): settle what was in
+    /// flight, end the display, show the page's worker error; the next begin respawns it.
+    fn worker_failed(&mut self) {
+        self.worker = None;
+        self.loading = false;
+        self.coordinates = None;
+        self.pending = None;
+        (self.pose_done, self.sample_done, self.gait_number, self.gait_ready) = (self.pose_sent, self.sample_sent, None, false);
+        self.error = Some(WORKER_FAILED.into());
+        self.end();
+    }
+
+    /// `update(state, force)` (:76-100): called on every new server state.
+    pub fn update(&mut self, state: &Status, force: bool) {
+        self.last = Some(state.clone());
+        if !self.settings.enabled || self.error.is_some() {
+            return;
+        }
+        let Some(coordinates) = self.coordinates.as_ref() else { return };
+        // A playing gait poses every motor joint; the bound leg shows the real
+        // encoders instead when the real leg is part of the session.
+        let mut values: Vec<f64> = coordinates.iter().map(|c| self.gait.as_ref().and_then(|g| g.get(&c.joint)).copied().unwrap_or(c.home)).collect();
+        if self.gait.is_some() && !self.gait_real_leg {
+            self.text = "Simulated gait".into();
+            if force || self.pending.as_ref() != Some(&values) {
+                self.solve(values);
+            }
+            return;
+        }
+        let none = Axis::default();
+        let mut lines = Vec::new();
+        for (id, role) in self.roles.iter().flatten() {
+            let axis = state.calibration.as_ref().and_then(|c| c.axes.get(id)).unwrap_or(&none);
+            let raw = state.samples.get(id).map(|t| t.position());
+            let (Some((i, c)), Some(binding)) = (self.coordinate(*id), self.settings.bindings.get(id)) else { continue };
+            let pose = align_label(binding.align).to_lowercase();
+            let Some(reference) = axis.reference else {
+                values[i] = self.alignment_angle(*id).unwrap_or(c.home);
+                lines.push(format!("{role}: not aligned — shown at {pose}"));
+                continue;
+            };
+            // A multi-turn alignment only holds in the encoder tracking session it was saved in.
+            let multi_turn = reference < 0 || reference > COUNTS as i64 - 1;
+            if multi_turn && axis.reference_session != state.coordinate_session {
+                values[i] = self.alignment_angle(*id).unwrap_or(c.home);
+                lines.push(format!("{role}: alignment is from an earlier session — re-align (shown at {pose})"));
+                continue;
+            }
+            let Some(raw) = raw else {
+                lines.push(format!("{role}: no reading"));
+                continue;
+            };
+            let delta = sign(binding.polarity) as f64 * (raw - reference as f64) * std::f64::consts::TAU / COUNTS;
+            values[i] = Self::saved_angle(axis, c) + delta;
+            lines.push(format!("{role}: {:.1}° from its alignment pose", delta.to_degrees()));
+        }
+        if !force && self.pending.as_ref() == Some(&values) {
+            return;
+        }
+        self.text = lines.join(" · ");
+        self.solve(values);
+    }
+
+    /// `solve(values)`: one pose request; the worker solves only the newest.
+    fn solve(&mut self, values: Vec<f64>) {
+        self.pending = Some(values.clone());
+        if !self.shown {
+            // Nothing shows it (the page's `show()` ignores it); begin forces a solve.
+            return;
+        }
+        self.pose_sent += 1;
+        let seq = self.pose_sent;
+        self.send(MirrorCommand::Pose { seq, values });
+    }
+
+    /// `setGait(pose, realLeg)` (:108).
+    fn set_gait(&mut self, pose: Option<BTreeMap<String, f64>>, real_leg: bool) {
+        self.gait = pose;
+        self.gait_real_leg = real_leg;
+        let last = self.last.take().unwrap_or_default();
+        self.update(&last, true);
+    }
+
+    /// The link's gait run (calibration-ui.mjs:241-270): load a compiled gait
+    /// played in Sim or Both, sample it once per frame with no sample in
+    /// flight (`gaitSampling`), and clear the gait pose when the run ends.
+    /// `leg_speed`: the leg's `state.gait.speed_scale`.
+    pub(crate) fn follow_gait(&mut self, run: Option<&GaitRun>, compiled: Option<&(u64, Arc<Value>, String)>, leg_speed: Option<f64>, now: Instant) {
+        let Some(run) = run else {
+            if self.gait_number.take().is_some() || self.gait.is_some() {
+                self.gait_ready = false;
+                self.sampled = false;
+                self.last_sample = None;
+                self.set_gait(None, true);
+            }
+            return;
+        };
+        if run.mode == GaitMode::Leg || self.worker.is_none() {
+            return;
+        }
+        let Some((number, gait, name)) = compiled else { return };
+        if self.gait_number != Some(*number) {
+            self.gait_number = Some(*number);
+            self.gait_ready = false;
+            self.sampled = false;
+            self.last_sample = None;
+            self.gait_notice = None;
+            self.send(MirrorCommand::Gait { number: *number, compiled: gait.clone(), name: name.clone() });
+            return;
+        }
+        if !self.gait_ready || self.sample_sent > self.sample_done {
+            return;
+        }
+        let dt = self.last_sample.map_or(0.0, |at| now.duration_since(at).as_secs_f64()).clamp(0.001, 0.2);
+        self.last_sample = Some(now);
+        let scale = if run.leg { leg_speed.unwrap_or(run.scale) } else { run.scale };
+        let reset = !self.sampled;
+        self.sampled = true;
+        self.sample_both = run.mode == GaitMode::Both;
+        self.sample_sent += 1;
+        let seq = self.sample_sent;
+        self.send(MirrorCommand::Sample { seq, t: run.t, dt, scale, reset });
+    }
+
+    /// Takes the worker's results; returns a solved pose to show.
+    pub(crate) fn poll(&mut self) -> Option<Solved> {
+        if self.worker.as_ref().is_some_and(|w| w.finished()) {
+            self.worker_failed();
+            return None;
+        }
+        let (coordinates, pose, gait, sample) = {
+            let worker = self.worker.as_ref()?;
+            let mut s = worker.lock();
+            (s.coordinates.take(), s.pose.take(), s.gait.take(), s.sample.take())
+        };
+        if let Some(result) = coordinates {
+            self.loading = false;
+            match result {
+                Ok(c) => {
+                    self.coordinates = Some(c);
+                    // Show it now (the page's begin continues after the load).
+                    self.restart = true;
+                }
+                Err(e) => self.error = Some(e),
+            }
+        }
+        if let Some((number, result)) = gait {
+            if Some(number) == self.gait_number {
+                match result {
+                    Ok(()) => self.gait_ready = true,
+                    Err(e) => self.gait_notice = Some(e),
+                }
+            }
+        }
+        if let Some((seq, result)) = sample {
+            self.sample_done = self.sample_done.max(seq);
+            match result {
+                // Only while the run still plays (`if (gaitRun)`).
+                Ok(pose) if self.gait_number.is_some() => self.set_gait(Some(pose.into_iter().collect()), self.sample_both),
+                Ok(_) => {}
+                Err(e) => self.gait_notice = Some(format!("Gait sample failed: {e}")),
+            }
+        }
+        let (seq, result) = pose?;
+        self.pose_done = self.pose_done.max(seq);
+        match result {
+            Ok((solved, violations)) => {
+                let limits: Vec<String> = violations.into_iter().filter(|n| n.starts_with(&self.settings.leg)).collect();
+                self.line = if limits.is_empty() { self.text.clone() } else { format!("{} · Beyond CAD limit: {}", self.text, limits.join(", ")) };
+                self.shown.then_some(solved)
+            }
+            Err(e) => {
+                self.line = format!("{} · Pose not solved: {e}", self.text);
+                None
+            }
+        }
+    }
+
+    /// `gaitBindings(state)` (:117-126): motor → CAD joint bindings for
+    /// driving the real leg with a gait (aligned, taught, enabled motors),
+    /// and the skipped motors with why.
+    pub fn gait_bindings(&self, state: &Status) -> (Vec<GaitBinding>, Vec<String>) {
+        let (mut out, mut skipped) = (Vec::new(), Vec::new());
+        let none = Axis::default();
+        for (id, role) in self.roles.iter().flatten() {
+            let axis = state.calibration.as_ref().and_then(|c| c.axes.get(id)).unwrap_or(&none);
+            let (joint, c) = (self.joint(*id), self.coordinate(*id).map(|(_, c)| c));
+            let why = if axis.disabled {
+                Some("disabled")
+            } else if axis.lower.is_none() || axis.upper.is_none() {
+                Some("poses not taught")
+            } else if axis.reference.is_none() {
+                Some("not aligned to the sim")
+            } else if c.is_none() {
+                Some("no CAD joint")
+            } else {
+                None
+            };
+            if let Some(why) = why {
+                skipped.push(format!("{role} ({why})"));
+                continue;
+            }
+            let (Some(joint), Some(c), Some(b)) = (joint, c, self.settings.bindings.get(id)) else { continue };
+            out.push(GaitBinding { id: *id, joint, polarity: sign(b.polarity) as f64, home_rad: Self::saved_angle(axis, c) });
+        }
+        (out, skipped)
+    }
+}
+
+/// The mirror's actions (the section's controls): each saves the
+/// preferences, then begins again (or ends, for "off"), as :32-38.
+pub fn apply(hw: &mut Hardware, action: &HardwareAction) -> Result<(), String> {
+    let m = &mut hw.mirror;
+    match action {
+        HardwareAction::MirrorEnabled { on } => {
+            m.settings.enabled = *on;
+            if *on { m.begin() } else { m.end() }
+        }
+        HardwareAction::MirrorLeg { leg } => {
+            if !LEGS.contains(&leg.as_str()) {
+                return Err(format!("mirror leg `{leg}`: expected one of {}", LEGS.join(", ")));
+            }
+            m.settings.leg = leg.clone();
+            m.begin();
+        }
+        HardwareAction::MirrorJoint { id, joint } => {
+            if !JOINTS.iter().any(|(j, _)| j == joint) {
+                return Err(format!("mirror joint `{joint}`: expected one of {}", JOINTS.map(|(j, _)| j).join(", ")));
+            }
+            binding(m, *id)?.joint = joint.clone();
+            m.begin();
+        }
+        HardwareAction::MirrorPolarity { id, polarity } => {
+            if !matches!(polarity, 1 | -1) {
+                return Err(format!("mirror sign {polarity}: expected 1 or -1"));
+            }
+            binding(m, *id)?.polarity = *polarity;
+            m.begin();
+        }
+        HardwareAction::MirrorAlign { id, align } => {
+            binding(m, *id)?.align = *align;
+            m.begin();
+        }
+        other => return Err(format!("`{}` is not a mirror action", other.name())),
+    }
+    m.revision += 1;
+    hw.settings.mirror = hw.mirror.to_save();
+    hw.settings.save();
+    Ok(())
+}
+
+fn binding(m: &mut Mirror, id: u8) -> Result<&mut MirrorBinding, String> {
+    let listed = m.roles.is_some();
+    m.settings.bindings.get_mut(&id).ok_or_else(|| {
+        if listed { format!("motor ID {id} is not on the calibration server's list") } else { "the calibration server has not listed its motors yet; connect first".to_string() }
+    })
+}
+
+/// The worker (the page's module worker: `mirror_load`, `mirror_pose`,
+/// `gait_load`, `gait_sample`; web/worker.js:68-91).
+fn worker(rx: mpsc::Receiver<MirrorCommand>, out: Arc<Mutex<MirrorShared>>) {
+    let mut mirror: Option<KinematicMirror> = None;
+    let mut links: Vec<String> = Vec::new();
+    let mut gait: Option<(Gait, GovernedGait)> = None;
+    loop {
+        let Ok(first) = rx.recv() else { return };
+        let mut batch = vec![first];
+        batch.extend(rx.try_iter());
+        // Latest wins: only the newest pose request of the batch is solved.
+        let newest_pose = batch.iter().rposition(|c| matches!(c, MirrorCommand::Pose { .. }));
+        for (i, command) in batch.into_iter().enumerate() {
+            match command {
+                MirrorCommand::Load { scene, links: names } => {
+                    links = names;
+                    let result = KinematicMirror::new(scene.scene().clone(), LIFT_M).map(|m| {
+                        let c = m.coordinates().into_iter().map(|c| Coordinate { joint: c.joint, home: c.home, lower: c.lower, upper: c.upper }).collect();
+                        mirror = Some(m);
+                        c
+                    });
+                    lock(&out).coordinates = Some(result);
+                }
+                MirrorCommand::Pose { .. } if Some(i) != newest_pose => {}
+                MirrorCommand::Pose { seq, values } => {
+                    let result = match mirror.as_mut() {
+                        None => Err("load the kinematic mirror first".to_string()),
+                        Some(m) => m.pose(&values).map(|pose| {
+                            let (poses, _) = crate::robot_gait::map_poses(&pose.poses, &links);
+                            (Solved { poses }, pose.authored_limit_violations)
+                        }),
+                    };
+                    lock(&out).pose = Some((seq, result));
+                }
+                MirrorCommand::Gait { number, compiled, name } => {
+                    let result = Gait::from_compiled(&compiled, &name).map(|g| {
+                        gait = Some((g.clone(), GovernedGait::new(g)));
+                    });
+                    if result.is_err() {
+                        gait = None;
+                    }
+                    lock(&out).gait = Some((number, result));
+                }
+                MirrorCommand::Sample { seq, t, dt, scale, reset } => {
+                    let result = match gait.as_mut() {
+                        None => Err("load a gait first".to_string()),
+                        Some((g, governed)) => {
+                            if reset {
+                                *governed = GovernedGait::new(g.clone());
+                            }
+                            // Governed (as the simulation commands it) when the gait has a governor.
+                            let values = if g.info.governor.is_some() { governed.step(t, dt, scale).map(|v| v.into_iter().map(|(q, _)| q).collect()) } else { g.sample(t) };
+                            values.map(|v: Vec<f64>| g.info.joints.iter().cloned().zip(v).collect())
+                        }
+                    };
+                    lock(&out).sample = Some((seq, result));
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests;

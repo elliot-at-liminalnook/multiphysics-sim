@@ -102,7 +102,12 @@ fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, Strin
 /// Why a control is unavailable now (`Ok` when enabled).
 pub(super) fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
     match action {
-        RobotAction::Run { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check(*action),
+        RobotAction::Run { action } => {
+            if *action == RunAction::Start && view.mirror.is_some() {
+                return Err(super::hardware::mirror::MIRRORING.into());
+            }
+            view.run.as_ref().ok_or("the robot has not loaded")?.check(*action)
+        }
         RobotAction::Jog { joint, delta } => {
             let run = view.run.as_ref().ok_or("the robot has not loaded")?;
             run.check_jog(joint, jog_target(run, joint, *delta)?).map(|_| ())
@@ -341,20 +346,61 @@ fn handle(view: &mut RobotView, orbit: &mut RobotOrbit, action: &RobotAction) ->
 
 /// Actions: robot mode's one apply system. A click's or key's refusal is
 /// the header's run message; a REST caller gets it (or `robot_state`).
-pub(super) fn apply(mut messages: ResMut<Messages<Act<RobotAction>>>, mut in_flight: ResMut<InFlight<RobotAction>>, mut replies: ResMut<Replies>, view: Option<ResMut<RobotView>>, orbit: Option<Single<&mut RobotOrbit>>) {
+/// `system_ui` also lists the Leg calibration panel's controls
+/// (`hardware:<name>`, from `hardware::panel::controls`) after robot mode's
+/// own: activating one passes its `HardwareAction` on with
+/// `Origin::SystemUi`, and one that starts motion is refused here, naming it
+/// (the hardware handler refuses it again). Their ids are stable names, so
+/// they need no `ui_revision`.
+pub(super) fn apply(
+    mut messages: ResMut<Messages<Act<RobotAction>>>,
+    mut in_flight: ResMut<InFlight<RobotAction>>,
+    mut replies: ResMut<Replies>,
+    view: Option<ResMut<RobotView>>,
+    orbit: Option<Single<&mut RobotOrbit>>,
+    hardware: Option<Res<super::hardware::Hardware>>,
+    mut to_hardware: MessageWriter<Act<super::hardware::HardwareAction>>,
+) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the robot view is not open".into())));
         return;
     };
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
-        let result = handle(&mut view, &mut orbit, action);
+        let result = match action {
+            RobotAction::Activate { id, .. } if id.starts_with("hardware:") => {
+                let found = hardware.as_ref().and_then(|hw| super::hardware::panel::controls(hw).into_iter().find(|(i, ..)| i == id));
+                match found {
+                    None => Err("unknown control; request controls".to_string()),
+                    Some((_, _, action, _)) if action.starts_motion() => Err(action.remote_refusal()),
+                    // Disabled now: refused here with its reason (the hardware handler's own
+                    // answer to a SystemUi action is dropped, so it would read as success).
+                    Some((id, _, _, Err(why))) => Err(format!("{id} is disabled: {why}")),
+                    Some((_, _, action, _)) => {
+                        to_hardware.write(Act { action, origin: Origin::SystemUi });
+                        Ok(None)
+                    }
+                }
+            }
+            RobotAction::Controls => handle(&mut view, &mut orbit, action).map(|answer| {
+                answer.map(|mut listing| {
+                    if let (Some(hw), Some(items)) = (hardware.as_ref(), listing.get_mut("controls").and_then(Value::as_array_mut)) {
+                        for (id, label, action, ready) in super::hardware::panel::controls(hw) {
+                            let reason = if action.starts_motion() { Some(action.remote_refusal()) } else { ready.err() };
+                            items.push(json!({"id": id, "label": label, "enabled": reason.is_none(), "disabled_reason": reason, "action": {"hardware": action}}));
+                        }
+                    }
+                    listing
+                })
+            }),
+            _ => handle(&mut view, &mut orbit, action),
+        };
         match call.origin {
             Origin::Rest(_) => Outcome::Done(result.map(|answer| answer.unwrap_or_else(|| view.state_json()))),
             Origin::Ui => {
                 view.run_message = result.err();
                 Outcome::Done(Ok(Value::Null))
             }
-            Origin::Quiet => Outcome::Done(Ok(Value::Null)),
+            Origin::Quiet | Origin::SystemUi => Outcome::Done(Ok(Value::Null)),
         }
     });
 }
@@ -374,15 +420,21 @@ pub(super) fn buttons(clicks: Query<(&Interaction, &RobotAction), Changed<Intera
 /// `system_ui` motion:* and REST `robot_input`. Robot mode's camera is
 /// mouse-only, so these keys take no camera action. Bevy releases every key
 /// when the window loses keyboard focus, which requests zero, as the browser's blur.
-pub(super) fn motion_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, mut out: MessageWriter<Act<RobotAction>>) {
-    const MAP: [(KeyCode, char); 4] = [(KeyCode::KeyW, 'w'), (KeyCode::KeyA, 'a'), (KeyCode::KeyS, 's'), (KeyCode::KeyD, 'd')];
+///
+/// While the Leg calibration panel is shown, A is its hold-to-move key
+/// (lower), as the page's capture-phase key handler takes it from WASD; W, S
+/// and D still steer.
+pub(super) fn motion_keys(keys: Res<ButtonInput<KeyCode>>, view: Res<RobotView>, hardware: Option<Res<super::hardware::Hardware>>, mut out: MessageWriter<Act<RobotAction>>) {
+    const ALL: [(KeyCode, char); 4] = [(KeyCode::KeyW, 'w'), (KeyCode::KeyA, 'a'), (KeyCode::KeyS, 's'), (KeyCode::KeyD, 'd')];
+    let panel = hardware.is_some_and(|h| h.open);
+    let map: Vec<(KeyCode, char)> = ALL.into_iter().filter(|(_, k)| !(panel && *k == 'a')).collect();
     let Some(run) = view.run.as_ref().filter(|r| r.motion_keys_active()) else { return };
     let request = if keys.just_pressed(KeyCode::KeyX) {
         Some(MotionRequest::Stop)
-    } else if MAP.iter().any(|(c, _)| keys.just_pressed(*c) || keys.just_released(*c)) {
-        let held: Vec<char> = MAP.iter().filter(|(c, _)| keys.pressed(*c)).map(|(_, k)| *k).collect();
+    } else if map.iter().any(|(c, _)| keys.just_pressed(*c) || keys.just_released(*c)) {
+        let held: Vec<char> = map.iter().filter(|(c, _)| keys.pressed(*c)).map(|(_, k)| *k).collect();
         // A release with only a latched (system_ui/REST) key active leaves that key's request alone.
-        let pressed = MAP.iter().any(|(c, _)| keys.just_pressed(*c));
+        let pressed = map.iter().any(|(c, _)| keys.just_pressed(*c));
         (pressed || run.keys_physical()).then_some(MotionRequest::HeldKeys(held))
     } else {
         None
@@ -471,6 +523,8 @@ impl actions::Action for RobotAction {
             "run:<action>", "run:speed_down", "run:speed_up", "run:speed:<scale>", "recorded:<transport>", "recorded:speed:<scale>", "jog:<joint>:-", "jog:<joint>:+",
             "motion:w", "motion:a", "motion:s", "motion:d", "motion:stop", "recording:save", "replay:<file>", "replay:cancel", "replay:refresh",
             "gait:open:<report>", "gait:play", "gait:pause", "gait:stop", "gait:seek:<step>", "gait:speed:<scale>", "gait:list",
+            // The Leg calibration panel's controls (hardware::panel::controls), passed on to its handler.
+            "hardware:<name>",
         ]
     }
 }

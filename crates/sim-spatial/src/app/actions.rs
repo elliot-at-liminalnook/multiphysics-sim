@@ -70,6 +70,12 @@ pub trait Action: DeserializeOwned + Send + Sync + 'static {
     fn parse(command: &sim_api::Command) -> Result<Self, String> {
         sim_api::decode::<Self>(command)
     }
+    /// The REST command names its parser accepts, read from serde (the
+    /// action's own form by default; an action with its own REST form names
+    /// that form's type, as [`variants`] reads it).
+    fn accepts() -> Vec<&'static str> {
+        variants::<Self>()
+    }
     /// The `system_ui` control ids it answers: exact ids, or patterns where
     /// `<…>` stands for a name, index or number the controls list fills in.
     fn controls() -> &'static [&'static str] {
@@ -102,6 +108,12 @@ pub enum Origin {
     Ui,
     /// Not shown to anyone (a file watch, a 3D pick): the outcome is dropped.
     Quiet,
+    /// A `system_ui` activation that one mode's handler passed on to another
+    /// action type (robot mode's `hardware:<name>` controls): remote like
+    /// `Rest`, but its REST command was answered by the handler that passed
+    /// it on, so the outcome is dropped. Hardware motion is refused from it
+    /// (`robot::hardware::HardwareAction::starts_motion`).
+    SystemUi,
 }
 
 /// An action on its way to its handler (a Bevy Message).
@@ -133,6 +145,11 @@ pub struct Call<'a> {
 impl Call<'_> {
     pub fn rest(&self) -> bool {
         matches!(self.origin, Origin::Rest(_))
+    }
+    /// From automation (REST, or a `system_ui` activation passed on), not a
+    /// pointer or key in the window.
+    pub fn remote(&self) -> bool {
+        matches!(self.origin, Origin::Rest(_) | Origin::SystemUi)
     }
 }
 
@@ -306,7 +323,7 @@ pub struct Feature {
     submit: fn(&mut World, &sim_api::Command, &mut Value, bool) -> Outcome,
 }
 fn feature<A: Action>(name: &'static str, commands: fn() -> Vec<Spec>) -> Feature {
-    Feature { name, action: std::any::type_name::<A>(), commands, accepts: variants::<A>, parses: |c| A::parse(c).map(drop), controls: A::controls, submit: submit_to::<A> }
+    Feature { name, action: std::any::type_name::<A>(), commands, accepts: A::accepts, parses: |c| A::parse(c).map(drop), controls: A::controls, submit: submit_to::<A> }
 }
 
 /// REST: parse into `A` and write it to its handler, with a reply token.
@@ -325,6 +342,7 @@ pub fn registry() -> &'static [Feature] {
             feature::<crate::builder::system_actions::SystemAction>("build", <crate::builder::system_actions::SystemAction as Action>::commands),
             feature::<crate::lesson::actions::LessonCommand>("lessons", <crate::lesson::actions::LessonCommand as Action>::commands),
             feature::<crate::robot::RobotAction>("robot", <crate::robot::RobotAction as Action>::commands),
+            feature::<crate::robot::hardware::HardwareAction>("hardware", <crate::robot::hardware::HardwareAction as Action>::commands),
             feature::<crate::place_view::PlaceAction>("place", <crate::place_view::PlaceAction as Action>::commands),
             // `system_ui` in inspect and place mode: the switcher's controls (listed last, as before).
             feature::<WindowAction>("switcher", WindowAction::switcher_commands),

@@ -215,6 +215,24 @@ pub struct Frame {
     /// `--robot FILE`: contacts, joint frames and deflections copied from the
     /// PhysicalRobot on the run thread (each only while its overlay is on).
     pub overlays: Overlays,
+    /// Live preset frames: the session frame's named motor targets (what the
+    /// browser's hardware sync streams, viewer.js:428); None for `--robot
+    /// FILE` and recorded frames.
+    pub motor_targets: Option<MotorTargets>,
+}
+
+/// A live preset frame's motor targets by name: the session frame's
+/// `servo_targets_rad` with the session's `coordinate_names`
+/// (`EmbeddedSession::coordinate_names`, `EmbeddedEnvironment::metadata`),
+/// copied as published; nothing is computed here.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MotorTargets {
+    /// The session's coordinate names (`joint.+X | Hip servo output`, …), shared by every frame of a build.
+    pub coordinates: Arc<Vec<String>>,
+    /// `servo_targets_rad`, in the frame's order (its length may differ from `coordinates`; consumers check).
+    pub targets_rad: Vec<f64>,
+    /// The session frame's `done` (the episode ended: the page's `frame.done`); false when absent.
+    pub done: bool,
 }
 impl Frame {
     /// (target, measured angle) of a joint by its file name, if the robot has a target for it.
@@ -1297,7 +1315,7 @@ fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u64, steps: u
         })
         .collect();
     let targets = robot.targets.lock().unwrap_or_else(|p| p.into_inner()).clone();
-    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new(), overlays: overlays(robot, flags) }
+    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new(), overlays: overlays(robot, flags), motor_targets: None }
 }
 
 /// Link poses by loaded-link index, their published velocities, and the pose
@@ -1330,19 +1348,34 @@ pub fn map_poses(poses: &[CapturePose], links: &[String]) -> Mapped {
 
 /// A frame from a preset session's `interactive_frame()`, its poses parsed as
 /// the shared [`CapturePose`] and mapped by [`map_poses`].
-fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64, inputs: &[f64]) -> Result<Frame, String> {
+fn preset_frame(v: &Value, links: &[String], generation: u64, steps: u64, step_s: f64, inputs: &[f64], names: &Arc<Vec<String>>) -> Result<Frame, String> {
     let completed = v.get("completed_steps").and_then(Value::as_u64).ok_or("session frame has no completed_steps")?;
     let raw = v.get("poses").and_then(Value::as_array).ok_or("session frame has no poses")?;
     let parsed = raw.iter().enumerate().map(|(k, pose)| CapturePose::deserialize(pose).map_err(|e| format!("session frame poses[{k}] ({}): {e}", pose.get("name").and_then(Value::as_str).unwrap_or("no name")))).collect::<Result<Vec<_>, _>>()?;
     let (poses, velocities, unmatched) = map_poses(&parsed, links);
-    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec(), overlays: Overlays::default() })
+    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec(), overlays: Overlays::default(), motor_targets: motor_targets(v, names) })
+}
+
+/// The frame's `servo_targets_rad` (every entry a number) with the session's
+/// coordinate names and the frame's `done`; None when the frame publishes no
+/// such array.
+fn motor_targets(v: &Value, names: &Arc<Vec<String>>) -> Option<MotorTargets> {
+    let targets_rad = v.get("servo_targets_rad")?.as_array()?.iter().map(Value::as_f64).collect::<Option<Vec<f64>>>()?;
+    let done = v.get("done").and_then(Value::as_bool).unwrap_or(false);
+    Some(MotorTargets { coordinates: names.clone(), targets_rad, done })
+}
+
+/// An environment's coordinate names (`metadata()["coordinate_names"]`, the
+/// session's `coordinate_names()`; the environment keeps its session private).
+fn environment_names(env: &sim_runtime::environment::EmbeddedEnvironment) -> Arc<Vec<String>> {
+    Arc::new(env.metadata()["coordinate_names"].as_array().map(|a| a.iter().filter_map(|n| n.as_str().map(str::to_string)).collect()).unwrap_or_default())
 }
 
 /// A recorded capture frame mapped to the loaded links by [`map_poses`]:
 /// `time` is the frame's recorded time_s and `steps` its index in the capture.
 pub fn recorded_frame(f: &CaptureFrame, links: &[String], generation: u64, index: u64) -> Frame {
     let (poses, velocities, unmatched) = map_poses(&f.poses, links);
-    Frame { generation, time: f.time_s, steps: index, completed_steps: None, poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: Vec::new(), overlays: Overlays::default() }
+    Frame { generation, time: f.time_s, steps: index, completed_steps: None, poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: Vec::new(), overlays: Overlays::default(), motor_targets: None }
 }
 
 /// A frame's time, step count and link poses as JSON (the sidecar's final frame).
@@ -1358,8 +1391,9 @@ fn frame_json(f: &Frame, links: &[String]) -> Value {
 enum Sim {
     Robot(sim_runtime::physical::PhysicalRobot),
     /// The held action: the session's own input values (see `robot_preset`'s action_rule).
-    Environment { env: sim_runtime::environment::EmbeddedEnvironment, held: Vec<f64>, run: Arc<PresetRun>, drive: Arc<Drive> },
-    Session { session: sim_runtime::embedded::EmbeddedSession, run: Arc<PresetRun>, drive: Arc<Drive> },
+    /// `names`: the session's coordinate names, for the frames' named motor targets.
+    Environment { env: sim_runtime::environment::EmbeddedEnvironment, held: Vec<f64>, run: Arc<PresetRun>, drive: Arc<Drive>, names: Arc<Vec<String>> },
+    Session { session: sim_runtime::embedded::EmbeddedSession, run: Arc<PresetRun>, drive: Arc<Drive>, names: Arc<Vec<String>> },
 }
 impl Sim {
     fn build(source: &Source, registry: &mut Option<sim_core::BehaviorRegistry>) -> Result<Sim, String> {
@@ -1376,12 +1410,14 @@ impl Sim {
                     // Held at the session's reset values, as EmbeddedEnvironment::prepare_replay does.
                     let held = env.inputs().iter().map(|c| c.initial).collect();
                     let drive = Arc::new(Drive::resolve(run, &env.metadata()["policy_contract"], env.inputs())?);
-                    Ok(Sim::Environment { env, held, run: run.clone(), drive })
+                    let names = environment_names(&env);
+                    Ok(Sim::Environment { env, held, run: run.clone(), drive, names })
                 }
                 None => {
                     let session = EmbeddedSession::new(run.scene.clone(), run.config.clone(), run.seed, CaptureMode::Latest)?;
                     let drive = Arc::new(Drive::resolve(run, &session.policy_metadata(), session.inputs())?);
-                    Ok(Sim::Session { session, run: run.clone(), drive })
+                    let names = Arc::new(session.coordinate_names().to_vec());
+                    Ok(Sim::Session { session, run: run.clone(), drive, names })
                 }
             },
         }
@@ -1402,7 +1438,7 @@ impl Sim {
                 robot_motion::next_packet(drive.heartbeat.as_ref(), held)?;
                 env.step(held).map(|_| ())
             }
-            Sim::Session { session, run, drive } => {
+            Sim::Session { session, run, drive, .. } => {
                 if drive.heartbeat.is_some() {
                     let mut action = session.input_values().to_vec();
                     robot_motion::next_packet(drive.heartbeat.as_ref(), &mut action)?;
@@ -1519,8 +1555,8 @@ impl Sim {
     fn frame(&self, links: &[String], generation: u64, steps: u64, flags: OverlayFlags) -> Result<Frame, String> {
         match self {
             Sim::Robot(r) => Ok(frame(r, generation, steps, flags)),
-            Sim::Environment { env, run, held, .. } => preset_frame(&env.frame()?, links, generation, steps, run.config.step_s, held),
-            Sim::Session { session, run, .. } => preset_frame(&session.interactive_frame()?, links, generation, steps, run.config.step_s, session.input_values()),
+            Sim::Environment { env, run, held, names, .. } => preset_frame(&env.frame()?, links, generation, steps, run.config.step_s, held, names),
+            Sim::Session { session, run, names, .. } => preset_frame(&session.interactive_frame()?, links, generation, steps, run.config.step_s, session.input_values(), names),
         }
     }
 }
@@ -1597,7 +1633,8 @@ fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std::path::Path
             let drive = Arc::new(tryr!(Drive::resolve(run, &next.metadata()["policy_contract"], next.inputs())));
             state.total = Some(actions.len() as u64);
             state.unit = Some("actions");
-            Ok((Sim::Environment { env: next, held, run: run.clone(), drive }, ActiveReplay { state, work: ReplayWork::Actions(actions.into()), final_frame, started: Instant::now() }))
+            let names = environment_names(&next);
+            Ok((Sim::Environment { env: next, held, run: run.clone(), drive, names }, ActiveReplay { state, work: ReplayWork::Actions(actions.into()), final_frame, started: Instant::now() }))
         }
         None => {
             let record: EmbeddedRecording = tryr!(serde_json::from_value(value).map_err(|e| format!("{}: not a shared EmbeddedRecording: {e}", path.display())));
@@ -1613,7 +1650,8 @@ fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std::path::Path
             let drive = Arc::new(tryr!(Drive::resolve(run, &session.policy_metadata(), session.inputs())));
             state.total = Some(steps as u64);
             state.unit = Some("nominal steps");
-            Ok((Sim::Session { session, run: run.clone(), drive }, ActiveReplay { state, work: ReplayWork::Steps { remaining: steps }, final_frame, started: Instant::now() }))
+            let names = Arc::new(session.coordinate_names().to_vec());
+            Ok((Sim::Session { session, run: run.clone(), drive, names }, ActiveReplay { state, work: ReplayWork::Steps { remaining: steps }, final_frame, started: Instant::now() }))
         }
     }
 }
@@ -2030,6 +2068,17 @@ mod tests {
             std::thread::sleep(Duration::from_millis(5));
             c.poll();
         }
+    }
+    #[test]
+    fn preset_frames_carry_named_motor_targets() {
+        let names = Arc::new(vec!["joint.+X | Hip servo output".to_string(), "joint.+X | Worm servo output".to_string()]);
+        let t = motor_targets(&json!({"servo_targets_rad": [0.25, -0.5]}), &names).expect("targets");
+        assert!(Arc::ptr_eq(&t.coordinates, &names), "the build's names are shared, not copied per frame");
+        assert_eq!(t.targets_rad, vec![0.25, -0.5]);
+        assert!(!t.done, "no `done` member: not ended");
+        assert!(motor_targets(&json!({"servo_targets_rad": [0.25], "done": true}), &names).expect("targets").done, "the frame's `done` is carried");
+        assert!(motor_targets(&json!({}), &names).is_none(), "a frame without servo_targets_rad has none");
+        assert!(motor_targets(&json!({"servo_targets_rad": [0.1, null]}), &names).is_none(), "a non-number is not a target");
     }
     #[test]
     fn pace_is_due_when_scaled_wall_catches_up_and_drops_lag() {

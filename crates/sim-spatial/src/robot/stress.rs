@@ -1,7 +1,7 @@
 //! Robot FILE mode's read-only stress overlay (`--robot FILE`): the model's
 //! `.simresult.json` (`sim_runtime::physical::results_path`) is read on a
 //! worker together with every source check (open, watch, manual reload;
-//! `robot_source::check`) and again when the overlay is switched on. The UI
+//! `robot::source::check`) and again when the overlay is switched on. The UI
 //! thread only compares hashes and colours link meshes from the parsed
 //! hotspots through the shared rule (`sim_domain_robot::stress_results`).
 //! Nothing is written; nothing is computed from physics here.

@@ -15,7 +15,12 @@
 //!     threads inside the system document, saved by the builder's own save
 //!     path with the system's undo);
 //!   - lesson notes (`lesson/threads.rs`, `sim_lesson::LessonAnchor` threads
-//!     in `lesson.md.annotations.json`).
+//!     in `lesson.md.annotations.json`);
+//!   - RoboCAD's threads (`cad/threads/source.rs`, a remote source: the
+//!     threads live in RoboCAD's document, reached over its REST routes;
+//!     each commit is one RoboCAD call on CAD mode's edit job, refused by
+//!     name when stale, in flight or disconnected, and reports
+//!     [`Committed::Pending`] with the edit's sequence; RoboCAD's undo).
 //! - **Operations.** Every intent is a [`ThreadOp`]; [`apply`] lowers it to
 //!   one command ([`lower`]: new ids and timestamps here; title, link, pin
 //!   and link-carrying edits as a whole-thread put), validates a put thread
@@ -29,7 +34,10 @@
 //! - **File work** never runs on the UI thread: the sidecar sources submit
 //!   to `sim_annotate::store::Store`, the shared crate's background worker
 //!   (a locked read-check-apply-write per edit, idle re-reads for edits made
-//!   elsewhere), and report [`Committed::Pending`] with its request id.
+//!   elsewhere), and report [`Committed::Pending`] with its request id. A
+//!   remote source's request runs on a job instead; it keeps its pending
+//!   requests in [`InFlight`] and lands each job's answer there
+//!   ([`InFlight::land`]), as the sidecar sources land the Store's.
 //! - **Drawing** is `ui_kit::threads`: one thread list, thread messages,
 //!   anchor chips and composer for every source.
 //! - **Selection.** A note on what is selected reads the shared
@@ -73,6 +81,51 @@ pub(crate) enum Committed {
     Done,
     /// Submitted to the source's file worker; the result comes with this request id.
     Pending(u64),
+}
+
+/// A remote source's commits waiting for their job's answer (the Store
+/// worker's sources keep theirs in the Store): each request's label and the
+/// thread it is about, until [`InFlight::land`] takes it.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) struct InFlight {
+    pending: BTreeMap<u64, (String, Option<String>)>,
+}
+
+/// A remote commit's answer, landed: the request, its label, the thread it
+/// was about when sent, and the outcome (`Ok(thread)`: the thread the
+/// source now names, which may be a new id the remote side assigned).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Landed {
+    pub request: u64,
+    pub label: String,
+    pub thread: Option<String>,
+    pub result: Result<Option<String>, String>,
+}
+
+impl InFlight {
+    /// `request` (a [`Committed::Pending`] id) was sent.
+    pub(crate) fn submitted(&mut self, request: u64, label: &str, thread: Option<String>) {
+        self.pending.insert(request, (label.to_string(), thread));
+    }
+    /// Whether any request waits for its answer.
+    pub(crate) fn busy(&self) -> bool {
+        !self.pending.is_empty()
+    }
+    /// Whether `request` waits for its answer.
+    pub(crate) fn waits(&self, request: u64) -> bool {
+        self.pending.contains_key(&request)
+    }
+    /// The answer of `request` arrived (`Ok(thread)`: the thread it names
+    /// now); None when it was not this source's.
+    pub(crate) fn land(&mut self, request: u64, result: Result<Option<String>, String>) -> Option<Landed> {
+        let (label, thread) = self.pending.remove(&request)?;
+        Some(Landed { request, label, thread, result })
+    }
+    /// Every request is forgotten (the connection or document was replaced:
+    /// their answers will not come here).
+    pub(crate) fn clear(&mut self) {
+        self.pending.clear();
+    }
 }
 
 /// What [`apply`] did.

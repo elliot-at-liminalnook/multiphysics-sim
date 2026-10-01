@@ -63,7 +63,8 @@ material and name; delete; undo and redo with history labels; save; GUI
 registry commands; Ops through REST; refresh; fit view; the keys
 Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Delete/Backspace, Home and Ctrl/Cmd+S; and
 service status, dirty state, the autosave indicator and stale/lost states.
-The later epics are `cad-sketch`, `cad-tools`, `cad-views-export`,
+The later epics are `cad-sketch`, `cad-select-transform` and
+`cad-modify` (the planned `cad-tools`, split 2026-10-01), `cad-views-export`,
 `cad-physical-inspect`, `cad-print`, `cad-experiments-motion` and
 `cad-organize`. `cad-organize` was planned as `cad-annotations`;
 it is renamed because it also takes the outliner's organization features, which no other epic
@@ -92,8 +93,8 @@ the feature is later, not that it cannot be reached at all.
 | "REST API: show address" (`api.address`, message box "REST API") | ui/app.py:426, ui/app.py:1797-1798 | n/a (display) | `cad::panel` header shows the service URL (`CadClient::url`) | deliberately different: the header always shows the service URL, so no dialog is needed |
 | Status bar messages; errors as "⚠ text" for 8 s with a beep | ui/app.py:1863-1873 | the error text of each route | `cad::panel` status line (`CadDocument.status`; RoboCAD's error verbatim via `CadError` Display) | done-by-reading |
 | A busy command shows "label…" and the wait cursor | ui/app.py:253-268 | n/a (display) | `cad::panel` shows the edit in flight (`Edit.label`) | done-by-reading |
-| Permanent readout label (snap kind and coordinates) | ui/app.py:176-177, ui/app.py:557-560, ui/app.py:1867-1868 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| Mode label "Tool · Selection mode" | ui/app.py:448-450, ui/app.py:525-526 | n/a (display) | cad-tools epic | later-epic: cad-tools |
+| Permanent readout label (snap kind and coordinates) | ui/app.py:176-177, ui/app.py:557-560, ui/app.py:1867-1868 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
+| Mode label "Tool · Selection mode" | ui/app.py:448-450, ui/app.py:525-526 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
 | "User guide" (`help.guide`: a message box with the path of USER_GUIDE.md) | ui/app.py:430, ui/app.py:1875-1877 | n/a (display) | docs/architecture/native-viewer.md and this ledger | deliberately different: RoboCAD shows only a path; the viewer's docs live in the repository |
 | "Open diagnostics folder" (`help.logs`) | ui/app.py:431, ui/app.py:1879-1883 | none needed | the self-started service's stderr log (`service::log_path`), whose tail is quoted in connection errors | deliberately different: the viewer reports the log of the service it started; RoboCAD's own session logs stay in RoboCAD |
 | Dark stylesheet | ui/app.py:44-57 | n/a (display) | the UI kit's theme | deliberately different: the native UI kit owns the look (native-viewer.md "UI kit") |
@@ -139,9 +140,9 @@ the feature is later, not that it cannot be reached at all.
 | Redo (`edit.redo`) | ui/app.py:292, commands.py:308-309 | `POST /redo` | `CadAction::CadRedo` → `CadClient::redo`; key Ctrl/Cmd+Shift+Z | done-by-reading |
 | History labels (undo and redo stacks) | commands.py:204-243, api.py:472-473 | `GET /history`, and `history` in `/doc` | `cad::panel` history list | done-by-reading |
 | RoboCAD's command stack is the only undo stack (EditBodies, AddNodes, RemoveNodes, SetAttributes, MoveNode, SetMaterialDef, Composite) | commands.py:31-202 | every mutating route | every CAD edit goes to RoboCAD (`cad::actions` module doc) | done-by-reading |
-| Delete (`edit.delete`; deletes the whole selection as one undo step) | ui/app.py:293, ui/app.py:1458-1463, commands.py:312 | `DELETE /nodes/{id}` (one node); `POST /ops/delete {"args": [[ids]]}` (one step for many) | `CadAction::CadDelete { id }` (button, keys Delete/Backspace) deletes the first selected node only; a multi-node delete as one undo step is REST `cad_op {"name":"delete","args":[[ids]]}` until cad-tools | later-epic: cad-tools |
-| "Copy with Placement" (`edit.copy`: JSON with B-rep hex and world placement on the clipboard) | ui/app.py:294, ui/app.py:1465-1468, document.py:672 | none: needs a Python route (GUI: `POST /commands/edit.copy` uses RoboCAD's clipboard) | cad-tools epic | later-epic: cad-tools |
-| "Paste with Placement" (`edit.paste`, one undo step "Paste") | ui/app.py:295, ui/app.py:1470-1484, document.py:683 | none: needs a Python route (GUI: `POST /commands/edit.paste`) | cad-tools epic | later-epic: cad-tools |
+| Delete (`edit.delete`; deletes the whole selection as one undo step) | ui/app.py:293, ui/app.py:1458-1463, commands.py:312 | `DELETE /nodes/{id}` (one node); `POST /ops/delete {"args": [[ids]]}` (one step for many) | `CadAction::CadDelete { id }` (button, keys Delete/Backspace) deletes the first selected node only; a multi-node delete as one undo step is REST `cad_op {"name":"delete","args":[[ids]]}` until cad-modify | later-epic: cad-modify |
+| "Copy with Placement" (`edit.copy`: JSON with B-rep hex and world placement on the clipboard) | ui/app.py:294, ui/app.py:1465-1468, document.py:672 | none: needs a Python route (GUI: `POST /commands/edit.copy` uses RoboCAD's clipboard) | cad-modify epic | later-epic: cad-modify |
+| "Paste with Placement" (`edit.paste`, one undo step "Paste") | ui/app.py:295, ui/app.py:1470-1484, document.py:683 | none: needs a Python route (GUI: `POST /commands/edit.paste`) | cad-modify epic | later-epic: cad-modify |
 | Model hotkeys pause while a text or number field has focus | ui/app.py:470-477 | n/a | `cad::keys` ignores every key while the name field has focus (`CadInputFocus`; `keys` runs after `panel::name_entry`) | done-by-reading |
 | A failed command reports RoboCAD's message and the app stays alive | ui/app.py:253-268 | the error JSON of each route (api.py:1280-1286) | `CadError` shown verbatim in `cad::panel` | done-by-reading |
 | Rename (outliner text edit or joint dialog) | ui/widgets.py:341-348, commands.py:333 | `PATCH /nodes/{id} {"name"}` | `CadAction::CadPatch`: the inspector's name field (Enter sends `CadPatch {"name"}`) and REST `cad_patch` | done-by-reading |
@@ -152,25 +153,25 @@ the feature is later, not that it cannot be reached at all.
 |---|---|---|---|---|
 | Click a body to select it (Select tool; "Click to select") | ui/tools.py:111-169 | `PUT /selection {"items": [[id, "body", 0]]}` | `cad::mesh` pick observer → `CadAction::CadSelect { ids }` | done-by-reading |
 | Shift adds to the selection | ui/tools.py:162-164 | `PUT /selection` | `CadAction::CadSelect { extend: true }` | done-by-reading |
-| Ctrl toggles an item | ui/tools.py:160-161, ui/viewport.py:237 | `PUT /selection` | cad-tools epic | later-epic: cad-tools |
-| Clicking empty space clears (unless Shift/Ctrl) | ui/tools.py:154-156 | `PUT /selection {"items": []}` | REST `cad_select {"ids":[]}` only; clicking empty space is cad-tools | later-epic: cad-tools |
+| Ctrl toggles an item | ui/tools.py:160-161, ui/viewport.py:237 | `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
+| Clicking empty space clears (unless Shift/Ctrl) | ui/tools.py:154-156 | `PUT /selection {"items": []}` | REST `cad_select {"ids":[]}` only; clicking empty space is cad-select-transform | later-epic: cad-select-transform |
 | The selection is synced with RoboCAD (its window, scripts and this viewer share it) | api.py:730-745, ui/widgets.py:316-329 | `GET/PUT /selection` | `cad::sync` poll reads `GET /selection` every 500 ms and adopts RoboCAD's body items; `CadSelect` pushes with `PUT /selection` | done-by-reading |
 | Locked and hidden nodes are not pickable | ui/viewport.py:1262 | `/doc` (`locked`, `effective_visible`) | `cad::mesh`: hidden and disabled bodies are not drawn (so not pickable); locked bodies are drawn and pickable | deliberately different: picking a locked body only selects it; every edit still goes through RoboCAD, which enforces its own lock rules |
-| Box select (drag more than 6 px; bodies whose bounding box lies inside; vertex and edge modes too) | ui/tools.py:124-137, ui/tools.py:198-228 | `PUT /selection` | cad-tools epic | later-epic: cad-tools |
-| Hover highlight (coalesced to 33 ms; never replaces a click pick) | ui/tools.py:171-183, ui/viewport.py:1226-1247 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| Alt+click on overlapping picks opens a disambiguation menu ("name: kind #i") | ui/tools.py:140-147, ui/widgets.py:888-894 | n/a (display) | cad-tools epic | later-epic: cad-tools |
+| Box select (drag more than 6 px; bodies whose bounding box lies inside; vertex and edge modes too) | ui/tools.py:124-137, ui/tools.py:198-228 | `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
+| Hover highlight (coalesced to 33 ms; never replaces a click pick) | ui/tools.py:171-183, ui/viewport.py:1226-1247 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
+| Alt+click on overlapping picks opens a disambiguation menu ("name: kind #i") | ui/tools.py:140-147, ui/widgets.py:888-894 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
 | Selection mode bodies (`select.body`, "Select bodys") | ui/app.py:319-320, ui/app.py:597-602 | `PUT /selection {"mode": "body"}` | body items only (`CadSelect`) | done-by-reading |
-| Selection mode faces (`select.face`) | ui/app.py:319-320, ui/viewport.py:1281-1293 | `PUT /selection {"mode": "face"}`; `GET /nodes/{id}/mesh` (`triangle_face`) | cad-tools epic | later-epic: cad-tools |
-| Selection mode edges (`select.edge`) | ui/app.py:319-320, ui/viewport.py:1301-1309 | `GET /nodes/{id}/edges`; edge polylines: see "Viewport" | cad-tools epic | later-epic: cad-tools |
-| Selection mode vertices (`select.vertex`) | ui/app.py:319-320, ui/viewport.py:1310-1316 | `GET /nodes/{id}/vertices` | cad-tools epic | later-epic: cad-tools |
-| Selection mode points (`select.point`: a surface point) | ui/app.py:319-320, ui/viewport.py:1281, ui/viewport.py:1337 | `PUT /selection {"mode": "point"}` | cad-tools epic | later-epic: cad-tools |
-| Changing the selection mode clears the selection ("Selection mode: mode") | ui/app.py:597-602 | `PUT /selection` | cad-tools epic | later-epic: cad-tools |
-| "Select All" (`edit.select_all`: visible bodies, sheets, curves, instances and meshes) | ui/app.py:296, ui/app.py:604-610 | `PUT /selection` (computed from `/doc`) | cad-tools epic | later-epic: cad-tools |
-| "Invert Selection" (`edit.invert`) | ui/app.py:297, ui/app.py:612-619 | `PUT /selection` | cad-tools epic | later-epic: cad-tools |
-| "Select Same Material" (`edit.select_same_material`) | ui/app.py:298, ui/app.py:621-629, document.py:448 | `PUT /selection` (from `/doc` materials) | cad-tools epic | later-epic: cad-tools |
-| "Selection: edges → bounding faces" (`edit.convert_faces`) | ui/app.py:299, ui/app.py:631-645 | `GET /nodes/{id}/edges`, `/faces`; `PUT /selection` | cad-tools epic | later-epic: cad-tools |
-| Status "n selected" / "Ready" | ui/app.py:594-595 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| Escape clears the selection in the Select tool, or returns to the Select tool | ui/app.py:487-497 | n/a | cad-tools epic | later-epic: cad-tools |
+| Selection mode faces (`select.face`) | ui/app.py:319-320, ui/viewport.py:1281-1293 | `PUT /selection {"mode": "face"}`; `GET /nodes/{id}/mesh` (`triangle_face`) | cad-select-transform epic | later-epic: cad-select-transform |
+| Selection mode edges (`select.edge`) | ui/app.py:319-320, ui/viewport.py:1301-1309 | `GET /nodes/{id}/edges`; edge polylines: see "Viewport" | cad-select-transform epic | later-epic: cad-select-transform |
+| Selection mode vertices (`select.vertex`) | ui/app.py:319-320, ui/viewport.py:1310-1316 | `GET /nodes/{id}/vertices` | cad-select-transform epic | later-epic: cad-select-transform |
+| Selection mode points (`select.point`: a surface point) | ui/app.py:319-320, ui/viewport.py:1281, ui/viewport.py:1337 | `PUT /selection {"mode": "point"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| Changing the selection mode clears the selection ("Selection mode: mode") | ui/app.py:597-602 | `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
+| "Select All" (`edit.select_all`: visible bodies, sheets, curves, instances and meshes) | ui/app.py:296, ui/app.py:604-610 | `PUT /selection` (computed from `/doc`) | cad-select-transform epic | later-epic: cad-select-transform |
+| "Invert Selection" (`edit.invert`) | ui/app.py:297, ui/app.py:612-619 | `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
+| "Select Same Material" (`edit.select_same_material`) | ui/app.py:298, ui/app.py:621-629, document.py:448 | `PUT /selection` (from `/doc` materials) | cad-select-transform epic | later-epic: cad-select-transform |
+| "Selection: edges → bounding faces" (`edit.convert_faces`) | ui/app.py:299, ui/app.py:631-645 | `GET /nodes/{id}/edges`, `/faces`; `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
+| Status "n selected" / "Ready" | ui/app.py:594-595 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
+| Escape clears the selection in the Select tool, or returns to the Select tool | ui/app.py:487-497 | n/a | cad-select-transform epic | later-epic: cad-select-transform |
 
 ## Tree (outliner)
 
@@ -198,7 +199,7 @@ the feature is later, not that it cannot be reached at all.
 | Context menu "Lock" / "Unlock" (whole selection) | ui/widgets.py:413-414 | `POST /ops/set_locked` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Group selection…" | ui/widgets.py:415 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Move to group" ▸ "Top level" and every group path ("A / B") | ui/widgets.py:416-430 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Make unique (bake instance)" | ui/widgets.py:431 | `POST /ops/make_unique` | cad-tools epic | later-epic: cad-tools |
+| Context menu "Make unique (bake instance)" | ui/widgets.py:431 | `POST /ops/make_unique` | cad-modify epic | later-epic: cad-modify |
 | Context menu "Set as active group"; "Clear active group"; registry "Set selected group as active" (`group.set_active`) | ui/widgets.py:432-435, ui/app.py:427 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Delete" | ui/widgets.py:434 | `DELETE /nodes/{id}`; `POST /ops/delete` | `CadAction::CadDelete` | done-by-reading |
 | Context menu "Show all" | ui/widgets.py:436 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
@@ -214,7 +215,7 @@ inspector shows as returned.
 |---|---|---|---|---|
 | Facts: "Nothing selected." / "n item(s)" / "Display size ≈ x × y × z mm" / "Exact measurements available on request." (display bounds only; a click never integrates a B-rep) | ui/widgets.py:452-455, ui/widgets.py:494-500, ui/widgets.py:555-564 | `GET /nodes/{id}` | `cad::inspector` shows `GET /nodes/{id}` (with its exact mass block) for the first selected node | deliberately different: the native inspector shows RoboCAD's node detail, whose mass block RoboCAD computes for each request (api.py:105-110). On a large imported body that request is slow, and in the GUI it runs on RoboCAD's Qt thread (api.py:1143-1144); RoboCAD's own panel avoids it |
 | "Calculate exact measurements" (a separate process over the whole selection: size, volume, area, mass, centroid; 60 s limit; cancelled by any edit or selection change) | ui/widgets.py:456-462, ui/widgets.py:566-633 | `GET /nodes/{id}` per node (combined natively) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Live dimensions of the selected faces and edges, editable | ui/widgets.py:505-509, ui/app.py:654-691 | `GET /nodes/{id}/faces`, `/edges`; `POST /ops/set_diameter`, `set_distance`, `set_angle` | cad-tools epic | later-epic: cad-tools |
+| Live dimensions of the selected faces and edges, editable | ui/widgets.py:505-509, ui/app.py:654-691 | `GET /nodes/{id}/faces`, `/edges`; `POST /ops/set_diameter`, `set_distance`, `set_angle` | cad-select-transform epic | later-epic: cad-select-transform |
 | "Material" dropdown "name (density g/cm³)", applied to the selection | ui/widgets.py:465-468, ui/widgets.py:491-503, ui/widgets.py:723-728 | `PATCH /nodes/{id} {"material"}`; `GET /doc` (`materials`) | `cad::inspector` material choice → `CadPatch` | done-by-reading |
 | "Tessellation tolerance (mm)" (0.005–2.0; RoboCAD's panel sets it without undo) | ui/widgets.py:469-476, ui/widgets.py:730-735 | `PATCH /nodes/{id} {"tessellation_tolerance"}` (undoable) | cad-views-export epic | later-epic: cad-views-export |
 | Joint physics overrides: "Radial clearance (mm)", "Wobble (°)", "Drive backlash (°; provenance)" ("Unmeasured"), "Coulomb friction (mN·m)", "Viscous (mN·m·s)", "Radial stiffness (N/m)", "Flex patch radius (mm)", the source line, and "*" for overridden values | ui/widgets.py:510-544, ui/widgets.py:635-679 | `GET /physical?flex=0` (joint `physics`, physical.py:552); `POST /ops/set_joint_physics` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
@@ -231,9 +232,9 @@ inspector shows as returned.
 | `color` shown | api.py:99 | `GET /nodes/{id}` | `cad::inspector` (as returned) | done-by-reading |
 | `color` editor | api.py:592-593, commands.py:348 | `PATCH /nodes/{id} {"color"}` (REST `cad_patch` works now) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | `pivot` shown | api.py:99 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
-| `pivot` editor | api.py:594-595, commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | cad-tools epic | later-epic: cad-tools |
+| `pivot` editor | api.py:594-595, commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | cad-modify epic | later-epic: cad-modify |
 | `transform` shown (`Transform.to_json`) | api.py:99 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
-| `transform` editor (refused for component occurrences, api.py:577-578) | api.py:596-597 | `PATCH /nodes/{id} {"transform"}` | cad-tools epic | later-epic: cad-tools |
+| `transform` editor (refused for component occurrences, api.py:577-578) | api.py:596-597 | `PATCH /nodes/{id} {"transform"}` | cad-modify epic | later-epic: cad-modify |
 | Mass block: `volume_mm3`, `area_mm2`, `mass_g`, `centroid`, `bbox_min`, `bbox_max`, `size` | api.py:104-107 | `GET /nodes/{id}` | `cad::inspector` (`MassBlock`) | done-by-reading |
 | `body_kind`, `face_count`, `edge_count` | api.py:106-109 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
 | `sketch` (curves on a plane) shown | api.py:110-111 | `GET /nodes/{id}`, `GET /nodes/{id}/sketch` | `cad::inspector` (as returned) | done-by-reading |
@@ -309,7 +310,7 @@ inspector shows as returned.
 | Stress overlay (`view.stress` "Toggle stress overlay (from loaded results)" and `print.overlay` "Strength overlay on/off"; blue 0 → red at yield) | ui/app.py:399, ui/app.py:422, ui/app.py:1695-1698, ui/viewport.py:826-877 | none: needs a Python route (per-node `results.hotspot`; see the inspector's "Results" row) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | "Draft-angle shading" (`inspect.draft`, pull +Z) | ui/app.py:403, ui/app.py:1304-1317 | `GET /nodes/{id}/mesh` (derived natively) | cad-views-export epic | later-epic: cad-views-export |
 | "Normal-direction shading" (`inspect.normals`, which switches to xray) | ui/app.py:404, ui/app.py:1319-1322 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| Overlay: "tool · mode" and the tool hint; footer "Right-drag orbit · Shift+right-drag pan · Wheel zoom · F focus \| n ms/frame" | ui/viewport.py:1198-1223 | n/a (display) | cad-tools epic | later-epic: cad-tools |
+| Overlay: "tool · mode" and the tool hint; footer "Right-drag orbit · Shift+right-drag pan · Wheel zoom · F focus \| n ms/frame" | ui/viewport.py:1198-1223 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
 | Frame time, display triangle counts | ui/viewport.py:561-566, api.py:1222-1228 | `GET /performance` | the viewer's own frame statistics | deliberately different: the viewer measures its own frames; RoboCAD's numbers describe RoboCAD's window |
 
 ## Tools
@@ -319,25 +320,25 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| Select tool (`tool.select`, "Select tool"; the click part is in "Selection") | ui/app.py:322, ui/tools.py:111-228 | `PUT /selection` | `cad::mesh` picking for bodies; the rest is cad-tools | done-by-reading |
+| Select tool (`tool.select`, "Select tool"; the click part is in "Selection") | ui/app.py:322, ui/tools.py:111-228 | `PUT /selection` | `cad::mesh` picking for bodies; the rest is cad-select-transform | done-by-reading |
 | Annotate (`tool.annotate`, N: click a surface, then write in Comments) | ui/app.py:278, ui/comments.py:98-125 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
-| Move (`tool.move`, G: gizmo axes, centre handle for screen-space, Ctrl snaps to the grid, Tab for dx dy dz) | ui/app.py:323, ui/tools.py:234-385, ui/viewport.py:1060-1132 | `POST /ops/transform {"translation"}` | cad-tools epic | later-epic: cad-tools |
-| Rotate (`tool.rotate`, R: rings, Ctrl snaps 15°, Tab for the angle) | ui/app.py:324, ui/tools.py:311-322, ui/tools.py:360-362 | `POST /ops/transform {"axis", "angle_deg", "center"}` | cad-tools epic | later-epic: cad-tools |
-| Scale (`tool.scale`, S: Ctrl snaps 0.1, Tab for the factor) | ui/app.py:325, ui/tools.py:323-330, ui/tools.py:363-364 | `POST /ops/transform {"scale", "center"}` | cad-tools epic | later-epic: cad-tools |
-| Push/Pull face (`tool.push_pull`, D: drag along the normal; Shift offsets; Ctrl snaps to the grid; a non-planar face is offset) | ui/app.py:326, ui/tools.py:547-632 | `POST /ops/push_pull`, `POST /ops/offset_faces` | cad-tools epic | later-epic: cad-tools |
-| Offset face (`tool.offset_face`, Shift+D) | ui/app.py:327, ui/tools.py:551-553 | `POST /ops/offset_faces` | cad-tools epic | later-epic: cad-tools |
-| Box (corner) (`tool.box`: drag the base, then the height; Tab width depth height; built as a sketch rectangle plus an extrude named "Box") | ui/app.py:328, ui/tools.py:391-541 | `POST /nodes {"kind": "box"}` or `POST /ops/box` | cad-tools epic | later-epic: cad-tools |
-| Box (centre) (`tool.box_center`) | ui/app.py:329, ui/tools.py:471-473 | `POST /ops/box_center` | cad-tools epic | later-epic: cad-tools |
-| Cylinder (`tool.cylinder`; Tab diameter height) | ui/app.py:330, ui/tools.py:503-507 | `POST /ops/cylinder` | cad-tools epic | later-epic: cad-tools |
-| Sphere (`tool.sphere`; Tab diameter) | ui/app.py:331, ui/tools.py:508-510 | `POST /ops/sphere` | cad-tools epic | later-epic: cad-tools |
+| Move (`tool.move`, G: gizmo axes, centre handle for screen-space, Ctrl snaps to the grid, Tab for dx dy dz) | ui/app.py:323, ui/tools.py:234-385, ui/viewport.py:1060-1132 | `POST /ops/transform {"translation"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| Rotate (`tool.rotate`, R: rings, Ctrl snaps 15°, Tab for the angle) | ui/app.py:324, ui/tools.py:311-322, ui/tools.py:360-362 | `POST /ops/transform {"axis", "angle_deg", "center"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| Scale (`tool.scale`, S: Ctrl snaps 0.1, Tab for the factor) | ui/app.py:325, ui/tools.py:323-330, ui/tools.py:363-364 | `POST /ops/transform {"scale", "center"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| Push/Pull face (`tool.push_pull`, D: drag along the normal; Shift offsets; Ctrl snaps to the grid; a non-planar face is offset) | ui/app.py:326, ui/tools.py:547-632 | `POST /ops/push_pull`, `POST /ops/offset_faces` | cad-select-transform epic | later-epic: cad-select-transform |
+| Offset face (`tool.offset_face`, Shift+D) | ui/app.py:327, ui/tools.py:551-553 | `POST /ops/offset_faces` | cad-select-transform epic | later-epic: cad-select-transform |
+| Box (corner) (`tool.box`: drag the base, then the height; Tab width depth height; built as a sketch rectangle plus an extrude named "Box") | ui/app.py:328, ui/tools.py:391-541 | `POST /nodes {"kind": "box"}` or `POST /ops/box` | cad-modify epic | later-epic: cad-modify |
+| Box (centre) (`tool.box_center`) | ui/app.py:329, ui/tools.py:471-473 | `POST /ops/box_center` | cad-modify epic | later-epic: cad-modify |
+| Cylinder (`tool.cylinder`; Tab diameter height) | ui/app.py:330, ui/tools.py:503-507 | `POST /ops/cylinder` | cad-modify epic | later-epic: cad-modify |
+| Sphere (`tool.sphere`; Tab diameter) | ui/app.py:331, ui/tools.py:508-510 | `POST /ops/sphere` | cad-modify epic | later-epic: cad-modify |
 | Extrude (`tool.extrude`, X: the selected sketch or curve; drag the height, taper; Shift subtracts, Ctrl unites, Alt intersects with the body under the selection; preview mesh) | ui/app.py:332, ui/tools.py:822-931 | `POST /ops/extrude {"op", "target"}` | cad-sketch epic | later-epic: cad-sketch |
 | Revolve (`tool.revolve`, Shift+R: about the sketch plane's x axis; Tab angle) | ui/app.py:333, ui/tools.py:916-918 | `POST /ops/revolve` | cad-sketch epic | later-epic: cad-sketch |
-| Fillet (`tool.fillet`, Ctrl+F: click edges, type the radius) | ui/app.py:338, ui/tools.py:937-989 | `POST /ops/fillet` | cad-tools epic | later-epic: cad-tools |
-| Variable fillet (`tool.fillet_variable`: start and end radius) | ui/app.py:339, ui/tools.py:981-982 | `POST /ops/fillet {"radius_end"}` | cad-tools epic | later-epic: cad-tools |
-| Chordal fillet (`tool.fillet_chordal`) | ui/app.py:340, ui/tools.py:983-984 | `POST /ops/fillet_chordal` | cad-tools epic | later-epic: cad-tools |
-| Chamfer (`tool.chamfer`, Ctrl+Shift+F: distance, and an angle unless it is 45°) | ui/app.py:344, ui/tools.py:985-986 | `POST /ops/chamfer` | cad-tools epic | later-epic: cad-tools |
-| Hollow / shell (`tool.shell`, Ctrl+Shift+H: pick the faces to open, type the wall) | ui/app.py:345, ui/tools.py:992-1021 | `POST /ops/shell` | cad-tools epic | later-epic: cad-tools |
-| Measure (`tool.measure`, M: two picks; distance, angle or radius; the value is copied to the clipboard; Shift+click keeps it as a measure node) | ui/app.py:349, ui/tools.py:1027-1062, ui/app.py:715-740 | `POST /ops/add_measurement` (kept measurements); `GET /nodes/{id}/faces`, `/edges` | cad-tools epic | later-epic: cad-tools |
+| Fillet (`tool.fillet`, Ctrl+F: click edges, type the radius) | ui/app.py:338, ui/tools.py:937-989 | `POST /ops/fillet` | cad-modify epic | later-epic: cad-modify |
+| Variable fillet (`tool.fillet_variable`: start and end radius) | ui/app.py:339, ui/tools.py:981-982 | `POST /ops/fillet {"radius_end"}` | cad-modify epic | later-epic: cad-modify |
+| Chordal fillet (`tool.fillet_chordal`) | ui/app.py:340, ui/tools.py:983-984 | `POST /ops/fillet_chordal` | cad-modify epic | later-epic: cad-modify |
+| Chamfer (`tool.chamfer`, Ctrl+Shift+F: distance, and an angle unless it is 45°) | ui/app.py:344, ui/tools.py:985-986 | `POST /ops/chamfer` | cad-modify epic | later-epic: cad-modify |
+| Hollow / shell (`tool.shell`, Ctrl+Shift+H: pick the faces to open, type the wall) | ui/app.py:345, ui/tools.py:992-1021 | `POST /ops/shell` | cad-modify epic | later-epic: cad-modify |
+| Measure (`tool.measure`, M: two picks; distance, angle or radius; the value is copied to the clipboard; Shift+click keeps it as a measure node) | ui/app.py:349, ui/tools.py:1027-1062, ui/app.py:715-740 | `POST /ops/add_measurement` (kept measurements); `GET /nodes/{id}/faces`, `/edges` | cad-select-transform epic | later-epic: cad-select-transform |
 | Plane from face (`tool.plane`, Ctrl+P) | ui/app.py:350, ui/tools.py:1065-1099 | `POST /ops/plane_from_face` | cad-sketch epic | later-epic: cad-sketch |
 | Plane from three points (`tool.plane_three`) | ui/app.py:351, ui/tools.py:1100-1106 | `POST /ops/plane_three_points` | cad-sketch epic | later-epic: cad-sketch |
 | Plane from two points (camera) (`tool.plane_camera`) | ui/app.py:352, ui/tools.py:1107-1111 | `POST /ops/plane_two_points_camera` | cad-sketch epic | later-epic: cad-sketch |
@@ -345,21 +346,21 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Active plane XY / XZ / YZ (`tool.plane_xy`, `tool.plane_xz`, `tool.plane_yz`; "Active plane set") | ui/app.py:354-356, ui/app.py:1022-1027 | n/a (viewer state; RoboCAD's `PUT /view {"active_plane"}` is GUI-only) | cad-sketch epic | later-epic: cad-sketch |
 | "Toggle 2D snapping to the active plane" (`tool.plane_2d_snap`) | ui/app.py:357, ui/app.py:1029-1031 | n/a (viewer state) | cad-sketch epic | later-epic: cad-sketch |
 | Fastener hole… (`tool.fastener`, Ctrl+H: dialog "Size" M2–M8, "Kind" clearance/tap/counterbore/countersink/insert, "Extra clearance (mm)", "Depth (mm)" or "through"; remembers the last; then click faces) | ui/app.py:358, ui/app.py:889-894, ui/widgets.py:988-1021, ui/tools.py:1120-1155 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
-| Mirror (about active plane) (`tool.mirror`, Ctrl+M; YZ when no plane is active) | ui/app.py:360, ui/app.py:910-914 | `POST /ops/mirror` | cad-tools epic | later-epic: cad-tools |
-| Mirror as live instance (`tool.mirror_live`) | ui/app.py:361 | `POST /ops/mirror {"live": true}` | cad-tools epic | later-epic: cad-tools |
-| Array… (`tool.array`, Ctrl+Shift+A: rectangular, count X/Y/Z, "count + spacing" or "count + total extent", or radial about the active plane; "As live instances"; "Merge into one body") | ui/app.py:365, ui/app.py:920-941, ui/widgets.py:1024-1063 | `POST /ops/array_rect`, `POST /ops/array_radial` | cad-tools epic | later-epic: cad-tools |
-| Instance selected (`tool.instance`: offset +20 mm in X) | ui/app.py:364, ui/app.py:916-918 | `POST /ops/instance` | cad-tools epic | later-epic: cad-tools |
-| "Set pivot at cursor snap" (`tool.set_pivot`) | ui/app.py:376, ui/app.py:1015-1020 | `POST /ops/set_pivot`; `PATCH /nodes/{id} {"pivot"}` | cad-tools epic | later-epic: cad-tools |
+| Mirror (about active plane) (`tool.mirror`, Ctrl+M; YZ when no plane is active) | ui/app.py:360, ui/app.py:910-914 | `POST /ops/mirror` | cad-modify epic | later-epic: cad-modify |
+| Mirror as live instance (`tool.mirror_live`) | ui/app.py:361 | `POST /ops/mirror {"live": true}` | cad-modify epic | later-epic: cad-modify |
+| Array… (`tool.array`, Ctrl+Shift+A: rectangular, count X/Y/Z, "count + spacing" or "count + total extent", or radial about the active plane; "As live instances"; "Merge into one body") | ui/app.py:365, ui/app.py:920-941, ui/widgets.py:1024-1063 | `POST /ops/array_rect`, `POST /ops/array_radial` | cad-modify epic | later-epic: cad-modify |
+| Instance selected (`tool.instance`: offset +20 mm in X) | ui/app.py:364, ui/app.py:916-918 | `POST /ops/instance` | cad-modify epic | later-epic: cad-modify |
+| "Set pivot at cursor snap" (`tool.set_pivot`) | ui/app.py:376, ui/app.py:1015-1020 | `POST /ops/set_pivot`; `PATCH /nodes/{id} {"pivot"}` | cad-modify epic | later-epic: cad-modify |
 | Image calibrate tool (two clicks on the image, type the real distance) | ui/tools.py:1210-1241 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
 | Motor tool (click a face: housing outside, shaft into the body) | ui/tools.py:1244-1291 | `POST /ops/add_motor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | Joint tool (parent, Ctrl-click for the world; child; an axis face) | ui/tools.py:1294-1361 | `POST /ops/add_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| Snapping: vertices, edge midpoints, centres, sketch endpoints, grid, plane, free; Alt suppresses; readout "kind (x, y, z)" | ui/viewport.py:1369-1435, ui/app.py:557-560 | `GET /nodes/{id}/vertices`, `GET /nodes/{id}/edges`, `GET /nodes/{id}/sketch` | cad-tools epic | later-epic: cad-tools |
-| Gizmo drawing and hit testing | ui/viewport.py:1060-1132 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| Tool cursors (arrow, size-all, crosshair) | ui/app.py:519-523 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| Tools toolbar (Select, Annotate, Saved Views, References, Pose, Experiments, Move, Rotate, Scale, Box, Cylinder, Sphere, Rectangle, Circle, Slot, Extrude, Push/Pull, Fillet, Shell, Union, Subtract, Fastener, Measure, Section, Validate; tools checkable) | ui/app.py:440-447, ui/app.py:527-529 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | cad-tools epic | later-epic: cad-tools |
-| Double-click a face: its dimension goes into the numeric bar | ui/tools.py:185-196, ui/app.py:693-713 | `GET /nodes/{id}/faces`; `POST /ops/set_diameter`, `set_distance` | cad-tools epic | later-epic: cad-tools |
-| Escape cancels the tool and returns to Select | ui/app.py:487-497, ui/tools.py:103-105 | n/a | cad-tools epic | later-epic: cad-tools |
+| Snapping: vertices, edge midpoints, centres, sketch endpoints, grid, plane, free; Alt suppresses; readout "kind (x, y, z)" | ui/viewport.py:1369-1435, ui/app.py:557-560 | `GET /nodes/{id}/vertices`, `GET /nodes/{id}/edges`, `GET /nodes/{id}/sketch` | cad-select-transform epic | later-epic: cad-select-transform |
+| Gizmo drawing and hit testing | ui/viewport.py:1060-1132 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
+| Tool cursors (arrow, size-all, crosshair) | ui/app.py:519-523 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
+| Tools toolbar (Select, Annotate, Saved Views, References, Pose, Experiments, Move, Rotate, Scale, Box, Cylinder, Sphere, Rectangle, Circle, Slot, Extrude, Push/Pull, Fillet, Shell, Union, Subtract, Fastener, Measure, Section, Validate; tools checkable) | ui/app.py:440-447, ui/app.py:527-529 | n/a (display) | cad-modify epic | later-epic: cad-modify |
+| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | cad-modify epic | later-epic: cad-modify |
+| Double-click a face: its dimension goes into the numeric bar | ui/tools.py:185-196, ui/app.py:693-713 | `GET /nodes/{id}/faces`; `POST /ops/set_diameter`, `set_distance` | cad-select-transform epic | later-epic: cad-select-transform |
+| Escape cancels the tool and returns to Select | ui/app.py:487-497, ui/tools.py:103-105 | n/a | cad-select-transform epic | later-epic: cad-select-transform |
 
 ## Sketch
 
@@ -400,60 +401,60 @@ visible one, else a new sketch (ui/tools.py:675-686).
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Union" (`modify.union`, Ctrl+U; the first selected is the target: "Select the target body first, then the tools") | ui/app.py:382, ui/app.py:787-793 | `POST /ops/boolean {"op": "union"}` | cad-tools epic | later-epic: cad-tools |
-| "Subtract" (`modify.subtract`, Ctrl+Shift+U) | ui/app.py:383 | `POST /ops/boolean {"op": "subtract"}` | cad-tools epic | later-epic: cad-tools |
-| "Intersect" (`modify.intersect`, Ctrl+Alt+U) | ui/app.py:384 | `POST /ops/boolean {"op": "intersect"}` | cad-tools epic | later-epic: cad-tools |
-| "Region (overlap as new body)" (`modify.region`) | ui/app.py:385, ui/app.py:795-799 | `POST /ops/region` | cad-tools epic | later-epic: cad-tools |
-| "Join" (`modify.join`, J) | ui/app.py:386 | `POST /ops/join` | cad-tools epic | later-epic: cad-tools |
-| "Unjoin" (`modify.unjoin`, Shift+J) | ui/app.py:387 | `POST /ops/unjoin` | cad-tools epic | later-epic: cad-tools |
-| "Dissolve redundant topology" (`modify.dissolve`) | ui/app.py:388 | `POST /ops/dissolve` | cad-tools epic | later-epic: cad-tools |
-| "Make instance unique" (`modify.make_unique`) | ui/app.py:389 | `POST /ops/make_unique` | cad-tools epic | later-epic: cad-tools |
-| "Fillet all edges…" (`tool.fillet_all`; "Radius (mm):") | ui/app.py:341, ui/app.py:832-837 | `POST /ops/fillet_all` | cad-tools epic | later-epic: cad-tools |
-| "Full round (two edges)" (`tool.full_round`) | ui/app.py:342, ui/app.py:839-846 | `POST /ops/full_round` | cad-tools epic | later-epic: cad-tools |
-| "Remove fillets (selected faces)" (`tool.remove_fillets`) | ui/app.py:343, ui/app.py:848-855 | `POST /ops/remove_fillets` | cad-tools epic | later-epic: cad-tools |
-| "Thicken sheet…" (`tool.thicken`; "Thickness (mm):") | ui/app.py:346, ui/app.py:857-864 | `POST /ops/thicken` | cad-tools epic | later-epic: cad-tools |
-| "Draft faces…" (`tool.draft`; "Angle (degrees):"; pull +Z; the active plane is neutral) | ui/app.py:347, ui/app.py:866-878 | `POST /ops/draft` | cad-tools epic | later-epic: cad-tools |
-| "Delete faces (heal)" (`tool.delete_face`) | ui/app.py:348, ui/app.py:880-887 | `POST /ops/delete_faces` | cad-tools epic | later-epic: cad-tools |
-| "Cut with active plane" (`tool.cut_plane`) | ui/app.py:366, ui/app.py:943-945 | `POST /ops/cut` (plane) | cad-tools epic | later-epic: cad-tools |
-| "Cut with selected sheet/curve" (`tool.cut_sheet`) | ui/app.py:367, ui/app.py:947-951 | `POST /ops/cut` (cutter id) | cad-tools epic | later-epic: cad-tools |
-| "Split faces with active plane" (`tool.split_face`) | ui/app.py:368, ui/app.py:953-955 | `POST /ops/split_face` | cad-tools epic | later-epic: cad-tools |
-| "Imprint selected curve/body" (`tool.imprint`) | ui/app.py:369, ui/app.py:957-961 | `POST /ops/imprint` | cad-tools epic | later-epic: cad-tools |
-| "Project curve onto body" (`tool.project_curve`, along the view direction) | ui/app.py:370, ui/app.py:963-968 | `POST /ops/project_curve` | cad-tools epic | later-epic: cad-tools |
-| "Silhouette onto active plane" (`tool.silhouette`) | ui/app.py:371, ui/app.py:970-972 | `POST /ops/silhouette` | cad-tools epic | later-epic: cad-tools |
-| "Show/edit control points (advanced)" (`tool.control_points`: shows the poles; editing is script-only) | ui/app.py:372, ui/app.py:974-984 | none: needs a Python route (reading `kernel.control_points`); writing: `POST /ops/set_control_points` | cad-tools epic | later-epic: cad-tools |
-| "Raise face degree" (`tool.raise_degree`, to 4 × 4) | ui/app.py:373, ui/app.py:986-991 | `POST /ops/raise_degree` | cad-tools epic | later-epic: cad-tools |
-| "Rebuild face…" (`tool.rebuild_face`; "Spans per direction:") | ui/app.py:374, ui/app.py:993-1001 | `POST /ops/rebuild_face` | cad-tools epic | later-epic: cad-tools |
-| "Dependent offset (face to body)…" (`tool.dependent_offset`; "Clearance (mm):") | ui/app.py:375, ui/app.py:1003-1013 | `POST /ops/offset_face_to` | cad-tools epic | later-epic: cad-tools |
-| "Curvature comb on selected curve" (`inspect.curvature`) | ui/app.py:401, ui/app.py:1277-1284 | none: needs a Python route (`analysis.curvature_comb`) | cad-tools epic | later-epic: cad-tools |
-| "Continuity check (G0/G1/G2)" (`inspect.continuity`; coloured edges; "Continuity: counts") | ui/app.py:402, ui/app.py:1286-1302 | none: needs a Python route (`analysis.continuity_report`) | cad-tools epic | later-epic: cad-tools |
-| REST-only direct edits with no GUI: `move_faces`, `rotate_faces`, `set_radius`, `untrim`, `array_curve`, `box_three_point`, `bridge`, `extract_components` | commands.py:525, 528, 531, 559, 743, 426, 511, 826 | `POST /ops/{name}` | cad-tools epic | later-epic: cad-tools |
+| "Union" (`modify.union`, Ctrl+U; the first selected is the target: "Select the target body first, then the tools") | ui/app.py:382, ui/app.py:787-793 | `POST /ops/boolean {"op": "union"}` | cad-modify epic | later-epic: cad-modify |
+| "Subtract" (`modify.subtract`, Ctrl+Shift+U) | ui/app.py:383 | `POST /ops/boolean {"op": "subtract"}` | cad-modify epic | later-epic: cad-modify |
+| "Intersect" (`modify.intersect`, Ctrl+Alt+U) | ui/app.py:384 | `POST /ops/boolean {"op": "intersect"}` | cad-modify epic | later-epic: cad-modify |
+| "Region (overlap as new body)" (`modify.region`) | ui/app.py:385, ui/app.py:795-799 | `POST /ops/region` | cad-modify epic | later-epic: cad-modify |
+| "Join" (`modify.join`, J) | ui/app.py:386 | `POST /ops/join` | cad-modify epic | later-epic: cad-modify |
+| "Unjoin" (`modify.unjoin`, Shift+J) | ui/app.py:387 | `POST /ops/unjoin` | cad-modify epic | later-epic: cad-modify |
+| "Dissolve redundant topology" (`modify.dissolve`) | ui/app.py:388 | `POST /ops/dissolve` | cad-modify epic | later-epic: cad-modify |
+| "Make instance unique" (`modify.make_unique`) | ui/app.py:389 | `POST /ops/make_unique` | cad-modify epic | later-epic: cad-modify |
+| "Fillet all edges…" (`tool.fillet_all`; "Radius (mm):") | ui/app.py:341, ui/app.py:832-837 | `POST /ops/fillet_all` | cad-modify epic | later-epic: cad-modify |
+| "Full round (two edges)" (`tool.full_round`) | ui/app.py:342, ui/app.py:839-846 | `POST /ops/full_round` | cad-modify epic | later-epic: cad-modify |
+| "Remove fillets (selected faces)" (`tool.remove_fillets`) | ui/app.py:343, ui/app.py:848-855 | `POST /ops/remove_fillets` | cad-modify epic | later-epic: cad-modify |
+| "Thicken sheet…" (`tool.thicken`; "Thickness (mm):") | ui/app.py:346, ui/app.py:857-864 | `POST /ops/thicken` | cad-modify epic | later-epic: cad-modify |
+| "Draft faces…" (`tool.draft`; "Angle (degrees):"; pull +Z; the active plane is neutral) | ui/app.py:347, ui/app.py:866-878 | `POST /ops/draft` | cad-modify epic | later-epic: cad-modify |
+| "Delete faces (heal)" (`tool.delete_face`) | ui/app.py:348, ui/app.py:880-887 | `POST /ops/delete_faces` | cad-modify epic | later-epic: cad-modify |
+| "Cut with active plane" (`tool.cut_plane`) | ui/app.py:366, ui/app.py:943-945 | `POST /ops/cut` (plane) | cad-modify epic | later-epic: cad-modify |
+| "Cut with selected sheet/curve" (`tool.cut_sheet`) | ui/app.py:367, ui/app.py:947-951 | `POST /ops/cut` (cutter id) | cad-modify epic | later-epic: cad-modify |
+| "Split faces with active plane" (`tool.split_face`) | ui/app.py:368, ui/app.py:953-955 | `POST /ops/split_face` | cad-modify epic | later-epic: cad-modify |
+| "Imprint selected curve/body" (`tool.imprint`) | ui/app.py:369, ui/app.py:957-961 | `POST /ops/imprint` | cad-modify epic | later-epic: cad-modify |
+| "Project curve onto body" (`tool.project_curve`, along the view direction) | ui/app.py:370, ui/app.py:963-968 | `POST /ops/project_curve` | cad-modify epic | later-epic: cad-modify |
+| "Silhouette onto active plane" (`tool.silhouette`) | ui/app.py:371, ui/app.py:970-972 | `POST /ops/silhouette` | cad-modify epic | later-epic: cad-modify |
+| "Show/edit control points (advanced)" (`tool.control_points`: shows the poles; editing is script-only) | ui/app.py:372, ui/app.py:974-984 | none: needs a Python route (reading `kernel.control_points`); writing: `POST /ops/set_control_points` | cad-modify epic | later-epic: cad-modify |
+| "Raise face degree" (`tool.raise_degree`, to 4 × 4) | ui/app.py:373, ui/app.py:986-991 | `POST /ops/raise_degree` | cad-modify epic | later-epic: cad-modify |
+| "Rebuild face…" (`tool.rebuild_face`; "Spans per direction:") | ui/app.py:374, ui/app.py:993-1001 | `POST /ops/rebuild_face` | cad-modify epic | later-epic: cad-modify |
+| "Dependent offset (face to body)…" (`tool.dependent_offset`; "Clearance (mm):") | ui/app.py:375, ui/app.py:1003-1013 | `POST /ops/offset_face_to` | cad-modify epic | later-epic: cad-modify |
+| "Curvature comb on selected curve" (`inspect.curvature`) | ui/app.py:401, ui/app.py:1277-1284 | none: needs a Python route (`analysis.curvature_comb`) | cad-modify epic | later-epic: cad-modify |
+| "Continuity check (G0/G1/G2)" (`inspect.continuity`; coloured edges; "Continuity: counts") | ui/app.py:402, ui/app.py:1286-1302 | none: needs a Python route (`analysis.continuity_report`) | cad-modify epic | later-epic: cad-modify |
+| REST-only direct edits with no GUI: `move_faces`, `rotate_faces`, `set_radius`, `untrim`, `array_curve`, `box_three_point`, `bridge`, `extract_components` | commands.py:525, 528, 531, 559, 743, 426, 511, 826 | `POST /ops/{name}` | cad-modify epic | later-epic: cad-modify |
 
 ## Numeric entry
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| The numeric bar: one field per dimension of the active tool, with the hint "Tab: type an exact value • Enter: confirm • Esc: cancel" | ui/widgets.py:142-176, ui/app.py:169-175, ui/strings.py:18 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| Tab focuses the first field ("Numeric entry (Tab)", `numeric.entry`); Tab is routed by hand because Qt's focus chain takes it | ui/app.py:429, ui/app.py:468-469, ui/app.py:483-486 | n/a | cad-tools epic | later-epic: cad-tools |
-| Enter commits, Escape cancels, Tab cycles fields | ui/widgets.py:200-216, ui/app.py:566-574 | the active tool's route | cad-tools epic | later-epic: cad-tools |
-| Unit-aware expressions (`20mm + 0.3`, `1in`, `pi*10`, `45deg`); bare numbers are mm or degrees; a red border marks a parse error | ui/widgets.py:183-198, units.py | n/a (needs a Rust port of `units.evaluate`, gated by the parity harness) | cad-tools epic | later-epic: cad-tools |
-| Live dimension edits: "Ø name", "Distance", "Angle", "Ø edge i" (a sphere or torus "R" is shown but says "use Scale about the centre") | ui/app.py:654-691, ui/widgets.py:715-721 | `POST /ops/set_diameter`, `set_distance`, `set_angle` | cad-tools epic | later-epic: cad-tools |
+| The numeric bar: one field per dimension of the active tool, with the hint "Tab: type an exact value • Enter: confirm • Esc: cancel" | ui/widgets.py:142-176, ui/app.py:169-175, ui/strings.py:18 | n/a (display) | cad-select-transform epic | later-epic: cad-select-transform |
+| Tab focuses the first field ("Numeric entry (Tab)", `numeric.entry`); Tab is routed by hand because Qt's focus chain takes it | ui/app.py:429, ui/app.py:468-469, ui/app.py:483-486 | n/a | cad-select-transform epic | later-epic: cad-select-transform |
+| Enter commits, Escape cancels, Tab cycles fields | ui/widgets.py:200-216, ui/app.py:566-574 | the active tool's route | cad-select-transform epic | later-epic: cad-select-transform |
+| Unit-aware expressions (`20mm + 0.3`, `1in`, `pi*10`, `45deg`); bare numbers are mm or degrees; a red border marks a parse error | ui/widgets.py:183-198, units.py | n/a (needs a Rust port of `units.evaluate`, gated by the parity harness) | cad-select-transform epic | later-epic: cad-select-transform |
+| Live dimension edits: "Ø name", "Distance", "Angle", "Ø edge i" (a sphere or torus "R" is shown but says "use Scale about the centre") | ui/app.py:654-691, ui/widgets.py:715-721 | `POST /ops/set_diameter`, `set_distance`, `set_angle` | cad-select-transform epic | later-epic: cad-select-transform |
 
 ## Radial menus
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "View radial menu" (`view.radial`, Space: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit) | ui/app.py:318, ui/app.py:1095-1097 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| "Selection-mode radial menu" (`select.mode_radial`, Q: Body, Face, Edge, Vertex, Point) | ui/app.py:321, ui/app.py:1099-1101 | `PUT /selection {"mode"}` | cad-tools epic | later-epic: cad-tools |
-| The pie widget (opens at the cursor; hover highlights; release or click runs; Escape closes) | ui/widgets.py:821-882 | n/a (display) | cad-tools epic | later-epic: cad-tools |
+| "View radial menu" (`view.radial`, Space: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit) | ui/app.py:318, ui/app.py:1095-1097 | n/a (display) | cad-modify epic | later-epic: cad-modify |
+| "Selection-mode radial menu" (`select.mode_radial`, Q: Body, Face, Edge, Vertex, Point) | ui/app.py:321, ui/app.py:1099-1101 | `PUT /selection {"mode"}` | cad-modify epic | later-epic: cad-modify |
+| The pie widget (opens at the cursor; hover highlights; release or click runs; Escape closes) | ui/widgets.py:821-882 | n/a (display) | cad-modify epic | later-epic: cad-modify |
 
 ## Command palette
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | List RoboCAD's registry commands with category and keys, and run one | ui/widgets.py:52-136, ui/app.py:247-251 | `GET /commands`, `POST /commands/{id}` (GUI only) | `cad::panel` commands list → `CadAction::CadCommand` → `CadClient::run_command`; a headless 409 "no GUI" is shown verbatim | done-by-reading |
-| "Command palette" (`command_palette`, Ctrl+Space or Shift+F): search "Type a command… (Ctrl+Space)" over id, label and category; ranked; first 60 | ui/app.py:282, ui/app.py:1109-1110, ui/widgets.py:79-108 | `GET /commands` | cad-tools epic | later-epic: cad-tools |
-| Key-conflict warning "⚠ conflicts with labels" | ui/widgets.py:72-77, ui/widgets.py:99-103 | `GET /commands` (`keys`) | cad-tools epic | later-epic: cad-tools |
-| Menus by category (File, Edit, View, Select, Create, Sketch, Modify, Planes, Inspect, Print, Advanced, Outliner, Robot, Bridge, Simulation, Help; "General" and "Window" fall into Help) | ui/app.py:433-439 | `GET /commands` (`category`) | cad-tools epic | later-epic: cad-tools |
+| "Command palette" (`command_palette`, Ctrl+Space or Shift+F): search "Type a command… (Ctrl+Space)" over id, label and category; ranked; first 60 | ui/app.py:282, ui/app.py:1109-1110, ui/widgets.py:79-108 | `GET /commands` | cad-modify epic | later-epic: cad-modify |
+| Key-conflict warning "⚠ conflicts with labels" | ui/widgets.py:72-77, ui/widgets.py:99-103 | `GET /commands` (`keys`) | cad-modify epic | later-epic: cad-modify |
+| Menus by category (File, Edit, View, Select, Create, Sketch, Modify, Planes, Inspect, Print, Advanced, Outliner, Robot, Bridge, Simulation, Help; "General" and "Window" fall into Help) | ui/app.py:433-439 | `GET /commands` (`category`) | cad-modify epic | later-epic: cad-modify |
 
 ## Print
 
@@ -701,14 +702,14 @@ calls. Who uses each route, by reading:
 | Autosave status | api.py:1133-1134, api.py:390-399 | `GET /autosave` (GUI only) | `CadClient::autosave` → `cad::panel` | done-by-reading |
 | Start a recovery save | api.py:1133-1134, api.py:392-393 | `POST /autosave` (GUI only) | cad-views-export epic | later-epic: cad-views-export |
 | Node summaries (`?kind=`) | api.py:1137-1138, api.py:532-533 | `GET /nodes` | `CadClient::nodes` | done-by-reading |
-| Create box, cylinder, sphere, sketch, plane, group, instance or measure (client) | api.py:1139-1140, api.py:541-571 | `POST /nodes` | cad-tools epic | later-epic: cad-tools |
+| Create box, cylinder, sphere, sketch, plane, group, instance or measure (client) | api.py:1139-1140, api.py:541-571 | `POST /nodes` | cad-modify epic | later-epic: cad-modify |
 | Node detail | api.py:1143-1144, api.py:102-133 | `GET /nodes/{id}` | `CadClient::node` → `cad::inspector` | done-by-reading |
 | Set attributes (name, visible, locked, disabled, material, color, pivot, transform, parent and index, tessellation_tolerance, plane, sketch) | api.py:1145-1146, api.py:573-612 | `PATCH /nodes/{id}` | `CadClient::patch` (`CadAction::CadPatch`) | done-by-reading |
 | Delete a node | api.py:1147-1148, api.py:614-618 | `DELETE /nodes/{id}` | `CadClient::delete` (`CadAction::CadDelete`) | done-by-reading |
-| Solid inventory | api.py:1150-1155 | `GET /nodes/{id}/solids` | cad-tools epic | later-epic: cad-tools |
-| Face references | api.py:1157-1158, api.py:621-623 | `GET /nodes/{id}/faces` | cad-tools epic | later-epic: cad-tools |
-| Edge references | api.py:1159-1160, api.py:625-627 | `GET /nodes/{id}/edges` | cad-tools epic | later-epic: cad-tools |
-| Vertices | api.py:1161-1162, api.py:629-631 | `GET /nodes/{id}/vertices` | cad-tools epic | later-epic: cad-tools |
+| Solid inventory | api.py:1150-1155 | `GET /nodes/{id}/solids` | cad-select-transform epic | later-epic: cad-select-transform |
+| Face references | api.py:1157-1158, api.py:621-623 | `GET /nodes/{id}/faces` | cad-select-transform epic | later-epic: cad-select-transform |
+| Edge references | api.py:1159-1160, api.py:625-627 | `GET /nodes/{id}/edges` | cad-select-transform epic | later-epic: cad-select-transform |
+| Vertices | api.py:1161-1162, api.py:629-631 | `GET /nodes/{id}/vertices` | cad-select-transform epic | later-epic: cad-select-transform |
 | Display mesh (vertices, triangles, triangle_face, face_count; 404 "no mesh") | api.py:1163-1164, api.py:633-637 | `GET /nodes/{id}/mesh?tolerance=` | `CadClient::mesh` → `cad::mesh` | done-by-reading |
 | Validation report | api.py:1165-1166, api.py:639-642 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
 | Exact B-rep section outline | api.py:1167-1168, api.py:644-647 | `GET /nodes/{id}/section?plane=` | cad-views-export epic | later-epic: cad-views-export |
@@ -800,18 +801,18 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `set_disabled` | commands.py:342 | `PATCH /nodes/{id} {"disabled"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_material` | commands.py:345 | `PATCH /nodes/{id} {"material"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_color` | commands.py:348 | `PATCH /nodes/{id} {"color"}` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_pivot` | commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | cad-tools epic | later-epic: cad-tools |
+| `set_pivot` | commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | cad-modify epic | later-epic: cad-modify |
 | `group` | commands.py:354 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 | `move_nodes` | commands.py:377 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
 | `move_node` | commands.py:395 | `PATCH /nodes/{id} {"parent", "index"}` | cad-organize epic | later-epic: cad-organize |
 | `set_active_group` | commands.py:398 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
 | `isolate` | commands.py:402 | `POST /ops/isolate` | cad-views-export epic | later-epic: cad-views-export |
 | `show_all` | commands.py:415 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
-| `box` | commands.py:419 | `POST /ops/box`; `POST /nodes` | cad-tools epic | later-epic: cad-tools |
-| `box_center` | commands.py:422 | `POST /ops/box_center` | cad-tools epic | later-epic: cad-tools |
-| `box_three_point` | commands.py:426 | `POST /ops/box_three_point` | cad-tools epic | later-epic: cad-tools |
-| `cylinder` | commands.py:437 | `POST /ops/cylinder` | cad-tools epic | later-epic: cad-tools |
-| `sphere` | commands.py:440 | `POST /ops/sphere` | cad-tools epic | later-epic: cad-tools |
+| `box` | commands.py:419 | `POST /ops/box`; `POST /nodes` | cad-modify epic | later-epic: cad-modify |
+| `box_center` | commands.py:422 | `POST /ops/box_center` | cad-modify epic | later-epic: cad-modify |
+| `box_three_point` | commands.py:426 | `POST /ops/box_three_point` | cad-modify epic | later-epic: cad-modify |
+| `cylinder` | commands.py:437 | `POST /ops/cylinder` | cad-modify epic | later-epic: cad-modify |
+| `sphere` | commands.py:440 | `POST /ops/sphere` | cad-modify epic | later-epic: cad-modify |
 | `new_sketch` | commands.py:444 | `POST /ops/new_sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `edit_sketch` (takes a Python callable, so `/ops` cannot pass it) | commands.py:449 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `extrude` | commands.py:480 | `POST /ops/extrude` | cad-sketch epic | later-epic: cad-sketch |
@@ -820,53 +821,53 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `pipe` | commands.py:498 | `POST /ops/pipe` | cad-sketch epic | later-epic: cad-sketch |
 | `loft` | commands.py:502 | `POST /ops/loft` | cad-sketch epic | later-epic: cad-sketch |
 | `fill` | commands.py:507 | `POST /ops/fill` | cad-sketch epic | later-epic: cad-sketch |
-| `bridge` | commands.py:511 | `POST /ops/bridge` | cad-tools epic | later-epic: cad-tools |
-| `push_pull` | commands.py:515 | `POST /ops/push_pull` | cad-tools epic | later-epic: cad-tools |
-| `offset_faces` | commands.py:518 | `POST /ops/offset_faces` | cad-tools epic | later-epic: cad-tools |
-| `offset_face_to` | commands.py:521 | `POST /ops/offset_face_to` | cad-tools epic | later-epic: cad-tools |
-| `move_faces` | commands.py:525 | `POST /ops/move_faces` | cad-tools epic | later-epic: cad-tools |
-| `rotate_faces` | commands.py:528 | `POST /ops/rotate_faces` | cad-tools epic | later-epic: cad-tools |
-| `set_radius` | commands.py:531 | `POST /ops/set_radius` | cad-tools epic | later-epic: cad-tools |
-| `set_diameter` | commands.py:534 | `POST /ops/set_diameter` | cad-tools epic | later-epic: cad-tools |
-| `set_distance` | commands.py:537 | `POST /ops/set_distance` | cad-tools epic | later-epic: cad-tools |
-| `set_angle` | commands.py:544 | `POST /ops/set_angle` | cad-tools epic | later-epic: cad-tools |
-| `draft` | commands.py:553 | `POST /ops/draft` | cad-tools epic | later-epic: cad-tools |
-| `delete_faces` | commands.py:556 | `POST /ops/delete_faces` | cad-tools epic | later-epic: cad-tools |
-| `untrim` | commands.py:559 | `POST /ops/untrim` | cad-tools epic | later-epic: cad-tools |
-| `imprint` | commands.py:562 | `POST /ops/imprint` | cad-tools epic | later-epic: cad-tools |
-| `split_face` | commands.py:566 | `POST /ops/split_face` | cad-tools epic | later-epic: cad-tools |
-| `boolean` | commands.py:573 | `POST /ops/boolean` | cad-tools epic | later-epic: cad-tools |
-| `region` | commands.py:588 | `POST /ops/region` | cad-tools epic | later-epic: cad-tools |
-| `cut` | commands.py:591 | `POST /ops/cut` | cad-tools epic | later-epic: cad-tools |
-| `shell` | commands.py:624 | `POST /ops/shell` | cad-tools epic | later-epic: cad-tools |
-| `thicken` | commands.py:627 | `POST /ops/thicken` | cad-tools epic | later-epic: cad-tools |
-| `fillet` | commands.py:630 | `POST /ops/fillet` | cad-tools epic | later-epic: cad-tools |
-| `fillet_chordal` | commands.py:633 | `POST /ops/fillet_chordal` | cad-tools epic | later-epic: cad-tools |
-| `fillet_all` | commands.py:636 | `POST /ops/fillet_all` | cad-tools epic | later-epic: cad-tools |
-| `full_round` | commands.py:639 | `POST /ops/full_round` | cad-tools epic | later-epic: cad-tools |
-| `remove_fillets` | commands.py:642 | `POST /ops/remove_fillets` | cad-tools epic | later-epic: cad-tools |
-| `chamfer` | commands.py:645 | `POST /ops/chamfer` | cad-tools epic | later-epic: cad-tools |
-| `transform` | commands.py:648 | `POST /ops/transform` | cad-tools epic | later-epic: cad-tools |
-| `mirror` | commands.py:694 | `POST /ops/mirror` | cad-tools epic | later-epic: cad-tools |
-| `instance` | commands.py:712 | `POST /ops/instance`; `POST /nodes {"kind": "instance"}` | cad-tools epic | later-epic: cad-tools |
-| `make_unique` | commands.py:719 | `POST /ops/make_unique` | cad-tools epic | later-epic: cad-tools |
-| `array_rect` | commands.py:728 | `POST /ops/array_rect` | cad-tools epic | later-epic: cad-tools |
-| `array_radial` | commands.py:738 | `POST /ops/array_radial` | cad-tools epic | later-epic: cad-tools |
-| `array_curve` | commands.py:743 | `POST /ops/array_curve` | cad-tools epic | later-epic: cad-tools |
-| `join` | commands.py:806 | `POST /ops/join` | cad-tools epic | later-epic: cad-tools |
-| `unjoin` | commands.py:814 | `POST /ops/unjoin` | cad-tools epic | later-epic: cad-tools |
-| `dissolve` | commands.py:823 | `POST /ops/dissolve` | cad-tools epic | later-epic: cad-tools |
-| `extract_components` | commands.py:826 | `POST /ops/extract_components` | cad-tools epic | later-epic: cad-tools |
-| `project_curve` | commands.py:856 | `POST /ops/project_curve` | cad-tools epic | later-epic: cad-tools |
-| `silhouette` | commands.py:860 | `POST /ops/silhouette` | cad-tools epic | later-epic: cad-tools |
-| `set_control_points` | commands.py:864 | `POST /ops/set_control_points` | cad-tools epic | later-epic: cad-tools |
-| `raise_degree` | commands.py:867 | `POST /ops/raise_degree` | cad-tools epic | later-epic: cad-tools |
-| `rebuild_face` | commands.py:870 | `POST /ops/rebuild_face` | cad-tools epic | later-epic: cad-tools |
+| `bridge` | commands.py:511 | `POST /ops/bridge` | cad-modify epic | later-epic: cad-modify |
+| `push_pull` | commands.py:515 | `POST /ops/push_pull` | cad-select-transform epic | later-epic: cad-select-transform |
+| `offset_faces` | commands.py:518 | `POST /ops/offset_faces` | cad-select-transform epic | later-epic: cad-select-transform |
+| `offset_face_to` | commands.py:521 | `POST /ops/offset_face_to` | cad-modify epic | later-epic: cad-modify |
+| `move_faces` | commands.py:525 | `POST /ops/move_faces` | cad-modify epic | later-epic: cad-modify |
+| `rotate_faces` | commands.py:528 | `POST /ops/rotate_faces` | cad-modify epic | later-epic: cad-modify |
+| `set_radius` | commands.py:531 | `POST /ops/set_radius` | cad-modify epic | later-epic: cad-modify |
+| `set_diameter` | commands.py:534 | `POST /ops/set_diameter` | cad-select-transform epic | later-epic: cad-select-transform |
+| `set_distance` | commands.py:537 | `POST /ops/set_distance` | cad-select-transform epic | later-epic: cad-select-transform |
+| `set_angle` | commands.py:544 | `POST /ops/set_angle` | cad-select-transform epic | later-epic: cad-select-transform |
+| `draft` | commands.py:553 | `POST /ops/draft` | cad-modify epic | later-epic: cad-modify |
+| `delete_faces` | commands.py:556 | `POST /ops/delete_faces` | cad-modify epic | later-epic: cad-modify |
+| `untrim` | commands.py:559 | `POST /ops/untrim` | cad-modify epic | later-epic: cad-modify |
+| `imprint` | commands.py:562 | `POST /ops/imprint` | cad-modify epic | later-epic: cad-modify |
+| `split_face` | commands.py:566 | `POST /ops/split_face` | cad-modify epic | later-epic: cad-modify |
+| `boolean` | commands.py:573 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
+| `region` | commands.py:588 | `POST /ops/region` | cad-modify epic | later-epic: cad-modify |
+| `cut` | commands.py:591 | `POST /ops/cut` | cad-modify epic | later-epic: cad-modify |
+| `shell` | commands.py:624 | `POST /ops/shell` | cad-modify epic | later-epic: cad-modify |
+| `thicken` | commands.py:627 | `POST /ops/thicken` | cad-modify epic | later-epic: cad-modify |
+| `fillet` | commands.py:630 | `POST /ops/fillet` | cad-modify epic | later-epic: cad-modify |
+| `fillet_chordal` | commands.py:633 | `POST /ops/fillet_chordal` | cad-modify epic | later-epic: cad-modify |
+| `fillet_all` | commands.py:636 | `POST /ops/fillet_all` | cad-modify epic | later-epic: cad-modify |
+| `full_round` | commands.py:639 | `POST /ops/full_round` | cad-modify epic | later-epic: cad-modify |
+| `remove_fillets` | commands.py:642 | `POST /ops/remove_fillets` | cad-modify epic | later-epic: cad-modify |
+| `chamfer` | commands.py:645 | `POST /ops/chamfer` | cad-modify epic | later-epic: cad-modify |
+| `transform` | commands.py:648 | `POST /ops/transform` | cad-select-transform epic | later-epic: cad-select-transform |
+| `mirror` | commands.py:694 | `POST /ops/mirror` | cad-modify epic | later-epic: cad-modify |
+| `instance` | commands.py:712 | `POST /ops/instance`; `POST /nodes {"kind": "instance"}` | cad-modify epic | later-epic: cad-modify |
+| `make_unique` | commands.py:719 | `POST /ops/make_unique` | cad-modify epic | later-epic: cad-modify |
+| `array_rect` | commands.py:728 | `POST /ops/array_rect` | cad-modify epic | later-epic: cad-modify |
+| `array_radial` | commands.py:738 | `POST /ops/array_radial` | cad-modify epic | later-epic: cad-modify |
+| `array_curve` | commands.py:743 | `POST /ops/array_curve` | cad-modify epic | later-epic: cad-modify |
+| `join` | commands.py:806 | `POST /ops/join` | cad-modify epic | later-epic: cad-modify |
+| `unjoin` | commands.py:814 | `POST /ops/unjoin` | cad-modify epic | later-epic: cad-modify |
+| `dissolve` | commands.py:823 | `POST /ops/dissolve` | cad-modify epic | later-epic: cad-modify |
+| `extract_components` | commands.py:826 | `POST /ops/extract_components` | cad-modify epic | later-epic: cad-modify |
+| `project_curve` | commands.py:856 | `POST /ops/project_curve` | cad-modify epic | later-epic: cad-modify |
+| `silhouette` | commands.py:860 | `POST /ops/silhouette` | cad-modify epic | later-epic: cad-modify |
+| `set_control_points` | commands.py:864 | `POST /ops/set_control_points` | cad-modify epic | later-epic: cad-modify |
+| `raise_degree` | commands.py:867 | `POST /ops/raise_degree` | cad-modify epic | later-epic: cad-modify |
+| `rebuild_face` | commands.py:870 | `POST /ops/rebuild_face` | cad-modify epic | later-epic: cad-modify |
 | `plane_from_face` | commands.py:874 | `POST /ops/plane_from_face` | cad-sketch epic | later-epic: cad-sketch |
 | `plane_three_points` | commands.py:878 | `POST /ops/plane_three_points` | cad-sketch epic | later-epic: cad-sketch |
 | `plane_two_points_camera` | commands.py:881 | `POST /ops/plane_two_points_camera` | cad-sketch epic | later-epic: cad-sketch |
 | `plane_midplane` | commands.py:887 | `POST /ops/plane_midplane` | cad-sketch epic | later-epic: cad-sketch |
-| `add_measurement` | commands.py:897 | `POST /ops/add_measurement`; `POST /nodes {"kind": "measure"}` | cad-tools epic | later-epic: cad-tools |
+| `add_measurement` | commands.py:897 | `POST /ops/add_measurement`; `POST /nodes {"kind": "measure"}` | cad-select-transform epic | later-epic: cad-select-transform |
 | `clearance` | commands.py:903 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
 | `fastener_hole` | commands.py:922 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
 | `add_joint` | commands.py:935 | `POST /ops/add_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
@@ -935,7 +936,7 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| `command_palette`: Ctrl+Space, Shift+F | keymap.json:3 | `GET /commands` | cad-tools epic | later-epic: cad-tools |
+| `command_palette`: Ctrl+Space, Shift+F | keymap.json:3 | `GET /commands` | cad-modify epic | later-epic: cad-modify |
 | `file.new`: Ctrl+N | keymap.json:4 | n/a | cad-views-export epic | later-epic: cad-views-export |
 | `file.open`: Ctrl+O | keymap.json:4 | n/a | cad-views-export epic | later-epic: cad-views-export |
 | `file.save`: Ctrl+S | keymap.json:4 | `POST /save` | `cad::keys` → `CadAction::CadSave` | done-by-reading |
@@ -946,11 +947,11 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `edit.undo`: Ctrl+Z | keymap.json:5 | `POST /undo` | `cad::keys` → `CadAction::CadUndo` | done-by-reading |
 | `edit.redo`: Ctrl+Shift+Z | keymap.json:5 | `POST /redo` | `cad::keys` → `CadAction::CadRedo` | done-by-reading |
 | `edit.delete`: Delete, Backspace | keymap.json:5 | `DELETE /nodes/{id}` | `cad::keys` → `CadAction::CadDelete` | done-by-reading |
-| `edit.copy`: Ctrl+C | keymap.json:5 | none: needs a Python route (as "Copy with Placement") | cad-tools epic | later-epic: cad-tools |
-| `edit.paste`: Ctrl+V | keymap.json:5 | none: needs a Python route (as "Paste with Placement") | cad-tools epic | later-epic: cad-tools |
-| `edit.select_all`: Ctrl+A | keymap.json:5 | `PUT /selection` | cad-tools epic | later-epic: cad-tools |
-| `edit.invert`: Ctrl+Shift+I | keymap.json:5 | `PUT /selection` | cad-tools epic | later-epic: cad-tools |
-| `edit.select_same_material`: Ctrl+Shift+M (`robot.add_motor` lists the same key, unbound; see below) | keymap.json:5 | `PUT /selection` | cad-tools epic | later-epic: cad-tools |
+| `edit.copy`: Ctrl+C | keymap.json:5 | none: needs a Python route (as "Copy with Placement") | cad-modify epic | later-epic: cad-modify |
+| `edit.paste`: Ctrl+V | keymap.json:5 | none: needs a Python route (as "Paste with Placement") | cad-modify epic | later-epic: cad-modify |
+| `edit.select_all`: Ctrl+A | keymap.json:5 | `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
+| `edit.invert`: Ctrl+Shift+I | keymap.json:5 | `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
+| `edit.select_same_material`: Ctrl+Shift+M (`robot.add_motor` lists the same key, unbound; see below) | keymap.json:5 | `PUT /selection` | cad-select-transform epic | later-epic: cad-select-transform |
 | `view.fit`: Home | keymap.json:6 | n/a (display) | `cad::keys` → `CadAction::CadFit` | done-by-reading |
 | `view.focus`: F | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
 | `view.front`: 1 | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
@@ -968,34 +969,34 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `view.hide`: H | keymap.json:6 | `POST /ops/set_visible` | cad-views-export epic | later-epic: cad-views-export |
 | `view.section`: Ctrl+Shift+X | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
 | `view.build_plate`: Ctrl+Shift+B | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.radial`: Space | keymap.json:6 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| `select.body`: B | keymap.json:7 | `PUT /selection {"mode"}` | cad-tools epic | later-epic: cad-tools |
-| `select.face`: Shift+B | keymap.json:7 | `PUT /selection {"mode"}` | cad-tools epic | later-epic: cad-tools |
-| `select.edge`: E | keymap.json:7 | `PUT /selection {"mode"}` | cad-tools epic | later-epic: cad-tools |
-| `select.vertex`: V | keymap.json:7 | `PUT /selection {"mode"}` | cad-tools epic | later-epic: cad-tools |
-| `select.point`: P | keymap.json:7 | `PUT /selection {"mode"}` | cad-tools epic | later-epic: cad-tools |
-| `select.mode_radial`: Q | keymap.json:7 | n/a (display) | cad-tools epic | later-epic: cad-tools |
-| `tool.select`: Escape | keymap.json:8 | n/a | cad-tools epic | later-epic: cad-tools |
+| `view.radial`: Space | keymap.json:6 | n/a (display) | cad-modify epic | later-epic: cad-modify |
+| `select.body`: B | keymap.json:7 | `PUT /selection {"mode"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| `select.face`: Shift+B | keymap.json:7 | `PUT /selection {"mode"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| `select.edge`: E | keymap.json:7 | `PUT /selection {"mode"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| `select.vertex`: V | keymap.json:7 | `PUT /selection {"mode"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| `select.point`: P | keymap.json:7 | `PUT /selection {"mode"}` | cad-select-transform epic | later-epic: cad-select-transform |
+| `select.mode_radial`: Q | keymap.json:7 | n/a (display) | cad-modify epic | later-epic: cad-modify |
+| `tool.select`: Escape | keymap.json:8 | n/a | cad-select-transform epic | later-epic: cad-select-transform |
 | `tool.annotate`: N | keymap.json:8 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
-| `tool.move`: G | keymap.json:8 | `POST /ops/transform` | cad-tools epic | later-epic: cad-tools |
-| `tool.rotate`: R | keymap.json:8 | `POST /ops/transform` | cad-tools epic | later-epic: cad-tools |
-| `tool.scale`: S | keymap.json:8 | `POST /ops/transform` | cad-tools epic | later-epic: cad-tools |
-| `tool.push_pull`: D | keymap.json:8 | `POST /ops/push_pull` | cad-tools epic | later-epic: cad-tools |
-| `tool.offset_face`: Shift+D | keymap.json:8 | `POST /ops/offset_faces` | cad-tools epic | later-epic: cad-tools |
-| `tool.box`: Shift+A, B | keymap.json:8 | `POST /ops/box` | cad-tools epic | later-epic: cad-tools |
-| `tool.cylinder`: Shift+A, C | keymap.json:8 | `POST /ops/cylinder` | cad-tools epic | later-epic: cad-tools |
-| `tool.sphere`: Shift+A, S | keymap.json:8 | `POST /ops/sphere` | cad-tools epic | later-epic: cad-tools |
+| `tool.move`: G | keymap.json:8 | `POST /ops/transform` | cad-select-transform epic | later-epic: cad-select-transform |
+| `tool.rotate`: R | keymap.json:8 | `POST /ops/transform` | cad-select-transform epic | later-epic: cad-select-transform |
+| `tool.scale`: S | keymap.json:8 | `POST /ops/transform` | cad-select-transform epic | later-epic: cad-select-transform |
+| `tool.push_pull`: D | keymap.json:8 | `POST /ops/push_pull` | cad-select-transform epic | later-epic: cad-select-transform |
+| `tool.offset_face`: Shift+D | keymap.json:8 | `POST /ops/offset_faces` | cad-select-transform epic | later-epic: cad-select-transform |
+| `tool.box`: Shift+A, B | keymap.json:8 | `POST /ops/box` | cad-modify epic | later-epic: cad-modify |
+| `tool.cylinder`: Shift+A, C | keymap.json:8 | `POST /ops/cylinder` | cad-modify epic | later-epic: cad-modify |
+| `tool.sphere`: Shift+A, S | keymap.json:8 | `POST /ops/sphere` | cad-modify epic | later-epic: cad-modify |
 | `tool.extrude`: X | keymap.json:8 | `POST /ops/extrude` | cad-sketch epic | later-epic: cad-sketch |
 | `tool.revolve`: Shift+R | keymap.json:8 | `POST /ops/revolve` | cad-sketch epic | later-epic: cad-sketch |
-| `tool.fillet`: Ctrl+F (the outliner's search placeholder also names Ctrl+F, which no command binds) | keymap.json:8 | `POST /ops/fillet` | cad-tools epic | later-epic: cad-tools |
-| `tool.chamfer`: Ctrl+Shift+F | keymap.json:8 | `POST /ops/chamfer` | cad-tools epic | later-epic: cad-tools |
-| `tool.shell`: Ctrl+Shift+H | keymap.json:8 | `POST /ops/shell` | cad-tools epic | later-epic: cad-tools |
-| `tool.measure`: M | keymap.json:8 | `POST /ops/add_measurement` | cad-tools epic | later-epic: cad-tools |
+| `tool.fillet`: Ctrl+F (the outliner's search placeholder also names Ctrl+F, which no command binds) | keymap.json:8 | `POST /ops/fillet` | cad-modify epic | later-epic: cad-modify |
+| `tool.chamfer`: Ctrl+Shift+F | keymap.json:8 | `POST /ops/chamfer` | cad-modify epic | later-epic: cad-modify |
+| `tool.shell`: Ctrl+Shift+H | keymap.json:8 | `POST /ops/shell` | cad-modify epic | later-epic: cad-modify |
+| `tool.measure`: M | keymap.json:8 | `POST /ops/add_measurement` | cad-select-transform epic | later-epic: cad-select-transform |
 | `tool.plane`: Ctrl+P | keymap.json:8 | `POST /ops/plane_from_face` | cad-sketch epic | later-epic: cad-sketch |
 | `tool.fastener`: Ctrl+H | keymap.json:8 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
 | `tool.clearance`: Ctrl+Shift+C | keymap.json:8 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
-| `tool.mirror`: Ctrl+M | keymap.json:8 | `POST /ops/mirror` | cad-tools epic | later-epic: cad-tools |
-| `tool.array`: Ctrl+Shift+A | keymap.json:8 | `POST /ops/array_rect` | cad-tools epic | later-epic: cad-tools |
+| `tool.mirror`: Ctrl+M | keymap.json:8 | `POST /ops/mirror` | cad-modify epic | later-epic: cad-modify |
+| `tool.array`: Ctrl+Shift+A | keymap.json:8 | `POST /ops/array_rect` | cad-modify epic | later-epic: cad-modify |
 | `sketch.line`: L | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.rectangle`: Shift+L | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.circle`: C | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
@@ -1004,14 +1005,14 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `sketch.slot`: Shift+S | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.spline`: Shift+C | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.text`: T | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
-| `modify.union`: Ctrl+U | keymap.json:10 | `POST /ops/boolean` | cad-tools epic | later-epic: cad-tools |
-| `modify.subtract`: Ctrl+Shift+U | keymap.json:10 | `POST /ops/boolean` | cad-tools epic | later-epic: cad-tools |
-| `modify.intersect`: Ctrl+Alt+U | keymap.json:10 | `POST /ops/boolean` | cad-tools epic | later-epic: cad-tools |
-| `modify.join`: J | keymap.json:10 | `POST /ops/join` | cad-tools epic | later-epic: cad-tools |
-| `modify.unjoin`: Shift+J | keymap.json:10 | `POST /ops/unjoin` | cad-tools epic | later-epic: cad-tools |
+| `modify.union`: Ctrl+U | keymap.json:10 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
+| `modify.subtract`: Ctrl+Shift+U | keymap.json:10 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
+| `modify.intersect`: Ctrl+Alt+U | keymap.json:10 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
+| `modify.join`: J | keymap.json:10 | `POST /ops/join` | cad-modify epic | later-epic: cad-modify |
+| `modify.unjoin`: Shift+J | keymap.json:10 | `POST /ops/unjoin` | cad-modify epic | later-epic: cad-modify |
 | `print.wall_check`: Ctrl+W | keymap.json:11 | `GET /nodes/{id}/thin` | cad-print epic | later-epic: cad-print |
 | `print.validate`: Ctrl+Shift+V | keymap.json:11 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
-| `numeric.entry`: Tab (cleared at ui/app.py:469 and routed by keyPressEvent) | keymap.json:12 | n/a | cad-tools epic | later-epic: cad-tools |
+| `numeric.entry`: Tab (cleared at ui/app.py:469 and routed by keyPressEvent) | keymap.json:12 | n/a | cad-select-transform epic | later-epic: cad-select-transform |
 | Keys listed in the registry but never bound, because they are not in keymap.json: `simulation.experiment` Ctrl+Return, `robot.add_motor` Ctrl+Shift+M (pressing it runs Select Same Material), `robot.add_joint` Ctrl+Shift+J (USER_GUIDE.md:368 and USER_GUIDE.md:375 document both) | ui/app.py:276, ui/app.py:408-409, ui/app.py:247-251 | n/a | cad-physical-inspect epic (decide the bindings deliberately) | later-epic: cad-physical-inspect |
 | Native addition: the same five shortcuts on Cmd and Ctrl in `cad::keys` (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Delete/Backspace, Home, Ctrl/Cmd+S) | n/a | as above | `cad::keys` | done-by-reading |
 
@@ -1029,8 +1030,9 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted from the tables above (2026-09-30) with a short script that reads
-each row's last cell, up to its reason. The count tables themselves are not
+Recounted from the tables above (2026-10-01, after the planned cad-tools'
+179 rows were split into cad-select-transform and cad-modify) with a short
+script that reads each row's last cell, up to its reason. The count tables themselves are not
 counted. There are 773 rows.
 
 | Status | Rows |
@@ -1043,7 +1045,8 @@ counted. There are 773 rows.
 
 | Later epic | Rows |
 |---|---|
-| cad-tools | 179 |
+| cad-modify | 116 |
+| cad-select-transform | 63 |
 | cad-views-export | 112 |
 | cad-organize | 108 |
 | cad-physical-inspect | 82 |

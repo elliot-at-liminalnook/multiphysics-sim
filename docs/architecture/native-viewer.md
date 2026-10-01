@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-09-30 after fold-sim-app; CAD mode verified at a4fe42d3; fold-sim-app written and reviewed by reading, awaiting its verification pass)
+## Where it is today (re-measured 2026-09-30 after fold-sim-app; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -127,7 +127,8 @@ duplicates physics.
   side-by-side steps [docs/cad-checklist.md](../cad-checklist.md).
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
-  reviewed by reading, awaiting the verification pass: `ViewerMode::Phenomena`
+  verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
+  `cargo check --workspace --all-targets --locked` clean): `ViewerMode::Phenomena`
   (`src/phenomena/`) runs `sim_phenomena::exhibits` on the "phenomena-run"
   `RunThread` with sim-app's pacing, `PhenomenaAction` and kit panels; robot
   mode opens planar v2 `*.simrobot.json` files through
@@ -1820,8 +1821,9 @@ user-facing capabilities into the one app and deleted the crate. There is
 now one viewer binary and one Bevy app. The ledger is
 [docs/sim-app-parity.md](../sim-app-parity.md): 58 rows, 44 done by
 reading, 11 deliberately different, 3 done for v2 and deliberately
-different for v3, none open. **Written and reviewed by reading only; the
-verification pass builds and tests it.** Paths are `crates/sim-spatial/src/`
+different for v3, none open. Written and reviewed by reading, then
+*verified at 80b5997e* (sim-spatial lib tests 172 passed, 1 ignored;
+workspace `--locked` check clean). Paths are `crates/sim-spatial/src/`
 unless they name another crate.
 
 ### Shape
@@ -2049,6 +2051,31 @@ Rejected or deferred, with reasons:
   generation only) → Present `robot.rs:2439` `draw` →
   `robot_planar::draw` (`robot_planar.rs:627`).
 
+## CAD selection and transform (2026-10-01)
+
+Batch cad-select-transform (default order item 7, §9 phase 1, the first
+half of the planned cad-tools epic; see §9 "Later CAD epics" 1). *In
+progress; this section is completed with the epic.*
+
+### Disk
+
+Free space was 18.49 GiB before the epic, below the 20 GiB build baseline.
+Removed 2026-10-01 (regenerable build output only; no `cargo clean`;
+`runs/`, `.claude-pair` and captures untouched), measured 27.59 GiB free
+afterwards:
+
+- 602 superseded incremental sessions in `target/debug/incremental/*/`
+  (every crate directory holding two finalized `s-*` sessions kept only
+  its newest, as rustc's own collection would): 10.19 GiB.
+- The deleted sim-app crate's build output: `target/debug/incremental/sim_app-*`
+  (3 directories) and `target/debug/deps/sim_app-*` and `libsim_app-*`
+  (320 files): 0.44 GiB.
+- 9 superseded incremental sessions in
+  `target/wasm32-unknown-unknown/debug/incremental/`: 0.18 GiB.
+- 608 superseded workspace-crate artifacts in `target/release/deps/`
+  (an older hash of the same crate and file kind, more than three days
+  older than the newest, which was kept): 2.76 GiB.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -2062,7 +2089,7 @@ Rejected or deferred, with reasons:
   annotations) survives the switch.
 - `sim-app`'s scenes (phenomena exhibits, CAD view) become modes of this app, or
   are retired once parity is shown by tracing their workflows in code.
-  *Done by fold-sim-app (2026-09-30), pending its verification pass:* the
+  *Done by fold-sim-app (2026-09-30), verified at 80b5997e:* the
   gallery is Phenomena mode, the CAD view's planar v2 files open in Robot
   mode, and sim-app is deleted ([ledger](../sim-app-parity.md)).
 - *Status:* in place since one-app-modes (see [One app](#one-app-2026-09-30)),
@@ -2424,38 +2451,57 @@ RoboCAD's REST service, like cad-mode. Every edit still goes through
 RoboCAD's command layer. Every Ops method is already callable through the
 `cad_op` REST command, so these epics build the *viewer UI*. Row-level scope
 is in [docs/cad-parity.md](../cad-parity.md) (773 rows: 113 cad-mode, 637
-later, 23 deliberately different). Twenty-three gaps there have no headless
+later, 23 deliberately different; the planned cad-tools' 179 rows were split
+2026-10-01 into cad-select-transform, 63, and cad-modify, 116). Twenty-three gaps there have no headless
 route. Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
 by the parity harness. Planned order:
 
-1. **cad-tools** (179 rows). Face, edge, vertex and point selection modes;
-   box select; hover; Alt disambiguation; the select-all, invert,
-   same-material and edges→faces commands. Then the transform gizmo
-   (move/rotate/scale), push/pull and offset, primitives, fillets and
-   chamfer, shell, measure, mirror, array, instance and pivot. Also every
-   Modify command (booleans, region, join/unjoin, dissolve, draft, delete
-   faces, cut, split, imprint, project, silhouette, control points,
-   rebuild, dependent offset), the numeric bar with unit expressions
-   (needs a Rust port of `units.evaluate`), live dimensions, snapping, both
-   radial menus and the command palette with key conflicts. Routes:
-   `/nodes/{id}/faces|edges|vertices|solids`, `POST /ops/*` (transform,
-   push_pull, offset_faces, fillet, chamfer, shell, boolean, …),
-   `PUT /selection` with `mode`, `POST /nodes`, `GET /commands`. Gaps:
-   copy and paste with placement, reading control points, curvature comb,
-   continuity check, and B-rep edge polylines (needed for edge picking;
-   shared with cad-views-export). It comes first because sketching and
-   printing reuse its picking, snapping and numeric entry.
-2. **cad-sketch** (60 rows). The active plane, construction planes (from a
+1. **cad-select-transform** (63 rows; the first half of the planned
+   cad-tools, split 2026-10-01 because one turn could not deliver 179 rows
+   well). Sub-body selection and direct transforms: face, edge, vertex and
+   point selection modes (B, Shift+B, E, V, P); hover; box select; Alt
+   disambiguation; select-all, invert, same-material and edges→faces;
+   selection pushed to and adopted from `/selection` as `[node, kind,
+   index]` with its mode; the inspector's face, edge and vertex details;
+   the move, rotate and uniform-scale gizmo with RoboCAD's pivot rule;
+   push/pull and offset of faces; measure (kept as a measure node on
+   Shift); the numeric bar with unit expressions over a Rust port of
+   `units.evaluate` (`sim_runtime::units`); live dimensions of the selected
+   faces and edges (`set_diameter`, `set_distance`, `set_angle`);
+   snapping (vertex, midpoint, centre, grid, plane; Alt suppresses) with
+   its readout; tool cursors and the tool · mode hint. Routes:
+   `/nodes/{id}/faces|edges|vertices|solids`, `GET /nodes/{id}/edges?samples=N`
+   (sampled B-rep edge polylines, the one read-only Python addition this
+   epic makes), `PUT /selection`, `POST /ops/transform|push_pull|offset_faces|set_diameter|set_distance|set_angle|add_measurement`.
+   It comes first because sketching, printing and cad-modify reuse its
+   picking, snapping and numeric entry.
+2. **cad-modify** (116 rows; the second half of the planned cad-tools). The
+   operation catalogue on top of cad-select-transform's picking and
+   numeric entry: primitives (box, centre box, three-point box, cylinder,
+   sphere), fillets (variable, chordal, all edges, full round, remove),
+   chamfer, shell, thicken, draft, mirror (and live), array (rectangular,
+   radial, curve), instance, make unique, pivot editing and "set pivot at
+   cursor", the inspector's pivot and transform editors, multi-node delete
+   as one step, every Modify command (booleans, region, join/unjoin,
+   dissolve, delete faces, cut, split, imprint, project, silhouette,
+   control points, raise degree, rebuild, dependent offset, the REST-only
+   direct edits), the tools toolbar and right-click menu, both radial
+   menus, and the command palette with key conflicts and menus by
+   category. Routes: `POST /ops/*`, `POST /nodes`, `GET /commands`. Gaps:
+   copy and paste with placement, reading control points, curvature comb
+   and continuity check (each needs a Python route).
+3. **cad-sketch** (60 rows). The active plane, construction planes (from a
    face, three points, two points and the camera, midplane), the 13 sketch
    tools, sketch offset/fillet/join and the REST-only edits (trim, split,
    extend, rebuild, vertices), extrude and revolve with boolean modifiers,
    sweep, pipe, loft and fill. Routes: `GET/POST /nodes/{id}/sketch`,
    `POST /nodes {"kind": "sketch"}`, `POST /ops/plane_*`,
    `POST /ops/extrude|revolve|sweep|pipe|loft|fill`. Curve-node display
-   shares the edge-polyline gap. RoboCAD has no sketch constraints, so
+   uses the sampled edge polylines cad-select-transform added
+   (`GET /nodes/{id}/edges?samples=N`). RoboCAD has no sketch constraints, so
    there is nothing to port there. The dead `sketch.arc` key (A) should be
    bound deliberately.
-3. **cad-views-export** (112 rows). Display modes (shaded with edges,
+4. **cad-views-export** (112 rows). Display modes (shaded with edges,
    wireframe, xray, matcap, render), pan, zoom to the cursor, trackball,
    view presets, the view cube, ortho and FOV, the grid, the build plate,
    the section tool (from display triangles) and exact sections, isolate,
@@ -2467,8 +2513,9 @@ by the parity harness. Planned order:
    `GET /nodes/{id}/section`, `POST /export`, `POST /import`,
    `GET /render`, `/loads/{id}`, `POST /autosave`. Gaps: the save
    thumbnail, the autosave interval and failure report, the mesh-unit
-   guess, edge polylines, and the GUI-only Blender link and web share.
-4. **cad-physical-inspect** (82 rows). The materials panel and engineering
+   guess, and the GUI-only Blender link and web share (edge polylines are
+   served since cad-select-transform; drawing them as display edges is here).
+5. **cad-physical-inspect** (82 rows). The materials panel and engineering
    properties, colour, the Robot panel (summary, tree, margins, issues),
    motor, joint, sensor and cable tools and dialogs, joint editing and
    joint-physics overrides, battery/control/uncertainty, the exact
@@ -2482,13 +2529,13 @@ by the parity harness. Planned order:
    `POST /ops/add_joint|set_joint|add_motor|attach_motor|set_joint_physics|set_material_props`.
    Gaps: per-node results (inspector line, stress overlay, margins) and
    the planar export variant. Port `results_margins` or add a route first.
-5. **cad-print** (33 rows). Wall check, validate, overhang shading,
+6. **cad-print** (33 rows). Wall check, validate, overhang shading,
    fastener and clearance tools, split for printing, strength, plan,
    strength-or-split, assembly guide, coupons, and the job list with
    progress and cancel. Routes: `GET /nodes/{id}/thin|validate`,
    `/print/*`, `POST /ops/fastener_hole|clearance|print_split`. Gap: the
-   print overlay's per-node results (shared with 4).
-6. **cad-organize** (108 rows; planned as cad-annotations). Outliner
+   print overlay's per-node results (shared with 5).
+7. **cad-organize** (108 rows; planned as cad-annotations). Outliner
    organization (search, groups, drag-and-drop, move to group, active
    group, inline rename, multi-select), comments and threads with pins and
    part links, references (images, placement, calibration, the linked
@@ -2499,7 +2546,7 @@ by the parity harness. Planned order:
    `POST /ops/group|move_nodes|set_active_group|import_references|update_reference|calibrate_reference|make_component|place_component|…`.
    Gaps: reference image pixels (viewport and list preview) and the
    geometry-rule recipes (`component_derivation.RECIPES`).
-7. **cad-experiments-motion** (63 rows). The experiments panel (Rhai
+8. **cad-experiments-motion** (63 rows). The experiments panel (Rhai
    editors, profiles, runs, cancel, baseline and compare, linked files,
    restore inputs, auto-rerun, the catalogue), run review, candidate
    review, model scripts and batches, the pose panel, motion programs and
@@ -2580,7 +2627,8 @@ The Director re-ranks with evidence, but this is the default:
    `sim-spatial` over its REST service, in several epics. **cad-mode**
    (2026-09-30; see [CAD mode](#cad-mode-2026-09-30)) is verified at
    a4fe42d3 and awaits the user's [CAD checklist](../cad-checklist.md).
-   Next: **cad-tools**. Remaining, in order (§9 "Later CAD epics"): cad-tools, cad-sketch,
+   **cad-select-transform** (2026-10-01) is in progress. Remaining, in
+   order (§9 "Later CAD epics"): cad-modify (next), cad-sketch,
    cad-views-export, cad-physical-inspect, cad-print, cad-organize,
    cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
@@ -2588,7 +2636,8 @@ The Director re-ranks with evidence, but this is the default:
    each.
 10. **OCCT from Rust** (§9 phase 4). Several epics, one kernel area each.
 11. **Fold in `sim-app`.** Bring its scenes in as modes, or retire them.
-    *Done 2026-09-30 pending its verification pass (batch fold-sim-app; see
+    *Done 2026-09-30, verified at 80b5997e (batch fold-sim-app; sim-spatial
+    lib tests 172 passed, 1 ignored; workspace `--locked` check clean; see
     [Fold in sim-app](#fold-in-sim-app-2026-09-30)).*
 
 After that, feature work resumes on the target shape. Split large files while

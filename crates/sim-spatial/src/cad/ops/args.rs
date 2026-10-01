@@ -182,6 +182,12 @@ fn vec3(entry: &OpEntry, values: &Map<String, Value>, name: &str) -> Result<[f64
     }
 }
 
+/// An optional point parameter: None when it was not given (`super::values`
+/// leaves out a parameter with an empty default that is empty).
+fn opt_vec3(entry: &OpEntry, values: &Map<String, Value>, name: &str) -> Result<Option<[f64; 3]>, String> {
+    if values.contains_key(name) { vec3(entry, values, name).map(Some) } else { Ok(None) }
+}
+
 fn pt(v: [f64; 3]) -> String {
     format!("({}, {}, {})", num(v[0]), num(v[1]), num(v[2]))
 }
@@ -301,7 +307,12 @@ fn arg(entry: &OpEntry, a: &Arg, r: &Resolved, g: &Group, values: &Map<String, V
             let node = g.node.as_ref().ok_or_else(missing)?;
             face_ref(node, *g.faces.first().ok_or_else(missing)?)
         }
-        Arg::FaceB => r.faces.get(1).map(|(n, f)| face_ref(n, *f)).ok_or_else(missing)?,
+        // RoboCAD's midplane takes exactly two picks (ui/tools.py:1096-1098).
+        Arg::FaceB => match r.faces.as_slice() {
+            [_, (n, f)] => face_ref(n, *f),
+            [] | [_] => return Err(missing()),
+            more => return Err(format!("{} takes exactly two faces ({} selected): select two faces", entry.label, more.len())),
+        },
         Arg::Keyed(key, name) => {
             let mut m = Map::new();
             m.insert((*key).to_string(), param(entry, values, name)?.clone());
@@ -459,7 +470,8 @@ fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
 /// RoboCAD's `PrimitiveTool` on the active plane (ui/tools.py:491-532;
 /// `ctx.active_plane()`: the active plane, else XY). The anchor parameter
 /// is a model point, projected onto the plane (`plane.to_local(anchor)`,
-/// tools.py:522-529); the sphere keeps its centre. The box as `_make_box`
+/// tools.py:522-529); the sphere keeps its centre. Without an anchor it is
+/// the plane's origin (`anchor = self.p0 or plane.origin`, tools.py:524). The box as `_make_box`
 /// (width and depth at least 1e-3; a height within 1e-6 of zero is 1; a
 /// negative height extrudes |h| along −normal), the centre box centred in
 /// the plane only, the cylinder as `_finish` (axis ± the normal by the
@@ -477,11 +489,17 @@ fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>, env
     let frame = env.plane.map_or(Ok(PlaneFrame::XY), |p| p.frame_or_xy())?;
     let on_xy = frame.same(&PlaneFrame::XY, 1e-9);
     let r3 = |v: [f64; 3]| [round6(v[0]), round6(v[1]), round6(v[2])];
+    // The anchor in the plane (u, v, w): the plane's origin when not given.
+    let local = |anchor: Option<[f64; 3]>| match anchor {
+        Some(a) if on_xy => a,
+        Some(a) => frame.to_local(a),
+        None => [0.0; 3],
+    };
     let call = match primitive {
         Primitive::BoxCorner | Primitive::BoxCentre => {
-            let anchor = vec3(entry, values, if primitive == Primitive::BoxCorner { "corner" } else { "center" })?;
+            let anchor = opt_vec3(entry, values, if primitive == Primitive::BoxCorner { "corner" } else { "center" })?;
             let (w, d, h) = (number(entry, values, "width")?, number(entry, values, "depth")?, number(entry, values, "height")?);
-            let [u, v, _] = if on_xy { anchor } else { frame.to_local(anchor) };
+            let [u, v, _] = local(anchor);
             let (x0, y0) = if primitive == Primitive::BoxCentre { (u - w / 2.0, v - d / 2.0) } else { (u, v) };
             let height = if h.abs() > 1e-6 { h.abs() } else { 1.0 };
             let (w, d) = (w.max(1e-3), d.max(1e-3));
@@ -502,14 +520,9 @@ fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>, env
             }
         }
         Primitive::Cylinder => {
-            let anchor = vec3(entry, values, "base")?;
+            let [u, v, _] = local(opt_vec3(entry, values, "base")?);
             let (dia, h) = (number(entry, values, "diameter")?, number(entry, values, "height")?);
-            let (base, normal) = if on_xy {
-                ([anchor[0], anchor[1], 0.0], [0.0, 0.0, 1.0])
-            } else {
-                let [u, v, _] = frame.to_local(anchor);
-                (frame.to_world(u, v, 0.0), frame.normal)
-            };
+            let (base, normal) = if on_xy { ([u, v, 0.0], [0.0, 0.0, 1.0]) } else { (frame.to_world(u, v, 0.0), frame.normal) };
             let base = r3(base);
             let axis = if h > 0.0 { r3(normal) } else { r3(normal.map(|x| -x)) };
             let radius = round6((dia / 2.0).max(1e-3));
@@ -517,7 +530,7 @@ fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>, env
             OpCall { name: entry.route, args: vec![json!(base), json!(axis), json!(radius), json!(round6(h.abs()))], kwargs: Map::new(), label }
         }
         Primitive::Sphere => {
-            let center = r3(vec3(entry, values, "center")?);
+            let center = r3(opt_vec3(entry, values, "center")?.unwrap_or(frame.origin));
             let radius = round6((number(entry, values, "diameter")? / 2.0).max(1e-3));
             let label = format!("Sphere Ø{} at {}", fl(2.0 * radius), pt(center));
             OpCall { name: entry.route, args: vec![json!(center), json!(radius)], kwargs: Map::new(), label }

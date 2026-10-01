@@ -32,7 +32,9 @@
 //!   (`CadActivePlane`), else XY. A placement keeps the plane it began on;
 //!   if the active plane changes during it, the placement ends with nothing
 //!   sent. A plane node whose frame is still being read refuses the press
-//!   by name. Base points are (u, v) in the plane (`to_local`), the height
+//!   by name; a placement under way keeps its plane while the node's frame
+//!   is re-read (each revision change), and its finish is refused by name
+//!   if the document changed since the press. Base points are (u, v) in the plane (`to_local`), the height
 //!   runs along its normal, the preview is drawn on it, and the finished
 //!   anchors are model points ([`finish_params`]); `args::place` turns them
 //!   into the Ops call for that plane.
@@ -392,8 +394,10 @@ fn pointer(
 
     let before = doc.ops.place.clone();
     let mut place = before.clone();
-    // The active plane changed during the placement: it ends with nothing sent.
-    if place.as_ref().is_some_and(|p| frame.as_ref().is_ok_and(|f| !f.same(&p.frame, 1e-9)) || frame.is_err()) {
+    // The active plane changed during the placement: it ends with nothing sent. A plane
+    // node's frame being re-read (every revision change) is not a change: the placement
+    // keeps its frame, and the finish's press-revision guard refuses by name if needed.
+    if place.as_ref().is_some_and(|p| frame.as_ref().is_ok_and(|f| !f.same(&p.frame, 1e-9))) {
         place = None;
         doc.show(Ok("The active plane changed: the placement ended (nothing was sent)".to_string()));
     }

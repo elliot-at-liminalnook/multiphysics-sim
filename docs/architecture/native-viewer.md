@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export written and reviewed by reading at f15766ea, pending its verification pass, see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
+## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -201,7 +201,7 @@ duplicates physics.
   **cad-views-export** (2026-10-01, see
   [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)),
   written and reviewed by reading in 78553886, 9b1e5eec and f15766ea,
-  pending its verification pass (nothing in it compiled or run yet): one
+  verified at bcf0c56c (see [Verification result](#verification-result-bcf0c56c)): one
   shared camera for every orbit mode (`src/camera/`, `CameraPlugin`,
   `CameraAction` with 13 `camera_*` commands; CAD gets RoboCAD's presets,
   89.5° pitch, zoom to the cursor, trackball, ortho/FOV and its extra
@@ -3394,8 +3394,8 @@ into done by reading and deliberately different, and the ledger's totals
 after the epic, are in its Counts), and the side-by-side steps are in
 [docs/cad-checklist.md](../cad-checklist.md) Part F. The work was written
 and reviewed by reading in commits 78553886, 9b1e5eec and f15766ea and is
-pending its verification pass: nothing in this epic has been compiled or
-run yet. Paths are relative to `crates/sim-spatial/src/` unless they name
+verified at bcf0c56c ([Verification result](#verification-result-bcf0c56c)).
+Paths are relative to `crates/sim-spatial/src/` unless they name
 another crate.
 
 ### Shape
@@ -3856,6 +3856,47 @@ pass).
 - Then the user's [docs/cad-checklist.md](../cad-checklist.md) Part F,
   each step against RoboCAD's own window.
 
+### Verification result (bcf0c56c)
+
+The verification pass (2026-10-01) over 1b00d789..813f0a86 and its fixes:
+
+- `cargo check --workspace --all-targets` found 3 errors and 2 new
+  warnings in sim-spatial. All are fixed in a33d0a2c:
+  - tracing's `info!` shadowed serde_json's `Value` (E0782);
+  - an `Outcome::Image` arm was missing (E0004);
+  - a private `Shown` type was in a `pub(super)` signature;
+  - an unused import and an unused re-export.
+- Five reviewers read the diff by area. Fixes are in 4883aef2 (files,
+  views, section, picking, surfaces) and 8ce1ed43 (camera).
+- The camera fixes:
+  - split view and close-up work when the view has no viewport;
+  - restores stop a spin;
+  - leaving orthographic restores the mode's own near plane;
+  - Home and Fit frame with the view area's aspect;
+  - Robot's zoom is clamped when the model's extent changes.
+- The linker failed once on missing `sim_runtime` LLVM-local symbols: a
+  corrupt incremental cache left by killed builds. Removing
+  `target/debug/incremental/sim_runtime-*` (about 4 GB, regenerable) fixed
+  it.
+- `cargo build -p sim-spatial --lib --tests --bins`: clean, with no
+  sim-spatial warnings (4 min).
+- `cargo test -p sim-spatial --lib --bins`: lib 356 passed, 1 ignored;
+  bins 4 passed. bcf0c56c fixes two tests, and neither change touches
+  behaviour:
+  - the node-fit test compared rotations with f32 `angle_between`, which
+    is acos noise of about 1e-3 rad; it now compares the quaternion dot
+    product;
+  - the clip test checked the collapsed point of removed triangles.
+- `cargo test -p sim-runtime --lib cad_client`: 65 passed.
+- `cargo test -p sim-runtime --lib units`: 29 passed.
+- `loopback_http` has no unit tests of its own (0 matched). Its
+  `exchange_bytes` is covered by the `cad_client` fake-server tests.
+- `cd cad && .venv/bin/pytest -q tests`: 396 passed, before 4883aef2,
+  which changes no Python.
+- `cargo check -p sim-web --target wasm32-unknown-unknown`: no errors.
+  Four warnings remain, all in files this epic did not touch: sim-agent
+  lib.rs:451 and :467, and sim-runtime `decision` and `rotor_speed`.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -4258,8 +4299,8 @@ modes, grid, build plate, view cube, high contrast, section preview and
 exact section, saved views, isolate/hide/show all, per-node tessellation
 tolerance and the file workflows (new, open, save as, import with units,
 export, drawing, render) with three api.py gap routes; it is written and
-reviewed by reading (78553886, 9b1e5eec, f15766ea), pending its
-verification pass. Next: its verification pass, then cad-physical-inspect.
+reviewed by reading (78553886, 9b1e5eec, f15766ea), and verified at
+bcf0c56c. Next: cad-physical-inspect.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -4350,7 +4391,7 @@ by the parity harness. Planned order:
    served since cad-select-transform; drawing them as display edges is here).
    *Done by reading 2026-10-01* (78553886, 9b1e5eec, f15766ea; see
    [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)),
-   pending its verification pass. Every row is now done by reading or
+   verified at bcf0c56c. Every row is now done by reading or
    deliberately different; the split and the ledger's totals are in
    [docs/cad-parity.md](../cad-parity.md)'s Counts. Gaps closed by new
    routes: the save thumbnail (`POST /save/thumbnail`) and the mesh-unit
@@ -4480,9 +4521,10 @@ The Director re-ranks with evidence, but this is the default:
    is verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; `cad_client` 47; `units` 29; api pytests 61; sim-web wasm check clean).
    **cad-views-export** (2026-10-01; see
    [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
-   is written and reviewed by reading at f15766ea, pending its
-   verification pass (nothing in it compiled or run yet).
-   Next: the cad-views-export verification pass, then **cad-physical-inspect**.
+   is verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4;
+   `cad_client` 65; `units` 29; RoboCAD pytests 396; sim-web wasm check
+   without errors; see [Verification result](#verification-result-bcf0c56c)).
+   Next: **cad-physical-inspect**.
    Remaining, in order (§9 "Later CAD epics"):
    cad-physical-inspect, cad-print, cad-organize, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).

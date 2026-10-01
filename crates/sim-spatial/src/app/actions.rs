@@ -360,6 +360,9 @@ pub fn registry() -> &'static [Feature] {
             feature::<crate::phenomena::PhenomenaAction>("phenomena", <crate::phenomena::PhenomenaAction as Action>::commands),
             // The shared camera's `camera_*` commands, in every orbit mode.
             feature::<crate::camera::CameraAction>("camera", <crate::camera::CameraAction as Action>::commands),
+            // The one selection (native-viewer.md §7): no REST command of its
+            // own; each mode's selection command is an adapter onto it.
+            feature::<crate::selection::SelectionAction>("selection", <crate::selection::SelectionAction as Action>::commands),
             // `system_ui` in inspect and place mode: the switcher's controls (listed last, as before).
             feature::<WindowAction>("switcher", WindowAction::switcher_commands),
         ]

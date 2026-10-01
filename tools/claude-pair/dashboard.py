@@ -85,23 +85,26 @@ def result_text(block):
 _events_cache = {}
 
 
-def events(path):
-    """Parsed activity for one call's stream, cached until the file changes."""
+def events(path, deep=False):
+    """Parsed activity for one call's stream, cached until the file changes.
+    Only the live call needs the deep read that keeps its subagents' spawn
+    calls in view; finished calls parse a smaller tail."""
     try:
         stat = path.stat()
         key = (stat.st_mtime_ns, stat.st_size)
     except OSError:
         return [], None
+    key = key + (deep,)
     hit = _events_cache.get(str(path))
     if hit and hit[0] == key:
         return hit[1]
-    parsed = parse_events(path)
+    parsed = parse_events(path, 4_000_000 if deep else 400_000)
     _events_cache[str(path)] = (key, parsed)
     return parsed
 
 
-def parse_events(path):
-    raw = tail(path, 4_000_000)  # subagents write a lot; keep the Agent calls that started them in view
+def parse_events(path, limit):
+    raw = tail(path, limit)
     if not raw.strip():
         return [], None
     try:
@@ -234,11 +237,11 @@ def view(root):
         number, _, role = stem.partition("-")
         if not number.isdigit() or role not in ("director", "orchestrator", "worker"):
             continue
-        activity, result = events(root / "logs" / (stem + ".stdout"))
+        live = active and state.get("inflight", {}).get("prefix") == str(root / "logs" / stem)
+        activity, result = events(root / "logs" / (stem + ".stdout"), deep=live)
         prompt_text = prompt.read_text()
         output = root / "logs" / (stem + ".stdout")
         updated = output.stat().st_mtime if output.exists() else prompt.stat().st_mtime
-        live = active and state.get("inflight", {}).get("prefix") == str(root / "logs" / stem)
         duration_ms = (result or {}).get("duration_ms")
         seconds = duration_ms / 1000 if isinstance(duration_ms, (int, float)) else max(0, (now if live else updated) - prompt.stat().st_mtime)
         total = (result or {}).get("total_cost_usd")
@@ -369,6 +372,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/":
                 html = (Path(__file__).parent / "dashboard.html").read_text().replace("__PAIR_TOKEN__", self.server.token)
                 return self.send(200, html, "text/html")
+            if path == "/api/ping":
+                return self.send(200, {"workspace": pair.read_json(self.server.root / "config.json")["worktree"]})
             if path == "/api/journal":
                 return self.send(200, shared_notebook.render(shared_notebook.entries(self.server.root)), "text/plain")
             if path in ("/dashboard.js", "/dashboard.css"):
@@ -413,10 +418,11 @@ class Handler(BaseHTTPRequestHandler):
                     if (reached(state["rounds"], config.get("max_rounds")) or reached(state["cost_usd"], config.get("budget_usd"))
                             or reached(state["elapsed_seconds"], (config.get("max_hours") or math.inf) * 3600)):
                         return self.send(409, {"error": "A run limit is reached. Increase the limit below before continuing."})
-                    if state.get("inflight") and not data.get("retry_interrupted"):
-                        return self.send(409, {"error": "The last turn was interrupted. Review its work and confirm resume.", "interrupted": True})
-                    self.server.launch(retry=bool(state.get("inflight")))
-                    return self.send(200, {"ok": True, "message": "The pair is continuing from its saved handoff."})
+                    interrupted = state.get("inflight")
+                    self.server.launch(retry=bool(interrupted))
+                    return self.send(200, {"ok": True, "message": (
+                        f"Continuing: the interrupted {interrupted['role']} turn resumes in its own session." if interrupted
+                        else "The pair is continuing from its saved handoff.")})
                 if path == "/api/retry-now":
                     state = pair.read_json(root / "state.json")
                     (root / "RETRY_NOW").touch()

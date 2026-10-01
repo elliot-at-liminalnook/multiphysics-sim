@@ -123,6 +123,17 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(argv[-1], str(self.root))
             self.assertEqual(self.post("start", {})[0], 409)
 
+    def test_continue_resumes_an_interrupted_turn_after_a_crash(self):
+        runner = pair.Runner(self.root)
+        runner.state.update(status="running", inflight={"role": "worker", "session_id": "s1", "prefix": "x", "reserved_usd": 0})
+        runner.save()
+        with patch.object(dashboard.subprocess, "Popen") as popen:
+            popen.return_value.poll.return_value = None
+            code, body = self.post("start", {})
+        self.assertEqual(code, 200)
+        self.assertIn("worker turn resumes", body["message"])
+        self.assertIn("--retry-interrupted", popen.call_args.args[0])
+
     def test_outer_settings_and_director_history_are_visible(self):
         self.assertEqual(self.post("outer", {"enabled": True, "max_batches": 3})[0], 200)
         self.assertEqual(self.post("outer", {"enabled": True, "max_batches": 0})[0], 400)

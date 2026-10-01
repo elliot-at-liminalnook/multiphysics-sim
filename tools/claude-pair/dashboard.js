@@ -149,6 +149,9 @@ function renderBanner() {
   } else if (!data.active && s.status === 'paused' && s.weekly_reset_at) {
     kind = 'warn';
     message = `<strong>Weekly Claude limit used up</strong>It resets ${esc(clock(s.weekly_reset_at))}${s.weekly_reset_at > data.now ? ' · in ' + esc(dur(s.weekly_reset_at - data.now)) : ''}. Press Continue after that; the interrupted session picks up where it stopped.`;
+  } else if (!data.active && s.inflight && !['blocked', 'paused', 'waiting'].includes(s.status)) {
+    kind = 'warn'; act = 'Continue';
+    message = `<strong>The run stopped unexpectedly</strong>The computer was shut down, or the coordinator crashed, partway through the ${esc(ROLES[s.inflight.role]?.name.toLowerCase() || 'agent')} turn. Its work in the folder is intact. Continue resumes that turn in its own session.`;
   } else if (!data.active && s.status === 'blocked') {
     kind = 'bad'; message = `<strong>The run stopped with an error</strong>${esc(s.message)}`;
     if (s.inflight) act = 'Resume interrupted turn';

@@ -22,13 +22,24 @@
 //!
 //! Network work runs on `Pool::Dedicated` (the jobs module's pool rule: a
 //! request may hold its thread for `cad_client::REQUEST_TIMEOUT`).
-use super::document::{CadDocument, ChildSlot, Connected, Connection, EditDone, PollCommand, PollSnapshot};
+mod launch;
+mod selection;
+
+#[cfg(test)]
+pub(super) use launch::{accept_served, serves};
+pub(crate) use selection::push_selection;
+pub(super) use selection::adopt_selection;
+#[cfg(test)]
+pub(super) use selection::selection_body;
+
+use super::document::{CadDocument, Connected, Connection, EditDone, PollCommand, PollSnapshot};
 use super::CadTarget;
-use crate::jobs::{Ctx, Job, Pool, RunThread};
+use crate::jobs::{Job, Pool, RunThread};
 use bevy::prelude::*;
+use launch::{log_tail, self_start};
+use selection::{detail, finish_selection};
 use serde_json::Value;
 use sim_runtime::cad_client::{CadClient, EDIT_TIMEOUT, SelectionItem, service};
-use std::path::Path;
 use std::sync::mpsc::{Receiver, RecvTimeoutError, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -77,6 +88,8 @@ pub(crate) fn start(doc: &mut CadDocument) {
     // and selection are adopted, not compared with the old service's.
     doc.doc_key = None;
     doc.remote_selection.clear();
+    // A desktop window's mode is adopted afresh from the new connection.
+    doc.remote_mode = None;
     doc.selection_pushed_at = None;
     doc.edit_waited = false;
     doc.selection_again = false;
@@ -106,86 +119,6 @@ pub(crate) fn start(doc: &mut CadDocument) {
     doc.shown_seconds = 0;
     doc.connect = Some(job);
     doc.touch();
-}
-
-/// Whether `health` is RoboCAD serving `document` (compared canonically,
-/// so /tmp and /private/tmp agree).
-fn serves(health: &sim_runtime::cad_client::Health, document: &Path) -> bool {
-    let canonical = |p: &Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
-    health.app == "robocad" && health.path.as_deref().is_some_and(|p| canonical(Path::new(p)) == canonical(document))
-}
-
-/// What a connect job says when the document closed its child slot.
-const SLOT_CLOSED: &str = "CAD mode closed this document while RoboCAD's service was starting; the service was stopped";
-
-/// The connect job of a `.rcad` file: the service on a free loopback port,
-/// waited for until it answers (a large document loads before it binds).
-/// The process goes into `slot` as soon as it is spawned (the document
-/// holds the same slot); a failed, cancelled or closed start stops it here.
-fn self_start(path: &Path, slot: &ChildSlot, ctx: &Ctx) -> Result<Connected, String> {
-    let cad_dir = crate::workspace::path("cad")?;
-    let python = service::interpreter(&cad_dir)?;
-    let document = std::path::absolute(path).map_err(|e| format!("{}: {e}", path.display()))?;
-    if !document.is_file() {
-        return Err(format!("{}: no such file", document.display()));
-    }
-    let port = service::free_port()?;
-    let url = format!("http://127.0.0.1:{port}");
-    let client = CadClient::new(&url).map_err(|e| e.to_string())?;
-    let log = service::log_path(port);
-    let child = crate::jobs::ChildProcess::spawn("RoboCAD service", service::service_command(&cad_dir, &python, &document, port))?;
-    let pid = child.id();
-    if let Err(child) = slot.put(child) {
-        child.stop();
-        return Err(SLOT_CLOSED.into());
-    }
-    ctx.message(format!("started RoboCAD's headless service (pid {pid}) at {url}; waiting for it to load {}", document.display()));
-    let deadline = Instant::now() + service::START_TIMEOUT;
-    let live = service::wait_until_live(
-        &client,
-        deadline,
-        || match slot.exited() {
-            Some(exit) => Err(exit),
-            None if slot.closed() => Err(SLOT_CLOSED.into()),
-            None => Ok(()),
-        },
-        || ctx.cancelled() || slot.closed(),
-    );
-    let stopped = ctx.cancelled() || slot.closed();
-    // The port was free when chosen, but another service could have bound it
-    // before this child did: only RoboCAD serving this document is accepted.
-    let live = live.and_then(|health| {
-        if serves(&health, &document) {
-            return Ok(health);
-        }
-        Err(format!(
-            "{url} answered as {} serving {}, not RoboCAD serving {}: another service took the port",
-            if health.app.is_empty() { "an unknown service" } else { health.app.as_str() },
-            health.path.as_deref().unwrap_or("a new document"),
-            document.display()
-        ))
-    });
-    match live {
-        Ok(health) if !stopped => Ok(Connected { client, health, self_started: true }),
-        result => {
-            // A service that never answered (or whose start was cancelled)
-            // is stopped, if the document has not already taken it.
-            if let Some(child) = slot.take() {
-                child.stop();
-            }
-            match result {
-                Ok(_) => Err(SLOT_CLOSED.into()),
-                Err(e) if stopped => Err(e),
-                Err(e) => Err(format!("{e}; its log {} ends: {}", log.display(), log_tail(&log))),
-            }
-        }
-    }
-}
-
-fn log_tail(log: &Path) -> String {
-    let tail = service::log_tail(log, LOG_TAIL);
-    let tail = tail.trim();
-    if tail.is_empty() { "(empty)".into() } else { tail.to_string() }
 }
 
 /// The poll worker for a connected client (its own copy, with [`POLL_TIMEOUT`]).
@@ -457,9 +390,23 @@ fn take_snapshot(doc: &mut CadDocument) {
         }
         None => {}
     }
+    // Our selection lost a deleted node's items: pushed once the snapshot is applied.
+    let mut pruned = false;
     if let Some(tree) = snapshot.doc {
-        // A deleted node leaves the selection.
-        doc.selection.retain(|id| tree.nodes.iter().any(|n| &n.id == id));
+        // A deleted node's items leave the selection (and the hover, the Alt menu).
+        let known = |i: &SelectionItem| tree.nodes.iter().any(|n| n.id == i.0);
+        let before = doc.selection.len();
+        doc.selection.retain(known);
+        pruned = doc.selection.len() != before;
+        if doc.hover.as_ref().is_some_and(|h| !known(h)) {
+            doc.hover = None;
+        }
+        if let Some(c) = &mut doc.candidates {
+            c.items.retain(known);
+            if c.items.is_empty() {
+                doc.candidates = None;
+            }
+        }
         doc.doc = Some(tree);
         doc.doc_key = snapshot.doc_key;
         changed = true;
@@ -488,10 +435,11 @@ fn take_snapshot(doc: &mut CadDocument) {
         doc.stale = stale;
         changed = true;
     }
-    // RoboCAD's selection (its body items), adopted when it changed there,
-    // unless our own push is in flight or the read predates its answer. A
-    // failed read is kept (shown in the connection line and cad_state)
-    // until one succeeds.
+    // RoboCAD's selection (all its items) and, from a desktop window, its
+    // mode: adopted when they changed there, unless our own push is in
+    // flight or the read predates its answer (`adopt_selection`). A failed
+    // read is kept (shown in the connection line and cad_state) until one
+    // succeeds.
     let selection = match snapshot.selection {
         Some((sent, Ok(selection))) => Some((sent, selection)),
         Some((_, Err(e))) => {
@@ -507,23 +455,15 @@ fn take_snapshot(doc: &mut CadDocument) {
         if doc.selection_error.take().is_some() {
             changed = true;
         }
-        let mut ids: Vec<String> = Vec::new();
-        for SelectionItem(node, kind, _) in &selection.items {
-            if kind == "body" && !ids.contains(node) {
-                ids.push(node.clone());
-            }
-        }
-        let current = doc.selection_job.is_none() && doc.selection_pushed_at.is_none_or(|at| sent >= at);
-        if current && ids != doc.remote_selection {
-            doc.remote_selection = ids.clone();
-            if doc.selection != ids {
-                doc.selection = ids;
-                changed = true;
-            }
-        }
+        changed |= adopt_selection(doc, sent, selection);
     }
     if changed {
         doc.touch();
+    }
+    // RoboCAD (a headless service keeps whatever was pushed) is told the
+    // pruned selection when it still differs from its copy.
+    if pruned && doc.connected() {
+        crate::cad::selection::publish(doc);
     }
 }
 
@@ -572,85 +512,6 @@ pub(crate) fn refresh(doc: &mut CadDocument, after_edit: bool) {
         doc.dirty_known_at = Some(if sent { published + 2 } else { u64::MAX });
     }
     doc.touch();
-}
-
-/// The selection push has answered: RoboCAD now holds our selection. A
-/// selection made while it was in flight is pushed now (the newest only).
-fn finish_selection(doc: &mut CadDocument) {
-    let Some(job) = &doc.selection_job else { return };
-    let Some(result) = job.poll() else { return };
-    let generation = job.generation();
-    doc.selection_job = None;
-    if generation != doc.generation {
-        return;
-    }
-    doc.selection_pushed_at = Some(Instant::now());
-    match result {
-        Ok(ids) => doc.remote_selection = ids,
-        Err(e) => doc.show(Err(format!("the selection was not pushed to RoboCAD: {e}"))),
-    }
-    if std::mem::take(&mut doc.selection_again) && doc.connected() && doc.selection != doc.remote_selection {
-        push_selection(doc);
-    }
-}
-
-/// Push the selection to RoboCAD's `/selection` as body items. One push at
-/// a time, so they land in order: while one is in flight, the newest
-/// selection is remembered and pushed when it answers (`finish_selection`).
-pub(crate) fn push_selection(doc: &mut CadDocument) {
-    if doc.selection_job.is_some() {
-        doc.selection_again = true;
-        return;
-    }
-    let Some(client) = doc.client.clone() else { return };
-    let items: Vec<SelectionItem> = doc.selection.iter().map(|id| SelectionItem(id.clone(), "body".into(), 0)).collect();
-    doc.selection_job = Some(Job::spawn(Pool::Dedicated, doc.generation, "cad-selection", move |_| {
-        let answered = client.set_selection(&items, None).map_err(|e| e.to_string())?;
-        let mut ids: Vec<String> = Vec::new();
-        for SelectionItem(node, kind, _) in answered.items {
-            if kind == "body" && !ids.contains(&node) {
-                ids.push(node);
-            }
-        }
-        Ok(ids)
-    }));
-}
-
-/// The inspected node's `GET /nodes/{id}`: refetched when the first
-/// selected node or the shown revision changes; a result for another node
-/// or revision is dropped.
-fn detail(doc: &mut CadDocument) {
-    let revision = doc.doc_key.as_ref().map_or(0, |k| k.1);
-    let wanted = doc.selection.first().map(|id| (id.clone(), revision));
-    if let Some(job) = &doc.detail_job {
-        if let Some(result) = job.poll() {
-            let generation = job.generation();
-            doc.detail_job = None;
-            if generation == doc.generation {
-                if let Some(key) = doc.detail_key.clone().filter(|k| Some(k) == wanted.as_ref()) {
-                    doc.detail = Some((key.0, key.1, result));
-                    doc.touch();
-                }
-            }
-        }
-    }
-    if doc.detail_key == wanted {
-        return;
-    }
-    match wanted {
-        None => {
-            doc.detail_key = None;
-            doc.detail_job = None;
-            if doc.detail.take().is_some() {
-                doc.touch();
-            }
-        }
-        Some((id, revision)) => {
-            let Some(client) = doc.client.clone().filter(|_| doc.connection == Connection::Connected) else { return };
-            doc.detail_key = Some((id.clone(), revision));
-            doc.detail_job = Some(Job::spawn(Pool::Dedicated, doc.generation, "cad-node-detail", move |_| client.node(&id).map_err(|e| e.to_string())));
-        }
-    }
 }
 
 /// Start `GET /physical?flex=0` for the shown revision.

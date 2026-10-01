@@ -7,7 +7,7 @@ use super::actions::{CadAction, rest_form};
 use super::document::{CadDocument, CadTarget, Connection, Edit, EditDone};
 use crate::app::actions::{self, Action};
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{CommandInfo, DocState, Health, History, NodeSummary};
+use sim_runtime::cad_client::{CommandInfo, DocState, Health, History, NodeSummary, SelectionItem};
 
 fn node(id: &str, parent: Option<&str>, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: "body".into(), name: name.into(), parent: parent.map(str::to_string), visible: true, effective_visible: true, ..Default::default() }
@@ -27,7 +27,7 @@ fn document() -> CadDocument {
         revision: 4,
         ..Default::default()
     });
-    doc.selection = vec!["b1".into()];
+    doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
     doc.commands = Some(Ok([("view.fit".to_string(), CommandInfo { label: "Fit view".into(), category: "View".into(), keys: json!("Home") })].into_iter().collect()));
     doc
 }
@@ -38,7 +38,7 @@ fn every_cad_control_fits_a_pattern_and_round_trips_through_rest() {
     let controls = super::panel::controls(&doc);
     let patterns = <CadAction as Action>::controls();
     let ids: Vec<&str> = controls.iter().map(|c| c.id.as_str()).collect();
-    for expected in ["cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:b1", "cad:visible:b2", "cad:locked:b1", "cad:disabled:b1", "cad:material:b1:al6061", "cad:command:view.fit"] {
+    for expected in ["cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:b1", "cad:visible:b2", "cad:locked:b1", "cad:disabled:b1", "cad:material:b1:al6061", "cad:command:view.fit", "cad:mode:face", "cad:mode:point", "cad:select_all", "cad:invert_selection", "cad:select_same_material", "cad:edges_to_faces", "cad:tool:move", "cad:tool:push_pull", "cad:tool:measure", "cad:cancel"] {
         assert!(ids.contains(&expected), "{expected} is not listed: {ids:?}");
     }
     for c in &controls {
@@ -53,7 +53,7 @@ fn every_cad_control_fits_a_pattern_and_round_trips_through_rest() {
     assert!(find("cad:redo").ready.is_err());
     assert!(find("cad:undo").ready.is_ok() && find("cad:undo").label.contains("Move"));
     // A tree row and a 3D pick write the same selection.
-    assert_eq!(find("cad:node:b2").action, CadAction::CadSelect { ids: vec!["b2".into()], extend: false });
+    assert_eq!(find("cad:node:b2").action, CadAction::CadSelect { ids: vec!["b2".into()], items: Vec::new(), extend: false, toggle: false });
 }
 
 #[test]

@@ -15,6 +15,18 @@
 //!   `cad_state` and the REST snapshot (Present).
 //! - [`keys`]: RoboCAD's shortcuts (Input).
 //! - `panel`, `tree`, `inspector`: the header, model tree and inspector.
+//! - [`view`]: the camera as plain matrices (projection and cursor rays in
+//!   RoboCAD's model frame), [`topology`]: faces, edges (sampled polylines)
+//!   and vertices by (node, revision).
+//! - `selection`, `pick`, `overlay`: sub-body selection (modes, hover, box
+//!   select, the Alt menu, the selection commands), picking and the
+//!   display-only highlights (cad-select-transform, native-viewer.md "CAD
+//!   selection and transform").
+//! - `transform`, `numeric`, `snap`, `measure`: the tools (gizmo move,
+//!   rotate and scale; push/pull and offset; measure), the numeric bar
+//!   with unit expressions, snapping and live dimensions. Previews are
+//!   display only; each commit is one RoboCAD Ops call through
+//!   `actions::edit`.
 //!
 //! Teardown is the one-app pattern: `app::switch`'s OnExit(ModeScope::Cad)
 //! removes the document, releases its self-started service at once
@@ -26,17 +38,30 @@ mod actions;
 mod document;
 mod inspector;
 mod keys;
+mod measure;
 mod mesh;
+mod numeric;
+mod overlay;
 mod panel;
+mod pick;
 mod scene;
+mod selection;
+mod snap;
 mod sync;
+mod topology;
+mod transform;
 mod tree;
+mod view;
+#[cfg(test)]
+mod lifecycle_tests;
 #[cfg(test)]
 mod tests;
 
-pub use actions::CadAction;
-pub use document::{CadDocument, CadInputFocus, CadTarget, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, TreeRow};
+pub use actions::{CadAction, Dimension, MeasurePick};
+pub use document::{CadDocument, CadInputFocus, CadTarget, CadTool, Candidates, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 pub use mesh::{BODY_KINDS, CadBody, CadMeshes, MeshCounts};
+pub use topology::{CadTopology, NodeTopology};
+pub use view::CadView;
 
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use bevy::prelude::*;
@@ -53,12 +78,19 @@ impl Plugin for CadCorePlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<CadAction>(app);
         app.init_resource::<CadInputFocus>()
-            .add_systems(OnEnter(ModeScope::Cad), (sync::enter, |mut commands: Commands| commands.insert_resource(CadMeshes::default())))
+            .add_systems(
+                OnEnter(ModeScope::Cad),
+                (sync::enter, |mut commands: Commands| {
+                    commands.insert_resource(CadMeshes::default());
+                    commands.insert_resource(CadTopology::default());
+                }),
+            )
             .add_systems(
                 Update,
                 (
                     actions::apply.in_set(ViewerSet::Actions),
                     sync::receive.in_set(ViewerSet::JobResults),
+                    topology::sync.in_set(ViewerSet::SimSync),
                     actions::publish.in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
@@ -77,18 +109,24 @@ pub struct CadPlugin;
 impl Plugin for CadPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(CadCorePlugin)
-            .add_systems(OnEnter(ModeScope::Cad), scene::setup)
+            .add_systems(OnEnter(ModeScope::Cad), (scene::setup, |mut commands: Commands| commands.insert_resource(CadView::default())))
             .add_systems(OnExit(ModeScope::Cad), scene::teardown)
             .add_systems(
                 Update,
                 (
                     // After the name field, so a key that opens or ends it this frame is its own (`CadInputFocus`).
                     keys::keys.after(crate::app::actions::serve).after(panel::name_entry).in_set(ViewerSet::Input),
-                    (mesh::sync, mesh::highlight, scene::fit, scene::orbit, scene::viewport).chain().in_set(ViewerSet::SimSync),
+                    (mesh::sync, mesh::highlight, scene::fit, scene::orbit, scene::viewport, view::update).chain().in_set(ViewerSet::SimSync),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
             );
         panel::build(app);
+        // Sub-body selection (picking, hover, box select, the Alt menu, mode
+        // buttons, overlays) and the tools (gizmo, push/pull, offset, measure,
+        // numeric bar, snapping): each registers its own systems, all writing
+        // `CadAction`s that `actions::apply` applies.
+        selection::build(app);
+        transform::build(app);
     }
 }
 
@@ -96,6 +134,8 @@ impl Plugin for CadPlugin {
 /// CAD mode's other resources.
 pub(crate) fn clear(world: &mut World) {
     world.remove_resource::<CadMeshes>();
+    world.remove_resource::<CadTopology>();
+    world.remove_resource::<CadView>();
     world.remove_resource::<mesh::CadMaterials>();
     if let Some(mut focus) = world.get_resource_mut::<CadInputFocus>() {
         focus.0 = false;

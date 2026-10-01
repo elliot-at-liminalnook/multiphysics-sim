@@ -11,7 +11,11 @@
 //! values RoboCAD sent as null (or non-finite) read "null in RoboCAD's
 //! answer", never a number. The attribute chips and Delete take their
 //! action and enabled state from `panel::controls`, so they match
-//! `system_ui`.
+//! `system_ui`. When the first selected item is a face, edge, vertex or
+//! point, a "Face 3" / "Edge 7" / "Vertex 2" / "Point on face 4" section
+//! comes first, from RoboCAD's topology of the node (`CadTopology`: `GET
+//! /nodes/{id}/faces|edges|vertices`), values as RoboCAD returned them (mm,
+//! mm²), "fetching…" while they load and the fetch's error verbatim.
 use super::actions::CadAction;
 use super::document::CadDocument;
 use super::document::Connection;
@@ -19,7 +23,8 @@ use super::panel::{CadButton, Control, HEADLESS_COMMANDS, Inert, NameDraft, Name
 use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, TEXT, VALUE, WARN, size, wrap};
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::NodeSummary;
+use super::topology::CadTopology;
+use sim_runtime::cad_client::{FaceInfo, NodeSummary, SelectionItem};
 use std::collections::BTreeMap;
 
 /// Keys whose values are provenance labels (shown as chips).
@@ -178,12 +183,139 @@ pub(super) fn name(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, dra
     }
 }
 
-pub(super) fn inspector_key(doc: &CadDocument) -> String {
+pub(super) fn inspector_key(doc: &CadDocument, topology: Option<&CadTopology>) -> String {
     let sel = doc.selected();
     let n = sel.and_then(|id| node(doc, id));
     let detail = doc.detail.as_ref().filter(|(id, ..)| Some(id.as_str()) == sel);
     let source = n.and_then(|n| n.source.as_deref()).map(|s| instance_of(doc, s));
-    format!("{:?}", (sel, n, source, detail, doc.connected(), waiting(doc)))
+    format!("{:?}", (sel, n, source, detail, doc.connected(), waiting(doc), sub_key(doc, topology)))
+}
+
+/// The first selected item when it is a face, edge, vertex or point.
+fn sub_item(doc: &CadDocument) -> Option<&SelectionItem> {
+    doc.selection.first().filter(|i| i.1 != "body")
+}
+
+/// What the sub-body section shows: the item, the selection's size and the
+/// node's topology state (the element shown, the error, or loading).
+fn sub_key(doc: &CadDocument, topology: Option<&CadTopology>) -> String {
+    let Some(SelectionItem(node, kind, index)) = sub_item(doc) else { return String::new() };
+    let state = topology.map(|t| match t.get(node) {
+        Some(topo) => {
+            let element = match kind.as_str() {
+                "edge" => format!("{:?}", topo.edges.iter().find(|e| e.index == *index).map(|e| (&e.kind, e.length, e.radius, e.center, e.start, e.end, e.midpoint))),
+                "vertex" => format!("{:?}", topo.vertices.iter().find(|v| v.index == *index)),
+                _ => format!("{:?}", topo.faces.iter().find(|f| f.index == *index)),
+            };
+            format!("{} {element}", topo.revision)
+        }
+        None => format!("{:?} {}", t.error(node), t.pending(node)),
+    });
+    format!("{node} {kind} {index} {} {} {state:?}", doc.selection.len(), doc.node_name(node))
+}
+
+/// Three coordinates as RoboCAD sent them, or the null text.
+fn point_text(v: Option<[f64; 3]>) -> (String, bool) {
+    match v {
+        Some(p) => (numbers(&p), true),
+        None => (NULL_VALUE.to_string(), false),
+    }
+}
+
+/// A vector row with its unit only when RoboCAD sent it.
+fn point_field(p: &mut ChildSpawnerCommands, k: &Kit, key: &str, v: Option<[f64; 3]>, unit: &str) {
+    let (text, present) = point_text(v);
+    field(p, k, key, &text, if present { unit } else { "" });
+}
+
+/// A face's rows (`face_json`): kind, area, normal, centroid, radius and its
+/// diameter, the axis for revolved surfaces.
+fn face_rows(p: &mut ChildSpawnerCommands, k: &Kit, f: &FaceInfo) {
+    field(p, k, "Surface", &f.kind, "");
+    mass_field(p, k, "Area", f.area, "mm²");
+    point_field(p, k, "Normal", f.normal, "");
+    point_field(p, k, "Centroid", f.centroid, "mm");
+    if let Some(r) = f.radius {
+        field(p, k, "Radius", &r.to_string(), "mm");
+        field(p, k, "Ø", &(2.0 * r).to_string(), "mm");
+    }
+    if f.axis_point.is_some() || f.axis_dir.is_some() {
+        point_field(p, k, "Axis point", f.axis_point, "mm");
+        point_field(p, k, "Axis direction", f.axis_dir, "");
+    }
+}
+
+/// The sub-body section ("Face 3", "Edge 7", "Vertex 2", "Point on face 4").
+fn sub_body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, topology: Option<&CadTopology>) {
+    let Some(SelectionItem(node, kind, index)) = sub_item(doc) else { return };
+    let title = match kind.as_str() {
+        "face" => format!("Face {index}"),
+        "edge" => format!("Edge {index}"),
+        "vertex" => format!("Vertex {index}"),
+        "point" => format!("Point on face {index}"),
+        other => format!("{other} {index}"),
+    };
+    let name = doc.node_name(node);
+    p.spawn(k.section(&title));
+    field(p, k, "Of", &name, "");
+    if doc.selection.len() > 1 {
+        field(p, k, "Selected items", &doc.selection.len().to_string(), "");
+    }
+    let Some(topology) = topology else {
+        p.spawn(k.caption("This window holds no topology (no 3D view)."));
+        return;
+    };
+    let Some(topo) = topology.get(node) else {
+        match topology.error(node) {
+            Some(e) => {
+                p.spawn(k.text(e.to_string(), size::SMALL, DANGER, 0));
+            }
+            None => {
+                p.spawn(k.caption("fetching…"));
+            }
+        }
+        return;
+    };
+    p.spawn(k.note(format!("RoboCAD's topology of {name} at revision {} (mm)", topo.revision)));
+    let missing = |what: &str| format!("RoboCAD listed no {what} {index} for {name} at revision {}.", topo.revision);
+    match kind.as_str() {
+        "edge" => match topo.edges.iter().find(|e| e.index == *index) {
+            Some(e) => {
+                field(p, k, "Curve", &e.kind, "");
+                mass_field(p, k, "Length", e.length, "mm");
+                if let Some(r) = e.radius {
+                    field(p, k, "Radius", &r.to_string(), "mm");
+                    field(p, k, "Ø", &(2.0 * r).to_string(), "mm");
+                }
+                if e.center.is_some() {
+                    point_field(p, k, "Centre", e.center, "mm");
+                }
+                point_field(p, k, "Start", e.start, "mm");
+                point_field(p, k, "End", e.end, "mm");
+                point_field(p, k, "Midpoint", e.midpoint, "mm");
+            }
+            None => {
+                p.spawn(k.caption(missing("edge")));
+            }
+        },
+        "vertex" => match topo.vertices.iter().find(|v| v.index == *index) {
+            Some(v) => point_field(p, k, "Position", v.point, "mm"),
+            None => {
+                p.spawn(k.caption(missing("vertex")));
+            }
+        },
+        _ => match topo.faces.iter().find(|f| f.index == *index) {
+            Some(f) => {
+                if kind == "point" {
+                    p.spawn(k.note("A point pick names the face it lies on; the face:"));
+                }
+                face_rows(p, k, f);
+            }
+            None => {
+                p.spawn(k.caption(missing("face")));
+            }
+        },
+    }
 }
 
 /// "Instance of": the source node's name and id (the id alone when the
@@ -224,10 +356,12 @@ fn mass_vector(p: &mut ChildSpawnerCommands, k: &Kit, key: &str, v: &[Option<f64
     field(p, k, key, &text, if v.iter().any(Option::is_some) { unit } else { "" });
 }
 
-/// The node: summary, transform, then RoboCAD's detail for it.
-pub(super) fn inspector(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
+/// The sub-body item (if the first selected is one), then the node:
+/// summary, transform, then RoboCAD's detail for it.
+pub(super) fn inspector(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, topology: Option<&CadTopology>) {
     let Some(id) = doc.selected() else { return };
     let Some(n) = node(doc, id) else { return };
+    sub_body(p, k, doc, topology);
     p.spawn(k.section("Node"));
     field(p, k, "Kind", &n.kind, "");
     field(p, k, "Id", &n.id, "");

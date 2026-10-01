@@ -18,17 +18,22 @@
 //!   `Pool::Compute` ([`build`]), and the asset and entity are made on the UI
 //!   thread. A body keeps its previous mesh on screen until the new
 //!   revision's arrives. Results of another generation or revision are dropped.
-//! - **Picking**: a click on a body writes `CadAction::CadSelect` (shift
-//!   extends), the same action a tree row writes.
-use super::actions::CadAction;
+//! - **Picking** is `pick`'s (one path for bodies, faces, edges, vertices
+//!   and points, through Bevy's `MeshRayCast` on these entities and
+//!   [`CadMeshes::face_of`]); the bodies carry `RayCastBackfaces` because
+//!   they are drawn double-sided (sheets are seen from both sides).
+//! - **Highlight** ([`highlight`]): a body selected as a body item is drawn
+//!   in the selection material; faces, edges, vertices and points are drawn
+//!   by `overlay`, so a face selection does not paint the whole body.
 use super::document::CadDocument;
-use crate::app::actions::Act;
 use crate::jobs::{Job, Pool};
+use bevy::picking::mesh_picking::ray_cast::RayCastBackfaces;
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use sim_runtime::cad_client::{MESH_TOLERANCE, MeshData};
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 /// RoboCAD node kinds that have a tessellation (`Document.mesh_of`: a body
 /// or sheet's own body, an instance's resolved body, a mesh node).
@@ -71,6 +76,11 @@ struct Entry {
     entity: Option<Entity>,
     /// Bounds of the drawn mesh (mm, RoboCAD's frame).
     bounds: Option<(Vec3, Vec3)>,
+    /// The revision the drawn mesh came from and RoboCAD's tessellation of
+    /// it (positions in mm, triangles, `triangle_face`): face picking,
+    /// face outlines and edges → faces read it. The drawn Bevy mesh keeps
+    /// RoboCAD's triangle order, so Bevy's triangle i is RoboCAD's triangle i.
+    drawn: Option<(u64, Arc<MeshData>)>,
 }
 
 struct Fetch {
@@ -81,7 +91,7 @@ struct Fetch {
 struct Building {
     id: String,
     revision: u64,
-    job: Job<Built>,
+    job: Job<(Built, Arc<MeshData>)>,
 }
 
 /// What `cad_state.meshes` reports.
@@ -140,6 +150,32 @@ impl CadMeshes {
     /// Whether node `id` is drawn.
     pub fn shown(&self, id: &str) -> bool {
         self.entries.get(id).is_some_and(|e| e.entity.is_some())
+    }
+
+    /// The entity drawing node `id`.
+    pub fn entity(&self, id: &str) -> Option<Entity> {
+        self.entries.get(id).and_then(|e| e.entity)
+    }
+
+    /// The RoboCAD revision node `id`'s drawn mesh came from.
+    pub fn drawn_revision(&self, id: &str) -> Option<u64> {
+        self.entries.get(id).and_then(|e| e.drawn.as_ref()).map(|(r, _)| *r)
+    }
+
+    /// RoboCAD's tessellation of node `id` as drawn (mm, RoboCAD's frame).
+    pub fn mesh_data(&self, id: &str) -> Option<&Arc<MeshData>> {
+        self.entries.get(id).filter(|e| e.entity.is_some()).and_then(|e| e.drawn.as_ref()).map(|(_, m)| m)
+    }
+
+    /// The B-rep face of node `id`'s drawn triangle `triangle` (RoboCAD's
+    /// `triangle_face`), as Bevy's ray cast reports the triangle.
+    pub fn face_of(&self, id: &str, triangle: usize) -> Option<i64> {
+        self.mesh_data(id)?.triangle_face.get(triangle).copied().filter(|f| *f >= 0)
+    }
+
+    /// Every drawn body's bounds (mm, RoboCAD's frame): box select's test.
+    pub fn body_bounds(&self) -> impl Iterator<Item = (&str, (Vec3, Vec3))> {
+        self.entries.iter().filter(|(_, e)| e.entity.is_some()).filter_map(|(id, e)| e.bounds.map(|b| (id.as_str(), b)))
     }
 }
 
@@ -297,16 +333,16 @@ pub(super) fn sync(
         match result {
             Ok(Some(data)) => {
                 let name = id.clone();
-                let job = Job::spawn(Pool::Compute, doc.generation, "cad-mesh-build", move |_| build(&name, &data));
+                let job = Job::spawn(Pool::Compute, doc.generation, "cad-mesh-build", move |_| build(&name, &data).map(|built| (built, Arc::new(data))));
                 meshes.building.push(Building { id, revision: at, job });
             }
             Ok(None) => {
-                let entry = meshes.entries.entry(id).or_insert(Entry { revision: Some(at), state: State::NoMesh, entity: None, bounds: None });
+                let entry = meshes.entries.entry(id).or_insert(Entry { revision: Some(at), state: State::NoMesh, entity: None, bounds: None, drawn: None });
                 if let Some(e) = entry.entity.take() {
                     commands.entity(e).despawn();
                     meshes.epoch += 1;
                 }
-                *entry = Entry { revision: Some(at), state: State::NoMesh, entity: None, bounds: None };
+                *entry = Entry { revision: Some(at), state: State::NoMesh, entity: None, bounds: None, drawn: None };
             }
             Err(error) => settle_failed(meshes, id, at, error),
         }
@@ -321,7 +357,7 @@ pub(super) fn sync(
         };
         let Building { id, revision: at, .. } = meshes.building.swap_remove(i);
         match result {
-            Ok(built) => {
+            Ok((built, data)) => {
                 let bounds = Some((built.min, built.max));
                 let handle = assets.add(bevy_mesh(built));
                 let existing = meshes.entries.get(&id).and_then(|e| e.entity);
@@ -331,12 +367,12 @@ pub(super) fn sync(
                         e
                     }
                     None => {
-                        let e = commands.spawn((Mesh3d(handle), MeshMaterial3d(materials.selected.clone()), Transform::default(), Visibility::default(), CadBody { id: id.clone() }, Pickable::default())).observe(pick).id();
+                        let e = commands.spawn((Mesh3d(handle), MeshMaterial3d(materials.selected.clone()), Transform::default(), Visibility::default(), CadBody { id: id.clone() }, Pickable::default(), RayCastBackfaces)).id();
                         commands.entity(*root).add_child(e);
                         e
                     }
                 };
-                meshes.entries.insert(id, Entry { revision: Some(at), state: State::Shown, entity: Some(entity), bounds });
+                meshes.entries.insert(id, Entry { revision: Some(at), state: State::Shown, entity: Some(entity), bounds, drawn: Some((at, data)) });
                 meshes.epoch += 1;
             }
             Err(error) => settle_failed(meshes, id, at, error),
@@ -400,12 +436,13 @@ fn counts_pending(meshes: &CadMeshes) -> bool {
 /// A failed fetch or build: reported, and the previous mesh (if any) stays
 /// drawn. Retried on a new revision, `cad_refresh` or a reconnection.
 fn settle_failed(meshes: &mut CadMeshes, id: String, revision: u64, error: String) {
-    let entry = meshes.entries.entry(id).or_insert(Entry { revision: Some(revision), state: State::NoMesh, entity: None, bounds: None });
+    let entry = meshes.entries.entry(id).or_insert(Entry { revision: Some(revision), state: State::NoMesh, entity: None, bounds: None, drawn: None });
     entry.revision = Some(revision);
     entry.state = State::Failed(error);
 }
 
-/// SimSync (after `sync`): each body's colour, or the selection's.
+/// SimSync (after `sync`): each body's colour, or the selection's for a
+/// body selected as a body item (`[id, "body", 0]`).
 pub(super) fn highlight(
     doc: Option<Res<CadDocument>>,
     meshes: Option<Res<CadMeshes>>,
@@ -422,21 +459,29 @@ pub(super) fn highlight(
     }
     *last = Some(key);
     for (body, mut material) in &mut bodies {
-        let want = if doc.selection.iter().any(|s| s == &body.id) { materials.selected.clone() } else { materials.colour(&mut assets, node_colour(&doc, &body.id)) };
+        let selected = doc.selection.iter().any(|s| s.0 == body.id && s.1 == "body");
+        let want = if selected { materials.selected.clone() } else { materials.colour(&mut assets, node_colour(&doc, &body.id)) };
         if material.0 != want {
             material.0 = want;
         }
     }
 }
 
-/// A click on a body selects it (shift adds it), as a tree row does.
-fn pick(click: On<Pointer<Click>>, bodies: Query<&CadBody>, keys: Option<Res<ButtonInput<KeyCode>>>, mut out: MessageWriter<Act<CadAction>>) {
-    if click.button != PointerButton::Primary {
-        return;
+impl CadMeshes {
+    /// Tests: node `id` drawn from `data` at `revision` (no entity is
+    /// spawned; the bounds are the data's).
+    #[cfg(test)]
+    pub(super) fn insert_drawn(&mut self, id: &str, revision: u64, data: MeshData) {
+        let (mut min, mut max) = (Vec3::splat(f32::INFINITY), Vec3::splat(f32::NEG_INFINITY));
+        for v in &data.vertices {
+            let p = Vec3::new(v[0] as f32, v[1] as f32, v[2] as f32);
+            min = min.min(p);
+            max = max.max(p);
+        }
+        let entry = Entry { revision: Some(revision), state: State::Shown, entity: Some(Entity::PLACEHOLDER), bounds: Some((min, max)), drawn: Some((revision, Arc::new(data))) };
+        self.entries.insert(id.to_string(), entry);
+        self.epoch += 1;
     }
-    let Ok(body) = bodies.get(click.entity) else { return };
-    let extend = keys.is_some_and(|k| k.pressed(KeyCode::ShiftLeft) || k.pressed(KeyCode::ShiftRight));
-    out.write(Act::ui(CadAction::CadSelect { ids: vec![body.id.clone()], extend }));
 }
 
 #[cfg(test)]

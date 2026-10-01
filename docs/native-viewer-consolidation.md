@@ -43,7 +43,7 @@ Rejected candidates and their disposition:
 | App | Why not the shell | Disposition |
 |---|---|---|
 | `sim-viewer` (eframe/egui schematic, `crates/sim-viewer/src/main.rs`) | Good 2D schematic and experiment review. Its REST covers only a subset of system edits (`system`, `system_state`, `system_level`, `system_select`, `system_undo`, `system_redo`, `system_grid`, `system_move`; no `system_run`, studies or `system_ui`). It has no 3D view. A second GUI toolkit in the same window as Bevy would need a bridge. | Keep as legacy until parity. Its reusable parts are already libraries: `sim-diagram` (schematic layout/projection, `TimeGraph` plot) and `sim_runtime::{experiment_study, controller_refinement::*}`. Port views into Bevy rather than embedding egui. |
-| `sim-app` (Bevy, `crates/sim-app/src/main.rs`) | No REST API and no system files. Both scenes step physics inside a Bevy `Update` system on the UI thread (`cad_app.rs:advance`, line 176; `phenomena_app.rs:advance`, line 180). This conflicts with the off-UI-thread rule. | Keep as legacy; not deleted. Its `--scene cad` window is now only the labelled fallback that RoboCAD's Simulate and `python -m robocad.simbridge` open when no sim-spatial binary is built (batch cad-simulate-native, §2b, §3). It is still the only viewer for planar v2 simrobot files (sim-spatial refuses them by name since batch cad-scene-parity); robot mode now has its own ×0.125–×8 speed scale. The phenomena gallery (`--scene phenomena`) is not migrated. Retire the cad scene after the remaining items in §3 are accepted. |
+| `sim-app` (Bevy, `crates/sim-app/src/main.rs`) | No REST API and no system files. Both scenes step physics inside a Bevy `Update` system on the UI thread (`cad_app.rs:advance`, line 176; `phenomena_app.rs:advance`, line 180). This conflicts with the off-UI-thread rule. | Keep as legacy; not deleted. Its `--scene cad` window is now only the labelled fallback that RoboCAD's Simulate and `python -m robocad.simbridge` open when no sim-spatial binary is built (batch cad-simulate-native, §2b, §3). It is still the only viewer for planar v2 simrobot files (sim-spatial refuses them by name since batch cad-scene-parity); robot mode now has its own ×0.125–×8 speed scale. The phenomena gallery (`--scene phenomena`) is not migrated. Retire the cad scene after the remaining items in §3 are accepted. **Update 2026-09-30 (fold-sim-app):** retired and deleted (b7a97853). The phenomena gallery is sim-spatial's Phenomena mode (`--phenomena`), planar v2 files open in robot mode through `cad_robot::build_planar`, and simbridge has no fallback; ledger `docs/sim-app-parity.md` (§6). |
 | Browser (`web/viewer`, `web/system-builder`, `sim-web` WASM) | The native-first direction supersedes it as the primary surface. | Preserved: it is the AGENTS.md realtime browser-walking surface. It is kept until native parity is shown and stays as a compatibility target afterwards. |
 | RoboCAD (Python/OCCT/Qt, `cad/robocad/ui/app.py`) | CAD kernel and authoring. Rewriting OCCT is out of scope. | Remains the CAD service behind REST (§3). |
 
@@ -132,8 +132,13 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `sim-spatial --robot` (batch cad-simulate-native, below); the legacy
   `sim-app --scene cad --model X.simrobot.json` (`cad_app.rs`) is only their
   fallback when sim-spatial is not built. Also the `sim-cad` CLI (cad/README).
+  **Update 2026-09-30 (fold-sim-app):** sim-app is retired; there is no
+  fallback (with no sim-spatial build nothing launches and the status names
+  `cargo build --release -p sim-spatial`), and planar v2 files open in robot
+  mode (§6).
 - **Reusable layer:** `sim_phenomena::scenarios::cad_robot` / `cad_physical`
-  (used by sim-app), `sim_domain_robot::PhysicalModel`,
+  (used by sim-app until its retirement; robot mode's planar v2 path calls
+  `cad_robot::build_planar`), `sim_domain_robot::PhysicalModel`,
   `sim_runtime::physical`, `sim_runtime::part_fit`, and the
   `sim-runtime cad-params` CLI (per builder-roadmap M7; *unverified* here).
 - **Shell status:** *partial*. sim-spatial draws CAD-exported OBJ display
@@ -823,6 +828,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `web/viewer/hardware-sync.mjs` (FPGA bridge, token gated) (native since hardware-front-end, 2026-09-30; the browser page stays the reference until the hardware checklist is signed off). `sim-app --scene cad`
   arrow keys set joint targets directly (`cad_app.rs:keyboard`). That is joint
   jogging, not motion requests through a walking controller.
+  **Update 2026-09-30 (fold-sim-app):** sim-app is retired; robot mode's planar v2
+  path keeps that arrow-key target jog (↑/↓ ±0.01 rad, Shift 0.05) for v2
+  files only, still joint jogging rather than motion requests.
 - **Reusable layer:** `sim_runtime::{session, embedded, environment, walking_task, steered_reference}`,
   `sim_domain_control::motion_clock`.
 - **Shell status:** *partial: native motion requests for embedded presets.*
@@ -1642,6 +1650,15 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   pointer-captured check of RoboCAD's Qt Simulate toggle opening sim-spatial;
   and removing the fallback branch from `viewer_command` together with its
   test. The phenomena gallery (`--scene phenomena`) is a separate migration.
+  **Update 2026-09-30 (fold-sim-app):** sim-app is retired and `crates/sim-app` deleted
+  (b7a97853); nothing above still needs it. Planar v2 files open in
+  sim-spatial robot mode through sim-phenomena's shared planar build
+  (`cad_robot::build_planar`, `robot_planar.rs`, labelled "planar v2 summary ·
+  uncalibrated · not the v3 physical model"; stress, gait, recordings, graphs,
+  joint/deflection overlays and the leg mirror refused by name), and
+  `PhysicalModel::parse`'s refusal now points at `sim-spatial --robot FILE`.
+  `simbridge.viewer_command` has no fallback branch. The gallery is
+  sim-spatial's Phenomena mode. Row-by-row ledger: `docs/sim-app-parity.md`.
 - **sim-viewer:** stays for schematic layout editing, plots and the
   `--experiments` review until c, i and j reach parity. The shell now covers
   read-only review of measured identification archives (§2j), but
@@ -1658,6 +1675,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   (`cad_app.rs:176`, `phenomena_app.rs:180`). It caps work at one grid step per
   frame but still blocks the frame. Do not port this pattern. Host these
   scenes on a worker, as sim-spatial's `run_thread` does.
+  **Update 2026-09-30 (fold-sim-app):** resolved by retirement: sim-spatial runs the
+  exhibits (`phenomena/run.rs`) and planar v2 files (`robot_planar.rs`) on
+  `jobs::RunThread`s, and sim-app is deleted.
 - **Small synchronous I/O on the UI thread in sim-spatial:** `save_run`
   (JSON write), `compare_runs` (loads records), and `Builder::apply` (store
   write) run inline in action handlers. They are fine for small files. Replay
@@ -1666,7 +1686,9 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   modules state that they only read committed frames (`builder/graphs.rs`,
   `physics_view.rs` headers). The browser JS mapping is command-only
   (`motion-commands.mjs` header). `sim-app` scenes use shared
-  `sim_phenomena` scenarios rather than their own integrators.
+  `sim_phenomena` scenarios rather than their own integrators (as do their
+  replacements, Phenomena mode and robot mode's planar v2 path, since
+  fold-sim-app).
 - **Fidelity labels:** the builder shows Detailed/Realtime and a staleness
   note for realtime measurements (`ui.rs:645`). Gait-lab fidelity strings
   (Gait lab tab, §2i) and actuator measured/derived/estimated provenance
@@ -1898,7 +1920,8 @@ unknown-id error).
      T20.2 fix ×1 holds 1.00 to t = 16.4 s and ×2–×8 reach ~1.2–1.26); stress
      peaks shown as kPa/Pa, stored values unchanged.
    - *Still not done:* a decision on v2 files and removal of the sim-app
-     fallback (§3); physical key and pointer input for the speed controls;
+     fallback (§3; both done in fold-sim-app, 2026-09-30: v2 runs in robot
+     mode and the fallback is gone); physical key and pointer input for the speed controls;
      a non-1 scale on preset and replay runs; a model fast enough to show ×4
      or ×8 achieved.
 12. **Done — recorded presets played back natively** (h/g; batch
@@ -1917,6 +1940,17 @@ unknown-id error).
      (recording-scrub). 07e0b59b touched sim-runtime, so the gait-lab
      runtime fingerprint changed and gait qualification must be rerun
      before evaluating gaits.
+13. **Done — sim-app folded in and retired** (b/g and the gallery; batch
+   fold-sim-app, 2026-09-30; b7a97853 deletes `crates/sim-app`).
+   - *Done:* Phenomena mode (`sim-spatial --phenomena [--exhibit N|title]`,
+     `PHENOMENA_EXHIBIT`, the switcher's Phenomena button, REST
+     `viewer_mode {"mode":"phenomena"}` and `phenomena_*` commands) runs
+     `sim_phenomena::exhibits` on a `jobs::RunThread` with ui_kit panels;
+     robot mode opens planar v2 files through `cad_robot::build_planar`;
+     `simbridge.viewer_command` has no sim-app fallback; the v2 refusal in
+     `PhysicalModel::parse` names `sim-spatial --robot FILE`.
+   - *Ledger:* `docs/sim-app-parity.md` (every sim-app behaviour, done or
+     deliberately different). Verification status is recorded there.
 
 ## 6. Launch path
 
@@ -1942,10 +1976,11 @@ FILE only choose the **initial** mode and its document; the window is one
 app (`sim_spatial::app::run`, `ViewerMode` states). Switch modes in the
 running window, through one handler (`app::switch::handle`):
 - the **mode switcher**, a row of buttons (Inspect, Build, Lessons, Robot,
-  Place) in the bottom-right corner of every mode, with the last outcome
+  Place, CAD, Phenomena; CAD since cad-mode and Phenomena since
+  fold-sim-app, 2026-09-30) in the bottom-right corner of every mode, with the last outcome
   (a refusal names its reason) above it;
 - `system_ui` controls `mode:inspect`, `mode:build`, `mode:lessons`,
-  `mode:robot`, `mode:place` (listed at the end of every mode's controls);
+  `mode:robot`, `mode:place`, `mode:cad`, `mode:phenomena` (listed at the end of every mode's controls);
 - REST `viewer_mode {"mode": …, "path"?: …, "preset"?: …}` (poll the job;
   `viewer_mode {}` or `GET /v1/viewer_mode` reports the active mode, and
   `state` carries `viewer_mode`).
@@ -2113,6 +2148,9 @@ sim-app cad scene (build: cargo build --release -p sim-spatial)". If nothing
 is built, nothing opens and the message names that build command. Build it
 first with `cargo build --release -p sim-spatial`; a release binary older
 than the source opens without newer features, because release is preferred.
+**Update 2026-09-30 (fold-sim-app):** the sim-app fallback is gone. With no
+sim-spatial binary, `viewer_command` returns no argv and the status is "no
+simulator viewer built: cargo build --release -p sim-spatial".
 
 Run speed and v2 files (batch cad-scene-parity). In robot mode, `-` and
 `=`/`+` (or the header − / + buttons, `system_ui` `run:speed_*`, REST
@@ -2121,7 +2159,17 @@ shows ×scale beside the achieved RTF and says "(compute-limited)" when the
 machine cannot keep up. A planar v2 simrobot does not open in sim-spatial:
 `--validate-only` exits 1, and the window shows the refusal naming the
 version and `sim-app --scene cad --model FILE`, which is the viewer to use
-for it.
+for it. **Update 2026-09-30 (fold-sim-app):** v2 files now open in robot mode
+(`sim-spatial --robot FILE` or a positional `*.simrobot.json`) through
+sim-phenomena's shared planar build `cad_robot::build_planar` on robot mode's
+planar run thread (`robot_planar.rs`), labelled "planar v2 summary ·
+uncalibrated · not the v3 physical model" (full text in `robot_state.format`).
+Keys: Space run/pause, R reset (rebuild from the loaded model), ←/→ joint
+select, ↑/↓ target ±0.01 rad per frame while held (Shift 0.05), C chain-tip
+contacts, `=`/`-` speed. Stress, gait preview, recordings and replay, graphs,
+the joint-frame and deflection overlays and the leg mirror are refused by
+name (`robot_planar::UNAVAILABLE`). The file is watched and reloaded, and
+`--validate-only` reports a v2 file through the same build.
 
 `sim-app --scene cad` is **no longer needed to run** a v3 simrobot file that
 builds with the default options, such as the wheeled baseline (verified in
@@ -2133,6 +2181,9 @@ sim-app still offers arrow-key jogging, which robot mode lacks; robot mode
 now also reloads on file change (below). `sim-app --scene cad` and `cad_app.rs` were not changed by
 this batch; their only diff against the run baseline is the earlier accepted
 1562f60c (shared collision triangulation).
+**Update 2026-09-30 (fold-sim-app):** sim-app is retired (b7a97853); robot
+mode's v2 path has the arrow-key jog, and v3 files keep the jog buttons,
+`system_ui` and REST. The 29-link build limitation is unchanged by it.
 
 Robot file reload (§2b). `sim-spatial --robot FILE.simrobot.json` (or the
 positional FILE) watches the file: it stats it every 0.5 s and, when the
@@ -2214,8 +2265,29 @@ the side-by-side steps are `docs/cad-checklist.md`. RoboCAD's window stays
 the reference and is still needed for sketching, direct-edit tools,
 printing, experiments, motion and the other later CAD epics.
 
+Phenomena mode (batch fold-sim-app, 2026-09-30) is sim-app's former default
+scene, the live gallery of `sim_phenomena::exhibits`, each exhibit on its own
+`jobs::RunThread` on simulation time (`crates/sim-spatial/src/phenomena/`):
+
+```
+cargo run --release -p sim-spatial -- --phenomena                      # the first exhibit
+cargo run --release -p sim-spatial -- --phenomena --exhibit quadruped  # number or title fragment
+```
+
+`PHENOMENA_EXHIBIT` sets the exhibit when `--exhibit` is absent; the switcher's
+**Phenomena** button, `system_ui` `mode:phenomena` and REST
+`viewer_mode {"mode":"phenomena"}` enter it from any mode. Keys as in sim-app:
+`]`/N/Tab next, `[`/P/Shift+Tab previous, digits 1–0, ←/→ knob (Shift ×5),
+R reset, Space pause, ↑/↓ speed. REST: `phenomena_state`, `phenomena_select`,
+`phenomena_next`, `phenomena_previous`, `phenomena_knob`, `phenomena_reset`,
+`phenomena_pause`, `phenomena_speed` and `system_ui`. With it and planar v2
+files in robot mode (above), **sim-app is retired**: `crates/sim-app` is
+deleted (b7a97853) and `simbridge.viewer_command` no longer falls back to it.
+Every former sim-app behaviour and where it now lives is in
+`docs/sim-app-parity.md`.
+
 Separate apps are still needed for the schematic and experiments
-(`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-app`), CAD authoring beyond CAD mode's first epic
+(`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-spatial --phenomena` since fold-sim-app, 2026-09-30; sim-app is retired), CAD authoring beyond CAD mode's first epic
 (`cad/run.sh`; see `docs/cad-parity.md`), and scrubbing of live-run or
 replay history (recorded presets play back natively, §2h), observation panels beyond the two robot-mode charts, and realtime walking
 (browser, `web/README.md`; §2g lists what native preset runs lack).
@@ -2244,4 +2316,8 @@ the hardware checklist is signed off.
   replay and the shared cursor do not, so the plan is partly overtaken. Its
   "decide the final single-window host" is decided here.
 - README quick start `sim-app --exhibit quadruped` is *unverified*: no exhibit
-  named "quadruped" was confirmed in this pass.
+  named "quadruped" was confirmed in this pass. **Update 2026-09-30 (fold-sim-app):** the
+  README now says `cargo run --release -p sim-spatial -- --phenomena --exhibit
+  quadruped`; the fragment matches exactly one title, "The quadruped's trot"
+  (`sim_phenomena::exhibits`, exhibits.rs:2096), by the case-insensitive
+  first-contains rule (`ExhibitRef::resolve`). Not launched.

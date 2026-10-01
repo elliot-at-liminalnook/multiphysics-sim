@@ -110,9 +110,13 @@ keeps the planar multibody with PD-held servos for v2 files), `sim-cad`
 runs it headless, and the live viewer is sim-spatial robot mode
 (`sim-spatial --robot file`, chosen by `simbridge.viewer_command`: release
 build, else debug), which runs the model on a worker thread and reloads on
-every save. `sim-app --scene cad --model file` is the labelled fallback
-when sim-spatial is not built, and the only viewer for planar v2 files,
-which `PhysicalModel::parse` refuses by name.
+every save. Planar v2 files, which `PhysicalModel::parse` refuses by
+name, open in the same robot mode through sim-phenomena's shared planar
+build (`cad_robot::build_planar`, labelled "planar v2 summary ·
+uncalibrated · not the v3 physical model"). There is no other viewer:
+when sim-spatial is not built, `viewer_command` launches nothing and the
+status names `cargo build --release -p sim-spatial` (sim-app, the former
+fallback, was retired on 2026-09-30).
 
 ## Performance notes
 

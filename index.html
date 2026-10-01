@@ -649,10 +649,10 @@ sim-compile           graph compilation, runtime scheduling and state commits
 sim-geometry          CAD manifests, frames, provenance and projection maps
 sim-domain-*          independent control, electrical, rotational, thermal …
 sim-blocks            native, WASM and opaque-solver adapters
-sim-app               Bevy canvas, 3D projection, inspectors and plots
+sim-spatial           Bevy canvas, 3D projection, inspectors and plots
 sim-phenomena         scenarios, traces, conservation and reference results</code></pre>
           </div>
-          <p><code>sim-core</code> depends on <code>bevy_ecs</code>, not the renderer. CAD semantics remain usable headlessly in <code>sim-geometry</code>; <code>sim-app</code> sits at the top; independent domain crates depend only on core contracts.</p>
+          <p><code>sim-core</code> depends on <code>bevy_ecs</code>, not the renderer. CAD semantics remain usable headlessly in <code>sim-geometry</code>; <code>sim-spatial</code> sits at the top; independent domain crates depend only on core contracts.</p>
         </div>
         <div class="card">
           <h3>The editable graph is identity-rich and solver-free</h3>
@@ -943,11 +943,11 @@ sim-dynamics          integration, discrete events and numerical analysis
 sim-geometry          CAD manifests, reference frames and projection maps
 sim-domain-*          independently registered physical behavior crates
 sim-blocks            native, WASM and opaque-solver adapters
-sim-app               Bevy canvas, 3D projection, inspectors and plots
+sim-spatial           Bevy canvas, 3D projection, inspectors and plots
 sim-phenomena         scenarios, traces, comparisons and phenomena</code></pre>
       </div>
 
-      <p>The dependency arrows only point downward, and <code>sim-core</code> depends on <code>bevy_ecs</code> rather than on <code>bevy</code>. CAD semantics and projection maps live in headless <code>sim-geometry</code>; the renderer consumes them from <code>sim-app</code>. Domain crates depend on core contracts, never on the app or on one another; bridge behaviors explicitly import only the connector kinds they join.</p>
+      <p>The dependency arrows only point downward, and <code>sim-core</code> depends on <code>bevy_ecs</code> rather than on <code>bevy</code>. CAD semantics and projection maps live in headless <code>sim-geometry</code>; the renderer consumes them from <code>sim-spatial</code>. Domain crates depend on core contracts, never on the app or on one another; bridge behaviors explicitly import only the connector kinds they join.</p>
 
       <div class="stack">
         <div class="card">

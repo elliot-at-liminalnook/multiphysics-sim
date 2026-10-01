@@ -67,7 +67,9 @@ planar joints and contact, and the stochastic lane (`Context::add_noise`).
   that answers late keeps the held command and increments a missed-deadline
   counter the viewer displays. Off by default; for hardware-in-the-loop and
   for driving the live viewer from outside.
-  *Done as a coupler, not a viewer switch: `sim_couple::RealTime` wraps any coupler with a wall-clock deadline per sample, holds the command and counts missed deadlines when the controller is late; plate 30's exhibit shows the counter live in the viewer.*
+  *Done as a coupler, not a viewer switch: `sim_couple::RealTime` wraps any coupler with a wall-clock deadline per sample, holds the command and counts missed deadlines when the controller is late; plate 30's exhibit shows the counter live in the viewer.* (The live
+  gallery now runs in sim-spatial's Phenomena mode, `sim-spatial --phenomena`;
+  sim-app was retired 2026-09-30.)
 
 ## C. The boundary as if it were real
 

@@ -1171,9 +1171,13 @@ class OcctKernel(GeometryKernel):
         return worst
 
     def _bspline_of(self, face: TopoDS_Face) -> Geom_BSplineSurface:
+        """A B-spline copy of the face's surface, safe to edit: the face's
+        own surface handle is shared with the body (and so with any undo
+        snapshot holding it), so it is never returned for in-place edits."""
         surf = BRep_Tool.Surface_s(face)
         if isinstance(surf, Geom_BSplineSurface):
-            return surf
+            # OCP downcasts `Copy()`'s Handle(Geom_Geometry) to the concrete type.
+            return surf.Copy()
         conv = BRepBuilderAPI_NurbsConvert(face, True)
         f = TopoDS.Face_s(conv.Shape())
         s = BRep_Tool.Surface_s(f)
@@ -1189,6 +1193,12 @@ class OcctKernel(GeometryKernel):
     def set_control_points(self, body: Body, face: FaceRef, points: list[list[Vec3]]) -> Body:
         occ, found = _find_occ_face(body.shape, face)
         bs = self._bspline_of(occ)
+        nu, nv = bs.NbUPoles(), bs.NbVPoles()
+        if len(points) != nu or any(len(row) != nv for row in points):
+            raise KernelError(
+                f"control points must be a {nu} x {nv} grid ({nu} rows of {nv} points) for this face, "
+                f"got {len(points)} rows of {sorted({len(row) for row in points})} points"
+            )
         for i, row in enumerate(points, start=1):
             for j, p in enumerate(row, start=1):
                 bs.SetPole(i, j, P(p))

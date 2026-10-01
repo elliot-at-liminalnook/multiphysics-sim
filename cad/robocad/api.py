@@ -731,7 +731,12 @@ class Service:
                     results.pop("stale", None)
                 else:
                     results["stale"] = stale
-            raise ApiError(422 if isinstance(e, KernelError) else 400, f"Clipboard has no robocad content: {type(e).__name__}: {e}")
+            if isinstance(e, KernelError):
+                # The clip was well formed; the kernel refused it (say, a B-rep it cannot read).
+                raise ApiError(422, str(e))
+            if isinstance(e, (KeyError, ValueError, TypeError)):
+                raise ApiError(400, f"Clipboard has no robocad content: {type(e).__name__}: {e}")
+            raise ApiError(400, f"Paste failed: {type(e).__name__}: {e}")
         # Make the paste undoable as one step.
         for n in nodes:
             self.doc.remove(n.id)
@@ -772,6 +777,9 @@ class Service:
             s = math.nan
         if not math.isfinite(s):
             raise ApiError(400, f"scale must be a finite number, got {scale!r}")
+        # Bounded so the comb (curvature x scale) stays finite in the JSON.
+        if abs(s) > 1e6:
+            raise ApiError(400, f"scale must be at most 1e6 in magnitude, got {scale!r}")
         text = "48" if samples is None else str(samples)
         if not (text.isascii() and text.isdigit() and len(text) <= 3) or not 2 <= int(text) <= 512:
             raise ApiError(400, f"samples must be an integer from 2 to 512, got {samples!r}")

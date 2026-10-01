@@ -62,11 +62,29 @@ cargo run --release -p sim-app -- --exhibit quadruped         # desktop exhibit
 cargo run --release -p sim-phenomena --bin sim-phenomena -- list   # physics phenomena gallery
 examples/systems-viewer/run-live.sh                           # linked schematic + physical views
 cargo run -p sim-spatial -- examples/systems-builder/motor-driver-board/board.system.json   # native viewer; switch modes in the window
-cad/run.sh examples/components/quadruped-parametric/model/robot.rcad   # CAD editor
+cad/run.sh examples/components/quadruped-parametric/model/robot.rcad   # CAD editor (RoboCAD, the reference)
+cargo run -p sim-spatial -- examples/components/quadruped-parametric/model/robot.rcad   # the same document in the native viewer's CAD mode
 ```
 
 The browser workspace is built and served as described in
 [web/README.md](web/README.md).
+
+### CAD mode in the native viewer
+
+`cargo run -p sim-spatial -- path/to/model.rcad` opens CAD mode: the viewer
+starts RoboCAD's headless REST service on the file (`cad/.venv/bin/python -m
+robocad.api`, from `cad/`; run `cad/run.sh` once to create the venv) and
+shows its model tree, tessellated bodies and inspector. To work beside
+RoboCAD's own window, attach to it instead:
+`cargo run -p sim-spatial -- --cad-url http://127.0.0.1:8420` (selection is
+shared). Every edit (visibility, lock, material, name, delete, undo, redo,
+save, registry commands) goes through RoboCAD's command layer, so its undo
+and `.rcad` file stay its own; the viewer never saves for you: it refuses to
+leave CAD mode while a document it started has unsaved edits, and keeps that
+service running (logging its URL) if the window closes. Sketching, direct-edit
+tools, printing and experiments are later CAD epics
+([parity ledger](docs/cad-parity.md)); compare the two step by step with
+[docs/cad-checklist.md](docs/cad-checklist.md). Not compiled or run yet.
 
 ### Leg calibration in the native viewer
 

@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (measured 2026-09-30, after ui-kit; hardware front end added the same day)
+## Where it is today (measured 2026-09-30, after ui-kit; hardware front end added the same day; CAD mode written the same day, not yet built)
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -19,7 +19,7 @@ duplicates physics.
 - **One app, modes as states** (see [One app](#one-app-2026-09-30)):
   `app::run` is the only `App` builder (`App::new()` appears elsewhere in
   `src/` only in `#[cfg(test)]` code). `ViewerMode` (Inspect, Build,
-  Lessons, Robot, Place) is a Bevy `States`; the computed states
+  Lessons, Robot, Place, and since cad-mode Cad) is a Bevy `States`; the computed states
   `ModeScope` and `SpatialScreen` follow it. Launch flags choose the initial
   mode and document; the user switches modes in the window (the mode
   switcher, `system_ui` `mode:*`, REST `viewer_mode`), through one handler
@@ -32,7 +32,9 @@ duplicates physics.
   layer's 92 plus the hardware front end's 5, `hardware_status`,
   `hardware_stop`, `hardware_export`, `hardware_gaits` and `hardware`) is
   generated from the action registry (`app::actions::capabilities`); no
-  hand-written list is left. Place mode answers `state`, `camera` and
+  hand-written list is left. CAD mode adds 15 (`state`, `system_ui` and the
+  13 `cad_*` commands), 112 in all (counted from the specs, not from a
+  running server). Place mode answers `state`, `camera` and
   `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
   verified at 90c65c86: every intent is a typed action
@@ -98,6 +100,18 @@ duplicates physics.
   area is given) and feature drawings (the schematic canvas, lesson cards,
   playheads, masks, sketch dots, markers, 3D labels, cards the kit has no
   widget for); see the UI kit section.
+- **CAD mode** (§9 phase 1, see [CAD mode](#cad-mode-2026-09-30)), written
+  2026-09-30 and not yet compiled or run (the verification pass builds and
+  tests it): `ViewerMode::Cad`, `CadPlugin` (`src/cad/`), a client of
+  RoboCAD's REST service through `sim_runtime::cad_client`, which shares one
+  loopback HTTP/1.1 transport (`sim_runtime::loopback_http`) with the
+  hardware client. A `.rcad` starts RoboCAD's headless service as a
+  `jobs::ChildProcess`; `--cad-url` attaches to a running RoboCAD. Tree,
+  tessellated bodies, selection shared with RoboCAD's `/selection`,
+  inspector with RoboCAD's labels as returned, attribute edits, delete,
+  undo/redo, save, registry commands and Ops, every intent a `CadAction`.
+  The ledger is [docs/cad-parity.md](../cad-parity.md) (773 rows), the
+  side-by-side steps [docs/cad-checklist.md](../cad-checklist.md).
 - **Hardware front end** (§8, see
   [Hardware front end](#hardware-front-end-2026-09-30)), done 2026-09-30
   pending the user's hardware checklist: the Leg calibration panel is a
@@ -233,6 +247,12 @@ result formats and state fields).
     (its `PlaybackState` is `Stamped`) and the placement validator (pointer
     moves are commands; the worker drains the channel and validates only the
     newest position; a closed channel never starts a queued one).
+  - `ChildProcess` (`jobs/child.rs`, added by cad-mode): owns a child
+    process the viewer started (RoboCAD's headless service): `spawn`,
+    `id`, `name`, `exited` (non-blocking), `stop` (kill, then reaped on a
+    reaper thread; never blocks the caller), `detach` (left running,
+    reaped when it ends) and `Drop` = `stop`. Only processes the viewer
+    spawned are ever owned, so only self-started services are stopped.
   - Helpers: `reap_child` for the linked `sim-viewer` (two sites in
     `main.rs`) and, found by reading, for the `open`/`xdg-open` process of a
     web source link, which was never waited for; `drop_off_thread` for the
@@ -396,7 +416,7 @@ Paths below are `crates/sim-spatial/src/`.
 - **Shape.**
   - `app/mod.rs`: `run(Launch)` (the one builder), `ViewerMode`, the
     computed states `ModeScope` (entity and resource lifetime: Inspect,
-    Builder = Build + Lessons, Robot, Place) and `SpatialScreen` (the
+    Builder = Build + Lessons, Robot, Place; Cad since cad-mode) and `SpatialScreen` (the
     spatial view is drawn: Inspect, Build, Lessons), `ViewerSet`,
     `CorePlugin` (window, per-mode look, fonts, mesh picking, occlusion,
     scroll clamp, REST wake, the switcher) and `ModesPlugin` (states, sets,
@@ -1529,6 +1549,237 @@ Commands and results are in the batch's report; the last run:
 `cargo test -p sim-runtime --lib hardware_client` 18 passed,
 `cargo test -p sim-spatial --lib` 143 passed, 1 ignored (the rerun after the review's last fixes first failed `sync::tests::leave_stop_only_for_our_session`, which still asserted the old never-retry rule; the test now checks the retry).
 
+## CAD mode (2026-09-30)
+
+Batch cad-mode (default order item 7, §9 phase 1, first of several CAD
+epics) added a CAD mode to `sim-spatial` that works as a client of
+RoboCAD's REST service. RoboCAD's Python kernel and command layer do all the
+work, so its undo, provenance and `.rcad` format are unchanged; no Python,
+`.rcad`, REST shape, Qt UI or browser page changed, and the hardware client
+now uses the shared transport with unchanged requests. The
+feature-by-feature ledger is [docs/cad-parity.md](../cad-parity.md) (773
+rows: 113 this epic, 637 named later epics, 23 deliberately different, 25
+rows flagged as needing a Python route); the side-by-side steps are
+[docs/cad-checklist.md](../cad-checklist.md). **Written and reviewed by
+reading only; the verification pass builds and tests it.** Paths are
+`crates/sim-spatial/src/` unless they name another crate.
+
+### Shape
+
+- `sim-runtime/src/loopback_http.rs`: the one loopback HTTP/1.1 transport,
+  moved from `hardware_client/http.rs` (unchanged except the refusal text
+  and one check order, see Decisions): `Endpoint` (`parse`,
+  `loopback`, `host`, `origin`), `Error` (`NotLoopback`, `Transport`,
+  `Server {status, error}`, `Decode`), `CONNECT_TIMEOUT`, `Request {method,
+  path, headers, body, closed_hint}`, `exchange`, `send_only`, `json`,
+  `decode`, and the private request writer, `read_response`, `parse_head`,
+  `salvage` and `is_closed` (the macOS reset handling). Per-client headers:
+  the hardware client passes `X-Control-Token`, `X-Client-Id` and
+  `Content-Type` on control requests (none on `page()`), the RoboCAD client
+  only `Content-Type` on requests with a body. Body caps stay per client.
+  `hardware_client` re-exports `Endpoint` and `CONNECT_TIMEOUT` and keeps
+  `ClientError` as a type alias of `loopback_http::Error`, so its users and
+  tests are unchanged.
+- `sim-runtime/src/cad_client/`: `CadClient` (`new`, `url`, `with_timeout`,
+  `health` (`GET /`), `doc`, `nodes`, `node`, `patch`, `delete`, `mesh`
+  (`Ok(None)` only for RoboCAD's 404 "no mesh"), `ops`, `op`, `commands`,
+  `run_command`, `history`, `undo`, `redo`, `selection`, `set_selection`,
+  `save`, `open`, `load_status`, `cancel_load`, `autosave`, `physical`
+  (never passes `path`, which would write a file), `export`); `CadError
+  {method, route, status, message}` ("RoboCAD {method} {route}: {message}",
+  RoboCAD's `error` verbatim); tolerant serde types in `types.rs` (every
+  struct `#[serde(default)]`, unknown fields ignored, `Value` where
+  RoboCAD's shape is open; `color`, `pivot`, the mass block and `/doc`'s
+  node list are lenient so one malformed value cannot hide the document);
+  bare `NaN`/`Infinity` tokens from Python's `json.dumps` read as null;
+  `DEFAULT_URL` (`http://127.0.0.1:8420`), `REQUEST_TIMEOUT` (30 s),
+  `EDIT_TIMEOUT` (130 s), `MESH_TOLERANCE` (0.1). `service.rs`:
+  `interpreter` (`cad/.venv/bin/python`, as `cad/run.sh`; never creates the
+  venv), `free_port`, `log_path`, `service_command` (`-m robocad.api <abs
+  file> --port N --host 127.0.0.1` in `cad/`, stderr to the log),
+  `log_tail`, `wait_until_live`, `START_TIMEOUT` (120 s).
+- `jobs/child.rs`: `ChildProcess` (see the jobs module section).
+- `cad/` (`CadCorePlugin`: the action, its handler, the connection and its
+  results, the mesh cache's lifetime and the REST snapshot, window-free;
+  `CadPlugin` = the core + scene, meshes, keys and panels):
+  - `document.rs`: `CadDocument` (target, client, `ChildSlot`, connection
+    `Connecting`/`Connected`/`Lost`, health, doc, doc key, stale,
+    selection, detail, commands, autosave, physical, edit, status,
+    revision), `CadTarget` (`File` or `Service`), `TreeRow`,
+    `CadInputFocus`, `switch_blockers`, `leaving_note`, `release_child`.
+  - `sync.rs`: the connect job (`Pool::Dedicated`; a file starts the
+    service and waits for `GET /`), the `cad-poll` `RunThread` (every
+    500 ms `GET /` and `GET /selection`; `/doc`, `/commands` and (GUI)
+    `/autosave` when the document id or revision changes or on Refresh;
+    its own 5 s client), and every result in JobResults (`receive`):
+    connect, snapshot, staleness, selection adoption, selection pushes
+    (one at a time, newest wins), node detail, physical, edits, the
+    child's exit with its log tail; `on_exit` at window close.
+  - `mesh.rs`: `CadMeshes`, fetch (`Pool::Dedicated`, at most 2 at once)
+    then build (`Pool::Compute`), cached by (node id, revision), drawn
+    under a Z-up mm→m root, picked (`CadSelect`, the tree's value), a
+    failed fetch retried on Refresh and on reconnect.
+  - `scene.rs`: camera (`MeshPickingCamera`), UI camera, light, orbit,
+    fit. `keys.rs`: RoboCAD's keymap (below).
+  - `actions.rs`: `CadAction` and its one handler `apply` (Actions),
+    `system_ui` (its controls are `panel::controls`), `cad_state`,
+    `publish` (`/v1/state`, `/v1/cad_state`).
+  - `panel.rs`, `tree.rs`, `inspector.rs`: the top bar, left dock (service,
+    connection, autosave, stale; the tree), right dock (name field,
+    summary, transform, detail, physical link, attributes, history,
+    commands) and status bar, on the UI kit; refreshed only when
+    `CadDocument.revision` changes.
+- Outside `cad/`: `app/mod.rs` (`ViewerMode::Cad`, `ModeScope::Cad`, the
+  Look, `Launch.cad`), `app/switch.rs` (`Document::Url`, `viewer_mode`'s
+  `url`, `Documents.cad`, the Cad arm of `prepare`, `leaving_blockers`,
+  `leaving_note`, `leave_cad`, `mode:cad`), `app/actions.rs` (the "cad"
+  feature, `fallback`), `launch.rs` (`LaunchKind::Cad` for `*.rcad`),
+  `main.rs` (positional `.rcad`, `--cad-url`, `--validate-only`).
+
+### CadAction
+
+REST and `system_ui` names: `state`, `cad_state`, `cad_open`, `cad_select`,
+`cad_patch`, `cad_delete`, `cad_undo`, `cad_redo`, `cad_save`,
+`cad_command`, `cad_op`, `cad_refresh`, `cad_fit`, `cad_physical`,
+`system_ui` (controls `cad:undo`, `cad:redo`, `cad:save`, `cad:refresh`,
+`cad:fit`, `cad:physical`, `cad:delete`, `cad:node:<id>`,
+`cad:visible:<id>`, `cad:locked:<id>`, `cad:disabled:<id>`,
+`cad:material:<id>:<mat>`, `cad:command:<id>`). The panel's buttons,
+`system_ui` and the keys read one list (`panel::controls`), tree rows and 3D
+picks write the same `CadSelect`, and `cad::tests` is written to check that
+every control's REST form parses back to the value a click writes. Mutations (patch,
+delete, undo, redo, save, command, op) run one at a time on a Dedicated job
+through RoboCAD's routes; a REST caller waits for RoboCAD's answer.
+
+### Decisions
+
+- **The switch never waits on RoboCAD.** Entering CAD mode is immediate;
+  connecting (or starting a service, up to 120 s for a large file) is CAD
+  mode's own job, shown in the top bar and left dock and in `cad_state.connection`. *Rejected:*
+  a switch that loads first (as robot mode does): a slow or absent RoboCAD
+  would hold the switch for minutes. *Revisit if* callers need
+  `viewer_mode` to answer only once connected.
+- **Opening a file starts a headless service; `/open` is not used.**
+  RoboCAD's GUI `/open` opens a *new window on another port*, so the
+  attached URL would not show the new document. `cad_open {path}` starts a
+  new headless service; `cad_open {url}` attaches. `open`/`load_status`/
+  `cancel_load` are in the client for a later epic.
+- **Unsaved edits.** The viewer never saves for you. Leaving CAD mode or
+  `cad_open` is refused while a self-started service reports `dirty` (or
+  its state can't be confirmed while it still runs); closing the window
+  detaches such a service (left running, URL logged) instead of stopping
+  it. An attached RoboCAD keeps its edits, and the switch's message says
+  so. *Rejected:* auto-save (writes the user's file unasked), RoboCAD's
+  Save/Discard prompt (a modal flow the viewer does not have).
+- **Network on `Pool::Dedicated`, not `Pool::Io`.** The assignment asked for
+  mesh fetches on Io; the jobs module's pool rule puts network on
+  Dedicated, because a request may wait up to its timeout and Io has at
+  most 4 threads shared with the asset server. Fetches are capped at 2 in
+  flight; building stays on Compute. *Revisit if* thread churn shows up.
+- **Timeouts.** Reads 30 s, the poll 5 s (so it exits promptly), edits
+  130 s (longer than RoboCAD's 120 s GUI wait, which cancels only a request
+  not yet started), so an edit is not reported failed and then applied; a
+  timed-out edit says RoboCAD may still apply it.
+- **Every revision refetches every visible body's mesh** (RoboCAD exposes
+  no per-node geometry stamp). Known cost on large assemblies; the old mesh
+  stays drawn until the new one arrives.
+- **Keys** (RoboCAD's keymap.json; Ctrl is Cmd on macOS, so Control or
+  Super): Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo, Delete/Backspace delete
+  the selected node, Home fit, Cmd/Ctrl+S save. No clash: no key is read in
+  every mode (`CorePlugin`, the switcher and the kit read none), and the
+  other modes' keys run only in their modes. Keys are ignored while the
+  name field has focus (`CadInputFocus`; `keys` runs after
+  `panel::name_entry`), and a key whose button is disabled shows the
+  button's reason instead of sending.
+- **The loopback refusal text** now reads "the local servers listen on
+  127.0.0.1 only …" (was "the hardware servers …"); hardware tests check
+  the unchanged substring. The hardware client's own control-character
+  check now runs before the loopback check, so a client wrong in both ways
+  reports the token first (nothing is sent either way).
+- **`cad_fit` is the native camera only**: RoboCAD's view is never moved
+  and geometry never changes for display.
+
+### Review findings (combined pair-reviewer pass, five reviewers, then two more)
+
+Fixed (by reading; unverified until the verification pass): two app tests that counted five modes; orphaned service when the
+window closed while starting (the child now sits in a `ChildSlot` the
+document owns from spawn); a lost connection could clear the unsaved-edit
+guard; concurrent selection pushes could land out of order; a failed mesh
+was never retried; the poll could linger 150 s after its document closed;
+attach accepted a non-RoboCAD server; `/selection` errors were dropped;
+edits timed out before RoboCAD's own wait; `NaN` from Python failed whole
+answers; one malformed node hid the document; `mesh()` hid a missing route;
+"Hidden by parent" shown for a node disabled itself; an instance's `source`
+shown as a provenance chip; "Loading…" while lost or after a failed fetch;
+no in-flight state for Physical; a GUI with no commands called headless;
+two `system_ui` control lists (now one) missing lock/disabled/material;
+a one-frame name-focus gap; empty names sent. Second pass: the poll's 5 s timeout
+also cut `/doc` (now only `GET /` and `/selection`); a refresh without a
+poll left the saved state looking clean; a restarted connection kept the old
+service's selection and tree key; an edit whose connection closed after
+sending did not say RoboCAD may still apply it. Found by reading during
+integration: the physical fetch's end did not refresh the panel when its
+generation was stale.
+
+Rejected or recorded: `p.is_file()` on the UI thread in `prepare`/
+`cad_open` (one `stat`, as every other mode's switch does); SIGKILL of a
+self-started service can orphan RoboCAD experiment workers in their own
+process groups (no CAD-mode route starts one; a later epic that does must
+stop it gracefully); service logs (`robocad-api-<pid>-<port>.log` in the
+temp dir) are kept for diagnosis; `wait_until_live` accepts any RoboCAD
+that answers on the chosen port (the `free_port` race is narrow).
+
+### Verification checklist
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- `cargo test -p sim-spatial --lib`, in particular
+  `app::tests::build_cad_build_tears_down_the_cad_document_and_keeps_shared_state`,
+  `app::tests::rest_refuses_commands_of_another_mode_by_name`,
+  `app::tests::every_mode_control_resolves_to_a_switch`,
+  `app::tests::every_capability_parses_into_its_action_and_every_parsed_command_is_registered`,
+  `cad::tests::*`, `cad::mesh::tests`, `cad::inspector` tests,
+  `jobs::tests::*` (the `ChildProcess` tests and
+  `threads_are_started_only_in_jobs`), `launch::tests`.
+- `cargo test -p sim-runtime --lib hardware_client` (unchanged requests).
+- `cargo test -p sim-runtime --lib cad_client`.
+- `cargo check -p sim-app`; `cargo check -p sim-web --target
+  wasm32-unknown-unknown` (the new modules are `cfg(not(wasm32))`).
+- Then the user's [docs/cad-checklist.md](../cad-checklist.md).
+
+### Reading trace (open, select, patch, undo, save)
+
+- **Open.** `sim-spatial FILE.rcad`: `launch::classify` → `LaunchKind::Cad`
+  (main.rs:342) → `cad_mode` (main.rs:205) → `CadDocument::new` →
+  `app::run`. Or the switcher / `mode:cad` / `viewer_mode` →
+  `switch::handle` → `prepare`'s Cad arm (app/switch.rs:650) →
+  `Prepared::Now` → `arrive` inserts the document. OnEnter(ModeScope::Cad)
+  `sync::enter` (cad/sync.rs:258) → `start` (:56): a Dedicated job runs
+  `self_start` (:108: interpreter, free port, `ChildProcess::spawn` into
+  the slot, `wait_until_live`) or `CadClient::health` → `receive` (:275) →
+  `finish_connect` (:296) → `spawn_poll` (:162) → `poll_loop` (:185) →
+  `take_snapshot` (:373) sets doc, stale, selection → `mesh::sync`
+  (cad/mesh.rs:242) fetches and builds meshes; the panels refresh on
+  `revision`.
+- **Select.** Tree row (cad/tree.rs:119) or 3D pick (`mesh::pick`,
+  cad/mesh.rs:431) → `Act<CadAction::CadSelect>` → `panel::buttons` /
+  observer → `actions::apply` (cad/actions.rs:125) → `select` (:293) sets
+  the selection now → `sync::push_selection` (cad/sync.rs:550) `PUT
+  /selection` on a job; `detail` (:572) fetches `GET /nodes/{id}`.
+- **Patch.** Inspector chip / `cad:visible:<id>` / REST `cad_patch` →
+  `handle` (cad/actions.rs:162-170) → `edit` (:211) → `sync::start_edit`
+  (cad/sync.rs:632, `EDIT_TIMEOUT`) → `CadClient::patch` (`PATCH
+  /nodes/{id}`, RoboCAD's command layer, one undo step) → `finish_edit`
+  (:498) → status, REST answer, `refresh` (:518) → the poll refetches
+  `/doc`.
+- **Undo.** Button / Cmd+Z (`keys`, cad/keys.rs:28, only when `cad:undo`
+  is ready) / `cad_undo` → cad/actions.rs:181 → `POST /undo` → as Patch.
+- **Save.** Button / Cmd+S / `cad_save` → cad/actions.rs:187-193 → `POST
+  /save` (RoboCAD writes its file) → as Patch; the poll sees `dirty`
+  false and the header says Saved. Leaving: `leaving_blockers`
+  (app/switch.rs:485; CAD clause :511) → `CadDocument::switch_blockers`; `leave_cad`
+  (app/switch.rs:856) removes the document (the slot's child is stopped,
+  or detached if dirty) and `cad::clear`.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -1871,6 +2122,114 @@ Rust with exact feature parity, in phases. RoboCAD is the reference throughout.
 The harness runs in verification passes. The `.rcad` format, undo, provenance
 and the REST surface stay compatible throughout.
 
+**Phase 1 progress.** *In progress.* The first CAD epic, **cad-mode**
+(2026-09-30, see [CAD mode](#cad-mode-2026-09-30)), added `ViewerMode::Cad`
+over RoboCAD's REST service: open a `.rcad` (self-started headless service)
+or attach to a running RoboCAD, the model tree, tessellated bodies, picking
+and selection shared with `/selection`, the inspector with RoboCAD's fields
+and labels as returned, attribute edits, delete, undo/redo, save, GUI
+registry commands and Ops, as typed `CadAction`s over a shared loopback
+client. It is written and reviewed by reading; the verification pass builds
+and tests it, and the user's [docs/cad-checklist.md](../cad-checklist.md)
+compares it with RoboCAD step by step. The ledger
+[docs/cad-parity.md](../cad-parity.md) assigns every other RoboCAD feature
+to one of the later epics below.
+
+#### Later CAD epics (planned 2026-09-30)
+
+These follow cad-mode, which covers opening and attaching, the tree, the
+bodies, picking, body selection, the inspector, the basic attribute edits,
+delete, undo/redo, save, commands and keys. Each later epic is a client of
+RoboCAD's REST service, like cad-mode. Every edit still goes through
+RoboCAD's command layer. Every Ops method is already callable through the
+`cad_op` REST command, so these epics build the *viewer UI*. Row-level scope
+is in [docs/cad-parity.md](../cad-parity.md) (773 rows: 113 cad-mode, 637
+later, 23 deliberately different). Twenty-three gaps there have no headless
+route. Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
+by the parity harness. Planned order:
+
+1. **cad-tools** (179 rows). Face, edge, vertex and point selection modes;
+   box select; hover; Alt disambiguation; the select-all, invert,
+   same-material and edges→faces commands. Then the transform gizmo
+   (move/rotate/scale), push/pull and offset, primitives, fillets and
+   chamfer, shell, measure, mirror, array, instance and pivot. Also every
+   Modify command (booleans, region, join/unjoin, dissolve, draft, delete
+   faces, cut, split, imprint, project, silhouette, control points,
+   rebuild, dependent offset), the numeric bar with unit expressions
+   (needs a Rust port of `units.evaluate`), live dimensions, snapping, both
+   radial menus and the command palette with key conflicts. Routes:
+   `/nodes/{id}/faces|edges|vertices|solids`, `POST /ops/*` (transform,
+   push_pull, offset_faces, fillet, chamfer, shell, boolean, …),
+   `PUT /selection` with `mode`, `POST /nodes`, `GET /commands`. Gaps:
+   copy and paste with placement, reading control points, curvature comb,
+   continuity check, and B-rep edge polylines (needed for edge picking;
+   shared with cad-views-export). It comes first because sketching and
+   printing reuse its picking, snapping and numeric entry.
+2. **cad-sketch** (60 rows). The active plane, construction planes (from a
+   face, three points, two points and the camera, midplane), the 13 sketch
+   tools, sketch offset/fillet/join and the REST-only edits (trim, split,
+   extend, rebuild, vertices), extrude and revolve with boolean modifiers,
+   sweep, pipe, loft and fill. Routes: `GET/POST /nodes/{id}/sketch`,
+   `POST /nodes {"kind": "sketch"}`, `POST /ops/plane_*`,
+   `POST /ops/extrude|revolve|sweep|pipe|loft|fill`. Curve-node display
+   shares the edge-polyline gap. RoboCAD has no sketch constraints, so
+   there is nothing to port there. The dead `sketch.arc` key (A) should be
+   bound deliberately.
+3. **cad-views-export** (112 rows). Display modes (shaded with edges,
+   wireframe, xray, matcap, render), pan, zoom to the cursor, trackball,
+   view presets, the view cube, ortho and FOV, the grid, the build plate,
+   the section tool (from display triangles) and exact sections, isolate,
+   hide and show all, high contrast, SpaceMouse, saved views (the native
+   camera written in RoboCAD's view-state schema), the per-node
+   tessellation tolerance, file dialogs (new, open, save as, import with
+   units), every export format and the drawing, and render/capture. Routes:
+   `/views*`, `POST /ops/isolate|show_all|set_visible`,
+   `GET /nodes/{id}/section`, `POST /export`, `POST /import`,
+   `GET /render`, `/loads/{id}`, `POST /autosave`. Gaps: the save
+   thumbnail, the autosave interval and failure report, the mesh-unit
+   guess, edge polylines, and the GUI-only Blender link and web share.
+4. **cad-physical-inspect** (82 rows). The materials panel and engineering
+   properties, colour, the Robot panel (summary, tree, margins, issues),
+   motor, joint, sensor and cable tools and dialogs, joint editing and
+   joint-physics overrides, battery/control/uncertainty, the exact
+   multi-selection measurement, physical export, results and
+   identification, the stress overlay, and the live simulation link (on
+   save, export `simrobot.json` through `/physical?path=` and reload robot
+   mode in this app). Routes: `GET /robot`, `GET /motors`, `/sensors`,
+   `/cables`, `PUT /battery|control|uncertainty`, `GET/POST /materials`,
+   `GET /physical`, `GET /results`, `POST /results/load`,
+   `POST /identification/apply`, `/actuator-profiles`,
+   `POST /ops/add_joint|set_joint|add_motor|attach_motor|set_joint_physics|set_material_props`.
+   Gaps: per-node results (inspector line, stress overlay, margins) and
+   the planar export variant. Port `results_margins` or add a route first.
+5. **cad-print** (33 rows). Wall check, validate, overhang shading,
+   fastener and clearance tools, split for printing, strength, plan,
+   strength-or-split, assembly guide, coupons, and the job list with
+   progress and cancel. Routes: `GET /nodes/{id}/thin|validate`,
+   `/print/*`, `POST /ops/fastener_hole|clearance|print_split`. Gap: the
+   print overlay's per-node results (shared with 4).
+6. **cad-organize** (108 rows; planned as cad-annotations). Outliner
+   organization (search, groups, drag-and-drop, move to group, active
+   group, inline rename, multi-select), comments and threads with pins and
+   part links, references (images, placement, calibration, the linked
+   system file and opening it in builder mode), components (library,
+   place, recipes, occurrences, jobs) and the system graph. Routes:
+   `/threads*`, `/comments/{id}`, `GET /components`,
+   `/component-jobs/{id}`, `/system*`,
+   `POST /ops/group|move_nodes|set_active_group|import_references|update_reference|calibrate_reference|make_component|place_component|…`.
+   Gaps: reference image pixels (viewport and list preview) and the
+   geometry-rule recipes (`component_derivation.RECIPES`).
+7. **cad-experiments-motion** (63 rows). The experiments panel (Rhai
+   editors, profiles, runs, cancel, baseline and compare, linked files,
+   restore inputs, auto-rerun, the catalogue), run review, candidate
+   review, model scripts and batches, the pose panel, motion programs and
+   video export (recorded by the viewer). Routes: `/experiments*`,
+   `/candidates*`, `POST /doc/batch`, `POST /doc/script`,
+   `/motion/programs` (headless). Gaps: captured-CAD replay, candidate
+   geometry and headless pose kinematics. `/motion` playback and export
+   need RoboCAD's window, so add routes for these or port `pose.py`'s
+   kinematics before this epic.
+
 ## Bevy features to use
 
 These are verified in the official 0.17, 0.18 and 0.19 release notes. Before
@@ -1937,8 +2296,13 @@ The Director re-ranks with evidence, but this is the default:
    and hardware panel in
    `sim-spatial`, over the existing Rust calibration layer, ending with the
    user's hardware checklist.
-7. **CAD mode** (§9 phase 1). RoboCAD's workflows in `sim-spatial` over its
-   REST service. This may take several epics.
+7. **CAD mode** (§9 phase 1). *In progress.* RoboCAD's workflows in
+   `sim-spatial` over its REST service, in several epics. **cad-mode**
+   (2026-09-30; see [CAD mode](#cad-mode-2026-09-30)) is written and awaits
+   its verification pass and the user's [CAD checklist](../cad-checklist.md).
+   Remaining, in order (§9 "Later CAD epics"): cad-tools, cad-sketch,
+   cad-views-export, cad-physical-inspect, cad-print, cad-organize,
+   cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
    each.

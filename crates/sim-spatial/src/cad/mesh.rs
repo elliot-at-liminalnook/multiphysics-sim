@@ -124,6 +124,12 @@ pub struct CadMeshes {
     /// Bodies showing a derived copy instead of their own mesh (the
     /// section's clipped copy, `display::section::preview`).
     copies: HashMap<String, ShownCopy>,
+    /// Drawn bodies hidden by a thread's temporary isolation (cad-organize:
+    /// `threads::shown`), display only: their entities are `Visibility::Hidden`
+    /// (so Bevy's ray casts skip them) and [`Self::shown`], [`Self::bounds`]
+    /// and [`Self::body_bounds`] leave them out (snaps, edge picks, box
+    /// select, framing). RoboCAD's visibility is never written.
+    hidden: HashSet<String>,
 }
 
 /// A derived copy a body shows in place of its own mesh: the tessellation
@@ -139,11 +145,22 @@ pub struct ShownCopy {
 impl CadMeshes {
     /// Bounds of the drawn bodies (all, or those in `ids`) in Bevy's frame
     /// (metres, Y up): RoboCAD's (x, y, z) mm is (x, z, −y) / 1000 here.
+    /// Bodies a thread's isolation hides are left out.
     pub fn bounds(&self, ids: Option<&HashSet<String>>) -> Option<(Vec3, Vec3)> {
+        self.bounds_where(ids, true)
+    }
+
+    /// Bounds of the drawn bodies in `ids`, hidden or not: the parts a
+    /// thread's isolation is about to show (its hidden set is the previous one).
+    pub fn bounds_of(&self, ids: &HashSet<String>) -> Option<(Vec3, Vec3)> {
+        self.bounds_where(Some(ids), false)
+    }
+
+    fn bounds_where(&self, ids: Option<&HashSet<String>>, skip_hidden: bool) -> Option<(Vec3, Vec3)> {
         let mut lo = Vec3::splat(f32::INFINITY);
         let mut hi = Vec3::splat(f32::NEG_INFINITY);
         for (id, entry) in &self.entries {
-            if ids.is_some_and(|ids| !ids.contains(id)) || entry.entity.is_none() {
+            if ids.is_some_and(|ids| !ids.contains(id)) || entry.entity.is_none() || (skip_hidden && self.hidden.contains(id)) {
                 continue;
             }
             let Some((min, max)) = entry.bounds else { continue };
@@ -160,9 +177,9 @@ impl CadMeshes {
         self.fit = Some(((lo + hi) / 2.0, ((hi - lo).length() / 2.0).max(0.005)));
     }
 
-    /// Whether node `id` is drawn.
+    /// Whether node `id` is drawn (and not hidden by a thread's isolation).
     pub fn shown(&self, id: &str) -> bool {
-        self.entries.get(id).is_some_and(|e| e.entity.is_some())
+        self.entries.get(id).is_some_and(|e| e.entity.is_some()) && !self.hidden.contains(id)
     }
 
     /// The entity drawing node `id`.
@@ -229,7 +246,7 @@ impl CadMeshes {
 
     /// Every drawn body's bounds (mm, RoboCAD's frame): box select's test.
     pub fn body_bounds(&self) -> impl Iterator<Item = (&str, (Vec3, Vec3))> {
-        self.entries.iter().filter(|(_, e)| e.entity.is_some()).filter_map(|(id, e)| e.bounds.map(|b| (id.as_str(), b)))
+        self.entries.iter().filter(|(id, e)| e.entity.is_some() && !self.hidden.contains(id.as_str())).filter_map(|(id, e)| e.bounds.map(|b| (id.as_str(), b)))
     }
 }
 
@@ -368,6 +385,8 @@ pub(super) fn sync(
     // Hidden or deleted nodes go (and their requests with them).
     let gone: Vec<String> = meshes.entries.keys().filter(|id| !wanted.contains(id.as_str())).cloned().collect();
     for id in gone {
+        // A despawned body's isolation record goes with it: a body drawn again gets a fresh entity (`hide_isolated`).
+        meshes.hidden.remove(&id);
         if let Some(e) = meshes.entries.remove(&id).and_then(|e| e.entity) {
             commands.entity(e).despawn();
             meshes.epoch += 1;
@@ -391,6 +410,7 @@ pub(super) fn sync(
                 meshes.building.push(Building { id, revision: at, job });
             }
             Ok(None) => {
+                meshes.hidden.remove(&id);
                 let entry = meshes.entries.entry(id).or_insert(Entry { revision: Some(at), state: State::NoMesh, entity: None, bounds: None, drawn: None });
                 if let Some(e) = entry.entity.take() {
                     commands.entity(e).despawn();
@@ -465,6 +485,8 @@ pub(super) fn sync(
     if meshes.counts != counts {
         meshes.counts = counts;
     }
+    // cad-organize: a thread's temporary isolation hides the other bodies (display only).
+    hide_isolated(&mut commands, &doc, meshes);
     let pending = counts_pending(meshes);
     if pending {
         redraw.write(bevy::window::RequestRedraw);
@@ -481,6 +503,32 @@ pub(super) fn sync(
             meshes.frame(b);
         }
     }
+}
+
+/// The drawn bodies a thread's isolation leaves out are hidden, and shown
+/// again when it ends (`Visibility` on their entities only; display only).
+/// The hidden set is recomputed each frame while an isolation is shown or
+/// a body is still hidden; a change moves `epoch`, so the overlays follow.
+/// `hidden` records what each drawn entity was given: `sync` removes an id
+/// whose entity it despawns, so a body spawned again during the isolation
+/// (a new `Visibility::Inherited` entity) is hidden here on the same frame.
+fn hide_isolated(commands: &mut Commands, doc: &CadDocument, meshes: &mut CadMeshes) {
+    if meshes.hidden.is_empty() && !crate::cad::threads::isolating(doc) {
+        return;
+    }
+    let hidden: HashSet<String> = meshes.entries.iter().filter(|(id, e)| e.entity.is_some() && !crate::cad::threads::shown(doc, id)).map(|(id, _)| id.clone()).collect();
+    if hidden == meshes.hidden {
+        return;
+    }
+    for (id, entry) in &meshes.entries {
+        let Some(entity) = entry.entity else { continue };
+        let now = hidden.contains(id);
+        if now != meshes.hidden.contains(id) {
+            commands.entity(entity).insert(if now { Visibility::Hidden } else { Visibility::Inherited });
+        }
+    }
+    meshes.hidden = hidden;
+    meshes.epoch += 1;
 }
 
 fn counts_pending(meshes: &CadMeshes) -> bool {

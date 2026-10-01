@@ -100,6 +100,10 @@ pub(super) struct PickState {
     /// (`camera::input`, `OrbitRules::robocad_gestures`), never a box
     /// select; an Alt click still opens the candidates menu.
     alt_drag: bool,
+    /// The press began while a click tool took the clicks (cad-organize:
+    /// Annotate and Reattach end on the press, so the release must not
+    /// become a selection click once the tool is gone).
+    tool_press: bool,
     /// The rubber band's corners while box dragging (`overlay` draws it).
     pub(super) band: Option<(Vec2, Vec2)>,
     /// Where the Alt menu opens (the click's position).
@@ -387,13 +391,16 @@ fn pointer(
         Some(Flow::PickThenForm(mode)) => Some(mode),
         _ => None,
     };
-    // A robot click tool (cad-physical-inspect, `robot::tools`) or the
-    // fastener tool (cad-print, `print::fastener_tool`) takes the click
-    // itself; selection here neither selects, clears nor box-selects.
-    // Hover stays, as RoboCAD's tools keep it.
-    let robot_tool = matches!(flow, Some(Flow::RobotPick(_) | Flow::PrintPick));
-    // An open command surface takes the press that closes it (as a Qt popup does).
-    let usable = view.valid && doc.tool == CadTool::Select && (!focused || pick_kind.is_some()) && !placing && doc.ops.surface.is_none();
+    // A robot click tool (cad-physical-inspect, `robot::tools`), the
+    // fastener tool (cad-print, `print::fastener_tool`), Annotate or
+    // Reattach (cad-organize, `threads::annotate`) or the reference
+    // calibrate tool (cad-organize, `references::calibrate`) takes the
+    // click itself; selection here neither selects, clears nor
+    // box-selects. Hover stays, as RoboCAD's tools keep it.
+    let robot_tool = matches!(flow, Some(Flow::RobotPick(_) | Flow::PrintPick)) || crate::cad::threads::takes_clicks(&doc) || crate::cad::references::takes_clicks(&doc);
+    // An open command surface, or the outliner's context menu (cad-organize,
+    // `tree::popup`), takes the press that closes it (as a Qt popup does).
+    let usable = view.valid && doc.tool == CadTool::Select && (!focused || pick_kind.is_some()) && !placing && doc.ops.surface.is_none() && !crate::cad::tree::menu_open(&doc);
     let in_view = cursor.is_some_and(|p| view.contains(p)) && !super::scene::over_ui(hover_map.as_deref(), &nodes);
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
     let ctrl = keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight]);
@@ -405,6 +412,7 @@ fn pointer(
         state.press = None;
         state.dragging = false;
         state.band = None;
+        state.tool_press = false;
     }
     if buttons.just_pressed(MouseButton::Left) && usable && in_view {
         if menu_open {
@@ -414,6 +422,7 @@ fn pointer(
             state.press = cursor;
             state.dragging = false;
             state.alt_drag = alt;
+            state.tool_press = robot_tool;
         }
     }
     if let Some(start) = state.press {
@@ -427,6 +436,8 @@ fn pointer(
         if buttons.just_released(MouseButton::Left) || !buttons.pressed(MouseButton::Left) {
             state.press = None;
             state.band = None;
+            // A click tool active at the press (or now) owns the whole click.
+            let robot_tool = robot_tool || std::mem::take(&mut state.tool_press);
             if std::mem::take(&mut state.dragging) {
                 // RoboCAD's pick-then-form tools pick on press only: no box select.
                 if pick_kind.is_none() && !robot_tool && !state.alt_drag {

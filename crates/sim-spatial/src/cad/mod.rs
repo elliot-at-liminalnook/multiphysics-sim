@@ -39,6 +39,15 @@
 //!   menu: wall check, validate, overhang shading, fastener hole and
 //!   clearance, the print studies, the one poller of RoboCAD's print jobs,
 //!   the Print jobs section and the print overlay.
+//! - `tree`, `threads`, `references` (cad-organize, native-viewer.md "CAD
+//!   organize"): the outliner's organization (search, collapse, multi-select,
+//!   rename, drag-and-drop, the context menu, the active group, New group);
+//!   RoboCAD's comment threads as the fourth `annotations::ThreadSource`
+//!   drawn by the one `ui_kit::threads` panel (Annotate, pins, part links,
+//!   Show on model, Fit in view, temporary isolation); the References dock
+//!   with textured image planes and the calibrate tool, and the linked
+//!   system file with Open in builder (an in-window switch to Build mode).
+//!   Every edit is one RoboCAD call through `actions::edit_at`.
 //!
 //! Teardown is the one-app pattern: `app::switch`'s OnExit(ModeScope::Cad)
 //! removes the document, releases its self-started service at once
@@ -63,6 +72,7 @@ mod overlay;
 mod panel;
 mod pick;
 mod print;
+mod references;
 mod rest_form;
 mod results;
 mod robot;
@@ -74,6 +84,7 @@ mod snap;
 mod specs;
 mod surfaces;
 mod sync;
+mod threads;
 mod topology;
 mod transform;
 mod tree;
@@ -135,6 +146,9 @@ impl Plugin for CadCorePlugin {
             // cad-physical-inspect, windowless parts: the robot description's
             // reads, the exact measurement and the results and export jobs.
             .add_plugins((robot::CoreParts, inspector::CoreParts, results::CoreParts, print::CoreParts))
+            // cad-organize, windowless parts: the outliner's state, the threads' and
+            // references' reads and the system link's status on jobs, Open in builder's switch.
+            .add_plugins((tree::CoreParts, threads::CoreParts, references::CoreParts))
             // At window close, a self-started service is stopped (or left running with unsaved edits).
             // After ExitSystems, which writes AppExit in Last: before it, the
             // message would be read only on a frame that never comes, and the
@@ -200,6 +214,13 @@ impl Plugin for CadPlugin {
         // cad-print: the wall check's points, the fastener tool's clicks
         // and the Print jobs section's input.
         print::build(app);
+        // cad-organize: the outliner's search, rename and drag input and its
+        // context menu; the Comments dock's typing, Annotate's and Reattach's
+        // face clicks and the pins; the References dock's typing, dropped
+        // files, the calibrate tool's clicks and the image planes.
+        tree::build(app);
+        threads::build(app);
+        references::build(app);
     }
 }
 

@@ -301,6 +301,18 @@ pub enum CadAction {
     /// fastener tool's picks and the wall check's points (`print`); the
     /// print tools and studies are catalogue entries.
     CadPrint(super::print::PrintArgs),
+    /// cad-organize: the outliner's search, expand and collapse, multi-select,
+    /// inline rename, drag-and-drop, context menu, active group and New
+    /// group (`tree`); each edit is one RoboCAD call through `edit_at`.
+    CadTree(super::tree::TreeArgs),
+    /// cad-organize: RoboCAD's comment threads (`threads`), the fourth
+    /// `annotations::ThreadSource`: the Comments dock, Annotate, pins, part
+    /// links, Show on model, Fit in view and the temporary isolation.
+    CadThreads(super::threads::ThreadsArgs),
+    /// cad-organize: the References dock, reference image planes, the
+    /// calibrate tool and the linked system file with Open in builder
+    /// (`references`).
+    CadReferences(super::references::ReferencesArgs),
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
 }
@@ -497,6 +509,9 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadInspector(_) => super::inspector::handle_physical(action, call, cx),
         CadAction::CadResults(_) => super::results::handle(action, call, cx),
         CadAction::CadPrint(_) => super::print::handle(action, call, cx),
+        CadAction::CadTree(_) => super::tree::handle(action, call, cx),
+        CadAction::CadThreads(_) => super::threads::handle(action, call, cx),
+        CadAction::CadReferences(_) => super::references::handle(action, call, cx),
         CadAction::SystemUi(args) => system_ui(call, cx, args),
     }
 }
@@ -665,6 +680,10 @@ fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
     out.extend(super::results::controls(cx));
     // cad-print: cad:print:*.
     out.extend(super::print::controls(cx));
+    // cad-organize: cad:tree:*, cad:threads:*, cad:references:*.
+    out.extend(super::tree::controls(cx));
+    out.extend(super::threads::controls(cx));
+    out.extend(super::references::controls(cx));
     out
 }
 

@@ -90,6 +90,15 @@ pub struct CadDocument {
     /// cad-print: the checks, the remembered print values, the registry
     /// and study reads, and RoboCAD's print jobs as last polled.
     pub print: super::print::PrintState,
+    /// cad-organize: the outliner's search, collapse state, range anchor,
+    /// rename and drag (`tree::TreeState`; display state only).
+    pub tree: super::tree::TreeState,
+    /// cad-organize: RoboCAD's threads as last read, the Comments dock,
+    /// the composer, pins and the temporary isolation (`threads::ThreadsState`).
+    pub threads: super::threads::ThreadsState,
+    /// cad-organize: the References dock, image textures, the calibrate
+    /// tool and the linked system file's status (`references::ReferencesState`).
+    pub references: super::references::ReferencesState,
     /// The mutating request in flight.
     pub edit: Option<Edit>,
     /// The latest outcome line (Ok message or the refusal / error).
@@ -195,6 +204,9 @@ impl CadDocument {
             physical_edit: Default::default(),
             results: Default::default(),
             print: Default::default(),
+            tree: Default::default(),
+            threads: Default::default(),
+            references: Default::default(),
             edit: None,
             status: None,
             revision: 0,

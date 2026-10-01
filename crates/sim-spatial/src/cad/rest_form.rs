@@ -71,6 +71,9 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadInspector(a) => tagged("cad_inspector", a),
         CadAction::CadResults(a) => tagged("cad_results", a),
         CadAction::CadPrint(a) => tagged("cad_print", a),
+        CadAction::CadTree(a) => tagged("cad_tree", a),
+        CadAction::CadThreads(a) => tagged("cad_threads", a),
+        CadAction::CadReferences(a) => tagged("cad_references", a),
     }
 }
 

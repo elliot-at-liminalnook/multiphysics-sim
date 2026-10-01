@@ -17,8 +17,8 @@
 //! `system_ui` control (`cad:op:<id>`) and REST `cad_invoke` write; the
 //! palette and the radials open with `CadSurface` at the pointer instead
 //! (`cad_invoke` of them opens at the 3D view's centre). Not ready, the key
-//! writes nothing and the status line shows why ("Fillet: …", "Annotate
-//! belongs to the cad-organize epic; …"), so a key press is never
+//! writes nothing and the status line shows why ("Fillet: …", "Preview
+//! joint motion belongs to the cad-experiments-motion epic; …"), so a key press is never
 //! silently ignored; Delete/Backspace with nothing selected stays silent:
 //! Backspace is too common a key to report on.
 //!
@@ -78,7 +78,7 @@
 //! | Enter | the spline's finish (`sketch::Finish::EnterOrDouble`, read by the sketch interaction), the open form's submit (`surfaces::form::input`, `CadFormSubmit`, only when no field has the keyboard), the numeric bar's commit (`numeric::entry`, while it is focused) | bound to no command here (`simulation.experiment`'s Ctrl+Return is listed, never bound); a focused field's Enter is that field's; with the Spline tool active and no field focused, Enter is the spline's finish, so the form's Enter submit must stand aside while a `Flow::Sketch` interaction is active (that guard is `surfaces::form`'s) |
 //! | Ctrl+Z, Ctrl+Shift+Z, Z | undo, redo, next display mode (`cad_display` next) | exact modifiers |
 //! | B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate preview (`cad_display` toggle) | exact modifiers |
-//! | F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus selection (frames the selected nodes; Fit All with none), palette, fillet, chamfer | exact modifiers |
+//! | F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus selection (frames the selected nodes; Fit All with none), palette, fillet, chamfer; the outliner's search (cad-organize) | exact modifiers; Ctrl+F is Fillet (RoboCAD's keymap binding) except with the pointer over the model tree dock, where it focuses the outliner's "Search (Ctrl+F)…" field (`tree::search`, which runs before these keys and consumes the key), as RoboCAD's placeholder names it while its keymap gives Ctrl+F to Fillet |
 //! | H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (catalogue: `Ops.set_visible`, `Ops.show_all`), fastener (cad-print), shell | exact modifiers; macOS's Option+H types "˙", but keys match the physical key (`KeyCode::KeyH`) with Alt held, so Alt+H reaches Show All |
 //! | Ctrl+G | grid (`cad_display` toggle) | no other reader in CAD mode |
 //! | 1, 3, 7, 0, Ctrl+1, Ctrl+3, Ctrl+7 | view front, right, top, iso; back, left, bottom (`camera_view`, RoboCAD's yaw/pitch table) | exact modifiers; the keypad's digits are the digits (`normalise`); the shared camera's numpad keys are off in CAD (`OrbitRules::keys` false, `scene`), so a digit is read once; macOS's Mission Control may take Control+digit ("Switch to Desktop n") when enabled, Command+digit still works |
@@ -88,7 +88,8 @@
 //! | Delete, Backspace | `edit.delete` | ignored while a text field (name, numeric bar, palette, form) has the keyboard |
 //! | Space | `view.radial` | typed as a space while a text field has the keyboard |
 //! | Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`: its first field, then the next); during a placement drag `ops::interact` also reads it to copy the base point into the form's anchor field; else the numeric bar's (`numeric::entry`) |
-//! | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), fit | no other reader in CAD mode |
+//! | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize: `CadInvoke tool.annotate`, the face-click tool of `threads::annotate`), fit | no other reader in CAD mode; while the Comments dock's composer has the keyboard (the kit's `typing`), N is typed |
+//! | Escape (cad-organize readers) | the outliner's context menu or name dialog closes (`tree::popup::input`); the calibrate tool ends (`references::calibrate::escape`); Annotate or Reattach is cancelled, else "Return to assembly" ends the linked parts shown alone (`threads::input::escape`, `threads::isolation::end`) | one consumer per press, in this order: the tree popup's reader runs before `keys::gate`; calibrate's after the gate (`keys::free`), before `keys::keys` and `transform::keys`; the threads' after calibrate's and before `transform::keys`. Each consumes the key only when it acted, so with none of them active Escape reaches the Select tool (`transform::input::keys`) |
 //! | Left press in the 3D view with a robot click tool active | the motor and joint tools (`robot::tools`'s click system) | Ctrl (Command) on the joint tool's first click is the world (`JointTool`); Alt+left is the orbit, not a pick |
 //! | Left press in the 3D view with the fastener tool active (cad-print) | one fastener hole on the face under the pointer (`print::fastener_tool`) | the selection's click stands aside (`pick`'s `robot_tool` includes `Flow::PrintPick`); Alt+left is the orbit |
 //!

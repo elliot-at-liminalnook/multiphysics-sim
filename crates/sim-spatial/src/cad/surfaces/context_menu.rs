@@ -14,8 +14,8 @@
 //! surfaces requirement puts every sketch tool in the 3D view's own menu.
 //! RoboCAD's 14 entries stay first, unchanged and in order. "Make unique"
 //! is the outliner's context menu's in RoboCAD; it stays here as the
-//! cad-modify row for that outliner entry, since the native outliner has no
-//! context menu yet.
+//! cad-modify row for that outliner entry (the native outliner's own
+//! context menu, cad-organize's `tree::popup`, lists it too).
 //! Each entry is enabled by the selection (`registry::ready`: a catalogue
 //! operation's `Needs`, an action's button, a later epic's refusal).
 //!

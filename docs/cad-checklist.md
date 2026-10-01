@@ -2,15 +2,18 @@
 
 This checklist closes the first CAD epic (**cad-mode**, §9 phase 1 of
 [docs/architecture/native-viewer.md](architecture/native-viewer.md), section
-"CAD mode (2026-09-30)") and the second (**cad-select-transform**: sub-body
-selection and the direct tools, Part C). Agents built them and checked them
-only by reading: **nothing here has been compiled or run yet** (the
-verification pass builds and tests it). Each step is done once in the native viewer and once in
+"CAD mode (2026-09-30)"), the second (**cad-select-transform**: sub-body
+selection and the direct tools, Part C) and the third (**cad-modify**: the
+operation catalogue and the command surfaces, Part D, section "CAD modify
+(2026-10-01)"). cad-mode and cad-select-transform were built and tested in
+their verification passes; cad-modify was written and checked only by
+reading: **Part D has not been compiled or run yet** (its verification pass
+builds and tests it). Each step is done once in the native viewer and once in
 RoboCAD's own window, so you can compare them. The feature-by-feature ledger
 is [cad-parity.md](cad-parity.md); its `done-by-reading` rows are the ones
-these steps show. Everything else in RoboCAD (sketching, the dialog-driven
-modify tools, printing, experiments, motion, comments, …) is a later CAD epic and stays in
-RoboCAD's window.
+these steps show. Everything else in RoboCAD (sketching, views and export,
+physical inspection, printing, experiments, motion, comments, …) is a later
+CAD epic and stays in RoboCAD's window.
 
 **RoboCAD stays the reference.** Nothing here changes it, its command layer
 or the `.rcad` format. The viewer never writes a `.rcad` file itself.
@@ -105,6 +108,65 @@ selection steps also show up live in RoboCAD's window.
 | CAD-33 One undo step per commit | After CAD-27 to CAD-32, read the inspector's History; Cmd/Ctrl+Z through them | Edit ▸ Undo through the same edits | Each commit (drag release, numeric Enter, dimension Enter, kept measurement) is exactly one step in RoboCAD's history, and each undo reverses exactly one; no preview stays on screen after an undo |
 | CAD-34 Refused while an edit is in flight | Release a drag, then at once release another (or send `cad_transform` while the first is pending). In Part B, edit in RoboCAD's window during a drag, then release | (n/a) | The second is refused "another CAD edit is in flight: …" and the stale one "the document changed since the preview began (revision …); nothing was sent"; RoboCAD's history shows only the edits that were sent |
 
+## Part D: the modify tools and command surfaces (cad-modify)
+
+Set up as in Part C: the viewer on one copy, RoboCAD's own window on a
+second copy, the same part selected in both. After each step compare the
+tree, the inspector's History (RoboCAD's undo labels) and the result's
+volume and face count in the inspector with RoboCAD's (`GET
+/nodes/<id>` on RoboCAD's port), then undo in both before the next step.
+Each operation is also in the native menu bar (the tabs under CAD mode's
+header, RoboCAD's categories), the palette and REST (`cad_invoke
+{"id":"<command id>"}` as the menu does, or `cad_run {"id", "params"}`);
+`cad_state.ops` shows the open form, the active operation and the
+catalogue. RoboCAD has no active plane in the viewer yet (cad-sketch), so
+leave RoboCAD's active plane unset (XY) for these steps.
+
+| Step | Native viewer | RoboCAD | Pass when |
+|---|---|---|---|
+| CAD-35 Box (corner) | Toolbar **Box**, Create ▸ Box (corner), or Shift+A then B. Press on the ground, drag the base, release, move to drag the height, click. The preview shows the base and top in light blue and the readout "20 mm × 20 mm × 10 mm". Again, but press Tab during the drag: the form's corner takes the press point; type width 30, depth 15, height 5 and press Enter. `cad_run {"id":"tool.box","params":{"corner":[0,0,0],"width":30,"depth":15,"height":5}}` | The toolbar's Box, the same drag; Tab, the same sizes, Enter | The same box (corner, size). The undo label is "Box" in the viewer and "Extrude" in RoboCAD (recorded difference: the viewer sends one `Ops.box`); the node is named "Box" in both. Snapping to a vertex starts the base there in both |
+| CAD-36 Box (centre) | Create ▸ Box (centre) (palette "centre"): the same drag from the centre; Tab sizes | Create ▸ Box (centre) | The base is centred on the press point and sits on the plane (not centred in height) in both |
+| CAD-37 Cylinder | Toolbar **Cylinder** or Shift+A, C: drag the radius, then the height (a downward drag builds down); Tab: diameter, height | The same | The same base, axis direction, diameter and height; the readout "Ø 10 mm × 10 mm" |
+| CAD-38 Sphere | Toolbar **Sphere** or Shift+A, S: press the centre, drag the radius, release (it finishes on release); Tab: diameter | The same | The same centre and radius; S as the chord's second key does not also pick the Scale tool |
+| CAD-39 Fillet | Ctrl/Cmd+F (toolbar **Fillet**): the mode becomes Edge, the form opens at the 3D view's top right with "radius 1.0" and the hint "fillet: select edges (click adds) then type the size • Enter applies". Click two edges of one body and one of another (a second click on an edge removes it); Tab, type `2`, Enter. `cad_run {"id":"tool.fillet","params":{"radius":"2 mm"},"items":[["<id>","edge",3]]}` | Ctrl+F, the same edges, Tab, 2, Enter | The same fillets. History shows one "Fillet" step per body in both; the selection clears and the tool stays active in both. With no edge picked, Enter is refused "Select one or more edges first" in both |
+| CAD-40 Variable and chordal fillet | Modify ▸ Variable fillet (start radius, end radius) and Modify ▸ Chordal fillet (chord) on the same edges | The same menu entries | The same results and one step per body |
+| CAD-41 Chamfer | Ctrl/Cmd+Shift+F: pick edges; distance 1.5, angle 45 → Enter; again with angle 30 | The same | The same chamfers. At 45° only the distance is sent (`cad_state` edit label "Chamfer …: distance 1.5 mm"), at 30° the angle too, as RoboCAD |
+| CAD-42 Fillet all | Select a body, Modify ▸ Fillet all edges…: a modal form "Radius (mm):" 1.0 (0.01 to 100); type 0.5, OK. With nothing selected the entry is disabled and says "Select the bodies to fillet" | Modify ▸ Fillet all edges…, 0.5 | The same result, one "Fillet all" per selected body. RoboCAD opens its dialog even with nothing selected and then does nothing (recorded difference) |
+| CAD-43 Full round | Edge mode: select two opposite edges of one face, Modify ▸ Full round (two edges); then try one edge, and edges of two bodies | The same | The same full round; the bad selections are refused "Select two edges of the same body" in both |
+| CAD-44 Remove fillets | Face mode: select fillet faces (on two bodies), Modify ▸ Remove fillets (selected faces) | The same | The same faces removed, one step per body; with no face selected the viewer refuses "Select the fillet faces to remove" (RoboCAD silent) |
+| CAD-45 Shell | Ctrl/Cmd+Shift+H (toolbar **Shell**): the mode becomes Face; click the top face (it toggles), type wall 2, Enter. Also with no face (a closed shell) | Ctrl+Shift+H, then select the face with the Select tool first, wall 2, Enter | The same hollow body. In RoboCAD a face click while the shell tool is active selects nothing (its `ShellTool.press` only toggles edges), so pre-select the face there; the viewer toggles faces (recorded difference) |
+| CAD-46 Thicken | Select a sheet (and a body: it is ignored), Modify ▸ Thicken sheet…: "Thickness (mm):" 2.0 | The same | The same solid; with no sheet selected both refuse "Select a sheet" |
+| CAD-47 Draft | Face mode: select side faces, Modify ▸ Draft faces…: "Angle (degrees):" 2.0 (−45 to 45) and a neutral plane (XY) | The same, no active plane | The same draft, pull +Z about XY. The viewer's form also offers XZ and YZ (RoboCAD uses its active plane; recorded difference until cad-sketch) |
+| CAD-48 Delete faces | Face mode: select faces, Modify ▸ Delete faces (heal) | The same | The same healed body, one step per body; the selection clears in both |
+| CAD-49 Mirror and live mirror | Select bodies, Ctrl/Cmd+M; then Modify ▸ Mirror as live instance. REST `cad_run {"id":"tool.mirror","params":{"plane":"xz"}}` mirrors about XZ | Ctrl+M with no active plane; Mirror as live instance | The same mirrored copies about YZ; the live one follows its source in both (move the source to check) |
+| CAD-50 Array | Ctrl/Cmd+Shift+A: the modal Array form (Kind rectangular: Count X/Y/Z, Mode "count + spacing" or "count + total extent", Spacing or extent X / Y / Z; As live instances; Merge into one body). 3 × 2 × 1 at 10, 10, 10, OK; again with extent; again Kind radial (count 6, total 360, axis plane XY) | Ctrl+Shift+A, the same dialog values | The same copies and positions; the rows switch with the kind in both. The viewer's radial axis is the chosen plane's normal through the origin (RoboCAD: the active plane's) |
+| CAD-51 Instance | Select two bodies, Modify ▸ Instance selected | The same | One instance per body, each offset +20 mm in X, one step each; nothing selected: the viewer refuses "Select the bodies to instance" (RoboCAD silent) |
+| CAD-52 Make unique | Select an instance: Modify ▸ Make instance unique, or right-click in the 3D view ▸ Make unique (bake instance) | The outliner's right-click ▸ Make unique (bake instance), or Modify ▸ Make instance unique | The instance becomes a body in both; a selection without an instance is refused "Select an instance to make unique" in the viewer (RoboCAD skips it silently); the viewer offers the entry in the 3D view's menu, RoboCAD in the outliner's |
+| CAD-53 Set pivot at cursor snap | Select a body, point at a vertex of another body (the snap marker shows it), then the palette ▸ "Set pivot at cursor snap" (Help menu, as RoboCAD's "Tools" category). `cad_run {"id":"tool.set_pivot","params":{"point":[0,0,10]}}` | Help ▸ Set pivot at cursor snap with the cursor on the same vertex (use its palette with the pointer there) | The inspector's pivot reads the vertex in both. Over a face with no snap point the viewer takes the point on the face (RoboCAD takes the grid or plane point; recorded difference) |
+| CAD-54 Inspector pivot and transform | Select a node: the inspector's pivot field; press it, type `10, 0, 5mm + 1`, Enter; **Clear pivot**. Select an instance: its translation, axis, angle and scale fields; change the angle to `30deg`. A bad value (`10, x, 0`) keeps the field open with the error naming the token | `PATCH /nodes/<id> {"pivot": [10,0,6]}` and `{"transform": …}` on RoboCAD's port, or its properties panel | One undo step each with RoboCAD's result; a component member's pivot and an occurrence's transform show RoboCAD's refusal instead of the field |
+| CAD-55 Delete as one step | Select three bodies, Delete (or Backspace, the **Delete** button, Edit ▸ Delete) | Delete with the same selection | All three go in one undo step "Delete" in both; Undo brings all three back |
+| CAD-56 Union, subtract, intersect | Select the target, then Shift-select the tools; Ctrl/Cmd+U, Ctrl/Cmd+Shift+U, Ctrl/Cmd+Alt+U (toolbar **Union**, **Subtract**). With one body selected: the status reads "Union: Select the target body first, then the tools" | The same selections and keys | The same result on the first selected body; the tools are removed and the selection clears in both; RoboCAD's message is the same |
+| CAD-57 Region | Two overlapping bodies, Modify ▸ Region (overlap as new body); then with three | The same | A new "Region" body in both; three are refused "Select exactly two bodies" in both |
+| CAD-58 Join and unjoin | Two bodies, J; then select the result, Shift+J | The same | The same joined body and the same parts after unjoin; J with one body is refused in the viewer ("Select two or more bodies to join"), RoboCAD calls join anyway |
+| CAD-59 Dissolve | A body with redundant edges (after a union), Modify ▸ Dissolve redundant topology | The same | The same face count after, one step per body |
+| CAD-60 Cut | Select a body, Modify ▸ Cut with active plane (the viewer cuts with XY; `cad_run {"id":"tool.cut_plane","params":{"plane":"yz"}}` for another); then select a body and a sheet, Modify ▸ Cut with selected sheet/curve | The same, no active plane; the same body and sheet | The same pieces. The sheet cut works headless only since this epic's `ArgConverter` fix (`cad/tests/test_api_cut_cutter.py`) |
+| CAD-61 Split faces | Select a body crossing z = 0, Modify ▸ Split faces with active plane | The same | The same faces split along XY |
+| CAD-62 Imprint | A body, then a curve or body touching it, Modify ▸ Imprint selected curve/body | The same | The same imprinted edges; one node refused "Select the body, then the tool" in both |
+| CAD-63 Project curve | A curve or sketch, then a body; orbit to look along −Z; Modify ▸ Project curve onto body | The same, from the same direction | The same projected curve; the direction is the view's in both (`cad_state` edit label), or REST's `direction` |
+| CAD-64 Silhouette | Select a body, Modify ▸ Silhouette onto active plane | The same | The same silhouette curve on XY |
+| CAD-65 Control points | Face mode: a curved face, Advanced ▸ Show/edit control points (advanced) | The same | The same points and rows in RoboCAD's pink, and the status "N control points (edit via Ops.set_control_points; …)"; nothing is written. Changing the document clears the overlay in both |
+| CAD-66 Raise degree | The same face, Advanced ▸ Raise face degree | The same | One "Raise degree" step in both; the face is 4 × 4 after (`tool.control_points` again) |
+| CAD-67 Rebuild face | Advanced ▸ Rebuild face…: "Spans per direction:" 4 (1 to 64) | The same | The same rebuilt face |
+| CAD-68 Dependent offset | Select a face, then Shift-select another body; Modify ▸ Dependent offset (face to body)…: "Clearance (mm):" 0.2 (−10 to 10) | The same | The same offset face; a face alone is refused "Select a face, then the body to offset it to" in both |
+| CAD-69 Copy and paste with placement | Select two bodies, Ctrl/Cmd+C: "Copied 2 item(s) with placement"; Ctrl/Cmd+V: two new bodies in place, one undo step "Paste". `cad_state.ops.clipboard` shows the copy. Copy in the viewer, then paste in RoboCAD's window | Ctrl+C, Ctrl+V | The same new nodes at the same placement, one step each time. The viewer's clip stays in the viewer: it does not reach RoboCAD's window or the OS clipboard (recorded difference) |
+| CAD-70 Curvature comb | Select a curve, Inspect ▸ Curvature comb on selected curve | The same | The same comb lines (scale 5, 48 samples) in RoboCAD's violet; a sketch shows none in both; with a curve then a sketch selected the viewer shows none, RoboCAD the curve's (recorded difference) |
+| CAD-71 Continuity | Select a filleted body, Inspect ▸ Continuity check (G0/G1/G2) | The same | The same edge colours (G0 red, G1 amber, G2 green, boundary grey) and the status "Continuity: {'G0': …, 'G1': …, 'G2': …, 'boundary': …}" |
+| CAD-72 Toolbar | Under CAD mode's header: the menu tabs, then RoboCAD's 25 tools in order. Hover each: the hint names its keys and, when disabled, why ("Annotate belongs to the cad-organize epic; …"). Activate Move, then Fillet: their buttons light. Scroll the row with the wheel on a narrow window | RoboCAD's toolbar | The same buttons in the same order; the native ones run as in RoboCAD; later-epic buttons are disabled naming their epic; Qt folds the overflow behind "»" where the viewer scrolls (recorded difference) |
+| CAD-73 Right-click menu | Right-click (without dragging) on the 3D view: Annotate, Comments panel, Push/Pull face, Fillet, Chamfer, Hollow / shell, Union, Subtract, Mirror, Array…, Measure, Isolate, Hide, Delete; with an instance selected also Make unique (bake instance). `cad_surface {"surface":{"kind":"context"}}` | Right-click in RoboCAD's viewport | The same entries in order; each enabled by the selection; Annotate, Comments panel, Isolate and Hide disabled naming their epic; a right drag still orbits |
+| CAD-74 Radial menus | Space: the view pie at the pointer (Front, Top, Right, Iso, Ortho, Grid, Mode, Fit): hover highlights, release on Fit frames the model, the others say "… belongs to the cad-views-export epic". Q: Body, Face, Edge, Vertex, Point; release on Edge switches the mode. Escape or the dead centre closes; a press outside closes | Space and Q in RoboCAD's viewport | The same entries and layout (first at the top, then clockwise); the viewer's pills are rounded rectangles where RoboCAD's are ellipses (recorded difference); Space types a space while a text field has the keyboard |
+| CAD-75 Palette | Control+Space (Command+Space is Spotlight on macOS) or Shift+F: "Type a command… (Ctrl+Space)". Type `fil`: "Fill / patch selected curve" (cad-sketch), then Fillet and Fillet all edges… (sorted by score, then label, as RoboCAD); Up/Down; Enter runs the highlighted row. Type `same`: "Edit: Select Same Material    [Ctrl+Shift+M]  ⚠ conflicts with Robot: add motor from library…". Rows of later epics read "(cad-sketch)" etc. and are disabled; GUI-only rows read "(GUI-only)" | Ctrl+Space, the same queries | The same ranking and the same conflict warning; the viewer also lists commands it cannot run yet, marked and disabled |
+| CAD-76 Menus by category | Click each tab: File, Edit, View, Select, Create, Sketch, Modify, Planes, Inspect, Print, Advanced, Outliner, Robot, Bridge, Simulation, Help; each lists its commands with keys; "General", "Window" and "Tools" commands (Command palette, Numeric entry, Select tool, Move, Set pivot at cursor snap, …) are in Help. `cad_surface {"surface":{"kind":"menu","category":"Modify"}}` | RoboCAD's menu bar | The same menus, entries, order and keys; a click runs the command and closes the menu |
+
 ## Known differences (deliberate)
 
 - RoboCAD asks Save/Discard/Cancel when closing; the viewer never saves for
@@ -125,6 +187,24 @@ selection steps also show up live in RoboCAD's window.
   ring turns about X (RoboCAD turns about Z); sketch endpoints and the active
   plane are not snap targets yet (cad-sketch); the viewport footer (orbit
   hints, ms/frame) is not drawn.
+- cad-modify (each recorded in cad-parity.md with its reason): there is no
+  active plane until cad-sketch, so mirror (YZ), cut, split, silhouette,
+  draft and the radial array (XY) take a plane parameter and primitives are
+  placed on XY; both box tools send `Ops.box` (undo label "Box", RoboCAD's
+  "Extrude"); the shell tool toggles faces on click (RoboCAD's toggles
+  nothing); the viewer refuses by name where RoboCAD silently does nothing
+  (empty selections for delete, copy, instance, unjoin, dissolve, cut,
+  split, silhouette, set pivot, remove fillets, delete faces, the face
+  edits, the analyses); copy keeps the clip in the viewer, not on the OS
+  clipboard; per-node operations run one RoboCAD call per node inside one
+  edit; the curvature comb reads the last selected curve and continuity
+  the last selected node with a body (as RoboCAD leaves them drawn), and
+  refuse by name when there is none; the selection is cleared only when
+  the edit succeeds (as RoboCAD); the pie entries are
+  rounded rectangles; Make unique is in the 3D view's right-click menu;
+  the toolbar, menus, palette and radials list later epics' and unported
+  commands disabled, naming why; Command+Space is Spotlight's on macOS, so
+  the palette opens with Control+Space or Shift+F.
 
 ## Sign-off
 

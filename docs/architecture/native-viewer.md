@@ -42,8 +42,11 @@ duplicates physics.
   `spec(`/`c(` entries: 121 in the nine action types' `commands()` plus
   the switcher's `system_ui` (`WindowAction::switcher_commands`).
   cad-select-transform adds 16 CAD commands (31 `spec(` entries in
-  `cad/actions.rs`, re-counted 2026-10-01): 138 in all. Place mode
-  answers `state`, `camera` and `screenshot`.
+  `cad/actions.rs`, re-counted 2026-10-01): 138 in all. cad-modify adds
+  6 (`cad_invoke`, `cad_run`, `cad_form_set`, `cad_form_submit`,
+  `cad_form_cancel`, `cad_surface`; the CAD specs moved to `cad/specs.rs`,
+  37 `spec(` entries there, re-counted 2026-10-01 against the 31 before):
+  144 in all. Place mode answers `state`, `camera` and `screenshot`.
 - **One action layer** (see [Action layer](#action-layer-2026-09-30)),
   verified at 90c65c86: every intent is a typed action
   (`WindowAction`, `InspectAction`, `SystemAction` carrying the builder's
@@ -139,6 +142,23 @@ duplicates physics.
   call. `cad/` is 10,397 lines in 30 files (wc -l, 2026-10-01; largest
   `document.rs` 734, `transform/mod.rs` 737, `panel.rs` 687, `actions.rs`
   678), `sim-runtime/src/units.rs` 901 (tests included).
+  **cad-modify** (2026-10-01, see [CAD modify](#cad-modify-2026-10-01)),
+  written and reviewed by reading, pending its verification pass: the op
+  catalogue as data (`cad/ops/`, 54 entries: 43 RoboCAD commands and 11
+  REST-only Ops methods) with one apply
+  path into the existing edit job, primitive placement, pick-then-form
+  tools and the cursor snap; the command surfaces built from RoboCAD's
+  command table (`cad/surfaces/`: menu bar, tools toolbar, right-click menu,
+  Space and Q radials, command palette with key conflicts, parameter form);
+  data-driven keys with two-step chords; read-only analysis overlays; the
+  inspector's pivot and transform editors; five RoboCAD routes (copy and
+  paste with placement, control points, curvature comb, continuity). `cad/`
+  is now 17,063 lines in 54 files (wc -l after the review fixes, tests
+  included; was 10,445 in 30 at fe6995d4; `ops/` and `surfaces/` 5,193;
+  largest `panel.rs` 700, `ops/catalogue.rs` 698, `ops/mod.rs` 682,
+  `actions.rs` 676, `inspector/mod.rs` 663, `sync/mod.rs` 582;
+  `document.rs` became `document/` 774 in three files and
+  `transform/mod.rs` 460).
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
   verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
@@ -177,6 +197,10 @@ duplicates physics.
   `builder/ui.rs` 1,395 (was 1,684), `lesson/ui.rs` 1,158, `lib.rs` 1,294
   (was 1,411), `app/switcher.rs` 84; `ui_kit/` 903 lines (`widgets.rs` 346,
   `theme.rs` 199, `tests.rs` 157, `slider.rs` 85, `mod.rs` 71, `scroll.rs`
+  45), 1,692 in 9 files after cad-modify (wc -l after the review fixes;
+  was 908 at fe6995d4: `widgets.rs` 351, `tests.rs` 346, `form.rs` 278,
+  `theme.rs` 199, `palette.rs` 198, `pie.rs` 98, `mod.rs` 92, `slider.rs`
+  85, `scroll.rs`
   45). The action modules are
   under 710 lines each (`hardware/actions.rs` 709, `robot/actions.rs` 689,
   `lesson/actions.rs` 670, `builder/actions.rs` 661, `app/actions.rs` 513,
@@ -2273,7 +2297,7 @@ overlays do not follow a preview (they return when the new meshes land).
   [[id, "face", f]]})` (:373) → `actions::apply` → `selection::select`
   (`selection/mod.rs:182`) → pushed as above; `topology::sync` fetches
   the body's faces for the inspector and the tool.
-- **Push/pull commit.** D (`transform/mod.rs` `keys`) → `CadTool
+- **Push/pull commit.** D (`transform/input.rs` `keys`, `transform/mod.rs` `keys` before cad-modify's split) → `CadTool
   {push_pull}` → `transform::handle` (`transform/mod.rs:578`) targets the
   selected face. A drag: `push_pull::tool` (`transform/push_pull.rs:140`)
   captures RoboCAD's revision at the press, previews a line and the
@@ -2311,6 +2335,431 @@ afterwards:
 - 608 superseded workspace-crate artifacts in `target/release/deps/`
   (an older hash of the same crate and file kind, more than three days
   older than the newest, which was kept): 2.76 GiB.
+
+## CAD modify (2026-10-01)
+
+Batch cad-modify (default order item 7, §9 phase 1, the second half of the
+planned cad-tools epic; see §9 "Later CAD epics" 2) brought RoboCAD's
+operation catalogue into CAD mode: primitives, fillets, chamfer, shell,
+thicken, draft, mirror, array, instance, make unique, booleans, region,
+join, dissolve, cut, split, imprint, project, silhouette, the advanced face
+edits, set pivot, copy and paste with placement, the read-only analyses,
+the REST-only Ops methods, and the command surfaces RoboCAD offers them
+through (menus, tools toolbar, right-click menu, Space and Q radials,
+command palette, parameter dialogs) with RoboCAD's keys. RoboCAD's command
+layer still does every edit: a run is one edit job sending the Ops calls
+RoboCAD's own handler makes, so undo and provenance stay RoboCAD's. The
+ledger rows are in [docs/cad-parity.md](../cad-parity.md) (116 rows: 77
+done by reading, 39 deliberately different, each with its reason; none
+open; after the epic the ledger has 245 rows done by reading, 458 later and
+70 deliberately different), the side-by-side steps in
+[docs/cad-checklist.md](../cad-checklist.md) (CAD-35 to CAD-76). Written
+and reviewed by reading, pending its verification pass. Paths are
+`crates/sim-spatial/src/cad/` unless they name another crate.
+
+### Shape
+
+- **The catalogue as data** (`ops/`): `catalogue.rs` `CATALOGUE`, 54
+  `OpEntry`s (43 RoboCAD commands in its registry order, then 11 REST-only
+  Ops methods as `ops.<name>`), each with RoboCAD's id, label, category,
+  keys, what must be selected (`Needs`), typed parameters (`Param`, with
+  RoboCAD's prompts, defaults and dialog ranges as `ui_kit::form::FieldKind`),
+  how it starts (`Flow`: `Immediate`, `Form`, `PickThenForm(mode)`,
+  `Place(primitive)`, `AtCursorSnap`), its route, its argument list
+  (`Shape`, `Arg`, kwargs), whether RoboCAD's handler calls once or per
+  node (`Fan`), RoboCAD's refusal and hint, whether it clears the
+  selection, and the RoboCAD source it was read from ("(ours)" where
+  RoboCAD says nothing). `kinds.rs` holds the shared field kinds, needs,
+  hints and `BASE`. Nothing is code per operation: `resolve.rs` `resolve`
+  is keyed by `Needs`, `args.rs` `build` by `Shape` (`plain`, `array`,
+  `place`, copy, paste and the three reads), with `history` naming each
+  route's RoboCAD history label.
+- **One action family** (`actions.rs` `CadAction`): `CadInvoke { id }`
+  (what a menu entry, toolbar button, palette row, radial entry, key,
+  `system_ui` `cad:op:<id>` or REST `cad_invoke` does), `CadRun { id,
+  params, items, revision }` (REST `cad_run`, the form's OK, a finished
+  placement), `CadFormSet`, `CadFormSubmit`, `CadFormCancel` and
+  `CadSurface { surface }`. `actions::handle` passes the first five to
+  `ops::handle` and the last to `surfaces::handle`; their REST specs are in
+  `specs.rs` (split from `actions.rs`), generated from the catalogue where
+  they list it.
+- **One apply path** (`ops/mod.rs`): `invoke` starts an entry by its flow
+  (an id not in the catalogue goes to `surfaces::invoke_command`, i.e.
+  `registry::invoke`); `run` → `prepare` (`CadDocument::commit_refusal`,
+  `resolve::resolve`, `values`, `args::build`) → `start`: the calls in
+  order inside one `actions::edit` job (`sync::start_edit`, a Dedicated
+  job), a paste through the same edit path, or a read through
+  `analysis_overlay::start`; `started` notes the selection on the edit
+  where RoboCAD clears it (`sync::finish_edit` clears it once the edit
+  succeeds and only if unchanged, as RoboCAD clears after its Ops call
+  returns) and closes a form-flow form. REST `items` naming faces or edges
+  need the `revision` their indices were read at; a parameter whose `when`
+  does not hold is refused by name. `submit`, `open_form`, `form_set`,
+  `form_cancel` own the form state (`OpsState::form`, `FormState`);
+  `state_json` is `cad_state.ops`.
+- **Interactions** (`ops/interact.rs`): primitive placement (RoboCAD's
+  `PrimitiveTool`: snap the press, drag the base, then the height on the
+  plane facing the camera, Ctrl for 10 mm steps, Tab for exact sizes;
+  `finish_params` writes one `CadRun` with the revision at the press; the
+  preview is overlay lines only); pick-then-form clicks are `pick.rs`'s
+  (`pick::pointer` toggles an item of the tool's kind from
+  `candidates_at`, i.e. `CadMeshes::face_at` and the topology at the shown
+  revision; no box select while the tool is active); the cursor snap
+  (`OpsState::cursor_snap`: `snap::snap` only, RoboCAD's `viewport.snap`
+  rule, every 33 ms at most, candidates cached by epochs) for "Set pivot
+  at cursor snap". A placement's base and Tab anchor lie on z = 0 (a
+  sphere keeps its centre); the anchor is the form's last field, so Tab
+  reaches width or diameter first as in RoboCAD. `topology::wanted` loads every
+  drawn body's topology while an op is active.
+- **Surfaces** (`surfaces/`): `registry.rs` is RoboCAD's whole command
+  table (183 commands, `COMMANDS`, keys and whether they are bound, and a
+  `Native` mapping: `Op`, `Action`, `Surface`, `NumericEntry`,
+  `Later(epic)`, `Different(reason)`; the ledger leaves no command
+  GUI-only: Blender link and web share belong to cad-views-export), plus `TOOLBAR`,
+  `CONTEXT`, `VIEW_RADIAL`, `SELECT_RADIAL`, `CATEGORIES` and `ready`, the
+  readiness every surface, key and `system_ui` control shares. `mod.rs`
+  `handle` opens and closes a surface (`OpsState::surface`) and answers its
+  entries; `controls` lists `cad:op:<id>`, `cad:surface:<kind>`,
+  `cad:menu:<category>` and the form's `cad:form:*`. `toolbar.rs` (the
+  menu bar's tabs and the tools row under CAD mode's header, `COMMAND_BAR`
+  high), `menus.rs`, `context_menu.rs`, `radial.rs`, `palette.rs` and
+  `form.rs` draw them on the kit and turn clicks and keys into the same
+  actions.
+- **Keys** (`keys.rs`): RoboCAD's bindings read from the registry, not
+  written per command (`parse`, exact modifiers; Control or Super for
+  Ctrl); a matched command acts only when `registry::ready`, else the
+  status line says why; the two-step "Shift+A, B/C/S" `Chord` with
+  `gate`; ignored while a text field, a command surface or a modal form
+  has the keyboard. The clash table is below.
+- **Kit widgets** (`src/ui_kit/`): `pie.rs` (`Kit::pie`, `index_at`,
+  `slot`), `palette.rs` (`rank`, `score`, `conflicts`, `Kit::palette`) and
+  `form.rs` (`evaluate`, `TextDraft`, `Kit::form`), with no intent logic.
+- **Inspector editors** (`inspector/editors.rs`, `inspector.rs` became
+  `inspector/`): the pivot and transform editors, one `CadPatch` per Enter.
+- **Overlays** (`analysis_overlay.rs`): copy, control points, curvature
+  comb and continuity read on one Dedicated job at a time, results landed
+  in JobResults (a copy into `OpsState::clipboard`), drawn on the tools'
+  gizmo group in RoboCAD's colours and cleared when the shown revision
+  changes.
+- **Python additions** (`cad/robocad/api.py`, read-only except paste): `POST
+  /clipboard/copy` (`Service.copy`), `POST /clipboard/paste`
+  (`Service.paste`, one undo step "Paste"; on an error the half-pasted
+  nodes are removed and the revision, dirty flag and results' stale flag
+  restored), `GET /nodes/{id}/control_points?face=i`,
+  `GET /nodes/{id}/curvature_comb[?scale&samples]`, `GET
+  /nodes/{id}/continuity`; and two `ArgConverter._one` fixes found by
+  reading: a non-plane node id passes through to `cut`'s `cutter`, and
+  `set_control_points`' grid of points converts. Pytests
+  `cad/tests/test_api_clipboard.py`, `test_api_control_points.py`,
+  `test_api_analysis.py`, `test_api_cut_cutter.py`,
+  `test_api_control_points_set.py`. sim-runtime
+  `cad_client` gains `copy_nodes`, `paste` (`Pasted`), `control_points`
+  (`ControlPoints`), `curvature_comb` (`CurvatureComb`) and `continuity`
+  (`Continuity`, `EdgeContinuity`).
+- **Splits** (each file under 700 lines): `document.rs` → `document/`
+  (`mod.rs` the resource, `state.rs` queries and the shared refusals,
+  `types.rs` value types); `transform/mod.rs` → `geometry.rs`, `input.rs`
+  and `numeric_fields.rs` beside it; `inspector.rs` → `inspector/`
+  (`mod.rs`, `editors.rs`); `actions.rs`' specs → `specs.rs`;
+  `ops/catalogue.rs`' building blocks → `ops/kinds.rs`.
+
+### Decisions
+
+- **The catalogue is data in `cad/ops`, not a match per operation.** Every
+  surface, the keys, REST and `system_ui` read one table, so a label, a key
+  or a refusal is written once and the tests can cross-check it against
+  RoboCAD's registry (`surfaces::tests`). *Rejected:* one `CadAction`
+  variant per operation (116 rows of hand-written arms and specs); calling
+  RoboCAD's `POST /commands/{id}` (GUI-only, opens Qt dialogs). *Revisit
+  if* an operation needs logic no `Shape` or `Needs` expresses; add a shape,
+  not a per-id branch.
+- **`CadOp` stays as the raw REST escape hatch.** `cad_op` still calls any
+  `POST /ops/{name}` with raw args; the catalogue is the checked path (its
+  selection, revision and parameter refusals). *Rejected:* removing it
+  (scripts and agents use it for methods no epic surfaces yet). *Revisit
+  if* every Ops method has a catalogue entry and nothing calls `cad_op`.
+- **Per-node calls run inside one edit job.** Where RoboCAD's handler loops
+  over the selected nodes, the viewer sends the same calls in the same
+  order on one job, each its own RoboCAD undo step as in RoboCAD; the first
+  error stops the rest and the message says how many ran. *Rejected:* one
+  job per call (the one-edit-in-flight rule would refuse the second);
+  folding them into one `Composite` (RoboCAD's undo would differ, and it
+  needs a new route). *Revisit if* RoboCAD's handlers become one Ops call.
+- **Two revision guards.** A form-flow run is refused when RoboCAD's
+  revision changed since its form opened (`FormState::began`); a pick or
+  place tool's form stays open across runs, so its picks carry the guard
+  instead (`resolve` refuses a selection first seen at an older revision,
+  `selection_revision`; a placement sends the revision at its press).
+  *Rejected:* one guard at the form's opening for every flow (a fillet
+  tool left open across an undo would be refused forever, or would send
+  stale indices). *Revisit if* forms become non-persistent.
+- **No active plane until cad-sketch.** Mirror (YZ), cut, split,
+  silhouette, draft's neutral plane and the radial array's axis (XY) take
+  a plane choice parameter with the default RoboCAD uses when no plane is
+  active; primitives are placed on XY through the origin. *Rejected:* a
+  stand-in active-plane state here (cad-sketch owns it, with its picking
+  and snapping). *Revisit with* cad-sketch: the parameter's default becomes
+  the active plane.
+- **Both box tools send `Ops.box`.** RoboCAD's `PrimitiveTool` extrudes a
+  sketch rectangle (history label "Extrude", node "Box"); the viewer sends
+  one `POST /ops/box` (label "Box") with the corner the tool computes. The
+  centre box keeps the tool's rule (centred in the plane, base on it), not
+  `Ops.box_center` (centred in height too), which stays as the REST-only
+  `ops.box_center`. *Rejected:* building a sketch body client-side (no
+  route takes one). *Revisit if* the undo label must match exactly.
+- **RoboCAD's command table is static data** (`surfaces/registry.rs`):
+  menus, the palette, the toolbar, the context menu and the keys list all
+  183 commands: later epics' disabled, naming the epic, and the few the
+  ledger leaves unported disabled with its reason (no command maps to
+  RoboCAD's `POST /commands/{id}`). *Rejected:*
+  reading `GET /commands` (empty headless, the common case); listing only
+  what runs (a user could not see where a RoboCAD command went).
+  *Revisit if* RoboCAD's registry changes (the tests pin the count and
+  the catalogue's agreement).
+- **Copy keeps the clip in the viewer.** `POST /clipboard/copy` answers the
+  clip and `OpsState::clipboard` keeps it with its revision; paste sends it
+  back. *Rejected:* the OS clipboard (another surface to own, and RoboCAD's
+  headless service could not read it anyway). *Revisit if* pasting between
+  RoboCAD windows and the viewer is wanted.
+- **The `ArgConverter` fixes.** `cut(node, cutter: str | Body | Plane)`
+  had every `plane`-annotated argument parsed as a plane name, so a cutter
+  node id failed headless (the GUI calls `Ops.cut` directly). A string that
+  names a node with no plane now passes through (only `cut` mixes `str`
+  and `Plane`). `set_control_points(…, points: list[list[Vec3]])` had its
+  grid sent through the `Vec3` branch, which raised; a grid named `points`
+  now converts first (only `set_control_points` has a `points`
+  parameter). *Rejected:* new routes for the same Ops methods. *Revisit
+  if* another Ops signature mixes ids and planes or takes nested points.
+- **The selection is cleared when the edit succeeds.** RoboCAD's handlers
+  clear it after the Ops call returns, so a failed fillet keeps the picks
+  for a retry; `sync::finish_edit` clears it only on success and only if
+  it is still the selection the run used. *Rejected:* clearing when the
+  edit starts (the first version; it lost the picks on a refused radius).
+- **`cad_state.ops`** reports the open form (each field's text and
+  evaluation), the active op, the placement, the open surface, the cursor
+  snap, the clipboard and the catalogue, so REST and an agent see what the
+  window shows. It is set outside the `json!` macro (recursion limit).
+- **The kit widgets carry no intent logic.** `ui_kit::{pie, palette, form}`
+  take entries and one action component per clickable part; ranking,
+  evaluation and the pie's hit test are pure functions tested in
+  `ui_kit::tests`. *Rejected:* CAD-only widgets (other modes need a
+  palette and forms). *Revisit if* a second caller needs a different
+  interaction model.
+
+### Key clashes
+
+From `keys.rs`' module doc (grep of `KeyCode::` over
+`crates/sim-spatial/src`, 2026-10-01; `app/`, `ui_kit/`, the switcher and
+REST read no keys, so no key is read in every mode):
+
+| Key | Commands | Resolution |
+|---|---|---|
+| Ctrl+Shift+M | `edit.select_same_material` (keymap), `robot.add_motor` (inline) | RoboCAD binds only the keymap's: Same Material runs; the palette shows RoboCAD's own conflict warning |
+| Ctrl+Space | `command_palette` | macOS takes Command+Space (Spotlight); Control+Space or Shift+F opens it |
+| Ctrl+H | `tool.fastener` (cad-print) | macOS's app menu takes Command+H (hide); Control+H reaches the refusal |
+| Ctrl+M | `tool.mirror` | a macOS app menu binding Command+M (minimise) would take it; winit's default menu has none; Control+M always works |
+| Shift+A, B / C / S | `tool.box` / `tool.cylinder` / `tool.sphere` | the second key is the chord's (see above), not B (select bodies), C (sketch circle) or S (scale) |
+| S, G, R, D, Shift+D, M, Escape | tools (transform) | read by transform's keys only; Shift+S (sketch slot), Shift+R (revolve), Shift+J etc. differ by Shift, which transform's S/G/R/M refuse |
+| Ctrl+S, Ctrl+Shift+S, Ctrl+Shift+D | save, save as, export drawing | transform's S and D act only without Ctrl |
+| Ctrl+A, Ctrl+Shift+A, Shift+A | select all, array, chord start | exact modifiers keep them apart |
+| Ctrl+Z, Z | undo, next display mode (cad-views-export) | exact modifiers |
+| B, Shift+B, Ctrl+Shift+B | select bodies, select faces, build plate (cad-views-export) | exact modifiers |
+| F, Shift+F, Ctrl+F, Ctrl+Shift+F | focus (cad-views-export), palette, fillet, chamfer | exact modifiers |
+| H, Alt+H, Ctrl+H, Ctrl+Shift+H | hide, show all (cad-views-export), fastener, shell | exact modifiers |
+| P, Shift+P, Ctrl+P | select points, sketch polygon (cad-sketch), plane from face (cad-sketch) | exact modifiers |
+| Delete, Backspace | `edit.delete` | ignored while a text field (name, numeric bar, palette, form) has the keyboard |
+| Space | `view.radial` | typed as a space while a text field has the keyboard |
+| Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`); during a placement drag `ops::interact` also copies the base point into the form's anchor field; else the numeric bar's |
+| digits, J, Q, X, T, L, C, N, /, Home | views (cad-views-export), join, selection radial, extrude, sketch text/line/circle (cad-sketch), annotate (cad-organize), isolate, fit | no other reader in CAD mode |
+
+Commands of later epics keep their keys, so a press says which epic owns
+them (status line), as their menu entries do.
+
+### Review findings (five pair-reviewers by area, then fixes)
+
+No reviewer found a compile error. Fixed:
+
+- **Kit:** `Unit::Factor` was never constructed (a dead-code warning;
+  removed); `TextDraft::key` reported `Ignored` when only the selection
+  changed, so typing the same character over a selected field left it
+  selected; the checkbox chip lit only for "true"; palette rows wrapped
+  inside their fixed height (now no-wrap); a hovered disabled pie entry
+  looked lit; two clippy lints.
+- **Catalogue and apply path:** the selection was cleared when an edit
+  started, losing a failed fillet's picks (now on success, in
+  `sync::finish_edit`); REST `items` with face or edge indices were sent
+  without a revision check (now `revision` is required); `when` gates
+  compared raw text, so "Radial" dropped every Array row, and a parameter
+  of the other kind was silently ignored (now the canonical option, and
+  refused by name); a read's revision guard could never fire; a create
+  with nothing selected named the selected node; a typed box or cylinder
+  kept its anchor's z where RoboCAD projects it onto the plane; the comb
+  and continuity read the last selected node even without a body; arrays
+  of strings kept their JSON quotes; the stale-revision refusal spoke only
+  of drags; `ops.set_control_points` could never succeed (an api.py
+  converter bug, fixed with a pytest).
+- **Interactions and pickers:** `cad_cancel` cleared a pick tool's picks
+  instead of ending the tool (now it ends it as the form's Cancel does);
+  the press that closes a popup also started a placement; Tab wrote a
+  snapped anchor off the plane and reached the anchor field before width;
+  the cursor snap ran a mesh ray cast over every body every 33 ms (now
+  `snap::snap` only, RoboCAD's rule); `pick::pointer` was unordered
+  against the editors' and the numeric bar's focus; push/pull read a face
+  with `face_of` before its revision check (older code; now `face_at`).
+- **Python and the client:** a failed paste left the document dirty with
+  a raised revision and no undo step (now restored), and its test never
+  reached the cleanup (now a valid item then a bad one).
+- **Surfaces and keys:** `RadialSlot`'s index was never read (a warning);
+  long menus (Modify 32 rows, View 31) were clipped with no scrolling
+  (now a wheel-scrolled area); Escape in the name field or an inspector
+  editor also cancelled the open op or popup; catalogue entries showed
+  enabled while an edit was in flight; three commands the ledger marks
+  "not ported" ran as GUI-only; open popups did not refresh on a
+  connection or edit change; the Tab row of the clash table.
+
+Rejected, with reasons: `cad_state.ops` clones the catalogue's JSON on
+each 100 ms snapshot (about 50 small objects; kept, it is what lets a REST
+client discover the operations); an empty paste still pushes an empty
+"Paste" step (RoboCAD's own paste does, app.py:1478-1483: parity); a
+timed-out copy carries the client's "may still apply" wording (copy is a
+POST that changes nothing; harmless); the palette shows keys from a
+desktop RoboCAD's `/commands`, which may include the user's keymap while
+the viewer binds RoboCAD's defaults (the palette shows what RoboCAD
+binds); a count typed as `0.1*30` is refused as not whole (RoboCAD's spin
+box takes integers only); the context menu's extra "Make unique (bake
+instance)" (it is the outliner context row of this epic, recorded in the
+ledger; the native outliner has no context menu yet); `ArgConverter`'s
+unreachable `Sequence[Vec3]` branch (no Ops method takes a flat point
+list; out of scope).
+
+### Disk
+
+Removed 2026-10-01 before the epic (regenerable build output only; no
+`cargo clean`; `runs/`, `.claude-pair` and captures untouched):
+
+- 275 superseded incremental session directories under
+  `target/debug/incremental/*/` (every crate directory holding two or more
+  finalized `s-*` sessions kept only its newest): about 3 GiB.
+- 7,237 superseded artifacts in `target/debug/deps/` (an older hash of the
+  same crate and file kind, more than two days older than the newest of
+  that kind, which was kept): 14.22 GiB.
+
+Free space was 21.43 GiB before and 38 GiB after (`df -g`).
+
+### Verification checklist
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- `cargo test -p sim-spatial --lib --bins`, in particular `cad::ops::tests::*`
+  (`catalogue_data_is_well_formed`, `every_entry_builds_calls_to_its_route`,
+  `fillet_and_chamfer_send_one_call_per_node_with_edge_refs`,
+  `shell_draft_and_faces_use_face_refs`,
+  `booleans_mirror_and_instance_match_robocad_handlers`,
+  `array_dialog_builds_rect_or_radial`, `primitives_follow_the_primitive_tool`,
+  `resolve_refuses_with_robocad_messages`,
+  `a_selection_seen_at_an_older_revision_is_refused`,
+  `runs_are_refused_in_flight_stale_or_with_unknown_parameters`,
+  `explicit_face_and_edge_items_need_their_revision`,
+  `when_gates_read_the_canonical_option_and_refuse_what_does_not_apply`,
+  `form_set_joins_string_arrays_without_quotes`,
+  `an_operation_that_needs_nothing_names_no_selected_node`,
+  `primitive_anchors_are_projected_onto_the_plane_and_come_last`,
+  `comb_and_continuity_read_the_last_node_with_a_body`),
+  `cad::surfaces::tests::*` (`the_table_is_robocads_registry`,
+  `every_surface_names_registry_commands`,
+  `every_catalogue_command_agrees_with_the_registry`,
+  `menus_put_general_window_and_tools_in_help`,
+  `readiness_refuses_with_the_entrys_refusal`, `keys_parse`,
+  `the_palette_shows_robocads_key_conflict`,
+  `the_context_menu_offers_make_unique_for_instances`,
+  `every_surfaces_control_round_trips_through_rest`), `ui_kit::tests::*`
+  (`pie_picks_the_entry_under_the_pointer`, `palette_ranks_as_robocad`,
+  `palette_warns_of_key_conflicts`, `form_fields_evaluate`,
+  `text_drafts_edit_as_the_numeric_bar`, `modify_widgets_spawn`, and the
+  colour rule), `cad::mesh::tests::face_at_reads_only_a_tessellation_at_the_shown_revision`,
+  `cad::inspector::editors::tests` (`a_typed_component_sends_the_whole_transform_and_the_pivot_alone`,
+  `component_occurrences_are_refused_as_robocad_refuses_them`),
+  `cad::ops::interact::tests` (`finishing_sends_the_sizes_robocad_finishes_with`,
+  `the_preview_outlines_the_base_and_the_top`,
+  `the_height_follows_the_cursor_along_the_normal`),
+  `cad::analysis_overlay::tests` (`counts_print_as_robocads_status`,
+  `overlays_use_robocads_shapes_and_colours`,
+  `state_json_names_the_overlay_and_the_read`), `app::tests::*` (the
+  registry cross-check
+  `every_capability_parses_into_its_action_and_every_parsed_command_is_registered`),
+  `cad::tests::every_cad_control_fits_a_pattern_and_round_trips_through_rest`,
+  and the earlier epics' CAD, jobs and transform tests.
+- `cargo test -p sim-runtime --lib -- cad_client units` (new:
+  `clipboard_copy_and_paste`, `analysis_reads_as_api_writes_them`,
+  `analysis_errors_name_the_route`).
+- `cd cad && .venv/bin/pytest -q tests/test_api.py
+  tests/test_api_edge_samples.py tests/test_api_clipboard.py
+  tests/test_api_control_points.py tests/test_api_analysis.py
+  tests/test_api_cut_cutter.py tests/test_api_control_points_set.py`
+  (run 2026-10-01, the only checks run in this epic: the four new files
+  27 passed before the review fixes; after them
+  `test_api_clipboard.py` 5 passed and `test_api_control_points_set.py`
+  2 passed).
+- `cargo check -p sim-web --target wasm32-unknown-unknown`.
+- Then the user's [docs/cad-checklist.md](../cad-checklist.md) CAD-35 to
+  CAD-76.
+
+### Reading traces
+
+Function names, not line numbers (fixes may follow the review).
+
+- **Edge pick → fillet form → commit → undo.** Ctrl+F (`keys::keys`
+  matches `tool.fillet`'s "Ctrl+F" from `surfaces::registry`, and it is
+  ready: `registry::readiness` accepts every pick-then-form op) →
+  `CadInvoke { tool.fillet }` → `actions::handle` → `ops::handle` →
+  `ops::invoke`: `Flow::PickThenForm(Edge)` → `end_tool` (Select), the
+  selection mode becomes Edge with the selection kept
+  (`selection::publish`, `PUT /selection`), `OpsState::active =
+  tool.fillet`, `open_form` (radius "1.0", unfocused, `began` = the shown
+  revision), the hint on the status line. A click on an edge:
+  `pick::pointer` (the tool's kind, also while its form has the keyboard)
+  → `candidates_at` (faces from `surface_item` via `CadMeshes::face_at`
+  at the shown revision; edges from the topology search at the shown
+  revision) → the first candidate of kind edge → `CadSelect { items,
+  toggle: true }` → `actions::handle` → `selection::handle` →
+  `selection::select` → `publish`. Tab focuses the form's radius field and
+  typing edits its draft (`surfaces/form.rs` `input`, `TextDraft` on
+  `FormState::texts`, display state as the numeric bar's; REST sets it with
+  `CadFormSet`), then Enter or OK → `CadFormSubmit` → `ops::submit` (the drafts as params; no
+  form revision for a pick tool) → `run` → `prepare`:
+  `commit_refusal(None)` (an edit in flight, not connected, stale),
+  `resolve::resolve` (the selection's revision must be the shown one; each
+  edge must exist in the shown topology; `Needs::Edges`, else "Select one
+  or more edges first"), `values` (radius evaluated by
+  `ui_kit::form::evaluate`), `args::build` → `plain` with `Fan::PerNode`:
+  one `OpCall` per node owning a selected edge → `start` →
+  `actions::edit` → `sync::start_edit` (a Dedicated job, "RoboCAD edit:
+  Fillet …") → `CadClient::op` → `POST /ops/fillet {"args": [node,
+  [{"node", "edge"}, …], radius]}` → RoboCAD's `Ops.fillet` (`_edit`, undo
+  step "Fillet") → the job lands: `finish_edit` → `refresh` (the poll
+  refetches `/doc`, meshes and topology at the new revision); `started`
+  noted the selection, which `finish_edit` clears now that the edit
+  succeeded, and kept the form and the tool active. Undo:
+  Ctrl+Z → `keys::keys` → `CadInvoke { edit.undo }` → `ops::invoke` (not
+  in the catalogue) → `surfaces::invoke_command` → `registry::invoke`
+  (`Native::Action(Do::Undo)`) → `actions::handle` `CadUndo` →
+  `actions::edit` → `POST /undo` (RoboCAD undoes "Fillet").
+- **Palette search → union.** Ctrl+Space or Shift+F (`keys::keys`:
+  `command_palette` resolves to `Native::Surface(Opens::Palette)`) →
+  `CadSurface { palette }` at the pointer → `actions::handle` →
+  `surfaces::handle` (`OpsState::surface`, highlight 0) → `surfaces/palette.rs`
+  `input` (it holds the keyboard) → typing "uni" edits the query
+  (`TextDraft`) → `palette::ranked` → `ui_kit::palette::rank` ("Union"
+  has "uni" at position 0 of its label: score 1, first) → Enter →
+  `row_entry` (ready) → `CadInvoke { modify.union }` and `CadSurface {
+  closed }` → `ops::invoke` (`Flow::Immediate`) → `run` → `prepare` →
+  `resolve::resolve` (`Needs::TargetThenTools`; fewer than two nodes:
+  RoboCAD's "Select the target body first, then the tools") →
+  `args::build` → `plain`: `[target, [tools], "union"]`, label "Union …"
+  → `start` → `actions::edit` → `POST /ops/boolean {"args": [target,
+  [tools], "union"]}` → RoboCAD's `Ops.boolean` (`Composite` "Union",
+  the tools removed) → `finish_edit` clears the selection
+  (`clears_selection`, noted by `started`) once the edit succeeded and
+  publishes it.
 
 ## Target shape
 
@@ -2682,7 +3131,16 @@ added sub-body selection, the transform gizmo, push/pull and offset,
 measure, live dimensions, snapping and the numeric bar over a Rust port
 of `units.evaluate`, with one read-only Python addition (sampled edge
 polylines); verified at c0ed9b29 (sim-spatial lib 209 passed, 1 ignored;
-bins 4; `cad_client` and `units` 59; api pytests 14). Next: cad-modify.
+bins 4; `cad_client` and `units` 59; api pytests 14). The third,
+**cad-modify** (2026-10-01, see [CAD modify](#cad-modify-2026-10-01)),
+added the op catalogue (54 operations as data, one apply path, primitive
+placement and pick-then-form tools), the command surfaces built from
+RoboCAD's command table (menus, toolbar, right-click menu, radials,
+palette, parameter form), data-driven keys, read-only analysis overlays and
+the inspector's pivot and transform editors, with five RoboCAD routes
+(copy and paste with placement, control points, curvature comb,
+continuity) and an `ArgConverter` fix for cutting with a node; written and
+reviewed by reading, pending its verification pass. Next: cad-sketch.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -2693,9 +3151,11 @@ RoboCAD's REST service, like cad-mode. Every edit still goes through
 RoboCAD's command layer. Every Ops method is already callable through the
 `cad_op` REST command, so these epics build the *viewer UI*. Row-level scope
 is in [docs/cad-parity.md](../cad-parity.md) (773 rows: 113 cad-mode, 637
-later, 23 deliberately different; the planned cad-tools' 179 rows were split
-2026-10-01 into cad-select-transform, 63, and cad-modify, 116). Twenty-three gaps there have no headless
-route. Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
+later, 23 deliberately different when planned; the planned cad-tools' 179
+rows were split 2026-10-01 into cad-select-transform, 63, and cad-modify,
+116; after cad-modify 245 are done by reading, 458 later and 70
+deliberately different). Seventeen gaps there have no headless route (22
+before cad-modify added five routes). Each needs a new route in `cad/robocad/api.py`, or a Rust port gated
 by the parity harness. Planned order:
 
 1. **cad-select-transform** (63 rows; the first half of the planned
@@ -2717,7 +3177,10 @@ by the parity harness. Planned order:
    epic makes), `PUT /selection`, `POST /ops/transform|push_pull|offset_faces|set_diameter|set_distance|set_angle|add_measurement`.
    It comes first because sketching, printing and cad-modify reuse its
    picking, snapping and numeric entry.
-2. **cad-modify** (116 rows; the second half of the planned cad-tools). The
+2. **cad-modify** (116 rows; the second half of the planned cad-tools).
+   *Done by reading 2026-10-01, pending its verification pass (see
+   [CAD modify](#cad-modify-2026-10-01)): 77 rows done by reading, 39
+   deliberately different; the five gaps below now have routes.* The
    operation catalogue on top of cad-select-transform's picking and
    numeric entry: primitives (box, centre box, three-point box, cylinder,
    sphere), fillets (variable, chordal, all edges, full round, remove),
@@ -2729,9 +3192,11 @@ by the parity harness. Planned order:
    control points, raise degree, rebuild, dependent offset, the REST-only
    direct edits), the tools toolbar and right-click menu, both radial
    menus, and the command palette with key conflicts and menus by
-   category. Routes: `POST /ops/*`, `POST /nodes`, `GET /commands`. Gaps:
-   copy and paste with placement, reading control points, curvature comb
-   and continuity check (each needs a Python route).
+   category. Routes: `POST /ops/*`, `POST /nodes`, `GET /commands`. Gaps
+   when planned: copy and paste with placement, reading control points,
+   curvature comb and continuity check (each needed a Python route; the
+   epic added `POST /clipboard/copy`, `POST /clipboard/paste` and `GET
+   /nodes/{id}/control_points|curvature_comb|continuity`).
 3. **cad-sketch** (60 rows). The active plane, construction planes (from a
    face, three points, two points and the camera, midplane), the 13 sketch
    tools, sketch offset/fillet/join and the REST-only edits (trim, split,
@@ -2872,8 +3337,10 @@ The Director re-ranks with evidence, but this is the default:
    **cad-select-transform** (2026-10-01; see
    [CAD selection and transform](#cad-selection-and-transform-2026-10-01))
    is verified at c0ed9b29 (sim-spatial lib 209 passed, 1 ignored; bins 4;
-   `cad_client` and `units` 59; api pytests 14). Next: **cad-modify**. Remaining,
-   in order (§9 "Later CAD epics"): cad-modify, cad-sketch,
+   `cad_client` and `units` 59; api pytests 14). **cad-modify** (2026-10-01;
+   see [CAD modify](#cad-modify-2026-10-01)) is done, written and reviewed
+   by reading, pending its verification pass. Next: **cad-sketch**.
+   Remaining, in order (§9 "Later CAD epics"): cad-sketch,
    cad-views-export, cad-physical-inspect, cad-print, cad-organize,
    cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).

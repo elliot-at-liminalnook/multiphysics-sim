@@ -416,7 +416,7 @@ fn the_views_export_rows_run_natively() {
     assert_eq!(resolved("view.mode_next"), Resolved::Action(CadAction::CadDisplay(DisplayArgs { next: true, ..DisplayArgs::default() })));
     assert_eq!(resolved("inspect.normals"), Resolved::Action(CadAction::CadDisplay(DisplayArgs { mode: Some(DisplayMode::Xray), ..DisplayArgs::default() })), "RoboCAD's normal shading is xray");
     assert_eq!(resolved("view.section"), Resolved::Action(CadAction::CadSection(SectionArgs::default())));
-    assert_eq!(resolved("view.saved_views"), Resolved::Action(CadAction::CadViews(ViewsArgs { op: ViewsOp::Panel, ..ViewsArgs::default() })));
+    assert_eq!(resolved("view.saved_views"), Resolved::Action(CadAction::CadViews(ViewsArgs { op: ViewsOp::Panel, open: Some(true), ..ViewsArgs::default() })));
     assert_eq!(Do::Display(DisplayCmd::Grid).action(), DisplayCmd::Grid.action());
     for id in ["view.isolate", "view.hide", "view.show_all"] {
         assert!(matches!(resolved(id), Resolved::Op(e) if e.id == id), "{id} is a catalogue operation");

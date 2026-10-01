@@ -98,7 +98,8 @@ fn refusals_carry_robocads_text_and_status() {
     let e = c.save_view("Top", &ViewState::default()).unwrap_err();
     assert!(e.no_gui(), "{e:?}");
     assert_eq!(e.message, "Headless: provide view state");
-    let e = c.update_view("a1", None, Some(&ViewState::default())).unwrap_err();
+    // An out-of-range pitch, as RoboCAD's answer says (the client sends it unchecked).
+    let e = c.update_view("a1", None, Some(&ViewState { pitch: 95.0, ..ViewState::default() })).unwrap_err();
     assert_eq!((e.status, e.message.as_str()), (Some(422), "View pitch must be between -89.5 and 89.5 degrees"));
     let e = c.update_view("a1", Some(" "), None).unwrap_err();
     assert_eq!(e.status, Some(422));

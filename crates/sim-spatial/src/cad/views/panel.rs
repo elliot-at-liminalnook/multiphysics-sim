@@ -174,7 +174,11 @@ pub(super) fn input(
                                 }
                                 None => {}
                             }
-                            // The new view's name stays until RoboCAD answers the save, cleared only on success (`views::settle_save`).
+                            // The new view's name stays until RoboCAD answers the save, cleared only on success (`views::settle_save`),
+                            // with this frame's keystrokes (settle_save compares it with the sent name).
+                            if matches!(t.field, ViewField::New) {
+                                views.new_name = t.draft.text.clone();
+                            }
                             typing = None;
                             ended = true;
                         }
@@ -183,6 +187,9 @@ pub(super) fn input(
                     break;
                 }
                 DraftKey::Escape => {
+                    if matches!(t.field, ViewField::New) {
+                        views.new_name = t.draft.text.clone();
+                    }
                     typing = None;
                     ended = true;
                     break;

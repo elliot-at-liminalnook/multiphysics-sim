@@ -371,6 +371,9 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
 /// to it once RoboCAD saved (`sync::finish_edit`), marked on the edit this
 /// call started (`edit_seq` moved), never on another one.
 pub(in crate::cad) fn save(doc: &mut CadDocument, call: &mut Call, path: Option<String>) -> Outcome {
+    // RoboCAD's Save As appends .rcad (`MainWindow.save_as`); `cad_save
+    // {path}` too, or the document would follow a path cad_open refuses.
+    let path = path.map(|p| if p.ends_with(".rcad") { p } else { format!("{p}.rcad") });
     let label = path.as_ref().map_or_else(|| "Save".to_string(), |p| format!("Save as {p}"));
     let sent = path.clone();
     let before = doc.edit_seq;
@@ -607,7 +610,7 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
             json!({"format": "step", "path": "/tmp/turntable.step", "settings": {"schema": "AP214"}}),
             format!("CAD mode: POST /export on a job: RoboCAD writes format to path (absolute; its extension must be the format's) with settings (checked here with the desktop dialog's ranges; absent ones take RoboCAD's defaults and are sent explicitly; the sent settings are remembered per format for the form) for ids (all visible bodies when absent). Formats and settings: {}. The sketch SVG's sketch defaults to the selected sketch; the drawing's title to the document's file name and its section to the section tool's plane while it is on. Without format or path, the export form opens (file.export; file.export_drawing opens it on the drawing). A failure is a named refusal (\"Export STEP to …: RoboCAD answered 422: …\"). Not cancellable: api.py has no cancel route for /export and RoboCAD runs it to the end; REST callers wait (cancelling only stops the wait), and the job completes even if CAD mode closes. Progress: cad_state.files.jobs and the window's job strip.", formats.join(" | ")),
         ),
-        spec("cad_render", CAD, json!({"path": "/tmp/turntable-iso.png", "view": "iso", "w": 1200, "h": 900}), format!("CAD mode: GET /render on a job, the PNG written to path (absolute, .png). Query as RoboCAD's: view ({} or \"dx,dy,dz\"), w and h (16…{MAX_RENDER} px; RoboCAD's default 1200×900), mode ({}), section (\"x|y|z:value\" mm), ids, highlight, labels, edges, focus (a node to frame), tolerance (mm), title; absent ones take RoboCAD's defaults. Works headless (the snapshot renderer); with RoboCAD's window a plain shaded view is drawn by its GPU viewport. Without path, the render form opens. Not cancellable once sent (no cancel route); REST callers wait. /capture and /screenshot are not used: they need RoboCAD's window and capture its own viewport.", RENDER_VIEWS.join(", "), RENDER_MODES.join(", "))),
+        spec("cad_render", CAD, json!({"path": "/tmp/turntable-iso.png", "view": "iso", "w": 1200, "h": 900}), format!("CAD mode: GET /render on a job, the PNG written to path (absolute, .png). Query as RoboCAD's: view ({} or \"dx,dy,dz\"), w and h (16…{MAX_RENDER} px; RoboCAD's default 1200×900), mode ({}), section (\"x|y|z:value\" mm), ids, highlight, labels, edges, focus (a node to frame), tolerance (mm), title; absent ones take RoboCAD's defaults. Works headless (the snapshot renderer); with RoboCAD's window a plain shaded view (no ids, highlight, labels or other mode) is drawn by its GPU viewport at the viewport's size, and w, h, edges, tolerance and title then do not apply (api.py render_request). Without path, the render form opens. Not cancellable once sent (no cancel route); REST callers wait. /capture and /screenshot are not used: they need RoboCAD's window and capture its own viewport.", RENDER_VIEWS.join(", "), RENDER_MODES.join(", "))),
     ]
 }
 

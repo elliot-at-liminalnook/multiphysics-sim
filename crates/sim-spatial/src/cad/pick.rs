@@ -61,6 +61,7 @@
 //!   decides it per pixel with its depth buffer; this compares with the
 //!   depth under the cursor only (a recorded approximation).
 use super::actions::CadAction;
+use super::display::{CadDisplay, SectionPlane};
 use super::document::{CadDocument, CadInputFocus, CadTool, SelectMode};
 use super::mesh::{CadBody, CadMeshes};
 use super::ops::Flow;
@@ -140,6 +141,9 @@ pub(super) struct Search {
     front: Option<f32>,
     /// Items that come first (a mesh node under the cursor: a body item).
     first: Vec<SelectionItem>,
+    /// The section tool's plane while it is on: what lies on its removed
+    /// side is not drawn, so not picked (RoboCAD picks under its clip plane).
+    clip: Option<SectionPlane>,
 }
 
 pub(super) fn build(app: &mut App) {
@@ -225,12 +229,12 @@ fn surface_items(doc: &CadDocument, meshes: &CadMeshes, view: &CadView, cursor: 
 }
 
 /// The snapshot for an edge or vertex search under `cursor`.
-fn search_for(doc: &CadDocument, meshes: &CadMeshes, topology: &CadTopology, view: &CadView, cursor: Vec2, ray: (Vec3, Vec3), hits: &[Hit]) -> Search {
+fn search_for(doc: &CadDocument, meshes: &CadMeshes, topology: &CadTopology, view: &CadView, cursor: Vec2, ray: (Vec3, Vec3), hits: &[Hit], clip: Option<SectionPlane>) -> Search {
     let bounds: HashMap<&str, (Vec3, Vec3)> = meshes.body_bounds().collect();
     let pickable = |id: &str| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).is_some_and(|n| n.effective_visible && !n.locked);
     let nodes = topology.ready().filter(|(id, _)| meshes.shown(id) && pickable(id)).map(|(id, t)| (id.clone(), t.clone(), bounds.get(id.as_str()).copied())).collect();
     let first = hits.first().filter(|h| is_mesh(doc, &h.id)).map(|h| SelectionItem(h.id.clone(), "body".into(), 0)).into_iter().collect();
-    Search { view: view.clone(), nodes, cursor, mode: doc.select_mode, ray, front: hits.first().map(|h| h.distance), first }
+    Search { view: view.clone(), nodes, cursor, mode: doc.select_mode, ray, front: hits.first().map(|h| h.distance), first, clip }
 }
 
 /// The screen rectangle of a model box (None when a corner is behind the camera).
@@ -253,12 +257,16 @@ fn screen_rect(view: &CadView, lo: Vec3, hi: Vec3) -> Option<(Vec2, Vec2)> {
 /// behind the first surface, nearest on screen first (after `first`).
 pub(super) fn search(s: &Search) -> Vec<SelectionItem> {
     let (origin, dir) = s.ray;
-    let hidden = |p: Vec3| match s.front {
-        Some(front) => {
-            let slack = (front.abs() * 0.01).max(s.view.mm_per_pixel(p).unwrap_or(0.0) * 8.0);
-            (p - origin).dot(dir) > front + slack
-        }
-        None => false,
+    let cut = |p: Vec3| s.clip.as_ref().is_some_and(|c| c.distance([p.x as f64, p.y as f64, p.z as f64]) > 1e-6);
+    let hidden = |p: Vec3| {
+        cut(p)
+            || match s.front {
+                Some(front) => {
+                    let slack = (front.abs() * 0.01).max(s.view.mm_per_pixel(p).unwrap_or(0.0) * 8.0);
+                    (p - origin).dot(dir) > front + slack
+                }
+                None => false,
+            }
     };
     let point = |p: &[f64; 3]| Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32);
     let mut found: Vec<(f32, SelectionItem)> = Vec::new();
@@ -323,7 +331,8 @@ pub(super) fn search(s: &Search) -> Vec<SelectionItem> {
 }
 
 /// Every candidate under `cursor` in the current mode, nearest first (a click's, inline).
-fn candidates_at(doc: &CadDocument, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, cursor: Vec2, ray_cast: &mut MeshRayCast, bodies: &Query<&CadBody>) -> Vec<SelectionItem> {
+#[allow(clippy::too_many_arguments)]
+fn candidates_at(doc: &CadDocument, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, cursor: Vec2, ray_cast: &mut MeshRayCast, bodies: &Query<&CadBody>, clip: Option<SectionPlane>) -> Vec<SelectionItem> {
     if matches!(doc.select_mode, SelectMode::Body | SelectMode::Face | SelectMode::Point) {
         return surface_items(doc, meshes, view, cursor, ray_cast, bodies);
     }
@@ -331,7 +340,7 @@ fn candidates_at(doc: &CadDocument, meshes: &CadMeshes, topology: Option<&CadTop
     match doc.select_mode {
         SelectMode::Body | SelectMode::Face | SelectMode::Point => Vec::new(),
         SelectMode::Edge | SelectMode::Vertex => match topology {
-            Some(topology) => search(&search_for(doc, meshes, topology, view, cursor, ray, &hits)),
+            Some(topology) => search(&search_for(doc, meshes, topology, view, cursor, ray, &hits, clip)),
             None => Vec::new(),
         },
     }
@@ -345,7 +354,7 @@ fn pointer(
     keys: Res<ButtonInput<KeyCode>>,
     hover_map: Option<Res<HoverMap>>,
     nodes: Query<(), With<Node>>,
-    (doc, meshes, topology, view, focus): (Option<Res<CadDocument>>, Option<Res<CadMeshes>>, Option<Res<CadTopology>>, Option<Res<CadView>>, Option<Res<CadInputFocus>>),
+    (doc, meshes, topology, view, focus, display): (Option<Res<CadDocument>>, Option<Res<CadMeshes>>, Option<Res<CadTopology>>, Option<Res<CadView>>, Option<Res<CadInputFocus>>, Option<Res<CadDisplay>>),
     mut state: ResMut<PickState>,
     mut ray_cast: MeshRayCast,
     bodies: Query<&CadBody>,
@@ -354,7 +363,9 @@ fn pointer(
 ) {
     let (Some(doc), Some(meshes), Some(view)) = (doc, meshes, view) else { return };
     let state = &mut *state;
-    if view.is_changed() {
+    let clip = display.as_deref().filter(|d| d.section.enabled).and_then(|d| d.section.plane);
+    // The section's plane changes what can be picked, as the camera does.
+    if view.is_changed() || display.as_ref().is_some_and(|d| d.is_changed()) {
         state.view_stamp += 1;
     }
     let cursor = windows.single().ok().and_then(Window::cursor_position);
@@ -419,12 +430,12 @@ fn pointer(
                 // face index comes from `surface_item` (`CadMeshes::face_at` at the shown
                 // revision), an edge from the topology search at the shown revision.
                 state.menu_at = None;
-                let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies);
+                let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies, clip);
                 if let Some(item) = items.into_iter().next().filter(|i| i.1 == mode.name()) {
                     out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![item], extend: false, toggle: true }));
                 }
             } else {
-                let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies);
+                let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies, clip);
                 // Only an Alt+click's menu opens at the pointer (a REST cad_candidates opens at the view's corner).
                 state.menu_at = (alt && items.len() > 1).then_some(at);
                 if alt && items.len() > 1 {
@@ -468,7 +479,7 @@ fn pointer(
                 }
                 SelectMode::Edge | SelectMode::Vertex => match (topology.as_deref(), ray_hits(&doc, &view, cursor, &mut ray_cast, &bodies)) {
                     (Some(topology), Some((ray, hits))) => {
-                        let next = search_for(&doc, &meshes, topology, &view, cursor, ray, &hits);
+                        let next = search_for(&doc, &meshes, topology, &view, cursor, ray, &hits, clip);
                         if state.hover_job.is_some() {
                             state.hover_waiting = Some(next);
                         } else {
@@ -552,7 +563,7 @@ mod tests {
             ..Default::default()
         };
         let front = (Vec3::ZERO - origin).dot(dir);
-        let mut s = Search { view: v.clone(), nodes: vec![("b1".into(), Arc::new(topo), None)], cursor: centre, mode: SelectMode::Edge, ray: (origin, dir), front: Some(front), first: Vec::new() };
+        let mut s = Search { view: v.clone(), nodes: vec![("b1".into(), Arc::new(topo), None)], cursor: centre, mode: SelectMode::Edge, ray: (origin, dir), front: Some(front), first: Vec::new(), clip: None };
         let items = search(&s);
         assert_eq!(items, vec![SelectionItem("b1".into(), "edge".into(), 0), SelectionItem("b1".into(), "edge".into(), 1)]);
         // Without a surface in front, the edge behind is a candidate too.

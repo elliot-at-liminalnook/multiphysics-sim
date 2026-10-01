@@ -722,6 +722,9 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, files: &CadFiles, form: &FileFo
         }
         _ => {}
     }
+    // The typed file name narrows the entries (a case-insensitive prefix).
+    let prefix = file.to_lowercase();
+    let narrows = |n: &String| n.to_lowercase().starts_with(&prefix);
     p.spawn(k.caption(format!("In {}", listing.dir)));
     if let Some(e) = &listing.error {
         p.spawn(k.text(e.clone(), size::SMALL, FAINT, 0));
@@ -730,12 +733,12 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, files: &CadFiles, form: &FileFo
         if listing.dir != "/" {
             list.spawn(k.button("..", FilePart(Hit::Up), Look::Ghost, true));
         }
-        for (i, (entry, is_dir)) in listing.entries.iter().take(SHOWN).enumerate() {
+        for (i, (entry, is_dir)) in listing.entries.iter().enumerate().filter(|(_, (n, _))| narrows(n)).take(SHOWN) {
             let label = if *is_dir { format!("{entry}/") } else { entry.clone() };
             list.spawn(k.button(&label, FilePart(Hit::Entry(i)), Look::Ghost, true));
         }
     });
-    let more = listing.entries.len().saturating_sub(SHOWN) + listing.more;
+    let more = listing.entries.iter().filter(|(n, _)| narrows(n)).count().saturating_sub(SHOWN) + listing.more;
     if more > 0 {
         p.spawn(k.text(format!("{more} more: type to narrow the path."), size::SMALL, FAINT, 0));
     }

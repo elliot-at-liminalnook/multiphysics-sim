@@ -142,6 +142,12 @@ impl Read {
 pub(super) fn start(doc: &mut CadDocument, read: Read, revision: u64) -> Result<Value, String> {
     let label = read.label();
     let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{label}: not connected to RoboCAD: {}", doc.connection_line().0))?;
+    // A read of an older document generation (replaced or reconnected) is
+    // not this document's: `receive` would drop its answer, so it does not
+    // block a new read (dropping the job cancels it).
+    if doc.ops.analysis.pending.as_ref().is_some_and(|p| p.job.generation() != doc.generation) {
+        doc.ops.analysis.pending = None;
+    }
     if let Some(p) = &doc.ops.analysis.pending {
         return Err(format!("{label}: {} is still being read; nothing was sent", p.read.label()));
     }

@@ -270,10 +270,10 @@ pub(super) fn gate(chord: Option<ResMut<Chord>>, focus: Option<ResMut<CadInputFo
     }
 }
 
-/// A modal parameter form is open (a `Flow::Form` op's: no interaction is
-/// active beside it).
+/// A modal parameter form is open: a `Flow::Form` op's dialog (a pick or
+/// place tool's form sits beside its interaction and leaves the keys on).
 fn modal_form(doc: &CadDocument) -> bool {
-    doc.ops.form.is_some() && doc.ops.active.is_none()
+    doc.ops.form.as_ref().and_then(|f| super::ops::entry(f.op)).is_some_and(|e| e.flow == super::ops::Flow::Form)
 }
 
 /// Input: RoboCAD's shortcuts (see the module doc).
@@ -304,6 +304,8 @@ pub(super) fn keys(
     let cmd = match pending {
         Some(first) => match bindings().find(|(_, b)| *b == Binding::Chord(first, pressed)) {
             Some((cmd, _)) => cmd,
+            // Escape abandons the chord (cleared above), silently.
+            None if key == KeyCode::Escape => return,
             None => {
                 doc.show(Err(format!("{}, {} is not one of RoboCAD's keys", text(first), text(pressed))));
                 return;

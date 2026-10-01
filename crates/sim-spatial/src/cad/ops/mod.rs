@@ -150,8 +150,9 @@ pub(crate) enum Arg {
     /// The snapped point under the pointer, or the entry's `point`
     /// parameter when given.
     CursorSnap,
-    /// The shown revision the picks were read at (`extract_components`'s
-    /// `expected_revision`).
+    /// The revision the caller's values were read at (`extract_components`'s
+    /// `expected_revision`): a REST run's `revision` (required), a form's
+    /// opening revision, else the shown one.
     Revision,
 }
 
@@ -328,8 +329,11 @@ pub struct OpsState {
     /// The command surface open now (palette, menus, radials, context menu).
     pub surface: Option<super::surfaces::Open>,
     /// The snapped point under the pointer when it was last over the 3D
-    /// view (mm; `interact` keeps it): "Set pivot at cursor snap".
-    pub cursor_snap: Option<[f64; 3]>,
+    /// view (mm), with the shown revision it was snapped at (`interact`
+    /// keeps it, and clears it when the pointer leaves the window, the snap
+    /// finds nothing or the shown revision moves on; `resolve` uses it
+    /// only at the shown revision): "Set pivot at cursor snap".
+    pub cursor_snap: Option<(u64, [f64; 3])>,
     /// The last copy: RoboCAD's clipboard JSON with the revision it was read at.
     pub clipboard: Option<(u64, Value)>,
     /// Read-only analysis results drawn as overlays (control points, comb, continuity).
@@ -371,7 +375,14 @@ fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
             if let Err(e) = resolve::resolve(entry, cx.doc, cx.topology.as_deref(), cx.view, None) {
                 return Outcome::Done(Err(e));
             }
-            Outcome::Done(Ok(open_form(cx.doc, entry)))
+            // The dialog replaces an active pick or place tool's form, so
+            // that tool ends as its Cancel ends it (`form_cancel`, less the
+            // status line): a tool left active without its form would keep
+            // taking clicks with no form to run them.
+            let doc = &mut *cx.doc;
+            doc.ops.active = None;
+            doc.ops.place = None;
+            Outcome::Done(Ok(open_form(doc, entry)))
         }
         Flow::PickThenForm(mode) => {
             end_tool(call, cx);
@@ -433,7 +444,18 @@ fn prepare(doc: &CadDocument, topology: Option<&CadTopology>, view: Option<&CadV
     {
         return Err("pass revision: the RoboCAD revision the face and edge indices in items were read at".into());
     }
-    let r = resolve::resolve(entry, doc, topology, view, items)?;
+    // An entry sending a revision (`extract_components`'s
+    // `expected_revision`) sends the one its other values were read at:
+    // a REST caller names it (the solid indices it read); a form sends
+    // the revision it opened at. `commit_refusal` checked it above.
+    let sends_revision = entry.args.iter().chain(entry.kwargs.iter().map(|(_, a)| a)).any(|a| *a == Arg::Revision);
+    if sends_revision && items.is_some() && revision.is_none() {
+        return Err(format!("{}: pass revision: the RoboCAD revision the indices in the parameters were read at", entry.id));
+    }
+    let mut r = resolve::resolve(entry, doc, topology, view, items)?;
+    if let Some(revision) = revision {
+        r.revision = revision;
+    }
     let values = values(entry, params)?;
     args::build(entry, &r, &values, doc)
 }
@@ -468,15 +490,17 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call,
             c.paste(&clip).map(|p| EditDone { message: format!("Pasted {} item(s)", p.pasted.len()), result: value(&p) })
         }),
         Built::Read(read) => {
-            // The revision the picks were made at: the selection's (so
-            // `analysis_overlay::start` refuses picks from before an edit);
-            // explicit items were checked against `revision` by `prepare`.
-            let revision = if explicit { doc.shown_revision() } else { super::transform::selection_revision(doc) };
+            // The shown revision: stale face picks were already refused by
+            // `resolve` (the selection's revision, for entries reading
+            // indices) or `prepare` (explicit items need `revision`); the
+            // node-only reads (copy, curvature, continuity) stay valid
+            // across an edit that kept the selection.
+            let revision = doc.shown_revision();
             return Outcome::Done(super::analysis_overlay::start(doc, read, revision));
         }
     };
     if !matches!(outcome, Outcome::Done(Err(_))) {
-        started(doc, entry);
+        started(doc, entry, explicit);
     }
     outcome
 }
@@ -484,10 +508,12 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call,
 /// After an edit started: where RoboCAD's handler clears the selection,
 /// the edit notes the selection now, and `sync::finish_edit` clears it once
 /// the edit succeeds (RoboCAD clears after its Ops call returns: a failed
-/// fillet keeps the picks); a form-flow operation's form closes (RoboCAD's
-/// dialog has returned); a pick or place tool keeps its form and stays active.
-fn started(doc: &mut CadDocument, entry: &OpEntry) {
-    if entry.clears_selection && !doc.selection.is_empty() {
+/// fillet keeps the picks), unless the run named its items (`explicit`,
+/// REST): the user's selection was not what it ran on; a form-flow
+/// operation's form closes (RoboCAD's dialog has returned); a pick or place
+/// tool keeps its form and stays active.
+fn started(doc: &mut CadDocument, entry: &OpEntry, explicit: bool) {
+    if entry.clears_selection && !explicit && !doc.selection.is_empty() {
         let selection = doc.selection.clone();
         if let Some(edit) = doc.edit.as_mut() {
             edit.clear_selection = Some(selection);
@@ -671,7 +697,7 @@ pub(super) fn state_json(doc: &CadDocument) -> Value {
     out.insert("active".into(), json!(ops.active));
     out.insert("place".into(), ops.place.as_ref().map_or(Value::Null, |p| json!(format!("{p:?}"))));
     out.insert("surface".into(), ops.surface.as_ref().map_or(Value::Null, |o| json!({"surface": o.surface, "highlight": o.highlight})));
-    out.insert("cursor_snap".into(), json!(ops.cursor_snap));
+    out.insert("cursor_snap".into(), json!(ops.cursor_snap.filter(|(revision, _)| *revision == doc.shown_revision()).map(|(_, p)| p)));
     out.insert(
         "clipboard".into(),
         ops.clipboard.as_ref().map_or(Value::Null, |(revision, clip)| json!({"revision": revision, "items": clip.get("items").and_then(Value::as_array).map_or(0, Vec::len)})),

@@ -8,9 +8,17 @@
 //! No intent logic: the caller owns the drafts and passes one action
 //! component per clickable part (`FormHit`); [`evaluate`] and
 //! [`TextDraft::key`] are pure functions the caller calls.
+//!
+//! A number keeps its typed value: RoboCAD's spin boxes round what they
+//! show to their decimals, but the form does not round (`decimals` is the
+//! caller's to use when it formats a value); a count must be whole.
+//! Range errors have no label ("0 is outside 0.01…100"): the caller
+//! prefixes the field's label.
 use super::Kit;
+use super::theme::*;
 use bevy::input::keyboard::Key;
 use bevy::prelude::*;
+use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
 
 /// How a number is read: a length (bare numbers mm), an angle (degrees),
@@ -52,8 +60,70 @@ pub(crate) enum FieldValue {
 /// Evaluate a field's text as its kind reads it. Errors name the token
 /// (the evaluator's message) or the range RoboCAD's dialog enforces.
 pub(crate) fn evaluate(kind: &FieldKind, text: &str) -> Result<FieldValue, String> {
-    let _ = (kind, text);
-    todo!("ui_kit::form::evaluate")
+    match *kind {
+        FieldKind::Number { unit, min, max, .. } => {
+            let v = number(unit, text)?;
+            match (min, max) {
+                (Some(lo), Some(hi)) if v < lo || v > hi => Err(format!("{v} is outside {lo}\u{2026}{hi}")),
+                (Some(lo), None) if v < lo => Err(format!("{v} is below the minimum {lo}")),
+                (None, Some(hi)) if v > hi => Err(format!("{v} is above the maximum {hi}")),
+                _ => Ok(FieldValue::Number(v)),
+            }
+        }
+        FieldKind::Vector { unit } => {
+            let parts: Vec<&str> = text.split(',').collect();
+            if parts.len() != 3 {
+                return Err(format!("expected three values \"x, y, z\" (got {})", parts.len()));
+            }
+            let mut v = [0.0; 3];
+            for ((slot, part), axis) in v.iter_mut().zip(&parts).zip(["x", "y", "z"]) {
+                *slot = number(unit, part).map_err(|e| format!("{axis}: {e}"))?;
+            }
+            Ok(FieldValue::Vector(v))
+        }
+        FieldKind::Choice { options } => options
+            .iter()
+            .position(|o| *o == text)
+            .or_else(|| options.iter().position(|o| o.to_lowercase() == text.to_lowercase()))
+            .map(FieldValue::Choice)
+            .ok_or_else(|| format!("{text:?} is not one of: {}", options.join(", "))),
+        FieldKind::Check => match text.trim().to_lowercase().as_str() {
+            "true" | "1" | "on" => Ok(FieldValue::Check(true)),
+            "false" | "0" | "off" => Ok(FieldValue::Check(false)),
+            _ => Err(format!("expected true or false (got {text:?})")),
+        },
+        FieldKind::Json => serde_json::from_str::<Value>(text).map(FieldValue::Json).map_err(|e| e.to_string()),
+    }
+}
+
+/// One number as `unit` reads it (the numeric bar's mapping,
+/// `cad::transform::FieldKind::evaluate`); a count must be whole.
+fn number(unit: Unit, text: &str) -> Result<f64, String> {
+    let v = match unit {
+        Unit::Length => sim_runtime::units::evaluate(text, false, Some("mm")),
+        Unit::Angle => sim_runtime::units::evaluate(text, true, None),
+        Unit::Count | Unit::Factor => sim_runtime::units::evaluate(text, false, None),
+    }
+    .map_err(|e| e.to_string())?;
+    if unit == Unit::Count && v.fract() != 0.0 {
+        return Err(format!("a count must be a whole number (got {v})"));
+    }
+    Ok(v)
+}
+
+/// A number as the form shows it under its field: "1.5 mm", "45°", "3".
+fn show(unit: Unit, v: f64) -> String {
+    match unit {
+        Unit::Length => sim_runtime::units::format_length(v, "mm", 3),
+        Unit::Angle => sim_runtime::units::format_angle(v, 2),
+        Unit::Count => format!("{v}"),
+        Unit::Factor => {
+            // At most six decimals, trailing zeros dropped.
+            let s = format!("{v:.6}");
+            let s = s.trim_end_matches('0').trim_end_matches('.');
+            if s.is_empty() || s == "-0" { "0".to_string() } else { s.to_string() }
+        }
+    }
 }
 
 /// One row the form shows.
@@ -99,8 +169,33 @@ pub(crate) struct TextDraft {
 impl TextDraft {
     /// Apply one pressed key (`chord`: Control/Command held, so characters are not typed).
     pub(crate) fn key(&mut self, key: &Key, chord: bool) -> DraftKey {
-        let _ = (key, chord);
-        todo!("ui_kit::form::TextDraft::key")
+        let before = self.text.clone();
+        match key {
+            Key::Enter => return DraftKey::Enter,
+            Key::Escape => return DraftKey::Escape,
+            Key::Tab => return DraftKey::Tab,
+            Key::Backspace => {
+                if self.select_all {
+                    self.text.clear();
+                    self.select_all = false;
+                } else {
+                    self.text.pop();
+                }
+            }
+            Key::Space if !chord => self.type_text(" "),
+            Key::Character(c) if !chord && !c.chars().any(char::is_control) => self.type_text(c.as_str()),
+            _ => {}
+        }
+        if self.text != before { DraftKey::Edited } else { DraftKey::Ignored }
+    }
+
+    /// Type `text` (replacing a selected text), as `cad::numeric`'s `type_text`.
+    fn type_text(&mut self, text: &str) {
+        if self.select_all {
+            self.text.clear();
+            self.select_all = false;
+        }
+        self.text.push_str(text);
     }
 }
 
@@ -110,7 +205,80 @@ impl Kit<'_> {
     /// when `ok_enabled`) and Cancel. `hit` gives each clickable part's
     /// action component. Accessible labels name each field and button.
     pub(crate) fn form<A: Component>(&self, parent: &mut ChildSpawnerCommands, title: &str, rows: &[FormRow], ok_enabled: bool, hit: impl Fn(FormHit) -> A) {
-        let _ = (parent, title, rows, ok_enabled, hit);
-        todo!("Kit::form")
+        // The numeric bar's panel (cad/numeric.rs `spawn`).
+        parent
+            .spawn((
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(8.0),
+                    padding: UiRect::all(Val::Px(12.0)),
+                    border: UiRect::all(Val::Px(1.0)),
+                    border_radius: BorderRadius::all(Val::Px(6.0)),
+                    min_width: Val::Px(320.0),
+                    ..default()
+                },
+                BackgroundColor(SURFACE),
+                BorderColor::all(BORDER),
+                AccessibleLabel::new(title),
+            ))
+            .with_children(|panel| {
+                panel.spawn(self.title(title));
+                for (i, row) in rows.iter().enumerate() {
+                    panel.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), ..default() }).with_children(|cell| self.form_row(cell, i, row, &hit));
+                }
+                panel.spawn(Node { justify_content: JustifyContent::FlexEnd, column_gap: Val::Px(6.0), margin: UiRect::top(Val::Px(4.0)), ..default() }).with_children(|buttons| {
+                    buttons.spawn(self.button("OK", hit(FormHit::Ok), Look::Primary, ok_enabled));
+                    buttons.spawn(self.button("Cancel", hit(FormHit::Cancel), Look::Secondary, true));
+                });
+            });
+    }
+
+    /// One form row: its label, then its field (with the evaluation or the
+    /// error under it, as the numeric bar shows them), options or checkbox.
+    fn form_row<A: Component>(&self, cell: &mut ChildSpawnerCommands, i: usize, row: &FormRow, hit: &impl Fn(FormHit) -> A) {
+        match row.kind {
+            FieldKind::Choice { options } => {
+                cell.spawn(self.text(row.label, size::CAPTION, SUBTLE, 1));
+                let current = evaluate(&row.kind, row.text).ok();
+                cell.spawn(self.segments()).with_children(|strip| {
+                    for (k, option) in options.iter().enumerate() {
+                        strip.spawn(self.segment(option, hit(FormHit::Option(i, k)), current == Some(FieldValue::Choice(k)), true));
+                    }
+                });
+            }
+            FieldKind::Check => {
+                // RoboCAD's checkbox carries its own label ("As live instances").
+                cell.spawn(Node { flex_shrink: 0.0, ..default() }).with_children(|line| {
+                    line.spawn(self.chip(row.label, hit(FormHit::Check(i)), row.text == "true", true));
+                });
+            }
+            FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json => {
+                cell.spawn(self.text(row.label, size::CAPTION, SUBTLE, 1));
+                let result = evaluate(&row.kind, row.text);
+                {
+                    // The kit input labels itself with its text; the field is named by its label.
+                    let mut input = cell.spawn(self.input(row.text, row.label, hit(FormHit::Field(i)), row.focused));
+                    input.insert(AccessibleLabel::new(row.label));
+                    if result.is_err() {
+                        // RoboCAD's red border (cad/numeric.rs `body`).
+                        input.insert(BorderColor::all(DANGER));
+                    }
+                }
+                let shown = match (&result, row.kind) {
+                    (Ok(FieldValue::Number(v)), FieldKind::Number { unit, .. }) => Some(format!("= {}", show(unit, *v))),
+                    (Ok(FieldValue::Vector(v)), FieldKind::Vector { unit }) => Some(format!("= {}", v.map(|x| show(unit, x)).join(", "))),
+                    _ => None,
+                };
+                match (result, shown) {
+                    (Err(e), _) => {
+                        cell.spawn(self.text(e, size::CAPTION, DANGER, 0));
+                    }
+                    (Ok(_), Some(shown)) => {
+                        cell.spawn(self.text(shown, size::CAPTION, SUBTLE, 0));
+                    }
+                    (Ok(_), None) => {}
+                }
+            }
+        }
     }
 }

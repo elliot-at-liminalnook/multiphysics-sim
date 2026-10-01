@@ -1,6 +1,6 @@
 //! The page's dial (web/viewer/calibration-ui.mjs :48 and `needle()` :74):
-//! a half-ellipse track over a 300×95 view, the measured needle (solid,
-//! round caps) and the requested needle (dashed 5 on, 4 off), rasterized on
+//! a half-ellipse track (butt caps) over a 300×95 view, the measured needle
+//! (solid, round caps) and the requested needle (dashed 5 on, 4 off), rasterized on
 //! the CPU into a small RGBA image (transparent background, like
 //! `chart.rs`). The "Lower"/"Upper" captions are kit text under the image.
 //! Colours are drawing colours, not UI tokens: `chart::COLORS[0]` measured,
@@ -33,12 +33,17 @@ pub fn blank_image() -> Image {
 }
 
 /// One stroke's coverage: segments in view units, `width` in view units,
-/// round caps and joins (`round`) or butt ends, an optional dash (on, off).
-fn stroke(coverage: &mut [f32], segments: &[((f64, f64), (f64, f64))], width: f64, round: bool, dash: Option<(f64, f64)>) {
+/// round or butt ends of the whole stroke (`round_ends`, SVG's
+/// `stroke-linecap`), round or butt joins between its segments
+/// (`round_joins`), an optional dash (on, off).
+fn stroke(coverage: &mut [f32], segments: &[((f64, f64), (f64, f64))], width: f64, round_ends: bool, round_joins: bool, dash: Option<(f64, f64)>) {
     let (w, h) = (SIZE.0 as i64, SIZE.1 as i64);
     let half = width / 2.0 * SCALE;
     let mut along = 0.0;
-    for &((ax, ay), (bx, by)) in segments {
+    let last = segments.len().saturating_sub(1);
+    for (index, &((ax, ay), (bx, by))) in segments.iter().enumerate() {
+        let round_start = if index == 0 { round_ends } else { round_joins };
+        let round_end = if index == last { round_ends } else { round_joins };
         let (ax, ay, bx, by) = (ax * SCALE, ay * SCALE, bx * SCALE, by * SCALE);
         let (dx, dy) = (bx - ax, by - ay);
         let length = (dx * dx + dy * dy).sqrt();
@@ -48,7 +53,7 @@ fn stroke(coverage: &mut [f32], segments: &[((f64, f64), (f64, f64))], width: f6
             for x in x0..=x1 {
                 let (px, py) = (x as f64 + 0.5 - ax, y as f64 + 0.5 - ay);
                 let t = if length > 0.0 { (px * dx + py * dy) / length } else { 0.0 };
-                if !round && (t < 0.0 || t > length) {
+                if (t < 0.0 && !round_start) || (t > length && !round_end) {
                     continue;
                 }
                 if let Some((on, off)) = dash
@@ -92,17 +97,21 @@ pub fn rasterize(measured: f64, requested: f64) -> Vec<u8> {
     let n = (SIZE.0 * SIZE.1) as usize;
     let mut px = vec![0u8; n * 4];
     // The track: `M 60 85 A 90 70 0 0 1 240 85`, the upper half of an
-    // ellipse centred on the pivot.
+    // ellipse centred on the pivot, with SVG's default butt caps (it ends
+    // at x = 60 and 240). The polyline's inner joins are round so the
+    // smooth arc shows no seams.
     let arc: Vec<(f64, f64)> = (0..=48).map(|i| std::f64::consts::PI * (1.0 - i as f64 / 48.0)).map(|a| (150.0 + 90.0 * a.cos(), 85.0 - 70.0 * a.sin())).collect();
     let segments: Vec<_> = arc.windows(2).map(|p| (p[0], p[1])).collect();
     let mut layer = vec![0f32; n];
-    stroke(&mut layer, &segments, 8.0, true, None);
+    stroke(&mut layer, &segments, 8.0, false, true, None);
     over(&mut px, &layer, TRACK);
     layer.fill(0.0);
-    stroke(&mut layer, &[(PIVOT, needle_end(requested))], 3.0, false, Some((5.0, 4.0)));
+    // The requested needle: no `stroke-linecap` (butt), dashed "5 4".
+    stroke(&mut layer, &[(PIVOT, needle_end(requested))], 3.0, false, false, Some((5.0, 4.0)));
     over(&mut px, &layer, crate::chart::COLORS[2]);
     layer.fill(0.0);
-    stroke(&mut layer, &[(PIVOT, needle_end(measured))], 5.0, true, None);
+    // The measured needle: `stroke-linecap="round"`.
+    stroke(&mut layer, &[(PIVOT, needle_end(measured))], 5.0, true, true, None);
     over(&mut px, &layer, crate::chart::COLORS[0]);
     px
 }
@@ -141,5 +150,11 @@ mod tests {
         let a = ((100.0 - 150.0) / 90.0f64).acos();
         assert_eq!(&pixel(&px, 100.0, 85.0 - 70.0 * a.sin())[..3], &TRACK[..]);
         assert_eq!(pixel(&px, 2.0, 2.0)[3], 0);
+        // Butt caps: the track ends on the baseline at x = 60 and 240 (a
+        // round cap would cover these points, 2.5 units from each end, below
+        // the baseline), but is drawn just inside.
+        assert_eq!(pixel(&px, 58.0, 87.0)[3], 0);
+        assert_eq!(pixel(&px, 242.0, 87.0)[3], 0);
+        assert_eq!(&pixel(&px, 62.0, 84.0)[..3], &TRACK[..]);
     }
 }

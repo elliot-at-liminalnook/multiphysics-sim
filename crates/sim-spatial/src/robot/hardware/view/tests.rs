@@ -26,6 +26,11 @@ fn angle_prints_one_decimal_motor_degrees() {
     // is below it, and toFixed gives the lower digit.
     assert_eq!(fixed(1.45, 1), "1.4");
     assert_eq!(fixed(12.45, 1), "12.4");
+    // Negative zero prints unsigned; a negative value rounding to zero
+    // keeps its sign, as toFixed does.
+    assert_eq!(fixed(-0.0, 1), "0.0");
+    assert_eq!(fixed(-0.04, 1), "-0.0");
+    assert_eq!(fixed(0.0, 0), "0");
     assert_eq!(js_num(35.0), "35");
     assert_eq!(js_num(35.5), "35.5");
 }
@@ -153,4 +158,18 @@ fn leg_gait_status_prints_missing_errors_and_limits_as_dashes() {
     // No limits: no "Limits:" line (the page prints a bare one).
     s.state.gait.as_mut().unwrap().limits.clear();
     assert!(!render(&s, &Form::default(), Instant::now()).gait.status.contains("Limits"));
+}
+
+#[test]
+fn chips_are_the_page_three_whatever_the_calibration_names() {
+    // A calibration with other ids and roles: the page's chips stay
+    // Knee 1, Worm 2, Belt 3; only `.off` comes from the axes.
+    let mut s = snapshot(2, 0, Axis { role: "Elbow".into(), disabled: true, ..Default::default() });
+    s.state.calibration.as_mut().unwrap().axes.insert(7, Axis { role: "Wrist".into(), ..Default::default() });
+    let v = render(&s, &Form::default(), Instant::now());
+    let chips: Vec<_> = v.chips.iter().map(|c| (c.id, c.label.as_str(), c.pressed, c.off)).collect();
+    assert_eq!(chips, [(1, "Knee 1", false, false), (2, "⊘ Worm 2", true, true), (3, "Belt 3", false, false)]);
+    // No calibration: the same three.
+    let v = render(&LinkSnapshot::default(), &Form::default(), Instant::now());
+    assert_eq!(v.chips.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(), ["Knee 1", "Worm 2", "Belt 3"]);
 }

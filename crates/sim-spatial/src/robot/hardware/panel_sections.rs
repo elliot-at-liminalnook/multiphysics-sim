@@ -232,7 +232,7 @@ pub(super) fn body(p: &mut ChildSpawnerCommands, k: &Kit, dial: Handle<Image>, m
         c.spawn((k.caption(""), PanelText::Telemetry));
         c.spawn(k.text(motion_view::HEADING, size::BODY, TEXT, 2));
         c.spawn((k.caption(""), PanelText::MotionDirection));
-        c.spawn((k.chart_image(motion, Node { width: Val::Percent(100.0), height: Val::Px(150.0), display: Display::None, ..default() }, true), MotionImage, Shown::Chart, PanelList { kind: ListKind::MotionLabels, key: None }));
+        c.spawn((k.chart_image(motion, Node { width: Val::Percent(100.0), aspect_ratio: Some(crate::chart::RASTER.0 as f32 / crate::chart::RASTER.1 as f32), flex_shrink: 0.0, display: Display::None, ..default() }, true), MotionImage, Shown::Chart, PanelList { kind: ListKind::MotionLabels, key: None }));
         c.spawn((k.caption(""), PanelText::MotionPlaceholder(0)));
         c.spawn((k.caption(""), PanelText::MotionPlaceholder(1)));
         c.spawn((k.caption(""), PanelText::MotionStatus));

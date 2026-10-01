@@ -16,6 +16,14 @@
 //! comes first, from RoboCAD's topology of the node (`CadTopology`: `GET
 //! /nodes/{id}/faces|edges|vertices`), values as RoboCAD returned them (mm,
 //! mm²), "fetching…" while they load and the fetch's error verbatim.
+//! The node's pivot and, for instances and reference meshes and images,
+//! its transform are editable ([`editors`]: one `CadPatch` per Enter).
+mod editors;
+
+pub use editors::EditDraft;
+/// The editors' typing system (for other Input systems' ordering).
+pub(super) use editors::entry as editor_entry;
+
 use super::actions::CadAction;
 use super::document::CadDocument;
 use super::document::Connection;
@@ -24,8 +32,25 @@ use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, TEXT, VALUE, WARN, size, wrap};
 use bevy::prelude::*;
 use serde_json::Value;
 use super::topology::CadTopology;
+use crate::app::{ViewerMode, ViewerSet};
 use sim_runtime::cad_client::{FaceInfo, NodeSummary, SelectionItem};
 use std::collections::BTreeMap;
+
+/// The editors' typing (Input): after the name field (it resets
+/// `CadInputFocus` when it has no draft) and before the numeric bar and
+/// the CAD keys (they honour the focus the editors set).
+pub(super) fn build(app: &mut App) {
+    app.add_systems(
+        Update,
+        editor_entry
+            .after(crate::app::actions::serve)
+            .after(super::panel::name_entry)
+            .before(super::numeric::entry)
+            .before(super::keys::keys)
+            .in_set(ViewerSet::Input)
+            .run_if(in_state(ViewerMode::Cad)),
+    );
+}
 
 /// Keys whose values are provenance labels (shown as chips).
 const PROVENANCE: [&str; 6] = ["source", "provenance", "mass_sources", "radius_source", "flex_patch_source", "reference"];
@@ -188,7 +213,7 @@ pub(super) fn inspector_key(doc: &CadDocument, topology: Option<&CadTopology>) -
     let n = sel.and_then(|id| node(doc, id));
     let detail = doc.detail.as_ref().filter(|(id, ..)| Some(id.as_str()) == sel);
     let source = n.and_then(|n| n.source.as_deref()).map(|s| instance_of(doc, s));
-    format!("{:?}", (sel, n, source, detail, doc.connected(), waiting(doc), sub_key(doc, topology)))
+    format!("{:?}", (sel, n, source, detail, doc.connected(), waiting(doc), sub_key(doc, topology), editors::key(doc)))
 }
 
 /// The first selected item when it is a face, edge, vertex or point.
@@ -372,9 +397,6 @@ pub(super) fn inspector(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument
     if let Some(c) = &n.color {
         field(p, k, "Colour", &numbers(c), "");
     }
-    if let Some(pivot) = &n.pivot {
-        field(p, k, "Pivot", &numbers(pivot), "mm");
-    }
     if let Some(source) = &n.source {
         field(p, k, "Instance of", &instance_of(doc, source), "");
     }
@@ -384,8 +406,7 @@ pub(super) fn inspector(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument
     if let Some(v) = &n.component_member {
         lines(p, k, "component_member", v);
     }
-    p.spawn(k.section("Transform"));
-    lines(p, k, "transform", &n.transform);
+    editors::editors(p, k, doc, n);
     p.spawn(k.section("Detail"));
     match &doc.detail {
         Some((detail_id, revision, result)) if detail_id == id => match result {

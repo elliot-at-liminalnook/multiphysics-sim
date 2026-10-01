@@ -153,7 +153,8 @@ pub(super) fn double_click(
     mut last: Local<Option<(Instant, Vec2)>>,
 ) {
     let (Some(mut doc), Some(view), Some(topology), Some(meshes)) = (doc, view, topology, meshes) else { return };
-    if doc.tool != CadTool::Select || doc.select_mode != SelectMode::Face {
+    // A catalogue interaction (a placement, a pick-then-form tool) owns the clicks.
+    if doc.tool != CadTool::Select || doc.select_mode != SelectMode::Face || doc.ops.active.is_some() {
         *last = None;
         return;
     }

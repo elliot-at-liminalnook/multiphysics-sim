@@ -89,36 +89,41 @@
 //!   modes' keys run only in their modes.
 mod commit;
 mod dimensions;
+mod numeric_fields;
+mod geometry;
 mod gizmo;
+mod input;
 mod preview;
 mod push_pull;
 #[cfg(test)]
 mod tests;
 
+// The paths the rest of CAD mode uses (`super::transform::X`,
+// `crate::cad::transform::X`) and the submodules' `super::X`, whichever
+// file now holds X. No re-export is wider than its item.
+pub(crate) use commit::{OpCall, face_ref};
 pub use dimensions::Entry as DimensionEntry;
 pub(super) use dimensions::keep_entry;
+pub use numeric_fields::{Field, FieldCommit, FieldKind, fields};
+pub(super) use numeric_fields::numeric_axis;
+pub use geometry::pivot;
+pub(super) use geometry::{cursor_in_view, face_target, marker, preview_bodies, ray_hit, selection_revision, track_selection, view_back};
 pub use gizmo::Drag;
+pub(super) use input::{keys, restore_cursor, tool_cursor};
 pub use push_pull::{PushDrag, Target as PushTarget};
 pub(super) use preview::{previews, state_json};
 
-use super::actions::{CadAction, Cx, Dimension};
-use super::document::{CadDocument, CadInputFocus, CadTool};
+use super::actions::{CadAction, Cx};
+use super::document::{CadDocument, CadTool};
 use super::measure::MeasureState;
-use super::mesh::{CadBody, CadMeshes};
 use super::numeric::Numeric;
 use super::snap::Snap;
-use super::topology::CadTopology;
-use super::view::CadView;
 use sim_runtime::cad_client::SelectionItem;
-use crate::app::actions::{Act, Call};
+use crate::app::actions::Call;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
-use bevy::picking::hover::HoverMap;
-use bevy::picking::mesh_picking::ray_cast::{MeshRayCast, MeshRayCastSettings, RayCastVisibility};
 use bevy::prelude::*;
-use bevy::window::{CursorIcon, PrimaryWindow, SystemCursorIcon};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use std::collections::HashSet;
 use std::time::{Duration, Instant};
 
 /// The gizmo's axes in RoboCAD's model frame.
@@ -217,75 +222,6 @@ pub struct Preview {
     pub phase: Phase,
 }
 
-/// How a numeric field is read: a length (bare numbers mm), an angle
-/// (degrees) or a factor (no unit), as RoboCAD's `NumericField`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FieldKind {
-    Length,
-    Angle,
-    Factor,
-}
-impl FieldKind {
-    /// RoboCAD's `NumericBar.values`: `evaluate(text, angle, None if angle
-    /// or not unit else "mm")`. The error names the token and its position.
-    pub fn evaluate(self, text: &str) -> Result<f64, String> {
-        let r = match self {
-            FieldKind::Length => sim_runtime::units::evaluate(text, false, Some("mm")),
-            FieldKind::Angle => sim_runtime::units::evaluate(text, true, None),
-            FieldKind::Factor => sim_runtime::units::evaluate(text, false, None),
-        };
-        r.map_err(|e| e.to_string())
-    }
-    /// A value as the field shows it (RoboCAD's `set_fields`).
-    pub fn show(self, v: f64) -> String {
-        match self {
-            FieldKind::Length => fl(v),
-            FieldKind::Angle => fa(v),
-            FieldKind::Factor => g(v),
-        }
-    }
-    pub fn name(self) -> &'static str {
-        match self {
-            FieldKind::Length => "length",
-            FieldKind::Angle => "angle",
-            FieldKind::Factor => "factor",
-        }
-    }
-}
-
-/// What a numeric field commits.
-#[derive(Clone, Debug, PartialEq)]
-pub enum FieldCommit {
-    Dx,
-    Dy,
-    Dz,
-    Angle,
-    Factor,
-    Distance,
-    /// A live dimension: `CadSetDimension`.
-    Dimension { node: String, dimension: Dimension, faces: Vec<i64> },
-    /// Shown, not editable: RoboCAD's message.
-    ReadOnly(String),
-}
-
-/// One numeric field: its name, how it is read, the value it opens with.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Field {
-    pub name: String,
-    pub kind: FieldKind,
-    pub value: f64,
-    pub commit: FieldCommit,
-}
-impl Field {
-    pub fn new(name: impl Into<String>, kind: FieldKind, value: f64, commit: FieldCommit) -> Self {
-        Field { name: name.into(), kind, value, commit }
-    }
-    /// The text the field opens with.
-    pub fn text(&self) -> String {
-        self.kind.show(self.value)
-    }
-}
-
 /// The active tool's state (`CadDocument::tool_state`); reset when a tool is activated.
 #[derive(Default)]
 pub struct ToolState {
@@ -316,6 +252,10 @@ pub struct ToolState {
     /// The selection and the shown revision it was first seen at (its
     /// face indices refer to that revision); kept across tool changes.
     pub selection_seen: Option<(Vec<SelectionItem>, u64)>,
+    /// The inspector's pivot or transform value being typed (`inspector`'s
+    /// editors); kept across tool changes. Here so the inspector's part
+    /// key, which reads the document only, sees each keystroke.
+    pub inspector_edit: Option<super::inspector::EditDraft>,
 }
 
 pub(super) fn build(app: &mut App) {
@@ -343,6 +283,8 @@ pub(super) fn build(app: &mut App) {
         )
         .add_systems(Update, (gizmo::draw, push_pull::draw, super::measure::draw, super::numeric::refresh, tool_cursor).in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)))
         .add_systems(OnExit(ModeScope::Cad), restore_cursor);
+    // The inspector's pivot and transform editors (their typing, Input).
+    super::inspector::build(app);
 }
 
 // ---- Formatting ------------------------------------------------------------
@@ -414,164 +356,6 @@ pub(super) fn is_transform(tool: CadTool) -> bool {
     matches!(tool, CadTool::Move | CadTool::Rotate | CadTool::Scale)
 }
 
-// ---- Geometry the tools share ------------------------------------------------
-
-/// The nodes `ids` and everything under them in the shown tree (the drawn
-/// bodies a transform of `ids` moves).
-pub(super) fn preview_bodies(doc: &CadDocument, ids: &[String]) -> Vec<String> {
-    let mut out: Vec<String> = ids.to_vec();
-    let mut seen: HashSet<String> = ids.iter().cloned().collect();
-    if let Some(state) = &doc.doc {
-        // Walk order lists parents before children.
-        for n in &state.nodes {
-            if n.parent.as_ref().is_some_and(|p| seen.contains(p)) && seen.insert(n.id.clone()) {
-                out.push(n.id.clone());
-            }
-        }
-    }
-    out
-}
-
-/// The transform tools' pivot (see the module doc's pivot rule).
-pub fn pivot(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Option<(Vec3, PivotRule)> {
-    let ids = doc.selected_nodes();
-    let first = ids.first()?;
-    let node = doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| &n.id == first));
-    if let Some(p) = node.and_then(|n| n.pivot.as_deref())
-        && p.len() >= 3
-        && p[..3].iter().all(|v| v.is_finite())
-    {
-        return Some((Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32), PivotRule::NodePivot));
-    }
-    if ids.len() == 1
-        && let Some((id, revision, Ok(detail))) = &doc.detail
-        && id == first
-        && *revision == doc.shown_revision()
-        && let Some(c) = detail.mass.as_ref().map(|m| &m.centroid)
-        && let [Some(x), Some(y), Some(z), ..] = c.as_slice()
-    {
-        return Some((Vec3::new(*x as f32, *y as f32, *z as f32), PivotRule::MassCentroid));
-    }
-    let bodies: HashSet<String> = preview_bodies(doc, &ids).into_iter().collect();
-    let (mut lo, mut hi) = (Vec3::splat(f32::INFINITY), Vec3::splat(f32::NEG_INFINITY));
-    for (id, (min, max)) in meshes?.body_bounds() {
-        if bodies.contains(id) {
-            lo = lo.min(min);
-            hi = hi.max(max);
-        }
-    }
-    lo.x.is_finite().then(|| ((lo + hi) / 2.0, PivotRule::BoundsCentre))
-}
-
-/// The shown revision the current selection was first seen at
-/// ([`track_selection`]); the shown revision when not tracked yet.
-pub(super) fn selection_revision(doc: &CadDocument) -> u64 {
-    match &doc.tool_state.selection_seen {
-        Some((items, revision)) if *items == doc.selection => *revision,
-        _ => doc.shown_revision(),
-    }
-}
-
-/// The first selected face as a push/pull target, at the revision the
-/// selection was seen at (described from the topology when that is the shown one).
-pub(super) fn face_target(doc: &CadDocument, topology: Option<&CadTopology>) -> Option<PushTarget> {
-    let (node, face) = doc.selected_of("face").into_iter().next()?;
-    let revision = selection_revision(doc);
-    let info = if revision == doc.shown_revision() { topology.and_then(|t| t.get(&node)).and_then(|t| t.faces.iter().find(|f| f.index == face)).cloned() } else { None };
-    Some(PushTarget { node, face, revision, info })
-}
-
-/// SimSync: remember the shown revision each new selection appeared at, so
-/// a face index from it is not used against renumbered faces after an
-/// edit. Approximate: a selection RoboCAD remaps during an edit is dated
-/// when the viewer adopts it.
-pub(super) fn track_selection(doc: Option<ResMut<CadDocument>>) {
-    let Some(mut doc) = doc else { return };
-    if doc.tool_state.selection_seen.as_ref().is_some_and(|(items, _)| *items == doc.selection) {
-        return;
-    }
-    let seen = (doc.selection.clone(), doc.shown_revision());
-    doc.tool_state.selection_seen = Some(seen);
-}
-
-/// The camera's back axis (towards the viewer) in the model frame: RoboCAD's `camera.basis()[2]`.
-pub(super) fn view_back(view: &CadView) -> Vec3 {
-    view.model_from_world.transform_vector3(view.world_from_view.transform_vector3(Vec3::Z)).try_normalize().unwrap_or(Vec3::Z)
-}
-
-/// The cursor (window logical pixels) when it is over the 3D view and not over a panel.
-pub(super) fn cursor_in_view(window: Option<&Window>, view: &CadView, hover: Option<&HoverMap>, nodes: &Query<(), With<Node>>) -> Option<Vec2> {
-    let p = window?.cursor_position()?;
-    (view.contains(p) && !super::scene::over_ui(hover, nodes)).then_some(p)
-}
-
-/// The first unlocked drawn body under the cursor.
-pub(super) struct Hit {
-    pub node: String,
-    pub triangle: Option<usize>,
-    /// The hit point (model mm).
-    pub point: Vec3,
-}
-
-/// Bevy's `MeshRayCast` along the cursor ray, on `CadBody` entities only;
-/// locked nodes are left out as RoboCAD's pick pass leaves them out.
-pub(super) fn ray_hit(doc: &CadDocument, cast: &mut MeshRayCast, view: &CadView, cursor: Vec2, bodies: &Query<&CadBody>) -> Option<Hit> {
-    let (origin, dir) = view.ray(cursor)?;
-    let world_origin = view.world_from_model.transform_point3(origin);
-    let world_dir = Dir3::new(view.world_from_model.transform_vector3(dir)).ok()?;
-    let filter = |e: Entity| bodies.contains(e);
-    let settings = MeshRayCastSettings::default().with_filter(&filter).with_visibility(RayCastVisibility::Visible).never_early_exit();
-    let locked = |id: &str| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).is_some_and(|n| n.locked);
-    for (entity, hit) in cast.cast_ray(Ray3d::new(world_origin, world_dir), &settings) {
-        let Ok(body) = bodies.get(*entity) else { continue };
-        if locked(&body.id) {
-            continue;
-        }
-        return Some(Hit { node: body.id.clone(), triangle: hit.triangle_index, point: view.model_from_world.transform_point3(hit.point) });
-    }
-    None
-}
-
-/// A point marker: a square `pixels` across, facing the camera.
-pub(super) fn marker(gizmos: &mut Gizmos<ToolGizmos>, view: &CadView, p: Vec3, pixels: f32, color: Color) {
-    let Some(per_pixel) = view.mm_per_pixel(p) else { return };
-    let r = per_pixel * pixels * 0.5;
-    let side = |axis: Vec3| view.model_from_world.transform_vector3(view.world_from_view.transform_vector3(axis)).try_normalize().unwrap_or(Vec3::ZERO) * r;
-    let (right, up) = (side(Vec3::X), side(Vec3::Y));
-    let corners = [p - right - up, p + right - up, p + right + up, p - right + up, p - right - up];
-    gizmos.linestrip(corners.map(|c| view.world_from_model.transform_point3(c)), color);
-}
-
-// ---- Numeric fields ------------------------------------------------------------
-
-/// The active tool's numeric fields (RoboCAD's `ctx.numeric(fields)`):
-/// move dx dy dz, rotate angle, scale factor, push/pull or offset distance;
-/// in the Select tool a double-clicked face's dimension, else the selected
-/// faces' and edges' live dimensions; none for measure.
-pub fn fields(doc: &CadDocument, topology: Option<&CadTopology>, meshes: Option<&CadMeshes>) -> Vec<Field> {
-    match doc.tool {
-        CadTool::Move => vec![Field::new("dx", FieldKind::Length, 0.0, FieldCommit::Dx), Field::new("dy", FieldKind::Length, 0.0, FieldCommit::Dy), Field::new("dz", FieldKind::Length, 0.0, FieldCommit::Dz)],
-        CadTool::Rotate => vec![Field::new("angle", FieldKind::Angle, 0.0, FieldCommit::Angle)],
-        CadTool::Scale => vec![Field::new("factor", FieldKind::Factor, 1.0, FieldCommit::Factor)],
-        CadTool::PushPull | CadTool::OffsetFace => vec![Field::new("distance", FieldKind::Length, 0.0, FieldCommit::Distance)],
-        CadTool::Measure => Vec::new(),
-        CadTool::Select => match &doc.tool_state.dimension {
-            Some(entry) => vec![entry.field.clone()],
-            None => dimensions::live(doc, topology, meshes),
-        },
-    }
-}
-
-/// The axis a typed rotation turns about: the last dragged one, else Z
-/// (RoboCAD: `axes[self.axis_index or 2]`, but handle 0 counts; see the module doc).
-pub(super) fn numeric_axis(state: &ToolState) -> Vec3 {
-    match state.axis {
-        Some(3) => state.free_axis.unwrap_or(Vec3::Z),
-        Some(i) if i < 3 => AXES[i],
-        _ => Vec3::Z,
-    }
-}
-
 // ---- The handler ---------------------------------------------------------------
 
 /// The tool arms of `CadAction` (see the module doc).
@@ -603,9 +387,18 @@ fn end_live(doc: &mut CadDocument) {
 fn activate(cx: &mut Cx, tool: CadTool) -> Value {
     let doc = &mut *cx.doc;
     end_live(doc);
+    // RoboCAD's `set_tool` replaces a catalogue pick or place tool too: its
+    // interaction ends and its form closes (a dialog form stays).
+    if let Some(active) = doc.ops.active.take() {
+        if doc.ops.form.as_ref().is_some_and(|f| f.op == active) {
+            doc.ops.form = None;
+        }
+        doc.ops.place = None;
+    }
     let keep = doc.tool_state.preview.take().filter(|p| p.phase != Phase::Live);
     let seen = doc.tool_state.selection_seen.take();
-    doc.tool_state = ToolState { preview: keep, selection_seen: seen, ..Default::default() };
+    let inspector_edit = doc.tool_state.inspector_edit.take();
+    doc.tool_state = ToolState { preview: keep, selection_seen: seen, inspector_edit, ..Default::default() };
     doc.tool = tool;
     let mut status = hint(tool).to_string();
     let mut answer = Map::new();
@@ -659,79 +452,4 @@ fn cancel(cx: &mut Cx) -> Value {
     doc.selection.clear();
     super::selection::publish(doc);
     json!({"selection": "cleared"})
-}
-
-// ---- Systems ---------------------------------------------------------------------
-
-/// RoboCAD's tool cursor (app.py:520-522: arrow for Select, size-all for
-/// the transform tools, a cross for the others), over the 3D view only (as
-/// RoboCAD sets it on its viewport); the default elsewhere.
-pub(super) fn tool_cursor(
-    mut commands: Commands,
-    doc: Option<Res<CadDocument>>,
-    view: Option<Res<CadView>>,
-    windows: Query<(Entity, &Window, Option<&CursorIcon>), With<PrimaryWindow>>,
-    hover: Option<Res<HoverMap>>,
-    nodes: Query<(), With<Node>>,
-) {
-    let Ok((entity, window, current)) = windows.single() else { return };
-    let over_view = view.as_deref().is_some_and(|v| cursor_in_view(Some(window), v, hover.as_deref(), &nodes).is_some());
-    let icon = match doc.map(|d| d.tool) {
-        Some(CadTool::Move | CadTool::Rotate | CadTool::Scale) if over_view => SystemCursorIcon::Move,
-        Some(CadTool::PushPull | CadTool::OffsetFace | CadTool::Measure) if over_view => SystemCursorIcon::Crosshair,
-        _ => SystemCursorIcon::Default,
-    };
-    let want = CursorIcon::System(icon);
-    // Inserted only on change (winit applies it when the component changes).
-    if current.map_or(icon != SystemCursorIcon::Default, |c| *c != want) {
-        commands.entity(entity).try_insert(want);
-    }
-}
-
-/// OnExit(Cad): the window's default cursor again.
-pub(super) fn restore_cursor(mut commands: Commands, windows: Query<(Entity, Option<&CursorIcon>), With<PrimaryWindow>>) {
-    for (entity, current) in &windows {
-        if current.is_some_and(|c| *c != CursorIcon::default()) {
-            commands.entity(entity).try_insert(CursorIcon::default());
-        }
-    }
-}
-
-/// Input: G, R, S, D, Shift+D, M and Escape as the tool controls'
-/// actions (`panel::controls`: cad:tool:<tool>, cad:cancel), ignored while
-/// a text field has the keyboard (`CadInputFocus`; the numeric bar's own
-/// Tab, Enter and Escape are `numeric::entry`'s).
-pub(super) fn keys(keys: Option<Res<ButtonInput<KeyCode>>>, focus: Option<Res<CadInputFocus>>, doc: Option<ResMut<CadDocument>>, mut out: MessageWriter<Act<CadAction>>) {
-    let Some(keys) = keys else { return };
-    if focus.is_some_and(|f| f.0) {
-        return;
-    }
-    let command = keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight]);
-    let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-    let alt = keys.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
-    let id = if keys.just_pressed(KeyCode::Escape) {
-        "cad:cancel"
-    } else if command || alt {
-        return;
-    } else if !shift && keys.just_pressed(KeyCode::KeyG) {
-        "cad:tool:move"
-    } else if !shift && keys.just_pressed(KeyCode::KeyR) {
-        "cad:tool:rotate"
-    } else if !shift && keys.just_pressed(KeyCode::KeyS) {
-        "cad:tool:scale"
-    } else if keys.just_pressed(KeyCode::KeyD) {
-        if shift { "cad:tool:offset_face" } else { "cad:tool:push_pull" }
-    } else if !shift && keys.just_pressed(KeyCode::KeyM) {
-        "cad:tool:measure"
-    } else {
-        return;
-    };
-    let Some(mut doc) = doc else { return };
-    let Some(found) = super::panel::controls(&doc).into_iter().find(|c| c.id == id) else { return };
-    match found.ready {
-        Ok(()) => {
-            out.write(Act::ui(found.action));
-        }
-        Err(why) => doc.show(Err(format!("{}: {why}", found.label))),
-    }
 }

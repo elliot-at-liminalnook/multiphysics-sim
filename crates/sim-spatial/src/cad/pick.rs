@@ -27,6 +27,17 @@
 //!   own hit first (else the nearest neighbour's).
 //! - **Box**: a left drag past 6 px draws the rubber band (`overlay`) and
 //!   on release writes `CadBoxSelect` (Shift or Ctrl extends).
+//! - **Catalogue interactions** (cad-modify, `ops::interact`): while a
+//!   placement (`Flow::Place`) is active the left button belongs to it:
+//!   no click, box or hover here. While a pick-then-form tool
+//!   (`Flow::PickThenForm`: fillet, chamfer, shell) is active, a click
+//!   toggles the item under the cursor when it is of the tool's kind
+//!   (`CadSelect {toggle: true}`; RoboCAD's `EdgeTool.press`), also while
+//!   the tool's form has the keyboard; empty space, other kinds, a drag
+//!   and Alt do nothing more. RoboCAD's `ShellTool.press` reuses
+//!   `EdgeTool.press`, whose `hit[0] == "edge"` test means a face click
+//!   there toggles nothing; here the face toggles (deliberately
+//!   different: the tool's own hint says "click adds").
 //! - **Hover**: coalesced to one search per 33 ms (RoboCAD's hover timer).
 //!   Body, face and point modes ray-cast inline (Bevy's own picking backend
 //!   casts as often). The edge and vertex screen search over every sampled
@@ -49,6 +60,7 @@
 use super::actions::CadAction;
 use super::document::{CadDocument, CadInputFocus, CadTool, SelectMode};
 use super::mesh::{CadBody, CadMeshes};
+use super::ops::Flow;
 use super::topology::{CadTopology, NodeTopology};
 use super::view::CadView;
 use crate::app::actions::Act;
@@ -331,7 +343,17 @@ fn pointer(
         state.last = p;
     }
     let focused = focus.is_some_and(|f| f.0);
-    let usable = view.valid && doc.tool == CadTool::Select && !focused;
+    // A catalogue op's interaction (cad-modify): a placement owns the left
+    // drag (`ops::interact`); a pick-then-form tool's click toggles one item
+    // of its kind (RoboCAD's `EdgeTool.press`), also while its form has the keyboard.
+    let flow = doc.ops.active.and_then(super::ops::entry).map(|e| e.flow);
+    let placing = matches!(flow, Some(Flow::Place(_)));
+    let pick_kind = match flow {
+        Some(Flow::PickThenForm(mode)) => Some(mode),
+        _ => None,
+    };
+    // An open command surface takes the press that closes it (as a Qt popup does).
+    let usable = view.valid && doc.tool == CadTool::Select && (!focused || pick_kind.is_some()) && !placing && doc.ops.surface.is_none();
     let in_view = cursor.is_some_and(|p| view.contains(p)) && !super::scene::over_ui(hover_map.as_deref(), &nodes);
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
     let ctrl = keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight]);
@@ -365,8 +387,21 @@ fn pointer(
             state.press = None;
             state.band = None;
             if std::mem::take(&mut state.dragging) {
-                let rect = [start.x.min(at.x), start.y.min(at.y), start.x.max(at.x), start.y.max(at.y)];
-                out.write(Act::ui(CadAction::CadBoxSelect { rect, extend: shift || ctrl }));
+                // RoboCAD's pick-then-form tools pick on press only: no box select.
+                if pick_kind.is_none() {
+                    let rect = [start.x.min(at.x), start.y.min(at.y), start.x.max(at.x), start.y.max(at.y)];
+                    out.write(Act::ui(CadAction::CadBoxSelect { rect, extend: shift || ctrl }));
+                }
+            } else if let Some(mode) = pick_kind {
+                // RoboCAD's `EdgeTool.press` (ShellTool's too): the hit toggles when it is
+                // of the tool's kind; anything else, or empty space, changes nothing. The
+                // face index comes from `surface_item` (`CadMeshes::face_at` at the shown
+                // revision), an edge from the topology search at the shown revision.
+                state.menu_at = None;
+                let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies);
+                if let Some(item) = items.into_iter().next().filter(|i| i.1 == mode.name()) {
+                    out.write(Act::ui(CadAction::CadSelect { ids: Vec::new(), items: vec![item], extend: false, toggle: true }));
+                }
             } else {
                 let items = candidates_at(&doc, &meshes, topology.as_deref(), &view, at, &mut ray_cast, &bodies);
                 // Only an Alt+click's menu opens at the pointer (a REST cad_candidates opens at the view's corner).

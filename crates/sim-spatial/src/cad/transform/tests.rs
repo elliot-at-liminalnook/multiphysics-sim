@@ -9,6 +9,7 @@ use super::preview::settle;
 use super::push_pull::{PushDrag, Target, match_face, release_action, resolve};
 use super::*;
 use crate::app::actions::{Call, Origin, Replies};
+use crate::cad::actions::Dimension;
 use crate::cad::document::{CadTarget, Connection, Edit, EditDone};
 use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary, SelectionItem};
 

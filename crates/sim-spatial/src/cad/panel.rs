@@ -165,11 +165,22 @@ pub(super) fn control<'a>(all: &'a [Control], id: &str) -> Option<&'a Control> {
     all.iter().find(|c| c.id == id)
 }
 
-/// Every CAD control with its state now: the top bar, Delete, the selected
-/// node's lock, disable and material choices, one select and one visibility
-/// toggle per tree row, one per RoboCAD registry command. (The name field is
-/// not one: see the module doc.)
+/// Every CAD control with its state now: the panel's own
+/// ([`own_controls`]), then the command surfaces' (`surfaces::controls`:
+/// `cad:op:<id>` per RoboCAD command, `cad:surface:<kind>`,
+/// `cad:menu:<category>`, the open form's `cad:form:*`).
 pub(crate) fn controls(doc: &CadDocument) -> Vec<Control> {
+    let mut all = own_controls(doc);
+    let surfaces = super::surfaces::controls(doc, &all);
+    all.extend(surfaces);
+    all
+}
+
+/// The panel's own controls: the top bar, Delete, the selected node's
+/// lock, disable and material choices, one select and one visibility
+/// toggle per tree row, one per RoboCAD GUI registry command. (The name
+/// field is not one: see the module doc.)
+pub(crate) fn own_controls(doc: &CadDocument) -> Vec<Control> {
     let blocked = edit_blocked(doc);
     let history = doc.doc.as_ref().map(|d| &d.history);
     let last_undo = history.and_then(|h| h.undo.last());
@@ -187,10 +198,10 @@ pub(crate) fn controls(doc: &CadDocument) -> Vec<Control> {
     add("cad:fit".into(), "Fit".into(), CadAction::CadFit { id: None }, Ok(()));
     let physical = if doc.connected() { Ok(()) } else { Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)) };
     add("cad:physical".into(), "Physical".into(), CadAction::CadPhysical, physical);
-    match doc.selected() {
-        Some(id) => add("cad:delete".into(), "Delete".into(), CadAction::CadDelete { id: id.to_string() }, ready(blocked.clone())),
-        None => add("cad:delete".into(), "Delete".into(), CadAction::CadDelete { id: String::new() }, Err("nothing is selected".to_string())),
-    }
+    // RoboCAD's Delete: every selected node in one step (the catalogue's
+    // `edit.delete`); REST `cad_delete {id}` still deletes one node.
+    let delete = if doc.selected().is_some() { ready(blocked.clone()) } else { Err("nothing is selected".to_string()) };
+    add("cad:delete".into(), "Delete".into(), CadAction::CadInvoke { id: "edit.delete".into() }, delete);
     // The inspected node's flags and material: the inspector's chips write
     // these same actions (`inspector::attributes`).
     let inspected = doc.selected().and_then(|id| doc.doc.as_ref()?.nodes.iter().find(|n| n.id == id));
@@ -549,7 +560,7 @@ fn part_key(part: Part, doc: Option<&CadDocument>, topology: Option<&super::topo
 
 /// The top bar's buttons: (control, look, divider before it).
 fn top_controls(doc: &CadDocument) -> Vec<(Control, Look, bool)> {
-    let mut all = controls(doc);
+    let mut all = own_controls(doc);
     all.retain(|c| matches!(c.id.as_str(), "cad:undo" | "cad:redo" | "cad:save" | "cad:refresh" | "cad:fit" | "cad:physical"));
     all.into_iter().map(|c| {
         let look = if c.id == "cad:save" && dirty(doc) == Some(true) { Look::Primary } else { Look::Secondary };

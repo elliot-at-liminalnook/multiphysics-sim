@@ -110,7 +110,8 @@ pub fn tool_needs_topology(tool: CadTool) -> bool {
 /// drawn body in a sub-body mode or with a tool that snaps or picks faces.
 pub fn wanted(doc: &CadDocument) -> HashSet<String> {
     let mut out: HashSet<String> = doc.selected_nodes().into_iter().collect();
-    if doc.select_mode != SelectMode::Body || tool_needs_topology(doc.tool) {
+    // A catalogue pick or place tool snaps and picks over every drawn body.
+    if doc.select_mode != SelectMode::Body || tool_needs_topology(doc.tool) || doc.ops.active.is_some() {
         if let Some(state) = &doc.doc {
             out.extend(state.nodes.iter().filter(|n| n.effective_visible && BODY_KINDS.contains(&n.kind.as_str())).map(|n| n.id.clone()));
         }

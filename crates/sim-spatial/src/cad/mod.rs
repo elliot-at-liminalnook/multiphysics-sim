@@ -132,6 +132,13 @@ impl Plugin for CadPlugin {
         // `CadAction`s that `actions::apply` applies.
         selection::build(app);
         transform::build(app);
+        // The op catalogue (cad-modify): its interactions (placing
+        // primitives, pick-then-form tools, the cursor snap), the command
+        // surfaces (toolbar, context menu, radials, palette, menus, the
+        // parameter form) and the analysis overlays.
+        ops::interact::build(app);
+        surfaces::build(app);
+        analysis_overlay::build(app);
     }
 }
 

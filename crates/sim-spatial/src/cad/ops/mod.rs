@@ -245,7 +245,9 @@ pub(crate) fn param_value(param: &Param, input: &Value) -> Result<Value, String>
 
 /// Every parameter's value: `given` (REST or the form) over the defaults.
 /// Unknown names are refused by name; a parameter whose `when` does not
-/// hold is left out.
+/// hold is left out, as is one with an empty default that was not given
+/// (an optional one, such as set pivot's `point`, which then comes from
+/// the cursor snap).
 pub(crate) fn values(entry: &OpEntry, given: &Map<String, Value>) -> Result<Map<String, Value>, String> {
     if let Some(unknown) = given.keys().find(|k| !entry.params.iter().any(|p| p.name == k.as_str())) {
         let names: Vec<&str> = entry.params.iter().map(|p| p.name).collect();
@@ -265,6 +267,9 @@ pub(crate) fn values(entry: &OpEntry, given: &Map<String, Value>) -> Result<Map<
             if text(q) != want {
                 continue;
             }
+        }
+        if p.default.is_empty() && given.get(p.name).is_none_or(|v| v.as_str() == Some("")) {
+            continue;
         }
         let input = given.get(p.name).cloned().unwrap_or_else(|| Value::String(p.default.to_string()));
         out.insert(p.name.to_string(), param_value(p, &input)?);
@@ -304,6 +309,9 @@ pub struct OpsState {
     pub place: Option<interact::Place>,
     /// The command surface open now (palette, menus, radials, context menu).
     pub surface: Option<super::surfaces::Open>,
+    /// The snapped point under the pointer when it was last over the 3D
+    /// view (mm; `interact` keeps it): "Set pivot at cursor snap".
+    pub cursor_snap: Option<[f64; 3]>,
     /// The last copy: RoboCAD's clipboard JSON with the revision it was read at.
     pub clipboard: Option<(u64, Value)>,
     /// Read-only analysis results drawn as overlays (control points, comb, continuity).

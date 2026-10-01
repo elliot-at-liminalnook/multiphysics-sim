@@ -11,9 +11,8 @@
 //!   `c(…)` call in one of [`C_SPEC_FILES`] (the files whose local `fn c`
 //!   builds a `Spec`; elsewhere `c` is something else, e.g. the CAD command
 //!   registry's window labels), at any depth over any number of lines; or in
-//!   a file named `specs.rs` or `commands.rs` (the registries' description
-//!   tables);
-//! - in a test: files named `*tests.rs`, files under a `tests` directory, and
+//!   one of [`DESCRIPTION_FILES`] (the registries' description tables);
+//! - in a test: files named `tests.rs` or `*_tests.rs`, files under a `tests` directory, and
 //!   everything from an inline `#[cfg(test)]` `mod … {` to the end of a file
 //!   (inline test modules come last);
 //! - on [`ALLOWLIST`]: (file, a snippet of the literal, why it may say REST).
@@ -25,6 +24,11 @@
 //! normal, raw (`r`, `br`, `cr`) and byte strings, escapes, char literals
 //! and lifetimes, and tracks open parentheses to know whether a literal is
 //! inside a `spec(` or (in [`C_SPEC_FILES`]) `c(` call.
+
+/// The registries' description tables, skipped whole (their text answers
+/// REST callers; robot/actions/commands.rs also converts wire commands,
+/// whose errors go back to the REST caller only).
+const DESCRIPTION_FILES: [&str; 2] = ["cad/specs.rs", "robot/actions/commands.rs"];
 
 /// (file under src/, snippet of the literal, reason).
 const ALLOWLIST: &[(&str, &str, &str)] = &[
@@ -273,7 +277,10 @@ fn window_text_does_not_send_people_to_rest() {
             }
             let relative = path.strip_prefix(&src).unwrap_or(&path).to_string_lossy().replace('\\', "/");
             let name = relative.rsplit('/').next().unwrap_or("");
-            if name.ends_with("tests.rs") || name == "specs.rs" || name == "commands.rs" || relative.ends_with("specs.rs") || relative.ends_with("commands.rs") {
+            // The registries' description tables only: other files named
+            // specs.rs (cad/sketch/specs.rs is sketch logic whose errors
+            // reach the status line) are window text like any other.
+            if name == "tests.rs" || name.ends_with("_tests.rs") || DESCRIPTION_FILES.contains(&relative.as_str()) {
                 continue;
             }
             let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));

@@ -211,6 +211,8 @@ pub(super) fn gait_path_input(
                 f.focused = true;
                 f.draft.select_all = true;
                 f.notice = None;
+                // Read the directory again: files may have appeared since.
+                f.asked = None;
                 started = true;
                 // An empty field starts in the workspace root (a compiled.json may be relative to it).
                 if f.draft.text.is_empty()

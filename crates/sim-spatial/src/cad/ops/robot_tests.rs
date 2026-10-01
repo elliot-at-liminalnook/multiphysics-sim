@@ -427,9 +427,9 @@ fn a_partial_rest_edit_joint_keeps_the_joints_other_values() {
     let k = &p.calls[0].kwargs;
     assert_eq!((k["type"].clone(), k["parent"].clone(), k["child"].clone(), k["motor"].clone()), (json!("revolute"), json!("b1"), json!("b3"), Value::Null));
     assert_eq!((k["pivot"].clone(), k["axis"].clone(), k["gear_ratio"].clone(), k["damping"].clone()), (json!([1.0, 2.0, 3.0]), json!([0.0, 1.0, 0.0]), json!(2.5), json!(0.01)));
-    // The given lower limit in degrees, sent in radians; the upper as the form shows it (28.6479°).
+    // The given lower limit in degrees, sent in radians; the upper the joint's own, not the form's rounded 28.6479°.
     assert!((k["lower"].as_f64().unwrap() + 30f64.to_radians()).abs() < 1e-12);
-    assert!((k["upper"].as_f64().unwrap() - 0.5).abs() < 1e-6);
+    assert!((k["upper"].as_f64().unwrap() - 0.5).abs() < 1e-12);
     // Every field given (what the window form's OK sends): used as given.
     let all: Vec<(&str, Value)> = op("ops.set_joint").params.iter().map(|p| (p.name, json!(p.default))).collect();
     let p = run_set_joint(&doc, &all).unwrap();
@@ -437,6 +437,51 @@ fn a_partial_rest_edit_joint_keeps_the_joints_other_values() {
     // A kind change across prismatic without the limits the joint has: their unit would change.
     assert!(run_set_joint(&doc, &[("type", json!("prismatic"))]).is_err_and(|e| e.contains("pass lower and upper")));
     assert!(run_set_joint(&doc, &[("type", json!("prismatic")), ("lower", json!(-5)), ("upper", json!(5))]).is_ok());
+}
+
+/// Edit joint's description `doc` with `f` applied to joint j1.
+fn with_hip(f: impl FnOnce(&mut RobotJoint)) -> CadDocument {
+    let mut doc = document();
+    if let Some(Ok(s)) = doc.robot.data.bundle.as_mut().map(|b| b.summary.as_mut()) {
+        f(&mut s.joints[0]);
+    }
+    doc
+}
+
+#[test]
+fn a_partial_rest_edit_joint_sends_the_joints_values_exactly() {
+    // Values the form would round (pivot 1234.57, gear ratio 2.57) survive exactly.
+    let doc = with_hip(|j| {
+        j.pivot = [1234.5678, -0.000123456789, 3.0];
+        j.axis = [0.6, 0.0, 0.8];
+        j.gear_ratio = 2.567;
+        j.damping = 0.000123456;
+        j.upper = Some(0.123456789);
+    });
+    let p = run_set_joint(&doc, &[("lower", json!(-30))]).unwrap();
+    let k = &p.calls[0].kwargs;
+    assert_eq!((k["pivot"].clone(), k["axis"].clone()), (json!([1234.5678, -0.000123456789, 3.0]), json!([0.6, 0.0, 0.8])));
+    assert_eq!((k["gear_ratio"].clone(), k["damping"].clone()), (json!(2.567), json!(0.000123456)));
+    assert!((k["upper"].as_f64().unwrap() - 0.123456789).abs() < 1e-12);
+    // A prismatic joint's limits are filled in mm as stored.
+    let doc = with_hip(|j| {
+        j.kind = "prismatic".into();
+        j.lower = Some(-12.345678);
+        j.upper = None;
+    });
+    let k = run_set_joint(&doc, &[("damping", json!(0.5))]).unwrap().calls[0].kwargs.clone();
+    assert!((k["lower"].as_f64().unwrap() + 12.345678).abs() < 1e-12);
+    assert_eq!((k["upper"].clone(), k["damping"].clone()), (Value::Null, json!(0.5)));
+}
+
+#[test]
+fn a_current_value_the_dialog_refuses_is_named_as_the_joints() {
+    let doc = with_hip(|j| j.gear_ratio = 0.005);
+    let e = run_set_joint(&doc, &[("lower", json!(-30))]).unwrap_err();
+    assert!(e.starts_with("Edit joint: hip's current gear_ratio (0.005) fills the parameter not given") && e.ends_with("; pass gear_ratio"), "{e}");
+    // Given, the field is the caller's: refused as any given value is, or sent.
+    assert!(run_set_joint(&doc, &[("lower", json!(-30)), ("gear_ratio", json!(0.005))]).is_err_and(|e| !e.contains("current")));
+    assert!(run_set_joint(&doc, &[("lower", json!(-30)), ("gear_ratio", json!(1.5))]).is_ok());
 }
 
 #[test]

@@ -154,6 +154,11 @@ fn strength_split_takes_the_first_study_part_selected_with_the_studys_settings()
     let refusal = ops::entry("print.strength_split").unwrap().refusal;
     assert_eq!(build(&doc, PrintCall::StrengthSplit, "print.strength_split", &["p1"], json!({})).unwrap_err(), refusal);
     assert_eq!(build(&doc, PrintCall::StrengthSplit, "print.strength_split", &[], json!({})).unwrap_err(), refusal);
+    // Nothing selected is the entry's refusal even while the study is unread.
+    let mut unread = document();
+    unread.print.studies.study = None;
+    assert_eq!(build(&unread, PrintCall::StrengthSplit, "print.strength_split", &[], json!({})).unwrap_err(), refusal);
+    assert_eq!(build(&unread, PrintCall::StrengthSplit, "print.strength_split", &["b1"], json!({})).unwrap_err(), "the print study is still being read (revision 4); try again in a moment");
 }
 
 #[test]
@@ -188,13 +193,18 @@ fn the_split_and_coupon_dialogs_wait_for_the_registry() {
     let split = ops::entry("print.split").unwrap();
     let coupons = ops::entry("print.coupons").unwrap();
     let strength = ops::entry("print.strength").unwrap();
+    let ops_split = ops::entry("ops.print_split").unwrap();
     assert_eq!(studies::precheck(split, &doc, &[]), None);
+    assert_eq!(studies::precheck(ops_split, &doc, &[]), None);
     doc.print.studies.registry = None;
     assert_eq!(studies::precheck(split, &doc, &[]).as_deref(), Some(REGISTRY_READING));
+    // ops.print_split's printer pick would be empty (its default blanked).
+    assert_eq!(studies::precheck(ops_split, &doc, &[]).as_deref(), Some(REGISTRY_READING));
     assert_eq!(studies::precheck(coupons, &doc, &[]).as_deref(), Some(REGISTRY_READING));
     assert_eq!(studies::precheck(strength, &doc, &[]), None);
     doc.print.studies.registry = Some(((doc.generation, doc.mesh_retry), Err("GET /print/registry: connection refused".into())));
     assert_eq!(studies::precheck(coupons, &doc, &[]).as_deref(), Some("RoboCAD's printing registry could not be read: GET /print/registry: connection refused"));
+    assert_eq!(studies::precheck(ops_split, &doc, &[]).as_deref(), Some("RoboCAD's printing registry could not be read: GET /print/registry: connection refused"));
     // A read from an older generation is not this connection's.
     doc.print.studies.registry = Some(((doc.generation + 1000, 0), Ok(registry())));
     assert_eq!(studies::precheck(split, &doc, &[]).as_deref(), Some(REGISTRY_READING));

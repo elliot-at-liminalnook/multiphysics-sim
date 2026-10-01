@@ -201,10 +201,10 @@ pub(super) fn build(call: PrintCall, entry: &OpEntry, r: &Resolved, values: &Map
     match call {
         PrintCall::WallCheck => {
             let threshold = values.get("threshold").and_then(Value::as_f64).filter(|t| t.is_finite() && *t > 0.0).ok_or_else(|| format!("{}: the threshold must be a positive number of mm", entry.label))?;
+            // No selection and no visible bodies: RoboCAD's loop runs over an
+            // empty list and says "No walls thinner than {t} mm"
+            // (ui/app.py:1117-1126); the empty plan lands at once with that.
             let nodes = if r.nodes.is_empty() { visible_bodies(doc).into_iter().map(|(id, _)| id).collect() } else { r.nodes.clone() };
-            if nodes.is_empty() {
-                return Err("nothing to check: no visible bodies".into());
-            }
             Ok(CheckPlan::Wall { threshold, nodes })
         }
         PrintCall::Validate => Ok(CheckPlan::Validate { bodies: visible_bodies(doc) }),
@@ -307,9 +307,16 @@ pub(super) fn land_wall(doc: &mut CadDocument, meta: WallMeta, fetched: Result<V
             return doc.show(Err(format!("Wall thickness check: {e}")));
         }
     };
+    let current = meta.generation == doc.generation && meta.revision == doc.shown_revision();
+    let shown_revision = doc.shown_revision();
     let checks = &mut doc.print.checks;
-    // One generation and revision is kept: an older one cannot be asked again.
-    checks.cache.retain(|k, _| k.0 == meta.generation && k.2 == meta.revision);
+    // One generation and revision is kept: an older one cannot be asked
+    // again. Only a result for the shown revision prunes: a late result for
+    // an older one must not delete newer reads (its own entries are dropped
+    // by the next current landing).
+    if current {
+        checks.cache.retain(|k, _| k.0 == meta.generation && k.2 == meta.revision);
+    }
     for (id, thin) in &fetched {
         checks.cache.insert(cache_key(meta.generation, id, meta.revision, meta.threshold), thin.clone());
     }
@@ -321,7 +328,11 @@ pub(super) fn land_wall(doc: &mut CadDocument, meta: WallMeta, fetched: Result<V
         counts.push((id.clone(), thin.map(Vec::len)));
         points.extend(thin.into_iter().flatten().map(|r| Vec3::new(r.point[0] as f32, r.point[1] as f32, r.point[2] as f32)));
     }
-    let status = wall_status(points.len(), meta.threshold);
+    let mut status = wall_status(points.len(), meta.threshold);
+    if !current && !points.is_empty() {
+        // Not drawn (`drawn` needs the shown revision): not reported as if it were.
+        status = format!("{status} (read at revision {}; the document is now at revision {shown_revision}: they are not drawn)", meta.revision);
+    }
     checks.wall = Some(WallResult { threshold: meta.threshold, revision: meta.revision, generation: meta.generation, counts, points });
     doc.show(Ok(status));
 }

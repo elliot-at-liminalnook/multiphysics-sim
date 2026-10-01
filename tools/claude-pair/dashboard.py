@@ -300,7 +300,7 @@ def view(root):
             "reserved": inflight.get("reserved_usd", 0), "elapsed_seconds": elapsed,
             "checks": checks, "stop_requested": (root / "STOP").exists(), "now": time.time(),
             "fast_roles": config.get("fast_roles", []), "branch": config.get("branch"),
-            "unverified_commits": pair.Runner(root).unverified_commits(), "verify_every": config.get("verify_every_commits", 20), "baseline": config.get("baseline"), "state_dir": str(root),
+            "unverified_commits": pair.Runner(root).unverified_commits(), "verify_every": config.get("verify_every_commits", 0), "baseline": config.get("baseline"), "state_dir": str(root),
             "git": git_summary(config), "captures": captures(root), "rate_limits": latest_rate_limits(root, state)}
 
 

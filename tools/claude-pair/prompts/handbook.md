@@ -12,8 +12,8 @@ code when something looks stale, and say so in coordination_notes.
 - **Don't build or test during normal work.** Cold or even incremental cargo
   commands here take minutes (a `sim-runtime` or `sim-spatial` test binary
   takes 2 to 4). Claude Code stops every shell command after 10 s, and
-  background commands are off (except in verification passes). Builds and tests happen in the coordinator's
-  verification passes (every 20 commits, and before an epic completes).
+  background commands are off. Nothing is built or tested: verification is by
+  reading the code.
 - The gait-lab runtime fingerprint hashes every crate's source, so any code edit
   invalidates gait qualification (see the gait-lab README before evaluating gaits).
 

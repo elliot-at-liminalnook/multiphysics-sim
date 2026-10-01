@@ -163,17 +163,11 @@ finish within 10 seconds; the agents wrap such commands in `within 10 <command>`
 reports a timeout as unverified, not failed. The worker fixes bugs it notices
 while reading and commits them with how they were found.
 
-**Verification passes** run every `verify_every_commits` commits (default 20)
-and before an epic can be marked complete. The coordinator replaces the worker's
-next turn with `prompts/verification.md`:
-- build the workspace and the touched binaries
-- hunt bugs in the commit range by reading
-- run targeted tests
-- capture changed viewer modes
-- commit the fixes, each saying how the bug was found
-
-The orchestrator reviews the pass like any assignment and then continues with
-its queued plan. The dashboard's Changes meter shows commits until the next pass.
+**There are no build or test passes:** verification is by reading only, and
+every epic stays focused on writing code. The verification-pass machinery is
+still in the coordinator, off by default. Set `verify_every_commits` above 0 in
+`.claude-pair/config.json` to schedule a build, bug-hunt and test pass every N
+commits and before an epic completes, using `prompts/verification.md`.
 
 The orchestrator may still list `checks` for the coordinator to rerun (normally
 none). Each is stopped at `check_seconds` (default 10); a timeout counts as

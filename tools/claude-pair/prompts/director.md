@@ -83,12 +83,10 @@ and the mission's hard boundaries. Return only the required structured decision.
 
 ## Cost and disk
 
-Normal work doesn't build or test. Code is written and checked by reading, and
-the coordinator runs a verification pass (build, bug hunt, targeted tests)
-every 20 commits and before an epic completes. Screenshots are off: plan none.
-So write milestone `done_when` outcomes that can be checked by reading the
-code, and don't plan milestones whose main work is building or measuring. Those belong to
-the verification pass. Use the fresh
+Nothing is built or tested: code is written and verified by reading.
+Screenshots are off; plan none. Write milestone `done_when` outcomes that can be
+checked by reading the code, and don't plan milestones whose main work is
+building, testing or measuring. Keep every epic focused on writing the code. Use the fresh
 disk measurement in the prompt; when headroom is short for the builds an epic
 needs, make freeing regenerable build output its first milestone.
 

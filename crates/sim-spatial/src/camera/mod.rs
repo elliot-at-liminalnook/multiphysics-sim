@@ -29,7 +29,7 @@
 //! (instead of panning), Alt held while right-drag orbiting snaps to the
 //! nearest axis view (`Camera.snap_orthographic`, applied after every
 //! orbit step as RoboCAD does), Alt+left-drag orbits once the pointer has
-//! moved past [`ALT_DRAG_SLOP`] (a shorter Alt+click stays the
+//! moved past [`input::ALT_DRAG_SLOP`] (a shorter Alt+click stays the
 //! mode's: CAD's candidates menu), and the arrow keys orbit 10° (Ctrl or
 //! Cmd 90°) and with Shift pan. The keys are `CameraAction`s like the
 //! numpad's, so REST can send them too (`camera_orbit {"degrees": …}`,
@@ -60,7 +60,6 @@ mod viewport;
 mod tests;
 
 pub use apply::controls;
-pub use input::ALT_DRAG_SLOP;
 pub use orbit::{GLIDE_S, Glide, Pose};
 pub(crate) use orbit::view_aspect;
 

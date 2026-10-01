@@ -110,7 +110,7 @@ pub(super) fn cube_press(clicks: Query<(&Interaction, &CubeButton, Option<&Enabl
 
 /// What the panel shows (it is rebuilt when this changes).
 #[derive(Clone, PartialEq)]
-struct Shown {
+pub(super) struct Shown {
     root: Entity,
     mode: DisplayMode,
     toggles: [bool; 5],

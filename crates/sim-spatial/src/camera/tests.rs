@@ -4,7 +4,7 @@
 //! numpad keys on a MinimalPlugins app, the action handler, and the
 //! `camera_*` / `camera:*` routing.
 use super::apply::{FOV_DEG, apply, control_action};
-use super::input::{DragKind, arrow_action, drag_kind, keys, navigate};
+use super::input::{ALT_DRAG_SLOP, DragKind, arrow_action, drag_kind, keys, navigate};
 use super::orbit::area_aspect;
 use super::viewport::{area, viewport, wanted};
 use super::*;

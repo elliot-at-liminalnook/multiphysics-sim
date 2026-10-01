@@ -6,7 +6,7 @@
 //! and need no camera query of their own (the apply system and jobs get a
 //! copy). Display only: nothing here changes geometry.
 use super::mesh::CadRoot;
-use bevy::camera::{CameraProjection, SubCameraView};
+use bevy::camera::SubCameraView;
 use bevy::math::Affine3A;
 use bevy::prelude::*;
 

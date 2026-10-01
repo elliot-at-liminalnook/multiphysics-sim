@@ -14,6 +14,10 @@
 //! - `set_locked(ids, locked)`: one undo step "Lock" / "Unlock".
 //! - `PATCH /nodes/{id} {"parent", "index"}`: one node moved
 //!   (`Ops.move_node`, one undo step "Move in outliner"); answers the node.
+//!   Unlike `move_nodes` it checks nothing (a body as parent, a group into
+//!   its own descendant: `Document.move` silently does nothing but the step
+//!   is pushed; an unknown parent is a 500), so the outliner moves through
+//!   `move_nodes`; this call is the client's for REST parity only.
 //!
 //! Each is a RoboCAD edit: use a client with [`super::EDIT_TIMEOUT`].
 use super::{CadClient, CadError, NodeDetail, OpResult};

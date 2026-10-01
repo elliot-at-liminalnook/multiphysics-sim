@@ -11,20 +11,20 @@ use bevy::math::{DMat3, DQuat};
 use serde::Serialize;
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
-use crate::robot_motion::{self, Motion, MotionChannel};
-use crate::robot_preset::{PresetRun, RecordedRun};
-use crate::robot_playback::{RecordedAction, RecordedPlayback};
+use crate::robot::motion::{self, Motion, MotionChannel};
+use crate::robot::preset::{PresetRun, RecordedRun};
+use crate::robot::playback::{RecordedAction, RecordedPlayback};
 use serde::Deserialize as _;
 use sim_runtime::embedded_capture::{CaptureFrame, CapturePose};
-use crate::robot_graphs;
-use crate::robot_gait::{GaitAction, GaitPreview};
-use crate::robot_recording::{self, Listed, Saved, Snapshot};
+use crate::robot::graphs;
+use crate::robot::gait::{GaitAction, GaitPreview};
+use crate::robot::recording::{self, Listed, Saved, Snapshot};
 use sim_runtime::session::InputChannel;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
-/// Sim time advanced per chunk (s): the 0.02 s grid (also the planar v2 run's, `robot_planar::GRID_S`). Step advances
+/// Sim time advanced per chunk (s): the 0.02 s grid (also the planar v2 run's, `planar::GRID_S`). Step advances
 /// exactly one chunk; running advances whole chunks.
 pub const CHUNK_S: f64 = 0.02;
 /// Wall-clock window over which the real-time factor is measured.
@@ -351,7 +351,7 @@ pub enum ReplayPhase {
     Replaying,
     /// Stopped between chunks by Cancel: never a verdict.
     Cancelled,
-    /// The shared runtime's replay checks passed (robot_recording::VERDICT_RULE).
+    /// The shared runtime's replay checks passed (recording::VERDICT_RULE).
     Done,
     /// Refused before replacing the run, or the runtime reported an error.
     Failed,
@@ -380,7 +380,7 @@ pub struct ReplayState {
     /// Whether the current run is this replay's simulation (false when refused before replacing it).
     pub replaced: bool,
     pub cancel_requested: bool,
-    /// robot_recording::MEASURED_RULE (null without a sidecar final_frame).
+    /// recording::MEASURED_RULE (null without a sidecar final_frame).
     pub measured: Option<Value>,
     /// The sidecar's preset id and saved time, when it exists.
     pub sidecar: Option<Value>,
@@ -401,7 +401,7 @@ impl ReplayState {
 }
 
 /// A built preset's typed input channels (the session's `inputs()`), its
-/// motion config (`robot_motion::config`) and declared packet heartbeat.
+/// motion config (`motion::config`) and declared packet heartbeat.
 #[derive(Debug)]
 pub struct Drive {
     pub inputs: Vec<InputChannel>,
@@ -412,7 +412,7 @@ impl Drive {
     /// As the browser does on load: an invalid declaration fails the build, naming it.
     fn resolve(run: &PresetRun, policy_contract: &Value, inputs: &[InputChannel]) -> Result<Self, String> {
         let entry = &run.preset.entry;
-        Ok(Self { inputs: inputs.to_vec(), motion: robot_motion::config(entry, policy_contract, inputs)?, heartbeat: robot_motion::heartbeat(entry, inputs)? })
+        Ok(Self { inputs: inputs.to_vec(), motion: motion::config(entry, policy_contract, inputs)?, heartbeat: motion::heartbeat(entry, inputs)? })
     }
 }
 
@@ -533,8 +533,8 @@ pub struct RunController {
     recordings: Vec<Listed>,
     list_error: Option<String>,
     /// Time histories of the applied frames of the current generation (robot_graphs).
-    graphs: robot_graphs::History,
-    /// The loaded model's chassis link (robot_graphs::CHASSIS_RULE), or why none.
+    graphs: graphs::History,
+    /// The loaded model's chassis link (graphs::CHASSIS_RULE), or why none.
     chassis: Result<usize, String>,
     /// Presets: the kinematic gait preview (robot_gait), on its own worker.
     gait: Option<GaitPreview>,
@@ -575,14 +575,14 @@ impl RunController {
         let generation = 0;
         let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
         let thread = crate::jobs::RunThread::idle("robot-run", Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None });
-        let mut graphs = robot_graphs::History::default();
+        let mut graphs = graphs::History::default();
         graphs.clear(generation);
         let frame = run.frames.first().cloned();
         Self { thread, generation, running: false, frame, status, jogged: Default::default(), jog_error: None, preset: None, recorded: Some(run.clone()), playback: Some(RecordedPlayback::spawn(run)), chunk_s: 0.0,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
-            graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
+            graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
     }
     pub fn recorded(&self) -> Option<&Arc<RecordedRun>> {
         self.recorded.as_ref()
@@ -614,7 +614,7 @@ impl RunController {
     }
     /// `robot_state.recorded` (None unless a recorded preset is loaded).
     pub fn recorded_json(&self) -> Option<Value> {
-        Some(crate::robot_playback::state_json(self.recorded.as_ref()?, self.playback.as_ref()?))
+        Some(crate::robot::playback::state_json(self.recorded.as_ref()?, self.playback.as_ref()?))
     }
     /// The refusal of a live-only action (`what`) when a recorded preset is loaded.
     fn recorded_refusal(&self, what: &str) -> Result<(), String> {
@@ -629,13 +629,13 @@ impl RunController {
         let chunk_s = source.chunk_s();
         let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
         let thread = crate::jobs::RunThread::spawn("robot-run", published, move |rx, out| worker(source, links, rx, out, generation));
-        let mut graphs = robot_graphs::History::default();
+        let mut graphs = graphs::History::default();
         graphs.clear(generation);
         Self { thread, generation, running: false, frame: None, status, jogged: Default::default(), jog_error: None, preset, recorded: None, playback: None, chunk_s,
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
-            graphs, chassis: robot_graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
+            graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -749,7 +749,7 @@ impl RunController {
         self.requested = Some(values);
         (self.keys, self.keys_physical) = match request {
             MotionRequest::Key(k) => (vec![k], false),
-            MotionRequest::HeldKeys(keys) => (robot_motion::KEYS.into_iter().filter(|k| keys.contains(k)).collect(), true),
+            MotionRequest::HeldKeys(keys) => (motion::KEYS.into_iter().filter(|k| keys.contains(k)).collect(), true),
             MotionRequest::Stop | MotionRequest::Channels(_) => (Vec::new(), false),
         };
         Ok(())
@@ -758,7 +758,7 @@ impl RunController {
     /// values, active keys, heartbeat, last refusal and the motion-request label.
     pub fn motion_json(&self) -> Value {
         if let Some(r) = &self.recorded {
-            return json!({"label": robot_motion::LABEL, "available": false, "unavailable_reason": r.refusal("a motion request")});
+            return json!({"label": motion::LABEL, "available": false, "unavailable_reason": r.refusal("a motion request")});
         }
         let Some(p) = &self.preset else { return Value::Null };
         let declared = json!({"motion_commands": p.preset.entry.get("motion_commands"), "motion_heartbeat": p.preset.entry.get("motion_heartbeat"), "motion_key_vectors": p.preset.entry.get("motion_key_vectors")});
@@ -769,13 +769,13 @@ impl RunController {
             m.channels.iter().enumerate().map(|(i, c)| json!({"name": c.name, "index": c.index, "kind": c.kind, "unit": c.unit, "lower": c.lower, "upper": c.upper,
                 "requested": self.requested.map(|r| r[i]), "held": self.held(c.index)})).collect()
         });
-        let heartbeat = drive.and_then(|d| d.heartbeat.as_ref()).map(|h| json!({"channel": h.name, "index": h.index, "lower": h.lower, "upper": h.upper, "value": self.held(h.index), "rule": robot_motion::HEARTBEAT_RULE}));
-        json!({"label": robot_motion::LABEL, "available": available.is_ok(), "unavailable_reason": available.err(),
+        let heartbeat = drive.and_then(|d| d.heartbeat.as_ref()).map(|h| json!({"channel": h.name, "index": h.index, "lower": h.lower, "upper": h.upper, "value": self.held(h.index), "rule": motion::HEARTBEAT_RULE}));
+        json!({"label": motion::LABEL, "available": available.is_ok(), "unavailable_reason": available.err(),
             "source": motion.map(|m| m.source), "config": motion.map(Motion::json), "channels": channels,
             "requested": self.requested, "active_keys": self.keys.iter().map(|k| k.to_string()).collect::<Vec<_>>(), "keys_physical": self.keys_physical,
             "heartbeat": heartbeat, "last_refusal": self.motion_refusal, "last_apply_error": self.motion_error,
             "session_inputs": drive.map(|d| d.inputs.iter().map(|c| json!({"name": c.name, "lower": c.lower, "upper": c.upper, "initial": c.initial})).collect::<Vec<_>>()),
-            "declared_in_presets_json": declared, "keys": robot_motion::KEY_SEMANTICS, "stop_key": robot_motion::STOP_KEY, "clamping": robot_motion::CLAMP_RULE,
+            "declared_in_presets_json": declared, "keys": motion::KEY_SEMANTICS, "stop_key": motion::STOP_KEY, "clamping": motion::CLAMP_RULE,
             "values_rule": "requested: the values last sent this generation (null until a request; Reset clears them); held: the session's input value in the latest accepted frame. Non-motion channels keep their held values."})
     }
 
@@ -802,13 +802,13 @@ impl RunController {
     }
     /// The one save handler behind the Save recording button, `system_ui`
     /// recording:save and REST `robot_save_recording`. The target is resolved
-    /// here without file-system access (robot_recording::target); the run
+    /// here without file-system access (recording::target); the run
     /// thread snapshots the shared recording and a writer thread writes the
     /// pair, reported in `recording_json` once done.
     pub fn save_recording(&mut self, path: Option<&str>, note: Option<&str>) -> Result<std::path::PathBuf, String> {
         let result = self.check_save().and_then(|p| {
-            let unix_ms = robot_recording::now_ms();
-            robot_recording::target(&p.root, &p.preset.id, path, unix_ms).map(|t| (t, unix_ms))
+            let unix_ms = recording::now_ms();
+            recording::target(&p.root, &p.preset.id, path, unix_ms).map(|t| (t, unix_ms))
         });
         let (target, unix_ms) = match result {
             Ok(x) => x,
@@ -828,8 +828,8 @@ impl RunController {
         let available = self.check_save().map(|_| ());
         json!({"available": available.is_ok(), "unavailable_reason": available.err(), "pending": self.saving, "last_saved": self.saved, "error": self.save_error,
             "saves_requested": self.save_requested, "saves_finished": self.save_done,
-            "root": self.preset.as_ref().map(|p| &p.root), "location_rule": robot_recording::LOCATION_RULE, "file_rule": robot_recording::FILE_RULE,
-            "replayable_rule": robot_recording::REPLAYABLE_RULE,
+            "root": self.preset.as_ref().map(|p| &p.root), "location_rule": recording::LOCATION_RULE, "file_rule": recording::FILE_RULE,
+            "replayable_rule": recording::REPLAYABLE_RULE,
             "kind_rule": "the browser's kind for the same preset (web/worker.js: a task → EnvironmentSimulation.recording() = EmbeddedEnvironment::episode_recording(), kind sampled_environment_recording; otherwise EmbeddedSimulation.recording() = EmbeddedSession::recording(), kind embedded_session)"})
     }
     pub fn saved(&self) -> Option<&Saved> {
@@ -847,7 +847,7 @@ impl RunController {
     /// an older one); `recordings_json` once done.
     pub fn refresh_recordings(&mut self) {
         let Some(p) = self.preset.clone() else { return };
-        self.listing.start(crate::jobs::Pool::Io, "the recording lister", move |_| robot_recording::list(&p.root, &p.preset.id));
+        self.listing.start(crate::jobs::Pool::Io, "the recording lister", move |_| recording::list(&p.root, &p.preset.id));
     }
     pub fn recordings(&self) -> &[Listed] {
         &self.recordings
@@ -855,7 +855,7 @@ impl RunController {
     /// `robot_state.recordings`: the saved recordings of the loaded preset (null for `--robot FILE`).
     pub fn recordings_json(&self) -> Value {
         let Some(p) = &self.preset else { return Value::Null };
-        json!({"dir": p.root.join(robot_recording::DIR).join(&p.preset.id), "files": self.recordings, "pending": self.listing.pending().is_some(), "error": self.list_error,
+        json!({"dir": p.root.join(recording::DIR).join(&p.preset.id), "files": self.recordings, "pending": self.listing.pending().is_some(), "error": self.list_error,
             "rule": "*.json (not *.meta.json) in runs/robot-presets/<preset-id>/ under the root, by file name (UTC stamp, oldest first); meta summarises the sidecar when it exists; listed off the UI thread at open, after each save and on robot_replay {action: \"list\"}"})
     }
 
@@ -892,10 +892,10 @@ impl RunController {
     /// The one replay handler behind the inspector Replay buttons, `system_ui`
     /// replay:<file> and REST `robot_replay`. The run thread reads the file,
     /// prepares it through the shared prepare_replay and advances it in chunks
-    /// (robot_recording::REPLAY_RULE); the verdict is in `replay_json`.
+    /// (recording::REPLAY_RULE); the verdict is in `replay_json`.
     pub fn replay(&mut self, file: Option<&str>, path: Option<&str>) -> Result<std::path::PathBuf, String> {
         let p = self.check_replay()?;
-        let source = robot_recording::replay_source(&p.root, &p.preset.id, file, path)?;
+        let source = recording::replay_source(&p.root, &p.preset.id, file, path)?;
         // Frames of the replaced run are stale once the replay (or its refusal) is published.
         self.generation += 1;
         self.running = false;
@@ -937,9 +937,9 @@ impl RunController {
         let mut v = json!(self.replay);
         v["available"] = json!(available.is_ok());
         v["unavailable_reason"] = json!(available.err());
-        v["replay_rule"] = json!(robot_recording::REPLAY_RULE);
-        v["verdict_rule"] = json!(robot_recording::VERDICT_RULE);
-        v["identity_rule"] = json!(robot_recording::IDENTITY_RULE);
+        v["replay_rule"] = json!(recording::REPLAY_RULE);
+        v["verdict_rule"] = json!(recording::VERDICT_RULE);
+        v["identity_rule"] = json!(recording::IDENTITY_RULE);
         v["pause_step_rule"] = json!("Pause and Step are refused during a replay (\"replay … in progress; Cancel or Reset\"): a replay re-executes the recorded schedule to its end or to Cancel, and pausing or stepping it would add a second, unrecorded control path; Cancel stops it between chunks and Reset returns to a fresh run");
         v
     }
@@ -1253,20 +1253,20 @@ impl RunController {
         if r.generation == self.generation && (r.phase == ReplayPhase::Replaying || r.replaced) { "replay" } else { "live" }
     }
     /// The fixed chart set for the selected link (by index into the loaded model).
-    pub fn graph_charts(&self, selected: Option<usize>) -> Vec<robot_graphs::ChartView> {
+    pub fn graph_charts(&self, selected: Option<usize>) -> Vec<graphs::ChartView> {
         let links: Vec<String> = self.model.links.iter().map(|l| l.name.clone()).collect();
         let selected = selected.and_then(|i| self.model.links.get(i)).map(|l| {
             let joints: Vec<(String, &'static str)> = self.model.joints.iter().filter(|j| j.child == l.name || j.parent.as_deref() == Some(l.name.as_str())).filter_map(|j| servo(&self.model, &j.name).ok()).map(|s| (s.joint, s.unit)).collect();
             (l.name.as_str(), if joints.is_empty() { Err("no servo joint on selected link".to_string()) } else { Ok(joints) })
         });
-        let cx = robot_graphs::Context { preset: self.preset.is_some(), motion: self.drive.as_ref().map(|d| d.motion.as_ref()), chassis: &self.chassis, links: &links, selected };
-        robot_graphs::charts(&self.graphs, &cx)
+        let cx = graphs::Context { preset: self.preset.is_some(), motion: self.drive.as_ref().map(|d| d.motion.as_ref()), chassis: &self.chassis, links: &links, selected };
+        graphs::charts(&self.graphs, &cx)
     }
     /// `robot_state.graphs`: visible, mode, generation, window and the charts with their traces.
     pub fn graphs_json(&self, selected: Option<usize>, visible: bool) -> Value {
-        robot_graphs::json(&self.graphs, &self.graph_charts(selected), visible, self.graphs_mode())
+        graphs::json(&self.graphs, &self.graph_charts(selected), visible, self.graphs_mode())
     }
-    pub fn graphs(&self) -> &robot_graphs::History {
+    pub fn graphs(&self) -> &graphs::History {
         &self.graphs
     }
 
@@ -1290,7 +1290,7 @@ impl RunController {
             }).collect()
         });
         let build = match &self.preset {
-            None if self.recorded.is_some() => format!("nothing is built: {}", crate::robot_preset::RECORDED_RUNS_AS),
+            None if self.recorded.is_some() => format!("nothing is built: {}", crate::robot::preset::RECORDED_RUNS_AS),
             None => "sim_runtime::physical::PhysicalRobot::build(model clone, sim_runtime::registry(), BuildOptions::default()) on the run thread".to_string(),
             Some(p) if p.task.is_some() => format!("sim_runtime::environment::EmbeddedEnvironment::new(scene, config, task, seed {}) from the preset's files unchanged, on the run thread", p.seed),
             Some(p) => format!("sim_runtime::embedded::EmbeddedSession::new(scene, config, seed {}, CaptureMode::Latest) from the preset's files unchanged, on the run thread", p.seed),
@@ -1431,18 +1431,18 @@ impl Sim {
         }
     }
     /// Advances exactly one chunk: one action packet for a preset, which
-    /// advances its declared heartbeat first (`robot_motion::next_packet`).
+    /// advances its declared heartbeat first (`motion::next_packet`).
     fn advance(&mut self) -> Result<(), String> {
         match self {
             Sim::Robot(r) => r.advance(CHUNK_S),
             Sim::Environment { env, held, drive, .. } => {
-                robot_motion::next_packet(drive.heartbeat.as_ref(), held)?;
+                motion::next_packet(drive.heartbeat.as_ref(), held)?;
                 env.step(held).map(|_| ())
             }
             Sim::Session { session, run, drive, .. } => {
                 if drive.heartbeat.is_some() {
                     let mut action = session.input_values().to_vec();
-                    robot_motion::next_packet(drive.heartbeat.as_ref(), &mut action)?;
+                    motion::next_packet(drive.heartbeat.as_ref(), &mut action)?;
                     session.set_inputs(&action)?;
                 }
                 session.advance(run.chunk_steps())
@@ -1586,7 +1586,7 @@ struct ActiveReplay {
 }
 
 /// Reads `path` and prepares it through the shared runtime against the loaded
-/// preset (robot_recording::REPLAY_RULE): the replacement simulation, its work
+/// preset (recording::REPLAY_RULE): the replacement simulation, its work
 /// and the state so far. Refusals name the reason; runtime refusals are verbatim.
 fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std::path::Path, mut state: ReplayState) -> Result<(Sim, ActiveReplay), (String, ReplayState)> {
     use sim_runtime::embedded::{CaptureMode, EmbeddedRecording, EmbeddedSession};
@@ -1612,9 +1612,9 @@ fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std::path::Path
     if kind != expected {
         return Err((format!("refused: {} is a `{kind}` recording, but preset `{id}` runs {} and replays `{expected}` recordings (the kind its Save and the browser's Download write)", path.display(), run.kind()), state));
     }
-    let sidecar: Option<Value> = std::fs::read_to_string(robot_recording::meta_path(path)).ok().and_then(|t| serde_json::from_str(&t).ok());
+    let sidecar: Option<Value> = std::fs::read_to_string(recording::meta_path(path)).ok().and_then(|t| serde_json::from_str(&t).ok());
     let final_frame = sidecar.as_ref().map(|m| m["final_frame"].clone()).filter(|f| !f.is_null());
-    state.sidecar = sidecar.as_ref().map(|m| json!({"path": robot_recording::meta_path(path), "preset_id": m["preset"]["id"], "saved_utc": m["saved_utc"], "note": m["note"], "has_final_frame": final_frame.is_some()}));
+    state.sidecar = sidecar.as_ref().map(|m| json!({"path": recording::meta_path(path), "preset_id": m["preset"]["id"], "saved_utc": m["saved_utc"], "note": m["note"], "has_final_frame": final_frame.is_some()}));
     match &run.task {
         Some(task) => {
             let record: EnvironmentRecording = tryr!(serde_json::from_value(value).map_err(|e| format!("{}: not a shared EnvironmentRecording: {e}", path.display())));
@@ -1641,7 +1641,7 @@ fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std::path::Path
             let record: EmbeddedRecording = tryr!(serde_json::from_value(value).map_err(|e| format!("{}: not a shared EmbeddedRecording: {e}", path.display())));
             state.recorded_completed_steps = Some(record.completed_steps as u64);
             state.recorded_failure = record.failure.clone();
-            // robot_recording::IDENTITY_RULE: EmbeddedSession::prepare_replay does not compare with the loaded preset.
+            // recording::IDENTITY_RULE: EmbeddedSession::prepare_replay does not compare with the loaded preset.
             for (what, a, b) in [("scene", json!(record.scene), json!(run.scene)), ("config (controller recipe)", json!(record.config), json!(run.config))] {
                 if fingerprint(&a) != fingerprint(&b) {
                     return Err((format!("refused by the viewer identity check (as sim-web's): the recording's {what} differs from preset `{id}`'s; replay must match the loaded scene and controller recipe; load another preset to change them"), state));
@@ -1658,7 +1658,7 @@ fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std::path::Path
 }
 
 /// The verdict once the work is exhausted (`error` None) or the runtime
-/// returned an error (robot_recording::VERDICT_RULE): only what it establishes.
+/// returned an error (recording::VERDICT_RULE): only what it establishes.
 fn finish_replay(sim: &Sim, r: &mut ActiveReplay, error: Option<String>) {
     let s = &mut r.state;
     s.completed_steps = sim.completed_steps();
@@ -1798,12 +1798,12 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
             }
             Some(Command::Jog { joint, .. }) if failed => set_jog_error(Some(format!("joint `{joint}`: not applied; the run failed (Reset rebuilds)"))),
             Some(Command::Motion { .. }) if failed || ended => set_motion_error(Some("motion request not applied: the run failed or ended (Reset rebuilds)".into())),
-            // Saved in every phase with a built simulation, failed and ended included (labelled by robot_recording::REPLAYABLE_RULE).
+            // Saved in every phase with a built simulation, failed and ended included (labelled by recording::REPLAYABLE_RULE).
             Some(Command::SaveRecording { seq, target, note, unix_ms }) => {
                 let result = sim.as_ref().ok_or_else(|| "no built session to record: the build failed or has not run (Reset rebuilds)".to_string()).and_then(|s| {
                     let (snapshot, run) = s.snapshot()?;
                     let last = s.frame(&links, generation, steps, flags.get()).ok().map(|f| frame_json(&f, &links));
-                    let meta = robot_recording::meta(&snapshot, run, &target, note.as_deref(), unix_ms, generation, steps, last);
+                    let meta = recording::meta(&snapshot, run, &target, note.as_deref(), unix_ms, generation, steps, last);
                     Ok((snapshot, meta, run.root.clone()))
                 });
                 match result {
@@ -1816,7 +1816,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                         drop(crate::jobs::Job::spawn(crate::jobs::Pool::Io, seq, "the recording writer", move |_| {
                             // The handle is gone, so a panic must be published here too, or
                             // recording.pending would never clear.
-                            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| robot_recording::write(&root, &target, &snapshot, meta)))
+                            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| recording::write(&root, &target, &snapshot, meta)))
                                 .unwrap_or_else(|_| Err(format!("the recording writer ended without a result (panic) writing {}", target.display())));
                             writer_out.lock().unwrap_or_else(|p| p.into_inner()).save = Some((seq, result));
                             Ok(())
@@ -2017,7 +2017,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                     ended = s.ended().is_some();
                     failed = !publish(s, if ended { Phase::Ended } else { Phase::Paused }, generation, steps, None);
                     if let (Some(recorded), Ok(f)) = (r.final_frame.as_ref(), s.frame(&links, generation, steps, flags.get())) {
-                        r.state.measured = robot_recording::measured(recorded, &frame_json(&f, &links));
+                        r.state.measured = recording::measured(recorded, &frame_json(&f, &links));
                     }
                     set_replay(&r.state);
                     continue;
@@ -2046,7 +2046,7 @@ fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Command>, out: 
                     finish_replay(s, &mut r, Some(e.clone()));
                     let f = s.frame(&links, generation, steps, flags.get()).ok();
                     if let (Some(recorded), Some(f)) = (r.final_frame.as_ref(), f.as_ref()) {
-                        r.state.measured = robot_recording::measured(recorded, &frame_json(f, &links));
+                        r.state.measured = recording::measured(recorded, &frame_json(f, &links));
                     }
                     set_replay(&r.state);
                     f
@@ -2307,7 +2307,7 @@ mod tests {
 
     fn preset(id: &str) -> Result<(crate::robot::Loaded, PresetRun), String> {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let p = crate::robot_preset::select(&root.join(crate::robot_preset::PRESETS), &root, id)?;
+        let p = crate::robot::preset::select(&root.join(crate::robot::preset::PRESETS), &root, id)?;
         crate::robot::load_preset(p, &root)
     }
 
@@ -2372,7 +2372,7 @@ mod tests {
         wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1) && c.drive().is_some());
         let drive = c.drive().unwrap().clone();
         let m = drive.motion.as_ref().expect("400hz declares motion_commands");
-        assert_eq!(m.source, robot_motion::Source::Preset);
+        assert_eq!(m.source, motion::Source::Preset);
         let [fwd, lat, yaw] = m.channels.each_ref().map(|ch| ch.index);
         let hb = drive.heartbeat.as_ref().expect("400hz declares motion_heartbeat").index;
         let initial = drive.inputs[hb].initial;
@@ -2417,7 +2417,7 @@ mod tests {
     fn preset_recordings_save_the_shared_type_and_refuse_protected_paths_and_overwrites() {
         use sim_runtime::embedded::EmbeddedRecording;
         use sim_runtime::environment::EnvironmentRecording;
-        let dir = std::env::temp_dir().join(format!("robot-recording-{}-{}", std::process::id(), robot_recording::now_ms()));
+        let dir = std::env::temp_dir().join(format!("robot-recording-{}-{}", std::process::id(), recording::now_ms()));
         let wait_save = |c: &mut RunController| wait(c, "save", |c| c.save_pending().is_none());
         // --robot FILE keeps no recording.
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -2469,7 +2469,7 @@ mod tests {
         }
         assert!(c.save_recording(Some(dir.join("x.meta.json").to_str().unwrap()), None).unwrap_err().contains(".meta.json"));
         // The default location rule, without writing.
-        let t = robot_recording::target(&c.preset().unwrap().root, "pendulum-environment", None, 1_790_748_502_729).unwrap();
+        let t = recording::target(&c.preset().unwrap().root, "pendulum-environment", None, 1_790_748_502_729).unwrap();
         assert!(t.ends_with("runs/robot-presets/pendulum-environment/20260930T060822.729Z.json"), "{}", t.display());
         // Session preset (no task): EmbeddedSession::recording().
         let (_, run) = preset("pendulum-embedded").unwrap();
@@ -2496,7 +2496,7 @@ mod tests {
     /// have typed inputs but no motion config.
     #[test]
     fn preset_replay_reaches_the_runtime_verdict_cancels_and_refuses_mismatches() {
-        let dir = std::env::temp_dir().join(format!("robot-replay-{}-{}", std::process::id(), robot_recording::now_ms()));
+        let dir = std::env::temp_dir().join(format!("robot-replay-{}-{}", std::process::id(), recording::now_ms()));
         let changed = |c: &RunController| -> Vec<f64> { c.drive().unwrap().inputs.iter().map(|ch| ch.initial + 0.5 * (ch.upper - ch.initial)).collect() };
         // Steps `n` chunks, changing every input after the first, then saves to `name`.
         let record = |c: &mut RunController, n: u64, name: &str| -> (std::path::PathBuf, u64) {
@@ -2601,20 +2601,20 @@ mod tests {
         assert!(RunController::spawn(model).replay(None, Some("x.json")).unwrap_err().contains("`--robot FILE`"));
         // Listing: *.json but not *.meta.json, with the sidecar summary.
         let listed_root = dir.join("root");
-        let preset_dir = listed_root.join(robot_recording::DIR).join("pendulum-policy");
+        let preset_dir = listed_root.join(recording::DIR).join("pendulum-policy");
         std::fs::create_dir_all(&preset_dir).unwrap();
         for f in ["session.json", "session.meta.json"] {
             std::fs::copy(dir.join(f), preset_dir.join(f)).unwrap();
         }
-        let list = robot_recording::list(&listed_root, "pendulum-policy").unwrap();
+        let list = recording::list(&listed_root, "pendulum-policy").unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!((list[0].file.as_str(), list[0].meta.as_ref().unwrap()["completed_steps"].as_u64()), ("session.json", Some(steps)));
-        assert!(robot_recording::list(&listed_root, "none").unwrap().is_empty());
-        assert!(robot_recording::replay_source(&listed_root, "p", Some("../x.json"), None).unwrap_err().contains("bare file name"));
+        assert!(recording::list(&listed_root, "none").unwrap().is_empty());
+        assert!(recording::replay_source(&listed_root, "p", Some("../x.json"), None).unwrap_err().contains("bare file name"));
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
-    /// Timing only (debug build): `ROBOT_PRESET=<id> cargo test -p sim-spatial --lib robot_run::tests::measure_full_robot_preset -- --ignored --nocapture`
+    /// Timing only (debug build): `ROBOT_PRESET=<id> cargo test -p sim-spatial --lib run::tests::measure_full_robot_preset -- --ignored --nocapture`
     /// (default robot-measured-400hz). Builds on this thread, as the run thread does.
     #[test]
     #[ignore]

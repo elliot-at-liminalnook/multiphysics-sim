@@ -16,7 +16,7 @@ use super::{Hardware, MirrorDisplay, mirror};
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::robot::{RobotAction, RobotView};
-use crate::robot_run::{Phase, RunAction};
+use crate::robot::run::{Phase, RunAction};
 use crate::ui_kit::{Kit, SUBTLE, TEXT, UiFonts, size, wrap};
 use bevy::prelude::*;
 use std::time::Instant;

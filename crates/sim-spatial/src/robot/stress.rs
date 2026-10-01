@@ -79,7 +79,7 @@ impl StressResults {
             Contents::Parsed(v) => (None, stress_results::peaks(v).into_iter().map(|(k, p)| (k, json!(p))).collect::<serde_json::Map<_, _>>().into()),
         };
         let hotspot_links: Vec<&str> = model.links.iter().filter(|l| self.parsed().and_then(|v| Hotspot::from_results(v, &l.name)).is_some()).map(|l| l.name.as_str()).collect();
-        json!({"path": self.path, "mtime_unix_s": self.mtime_unix_s, "mtime_utc": self.mtime_unix_s.map(|t| crate::robot_recording::iso((t * 1e3) as u128)), "status": self.status(model), "absent": matches!(self.contents, Contents::Missing), "error": error,
+        json!({"path": self.path, "mtime_unix_s": self.mtime_unix_s, "mtime_utc": self.mtime_unix_s.map(|t| crate::robot::recording::iso((t * 1e3) as u128)), "status": self.status(model), "absent": matches!(self.contents, Contents::Missing), "error": error,
             "recorded_physical_hash": self.parsed().and_then(stress_results::recorded_physical_hash), "model_physical_hash": model_hash(model),
             "peak_stress_pa": peaks, "hotspot_links": hotspot_links, "scale": stress_results::SCALE, "rule": RULE})
     }

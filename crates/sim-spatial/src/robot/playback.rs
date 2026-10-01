@@ -8,8 +8,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_runtime::embedded_capture::{LOOKUP_RULE, TIME_RULE, frame_at};
-use crate::robot_preset::{RECORDED_LABEL, RecordedRun};
-use crate::robot_run::{Frame, SPEED_SCALES, SpeedRequest, speed_target};
+use crate::robot::preset::{RECORDED_LABEL, RecordedRun};
+use crate::robot::run::{Frame, SPEED_SCALES, SpeedRequest, speed_target};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 

@@ -16,7 +16,7 @@ use sim_runtime::gait_lab::{LabReport, scan_results};
 use sim_runtime::gait_playback::{Clock, Gait, GovernedGait, GovernorSource, compiled_with_governor};
 use sim_runtime::kinematic_mirror::{KinematicMirror, MirrorCoordinate};
 use sim_runtime::session::LinkPose;
-use crate::robot_preset::PresetRun;
+use crate::robot::preset::PresetRun;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
@@ -364,7 +364,7 @@ pub fn map_poses(poses: &[LinkPose], links: &[String]) -> (Vec<Option<([f64; 3],
     let mut unmatched = Vec::new();
     for p in poses {
         match links.iter().position(|l| *l == p.name) {
-            Some(i) => out[i] = Some((p.position_m, crate::robot_run::rotation_quat(&p.rotation))),
+            Some(i) => out[i] = Some((p.position_m, crate::robot::run::rotation_quat(&p.rotation))),
             None => unmatched.push(p.name.clone()),
         }
     }
@@ -594,7 +594,7 @@ fn worker(run: Arc<PresetRun>, links: Vec<String>, rx: mpsc::Receiver<Command>, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::robot_run::{RunAction, RunController};
+    use crate::robot::run::{RunAction, RunController};
 
     fn wait(c: &mut RunController, what: &str, done: impl Fn(&Value) -> bool) -> Value {
         let start = Instant::now();
@@ -617,7 +617,7 @@ mod tests {
     #[test]
     fn gait_preview_seeks_to_the_shared_sampler_refuses_by_name_and_excludes_runs() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..").canonicalize().unwrap();
-        let p = crate::robot_preset::select(&root.join(crate::robot_preset::PRESETS), &root, "robot-measured-400hz").unwrap();
+        let p = crate::robot::preset::select(&root.join(crate::robot::preset::PRESETS), &root, "robot-measured-400hz").unwrap();
         let (loaded, run) = crate::robot::load_preset(p, &root).unwrap();
         assert_eq!(loaded.model.links.len(), 29);
         let mut c = RunController::spawn_preset(Arc::new(run));

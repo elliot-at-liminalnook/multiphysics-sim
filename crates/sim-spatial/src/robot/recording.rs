@@ -190,7 +190,7 @@ pub fn write(root: &Path, path: &Path, snapshot: &Snapshot, meta: Value) -> Resu
 
 /// The sidecar (`<stem>.meta.json`): what the recording itself does not say.
 #[allow(clippy::too_many_arguments)]
-pub fn meta(snapshot: &Snapshot, run: &crate::robot_preset::PresetRun, recording_file: &Path, note: Option<&str>, unix_ms: u128, generation: u64, chunks: u64, final_frame: Option<Value>) -> Value {
+pub fn meta(snapshot: &Snapshot, run: &crate::robot::preset::PresetRun, recording_file: &Path, note: Option<&str>, unix_ms: u128, generation: u64, chunks: u64, final_frame: Option<Value>) -> Value {
     let p = &run.preset;
     let replayable = snapshot.replayable();
     let identity = snapshot.runtime().runtime_identity.as_ref();
@@ -200,8 +200,8 @@ pub fn meta(snapshot: &Snapshot, run: &crate::robot_preset::PresetRun, recording
         "completed_steps": snapshot.completed_steps(), "sim_time_s": snapshot.completed_steps() as f64 * run.config.step_s, "requested_steps": run.config.steps,
         "replayable": replayable.is_ok(), "not_replayable_reason": replayable.err(), "failure": snapshot.failure(), "replayable_rule": REPLAYABLE_RULE,
         "runtime_identity": identity, "runtime_identity_note": "copied from the recording's runtime_identity (library sources/features); binary and host attestations are not included",
-        "preset": {"id": p.id, "label": p.label, "mode": p.mode, "scene": p.scene, "config": p.config, "task": p.task, "presets_file": crate::robot_preset::PRESETS, "runs_as": run.kind()},
-        "root": run.root, "seed": run.seed, "seed_rule": crate::robot_preset::SEED_RULE, "note": note,
+        "preset": {"id": p.id, "label": p.label, "mode": p.mode, "scene": p.scene, "config": p.config, "task": p.task, "presets_file": crate::robot::preset::PRESETS, "runs_as": run.kind()},
+        "root": run.root, "seed": run.seed, "seed_rule": crate::robot::preset::SEED_RULE, "note": note,
         "saved_utc": iso(unix_ms), "viewer": {"crate": env!("CARGO_PKG_NAME"), "version": env!("CARGO_PKG_VERSION")},
         "run": {"generation": generation, "chunks": chunks},
         "final_frame": final_frame, "final_frame_note": "measured at save from the session's interactive_frame(): link frames at their com, model frame; a reference for comparison, not part of the recording or of any replay verdict"})

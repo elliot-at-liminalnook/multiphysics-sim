@@ -159,7 +159,7 @@ fn registry() -> sim_core::BehaviorRegistry {
 }
 /// The preset list: explicit --robot-presets, else `<workspace>/web/viewer/presets.json`.
 fn presets(args: &Args) -> Result<PathBuf, String> {
-    args.robot_presets.clone().map(Ok).unwrap_or_else(sim_spatial::robot_preset::default_file)
+    args.robot_presets.clone().map(Ok).unwrap_or_else(sim_spatial::robot::preset::default_file)
 }
 
 /// The display-model catalog directory: explicit --models, else `models`
@@ -296,12 +296,12 @@ fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::e
 fn robot_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
     if args.validate_only {
         match sim_spatial::robot::load_file(path)? {
-            sim_spatial::robot_source::FileModel::Physical(loaded) => {
+            sim_spatial::robot::source::FileModel::Physical(loaded) => {
                 let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
                 println!("Validated {} with {} links ({drawn} with collision geometry).", path.display(), loaded.model.links.len());
             }
             // A planar v2 summary: built through sim-phenomena's shared planar build, as robot mode's run thread builds it.
-            sim_spatial::robot_source::FileModel::Planar(p) => {
+            sim_spatial::robot::source::FileModel::Planar(p) => {
                 let (bodies, joints) = (p.model.bodies.len(), p.model.joints.len());
                 let robot = sim_phenomena::scenarios::cad_robot::build_planar(p.model)?;
                 // The build prints its warnings to stderr itself ("cad model: …").
@@ -320,11 +320,11 @@ fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Er
     if args.validate_only {
         let root = sim_spatial::workspace::root()?;
         let presets = presets(args)?;
-        for p in sim_spatial::robot_preset::list(&presets)? {
+        for p in sim_spatial::robot::preset::list(&presets)? {
             let d = p.discovery(&root);
             println!("{} · mode {} · inputs exist {} · {}", p.id, p.mode, d["inputs_exist"], d["not_openable_reason"].as_str().unwrap_or("openable (build not attempted)"));
         }
-        let preset = sim_spatial::robot_preset::select(&presets, root, id)?;
+        let preset = sim_spatial::robot::preset::select(&presets, root, id)?;
         if preset.is_recorded() {
             let (loaded, run) = sim_spatial::robot::load_recorded(preset, root)?;
             let c = &run.capture;

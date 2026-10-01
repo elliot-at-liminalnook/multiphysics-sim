@@ -12,7 +12,7 @@
 //! model; the stat of the failed attempt is remembered, so the next write
 //! (a changed stat) retries.
 use crate::robot::{Loaded, load_file_bytes};
-use crate::robot_planar::PlanarLoaded;
+use crate::robot::planar::PlanarLoaded;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
@@ -75,7 +75,7 @@ pub struct Checked {
     pub hash: Option<String>,
     pub outcome: Outcome,
     /// The results file beside the model (`robot_stress`), read by the same worker.
-    pub results: Option<crate::robot_stress::StressResults>,
+    pub results: Option<crate::robot::stress::StressResults>,
     pub seconds: f64,
 }
 
@@ -100,7 +100,7 @@ pub fn check(path: &Path, loaded_hash: Option<&str>) -> Checked {
             (Some(hash), outcome)
         }
     };
-    let results = Some(crate::robot_stress::read(path));
+    let results = Some(crate::robot::stress::read(path));
     Checked { stat, hash, outcome, results, seconds: started.elapsed().as_secs_f64() }
 }
 
@@ -237,13 +237,13 @@ impl SourceWatch {
 
 /// Now as `2026-09-30T12:00:00.000Z`.
 pub fn now_utc() -> String {
-    crate::robot_recording::iso(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_millis())
+    crate::robot::recording::iso(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_millis())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::robot_run::RunController;
+    use crate::robot::run::RunController;
 
     fn finished(w: &mut SourceWatch) -> (Trigger, Checked) {
         let until = Instant::now() + Duration::from_secs(60);

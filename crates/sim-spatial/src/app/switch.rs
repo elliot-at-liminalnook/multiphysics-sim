@@ -635,7 +635,7 @@ fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) -> Result<P
                     RobotView::open(p.clone()).with_presets(docs.presets.clone())
                 }
                 Document::Preset(id) => {
-                    let presets = docs.presets.clone().map(Ok).unwrap_or_else(crate::robot_preset::default_file)?;
+                    let presets = docs.presets.clone().map(Ok).unwrap_or_else(crate::robot::preset::default_file)?;
                     RobotView::open_preset(&presets, id)?
                 }
                 Document::Url(url) => return Err(format!("url `{url}` opens cad mode only (a running RoboCAD service)")),

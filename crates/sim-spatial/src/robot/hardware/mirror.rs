@@ -23,7 +23,7 @@ use super::link::GaitRun;
 use super::settings::{MirrorBinding, MirrorSettings, sign};
 use super::Hardware;
 use super::view::fixed;
-use crate::robot_preset::{PresetRun, RecordedRun};
+use crate::robot::preset::{PresetRun, RecordedRun};
 use bevy::math::DQuat;
 use serde_json::{Value, json};
 use sim_runtime::gait_playback::{Gait, GovernedGait};
@@ -37,7 +37,7 @@ use std::time::Instant;
 /// Encoder counts per revolution (calibration-mirror.mjs:4).
 pub const COUNTS: f64 = 4096.0;
 /// Suspension lift (m): the page's `LIFT_M`, shared with the gait preview.
-pub const LIFT_M: f64 = crate::robot_gait::LIFT_M;
+pub const LIFT_M: f64 = crate::robot::gait::LIFT_M;
 /// CAD motor joints a motor can be bound to, with the panel's labels (:5).
 pub const JOINTS: [(&str, &str); 3] = [("Hip servo output", "Hip swing (belt)"), ("Worm servo output", "Worm drive"), ("Foot servo output", "Foot slide")];
 /// The simulated legs (:25).
@@ -121,7 +121,7 @@ impl PartialEq for SceneId {
 pub fn scene_of(view: &crate::robot::RobotView) -> Result<Option<SceneSource>, String> {
     // A planar v2 file has no run here (it runs on robot_planar's thread) and no scene to pose.
     if view.is_planar() {
-        return Err(crate::robot_planar::NO_MIRROR.into());
+        return Err(crate::robot::planar::NO_MIRROR.into());
     }
     let Some(run) = view.run.as_ref() else { return Ok(None) };
     if let Some(p) = run.preset() {
@@ -728,7 +728,7 @@ fn worker(rx: mpsc::Receiver<MirrorCommand>, out: Arc<Mutex<MirrorShared>>) {
                     let result = match mirror.as_mut() {
                         None => Err("load the kinematic mirror first".to_string()),
                         Some(m) => m.pose(&values).map(|pose| {
-                            let (poses, _) = crate::robot_gait::map_poses(&pose.poses, &links);
+                            let (poses, _) = crate::robot::gait::map_poses(&pose.poses, &links);
                             (Solved { poses }, pose.authored_limit_violations)
                         }),
                     };

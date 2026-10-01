@@ -39,7 +39,7 @@ use super::view::fixed;
 use super::{Hardware, ServerTarget};
 use crate::jobs::{Job, Pool, RunThread};
 use crate::robot::{RobotAction, RobotView};
-use crate::robot_run::{Phase, ReplayPhase, RunAction};
+use crate::robot::run::{Phase, ReplayPhase, RunAction};
 use serde_json::{Value, json};
 use sim_runtime::hardware_client::{Body, Client, STOP_TIMEOUT, ServerKind, bench, token};
 use std::sync::{Arc, Mutex, MutexGuard, mpsc};
@@ -646,7 +646,7 @@ impl StartInput {
     fn of(view: &RobotView, seq: u64) -> Self {
         // A planar v2 file has no live controller: refused by name, not as "reset the episode".
         if view.is_planar() {
-            let why = crate::robot_planar::LIVE_SYNC;
+            let why = crate::robot::planar::LIVE_SYNC;
             return Self { initial: Err(why.into()), source: String::new(), key: None, running: false, start: Err(why.into()) };
         }
         let r = view.run.as_ref();

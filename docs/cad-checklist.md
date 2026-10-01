@@ -17,17 +17,19 @@ section "CAD physical properties (2026-10-01)") and the seventh
 (**cad-print**: the wall check, validation, overhang shading, the fastener
 and clearance tools, split, strength, plan, whole or split, the assembly
 guide, coupons, the Print jobs section and the print overlay, Part H,
-section "CAD print (2026-10-01)"). cad-mode,
+section "CAD print (2026-10-01)") and the eighth (**cad-organize**: the
+outliner's organization, comment threads, reference images and the
+linked system file, Part I, section "CAD organize (2026-10-01)"). cad-mode,
 cad-select-transform, cad-modify and cad-sketch (at cc7ac194) were built
 and tested in their verification passes; cad-views-export was verified at
-bcf0c56c; cad-physical-inspect and cad-print were written and checked only
-by reading: **Parts G and H have not been through their verification
-passes yet**. Each
+bcf0c56c; cad-physical-inspect, cad-print and cad-organize were written
+and checked only by reading: **Parts G, H and I have not been through
+their verification passes yet** (nothing in Part I has been compiled). Each
 step is done once in the native viewer and once in RoboCAD's own window,
 so you can compare them. The feature-by-feature ledger is
 [cad-parity.md](cad-parity.md); its `done-by-reading` rows are the ones
-these steps show. Everything else in RoboCAD (experiments,
-motion, comments, …) is a later CAD epic and stays in RoboCAD's window.
+these steps show. Everything else in RoboCAD (the components library and
+the system graph, experiments, motion, …) is a later CAD epic and stays in RoboCAD's window.
 
 **RoboCAD stays the reference.** Nothing here changes it, its command layer
 or the `.rcad` format. The viewer never writes a `.rcad` file itself.
@@ -365,6 +367,54 @@ been through its verification pass yet**.
 | CAD-167 Robot panel row press | Click a joint row in the Robot section, then the same row through `system_ui` `cad:robot:row:<id>` | Click the same row in RoboCAD's Robot dock | The node is selected in both, as in CAD-141; the viewer's press is stamped with the revision the robot description was read at, which records where the row came from without refusing a row of an older read; a row of a node that has left the tree is refused by name |
 | CAD-168 Partial REST Edit joint | With joint `<j>` selected, `cad_run {"id":"ops.set_joint","params":{"lower":-30}}` | `curl -X POST http://127.0.0.1:<RoboCAD port>/ops/set_joint -d '{"args":["<j>"],"kwargs":{…every current value, lower -0.5236…}}'` (RoboCAD's `set_joint` takes every field; the Edit joint dialog fills them) | Only the lower limit changes (−30°), the joint's type, parent, child, pivot, axis, upper limit, motor, gear ratio, damping and name stay as they were in both (`GET /robot`); a type change between prismatic and revolute without both limits is refused by name; with the robot description not yet read at the shown revision it is refused by name and nothing is sent |
 
+## Part I: outliner organization, comments, references and the system link (cad-organize)
+
+Set up as in Part G: the viewer on one copy of `turntable.rcad`, RoboCAD's
+own window on a second copy (`turntable-rc.rcad`). Use a model with at
+least two groups and a few bodies in each. For the references steps, have
+a PNG or JPEG image on disk (`<img>`, e.g. a photo of the part with a
+ruler) and, for the system steps, a `.system.json` (`<system>`, e.g. one
+from `library/systems/`). In the viewer the outliner's search, New group,
+Expand all and Collapse all sit above the model tree, and Comments and
+References are sections at the top of the right dock while shown
+(RoboCAD: the Outliner, Comments and References docks). `cad_state.tree`,
+`cad_state.threads` and `cad_state.references` show the viewer's state
+(REST: `cad_tree`, `cad_threads`, `cad_references`). Steps that edit are undone in both before the next
+step, unless the step says otherwise. Nothing in this part was compiled
+or run before it was written: **Part I has not been through its
+verification pass yet**.
+
+| Step | Native viewer | RoboCAD | Pass when |
+|---|---|---|---|
+| CAD-169 Search | Type part of a body's name into "Search (Ctrl+F)…" above the tree; clear it; then with the pointer over the tree press Ctrl+F, and with the pointer over the 3D view and a body selected press Ctrl+F | Type the same text into the Outliner's search; Ctrl+F | The same rows in both: every node whose name contains the text (any case), its ancestors and its descendants, all expanded while searching; clearing restores the collapse state from before. Ctrl+F over the tree focuses the search in the viewer; elsewhere it starts Fillet in both (RoboCAD's keymap gives Ctrl+F to Fillet, so its placeholder's key never reaches the field: recorded) |
+| CAD-170 Expand and collapse | **Collapse all**, then expand one group by its "+" chip; make an edit (rename a body); **Expand all**; then type a search and press **Collapse all** | The same buttons and arrow | The same rows shown in both after each; the collapsed groups stay collapsed after the edit's refresh in both; while a search is typed the viewer refuses Expand all, Collapse all and the chips by name (RoboCAD changes the searched view without keeping it: recorded) |
+| CAD-171 Shift and Ctrl select | Click a body row, Shift+click a row three below, then Ctrl/Cmd+click one of them | The same clicks in the Outliner | The same nodes selected in both (the range, then without the Ctrl-clicked one); the 3D view lights the same bodies; the viewer's selection is pushed to RoboCAD (`GET /selection`) as body items |
+| CAD-172 Rename in place | Double-click a body's name, type `Check name`, Enter; then double-click again and press Escape; again, type a name and click elsewhere; again, clear the name and press Enter | Double-click the same name, type, Enter; the same click elsewhere | One undo step renames it in both (the inspector and the tree follow); Escape leaves the name; an unchanged name sends nothing; a click elsewhere renames in RoboCAD (Qt commits on focus loss) and ends without renaming in the viewer, and an empty name is refused by name in the viewer (both recorded) |
+| CAD-173 Drag into a group, before a sibling | Drag two selected bodies onto the middle of a group row; undo; drag one body onto a body row in another group; then drag a group onto the top quarter of another group's row; finally drag a group onto one of its own children | The same drags in the Outliner | The same tree in both after the first two: on a group the rows move into it (at its end); on a body they move before it under its parent; each drag is one `move_nodes` undo step. The top quarter of a group row moves the group in front of it in the viewer, where RoboCAD drops into the group (recorded). A group onto its own child is refused in both ("Cannot move a group into itself or its descendants"; the viewer checks before sending) |
+| CAD-174 Context menu | Right-click an unselected body row (it becomes the selection), then a selected one: read the entries; **Hide**, **Show**, **Isolate**, **Show all**; **Lock**, then **Unlock**; **Group selection…** (`Organize components` / `Group name:` `Pair`, OK); under **Move to group**, **Top level**, then a group by its path ("A / B"); right-click a group: **Set as active group**; then **Clear active group**; registry `group.set_active` with no group selected | The same entries in RoboCAD's Outliner menu; the registry command "Set selected group as active" with no group selected | The same entries in the same order in both (Fit in view, Isolate, Hide, Show, Lock, Unlock, Group selection…, Move to group, Make unique (bake instance), Set as active group for one group, Delete, Clear active group, Show all); the same visibility, lock state, groups, moves and active group (its row in blue in both) after each, Hide and Show one undo step each; Move to group lists the same group paths in the same order, without the selection and its descendants, as a heading over indented entries in the viewer, a submenu in RoboCAD (recorded); with no group selected `group.set_active` is refused by name in the viewer, where RoboCAD silently clears the active group (recorded) |
+| CAD-175 New group | **New group** above the tree: `Group name:` `Empty`, OK; then New group with an empty name | Outliner ▸ **New group**, the same names | An empty group "Empty" appears in the same place in both, one undo step; an empty name creates nothing in both, and the viewer says why in the dialog (RoboCAD's dialog just closes: recorded) |
+| CAD-176 Comments section and Annotate | View ▸ Comments panel; **＋ Annotate model** (or N with the pointer over the 3D view): click a face of a body; type `Check this face`, **Post annotation**; then N and click empty space | View ▸ Comments panel, Annotate (N), click the same face, the same text | The same thread "1 · part" in both lists with the same preview and "Attached to surface"; the pin "1" at the clicked point in both; clicking empty space says "Click a visible surface to place the annotation" in both; with the composer focused, N is typed, not a new annotation. The viewer picks on the press and leaves the selection mode as it is (RoboCAD picks on the release and shows face mode while the tool is on: recorded) |
+| CAD-177 Reply with a part link | Select the thread; select another body in the tree; **Insert part link from selection**; type ` needs a fillet`; Shift+Enter, a second line; **Reply** (then, for a second reply, Enter) | The same in RoboCAD's Comments dock (Enter types a newline there; Reply posts) | The same reply in both, the link shown as the part's label; with nothing selected both say "Select a part in the outliner or viewport first"; in the viewer Enter posts and Shift+Enter is a newline (recorded) |
+| CAD-178 Click the part link | Click the link in the reply (use a link to a group) | Click the same link | Both show only that part and its descendants, framed, with "Part view: name" in the status line; the viewer selects exactly the linked node (as `cad_select`), RoboCAD the node with its descendants (recorded) |
+| CAD-179 Show on model | **Return to assembly**, then **Show on model** | **Show on model** | The anchor body is selected and the camera returns to the view saved with the thread in both; the viewer restores it from the thread list, not through RoboCAD's GUI-only `/threads/{id}/show` (recorded); on a thread of experiment evidence the viewer refuses by name (RoboCAD opens its experiments panel: cad-experiments-motion) |
+| CAD-180 Fit in view | **Fit in view** | **Fit in view** | Both frame the thread's linked parts at the current angle, select them and show the pins, "Fit annotation in view: names" in both |
+| CAD-181 Show only linked parts and Return | **Link selected parts** with two bodies selected; **Show only linked parts**; **Return to assembly**; again Show only linked parts, then Escape | The same | Only the linked parts are drawn in both, the tool hint "Showing linked parts only · Esc or Return to assembly restores your view"; Return and Escape restore the camera and the selection from before in both; no node's visibility changes in either (`GET /doc`), and RoboCAD's window is not isolated by the viewer's (recorded) |
+| CAD-182 Resolve and Reopen | **Resolve**; filter **Resolved**, then **Open**, then **All**; **Reopen** | The same | The thread moves between the filters the same way in both, "✓" when resolved; its pin is hidden while resolved in both |
+| CAD-183 Edit and delete a message | Select the reply, **Edit message**, change the text, **Save edit**; then **Delete message** | The same | The same text, then the message gone, in both; each one RoboCAD undo step |
+| CAD-184 Delete thread | **Delete thread** | **Delete thread** | The thread and its pin are gone in both; undo brings both back |
+| CAD-185 Pins | View ▸ Toggle comment pins off and on; click pin "1" | The same | The pins hide and show in both; a click on a pin opens its thread in the Comments section in both (amber for "needs review", blue otherwise) |
+| CAD-186 Reattach | Delete the anchored body (then undo after the step), so the thread says "Part deleted — reattach this annotation"; **Reattach…**, click another face | The same | The same attachment texts in both; after the click the thread is attached to the new face in both (one `PATCH`, one undo step) and its pin moves; the viewer picks on the press (recorded) |
+| CAD-187 Add reference images | View ▸ References; **＋ Add reference images…**: the absolute path of `<img>` in the path field, Enter; then drop `<img>` on the 3D view; then drop a `.step` file, and type a relative path in the path field | References ▸ **＋ Add reference images…**, the same file in the file dialog; then drop it on the viewport; then drop the `.step` file | One locked image node per file in both, on the active plane (else XY), 100 mm wide, the view aligned on it; the image textured on its plane at 60 % opacity in both; "n reference image(s) added • Calibrate scale before tracing"; the viewer takes one typed image per submit, not the system's file dialog (recorded); the `.step` drop and the relative path are refused by name in the viewer with nothing sent, where RoboCAD's import fails in Pillow (recorded) |
+| CAD-188 Visibility | Uncheck the image in the References list (its chip), then check it; read the list | The same | The image hides and shows in both, one undo step each; RoboCAD shows a preview thumbnail under the list, the viewer none (the image is drawn on its plane; recorded); a WebP or BMP image is listed in the viewer with a note that it is not drawn (recorded) |
+| CAD-189 Placement | Plane `Front (XZ)`, Width `200`, Origin `10, 0, 5`, Rotation `15`, Opacity `40`, **Apply placement** | The same fields, **Apply placement** | The same plane, size, rotation and opacity in both; "Reference placement updated • Ctrl+Z undoes"; one undo step |
+| CAD-190 Align view | **Align view**; then make a construction plane from a tilted face, make it the active plane, add `<img>` (it lands on that plane), delete the plane node, and Align view again, then **Sketch over this** | **Align view**, the same, **Sketch over this** | Both look straight at the image, orthographic, centred, the image's plane the active plane; on the tilted plane (no longer a plane node, nor XY, XZ or YZ) the viewer aligns the camera but leaves the active plane and says so, and refuses Sketch over this by name, where RoboCAD sketches on the image's plane (recorded) |
+| CAD-191 Calibrate scale | **Calibrate scale**: click two points on the ruler, type the real distance (e.g. `100`) in the References section's "Real distance" field, Enter; again, clicking the same point twice | The same clicks and distance (RoboCAD's numeric bar) | The same new width in both ("Reference calibrated • Ctrl+Z undoes"); Escape before Enter changes nothing; the same point twice is refused with RoboCAD's text; the viewer's distance field is in the References section, not the numeric bar (recorded) |
+| CAD-192 Sketch over this | **Sketch over this**, draw a line over the image | The same | The view is aligned and the line tool starts on the image's plane in both |
+| CAD-193 Remove reference | **Remove reference** | **Remove reference** | The image node is gone in both; undo restores it |
+| CAD-194 System status line | Read the line at the top of the References section with no system linked | The same line in RoboCAD's References dock | "System file: none linked. Link a .system.json to build circuits and subsystems for this model." in both |
+| CAD-195 Link, Accept, Unlink | **Link system file…**: `<system>` in the path form, OK; edit `<system>` on disk (e.g. change its title); **Accept changes**; **Unlink** | **Link system file…** (file dialog), the same edit, **Accept changes**, **Unlink** | The same status line in both after each: "System: title · revision n · n definitions", "· CHANGED since linked (was revision r)" after the edit, back without it after Accept, "none linked" after Unlink; each one RoboCAD undo step |
+| CAD-196 Open in builder | Link `<system>` again; **Open in builder**; then unlink and press it again | **Open in builder** | The viewer switches this window to Build mode on `<system>` (no new process; RoboCAD starts a second `sim-spatial --system … --schematic`: recorded); leaving CAD follows the usual rule (refused over unsaved edits of a self-started service); with no system linked both refuse "Link an existing system file first" |
+
 ## Known differences (deliberate)
 
 - RoboCAD asks Save/Discard/Cancel when closing; the viewer never saves for
@@ -466,6 +516,32 @@ been through its verification pass yet**.
   failure index on Robot mode's scale, not RoboCAD's per-voxel field;
   `GET /print/jobs/{id}`'s `wait` is never used (RoboCAD never honours
   it). No cad-print row is open.
+- cad-organize (each recorded in cad-parity.md with its reason): Ctrl+F
+  focuses the outliner's search only with the pointer over the model tree
+  dock (elsewhere it is Fillet, RoboCAD's keymap binding); expand and
+  collapse are refused while searching; a rename ends without renaming on
+  focus loss, and an empty name (rename, New group, Group selection…) is
+  refused by name; a drop on a group row's top quarter lands in front of
+  the group; "Move to group" is a heading over its entries, not a
+  submenu; `group.set_active` refuses by name with no group selected
+  (RoboCAD silently clears the active group); Annotate and Reattach pick
+  on the press and leave the selection mode alone; Enter posts in the
+  composer; a part row has a single press and the label dialog is
+  inline; a part link selects exactly the linked node; an unknown
+  attachment state reads "Attachment unknown" with a grey pin; Show on
+  model and Show only linked parts are reproduced from the thread list
+  (RoboCAD's `/threads/{id}/show` is GUI-only), and a thread of experiment
+  evidence is refused (cad-experiments-motion); reference images and the
+  system file are typed in the viewer's path field, one image per submit,
+  and non-image paths and drops are refused by name; a file dropped
+  anywhere on the CAD window is imported; only PNG and JPEG (and MPO)
+  references are textured, there is no preview thumbnail, and pixels are
+  cached per connection and node; the calibrate distance is the
+  References section's field; an image off XY, XZ, YZ and the plane
+  nodes leaves the active plane alone and refuses Sketch over this; Open
+  in builder switches this window to Build mode instead of starting a
+  process. The components library and the system graph are
+  cad-components'. No cad-organize row is open.
 
 ## Sign-off
 

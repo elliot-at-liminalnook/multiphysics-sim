@@ -17,8 +17,8 @@
 //! `system_ui` control (`cad:op:<id>`) and REST `cad_invoke` write; the
 //! palette and the radials open with `CadSurface` at the pointer instead
 //! (`cad_invoke` of them opens at the 3D view's centre). Not ready, the key
-//! writes nothing and the status line shows why ("Fillet: …", "Fastener
-//! hole… belongs to the cad-print epic; …"), so a key press is never
+//! writes nothing and the status line shows why ("Fillet: …", "Annotate
+//! belongs to the cad-organize epic; …"), so a key press is never
 //! silently ignored; Delete/Backspace with nothing selected stays silent:
 //! Backspace is too common a key to report on.
 //!
@@ -57,7 +57,9 @@
 //! | Ctrl+Shift+M | `edit.select_same_material` (keymap), `robot.add_motor` (inline) | RoboCAD binds only the keymap's: Same Material runs; the palette shows RoboCAD's own conflict warning; `robot.add_motor` stays unbound (its menu entry, palette row and the Robot panel's button start it) |
 //! | Ctrl+Shift+J | `robot.add_joint` (inline only in RoboCAD, never bound there) | bound here deliberately (cad-physical-inspect): no other command or system reads it in CAD mode (J join, Shift+J unjoin differ by modifiers; Robot mode's J joint frames is another mode's); RoboCAD's USER_GUIDE.md:375 documents the key |
 //! | Ctrl+Space | `command_palette` | macOS takes Command+Space (Spotlight); Control+Space or Shift+F opens it |
-//! | Ctrl+H | `tool.fastener` (cad-print) | macOS's app menu takes Command+H (hide); Control+H reaches the refusal |
+//! | Ctrl+H | `tool.fastener` (cad-print: starts the fastener tool, its form beside the view, then face clicks) | macOS's app menu takes Command+H (hide); Control+H starts the tool |
+//! | Ctrl+W | `print.wall_check` (cad-print: the "Flag walls thinner than (mm):" form) | winit's default macOS menu has no Close item, so Command+W reaches the check; no other CAD reader of W (the shared camera's fly keys are not used in CAD mode) |
+//! | V, Ctrl+V, Ctrl+Shift+V | select vertices, paste with placement, validate for printing (cad-print) | exact modifiers |
 //! | Ctrl+M | `tool.mirror` | a macOS app menu binding Command+M (minimise) would take it; winit's default menu has none; Control+M always works |
 //! | Shift+A, B / C / S | `tool.box` / `tool.cylinder` / `tool.sphere` | the second key is the chord's (see above), not B (select bodies), C (sketch circle) or S (scale) |
 //! | S, G, R, D, Shift+D, M, Escape | tools (transform) | read by transform's keys only (`transform::input::keys`, and not while an operation's interaction, form or a surface is open: a sketch tool's keys stay the registry's); Shift+S (sketch slot), Shift+R (revolve), Shift+J etc. differ by Shift, which transform's S/G/R/M refuse (`!shift`) |
@@ -66,7 +68,7 @@
 //! | R, Shift+R | rotate (transform), revolve | transform's R refuses Shift |
 //! | A, Shift+A, Ctrl+A, Ctrl+Shift+A | sketch arc (three points; the native binding of keymap.json's dead `sketch.arc`), chord start (box, cylinder, sphere), select all, array | exact modifiers keep them apart: A alone is no chord's first step, so it runs the arc at once |
 //! | L, Shift+L | sketch line, sketch rectangle | exact modifiers |
-//! | C, Shift+C, Ctrl+C, Ctrl+Shift+C, Shift+A then C | sketch circle, sketch spline, copy, clearance (cad-print), cylinder | exact modifiers; C after Shift+A is the chord's (see above), not the circle's |
+//! | C, Shift+C, Ctrl+C, Ctrl+Shift+C, Shift+A then C | sketch circle, sketch spline, copy, clearance offset (cad-print: needs selected faces, then its form), cylinder | exact modifiers; C after Shift+A is the chord's (see above), not the circle's |
 //! | X, Ctrl+Shift+X | extrude, section analysis (`cad_section` toggle) | exact modifiers |
 //! | T | sketch text | no other reader in CAD mode; while the Text tool's form has its text field focused (`CadInputFocus`), T is typed |
 //! | Ctrl+P | plane from face | exact modifiers (P select points, Shift+P sketch polygon; see the P row) |
@@ -85,6 +87,7 @@
 //! | Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`: its first field, then the next); during a placement drag `ops::interact` also reads it to copy the base point into the form's anchor field; else the numeric bar's (`numeric::entry`) |
 //! | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), fit | no other reader in CAD mode |
 //! | Left press in the 3D view with a robot click tool active | the motor and joint tools (`robot::tools`'s click system) | Ctrl (Command) on the joint tool's first click is the world (`JointTool`); Alt+left is the orbit, not a pick |
+//! | Left press in the 3D view with the fastener tool active (cad-print) | one fastener hole on the face under the pointer (`print::fastener_tool`) | the selection's click stands aside (`pick`'s `robot_tool` includes `Flow::PrintPick`); Alt+left is the orbit |
 //!
 //! Commands of later epics keep their keys so a press says which epic owns
 //! them (status line), as their menu entries do.

@@ -513,3 +513,32 @@ fn the_physical_rows_run_native_actions() {
         assert!(matches!(registry::resolve(registry::command(id).unwrap()), Resolved::Op(e) if e.id == id), "{id} is not a catalogue operation");
     }
 }
+
+/// cad-print: no row is left for that epic; every Print menu tool and
+/// study is a catalogue operation with the command table's label, category
+/// and keys, and every `Do::Print` id has an action
+/// (`print::command_action`, which `Do::action` would panic without).
+#[test]
+fn the_print_rows_run_native_actions() {
+    for c in COMMANDS.iter() {
+        assert_ne!(c.native, Native::Later("cad-print"), "{} is still left for later", c.id);
+        if let Native::Action(super::registry::Do::Print(id)) = c.native {
+            assert_eq!(id, c.id, "a print row names its own id");
+            assert!(crate::cad::print::command_action(id).is_some(), "{id}: print::command_action has no action");
+        }
+    }
+    for id in ["tool.fastener", "tool.clearance", "print.wall_check", "print.validate", "print.split", "print.strength", "print.plan", "print.strength_split", "print.assembly", "print.coupons"] {
+        let cmd = registry::command(id).unwrap();
+        assert!(matches!(registry::resolve(cmd), Resolved::Op(e) if e.id == id && e.label == cmd.label && e.category == cmd.category && e.keys == cmd.keys), "{id} is not a catalogue operation matching the command table");
+    }
+    for id in ["print.overhangs", "print.jobs"] {
+        assert!(matches!(registry::resolve(registry::command(id).unwrap()), Resolved::Action(_)), "{id} is not a native action");
+    }
+    // The overlay stays the results part's toggle, as RoboCAD's print.overlay is its view.stress.
+    assert!(matches!(registry::resolve(registry::command("print.overlay").unwrap()), Resolved::Action(_)));
+    // The keys are bound as RoboCAD binds them.
+    for (id, key) in [("tool.fastener", "Ctrl+H"), ("tool.clearance", "Ctrl+Shift+C"), ("print.wall_check", "Ctrl+W"), ("print.validate", "Ctrl+Shift+V")] {
+        let cmd = registry::command(id).unwrap();
+        assert!(cmd.bound && cmd.keys == [key], "{id}: {:?}", cmd.keys);
+    }
+}

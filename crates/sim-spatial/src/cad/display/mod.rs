@@ -29,6 +29,11 @@
 //! - **High contrast**: the 3D view's background (RoboCAD's 0.98, 0.98,
 //!   0.99), grid and edge colours; RoboCAD's stylesheet swap has no native
 //!   counterpart yet (the kit's tokens are constants).
+//! - **Overhang shading** (cad-print): its own setting, as RoboCAD's
+//!   `show_overhangs` (ui/app.py:1072-1083): toggling or setting the build
+//!   plate sets it to the plate's new state; its toggle ("Toggle overhang
+//!   shading", `print.overhangs`) flips only it. The tint is the shown
+//!   mesh's triangles past 45° (`section::overhangs`), display only.
 use crate::app::actions::{Call, Spec, spec};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::cad::actions::{CAD, CadAction, Cx};
@@ -153,6 +158,8 @@ pub struct CadDisplay {
     pub mode: DisplayMode,
     pub grid: bool,
     pub build_plate: bool,
+    /// RoboCAD's `show_overhangs`: the overhang tint over the drawn bodies.
+    pub overhangs: bool,
     pub high_contrast: bool,
     pub view_cube: bool,
     /// The view-state schema's `comment_pins` (pins are drawn by cad-organize).
@@ -163,7 +170,7 @@ pub struct CadDisplay {
 }
 impl Default for CadDisplay {
     fn default() -> Self {
-        Self { mode: DisplayMode::ShadedEdges, grid: true, build_plate: false, high_contrast: false, view_cube: true, comment_pins: true, section: Section::default(), exact: ExactSection::default() }
+        Self { mode: DisplayMode::ShadedEdges, grid: true, build_plate: false, overhangs: false, high_contrast: false, view_cube: true, comment_pins: true, section: Section::default(), exact: ExactSection::default() }
     }
 }
 
@@ -179,17 +186,20 @@ pub const BUILD_PLATE_MM: [f64; 2] = [220.0, 220.0];
 pub enum DisplaySetting {
     Grid,
     BuildPlate,
+    /// RoboCAD's overhang shading (`toggle_overhangs`).
+    Overhangs,
     HighContrast,
     ViewCube,
     CommentPins,
 }
 
 impl DisplaySetting {
-    pub const ALL: [DisplaySetting; 5] = [DisplaySetting::Grid, DisplaySetting::BuildPlate, DisplaySetting::HighContrast, DisplaySetting::ViewCube, DisplaySetting::CommentPins];
+    pub const ALL: [DisplaySetting; 6] = [DisplaySetting::Grid, DisplaySetting::BuildPlate, DisplaySetting::Overhangs, DisplaySetting::HighContrast, DisplaySetting::ViewCube, DisplaySetting::CommentPins];
     pub fn name(self) -> &'static str {
         match self {
             DisplaySetting::Grid => "grid",
             DisplaySetting::BuildPlate => "build_plate",
+            DisplaySetting::Overhangs => "overhangs",
             DisplaySetting::HighContrast => "high_contrast",
             DisplaySetting::ViewCube => "view_cube",
             DisplaySetting::CommentPins => "comment_pins",
@@ -199,6 +209,7 @@ impl DisplaySetting {
         match self {
             DisplaySetting::Grid => "Grid",
             DisplaySetting::BuildPlate => "Build plate",
+            DisplaySetting::Overhangs => "Overhangs",
             DisplaySetting::HighContrast => "High contrast",
             DisplaySetting::ViewCube => "View cube",
             DisplaySetting::CommentPins => "Comment pins",
@@ -208,6 +219,7 @@ impl DisplaySetting {
         match self {
             DisplaySetting::Grid => &mut d.grid,
             DisplaySetting::BuildPlate => &mut d.build_plate,
+            DisplaySetting::Overhangs => &mut d.overhangs,
             DisplaySetting::HighContrast => &mut d.high_contrast,
             DisplaySetting::ViewCube => &mut d.view_cube,
             DisplaySetting::CommentPins => &mut d.comment_pins,
@@ -218,6 +230,7 @@ impl DisplaySetting {
         match self {
             DisplaySetting::Grid => d.grid,
             DisplaySetting::BuildPlate => d.build_plate,
+            DisplaySetting::Overhangs => d.overhangs,
             DisplaySetting::HighContrast => d.high_contrast,
             DisplaySetting::ViewCube => d.view_cube,
             DisplaySetting::CommentPins => d.comment_pins,
@@ -238,6 +251,9 @@ pub struct DisplayArgs {
     pub grid: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build_plate: Option<bool>,
+    /// Overhang shading (set after `build_plate`, which sets it too).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub overhangs: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub high_contrast: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -245,7 +261,8 @@ pub struct DisplayArgs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment_pins: Option<bool>,
     /// Flip this setting (RoboCAD's `toggle_grid`, `toggle_build_plate`,
-    /// `toggle_high_contrast`).
+    /// `toggle_overhangs`, `toggle_high_contrast`); flipping the build
+    /// plate sets overhang shading to its new state, as RoboCAD's does.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub toggle: Option<DisplaySetting>,
 }
@@ -319,9 +336,11 @@ pub struct SectionContext {
 
 /// Apply `cad_display`'s arguments (all checked first).
 pub fn apply_display(d: &mut CadDisplay, a: &DisplayArgs) -> Result<(), String> {
-    let explicit = [(DisplaySetting::Grid, a.grid), (DisplaySetting::BuildPlate, a.build_plate), (DisplaySetting::HighContrast, a.high_contrast), (DisplaySetting::ViewCube, a.view_cube), (DisplaySetting::CommentPins, a.comment_pins)];
+    // In this order: the build plate sets overhang shading, and an explicit
+    // `overhangs` given with it then wins.
+    let explicit = [(DisplaySetting::Grid, a.grid), (DisplaySetting::BuildPlate, a.build_plate), (DisplaySetting::Overhangs, a.overhangs), (DisplaySetting::HighContrast, a.high_contrast), (DisplaySetting::ViewCube, a.view_cube), (DisplaySetting::CommentPins, a.comment_pins)];
     if a.mode.is_none() && !a.next && a.toggle.is_none() && explicit.iter().all(|(_, v)| v.is_none()) {
-        return Err("cad_display needs a setting: mode, next, toggle, grid, build_plate, high_contrast, view_cube or comment_pins".into());
+        return Err("cad_display needs a setting: mode, next, toggle, grid, build_plate, overhangs, high_contrast, view_cube or comment_pins".into());
     }
     if a.mode.is_some() && a.next {
         return Err("cad_display: give mode or next, not both".into());
@@ -329,6 +348,10 @@ pub fn apply_display(d: &mut CadDisplay, a: &DisplayArgs) -> Result<(), String> 
     if let Some(t) = a.toggle {
         if explicit.iter().any(|(s, v)| *s == t && v.is_some()) {
             return Err(format!("cad_display: toggle {0} and {0} together; give one", t.name()));
+        }
+        // Flipping the plate sets the shading: an explicit value would be overwritten.
+        if t == DisplaySetting::BuildPlate && a.overhangs.is_some() {
+            return Err("cad_display: toggle build_plate sets overhangs to the plate's new state; give overhangs on its own, or build_plate true or false with it".into());
         }
     }
     if let Some(m) = a.mode {
@@ -340,11 +363,18 @@ pub fn apply_display(d: &mut CadDisplay, a: &DisplayArgs) -> Result<(), String> 
     for (setting, value) in explicit {
         if let Some(v) = value {
             *setting.slot(d) = v;
+            // RoboCAD's `toggle_build_plate`: `show_overhangs = build_plate is not None`.
+            if setting == DisplaySetting::BuildPlate {
+                d.overhangs = v;
+            }
         }
     }
     if let Some(t) = a.toggle {
         let slot = t.slot(d);
         *slot = !*slot;
+        if t == DisplaySetting::BuildPlate {
+            d.overhangs = d.build_plate;
+        }
     }
     Ok(())
 }
@@ -449,6 +479,8 @@ pub(in crate::cad) fn state_json(d: &CadDisplay) -> Value {
         "grid_step_mm": GRID_STEP_MM,
         "build_plate": d.build_plate,
         "build_plate_mm": BUILD_PLATE_MM,
+        "overhangs": d.overhangs,
+        "overhang_deg": section::OVERHANG_DEG,
         "high_contrast": d.high_contrast,
         "view_cube": d.view_cube,
         "comment_pins": d.comment_pins,
@@ -535,7 +567,7 @@ pub(in crate::cad) fn build(app: &mut App) {
 /// This part's REST commands (appended to `CadAction::commands`).
 pub(in crate::cad) fn specs() -> Vec<Spec> {
     vec![
-        spec("cad_display", CAD, json!({"mode": "wireframe"}), "CAD mode: the display state, display only (never a document edit; RoboCAD's own window is unchanged): mode (shaded | shaded_edges | wireframe | xray | matcap | render; RoboCAD's view.mode.*), next (RoboCAD's view.mode_next, Z: the next mode in that order, wrapping), grid (RoboCAD's 10 mm grid on XY, ±200 mm, view.grid), build_plate (RoboCAD's 220 × 220 mm plate with overhang shading, view.build_plate), high_contrast (the 3D view's light background, grid and edge colours, view.high_contrast), view_cube, comment_pins (true or false each), or toggle (grid | build_plate | high_contrast | view_cube | comment_pins: flip it). Settings given together apply together; mode with next, or toggle with the same setting, is refused. Answers the display state (also cad_state.display)."),
+        spec("cad_display", CAD, json!({"mode": "wireframe"}), "CAD mode: the display state, display only (never a document edit; RoboCAD's own window is unchanged): mode (shaded | shaded_edges | wireframe | xray | matcap | render; RoboCAD's view.mode.*), next (RoboCAD's view.mode_next, Z: the next mode in that order, wrapping), grid (RoboCAD's 10 mm grid on XY, ±200 mm, view.grid), build_plate (RoboCAD's 220 × 220 mm plate, view.build_plate; setting or toggling it sets overhangs to its new state, as RoboCAD's toggle_build_plate), overhangs (RoboCAD's overhang shading, print.overhangs: the drawn triangles facing down past 45° tinted, display only; set after build_plate when both are given), high_contrast (the 3D view's light background, grid and edge colours, view.high_contrast), view_cube, comment_pins (true or false each), or toggle (grid | build_plate | overhangs | high_contrast | view_cube | comment_pins: flip it). Settings given together apply together; mode with next, toggle with the same setting, or toggle build_plate with overhangs, is refused. Answers the display state (also cad_state.display)."),
         spec("cad_section", CAD, json!({"axis": "z", "offset": 5.0}), "CAD mode: the section tool, display only (never a document edit). Nothing given toggles it (RoboCAD's view.section, Ctrl+Shift+X; turned on without a plane it starts on XZ through the drawn bodies' centre, as RoboCAD's Section tool). plane {origin, normal, x_axis} (mm, RoboCAD's model frame; unit, perpendicular axes, as a saved view's) or axis x | y | z with offset mm (RoboCAD's {axis, offset}: Plane.yz, xz or xy at that offset) sets the plane; offset alone moves the current plane along its normal (the Section tool's Tab; the display toolbar's offset field sends it); rotate turns it 90° about Z (the tool's R); enabled true or false. The preview cuts the drawn triangles (clipped copies built off the UI thread; the side the normal points to is removed, as RoboCAD's clip plane) and draws their cut outline. exact: a node id whose exact B-rep section is read from RoboCAD's GET /nodes/{id}/section on a job, cached by (node, RoboCAD revision, plane) and drawn only while all three are current; RoboCAD's route takes plane=xy|xz|yz through the origin or a plane node id, so an exact section is refused, naming why, on any other plane. Answers the display state (cad_state.display.section)."),
     ]
 }

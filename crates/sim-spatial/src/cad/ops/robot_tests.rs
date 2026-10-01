@@ -407,3 +407,49 @@ fn a_joint_tool_pick_the_dialog_cannot_take_is_named() {
     assert_eq!(texts_of(&doc)["parent"], "b1");
     assert!(doc.status.as_ref().is_some_and(|s| s.as_ref().is_err_and(|e| e.starts_with("Robot: joint from the two selected bodies…: Servo is not"))));
 }
+
+/// `prepare` of a REST `cad_run ops.set_joint` on joint j1 with `given`.
+fn run_set_joint(doc: &CadDocument, given: &[(&str, Value)]) -> Result<Plan, String> {
+    let params: Map<String, Value> = given.iter().map(|(k, v)| (k.to_string(), v.clone())).collect();
+    let items = [SelectionItem("j1".into(), "body".into(), 0)];
+    match prepare(doc, &Env::default(), op("ops.set_joint"), &params, Some(&items), None)? {
+        Built::Robot(plan) => Ok(plan),
+        other => panic!("expected a robot plan, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_partial_rest_edit_joint_keeps_the_joints_other_values() {
+    let doc = document();
+    let p = run_set_joint(&doc, &[("lower", json!(-30))]).unwrap();
+    assert_eq!(p.calls.len(), 1, "the name is the joint's own: no rename");
+    assert_eq!((p.calls[0].name, &p.calls[0].args), ("set_joint", &vec![json!("j1")]));
+    let k = &p.calls[0].kwargs;
+    assert_eq!((k["type"].clone(), k["parent"].clone(), k["child"].clone(), k["motor"].clone()), (json!("revolute"), json!("b1"), json!("b3"), Value::Null));
+    assert_eq!((k["pivot"].clone(), k["axis"].clone(), k["gear_ratio"].clone(), k["damping"].clone()), (json!([1.0, 2.0, 3.0]), json!([0.0, 1.0, 0.0]), json!(2.5), json!(0.01)));
+    // The given lower limit in degrees, sent in radians; the upper as the form shows it (28.6479°).
+    assert!((k["lower"].as_f64().unwrap() + 30f64.to_radians()).abs() < 1e-12);
+    assert!((k["upper"].as_f64().unwrap() - 0.5).abs() < 1e-6);
+    // Every field given (what the window form's OK sends): used as given.
+    let all: Vec<(&str, Value)> = op("ops.set_joint").params.iter().map(|p| (p.name, json!(p.default))).collect();
+    let p = run_set_joint(&doc, &all).unwrap();
+    assert_eq!((p.calls[0].kwargs["parent"].clone(), p.calls[0].kwargs["gear_ratio"].clone(), p.calls[0].kwargs["lower"].clone()), (Value::Null, json!(1.0), Value::Null));
+    // A kind change across prismatic without the limits the joint has: their unit would change.
+    assert!(run_set_joint(&doc, &[("type", json!("prismatic"))]).is_err_and(|e| e.contains("pass lower and upper")));
+    assert!(run_set_joint(&doc, &[("type", json!("prismatic")), ("lower", json!(-5)), ("upper", json!(5))]).is_ok());
+}
+
+#[test]
+fn a_partial_rest_edit_joint_refuses_without_the_current_description() {
+    // Read at an older revision: refused by name, nothing built.
+    let mut old = document();
+    old.robot.data.key = Some((old.generation, 3));
+    let e = run_set_joint(&old, &[("lower", json!(-30))]).unwrap_err();
+    assert!(e.starts_with("Edit joint: hip's current values fill the parameters not given") && e.ends_with("the robot description is still being read (revision 4); try again in a moment"), "{e}");
+    // A joint the description does not have.
+    let mut unknown = document();
+    if let Some(Ok(s)) = unknown.robot.data.bundle.as_mut().map(|b| b.summary.as_mut()) {
+        s.joints.clear();
+    }
+    assert!(run_set_joint(&unknown, &[("lower", json!(-30))]).is_err_and(|e| e.ends_with("hip is not in RoboCAD's robot description at revision 4, so its values are not known")));
+}

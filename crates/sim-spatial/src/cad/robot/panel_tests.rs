@@ -161,8 +161,32 @@ fn every_robot_panel_control_fits_a_pattern_and_round_trips_through_rest() {
         let Value::Object(mut args) = rest_form(action) else { panic!("{id}: not an object") };
         let name = args.remove("command").and_then(|v| v.as_str().map(str::to_string)).expect("a command name");
         let parsed = <CadAction as Action>::parse(&sim_api::Command { command: name.clone(), args: Value::Object(args) }).unwrap_or_else(|e| panic!("{id}: {name} does not parse: {e}"));
-        assert_eq!(&parsed, action, "{id}: REST form and click differ");
+        // `picked_at` is not a REST argument (the window's stamp; a row's items are body items, which it does not touch).
+        let mut clicked = action.clone();
+        if let CadAction::CadSelect { picked_at, .. } = &mut clicked {
+            *picked_at = None;
+        }
+        assert_eq!(parsed, clicked, "{id}: REST form and click differ");
     }
+}
+
+#[test]
+fn a_row_press_carries_the_revision_the_description_was_read_at() {
+    let mut doc = document();
+    // The tree has moved on to revision 5; the description is still revision 3's.
+    doc.doc_key = Some((None, 5));
+    assert_eq!(doc.robot.data.read_at(), Some(3));
+    let press = controls(&doc, &[]).into_iter().find(|c| c.0 == "cad:robot:row:j1").expect("the joint's row is listed").2;
+    assert_eq!(press, CadAction::CadSelect { ids: vec!["j1".into()], items: Vec::new(), extend: false, toggle: false, picked_at: doc.robot.data.read_at() });
+    assert_eq!(select_action(&doc, "j1"), press, "the drawn row's button writes the same action");
+    // Its node is a body item: selected, with no index revision to refuse.
+    let mut f = Fixture::at(5);
+    assert!(matches!(apply(&press, &mut doc, &mut f), Outcome::Done(Ok(_))));
+    assert_eq!(f.items(), vec![SelectionItem("j1".into(), "body".into(), 0)]);
+    // Nothing read yet: no stamp.
+    let mut unread = document();
+    unread.robot.data.key = None;
+    assert!(matches!(select_action(&unread, "j1"), CadAction::CadSelect { picked_at: None, .. }));
 }
 
 #[test]

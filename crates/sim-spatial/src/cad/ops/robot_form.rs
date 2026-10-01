@@ -13,13 +13,13 @@
 //! body), and so does [`seed`]. Values are shown as RoboCAD's dialogs show
 //! them (`f"{v:g}"` line edits, [`g`]; spin boxes rounded to their
 //! decimals), so an untouched field sends what RoboCAD's would.
-use super::resolve::kind_of;
+use super::resolve::{Resolved, kind_of};
 use super::{Env, OpEntry};
 use crate::cad::document::CadDocument;
 use crate::cad::transform::num;
 use crate::ui_kit::form::FieldKind;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{RobotSummary, SelectionItem};
+use sim_runtime::cad_client::{RobotJoint, RobotSummary, SelectionItem};
 
 /// RoboCAD's `JOINT_TYPES` with `JOINT_TYPE_HINTS` (robotics.py:22, ui/widgets.py:1065-1071).
 const JOINT_TYPES: [(&str, &str); 7] = [
@@ -236,19 +236,7 @@ pub(super) fn seed(entry: &OpEntry, doc: &CadDocument, env: &Env, texts: &mut [S
         "ops.set_joint" => {
             let joint = selected.iter().copied().find(|id| kind_of(doc, id) == Some("joint")).and_then(|id| doc.robot.data.summary()?.joints.iter().find(|j| j.id == id));
             if let Some(j) = joint {
-                let degrees = j.kind != "prismatic";
-                let limit = |v: Option<f64>| v.map_or_else(String::new, |v| g(if degrees { v.to_degrees() } else { v }));
-                put(entry, texts, "type", j.kind.clone());
-                put(entry, texts, "parent", j.parent.clone().unwrap_or_default());
-                put(entry, texts, "child", j.child.clone());
-                put(entry, texts, "pivot", g3(j.pivot));
-                put(entry, texts, "axis", g3(j.axis));
-                put(entry, texts, "lower", limit(j.lower));
-                put(entry, texts, "upper", limit(j.upper));
-                put(entry, texts, "motor", j.motor.clone().unwrap_or_default());
-                put(entry, texts, "gear_ratio", fixed(j.gear_ratio, 2));
-                put(entry, texts, "damping", fixed(j.damping, 4));
-                put(entry, texts, "name", j.name.clone());
+                joint_texts(entry, j, texts);
             }
         }
         "robot.assign_motor" => {
@@ -286,6 +274,67 @@ pub(super) fn seed(entry: &OpEntry, doc: &CadDocument, env: &Env, texts: &mut [S
             }
         }
     }
+}
+
+/// The Edit joint dialog's values for joint `j` (`robot_edit_joint`:
+/// `j.to_json()`): limits in degrees unless prismatic, line edits as
+/// [`g`], spin boxes rounded to their decimals.
+fn joint_texts(entry: &OpEntry, j: &RobotJoint, texts: &mut [String]) {
+    let degrees = j.kind != "prismatic";
+    let limit = |v: Option<f64>| v.map_or_else(String::new, |v| g(if degrees { v.to_degrees() } else { v }));
+    put(entry, texts, "type", j.kind.clone());
+    put(entry, texts, "parent", j.parent.clone().unwrap_or_default());
+    put(entry, texts, "child", j.child.clone());
+    put(entry, texts, "pivot", g3(j.pivot));
+    put(entry, texts, "axis", g3(j.axis));
+    put(entry, texts, "lower", limit(j.lower));
+    put(entry, texts, "upper", limit(j.upper));
+    put(entry, texts, "motor", j.motor.clone().unwrap_or_default());
+    put(entry, texts, "gear_ratio", fixed(j.gear_ratio, 2));
+    put(entry, texts, "damping", fixed(j.damping, 4));
+    put(entry, texts, "name", j.name.clone());
+}
+
+/// `ops.set_joint`'s parameters for a run (`ops::prepare`): `given` over
+/// the resolved joint's current values as the Edit joint form seeds them
+/// ([`joint_texts`]), so a REST `cad_run ops.set_joint` naming only
+/// `lower` changes only the lower limit instead of resetting the other
+/// fields to the dialog's defaults. The window form sends every field
+/// (all its drafts), so `given` is returned unchanged and its OK behaves
+/// as before. Unlike the form, a filled-in pick is not moved onto the
+/// combo box's first entry when the dialog would not list it: the field
+/// keeps the joint's own value. Refused by name, with nothing sent, when
+/// the description is not read at the shown revision ([`description`]),
+/// when the joint is not in it, and when `type` changes between prismatic
+/// and a rotary kind while a limit the joint has is left out (its value is
+/// in the old kind's unit: mm against degrees).
+pub(super) fn fill_from_joint(entry: &OpEntry, doc: &CadDocument, r: &Resolved, given: &Map<String, Value>) -> Result<Map<String, Value>, String> {
+    let missing: Vec<&super::Param> = entry.params.iter().filter(|p| !given.contains_key(p.name)).collect();
+    if missing.is_empty() {
+        return Ok(given.clone());
+    }
+    let jid = r.nodes.first().ok_or_else(|| entry.refusal.to_string())?;
+    let name = doc.node_name(jid);
+    let unknown = |why: String| format!("{}: {name}'s current values fill the parameters not given ({}), and {why}", entry.label, missing.iter().map(|p| p.name).collect::<Vec<_>>().join(", "));
+    let s = description(doc).map_err(unknown)?;
+    let j = s.joints.iter().find(|j| j.id == *jid).ok_or_else(|| unknown(format!("{name} is not in RoboCAD's robot description at revision {}, so its values are not known", doc.shown_revision())))?;
+    if let Some(kind) = given.get("type").and_then(Value::as_str).map(str::trim)
+        && (kind == "prismatic") != (j.kind == "prismatic")
+    {
+        let left: Vec<&str> = [("lower", j.lower), ("upper", j.upper)].into_iter().filter(|(n, v)| v.is_some() && !given.contains_key(*n)).map(|(n, _)| n).collect();
+        if !left.is_empty() {
+            return Err(format!("{}: {name} changes from {} to {kind}: pass {} (the current limits are in {}, the new type's in {})", entry.label, j.kind, left.join(" and "), if j.kind == "prismatic" { "mm" } else { "degrees" }, if kind == "prismatic" { "mm" } else { "degrees" }));
+        }
+    }
+    let mut texts: Vec<String> = entry.params.iter().map(|p| p.default.to_string()).collect();
+    joint_texts(entry, j, &mut texts);
+    let mut out = given.clone();
+    for p in missing {
+        if let Some(i) = index(entry, p.name) {
+            out.insert(p.name.to_string(), Value::String(texts[i].clone()));
+        }
+    }
+    Ok(out)
 }
 
 /// PowerDialog's values (ui/widgets.py:1463-1505): the document's

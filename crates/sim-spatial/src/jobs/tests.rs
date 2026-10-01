@@ -309,6 +309,16 @@ fn open_in_browser_refuses_anything_but_a_web_link() {
     }
 }
 
+#[test]
+fn open_local_refuses_relative_and_missing_paths_by_name() {
+    // Refused before any opener is started.
+    for path in ["notes.md", "runs/cad-print/guide.html", ""] {
+        assert_eq!(open_local(std::path::Path::new(path)), Err(format!("not an absolute path: {path}")));
+    }
+    let missing = std::env::temp_dir().join("sim-spatial-open-local-missing").join("guide.html");
+    assert_eq!(open_local(&missing), Err(format!("no such file or folder: {}", missing.display())));
+}
+
 /// Every non-comment line of the `.rs` files under `src/` outside
 /// `src/jobs/` for which `hit` is true: (path relative to `src/`,
 /// "path:line: text"), sorted by path.

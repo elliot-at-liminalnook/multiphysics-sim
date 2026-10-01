@@ -10,14 +10,17 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01))
+## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01))
 
 **Nothing has been compiled, tested or run since aa34ef48** (the last
-verified commit). Three epics since were written and reviewed by reading
+verified commit). Four epics since were written and reviewed by reading
 only: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
 cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
-fixes 697a15c1, docs 61f1bea5) and cad-print (35ea6de0, 17f90d08 and
-its docs). Their counts and "done" states below are by
+fixes 697a15c1, docs 61f1bea5), cad-print (35ea6de0, 17f90d08, review
+fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3) and one-text-entry
+(d385e7eb, 8627fd51, 91c44f38 and its docs commit: one keyboard focus
+and one kit text field; see [One text entry](#one-text-entry-2026-10-01)).
+This epic is uncompiled too. Their counts and "done" states below are by
 reading, not by a build.
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
@@ -315,6 +318,53 @@ reading, not by a build.
   (`cad/actions.rs` fell from 705 to under 640 when `snapshot.rs` and
   `rest_form.rs` were split out). `src/` is 83,045 lines in 274 files
   (wc -l, tests included; `camera/` 2,458 in 7).
+- **Bevy-practice gaps** (audited 2026-10-01 against
+  `tools/claude-pair/prompts/bevy.md`; counts by grep over non-test
+  sources, nothing compiled). No pre-0.19 APIs remain: 0 `EventReader`,
+  `Trigger<`, `despawn_recursive` or `StateScoped`, and the simulation
+  boundary holds, because `Res<Time>` drives only animation and playback.
+  Open gaps, each with an epic ID in [Default epic order](#default-epic-order):
+  - **Private ordering edges** (`public-system-sets`): 94 `.after(..)` /
+    `.before(..)` calls named a function in another module (`grep -rnE
+    "\.(after|before)\([a-z_]+::[a-z_:]+\)"`), 66 after one-text-entry. Of these, 24 are
+    `.after(actions::serve)` (the REST poll) on input systems. Others cross
+    feature folders: `builder.rs:539` before `inspect_view::sync_camera`,
+    `robot/hardware/mirror_panel.rs:35` and `sync_panel.rs:58` against
+    `robot::apply_frames`, `robot/hardware/actions.rs:411` after the robot's
+    `actions::apply`, and `cad/mod.rs:127`, `cad/inspector/physical_edit.rs:339`
+    and `cad/print/studies.rs:411` after `cad::sync::receive`. CAD's
+    keyboard arbitration chain (`cad/attach.rs:67`, `cad/pick.rs:159`,
+    `cad/inspector/mod.rs:67`, `cad/materials/mod.rs:390`, against
+    `name_entry`, `editor_entry`, `numeric::entry` and `keys::gate`) was
+    reduced by one-text-entry to CAD-internal rules (every system that
+    gives a field the keyboard on a press or Tab runs before `keys::keys`; `keys::gate`
+    runs before the readers it gates; the surfaces chain before
+    `numeric::entry`); the picker orders itself against the kit's
+    `ui_kit::text::input::keys` in PreUpdate. §2 forbids ordering against another
+    feature's private systems.
+  - **Hand-computed 3D viewports** (`viewport-nodes`): `camera/viewport.rs`,
+    `view.rs:158` and `:296` (the split schematic) and `place_view.rs:294`
+    set `Camera.viewport` from dock sizes every frame. 0.19.1's
+    `ViewportNode` (`bevy_ui-0.19.1/src/widget/viewport.rs`, with
+    `viewport_picking` under the `bevy_picking` feature) renders a camera
+    into a UI node, so the dock layout owns where a view goes. 0 uses.
+  - **Hand-rolled persistence** (`persisted-settings`): `app/recent.rs`
+    writes its own `recent.json`, and remembered values (wall threshold,
+    fastener, clearance) last for one window only. Bevy 0.19 has app
+    settings (`#[derive(SettingsGroup)]`, in `bevy_ecs_macros-0.19.1`); the
+    crate providing the plugin isn't in the lockfile yet.
+  - **Small, for whichever epic touches the file:**
+    `physics_view::labels` (`physics_view.rs:517`) despawns and respawns
+    every `PhysicsLabel` each frame; keep the entities and update them with
+    `set_if_neq`. `selection::apply_actions` (`selection/mod.rs:375`) is an
+    exclusive `&mut World` system in Actions; narrow it to system params
+    unless it needs the world.
+  - **Deliberate, not gaps:** buttons on `Interaction` (see the UI kit
+    decisions; one-text-entry is done, so revisit: Enter/Space on a
+    tab-focused button needs `bevy_ui_widgets::Button` and `Activate`), CAD
+    face picks by `MeshRayCast` (see CAD selection and transform), and the
+    shared camera and grid instead of Bevy's controllers and `InfiniteGrid`
+    (see Shared camera and CAD views).
 - **What already works well, to keep:**
   - typed actions with one validated handler per action type
   - generation-stamped frames
@@ -797,7 +847,8 @@ Paths are `crates/sim-spatial/src/`.
     motion_keys, graph_key, overlay_keys, speed_keys}`, `place_view::keys`,
     and the pick observers (`inspect_view/scene.rs` `pick_part`, `linked::pick_net`,
     `builder::pick_reference`, `robot::actions::pick_link`). The builder's
-    `text_input` (SimSync) edits the draft and writes its Enter/Escape as
+    `text_input` (SimSync; since one-text-entry `drafts::sync_field`, over
+    the kit fields `builder.draft`/`builder.note`) edits the draft and writes its Enter/Escape as
     `BuildAction::SubmitDraft`/`DropDraft`; `robot::watch` (SimSync) writes
     the file watch's Reload. Continuous gestures stay where they were
     (orbit and fly cameras, wheel scroll, placement drags, sketch strokes)
@@ -877,7 +928,7 @@ Paths are `crates/sim-spatial/src/`.
     load finishes sees the view before the load (the next frame sees it);
     the file watch's Reload is written in SimSync and applied next frame.
     Place: station keys apply before `fly`. Inspect: actions apply before
-    `notes::update`. Builder and lessons: before `text_input` and the lesson
+    `notes::update`. Builder and lessons: before `text_input` (now `drafts::sync_field`) and the lesson
     poll. Nothing reads state that an action of the same frame changes
     later in the frame, except these one-frame shifts.
   - *Error texts changed only in edge cases:* a malformed `lesson_*`
@@ -1040,10 +1091,17 @@ switcher), 32e4cea1 and a56b4260 (review fixes).
 - **Feathers: not used.** Its palette, fonts and control shapes are not the
   builder's, and the batch preserves the builder's look; its theme tokens
   would have been a second token set. Revisit with a visual refresh.
-- **Text input: Bevy's text input not adopted.** The builder's draft
-  semantics (the "/" filter key is not typed, Escape leaves Connect, a draft
-  survives a mode switch) are recent reading-only fixes with no test; the
-  kit only styles the entry (`Kit::input`). Revisit when those have tests.
+- **Text input: one kit field on `InputFocus`, not Bevy's `EditableText`**
+  (one-text-entry, 2026-10-01; first decided here as "not adopted"). Every
+  text site is a `ui_kit::text` field: a `TextDraft` edited by one input
+  system on Bevy's `InputFocus`, with submit, cancel, tab, arrows and blur
+  delivered as `FieldMsg` data and one `typing` run condition for every key
+  map (the `typing` run condition or the `Typing` parameter). `EditableText` lacks a placeholder, submit handling and AccessKit
+  support and needs persistent editor nodes the kit's rebuilt panels do
+  not keep; the API facts and reasons are in
+  [One text entry](#one-text-entry-2026-10-01). The builder's draft
+  semantics (the "/" filter key is not typed, Escape leaves Connect, a
+  draft survives a mode switch) are kept and traced there.
 - **State styling.** `Look` is a component: a mode that toggles a button
   (current tab, lit chip, chosen segment, enabled) writes a new `Look` or
   `Enabled` and `repaint_buttons` repaints it, hover included. `Tint`
@@ -1792,7 +1850,7 @@ a4fe42d3 (see the journal's verification pass).* Paths are
     `Connecting`/`Connected`/`Lost`, health, doc, doc key, stale,
     selection, detail, commands, autosave, physical, edit, status,
     revision), `CadTarget` (`File` or `Service`), `TreeRow`,
-    `CadInputFocus`, `switch_blockers`, `leaving_note`, `release_child`.
+    `CadInputFocus` (deleted by one-text-entry: `ui_kit::text`), `switch_blockers`, `leaving_note`, `release_child`.
   - `sync.rs` (`sync/` since cad-select-transform): the connect job (`Pool::Dedicated`; a file starts the
     service and waits for `GET /`), the `cad-poll` `RunThread` (every
     500 ms `GET /` and `GET /selection`; `/doc`, `/commands` and (GUI)
@@ -1879,8 +1937,9 @@ through RoboCAD's routes; a REST caller waits for RoboCAD's answer.
   the selected node, Home fit, Cmd/Ctrl+S save. No clash: no key is read in
   every mode (`CorePlugin`, the switcher and the kit read none), and the
   other modes' keys run only in their modes. Keys are ignored while the
-  name field has focus (`CadInputFocus`; `keys` runs after
-  `panel::name_entry`), and a key whose button is disabled shows the
+  name field has focus (then `CadInputFocus`; since one-text-entry while
+  any kit text field has the keyboard, `ui_kit::text::Typing`, see
+  [One text entry](#one-text-entry-2026-10-01)), and a key whose button is disabled shows the
   button's reason instead of sending.
 - **The loopback refusal text** now reads "the local servers listen on
   127.0.0.1 only …" (was "the hardware servers …"); hardware tests check
@@ -3460,7 +3519,8 @@ another crate.
     `Framing::{Bounds, Fixed}`, `glide_home`, `zoom_to_cursor`,
     `yield_to_ui`, `robocad_gestures`) plus a per-frame input gate the mode
     writes as data (`enabled`, `zoom_modifier`, `reduced_motion`, `keys`,
-    `alt_left`, `typing`). `ViewArea::{Window, Docks, Card}` says where the
+    `alt_left`; `typing` until one-text-entry, which gates the camera's keys
+    on `ui_kit::text::typing` instead). `ViewArea::{Window, Docks, Card}` says where the
     view draws. `ViewPreset` is RoboCAD's `set_view` table
     (`robocad_degrees`, `robocad_to_display`/`display_to_robocad`).
     `OrbitMode` and `CameraState` round out the types.
@@ -3726,7 +3786,7 @@ full, current one), with the cad-print keys that share their letters
 | / | isolate (catalogue: `Ops.isolate`) | the keypad's divide is `/` (`normalise`) |
 | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize), fit | no other reader in CAD mode |
 | Numpad1, Numpad3, Numpad7 (Ctrl: the opposite side), Numpad9, Numpad5, Numpad0, NumpadDecimal, Home | shared camera (`camera/input.rs` `keys`): front/back, right/left, top/bottom, opposite, orthographic toggle, iso, fit, home | read only where an enabled camera's rules set `keys` and no text field is `typing`: Inspect, Build, Lessons, Robot and Phenomena; off in CAD, whose keymap reads the digits and Home itself; no other reader of these numpad keys or Home in those modes (Robot's NumpadAdd/NumpadSubtract set speed; grep of `Numpad` and `KeyCode::Home`) |
-| Arrow keys (Ctrl/Cmd: 90°; Shift: pan) | RoboCAD's orbit 10° and pan steps (`camera/input.rs` `arrow_action`, `camera_orbit {degrees}`, `camera_pan`) | CAD only (`robocad_gestures`), not while a text field has the keyboard (`typing` from `CadInputFocus`, which the palette sets, so its Up/Down stay the palette's); Robot, Phenomena, Lessons and Build read their own arrows, and the camera's arrows are off there |
+| Arrow keys (Ctrl/Cmd: 90°; Shift: pan) | RoboCAD's orbit 10° and pan steps (`camera/input.rs` `arrow_action`, `camera_orbit {degrees}`, `camera_pan`) | CAD only (`robocad_gestures`), not while a text field has the keyboard (the shared `ui_kit::text::typing` condition since one-text-entry; the palette's field takes Up/Down as `FieldEvent::Arrow`); Robot, Phenomena, Lessons and Build read their own arrows, and the camera's arrows are off there |
 
 ### Review findings (three reviewers by area, then fixes in f15766ea)
 
@@ -4090,7 +4150,7 @@ typed action:
   refuses focus while the Leg calibration panel is open, whose Q/A and STOP
   keys read any focus.
 - **CAD, unconnected:** an attach-URL field (`cad/attach.rs`,
-  `CadAction::CadOpen { url }`, holding `CadInputFocus`).
+  `CadAction::CadOpen { url }`; since one-text-entry the kit field `cad.attach`).
 - **Wording:**
   - HEADLESS_COMMANDS names the menus, toolbar, right-click menu and
     palette;
@@ -4895,6 +4955,288 @@ Nothing above was compiled or run. To do in the verification pass:
   leaving CAD mode while a job runs, the Robot panel row press and a
   partial REST Edit joint.
 
+## One text entry (2026-10-01)
+
+Batch one-text-entry (structural; T39.1–T39.3). Text entry in
+`sim-spatial` goes through one keyboard focus and one kit text field.
+Before it, 16 files read `KeyboardInput` messages with their own focus
+logic (15 by `MessageReader`, the document picker by `MessageCursor`), and
+four flags said "a field is typing" (`CadInputFocus`, `Builder::typing`,
+robot `panel_ui::typing`, `materials::typing`). All of them are gone.
+**Written and reviewed by reading only: nothing was compiled, tested or
+run.** Commits: d385e7eb (the kit skeleton and guard), 8627fd51
+(`Typing`), 91c44f38 (every site moved, the flags deleted, the key maps
+gated, and both review passes' fixes), and the docs commit after it.
+
+### Decision: TextDraft on InputFocus, not Bevy's `EditableText`
+
+API facts read from the 0.19.1 registry sources:
+
+- `bevy_ui_widgets-0.19.1/src/lib.rs:63-76`: `UiWidgetsPlugins` adds
+  `EditableTextInputPlugin`, so it is already active. Its observer
+  `on_focused_keyboard_input` (`text_input.rs`) handles
+  `On<FocusedInput<KeyboardInput>>` and returns at once unless the focused
+  entity has `EditableText` (`query.get_mut(focused_entity)`). It maps keys
+  to `TextEdit`s (Copy/Cut/Paste, Cmd+A/C/X/V, word and line motion,
+  Backspace, Delete, Escape as `CollapseSelection`, characters, Enter as a
+  newline only when `allow_newlines`) and lets Enter and Tab propagate
+  ("for tab navigation and submit actions"). `SelectAllOnFocus` selects on
+  `FocusGained` (deferred to pointer release for a press). `ImeSystems`
+  (HandleEvents, ToggleWindowIMEInput in PreUpdate; UpdatePosition in
+  PostUpdate) drive the IME for a focused `EditableText`.
+- `bevy_text-0.19.1/src/editing.rs`: `EditableText` holds a parley
+  `PlainEditor`, `pending_edits: Vec<TextEdit>`, `max_characters`,
+  `allow_newlines`; edits apply in PostUpdate (`apply_text_edits`, which
+  needs `FontCx`, `LayoutCx` and `bevy_clipboard::Clipboard`) and trigger
+  the `TextEditChange` entity event. `EditableTextFilter(Option<Arc<dyn
+  Fn(char) -> bool>>)` refuses inserts. Its module doc lists as **not
+  implemented**: placeholder text, text validation, AccessKit integration
+  and "text form submission handling". It is "headless": no box, border or
+  focus styling. `text_edit.rs`: `TextEdit` is the edit enum (Insert,
+  Backspace, motions, selections, IME compose/commit, Paste).
+- `bevy_input_focus-0.19.1/src/lib.rs`: `InputFocus` (`get`, `set(entity,
+  FocusCause)`, `clear`, `from_entity`), set to the primary window by
+  `set_initial_focus` (PostStartup). `InputDispatchPlugin` triggers
+  `FocusedInput<KeyboardInput>` on the focused entity (bubbling to the
+  window) in `InputFocusSystems::Dispatch`; it clears a despawned focus.
+  `gained_and_lost.rs`: `FocusGained`/`FocusLost` entity events in
+  PostUpdate (`InputFocusSystems::FocusChangeEvents`). `tab_navigation.rs`:
+  `TabNavigationPlugin` is not added by `DefaultPlugins`.
+- `bevy_winit-0.19.1/src/accessibility.rs:216-221`: AccessKit updates are
+  skipped while the focused entity has no `AccessibilityNode`.
+- sim-spatial's `bevy` features include `bevy_text`, `bevy_ui`,
+  `bevy_ui_widgets` (which enables `bevy_input_focus`) and `keyboard`, but
+  not `system_clipboard`, so `EditableText`'s copy and paste would be
+  in-app only.
+
+Why the kit keeps `TextDraft` driven by one system on `InputFocus`:
+
+1. Every panel is rebuilt from its owner's state (despawn and respawn on a
+   change key). An `EditableText` holds the editor state and must live
+   across rebuilds; focusing a rebuilt node would lose focus (dispatch
+   clears a despawned focus). Moving 19 fields to persistent editor nodes
+   would rewrite every panel's drawing.
+2. The batch needs a placeholder, submit and cancel as data, and an
+   accessible label: `EditableText` has none of them.
+3. Windowless tests: `apply_text_edits` needs the font, layout and
+   clipboard resources; the kit's tests run on `InputPlugin` alone.
+4. Copy, cut and paste would not reach the OS clipboard without a new
+   feature. **Intended gap:** kit fields have no clipboard, cursor
+   motion or selection beyond select-all (as every site before).
+
+Bevy's observer cannot double-type into a kit field: no kit field entity
+has `EditableText` (grep finds none in `src/`), so
+`on_focused_keyboard_input` returns before queuing an edit. Revisit when
+Bevy's text input gains placeholder, submit and AccessKit support and the
+panels keep their nodes (or a field adopts a persistent node).
+
+### Module map
+
+- `ui_kit/text/mod.rs`: `FieldId` (a field's identity), `TextField` (the
+  working `TextDraft`, `filter: Option<fn(char) -> bool>`, `placeholder`,
+  `label`, `select_on_focus`, `EnterKey::{Submit, ShiftNewline,
+  CommandSubmits}`, `TabKey::{Emit, Indent}`, `sticky`), `KitInput` (tags
+  `Kit::input` nodes), `FieldMsg { field, event: FieldEvent::{Changed,
+  Submit, Cancel, Tab { back }, Arrow { up }, Blur} }`, `Typing` (read-only
+  check) and the run condition `typing`, `TextFocus` (`focused`, `typing`,
+  `draft`, `focus`, `focus_draft`, `set`, `release`, `blur`; writes `Blur`
+  through `Commands`), `TextFieldApp::add_text_field` (spawns the field
+  entity once, with an `AccessibilityNode` carrying the label, placeholder
+  and the draft as its value), `TextEntryPlugin` (added by `UiKitPlugin`;
+  windowless).
+- `ui_kit/text/input.rs`: `keys`, the one reader of `KeyboardInput` for
+  text (PreUpdate, after `InputSystems` and `UiSystems::Focus`), and
+  `release_held` (moved unchanged from `app/picker`).
+- `ui_kit/text/draft.rs`: `TextDraft` and `DraftKey` (moved from
+  `form.rs`), `TextDraft::key(key, chord, filter)`.
+- `ui_kit/text/tests.rs`: the windowless tests and the source guard.
+
+The input system, each frame: (1) a field that lost the keyboard to a
+non-field entity gets `Blur`; (2) a left press not on a `KitInput` takes
+the keyboard from a non-sticky field, and a mode switch from the field
+that had it before the switch (`Blur`); (3) a field that gained the
+keyboard since the last run releases every held key (`release_held`,
+same-frame releases kept); (4) the focused field's keys: typing edits
+the draft (one `Changed` per frame), Enter is `Submit` as `EnterKey`
+reads it (the field keeps the keyboard: the owner blurs it on
+acceptance), Escape is `Cancel` (the kit blurs), Tab is `Tab` or a
+two-space indent, ↑/↓ are `Arrow`; keys after a Submit, Cancel or Tab in
+the same frame are dropped; every key the field used and every key
+pressed without Cmd/Ctrl is consumed (`clear_just_pressed` on both
+`ButtonInput`s), so no key map sees it; Cmd/Ctrl chords the field
+ignores pass through. Modifiers are followed from the keyboard messages
+(not `ButtonInput`, which the release empties).
+
+Owners: one `FieldId` per site (a form or a row set shares one, with the
+row as owner data); a press on the field (its existing action component,
+which `system_ui` also activates, so ids and handlers are unchanged) calls
+`focus`; `FieldMsg` is read as data. Mode key maps run under
+`not(ui_kit::text::typing)` or test `Typing::get()`.
+
+### Sites
+
+| Site | Old loop | Field | Submit / Cancel / Tab / Blur |
+|---|---|---|---|
+| Document picker "Open file…" | `app/picker/mod.rs` `keys` (own cursors, modifiers) | `picker.path` (select-all, sticky; `app/picker/modal.rs`) | open / close / give up the keyboard / redraw; unfocused Enter, Escape, Tab from `ButtonInput<Key>`; still releases held keys every frame while open |
+| CAD name | `cad/panel.rs` `name_entry` | `cad.name` (sticky; `cad/panel/name.rs`) | checks, refusal keeps it / end / – / end |
+| Numeric bar | `cad/numeric.rs` `entry` | `cad.numeric` (select-all) | `CadNumeric {values}` if every row evaluates / end, key cleared / next row selected / end |
+| Inspector editors | `cad/inspector/editors.rs` | `cad.inspector.edit` (select-all) | as before |
+| Inspector physical rows | `cad/inspector/entry.rs` | `cad.inspector.physical` (select-all) | as before |
+| Materials search, dialog | `cad/materials/panel.rs` (two loops) | `cad.materials.search`, `cad.materials.form` (select-all, sticky) | as before; `typing()`/`end_typing()` deleted |
+| Saved views | `cad/views/panel.rs` | `cad.views` | as before |
+| Section offset | `cad/display/entry.rs` | `cad.section.offset` (select-all; opens "0") | `offset_action` / end / – / end |
+| Attach URL | `cad/attach.rs` | `cad.attach` | attach / – / – / – |
+| Files form | `cad/files/form.rs` | `cad.files` (sticky) | OK / Close / next text row / row cleared, retaken while open |
+| Results forms | `cad/results/forms.rs` | `cad.results` (sticky) | OK / FormCancel / – / retaken while open |
+| Parameter form (incl. "Text to sketch:", print and robot forms) | `cad/surfaces/form.rs` | `cad.form` (sticky) | `CadFormSubmit` (Text row: starts the clicks) / `CadFormCancel` / next row / row none |
+| Command palette | `cad/surfaces/palette.rs` | `cad.palette` (sticky) | run highlighted row / close / – / close; `Arrow` moves the highlight; `Changed` re-ranks |
+| Builder drafts | `builder/drafts.rs` `text_input` | `builder.draft`, `builder.note` (the note: Shift+Enter newline; both sticky) | `SubmitDraft` / `DropDraft` (+ `SetMode(Select)` with no drag in Build) / – / – |
+| Lesson drafts and inputs | `lesson/actions.rs` `keys` | `lesson.note` (Shift+Enter newline), `lesson.block` (Cmd/Ctrl+Enter submits); Tab indents; sticky | `Submit` / `CancelDraft` |
+| Robot gait path | `robot/panel_ui.rs` | `robot.gait_path` | check, accepted path blurs / – / – / – |
+
+The flags: `CadInputFocus` (type, resource, every reader) deleted;
+`Builder::typing`, `RobotPanelUi::typing`, `GaitPathDraft.focused`,
+`Picker.focused`, `AttachDraft.focused`, `materials::typing`/`end_typing`
+and `OrbitRules::typing` deleted. What remains is owner data reconciled
+from `InputFocus` every frame (never consulted for key routing):
+`Numeric::focus` (the row the open entry edits; read by transform, sketch
+and REST state), `SectionEntry::typing` and `CadViews::typing` (draft and
+error), `MaterialsState::focus` and `select_all` (REST `"typing"`),
+`NameDraft.node`, the results form's `focused` and the files form's
+`focus` row.
+`cad/keys.rs` `Held` is `Typing` plus the pending chord (`keys::free`).
+
+Gated on the shared condition: CAD keys (`keys::keys`, transform keys,
+picks, sketch tools via `Held`; the numeric bar's Tab-to-open also not in
+a chord's frame), the camera's numpad/arrow keys (`camera/input.rs` under
+`not(typing)`) and fly's W/A/S/D/Q/E (`Typing`), builder keys, placement
+X/Y/Z/Escape, `inspect::input`, lesson page keys, robot keys, hardware
+Q/A `JogPress`, phenomena and Place keys. Ungated on purpose: hardware
+`JogRelease` (a release always stops a jog) and keyboard STOP (no field can
+hold the keyboard while the Leg panel is shown: the gait field refuses and
+blurs, the picker closes), and gesture modifiers (Shift/Alt/Ctrl variants
+of pointer gestures).
+
+### Intended behaviour differences
+
+- The picker's path field takes the keyboard when the picker opens; Tab
+  gives it up. Unfocused, only one of Escape, Enter and Tab applies per
+  frame, Escape first, then Enter, then Tab.
+- Characters typed with Cmd/Ctrl held are not typed anywhere (the builder
+  typed "v" for Cmd+V). Shift+Tab in the numeric bar still moves forward.
+- A press elsewhere ends a non-sticky field's entry in PreUpdate; that
+  press then also acts (a pick, a sketch point) where the old code blocked
+  the frame.
+- A menu, context menu or radial opening ends a non-sticky field's entry
+  (`TextFocus::release`, `surfaces::input`): the numeric bar's, as before;
+  the inspector's, section offset's and saved views' entries end instead of
+  pausing. The name field and the forms are sticky and keep theirs.
+- During a placement drag, Tab while the form types no longer also copies
+  the base point. The camera's arrows are not stopped by a pending
+  Shift+A chord.
+- Robot and inspect keys are silent while any field types (not only their
+  own); an open picker also sends robot `motion_keys`' one zero request.
+- Keys typed in the frame after Enter (before the builder's or lessons'
+  handler applied it) are not mirrored into the next draft.
+
+### Reading trace (Build draft → numeric '10 mm + 2' → Enter → gait path)
+
+1. **Build draft.** "/" in Build: `builder::actions::keys` (under
+   `not(typing)`) writes the filter action; the handler opens
+   `Builder.input`; `drafts::sync_field` (SimSync, Build) focuses
+   `builder.draft` with the buffer. The "/" was read by
+   `ui_kit::text::input::keys` in that frame's PreUpdate, before the field
+   had focus, so it is not typed. Typed keys: `Changed` → the buffer.
+2. **CAD numeric bar.** Switching to CAD: the kit blurs `builder.draft`
+   (it had the keyboard before the switch); the draft stays open in
+   `Builder.input`. In CAD with the Move tool, Tab: `numeric::entry`
+   (`!typing`, no chord) focuses `cad.numeric` with row 0 selected and
+   `began` set. Next PreUpdate the kit releases held keys. Typing
+   "10 mm + 2": each frame's `Changed` sets `texts[0]` and re-evaluates
+   (`fields[0].kind.evaluate` → `sim_runtime::units::evaluate(text,
+   false, Some("mm"))` = 12 mm), so the bar shows "= 12 mm" live.
+3. **Enter commits.** The kit writes `Submit` (a `Changed` comes first
+   only if keys typed in the Enter frame edited the draft) and consumes
+   Enter (CAD's keys never see it). `numeric::entry` evaluates every row;
+   all evaluate, so it writes `CadNumeric { values: ["10 mm + 2", …] }`,
+   clears `focus` and `key` and blurs the field.
+   `transform::commit::numeric` evaluates again and commits with the
+   `began` revision (refused by name if RoboCAD's document changed).
+4. **Robot gait path.** In Robot mode a press on the gait path field
+   (`robot/panel_ui.rs`, refused while the picker or Leg panel is open)
+   focuses `robot.gait_path`. Next PreUpdate the kit releases held keys,
+   and `motion_keys` (which reads no key while typing) sends
+   `HeldKeys([])` once as typing starts, so a robot walking on a held W
+   stops. Enter: `Submit` → the existing path check; an accepted path
+   writes its action and blurs.
+
+### Review findings (four pair-reviewers by area, then fixes)
+
+Fixed: a `field` name clash in `cad/inspector/editors.rs` (E0255; renamed
+`editor_field`); `TextFocus` held a `MessageWriter<FieldMsg>`, which
+conflicts with a `MessageReader<FieldMsg>` in one system (Blur now goes
+through `Commands`); the palette's ↑/↓ (new `FieldEvent::Arrow`); a mode
+switch blurring a field focused after the transition (`StateTransition`
+runs after PreUpdate: only the field that had the keyboard before is
+blurred); the windowless tests asserting consumption in the focus frame,
+where the release alone hid the key (an update between focus and the
+key); dead `TextField::filter` builder, `Typing::draft` and
+`TextDraft::key` wrapper; field entities without an `AccessibilityNode`
+(AccessKit updates paused while typing); `cad_cancel` and an opening menu
+no longer ending the numeric entry; the materials dialog not clearing a
+pending numeric focus request; a material row press ending the search
+(rows are `KitInput`); a saved-view focus request taking the previous
+draft's typing; the files and results forms losing modality after a
+`Blur` (retaken while open and no field types); the numeric Tab opening
+in a chord's frame; sketch clicks blocked while renaming (only the
+form's, numeric bar's and inspector editor's fields block them, as
+before); a new parameter form taking the previous form's typed text; the
+attach field's ordering before CAD's keys; keys typed between Enter and
+its handler landing in the next builder or lesson draft; stale comments.
+
+Rejected, with reasons: an accessibility *crash* (Bevy skips the update
+when the focus has no node; the pause was real and is fixed); Bevy's
+checkbox taking the keyboard from a sticky field (sim-spatial uses no
+`bevy_ui_widgets` checkbox or menu); the camera's arrows during a pending
+chord (accepted, listed above).
+
+Unverified, to watch on the first build: every `ParamSet<(MessageReader<
+FieldMsg>, TextFocus)>` borrow, the `Option<fn(char) -> bool>` field in
+struct-update literals, `AccessibilityNode` deref to `set_label`,
+`set_placeholder`, `set_value`, `value`, and the run-condition
+`not(typing)` on systems in chains.
+
+### Tests (windowless, `ui_kit/text/tests.rs`)
+
+`only_the_focused_field_types`, `mode_keys_are_silent_while_typing`,
+`held_keys_are_released_on_focus`, `release_keeps_same_frame_releases`
+(moved from `app/picker_tests.rs`, where it was
+`picker_release_keeps_same_frame_releases`), `enter_submits_and_escape_cancels`,
+`arrows_reach_the_owner`, `a_press_elsewhere_blurs`,
+`kit_inputs_and_sticky_fields_keep_the_keyboard`, `a_mode_switch_blurs`,
+`tab_filter_and_chords`, and the guard
+`keyboard_text_is_read_only_in_the_kit` (no `KeyboardInput>` outside
+`ui_kit/text/`, which covers `MessageReader`, `MessageCursor`,
+`Messages` and `FocusedInput`; allowlist empty). Also updated:
+`camera/tests.rs` (keys silent while a field types),
+`cad/materials/tests.rs` (the dialog's field takes the keyboard),
+`cad/scene.rs` (`the_gate_follows_the_text_focus` replaced by
+`the_gate_keeps_alt_left_drag_off_without_a_document`), `app/tests.rs`
+and `builder/test_support.rs` (the draft is kept, without
+`Builder::typing`), `ui_kit/tests.rs` (`TextDraft::key` with a filter; the
+picker's path-field parts are `KitInput`).
+
+### Verification checklist
+
+- [ ] `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- [ ] `cargo test -p sim-spatial --lib --bins`, including
+  `ui_kit::text::tests::*`, `app::tests::source_files_stay_small`,
+  `jobs::tests::*`, the copy guard and `camera::tests`.
+- [ ] In the window: Build "/" filter typed without "/"; a builder draft
+  across Build → Lessons → Build; the CAD numeric bar "10 mm + 2" + Enter;
+  the name field; the palette's ↑/↓; a held W in Robot then a press on
+  the gait path field (the robot stops); the picker's path field.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -5324,7 +5666,10 @@ RoboCAD jobs started through the edit path, one poller of RoboCAD's print
 jobs with progress, cancel and the Print jobs section, and the print
 study's results in the stress overlay, with one api.py gap route
 (`GET /print/study`); it is written and reviewed by reading (35ea6de0,
-17f90d08) and pending verification. Next: cad-organize.
+17f90d08, review fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3) and
+pending verification. After it, the structural one-text-entry (see
+[One text entry](#one-text-entry-2026-10-01)) moved every CAD text field
+onto the kit field. Next: cad-organize.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -5492,11 +5837,11 @@ on memory.
 |---|---|---|
 | Event / observer overhaul | 0.17 | the action layer (§3) |
 | Headless standard widgets (`bevy_ui_widgets`); Feathers | 0.17–0.19 | the UI kit (§6): the slider is headless; Feathers is not used (its look is not the builder's) |
-| Text input | 0.19 | not adopted yet: the builder's draft keeps its own entry (see the UI kit section) |
-| `ViewportNode` | 0.17 | 3D views inside panels (schematic beside spatial, inspector previews) |
+| Text input (`EditableText`, `EditableTextInputPlugin`); input focus (`bevy_input_focus`) | 0.19 | `InputFocus` adopted as the one keyboard focus; `EditableText` not adopted (no placeholder, submit or AccessKit support; editor nodes must persist across the kit's panel rebuilds; no OS clipboard without the `system_clipboard` feature): every field is the kit's `ui_kit::text` field, a `TextDraft` driven by one system on `InputFocus` (see [One text entry](#one-text-entry-2026-10-01)) |
+| `ViewportNode` | 0.17 | 3D views inside panels (schematic beside spatial, inspector previews); not adopted yet: viewports are computed from dock sizes (epic viewport-nodes) |
 | First-party camera controllers | 0.18 | not adopted (cad-views-export): 0.19.1 has no orbit controller, `FreeCamera` (`bevy_camera_controller`, in neither the lockfile nor the registry) grabs the cursor on a right-click and keeps state REST cannot set as Place's `Fly` yaw/pitch/speed, and `PanCamera` is 2D; the hand-rolled orbit cameras became one shared module instead (`src/camera/`, see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)) |
 | Easy screenshot and video recording | 0.18 | `ui_capture` and run recordings |
-| App settings | 0.19 | persisted viewer preferences |
+| App settings | 0.19 | persisted viewer preferences; not adopted yet: `app/recent.rs` writes its own file (epic persisted-settings) |
 | Interactive transform gizmo, infinite grid | 0.19 | build-mode placement (display-only); the infinite grid is not adopted for CAD (cad-views-export): CAD draws RoboCAD's `_draw_grid` as gizmo lines (10 mm step, ±200 mm, every 5th line major, X/Y/Z axis colours) because `InfiniteGrid` is infinite and fading, marks every 10th line, colours only X and Z, needs the `bevy_dev_tools` feature and cannot be cut by the section plane |
 | Text gizmos | 0.19 | 3D labels (steady values, fixed anchors) |
 | Diagnostics overlay, frame time graph | 0.17–0.19 | measuring realtime performance, which `AGENTS.md` requires |
@@ -5576,8 +5921,11 @@ The Director re-ranks with evidence, but this is the default:
    f26842fa and the review fixes committed in 697a15c1; nothing compiled
    or run).
    **cad-print** (2026-10-01; see [CAD print](#cad-print-2026-10-01)) is
-   done pending verification (written and reviewed by reading in 35ea6de0
-   and 17f90d08; nothing compiled or run).
+   done pending verification (written and reviewed by reading in 35ea6de0,
+   17f90d08, 6c6b1a5a, 9afd63f5 and 0a1147b3; nothing compiled or run).
+   Then the structural **one-text-entry** (2026-10-01; see
+   [One text entry](#one-text-entry-2026-10-01)), done pending
+   verification (by reading; nothing compiled or run).
    Next: **cad-organize**.
    Remaining, in order (§9 "Later CAD epics"):
    cad-organize, cad-experiments-motion.
@@ -5589,6 +5937,40 @@ The Director re-ranks with evidence, but this is the default:
     *Done 2026-09-30, verified at 80b5997e (batch fold-sim-app; sim-spatial
     lib tests 172 passed, 1 ignored; workspace `--locked` check clean; see
     [Fold in sim-app](#fold-in-sim-app-2026-09-30)).*
+
+**Bevy-practice epics** (added 2026-10-01; structural; the gaps are listed under
+"Bevy-practice gaps" in "Where it is today"). one-text-entry is done
+(pending verification); cad-organize is next (Director, 2026-10-01), then
+**public-system-sets**, which finishes the same ordering cleanup.
+Interleave the other two with the remaining CAD epics, keeping at least
+one epic in three structural:
+
+- **public-system-sets.** No system orders itself against a function in
+  another feature's folder.
+  - Input gets public sub-steps: the REST poll first, then buttons, keys and
+    picks. This replaces the 25 `.after(actions::serve)` edges.
+  - A feature that others order against exposes a public set, as
+    `camera::CameraSet` does: Robot frames (`robot::apply_frames`), the
+    robot's action apply, CAD sync results (`cad::sync::receive`), and the
+    spatial view's camera sync (closing §2's open builder and lesson
+    item).
+  - A lib test scans `src/` and names any cross-folder `.after` / `.before`
+    on a function path, like `jobs::tests::threads_are_started_only_in_jobs`.
+- **viewport-nodes.** 3D views inside docks are `ViewportNode`s, so the
+  layout owns placement and no system computes `Camera.viewport` from dock
+  sizes.
+  - Start with a spike on one view (the split schematic in `view.rs`).
+    Check gizmos, anti-aliasing and HDR on an image target, picking through
+    the node (Bevy's `viewport_picking`, and the cursor ray CAD's
+    `MeshRayCast` builds, which must become node-local), and the REST
+    `screenshot`.
+  - Then move the rest, or record per view why not, and update §6 and the
+    "Bevy features to use" table.
+- **persisted-settings.** Viewer preferences and remembered values persist
+  through Bevy 0.19's app settings instead of `app/recent.rs`'s own file.
+  - First confirm the crate and feature on docs.rs for 0.19.1 and add them.
+  - Keep or migrate `recent.json` without losing a user's recents.
+  - Values that come from CAD or the actuator registry are never settings.
 
 After that, feature work resumes on the target shape. The large-file debt
 was paid off by split-large-files (2026-10-01, see

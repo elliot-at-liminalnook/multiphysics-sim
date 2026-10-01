@@ -66,6 +66,13 @@ cad/run.sh examples/components/quadruped-parametric/model/robot.rcad   # CAD edi
 cargo run -p sim-spatial -- examples/components/quadruped-parametric/model/robot.rcad   # the same document in the native viewer's CAD mode
 ```
 
+Any window can open every mode's document from inside the window: pick a
+mode in the switcher strip along the bottom, and if that mode has nothing
+open, a document picker lists its robot presets, recent documents (kept in
+your config directory, never in the repository), the repository's example
+files and lesson or place folders, plus an "Open file…" path field.
+`cargo run -p sim-spatial` with no arguments is enough to reach every mode.
+
 The browser workspace is built and served as described in
 [web/README.md](web/README.md).
 

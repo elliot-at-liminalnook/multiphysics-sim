@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
+## Where it is today (re-measured 2026-10-01; window-first-usability written 2026-10-01, not yet built or tested, see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01))
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -27,6 +27,12 @@ duplicates physics.
   mode and document; the user switches modes in the window (the mode
   switcher, `system_ui` `mode:*`, REST `viewer_mode`), through one handler
   (`app::switch::handle`). Verified at 7da1216e.
+- **Window-first** (window-first-usability, 2026-10-01, written, not yet
+  verified): every mode's document can be opened in the window. A mode
+  chosen in the switcher with no document opens the document picker
+  (`app/picker/`); the switcher sits in a reserved strip every dock ends
+  above (`ui_kit::SWITCHER_STRIP`); no window text tells a person to use
+  REST (`copy_guard_tests.rs`).
 - **One REST server** (`rest::bind`, the only `sim_api::Server::bind` in
   sim-spatial, also used by `--headless`) and **one REST poll**
   (`app::actions::serve`, Input): every mode's commands, each tagged with
@@ -639,7 +645,12 @@ Paths below are `crates/sim-spatial/src/`.
   - *The switcher.* A row of the robot header's buttons in the bottom-right
     corner of every mode, with the last outcome above it: every mode's top
     edge is full (toolbars, run controls). Not visually checked (screenshots
-    are off for this run).
+    are off for this run). *Superseded by window-first-usability:* the
+    switcher is now the reserved strip `Dock::Strip` along the whole bottom
+    edge (`ui_kit::SWITCHER_STRIP`, 40 px), the segments on the right and
+    the last outcome on the left, wrapped and clipped to two lines; every
+    dock ends above it. A mode with no document opens the document picker.
+    See [Window-first usability](#window-first-usability-2026-10-01).
   - *Capability mode tags.* Each capability gains a `modes` array (added in
     `rest::capabilities`; `sim_api` is unchanged). A name may appear more
     than once with different modes and arguments (`system_ui`: builder,
@@ -1114,7 +1125,10 @@ The verification pass ran the following (verified at 4bc03789, below):
     in `lesson::seek` → `SeekTo`); a lesson button (`LessonAction` →
     `lesson::actions::buttons`); the page scroll (`LearnScroll::Page`).
   - Robot: a run button (`RobotAction::Run` → `robot::actions::buttons`);
-    the inspector scroll (`InspectorScroll` + `robot::scroll`); no slider.
+    the inspector scroll (`InspectorScroll` + `robot::scroll`); no slider
+    (since window-first-usability: the recorded timeline's seek slider,
+    `Kit::slider(Timebar)` → `SliderValue` + `slider_held` in
+    `robot::panel_ui::recorded_seek` → `RobotAction::Recorded { Seek }`).
   - Inspect: a toolbar chip (`InspectAction` → `inspect::input`); the
     inspector scroll (`scroll_inspector`); no slider.
   - Switcher: a mode segment (`ModeButton` → `switcher_clicks` →
@@ -3896,6 +3910,231 @@ The verification pass (2026-10-01) over 1b00d789..813f0a86 and its fixes:
 - `cargo check -p sim-web --target wasm32-unknown-unknown`: no errors.
   Four warnings remain, all in files this epic did not touch: sim-agent
   lib.rs:451 and :467, and sim-runtime `decision` and `rotor_speed`.
+
+## Window-first usability (2026-10-01)
+
+Batch window-first-usability fixes three bugs the user reported on
+2026-10-01 from using the window by hand, in all seven modes:
+
+1. Pressing Robot in a Build window with no robot refused with a REST
+   payload ("give path … or preset …, e.g. viewer_mode {…}").
+2. The switcher floated bottom right over panel content: the Robot
+   inspector's gait list, the Build status line, and its outcome message
+   over both.
+3. Some window text told people to use REST.
+
+Paths are `crates/sim-spatial/src/`. Written and checked by reading; not yet
+built or tested (the verification pass does that).
+
+### Shape
+
+- **Kit widgets** (§6, no intent logic):
+  - `ui_kit/path_field.rs` is the one path entry: an input with a
+    submit button, and the typed directory's matching entries.
+    - The listing runs on `Pool::Io` through a `jobs::Latest<Listing>`
+      (`request`/`receive`).
+    - `~` and `~/` are expanded, ".." goes up, and the typed file name
+      narrows the entries.
+    - The pure helpers are tested without a window.
+    - CAD's path form (`cad/files/form.rs`) now uses it: its own `dir_of`,
+      `file_of`, listing and footer listing are deleted, and so are
+      `cad/files/jobs.rs`'s `Listing`/`list`/`request_listing`.
+  - `ui_kit/picker.rs` holds `Kit::backdrop(label, cover_strip)`, at
+    `MODAL_Z` 50, above the pie (45), CAD popups (44) and the switcher (40),
+    and `Kit::document_picker`: titled sections of entries, the path field
+    and Close.
+- **The strip:**
+  - `ui_kit::SWITCHER_STRIP` (40 px, `theme.rs`) is reserved once.
+  - `Kit::dock` adds it to every bottom edge (`Dock::Bottom`, `Left`,
+    `Right`, and `Under`, which gained a `bottom`). `dock_rect` is the pure
+    layout.
+  - `Dock::Strip` is the strip itself (`app/switcher.rs`). Other
+    bottom-anchored nodes use `above_strip(px)`.
+  - Modes add no switcher room of their own: phenomena's `SWITCHER_ROOM`
+    and CAD's 580 px status-bar padding are gone.
+  - Viewports and wheel hit-tests end above the strip:
+    - `inspect_view::bottom()` (Inspect and Build);
+    - `cad/scene.rs`, `phenomena/scene.rs` and `robot/scene.rs`
+      `wanted_area`;
+    - Place's new viewport and its UI camera;
+    - the fly camera, which ignores a drag that starts in the strip and the
+      wheel over it;
+    - CAD popups (`popup_place`).
+- **The picker** (`app/picker/mod.rs`, discovery in `app/picker/discover.rs`):
+  - `Picker` is a resource. Discovery runs on `Pool::Io` when it opens, and
+    is cancelled when it closes.
+  - Its sources per mode:
+    - the recent documents;
+    - Robot: the presets (`robot::preset::list`);
+    - the examples under `<workspace>/examples` (and `lessons/`, and `cad/`
+      for `.rcad`), skipping `runs`, `target`, `node_modules`, `.venv` and
+      dot-dirs, at most 40 per section, with a truncation note;
+    - CAD: the RoboCAD service at the default URL;
+    - every mode: "Open file…" (suffixes per mode; directories only for
+      Lessons and Place; an http(s) URL for CAD).
+  - Choices are switches: `Picker::choice`/`typed` build
+    `ModeSwitch { mode, document: Some(..) }`, equal to
+    `ModeSwitch::from_args` for `viewer_mode {mode, path|preset|url}`. They
+    are written as `Act::ui(WindowAction::Switch(..))` and handled by
+    `app::switch::handle`. There is no second switch path.
+- **Recent documents** (`app/recent.rs`):
+  - One file per user, `recent.json` in the config directory:
+    `$SIM_SPATIAL_CONFIG_DIR`, `$XDG_CONFIG_HOME/sim-spatial`,
+    `~/Library/Application Support/sim-spatial` or `~/.config/sim-spatial`.
+    Never in the repository; `None` under `cfg(test)`.
+  - Versioned (`VERSION` 1). A newer version's file, or an unreadable
+    file, is never overwritten.
+  - Written atomically: a temp file beside it, `sync_all`, then rename.
+  - Recorded by `switch::handle` once a switch that named a document is
+    entered (`recent::record_job`, `Pool::Io`, `complete_on_drop`).
+- **`system_ui`:**
+  - While the picker is open, every mode's controls list ends with
+    `picker:<mode>:<n>` (the flat index), `picker:path` (activate with an
+    optional `text`) and `picker:close`.
+  - `route::mode_control` routes `picker:` ids to the window in every mode,
+    and `actions::serve` passes the controls to `route::annotate`.
+  - A `system_ui` `mode:<mode>` activation is interactive, like a click.
+
+### Decisions
+
+- **Only window intents open the picker.** A click (`Origin::Ui`, which
+  includes the builder's Lessons button) and a `system_ui` `mode:<mode>`
+  activation open it. REST `viewer_mode` without a document keeps its
+  behaviour: a structured Err, or for CAD the default-URL fallback. Its
+  refusal text names the in-window way ("robot mode needs a robot: choose
+  one in the picker …") with no payloads. Rejected: opening the picker for
+  REST too, which is a side effect a script didn't ask for.
+- **The picker opens after the leaving checks.** A person is never asked to
+  choose a document for a switch that would be refused.
+- **CAD with no document.** CAD opens the picker in the window when this
+  window has never had a CAD document (`Documents::cad` is None). Its
+  entries include the RoboCAD service at the default URL, which REST still
+  gets without asking.
+- **No keyboard mode switch exists.** grep finds none, so the keyboard
+  part of the brief has nothing to change.
+- **The picker is modal and safe for STOP.**
+  - `picker::keys` runs in PreUpdate after Bevy's input systems. It reads
+    keys and the wheel through its own cursors, then clears the keyboard and
+    wheel messages.
+  - Held keys are released (`clear` + `release_all`), not erased, so a
+    walking robot or a jog sees the release and stops.
+  - The picker doesn't open in Robot mode while the Leg calibration panel
+    is open, and closes if the panel opens, so its STOP stays reachable.
+  - Modifiers are tracked from the key messages, so Cmd+V is not typed.
+- **The picker's backdrop ends above the strip.** The switcher stays
+  usable, since the picker holds no work. CAD's modal forms cover the strip
+  (`cover_strip` true), because a switch would discard their typed values
+  and `leaving_blockers` doesn't check open forms.
+- **The outcome message** wraps within the strip and is clipped to two
+  lines (CAPTION, 28 px). The full text is its accessible label, and the
+  picker shows later outcomes, such as a refused choice, as its status line.
+  Rejected: a toast over the 3D view, which would overlap docks in some
+  modes.
+- **CAD's form keeps its path input as a kit form row.** Only the listing,
+  navigation and expansion moved to the path field: a form row is how the
+  kit form draws text inputs.
+
+### No REST in window text
+
+Each instruction is replaced by an in-window control emitting the existing
+typed action:
+
+- **Robot, older recordings:** "More recordings…" lists every recording's
+  Replay (`RobotAction::Replay`).
+- **Robot, the recorded timeline:** a seek slider
+  (`RobotAction::Recorded { Seek }`, checked first).
+- **Robot, the gait report list:** a compiled-gait path field
+  (`RobotAction::Gait { Open { Path } }`). While it has the keyboard, robot
+  and camera keys are ignored and held motion keys request zero once. It
+  refuses focus while the Leg calibration panel is open, whose Q/A and STOP
+  keys read any focus.
+- **CAD, unconnected:** an attach-URL field (`cad/attach.rs`,
+  `CadAction::CadOpen { url }`, holding `CadInputFocus`).
+- **Wording:**
+  - HEADLESS_COMMANDS names the menus, toolbar, right-click menu and
+    palette;
+  - the empty state points to the picker and Open;
+  - the field-of-view prompt;
+  - the robot key, recording, mode-switch and planar-graph texts;
+  - CAD export warnings;
+  - CAD Preferences;
+  - the switch refusals and `open_hint`.
+
+Unchanged: capability descriptions, refusals only REST or `system_ui`
+callers receive, and the hardware rule texts (an operator at the window for
+motion; `robot/hardware/actions.rs`, `handlers.rs`, `SYNC_REMOTE_REFUSAL`).
+
+**Guard.** `copy_guard_tests.rs` fails on any string literal outside tests
+naming "REST" (as a word), `cad_state.`, `robot_state.` or `system_ui `.
+- Exempt: `spec(`/`c(` capability calls, where `c(` is exempt only in the
+  files whose `c` builds a `Spec`, and `specs.rs`/`commands.rs`.
+- Allowlisted: a reasoned list of REST-only answers, terminal and OS
+  strings, and origin labels.
+- Stale allowlist entries fail too.
+
+### Reading trace (Build window → Robot button → picker → preset → Robot mode)
+
+1. A click on "Robot" in the strip: `switcher_clicks`
+   (`app/switcher.rs:63`, Input) writes
+   `Act::ui(WindowAction::Switch(ModeSwitch { mode: Robot, document: None }))`.
+2. `switch::handle` (`app/switch/mod.rs:390`, Actions) marks it interactive
+   (`:432`, `origin == Origin::Ui`) and calls `start` (`:514`). After the
+   blockers, `missing_document` (`prepare.rs:113`) finds `docs.robot` None
+   (`:118`). `start` (`:537`) sets the switcher line "Choose a robot for
+   Robot mode in the picker." and calls `Picker::open_for` (`:552`;
+   `picker/mod.rs:156`). Discovery starts on `Pool::Io` (`discover`,
+   `discover.rs:207`), and Build mode stays.
+3. `picker::receive` (`picker/mod.rs:339`, JobResults) takes the sources.
+   `picker::draw` (`:599`, Present, registered in `app/mod.rs:353`) spawns
+   `Kit::backdrop` + `Kit::document_picker` with the presets, recents,
+   examples and "Open file…".
+4. A click on a preset: `picker::clicks` (`:378`, `PickHit::Entry` at
+   `:388`) gets `Picker::choice` (`:185`), which is
+   `ModeSwitch { Robot, Some(Preset(id)) }`, and writes it as
+   `Act::ui(WindowAction::Switch(..))`: the same request `viewer_mode
+   {"mode":"robot","preset":id}` parses to (`picker_tests.rs:49`).
+5. `handle` → `start` → `prepare`'s Robot arm (`prepare.rs:211`): the
+   preset loads through `RobotView::open_preset` → `finish_load`
+   (`arrival.rs:38`) → `enter` (`arrival.rs:19`) → `NextState(Robot)` →
+   OnEnter `arrive` (`arrival.rs:75`).
+6. On the next frame `handle` confirms the switch and records the preset in
+   the recent documents (`switch/mod.rs:399`, `recent::record_job`,
+   `recent.rs:213`). `picker::receive` sees the mode changed and closes the
+   picker.
+
+### Tests (windowless)
+
+- `app/picker_tests.rs`:
+  - `a_picker_choice_is_the_switch_viewer_mode_builds`;
+  - `a_click_to_a_mode_with_no_document_opens_the_picker_and_rest_is_refused`;
+  - `refusals_name_no_rest_payload`;
+  - `recents_round_trip_dedupe_and_save_atomically`;
+  - `a_record_leaves_a_newer_versions_file_alone`;
+  - `discovery_finds_examples_and_skips_runs`.
+- `app/tests.rs`: the controls cross-check covers `picker:*`.
+- `ui_kit/tests.rs`:
+  - `path_field_paths`;
+  - `path_field_lists_a_directory`;
+  - `docks_leave_the_switcher_strip` (the strip layout);
+  - `document_picker_spawns_labelled_buttons`.
+- `cad/files/tests.rs`: `the_forms_listing_is_the_kit_path_fields`.
+- `cad/surfaces/tests.rs`: `popups_are_kept_inside_the_window`, with the
+  strip.
+- `copy_guard_tests.rs`: `window_text_does_not_send_people_to_rest`,
+  `the_lexer_finds_literals_and_spec_calls`.
+
+### Verification checklist
+
+- `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
+  warnings.
+- `cargo test -p sim-spatial --lib --bins`, in particular the tests above
+  and the existing `app::tests` switch tests, `jobs::tests` (the thread
+  guard) and the 750-line guard.
+- By reading, against the built code: the trace above; each mode's docks
+  ending above the strip; no UI-thread file I/O in `picker::draw`,
+  `robot::panel_ui::gait_path_draw` or `cad::attach`.
+- Unverified until screenshots are on: how the strip, the picker and the
+  two-line message look in each mode.
 
 ## Target shape
 

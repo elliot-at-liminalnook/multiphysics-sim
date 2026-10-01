@@ -152,6 +152,7 @@ mod controls;
 mod inspector;
 mod loader;
 mod overlay_view;
+mod panel_ui;
 mod scene;
 mod sections;
 mod state;
@@ -162,6 +163,7 @@ pub use loader::{FileNotes, LinkGeometry, Loaded, Opened, PLANAR_POSE, load, loa
 use controls::{GAIT_SCALES, GAIT_SEEK, OVERLAYS, RECORDED_TRANSPORT, STRESS_PRESET, gait_panel, gait_seek, jog_joints, jog_panel, motion_buttons, motion_panel, motion_text, overlay_on, recorded_panel, replay_line};
 use inspector::{clip, overlay_panel, panels, recorded_line, speed_panel};
 use overlay_view::{OverlayGizmos, draw, graph_dock, overlay_gizmo_config, stress_paint, stress_panel};
+use panel_ui::{GaitPathRoot, PanelToggle, RecordedSeek, RecordedSeekFill, RobotPanelUi, seek_fraction};
 use scene::{apply_frames, enable, highlight, planar_sync, receive, scroll, view_area, watch};
 use sections::{drives_text, file_watch_text, jog_line, joints_text, link_text, source_text};
 use state::touching;
@@ -182,21 +184,27 @@ impl Plugin for RobotPlugin {
         crate::app::actions::register::<RobotAction>(app);
         hardware::build(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
+            .init_resource::<RobotPanelUi>()
             .add_systems(OnEnter(ModeScope::Robot), setup)
-            .add_systems(OnExit(ModeScope::Robot), |mut commands: Commands| {
+            .add_systems(OnExit(ModeScope::Robot), (|mut commands: Commands| {
                 commands.remove_resource::<Materials>();
-            })
+            }, panel_ui::leave))
             .add_systems(
                 Update,
                 (
                     // Keys and buttons write robot actions after REST's, as the old chain applied them.
-                    (actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input),
+                    // The gait path field first: a key it takes this frame is not also a robot key (`RobotPanelUi::typing`).
+                    (panel_ui::gait_path_input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
+                        .chain()
+                        .after(crate::app::actions::serve)
+                        .in_set(ViewerSet::Input),
                     actions::apply.in_set(ViewerSet::Actions),
+                    panel_ui::receive_listing.in_set(ViewerSet::JobResults),
                     // Before the shared camera (`crate::camera`): its viewport reads the
                     // ViewArea `view_area` sets, its place step frames the bounds `receive`
                     // and `planar_sync` write.
                     (watch, receive, stress_paint, apply_frames, planar_sync, scroll, view_area, highlight).chain().in_set(ViewerSet::SimSync).before(CameraSet::Viewport),
-                    (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
+                    (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, panel_ui::gait_path_draw, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),
             );

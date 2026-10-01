@@ -34,7 +34,7 @@ use super::surfaces::SurfaceRoot;
 use crate::app::actions::Act;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
-use crate::ui_kit::{DANGER, Dock, FAINT, Kit, LEFT_WIDTH, Look, OK, RIGHT_WIDTH, STATUSBAR, SUBTLE, TEXT, TOPBAR, Tint, UiFonts, WARN, divider, size, wheel_delta};
+use crate::ui_kit::{DANGER, Dock, FAINT, Kit, LEFT_WIDTH, Look, OK, RIGHT_WIDTH, STATUSBAR, SUBTLE, SWITCHER_STRIP, TEXT, TOPBAR, Tint, UiFonts, WARN, divider, size, wheel_delta};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::input::mouse::MouseWheel;
@@ -152,7 +152,7 @@ pub(super) fn command_label(label: &str, keys: &Value) -> String {
 }
 
 /// Why RoboCAD's command registry is unavailable, if it is.
-pub(super) const HEADLESS_COMMANDS: &str = "RoboCAD's command registry belongs to its desktop window; this service is headless. Ops (RoboCAD's command layer) are available through REST cad_op.";
+pub(super) const HEADLESS_COMMANDS: &str = "RoboCAD's command registry belongs to its desktop window; this service is headless. Its ops are in this window's menu bar, tools toolbar, right-click menu and command palette (Ctrl+Space), each opening its parameter form.";
 
 /// A material's id and the label to show for it (its name, else its id).
 pub(super) fn material(v: &Value) -> Option<(String, String)> {
@@ -320,10 +320,10 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
                 });
             });
         });
-    // The status bar's right end is left to the mode switcher (app/switcher.rs,
-    // 560 px at most, bottom right).
+    // Normal padding: the mode switcher has its own strip under the status
+    // bar (`SWITCHER_STRIP`), so no right-end room is kept for it here.
     commands.spawn((
-        k.dock(Dock::Bottom { height: STATUSBAR }, Node { padding: UiRect::new(Val::Px(14.0), Val::Px(580.0), Val::Px(0.0), Val::Px(0.0)), align_items: AlignItems::Center, column_gap: Val::Px(14.0), overflow: Overflow::clip(), ..default() }),
+        k.dock(Dock::Bottom { height: STATUSBAR }, Node { padding: UiRect::horizontal(Val::Px(14.0)), align_items: AlignItems::Center, column_gap: Val::Px(14.0), overflow: Overflow::clip(), ..default() }),
         FocusPolicy::Block,
         AccessibleLabel::new("CAD status"),
         CadList::new(Part::Status),
@@ -458,7 +458,7 @@ fn scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<Pri
     }
     let Ok(window) = windows.single() else { return };
     let Some(p) = window.cursor_position() else { return };
-    if p.y <= TOPBAR || p.y >= window.height() - STATUSBAR || super::surfaces::over_popup(&popups, p) {
+    if p.y <= TOPBAR || p.y >= window.height() - STATUSBAR - SWITCHER_STRIP || super::surfaces::over_popup(&popups, p) {
         return;
     }
     let areas = if p.x <= LEFT_WIDTH {
@@ -528,7 +528,7 @@ fn refresh(
         commands.entity(entity).with_children(|p| match doc {
             None => {
                 if part == Part::Document {
-                    p.spawn(k.caption("No CAD document is open: open a .rcad file or attach to RoboCAD (REST cad_open)."));
+                    p.spawn(k.caption("No CAD document is open: choose a .rcad file in the mode switcher's document picker. With a document open, File → Open… (Ctrl+O) opens another, and the Attach field under an unconnected document's status attaches to a running RoboCAD."));
                 }
             }
             Some(doc) => match part {
@@ -694,6 +694,10 @@ fn document(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     // While connected the connection line already names it.
     if !connected && let Some(stale) = &doc.stale {
         p.spawn(k.text(format!("View may be behind RoboCAD: {stale}"), size::SMALL, WARN, 0));
+    }
+    // Not connected: the attach-URL field (`attach`, the same CadOpen {url} as cad_open).
+    if !connected {
+        super::attach::root(p);
     }
 }
 

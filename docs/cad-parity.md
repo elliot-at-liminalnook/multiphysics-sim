@@ -42,14 +42,17 @@ feature. *Native target* is the symbol that implements it in this epic
 - **none: needs a Python route**: nothing in `api.py` reaches the feature
   (or reaches it only through a GUI command, which opens RoboCAD's dialogs
   or uses its clipboard or viewport). These rows are flagged and listed at
-  the end: 24 rows, 22 distinct gaps.
+  the end: 17 rows, 17 distinct gaps (24 rows and 22 gaps until the
+  cad-modify epic added routes for copy and paste with placement, control
+  points, the curvature comb and the continuity check).
 - `n/a (display)`: purely the viewer's own presentation (camera, cursor,
   theme). No RoboCAD state is involved and no route is needed.
 
 **Status legend.**
 
-- `done-by-reading`: the cad-mode or cad-select-transform epic implements it
-  (native-viewer.md, CAD mode section; "CAD selection and transform"). It
+- `done-by-reading`: the cad-mode, cad-select-transform or cad-modify epic
+  implements it (native-viewer.md, CAD mode section; "CAD selection and
+  transform"; "CAD modify"). It
   will be built and tested in the verification pass. Nothing is `done` yet,
   because nothing in the epic has been compiled or run.
 - `later-epic: <name>`: owned by a later CAD epic (see "Epics" below).
@@ -72,7 +75,15 @@ it is renamed because it also takes the outliner's organization features, which 
 fits. The `cad-select-transform` epic (2026-10-01) has mapped its rows to
 native code (sub-body selection, the transform tools, push/pull, the
 numeric bar, live dimensions, snapping and measure); one row stays open
-(see "Counts").
+(see "Counts"). The `cad-modify` epic (2026-10-01) is done by reading: its
+116 rows map to native code (the op catalogue `cad::ops`, the command
+surfaces `cad::surfaces`, the keys `cad::keys`, the analysis overlays
+`cad::analysis_overlay` and the inspector's pivot and transform editors
+`cad::inspector::editors`), 77 `done-by-reading` and 39 `deliberately
+different`, each with its reason; none stays open. Its five new
+routes in RoboCAD's `api.py` (`POST /clipboard/copy`, `POST
+/clipboard/paste`, `GET /nodes/{id}/control_points|curvature_comb|continuity`)
+closed five flagged gaps (seven rows).
 
 **Every Ops method is already reachable natively, but only by REST.** The
 `cad_op` REST command (`CadAction::CadOp` → `CadClient::op`) can call any
@@ -144,9 +155,9 @@ the feature is later, not that it cannot be reached at all.
 | Redo (`edit.redo`) | ui/app.py:292, commands.py:308-309 | `POST /redo` | `CadAction::CadRedo` → `CadClient::redo`; key Ctrl/Cmd+Shift+Z | done-by-reading |
 | History labels (undo and redo stacks) | commands.py:204-243, api.py:472-473 | `GET /history`, and `history` in `/doc` | `cad::panel` history list | done-by-reading |
 | RoboCAD's command stack is the only undo stack (EditBodies, AddNodes, RemoveNodes, SetAttributes, MoveNode, SetMaterialDef, Composite) | commands.py:31-202 | every mutating route | every CAD edit goes to RoboCAD (`cad::actions` module doc) | done-by-reading |
-| Delete (`edit.delete`; deletes the whole selection as one undo step) | ui/app.py:293, ui/app.py:1458-1463, commands.py:312 | `DELETE /nodes/{id}` (one node); `POST /ops/delete {"args": [[ids]]}` (one step for many) | `CadAction::CadDelete { id }` (button, keys Delete/Backspace) deletes the first selected node only; a multi-node delete as one undo step is REST `cad_op {"name":"delete","args":[[ids]]}` until cad-modify | later-epic: cad-modify |
-| "Copy with Placement" (`edit.copy`: JSON with B-rep hex and world placement on the clipboard) | ui/app.py:294, ui/app.py:1465-1468, document.py:672 | none: needs a Python route (GUI: `POST /commands/edit.copy` uses RoboCAD's clipboard) | cad-modify epic | later-epic: cad-modify |
-| "Paste with Placement" (`edit.paste`, one undo step "Paste") | ui/app.py:295, ui/app.py:1470-1484, document.py:683 | none: needs a Python route (GUI: `POST /commands/edit.paste`) | cad-modify epic | later-epic: cad-modify |
+| Delete (`edit.delete`; deletes the whole selection as one undo step) | ui/app.py:293, ui/app.py:1458-1463, commands.py:312 | `DELETE /nodes/{id}` (one node); `POST /ops/delete {"args": [[ids]]}` (one step for many) | `cad::ops` catalogue `edit.delete` (`Flow::Immediate`, `Arg::Nodes`; keys Delete/Backspace in `cad::keys`, the panel's Delete button `cad:delete`, the Edit menu, palette and right-click menu) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): one `POST /ops/delete {"args": [[ids]]}` (one undo step), then the selection is cleared. REST `cad_delete {id}` still deletes one node | deliberately different: refused by name ("Select the nodes to delete") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason (the Delete and Backspace keys stay silent on an empty selection, as RoboCAD's) |
+| "Copy with Placement" (`edit.copy`: JSON with B-rep hex and world placement on the clipboard) | ui/app.py:294, ui/app.py:1465-1468, document.py:672 | `POST /clipboard/copy {"ids"}` (api.py `Service.copy`, 2026-10-01; read-only); GUI: `POST /commands/edit.copy` uses RoboCAD's clipboard | `cad::ops` catalogue `edit.copy` (`Shape::Copy`; Ctrl+C) → `args::build` (`Read::Copy`) → `analysis_overlay::start` (a Dedicated job, `CadClient::copy_nodes`) → `analysis_overlay::receive` keeps the clip in `OpsState::clipboard` with the revision it was read at ("Copied N item(s) with placement") | deliberately different: the clip stays in the viewer (`OpsState::clipboard`), not on the OS clipboard: the viewer reads it over REST and pastes it into the same service; an empty selection is refused by name ("Select the nodes to copy") where RoboCAD copies an empty clip |
+| "Paste with Placement" (`edit.paste`, one undo step "Paste") | ui/app.py:295, ui/app.py:1470-1484, document.py:683 | `POST /clipboard/paste {"clip"}` (api.py `Service.paste`, 2026-10-01; one undo step "Paste"); GUI: `POST /commands/edit.paste` | `cad::ops` catalogue `edit.paste` (`Shape::Paste`; Ctrl+V) → `args::build` (`Built::Paste` of `OpsState::clipboard`) → `ops::start` → `actions::edit` → `CadClient::paste` (one undo step "Paste") | deliberately different: pastes the viewer's last copy, not the OS clipboard (refused "Nothing to paste: copy with placement first (Ctrl+C)" when there is none); a clip RoboCAD cannot read comes back as its "Clipboard has no robocad content" |
 | Model hotkeys pause while a text or number field has focus | ui/app.py:470-477 | n/a | `cad::keys` ignores every key while the name field has focus (`CadInputFocus`; `keys` runs after `panel::name_entry`) | done-by-reading |
 | A failed command reports RoboCAD's message and the app stays alive | ui/app.py:253-268 | the error JSON of each route (api.py:1280-1286) | `CadError` shown verbatim in `cad::panel` | done-by-reading |
 | Rename (outliner text edit or joint dialog) | ui/widgets.py:341-348, commands.py:333 | `PATCH /nodes/{id} {"name"}` | `CadAction::CadPatch`: the inspector's name field (Enter sends `CadPatch {"name"}`) and REST `cad_patch` | done-by-reading |
@@ -203,9 +214,9 @@ the feature is later, not that it cannot be reached at all.
 | Context menu "Lock" / "Unlock" (whole selection) | ui/widgets.py:413-414 | `POST /ops/set_locked` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Group selection…" | ui/widgets.py:415 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 | Context menu "Move to group" ▸ "Top level" and every group path ("A / B") | ui/widgets.py:416-430 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Make unique (bake instance)" | ui/widgets.py:431 | `POST /ops/make_unique` | cad-modify epic | later-epic: cad-modify |
+| Context menu "Make unique (bake instance)" | ui/widgets.py:431 | `POST /ops/make_unique` | `cad::surfaces::context_menu`: `registry::MAKE_UNIQUE` ("Make unique (bake instance)") is added to the 3D view's right-click menu while an instance is selected (`context_menu::instance_selected`) → `CadInvoke { modify.make_unique }` → `cad::ops` catalogue `modify.make_unique` (instances only, one call per node) | deliberately different: offered in the 3D view's right-click menu: the native tree has no context menu (the outliner's menu belongs to cad-organize) |
 | Context menu "Set as active group"; "Clear active group"; registry "Set selected group as active" (`group.set_active`) | ui/widgets.py:432-435, ui/app.py:427 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
-| Context menu "Delete" | ui/widgets.py:434 | `DELETE /nodes/{id}`; `POST /ops/delete` | `CadAction::CadDelete` | done-by-reading |
+| Context menu "Delete" | ui/widgets.py:434 | `DELETE /nodes/{id}`; `POST /ops/delete` | the panel's Delete (`cad:delete` → `CadInvoke { edit.delete }`: every selected node in one `POST /ops/delete` since cad-modify); REST `cad_delete` (`CadAction::CadDelete`, one node) | done-by-reading |
 | Context menu "Show all" | ui/widgets.py:436 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
 | "Group selection" (`group.group`) | ui/app.py:428 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 
@@ -236,9 +247,9 @@ inspector shows as returned.
 | `color` shown | api.py:99 | `GET /nodes/{id}` | `cad::inspector` (as returned) | done-by-reading |
 | `color` editor | api.py:592-593, commands.py:348 | `PATCH /nodes/{id} {"color"}` (REST `cad_patch` works now) | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | `pivot` shown | api.py:99 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
-| `pivot` editor | api.py:594-595, commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | cad-modify epic | later-epic: cad-modify |
+| `pivot` editor | api.py:594-595, commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | `cad::inspector::editors` (`EditKey::Pivot`: `editors::entry` evaluates "x, y, z" with `sim_runtime::units` → `patch_for` → `CadAction::CadPatch {"pivot"}`, one undo step; "Clear pivot" sends `null`; refused as RoboCAD refuses a component member's, `editors::refusal`) | done-by-reading |
 | `transform` shown (`Transform.to_json`) | api.py:99 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
-| `transform` editor (refused for component occurrences, api.py:577-578) | api.py:596-597 | `PATCH /nodes/{id} {"transform"}` | cad-modify epic | later-epic: cad-modify |
+| `transform` editor (refused for component occurrences, api.py:577-578) | api.py:596-597 | `PATCH /nodes/{id} {"transform"}` | `cad::inspector::editors` (`EditKey::Translation`, `Axis`, `Angle`, `Scale`: one changed component is sent with the other three as RoboCAD reported them, `placement` → `patch_for` → `CadAction::CadPatch {"transform"}`; refused for component occurrences and members as RoboCAD refuses them, `editors::refusal`) | deliberately different: the editor is shown only for the nodes RoboCAD keeps a placement for (instances, reference meshes and images; bodies are baked in world, document.py:142-144), and a transform RoboCAD sent without one of its keys is not edited (nothing is filled in) |
 | Mass block: `volume_mm3`, `area_mm2`, `mass_g`, `centroid`, `bbox_min`, `bbox_max`, `size` | api.py:104-107 | `GET /nodes/{id}` | `cad::inspector` (`MassBlock`) | done-by-reading |
 | `body_kind`, `face_count`, `edge_count` | api.py:106-109 | `GET /nodes/{id}` | `cad::inspector` | done-by-reading |
 | `sketch` (curves on a plane) shown | api.py:110-111 | `GET /nodes/{id}`, `GET /nodes/{id}/sketch` | `cad::inspector` (as returned) | done-by-reading |
@@ -331,17 +342,17 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Scale (`tool.scale`, S: Ctrl snaps 0.1, Tab for the factor) | ui/app.py:325, ui/tools.py:323-330, ui/tools.py:363-364 | `POST /ops/transform {"scale", "center"}` | `cad::transform::gizmo` (`scale_factor`, uniform, Ctrl ×0.1) → `CadTransform { scale, center }`; Tab: the factor | deliberately different: the pivot for several selected nodes is the centre of their drawn-mesh bounds, not RoboCAD's mass-weighted centroid (`cad::transform::pivot`) |
 | Push/Pull face (`tool.push_pull`, D: drag along the normal; Shift offsets; Ctrl snaps to the grid; a non-planar face is offset) | ui/app.py:326, ui/tools.py:547-632 | `POST /ops/push_pull`, `POST /ops/offset_faces` | `cad::transform::push_pull::tool` (the face by ray cast, along its normal, Ctrl 10 mm steps; `release_action`: Shift or a non-planar face → `CadOffsetFaces`, else `CadPushPull`) → `cad::transform::commit::push_pull_call` / `offset_call` | done-by-reading |
 | Offset face (`tool.offset_face`, Shift+D) | ui/app.py:327, ui/tools.py:551-553 | `POST /ops/offset_faces` | `CadAction::CadTool { tool: OffsetFace }` → `cad::transform::push_pull::release_action` → `CadOffsetFaces` → `cad::transform::commit::offset_call` | done-by-reading |
-| Box (corner) (`tool.box`: drag the base, then the height; Tab width depth height; built as a sketch rectangle plus an extrude named "Box") | ui/app.py:328, ui/tools.py:391-541 | `POST /nodes {"kind": "box"}` or `POST /ops/box` | cad-modify epic | later-epic: cad-modify |
-| Box (centre) (`tool.box_center`) | ui/app.py:329, ui/tools.py:471-473 | `POST /ops/box_center` | cad-modify epic | later-epic: cad-modify |
-| Cylinder (`tool.cylinder`; Tab diameter height) | ui/app.py:330, ui/tools.py:503-507 | `POST /ops/cylinder` | cad-modify epic | later-epic: cad-modify |
-| Sphere (`tool.sphere`; Tab diameter) | ui/app.py:331, ui/tools.py:508-510 | `POST /ops/sphere` | cad-modify epic | later-epic: cad-modify |
+| Box (corner) (`tool.box`: drag the base, then the height; Tab width depth height; built as a sketch rectangle plus an extrude named "Box") | ui/app.py:328, ui/tools.py:391-541 | `POST /nodes {"kind": "box"}` or `POST /ops/box` | `cad::ops` catalogue `tool.box` (`Flow::Place`: `ops::invoke` makes it the active op with its form for exact sizes; `cad::ops::interact::pointer` snaps the press, drags the base, then the height; `interact::finish_params` writes `CadRun {id, params, revision}`; Tab writes the drag's first point into the form's anchor) → `args::build` (`place`) → one `POST /ops/box {"args": [corner, size]}` | deliberately different: sent as one `Ops.box` (history label "Box"; RoboCAD extrudes a sketch rectangle, label "Extrude", node "Box"), and placed on the XY plane through the origin (z = 0): no active plane until cad-sketch |
+| Box (centre) (`tool.box_center`) | ui/app.py:329, ui/tools.py:471-473 | `POST /ops/box_center` | `cad::ops` catalogue `tool.box_center` (`Flow::Place`: `ops::invoke` makes it the active op with its form for exact sizes; `cad::ops::interact::pointer` snaps the press, drags the base, then the height; `interact::finish_params` writes `CadRun {id, params, revision}`; Tab writes the drag's first point into the form's anchor) → `args::build` (`place`: the corner is the centre less half the width and depth, the base on the plane, as RoboCAD's tool) → one `POST /ops/box` | deliberately different: sent as `Ops.box` like the corner box (RoboCAD's tool extrudes; `Ops.box_center`, which also centres the height, is the REST-only `ops.box_center`), on the XY plane (z = 0): no active plane until cad-sketch |
+| Cylinder (`tool.cylinder`; Tab diameter height) | ui/app.py:330, ui/tools.py:503-507 | `POST /ops/cylinder` | `cad::ops` catalogue `tool.cylinder` (`Flow::Place`: `ops::invoke` makes it the active op with its form for exact sizes; `cad::ops::interact::pointer` snaps the press, drags the base, then the height; `interact::finish_params` writes `CadRun {id, params, revision}`; Tab writes the drag's first point into the form's anchor) → `args::build` (`place`: axis ±Z by the height's sign, radius at least 1e-3, as `_finish`) → one `POST /ops/cylinder` | deliberately different: placed on the XY plane (z = 0) only: no active plane until cad-sketch |
+| Sphere (`tool.sphere`; Tab diameter) | ui/app.py:331, ui/tools.py:508-510 | `POST /ops/sphere` | `cad::ops` catalogue `tool.sphere` (`Flow::Place`: `ops::invoke` makes it the active op with its form for exact sizes; `cad::ops::interact::pointer` snaps the press, drags the base, then the height; `interact::finish_params` writes `CadRun {id, params, revision}`; Tab writes the drag's first point into the form's anchor) (the release finishes it, as RoboCAD's `release`) → `args::build` (`place`) → one `POST /ops/sphere` | deliberately different: placed from the XY plane (z = 0) only: no active plane until cad-sketch |
 | Extrude (`tool.extrude`, X: the selected sketch or curve; drag the height, taper; Shift subtracts, Ctrl unites, Alt intersects with the body under the selection; preview mesh) | ui/app.py:332, ui/tools.py:822-931 | `POST /ops/extrude {"op", "target"}` | cad-sketch epic | later-epic: cad-sketch |
 | Revolve (`tool.revolve`, Shift+R: about the sketch plane's x axis; Tab angle) | ui/app.py:333, ui/tools.py:916-918 | `POST /ops/revolve` | cad-sketch epic | later-epic: cad-sketch |
-| Fillet (`tool.fillet`, Ctrl+F: click edges, type the radius) | ui/app.py:338, ui/tools.py:937-989 | `POST /ops/fillet` | cad-modify epic | later-epic: cad-modify |
-| Variable fillet (`tool.fillet_variable`: start and end radius) | ui/app.py:339, ui/tools.py:981-982 | `POST /ops/fillet {"radius_end"}` | cad-modify epic | later-epic: cad-modify |
-| Chordal fillet (`tool.fillet_chordal`) | ui/app.py:340, ui/tools.py:983-984 | `POST /ops/fillet_chordal` | cad-modify epic | later-epic: cad-modify |
-| Chamfer (`tool.chamfer`, Ctrl+Shift+F: distance, and an angle unless it is 45°) | ui/app.py:344, ui/tools.py:985-986 | `POST /ops/chamfer` | cad-modify epic | later-epic: cad-modify |
-| Hollow / shell (`tool.shell`, Ctrl+Shift+H: pick the faces to open, type the wall) | ui/app.py:345, ui/tools.py:992-1021 | `POST /ops/shell` | cad-modify epic | later-epic: cad-modify |
+| Fillet (`tool.fillet`, Ctrl+F: click edges, type the radius) | ui/app.py:338, ui/tools.py:937-989 | `POST /ops/fillet` | `cad::ops` catalogue `tool.fillet` (`Flow::PickThenForm`: `ops::invoke` sets the selection mode, keeps the selection and opens the form beside the view, `cad::surfaces::form`; clicks toggle picks in `cad::pick::pointer`; Enter or OK → `CadFormSubmit` → `ops::submit`) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): `POST /ops/fillet {"args": [node, [{"node", "edge"}], radius]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD; the selection is cleared and the tool stays active | done-by-reading |
+| Variable fillet (`tool.fillet_variable`: start and end radius) | ui/app.py:339, ui/tools.py:981-982 | `POST /ops/fillet {"radius_end"}` | `cad::ops` catalogue `tool.fillet_variable` (`Flow::PickThenForm`: `ops::invoke` sets the selection mode, keeps the selection and opens the form beside the view, `cad::surfaces::form`; clicks toggle picks in `cad::pick::pointer`; Enter or OK → `CadFormSubmit` → `ops::submit`) → `POST /ops/fillet` with `radius` and `radius_end`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | done-by-reading |
+| Chordal fillet (`tool.fillet_chordal`) | ui/app.py:340, ui/tools.py:983-984 | `POST /ops/fillet_chordal` | `cad::ops` catalogue `tool.fillet_chordal` (`Flow::PickThenForm`: `ops::invoke` sets the selection mode, keeps the selection and opens the form beside the view, `cad::surfaces::form`; clicks toggle picks in `cad::pick::pointer`; Enter or OK → `CadFormSubmit` → `ops::submit`) → `POST /ops/fillet_chordal`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | done-by-reading |
+| Chamfer (`tool.chamfer`, Ctrl+Shift+F: distance, and an angle unless it is 45°) | ui/app.py:344, ui/tools.py:985-986 | `POST /ops/chamfer` | `cad::ops` catalogue `tool.chamfer` (`Flow::PickThenForm`: `ops::invoke` sets the selection mode, keeps the selection and opens the form beside the view, `cad::surfaces::form`; clicks toggle picks in `cad::pick::pointer`; Enter or OK → `CadFormSubmit` → `ops::submit`) → `args::build` (`Shape::Chamfer`: `{"distance"}`, plus `angle_deg` only when it is not 45°) → `POST /ops/chamfer`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | done-by-reading |
+| Hollow / shell (`tool.shell`, Ctrl+Shift+H: pick the faces to open, type the wall) | ui/app.py:345, ui/tools.py:992-1021 | `POST /ops/shell` | `cad::ops` catalogue `tool.shell` (`Flow::PickThenForm`: `ops::invoke` sets the selection mode, keeps the selection and opens the form beside the view, `cad::surfaces::form`; clicks toggle picks in `cad::pick::pointer`; Enter or OK → `CadFormSubmit` → `ops::submit`) in face mode → `POST /ops/shell {"args": [node, wall, [faces]]}`, one call per selected node with its selected faces (`Needs::NodesWithFaces`) | deliberately different: a face click toggles the face: RoboCAD's `ShellTool.press` reuses `EdgeTool.press`, whose `hit[0] == "edge"` test makes a face click toggle nothing there, while the tool's own hint says "click adds" (`cad::pick` module doc) |
 | Measure (`tool.measure`, M: two picks; distance, angle or radius; the value is copied to the clipboard; Shift+click keeps it as a measure node) | ui/app.py:349, ui/tools.py:1027-1062, ui/app.py:715-740 | `POST /ops/add_measurement` (kept measurements); `GET /nodes/{id}/faces`, `/edges` | `cad::measure::tool` (two picks, `cad::measure::between`) → `CadAction::CadMeasure { keep: Shift }` → `cad::transform::commit::measure` (kept: one `POST /ops/add_measurement`) | deliberately different: the value is not copied to the clipboard (it shows in the status line and the tool bar, and REST `cad_measure` answers it); the same circular edge picked twice gives its radius (RoboCAD's branch is unreachable); the label is in the tool bar, not 3D text |
 | Plane from face (`tool.plane`, Ctrl+P) | ui/app.py:350, ui/tools.py:1065-1099 | `POST /ops/plane_from_face` | cad-sketch epic | later-epic: cad-sketch |
 | Plane from three points (`tool.plane_three`) | ui/app.py:351, ui/tools.py:1100-1106 | `POST /ops/plane_three_points` | cad-sketch epic | later-epic: cad-sketch |
@@ -350,19 +361,19 @@ commands. Direct-edit commands driven by dialogs are under "Modify".
 | Active plane XY / XZ / YZ (`tool.plane_xy`, `tool.plane_xz`, `tool.plane_yz`; "Active plane set") | ui/app.py:354-356, ui/app.py:1022-1027 | n/a (viewer state; RoboCAD's `PUT /view {"active_plane"}` is GUI-only) | cad-sketch epic | later-epic: cad-sketch |
 | "Toggle 2D snapping to the active plane" (`tool.plane_2d_snap`) | ui/app.py:357, ui/app.py:1029-1031 | n/a (viewer state) | cad-sketch epic | later-epic: cad-sketch |
 | Fastener hole… (`tool.fastener`, Ctrl+H: dialog "Size" M2–M8, "Kind" clearance/tap/counterbore/countersink/insert, "Extra clearance (mm)", "Depth (mm)" or "through"; remembers the last; then click faces) | ui/app.py:358, ui/app.py:889-894, ui/widgets.py:988-1021, ui/tools.py:1120-1155 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
-| Mirror (about active plane) (`tool.mirror`, Ctrl+M; YZ when no plane is active) | ui/app.py:360, ui/app.py:910-914 | `POST /ops/mirror` | cad-modify epic | later-epic: cad-modify |
-| Mirror as live instance (`tool.mirror_live`) | ui/app.py:361 | `POST /ops/mirror {"live": true}` | cad-modify epic | later-epic: cad-modify |
-| Array… (`tool.array`, Ctrl+Shift+A: rectangular, count X/Y/Z, "count + spacing" or "count + total extent", or radial about the active plane; "As live instances"; "Merge into one body") | ui/app.py:365, ui/app.py:920-941, ui/widgets.py:1024-1063 | `POST /ops/array_rect`, `POST /ops/array_radial` | cad-modify epic | later-epic: cad-modify |
-| Instance selected (`tool.instance`: offset +20 mm in X) | ui/app.py:364, ui/app.py:916-918 | `POST /ops/instance` | cad-modify epic | later-epic: cad-modify |
-| "Set pivot at cursor snap" (`tool.set_pivot`) | ui/app.py:376, ui/app.py:1015-1020 | `POST /ops/set_pivot`; `PATCH /nodes/{id} {"pivot"}` | cad-modify epic | later-epic: cad-modify |
+| Mirror (about active plane) (`tool.mirror`, Ctrl+M; YZ when no plane is active) | ui/app.py:360, ui/app.py:910-914 | `POST /ops/mirror` | `cad::ops` catalogue `tool.mirror` (`Flow::Immediate`; Ctrl+M) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): one `POST /ops/mirror {"args": [ids, plane], "kwargs": {"live": false}}` | deliberately different: the native viewer has no active plane until cad-sketch, so the plane is the entry's `plane` choice parameter (xy, xz or yz), defaulting to the plane RoboCAD uses with none active (YZ; REST `cad_run {"params": {"plane"}}` chooses another) |
+| Mirror as live instance (`tool.mirror_live`) | ui/app.py:361 | `POST /ops/mirror {"live": true}` | `cad::ops` catalogue `tool.mirror_live` → one `POST /ops/mirror {"args": [ids, plane], "kwargs": {"live": true}}` | deliberately different: the native viewer has no active plane until cad-sketch, so the plane is the entry's `plane` choice parameter (xy, xz or yz), defaulting to the plane RoboCAD uses with none active (YZ) |
+| Array… (`tool.array`, Ctrl+Shift+A: rectangular, count X/Y/Z, "count + spacing" or "count + total extent", or radial about the active plane; "As live instances"; "Merge into one body") | ui/app.py:365, ui/app.py:920-941, ui/widgets.py:1024-1063 | `POST /ops/array_rect`, `POST /ops/array_radial` | `cad::ops` catalogue `tool.array` (`Flow::Form`, `Shape::Array`: the ArrayDialog's fields in `cad::surfaces::form`, the rectangular or radial rows shown by `Param::when`) → `args::build` (`array`) → one `POST /ops/array_rect` (count X/Y/Z with `spacing` or `extent` by the mode) or `POST /ops/array_radial` (count, total angle, about the chosen plane's normal through the origin), with `as_instances` and `merge` | deliberately different: radial arrays turn about a plane chosen in the form (default XY, RoboCAD's with no active plane): no active plane until cad-sketch |
+| Instance selected (`tool.instance`: offset +20 mm in X) | ui/app.py:364, ui/app.py:916-918 | `POST /ops/instance` | `cad::ops` catalogue `tool.instance` (`Flow::Immediate`) → `POST /ops/instance {"args": [node, {"translation": [20, 0, 0]}]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: refused by name ("Select the bodies to instance") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Set pivot at cursor snap" (`tool.set_pivot`) | ui/app.py:376, ui/app.py:1015-1020 | `POST /ops/set_pivot`; `PATCH /nodes/{id} {"pivot"}` | `cad::ops` catalogue `tool.set_pivot` (`Flow::AtCursorSnap`) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): `POST /ops/set_pivot {"args": [first node, point]}` with `Arg::CursorSnap`, the snap `cad::ops::interact::pointer` keeps in `OpsState::cursor_snap` while the pointer is over the 3D view (or REST's `point`) | deliberately different: the snap falls back to the first surface under the pointer (RoboCAD's `viewport.snap` has none), so a pivot can be set on a face; an empty selection is refused by name ("Select the node whose pivot to set") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
 | Image calibrate tool (two clicks on the image, type the real distance) | ui/tools.py:1210-1241 | `POST /ops/calibrate_reference` | cad-organize epic | later-epic: cad-organize |
 | Motor tool (click a face: housing outside, shaft into the body) | ui/tools.py:1244-1291 | `POST /ops/add_motor` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | Joint tool (parent, Ctrl-click for the world; child; an axis face) | ui/tools.py:1294-1361 | `POST /ops/add_joint` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
 | Snapping: vertices, edge midpoints, centres, sketch endpoints, grid, plane, free; Alt suppresses; readout "kind (x, y, z)" | ui/viewport.py:1369-1435, ui/app.py:557-560 | `GET /nodes/{id}/vertices`, `GET /nodes/{id}/edges`, `GET /nodes/{id}/sketch` | `cad::snap::snap` (`candidates`: vertices, edge midpoints, edge centres; then grid; then free; Alt suppresses), readout `Snap::readout`; used by `cad::measure::tool` | deliberately different: sketch endpoints and the active plane are cad-sketch's (no sketches or active plane yet, so the ground plane is the only plane); centre snaps work here (RoboCAD reads a `centers` attribute its items lack, so its never fire) |
 | Gizmo drawing and hit testing | ui/viewport.py:1060-1132 | n/a (display) | `cad::transform::gizmo::draw` and `hit_test` (RoboCAD's 90 px handles; centre within 10 px, axes and rings within 14 px), CAD mode's own rather than Bevy's `TransformGizmoPlugin` (reasons in cad/transform/mod.rs) | done-by-reading |
 | Tool cursors (arrow, size-all, crosshair) | ui/app.py:519-523 | n/a (display) | `cad::transform::tool_cursor` (arrow, move, crosshair over the 3D view; `restore_cursor` on leaving CAD mode) | done-by-reading |
-| Tools toolbar (Select, Annotate, Saved Views, References, Pose, Experiments, Move, Rotate, Scale, Box, Cylinder, Sphere, Rectangle, Circle, Slot, Extrude, Push/Pull, Fillet, Shell, Union, Subtract, Fastener, Measure, Section, Validate; tools checkable) | ui/app.py:440-447, ui/app.py:527-529 | n/a (display) | cad-modify epic | later-epic: cad-modify |
-| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | cad-modify epic | later-epic: cad-modify |
+| Tools toolbar (Select, Annotate, Saved Views, References, Pose, Experiments, Move, Rotate, Scale, Box, Cylinder, Sphere, Rectangle, Circle, Slot, Extrude, Push/Pull, Fillet, Shell, Union, Subtract, Fastener, Measure, Section, Validate; tools checkable) | ui/app.py:440-447, ui/app.py:527-529 | n/a (display) | `cad::surfaces::toolbar` (`registry::TOOLBAR`, RoboCAD's 25 entries in order, under the menu bar's tabs; each a kit chip with `CadButton(CadInvoke { id })` and `Enabled` from `registry::ready`; the `tool.*` entries lit while that tool or op is active, `toolbar::lit`; a hint under the hovered button names its keys and why it cannot run) | deliberately different: the entries owned by later epics (Annotate, Saved Views, References, Pose, Experiments, Rectangle, Circle, Slot, Extrude, Fastener, Section, Validate) are shown disabled with the hint naming the epic; the row scrolls sideways where Qt folds its overflow behind "»"; the hint stands in for Qt's tooltips (the kit has no tooltip widget) |
+| Viewport right-click menu (Annotate, Comments panel, Push/Pull, Fillet, Chamfer, Shell, Union, Subtract, Mirror, Array, Measure, Isolate, Hide, Delete) | ui/app.py:1103-1107, ui/viewport.py:1526-1528 | the commands' routes | `cad::surfaces::context_menu` (a right press and release without a drag over the 3D view → `CadSurface { context { at } }`; `registry::CONTEXT`, RoboCAD's 14 entries in order, each enabled by `registry::ready`; a click → `CadInvoke`, then `CadSurface { closed }`) | deliberately different: Annotate and Comments panel (cad-organize), Isolate and Hide (cad-views-export) are shown disabled, naming their epic; the outliner's "Make unique (bake instance)" is added while an instance is selected |
 | Double-click a face: its dimension goes into the numeric bar | ui/tools.py:185-196, ui/app.py:693-713 | `GET /nodes/{id}/faces`; `POST /ops/set_diameter`, `set_distance` | `cad::transform::dimensions::double_click` (`edit_at`: a cylinder's diameter, or a planar face's distance to the opposite face) → the focused `cad::numeric` field; face mode only | deliberately different: face mode only. In body mode the second click's pick (on release) re-selects the body, so a face entry would be overwritten; switch to face mode (Shift+B) first. RoboCAD picks a face temporarily in body mode (tools.py:185-196) |
 | Escape cancels the tool and returns to Select | ui/app.py:487-497, ui/tools.py:103-105 | n/a | Escape → `CadAction::CadCancel` → `cad::transform::cancel` (`activate(Select)`) | done-by-reading |
 
@@ -405,33 +416,33 @@ visible one, else a new sketch (ui/tools.py:675-686).
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Union" (`modify.union`, Ctrl+U; the first selected is the target: "Select the target body first, then the tools") | ui/app.py:382, ui/app.py:787-793 | `POST /ops/boolean {"op": "union"}` | cad-modify epic | later-epic: cad-modify |
-| "Subtract" (`modify.subtract`, Ctrl+Shift+U) | ui/app.py:383 | `POST /ops/boolean {"op": "subtract"}` | cad-modify epic | later-epic: cad-modify |
-| "Intersect" (`modify.intersect`, Ctrl+Alt+U) | ui/app.py:384 | `POST /ops/boolean {"op": "intersect"}` | cad-modify epic | later-epic: cad-modify |
-| "Region (overlap as new body)" (`modify.region`) | ui/app.py:385, ui/app.py:795-799 | `POST /ops/region` | cad-modify epic | later-epic: cad-modify |
-| "Join" (`modify.join`, J) | ui/app.py:386 | `POST /ops/join` | cad-modify epic | later-epic: cad-modify |
-| "Unjoin" (`modify.unjoin`, Shift+J) | ui/app.py:387 | `POST /ops/unjoin` | cad-modify epic | later-epic: cad-modify |
-| "Dissolve redundant topology" (`modify.dissolve`) | ui/app.py:388 | `POST /ops/dissolve` | cad-modify epic | later-epic: cad-modify |
-| "Make instance unique" (`modify.make_unique`) | ui/app.py:389 | `POST /ops/make_unique` | cad-modify epic | later-epic: cad-modify |
-| "Fillet all edges…" (`tool.fillet_all`; "Radius (mm):") | ui/app.py:341, ui/app.py:832-837 | `POST /ops/fillet_all` | cad-modify epic | later-epic: cad-modify |
-| "Full round (two edges)" (`tool.full_round`) | ui/app.py:342, ui/app.py:839-846 | `POST /ops/full_round` | cad-modify epic | later-epic: cad-modify |
-| "Remove fillets (selected faces)" (`tool.remove_fillets`) | ui/app.py:343, ui/app.py:848-855 | `POST /ops/remove_fillets` | cad-modify epic | later-epic: cad-modify |
-| "Thicken sheet…" (`tool.thicken`; "Thickness (mm):") | ui/app.py:346, ui/app.py:857-864 | `POST /ops/thicken` | cad-modify epic | later-epic: cad-modify |
-| "Draft faces…" (`tool.draft`; "Angle (degrees):"; pull +Z; the active plane is neutral) | ui/app.py:347, ui/app.py:866-878 | `POST /ops/draft` | cad-modify epic | later-epic: cad-modify |
-| "Delete faces (heal)" (`tool.delete_face`) | ui/app.py:348, ui/app.py:880-887 | `POST /ops/delete_faces` | cad-modify epic | later-epic: cad-modify |
-| "Cut with active plane" (`tool.cut_plane`) | ui/app.py:366, ui/app.py:943-945 | `POST /ops/cut` (plane) | cad-modify epic | later-epic: cad-modify |
-| "Cut with selected sheet/curve" (`tool.cut_sheet`) | ui/app.py:367, ui/app.py:947-951 | `POST /ops/cut` (cutter id) | cad-modify epic | later-epic: cad-modify |
-| "Split faces with active plane" (`tool.split_face`) | ui/app.py:368, ui/app.py:953-955 | `POST /ops/split_face` | cad-modify epic | later-epic: cad-modify |
-| "Imprint selected curve/body" (`tool.imprint`) | ui/app.py:369, ui/app.py:957-961 | `POST /ops/imprint` | cad-modify epic | later-epic: cad-modify |
-| "Project curve onto body" (`tool.project_curve`, along the view direction) | ui/app.py:370, ui/app.py:963-968 | `POST /ops/project_curve` | cad-modify epic | later-epic: cad-modify |
-| "Silhouette onto active plane" (`tool.silhouette`) | ui/app.py:371, ui/app.py:970-972 | `POST /ops/silhouette` | cad-modify epic | later-epic: cad-modify |
-| "Show/edit control points (advanced)" (`tool.control_points`: shows the poles; editing is script-only) | ui/app.py:372, ui/app.py:974-984 | none: needs a Python route (reading `kernel.control_points`); writing: `POST /ops/set_control_points` | cad-modify epic | later-epic: cad-modify |
-| "Raise face degree" (`tool.raise_degree`, to 4 × 4) | ui/app.py:373, ui/app.py:986-991 | `POST /ops/raise_degree` | cad-modify epic | later-epic: cad-modify |
-| "Rebuild face…" (`tool.rebuild_face`; "Spans per direction:") | ui/app.py:374, ui/app.py:993-1001 | `POST /ops/rebuild_face` | cad-modify epic | later-epic: cad-modify |
-| "Dependent offset (face to body)…" (`tool.dependent_offset`; "Clearance (mm):") | ui/app.py:375, ui/app.py:1003-1013 | `POST /ops/offset_face_to` | cad-modify epic | later-epic: cad-modify |
-| "Curvature comb on selected curve" (`inspect.curvature`) | ui/app.py:401, ui/app.py:1277-1284 | none: needs a Python route (`analysis.curvature_comb`) | cad-modify epic | later-epic: cad-modify |
-| "Continuity check (G0/G1/G2)" (`inspect.continuity`; coloured edges; "Continuity: counts") | ui/app.py:402, ui/app.py:1286-1302 | none: needs a Python route (`analysis.continuity_report`) | cad-modify epic | later-epic: cad-modify |
-| REST-only direct edits with no GUI: `move_faces`, `rotate_faces`, `set_radius`, `untrim`, `array_curve`, `box_three_point`, `bridge`, `extract_components` | commands.py:525, 528, 531, 559, 743, 426, 511, 826 | `POST /ops/{name}` | cad-modify epic | later-epic: cad-modify |
+| "Union" (`modify.union`, Ctrl+U; the first selected is the target: "Select the target body first, then the tools") | ui/app.py:382, ui/app.py:787-793 | `POST /ops/boolean {"op": "union"}` | `cad::ops` catalogue `modify.union` (`Flow::Immediate`, `Needs::TargetThenTools`: refused "Select the target body first, then the tools" with fewer than two nodes) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): one `POST /ops/boolean {"args": [target, [tools], "union"]}` (RoboCAD's Composite "Union"), then the selection is cleared | done-by-reading |
+| "Subtract" (`modify.subtract`, Ctrl+Shift+U) | ui/app.py:383 | `POST /ops/boolean {"op": "subtract"}` | `cad::ops` catalogue `modify.subtract` (`Flow::Immediate`, `Needs::TargetThenTools`: refused "Select the target body first, then the tools" with fewer than two nodes) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): one `POST /ops/boolean {"args": [target, [tools], "subtract"]}` (RoboCAD's Composite "Subtract"), then the selection is cleared | done-by-reading |
+| "Intersect" (`modify.intersect`, Ctrl+Alt+U) | ui/app.py:384 | `POST /ops/boolean {"op": "intersect"}` | `cad::ops` catalogue `modify.intersect` (`Flow::Immediate`, `Needs::TargetThenTools`: refused "Select the target body first, then the tools" with fewer than two nodes) → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job): one `POST /ops/boolean {"args": [target, [tools], "intersect"]}` (RoboCAD's Composite "Intersect"), then the selection is cleared | done-by-reading |
+| "Region (overlap as new body)" (`modify.region`) | ui/app.py:385, ui/app.py:795-799 | `POST /ops/region` | `cad::ops` catalogue `modify.region` (exactly two nodes, "Select exactly two bodies") → one `POST /ops/region {"args": [a, b]}` | done-by-reading |
+| "Join" (`modify.join`, J) | ui/app.py:386 | `POST /ops/join` | `cad::ops` catalogue `modify.join` (key J) → one `POST /ops/join {"args": [ids]}` | deliberately different: fewer than two nodes are refused by name ("Select two or more bodies to join") where RoboCAD calls `Ops.join` unchecked |
+| "Unjoin" (`modify.unjoin`, Shift+J) | ui/app.py:387 | `POST /ops/unjoin` | `cad::ops` catalogue `modify.unjoin` (Shift+J) → `POST /ops/unjoin`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: refused by name ("Select the bodies to unjoin") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Dissolve redundant topology" (`modify.dissolve`) | ui/app.py:388 | `POST /ops/dissolve` | `cad::ops` catalogue `modify.dissolve` → `POST /ops/dissolve`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: refused by name ("Select the bodies to dissolve") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Make instance unique" (`modify.make_unique`) | ui/app.py:389 | `POST /ops/make_unique` | `cad::ops` catalogue `modify.make_unique` (instances only, `Needs::Nodes` with kinds `instance`) → `POST /ops/make_unique`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: a selection with no instance is refused by name ("Select an instance to make unique") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Fillet all edges…" (`tool.fillet_all`; "Radius (mm):") | ui/app.py:341, ui/app.py:832-837 | `POST /ops/fillet_all` | `cad::ops` catalogue `tool.fillet_all` (`Flow::Form`: "Radius (mm):", 1.0, 0.01 to 100, as RoboCAD's dialog) → `POST /ops/fillet_all`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: the selection is checked before the form opens and an empty one is refused by name ("Select the bodies to fillet") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason (RoboCAD opens its dialog and then does nothing) |
+| "Full round (two edges)" (`tool.full_round`) | ui/app.py:342, ui/app.py:839-846 | `POST /ops/full_round` | `cad::ops` catalogue `tool.full_round` (`Needs::Edges` two of one body: "Select two edges of the same body") → one `POST /ops/full_round {"args": [node, edge_a, edge_b]}` | done-by-reading |
+| "Remove fillets (selected faces)" (`tool.remove_fillets`) | ui/app.py:343, ui/app.py:848-855 | `POST /ops/remove_fillets` | `cad::ops` catalogue `tool.remove_fillets` (the selected faces grouped by node) → `POST /ops/remove_fillets`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: refused by name ("Select the fillet faces to remove") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Thicken sheet…" (`tool.thicken`; "Thickness (mm):") | ui/app.py:346, ui/app.py:857-864 | `POST /ops/thicken` | `cad::ops` catalogue `tool.thicken` (`Flow::Form`: "Thickness (mm):", 2.0, 0.01 to 100; sheets only) → `POST /ops/thicken`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | done-by-reading |
+| "Draft faces…" (`tool.draft`; "Angle (degrees):"; pull +Z; the active plane is neutral) | ui/app.py:347, ui/app.py:866-878 | `POST /ops/draft` | `cad::ops` catalogue `tool.draft` (`Flow::Form`: "Angle (degrees):", 2.0, -45 to 45; pull `[0, 0, 1]`) → `POST /ops/draft {"args": [node, [faces], [0, 0, 1], angle, neutral]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: the native viewer has no active plane until cad-sketch, so the plane is the entry's `neutral` choice parameter (xy, xz or yz), defaulting to the plane RoboCAD uses with none active (XY) |
+| "Delete faces (heal)" (`tool.delete_face`) | ui/app.py:348, ui/app.py:880-887 | `POST /ops/delete_faces` | `cad::ops` catalogue `tool.delete_face` (faces grouped by node) → `POST /ops/delete_faces`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD; the selection is cleared | deliberately different: refused by name ("Select the faces to delete") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Cut with active plane" (`tool.cut_plane`) | ui/app.py:366, ui/app.py:943-945 | `POST /ops/cut` (plane) | `cad::ops` catalogue `tool.cut_plane` → `POST /ops/cut {"args": [node, plane]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: the native viewer has no active plane until cad-sketch, so the plane is the entry's `plane` choice parameter (xy, xz or yz), defaulting to the plane RoboCAD uses with none active (XY); an empty selection is refused by name ("Select the bodies to cut") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Cut with selected sheet/curve" (`tool.cut_sheet`) | ui/app.py:367, ui/app.py:947-951 | `POST /ops/cut` (cutter id) | `cad::ops` catalogue `tool.cut_sheet` (two nodes: "Select the body, then the cutter") → one `POST /ops/cut {"args": [body, cutter id]}`; RoboCAD's `ArgConverter` now passes a non-plane node id through as the cutter (api.py, 2026-10-01; `cad/tests/test_api_cut_cutter.py`) where it read every `plane`-named argument as a plane name | done-by-reading |
+| "Split faces with active plane" (`tool.split_face`) | ui/app.py:368, ui/app.py:953-955 | `POST /ops/split_face` | `cad::ops` catalogue `tool.split_face` → `POST /ops/split_face {"args": [node, plane]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: the native viewer has no active plane until cad-sketch, so the plane is the entry's `plane` choice parameter (xy, xz or yz), defaulting to the plane RoboCAD uses with none active (XY); an empty selection is refused by name ("Select the bodies whose faces to split") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Imprint selected curve/body" (`tool.imprint`) | ui/app.py:369, ui/app.py:957-961 | `POST /ops/imprint` | `cad::ops` catalogue `tool.imprint` (two nodes: "Select the body, then the tool") → one `POST /ops/imprint {"args": [body, tool]}` | done-by-reading |
+| "Project curve onto body" (`tool.project_curve`, along the view direction) | ui/app.py:370, ui/app.py:963-968 | `POST /ops/project_curve` | `cad::ops` catalogue `tool.project_curve` (two nodes: "Select the curve/sketch, then the body") → one `POST /ops/project_curve {"args": [curve, body, direction]}` with `Arg::ViewDir`, the native camera's view direction (`-view_back`, RoboCAD's `-camera.basis()[2]`), or REST's `direction` | done-by-reading |
+| "Silhouette onto active plane" (`tool.silhouette`) | ui/app.py:371, ui/app.py:970-972 | `POST /ops/silhouette` | `cad::ops` catalogue `tool.silhouette` → `POST /ops/silhouette {"args": [node, plane]}`, one call per node in RoboCAD's order inside that one job (`Fan::PerNode`), each its own RoboCAD undo step as in RoboCAD | deliberately different: the native viewer has no active plane until cad-sketch, so the plane is the entry's `plane` choice parameter (xy, xz or yz), defaulting to the plane RoboCAD uses with none active (XY); an empty selection is refused by name ("Select the bodies to project") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Show/edit control points (advanced)" (`tool.control_points`: shows the poles; editing is script-only) | ui/app.py:372, ui/app.py:974-984 | `GET /nodes/{id}/control_points?face=i` (api.py `Service.control_points`, 2026-10-01; read-only); writing: `POST /ops/set_control_points` | `cad::ops` catalogue `tool.control_points` (`Shape::ControlPoints`, the first selected face) → `args::build` (`Read::ControlPoints`) → `analysis_overlay::start` (a Dedicated job, `CadClient::control_points`) → `analysis_overlay::receive` → `draw` (points and rows in RoboCAD's colours, display only; status "N control points (edit via Ops.set_control_points; …)"); editing: the REST-only `ops.set_control_points` (a JSON grid) | done-by-reading |
+| "Raise face degree" (`tool.raise_degree`, to 4 × 4) | ui/app.py:373, ui/app.py:986-991 | `POST /ops/raise_degree` | `cad::ops` catalogue `tool.raise_degree` (the first selected face, du = dv = 4) → one `POST /ops/raise_degree {"args": [node, {"node", "face"}, 4, 4]}` | deliberately different: a selection without a face is refused by name ("Select a face to raise its degree") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Rebuild face…" (`tool.rebuild_face`; "Spans per direction:") | ui/app.py:374, ui/app.py:993-1001 | `POST /ops/rebuild_face` | `cad::ops` catalogue `tool.rebuild_face` (`Flow::Form`: "Spans per direction:", 4, 1 to 64) → one `POST /ops/rebuild_face {"args": [node, face, n, n]}` | deliberately different: the face is checked before the form opens and its absence is refused by name ("Select a face to rebuild") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| "Dependent offset (face to body)…" (`tool.dependent_offset`; "Clearance (mm):") | ui/app.py:375, ui/app.py:1003-1013 | `POST /ops/offset_face_to` | `cad::ops` catalogue `tool.dependent_offset` (`Flow::Form`: "Clearance (mm):", 0.2, -10 to 10; `Needs::FaceThenNode`: "Select a face, then the body to offset it to") → one `POST /ops/offset_face_to {"args": [node, face, target, clearance]}` | done-by-reading |
+| "Curvature comb on selected curve" (`inspect.curvature`) | ui/app.py:401, ui/app.py:1277-1284 | `GET /nodes/{id}/curvature_comb` (api.py `Service.curvature_comb`, 2026-10-01; scale 5 and 48 samples as the GUI; read-only) | `cad::ops` catalogue `inspect.curvature` (`Shape::CurvatureComb`, the last selected node of kind curve, as RoboCAD's loop leaves the last curve's comb drawn: a sketch has no body and draws nothing there) → `args::build` (`Read::CurvatureComb`) → `analysis_overlay::start` (a Dedicated job, `CadClient::curvature_comb`) → `draw` (RoboCAD's lines and colour, display only; status "Curvature comb: N line(s)", a viewer addition) | deliberately different: a selection with no curve is refused by name ("Select a curve: a sketch has no body to comb…") where RoboCAD silently draws nothing, so a menu entry, key or REST call is never ignored without a reason; the status line is the viewer's |
+| "Continuity check (G0/G1/G2)" (`inspect.continuity`; coloured edges; "Continuity: counts") | ui/app.py:402, ui/app.py:1286-1302 | `GET /nodes/{id}/continuity` (api.py `Service.continuity`, 2026-10-01; read-only) | `cad::ops` catalogue `inspect.continuity` (`Shape::Continuity`, the last selected node with a body (a body kind or a curve), as RoboCAD's loop leaves the last one drawn) → `args::build` (`Read::Continuity`) → `analysis_overlay::start` (`CadClient::continuity`) → `draw` (each edge's 16-point polyline in RoboCAD's G0/G1/G2/boundary colours; status "Continuity: {…}" as `analysis_overlay::counts_text`) | deliberately different: a selection with no body is refused by name ("Select a body: …") where RoboCAD silently does nothing, so a menu entry, key or REST call is never ignored without a reason |
+| REST-only direct edits with no GUI: `move_faces`, `rotate_faces`, `set_radius`, `untrim`, `array_curve`, `box_three_point`, `bridge`, `extract_components` | commands.py:525, 528, 531, 559, 743, 426, 511, 826 | `POST /ops/{name}` | `cad::ops` catalogue `ops.move_faces`, `ops.rotate_faces`, `ops.set_radius`, `ops.untrim`, `ops.array_curve`, `ops.box_three_point`, `ops.bridge`, `ops.extract_components` (`expected_revision` is the shown revision) through REST `cad_invoke` (their parameter form) and `cad_run` → `ops::handle` → `ops::run` → `ops::prepare` (`CadDocument::commit_refusal`, `resolve::resolve`, `args::build`) → `ops::start` → `actions::edit` (one Dedicated edit job) | done-by-reading (REST only, with the form; not in the menus or palette, as RoboCAD has no GUI for them) |
 
 ## Numeric entry
 
@@ -447,18 +458,18 @@ visible one, else a new sketch (ui/tools.py:675-686).
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "View radial menu" (`view.radial`, Space: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit) | ui/app.py:318, ui/app.py:1095-1097 | n/a (display) | cad-modify epic | later-epic: cad-modify |
-| "Selection-mode radial menu" (`select.mode_radial`, Q: Body, Face, Edge, Vertex, Point) | ui/app.py:321, ui/app.py:1099-1101 | `PUT /selection {"mode"}` | cad-modify epic | later-epic: cad-modify |
-| The pie widget (opens at the cursor; hover highlights; release or click runs; Escape closes) | ui/widgets.py:821-882 | n/a (display) | cad-modify epic | later-epic: cad-modify |
+| "View radial menu" (`view.radial`, Space: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit) | ui/app.py:318, ui/app.py:1095-1097 | n/a (display) | `cad::surfaces::radial` on `ui_kit::pie` (`registry::VIEW_RADIAL`: Front, Top, Right, Iso, Ortho, Grid, Mode, Fit), opened at the pointer by Space (`cad::keys` → `CadSurface { view_radial }`) or REST `cad_surface` | deliberately different: every entry but Fit belongs to cad-views-export (the native camera has no named views yet) and is shown disabled, saying so |
+| "Selection-mode radial menu" (`select.mode_radial`, Q: Body, Face, Edge, Vertex, Point) | ui/app.py:321, ui/app.py:1099-1101 | `PUT /selection {"mode"}` | `cad::surfaces::radial` (`registry::SELECT_RADIAL`: Body, Face, Edge, Vertex, Point → `CadInvoke { select.<mode> }` → `CadSelectMode`, pushed with `PUT /selection {"mode"}`), opened at the pointer by Q (`cad::keys`) or REST `cad_surface` | done-by-reading |
+| The pie widget (opens at the cursor; hover highlights; release or click runs; Escape closes) | ui/widgets.py:821-882 | n/a (display) | `ui_kit::pie` (`Kit::pie`, `index_at`: the entry under the pointer's angle, none in the 18 px dead centre; `slot`: the first straight up, then clockwise) and `cad::surfaces::radial::input` (a press inside or a release runs the entry and closes the pie; a press outside or Escape closes it) | deliberately different: the entries are kit buttons of RoboCAD's 92 × 44 size with the kit's 5 px corner radius (rounded rectangles, not RoboCAD's ellipses), so hover, disabled and label styling are the kit's |
 
 ## Command palette
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | List RoboCAD's registry commands with category and keys, and run one | ui/widgets.py:52-136, ui/app.py:247-251 | `GET /commands`, `POST /commands/{id}` (GUI only) | `cad::panel` commands list → `CadAction::CadCommand` → `CadClient::run_command`; a headless 409 "no GUI" is shown verbatim | done-by-reading |
-| "Command palette" (`command_palette`, Ctrl+Space or Shift+F): search "Type a command… (Ctrl+Space)" over id, label and category; ranked; first 60 | ui/app.py:282, ui/app.py:1109-1110, ui/widgets.py:79-108 | `GET /commands` | cad-modify epic | later-epic: cad-modify |
-| Key-conflict warning "⚠ conflicts with labels" | ui/widgets.py:72-77, ui/widgets.py:99-103 | `GET /commands` (`keys`) | cad-modify epic | later-epic: cad-modify |
-| Menus by category (File, Edit, View, Select, Create, Sketch, Modify, Planes, Inspect, Print, Advanced, Outliner, Robot, Bridge, Simulation, Help; "General" and "Window" fall into Help) | ui/app.py:433-439 | `GET /commands` (`category`) | cad-modify epic | later-epic: cad-modify |
+| "Command palette" (`command_palette`, Ctrl+Space or Shift+F): search "Type a command… (Ctrl+Space)" over id, label and category; ranked; first 60 | ui/app.py:282, ui/app.py:1109-1110, ui/widgets.py:79-108 | `GET /commands` | `cad::surfaces::palette` on `ui_kit::palette` (`PLACEHOLDER` "Type a command… (Ctrl+Space)", `rank` as RoboCAD ranks, the first 60) over `registry::COMMANDS` (RoboCAD's 183 commands), opened by Ctrl+Space or Shift+F (`cad::keys` → `CadSurface { palette }`) or REST `cad_surface`; Up/Down, Enter or a click → `CadInvoke { id }` | deliberately different: it lists RoboCAD's whole command table: a command that cannot run here is noted (its owning epic, or "not ported" with the ledger's reason) and disabled; on macOS Command+Space is Spotlight's, so Control+Space or Shift+F opens it (`cad::keys` clash table) |
+| Key-conflict warning "⚠ conflicts with labels" | ui/widgets.py:72-77, ui/widgets.py:99-103 | `GET /commands` (`keys`) | `ui_kit::palette::conflicts` over the registry's keys (`cad::surfaces::palette::keys_of`; RoboCAD's `/commands` keys on a desktop RoboCAD, a user keymap included); RoboCAD's quirk kept: only the last conflicting key's warning shows | done-by-reading |
+| Menus by category (File, Edit, View, Select, Create, Sketch, Modify, Planes, Inspect, Print, Advanced, Outliner, Robot, Bridge, Simulation, Help; "General" and "Window" fall into Help) | ui/app.py:433-439 | `GET /commands` (`category`) | `cad::surfaces::menus` (`menus::tabs`: one tab per `registry::CATEGORIES` in RoboCAD's order → `CadSurface { menu { category } }`; `registry::menu_of` puts General, Window and Tools in Help; a menu lists its commands with keys and enabled state) | done-by-reading |
 
 ## Print
 
@@ -706,7 +717,7 @@ calls. Who uses each route, by reading:
 | Autosave status | api.py:1133-1134, api.py:390-399 | `GET /autosave` (GUI only) | `CadClient::autosave` → `cad::panel` | done-by-reading |
 | Start a recovery save | api.py:1133-1134, api.py:392-393 | `POST /autosave` (GUI only) | cad-views-export epic | later-epic: cad-views-export |
 | Node summaries (`?kind=`) | api.py:1137-1138, api.py:532-533 | `GET /nodes` | `CadClient::nodes` | done-by-reading |
-| Create box, cylinder, sphere, sketch, plane, group, instance or measure (client) | api.py:1139-1140, api.py:541-571 | `POST /nodes` | cad-modify epic | later-epic: cad-modify |
+| Create box, cylinder, sphere, sketch, plane, group, instance or measure (client) | api.py:1139-1140, api.py:541-571 | `POST /nodes` | the catalogue creates boxes, cylinders, spheres and instances through `POST /ops/box`, `/ops/cylinder`, `/ops/sphere` and `/ops/instance` (`tool.box`, `tool.box_center`, `tool.cylinder`, `tool.sphere`, `tool.instance`, `ops.box`), the Ops methods `POST /nodes` itself calls (api.py `Service.create`) | deliberately different: the viewer calls the Ops methods directly (one route family, `POST /ops/*`); sketch and plane nodes belong to cad-sketch, groups to cad-organize, measure nodes to cad-select-transform's `POST /ops/add_measurement` |
 | Node detail | api.py:1143-1144, api.py:102-133 | `GET /nodes/{id}` | `CadClient::node` → `cad::inspector` | done-by-reading |
 | Set attributes (name, visible, locked, disabled, material, color, pivot, transform, parent and index, tessellation_tolerance, plane, sketch) | api.py:1145-1146, api.py:573-612 | `PATCH /nodes/{id}` | `CadClient::patch` (`CadAction::CadPatch`) | done-by-reading |
 | Delete a node | api.py:1147-1148, api.py:614-618 | `DELETE /nodes/{id}` | `CadClient::delete` (`CadAction::CadDelete`) | done-by-reading |
@@ -798,25 +809,25 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `print_split` | commands.py:299 | `POST /ops/print_split` | cad-print epic | later-epic: cad-print |
 | `undo` | commands.py:305 | `POST /undo` | `CadAction::CadUndo` | done-by-reading |
 | `redo` | commands.py:308 | `POST /redo` | `CadAction::CadRedo` | done-by-reading |
-| `delete` | commands.py:312 | `DELETE /nodes/{id}`; `POST /ops/delete` | `CadAction::CadDelete` | done-by-reading |
+| `delete` | commands.py:312 | `DELETE /nodes/{id}`; `POST /ops/delete` | `cad::ops` catalogue `edit.delete` (`POST /ops/delete` of every selected node); `CadAction::CadDelete` (`DELETE /nodes/{id}`, one node) | done-by-reading |
 | `rename` | commands.py:333 | `PATCH /nodes/{id} {"name"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_visible` | commands.py:336 | `PATCH /nodes/{id} {"visible"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_locked` | commands.py:339 | `PATCH /nodes/{id} {"locked"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_disabled` | commands.py:342 | `PATCH /nodes/{id} {"disabled"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_material` | commands.py:345 | `PATCH /nodes/{id} {"material"}` | `CadAction::CadPatch` | done-by-reading |
 | `set_color` | commands.py:348 | `PATCH /nodes/{id} {"color"}` | cad-physical-inspect epic | later-epic: cad-physical-inspect |
-| `set_pivot` | commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | cad-modify epic | later-epic: cad-modify |
+| `set_pivot` | commands.py:351 | `PATCH /nodes/{id} {"pivot"}` | `cad::ops` catalogue `tool.set_pivot`; the inspector's pivot editor (`cad::inspector::editors`) sends `PATCH /nodes/{id} {"pivot"}` via `ops::handle`/`args::build` | done-by-reading |
 | `group` | commands.py:354 | `POST /ops/group` | cad-organize epic | later-epic: cad-organize |
 | `move_nodes` | commands.py:377 | `POST /ops/move_nodes` | cad-organize epic | later-epic: cad-organize |
 | `move_node` | commands.py:395 | `PATCH /nodes/{id} {"parent", "index"}` | cad-organize epic | later-epic: cad-organize |
 | `set_active_group` | commands.py:398 | `POST /ops/set_active_group` | cad-organize epic | later-epic: cad-organize |
 | `isolate` | commands.py:402 | `POST /ops/isolate` | cad-views-export epic | later-epic: cad-views-export |
 | `show_all` | commands.py:415 | `POST /ops/show_all` | cad-views-export epic | later-epic: cad-views-export |
-| `box` | commands.py:419 | `POST /ops/box`; `POST /nodes` | cad-modify epic | later-epic: cad-modify |
-| `box_center` | commands.py:422 | `POST /ops/box_center` | cad-modify epic | later-epic: cad-modify |
-| `box_three_point` | commands.py:426 | `POST /ops/box_three_point` | cad-modify epic | later-epic: cad-modify |
-| `cylinder` | commands.py:437 | `POST /ops/cylinder` | cad-modify epic | later-epic: cad-modify |
-| `sphere` | commands.py:440 | `POST /ops/sphere` | cad-modify epic | later-epic: cad-modify |
+| `box` | commands.py:419 | `POST /ops/box`; `POST /nodes` | `cad::ops` catalogue `tool.box` and `tool.box_center` (both send `Ops.box`), and the REST-only `ops.box` via `ops::handle`/`args::build` | done-by-reading |
+| `box_center` | commands.py:422 | `POST /ops/box_center` | `cad::ops` catalogue `ops.box_center` (REST `cad_invoke`/`cad_run`, with its form) via `ops::handle`/`args::build` | done-by-reading |
+| `box_three_point` | commands.py:426 | `POST /ops/box_three_point` | `cad::ops` catalogue `ops.box_three_point` (REST, with its form; every parameter required) via `ops::handle`/`args::build` | done-by-reading |
+| `cylinder` | commands.py:437 | `POST /ops/cylinder` | `cad::ops` catalogue `tool.cylinder` via `ops::handle`/`args::build` | done-by-reading |
+| `sphere` | commands.py:440 | `POST /ops/sphere` | `cad::ops` catalogue `tool.sphere` via `ops::handle`/`args::build` | done-by-reading |
 | `new_sketch` | commands.py:444 | `POST /ops/new_sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `edit_sketch` (takes a Python callable, so `/ops` cannot pass it) | commands.py:449 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `extrude` | commands.py:480 | `POST /ops/extrude` | cad-sketch epic | later-epic: cad-sketch |
@@ -825,48 +836,48 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `pipe` | commands.py:498 | `POST /ops/pipe` | cad-sketch epic | later-epic: cad-sketch |
 | `loft` | commands.py:502 | `POST /ops/loft` | cad-sketch epic | later-epic: cad-sketch |
 | `fill` | commands.py:507 | `POST /ops/fill` | cad-sketch epic | later-epic: cad-sketch |
-| `bridge` | commands.py:511 | `POST /ops/bridge` | cad-modify epic | later-epic: cad-modify |
+| `bridge` | commands.py:511 | `POST /ops/bridge` | `cad::ops` catalogue `ops.bridge` (two curves or sketches; REST) via `ops::handle`/`args::build` | done-by-reading |
 | `push_pull` | commands.py:515 | `POST /ops/push_pull` | `cad::transform::commit::push_pull_call` (`CadAction::CadPushPull`, REST `cad_push_pull`) | done-by-reading |
 | `offset_faces` | commands.py:518 | `POST /ops/offset_faces` | `cad::transform::commit::offset_call` (`CadAction::CadOffsetFaces`, REST `cad_offset_faces`) | done-by-reading |
-| `offset_face_to` | commands.py:521 | `POST /ops/offset_face_to` | cad-modify epic | later-epic: cad-modify |
-| `move_faces` | commands.py:525 | `POST /ops/move_faces` | cad-modify epic | later-epic: cad-modify |
-| `rotate_faces` | commands.py:528 | `POST /ops/rotate_faces` | cad-modify epic | later-epic: cad-modify |
-| `set_radius` | commands.py:531 | `POST /ops/set_radius` | cad-modify epic | later-epic: cad-modify |
+| `offset_face_to` | commands.py:521 | `POST /ops/offset_face_to` | `cad::ops` catalogue `tool.dependent_offset` via `ops::handle`/`args::build` | done-by-reading |
+| `move_faces` | commands.py:525 | `POST /ops/move_faces` | `cad::ops` catalogue `ops.move_faces` (REST, with its form; per node) via `ops::handle`/`args::build` | done-by-reading |
+| `rotate_faces` | commands.py:528 | `POST /ops/rotate_faces` | `cad::ops` catalogue `ops.rotate_faces` (REST, with its form; per node) via `ops::handle`/`args::build` | done-by-reading |
+| `set_radius` | commands.py:531 | `POST /ops/set_radius` | `cad::ops` catalogue `ops.set_radius` (REST, with its form) via `ops::handle`/`args::build` | done-by-reading |
 | `set_diameter` | commands.py:534 | `POST /ops/set_diameter` | `cad::transform::commit::dimension_call` (`CadAction::CadSetDimension`, REST `cad_set_dimension`) | done-by-reading |
 | `set_distance` | commands.py:537 | `POST /ops/set_distance` | `cad::transform::commit::dimension_call` (`CadAction::CadSetDimension`, REST `cad_set_dimension`) | done-by-reading |
 | `set_angle` | commands.py:544 | `POST /ops/set_angle` | `cad::transform::commit::dimension_call` (`CadAction::CadSetDimension`, REST `cad_set_dimension`) | done-by-reading |
-| `draft` | commands.py:553 | `POST /ops/draft` | cad-modify epic | later-epic: cad-modify |
-| `delete_faces` | commands.py:556 | `POST /ops/delete_faces` | cad-modify epic | later-epic: cad-modify |
-| `untrim` | commands.py:559 | `POST /ops/untrim` | cad-modify epic | later-epic: cad-modify |
-| `imprint` | commands.py:562 | `POST /ops/imprint` | cad-modify epic | later-epic: cad-modify |
-| `split_face` | commands.py:566 | `POST /ops/split_face` | cad-modify epic | later-epic: cad-modify |
-| `boolean` | commands.py:573 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
-| `region` | commands.py:588 | `POST /ops/region` | cad-modify epic | later-epic: cad-modify |
-| `cut` | commands.py:591 | `POST /ops/cut` | cad-modify epic | later-epic: cad-modify |
-| `shell` | commands.py:624 | `POST /ops/shell` | cad-modify epic | later-epic: cad-modify |
-| `thicken` | commands.py:627 | `POST /ops/thicken` | cad-modify epic | later-epic: cad-modify |
-| `fillet` | commands.py:630 | `POST /ops/fillet` | cad-modify epic | later-epic: cad-modify |
-| `fillet_chordal` | commands.py:633 | `POST /ops/fillet_chordal` | cad-modify epic | later-epic: cad-modify |
-| `fillet_all` | commands.py:636 | `POST /ops/fillet_all` | cad-modify epic | later-epic: cad-modify |
-| `full_round` | commands.py:639 | `POST /ops/full_round` | cad-modify epic | later-epic: cad-modify |
-| `remove_fillets` | commands.py:642 | `POST /ops/remove_fillets` | cad-modify epic | later-epic: cad-modify |
-| `chamfer` | commands.py:645 | `POST /ops/chamfer` | cad-modify epic | later-epic: cad-modify |
+| `draft` | commands.py:553 | `POST /ops/draft` | `cad::ops` catalogue `tool.draft` via `ops::handle`/`args::build` | done-by-reading |
+| `delete_faces` | commands.py:556 | `POST /ops/delete_faces` | `cad::ops` catalogue `tool.delete_face` via `ops::handle`/`args::build` | done-by-reading |
+| `untrim` | commands.py:559 | `POST /ops/untrim` | `cad::ops` catalogue `ops.untrim` (REST; per node) via `ops::handle`/`args::build` | done-by-reading |
+| `imprint` | commands.py:562 | `POST /ops/imprint` | `cad::ops` catalogue `tool.imprint` via `ops::handle`/`args::build` | done-by-reading |
+| `split_face` | commands.py:566 | `POST /ops/split_face` | `cad::ops` catalogue `tool.split_face` via `ops::handle`/`args::build` | done-by-reading |
+| `boolean` | commands.py:573 | `POST /ops/boolean` | `cad::ops` catalogue `modify.union`, `modify.subtract`, `modify.intersect` via `ops::handle`/`args::build` | done-by-reading |
+| `region` | commands.py:588 | `POST /ops/region` | `cad::ops` catalogue `modify.region` via `ops::handle`/`args::build` | done-by-reading |
+| `cut` | commands.py:591 | `POST /ops/cut` | `cad::ops` catalogue `tool.cut_plane` (a plane name) and `tool.cut_sheet` (a cutter node id, which api.py's `ArgConverter` passes through since 2026-10-01) via `ops::handle`/`args::build` | done-by-reading |
+| `shell` | commands.py:624 | `POST /ops/shell` | `cad::ops` catalogue `tool.shell` via `ops::handle`/`args::build` | done-by-reading |
+| `thicken` | commands.py:627 | `POST /ops/thicken` | `cad::ops` catalogue `tool.thicken` via `ops::handle`/`args::build` | done-by-reading |
+| `fillet` | commands.py:630 | `POST /ops/fillet` | `cad::ops` catalogue `tool.fillet` and `tool.fillet_variable` (`radius_end`) via `ops::handle`/`args::build` | done-by-reading |
+| `fillet_chordal` | commands.py:633 | `POST /ops/fillet_chordal` | `cad::ops` catalogue `tool.fillet_chordal` via `ops::handle`/`args::build` | done-by-reading |
+| `fillet_all` | commands.py:636 | `POST /ops/fillet_all` | `cad::ops` catalogue `tool.fillet_all` via `ops::handle`/`args::build` | done-by-reading |
+| `full_round` | commands.py:639 | `POST /ops/full_round` | `cad::ops` catalogue `tool.full_round` via `ops::handle`/`args::build` | done-by-reading |
+| `remove_fillets` | commands.py:642 | `POST /ops/remove_fillets` | `cad::ops` catalogue `tool.remove_fillets` via `ops::handle`/`args::build` | done-by-reading |
+| `chamfer` | commands.py:645 | `POST /ops/chamfer` | `cad::ops` catalogue `tool.chamfer` (`Shape::Chamfer`) via `ops::handle`/`args::build` | done-by-reading |
 | `transform` | commands.py:648 | `POST /ops/transform` | `cad::transform::commit::transform_call` (`CadAction::CadTransform`, REST `cad_transform`) | done-by-reading |
-| `mirror` | commands.py:694 | `POST /ops/mirror` | cad-modify epic | later-epic: cad-modify |
-| `instance` | commands.py:712 | `POST /ops/instance`; `POST /nodes {"kind": "instance"}` | cad-modify epic | later-epic: cad-modify |
-| `make_unique` | commands.py:719 | `POST /ops/make_unique` | cad-modify epic | later-epic: cad-modify |
-| `array_rect` | commands.py:728 | `POST /ops/array_rect` | cad-modify epic | later-epic: cad-modify |
-| `array_radial` | commands.py:738 | `POST /ops/array_radial` | cad-modify epic | later-epic: cad-modify |
-| `array_curve` | commands.py:743 | `POST /ops/array_curve` | cad-modify epic | later-epic: cad-modify |
-| `join` | commands.py:806 | `POST /ops/join` | cad-modify epic | later-epic: cad-modify |
-| `unjoin` | commands.py:814 | `POST /ops/unjoin` | cad-modify epic | later-epic: cad-modify |
-| `dissolve` | commands.py:823 | `POST /ops/dissolve` | cad-modify epic | later-epic: cad-modify |
-| `extract_components` | commands.py:826 | `POST /ops/extract_components` | cad-modify epic | later-epic: cad-modify |
-| `project_curve` | commands.py:856 | `POST /ops/project_curve` | cad-modify epic | later-epic: cad-modify |
-| `silhouette` | commands.py:860 | `POST /ops/silhouette` | cad-modify epic | later-epic: cad-modify |
-| `set_control_points` | commands.py:864 | `POST /ops/set_control_points` | cad-modify epic | later-epic: cad-modify |
-| `raise_degree` | commands.py:867 | `POST /ops/raise_degree` | cad-modify epic | later-epic: cad-modify |
-| `rebuild_face` | commands.py:870 | `POST /ops/rebuild_face` | cad-modify epic | later-epic: cad-modify |
+| `mirror` | commands.py:694 | `POST /ops/mirror` | `cad::ops` catalogue `tool.mirror` and `tool.mirror_live` via `ops::handle`/`args::build` | done-by-reading |
+| `instance` | commands.py:712 | `POST /ops/instance`; `POST /nodes {"kind": "instance"}` | `cad::ops` catalogue `tool.instance` (`POST /ops/instance`) via `ops::handle`/`args::build` | done-by-reading |
+| `make_unique` | commands.py:719 | `POST /ops/make_unique` | `cad::ops` catalogue `modify.make_unique` via `ops::handle`/`args::build` | done-by-reading |
+| `array_rect` | commands.py:728 | `POST /ops/array_rect` | `cad::ops` catalogue `tool.array` (rectangular) via `ops::handle`/`args::build` | done-by-reading |
+| `array_radial` | commands.py:738 | `POST /ops/array_radial` | `cad::ops` catalogue `tool.array` (radial) via `ops::handle`/`args::build` | done-by-reading |
+| `array_curve` | commands.py:743 | `POST /ops/array_curve` | `cad::ops` catalogue `ops.array_curve` (REST, with its form; the bodies, then the path) via `ops::handle`/`args::build` | done-by-reading |
+| `join` | commands.py:806 | `POST /ops/join` | `cad::ops` catalogue `modify.join` via `ops::handle`/`args::build` | done-by-reading |
+| `unjoin` | commands.py:814 | `POST /ops/unjoin` | `cad::ops` catalogue `modify.unjoin` via `ops::handle`/`args::build` | done-by-reading |
+| `dissolve` | commands.py:823 | `POST /ops/dissolve` | `cad::ops` catalogue `modify.dissolve` via `ops::handle`/`args::build` | done-by-reading |
+| `extract_components` | commands.py:826 | `POST /ops/extract_components` | `cad::ops` catalogue `ops.extract_components` (REST, with its form; `expected_revision` is the shown revision) via `ops::handle`/`args::build` | done-by-reading |
+| `project_curve` | commands.py:856 | `POST /ops/project_curve` | `cad::ops` catalogue `tool.project_curve` via `ops::handle`/`args::build` | done-by-reading |
+| `silhouette` | commands.py:860 | `POST /ops/silhouette` | `cad::ops` catalogue `tool.silhouette` via `ops::handle`/`args::build` | done-by-reading |
+| `set_control_points` | commands.py:864 | `POST /ops/set_control_points` | `cad::ops` catalogue `ops.set_control_points` (REST, with its form; the grid `tool.control_points` shows) via `ops::handle`/`args::build`; the route takes the grid since `ArgConverter`'s points fix (api.py, 2026-10-01, `test_api_control_points_set.py`) | done-by-reading |
+| `raise_degree` | commands.py:867 | `POST /ops/raise_degree` | `cad::ops` catalogue `tool.raise_degree` via `ops::handle`/`args::build` | done-by-reading |
+| `rebuild_face` | commands.py:870 | `POST /ops/rebuild_face` | `cad::ops` catalogue `tool.rebuild_face` via `ops::handle`/`args::build` | done-by-reading |
 | `plane_from_face` | commands.py:874 | `POST /ops/plane_from_face` | cad-sketch epic | later-epic: cad-sketch |
 | `plane_three_points` | commands.py:878 | `POST /ops/plane_three_points` | cad-sketch epic | later-epic: cad-sketch |
 | `plane_two_points_camera` | commands.py:881 | `POST /ops/plane_two_points_camera` | cad-sketch epic | later-epic: cad-sketch |
@@ -940,7 +951,7 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| `command_palette`: Ctrl+Space, Shift+F | keymap.json:3 | `GET /commands` | cad-modify epic | later-epic: cad-modify |
+| `command_palette`: Ctrl+Space, Shift+F | keymap.json:3 | `GET /commands` | `cad::keys` → `CadSurface { palette }` at the pointer (`registry::Opens::Palette`) | deliberately different: on macOS Command+Space is Spotlight's, so Control+Space or Shift+F opens it (`cad::keys` clash table) |
 | `file.new`: Ctrl+N | keymap.json:4 | n/a | cad-views-export epic | later-epic: cad-views-export |
 | `file.open`: Ctrl+O | keymap.json:4 | n/a | cad-views-export epic | later-epic: cad-views-export |
 | `file.save`: Ctrl+S | keymap.json:4 | `POST /save` | `cad::keys` → `CadAction::CadSave` | done-by-reading |
@@ -950,9 +961,9 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `file.export_drawing`: Ctrl+Shift+D | keymap.json:4 | `POST /export` | cad-views-export epic | later-epic: cad-views-export |
 | `edit.undo`: Ctrl+Z | keymap.json:5 | `POST /undo` | `cad::keys` → `CadAction::CadUndo` | done-by-reading |
 | `edit.redo`: Ctrl+Shift+Z | keymap.json:5 | `POST /redo` | `cad::keys` → `CadAction::CadRedo` | done-by-reading |
-| `edit.delete`: Delete, Backspace | keymap.json:5 | `DELETE /nodes/{id}` | `cad::keys` → `CadAction::CadDelete` | done-by-reading |
-| `edit.copy`: Ctrl+C | keymap.json:5 | none: needs a Python route (as "Copy with Placement") | cad-modify epic | later-epic: cad-modify |
-| `edit.paste`: Ctrl+V | keymap.json:5 | none: needs a Python route (as "Paste with Placement") | cad-modify epic | later-epic: cad-modify |
+| `edit.delete`: Delete, Backspace | keymap.json:5 | `POST /ops/delete {"args": [[ids]]}` | `cad::keys` → `CadInvoke { edit.delete }` → `cad::ops` catalogue `edit.delete` (every selected node in one step since cad-modify; silent on an empty selection, as RoboCAD) | done-by-reading |
+| `edit.copy`: Ctrl+C | keymap.json:5 | `POST /clipboard/copy` (as "Copy with Placement") | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { edit.copy }` when ready, else the status line says why | deliberately different: the clip stays in the viewer (`OpsState::clipboard`), not on the OS clipboard (see "Copy with Placement") |
+| `edit.paste`: Ctrl+V | keymap.json:5 | `POST /clipboard/paste` (as "Paste with Placement") | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { edit.paste }` when ready, else the status line says why | deliberately different: pastes the viewer's last copy, not the OS clipboard (see "Paste with Placement") |
 | `edit.select_all`: Ctrl+A | keymap.json:5 | `PUT /selection` | `cad::keys` → `CadAction::CadSelectAll` | done-by-reading |
 | `edit.invert`: Ctrl+Shift+I | keymap.json:5 | `PUT /selection` | `cad::keys` → `CadAction::CadInvertSelection` | done-by-reading |
 | `edit.select_same_material`: Ctrl+Shift+M (`robot.add_motor` lists the same key, unbound; see below) | keymap.json:5 | `PUT /selection` | `cad::keys` → `CadAction::CadSelectSameMaterial` | done-by-reading |
@@ -973,13 +984,13 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `view.hide`: H | keymap.json:6 | `POST /ops/set_visible` | cad-views-export epic | later-epic: cad-views-export |
 | `view.section`: Ctrl+Shift+X | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
 | `view.build_plate`: Ctrl+Shift+B | keymap.json:6 | n/a (display) | cad-views-export epic | later-epic: cad-views-export |
-| `view.radial`: Space | keymap.json:6 | n/a (display) | cad-modify epic | later-epic: cad-modify |
+| `view.radial`: Space | keymap.json:6 | n/a (display) | `cad::keys` → `CadSurface { view_radial }` at the pointer (typed as a space while a text field has the keyboard) | done-by-reading |
 | `select.body`: B | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Body }` | done-by-reading |
 | `select.face`: Shift+B | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Face }` | done-by-reading |
 | `select.edge`: E | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Edge }` | done-by-reading |
 | `select.vertex`: V | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Vertex }` | done-by-reading |
 | `select.point`: P | keymap.json:7 | `PUT /selection {"mode"}` | `cad::keys` → `CadAction::CadSelectMode { mode: Point }` | done-by-reading |
-| `select.mode_radial`: Q | keymap.json:7 | n/a (display) | cad-modify epic | later-epic: cad-modify |
+| `select.mode_radial`: Q | keymap.json:7 | n/a (display) | `cad::keys` → `CadSurface { select_radial }` at the pointer | done-by-reading |
 | `tool.select`: Escape | keymap.json:8 | n/a | `cad::transform::keys` → `CadAction::CadCancel` | done-by-reading |
 | `tool.annotate`: N | keymap.json:8 | `POST /threads` | cad-organize epic | later-epic: cad-organize |
 | `tool.move`: G | keymap.json:8 | `POST /ops/transform` | `cad::transform::keys` → `CadAction::CadTool { tool: Move }` | done-by-reading |
@@ -987,20 +998,20 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `tool.scale`: S | keymap.json:8 | `POST /ops/transform` | `cad::transform::keys` → `CadAction::CadTool { tool: Scale }` (not with Ctrl: Ctrl+S saves) | done-by-reading |
 | `tool.push_pull`: D | keymap.json:8 | `POST /ops/push_pull` | `cad::transform::keys` → `CadAction::CadTool { tool: PushPull }` | done-by-reading |
 | `tool.offset_face`: Shift+D | keymap.json:8 | `POST /ops/offset_faces` | `cad::transform::keys` → `CadAction::CadTool { tool: OffsetFace }` | done-by-reading |
-| `tool.box`: Shift+A, B | keymap.json:8 | `POST /ops/box` | cad-modify epic | later-epic: cad-modify |
-| `tool.cylinder`: Shift+A, C | keymap.json:8 | `POST /ops/cylinder` | cad-modify epic | later-epic: cad-modify |
-| `tool.sphere`: Shift+A, S | keymap.json:8 | `POST /ops/sphere` | cad-modify epic | later-epic: cad-modify |
+| `tool.box`: Shift+A, B | keymap.json:8 | `POST /ops/box` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.box }` when ready, else the status line says why (a two-step `cad::keys::Chord`: Shift+A, then the key within 1.5 s; `keys::gate` holds the second key for the chord so it does not also run B, select bodies) | done-by-reading |
+| `tool.cylinder`: Shift+A, C | keymap.json:8 | `POST /ops/cylinder` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.cylinder }` when ready, else the status line says why (a two-step `cad::keys::Chord`: Shift+A, then the key within 1.5 s; `keys::gate` holds the second key for the chord so it does not also run C, sketch circle) | done-by-reading |
+| `tool.sphere`: Shift+A, S | keymap.json:8 | `POST /ops/sphere` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.sphere }` when ready, else the status line says why (a two-step `cad::keys::Chord`: Shift+A, then the key within 1.5 s; `keys::gate` holds the second key for the chord so it does not also run S, the Scale tool) | done-by-reading |
 | `tool.extrude`: X | keymap.json:8 | `POST /ops/extrude` | cad-sketch epic | later-epic: cad-sketch |
 | `tool.revolve`: Shift+R | keymap.json:8 | `POST /ops/revolve` | cad-sketch epic | later-epic: cad-sketch |
-| `tool.fillet`: Ctrl+F (the outliner's search placeholder also names Ctrl+F, which no command binds) | keymap.json:8 | `POST /ops/fillet` | cad-modify epic | later-epic: cad-modify |
-| `tool.chamfer`: Ctrl+Shift+F | keymap.json:8 | `POST /ops/chamfer` | cad-modify epic | later-epic: cad-modify |
-| `tool.shell`: Ctrl+Shift+H | keymap.json:8 | `POST /ops/shell` | cad-modify epic | later-epic: cad-modify |
+| `tool.fillet`: Ctrl+F (the outliner's search placeholder also names Ctrl+F, which no command binds) | keymap.json:8 | `POST /ops/fillet` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.fillet }` when ready, else the status line says why | done-by-reading |
+| `tool.chamfer`: Ctrl+Shift+F | keymap.json:8 | `POST /ops/chamfer` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.chamfer }` when ready, else the status line says why | done-by-reading |
+| `tool.shell`: Ctrl+Shift+H | keymap.json:8 | `POST /ops/shell` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.shell }` when ready, else the status line says why | done-by-reading |
 | `tool.measure`: M | keymap.json:8 | `POST /ops/add_measurement` | `cad::transform::keys` → `CadAction::CadTool { tool: Measure }` (not with Ctrl: Ctrl+Shift+M is Same Material) | done-by-reading |
 | `tool.plane`: Ctrl+P | keymap.json:8 | `POST /ops/plane_from_face` | cad-sketch epic | later-epic: cad-sketch |
 | `tool.fastener`: Ctrl+H | keymap.json:8 | `POST /ops/fastener_hole` | cad-print epic | later-epic: cad-print |
 | `tool.clearance`: Ctrl+Shift+C | keymap.json:8 | `POST /ops/clearance` | cad-print epic | later-epic: cad-print |
-| `tool.mirror`: Ctrl+M | keymap.json:8 | `POST /ops/mirror` | cad-modify epic | later-epic: cad-modify |
-| `tool.array`: Ctrl+Shift+A | keymap.json:8 | `POST /ops/array_rect` | cad-modify epic | later-epic: cad-modify |
+| `tool.mirror`: Ctrl+M | keymap.json:8 | `POST /ops/mirror` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.mirror }` when ready, else the status line says why (Control+M always works; a macOS app menu binding Command+M to minimise would take it, and winit's default menu has none) | done-by-reading |
+| `tool.array`: Ctrl+Shift+A | keymap.json:8 | `POST /ops/array_rect` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { tool.array }` when ready, else the status line says why | done-by-reading |
 | `sketch.line`: L | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.rectangle`: Shift+L | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.circle`: C | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
@@ -1009,11 +1020,11 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 | `sketch.slot`: Shift+S | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.spline`: Shift+C | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
 | `sketch.text`: T | keymap.json:9 | `POST /nodes/{id}/sketch` | cad-sketch epic | later-epic: cad-sketch |
-| `modify.union`: Ctrl+U | keymap.json:10 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
-| `modify.subtract`: Ctrl+Shift+U | keymap.json:10 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
-| `modify.intersect`: Ctrl+Alt+U | keymap.json:10 | `POST /ops/boolean` | cad-modify epic | later-epic: cad-modify |
-| `modify.join`: J | keymap.json:10 | `POST /ops/join` | cad-modify epic | later-epic: cad-modify |
-| `modify.unjoin`: Shift+J | keymap.json:10 | `POST /ops/unjoin` | cad-modify epic | later-epic: cad-modify |
+| `modify.union`: Ctrl+U | keymap.json:10 | `POST /ops/boolean` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.union }` when ready, else the status line says why | done-by-reading |
+| `modify.subtract`: Ctrl+Shift+U | keymap.json:10 | `POST /ops/boolean` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.subtract }` when ready, else the status line says why | done-by-reading |
+| `modify.intersect`: Ctrl+Alt+U | keymap.json:10 | `POST /ops/boolean` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.intersect }` when ready, else the status line says why | done-by-reading |
+| `modify.join`: J | keymap.json:10 | `POST /ops/join` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.join }` when ready, else the status line says why | done-by-reading |
+| `modify.unjoin`: Shift+J | keymap.json:10 | `POST /ops/unjoin` | `cad::keys` (matched against `surfaces::registry`) → `CadInvoke { modify.unjoin }` when ready, else the status line says why | done-by-reading |
 | `print.wall_check`: Ctrl+W | keymap.json:11 | `GET /nodes/{id}/thin` | cad-print epic | later-epic: cad-print |
 | `print.validate`: Ctrl+Shift+V | keymap.json:11 | `GET /nodes/{id}/validate` | cad-print epic | later-epic: cad-print |
 | `numeric.entry`: Tab (cleared at ui/app.py:469 and routed by keyPressEvent) | keymap.json:12 | n/a | `cad::numeric::entry` | done-by-reading |
@@ -1024,8 +1035,8 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| The viewer's REST commands `state`, `cad_state`, `cad_open`, `cad_select`, `cad_patch`, `cad_delete`, `cad_undo`, `cad_redo`, `cad_save`, `cad_command`, `cad_op`, `cad_refresh`, `cad_fit`, `cad_physical`, `system_ui`; and, with cad-select-transform, `cad_select_mode`, `cad_hover`, `cad_box_select`, `cad_candidates`, `cad_select_all`, `cad_invert_selection`, `cad_select_same_material`, `cad_edges_to_faces`, `cad_tool`, `cad_cancel`, `cad_transform`, `cad_push_pull`, `cad_offset_faces`, `cad_set_dimension`, `cad_numeric`, `cad_measure` | none | the viewer's own REST | `cad::actions::CadAction` and `apply` | done-by-reading |
-| `system_ui` controls `cad:undo`, `cad:redo`, `cad:save`, `cad:refresh`, `cad:fit`, `cad:physical`, `cad:delete`, `cad:node:<id>`, `cad:visible:<id>`, `cad:locked:<id>`, `cad:disabled:<id>`, `cad:material:<id>:<mat>`, `cad:command:<id>`, and, with cad-select-transform, `cad:mode:<mode>`, `cad:select_all`, `cad:invert_selection`, `cad:select_same_material`, `cad:edges_to_faces`, `cad:candidate:<n>`, `cad:tool:<tool>`, `cad:cancel`; each with enabled and disabled_reason | none | the viewer's own REST | `cad::actions` | done-by-reading |
+| The viewer's REST commands `state`, `cad_state`, `cad_open`, `cad_select`, `cad_patch`, `cad_delete`, `cad_undo`, `cad_redo`, `cad_save`, `cad_command`, `cad_op`, `cad_refresh`, `cad_fit`, `cad_physical`, `system_ui`; and, with cad-select-transform, `cad_select_mode`, `cad_hover`, `cad_box_select`, `cad_candidates`, `cad_select_all`, `cad_invert_selection`, `cad_select_same_material`, `cad_edges_to_faces`, `cad_tool`, `cad_cancel`, `cad_transform`, `cad_push_pull`, `cad_offset_faces`, `cad_set_dimension`, `cad_numeric`, `cad_measure`; and, with cad-modify, `cad_invoke`, `cad_run`, `cad_form_set`, `cad_form_submit`, `cad_form_cancel`, `cad_surface` (and `cad_state.ops`) | none | the viewer's own REST | `cad::actions::CadAction` and `apply`; the specs in `cad::specs` | done-by-reading |
+| `system_ui` controls `cad:undo`, `cad:redo`, `cad:save`, `cad:refresh`, `cad:fit`, `cad:physical`, `cad:delete`, `cad:node:<id>`, `cad:visible:<id>`, `cad:locked:<id>`, `cad:disabled:<id>`, `cad:material:<id>:<mat>`, `cad:command:<id>`, and, with cad-select-transform, `cad:mode:<mode>`, `cad:select_all`, `cad:invert_selection`, `cad:select_same_material`, `cad:edges_to_faces`, `cad:candidate:<n>`, `cad:tool:<tool>`, `cad:cancel`; and, with cad-modify, `cad:op:<id>` (every RoboCAD command), `cad:surface:<kind>`, `cad:menu:<category>`, `cad:form:ok`, `cad:form:cancel`, `cad:form:set:<name>:<value>`; each with enabled and disabled_reason | none | the viewer's own REST | `cad::actions`, `cad::panel::controls` (`own_controls`, then `cad::surfaces::controls`) | done-by-reading |
 | "Refresh": refetch `/doc`, `/commands` and `/autosave` now | none | `GET /doc`, `GET /commands`, `GET /autosave` | `CadAction::CadRefresh` → `cad::sync` (`PollCommand::Refresh`) | done-by-reading |
 | Stale and lost states: a failed request keeps the last snapshot on screen, marked stale, with the error verbatim | none | `GET /`, `GET /doc` | `cad::document::Connection::Lost`, `CadDocument.stale` | done-by-reading |
 | One edit in flight at a time; others are refused, naming it | none | the mutating routes | `cad::document::Edit` | done-by-reading |
@@ -1034,84 +1045,95 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted from the tables above (2026-10-01, after the cad-select-transform
-epic: its 63 rows were mapped to native code, 55 `done-by-reading` and 8
-`deliberately different`; two existing selection rows also changed status) with a short
-script that reads each row's last cell, up to its reason. The count tables themselves are not
-counted. There are 773 rows.
+Recounted from the tables above (2026-10-01, after the cad-modify epic: its
+116 rows were mapped to native code, 77 `done-by-reading` and 39
+`deliberately different`) with a short script that splits each row on its
+unescaped `|`, takes the status cell and counts it by its leading status (up
+to its reason). The count tables themselves are not counted. There are 773
+rows. (After cad-select-transform the counts were 168 done by reading, 574
+later and 31 deliberately different; its 63 rows were 55 and 8.)
 
 | Status | Rows |
 |---|---|
 | done | 0 |
-| done-by-reading | 168 |
-| later-epic | 574 |
-| deliberately different | 31 |
+| done-by-reading | 245 |
+| later-epic | 458 |
+| deliberately different | 70 |
 | **total** | **773** |
 
 | Later epic | Rows |
 |---|---|
-| cad-modify | 116 |
 | cad-views-export | 112 |
 | cad-organize | 108 |
 | cad-physical-inspect | 82 |
 | cad-experiments-motion | 63 |
 | cad-sketch | 60 |
 | cad-print | 33 |
-| **total** | **574** |
+| **total** | **458** |
 
 Some rows repeat a feature from another angle: as a UI feature, as a REST
 route, as an Ops method and as a key. The ledger checks each of those
 surfaces separately. By script, every one of the 183 registry command ids,
 the 77 keymap ids and the 134 public Ops methods appears in a row. Other
-counts: 81 rows are `n/a (display)` and 24 are flagged.
+counts: 81 rows are `n/a (display)` and 17 are flagged.
 
-No row is blank or `todo`, and no cad-select-transform row is open. Nothing is `done`, because nothing in either
-epic has been compiled or run yet. The verification pass moves rows to `done`
-as it builds and tests them.
+No row is blank or `todo`, and no cad-select-transform or cad-modify row is
+open. Nothing is `done`, because no epic's rows have been moved to `done` yet:
+cad-mode and cad-select-transform were built and tested in their
+verification passes and await the user's checklist; cad-modify is written
+and reviewed by reading, pending its verification pass. The verification
+passes and the checklist move rows to `done`.
 
 ## Rows flagged "none: needs a Python route"
 
-There are 24 flagged rows covering 22 distinct gaps (`edit.copy` and
-`edit.paste` also have keymap rows). Each gap needs one of two things before
-the native viewer can reach the feature headless:
+There are 17 flagged rows covering 17 distinct gaps. Each gap needs one of
+two things before the native viewer can reach the feature headless:
 
 - a new route in `cad/robocad/api.py`, a RoboCAD change outside this epic;
 - a Rust port, gated by the parity harness.
 
-No route at all (20):
+No route at all (15):
 
 1. Save with the viewport thumbnail (`thumbnail.png`). `/save` writes none.
 2. Report a failed autosave. `/autosave` does not report one.
 3. Set the autosave interval preference.
-4. Copy with Placement.
-5. Paste with Placement.
-6. Per-node simulation results (`Node.results`) for the inspector's
+4. Per-node simulation results (`Node.results`) for the inspector's
    "Results" line.
-7. The stress overlay's per-node hotspot colours (same data as 6).
-8. The print overlay's per-node results (same data as 6).
-9. The Robot panel's margins (`results_margins`, same data as 6).
-10. Reference image pixels in the viewport.
-11. The reference list's preview (same data as 10).
-12. Reading face control points.
-13. Curvature comb.
-14. Continuity check.
-15. The planar ("x–z") simulation export.
-16. Run review's captured CAD replay (captured document and poses).
-17. Candidate review's proposed geometry.
-18. Pose kinematics without a desktop window.
-19. Geometry-rule recipes for system components
+5. The stress overlay's per-node hotspot colours (same data as 4).
+6. The print overlay's per-node results (same data as 4).
+7. The Robot panel's margins (`results_margins`, same data as 4).
+8. Reference image pixels in the viewport.
+9. The reference list's preview (same data as 8).
+10. The planar ("x–z") simulation export.
+11. Run review's captured CAD replay (captured document and poses).
+12. Candidate review's proposed geometry.
+13. Pose kinematics without a desktop window.
+14. Geometry-rule recipes for system components
     (`component_derivation.RECIPES`).
-20. The mesh-unit guess on import (`importers.mesh_units_guess`).
+15. The mesh-unit guess on import (`importers.mesh_units_guess`).
 
 No longer a gap: B-rep edge polylines (edge display, edge picking and
 curve nodes). RoboCAD now serves them as `GET /nodes/{id}/edges?samples=N`
 (api.py:625-638, 2026-10-01); edge picking uses it (cad-select-transform),
 and edge display stays with cad-views-export.
 
+No longer gaps since cad-modify (2026-10-01; routes added to `api.py`
+`Service`, pytests `cad/tests/test_api_clipboard.py`,
+`test_api_control_points.py`, `test_api_analysis.py`): Copy with Placement
+(`POST /clipboard/copy`, `Service.copy`, read-only), Paste with Placement
+(`POST /clipboard/paste`, `Service.paste`, one undo step "Paste"), reading
+face control points (`GET /nodes/{id}/control_points?face=i`), the
+curvature comb (`GET /nodes/{id}/curvature_comb`) and the continuity check
+(`GET /nodes/{id}/continuity`). The same epic fixed `ArgConverter` twice,
+found by reading: `POST /ops/cut` takes a cutter node id
+(`test_api_cut_cutter.py`), and `POST /ops/set_control_points` takes its
+grid of points (`test_api_control_points_set.py`); both were refused
+before.
+
 GUI-only through `POST /commands/{id}`, with no headless route (2):
 
-21. Blender live link start and stop.
-22. Web share.
+16. Blender live link start and stop.
+17. Web share.
 
 ## Headless versus GUI-only routes
 

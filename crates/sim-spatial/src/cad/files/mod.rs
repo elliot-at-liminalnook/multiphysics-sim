@@ -5,12 +5,13 @@
 //!
 //! - **Paths, not dialogs.** A command without a path opens a modal path
 //!   form on the UI kit (`form`), pre-filled with the document's directory,
-//!   with the directory's matching files listed by a `Pool::Io` job; no file
-//!   I/O on the UI thread. rfd is not in the workspace: a native dialog adds
-//!   a dependency tree (objc2/AppKit on macOS, GTK or the portal on Linux)
-//!   whose macOS dialogs must run on the main thread's event loop, which
-//!   cannot be verified without building and running; revisit in a
-//!   verification pass.
+//!   with the directory's matching files listed by a `Pool::Io` job (the
+//!   kit path field's listing, `ui_kit::path_field`, the one way to enter
+//!   a path in the window); no file I/O on the UI thread. rfd is not in
+//!   the workspace: a native dialog adds a dependency tree (objc2/AppKit
+//!   on macOS, GTK or the portal on Linux) whose macOS dialogs must run on
+//!   the main thread's event loop, which cannot be verified without
+//!   building and running; revisit in a verification pass.
 //! - **Unsaved edits.** RoboCAD's New and Open open another window, so
 //!   they never lose edits. CAD mode shows one document, so new and open
 //!   replace it under `cad_open`'s rule (`CadDocument::switch_blockers`,
@@ -69,7 +70,8 @@ use std::path::PathBuf;
 use std::collections::BTreeMap;
 
 pub(crate) use form::FileForm;
-pub(crate) use jobs::{FileJob, Listing};
+pub(crate) use jobs::FileJob;
+use crate::ui_kit::path_field::Listing;
 
 /// The file forms, exports and renders in flight.
 #[derive(Resource, Default)]
@@ -88,7 +90,8 @@ pub struct CadFiles {
     /// The export settings last sent per format (RoboCAD's desktop keeps
     /// them in its preferences, `export_settings`); the form starts from them.
     pub(crate) export_settings: BTreeMap<String, Map<String, Value>>,
-    /// The form's directory listing (`Pool::Io`), and the newest one read.
+    /// The form's directory listing (`Pool::Io`, `path_field::request`),
+    /// and the newest one read (`path_field::receive`).
     pub(crate) listing: crate::jobs::Latest<Listing>,
     pub(crate) listed: Option<Listing>,
 }
@@ -471,8 +474,11 @@ fn export(args: &ExportArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     let format_label = fmt.label;
     jobs::start(cx, call, "export", label, true, jobs::Then::Nothing, move |_| {
         let answer = client.export(&request).map_err(|e| jobs::named(&l, &e)).map(|x| {
-            let warnings = x.warnings.as_array().map_or(0, Vec::len);
-            let note = if warnings > 0 { format!(" ({warnings} warning(s): see cad_state.files.last)") } else { String::new() };
+            // The status line shows the message: the warnings themselves (the first few), not a pointer elsewhere.
+            let listed: Vec<String> = x.warnings.as_array().into_iter().flatten().map(|w| w.as_str().map_or_else(|| w.to_string(), str::to_string)).collect();
+            let shown: Vec<&str> = listed.iter().take(3).map(String::as_str).collect();
+            let more = if listed.len() > shown.len() { format!("; … {} more", listed.len() - shown.len()) } else { String::new() };
+            let note = if listed.is_empty() { String::new() } else { format!(" ({} warning(s): {}{more})", listed.len(), shown.join("; ")) };
             json!({"exported": x.exported, "format": request.format, "warnings": x.warnings, "settings": request.settings, "message": format!("Exported {format_label} to {}{note}", x.exported)})
         });
         jobs::logged(&l, answer)

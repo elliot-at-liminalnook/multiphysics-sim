@@ -1,5 +1,7 @@
 //! The file jobs (export, render, new, the unit guess) and the form's
-//! directory listing: started from the handler, polled in JobResults,
+//! directory listing (the kit path field's `Listing`, read by
+//! `ui_kit::path_field::request` from `form::input` and received here by
+//! `path_field::receive`): started from the handler, polled in JobResults,
 //! shown in the status line, `cad_state.files` and the progress strip; a
 //! REST caller waits on its job's sequence (`file_job` in its continuation);
 //! a waited new's open runs in that wait, so its answer is the open's.
@@ -14,7 +16,8 @@ use crate::app::actions::{Act, Call};
 use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::CadDocument;
 use crate::jobs::{Ctx, Job, Pool};
-use crate::ui_kit::{BORDER, Kit, LEFT_WIDTH, STATUSBAR, SURFACE, TEXT, UiFonts, size};
+use crate::ui_kit::path_field;
+use crate::ui_kit::{BORDER, Kit, LEFT_WIDTH, STATUSBAR, SURFACE, TEXT, UiFonts, above_strip, size};
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
@@ -181,11 +184,8 @@ fn message(job: &FileJob, value: &Value) -> String {
 /// the created file; a guess fills the import form's unit).
 pub(super) fn receive(files: Option<ResMut<CadFiles>>, mut doc: Option<ResMut<CadDocument>>, mut out: MessageWriter<Act<CadAction>>) {
     let Some(mut files) = files else { return };
-    if files.listing.pending().is_some()
-        && let Some((_, result)) = files.listing.poll()
-    {
-        files.listed = Some(result.unwrap_or_else(|e| Listing { error: Some(e), ..Default::default() }));
-    }
+    let files = &mut *files;
+    path_field::receive(&mut files.listing, &mut files.listed);
     if files.jobs.is_empty() {
         return;
     }
@@ -199,7 +199,7 @@ pub(super) fn receive(files: Option<ResMut<CadFiles>>, mut doc: Option<ResMut<Ca
     }
     for (job, result) in finished {
         if job.waited {
-            keep_result(&mut files, job.seq, (result.clone(), job.then.clone()));
+            keep_result(files, job.seq, (result.clone(), job.then.clone()));
         }
         match (&job.then, &result) {
             // A waited new is opened by its caller (`wait`), which answers with the open's outcome.
@@ -220,58 +220,6 @@ pub(super) fn receive(files: Option<ResMut<CadFiles>>, mut doc: Option<ResMut<Ca
         }
         files.last = Some((job.label.clone(), result));
     }
-}
-
-/// The form's directory listing: subdirectories and the files with one of
-/// `extensions` (hidden ones left out), directories first, by name.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct Listing {
-    /// What was asked: the directory and the extensions (`FileForm::listing_key`).
-    pub key: String,
-    pub dir: String,
-    /// (name, is a directory), at most [`MAX_LISTED`].
-    pub entries: Vec<(String, bool)>,
-    /// Entries left out past [`MAX_LISTED`].
-    pub more: usize,
-    pub error: Option<String>,
-}
-impl Listing {
-    pub(crate) fn json(&self) -> Value {
-        json!({"dir": self.dir, "entries": self.entries.iter().map(|(n, d)| json!({"name": n, "dir": d})).collect::<Vec<_>>(), "more": self.more, "error": self.error})
-    }
-}
-
-/// Entries a listing keeps.
-const MAX_LISTED: usize = 200;
-
-/// Reads `dir` (on `Pool::Io`).
-pub(crate) fn list(key: String, dir: String, extensions: &[&str]) -> Listing {
-    let read = match std::fs::read_dir(&dir) {
-        Ok(read) => read,
-        Err(e) => return Listing { key, dir: dir.clone(), error: Some(format!("{dir}: {e}")), ..Default::default() },
-    };
-    let mut entries: Vec<(String, bool)> = read
-        .filter_map(Result::ok)
-        .filter_map(|e| {
-            let name = e.file_name().to_string_lossy().into_owned();
-            if name.starts_with('.') {
-                return None;
-            }
-            // Follows symlinks, so a linked directory lists as one.
-            let is_dir = std::fs::metadata(e.path()).map(|m| m.is_dir()).unwrap_or(false);
-            let ext = sim_runtime::cad_client::extension(&name);
-            (is_dir || extensions.contains(&ext.as_str())).then_some((name, is_dir))
-        })
-        .collect();
-    entries.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.to_lowercase().cmp(&b.0.to_lowercase())));
-    let more = entries.len().saturating_sub(MAX_LISTED);
-    entries.truncate(MAX_LISTED);
-    Listing { key, dir, entries, more, error: None }
-}
-
-/// Starts reading the listing `key` names.
-pub(super) fn request_listing(files: &mut CadFiles, key: String, dir: String, extensions: Vec<&'static str>) {
-    files.listing.start(Pool::Io, "cad file listing", move |_| Ok(list(key, dir, &extensions)));
 }
 
 /// The progress strip's root.
@@ -300,7 +248,8 @@ pub(super) fn strip(mut commands: Commands, files: Option<Res<CadFiles>>, fonts:
             Node {
                 position_type: PositionType::Absolute,
                 left: Val::Px(LEFT_WIDTH + 8.0),
-                bottom: Val::Px(STATUSBAR + 8.0),
+                // Above the status bar, which sits on the switcher strip.
+                bottom: above_strip(STATUSBAR + 8.0),
                 flex_direction: FlexDirection::Column,
                 row_gap: Val::Px(2.0),
                 padding: UiRect::all(Val::Px(8.0)),

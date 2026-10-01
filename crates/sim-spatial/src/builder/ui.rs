@@ -7,7 +7,7 @@
 //! └ status: message                                   revision · parts · nets · state ┘
 use super::*;
 use bevy::input::mouse::MouseWheel;
-use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, Corner, DANGER, Dock, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, divider, size, wheel_delta, wrap};
+use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, Corner, DANGER, Dock, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SWITCHER_STRIP, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, divider, size, wheel_delta, wrap};
 
 #[derive(Component)]
 pub(super) enum Scroll {
@@ -270,56 +270,50 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
     if !b.graphs.visible {
         return;
     }
-    // `Dock::Under` sits on the bottom of its parent, so a layout-only
-    // parent places it above the status bar, between the side columns.
+    // One `Dock::Under` above the status bar (the kit adds the switcher
+    // strip, `SWITCHER_STRIP`), between the side columns.
     commands
-        .spawn((
-            Node { position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH), right: Val::Px(RIGHT_WIDTH), bottom: Val::Px(STATUSBAR), height: Val::Px(graphs::DOCK), ..default() },
-            BuilderPanel,
-        ))
-        .with_children(|slot| {
-            slot.spawn(k.dock(Dock::Under { left: 0., right: 0., height: graphs::DOCK }, Node { padding: UiRect::all(Val::Px(10.)), column_gap: Val::Px(10.), ..default() }))
-            .with_children(|dock| {
-                if let Some(r) = &b.study.result {
-                    dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(BAR)))
-                        .with_children(|legend| {
-                            legend.spawn(k.text(format!("Study {}", r.name), size::DETAIL, TEXT, 2));
-                            for (label, color) in b.graphs.charts.iter().find(|c| !c.legend.is_empty()).map(|c| c.legend.clone()).unwrap_or_default() {
-                                legend.spawn((Node { column_gap: Val::Px(5.), align_items: AlignItems::Center, ..default() }, children![k.dot(Color::srgb_u8(color[0], color[1], color[2])), k.text(label, size::DETAIL, SUBTLE, 0)]));
-                            }
-                            legend.spawn(k.button("Back to live", BuildAction::ClearStudy, Look::Ghost, true));
-                        });
-                }
-                if b.graphs.charts.is_empty() {
-                    dock.spawn(k.caption(if b.run.is_none() { "Press Run (R) to record. Select a part to plot its speed, current or torque, or pin quantities from the inspector." } else { "Nothing plottable yet: select a part." }));
-                }
-                for (i, c) in b.graphs.charts.iter().enumerate() {
-                    let [r, g, bl] = c.color;
-                    let color = Color::srgb_u8(r, g, bl);
-                    dock.spawn((
-                        Node { flex_direction: FlexDirection::Column, flex_grow: 1., flex_basis: Val::Px(0.), min_width: Val::Px(0.), row_gap: Val::Px(3.), ..default() },
-                    ))
-                    .with_children(|card| {
-                        card.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(6.), flex_shrink: 0., ..default() }).with_children(|head| {
-                            head.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Center, min_width: Val::Px(0.), overflow: Overflow::clip(), ..default() }, children![k.dot(color), k.text(&c.title, size::CAPTION, TEXT, 1)]));
-                            let latest = c.latest.map(|v| format!("{} {}", num(v), c.unit)).unwrap_or_else(|| "–".into());
-                            head.spawn(k.text(latest, size::CAPTION, color, 2));
-                            if c.pinned {
-                                head.spawn(k.button("×", BuildAction::Unpin(c.id.clone()), Look::Ghost, true));
-                            }
-                        });
-                        if let Some(image) = b.graphs.images.get(i) {
-                            card.spawn(k.chart_image(image.clone(), Node { flex_grow: 1., ..default() }, true)).with_children(|plot| {
-                                let label = |v: f64| format!("{} {}", num(v), c.unit);
-                                plot.spawn(k.chart_label(label(c.range.1), Corner::TopLeft));
-                                plot.spawn(k.chart_label(label(c.range.0), Corner::BottomLeft));
-                                let x = if c.x_label == "s" { format!("{:.2} – {:.2} s", c.window.0, c.window.1) } else { format!("{} {} – {}", c.x_label, num(c.window.0), num(c.window.1)) };
-                                plot.spawn(k.chart_label(x, Corner::BottomRight));
-                            });
+        .spawn((k.dock(Dock::Under { left: LEFT_WIDTH, right: RIGHT_WIDTH, bottom: STATUSBAR, height: graphs::DOCK }, Node { padding: UiRect::all(Val::Px(10.)), column_gap: Val::Px(10.), ..default() }), BuilderPanel))
+        .with_children(|dock| {
+            if let Some(r) = &b.study.result {
+                dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(BAR)))
+                    .with_children(|legend| {
+                        legend.spawn(k.text(format!("Study {}", r.name), size::DETAIL, TEXT, 2));
+                        for (label, color) in b.graphs.charts.iter().find(|c| !c.legend.is_empty()).map(|c| c.legend.clone()).unwrap_or_default() {
+                            legend.spawn((Node { column_gap: Val::Px(5.), align_items: AlignItems::Center, ..default() }, children![k.dot(Color::srgb_u8(color[0], color[1], color[2])), k.text(label, size::DETAIL, SUBTLE, 0)]));
+                        }
+                        legend.spawn(k.button("Back to live", BuildAction::ClearStudy, Look::Ghost, true));
+                    });
+            }
+            if b.graphs.charts.is_empty() {
+                dock.spawn(k.caption(if b.run.is_none() { "Press Run (R) to record. Select a part to plot its speed, current or torque, or pin quantities from the inspector." } else { "Nothing plottable yet: select a part." }));
+            }
+            for (i, c) in b.graphs.charts.iter().enumerate() {
+                let [r, g, bl] = c.color;
+                let color = Color::srgb_u8(r, g, bl);
+                dock.spawn((
+                    Node { flex_direction: FlexDirection::Column, flex_grow: 1., flex_basis: Val::Px(0.), min_width: Val::Px(0.), row_gap: Val::Px(3.), ..default() },
+                ))
+                .with_children(|card| {
+                    card.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, column_gap: Val::Px(6.), flex_shrink: 0., ..default() }).with_children(|head| {
+                        head.spawn((Node { column_gap: Val::Px(6.), align_items: AlignItems::Center, min_width: Val::Px(0.), overflow: Overflow::clip(), ..default() }, children![k.dot(color), k.text(&c.title, size::CAPTION, TEXT, 1)]));
+                        let latest = c.latest.map(|v| format!("{} {}", num(v), c.unit)).unwrap_or_else(|| "–".into());
+                        head.spawn(k.text(latest, size::CAPTION, color, 2));
+                        if c.pinned {
+                            head.spawn(k.button("×", BuildAction::Unpin(c.id.clone()), Look::Ghost, true));
                         }
                     });
-                }
-            });
+                    if let Some(image) = b.graphs.images.get(i) {
+                        card.spawn(k.chart_image(image.clone(), Node { flex_grow: 1., ..default() }, true)).with_children(|plot| {
+                            let label = |v: f64| format!("{} {}", num(v), c.unit);
+                            plot.spawn(k.chart_label(label(c.range.1), Corner::TopLeft));
+                            plot.spawn(k.chart_label(label(c.range.0), Corner::BottomLeft));
+                            let x = if c.x_label == "s" { format!("{:.2} – {:.2} s", c.window.0, c.window.1) } else { format!("{} {} – {}", c.x_label, num(c.window.0), num(c.window.1)) };
+                            plot.spawn(k.chart_label(x, Corner::BottomRight));
+                        });
+                    }
+                });
+            }
         });
 }
 
@@ -353,7 +347,7 @@ fn status_bar(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScen
 pub(super) fn scroll_panels(mut wheel: MessageReader<MouseWheel>, window: Single<&Window>, mut panels: Query<(&mut ScrollPosition, &Scroll)>) {
     let delta = wheel_delta(&mut wheel, WHEEL_LINE);
     let Some(p) = window.cursor_position() else { return };
-    if p.y < TOPBAR || p.y > window.height() - STATUSBAR {
+    if p.y < TOPBAR || p.y > window.height() - STATUSBAR - SWITCHER_STRIP {
         return;
     }
     for (mut position, side) in &mut panels {

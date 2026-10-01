@@ -17,6 +17,9 @@
 use bevy::ecs::message::{MessageCursor, Messages};
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
+
+use crate::ui_kit::SWITCHER_STRIP;
 
 /// The fly camera's heading and speed (Place mode).
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
@@ -40,8 +43,14 @@ pub(crate) fn orientation(fly: &Fly) -> Quat {
 /// they are read as options, since a `MessageReader` of an unregistered
 /// message fails validation and panics). The mouse messages are skipped
 /// either way, so a fly camera spawned later does not take a stale burst.
+/// Pointer input belongs to the view only: the wheel is ignored over the
+/// switcher strip (`ui_kit::SWITCHER_STRIP`), and a drag turns the view
+/// only if its first button went down in the view ([`in_view`]); `drag`
+/// holds that answer until every button is up (None: none held).
 #[allow(clippy::too_many_arguments)]
 pub(super) fn fly(
+    window: Option<Single<&Window, With<PrimaryWindow>>>,
+    mut drag: Local<Option<bool>>,
     time: Option<Res<Time>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
@@ -52,12 +61,21 @@ pub(super) fn fly(
     mut q: Query<(&mut Transform, &mut Fly)>,
 ) {
     let (Some(time), Some(keys), Some(buttons), Some(motion), Some(wheel)) = (time, keys, buttons, motion, wheel) else { return };
+    let pointer_in_view = in_view(window.as_deref().copied());
+    let held = buttons.pressed(MouseButton::Right) || buttons.pressed(MouseButton::Left);
+    if !held {
+        *drag = None;
+    } else if drag.is_none() {
+        // The first button down (or one already held when this system
+        // first sees it, e.g. the click on Place's switcher button).
+        *drag = Some(pointer_in_view);
+    }
     let Ok((mut t, mut fly)) = q.single_mut() else {
         motion_seen.clear(&motion);
         wheel_seen.clear(&wheel);
         return;
     };
-    if buttons.pressed(MouseButton::Right) || buttons.pressed(MouseButton::Left) {
+    if *drag == Some(true) {
         for m in motion_seen.read(&motion) {
             fly.yaw -= m.delta.x * 0.004;
             fly.pitch = (fly.pitch - m.delta.y * 0.004).clamp(-1.5, 1.5);
@@ -66,6 +84,9 @@ pub(super) fn fly(
         motion_seen.clear(&motion);
     }
     for w in wheel_seen.read(&wheel) {
+        if !pointer_in_view {
+            continue;
+        }
         fly.speed = (fly.speed * if w.y > 0.0 { 1.15 } else { 1.0 / 1.15 }).clamp(0.05, 8.0);
     }
     t.rotation = orientation(&fly);
@@ -92,4 +113,12 @@ pub(super) fn fly(
     }
     let boost = if keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight) { 3.0 } else { 1.0 };
     t.translation += d.normalize_or_zero() * fly.speed * boost * time.delta_secs();
+}
+
+/// Whether the pointer is over the 3D view: in the window and above the
+/// switcher strip (logical px). No cursor (outside the window) is not in
+/// the view; no window at all (a window-free app or test) counts as in it.
+fn in_view(window: Option<&Window>) -> bool {
+    let Some(window) = window else { return true };
+    window.cursor_position().is_some_and(|c| c.y < window.height() - SWITCHER_STRIP)
 }

@@ -114,7 +114,7 @@ use super::view::CadView;
 use crate::app::actions::{Act, Call};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
-use crate::ui_kit::{BORDER, FAINT, Kit, LEFT_WIDTH, Look, SURFACE, TOPBAR, UiFonts, WHEEL_LINE, size, wheel_delta};
+use crate::ui_kit::{BORDER, FAINT, Kit, LEFT_WIDTH, Look, SURFACE, SWITCHER_STRIP, TOPBAR, UiFonts, WHEEL_LINE, size, wheel_delta};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
@@ -495,11 +495,12 @@ const POPUP_WIDTH: f32 = 220.0;
 /// Where a popup asked for at `at` goes in a `window`-sized window, and
 /// how tall its rows may get: below and right of `at` when it fits; moved
 /// up when less than [`ROWS_MIN`] is left below, and left so its least
-/// width fits; its rows scroll past the room left above the bottom edge.
+/// width fits; its rows scroll past the room left above the bottom edge,
+/// which is the top of the mode switcher's strip ([`SWITCHER_STRIP`]).
 /// Returns (left, top, rows' max height, max width).
 fn popup_place(at: Vec2, window: Vec2) -> (f32, f32, f32, f32) {
     let left = at.x.min(window.x - EDGE - POPUP_WIDTH).max(EDGE);
-    let bottom = window.y - EDGE - POPUP_CHROME;
+    let bottom = window.y - SWITCHER_STRIP - EDGE - POPUP_CHROME;
     let top = (if bottom - at.y < ROWS_MIN { (bottom - ROWS_MIN).min(at.y) } else { at.y }).max(EDGE);
     let rows = (bottom - top).clamp(0.0, ROWS_MAX);
     (left, top, rows, (window.x - EDGE - left).max(POPUP_WIDTH))

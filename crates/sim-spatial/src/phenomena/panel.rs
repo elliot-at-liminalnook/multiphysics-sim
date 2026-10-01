@@ -19,7 +19,7 @@ use super::run::{CHART_INTERVAL, Frame, knob_target};
 use crate::app::ModeScope;
 use crate::app::actions::Act;
 use crate::builder::ui_api::Enabled;
-use crate::ui_kit::{ACCENT, Corner, DANGER, Dock, Kit, LEFT_WIDTH, Look, RIGHT_WIDTH, SUBTLE, SliderLook, TEXT, TOPBAR, Tint, UiFonts, VALUE, WARN, WHEEL_LINE, size, slider_held, wheel_delta, wrap};
+use crate::ui_kit::{ACCENT, Corner, DANGER, Dock, Kit, LEFT_WIDTH, Look, RIGHT_WIDTH, SUBTLE, SWITCHER_STRIP, SliderLook, TEXT, TOPBAR, Tint, UiFonts, VALUE, WARN, WHEEL_LINE, size, slider_held, wheel_delta, wrap};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -27,9 +27,6 @@ use sim_phenomena::exhibit::Knob;
 
 /// The chart strip's height under the 3D view.
 pub(super) const CHART_HEIGHT: f32 = 210.0;
-/// Room kept at the bottom of the right dock and the chart strip for the
-/// mode switcher (bottom right, over every mode).
-const SWITCHER_ROOM: f32 = 46.0;
 /// Seconds between refreshes of the numbers (steady labels).
 const VALUE_REFRESH: f64 = 0.25;
 /// Seconds between chart redraws.
@@ -213,11 +210,13 @@ pub(super) fn setup(mut commands: Commands, fonts: Res<UiFonts>, mut images: Res
             k.header(p, "Exhibits", "Click one, or ] and [ for the next and previous; 1–9 and 0 open the first ten.");
             p.spawn((k.scroll_area(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), flex_grow: 1.0, min_height: Val::Px(0.0), ..default() }, 0.0), ExhibitList));
         });
+    // Every dock ends above the switcher strip (`SWITCHER_STRIP`, added by
+    // the kit), so the right dock and chart strip need no switcher room.
     commands
         .spawn((
             k.dock(
                 Dock::Right { top: TOPBAR, bottom: 0.0, width: RIGHT_WIDTH },
-                Node { flex_direction: FlexDirection::Column, padding: UiRect { left: Val::Px(16.0), right: Val::Px(16.0), top: Val::Px(14.0), bottom: Val::Px(SWITCHER_ROOM) }, row_gap: Val::Px(6.0), ..default() },
+                Node { flex_direction: FlexDirection::Column, padding: UiRect { left: Val::Px(16.0), right: Val::Px(16.0), top: Val::Px(14.0), bottom: Val::Px(14.0) }, row_gap: Val::Px(6.0), ..default() },
             ),
             DespawnOnExit(ModeScope::Phenomena),
         ))
@@ -229,8 +228,8 @@ pub(super) fn setup(mut commands: Commands, fonts: Res<UiFonts>, mut images: Res
     commands
         .spawn((
             k.dock(
-                Dock::Under { left: LEFT_WIDTH, right: RIGHT_WIDTH, height: CHART_HEIGHT },
-                Node { flex_direction: FlexDirection::Column, padding: UiRect { left: Val::Px(12.0), right: Val::Px(12.0), top: Val::Px(8.0), bottom: Val::Px(SWITCHER_ROOM) }, row_gap: Val::Px(4.0), ..default() },
+                Dock::Under { left: LEFT_WIDTH, right: RIGHT_WIDTH, bottom: 0.0, height: CHART_HEIGHT },
+                Node { flex_direction: FlexDirection::Column, padding: UiRect { left: Val::Px(12.0), right: Val::Px(12.0), top: Val::Px(8.0), bottom: Val::Px(8.0) }, row_gap: Val::Px(4.0), ..default() },
             ),
             DespawnOnExit(ModeScope::Phenomena),
         ))
@@ -294,7 +293,7 @@ pub(super) fn slider(tracks: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui
 pub(super) fn scroll(mut wheel: MessageReader<MouseWheel>, window: Option<Single<&Window, With<PrimaryWindow>>>, mut areas: Query<(&mut ScrollPosition, Has<ExhibitList>), Or<(With<ExhibitList>, With<Inspector>)>>) {
     let delta = wheel_delta(&mut wheel, WHEEL_LINE);
     let Some(window) = window else { return };
-    let Some(p) = window.cursor_position().filter(|p| delta != 0.0 && p.y > TOPBAR) else { return };
+    let Some(p) = window.cursor_position().filter(|p| delta != 0.0 && p.y > TOPBAR && p.y < window.height() - SWITCHER_STRIP) else { return };
     let list = if p.x < LEFT_WIDTH {
         true
     } else if p.x > window.width() - RIGHT_WIDTH {

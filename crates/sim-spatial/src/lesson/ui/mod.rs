@@ -8,7 +8,7 @@ use super::*;
 use crate::annotate::{self, Composer, Host};
 use crate::builder::ui::{equations, markdown_theme, num, paragraph};
 use crate::ui_kit::{
-    ACCENT, BORDER, Dock, FAINT, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, SliderLook, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, divider, size, wheel_delta, wrap,
+    ACCENT, BORDER, Dock, FAINT, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, SWITCHER_STRIP, SliderLook, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, above_strip, divider, size, wheel_delta, wrap,
 };
 use bevy::input::mouse::MouseWheel;
 use bevy::ui::prelude::AccessibleLabel;
@@ -162,7 +162,7 @@ fn page(commands: &mut Commands, k: &Kit, l: &Learn, builder: Option<&Builder>, 
     commands
         .spawn((
             // The reading column between the docks (transparent: scene cards show the 3D view through it).
-            k.scroll_area(Node { position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH), right: Val::Px(RIGHT_WIDTH), top: Val::Px(TOPBAR), bottom: Val::Px(STATUSBAR + narrate::reserved(l)), flex_direction: FlexDirection::Column, align_items: AlignItems::Center, ..default() }, l.scroll),
+            k.scroll_area(Node { position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH), right: Val::Px(RIGHT_WIDTH), top: Val::Px(TOPBAR), bottom: above_strip(STATUSBAR + narrate::reserved(l)), flex_direction: FlexDirection::Column, align_items: AlignItems::Center, ..default() }, l.scroll),
             LearnScroll::Page,
             LearnPanel,
         ))
@@ -386,7 +386,7 @@ pub(super) fn scroll(
     if delta != 0.0 {
         if let Some(p) = window.cursor_position() {
             let zooming = (keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight) || keys.pressed(KeyCode::SuperLeft) || keys.pressed(KeyCode::SuperRight)) && scene.learn_view.is_some_and(|v| v.visible.contains(p * scale));
-            if !zooming && p.y > TOPBAR && p.y < window.height() - STATUSBAR {
+            if !zooming && p.y > TOPBAR && p.y < window.height() - STATUSBAR - SWITCHER_STRIP {
                 let which = if p.x < LEFT_WIDTH {
                     LearnScroll::Outline
                 } else if p.x > window.width() - RIGHT_WIDTH {

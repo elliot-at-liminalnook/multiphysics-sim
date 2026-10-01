@@ -50,7 +50,7 @@ pub(in crate::lesson) fn bar(commands: &mut Commands, k: &Kit, l: &Learn) {
     let started = n.playing || n.time > 0. || n.section > 0;
     commands
         .spawn((
-            Node { border_radius: BorderRadius::all(Val::Px(9.)), position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH + 24.), right: Val::Px(RIGHT_WIDTH + 24.), bottom: Val::Px(STATUSBAR + 10.), max_height: Val::Px(reserved(l) - 16.), overflow: Overflow::clip(), flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::axes(Val::Px(14.), Val::Px(10.)), border: UiRect::all(Val::Px(1.)), ..default() },
+            Node { border_radius: BorderRadius::all(Val::Px(9.)), position_type: PositionType::Absolute, left: Val::Px(LEFT_WIDTH + 24.), right: Val::Px(RIGHT_WIDTH + 24.), bottom: crate::ui_kit::above_strip(STATUSBAR + 10.), max_height: Val::Px(reserved(l) - 16.), overflow: Overflow::clip(), flex_direction: FlexDirection::Column, row_gap: Val::Px(8.), padding: UiRect::axes(Val::Px(14.), Val::Px(10.)), border: UiRect::all(Val::Px(1.)), ..default() },
             BackgroundColor(Color::srgba(0.07, 0.086, 0.106, 0.96)),
             BorderColor::all(BORDER),
             GlobalZIndex(20),

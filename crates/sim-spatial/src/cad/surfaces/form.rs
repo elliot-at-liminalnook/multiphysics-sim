@@ -366,7 +366,10 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
     let modal = doc.ops.active.is_none();
     // The kit's form panel is the frame; the root here only places it.
     if modal {
-        // RoboCAD's dialogs are modal: the dimmed window takes every click.
+        // RoboCAD's dialogs are modal: the dimmed window takes every click,
+        // the switcher strip's too (z 42 is above the strip's 40). A switch
+        // would lose the dialog's typed values, and the switch's
+        // `leaving_blockers` do not check open forms.
         commands
             .spawn((
                 Node { position_type: PositionType::Absolute, left: Val::Px(0.0), right: Val::Px(0.0), top: Val::Px(0.0), bottom: Val::Px(0.0), justify_content: JustifyContent::Center, align_items: AlignItems::Center, ..default() },

@@ -91,3 +91,16 @@ fn the_apply_system_applies_picks_and_answers_rest() {
         _ => panic!("expected a refusal naming the item"),
     }
 }
+
+#[test]
+fn an_inspection_target_round_trips_through_items() {
+    let (r, d) = registry();
+    let mut s = Selection::default();
+    assert_eq!(s.target(d), SelectionTarget::None);
+    let nets = SelectionTarget::Nets { ids: ["n2".to_string(), "n1".to_string()].into() };
+    s.apply(&r, &SelectionAction::set(d, target_items(&nets))).unwrap();
+    assert_eq!(s.target(d), nets);
+    // A link (robot) is not part of an inspection target.
+    s.apply(&r, &SelectionAction::new(Op::Add, d, [Item::Link { index: 0, name: "l".into() }])).unwrap();
+    assert_eq!(s.target(d), nets);
+}

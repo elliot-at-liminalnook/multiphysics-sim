@@ -4,8 +4,8 @@
 //! input, a published link velocity, a servo target or joint angle); |v_xy| and
 //! ω_z are a norm and a component of the published world-frame velocities.
 //! Nothing is integrated or differentiated here. Drawn with `crate::chart`.
-use crate::robot_motion::Motion;
-use crate::robot_run::{Frame, short};
+use crate::robot::motion::Motion;
+use crate::robot::run::{Frame, short};
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use std::collections::{BTreeMap, VecDeque};

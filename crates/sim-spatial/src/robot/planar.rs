@@ -13,7 +13,7 @@
 //! draws the generation-stamped frames it publishes ([`PlanarFrame`]) as
 //! gizmos: outlines, centres of mass, chain-tip contact points, a ground grid.
 use crate::jobs::{RunThread, Stamped};
-use crate::robot_run::{RunAction, SpeedRequest, speed_target};
+use crate::robot::run::{RunAction, SpeedRequest, speed_target};
 use bevy::prelude::*;
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -800,10 +800,10 @@ mod tests {
     fn version_routes_the_file() {
         let path = Path::new("/tmp/planar.simrobot.json");
         match crate::robot::load_file_bytes(path, FILE.as_bytes()).unwrap() {
-            crate::robot_source::FileModel::Planar(p) => {
+            crate::robot::source::FileModel::Planar(p) => {
                 assert_eq!((p.version, p.declared_version, p.model.bodies.len()), (2, Some(2), 2));
             }
-            crate::robot_source::FileModel::Physical(_) => panic!("a v2 file must not load as physical"),
+            crate::robot::source::FileModel::Physical(_) => panic!("a v2 file must not load as physical"),
         }
         let unit = FILE.replace(r#""unit":"mm""#, r#""unit":"in""#);
         assert!(crate::robot::load_file_bytes(path, unit.as_bytes()).err().unwrap().contains("unit `in`"));
@@ -815,14 +815,14 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let v3 = root.join("examples/wheeled-robot/baseline/robot.simrobot.json");
         let bytes = std::fs::read(&v3).unwrap();
-        assert!(matches!(crate::robot::load_file_bytes(&v3, &bytes).unwrap(), crate::robot_source::FileModel::Physical(_)));
+        assert!(matches!(crate::robot::load_file_bytes(&v3, &bytes).unwrap(), crate::robot::source::FileModel::Physical(_)));
         let dir = std::env::temp_dir().join(format!("sim-spatial-planar-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("robot.simrobot.json");
         std::fs::write(&file, FILE).unwrap();
-        let checked = crate::robot_source::check(&file, None);
+        let checked = crate::robot::source::check(&file, None);
         assert_eq!(checked.outcome.name(), "loaded");
-        assert!(matches!(checked.outcome, crate::robot_source::Outcome::Loaded(crate::robot_source::FileModel::Planar(_))));
+        assert!(matches!(checked.outcome, crate::robot::source::Outcome::Loaded(crate::robot::source::FileModel::Planar(_))));
         let _ = std::fs::remove_dir_all(&dir);
     }
 

@@ -163,7 +163,7 @@ pub struct RecordedRun {
     pub capture_path: PathBuf,
     pub capture: RecordedCapture,
     /// One mapped frame per capture frame, same order (generation 0).
-    pub frames: Vec<crate::robot_run::Frame>,
+    pub frames: Vec<crate::robot::run::Frame>,
     /// Capture pose names matching no scene link, over all frames (sorted, unique).
     pub unmatched: Vec<String>,
     pub root: PathBuf,
@@ -188,7 +188,7 @@ impl RecordedRun {
         let capture_load_s = t.elapsed().as_secs_f64();
         let t = std::time::Instant::now();
         let links: Vec<String> = scene.robot.links.iter().map(|l| l.name.clone()).collect();
-        let frames: Vec<crate::robot_run::Frame> = capture.frames.iter().enumerate().map(|(i, f)| crate::robot_run::recorded_frame(f, &links, 0, i as u64)).collect();
+        let frames: Vec<crate::robot::run::Frame> = capture.frames.iter().enumerate().map(|(i, f)| crate::robot::run::recorded_frame(f, &links, 0, i as u64)).collect();
         let mut unmatched: Vec<String> = frames.iter().flat_map(|f| f.unmatched.iter().cloned()).collect();
         unmatched.sort();
         unmatched.dedup();

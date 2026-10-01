@@ -31,15 +31,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_domain_robot::PhysicalModel;
 use sim_domain_robot::cad_link::{self, CadLinkStatus};
-use crate::robot_preset::{Preset, PresetRun, RecordedRun};
-use crate::robot_motion;
-use crate::robot_recording;
-use crate::robot_source::{self, FileModel, SourceWatch, Trigger as ReloadTrigger};
-use crate::robot_planar::{self, PlanarView};
-use crate::robot_stress::{self, StressOverlay};
-use crate::robot_gait::{self, GaitAction, GaitSource};
-use crate::robot_playback::{self, RecordedAction};
-use crate::robot_run::{self, JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, OverlayFlags, ReplayPhase, RunAction, RunController, SpeedRequest};
+use preset::{Preset, PresetRun, RecordedRun};
+use source::{FileModel, SourceWatch, Trigger as ReloadTrigger};
+use planar::PlanarView;
+use stress::StressOverlay;
+use gait::{GaitAction, GaitSource};
+use playback::RecordedAction;
+use run::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, MotionRequest, OverlayFlags, ReplayPhase, RunAction, RunController, SpeedRequest};
 use std::path::{Path, PathBuf};
 
 const LEFT: f32 = 280.0;
@@ -114,12 +112,12 @@ pub fn load_bytes(path: &Path, bytes: &[u8]) -> Result<Loaded, String> {
 /// The `--robot FILE` loader (the first open and every reload, `robot_source`):
 /// a JSON object whose version (`simrobot_version`, the shared rule) is below
 /// `FIRST_PHYSICAL_VERSION` is a planar (v2) summary, read as sim-phenomena's
-/// `CadModel` from the same bytes (`robot_planar::load_bytes`); anything else
+/// `CadModel` from the same bytes (`planar::load_bytes`); anything else
 /// goes through [`load_bytes`] (`PhysicalModel`), so its errors are unchanged.
 pub fn load_file_bytes(path: &Path, bytes: &[u8]) -> Result<FileModel, String> {
     if let Ok(raw @ Value::Object(_)) = serde_json::from_slice::<Value>(bytes) {
         if sim_domain_robot::model::simrobot_version(&raw) < sim_domain_robot::model::FIRST_PHYSICAL_VERSION {
-            return robot_planar::load_bytes(path, bytes, &raw).map(|p| FileModel::Planar(Box::new(p)));
+            return planar::load_bytes(path, bytes, &raw).map(|p| FileModel::Planar(Box::new(p)));
         }
     }
     load_bytes(path, bytes).map(|l| FileModel::Physical(Box::new(l)))
@@ -256,7 +254,7 @@ impl RobotView {
     /// its files are parsed on a worker thread.
     pub fn open_preset(presets: &Path, id: &str) -> Result<Self, String> {
         let root = crate::workspace::root().map_err(|e| format!("robot preset `{id}` resolves its inputs against the workspace root: {e}"))?.to_path_buf();
-        let preset = crate::robot_preset::select(presets, &root, id)?;
+        let preset = crate::robot::preset::select(presets, &root, id)?;
         let (worker, dir) = (preset.clone(), root.clone());
         let path = root.join(preset.scene.as_deref().unwrap_or_default());
         // Parse and triangulate: CPU work.
@@ -325,7 +323,7 @@ impl RobotView {
     fn new(path: PathBuf, load: Option<crate::jobs::Job<(Loaded, Option<Opened>)>>, preset: Option<Preset>) -> Self {
         Self {
             preset,
-            presets: crate::robot_preset::default_file(),
+            presets: crate::robot::preset::default_file(),
             root: crate::workspace::root().map(Path::to_path_buf),
             path,
             status: Status::Loading(std::time::Instant::now()),
@@ -455,15 +453,15 @@ impl RobotView {
         let selected = planar["selected_body"].clone();
         let f = p.run.frame().filter(|f| f.built);
         let jog: Vec<Value> = f.map(|f| f.joint_names.iter().enumerate().map(|(i, n)| json!({"index": i, "name": n, "angle_rad": f.joint_angles.get(i), "target_rad": f.targets.get(i)})).collect::<Vec<Value>>()).unwrap_or_default();
-        let refusals: serde_json::Map<String, Value> = robot_planar::UNAVAILABLE.iter().map(|(k, why)| (k.to_string(), json!(why))).collect();
+        let refusals: serde_json::Map<String, Value> = planar::UNAVAILABLE.iter().map(|(k, why)| (k.to_string(), json!(why))).collect();
         let mut out = json!({"file": self.path, "workspace": crate::workspace::json(), "status": status, "error": error, "load_seconds": seconds,
             "format": p.format_json(), "planar": planar, "links": [], "selected": selected,
             "source_file": self.source.as_ref().map(|s| s.json(true)), "notice": self.notice,
             "provenance_rule": "a planar v2 summary carries no per-value provenance: masses, centres, planar inertias and outlines are RoboCAD's geometry-derived export values, shown as stored",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
             "pose": PLANAR_POSE, "read_only": true, "stepped": f.is_some_and(|f| f.steps > 0), "run": p.run.json(),
-            "jog": {"label": "planar v2 joint target", "rule": robot_planar::JOG_RULE, "selected_joint": p.selected_joint_name(), "joints": jog},
-            "graphs": {"visible": false, "available": false, "reason": robot_planar::GRAPHS}, "overlays": p.overlays_json(), "unavailable": refusals,
+            "jog": {"label": "planar v2 joint target", "rule": planar::JOG_RULE, "selected_joint": p.selected_joint_name(), "joints": jog},
+            "graphs": {"visible": false, "available": false, "reason": planar::GRAPHS}, "overlays": p.overlays_json(), "unavailable": refusals,
             "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
         // The v3-only blocks, null (kept out of the literal: json! hits the default recursion limit with every key in one call).
         for key in ["link_count", "joints", "motors", "transmissions", "battery", "actuator_profiles", "uncertainty", "uncertainty_parsed", "identification", "materials", "source", "cad_link",
@@ -507,7 +505,17 @@ impl Section {
 }
 
 mod actions;
+pub mod gait;
+pub mod graphs;
 pub mod hardware;
+pub mod motion;
+pub mod planar;
+pub mod playback;
+pub mod preset;
+pub mod recording;
+pub mod run;
+pub mod source;
+pub mod stress;
 pub(crate) use actions::RobotAction;
 use actions::{check, check_stress, overlay_toggle};
 /// The overlays: (system_ui id suffix, label, key). H (hotspots) for stress: S is the WASD jog key.
@@ -733,7 +741,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     commands.spawn((Camera2d, Camera { order: 3, clear_color: ClearColorConfig::None, ..default() }, IsDefaultUiCamera));
     commands.spawn((DirectionalLight { illuminance: 9000.0, shadow_maps_enabled: false, ..default() }, Transform::from_xyz(1.0, 2.0, 1.5).looking_at(Vec3::ZERO, Vec3::Y)));
     // Z-up model frame shown in Bevy's Y-up frame: model (x, y, z) → display (x, z, −y)
-    // (a planar v2 file's working plane is the model's XZ plane, drawn at display z = 0, `robot_planar::display`).
+    // (a planar v2 file's working plane is the model's XZ plane, drawn at display z = 0, `planar::display`).
     commands.spawn((Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)), Visibility::default(), RobotRoot));
     let file = view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
     // The header: title and status line (both rewritten by `panels`).
@@ -838,7 +846,7 @@ fn overlay_button(k: &Kit<'_>, i: usize) -> impl Bundle + use<> {
     (k.chip(name, RobotAction::Overlay { contacts: None, joints: None, deflections: None, stress: None }, false, true), OverlayButton(kind), OverlayLabel(kind))
 }
 
-/// UI thread, FILE mode: stats the opened file every `robot_source::POLL`;
+/// UI thread, FILE mode: stats the opened file every `source::POLL`;
 /// a changed stat writes the one Reload action (trigger watch), applied next frame.
 fn watch(mut view: ResMut<RobotView>, mut out: MessageWriter<crate::app::actions::Act<RobotAction>>) {
     let idle = view.load.is_none();
@@ -890,7 +898,7 @@ fn receive(
         let seconds = checked.seconds;
         let results = checked.results.take();
         let was_failing = source.failing.is_some();
-        let settled = source.settle(trigger, checked, robot_source::now_utc());
+        let settled = source.settle(trigger, checked, source::now_utc());
         if let Some(r) = results {
             // Read by the same worker; its status is always judged against the displayed model.
             view.stress.set(r);
@@ -994,7 +1002,7 @@ fn receive(
     let kept = view.selected.and_then(|i| view.link_name(i)).map(str::to_string);
     // A reload that turns a planar (v2) file into a physical one: the planar run
     // is joined off the UI thread; its speed and contacts choice carry over.
-    let planar = view.planar.take().map(|p| (p.run.speed_scale(), p.contacts, p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == robot_planar::PlanarPhase::Running, p));
+    let planar = view.planar.take().map(|p| (p.run.speed_scale(), p.contacts, p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == planar::PlanarPhase::Running, p));
     let previous = view.run.take();
     let (mut run, mut run_reset) = match preset {
         Some(Opened::Preset(run)) => (RunController::spawn_preset(std::sync::Arc::new(run)), false),
@@ -1057,7 +1065,7 @@ fn install_planar(
     view: &mut RobotView,
     list: Entity,
     k: &Kit<'_>,
-    loaded: robot_planar::PlanarLoaded,
+    loaded: planar::PlanarLoaded,
     reload: Option<(ReloadTrigger, f64)>,
     started: std::time::Instant,
 ) {
@@ -1076,8 +1084,8 @@ fn install_planar(
     }
     if let Some(p) = view.planar.take() {
         (speed, contacts, joint) = (p.run.speed_scale(), p.contacts, (p.selected_joint, p.selected_joint_name().map(str::to_string)));
-        run_reset = p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == robot_planar::PlanarPhase::Running;
-        resume = p.run.phase() == robot_planar::PlanarPhase::Running;
+        run_reset = p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == planar::PlanarPhase::Running;
+        resume = p.run.phase() == planar::PlanarPhase::Running;
         generation = p.run.generation() + 1;
         crate::jobs::drop_off_thread(p, "the planar v2 run");
     }
@@ -1138,7 +1146,7 @@ fn install_planar(
             (Some(n), None) => format!("; selection cleared: `{n}` is not a body of the new file"),
             (None, _) => String::new(),
         };
-        view.notice = Some(format!("reloaded ({}): {reason}; {run}; generation {generation}{selection}", robot_planar::FORMAT_NAME));
+        view.notice = Some(format!("reloaded ({}): {reason}; {run}; generation {generation}{selection}", planar::FORMAT_NAME));
         if let Some(s) = view.source.as_mut() {
             s.run_reset = Some(run_reset);
         }
@@ -1164,7 +1172,7 @@ fn planar_sync(mut view: ResMut<RobotView>, mut orbit: Single<&mut RobotOrbit>, 
     // Every frame: also clamps a carried index when the old run had no built frame to name it.
     p.resolve_pending_joint();
     let Some(move_focus) = p.frame_camera else { return };
-    let Some((lo, hi)) = p.run.frame().filter(|f| f.built).and_then(robot_planar::bounds) else { return };
+    let Some((lo, hi)) = p.run.frame().filter(|f| f.built).and_then(planar::bounds) else { return };
     p.frame_camera = None;
     orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
     if move_focus {
@@ -1350,9 +1358,9 @@ fn panels(
         }
     }
     let heading = match &view.preset {
-        Some(p) if p.is_recorded() => format!("Robot preset — {} ({})  ·  {}", p.label, p.id, crate::robot_preset::RECORDED_LABEL),
+        Some(p) if p.is_recorded() => format!("Robot preset — {} ({})  ·  {}", p.label, p.id, crate::robot::preset::RECORDED_LABEL),
         Some(p) => format!("Robot preset — {} ({})  ·  files read-only", p.label, p.id),
-        None if view.planar.is_some() => format!("Robot — {}  ·  {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default(), robot_planar::HEADER_LABEL),
+        None if view.planar.is_some() => format!("Robot — {}  ·  {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default(), planar::HEADER_LABEL),
         None => format!("Robot — {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()),
     };
     if title.0 != heading {
@@ -1362,7 +1370,7 @@ fn panels(
         // A planar (v2) file: its own run thread (`robot_planar`).
         None if view.planar.is_some() => {
             let refused = view.run_message.as_ref().map_or(String::new(), |m| format!(" · refused: {}", clip(m, 60)));
-            view.planar.as_ref().map_or(String::new(), |p| format!("{}{refused}", robot_planar::run_line(p)))
+            view.planar.as_ref().map_or(String::new(), |p| format!("{}{refused}", planar::run_line(p)))
         }
         None => String::new(),
         Some(r) if r.recorded().is_some() => {
@@ -1374,7 +1382,7 @@ fn panels(
             let rtf = r.rtf().map_or(String::new(), |x| format!(" · RTF {x:.2}"));
             // The requested scale while running or paused, and whether compute kept it from being reached.
             let speed = match r.phase() {
-                robot_run::Phase::Running | robot_run::Phase::Paused => format!(" · ×{}{}", r.speed_scale(), if r.compute_limited() == Some(true) { " (compute-limited)" } else { "" }),
+                run::Phase::Running | run::Phase::Paused => format!(" · ×{}{}", r.speed_scale(), if r.compute_limited() == Some(true) { " (compute-limited)" } else { "" }),
                 _ => String::new(),
             };
             // The header has one line beside the subtitle: long messages are cut here and shown in full in the inspector.
@@ -1420,7 +1428,7 @@ fn panels(
             (Some(_), Some(s)) => format!("SHOWING LAST GOOD MODEL (loaded {}) · reload failed: {} (full error in Source)", s.loaded_at.as_deref().unwrap_or("—"), clip(s.failing.as_deref().unwrap_or_default(), 70)),
             (Some(p), None) => {
                 let notice = view.notice.as_ref().map_or(String::new(), |n| format!("{} · ", clip(n, 90)));
-                format!("{notice}{} · {} bodies · {} joints in file · loaded in {seconds:.2} s · {}", view.path.display(), p.loaded.model.bodies.len(), p.loaded.model.joints.len(), robot_planar::HEADER_LABEL)
+                format!("{notice}{} · {} bodies · {} joints in file · loaded in {seconds:.2} s · {}", view.path.display(), p.loaded.model.bodies.len(), p.loaded.model.joints.len(), planar::HEADER_LABEL)
             }
         },
     };
@@ -1430,7 +1438,7 @@ fn panels(
     let body = match &view.model {
         None => view.planar.as_ref().map_or(String::new(), |p| {
             let watch = view.source.as_ref().map(file_watch_text).unwrap_or_default();
-            robot_planar::inspector_text(p, &view.section.label().to_lowercase(), view.selected, &watch)
+            planar::inspector_text(p, &view.section.label().to_lowercase(), view.selected, &watch)
         }),
         Some(m) => match view.section {
             Section::Link => link_text(&view, m),
@@ -1458,7 +1466,7 @@ fn preset_text(view: &RobotView) -> String {
         let c = &rec.capture;
         let src = c.meta.source.as_ref();
         let opt = |x: Option<String>| x.unwrap_or_else(|| "(absent in file)".into());
-        t += &format!("{}\n", crate::robot_preset::RECORDED_LABEL.to_uppercase());
+        t += &format!("{}\n", crate::robot::preset::RECORDED_LABEL.to_uppercase());
         if let Some(f) = view.run.as_ref().and_then(|r| r.frame()) {
             t += &format!("frame {} of {} · t {} s · recorded {} s\n", f.steps, c.frames.len(), f.time, c.duration_s());
         }
@@ -1502,7 +1510,7 @@ fn preset_text(view: &RobotView) -> String {
         if let Some(e) = r.save_error() {
             t += &format!("last save error: {e}\n");
         }
-        t += &format!("{}\n\n", robot_recording::LOCATION_RULE);
+        t += &format!("{}\n\n", recording::LOCATION_RULE);
         let s = r.replay_state();
         t += "REPLAY — the shared prepare_replay on the run thread; the verdict is the runtime's\n";
         t += &format!("{} saved recording(s) for this preset\n", r.recordings().len());
@@ -1515,13 +1523,13 @@ fn preset_text(view: &RobotView) -> String {
                 t += &format!("full error: {e}\n");
             }
         }
-        t += &format!("{}\n\n", robot_recording::VERDICT_RULE);
+        t += &format!("{}\n\n", recording::VERDICT_RULE);
     }
     t
 }
 
 /// The recorded timeline's status line (header and inspector Recorded section).
-fn recorded_line(p: &robot_playback::RecordedPlayback) -> String {
+fn recorded_line(p: &playback::RecordedPlayback) -> String {
     let tl = p.timeline();
     let f = p.frame();
     let phase = json!(tl.phase);
@@ -1620,7 +1628,7 @@ fn motion_panel(
     };
     if view.preset.as_ref().is_some_and(|p| !p.is_recorded()) && !*shown {
         let header = commands.spawn(k.section("Motion")).id();
-        let label = commands.spawn(k.text(robot_motion::LABEL, size::CAPTION, SUBTLE, 0)).id();
+        let label = commands.spawn(k.text(motion::LABEL, size::CAPTION, SUBTLE, 0)).id();
         let row = commands.spawn(wrap()).id();
         for (_, text, request) in motion_buttons() {
             let b = button(&mut commands, RobotAction::Motion { request }, text);
@@ -1706,7 +1714,7 @@ fn recorded_panel(
     if !*shown {
         let k = Kit { f: &fonts };
         let header = commands.spawn(k.section("Recorded")).id();
-        let label = commands.spawn(k.text(format!("{} · speed: header −/×/+ · seek: REST robot_recorded", crate::robot_preset::RECORDED_LABEL), size::CAPTION, SUBTLE, 0)).id();
+        let label = commands.spawn(k.text(format!("{} · speed: header −/×/+ · seek: REST robot_recorded", crate::robot::preset::RECORDED_LABEL), size::CAPTION, SUBTLE, 0)).id();
         let row = commands.spawn(wrap()).id();
         for (_, name, action) in RECORDED_TRANSPORT {
             let action = RobotAction::Recorded { action };
@@ -1755,7 +1763,7 @@ fn gait_panel(
     };
     if !*shown {
         let header = commands.spawn(k.section("Gait preview")).id();
-        let label = commands.spawn(k.text(robot_gait::LABEL, size::CAPTION, SUBTLE, 0)).id();
+        let label = commands.spawn(k.text(gait::LABEL, size::CAPTION, SUBTLE, 0)).id();
         let row = |commands: &mut Commands| commands.spawn(wrap()).id();
         let transport = row(&mut commands);
         let play = button(&mut commands, GaitAction::Play, "Play");
@@ -1827,12 +1835,12 @@ fn gait_panel(
 }
 
 /// The Gait preview status lines (rounded, so they only change with the pose).
-fn gait_line(r: &RunController, g: &robot_gait::GaitPreview) -> String {
+fn gait_line(r: &RunController, g: &gait::GaitPreview) -> String {
     let phase = json!(g.phase());
     let phase = phase.as_str().unwrap_or("");
     let blocked = r.check_gait(&GaitAction::Play).err().filter(|e| e.starts_with("a physics") || e.starts_with("a replay")).map_or(String::new(), |e| format!("\nunavailable: {e}"));
     let Some(l) = g.loaded() else {
-        return format!("phase {phase} · no gait open · lift {} m (browser calibration-mirror){blocked}", robot_gait::LIFT_M);
+        return format!("phase {phase} · no gait open · lift {} m (browser calibration-mirror){blocked}", gait::LIFT_M);
     };
     let source = json!(l.governor_source);
     let (status, fidelity) = l.report.as_ref().map_or(("(opened by path: no report)", "(opened by path: no report)"), |x| (x.status.as_str(), x.fidelity.as_str()));
@@ -1843,7 +1851,7 @@ fn gait_line(r: &RunController, g: &robot_gait::GaitPreview) -> String {
         l.period_s,
         g.sample().map_or("—".into(), |x| format!("{:.2} s", x.gait_time_s)),
         g.speed_scale(),
-        robot_gait::LIFT_M,
+        gait::LIFT_M,
     );
     match g.sample() {
         Some(x) => {
@@ -1911,7 +1919,7 @@ fn replay_line(r: &RunController) -> String {
 /// and held values, keys, heartbeat and the last refusal (robot_state.motion).
 fn motion_text(r: &RunController) -> String {
     let m = r.motion_json();
-    let mut t = format!("MOTION — {}\n", robot_motion::LABEL);
+    let mut t = format!("MOTION — {}\n", motion::LABEL);
     if m["available"] != true {
         t += &format!("unavailable: {}\n", m["unavailable_reason"].as_str().unwrap_or(""));
     }
@@ -1934,7 +1942,7 @@ fn motion_text(r: &RunController) -> String {
             t += &format!("{name}: {e}\n");
         }
     }
-    t.push_str(&format!("{}\n{}\n\n", robot_motion::KEY_SEMANTICS, robot_motion::CLAMP_RULE));
+    t.push_str(&format!("{}\n{}\n\n", motion::KEY_SEMANTICS, motion::CLAMP_RULE));
     t
 }
 
@@ -2043,7 +2051,7 @@ const JOG_NOTE: &str = "Jogging while paused sets the target; it takes effect wh
 
 /// A joint's servo state from the latest accepted frame, or why it has none.
 fn jog_line(r: &RunController, joint: &str) -> String {
-    match crate::robot_run::servo(r.model(), joint) {
+    match crate::robot::run::servo(r.model(), joint) {
         Err(e) => format!("none — {e}"),
         Ok(s) => {
             let latest = r.frame().and_then(|f| f.servo(joint));
@@ -2156,7 +2164,7 @@ fn source_text(view: &RobotView, m: &PhysicalModel) -> String {
 
 /// The opened file's identity and last reload (robot_state.source_file).
 fn file_watch_text(s: &SourceWatch) -> String {
-    let mut t = format!("FILE (watched every {:.1} s; Reload re-reads it)\n{}\nsha256 {}\nloaded at {} · {} reload(s)\n", robot_source::POLL.as_secs_f64(), s.path.display(), s.hash.as_deref().unwrap_or("—"), s.loaded_at.as_deref().unwrap_or("—"), s.reload_count);
+    let mut t = format!("FILE (watched every {:.1} s; Reload re-reads it)\n{}\nsha256 {}\nloaded at {} · {} reload(s)\n", source::POLL.as_secs_f64(), s.path.display(), s.hash.as_deref().unwrap_or("—"), s.loaded_at.as_deref().unwrap_or("—"), s.reload_count);
     if let Some(r) = &s.last {
         t += &format!("last reload: {:?} · {} at {}\n", r.trigger, r.outcome, r.at).to_lowercase();
     }
@@ -2233,14 +2241,14 @@ fn overlay_panel(
         Some(r) => match r.check_overlays() {
             Err(_) => "Overlays (contacts, joint frames, deflections): not available for presets".into(),
             Ok(()) => match r.frame() {
-                None => format!("Overlays: no run frame yet (Run or Step) · force {} m/N · deflection ×{}", robot_run::FORCE_SCALE_M_PER_N, robot_run::DEFLECTION_MAGNIFICATION),
+                None => format!("Overlays: no run frame yet (Run or Step) · force {} m/N · deflection ×{}", run::FORCE_SCALE_M_PER_N, run::DEFLECTION_MAGNIFICATION),
                 Some(f) => {
                     let o = &f.overlays;
                     let count = |n: Option<usize>| n.map_or("—".into(), |n| n.to_string());
                     let max = o.deflections.as_ref().map(|d| d.iter().map(|d| d.displacement.iter().map(|x| x * x).sum::<f64>().sqrt()).fold(0.0, f64::max));
                     format!("Overlays · gen {} t {:.2} s: {} contacts · {} joint frames · {} deflection points{} · force {} m/N · deflection ×{}",
                         f.generation, f.time, count(o.contacts.as_ref().map(Vec::len)), count(o.joints.as_ref().map(Vec::len)), count(o.deflections.as_ref().map(Vec::len)),
-                        max.filter(|m| *m > 0.0).map_or(String::new(), |m| format!(" (max {:.3} mm)", m * 1e3)), robot_run::FORCE_SCALE_M_PER_N, robot_run::DEFLECTION_MAGNIFICATION)
+                        max.filter(|m| *m > 0.0).map_or(String::new(), |m| format!(" (max {:.3} mm)", m * 1e3)), run::FORCE_SCALE_M_PER_N, run::DEFLECTION_MAGNIFICATION)
                 }
             },
         },
@@ -2321,10 +2329,10 @@ fn stress_panel(view: Res<RobotView>, mut line: Single<&mut Text, With<StressTex
             Some(r) => {
                 let path = r.path.display();
                 match &r.contents {
-                    robot_stress::Contents::Missing => format!("Stress: no results file ({path}); run `sim-cad run <model>` to write one"),
-                    robot_stress::Contents::Invalid(e) => format!("Stress: results file not usable: {e}"),
-                    robot_stress::Contents::Parsed(v) => {
-                        let mtime = r.mtime_unix_s.map_or("mtime unknown".into(), |t| format!("mtime {}", robot_recording::iso((t * 1e3) as u128)));
+                    stress::Contents::Missing => format!("Stress: no results file ({path}); run `sim-cad run <model>` to write one"),
+                    stress::Contents::Invalid(e) => format!("Stress: results file not usable: {e}"),
+                    stress::Contents::Parsed(v) => {
+                        let mtime = r.mtime_unix_s.map_or("mtime unknown".into(), |t| format!("mtime {}", recording::iso((t * 1e3) as u128)));
                         let peaks: Vec<String> = sim_domain_robot::stress_results::peaks(v).into_iter().map(|(k, p)| format!("{k} {}", p.map_or("—".into(), stress_label))).collect();
                         format!("Stress · {} · {path} · {mtime}\npeak: {}\n{}", r.status(m), peaks.join(" · "), sim_domain_robot::stress_results::SCALE)
                     }
@@ -2338,7 +2346,7 @@ fn stress_panel(view: Res<RobotView>, mut line: Single<&mut Text, With<StressTex
     }
 }
 
-/// The graph dock: the fixed chart set (`robot_graphs::charts`) drawn with the
+/// The graph dock: the fixed chart set (`graphs::charts`) drawn with the
 /// shared `crate::chart` raster, redrawn at most ten times a second and only
 /// when the sampled history, selection, mode or visibility changed.
 fn graph_dock(
@@ -2390,7 +2398,7 @@ fn graph_dock(
             handles.push(images.add(crate::chart::blank_image()));
         }
         let traces: Vec<(&[[f64; 2]], [u8; 3])> = c.traces.iter().enumerate().map(|(i, t)| (t.points.as_slice(), crate::chart::COLORS[i % crate::chart::COLORS.len()])).collect();
-        let (pixels, range, window) = crate::chart::rasterize_span(&traces, Some(crate::robot_graphs::WINDOW_S));
+        let (pixels, range, window) = crate::chart::rasterize_span(&traces, Some(crate::robot::graphs::WINDOW_S));
         let drawable = c.traces.iter().map(|t| t.points.len()).sum::<usize>() >= 2;
         if let Some(mut image) = images.get_mut(&handles[slot]) {
             image.data = Some(pixels);
@@ -2424,7 +2432,7 @@ fn graph_dock(
                     (None, Some(why)) => why.clone(),
                     (None, None) => "–".into(),
                 };
-                let source = if t.source.starts_with("request") { "request (held input in frame)" } else if t.source.starts_with(crate::robot_graphs::WORLD_FRAME) { crate::robot_graphs::WORLD_FRAME } else { t.source.split(" (").next().unwrap_or(&t.source) };
+                let source = if t.source.starts_with("request") { "request (held input in frame)" } else if t.source.starts_with(crate::robot::graphs::WORLD_FRAME) { crate::robot::graphs::WORLD_FRAME } else { t.source.split(" (").next().unwrap_or(&t.source) };
                 let color = Color::srgb_u8(r, g, b);
                 let swatch = commands.spawn((Node { border_radius: BorderRadius::all(Val::Px(2.0)), width: Val::Px(9.0), height: Val::Px(9.0), flex_shrink: 0.0, ..default() }, BackgroundColor(color))).id();
                 let line = commands.spawn(k.text(format!("{}: {value}  ·  {source}", t.name), size::SECTION, color, 0)).id();
@@ -2449,7 +2457,7 @@ fn overlay_gizmo_config() -> GizmoConfig {
 fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, mut gizmos: Gizmos, mut overlay: Gizmos<OverlayGizmos>) {
     if let Some(p) = &view.planar {
         // A planar file: outlines, centres of mass and chain tips from the planar run's latest frame.
-        robot_planar::draw(p, view.selected, &mut gizmos);
+        planar::draw(p, view.selected, &mut gizmos);
         return;
     }
     let Some(model) = &view.model else { return };
@@ -2457,7 +2465,7 @@ fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, m
     // generation, mapped model → display through RobotRoot like the link meshes.
     if let Some(run) = view.run.as_ref() {
         let flags = run.overlays();
-        if let Some(f) = run.frame().filter(|f| robot_run::accept(run.generation(), f)) {
+        if let Some(f) = run.frame().filter(|f| run::accept(run.generation(), f)) {
             let affine = root.affine();
             let point = |p: &[f64; 3]| affine.transform_point3(Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32));
             let vector = |v: &[f64; 3], k: f64| affine.transform_vector3(Vec3::new((v[0] * k) as f32, (v[1] * k) as f32, (v[2] * k) as f32));
@@ -2466,7 +2474,7 @@ fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, m
                 for j in joints {
                     let p = point(&j.point);
                     for (k, a) in j.axes.iter().enumerate() {
-                        let d = vector(a, robot_run::JOINT_AXIS_HALF_M);
+                        let d = vector(a, run::JOINT_AXIS_HALF_M);
                         overlay.line(p - d, p + d, AXES[k % 3]);
                     }
                     overlay.sphere(Isometry3d::from_translation(p), 0.003, Color::WHITE);
@@ -2477,13 +2485,13 @@ fn draw(view: Res<RobotView>, root: Single<&GlobalTransform, With<RobotRoot>>, m
                     let p = point(&c.point);
                     let color = if c.other == "ground" { Color::srgb(1.0, 0.2, 0.2) } else { Color::srgb(1.0, 0.4, 0.2) };
                     overlay.sphere(Isometry3d::from_translation(p), 0.003, color);
-                    overlay.line(p, p + vector(&c.force, robot_run::FORCE_SCALE_M_PER_N), color);
+                    overlay.line(p, p + vector(&c.force, run::FORCE_SCALE_M_PER_N), color);
                 }
             }
             if let Some(deflections) = f.overlays.deflections.as_ref().filter(|_| flags.deflections) {
                 for d in deflections {
                     let p = point(&d.point);
-                    overlay.line(p, p + vector(&d.displacement, robot_run::DEFLECTION_MAGNIFICATION), Color::srgb(0.6, 1.0, 0.6));
+                    overlay.line(p, p + vector(&d.displacement, run::DEFLECTION_MAGNIFICATION), Color::srgb(0.6, 1.0, 0.6));
                 }
             }
         }

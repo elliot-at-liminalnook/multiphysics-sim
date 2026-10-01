@@ -237,7 +237,7 @@ mod tests {
     #[test]
     fn declared_key_vectors_sum_per_channel_and_refuse_out_of_bounds_sums() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let preset = crate::robot_preset::select(&root.join(crate::robot_preset::PRESETS), &root, "robot-measured-400hz").unwrap();
+        let preset = crate::robot::preset::select(&root.join(crate::robot::preset::PRESETS), &root, "robot-measured-400hz").unwrap();
         let text = std::fs::read_to_string(root.join(preset.scene.as_ref().unwrap())).unwrap();
         let scene: sim_runtime::session::Scene = serde_json::from_str(&text).unwrap();
         let inputs = &scene.controller.as_ref().expect("controller").inputs;

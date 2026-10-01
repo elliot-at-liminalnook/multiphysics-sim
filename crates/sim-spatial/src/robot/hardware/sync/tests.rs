@@ -164,7 +164,7 @@ fn numbers_round_as_to_fixed() {
 
 #[test]
 fn replays_recordings_and_gait_previews_are_not_live() {
-    use crate::robot_run::ReplayPhase as R;
+    use crate::robot::run::ReplayPhase as R;
     assert!(live_run(false, true, R::Idle, false, false), "a preset's own run");
     assert!(!live_run(true, false, R::Idle, false, false), "recorded playback");
     assert!(!live_run(false, false, R::Idle, false, false), "--robot FILE (no named targets)");

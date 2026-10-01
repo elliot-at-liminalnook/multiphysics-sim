@@ -69,7 +69,7 @@ fn sync_frames(hw: Option<ResMut<Hardware>>, view: Option<Res<RobotView>>, mut a
     }
     let mut out: Vec<RobotAction> = Vec::new();
     if s.poll() {
-        out.push(RobotAction::Run { action: crate::robot_run::RunAction::Pause });
+        out.push(RobotAction::Run { action: crate::robot::run::RunAction::Pause });
     }
     let key = view.run.as_ref().and_then(|r| r.frame().map(|f| (r.generation(), f.steps, f.completed_steps)));
     if key.is_some() && key != *last {

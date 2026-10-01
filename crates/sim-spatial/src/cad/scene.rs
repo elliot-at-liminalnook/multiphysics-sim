@@ -203,7 +203,8 @@ mod tests {
         app.update();
         let o = orbit(&app, camera);
         assert!((o.focus - all.0).length() < 1e-6 && (o.radius - all.1 * 3.2).abs() < 1e-5, "{o:?}");
-        assert!(o.centre == centre && o.extent == extent && o.trackball.is_some() && o.rotation().angle_between(rotation) < 1e-5);
+        // The same rotation (f32 `angle_between` is acos noise near 0, about 1e-3 rad; the dot is exact to rounding).
+        assert!(o.centre == centre && o.extent == extent && o.trackball.is_some() && o.rotation().dot(rotation).abs() > 1.0 - 1e-6, "{o:?}");
         assert!(app.world().resource::<CadMeshes>().fit.is_none());
     }
 

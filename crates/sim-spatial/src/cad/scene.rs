@@ -86,7 +86,7 @@ pub(super) fn fit(meshes: Option<ResMut<CadMeshes>>, orbit: Option<Single<&mut C
 }
 
 /// Whether the mouse is over a UI node (a panel): the pointer is the panel's then.
-fn over_ui(hover: Option<&HoverMap>, nodes: &Query<(), With<Node>>) -> bool {
+pub(super) fn over_ui(hover: Option<&HoverMap>, nodes: &Query<(), With<Node>>) -> bool {
     hover.and_then(|h| h.get(&PointerId::Mouse)).is_some_and(|hits| hits.keys().any(|e| nodes.contains(*e)))
 }
 

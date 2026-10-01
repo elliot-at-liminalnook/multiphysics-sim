@@ -1,6 +1,8 @@
 //! CAD mode's model tree (left dock): one row per node of RoboCAD's
 //! document in its walk order, indented by depth. A row press writes
-//! `CadSelect {ids: [id], extend: false}` (exactly what a 3D pick writes);
+//! `CadSelect {ids: [id]}` (the node as a body item, `[id, "body", 0]`,
+//! what a 3D pick in body mode writes; `cad:node:<id>` is the same action);
+//! a row is lit when any item of its node is selected (a face too);
 //! its visibility chip writes `CadPatch {id, attrs: {"visible": !visible}}`,
 //! RoboCAD's own flag (the chip reads "Disabled" when the node itself is
 //! disabled, and "Hidden by parent" when it is visible and enabled itself
@@ -75,7 +77,7 @@ pub(super) fn highlight(commands: &mut Commands, doc: &CadDocument, rows: &mut Q
         enabled.set_if_neq(editable);
     }
     for (entity, row, mut tint, mut edge, label) in rows.iter_mut() {
-        let selected = doc.selection.iter().any(|s| *s == row.id);
+        let selected = doc.selection.iter().any(|s| s.0 == row.id);
         tint.set_if_neq(Tint::selectable(selected));
         edge.set_if_neq(BorderColor::all(if selected { ACCENT } else { Color::NONE }));
         let text = row_label(&row.label, selected);
@@ -116,7 +118,7 @@ pub(super) fn build(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
         let label = format!("{}, {}", row.name, flags.join(", "));
         p.spawn((
             Button,
-            CadButton(CadAction::CadSelect { ids: vec![row.id.clone()], extend: false }),
+            CadButton(CadAction::CadSelect { ids: vec![row.id.clone()], items: Vec::new(), extend: false, toggle: false }),
             Tint::selectable(row.selected),
             AccessibleLabel::new(row_label(&label, row.selected)),
             TreeRowId { id: row.id.clone(), label },

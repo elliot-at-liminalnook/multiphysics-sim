@@ -6,9 +6,33 @@
 //! undo, provenance and `.rcad` file stay its own.
 use crate::app::actions::{self, Spec, spec};
 use crate::app::ViewerMode;
-use serde::Deserialize;
+use super::document::{CadTool, SelectMode};
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
+use sim_runtime::cad_client::SelectionItem;
 use std::path::PathBuf;
+
+/// One end of a measurement (RoboCAD's `MeasureTool` pick): the picked item
+/// (`[node, kind, index]`, or none for a point in space) and the point
+/// (mm, RoboCAD's frame), snapped as the measure tool snaps.
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct MeasurePick {
+    #[serde(default)]
+    pub item: Option<SelectionItem>,
+    pub point: [f64; 3],
+}
+
+/// A live dimension's kind (RoboCAD's `live_dimensions`): a cylinder's
+/// diameter (`set_diameter`), the distance between two parallel planar
+/// faces (`set_distance`) or the angle between two planar faces (`set_angle`).
+#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Dimension {
+    Diameter,
+    Distance,
+    Angle,
+}
 
 /// CAD mode's REST modes.
 pub const CAD: &[ViewerMode] = &[ViewerMode::Cad];
@@ -32,14 +56,124 @@ pub enum CadAction {
         #[serde(default)]
         url: Option<String>,
     },
-    /// Replace the selection with `ids` (body items; empty clears it), or add
-    /// them with `extend`. Pushed to RoboCAD's `/selection`.
+    /// Replace the selection with `items` (RoboCAD's `[node, kind, index]`)
+    /// and `ids` (body items `[id, "body", 0]`); empty clears it. `extend`
+    /// adds them (Shift), `toggle` adds or removes each (Ctrl). Pushed to
+    /// RoboCAD's `/selection` with the mode. Tree rows, 3D picks, box select,
+    /// the Alt menu, keys, `system_ui` and REST all write this.
     CadSelect {
         #[serde(default)]
         ids: Vec<String>,
         #[serde(default)]
+        items: Vec<SelectionItem>,
+        #[serde(default)]
+        extend: bool,
+        #[serde(default)]
+        toggle: bool,
+    },
+    /// Switch the selection mode (body, face, edge, vertex, point); as in
+    /// RoboCAD, the selection is cleared.
+    CadSelectMode { mode: SelectMode },
+    /// The item under the pointer (display only: the hover highlight; a
+    /// click pick never waits on it).
+    CadHover {
+        #[serde(default)]
+        item: Option<SelectionItem>,
+    },
+    /// Box select: the rectangle `[x0, y0, x1, y1]` in window logical
+    /// pixels, as RoboCAD's `_box_select` (bodies whose bounds lie inside;
+    /// edges whose samples all lie inside; vertices inside). `extend` keeps
+    /// the selection.
+    CadBoxSelect {
+        rect: [f32; 4],
+        #[serde(default)]
         extend: bool,
     },
+    /// Open the Alt+click menu over the stacked `items` under the cursor;
+    /// choosing one writes `CadSelect` with `extend`/`toggle`.
+    CadCandidates {
+        items: Vec<SelectionItem>,
+        #[serde(default)]
+        extend: bool,
+        #[serde(default)]
+        toggle: bool,
+    },
+    /// RoboCAD's `edit.select_all`: every visible body, sheet, curve,
+    /// instance and mesh as body items.
+    CadSelectAll,
+    /// RoboCAD's `edit.invert`.
+    CadInvertSelection,
+    /// RoboCAD's `edit.select_same_material` (the first selected node's material).
+    CadSelectSameMaterial,
+    /// RoboCAD's `edit.convert_faces`: the selected edges become the faces
+    /// they bound, and the mode becomes face.
+    CadEdgesToFaces,
+    /// Activate a tool (select, move, rotate, scale, push_pull, offset_face, measure).
+    CadTool { tool: CadTool },
+    /// Commit a transform: exactly one `POST /ops/transform` (RoboCAD's
+    /// `Ops.transform(ids, translation, axis, angle_deg, center, scale)`,
+    /// uniform scale) on the selected nodes, or `ids`. `revision`: RoboCAD's
+    /// revision the preview began at; refused when it changed.
+    CadTransform {
+        #[serde(default)]
+        ids: Option<Vec<String>>,
+        #[serde(default)]
+        translation: Option<[f64; 3]>,
+        #[serde(default)]
+        axis: Option<[f64; 3]>,
+        #[serde(default)]
+        angle_deg: Option<f64>,
+        #[serde(default)]
+        center: Option<[f64; 3]>,
+        #[serde(default)]
+        scale: Option<f64>,
+        #[serde(default)]
+        revision: Option<u64>,
+    },
+    /// Push/pull one planar face `distance` mm along its normal: one
+    /// `POST /ops/push_pull` (`Ops.push_pull(node_id, face, distance)`).
+    CadPushPull {
+        node: String,
+        face: i64,
+        distance: f64,
+        #[serde(default)]
+        revision: Option<u64>,
+    },
+    /// Offset faces `distance` mm: one `POST /ops/offset_faces`
+    /// (`Ops.offset_faces(node_id, faces, distance)`).
+    CadOffsetFaces {
+        node: String,
+        faces: Vec<i64>,
+        distance: f64,
+        #[serde(default)]
+        revision: Option<u64>,
+    },
+    /// Set a live dimension: one `POST /ops/set_diameter` (faces `[f]`),
+    /// `set_distance` (faces `[a, b]`, `b` moves) or `set_angle` (`[a, b]`).
+    CadSetDimension {
+        node: String,
+        dimension: Dimension,
+        faces: Vec<i64>,
+        value: f64,
+        #[serde(default)]
+        revision: Option<u64>,
+    },
+    /// The numeric bar's Enter: each field's text, evaluated with RoboCAD's
+    /// unit expressions (`sim_runtime::units::evaluate`), committed through
+    /// the active tool's one call.
+    CadNumeric { values: Vec<String> },
+    /// Measure between two picks (RoboCAD's `measure_between`): computed
+    /// here; `keep` also adds it as a measure node (one `POST
+    /// /ops/add_measurement`, RoboCAD's Shift+click).
+    CadMeasure {
+        a: MeasurePick,
+        b: MeasurePick,
+        #[serde(default)]
+        keep: bool,
+    },
+    /// Escape: cancel the preview and return to the Select tool; in the
+    /// Select tool, clear the selection (RoboCAD's app.py:487-497).
+    CadCancel,
     /// `PATCH /nodes/{id}` with `attrs` as RoboCAD accepts them (name,
     /// visible, locked, disabled, material, color, pivot, transform, parent,
     /// index, tessellation_tolerance, plane, sketch): one undo step there.
@@ -84,9 +218,25 @@ impl actions::Action for CadAction {
     fn commands() -> Vec<Spec> {
         vec![
             spec("state", CAD, json!({}), "CAD mode: the same answer as cad_state, plus viewer_mode."),
-            spec("cad_state", CAD, json!({}), "CAD mode: the RoboCAD document as this window shows it: target (file or service URL), service (self-started or attached; url, pid), connection (connecting | connected | lost with the error verbatim), health (RoboCAD's GET /: path, dirty, gui, nodes, document_id, revision), stale (why the shown tree may be behind RoboCAD, or null), nodes (id, kind, name, parent, depth, visible, effective_visible, locked, disabled), selection (node ids, synced with RoboCAD's /selection), selection_error (why the last read of RoboCAD's /selection failed, or null), unsaved (RoboCAD's dirty flag, or null when it can't be confirmed: not connected, or an edit in flight or just finished), inspected (RoboCAD's node detail for the first selected node, exactly as returned), physical (fetched with cad_physical), history (undo and redo labels), commands (RoboCAD's GUI registry; empty headless), autosave (GUI only), edit (the mutating request in flight, by name), meshes (shown, pending, failed) and status (the last outcome)."),
+            spec("cad_state", CAD, json!({}), "CAD mode: the RoboCAD document as this window shows it: target (file or service URL), service (self-started or attached; url, pid), connection (connecting | connected | lost with the error verbatim), health (RoboCAD's GET /: path, dirty, gui, nodes, document_id, revision), stale (why the shown tree may be behind RoboCAD, or null), nodes (id, kind, name, parent, depth, visible, effective_visible, locked, disabled), selection (RoboCAD's items [node, kind, index], synced with its /selection), select_mode (body | face | edge | vertex | point), hover (the item under the pointer, display only), candidates (the Alt menu while open), selection_error (why the last read of RoboCAD's /selection failed, or null), unsaved (RoboCAD's dirty flag, or null when it can't be confirmed: not connected, or an edit in flight or just finished), inspected (RoboCAD's node detail for the first selected node, exactly as returned), physical (fetched with cad_physical), history (undo and redo labels), commands (RoboCAD's GUI registry; empty headless), autosave (GUI only), edit (the mutating request in flight, by name), meshes (shown, pending, failed), tool (the active tool), tool_state (pivot, drag and preview with the revision each began at, push/pull target, numeric fields with their evaluations, last measurement, snap, readout) and status (the last outcome)."),
             spec("cad_open", CAD, json!({"path": "examples/camera-turntable/cad/turntable.rcad"}), "CAD mode: open a .rcad file (path: RoboCAD's headless service is started on it with cad/.venv/bin/python -m robocad.api PATH --port N, and stopped when the document closes) or attach to a running RoboCAD (url, loopback only, e.g. http://127.0.0.1:8420; never stopped). Refused, naming the reason, while an edit is in flight or while a self-started document has unsaved edits or edits whose saved state can't be confirmed (not connected to it; save first: the viewer never saves for you). Answers once the service is starting; poll cad_state for the connection."),
-            spec("cad_select", CAD, json!({"ids": ["n1"]}), "CAD mode: select nodes by id (ids; [] clears; extend adds). The same action as a click on a tree row or a body in the 3D view. Pushed to RoboCAD's /selection as [[id, \"body\", 0], ...], so RoboCAD's window shows it too; RoboCAD's own selection changes come back on the next poll."),
+            spec("cad_select", CAD, json!({"items": [["n1", "face", 2]], "extend": false}), "CAD mode: select items as RoboCAD writes them (items: [[node, kind, index], ...], kind body | face | edge | vertex | point; ids: node ids as body items [id, \"body\", 0]; [] clears; extend adds like Shift; toggle adds or removes like Ctrl). The same action as a click on a tree row, a pick or box select in the 3D view, or a choice in the Alt menu. Pushed to RoboCAD's PUT /selection with the selection mode, so RoboCAD's window shows it too; RoboCAD's own selection changes come back on the next poll."),
+            spec("cad_select_mode", CAD, json!({"mode": "face"}), "CAD mode: the selection mode (body | face | edge | vertex | point; RoboCAD's B, Shift+B, E, V, P): what a click in the 3D view picks. Clears the selection, as RoboCAD does. A headless RoboCAD does not store the mode (its GET /selection has none), so the viewer holds it; a desktop RoboCAD's mode is adopted when it changes there."),
+            spec("cad_hover", CAD, json!({"item": ["n1", "face", 2]}), "CAD mode: the hover highlight (item [node, kind, index], or null to clear). Display only: nothing is sent to RoboCAD."),
+            spec("cad_box_select", CAD, json!({"rect": [300.0, 200.0, 600.0, 450.0]}), "CAD mode: box select over the window rectangle rect [x0, y0, x1, y1] (logical pixels), as RoboCAD's drag: in body mode the bodies whose bounding box lies inside, in edge mode the edges whose sampled polylines lie inside, in vertex mode the vertices inside. extend keeps the selection (Shift or Ctrl)."),
+            spec("cad_candidates", CAD, json!({"items": [["n1", "face", 2], ["n2", "face", 0]]}), "CAD mode: open the Alt+click menu over stacked candidates (items as cad_select's; extend, toggle say how a choice applies). Its entries are system_ui controls cad:candidate:<n>."),
+            spec("cad_select_all", CAD, json!({}), "CAD mode: RoboCAD's Select All (Ctrl+A): every visible body, sheet, curve, instance and mesh, as body items."),
+            spec("cad_invert_selection", CAD, json!({}), "CAD mode: RoboCAD's Invert Selection (Ctrl+Shift+I): the visible bodies, sheets, curves, instances and meshes not selected now."),
+            spec("cad_select_same_material", CAD, json!({}), "CAD mode: RoboCAD's Select Same Material (Ctrl+Shift+M): every node with the first selected node's material."),
+            spec("cad_edges_to_faces", CAD, json!({}), "CAD mode: RoboCAD's 'Selection: edges → bounding faces': each selected edge becomes the faces it bounds (found from RoboCAD's tessellation: faces with a triangle side along the edge), and the mode becomes face."),
+            spec("cad_tool", CAD, json!({"tool": "move"}), "CAD mode: activate a tool (select | move | rotate | scale | push_pull | offset_face | measure; RoboCAD's Escape, G, R, S, D, Shift+D, M). Move, rotate and scale place the gizmo at the first selected node's pivot (else the selection's centre); push/pull and offset target the first selected face; measure takes two picks. Display only until a commit."),
+            spec("cad_transform", CAD, json!({"translation": [10.0, 0.0, 0.0]}), "CAD mode: commit a transform as exactly one POST /ops/transform (RoboCAD's Ops.transform: translation [dx, dy, dz] mm, or axis [x, y, z] with angle_deg about center, or a uniform scale factor about center) on the selected nodes or ids. revision: RoboCAD's revision the preview began at (refused, naming it, when the document changed since). Refused while another edit is in flight. RoboCAD's command layer applies it as one undo step."),
+            spec("cad_push_pull", CAD, json!({"node": "n1", "face": 3, "distance": 5.0}), "CAD mode: push/pull planar face index face of node by distance mm along its normal: exactly one POST /ops/push_pull (one undo step in RoboCAD). revision as cad_transform's. Refused while another edit is in flight."),
+            spec("cad_offset_faces", CAD, json!({"node": "n1", "faces": [3], "distance": 1.5}), "CAD mode: offset faces of node by distance mm: exactly one POST /ops/offset_faces (one undo step). revision as cad_transform's."),
+            spec("cad_set_dimension", CAD, json!({"node": "n1", "dimension": "diameter", "faces": [4], "value": 8.0}), "CAD mode: set a live dimension of the selected faces (RoboCAD's live_dimensions): diameter of a cylindrical face (faces [f], set_diameter), distance between two parallel planar faces (faces [a, b], b moves, set_distance) or angle between two planar faces (faces [a, b], degrees, set_angle). Exactly one POST /ops call; revision as cad_transform's."),
+            spec("cad_numeric", CAD, json!({"values": ["20mm + 0.3"]}), "CAD mode: the numeric bar's Enter: values are the active tool's fields as typed (move dx dy dz, rotate angle, scale factor, push/pull or offset distance, a live dimension), each a unit expression RoboCAD's numeric bar accepts (20mm + 0.3, 1in, pi*10, 45deg; bare numbers are mm or degrees), evaluated by sim_runtime::units. An error names the token and its position. Commits through the tool's one call."),
+            spec("cad_measure", CAD, json!({"a": {"item": ["n1", "face", 0], "point": [0.0, 0.0, 0.0]}, "b": {"item": ["n1", "face", 5], "point": [0.0, 0.0, 20.0]}}), "CAD mode: measure between two picks as RoboCAD's measure tool (distance between parallel planar faces, the angle between faces or between line edges, an edge's radius when both picks are the same circular edge, else the points' distance). Answers the measurement; keep (RoboCAD's Shift+click) also adds it as a measure node with exactly one POST /ops/add_measurement."),
+            spec("cad_cancel", CAD, json!({}), "CAD mode: Escape: cancel a preview and return to the Select tool; in the Select tool, clear the selection. Nothing is sent to RoboCAD except the cleared selection."),
             spec("cad_patch", CAD, json!({"id": "n1", "attrs": {"visible": false}}), "CAD mode: PATCH /nodes/{id} with attrs exactly as RoboCAD accepts them (name, visible, locked, disabled, material, color, pivot, transform, parent, index, tessellation_tolerance, plane, sketch): RoboCAD's command layer applies it as one undo step. One edit at a time: refused while another is in flight. Answers RoboCAD's node detail, or its error verbatim."),
             spec("cad_delete", CAD, json!({"id": "n1"}), "CAD mode: DELETE /nodes/{id} through RoboCAD's delete command (undoable there). Refused while another edit is in flight."),
             spec("cad_undo", CAD, json!({}), "CAD mode: POST /undo: RoboCAD undoes its last command; answers the label undone and the history."),
@@ -97,11 +247,14 @@ impl actions::Action for CadAction {
             spec("cad_refresh", CAD, json!({}), "CAD mode: refetch RoboCAD's /doc, /commands and /autosave now."),
             spec("cad_fit", CAD, json!({}), "CAD mode: frame the native 3D view on every shown body, or on node id. Display only: RoboCAD's own view and the geometry are not changed."),
             spec("cad_physical", CAD, json!({}), "CAD mode: fetch RoboCAD's physical description (GET /physical?flex=0; nothing is written) for the inspector: the link holding the selected body, its mass, centre of mass and inertia, and mass_sources as RoboCAD labels them (declared measurement source, material density, ...), never filled in."),
-            spec("system_ui", CAD, json!({"action": {"operation": "controls"}}), "CAD mode: its controls (cad:undo, cad:redo, cad:save, cad:refresh, cad:fit, cad:physical, cad:delete, cad:node:<id> to select a tree row, cad:visible:<id> to toggle visibility, cad:locked:<id> to toggle locked, cad:disabled:<id> to toggle disabled, cad:material:<id>:<mat> to assign material <mat> (an id from RoboCAD's /doc materials) to node <id>, cad:command:<id> for RoboCAD's registry commands), each with enabled and disabled_reason, then the mode switcher's mode:* controls; activate {id} writes the same CAD action a click does."),
+            spec("system_ui", CAD, json!({"action": {"operation": "controls"}}), "CAD mode: its controls (cad:undo, cad:redo, cad:save, cad:refresh, cad:fit, cad:physical, cad:delete, cad:node:<id> to select a tree row, cad:visible:<id> to toggle visibility, cad:locked:<id> to toggle locked, cad:disabled:<id> to toggle disabled, cad:material:<id>:<mat> to assign material <mat> (an id from RoboCAD's /doc materials) to node <id>, cad:command:<id> for RoboCAD's registry commands, cad:mode:<mode> for a selection mode, cad:select_all, cad:invert_selection, cad:select_same_material, cad:edges_to_faces, cad:candidate:<n> for an entry of the open Alt menu, cad:tool:<tool> to activate a tool, cad:cancel for Escape), each with enabled and disabled_reason, then the mode switcher's mode:* controls; activate {id} writes the same CAD action a click does."),
         ]
     }
     fn controls() -> &'static [&'static str] {
-        &["cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:<id>", "cad:visible:<id>", "cad:locked:<id>", "cad:disabled:<id>", "cad:material:<id>:<mat>", "cad:command:<id>"]
+        &[
+            "cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:<id>", "cad:visible:<id>", "cad:locked:<id>", "cad:disabled:<id>", "cad:material:<id>:<mat>", "cad:command:<id>",
+            "cad:mode:<mode>", "cad:select_all", "cad:invert_selection", "cad:select_same_material", "cad:edges_to_faces", "cad:candidate:<n>", "cad:tool:<tool>", "cad:cancel",
+        ]
     }
 }
 
@@ -110,6 +263,8 @@ impl actions::Action for CadAction {
 use super::document::{CadDocument, CadTarget, Connection, EditDone};
 use super::mesh::CadMeshes;
 use super::sync::{self, value};
+use super::topology::CadTopology;
+use super::view::CadView;
 use crate::app::actions::{Act, Call, InFlight, Origin, Replies};
 use crate::app::switch::Documents;
 use bevy::ecs::message::Messages;
@@ -122,12 +277,15 @@ use std::collections::HashSet;
 /// header's status line; a REST caller gets it, or the answer. Mutations
 /// run on an edit job; their REST callers wait for RoboCAD's answer
 /// (Pending with the edit's sequence in the continuation).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<CadAction>>>,
     mut in_flight: ResMut<InFlight<CadAction>>,
     mut replies: ResMut<Replies>,
     doc: Option<ResMut<CadDocument>>,
     mut meshes: Option<ResMut<CadMeshes>>,
+    mut topology: Option<ResMut<CadTopology>>,
+    view: Option<Res<CadView>>,
     mut documents: ResMut<Documents>,
 ) {
     let Some(mut doc) = doc else {
@@ -135,7 +293,8 @@ pub(super) fn apply(
         return;
     };
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
-        let outcome = handle(action, call, &mut doc, meshes.as_deref_mut(), &mut documents);
+        let mut cx = Cx { doc: &mut *doc, meshes: meshes.as_deref_mut(), topology: topology.as_deref_mut(), view: view.as_deref(), documents: &mut *documents };
+        let outcome = handle(action, call, &mut cx);
         match call.origin {
             Origin::Rest(_) => outcome,
             origin => {
@@ -148,17 +307,48 @@ pub(super) fn apply(
     });
 }
 
+/// What the one handler works on: the document and CAD mode's caches. The
+/// selection arms (`selection::handle`) and the tool arms
+/// (`transform::handle`) take the same context.
+pub(super) struct Cx<'a> {
+    pub doc: &'a mut CadDocument,
+    /// The drawn bodies (None without a window).
+    pub meshes: Option<&'a mut CadMeshes>,
+    /// Faces, edges and vertices of the shown bodies (None without CAD mode's caches).
+    pub topology: Option<&'a mut CadTopology>,
+    /// The camera as last drawn (None without a window).
+    pub view: Option<&'a CadView>,
+    pub documents: &'a mut Documents,
+}
+
 /// One action, from any entry point.
-fn handle(action: &CadAction, call: &mut Call, doc: &mut CadDocument, meshes: Option<&mut CadMeshes>, documents: &mut Documents) -> Outcome {
+pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     // A REST caller waiting for the edit it started (also through system_ui activate).
     if let Some(seq) = call.continuation.get("edit").and_then(Value::as_u64) {
-        return wait_edit(doc, call, seq);
+        return wait_edit(cx.doc, call, seq);
     }
     let done = |r: Result<Value, String>| Outcome::Done(r);
+    let doc = &mut *cx.doc;
     match action {
-        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, meshes.as_deref()))),
-        CadAction::CadOpen { path, url } => done(open(doc, documents, path.as_ref(), url.as_deref())),
-        CadAction::CadSelect { ids, extend } => done(select(doc, ids, *extend)),
+        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, cx.meshes.as_deref()))),
+        CadAction::CadOpen { path, url } => done(open(doc, cx.documents, path.as_ref(), url.as_deref())),
+        CadAction::CadSelect { .. }
+        | CadAction::CadSelectMode { .. }
+        | CadAction::CadHover { .. }
+        | CadAction::CadBoxSelect { .. }
+        | CadAction::CadCandidates { .. }
+        | CadAction::CadSelectAll
+        | CadAction::CadInvertSelection
+        | CadAction::CadSelectSameMaterial
+        | CadAction::CadEdgesToFaces => super::selection::handle(action, call, cx),
+        CadAction::CadTool { .. }
+        | CadAction::CadTransform { .. }
+        | CadAction::CadPushPull { .. }
+        | CadAction::CadOffsetFaces { .. }
+        | CadAction::CadSetDimension { .. }
+        | CadAction::CadNumeric { .. }
+        | CadAction::CadMeasure { .. }
+        | CadAction::CadCancel => super::transform::handle(action, call, cx),
         CadAction::CadPatch { id, attrs } => {
             if !doc.has_node(id) {
                 return done(Err(format!("no node {id} in the shown tree")));
@@ -201,14 +391,15 @@ fn handle(action: &CadAction, call: &mut Call, doc: &mut CadDocument, meshes: Op
             edit(doc, call, format!("Op {name}"), move |c| c.op(&name, &args, &kwargs).map(|r| EditDone { message: format!("Ran {name}"), result: value(&r) }))
         }
         CadAction::CadRefresh => done(Ok(refresh(doc))),
-        CadAction::CadFit { id } => done(fit(doc, meshes, id.as_deref())),
+        CadAction::CadFit { id } => done(fit(doc, cx.meshes.as_deref_mut(), id.as_deref())),
         CadAction::CadPhysical => done(sync::fetch_physical(doc).map(|()| json!({"message": "Fetching RoboCAD's physical description (GET /physical?flex=0); it shows in cad_state.physical."}))),
-        CadAction::SystemUi(args) => system_ui(doc, call, meshes, documents, args),
+        CadAction::SystemUi(args) => system_ui(call, cx, args),
     }
 }
 
-/// Start a mutating request; a REST caller waits for its answer.
-fn edit(doc: &mut CadDocument, call: &mut Call, label: String, work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
+/// Start a mutating request; a REST caller waits for its answer. The one
+/// path every document edit takes (the tools' commits too).
+pub(super) fn edit(doc: &mut CadDocument, call: &mut Call, label: String, work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
     match sync::start_edit(doc, label, call.rest(), work) {
         Err(e) => Outcome::Done(Err(e)),
         Ok(seq) if call.rest() => {
@@ -289,28 +480,6 @@ fn open(doc: &mut CadDocument, documents: &mut Documents, path: Option<&PathBuf>
     Ok(json!({"opened": target.json(), "message": message, "generation": doc.generation}))
 }
 
-/// `cad_select`: the selection now, then pushed to RoboCAD's `/selection`.
-fn select(doc: &mut CadDocument, ids: &[String], extend: bool) -> Result<Value, String> {
-    if let Some(id) = ids.iter().find(|id| !doc.has_node(id)) {
-        return Err(format!("no node {id} in the shown tree"));
-    }
-    let mut selection = if extend { doc.selection.clone() } else { Vec::new() };
-    for id in ids {
-        if !selection.contains(id) {
-            selection.push(id.clone());
-        }
-    }
-    if selection != doc.selection {
-        doc.selection = selection;
-        doc.touch();
-    }
-    let pushed = doc.connected() && doc.selection != doc.remote_selection;
-    if pushed {
-        sync::push_selection(doc);
-    }
-    Ok(json!({"selection": doc.selection, "pushed": pushed, "connected": doc.connected()}))
-}
-
 /// `cad_refresh`: refetch now; reconnect when the connection is gone (a
 /// self-started service that exited is started again).
 fn refresh(doc: &mut CadDocument) -> Value {
@@ -377,7 +546,27 @@ pub(super) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadFit { id } => json!({"command": "cad_fit", "id": id}),
         CadAction::CadPhysical => json!({"command": "cad_physical"}),
         CadAction::CadDelete { id } => json!({"command": "cad_delete", "id": id}),
-        CadAction::CadSelect { ids, extend } => json!({"command": "cad_select", "ids": ids, "extend": extend}),
+        CadAction::CadSelect { ids, items, extend, toggle } => json!({"command": "cad_select", "ids": ids, "items": items, "extend": extend, "toggle": toggle}),
+        CadAction::CadSelectMode { mode } => json!({"command": "cad_select_mode", "mode": mode}),
+        CadAction::CadHover { item } => json!({"command": "cad_hover", "item": item}),
+        CadAction::CadBoxSelect { rect, extend } => json!({"command": "cad_box_select", "rect": rect, "extend": extend}),
+        CadAction::CadCandidates { items, extend, toggle } => json!({"command": "cad_candidates", "items": items, "extend": extend, "toggle": toggle}),
+        CadAction::CadSelectAll => json!({"command": "cad_select_all"}),
+        CadAction::CadInvertSelection => json!({"command": "cad_invert_selection"}),
+        CadAction::CadSelectSameMaterial => json!({"command": "cad_select_same_material"}),
+        CadAction::CadEdgesToFaces => json!({"command": "cad_edges_to_faces"}),
+        CadAction::CadTool { tool } => json!({"command": "cad_tool", "tool": tool}),
+        CadAction::CadTransform { ids, translation, axis, angle_deg, center, scale, revision } => {
+            json!({"command": "cad_transform", "ids": ids, "translation": translation, "axis": axis, "angle_deg": angle_deg, "center": center, "scale": scale, "revision": revision})
+        }
+        CadAction::CadPushPull { node, face, distance, revision } => json!({"command": "cad_push_pull", "node": node, "face": face, "distance": distance, "revision": revision}),
+        CadAction::CadOffsetFaces { node, faces, distance, revision } => json!({"command": "cad_offset_faces", "node": node, "faces": faces, "distance": distance, "revision": revision}),
+        CadAction::CadSetDimension { node, dimension, faces, value, revision } => {
+            json!({"command": "cad_set_dimension", "node": node, "dimension": dimension, "faces": faces, "value": value, "revision": revision})
+        }
+        CadAction::CadNumeric { values } => json!({"command": "cad_numeric", "values": values}),
+        CadAction::CadMeasure { a, b, keep } => json!({"command": "cad_measure", "a": a, "b": b, "keep": keep}),
+        CadAction::CadCancel => json!({"command": "cad_cancel"}),
         CadAction::CadPatch { id, attrs } => json!({"command": "cad_patch", "id": id, "attrs": attrs}),
         CadAction::CadCommand { id } => json!({"command": "cad_command", "id": id}),
         CadAction::CadOp { name, args, kwargs } => json!({"command": "cad_op", "name": name, "args": args, "kwargs": kwargs}),
@@ -391,23 +580,23 @@ pub(super) fn rest_form(action: &CadAction) -> Value {
 /// `system_ui`: the controls, or one activated through this handler (the
 /// same action a click writes). Ids are stable names, so `ui_revision` is
 /// reported but not required.
-fn system_ui(doc: &mut CadDocument, call: &mut Call, meshes: Option<&mut CadMeshes>, documents: &mut Documents, args: &Map<String, Value>) -> Outcome {
+fn system_ui(call: &mut Call, cx: &mut Cx, args: &Map<String, Value>) -> Outcome {
     let action = args.get("action").cloned().unwrap_or(Value::Null);
     match action["operation"].as_str() {
         Some("controls") => {
-            let items: Vec<Value> = controls(doc)
+            let items: Vec<Value> = controls(cx.doc)
                 .into_iter()
                 .map(|(id, label, action, ready)| json!({"id": id, "label": label, "enabled": ready.is_ok(), "disabled_reason": ready.err(), "action": rest_form(&action)}))
                 .collect();
-            Outcome::Done(Ok(json!({"ui_revision": doc.revision, "ready": true, "controls": items, "state": state_json(doc, meshes.as_deref())})))
+            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, cx.meshes.as_deref())})))
         }
         Some("activate") => {
             let Some(id) = action["id"].as_str() else { return Outcome::Done(Err("system_ui activate needs an id; request controls".into())) };
-            let found = controls(doc).into_iter().find(|(i, ..)| i == id);
+            let found = controls(cx.doc).into_iter().find(|(i, ..)| i == id);
             match found {
                 None => Outcome::Done(Err(format!("unknown control {id}; request controls"))),
                 Some((id, _, _, Err(why))) => Outcome::Done(Err(format!("{id} is disabled: {why}"))),
-                Some((_, _, action, Ok(()))) => handle(&action, call, doc, meshes, documents),
+                Some((_, _, action, Ok(()))) => handle(&action, call, cx),
             }
         }
         _ => Outcome::Done(Err("system_ui in CAD mode: operation controls, or activate with a control id (cad:* or mode:*)".into())),
@@ -456,7 +645,12 @@ pub(super) fn state_json(doc: &CadDocument, meshes: Option<&CadMeshes>) -> Value
         "stale": doc.stale,
         "nodes": nodes,
         "selection": doc.selection,
+        "select_mode": doc.select_mode,
+        "hover": doc.hover,
+        "candidates": doc.candidates.as_ref().map(|c| json!({"items": c.items, "extend": c.extend, "toggle": c.toggle})),
         "selection_error": doc.selection_error,
+        "tool": doc.tool,
+        "tool_state": super::transform::state_json(doc),
         "inspected": doc.detail.as_ref().map(|(id, revision, r)| json!({"id": id, "revision": revision, "detail": result(&r.as_ref().map(value).map_err(Clone::clone))})),
         "physical": doc.physical.as_ref().map(|(revision, r)| json!({"revision": revision, "result": result(r)})).unwrap_or(Value::Null),
         "physical_pending": doc.physical_job.is_some(),

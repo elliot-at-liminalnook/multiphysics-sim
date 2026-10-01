@@ -7,7 +7,8 @@
 use crate::jobs::{ChildProcess, Job, RunThread};
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::{Autosave, CadClient, CommandInfo, DocState, Health, NodeDetail, Selection};
+use serde::{Deserialize, Serialize};
+use sim_runtime::cad_client::{Autosave, CadClient, CommandInfo, DocState, Health, NodeDetail, Selection, SelectionItem};
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -178,6 +179,101 @@ impl ChildSlot {
     }
 }
 
+/// RoboCAD's selection modes (`viewport.selection_mode`; keymap `select.*`):
+/// what a click in the 3D view picks. A selection item's kind is its mode
+/// (`[node, "face", i]`); body items have index 0.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SelectMode {
+    #[default]
+    Body,
+    Face,
+    Edge,
+    Vertex,
+    Point,
+}
+impl SelectMode {
+    pub const ALL: [SelectMode; 5] = [SelectMode::Body, SelectMode::Face, SelectMode::Edge, SelectMode::Vertex, SelectMode::Point];
+    /// RoboCAD's name (`/selection`'s `mode`, an item's kind).
+    pub fn name(self) -> &'static str {
+        match self {
+            SelectMode::Body => "body",
+            SelectMode::Face => "face",
+            SelectMode::Edge => "edge",
+            SelectMode::Vertex => "vertex",
+            SelectMode::Point => "point",
+        }
+    }
+    pub fn parse(name: &str) -> Option<SelectMode> {
+        SelectMode::ALL.into_iter().find(|m| m.name() == name)
+    }
+    /// The mode button's label.
+    pub fn label(self) -> &'static str {
+        match self {
+            SelectMode::Body => "Bodies",
+            SelectMode::Face => "Faces",
+            SelectMode::Edge => "Edges",
+            SelectMode::Vertex => "Vertices",
+            SelectMode::Point => "Points",
+        }
+    }
+}
+
+/// The tools of RoboCAD's this mode has (`ui/tools.py`): Select, the
+/// transform gizmo's three modes, push/pull, offset face and measure.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CadTool {
+    #[default]
+    Select,
+    Move,
+    Rotate,
+    Scale,
+    PushPull,
+    OffsetFace,
+    Measure,
+}
+impl CadTool {
+    pub const ALL: [CadTool; 7] = [CadTool::Select, CadTool::Move, CadTool::Rotate, CadTool::Scale, CadTool::PushPull, CadTool::OffsetFace, CadTool::Measure];
+    /// RoboCAD's tool name (`Tool.name`; `tool.<name>` in its keymap).
+    pub fn name(self) -> &'static str {
+        match self {
+            CadTool::Select => "select",
+            CadTool::Move => "move",
+            CadTool::Rotate => "rotate",
+            CadTool::Scale => "scale",
+            CadTool::PushPull => "push_pull",
+            CadTool::OffsetFace => "offset_face",
+            CadTool::Measure => "measure",
+        }
+    }
+    pub fn parse(name: &str) -> Option<CadTool> {
+        CadTool::ALL.into_iter().find(|t| t.name() == name)
+    }
+    /// The tool button's label (RoboCAD's toolbar names).
+    pub fn label(self) -> &'static str {
+        match self {
+            CadTool::Select => "Select",
+            CadTool::Move => "Move",
+            CadTool::Rotate => "Rotate",
+            CadTool::Scale => "Scale",
+            CadTool::PushPull => "Push/Pull",
+            CadTool::OffsetFace => "Offset face",
+            CadTool::Measure => "Measure",
+        }
+    }
+}
+
+/// The Alt+click disambiguation menu (RoboCAD's `disambiguation_menu`,
+/// ui/widgets.py:888-894): the stacked candidates under the cursor, and
+/// how choosing one applies (Shift extends, Ctrl toggles).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Candidates {
+    pub items: Vec<SelectionItem>,
+    pub extend: bool,
+    pub toggle: bool,
+}
+
 /// True while one of CAD mode's text fields has the keyboard (D2's panel
 /// sets it): CAD mode's keys (`keys`) are ignored meanwhile.
 #[derive(Resource, Default)]
@@ -206,9 +302,23 @@ pub struct CadDocument {
     /// Why the shown document may be behind RoboCAD's ("refetching revision
     /// 12", or a failed refetch's error). None when it is current.
     pub stale: Option<String>,
-    /// Selected node ids (body items), as last pushed to or read from
-    /// RoboCAD's `/selection`.
-    pub selection: Vec<String>,
+    /// The selection as RoboCAD's items `[node, kind, index]` (kind body,
+    /// face, edge, vertex or point), as last pushed to or read from RoboCAD's
+    /// `/selection`.
+    pub selection: Vec<SelectionItem>,
+    /// The selection mode (what a 3D click picks). The viewer holds it: a
+    /// headless RoboCAD stores only the items (api.py `set_selection`), a
+    /// desktop one's `mode` is adopted when it changes there.
+    pub select_mode: SelectMode,
+    /// The item under the pointer (display only: the hover highlight).
+    pub hover: Option<SelectionItem>,
+    /// The Alt+click menu, while open.
+    pub candidates: Option<Candidates>,
+    /// The active tool.
+    pub tool: CadTool,
+    /// The active tool's own state: its target, pivot, the revision its
+    /// preview began at, the numeric fields (`transform::ToolState`).
+    pub tool_state: super::transform::ToolState,
     /// Why the poll's last `GET /selection` failed (None once one succeeds):
     /// RoboCAD's own selection changes are not seen meanwhile.
     pub selection_error: Option<String>,
@@ -230,13 +340,16 @@ pub struct CadDocument {
     pub(super) seen_poll: u64,
     pub(super) detail_job: Option<Job<NodeDetail>>,
     pub(super) physical_job: Option<Job<Value>>,
-    pub(super) selection_job: Option<Job<Vec<String>>>,
+    pub(super) selection_job: Option<Job<Vec<SelectionItem>>>,
     /// The (node id, revision) the detail job fetches or fetched.
     pub(super) detail_key: Option<(String, u64)>,
     /// The revision the physical job was started at.
     pub(super) physical_revision: u64,
     /// The last selection read from RoboCAD (adopted once when it changes).
-    pub(super) remote_selection: Vec<String>,
+    pub(super) remote_selection: Vec<SelectionItem>,
+    /// The last selection mode read from RoboCAD (a desktop window's; a
+    /// headless service sends none), adopted once when it changes.
+    pub(super) remote_mode: Option<SelectMode>,
     /// When our latest selection push was answered: a poll's selection read
     /// sent before then is not adopted (it predates the push).
     pub(super) selection_pushed_at: Option<Instant>,
@@ -304,6 +417,11 @@ impl CadDocument {
             doc_key: None,
             stale: None,
             selection: Vec::new(),
+            select_mode: SelectMode::Body,
+            hover: None,
+            candidates: None,
+            tool: CadTool::Select,
+            tool_state: Default::default(),
             selection_error: None,
             detail: None,
             commands: None,
@@ -321,6 +439,7 @@ impl CadDocument {
             detail_key: None,
             physical_revision: 0,
             remote_selection: Vec::new(),
+            remote_mode: None,
             selection_pushed_at: None,
             selection_again: false,
             mesh_retry: 0,
@@ -363,7 +482,7 @@ impl CadDocument {
                     visible: n.visible,
                     locked: n.locked,
                     disabled: n.disabled,
-                    selected: self.selection.iter().any(|s| s == &n.id),
+                    selected: self.selection.iter().any(|s| s.0 == n.id),
                 }
             })
             .collect()
@@ -455,7 +574,49 @@ impl CadDocument {
 
     /// The first selected node (the inspected one).
     pub(crate) fn selected(&self) -> Option<&str> {
-        self.selection.first().map(String::as_str)
+        self.selection.first().map(|i| i.0.as_str())
+    }
+
+    /// The selected nodes, each once, in selection order (RoboCAD's
+    /// `Selection.nodes`).
+    pub(crate) fn selected_nodes(&self) -> Vec<String> {
+        let mut out: Vec<String> = Vec::new();
+        for SelectionItem(node, ..) in &self.selection {
+            if !out.contains(node) {
+                out.push(node.clone());
+            }
+        }
+        out
+    }
+
+    /// The selected items of one kind ("face", "edge", …) as (node, index).
+    pub(crate) fn selected_of(&self, kind: &str) -> Vec<(String, i64)> {
+        self.selection.iter().filter(|i| i.1 == kind).map(|i| (i.0.clone(), i.2)).collect()
+    }
+
+    /// RoboCAD's revision the shown tree (and meshes, topology) is at.
+    pub(crate) fn shown_revision(&self) -> u64 {
+        self.doc_key.as_ref().map_or(0, |k| k.1)
+    }
+
+    /// Why a tool's commit cannot be sent now: an edit in flight or no
+    /// connection (`edit_refusal`), the shown document behind RoboCAD's
+    /// (`stale`), or RoboCAD's revision changed since the drag or preview
+    /// began at `began` (the preview was computed on geometry that is gone).
+    /// Nothing is sent when refused.
+    pub(crate) fn commit_refusal(&self, began: Option<u64>) -> Option<String> {
+        if let Some(why) = self.edit_refusal() {
+            return Some(why);
+        }
+        if let Some(stale) = &self.stale {
+            return Some(format!("the shown document is behind RoboCAD's ({stale}); nothing was sent"));
+        }
+        match (began, self.health.as_ref().map(|h| h.revision)) {
+            (Some(began), Some(now)) if began != now || began != self.shown_revision() => {
+                Some(format!("the document changed since the preview began (revision {began}, now {now}); nothing was sent: redo the drag or the entry"))
+            }
+            _ => None,
+        }
     }
 
     /// The service answers and the window may send it requests.

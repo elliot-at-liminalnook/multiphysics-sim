@@ -29,7 +29,7 @@
 //!   name, or an Enter while edits cannot be sent, keeps the draft open with
 //!   the reason under the field (no request).
 use super::actions::CadAction;
-use super::document::{CadDocument, CadInputFocus, Connection};
+use super::document::{CadDocument, CadInputFocus, CadTool, Connection, SelectMode};
 use crate::app::actions::Act;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
@@ -205,10 +205,39 @@ pub(crate) fn controls(doc: &CadDocument) -> Vec<Control> {
         }
     }
     for row in doc.rows() {
-        add(format!("cad:node:{}", row.id), row.name.clone(), CadAction::CadSelect { ids: vec![row.id.clone()], extend: false }, Ok(()));
+        add(format!("cad:node:{}", row.id), row.name.clone(), CadAction::CadSelect { ids: vec![row.id.clone()], items: Vec::new(), extend: false, toggle: false }, Ok(()));
         let label = format!("{} {}", if row.visible { "Hide" } else { "Show" }, row.name);
         add(format!("cad:visible:{}", row.id), label, patch(&row.id, "visible", Value::Bool(!row.visible)), ready(blocked.clone()));
     }
+    // Selection modes and commands (RoboCAD's select.* and edit.select_*):
+    // the viewer's own state until a selection is pushed, so always enabled
+    // unless they need a selection.
+    for mode in SelectMode::ALL {
+        let label = if mode == doc.select_mode { format!("Select {} (active)", mode.label()) } else { format!("Select {}", mode.label()) };
+        add(format!("cad:mode:{}", mode.name()), label, CadAction::CadSelectMode { mode }, Ok(()));
+    }
+    add("cad:select_all".into(), "Select All".into(), CadAction::CadSelectAll, Ok(()));
+    add("cad:invert_selection".into(), "Invert Selection".into(), CadAction::CadInvertSelection, Ok(()));
+    let same = if doc.selection.is_empty() { Err("nothing is selected".to_string()) } else { Ok(()) };
+    add("cad:select_same_material".into(), "Select Same Material".into(), CadAction::CadSelectSameMaterial, same);
+    let edges = if doc.selection.iter().any(|i| i.1 == "edge") { Ok(()) } else { Err("no edges are selected (edge mode, E)".to_string()) };
+    add("cad:edges_to_faces".into(), "Selection: edges → bounding faces".into(), CadAction::CadEdgesToFaces, edges);
+    // The Alt+click menu's entries while it is open (RoboCAD's labels).
+    if let Some(c) = &doc.candidates {
+        for (n, item) in c.items.iter().enumerate() {
+            // RoboCAD's text: "name: kind #i", without "#i" for a body.
+            let index = if item.1 == "body" { String::new() } else { format!(" #{}", item.2) };
+            let label = format!("{}: {}{index}", doc.node_name(&item.0), item.1);
+            add(format!("cad:candidate:{n}"), label, CadAction::CadSelect { ids: Vec::new(), items: vec![item.clone()], extend: c.extend, toggle: c.toggle }, Ok(()));
+        }
+    }
+    // Tools (RoboCAD's tool.*): activating one only changes the view; its
+    // commit is refused by name when no edit can be sent.
+    for tool in CadTool::ALL {
+        let label = if tool == doc.tool { format!("{} (active)", tool.label()) } else { tool.label().to_string() };
+        add(format!("cad:tool:{}", tool.name()), label, CadAction::CadTool { tool }, Ok(()));
+    }
+    add("cad:cancel".into(), "Cancel (Escape)".into(), CadAction::CadCancel, Ok(()));
     let gui = doc.health.as_ref().is_some_and(|h| h.gui);
     if let Some(Ok(commands)) = &doc.commands {
         for (id, info) in commands {
@@ -438,14 +467,18 @@ struct Drawn {
     stamp: Option<(u64, u64)>,
 }
 
-/// Present: rebuild the parts whose content changed (see the module doc).
+/// Present: rebuild the parts whose content changed (see the module doc);
+/// also when the sub-body topology changes (`CadTopology::epoch`: the
+/// inspector's face, edge and vertex details).
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn refresh(
     mut commands: Commands,
     doc: Option<Res<CadDocument>>,
+    topology: Option<Res<super::topology::CadTopology>>,
     draft: Res<NameDraft>,
     fonts: Res<UiFonts>,
     mut drawn: Local<Drawn>,
+    mut seen_epoch: Local<Option<u64>>,
     roots: Query<Entity, With<CadRoot>>,
     mut lists: Query<(Entity, &mut CadList)>,
     mut rows: Query<(Entity, &super::tree::TreeRowId, &mut Tint, &mut BorderColor, &AccessibleLabel)>,
@@ -454,19 +487,22 @@ fn refresh(
     let root = roots.iter().next();
     let stamp = doc.as_ref().map(|d| (d.generation, d.revision));
     let added = doc.as_ref().is_some_and(|d| d.is_added());
-    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() {
+    let epoch = topology.as_ref().map(|t| t.epoch);
+    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() && epoch == *seen_epoch {
         return;
     }
     drawn.root = root;
     drawn.stamp = stamp;
+    *seen_epoch = epoch;
     let doc = doc.as_deref();
+    let topology = topology.as_deref();
     if let Some(doc) = doc {
         super::tree::highlight(&mut commands, doc, &mut rows, &mut eyes);
     }
     let k = Kit::new(&fonts);
     for (entity, mut list) in &mut lists {
         let part = list.part;
-        let key = part_key(part, doc, &draft);
+        let key = part_key(part, doc, topology, &draft);
         if list.key.as_ref() == Some(&key) {
             continue;
         }
@@ -484,7 +520,7 @@ fn refresh(
                 Part::Status => status(p, &k, doc),
                 Part::Tree => super::tree::build(p, &k, doc),
                 Part::Name => super::inspector::name(p, &k, doc, &draft),
-                Part::Inspector => super::inspector::inspector(p, &k, doc),
+                Part::Inspector => super::inspector::inspector(p, &k, doc, topology),
                 Part::Physical => super::inspector::physical(p, &k, doc),
                 Part::Attributes => super::inspector::attributes(p, &k, doc),
                 Part::History => super::inspector::history(p, &k, doc),
@@ -495,7 +531,7 @@ fn refresh(
 }
 
 /// What a part shows now, as a comparable text.
-fn part_key(part: Part, doc: Option<&CadDocument>, draft: &NameDraft) -> String {
+fn part_key(part: Part, doc: Option<&CadDocument>, topology: Option<&super::topology::CadTopology>, draft: &NameDraft) -> String {
     let Some(doc) = doc else { return "no document".to_string() };
     match part {
         Part::Top => format!("{:?}", (doc.document_name(), connection_state(&doc.connection), dirty(doc), doc.health.is_some(), top_controls(doc))),
@@ -503,7 +539,7 @@ fn part_key(part: Part, doc: Option<&CadDocument>, draft: &NameDraft) -> String 
         Part::Status => format!("{:?}", (doc.edit_label(), &doc.status)),
         Part::Tree => super::tree::key(doc),
         Part::Name => super::inspector::name_key(doc, draft),
-        Part::Inspector => super::inspector::inspector_key(doc),
+        Part::Inspector => super::inspector::inspector_key(doc, topology),
         Part::Physical => super::inspector::physical_key(doc),
         Part::Attributes => super::inspector::attributes_key(doc),
         Part::History => format!("{:?}", doc.doc.as_ref().map(|d| &d.history)),

@@ -188,6 +188,8 @@ pub struct Documents {
     pub robot: Option<Document>,
     /// The place last walked through.
     pub place: Option<PathBuf>,
+    /// The hardware servers given at launch (`--hardware`, `--motor-bench`), for robot mode's Leg calibration panel.
+    pub hardware: crate::robot::hardware::HardwareConfig,
     /// Inspect's scene (and selection link) while another mode is shown.
     parked_inspect: Option<Box<(SpatialScene, Option<SelectionLink>)>>,
     /// The builder's scene while a mode outside Build/Lessons is shown.
@@ -203,6 +205,7 @@ impl Default for Documents {
             lessons: None,
             robot: None,
             place: None,
+            hardware: Default::default(),
             parked_inspect: None,
             parked_builder: None,
         }

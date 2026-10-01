@@ -95,6 +95,23 @@ struct Args {
     /// relative to the current directory.
     #[arg(long)]
     robot_presets: Option<PathBuf>,
+    /// Robot mode's Leg calibration panel: the running `serve_actuator_calibration`
+    /// (loopback only, e.g. http://127.0.0.1:4194). The panel opens and connects
+    /// (reads status; nothing moves until the operator selects a motor).
+    /// Without it, the panel's Connect uses http://127.0.0.1:4194.
+    #[arg(long, value_name = "URL")]
+    hardware: Option<String>,
+    /// The calibration server's control token in a file (default: read from
+    /// the page the server serves, as the browser receives it).
+    #[arg(long, value_name = "FILE", requires = "hardware")]
+    hardware_token_file: Option<PathBuf>,
+    /// The Leg calibration panel's Real motor sync: the running
+    /// `serve_motor_bench` (loopback only).
+    #[arg(long, value_name = "URL")]
+    motor_bench: Option<String>,
+    /// The motor bench's control token in a file (default: read from its page).
+    #[arg(long, value_name = "FILE", requires = "motor_bench")]
+    motor_bench_token_file: Option<PathBuf>,
     /// Lesson to open first (slug); default: the first in reading order.
     /// Requires lessons mode (--lessons DIR or a lessons FILE).
     #[arg(long)]
@@ -153,6 +170,10 @@ fn documents(args: &Args) -> sim_spatial::app::switch::Documents {
         documents.models = models;
     }
     documents.presets = args.robot_presets.clone();
+    documents.hardware = sim_spatial::robot::hardware::HardwareConfig {
+        calibration: args.hardware.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.hardware_token_file.clone() }),
+        bench: args.motor_bench.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.motor_bench_token_file.clone() }),
+    };
     documents
 }
 

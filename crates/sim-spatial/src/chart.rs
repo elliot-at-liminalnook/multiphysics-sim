@@ -17,8 +17,23 @@ pub(crate) fn blank_image() -> Image {
 }
 
 /// Draw traces of [x, y] points; `last` keeps only that much of x before its
-/// maximum (a time window), `None` the whole x range (an x–y plot).
+/// maximum (a time window), `None` the whole x range (an x–y plot). The y
+/// range is the data's, padded by 8 % of its span on each side.
 pub(crate) fn rasterize_span(traces: &[(&[[f64; 2]], [u8; 3])], last: Option<f64>) -> (Vec<u8>, (f64, f64), (f64, f64)) {
+    raster(traces, last, None, None)
+}
+
+/// Draw traces on fixed axes: x over `x_range` (None: the data's x range, as
+/// [`rasterize_span`] with no window) and y over exactly `y_range` (no
+/// padding; `y_range.0 < y_range.1`). Points outside the axes are clipped at
+/// the frame. With no points at all it is the blank raster (as
+/// [`rasterize_span`]).
+pub(crate) fn rasterize_fixed(traces: &[(&[[f64; 2]], [u8; 3])], x_range: Option<(f64, f64)>, y_range: (f64, f64)) -> (Vec<u8>, (f64, f64), (f64, f64)) {
+    raster(traces, None, x_range, Some(y_range))
+}
+
+/// The one rasterizer: `fixed_x`/`fixed_y` fix an axis (None: from the data; y padded).
+fn raster(traces: &[(&[[f64; 2]], [u8; 3])], last: Option<f64>, fixed_x: Option<(f64, f64)>, fixed_y: Option<(f64, f64)>) -> (Vec<u8>, (f64, f64), (f64, f64)) {
     let (w, h) = (RASTER.0 as i64, RASTER.1 as i64);
     let mut px = vec![0u8; (w * h * 4) as usize];
     let mut put = |x: i64, y: i64, c: [u8; 3], a: f32| {
@@ -43,15 +58,20 @@ pub(crate) fn rasterize_span(traces: &[(&[[f64; 2]], [u8; 3])], last: Option<f64
         }
     }
     let all: Vec<&[f64; 2]> = traces.iter().flat_map(|(p, _)| p.iter()).collect();
-    if all.len() < 2 {
+    // Fixed axes need no second point to span them.
+    let needed = if fixed_x.is_some() && fixed_y.is_some() { 1 } else { 2 };
+    if all.len() < needed {
         return (px, (0., 0.), (0., 0.));
     }
-    let t1 = all.iter().map(|p| p[0]).fold(f64::NEG_INFINITY, f64::max);
-    let t0 = all.iter().map(|p| p[0]).fold(f64::INFINITY, f64::min).max(last.map_or(f64::NEG_INFINITY, |l| t1 - l));
-    let (mut lo, mut hi) = all.iter().filter(|p| p[0] >= t0).fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p[1]), b.max(p[1])));
-    let span = (hi - lo).max(1e-9 * hi.abs().max(lo.abs())).max(1e-12);
-    lo -= 0.08 * span;
-    hi += 0.08 * span;
+    let (t0, t1) = fixed_x.unwrap_or_else(|| {
+        let t1 = all.iter().map(|p| p[0]).fold(f64::NEG_INFINITY, f64::max);
+        (all.iter().map(|p| p[0]).fold(f64::INFINITY, f64::min).max(last.map_or(f64::NEG_INFINITY, |l| t1 - l)), t1)
+    });
+    let (lo, hi) = fixed_y.unwrap_or_else(|| {
+        let (lo, hi) = all.iter().filter(|p| p[0] >= t0).fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p[1]), b.max(p[1])));
+        let span = (hi - lo).max(1e-9 * hi.abs().max(lo.abs())).max(1e-12);
+        (lo - 0.08 * span, hi + 0.08 * span)
+    });
     let to_px = |p: &[f64; 2]| -> (i64, i64) {
         let x = if t1 > t0 { (p[0] - t0) / (t1 - t0) } else { 1. };
         let y = (p[1] - lo) / (hi - lo);
@@ -108,6 +128,24 @@ mod tests {
         assert!((window.1 - 1.99).abs() < 1e-12);
         let red = px.chunks(4).filter(|c| c[0] == 255 && c[1] == 0).count();
         assert!(red > RASTER.0 as usize, "trace drawn ({red} pixels)");
+    }
+
+    /// Fixed axes are used as given (no padding, no invisible points): the
+    /// zero line sits mid-frame for a symmetric range, a trace covering part
+    /// of the x range stays in that part, and one point is enough to draw.
+    #[test]
+    fn fixed_axes_are_used_as_given() {
+        let points = [[0.0, 0.0], [0.5, 1.0]];
+        let (px, range, window) = rasterize_fixed(&[(&points, [255, 0, 0])], Some((0.0, 1.0)), (-2.0, 2.0));
+        assert_eq!((range, window), ((-2.0, 2.0), (0.0, 1.0)));
+        let red_x: Vec<usize> = px.chunks(4).enumerate().filter(|(_, c)| c[0] == 255 && c[1] == 0).map(|(i, _)| i % RASTER.0 as usize).collect();
+        assert!(!red_x.is_empty() && red_x.iter().all(|&x| x <= RASTER.0 as usize / 2 + 3), "the trace ends at mid-width");
+        let mid = (RASTER.1 as usize - 1) / 2;
+        let at = |x: usize, y: usize| px[(y * RASTER.0 as usize + x) * 4..][..3].to_vec();
+        assert_eq!(at(RASTER.0 as usize - 1, mid + 1), vec![90u8, 100, 112], "the zero line is mid-frame");
+        let (one, _, _) = rasterize_fixed(&[(&points[..1], [255, 0, 0])], Some((0.0, 1.0)), (-2.0, 2.0));
+        assert!(one.chunks(4).any(|c| c[0] == 255 && c[1] == 0), "a single point is marked");
+        assert_eq!(rasterize_fixed(&[], Some((0.0, 1.0)), (-2.0, 2.0)).0, rasterize_span(&[], None).0, "no points: the blank raster");
     }
 
     /// The builder's graph dock used to call its own `graphs::rasterize`,

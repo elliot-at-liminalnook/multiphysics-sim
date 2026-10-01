@@ -201,6 +201,10 @@ pub struct RobotView {
     notice: Option<String>,
     /// `--robot FILE`: the read-only `.simresult.json` stress overlay (`robot_stress`).
     stress: StressOverlay,
+    /// The Leg calibration panel's mirror (`hardware::mirror`): while set, its
+    /// poses are drawn instead of the run's frame and its leg is tinted blue;
+    /// Run is refused (the page's `setPlaying` refuses to play while mirroring).
+    mirror: Option<hardware::MirrorDisplay>,
 }
 impl RobotView {
     /// Starts the worker load; the window opens without waiting for it.
@@ -308,6 +312,7 @@ impl RobotView {
             source: None,
             notice: None,
             stress: StressOverlay::default(),
+            mirror: None,
         }
     }
     fn link_name(&self, i: usize) -> Option<&str> {
@@ -424,6 +429,7 @@ impl Section {
 }
 
 mod actions;
+pub mod hardware;
 pub(crate) use actions::RobotAction;
 use actions::{check, check_stress, overlay_toggle};
 /// The overlays: (system_ui id suffix, label, key). H (hotspots) for stress: S is the WASD jog key.
@@ -586,6 +592,8 @@ struct Materials {
     /// White bases for per-vertex stress colours (selection keeps its emissive tint).
     stress: Handle<StandardMaterial>,
     stress_selected: Handle<StandardMaterial>,
+    /// The leg mirror's links (the page's blue emissive 0x1d4a7a on the mirrored leg).
+    mirrored: Handle<StandardMaterial>,
 }
 /// `Materials::normal`'s base colour: the vertex colour of a link without hotspot cells while stress is shown.
 const LINK_COLOUR: Color = Color::srgb(0.62, 0.68, 0.76);
@@ -599,6 +607,7 @@ pub struct RobotPlugin;
 impl Plugin for RobotPlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<RobotAction>(app);
+        hardware::build(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
             .add_systems(OnEnter(ModeScope::Robot), setup)
             .add_systems(OnExit(ModeScope::Robot), |mut commands: Commands| {
@@ -625,6 +634,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
         selected: materials.add(StandardMaterial { base_color: Color::srgb(0.98, 0.62, 0.22), emissive: LinearRgba::rgb(0.35, 0.16, 0.02), perceptual_roughness: 0.6, cull_mode: None, ..default() }),
         stress: materials.add(StandardMaterial { base_color: Color::WHITE, perceptual_roughness: 0.7, metallic: 0.05, cull_mode: None, ..default() }),
         stress_selected: materials.add(StandardMaterial { base_color: Color::WHITE, emissive: LinearRgba::rgb(0.35, 0.16, 0.02), perceptual_roughness: 0.6, cull_mode: None, ..default() }),
+        mirrored: materials.add(StandardMaterial { base_color: LINK_COLOUR, emissive: Color::srgb_u8(0x1d, 0x4a, 0x7a).into(), perceptual_roughness: 0.7, metallic: 0.05, cull_mode: None, ..default() }),
     });
     commands.spawn((
         Camera3d::default(),
@@ -666,6 +676,10 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>
     let graphs = commands.spawn(k.button("Graphs (G)", RobotAction::ToggleGraphs, Look::Secondary, true)).id();
     commands.entity(graphs).entry::<Node>().and_modify(|mut node| node.margin = UiRect::left(Val::Px(8.0)));
     row.push(graphs);
+    // The Leg calibration panel (robot::hardware): the page's header toggle.
+    let hardware = commands.spawn(k.button("Leg calibration", hardware::HardwareAction::TogglePanel, Look::Secondary, true)).id();
+    commands.entity(hardware).entry::<Node>().and_modify(|mut node| node.margin = UiRect::left(Val::Px(8.0)));
+    row.push(hardware);
     let buttons = commands.spawn(Node { flex_direction: FlexDirection::Row, align_items: AlignItems::Center, column_gap: Val::Px(4.0), ..default() }).add_children(&row).id();
     let run_text = commands.spawn((k.caption(""), RunText)).id();
     // Over the header dock: sibling roots are stacked in query order, not spawn order.
@@ -933,8 +947,11 @@ fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut T
         return;
     }
     view.pose_dirty = false;
-    // A loaded gait preview's pose, else the run's latest accepted frame.
-    let poses = view.run.as_ref().and_then(|r| r.display_poses());
+    // The leg mirror's pose, else a loaded gait preview's, else the run's latest accepted frame.
+    let poses = match view.mirror.as_ref() {
+        Some(m) => Some(m.poses.as_slice()),
+        None => view.run.as_ref().and_then(|r| r.display_poses()),
+    };
     let Some(model) = view.model.as_ref() else { return };
     for (link, mut transform) in &mut links {
         let (p, q) = match poses.and_then(|f| f.get(link.0)).and_then(|p| p.as_ref()) {
@@ -1019,8 +1036,10 @@ fn highlight(
         look.set_if_neq(Look::Tab(view.section == tab.0));
     }
     for (link, mut material) in &mut meshes {
+        let mirrored = view.mirror.as_ref().is_some_and(|m| m.tinted.contains(&link.0));
         let want = match (view.selected == Some(link.0), view.stress.painting()) {
             (true, false) => &materials.selected,
+            (false, _) if mirrored => &materials.mirrored,
             (false, false) => &materials.normal,
             (true, true) => &materials.stress_selected,
             (false, true) => &materials.stress,
@@ -1043,11 +1062,19 @@ fn enable(mut flag: Mut<Enabled>, on: bool) {
 
 /// Wheel over the inspector, or a requested offset (reset on selection and
 /// section changes); reports the laid-out offset and its maximum back to REST.
-fn scroll(mut view: ResMut<RobotView>, mut wheel: MessageReader<MouseWheel>, window: Single<&Window>, panel: Single<(&mut ScrollPosition, &ComputedNode), With<InspectorScroll>>) {
+/// While the Leg calibration panel covers the inspector, the wheel is the panel's (`hardware::panel`).
+fn scroll(
+    mut view: ResMut<RobotView>,
+    mut wheel: MessageReader<MouseWheel>,
+    window: Single<&Window>,
+    panel: Single<(&mut ScrollPosition, &ComputedNode), With<InspectorScroll>>,
+    hardware: Option<Res<hardware::Hardware>>,
+) {
     let (mut position, node) = panel.into_inner();
     let delta = wheel_delta(&mut wheel, 24.0);
     let max = ((node.content_size().y - node.size().y) * node.inverse_scale_factor()).max(0.0);
-    if delta != 0.0 && window.cursor_position().is_some_and(|p| p.x >= window.width() - RIGHT && p.y > TOP) {
+    let covered = hardware.is_some_and(|h| h.open);
+    if delta != 0.0 && !covered && window.cursor_position().is_some_and(|p| p.x >= window.width() - RIGHT && p.y > TOP) {
         view.scroll_to = Some((position.y - delta).clamp(0.0, max));
     }
     if let Some(y) = view.scroll_to.take() {

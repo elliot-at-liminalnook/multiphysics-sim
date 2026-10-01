@@ -61,10 +61,10 @@ pub const GRAPHS: &str = "planar v2 file: graphs are not available (robot_graphs
 pub const STRESS: &str = "planar v2 file: the stress overlay is not available (stress needs a v3 physical export: `sim-cad run` writes a .simresult.json only for v3 files)";
 /// Why the hardware mirror cannot pose a planar file (for `robot::hardware::mirror::scene_of`).
 pub const NO_MIRROR: &str = "planar v2 file: the leg mirror is not available (it poses a robot preset's scene; a planar v2 summary has no scene or PhysicalModel)";
-/// `robot_state.unavailable` for a planar file.
 /// Live motor sync (hardware panel) streams a live controller's named motor targets; a planar v2 run has none.
 pub const LIVE_SYNC: &str = "planar v2 file: live motor sync is not available (it streams a live walking controller's named motor targets; the planar v2 build holds joint targets with its own PD and names no motors)";
 
+/// `robot_state.unavailable` for a planar file.
 pub const UNAVAILABLE: [(&str, &str); 11] = [
     ("motion", MOTION),
     ("save_recording", SAVE_RECORDING),

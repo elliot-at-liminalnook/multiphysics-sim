@@ -243,8 +243,7 @@ impl Learn {
     }
 }
 
-/// Record a scene from its sandbox (the learner's copy), cached by hash.
-/// Record a scene from its sandbox, with `extra` parameter values on top
+/// Record a scene from its sandbox (the learner's copy), with `extra` parameter values on top
 /// (the reader's sliders, or a companion run's `set`).
 fn record(lesson: &Lesson, scene: &Scene, extra: &BTreeMap<String, f64>, registry: &sim_core::BehaviorRegistry, ctx: &crate::jobs::Ctx<Stage>) -> Result<SceneRun, String> {
     let sb = runtime::sandbox(lesson, scene, registry, false)?;

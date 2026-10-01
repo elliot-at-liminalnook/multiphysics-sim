@@ -116,7 +116,6 @@ pub(super) fn references_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Build
     }
 }
 
-/// Saved studies, the running one, and the latest result's trade-off table.
 /// Open another system file in this window: a path field and the system
 /// files found under examples/systems-builder, the library and this file's folder.
 pub(super) fn systems_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
@@ -282,6 +281,7 @@ fn registry_view(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     }
 }
 
+/// Saved studies, the running one, and the latest result's trade-off table.
 pub(super) fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
     body.spawn(k.caption("Run the same system several ways: compare alternatives for a part, or sweep one parameter. Studies are saved in the system file and rerun identically."));
     body.spawn(k.text("Start one from a part's inspector: Compare alternatives, or Sweep under Parameters.", size::DETAIL, FAINT, 0));

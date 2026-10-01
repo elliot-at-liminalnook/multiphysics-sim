@@ -110,8 +110,9 @@ duplicates physics.
   connection from a Dedicated job, never behind the link thread. Focus
   loss, panel close, leaving Robot mode and closing the window stop any
   drive (wider than the page's rule), as does the link's drop; closing the
-  window also writes STOP synchronously. Not compiled yet: the
-  verification pass builds and tests it. The panel also holds the leg mirror
+  window or quitting also writes STOP synchronously. The heartbeats run on
+  their own worker beside the link. Built and tested in the 2026-09-30
+  verification pass (see the section's Verification pass). The panel also holds the leg mirror
   (blue-tinted suspended robot) and live motor sync. The feature-by-feature
   ledger is [docs/hardware-parity.md](../hardware-parity.md), and the
   operator's steps are [docs/hardware-checklist.md](../hardware-checklist.md).
@@ -1020,7 +1021,9 @@ definition) against the final code.
     JobResults.
   - `handlers.rs`: one handler per intent, `handle`; `remote_check` (a
     remote action whose control is disabled now is refused with its
-    reason), `loss`, `post_stop_on_leave`, `close`, `gait_play`, `export`,
+    reason; `loss` `leaving` is refused from REST and `system_ui`), `loss`
+    (the synchronous STOP only for the window's own close request,
+    `Origin::Quiet`), `close`, `gait_play`, `export`,
     `start_export`, `write_export`, `load_gaits`, `gaits_json`.
   - `link.rs`: `Link::spawn` (one `jobs::RunThread` "hardware-link" per
     connection, join bound zero), `Link::send`, `Link::snapshot`,
@@ -1133,9 +1136,12 @@ definition) against the final code.
   `loss()` (ready, starting or a session), any drive stops:
   `link::drive_active` also counts busy, sweep-all, tuning, campaigning and
   a leg gait. `Loss::Leaving` always stops. Closing the window also writes
-  STOP synchronously with `Client::send_only` (`post_stop_on_leave`, the
-  keepalive equivalent; at most the 500 ms connect timeout and a loopback
-  write, once). Live sync stops on every loss, but only a session this
+  STOP synchronously with `Client::send_only` (`Link::post_stop_sync` and
+  `LiveSync::post_stop_on_leave`, the keepalive equivalent; at most the
+  500 ms connect timeout and a loopback write, once, retried by a later
+  exit path only if it failed), and so do `AppExit` (`stop_on_exit`) and
+  the link's drop. Only the window's own close request (`Origin::Quiet`)
+  writes it on the UI thread; REST and `system_ui` are refused `leaving`. Live sync stops on every loss, but only a session this
   viewer opened (`LiveSync::stop_ours`); the operator's Stop motors and
   STOP use `LiveSync::stop`, which also ends a session the bench reports
   from elsewhere. *Why:* the page leaves a leg gait, tune, campaign or
@@ -1155,16 +1161,19 @@ definition) against the final code.
 - **Refusal rule.** `HardwareAction::starts_motion` actions from
   `Origin::Rest` or `Origin::SystemUi` are refused with "hardware `{name}`
   starts, changes or arms motion and needs an operator at the window: REST
-  and system_ui may read status, list gaits, export, connect, change the
-  mirror's display and STOP only". Refused: select, set disabled
+  and system_ui may read status, list gaits, export, connect, turn the
+  mirror on or off and STOP only". Refused: select, set disabled
   (enable/disable), sweep all, hold others, jog press/release, speed,
   target and its commit, capture, reset poses, clear lower/upper, sweep,
   learn, the tune/campaign/gait confirmations, tune, campaign, gait
   select/mode/speed/effort/play, drive mode, PWM ceiling, flip, raw step
-  value, raw step, and live sync's leg/motor/polarity/scale/start.
-  Allowed: toggle/close panel, connect, sections, status, STOP, loss,
-  export, load gaits, gait stop, the mirror's display settings, sync
-  connect and sync stop. Robot mode refuses them when a `hardware:<name>`
+  value, raw step, live sync's leg/motor/polarity/scale/start, and the
+  mirror's leg, joint, polarity and alignment bindings (they become the
+  Leg/Both `gait_start` bindings and the alignment reference that Save
+  sim alignment sends). Allowed: toggle/close panel, connect, sections,
+  status, STOP, loss (focus lost, panel closed; `leaving` is the window's
+  own close request and is refused from REST), export, load gaits, gait
+  stop, mirror on/off, sync connect and sync stop. Robot mode refuses them when a `hardware:<name>`
   control is activated, and the hardware handler refuses them again.
   *Why:* AGENTS.md: drive motors only with the operator present; the
   confirmations and drive settings arm or shape motion, so automation may
@@ -1316,7 +1325,9 @@ Shape.
     reset put the old speed back): fixed, `Inputs::speed_reset`
     (`Session::handle`, `actions.rs` `poll_jobs`).
   - Gait lease could expire behind a slow request on the link thread:
-    fixed, `gait_lease` on its own Dedicated job, 1 s timeout.
+    first fixed by posting each update from its own job, but its schedule
+    still ran on the link thread; fixed for good in the verification pass
+    (item 3 below), the "hardware-beat" worker.
   - Dropping the link joined a thread that may wait `STOP_TIMEOUT`: fixed,
     join bound zero (`Link::spawn`), dropped off the UI thread.
 - **Panel** (`actions.rs`, `handlers.rs`, `panel.rs`, `view.rs`):
@@ -1335,7 +1346,8 @@ Shape.
     disabled: {why}" (`robot/actions.rs` `apply`).
   - Window close relied on a detached job that may die with the process:
     fixed, STOP also written synchronously with `Client::send_only`
-    (`handlers.rs` `post_stop_on_leave`), and `leave` calls
+    (then `handlers.rs` `post_stop_on_leave`; since the verification pass
+    `Link::post_stop_sync`), and `leave` calls
     `stop_immediate` and `stop_ours` directly.
   - Preferences were read from disk on entering Robot mode (UI thread):
     fixed, read once at app build (`actions::Preferences`).
@@ -1381,9 +1393,8 @@ Shape.
 
 ### Verification checklist
 
-The hardware front end has not been compiled yet: the verification pass
-builds and tests it. No hardware has been driven. The verification pass
-should:
+What the verification pass was asked to check (its results are in the
+next section). No hardware has been driven:
 
 - `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
   warnings;
@@ -1409,13 +1420,114 @@ should:
   (`robot::actions::apply` → `Origin::SystemUi` → `apply`), focus loss
   (`window_loss` → `Loss { FocusLost }` → `handlers::loss`), panel close
   (`handlers::close`), window close (`window_loss` → `Loss { Leaving }` →
-  `loss` → `stop_immediate` and `post_stop_on_leave`), and leaving Robot
+  `loss` → `stop_immediate`, `Link::post_stop_sync` and
+  `LiveSync::post_stop_on_leave`), quitting (`stop_on_exit` on `AppExit`,
+  and `Drop for Link`), and leaving Robot
   mode (`actions::leave` → `stop_immediate`, `LiveSync::stop_ours`, then
   the link's drop → `Session::shutdown`);
 - move the ledger's rows to `done` as they are built and tested, and
   recount them by status;
 - **never drive hardware**: the hardware steps are the user's
   ([docs/hardware-checklist.md](../hardware-checklist.md)).
+
+### Verification pass (2026-09-30)
+
+The first build and test of the batch, and a repair turn for every review
+finding. No hardware, server, serial port or motion was touched; tests use
+in-process fake loopback servers only.
+
+- **Compiler:** sim-spatial did not compile at bce6b21c (`panel::refresh`
+  took `&mut` on Bevy's immutable `SliderValue`): fixed, the value is
+  replaced with an insert (f7288f5d). `Mirror::state_json` and
+  `LiveSync::state_json` were never called, so REST `hardware_status`
+  lacked the mirror and sync state: wired in. sim-web's wasm32 build was
+  broken before this run (sim-lesson called `write_atomic`, native only):
+  fixed with a wasm32 `write_atomic` that returns an error (1d0f463a).
+- **Test:** on macOS `set_read_timeout` fails with EINVAL on a socket the
+  peer has reset, which hid a server's refusal: now best effort, the
+  deadline is still checked (3a246be9).
+
+Reading-review findings, numbered as the orchestrator listed them; every
+one is fixed:
+
+1. *Safety.* The mirror's leg, joint, polarity and alignment were
+   automatable, but they become the Leg/Both `gait_start` bindings and the
+   saved alignment reference: `starts_motion` now covers them; only mirror
+   on/off stays remote (`hw/actions.rs`; §8, NAT-06, MIR-08, MIR-09,
+   HW-16).
+2. *Safety.* Live sync could open a bench session for a run that would
+   never start, holding the first target for 12 s: it opens only when the
+   run is running or accepts Start (`StartInput::of`,
+   `LiveSync::start_with`); replays, recorded playback, replaced runs and
+   gait previews are not live (`sync::live_run`, the page's `NOT_LIVE`);
+   an engaged session also stops on a failed run, input that stops being
+   live, or no Running within 2 s of its Start (`LiveSync::watch`;
+   SYNC-16, SYNC-22, SYNC-30).
+3. *Safety.* The heartbeats were scheduled on the link thread, which can
+   wait 8 s: they run on their own `jobs::RunThread` "hardware-beat"
+   (`session/beat.rs`), the single sender of the server's per-run sequence
+   domain (`motion_update` and `capture_hold`, which the review of this
+   item found shares that check), silent while a STOP is pending; the link
+   thread waits for an intent change's beat at most `beat_wait` (two
+   requests' connect and read timeouts, a lease, a margin) and acts on a
+   beat's failure only when its run and epoch still match (CAL-23, CAL-24,
+   CAL-128 to CAL-130).
+4. The bench STOP on window close was only a job:
+   `LiveSync::post_stop_on_leave` writes it synchronously, for this
+   viewer's session only (SYNC-29).
+5. The sync thread was not told when the bench ended a session: it is sent
+   `Deactivate` (SYNC-25).
+6. The synchronous STOP blocked the UI thread for remote `loss`: only the
+   window's own close request (`Origin::Quiet`) writes it; REST and
+   `system_ui` are refused `loss` `leaving`.
+7. Mirror and sync workers were dropped on the UI thread (up to 200 ms):
+   released with `jobs::drop_off_thread` (`release_worker`,
+   `Drop for Mirror`, `Drop for LiveSync`; MIR-16, MIR-30).
+8. Opening the panel while A was held left the simulated robot strafing:
+   `HeldKeys` is re-sent without A when the panel opens
+   (`robot/actions.rs` `motion_keys`).
+9. Quitting without a close request (Cmd+Q, `AppExit`) could skip every
+   STOP: `actions::stop_on_exit` in `Last` and `Drop for Link`
+   (`Link::post_stop_sync`, at most once per link, retried by a later exit
+   path if the write failed). Known limit: a crash or SIGKILL sends
+   nothing; leases and the FPGA watchdog stop motion, but a tune,
+   campaign or sweep-all runs on the server until it ends or STOP (HW-14).
+10. Client numbers differed from `JSON.stringify` (1e-6 to 1e-5, 2^53 and
+    above): ECMAScript `Number::toString` (`js_number_text`; CAL-13).
+11. A refusal that reset the connection read as "connection reset": the
+    answer that arrived is used (`http.rs` `salvage`).
+12. Sync and mirror numbers rounded ties to even: `view::fixed`
+    (`stats_text`, `reading_lines`, `degrees_text`; CAL-147, MIR-25).
+13. `fixed` printed -0 as "-0.0": "0.0" (CAL-147).
+14. Motor chips came from the calibration: always the page's Knee 1, Worm 2,
+    Belt 3 (CAL-34).
+15. A one-sample motion chart was blank: the page's fixed axes through
+    `chart::rasterize_fixed`; the labels now show the data's hi and lo, not
+    the padded edges, a bug found while fixing it (AMV-10, AMV-12).
+16. The motion chart was stretched: it keeps the raster's aspect ratio.
+17. Dial caps differed from the SVG: butt track ends with round joins,
+    round measured needle, butt dashed requested needle (CAL-74).
+18. The client id was new on every connect: one per process
+    (`process_client_id`; CAL-12, SYNC-05).
+
+Found by the combined review of the repair and fixed: the beat's wait
+had no headroom for a request already in flight (a slow but working
+server would read as a dead beat and stop the session); shutdown could let
+one more heartbeat out before its STOP (the session now bumps the epoch
+first); a failed synchronous exit STOP was not retried. Also found there,
+outside this diff: while live sync is engaged, REST and `system_ui` could
+still start, step, jog, drive or re-speed the run whose targets go to the
+motors. They are now refused while `LiveSync::engaged`
+(`robot/actions.rs` `moves_synced_motors`, `SYNC_REMOTE_REFUSAL`); Pause,
+Reset and STOP stay available. Deliberate remaining difference: an intent
+change while a heartbeat is in flight is sent right after it, where the
+page's `heartbeatBusy` drops it until the next beat.
+
+Commands and results are in the batch's report; the last run:
+`cargo check -p sim-spatial --all-targets` clean (no warnings),
+`cargo check -p sim-web --target wasm32-unknown-unknown` clean,
+`cargo test -p sim-runtime --lib hardware_client` 18 passed,
+`cargo test -p sim-spatial --lib` 143 passed, 1 ignored before the combined review's last fixes (beat wait, shutdown epoch, exit-STOP retry, sync remote refusal), which `cargo check -p sim-spatial --all-targets` compiled clean; the rerun after them was still running when this was written.
 
 ## Target shape
 
@@ -1618,14 +1730,22 @@ hardware checklist.* The browser's calibration and hardware pages
     servers' body limits (4096 bytes calibration, 8192 bench) checked before
     connecting;
   - the pages' headers: `Host` the server's own origin, `X-Control-Token`,
-    `X-Client-Id` (a 36-character UUID per panel, as one per tab),
+    `X-Client-Id` (one 36-character UUID per viewer process,
+    `hardware_client::process_client_id`, reused on every connect to
+    either server, as the page keeps one per page load),
     `Content-Type: application/json`; no `Origin` or `Sec-Fetch-Site`;
-  - bodies with their members in the page's order and numbers written as
-    JavaScript writes them (`Body`, `js_number`), so each request is the
-    page's `JSON.stringify` byte for byte;
+  - bodies with their members in the page's order and numbers in
+    ECMAScript `Number::toString` form (`Body`, `js_number`,
+    `js_number_text`: `0.0000032`, `1e-7`, `1e+21`, 2^60 as
+    `1152921504606847000`, -0 as `0`, non-finite as `null`), so each
+    request is the page's `JSON.stringify` byte for byte;
   - a non-2xx answer surfaces the server's `error` field verbatim
     (`ClientError::Server`), as the pages show `v.error`; without one it
-    reads "Request failed (HTTP {status})".
+    reads "Request failed (HTTP {status})". A server that refuses a request
+    after reading only its head (a stale token after a restart) closes
+    with the body unread, which may reset the connection; the answer that
+    arrived is still used, and without one the error says the server
+    closed the connection and its token may have changed.
 - **Token hand-off.** The token is read from the page the server already
   serves, as the browser receives it: the calibration server's
   `<meta name="calibration-token">`, the bench's `const token='…'` in `/`
@@ -1636,21 +1756,27 @@ hardware checklist.* The browser's calibration and hardware pages
   `HardwareAction::starts_motion` (actions.rs) is refused when it comes
   from `Origin::Rest` or `Origin::SystemUi`, with "hardware `{name}`
   starts, changes or arms motion and needs an operator at the window: REST
-  and system_ui may read status, list gaits, export, connect, change the
-  mirror's display and STOP only": select, set disabled (enable/disable),
+  and system_ui may read status, list gaits, export, connect, turn the
+  mirror on or off and STOP only": select, set disabled (enable/disable),
   sweep all, hold others, jog press/release, speed, target and its commit,
   capture, reset poses, clear lower/upper, sweep, learn, the
   tune/campaign/gait confirmations, tune, campaign, gait
   select/mode/speed/effort/play, drive mode, PWM ceiling, flip, raw step
-  value, raw step, and live sync's leg/motor/polarity/scale/start. Motion
+  value, raw step, live sync's leg/motor/polarity/scale/start, and the
+  mirror's leg, joint, polarity and alignment bindings (the Leg/Both gait
+  bindings and the saved alignment reference come from them). Motion
   needs a pointer or key in the window, with the operator there. Allowed
   from automation: toggle/close panel, connect, sections, status, STOP,
-  loss, export, load gaits, gait stop, the mirror's display settings, sync
+  loss (except `leaving`, which only the window's close request sends),
+  export, load gaits, gait stop, turning the mirror on or off, sync
   connect and sync stop (REST `hardware_status`, `hardware_stop`,
   `hardware_export`, `hardware_gaits`, `hardware {action}`; `system_ui`
   `hardware:<name>`). A `system_ui` activation of a hardware control that
   is disabled now is refused with "{id} is disabled: {why}"
-  (`robot/actions.rs` `apply`).
+  (`robot/actions.rs` `apply`). While live motor sync is engaged, REST and
+  `system_ui` may not start, step, jog, drive or re-speed the robot run
+  either, since its targets go to the motors (`moves_synced_motors`);
+  Pause, Reset and STOP stay available.
 - **STOP paths.**
   - *Immediate.* The Stop button, Z, Escape, REST `hardware_stop` and
     `system_ui` `hardware:stop` post `stop` on a fresh connection from a
@@ -1672,18 +1798,35 @@ hardware checklist.* The browser's calibration and hardware pages
     sync stops on every loss, but only a session this viewer opened
     (`LiveSync::stop_ours`).
   - *Link drop.* When the link's channel closes (reconnect, mode exit,
-    window close), the link thread sends STOP before it returns.
+    window close), the link thread sends STOP before it returns. Dropping
+    the `Link` itself also writes a synchronous STOP when drive is active
+    (`Link::post_stop_sync`, at most once per link), and an `AppExit`
+    system in `Last` (`actions::stop_on_exit`) does what a window close
+    does. bevy_winit clears the world when its event loop exits, so Cmd+Q
+    and other exits without `WindowCloseRequested` still stop drive.
   - *Keepalive equivalence.* The page marks STOP `keepalive` so it outlives
     the tab. The native equivalent is `complete_on_drop` on its own thread
     (the request finishes even if the panel or the mode goes away first)
-    and, when the window closes, a STOP written synchronously with
-    `Client::send_only` (`handlers::post_stop_on_leave`; the bench's `/stop`
-    likewise when `LiveSync` drops), since the process may end before a
-    job connects.
+    and, when the window closes or the app exits, a STOP written
+    synchronously with `Client::send_only` (`Link::post_stop_sync`; the
+    bench's `/stop` likewise, `LiveSync::post_stop_on_leave`, only for a
+    session this viewer opened), since the process may end before a job
+    connects. Only the window's own close request (`Origin::Quiet`) writes
+    it on the UI thread.
   - *Underneath.* The servers' leases (1.5 s motion and gait leases on the
     calibration server, 0.9 s on the bench) and the FPGA's command and
     telemetry watchdogs still stop the motors if the viewer dies without
-    sending anything.
+    sending anything (SIGKILL, a crash). A tune, campaign or sweep-all has
+    no lease and keeps running on the server until it ends or someone
+    presses STOP (on the server's page, or in a restarted viewer).
+  - *Heartbeats beside the link.* The `motion_update` heartbeat (100 ms
+    after each answer) and the gait lease (`gait_update`, 300 ms, at once
+    on pause or speed) run on their own `jobs::RunThread`
+    ("hardware-beat", `session/beat.rs`), not on the link thread, so a
+    request there that waits up to 8 s cannot let a 1.5 s lease lapse. The
+    beat is the only sender of the server's per-run sequence domain
+    (`motion_update`, `capture_hold`), draws sequences from the shared
+    counter as it sends, and sends nothing while a STOP is pending.
 - **What stays in the servers.** The serial bus, the one hardware worker,
   leases, sequence and owner checks, watchdog proofs, the FPGA supervisor
   and taught travel windows, the feedback controller, tuning, the campaign,

@@ -8,6 +8,12 @@ pub mod gait_playback;
 /// Loopback HTTP client of the hardware servers (native only: std::net).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod hardware_client;
+/// One-request HTTP/1.1 transport to loopback servers (native only: std::net).
+#[cfg(not(target_arch = "wasm32"))]
+pub mod loopback_http;
+/// Typed client of RoboCAD's loopback REST API and its service lifecycle helpers (native only).
+#[cfg(not(target_arch = "wasm32"))]
+pub mod cad_client;
 pub mod contact_audit;
 pub mod contact_planning;
 pub mod contact_reference;

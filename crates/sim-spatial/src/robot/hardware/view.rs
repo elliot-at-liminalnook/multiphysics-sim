@@ -180,7 +180,7 @@ pub const STATS_HEADER: [&str; 11] = ["Motor", "RMS error", "Peak", "Sim RMS", "
 /// "Recent leg runs" when there are none.
 pub const NO_RUNS: &str = "No leg runs yet.";
 
-/// The page's motor chips when the calibration names no axes.
+/// The page's motor chips (:13), always these three.
 const DEFAULT_MOTORS: [(u8, &str); 3] = [(1, "Knee"), (2, "Worm"), (3, "Belt")];
 
 // ---- the page's helpers ----
@@ -193,7 +193,8 @@ const DEFAULT_MOTORS: [(u8, &str); 3] = [(1, "Knee"), (2, "Worm"), (3, "Belt")];
 /// product was computed without rounding (the fused `mul_add` residual is
 /// 0). A product that merely rounds to .5 (1.45 is 1.4499999999999999556
 /// in binary, ×10 rounds to 14.5) is not a tie and goes to `format!`,
-/// which gives "1.4" as the page does. Non-finite values print as JS does.
+/// which gives "1.4" as the page does. Non-finite values and negative
+/// zero print as JS does.
 pub fn fixed(x: f64, d: usize) -> String {
     if x.is_nan() {
         return "NaN".into();
@@ -201,6 +202,10 @@ pub fn fixed(x: f64, d: usize) -> String {
     if x.is_infinite() {
         return if x > 0.0 { "Infinity".into() } else { "-Infinity".into() };
     }
+    // JavaScript prints negative zero without its sign ((-0).toFixed(1) is
+    // "0.0") but keeps the sign of a negative value that rounds to zero
+    // ((-0.04).toFixed(1) is "-0.0"), as Rust does.
+    let x = if x == 0.0 { 0.0 } else { x };
     let scale = 10f64.powi(d as i32);
     let scaled = x.abs() * scale;
     let exact = x.abs().mul_add(scale, -scaled) == 0.0;
@@ -365,18 +370,16 @@ pub fn gait_option_label(g: &GaitEntry) -> String {
     }
 }
 
-/// A chip's label and the page's default roles (Knee 1, Worm 2, Belt 3).
+/// The page's three fixed motor chips (Knee 1, Worm 2, Belt 3, :13): the
+/// labels never follow the calibration's roles or axis ids; only the
+/// `.off` state is looked up from `state.calibration.axes[id].disabled`
+/// (:84).
 fn chips(s: &LinkSnapshot) -> Vec<Chip> {
-    let axes = s.state.calibration.as_ref().map(|c| &c.axes).filter(|a| !a.is_empty());
-    let ids: Vec<u8> = match axes {
-        Some(axes) => axes.keys().copied().collect(),
-        None => DEFAULT_MOTORS.iter().map(|(id, _)| *id).collect(),
-    };
-    ids.into_iter()
-        .map(|id| {
-            let a = axes.and_then(|axes| axes.get(&id));
-            let role = a.map(|a| a.role.as_str()).filter(|r| !r.is_empty()).or_else(|| DEFAULT_MOTORS.iter().find(|(i, _)| *i == id).map(|(_, r)| *r)).unwrap_or("Motor");
-            let off = a.is_some_and(|a| a.disabled);
+    let axes = s.state.calibration.as_ref().map(|c| &c.axes);
+    DEFAULT_MOTORS
+        .iter()
+        .map(|&(id, role)| {
+            let off = axes.and_then(|axes| axes.get(&id)).is_some_and(|a| a.disabled);
             Chip { id, label: format!("{}{role} {id}", if off { "⊘ " } else { "" }), pressed: s.id == Some(id), enabled: !s.busy, off }
         })
         .collect()

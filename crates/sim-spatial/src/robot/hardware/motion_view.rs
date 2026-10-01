@@ -2,19 +2,28 @@
 //! read-only comparison of the requested and measured encoder motion, as
 //! pure functions ([`comparison`] is `motionComparison`, [`update`] is
 //! `ActuatorMotionView.update`). The panel draws [`MotionView::chart`] with
-//! `chart::rasterize_span` (an x–y plot over elapsed ms).
+//! `chart::rasterize_fixed` over [`MotionChart::x_range`] and
+//! [`MotionChart::y_range`] (an x–y plot over elapsed ms).
 //!
 //! The page calls `update({id, axis, telemetry, sweep})` (:120) with no
 //! `jog` or `preview`, so its per-motor receipts are never set: a record
 //! exists only for a continuous session of the selected motor. That is kept.
 //!
-//! Differences in drawing only: the plot's vertical range is the traces'
-//! own (with the raster's margin), not widened to include 0 and the last
-//! request. Samples without a requested target are left out of the
-//! requested trace, deliberately: the page maps every sample
-//! (`y(p.target_raw-origin)`), so a `null` target (`null-origin` = −origin)
-//! draws a false point at minus the start position, and a missing key
-//! (`undefined-origin` = NaN) writes NaN coordinates.
+//! The axes are the page's (:29-31): x over `begin..end` (at least 1 ms,
+//! so one sample or two at the same time stamp still have a width), y over
+//! `lo − margin .. lo + span + margin` where `lo`/`hi` span 0, the last
+//! request and every measured and requested value, `span = max(1, hi − lo)`
+//! and `margin = 0.15·span`; the labels are `lo`/`hi` to one decimal. A
+//! single sample therefore draws and labels as the page does.
+//!
+//! Differences in drawing only: samples without a requested target are
+//! left out of the requested trace and out of the y range, deliberately:
+//! the page maps every sample (`y(p.target_raw-origin)`), so a `null`
+//! target (`null-origin` = −origin) draws a false point at minus the start
+//! position, and a missing key (`undefined-origin` = NaN) writes NaN
+//! coordinates; a `null` last request makes the page's `Math.min` NaN.
+//! The measured points are marked only while there are few of them (the
+//! shared raster's rule; the page marks each one).
 use super::view::{fixed, js_num};
 use serde::Serialize;
 use sim_runtime::hardware_client::calibration::{Axis, Sweep, SweepSample, Telemetry};
@@ -92,9 +101,35 @@ pub struct MotionChart {
     pub requested: Vec<[f64; 2]>,
     #[serde(skip)]
     pub measured: Vec<[f64; 2]>,
-    /// The first and last sample time (ms), as the page labels them.
+    /// The first and last sample time (ms), as the page labels them;
+    /// `end ≥ begin + 1`.
     pub begin: f64,
     pub end: f64,
+    /// The smallest and largest value plotted, 0 included (the page's
+    /// `lo`/`hi`, labelled to one decimal).
+    pub lo: f64,
+    pub hi: f64,
+}
+
+impl MotionChart {
+    /// The x axis: `begin..end` (ms).
+    pub fn x_range(&self) -> (f64, f64) {
+        (self.begin, self.end)
+    }
+
+    /// The y axis as the page scales it (:29, :31): `span = max(1, hi − lo)`
+    /// and a 15 % margin either side, so the bottom is `lo − margin` and the
+    /// top `lo + span + margin` (always wider than zero).
+    pub fn y_range(&self) -> (f64, f64) {
+        let span = (self.hi - self.lo).max(1.0);
+        let margin = span * 0.15;
+        (self.lo - margin, self.lo + span + margin)
+    }
+
+    /// The chart's labels: `hi`, `lo` and the time span (:36).
+    pub fn labels(&self) -> [String; 3] {
+        [fixed(self.hi, 1), fixed(self.lo, 1), format!("{} ms – {} ms", js_num(self.begin), js_num(self.end))]
+    }
 }
 
 /// What the view shows.
@@ -151,9 +186,11 @@ pub fn update(id: Option<u8>, axis: &Axis, telemetry: Option<&Telemetry>, sweep:
     let begin = if continuous.is_some() { r.samples.iter().map(|p| p.elapsed_ms).fold(f64::INFINITY, f64::min) } else { 0.0 };
     let begin = if begin.is_finite() { begin } else { 0.0 };
     let end = r.samples.iter().map(|p| p.elapsed_ms).fold(begin + 1.0, f64::max);
-    let measured = r.samples.iter().map(|p| [p.elapsed_ms, p.position() - origin]).collect();
-    let requested = r.samples.iter().filter_map(|p| p.target_raw.map(|t| [p.elapsed_ms, t - origin])).collect();
-    MotionView { direction, status, mismatch, chart: Some(MotionChart { requested, measured, begin, end }), placeholder: None }
+    let measured: Vec<[f64; 2]> = r.samples.iter().map(|p| [p.elapsed_ms, p.position() - origin]).collect();
+    let requested: Vec<[f64; 2]> = r.samples.iter().filter_map(|p| p.target_raw.map(|t| [p.elapsed_ms, t - origin])).collect();
+    let values = [0.0, r.requested_counts].into_iter().chain(measured.iter().chain(&requested).map(|p| p[1])).filter(|v| v.is_finite());
+    let (lo, hi) = values.fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), v| (lo.min(v), hi.max(v)));
+    MotionView { direction, status, mismatch, chart: Some(MotionChart { requested, measured, begin, end, lo, hi }), placeholder: None }
 }
 
 #[cfg(test)]
@@ -199,7 +236,34 @@ mod tests {
         assert_eq!((chart.begin, chart.end), (100.0, 300.0));
         assert_eq!(chart.measured, vec![[100.0, 0.0], [200.0, 10.0], [300.0, 30.0]]);
         assert_eq!(chart.requested, vec![[100.0, 0.0], [300.0, 50.0]]);
+        // The page's y range: 0, the last request and every value; a 15 %
+        // margin of max(1, hi − lo) either side.
+        assert_eq!((chart.lo, chart.hi), (0.0, 50.0));
+        assert_eq!(chart.y_range(), (-7.5, 57.5));
+        assert_eq!(chart.labels(), ["50.0".to_string(), "0.0".to_string(), "100 ms – 300 ms".to_string()]);
         // Another motor's session is not this motor's record.
         assert!(update(Some(1), &Axis::default(), None, Some(&sweep)).chart.is_none());
+    }
+
+    #[test]
+    fn one_sample_draws_and_labels_like_the_page() {
+        // One sample, at rest: values are all 0, so the span is 1 and the
+        // x axis is 1 ms wide.
+        let mut at_rest = sample(40.0, 500, Some(500.0));
+        at_rest.velocity_counts_s = 0.0;
+        let sweep = Sweep { running: true, motor_id: Some(1), samples: vec![at_rest], ..Default::default() };
+        // Taught in reverse: the velocity is multiplied by −1 (−0 at rest).
+        let a = Axis { lower: Some(3000), upper: Some(1000), ..Default::default() };
+        let v = update(Some(1), &a, None, Some(&sweep));
+        assert_eq!(v.status, "Moving · toward upper ↑ · measured 0.0 part counts/s · tracking error 0.0 counts");
+        let chart = v.chart.unwrap();
+        assert_eq!(chart.x_range(), (40.0, 41.0));
+        assert_eq!((chart.lo, chart.hi), (0.0, 0.0));
+        assert_eq!(chart.y_range(), (-0.15, 1.15));
+        assert_eq!(chart.labels(), ["0.0".to_string(), "0.0".to_string(), "40 ms – 41 ms".to_string()]);
+        // A request without a target leaves the range to the values there are.
+        let sweep = Sweep { running: true, motor_id: Some(1), samples: vec![sample(0.0, 500, None), sample(0.0, 490, None)], ..Default::default() };
+        let chart = update(Some(1), &Axis::default(), None, Some(&sweep)).chart.unwrap();
+        assert_eq!((chart.lo, chart.hi, chart.x_range()), (-10.0, 0.0, (0.0, 1.0)));
     }
 }

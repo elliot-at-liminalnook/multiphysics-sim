@@ -541,13 +541,16 @@ fn refresh(
     let mut chart_labels = None;
     if drawn.chart.as_ref() != Some(&chart) {
         if let Some(c) = chart.as_ref() {
-            let (pixels, range, _) = crate::chart::rasterize_span(&[(c.requested.as_slice(), crate::chart::COLORS[2]), (c.measured.as_slice(), crate::chart::COLORS[0])], None);
+            // The page's axes (fixed, so one sample draws and its labels
+            // match what is drawn).
+            let traces = [(c.requested.as_slice(), crate::chart::COLORS[2]), (c.measured.as_slice(), crate::chart::COLORS[0])];
+            let (pixels, ..) = crate::chart::rasterize_fixed(&traces, Some(c.x_range()), c.y_range());
             if let Some((image, _)) = pictures.iter().find(|(_, dial)| !*dial)
                 && let Some(mut image) = images.get_mut(&image.image)
             {
                 image.data = Some(pixels);
             }
-            chart_labels = Some([view::fixed(range.1, 1), view::fixed(range.0, 1), format!("{} ms – {} ms", view::js_num(c.begin), view::js_num(c.end))]);
+            chart_labels = Some(c.labels());
         }
         drawn.chart = Some(chart);
     }

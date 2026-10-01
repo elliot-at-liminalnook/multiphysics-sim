@@ -1930,8 +1930,9 @@ sim-spatial --validate-only FILE  # checks FILE without a window
 FILE is dispatched by name or structure only (`sim_spatial::launch::classify`):
 `*.system.json` → build mode, `*.simrobot.json` → robot mode, a directory
 holding `place.json` → place mode, a directory with `<slug>/lesson.md`
-entries → lessons mode. Anything else (another suffix, a missing path, a
-directory with neither marker) exits nonzero naming the path and the four
+entries → lessons mode, a `*.rcad` file → CAD mode (since cad-mode,
+2026-09-30). Anything else (another suffix, a missing path, a
+directory with neither marker) exits nonzero naming the path and the five
 accepted types. FILE conflicts with the mode flags (`--system`, `--robot`,
 `--robot-preset`, `--lessons`, `--place`, `--description`, …), which keep
 their meaning; `--lesson SLUG` works with a lessons FILE.
@@ -2189,9 +2190,33 @@ sync if this viewer opened it. Not compiled or run yet. The ledger is `docs/hard
 steps are `docs/hardware-checklist.md`. The browser page at the server's URL
 stays available until that checklist is signed off.
 
+CAD mode (§9 phase 1 of docs/architecture/native-viewer.md, epic cad-mode,
+2026-09-30) opens a RoboCAD document in the same window:
+
+```
+cargo run -p sim-spatial -- path/to/model.rcad          # starts RoboCAD's headless service on it
+cargo run -p sim-spatial -- --cad-url http://127.0.0.1:8420   # attaches to a running RoboCAD (its GUI serves 8420)
+```
+
+or the switcher's **CAD** button, `system_ui` `mode:cad`, or REST
+`viewer_mode {"mode":"cad","path":"…rcad"}` / `{"mode":"cad","url":"…"}`.
+A `.rcad` starts `cad/.venv/bin/python -m robocad.api FILE --port N --host
+127.0.0.1` from `cad/` (run `cad/run.sh` once to create the venv) and stops
+it when the document closes, unless it holds unsaved edits (leaving is then
+refused; closing the window leaves it running and logs its URL). An attached
+RoboCAD is never stopped. It shows the model tree, tessellated bodies,
+selection shared with RoboCAD's `/selection`, the node inspector and the
+physical link with RoboCAD's labels; edits visibility, lock, disabled,
+material and name, deletes, undoes and redoes, saves and runs RoboCAD's
+registry commands (GUI only) and Ops (REST `cad_op`), all through RoboCAD's
+command layer. Not compiled or run yet. The ledger is `docs/cad-parity.md`;
+the side-by-side steps are `docs/cad-checklist.md`. RoboCAD's window stays
+the reference and is still needed for sketching, direct-edit tools,
+printing, experiments, motion and the other later CAD epics.
+
 Separate apps are still needed for the schematic and experiments
-(`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-app`), CAD
-(`cad/run.sh`), and scrubbing of live-run or
+(`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-app`), CAD authoring beyond CAD mode's first epic
+(`cad/run.sh`; see `docs/cad-parity.md`), and scrubbing of live-run or
 replay history (recorded presets play back natively, §2h), observation panels beyond the two robot-mode charts, and realtime walking
 (browser, `web/README.md`; §2g lists what native preset runs lack).
 Calibration and hardware sync have the native panel above, with the browser

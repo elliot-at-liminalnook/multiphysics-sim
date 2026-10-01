@@ -29,8 +29,9 @@
 //! - **Box**: a left drag past 6 px draws the rubber band (`overlay`) and
 //!   on release writes `CadBoxSelect` (Shift or Ctrl extends).
 //! - **Catalogue interactions** (cad-modify, `ops::interact`): while a
-//!   placement (`Flow::Place`) is active the left button belongs to it:
-//!   no click, box or hover here. While a pick-then-form tool
+//!   placement (`Flow::Place`), a plane tool (`Flow::PlanePick`), a sketch
+//!   tool (`Flow::Sketch`) or extrude (`Flow::Extrude`) is active the left
+//!   button belongs to it (cad-sketch): no click, box or hover here. While a pick-then-form tool
 //!   (`Flow::PickThenForm`: fillet, chamfer, shell) is active, a click
 //!   toggles the item under the cursor when it is of the tool's kind
 //!   (`CadSelect {toggle: true}`; RoboCAD's `EdgeTool.press`), also while
@@ -360,7 +361,8 @@ fn pointer(
     // drag (`ops::interact`); a pick-then-form tool's click toggles one item
     // of its kind (RoboCAD's `EdgeTool.press`), also while its form has the keyboard.
     let flow = doc.ops.active.and_then(super::ops::entry).map(|e| e.flow);
-    let placing = matches!(flow, Some(Flow::Place(_)));
+    // Placing, a plane tool's picks, a sketch tool's clicks and extrude's drag (cad-sketch) own the left button.
+    let placing = matches!(flow, Some(Flow::Place(_) | Flow::PlanePick(_) | Flow::Sketch(_) | Flow::Extrude { .. }));
     let pick_kind = match flow {
         Some(Flow::PickThenForm(mode)) => Some(mode),
         _ => None,

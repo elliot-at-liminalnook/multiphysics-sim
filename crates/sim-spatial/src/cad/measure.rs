@@ -1,12 +1,14 @@
 //! The measure tool (RoboCAD's `MeasureTool`, ui/tools.py:1027-1062, and
 //! `measure_between`, ui/app.py:707-735) and its math (cad/robocad/analysis.py:20-48).
 //!
-//! - **Tool** (M): the pointer snaps as RoboCAD's (`snap`); hovering shows
+//! - **Tool** (M): the pointer snaps as RoboCAD's (`snap::snap_on`: the
+//!   drawn bodies' and visible sketches' candidates, projected onto the
+//!   active plane while 2D snapping is on); hovering shows
 //!   the snap marker and the readout ("vertex  (x, y, z)"; with a first pick
 //!   held, "12.5 mm  (vertex)"). A press picks: the item under the cursor in
 //!   the selection mode (a face or body by ray cast, an edge or vertex
 //!   within 12 px) and the point (the snap point, or the surface hit when
-//!   the snap is free, as `MeasureTool.press`). The second press writes
+//!   the snap is free or on the plane, as `MeasureTool.press`). The second press writes
 //!   `CadMeasure {a, b, keep: Shift}`; `transform::handle` computes it with
 //!   [`between`], shows it and, when kept, adds it as one
 //!   `POST /ops/add_measurement` (RoboCAD's Shift+click).
@@ -30,6 +32,7 @@
 use super::actions::{CadAction, MeasurePick};
 use super::document::{CadDocument, CadTool, SelectMode};
 use super::mesh::{CadBody, CadMeshes};
+use super::sketch::{CadActivePlane, CadSketches};
 use super::snap::{self, Candidate, SNAP_PIXELS, SnapKind};
 use super::topology::{CadTopology, NodeTopology};
 use super::transform::{HOT, SNAP_COLOUR, ToolGizmos, cursor_in_view, fl, marker, ray_hit};
@@ -229,18 +232,18 @@ pub(super) fn tool(
     mut cast: MeshRayCast,
     bodies: Query<&CadBody>,
     mut out: MessageWriter<Act<CadAction>>,
-    mut cache: Local<Option<((u64, u64), Vec<Candidate>)>>,
+    (plane, sketches): (Option<Res<CadActivePlane>>, Option<Res<CadSketches>>),
+    mut cache: Local<Option<((u64, u64, u64), Vec<Candidate>)>>,
 ) {
     let (Some(mut doc), Some(view), Some(topology), Some(meshes)) = (doc, view, topology, meshes) else { return };
     if doc.tool != CadTool::Measure {
         return;
     }
     let Some(cursor) = cursor_in_view(windows.single().ok(), &view, hover.as_deref(), &nodes) else { return };
-    // The candidates change only with the topology or the drawn bodies.
-    let key = (topology.epoch, meshes.epoch);
+    // The candidates change only with the topology, the drawn bodies or the sketches.
+    let key = snap::candidates_key(Some(&*topology), Some(&*meshes), sketches.as_deref());
     if cache.as_ref().is_none_or(|(k, _)| *k != key) {
-        let drawn: Vec<(&str, &NodeTopology)> = topology.ready().filter(|(id, _)| meshes.shown(id)).map(|(id, t)| (id.as_str(), &**t)).collect();
-        *cache = Some((key, snap::candidates(drawn)));
+        *cache = Some((key, snap::drawn_candidates(&doc, Some(&*topology), Some(&*meshes), sketches.as_deref())));
     }
     let candidates: &[Candidate] = match cache.as_ref() {
         Some((_, c)) => c,
@@ -249,7 +252,9 @@ pub(super) fn tool(
     let held = |pair: [KeyCode; 2]| keys.as_ref().is_some_and(|k| k.any_pressed(pair));
     let alt = held([KeyCode::AltLeft, KeyCode::AltRight]);
     let shift = held([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-    let Some(s) = snap::snap(&view, cursor, candidates, alt) else { return };
+    // RoboCAD's `MeasureTool` snaps with no plane of its own: the active plane only with 2D snapping on.
+    let on = snap::snap_plane(plane.as_deref());
+    let Some(s) = snap::snap_on(&view, cursor, candidates, alt, on.as_ref()) else { return };
     let readout = match &doc.tool_state.measure.first {
         Some(first) => {
             let a = Vec3::new(first.point[0] as f32, first.point[1] as f32, first.point[2] as f32);
@@ -285,8 +290,8 @@ pub(super) fn tool(
         SelectMode::Vertex => nearest_vertex(&view, cursor, drawn()).map(|(n, i)| SelectionItem(n, "vertex".into(), i)),
         SelectMode::Point => None,
     };
-    // As `MeasureTool.press`: the snap point unless the snap is free, then the surface hit.
-    let point = if s.kind != SnapKind::Free { s.point } else { hit.as_ref().map_or(s.point, |h| h.point) };
+    // As `MeasureTool.press`: the snap point unless the snap is free or on the plane, then the surface hit.
+    let point = if !matches!(s.kind, SnapKind::Free | SnapKind::Plane) { s.point } else { hit.as_ref().map_or(s.point, |h| h.point) };
     let pick = MeasurePick { item, point: [f64::from(point.x), f64::from(point.y), f64::from(point.z)] };
     match doc.tool_state.measure.first.take() {
         None => doc.tool_state.measure.first = Some(pick),

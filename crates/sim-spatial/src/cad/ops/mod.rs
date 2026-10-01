@@ -638,6 +638,9 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call,
 /// one path every sketch shape and sketch edit takes (`cad_sketch` too);
 /// the caller has checked `CadDocument::commit_refusal`.
 pub(in crate::cad) fn send_sketch(doc: &mut CadDocument, call: &mut Call, target: SketchTarget, calls: Vec<sim_runtime::cad_client::SketchCall>, label: String) -> Outcome {
+    // The polygon tool's side count follows what was sent (RoboCAD's
+    // `Sketch.last_polygon_sides`).
+    super::sketch::specs::remember_polygon_sides(doc, &calls);
     let message = label.clone();
     super::actions::edit(doc, call, label, move |c| {
         let detail = match &target {

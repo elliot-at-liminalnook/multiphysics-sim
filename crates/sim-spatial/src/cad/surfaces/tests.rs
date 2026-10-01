@@ -1,13 +1,13 @@
 //! The command surfaces without a window: RoboCAD's command table against
 //! the op catalogue, the menus, readiness, the key parser, and every
 //! surfaces control round-tripping through its REST form.
-use super::registry::{self, CATEGORIES, COMMANDS, CONTEXT, MAKE_UNIQUE, Native, Resolved, SELECT_RADIAL, TOOLBAR, VIEW_RADIAL};
+use super::registry::{self, CATEGORIES, COMMANDS, CONTEXT, MAKE_UNIQUE, Native, Resolved, SELECT_RADIAL, SKETCH_CONTEXT, TOOLBAR, VIEW_RADIAL};
 use super::{Surface, entries};
 use crate::app::actions::{self, Action};
 use crate::cad::actions::{CadAction, rest_form};
-use crate::cad::document::{CadDocument, CadTarget, Connection};
+use crate::cad::document::{CadDocument, CadTarget, Connection, Edit, EditDone};
 use crate::cad::keys::{Binding, parse};
-use crate::cad::ops::{CATALOGUE, FormState, Needs, OpEntry};
+use crate::cad::ops::{CATALOGUE, Flow, FormState, Needs, OpEntry};
 use crate::cad::panel::own_controls;
 use crate::ui_kit::form::FieldKind;
 use crate::ui_kit::palette::conflicts;
@@ -59,6 +59,10 @@ fn the_table_is_robocads_registry() {
     assert_eq!(cmd("command_palette").keys, &["Ctrl+Space", "Shift+F"]);
     assert_eq!(cmd("edit.delete").keys, &["Delete", "Backspace"]);
     assert!(registry::command("sketch.arc").is_none(), "keymap.json's sketch.arc names no command");
+    // Its A is bound to the three-point arc instead, deliberately (the module doc).
+    assert_eq!(cmd("sketch.arc_3pt").keys, &["A"]);
+    assert!(cmd("sketch.arc_3pt").bound);
+    assert_eq!(parse("A"), Ok(Binding::One(crate::cad::keys::Combo { ctrl: false, shift: false, alt: false, key: bevy::prelude::KeyCode::KeyA })));
 }
 
 #[test]
@@ -115,7 +119,9 @@ fn readiness_refuses_with_the_entrys_refusal() {
             _ => true,
         };
         let r = registry::readiness(e, &doc);
-        if matches!(e.flow, crate::cad::ops::Flow::PickThenForm(_)) || !needs_something {
+        // An interaction is started to pick (its refusals come when it runs); viewer state needs nothing.
+        let started = matches!(e.flow, Flow::PickThenForm(_) | Flow::Sketch(_) | Flow::Extrude { .. } | Flow::PlanePick(_) | Flow::View(_));
+        if started || !needs_something {
             assert!(r.is_ok(), "{}: {r:?}", e.id);
         } else {
             assert_eq!(r, Err(e.refusal.to_string()), "{}", e.id);
@@ -177,10 +183,26 @@ fn the_palette_shows_robocads_key_conflict() {
 fn the_context_menu_offers_make_unique_for_instances() {
     let mut doc = document();
     let ids = |doc: &CadDocument| entries(&Surface::Context { at: None }, doc, &own_controls(doc)).into_iter().map(|e| e.id).collect::<Vec<_>>();
-    assert_eq!(ids(&doc), CONTEXT.iter().map(|s| s.to_string()).collect::<Vec<_>>());
+    // RoboCAD's 14 first and unchanged, then the native Sketch section's 13.
+    assert_eq!(ids(&doc), CONTEXT.iter().chain(SKETCH_CONTEXT.iter()).map(|s| s.to_string()).collect::<Vec<_>>());
     doc.selection = vec![SelectionItem("i1".into(), "body".into(), 0)];
     let with = ids(&doc);
+    assert_eq!(with.len(), CONTEXT.len() + SKETCH_CONTEXT.len() + 1);
     assert_eq!(with.last().map(String::as_str), Some(MAKE_UNIQUE.0));
+}
+
+/// The 13 sketch tools are RoboCAD's sketch-shape loop (app.py:377-378), in its order.
+#[test]
+fn the_context_menus_sketch_section_is_robocads_sketch_tools() {
+    let tools: Vec<&str> = COMMANDS.iter().filter(|c| c.category == "Sketch" && !["sketch.offset", "sketch.fillet", "sketch.join"].contains(&c.id)).map(|c| c.id).collect();
+    assert_eq!(tools, SKETCH_CONTEXT.to_vec());
+    let doc = document();
+    let list = entries(&Surface::Context { at: None }, &doc, &own_controls(&doc));
+    for (e, id) in list[CONTEXT.len()..].iter().zip(SKETCH_CONTEXT) {
+        assert_eq!(e.id, id);
+        assert_eq!(e.action, CadAction::CadInvoke { id: id.to_string() });
+        assert!(e.closes, "{id}");
+    }
 }
 
 /// A document with a form open on the first catalogue entry that has a
@@ -241,4 +263,126 @@ fn popups_are_kept_inside_the_window() {
     // A window shorter than the least rows: pinned at the top edge.
     let (_, top, rows, _) = super::popup_place(Vec2::new(10.0, 50.0), Vec2::new(400.0, 120.0));
     assert_eq!((top, rows), (8.0, 94.0));
+}
+
+/// The cad-sketch epic's commands: (id, RoboCAD's label, its keys), in
+/// registry order. Every one is a catalogue operation now.
+const SKETCH_EPIC: [(&str, &str, &[&str]); 30] = [
+    ("tool.extrude", "Extrude", &["X"]),
+    ("tool.revolve", "Revolve", &["Shift+R"]),
+    ("tool.sweep", "Sweep (profile + path from selection)", &[]),
+    ("tool.pipe", "Pipe along selected curve…", &[]),
+    ("tool.loft", "Loft selected sketches", &[]),
+    ("tool.fill", "Fill / patch selected curve", &[]),
+    ("tool.plane", "Plane from face", &["Ctrl+P"]),
+    ("tool.plane_three", "Plane from three points", &[]),
+    ("tool.plane_camera", "Plane from two points (camera)", &[]),
+    ("tool.plane_mid", "Midplane between two faces", &[]),
+    ("tool.plane_xy", "Active plane: XY", &[]),
+    ("tool.plane_xz", "Active plane: XZ", &[]),
+    ("tool.plane_yz", "Active plane: YZ", &[]),
+    ("tool.plane_2d_snap", "Toggle 2D snapping to the active plane", &[]),
+    ("sketch.line", "Sketch: Line", &["L"]),
+    ("sketch.rectangle", "Sketch: Rectangle", &["Shift+L"]),
+    ("sketch.rectangle_center", "Sketch: Rectangle (centre)", &[]),
+    ("sketch.circle", "Sketch: Circle", &["C"]),
+    ("sketch.circle_2pt", "Sketch: Circle (two points)", &[]),
+    ("sketch.circle_3pt", "Sketch: Circle (three points)", &[]),
+    ("sketch.arc_3pt", "Sketch: Arc (three points)", &["A"]),
+    ("sketch.polygon", "Sketch: Polygon", &["Shift+P"]),
+    ("sketch.slot", "Sketch: Slot", &["Shift+S"]),
+    ("sketch.spline", "Sketch: Spline", &["Shift+C"]),
+    ("sketch.ellipse", "Sketch: Ellipse", &[]),
+    ("sketch.spiral", "Sketch: Spiral", &[]),
+    ("sketch.text", "Sketch: Text", &["T"]),
+    ("sketch.offset", "Sketch: offset selected curve…", &[]),
+    ("sketch.fillet", "Sketch: fillet corner…", &[]),
+    ("sketch.join", "Sketch: join curves", &[]),
+];
+
+#[test]
+fn every_cad_sketch_command_runs_through_the_catalogue() {
+    for (id, label, keys) in SKETCH_EPIC {
+        let c = registry::command(id).unwrap_or_else(|| panic!("{id} is not a RoboCAD command"));
+        assert_eq!((c.label, c.keys), (label, keys), "{id}: the registry");
+        assert_eq!(c.native, Native::Op, "{id}");
+        let e = crate::cad::ops::entry(id).unwrap_or_else(|| panic!("{id} is not in the op catalogue"));
+        assert_eq!((e.label, e.category, e.keys), (c.label, c.category, c.keys), "{id}: the catalogue");
+        assert_eq!(registry::resolve(c), Resolved::Op(e), "{id}");
+        assert!(registry::note(c).is_empty(), "{id} still carries a note: {}", registry::note(c));
+    }
+    // No command is left to the cad-sketch epic.
+    for c in COMMANDS {
+        assert_ne!(c.native, Native::Later("cad-sketch"), "{}", c.id);
+        assert_ne!(registry::resolve(c), Resolved::Later("cad-sketch"), "{}", c.id);
+    }
+    // Keys bound in RoboCAD's keymap stay bound; A is the native arc binding.
+    for (id, _, keys) in SKETCH_EPIC {
+        assert_eq!(registry::command(id).unwrap().bound, !keys.is_empty(), "{id}");
+    }
+}
+
+#[test]
+fn the_toolbars_sketch_and_extrude_buttons_are_enabled_operations() {
+    let doc = document();
+    let own = own_controls(&doc);
+    for id in ["sketch.rectangle", "sketch.circle", "sketch.slot", "tool.extrude"] {
+        assert!(TOOLBAR.contains(&id), "{id}");
+        let c = registry::command(id).unwrap();
+        assert!(matches!(registry::resolve(c), Resolved::Op(e) if e.id == id), "{id}");
+        assert_eq!(registry::ready(c, &doc, &own), Ok(()), "{id}");
+    }
+}
+
+/// The Create, Sketch and Planes menus and the palette list the cad-sketch
+/// commands in RoboCAD's registry order.
+#[test]
+fn menus_and_palette_list_the_cad_sketch_commands_in_robocads_order() {
+    let doc = document();
+    let own = own_controls(&doc);
+    let menu = |category: &str| entries(&Surface::Menu { category: category.into() }, &doc, &own).into_iter().map(|e| e.id).collect::<Vec<_>>();
+    let epic = |category: &str| SKETCH_EPIC.iter().filter(|(id, ..)| registry::command(id).unwrap().category == category).map(|(id, ..)| id.to_string()).collect::<Vec<_>>();
+    let create = menu("Create");
+    assert_eq!(create, ["tool.box", "tool.box_center", "tool.cylinder", "tool.sphere", "tool.extrude", "tool.revolve", "tool.sweep", "tool.pipe", "tool.loft", "tool.fill", "components.make"].map(String::from).to_vec());
+    assert_eq!(menu("Sketch"), epic("Sketch"));
+    assert_eq!(menu("Planes"), epic("Planes"));
+    let palette: Vec<String> = super::palette::palette_entries(&doc, &own).into_iter().map(|e| e.id).filter(|id| SKETCH_EPIC.iter().any(|(s, ..)| s == id)).collect();
+    assert_eq!(palette, SKETCH_EPIC.map(|(id, ..)| id.to_string()).to_vec());
+}
+
+/// `system_ui` lists `cad:op:<id>` for each, writing the menu entry's
+/// `CadInvoke`; the active plane (viewer state) is never refused for an
+/// edit in flight, the sketch tools are.
+#[test]
+fn system_ui_reaches_every_cad_sketch_command_as_a_click_does() {
+    let mut doc = document();
+    let all = crate::cad::panel::controls(&doc);
+    for (id, label, _) in SKETCH_EPIC {
+        let control = all.iter().find(|c| c.id == format!("cad:op:{id}")).unwrap_or_else(|| panic!("cad:op:{id} is not listed"));
+        assert_eq!((control.label.as_str(), &control.action), (label, &CadAction::CadInvoke { id: id.to_string() }), "{id}");
+    }
+    let own = own_controls(&doc);
+    let planes = entries(&Surface::Menu { category: "Planes".into() }, &doc, &own);
+    let menu_entry = planes.iter().find(|e| e.id == "tool.plane_xy").unwrap();
+    let control = all.iter().find(|c| c.id == "cad:op:tool.plane_xy").unwrap();
+    assert_eq!(control.action, menu_entry.action, "activate and a click write the same action");
+    assert_eq!(rest_form(&control.action), json!({"command": "cad_invoke", "id": "tool.plane_xy"}));
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false });
+    let all = crate::cad::panel::controls(&doc);
+    let ready = |id: &str| all.iter().find(|c| c.id == format!("cad:op:{id}")).unwrap().ready.clone();
+    if crate::cad::ops::entry("tool.plane_xy").is_some_and(|e| matches!(e.flow, Flow::View(_))) {
+        assert_eq!(ready("tool.plane_xy"), Ok(()));
+    }
+    assert!(ready("sketch.line").is_err_and(|e| e.contains("in flight")), "{:?}", ready("sketch.line"));
+}
+
+/// `cad_sketch` is a registered CAD-mode capability whose example parses.
+#[test]
+fn cad_sketch_is_a_capability_with_a_valid_example() {
+    let specs = <CadAction as Action>::commands();
+    let spec = specs.iter().find(|s| s.name == "cad_sketch").expect("cad_sketch is registered");
+    assert!(spec.modes.contains(&crate::app::ViewerMode::Cad));
+    let parsed = <CadAction as Action>::parse(&sim_api::Command { command: "cad_sketch".into(), args: spec.example.clone() }).unwrap_or_else(|e| panic!("the example does not parse: {e}"));
+    assert!(matches!(parsed, CadAction::CadSketch { ref calls, .. } if !calls.is_empty()), "{parsed:?}");
+    assert!(actions::command_modes("cad_sketch").is_some_and(|m| m.contains(&crate::app::ViewerMode::Cad)));
 }

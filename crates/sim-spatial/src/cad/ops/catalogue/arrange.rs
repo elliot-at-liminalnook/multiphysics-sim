@@ -2,6 +2,7 @@
 //! In RoboCAD's registry order (`ui/app.py` `_build_commands`); see `super`.
 use super::super::kinds::*;
 use super::super::*;
+use crate::cad::sketch::BasePlane;
 use crate::ui_kit::form::Unit;
 
 pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
@@ -11,9 +12,9 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         label: "Mirror (about active plane)",
         keys: &["Ctrl+M"],
         needs: ANY_NODES,
-        params: &[p("plane", "mirror plane", PLANES, "yz")],
+        params: &[p("plane", "mirror plane", PLANES, "active")],
         route: "mirror",
-        args: &[Arg::Nodes, Arg::Param("plane")],
+        args: &[Arg::Nodes, Arg::Plane("plane", BasePlane::Yz)],
         kwargs: &[("live", Arg::Const("false"))],
         refusal: "Select bodies to mirror",
         source: "ui/app.py:360, ui/app.py:910-914 (the active plane or YZ), commands.py:694",
@@ -23,12 +24,12 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         id: "tool.mirror_live",
         label: "Mirror as live instance",
         needs: ANY_NODES,
-        params: &[p("plane", "mirror plane", PLANES, "yz")],
+        params: &[p("plane", "mirror plane", PLANES, "active")],
         route: "mirror",
-        args: &[Arg::Nodes, Arg::Param("plane")],
+        args: &[Arg::Nodes, Arg::Plane("plane", BasePlane::Yz)],
         kwargs: &[("live", Arg::Const("true"))],
         refusal: "Select bodies to mirror",
-        source: "ui/app.py:361, ui/app.py:910-914, commands.py:694",
+        source: "ui/app.py:361, ui/app.py:910-914 (the active plane or YZ), commands.py:694",
         ..BASE
     },
     OpEntry {
@@ -56,7 +57,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
             when(p("spacing", "Spacing or extent X / Y / Z", POINT, "10, 10, 10"), "kind", "rectangular"),
             when(p("count", "Radial count", number(Unit::Count, 2.0, 360.0, 0), "6"), "kind", "radial"),
             when(p("angle", "Radial total angle", ANGLE, "360"), "kind", "radial"),
-            when(p("plane", "axis plane (its normal through its origin)", PLANES, "xy"), "kind", "radial"),
+            when(p("plane", "axis plane (its normal through its origin)", PLANES, "active"), "kind", "radial"),
             p("as_instances", "As live instances", CHECK, "false"),
             p("merge", "Merge into one body", CHECK, "false"),
         ],
@@ -72,9 +73,9 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         id: "tool.cut_plane",
         label: "Cut with active plane",
         needs: ANY_NODES,
-        params: &[p("plane", "cutting plane", PLANES, "xy")],
+        params: &[p("plane", "cutting plane", PLANES, "active")],
         route: "cut",
-        args: &[Arg::Node, Arg::Param("plane")],
+        args: &[Arg::Node, Arg::Plane("plane", BasePlane::Xy)],
         fan: Fan::PerNode,
         refusal: "Select the bodies to cut",
         source: "ui/app.py:366, ui/app.py:943-945 (the active plane or XY; silent when none: refusal ours), commands.py:591",
@@ -94,9 +95,9 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         id: "tool.split_face",
         label: "Split faces with active plane",
         needs: ANY_NODES,
-        params: &[p("plane", "splitting plane", PLANES, "xy")],
+        params: &[p("plane", "splitting plane", PLANES, "active")],
         route: "split_face",
-        args: &[Arg::Node, Arg::Param("plane")],
+        args: &[Arg::Node, Arg::Plane("plane", BasePlane::Xy)],
         fan: Fan::PerNode,
         refusal: "Select the bodies whose faces to split",
         source: "ui/app.py:368, ui/app.py:953-955 (the active plane or XY; refusal ours), commands.py:566",
@@ -127,9 +128,9 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         id: "tool.silhouette",
         label: "Silhouette onto active plane",
         needs: ANY_NODES,
-        params: &[p("plane", "projection plane", PLANES, "xy")],
+        params: &[p("plane", "projection plane", PLANES, "active")],
         route: "silhouette",
-        args: &[Arg::Node, Arg::Param("plane")],
+        args: &[Arg::Node, Arg::Plane("plane", BasePlane::Xy)],
         fan: Fan::PerNode,
         refusal: "Select the bodies to project",
         source: "ui/app.py:371, ui/app.py:970-972 (the active plane or XY; refusal ours), commands.py:860",

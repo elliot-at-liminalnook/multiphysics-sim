@@ -1,10 +1,19 @@
 //! The 3D view's right-click menu (RoboCAD's `_context_menu`,
 //! app.py:1103-1107): Annotate, Comments panel, Push/Pull face, Fillet,
 //! Chamfer, Hollow / shell, Union, Subtract, Mirror, Array…, Measure,
-//! Isolate, Hide, Delete (`registry::CONTEXT`), plus the outliner's "Make
-//! unique (bake instance)" (widgets.py:431) when an instance is selected.
-//! That entry is a deliberate difference: RoboCAD's `_context_menu` lacks
-//! it (it is the outliner's context menu's); it stays here as the
+//! Isolate, Hide, Delete (`registry::CONTEXT`), then a "Sketch" section
+//! with the 13 sketch tools in RoboCAD's registry order (Line, Rectangle,
+//! Rectangle (centre), Circle, Circle (two points), Circle (three points),
+//! Arc (three points), Polygon, Slot, Spline, Ellipse, Spiral, Text:
+//! `registry::SKETCH_CONTEXT`, under a "Sketch" heading), plus the
+//! outliner's "Make unique (bake instance)" (widgets.py:431) when an
+//! instance is selected.
+//!
+//! Two deliberate differences. The Sketch section is a native addition:
+//! RoboCAD's `_context_menu` has no sketch tools; the cad-sketch epic's
+//! surfaces requirement puts every sketch tool in the 3D view's own menu.
+//! RoboCAD's 14 entries stay first, unchanged and in order. "Make unique"
+//! is the outliner's context menu's in RoboCAD; it stays here as the
 //! cad-modify row for that outliner entry, since the native outliner has no
 //! context menu yet.
 //! Each entry is enabled by the selection (`registry::ready`: a catalogue

@@ -496,12 +496,15 @@ fn refresh(
     mut lists: Query<(Entity, &mut CadList)>,
     mut rows: Query<(Entity, &super::tree::TreeRowId, &mut Tint, &mut BorderColor, &AccessibleLabel)>,
     mut eyes: Query<&mut Enabled, With<super::tree::EyeChip>>,
+    plane: Option<Res<super::CadActivePlane>>,
 ) {
     let root = roots.iter().next();
     let stamp = doc.as_ref().map(|d| (d.generation, d.revision));
     let added = doc.as_ref().is_some_and(|d| d.is_added());
     let epoch = topology.as_ref().map(|t| t.epoch);
-    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() && epoch == *seen_epoch {
+    // The header's active-plane line follows the plane (cad-sketch).
+    let plane_changed = plane.as_ref().is_some_and(|p| p.is_changed());
+    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() && epoch == *seen_epoch && !plane_changed {
         return;
     }
     drawn.root = root;
@@ -509,13 +512,14 @@ fn refresh(
     *seen_epoch = epoch;
     let doc = doc.as_deref();
     let topology = topology.as_deref();
+    let plane = plane.as_deref();
     if let Some(doc) = doc {
         super::tree::highlight(&mut commands, doc, &mut rows, &mut eyes);
     }
     let k = Kit::new(&fonts);
     for (entity, mut list) in &mut lists {
         let part = list.part;
-        let key = part_key(part, doc, topology, &draft);
+        let key = part_key(part, doc, topology, &draft, plane);
         if list.key.as_ref() == Some(&key) {
             continue;
         }
@@ -528,7 +532,7 @@ fn refresh(
                 }
             }
             Some(doc) => match part {
-                Part::Top => top(p, &k, doc),
+                Part::Top => top(p, &k, doc, plane),
                 Part::Document => document(p, &k, doc),
                 Part::Status => status(p, &k, doc),
                 Part::Tree => super::tree::build(p, &k, doc),
@@ -544,10 +548,10 @@ fn refresh(
 }
 
 /// What a part shows now, as a comparable text.
-fn part_key(part: Part, doc: Option<&CadDocument>, topology: Option<&super::topology::CadTopology>, draft: &NameDraft) -> String {
+fn part_key(part: Part, doc: Option<&CadDocument>, topology: Option<&super::topology::CadTopology>, draft: &NameDraft, plane: Option<&super::CadActivePlane>) -> String {
     let Some(doc) = doc else { return "no document".to_string() };
     match part {
-        Part::Top => format!("{:?}", (doc.document_name(), connection_state(&doc.connection), dirty(doc), doc.health.is_some(), top_controls(doc))),
+        Part::Top => format!("{:?}", (doc.document_name(), connection_state(&doc.connection), dirty(doc), doc.health.is_some(), top_controls(doc), plane_line(doc, plane))),
         Part::Document => format!("{:?}", (path_line(doc), doc.service_line(), doc.connection_line(), doc.connection == Connection::Connected, autosave_line(doc), &doc.stale)),
         Part::Status => format!("{:?}", (doc.edit_label(), &doc.status)),
         Part::Tree => super::tree::key(doc),
@@ -599,8 +603,14 @@ fn short(label: &str, max: usize) -> String {
     if label.chars().count() <= max { label.to_string() } else { format!("{}…", label.chars().take(max - 1).collect::<String>()) }
 }
 
-/// The top bar: document name, connection, saved state, the document buttons.
-fn top(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
+/// The header's active-plane line (cad-sketch): "Active plane: XY", with
+/// "2D snap" while 2D snapping is on.
+fn plane_line(doc: &CadDocument, plane: Option<&super::CadActivePlane>) -> Option<(String, bool)> {
+    plane.map(|p| (format!("Active plane: {}", p.label(doc)), p.snap_2d))
+}
+
+/// The top bar: document name, connection, saved state, the active plane, the document buttons.
+fn top(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, plane: Option<&super::CadActivePlane>) {
     p.spawn(k.text("CAD", size::PRODUCT, SUBTLE, 2));
     p.spawn((k.title(doc.document_name()), Node { flex_shrink: 1.0, min_width: Val::Px(0.0), ..default() }));
     let (word, tone) = connection_state(&doc.connection);
@@ -610,6 +620,12 @@ fn top(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
         Some(false) => indicator(p, k, "Saved", OK),
         None if doc.health.is_some() => indicator(p, k, "Checking saved state…", SUBTLE),
         None => {}
+    }
+    if let Some((line, snap_2d)) = plane_line(doc, plane) {
+        p.spawn(k.text(line, size::CAPTION, SUBTLE, 1));
+        if snap_2d {
+            p.spawn(k.text("2D snap", size::CAPTION, SUBTLE, 1));
+        }
     }
     p.spawn(Node { flex_grow: 1.0, ..default() });
     for (c, look, gap) in top_controls(doc) {

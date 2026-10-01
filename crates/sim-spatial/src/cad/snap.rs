@@ -1,32 +1,48 @@
 //! Snapping for CAD mode's tools, a port of RoboCAD's `Viewport.snap`
 //! (cad/robocad/ui/viewport.py:1369-1435): the best snap under the cursor
 //! among the drawn bodies' B-rep vertices, edge "midpoints" (the middle
-//! sample of each edge polyline, `seg[len // 2]`) and edge centres, within
-//! [`SNAP_PIXELS`] of the cursor; then the [`GRID_STEP`] grid on the XY
-//! ground plane within the same radius ("grid"); else the cursor ray's hit
-//! on the ground plane ("free"). Alt suppresses every snap (`suppress`).
-//! Every candidate competes on screen distance alone, as RoboCAD's loop
-//! does (a strictly nearer one replaces the best; on a tie the earlier in
-//! vertex, midpoint, centre order wins).
+//! sample of each edge polyline, `seg[len // 2]`) and edge centres, then
+//! the visible sketches' endpoints (line, polyline, spline and control
+//! points) and curve centres ([`sketch_candidates`]), within
+//! [`SNAP_PIXELS`] of the cursor. With a plane ([`snap_on`]: a tool's
+//! `want_plane`, or the active plane while 2D snapping is on) the best snap
+//! is projected onto it; with none, the cursor ray meets the plane: the
+//! [`GRID_STEP`] grid in the plane's own (u, v) within the same radius
+//! ("grid"), else the hit ("plane"). Then the grid on the XY ground plane
+//! ("grid"); else the cursor ray's hit on the ground plane ("free"). Alt
+//! suppresses every snap (`suppress`). Every candidate competes on screen
+//! distance alone, as RoboCAD's loop does (a strictly nearer one replaces
+//! the best; on a tie the earlier wins: bodies' vertex, midpoint, centre,
+//! then sketches' endpoints and centres).
 //!
-//! Pure functions over [`CadView`] and the topology; display only. The
-//! measure tool (`measure`) reads it on hover and press, with the marker
-//! and the readout RoboCAD's `_snap_marker` shows ("vertex  (x, y, z)").
+//! Pure functions over [`CadView`], the topology and the sketch cache;
+//! display only. The measure tool (`measure`), the cursor snap and the
+//! primitives (`ops::interact`), the plane tools (`sketch::plane`) and the
+//! sketch tools read it. Measure and the cursor snap pass the active plane
+//! only while 2D snapping is on ([`snap_plane`], RoboCAD's
+//! `plane_snapping`); a primitive passes the active plane (or XY) always,
+//! as RoboCAD's `PrimitiveTool` passes `want_plane`.
 //!
 //! Deliberately different from RoboCAD, each recorded:
 //! - Centre snaps work here. RoboCAD reads `getattr(item, "centers", [])`
 //!   (viewport.py:1388), but `RenderItem` has no `centers` (the list built
 //!   at viewport.py:1640-1654 is only stored on the function), so its centre
 //!   snap never fires; the epic asks for centres, from `EdgeInfo::center`.
-//! - The active-plane step ("plane", and grid on that plane) is cad-sketch's:
-//!   this epic has no active plane, so the ground plane is the only plane.
-//! - Sketch endpoints are not candidates (no sketches are drawn yet).
+//! - Sketch candidates are read at the shown revision only
+//!   (`CadSketches::sketch`): while a sketch is refetched after an edit its
+//!   endpoints are not offered, rather than snapping to where they were.
+//! - RoboCAD's grid steps also need `show_grid`; the viewer has no grid
+//!   toggle, so the grid snap is always on.
 //! - A ray that misses the ground plane gives a point along the ray at the
 //!   distance of the model origin (RoboCAD uses its camera distance, which
 //!   the view snapshot does not carry).
-use super::topology::NodeTopology;
+use super::document::CadDocument;
+use super::mesh::CadMeshes;
+use super::sketch::{CadActivePlane, CadSketches};
+use super::topology::{CadTopology, NodeTopology};
 use super::view::{CadView, ray_plane};
 use bevy::prelude::*;
+use sim_runtime::cad_client::{PlaneFrame, SketchGeometry};
 
 /// RoboCAD's `snap_pixels` (viewport.py:300).
 pub const SNAP_PIXELS: f32 = 12.0;
@@ -39,7 +55,11 @@ pub enum SnapKind {
     Vertex,
     Midpoint,
     Center,
+    /// A sketch curve's point (RoboCAD's "endpoint").
+    Endpoint,
     Grid,
+    /// The cursor ray's hit on the snap plane (RoboCAD's "plane").
+    Plane,
     Free,
 }
 impl SnapKind {
@@ -48,7 +68,9 @@ impl SnapKind {
             SnapKind::Vertex => "vertex",
             SnapKind::Midpoint => "midpoint",
             SnapKind::Center => "center",
+            SnapKind::Endpoint => "endpoint",
             SnapKind::Grid => "grid",
+            SnapKind::Plane => "plane",
             SnapKind::Free => "free",
         }
     }
@@ -80,6 +102,10 @@ fn vec(p: [f64; 3]) -> Vec3 {
     Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32)
 }
 
+fn arr(p: Vec3) -> [f64; 3] {
+    [f64::from(p.x), f64::from(p.y), f64::from(p.z)]
+}
+
 /// The candidates of these nodes, in RoboCAD's order per node: vertices,
 /// then each edge polyline's middle sample, then edge centres. Nodes are
 /// taken in id order so ties resolve the same way every frame.
@@ -108,9 +134,70 @@ pub fn candidates<'a>(nodes: impl IntoIterator<Item = (&'a str, &'a NodeTopology
     out
 }
 
-/// The best snap under window pixel `cursor` (see the module doc). None
-/// only when the view is not ready.
+/// The sketch candidates, after the bodies' (viewport.py:1393-1404): each
+/// sketch's line, polyline, spline and control curves' points as
+/// "endpoint", then each curve's centre as "center", per curve, through
+/// the sketch's plane to the model frame. A sketch whose plane is unknown
+/// gives none. Sketches in the order given (the shown tree's).
+pub fn sketch_candidates<'a>(sketches: impl IntoIterator<Item = (&'a str, &'a SketchGeometry)>) -> Vec<Candidate> {
+    let mut out = Vec::new();
+    for (id, sketch) in sketches {
+        let Some(plane) = sketch.plane else { continue };
+        let world = |p: [f64; 2]| vec(plane.to_world(p[0], p[1], 0.0));
+        for c in &sketch.curves {
+            if matches!(c.kind.as_str(), "line" | "polyline" | "spline" | "control") {
+                out.extend(c.points.iter().map(|p| Candidate { point: world(*p), kind: SnapKind::Endpoint, node: id.to_string() }));
+            }
+            if let Some(centre) = c.center {
+                out.push(Candidate { point: world(centre), kind: SnapKind::Center, node: id.to_string() });
+            }
+        }
+    }
+    out
+}
+
+/// The visible sketch nodes of the shown tree with their geometry at the
+/// shown revision, in tree order (RoboCAD's `doc.nodes` order).
+pub(in crate::cad) fn shown_sketches<'a>(doc: &'a CadDocument, cache: &'a CadSketches) -> Vec<(&'a str, &'a SketchGeometry)> {
+    let Some(state) = &doc.doc else { return Vec::new() };
+    state.nodes.iter().filter(|n| n.kind == "sketch" && n.effective_visible).filter_map(|n| cache.sketch(&n.id).map(|g| (n.id.as_str(), &**g))).collect()
+}
+
+/// What the drawn candidates depend on: the topology's, meshes' and sketch cache's epochs.
+pub(in crate::cad) fn candidates_key(topology: Option<&CadTopology>, meshes: Option<&CadMeshes>, sketches: Option<&CadSketches>) -> (u64, u64, u64) {
+    (topology.map_or(0, |t| t.epoch), meshes.map_or(0, |m| m.epoch), sketches.map_or(0, |s| s.epoch))
+}
+
+/// Every snap candidate in view: the drawn bodies' ([`candidates`]), then
+/// the visible sketches' ([`sketch_candidates`]), RoboCAD's order.
+pub(in crate::cad) fn drawn_candidates(doc: &CadDocument, topology: Option<&CadTopology>, meshes: Option<&CadMeshes>, sketches: Option<&CadSketches>) -> Vec<Candidate> {
+    let mut out = match (topology, meshes) {
+        (Some(t), Some(m)) => candidates(t.ready().filter(|(id, _)| m.shown(id)).map(|(id, t)| (id.as_str(), &**t))),
+        _ => Vec::new(),
+    };
+    if let Some(cache) = sketches {
+        out.extend(sketch_candidates(shown_sketches(doc, cache)));
+    }
+    out
+}
+
+/// The plane a hover or pick snaps onto without a tool's own plane:
+/// RoboCAD's `active_plane if plane_snapping else None`. A plane node whose
+/// frame is still being read gives none.
+pub(in crate::cad) fn snap_plane(plane: Option<&CadActivePlane>) -> Option<PlaneFrame> {
+    plane.filter(|p| p.snap_2d).and_then(|p| p.frame().ok().flatten())
+}
+
+/// The best snap under window pixel `cursor` with no plane (see the module
+/// doc). None only when the view is not ready.
 pub fn snap(view: &CadView, cursor: Vec2, candidates: &[Candidate], suppress: bool) -> Option<Snap> {
+    snap_on(view, cursor, candidates, suppress, None)
+}
+
+/// The best snap under window pixel `cursor` (see the module doc), on
+/// `plane` when given (RoboCAD's `want_plane`, or the active plane with 2D
+/// snapping on). None only when the view is not ready.
+pub fn snap_on(view: &CadView, cursor: Vec2, candidates: &[Candidate], suppress: bool, plane: Option<&PlaneFrame>) -> Option<Snap> {
     let (origin, dir) = view.ray(cursor)?;
     if !suppress {
         let mut best: Option<&Candidate> = None;
@@ -124,8 +211,24 @@ pub fn snap(view: &CadView, cursor: Vec2, candidates: &[Candidate], suppress: bo
             }
         }
         if let Some(c) = best {
-            return Some(Snap { point: c.point, kind: c.kind, node: Some(c.node.clone()) });
+            // On a plane, the best snap is projected onto it (viewport.py:1405-1406).
+            let point = plane.map_or(c.point, |p| vec(p.project(arr(c.point))));
+            return Some(Snap { point, kind: c.kind, node: Some(c.node.clone()) });
         }
+    }
+    if let Some(p) = plane
+        && let Some(hit) = ray_plane(origin, dir, vec(p.origin), vec(p.normal))
+    {
+        if !suppress {
+            // The grid in the plane's own coordinates (viewport.py:1413-1418), half to even.
+            let [u, v, _] = p.to_local(arr(hit));
+            let step = f64::from(GRID_STEP);
+            let grid = vec(p.to_world((u / step).round_ties_even() * step, (v / step).round_ties_even() * step, 0.0));
+            if view.project(grid).is_some_and(|sp| (sp - cursor).length() < SNAP_PIXELS) {
+                return Some(Snap { point: grid, kind: SnapKind::Grid, node: None });
+            }
+        }
+        return Some(Snap { point: hit, kind: SnapKind::Plane, node: None });
     }
     if let Some(hit) = ray_plane(origin, dir, Vec3::ZERO, Vec3::Z) {
         if !suppress {
@@ -226,5 +329,48 @@ pub(crate) mod tests {
         let s = snap(&close, p, &[], false).unwrap();
         assert_eq!(s.kind, SnapKind::Free);
         assert!((s.point - Vec3::new(5.0, 5.0, 0.0)).length() < 0.01, "{:?}", s.point);
+    }
+
+    /// Sketch endpoints and centres come after the bodies', through the
+    /// sketch's plane; with a plane the best snap is projected onto it.
+    #[test]
+    fn sketch_endpoints_and_the_plane_step() {
+        use sim_runtime::cad_client::{SketchCurve, SketchGeometry};
+        let view = top_view(200.0);
+        // A sketch on XY offset 5 mm up: a line from (40, 0) to (60, 0), a circle centred at (-40, 0).
+        let plane = PlaneFrame { origin: [0.0, 0.0, 5.0], ..PlaneFrame::XY };
+        let sketch = SketchGeometry {
+            plane: Some(plane),
+            curves: vec![
+                SketchCurve { kind: "line".into(), points: vec![[40.0, 0.0], [60.0, 0.0]], ..Default::default() },
+                SketchCurve { kind: "circle".into(), center: Some([-40.0, 0.0]), radius: 3.0, ..Default::default() },
+            ],
+            ..Default::default()
+        };
+        let t = topology();
+        let mut cands = candidates([("n1", &t)]);
+        cands.extend(sketch_candidates([("k1", &sketch)]));
+        let kinds: Vec<SnapKind> = cands.iter().map(|c| c.kind).collect();
+        assert_eq!(kinds, vec![SnapKind::Vertex, SnapKind::Midpoint, SnapKind::Center, SnapKind::Endpoint, SnapKind::Endpoint, SnapKind::Center]);
+        assert_eq!(cands[3].point, Vec3::new(40.0, 0.0, 5.0));
+        let s = snap(&view, view.project(Vec3::new(41.0, 0.0, 5.0)).unwrap(), &cands, false).unwrap();
+        assert_eq!((s.kind, s.node.as_deref(), s.point), (SnapKind::Endpoint, Some("k1"), Vec3::new(40.0, 0.0, 5.0)));
+        assert_eq!(s.kind.name(), "endpoint");
+        // On the XY plane the endpoint is projected onto it.
+        let s = snap_on(&view, view.project(Vec3::new(41.0, 0.0, 5.0)).unwrap(), &cands, false, Some(&PlaneFrame::XY)).unwrap();
+        assert_eq!((s.kind, s.point), (SnapKind::Endpoint, Vec3::new(40.0, 0.0, 0.0)));
+        // Nothing near on a plane 20 mm up: the grid in its coordinates, else the hit ("plane").
+        let up = PlaneFrame { origin: [0.0, 0.0, 20.0], ..PlaneFrame::XY };
+        let s = snap_on(&view, view.project(Vec3::new(101.0, -49.0, 20.0)).unwrap(), &cands, false, Some(&up)).unwrap();
+        assert_eq!(s.kind, SnapKind::Grid);
+        assert!((s.point - Vec3::new(100.0, -50.0, 20.0)).length() < 1e-3, "{:?}", s.point);
+        let s = snap_on(&view, view.project(Vec3::new(101.0, -49.0, 20.0)).unwrap(), &cands, true, Some(&up)).unwrap();
+        assert_eq!((s.kind, s.kind.name()), (SnapKind::Plane, "plane"));
+        assert!((s.point - Vec3::new(101.0, -49.0, 20.0)).length() < 0.05, "{:?}", s.point);
+        // 2D snapping passes the active plane only while it is on.
+        let mut active = CadActivePlane { plane: Some(crate::cad::sketch::ActivePlane::Base(crate::cad::sketch::BasePlane::Xz)), ..Default::default() };
+        assert_eq!(snap_plane(Some(&active)), None);
+        active.snap_2d = true;
+        assert_eq!(snap_plane(Some(&active)), Some(PlaneFrame::XZ));
     }
 }

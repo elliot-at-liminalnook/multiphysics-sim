@@ -1,34 +1,352 @@
-//! P2: the active plane's systems (see `super` and the P2 brief).
-use super::{CadActivePlane, PlaneMode, ViewAct};
-use crate::cad::document::CadDocument;
+//! The active plane's systems (cad-sketch; RoboCAD's `viewport.active_plane`,
+//! `set_active_plane`, `toggle_plane_snapping` and `PlaneTool`).
+//!
+//! - [`sync`] (SimSync, core, after the cache): the active plane belongs
+//!   to one document generation (reset when it changes); a plane tool's new
+//!   plane node becomes active once its edit succeeds (`ops.plane_created`,
+//!   status "Active plane set", RoboCAD's `set_active_plane(pid)`); a plane
+//!   node's frame is filled from the cache at the shown revision and kept
+//!   while it is refetched; a plane node gone from the shown tree is
+//!   dropped with a status naming it; a read error is shown once.
+//! - **Selecting a plane node makes it active** (native addition, recorded:
+//!   RoboCAD has no such gesture; its plane nodes become active only when a
+//!   plane tool creates them). When the selection changes to exactly one
+//!   node of kind "plane", that node becomes the active plane.
+//! - [`view_act`]: "Active plane: XY|XZ|YZ" and "Toggle 2D snapping"
+//!   (app.py:1022-1031, the same status lines).
+//! - [`begin`]: `PlaneTool.activate` (tools.py:1078-1081): picks cleared,
+//!   selection mode face (from face, midplane) or vertex (three points,
+//!   camera).
+//! - **Picks** ([`picks`], SimSync; tools.py:1083-1111): a left press over
+//!   the 3D view (not while a command surface is open, or was when the press
+//!   came, nor while a text field has the keyboard): from face and midplane
+//!   take the face under the cursor (`ray_hit`, then `CadMeshes::face_at` at
+//!   the shown revision; a body being redrawn refuses by name), three
+//!   points and camera take the snap (`snap::snap_on` over the drawn bodies'
+//!   and sketches' candidates, on the active plane while 2D snapping is
+//!   on; RoboCAD's `ctx.snap(pos)`, no Alt). When the tool has its picks it
+//!   writes one `CadRun` (faces as `items` with the revision they were
+//!   picked at; points as the "x, y, z" parameters a, b, c; the camera's
+//!   direction is the view's at the run, `Arg::ViewDir`), clears the picks
+//!   and stays active, as RoboCAD's tool does. A face pick from an older
+//!   revision is dropped before the next is added (its index may name
+//!   another face now). The picks are drawn as markers ([`draw`], Present).
+//! - [`state_json`]: `cad_state.plane`.
+use super::{ActivePlane, BasePlane, CadActivePlane, CadSketches, PlaneMode, PlanePick, ViewAct};
+use crate::app::actions::Act;
+use crate::app::{ViewerMode, ViewerSet};
+use crate::cad::actions::CadAction;
+use crate::cad::document::{CadDocument, CadInputFocus, SelectMode};
+use crate::cad::mesh::{CadBody, CadMeshes};
+use crate::cad::ops::{Flow, entry};
+use crate::cad::snap::{self, Candidate};
+use crate::cad::topology::CadTopology;
+use crate::cad::transform::{HOT, ToolGizmos, cursor_in_view, marker, num, ray_hit};
+use crate::cad::view::CadView;
+use bevy::picking::hover::HoverMap;
+use bevy::picking::mesh_picking::ray_cast::MeshRayCast;
 use bevy::prelude::*;
-use serde_json::Value;
+use bevy::window::PrimaryWindow;
+use serde_json::{Map, Value, json};
+use sim_runtime::cad_client::SelectionItem;
 
-/// The window's plane systems: the plane tools' picks, the header line.
+/// RoboCAD's status line when the active plane is set (app.py:1026).
+const SET: &str = "Active plane set";
+
+/// The window's plane systems: the plane tools' picks and their markers.
 pub(in crate::cad) fn build(app: &mut App) {
-    let _ = app;
+    app.add_systems(
+        Update,
+        // After this frame's camera snapshot and the drawn bodies (the picks read both).
+        picks.after(crate::cad::view::update).after(crate::cad::mesh::sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+    )
+    .add_systems(Update, draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
+}
+
+/// What [`sync`] remembers across frames.
+#[derive(Default)]
+pub(in crate::cad) struct Seen {
+    /// The selection last looked at (a change to one plane node activates it).
+    selection: Option<Vec<SelectionItem>>,
+    /// The plane node and revision whose read error was last shown.
+    reported: Option<(String, u64)>,
+}
+
+/// The node's kind in the shown tree.
+fn kind<'a>(doc: &'a CadDocument, id: &str) -> Option<&'a str> {
+    doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).map(|n| n.kind.as_str())
 }
 
 /// SimSync (core, after `cache::sync`): reset on a new generation, adopt a
 /// plane tool's new node, fill and drop node frames, follow a selected plane node.
-pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMut<CadActivePlane>>, sketches: Option<Res<super::CadSketches>>) {
-    let _ = (doc, plane, sketches);
+pub(in crate::cad) fn sync(doc: Option<ResMut<CadDocument>>, plane: Option<ResMut<CadActivePlane>>, sketches: Option<Res<super::CadSketches>>, mut seen: Local<Seen>) {
+    let (Some(mut doc), Some(mut plane)) = (doc, plane) else { return };
+    let sketches = sketches.as_deref();
+    if plane.generation != doc.generation {
+        *plane = CadActivePlane { generation: doc.generation, ..default() };
+        *seen = Seen::default();
+    }
+    // A plane tool's new plane (its edit succeeded): RoboCAD's `set_active_plane(pid)`.
+    if doc.ops.plane_created.is_some()
+        && let Some(id) = doc.ops.plane_created.take()
+    {
+        let frame = sketches.and_then(|s| s.plane(&id));
+        plane.plane = Some(ActivePlane::Node { id, frame });
+        doc.show(Ok(SET.to_string()));
+    }
+    // A selection that changed to exactly one plane node makes it active (native addition).
+    if seen.selection.as_ref() != Some(&doc.selection) {
+        seen.selection = Some(doc.selection.clone());
+        let nodes = doc.selected_nodes();
+        if let [only] = nodes.as_slice()
+            && kind(&doc, only) == Some("plane")
+            && !matches!(&plane.plane, Some(ActivePlane::Node { id, .. }) if id == only)
+        {
+            let frame = sketches.and_then(|s| s.plane(only));
+            plane.plane = Some(ActivePlane::Node { id: only.clone(), frame });
+            doc.show(Ok(SET.to_string()));
+        }
+    }
+    let Some(ActivePlane::Node { id, frame }) = &plane.plane else { return };
+    let id = id.clone();
+    // A plane node gone from the shown tree is no longer the active plane.
+    if doc.doc.is_some() && !doc.has_node(&id) {
+        plane.plane = None;
+        doc.show(Ok(format!("The active plane (node {id}) is no longer in the document: no plane is active (XY is used)")));
+        return;
+    }
+    // Its frame at the shown revision; the last one is kept until the refetch lands.
+    let next = sketches.and_then(|s| s.plane(&id).or_else(|| frame.and(s.plane_last(&id))));
+    if next != *frame {
+        plane.plane = Some(ActivePlane::Node { id: id.clone(), frame: next });
+    }
+    // A frame that cannot be read is said once per revision (its label stays "(reading)").
+    if next.is_none()
+        && let Some(error) = sketches.and_then(|s| s.error(&id))
+    {
+        let at = (id.clone(), doc.shown_revision());
+        if seen.reported.as_ref() != Some(&at) {
+            let message = format!("The active plane {} could not be read from RoboCAD: {error}", doc.node_name(&id));
+            seen.reported = Some(at);
+            doc.show(Err(message));
+        }
+    }
 }
 
 /// `Flow::View`: set the active plane or toggle 2D snapping; the answer.
 pub(in crate::cad) fn view_act(doc: &mut CadDocument, plane: &mut CadActivePlane, act: ViewAct) -> Value {
-    let _ = (doc, plane, act);
-    Value::Null
+    if plane.generation != doc.generation {
+        *plane = CadActivePlane { generation: doc.generation, ..default() };
+    }
+    match act {
+        // RoboCAD's `set_active_plane(None, Plane.xy())` (app.py:1022-1027).
+        ViewAct::Plane(b) => {
+            plane.plane = Some(ActivePlane::Base(b));
+            doc.show(Ok(SET.to_string()));
+        }
+        // RoboCAD's `toggle_plane_snapping` (app.py:1029-1031).
+        ViewAct::Snap2d => {
+            plane.snap_2d = !plane.snap_2d;
+            doc.show(Ok(format!("2D snapping {}", if plane.snap_2d { "on" } else { "off" })));
+        }
+    }
+    json!({"plane": plane.label(doc), "snap_2d": plane.snap_2d})
 }
 
-/// `Flow::PlanePick` starts: RoboCAD's `PlaneTool.activate`.
+/// `Flow::PlanePick` starts: RoboCAD's `PlaneTool.activate` (tools.py:1078-1081).
 pub(in crate::cad) fn begin(doc: &mut CadDocument, mode: PlaneMode) -> Result<(), String> {
-    let _ = (doc, mode);
+    doc.ops.plane_picks.clear();
+    let select = match mode {
+        PlaneMode::Face | PlaneMode::Mid => SelectMode::Face,
+        PlaneMode::Three | PlaneMode::Camera => SelectMode::Vertex,
+    };
+    if doc.select_mode != select {
+        doc.select_mode = select;
+        crate::cad::selection::publish(doc);
+    }
     Ok(())
 }
 
-/// `cad_state.plane`.
+/// `cad_state.plane`: the label, the argument an operation sends for it
+/// (null with no active plane), its frame (or the error while a plane
+/// node is being read), 2D snapping and the generation.
 pub(in crate::cad) fn state_json(doc: &CadDocument, plane: &CadActivePlane) -> Value {
-    let _ = (doc, plane);
-    Value::Null
+    let arg = if plane.plane.is_some() { plane.arg_or(BasePlane::Xy) } else { Value::Null };
+    let frame = match plane.frame() {
+        Ok(Some(f)) => f.json(),
+        Ok(None) => Value::Null,
+        Err(e) => json!({"error": e}),
+    };
+    json!({"plane": plane.label(doc), "arg": arg, "frame": frame, "snap_2d": plane.snap_2d, "generation": plane.generation})
+}
+
+/// The plane tool that is active, with its mode.
+fn plane_tool(doc: &CadDocument) -> Option<(&'static str, PlaneMode)> {
+    let id = doc.ops.active?;
+    match entry(id)?.flow {
+        Flow::PlanePick(mode) => Some((id, mode)),
+        _ => None,
+    }
+}
+
+/// How many picks a mode needs (tools.py:1092-1111).
+fn needed(mode: PlaneMode) -> usize {
+    match mode {
+        PlaneMode::Face => 1,
+        PlaneMode::Mid | PlaneMode::Camera => 2,
+        PlaneMode::Three => 3,
+    }
+}
+
+/// A point as a POINT parameter's text ("x, y, z", mm).
+fn point_text(p: [f64; 3]) -> Value {
+    Value::String(p.map(num).join(", "))
+}
+
+/// The `CadRun` a complete set of picks sends, or None while picks are missing.
+pub(in crate::cad) fn run_for(id: &str, mode: PlaneMode, picks: &[PlanePick]) -> Option<CadAction> {
+    if picks.len() < needed(mode) {
+        return None;
+    }
+    let faces: Vec<(SelectionItem, u64)> = picks.iter().filter_map(|p| match p {
+        PlanePick::Face { node, face, revision } => Some((SelectionItem(node.clone(), "face".into(), *face), *revision)),
+        PlanePick::Point(_) => None,
+    }).collect();
+    let points: Vec<[f64; 3]> = picks.iter().filter_map(|p| match p {
+        PlanePick::Point(q) => Some(*q),
+        PlanePick::Face { .. } => None,
+    }).collect();
+    let (params, items, revision) = match mode {
+        PlaneMode::Face | PlaneMode::Mid => {
+            let revision = faces.first().map(|(_, r)| *r);
+            (Map::new(), Some(faces.into_iter().map(|(i, _)| i).collect::<Vec<_>>()), revision)
+        }
+        PlaneMode::Three | PlaneMode::Camera => {
+            let params: Map<String, Value> = ["a", "b", "c"].iter().zip(&points).map(|(k, p)| ((*k).to_string(), point_text(*p))).collect();
+            (params, None, None)
+        }
+    };
+    Some(CadAction::CadRun { id: id.to_string(), params, items, revision })
+}
+
+/// What [`picks`] remembers across frames.
+#[derive(Default)]
+struct Picker {
+    /// Snap candidates of the drawn bodies and sketches, by their epochs.
+    cache: Option<((u64, u64, u64), Vec<Candidate>)>,
+    /// A command surface was open at the end of the last frame's SimSync.
+    surface_open: bool,
+}
+
+/// SimSync: a plane tool's picks (see the module doc).
+#[allow(clippy::too_many_arguments)]
+fn picks(
+    doc: Option<ResMut<CadDocument>>,
+    (view, topology, meshes, plane, sketches, focus): (Option<Res<CadView>>, Option<Res<CadTopology>>, Option<Res<CadMeshes>>, Option<Res<CadActivePlane>>, Option<Res<CadSketches>>, Option<Res<CadInputFocus>>),
+    windows: Query<&Window, With<PrimaryWindow>>,
+    buttons: Option<Res<ButtonInput<MouseButton>>>,
+    hover: Option<Res<HoverMap>>,
+    nodes: Query<(), With<Node>>,
+    mut cast: MeshRayCast,
+    bodies: Query<&CadBody>,
+    mut out: MessageWriter<Act<CadAction>>,
+    mut state: Local<Picker>,
+) {
+    let (Some(mut doc), Some(view), Some(meshes)) = (doc, view, meshes) else { return };
+    let state = &mut *state;
+    // The surface as this frame's Input saw it: an outside press closed it in Actions, before this system.
+    let surface_was_open = std::mem::replace(&mut state.surface_open, doc.ops.surface.is_some());
+    let Some((id, mode)) = plane_tool(&doc) else { return };
+    let focused = focus.is_some_and(|f| f.0);
+    let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !surface_was_open && doc.ops.surface.is_none() && !focused;
+    if !pressed || !view.valid {
+        return;
+    }
+    let Some(cursor) = cursor_in_view(windows.single().ok(), &view, hover.as_deref(), &nodes) else { return };
+    let shown = doc.shown_revision();
+    let pick = match mode {
+        PlaneMode::Face | PlaneMode::Mid => {
+            // RoboCAD's `request_pick`: only a face hit counts (tools.py:1086-1088).
+            let Some(hit) = ray_hit(&doc, &mut cast, &view, cursor, &bodies) else { return };
+            if meshes.drawn_revision(&hit.node).is_some_and(|r| r != shown) {
+                let name = doc.node_name(&hit.node);
+                doc.show(Err(format!("{name} is being redrawn for revision {shown}; click again in a moment")));
+                return;
+            }
+            let Some(face) = hit.triangle.and_then(|t| meshes.face_at(&hit.node, t, shown)) else { return };
+            PlanePick::Face { node: hit.node, face, revision: shown }
+        }
+        PlaneMode::Three | PlaneMode::Camera => {
+            let key = snap::candidates_key(topology.as_deref(), Some(&*meshes), sketches.as_deref());
+            if state.cache.as_ref().is_none_or(|(k, _)| *k != key) {
+                state.cache = Some((key, snap::drawn_candidates(&doc, topology.as_deref(), Some(&*meshes), sketches.as_deref())));
+            }
+            let candidates: &[Candidate] = match state.cache.as_ref() {
+                Some((_, c)) => c,
+                None => &[],
+            };
+            // RoboCAD's `ctx.snap(pos)`: no Alt, the active plane only with 2D snapping on.
+            let on = snap::snap_plane(plane.as_deref());
+            let Some(s) = snap::snap_on(&view, cursor, candidates, false, on.as_ref()) else { return };
+            PlanePick::Point([f64::from(s.point.x), f64::from(s.point.y), f64::from(s.point.z)])
+        }
+    };
+    let ops = &mut doc.ops;
+    // A face picked at an older revision may name another face now.
+    ops.plane_picks.retain(|p| !matches!(p, PlanePick::Face { revision, .. } if *revision != shown));
+    ops.plane_picks.push(pick);
+    let n = ops.plane_picks.len();
+    match run_for(id, mode, &ops.plane_picks) {
+        Some(run) => {
+            // The tool stays active with no picks (RoboCAD's `self.picks = []`).
+            ops.plane_picks.clear();
+            out.write(Act::ui(run));
+        }
+        None => {
+            let hint = entry(id).map_or("", |e| e.hint);
+            doc.show(Ok(format!("{hint} ({n} of {})", needed(mode))));
+        }
+    }
+}
+
+/// Present: the plane tool's picks as markers (display only): a point at
+/// itself, a face at its centroid in the shown topology.
+fn draw(doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, topology: Option<Res<CadTopology>>, mut gizmos: Gizmos<ToolGizmos>) {
+    let (Some(doc), Some(view)) = (doc, view) else { return };
+    if doc.ops.plane_picks.is_empty() || !view.valid || plane_tool(&doc).is_none() {
+        return;
+    }
+    let at = |p: [f64; 3]| Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32);
+    for pick in &doc.ops.plane_picks {
+        let point = match pick {
+            PlanePick::Point(p) => Some(at(*p)),
+            PlanePick::Face { node, face, .. } => topology.as_deref().and_then(|t| t.get(node)).and_then(|t| t.faces.iter().find(|f| f.index == *face)).and_then(|f| f.centroid).map(at),
+        };
+        if let Some(p) = point {
+            marker(&mut gizmos, &view, p, 9.0, HOT);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A complete set of picks is one `CadRun`: faces as items at their
+    /// revision, points as "x, y, z" parameters; fewer picks send nothing.
+    #[test]
+    fn complete_picks_make_one_run() {
+        let face = |node: &str, face: i64| PlanePick::Face { node: node.into(), face, revision: 7 };
+        assert_eq!(run_for("tool.plane_mid", PlaneMode::Mid, &[face("b1", 2)]), None);
+        let Some(CadAction::CadRun { id, params, items, revision }) = run_for("tool.plane_mid", PlaneMode::Mid, &[face("b1", 2), face("b2", 5)]) else { panic!("no run") };
+        assert_eq!((id.as_str(), params.is_empty(), revision), ("tool.plane_mid", true, Some(7)));
+        assert_eq!(items, Some(vec![SelectionItem("b1".into(), "face".into(), 2), SelectionItem("b2".into(), "face".into(), 5)]));
+        let picks = [PlanePick::Point([0.0, 0.0, 0.0]), PlanePick::Point([10.0, 0.0, 0.0]), PlanePick::Point([0.0, 10.5, 0.0])];
+        assert_eq!(run_for("tool.plane_three", PlaneMode::Three, &picks[..2]), None);
+        let Some(CadAction::CadRun { params, items, revision, .. }) = run_for("tool.plane_three", PlaneMode::Three, &picks) else { panic!("no run") };
+        assert_eq!(Value::Object(params), json!({"a": "0, 0, 0", "b": "10, 0, 0", "c": "0, 10.5, 0"}));
+        assert_eq!((items, revision), (None, None));
+        let Some(CadAction::CadRun { params, .. }) = run_for("tool.plane_camera", PlaneMode::Camera, &picks[..2]) else { panic!("no run") };
+        assert_eq!(Value::Object(params), json!({"a": "0, 0, 0", "b": "10, 0, 0"}));
+    }
 }

@@ -13,7 +13,7 @@ use std::time::Instant;
 
 /// One request as the fake server received it.
 #[derive(Debug)]
-struct Seen {
+pub(super) struct Seen {
     head: String,
     body: String,
 }
@@ -31,7 +31,7 @@ impl Seen {
 }
 
 /// What the fake server does with one connection.
-enum Answer {
+pub(super) enum Answer {
     /// Reads the request and closes without answering.
     Close,
     /// Reads the request, holds the connection this long without
@@ -42,12 +42,12 @@ enum Answer {
     Json(u16, String),
 }
 
-fn ok(body: &str) -> Answer {
+pub(super) fn ok(body: &str) -> Answer {
     Answer::Json(200, body.to_string())
 }
 
 /// Accepts one connection per answer and records each request.
-fn serve(answers: Vec<Answer>) -> (CadClient, JoinHandle<Vec<Seen>>) {
+pub(super) fn serve(answers: Vec<Answer>) -> (CadClient, JoinHandle<Vec<Seen>>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
     listener.set_nonblocking(true).unwrap();
@@ -113,7 +113,7 @@ fn with_body(port: u16, body: &str) -> Vec<String> {
     vec![format!("Host: 127.0.0.1:{port}"), "Content-Type: application/json".into(), format!("Content-Length: {}", body.len()), "Connection: close".into()]
 }
 
-fn assert_request(seen: &Seen, line: &str, port: u16, body: Option<&str>) {
+pub(super) fn assert_request(seen: &Seen, line: &str, port: u16, body: Option<&str>) {
     assert_eq!(seen.request_line(), line);
     let expected = match body {
         Some(body) => with_body(port, body),

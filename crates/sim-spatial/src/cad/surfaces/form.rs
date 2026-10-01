@@ -24,7 +24,11 @@
 //!   press elsewhere ends the typing. With no field focused, Enter submits
 //!   (RoboCAD's default button, and Enter applies a tool's values), and Tab
 //!   focuses the first text field (RoboCAD's "Numeric entry (Tab)") unless
-//!   the numeric bar or the name field has the keyboard.
+//!   the numeric bar or the name field has the keyboard. A sketch tool's
+//!   form is the exception: Enter outside its fields does nothing here
+//!   (RoboCAD's sketch tools take Enter only to finish a spline,
+//!   `sketch::interact`), and the field its start focused (the text tool's
+//!   "Text to sketch:") keeps the keyboard.
 //! - A modal form opens with its first number field focused (as the
 //!   catalogue opens it, RoboCAD's dialog); a tool's form opens unfocused,
 //!   as RoboCAD's numeric bar does until Tab.
@@ -177,8 +181,11 @@ pub(super) fn input(
     let (mut started, mut ended) = (false, false);
     if *seen != Some((form.op, form.began)) {
         *seen = Some((form.op, form.began));
-        // A tool's values are not focused until Tab (RoboCAD's numeric bar).
-        if !modal {
+        // A tool's values are not focused until Tab (RoboCAD's numeric bar),
+        // except the field a sketch tool's start focused: the text tool's
+        // "Text to sketch:" (RoboCAD's `getText` dialog comes first;
+        // `sketch::interact::begin`).
+        if !modal && !matches!(entry.flow, ops::Flow::Sketch(_)) {
             at = None;
         }
         // Keys pressed before the form opened (its own shortcut) are not its text.
@@ -253,6 +260,7 @@ pub(super) fn input(
     } else if let Some(mut i) = at {
         let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
         let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
+        let mut released = false;
         for e in typed {
             let mut d = TextDraft { text: texts.get(i).cloned().unwrap_or_default(), select_all };
             match d.key(&e.logical_key, chord) {
@@ -261,6 +269,14 @@ pub(super) fn input(
                         *t = d.text;
                     }
                     select_all = d.select_all;
+                }
+                // The text tool's "Text to sketch:" is RoboCAD's `getText`
+                // dialog: its OK starts the tool's clicks (the text is placed
+                // where the user clicks), it does not place the text.
+                DraftKey::Enter if matches!(entry.flow, ops::Flow::Sketch(_)) && entry.params.get(i).is_some_and(|p| p.kind == FieldKind::Text) => {
+                    released = true;
+                    ended = true;
+                    break;
                 }
                 DraftKey::Enter => {
                     out.write(Act::ui(CadAction::CadFormSubmit));
@@ -278,10 +294,14 @@ pub(super) fn input(
                 DraftKey::Ignored => {}
             }
         }
-        at = Some(i);
+        at = if released { None } else { Some(i) };
     } else {
         events.clear();
-        if keys.as_ref().is_some_and(|k| k.just_pressed(KeyCode::Enter)) && !others {
+        // A sketch tool's Enter outside its fields is not OK: RoboCAD's
+        // `SketchTool.key` takes Enter only to finish a spline
+        // (`sketch::interact`), and its Tab values commit from the numeric bar.
+        let sketching = matches!(entry.flow, ops::Flow::Sketch(_));
+        if keys.as_ref().is_some_and(|k| k.just_pressed(KeyCode::Enter)) && !others && !sketching {
             out.write(Act::ui(CadAction::CadFormSubmit));
         }
     }

@@ -822,14 +822,21 @@ class Service:
                 kwargs = call[2] if len(call) > 2 else {}
                 if not hasattr(sk, method) or method.startswith("_"):
                     raise ApiError(400, f"no sketch method {method}")
-                args = [tuple(a) if isinstance(a, list) and len(a) == 2 and all(isinstance(x, (int, float)) for x in a) else ([tuple(p) for p in a] if isinstance(a, list) and a and isinstance(a[0], list) else a) for a in args]
-                target = sk
-                if method in ("trim", "extend", "split_at", "fillet_corner", "offset", "reverse", "remove", "unjoin", "rebuild", "insert_vertex", "remove_vertex") and args and isinstance(args[0], int):
+                # Curve indices become curves first, so a list of exactly two
+                # indices is not mistaken for a point by the conversion below.
+                args, curve_args = list(args), set()
+                ints = lambda a: isinstance(a, list) and all(isinstance(i, int) for i in a)
+                if method in ("trim", "extend", "split_at", "fillet_corner", "offset", "reverse", "remove", "unjoin", "rebuild", "insert_vertex", "remove_vertex", "arc_tangent") and args and isinstance(args[0], int):
                     args[0] = sk.curves[args[0]]
-                if method in ("trim", "extend") and len(args) > 1 and isinstance(args[1], list):
+                    curve_args.add(0)
+                if method in ("trim", "extend") and len(args) > 1 and ints(args[1]):
                     args[1] = [sk.curves[i] for i in args[1]]
-                if method == "join" and args and isinstance(args[0], list):
+                    curve_args.add(1)
+                if method in ("join", "circle_tangent") and args and ints(args[0]):
                     args[0] = [sk.curves[i] for i in args[0]]
+                    curve_args.add(0)
+                args = [a if i in curve_args else tuple(a) if isinstance(a, list) and len(a) == 2 and all(isinstance(x, (int, float)) for x in a) else ([tuple(p) for p in a] if isinstance(a, list) and a and isinstance(a[0], list) else a) for i, a in enumerate(args)]
+                target = sk
                 getattr(target, method)(*args, **kwargs)
 
         self.ops.edit_sketch(n.id, fn, label="Sketch (API)")

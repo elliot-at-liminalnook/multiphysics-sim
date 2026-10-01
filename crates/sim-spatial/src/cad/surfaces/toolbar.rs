@@ -12,6 +12,15 @@
 //! the active interaction or open form (`ops.active`, `ops.form`). Entries
 //! owned by a later epic are disabled, the hint naming the epic.
 //!
+//! Rectangle, Circle, Slot and Extrude (`sketch.rectangle`,
+//! `sketch.circle`, `sketch.slot`, `tool.extrude`) are catalogue
+//! operations (cad-sketch): `registry::resolve` finds them in the
+//! catalogue, so they are enabled as any interaction is (`registry::ready`:
+//! connected, no edit in flight). The three sketch buttons are lit while
+//! their sketch tool is active ([`checkable`]): a deliberate difference,
+//! as RoboCAD's toolbar makes only `tool.*` checkable (app.py:445-446), so its
+//! Rectangle, Circle and Slot never show which sketch tool is drawing.
+//!
 //! The bar has a fixed height ([`COMMAND_BAR`]); the menu row and the
 //! toolbar row each scroll sideways with the wheel when wider than the view
 //! (RoboCAD's Qt toolbar folds its overflow behind a "»" button instead).
@@ -106,6 +115,12 @@ pub(super) fn spawn(mut commands: Commands, fonts: Res<UiFonts>) {
         ));
 }
 
+/// Whether a toolbar button is checkable: RoboCAD's `tool.*`, and the
+/// sketch tools (see the module doc).
+fn checkable(id: &str) -> bool {
+    id.starts_with("tool.") || id.starts_with("sketch.")
+}
+
 /// Whether a checkable toolbar command is the active tool or interaction.
 fn lit(doc: &CadDocument, cmd: &Command) -> bool {
     match registry::resolve(cmd) {
@@ -162,7 +177,7 @@ pub(super) fn refresh(
         for id in TOOLBAR {
             let Some(cmd) = registry::command(id) else { continue };
             let ready = registry::ready(cmd, &doc, &own);
-            let on = id.starts_with("tool.") && lit(&doc, cmd);
+            let on = checkable(id) && lit(&doc, cmd);
             p.spawn(k.chip(cmd.label, CadButton(CadAction::CadInvoke { id: id.to_string() }), on, ready.is_ok())).insert(Hint(describe(cmd, &ready)));
         }
     });

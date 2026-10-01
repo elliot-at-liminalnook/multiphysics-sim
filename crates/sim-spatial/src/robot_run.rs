@@ -1,8 +1,9 @@
 //! Robot-mode run thread: one worker owns the simulation and advances it in
-//! fixed sim-time chunks, paced at most to real time. For `--robot FILE` it is
+//! fixed sim-time chunks, paced at most to real time. For a physical (v3+)
+//! `--robot FILE` (a planar v2 file runs on `robot_planar`'s thread instead) it is
 //! the shared `sim_runtime::physical::PhysicalRobot` (built from a clone of the
-//! loaded model with `sim_runtime::registry()` and `BuildOptions::default()`,
-//! as sim-app's cad scene does); for a preset (`robot_preset`) it is the shared
+//! loaded model with `sim_runtime::registry()` and `BuildOptions::default()`);
+//! for a preset (`robot_preset`) it is the shared
 //! `EmbeddedEnvironment` (with a task) or `EmbeddedSession` built from the
 //! preset's files unchanged. The UI thread only sends commands and applies the
 //! published frames; it never builds, advances or locks the simulation.
@@ -23,13 +24,13 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
-/// Sim time advanced per chunk (s): sim-app's 0.02 s grid. Step advances
+/// Sim time advanced per chunk (s): the 0.02 s grid (also the planar v2 run's, `robot_planar::GRID_S`). Step advances
 /// exactly one chunk; running advances whole chunks.
 pub const CHUNK_S: f64 = 0.02;
 /// Wall-clock window over which the real-time factor is measured.
 const RTF_WINDOW: Duration = Duration::from_secs(1);
 pub const PACING: &str = "paced at most to speed_scale × real time (pace()): a chunk starts only when (wall time since the anchor) × speed_scale has caught up with sim time since the anchor; the anchor is (wall, sim) at Run, at a replay start and at every speed change, so a mid-run change causes no burst and no stall; lag beyond one chunk is dropped (re-anchored), never made up faster than speed_scale × real time. The scale changes pacing only: dt, chunk_s and the physics step are unchanged. FILE runs, preset runs and replays share this one rule. rtf = sim seconds / wall seconds over the last ~1 s of running (restarted at a speed change), including pacing sleeps; null when not running";
-/// Run speed scales (× real time), powers of two as sim-app's cad scene.
+/// Run speed scales (× real time), powers of two (the planar v2 run uses the same scales).
 pub const SPEED_SCALES: [f64; 7] = [0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0];
 /// Achieved rtf below this fraction of speed_scale while running is reported as compute-limited.
 pub const COMPUTE_LIMITED_FRACTION: f64 = 0.9;
@@ -242,11 +243,11 @@ impl Frame {
     }
 }
 
-/// Force line length per newton of contact force (m/N), as sim-app's cad scene.
+/// Force line length per newton of contact force (m/N).
 pub const FORCE_SCALE_M_PER_N: f64 = 0.005;
-/// Deflection lines are drawn this many times their displacement, as sim-app's cad scene.
+/// Deflection lines are drawn this many times their displacement.
 pub const DEFLECTION_MAGNIFICATION: f64 = 50.0;
-/// Half-length of each drawn joint axis (m), as sim-app's cad scene.
+/// Half-length of each drawn joint axis (m).
 pub const JOINT_AXIS_HALF_M: f64 = 0.02;
 /// Contacts listed with their values in `robot_state.overlays` (all are counted).
 pub const OVERLAY_SAMPLE: usize = 4;
@@ -260,7 +261,7 @@ pub struct OverlayFlags {
     pub deflections: bool,
 }
 impl Default for OverlayFlags {
-    /// sim-app's cad scene draws all three (contacts toggleable, on by default).
+    /// All three are drawn by default (each toggleable).
     fn default() -> Self {
         Self { contacts: true, joints: true, deflections: true }
     }

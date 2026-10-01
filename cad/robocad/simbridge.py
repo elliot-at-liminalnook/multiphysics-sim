@@ -14,9 +14,10 @@ edit → Ctrl+S → watch it move.
 
 The live-loop viewer is sim-spatial robot mode (`viewer_command`): it
 watches the model file and reloads in place, and a model that does not
-exist yet (a first background export) loads when it appears. The legacy
-`sim-app --scene cad --model file` window is only a labelled fallback when
-sim-spatial is not built.
+exist yet (a first background export) loads when it appears. It opens both
+generations: a physical (v3+) export, and a planar (v2) summary, which it
+runs through sim-phenomena's planar build. When sim-spatial is not built,
+nothing is launched and the message names the build command.
 """
 
 from __future__ import annotations
@@ -188,9 +189,9 @@ VIEWER_BUILD = "cargo build --release -p sim-spatial"
 def viewer_command(model_path: str) -> tuple[Optional[list[str]], str]:
     """The live-loop viewer for `model_path`: `(argv, message)`.
 
-    sim-spatial robot mode, release preferred over debug; else the legacy
-    sim-app cad scene with a message naming the fallback; else `(None, …)`
-    naming the build command. The message is empty for the normal case.
+    sim-spatial robot mode, release preferred over debug; when neither is
+    built, `(None, …)` with a message naming the build command (there is no
+    other viewer to fall back to). The message is empty for the normal case.
     sim-spatial tolerates a model that is not written yet and loads it when
     it appears, so callers need not wait for a background export. The path
     is made absolute here because the viewer runs with cwd=ROOT while
@@ -200,9 +201,6 @@ def viewer_command(model_path: str) -> tuple[Optional[list[str]], str]:
         exe = os.path.join(ROOT, "target", profile, "sim-spatial")
         if os.path.exists(exe):
             return [exe, "--robot", model_path], ""
-    legacy = os.path.join(ROOT, "target", "release", "sim-app")
-    if os.path.exists(legacy):
-        return [legacy, "--scene", "cad", "--model", model_path], f"sim-spatial not built; falling back to legacy sim-app cad scene (build: {VIEWER_BUILD})"
     return None, f"no simulator viewer built: {VIEWER_BUILD}"
 
 
@@ -214,8 +212,8 @@ def _viewer_env() -> dict:
 
 class SimLink:
     """Watches the document file; on every save re-exports the sim model
-    and starts the viewer (`viewer_command`: sim-spatial, else the labelled
-    sim-app fallback) when none is running. The viewer itself watches the
+    and starts the viewer (`viewer_command`: sim-spatial robot mode; when it
+    is not built, only a status naming the build command) when none is running. The viewer itself watches the
     model file, so it reloads in place and is never relaunched per save."""
 
     def __init__(self, doc: Document, app=None):

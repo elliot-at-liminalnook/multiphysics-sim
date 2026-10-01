@@ -20,6 +20,7 @@ pub mod robot;
 pub mod robot_gait;
 pub mod robot_graphs;
 pub mod robot_motion;
+pub mod robot_planar;
 pub mod robot_playback;
 pub mod robot_preset;
 pub mod robot_recording;

@@ -2,15 +2,17 @@
 //! `.simrobot.json` is re-read when it changes on disk, and on a manual
 //! Reload. The UI thread only stats the file (length and mtime, every
 //! [`POLL`]); reading, hashing and parsing run on a worker through the same
-//! loader as the first open ([`crate::robot::load_bytes`]). Presets are not
-//! watched.
+//! loader as the first open ([`crate::robot::load_file_bytes`]: a physical
+//! (v3+) file through `PhysicalModel`, a planar (v2) one as sim-phenomena's
+//! `CadModel`, by the shared version rule). Presets are not watched.
 //!
 //! A half-written file is never applied: a model is applied only after the
 //! whole file was read, its sha256 differs from the loaded file's and the
 //! same bytes parsed. A failed attempt keeps the loaded hash, stat and
 //! model; the stat of the failed attempt is remembered, so the next write
 //! (a changed stat) retries.
-use crate::robot::{Loaded, load_bytes};
+use crate::robot::{Loaded, load_file_bytes};
+use crate::robot_planar::PlanarLoaded;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
@@ -18,7 +20,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 /// How often the UI thread stats the opened file.
 pub const POLL: Duration = Duration::from_millis(500);
-pub const RULE: &str = "FILE mode only: the UI thread stats the opened file (length, mtime) every 0.5 s; a changed stat, or a manual Reload, reads and sha256-hashes the whole file on a worker thread. Identical bytes (a touch, an atomic rewrite with the same content) are `unchanged` and nothing is replaced. Different bytes go through the same loader as the first open (PhysicalModel::parse, triangulation, CAD link status); only a successful parse is applied (`loaded`). A read or parse error (`failed`) keeps the last good model, its hash and its run; the next change on disk retries. Presets are not watched.";
+pub const RULE: &str = "FILE mode only: the UI thread stats the opened file (length, mtime) every 0.5 s; a changed stat, or a manual Reload, reads and sha256-hashes the whole file on a worker thread. Identical bytes (a touch, an atomic rewrite with the same content) are `unchanged` and nothing is replaced. Different bytes go through the same loader as the first open: the version rule (sim_domain_robot::model::simrobot_version: the `version` field, 2 when absent) sends version >= 3 to PhysicalModel::parse, triangulation and CAD link status, and a planar v2 file to sim-phenomena's CadModel from the same bytes (run by the shared CadRobot planar build, cad_robot::build_planar, on the planar run thread); only a successful parse is applied (`loaded`), and a reload may switch between the two (the old run is dropped). A read or parse error (`failed`) keeps the last good model, its hash and its run; the next change on disk retries. Presets are not watched.";
 
 /// What started a load of the source file.
 #[derive(Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -43,8 +45,14 @@ pub fn stat(path: &Path) -> Option<Stat> {
     std::fs::metadata(path).ok().map(|m| Stat { len: m.len(), modified: m.modified().ok() })
 }
 
+/// A loaded file: a physical (v3+) model, or a planar (v2) summary.
+pub enum FileModel {
+    Physical(Box<Loaded>),
+    Planar(Box<PlanarLoaded>),
+}
+
 pub enum Outcome {
-    Loaded(Box<Loaded>),
+    Loaded(FileModel),
     /// The bytes hash to the loaded file's hash.
     Unchanged,
     /// A read or parse error naming the path.
@@ -84,8 +92,8 @@ pub fn check(path: &Path, loaded_hash: Option<&str>) -> Checked {
             let outcome = if loaded_hash == Some(hash.as_str()) {
                 Outcome::Unchanged
             } else {
-                match load_bytes(path, &bytes) {
-                    Ok(l) => Outcome::Loaded(Box::new(l)),
+                match load_file_bytes(path, &bytes) {
+                    Ok(l) => Outcome::Loaded(l),
                     Err(e) => Outcome::Failed(e),
                 }
             };
@@ -188,7 +196,7 @@ impl SourceWatch {
     }
     /// Records a finished check; returns the model to apply (only `loaded`).
     /// A failure keeps `hash`, so different content later is still a change.
-    pub fn settle(&mut self, trigger: Trigger, checked: Checked, now_utc: String) -> Option<Box<Loaded>> {
+    pub fn settle(&mut self, trigger: Trigger, checked: Checked, now_utc: String) -> Option<FileModel> {
         self.stat = checked.stat;
         let error = match &checked.outcome {
             Outcome::Failed(e) => Some(e.clone()),
@@ -264,7 +272,7 @@ mod tests {
         let mut w = SourceWatch::open(path.clone());
         let (trigger, checked) = finished(&mut w);
         assert_eq!(trigger, Trigger::Open);
-        let first = w.settle(trigger, checked, now_utc()).expect("the copy loads");
+        let Some(FileModel::Physical(first)) = w.settle(trigger, checked, now_utc()) else { panic!("the copy loads as a physical model") };
         let (hash0, mass0) = (w.hash.clone().unwrap(), first.model.links[0].mass);
         assert!(!w.poll(Instant::now() + POLL * 2), "an unchanged file is not a change");
         let (mut run, reset) = RunController::replace(None, first.model.clone());
@@ -282,7 +290,7 @@ mod tests {
         assert!(w.start(Trigger::Manual).unwrap_err().contains("already in progress"));
         let (trigger, checked) = finished(&mut w);
         assert_eq!(checked.outcome.name(), "loaded");
-        let next = w.settle(trigger, checked, now_utc()).expect("changed mass applies");
+        let Some(FileModel::Physical(next)) = w.settle(trigger, checked, now_utc()) else { panic!("changed mass applies") };
         assert_eq!(next.model.links[0].mass, mass1);
         assert_ne!(mass1, mass0);
         let hash1 = w.hash.clone().unwrap();

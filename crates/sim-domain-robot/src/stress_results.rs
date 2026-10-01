@@ -2,7 +2,7 @@
 //! `sim_runtime::physical::PhysicalRobot::results`, contract:
 //! `cad/PHYSICAL_MODEL.md`) for display: the per-link stress hotspot
 //! colouring and the provenance check. Pure functions over the parsed JSON;
-//! the viewers (sim-app's cad scene, sim-spatial robot mode) share them.
+//! the viewers (sim-spatial robot mode) share them.
 use serde_json::Value;
 
 /// The colour scale the stress colouring uses, for labels.

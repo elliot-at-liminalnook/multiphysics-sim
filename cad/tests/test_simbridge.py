@@ -43,8 +43,8 @@ def test_joint_parent_inferred():
     assert js[0]["parent"] == "base"
 
 
-# The live-loop viewer: sim-spatial robot mode, release then debug, else the
-# labelled sim-app fallback, else no launch and the build command.
+# The live-loop viewer: sim-spatial robot mode, release then debug, else no
+# launch and the build command (no other viewer is ever launched).
 
 import os
 from unittest import mock
@@ -61,7 +61,7 @@ def _built(*rel):
 
 
 def test_viewer_prefers_release_sim_spatial():
-    with _built("release/sim-spatial", "debug/sim-spatial", "release/sim-app"):
+    with _built("release/sim-spatial", "debug/sim-spatial"):
         argv, message = viewer_command("/m/robot.simrobot.json")
     assert argv == [os.path.join(ROOT, "target", "release", "sim-spatial"), "--robot", "/m/robot.simrobot.json"]
     assert message == ""
@@ -75,21 +75,21 @@ def test_viewer_passes_an_absolute_model_path(tmp_path, monkeypatch):
 
 
 def test_viewer_debug_when_no_release():
-    with _built("debug/sim-spatial", "release/sim-app"):
+    with _built("debug/sim-spatial"):
         argv, message = viewer_command("/m/robot.simrobot.json")
     assert argv == [os.path.join(ROOT, "target", "debug", "sim-spatial"), "--robot", "/m/robot.simrobot.json"]
     assert message == ""
 
 
-def test_viewer_falls_back_to_sim_app_with_message():
-    with _built("release/sim-app"):
-        argv, message = viewer_command("/m/robot.simrobot.json")
-    assert argv == [os.path.join(ROOT, "target", "release", "sim-app"), "--scene", "cad", "--model", "/m/robot.simrobot.json"]
-    assert "sim-spatial not built" in message and "legacy sim-app" in message and "cargo build --release -p sim-spatial" in message
-
-
 def test_viewer_none_names_build_command():
     with _built():
+        argv, message = viewer_command("/m/robot.simrobot.json")
+    assert argv is None and message == "no simulator viewer built: cargo build --release -p sim-spatial"
+
+
+def test_viewer_without_sim_spatial_launches_nothing_whatever_else_is_built():
+    # Any other binary under target/ is never a fallback.
+    with mock.patch.object(simbridge.os.path, "exists", side_effect=lambda p: not p.endswith(os.sep + "sim-spatial")):
         argv, message = viewer_command("/m/robot.simrobot.json")
     assert argv is None and "cargo build --release -p sim-spatial" in message
 
@@ -127,12 +127,7 @@ def test_simlink_launch_argv_cwd_env_and_no_relaunch_while_alive(tmp_path):
     popen.assert_called_once()
 
 
-def test_simlink_launch_fallback_and_none_report_status(tmp_path):
-    link = _link(tmp_path)
-    with _built("release/sim-app"), mock.patch.object(simbridge.subprocess, "Popen") as popen:
-        link.launch()
-    assert popen.call_args[0][0][1:4] == ["--scene", "cad", "--model"]
-    assert "falling back to legacy sim-app" in link.app.messages[-1]
+def test_simlink_without_sim_spatial_reports_build_command_and_launches_nothing(tmp_path):
     link = _link(tmp_path)
     with _built(), mock.patch.object(simbridge.subprocess, "Popen") as popen:
         link.launch()

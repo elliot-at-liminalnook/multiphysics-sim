@@ -119,6 +119,10 @@ impl PartialEq for SceneId {
 /// The loaded run's scene (Ok(None) while Robot mode loads; Err for
 /// `--robot FILE`, which has no scene).
 pub fn scene_of(view: &crate::robot::RobotView) -> Result<Option<SceneSource>, String> {
+    // A planar v2 file has no run here (it runs on robot_planar's thread) and no scene to pose.
+    if view.is_planar() {
+        return Err(crate::robot_planar::NO_MIRROR.into());
+    }
     let Some(run) = view.run.as_ref() else { return Ok(None) };
     if let Some(p) = run.preset() {
         return Ok(Some(SceneSource::Preset(p.clone())));

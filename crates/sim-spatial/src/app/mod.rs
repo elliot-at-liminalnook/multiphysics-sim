@@ -3,7 +3,7 @@
 //! - **One `App`**, built by [`run`] and nowhere else. Launch flags only
 //!   choose the initial [`ViewerMode`] and its documents ([`Launch`]).
 //! - **Modes are states.** [`ViewerMode`] (Inspect, Build, Lessons, Robot,
-//!   Place, Cad) is the Bevy state; two computed
+//!   Place, Cad, Phenomena) is the Bevy state; two computed
 //!   states follow it: [`ModeScope`] (what a mode's entities and resources
 //!   live for: Build and Lessons share one scope, the lesson screen being
 //!   drawn over the builder's scene) and [`SpatialScreen`] (the spatial
@@ -54,10 +54,14 @@ pub enum ViewerMode {
     /// A RoboCAD document (`*.rcad`), shown and edited through RoboCAD's
     /// REST service (native-viewer.md §9 phase 1; `crate::cad`).
     Cad,
+    /// The phenomena gallery: the built-in exhibits of
+    /// `sim_phenomena::exhibits`, run live (`crate::phenomena`; it was
+    /// sim-app's default scene).
+    Phenomena,
 }
 
 impl ViewerMode {
-    pub const ALL: [ViewerMode; 6] = [ViewerMode::Inspect, ViewerMode::Build, ViewerMode::Lessons, ViewerMode::Robot, ViewerMode::Place, ViewerMode::Cad];
+    pub const ALL: [ViewerMode; 7] = [ViewerMode::Inspect, ViewerMode::Build, ViewerMode::Lessons, ViewerMode::Robot, ViewerMode::Place, ViewerMode::Cad, ViewerMode::Phenomena];
     /// The REST and `system_ui` name (`mode:<name>`).
     pub fn name(self) -> &'static str {
         match self {
@@ -67,6 +71,7 @@ impl ViewerMode {
             ViewerMode::Robot => "robot",
             ViewerMode::Place => "place",
             ViewerMode::Cad => "cad",
+            ViewerMode::Phenomena => "phenomena",
         }
     }
     pub fn label(self) -> &'static str {
@@ -77,6 +82,7 @@ impl ViewerMode {
             ViewerMode::Robot => "Robot",
             ViewerMode::Place => "Place",
             ViewerMode::Cad => "CAD",
+            ViewerMode::Phenomena => "Phenomena",
         }
     }
     pub fn parse(name: &str) -> Result<Self, String> {
@@ -101,6 +107,7 @@ pub enum ModeScope {
     Robot,
     Place,
     Cad,
+    Phenomena,
 }
 impl ComputedStates for ModeScope {
     type SourceStates = ViewerMode;
@@ -113,6 +120,7 @@ impl ComputedStates for ModeScope {
             ViewerMode::Robot => ModeScope::Robot,
             ViewerMode::Place => ModeScope::Place,
             ViewerMode::Cad => ModeScope::Cad,
+            ViewerMode::Phenomena => ModeScope::Phenomena,
         })
     }
 }
@@ -210,6 +218,7 @@ pub fn run(launch: Launch) {
         crate::robot::RobotPlugin,
         crate::place_view::PlacePlugin,
         crate::cad::CadPlugin,
+        crate::phenomena::PhenomenaPlugin,
     ))
     .run();
 }
@@ -281,6 +290,20 @@ fn look(mode: ViewerMode, compact: bool) -> Look {
             winit: WinitSettings { focused_mode: UpdateMode::Continuous, unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(100)) },
         },
         ViewerMode::Cad => Look { title: "Systems — CAD (RoboCAD document)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive() },
+        // The exhibit moves on its own run thread, so the window redraws
+        // every frame while focused to show its latest frame; the setting is
+        // scoped to this mode (as Place's). The exhibits paint with
+        // `sim_phenomena::exhibit::paint` (dark ink for a light board), so
+        // the scene keeps sim-app's light background and light; the panels
+        // are kit docks with their own surfaces.
+        ViewerMode::Phenomena => Look {
+            title: "Systems — Phenomena",
+            clear: Color::srgb(0.94, 0.95, 0.965),
+            ambient: (Color::srgb(0.85, 0.88, 0.95), 650.0),
+            size: (1500, 940),
+            min: Some((980.0, 720.0)),
+            winit: WinitSettings { focused_mode: UpdateMode::Continuous, unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(100)) },
+        },
     }
 }
 

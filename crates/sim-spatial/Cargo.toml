@@ -28,6 +28,9 @@ sim-core = { path = "../sim-core" }
 sim-compile = { path = "../sim-compile" }
 sim-runtime = { path = "../sim-runtime" }
 sim-domain-robot = { path = "../sim-domain-robot" }
+# Phenomena mode's exhibits and robot mode's planar (v2) files run through
+# the shared sim_phenomena paths (exhibits::all, scenarios::cad_robot).
+sim-phenomena = { path = "../sim-phenomena" }
 sim-system = { path = "../sim-system" }
 sim-parts = { path = "../sim-parts" }
 sim-lesson = { path = "../sim-lesson" }

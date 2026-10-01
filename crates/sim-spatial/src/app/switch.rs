@@ -130,7 +130,7 @@ pub enum WindowAction {
 impl actions::Action for WindowAction {
     fn commands() -> Vec<Spec> {
         vec![
-            spec("viewer_mode", actions::ALL, json!({"mode":"robot","preset":"robot-measured-400hz"}), "Switch this window's mode, or with no mode (args {}) report it: active, modes, pending (a document still loading), entering, message (the switcher's last line) and documents (what each mode reopens: inspect description/spatial, lessons dir and lesson, robot path or preset, place; library, models, presets). mode inspect | build | lessons | robot | place | cad; optional path (inspect: a *.description.json with its *.spatial.json beside it; build: a *.system.json; lessons: a folder of <slug>/lesson.md; robot: a *.simrobot.json; place: a sim-place build directory; cad: a *.rcad file, on which this window starts RoboCAD's headless service and stops it when the document closes), preset (robot: an id listed by robot_presets) or url (cad: a running loopback RoboCAD service such as http://127.0.0.1:8420, attached to and never stopped). Without one, a mode reopens what it showed before in this window or at launch; inspect falls back to the example assembly and cad to RoboCAD at http://127.0.0.1:8420. Entering cad mode does not wait for RoboCAD: the connection (or the service's start) runs on its own job and shows in cad_state.connection and the mode's header. The same handler as the mode switcher (bottom right of the window), the builder's Lessons button and system_ui mode:<mode> (every mode). Refused, naming the reason, with the current mode kept: no document for the target mode; leaving build or lessons, entering lessons from build (by any entry point: the switcher, the Lessons button, system_ui mode:lessons, viewer_mode, lesson_open or lesson_screen) or replacing the builder with a new lesson's, while a text or discussion draft, placement drag, study, replay, Codex answer or open is in progress (the builder's system_open blockers), or leaving build or lessons while a lesson draft or contact sheet is, and a new lesson replacing a build-mode builder with a live run; leaving robot mode while a recording is being written or a replay runs; leaving cad mode while a CAD edit is in flight or while a RoboCAD service this window started holds unsaved edits, or may hold edits whose saved state can't be confirmed because the window is not connected to it (save first; leaving an attached RoboCAD with unsaved edits is allowed and the result's message says it keeps them); another switch in progress; a path of the wrong kind; a document that fails to load (named). Documents load off the UI thread; poll the job. Build and lessons share the builder: switching between them keeps it and the lesson (the lesson screen is drawn over the builder), and entering lessons pauses a live build run and keeps it (Run resumes it in build mode). The builder stays in the window across every switch: leaving build/lessons pauses a live run and parks its scene; build with a path while it has another file open is refused (use system_open in build mode). Leaving lessons closes the lesson (its recordings and narration stop; lessons reopens it); leaving robot mode stops its run, gait and playback threads; leaving cad mode stops its poll and a RoboCAD service it started (never an attached one); leaving inspect parks its scene and selection link. Commands of another mode are refused naming the active mode. Result: mode, previous, document, load_seconds (unchanged=true when the mode was already active)."),
+            spec("viewer_mode", actions::ALL, json!({"mode":"robot","preset":"robot-measured-400hz"}), "Switch this window's mode, or with no mode (args {}) report it: active, modes, pending (a document still loading), entering, message (the switcher's last line) and documents (what each mode reopens: inspect description/spatial, lessons dir and lesson, robot path or preset, place; library, models, presets). mode inspect | build | lessons | robot | place | cad | phenomena; optional path (inspect: a *.description.json with its *.spatial.json beside it; build: a *.system.json; lessons: a folder of <slug>/lesson.md; robot: a *.simrobot.json; place: a sim-place build directory; cad: a *.rcad file, on which this window starts RoboCAD's headless service and stops it when the document closes), preset (robot: an id listed by robot_presets) or url (cad: a running loopback RoboCAD service such as http://127.0.0.1:8420, attached to and never stopped). Without one, a mode reopens what it showed before in this window or at launch; inspect falls back to the example assembly and cad to RoboCAD at http://127.0.0.1:8420. Phenomena takes no document: it opens the built-in exhibits (sim_phenomena::exhibits) on the exhibit it last showed, or --exhibit's, or the first; select another with phenomena_select. Entering cad mode does not wait for RoboCAD: the connection (or the service's start) runs on its own job and shows in cad_state.connection and the mode's header. The same handler as the mode switcher (bottom right of the window), the builder's Lessons button and system_ui mode:<mode> (every mode). Refused, naming the reason, with the current mode kept: no document for the target mode; leaving build or lessons, entering lessons from build (by any entry point: the switcher, the Lessons button, system_ui mode:lessons, viewer_mode, lesson_open or lesson_screen) or replacing the builder with a new lesson's, while a text or discussion draft, placement drag, study, replay, Codex answer or open is in progress (the builder's system_open blockers), or leaving build or lessons while a lesson draft or contact sheet is, and a new lesson replacing a build-mode builder with a live run; leaving robot mode while a recording is being written or a replay runs; leaving cad mode while a CAD edit is in flight or while a RoboCAD service this window started holds unsaved edits, or may hold edits whose saved state can't be confirmed because the window is not connected to it (save first; leaving an attached RoboCAD with unsaved edits is allowed and the result's message says it keeps them); another switch in progress; a path of the wrong kind; a document that fails to load (named). Documents load off the UI thread; poll the job. Build and lessons share the builder: switching between them keeps it and the lesson (the lesson screen is drawn over the builder), and entering lessons pauses a live build run and keeps it (Run resumes it in build mode). The builder stays in the window across every switch: leaving build/lessons pauses a live run and parks its scene; build with a path while it has another file open is refused (use system_open in build mode). Leaving lessons closes the lesson (its recordings and narration stop; lessons reopens it); leaving robot mode stops its run, gait and playback threads; leaving cad mode stops its poll and a RoboCAD service it started (never an attached one); leaving phenomena mode stops its exhibit's run thread (joined within 200 ms) and remembers the exhibit; leaving inspect parks its scene and selection link. Commands of another mode are refused naming the active mode. Result: mode, previous, document, load_seconds (unchanged=true when the mode was already active)."),
             spec("screenshot", actions::ALL, json!({"path":"/tmp/view.png"}), "Save the window exactly as drawn (UI, overlays, lesson pages) to a PNG after the next frame; refused, naming the cause, while the window is not visible"),
         ]
     }
@@ -143,13 +143,13 @@ impl actions::Action for WindowAction {
         sim_api::decode::<Self>(command)
     }
     fn controls() -> &'static [&'static str] {
-        &["mode:inspect", "mode:build", "mode:lessons", "mode:robot", "mode:place", "mode:cad"]
+        &["mode:inspect", "mode:build", "mode:lessons", "mode:robot", "mode:place", "mode:cad", "mode:phenomena"]
     }
 }
 impl WindowAction {
     /// `system_ui` in modes without controls of their own.
     pub(crate) fn switcher_commands() -> Vec<Spec> {
-        vec![spec("system_ui", actions::SWITCHER_ONLY, json!({"action":{"operation":"controls"}}), "Inspect and place mode: the mode switcher's controls mode:inspect | mode:build | mode:lessons | mode:robot | mode:place | mode:cad (controls; activate {id, ui_revision}, the same handler as viewer_mode and the switcher's buttons; ui_revision is not checked for mode:* controls). In build, lessons, robot and cad mode system_ui is the mode's own (its controls list ends with these mode:* controls).")]
+        vec![spec("system_ui", actions::SWITCHER_ONLY, json!({"action":{"operation":"controls"}}), "Inspect and place mode: the mode switcher's controls mode:inspect | mode:build | mode:lessons | mode:robot | mode:place | mode:cad | mode:phenomena (controls; activate {id, ui_revision}, the same handler as viewer_mode and the switcher's buttons; ui_revision is not checked for mode:* controls). In build, lessons, robot, cad and phenomena mode system_ui is the mode's own (its controls list ends with these mode:* controls).")]
     }
     /// The switch a `system_ui` `mode:*` control asks for.
     pub(super) fn mode_control(args: &Map<String, Value>) -> Option<Result<ModeSwitch, String>> {
@@ -201,6 +201,10 @@ pub struct Documents {
     /// The RoboCAD document CAD mode last showed (or the launch's): set by
     /// the launch, `cad_open` and leaving CAD mode.
     pub cad: Option<CadTarget>,
+    /// The exhibit phenomena mode opens: `--exhibit` (a 1-based number or a
+    /// title fragment, sim-app's rule), then the exhibit it last showed (set
+    /// on leaving, as its 1-based number). None: the first.
+    pub exhibit: Option<String>,
     /// Inspect's scene (and selection link) while another mode is shown.
     parked_inspect: Option<Box<(SpatialScene, Option<SelectionLink>)>>,
     /// The builder's scene while a mode outside Build/Lessons is shown.
@@ -218,6 +222,7 @@ impl Default for Documents {
             place: None,
             hardware: Default::default(),
             cad: None,
+            exhibit: None,
             parked_inspect: None,
             parked_builder: None,
         }
@@ -233,6 +238,7 @@ impl Documents {
             "robot": self.robot.as_ref().map(Document::json),
             "place": self.place,
             "cad": self.cad.as_ref().map(CadTarget::json),
+            "phenomena": {"exhibit": self.exhibit},
             "library": match &self.library { Ok(p) => json!(p), Err(e) => json!({"error": e}) },
             "models": self.models,
             "presets": self.presets,
@@ -334,6 +340,7 @@ pub(crate) fn build(app: &mut App) {
         .add_systems(OnExit(ModeScope::Robot), leave_robot)
         .add_systems(OnExit(ModeScope::Place), leave_place)
         .add_systems(OnExit(ModeScope::Cad), leave_cad)
+        .add_systems(OnExit(ModeScope::Phenomena), crate::phenomena::leave)
         .add_systems(OnExit(ViewerMode::Lessons), hide_lessons);
     for mode in ViewerMode::ALL {
         if mode == ViewerMode::Lessons {
@@ -438,6 +445,7 @@ fn open_hint(mode: ViewerMode) -> &'static str {
         ViewerMode::Lessons => "lesson_open, the lesson list",
         ViewerMode::Robot => "robot_preset for a preset",
         ViewerMode::Cad => "cad_open",
+        ViewerMode::Phenomena => "phenomena_select",
         ViewerMode::Inspect | ViewerMode::Place => "switch to another mode first",
     }
 }
@@ -668,6 +676,13 @@ fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) -> Result<P
             };
             Ok(Prepared::Now(Box::new(Arrival { document: target.json(), cad: Some(CadDocument::new(target)), ..Default::default() })))
         }
+        // Nothing to load: the exhibits are compiled in. The run thread
+        // builds them on OnEnter (`phenomena::enter`), off the UI thread,
+        // opening `Documents::exhibit`.
+        ViewerMode::Phenomena => match &request.document {
+            None => Ok(Prepared::Now(Box::new(Arrival { document: json!({"exhibit": docs.exhibit}), ..Default::default() }))),
+            Some(d) => Err(format!("phenomena mode takes no document ({} given); it opens the built-in exhibits: switch with viewer_mode {{\"mode\":\"phenomena\"}}, then phenomena_select", d.describe())),
+        },
     }
 }
 

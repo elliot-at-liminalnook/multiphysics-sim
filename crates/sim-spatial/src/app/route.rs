@@ -3,8 +3,10 @@
 //! `system_ui` `mode:*` go to the mode switch's actions in every mode; a
 //! command of another mode is refused naming the active mode; everything
 //! else goes, unchanged, to the action type the registry names for the
-//! active mode (`actions::feature_for`). [`annotate`] adds what every mode
-//! adds to its answer. The headless server (`window` false) has no window
+//! active mode (`actions::feature_for`). `system_ui` `picker:*` (the
+//! document picker's entries, path field and Close, `app::picker`) goes to
+//! the mode switch's actions too. [`annotate`] adds what every mode adds to
+//! its answer, including the open picker's controls. The headless server (`window` false) has no window
 //! to switch and no camera to move: `viewer_mode`, `mode:*` and every
 //! command of the shared camera are refused there, and its `system_ui`
 //! controls do not list `camera:*` ([`annotate_for`]).
@@ -25,10 +27,11 @@ fn mode_list(modes: &[ViewerMode]) -> String {
 /// Why the headless server refuses the shared camera's commands.
 const NO_CAMERA: &str = "the headless server has no camera to move; it renders through inspect's camera/fit commands";
 
-/// `system_ui` activating a `mode:*` control: the switcher's, in every mode.
+/// `system_ui` activating a `mode:*` control (the switcher's) or a
+/// `picker:*` control (the document picker's): the window's, in every mode.
 fn mode_control(command: &sim_api::Command) -> bool {
     let action = &command.args["action"];
-    command.command == "system_ui" && action["operation"] == "activate" && action["id"].as_str().is_some_and(|id| id.starts_with("mode:"))
+    command.command == "system_ui" && action["operation"] == "activate" && action["id"].as_str().is_some_and(|id| id.starts_with("mode:") || id.starts_with("picker:"))
 }
 
 /// The one REST dispatch: the action type that takes `command` in `mode`,
@@ -69,17 +72,24 @@ pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) 
 }
 
 /// What every mode adds to its handler's answer in the window
-/// ([`annotate_for`] with a window).
-pub(crate) fn annotate(mode: ViewerMode, command: &sim_api::Command, outcome: Outcome) -> Outcome {
-    annotate_for(mode, true, command, outcome)
+/// ([`annotate_with`] with a window): `picker` is the open document
+/// picker's controls (`app::picker::Picker::controls`; empty when closed).
+pub(crate) fn annotate(mode: ViewerMode, picker: &[Value], command: &sim_api::Command, outcome: Outcome) -> Outcome {
+    annotate_with(mode, true, picker, command, outcome)
+}
+
+/// [`annotate_with`] with no picker (the headless server has none).
+pub(crate) fn annotate_for(mode: ViewerMode, window: bool, command: &sim_api::Command, outcome: Outcome) -> Outcome {
+    annotate_with(mode, window, &[], command, outcome)
 }
 
 /// What every mode adds to its handler's answer: the active mode on
 /// `state`, and the mode switcher's controls at the end of `system_ui`
 /// controls (in build, lessons and robot mode, after the mode's own),
 /// after the shared camera's in every orbit mode when there is a window
-/// (`window` false is the headless server, which refuses them).
-pub(crate) fn annotate_for(mode: ViewerMode, window: bool, command: &sim_api::Command, mut outcome: Outcome) -> Outcome {
+/// (`window` false is the headless server, which refuses them), then the
+/// open document picker's (`picker`, in every mode).
+pub(crate) fn annotate_with(mode: ViewerMode, window: bool, picker: &[Value], command: &sim_api::Command, mut outcome: Outcome) -> Outcome {
     if let Outcome::Done(Ok(value)) = &mut outcome {
         match command.command.as_str() {
             "state" if value.is_object() => value["viewer_mode"] = json!(mode.name()),
@@ -93,6 +103,7 @@ pub(crate) fn annotate_for(mode: ViewerMode, window: bool, command: &sim_api::Co
                     if !actions::SWITCHER_ONLY.contains(&mode) {
                         controls.extend(mode_controls(mode));
                     }
+                    controls.extend(picker.iter().cloned());
                 }
             }
             _ => {}

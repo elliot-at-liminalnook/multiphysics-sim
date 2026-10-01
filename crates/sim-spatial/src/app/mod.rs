@@ -22,12 +22,19 @@
 //!   one dispatch ([`route`]).
 //! - **Switching** lives in [`switch`]: one request type, one validating
 //!   handler, teardown on exit. Its entry points: [`switcher`] (the buttons),
-//!   `system_ui` `mode:*`, `viewer_mode`, the builder's Lessons button and
-//!   the lesson screen's toggles.
+//!   `system_ui` `mode:*`, `viewer_mode`, the builder's Lessons button, the
+//!   lesson screen's toggles and [`picker`], the document picker a switch
+//!   from the window opens for a mode with no document (its entries, path
+//!   field and `system_ui` `picker:*`), with [`recent`] (the recent
+//!   documents it offers, recorded by every switch that names one).
 pub mod actions;
+pub mod picker;
+pub mod recent;
 pub mod route;
 pub mod switch;
 pub mod switcher;
+#[cfg(test)]
+mod picker_tests;
 #[cfg(test)]
 mod tests;
 
@@ -341,7 +348,9 @@ impl Plugin for CorePlugin {
         .add_plugins(crate::ui_kit::UiKitPlugin)
         .add_systems(Startup, (crate::rest::wake_on_request, switcher::spawn_switcher))
         .add_systems(Update, switcher::switcher_clicks.in_set(ViewerSet::Input))
-        .add_systems(Update, (switcher::update_switcher, switcher::publish).in_set(ViewerSet::Present));
+        .add_systems(Update, (switcher::update_switcher, switcher::publish).in_set(ViewerSet::Present))
+        // The document picker's panel (its state and input are `switch::build`'s).
+        .add_systems(Update, picker::draw.in_set(ViewerSet::Present));
         for mode in ViewerMode::ALL {
             app.add_systems(OnEnter(mode), apply_look);
         }

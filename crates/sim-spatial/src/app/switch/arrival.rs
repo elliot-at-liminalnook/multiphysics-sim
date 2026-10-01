@@ -1,7 +1,7 @@
 //! Entering the target mode: the state change, a loaded document's result,
 //! and installing what the switch brought on the mode's OnEnter.
 use super::prepare::{leaving_blockers, leaving_note};
-use super::{Arrival, Documents, Switcher, Work, refusal};
+use super::{Arrival, Document, Documents, Switcher, Work, refusal};
 use crate::SpatialScene;
 use crate::app::ViewerMode;
 use crate::app::actions::Origin;
@@ -13,7 +13,10 @@ use serde_json::json;
 use std::time::Instant;
 
 /// Hand the arrival to the target mode's OnEnter and set the state.
-pub(super) fn enter(world: &mut World, switch: &mut Switcher, origin: Origin, from: ViewerMode, target: ViewerMode, mut arrival: Box<Arrival>, started: Instant) {
+/// `document` is the one the request named: `handle` records it in the
+/// recent documents once the state is entered.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn enter(world: &mut World, switch: &mut Switcher, origin: Origin, from: ViewerMode, target: ViewerMode, mut arrival: Box<Arrival>, started: Instant, document: Option<Document>) {
     let message = match leaving_note(world, from) {
         Some(note) => format!("Switched to {} mode; {note}.", target.label()),
         None => format!("Switched to {} mode.", target.label()),
@@ -24,7 +27,7 @@ pub(super) fn enter(world: &mut World, switch: &mut Switcher, origin: Origin, fr
         "message": message,
     });
     switch.arrival = Some(arrival);
-    switch.entering = Some((origin, target, summary));
+    switch.entering = Some((origin, target, summary, document));
     switch.revision += 1;
     world.resource_mut::<NextState<ViewerMode>>().set(target);
 }
@@ -44,7 +47,7 @@ pub(crate) fn finish_load(world: &mut World) {
             switch.pending = Some(pending);
             return;
         };
-        let (origin, target, started) = (pending.origin, pending.mode, pending.started);
+        let (origin, target, started, document) = (pending.origin, pending.mode, pending.started, pending.document.take());
         let mut arrival = match result {
             Ok(arrival) => arrival,
             Err(e) => {
@@ -61,7 +64,7 @@ pub(crate) fn finish_load(world: &mut World) {
             crate::jobs::drop_off_thread(arrival, "a refused mode switch");
             return;
         }
-        enter(world, &mut switch, origin, current, target, arrival, started);
+        enter(world, &mut switch, origin, current, target, arrival, started, document);
     });
 }
 

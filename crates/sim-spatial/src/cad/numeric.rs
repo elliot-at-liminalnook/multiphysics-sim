@@ -75,7 +75,7 @@ struct BarRoot;
 
 /// The bar's two parts, each rebuilt alone when what it shows changes.
 #[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
-enum BarPart {
+pub(super) enum BarPart {
     Head,
     Body,
 }

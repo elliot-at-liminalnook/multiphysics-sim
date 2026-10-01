@@ -167,7 +167,7 @@ duplicates physics.
   `RunThread` with sim-app's pacing, `PhenomenaAction` and kit panels; robot
   mode opens planar v2 `*.simrobot.json` files through
   `cad_robot::build_planar` on the "robot-run (planar v2)" `RunThread`
-  (`src/robot_planar.rs`). `crates/sim-app` is deleted; its ledger is
+  (`src/robot/planar/`). `crates/sim-app` is deleted; its ledger is
   [docs/sim-app-parity.md](../sim-app-parity.md) (58 rows, none open). Every
   child process starts in `jobs` (`spawn_detached`, `open_in_browser`,
   `ChildProcess`), enforced by `jobs::tests::processes_are_started_only_in_jobs`.
@@ -189,33 +189,24 @@ duplicates physics.
   (blue-tinted suspended robot) and live motor sync. The feature-by-feature
   ledger is [docs/hardware-parity.md](../hardware-parity.md), and the
   operator's steps are [docs/hardware-checklist.md](../hardware-checklist.md).
-- **Large files:** `robot_run.rs` (2,647 lines), `robot.rs` (2,514 after
-  fold-sim-app's v2 branches; was 2,232), `builder.rs` (2,453) and
-  `lesson/mod.rs` (2,371); fold-sim-app also left `robot/actions.rs` at 898
-  and `robot_planar.rs` at 826 (tests included), past the 800-line smell,
-  and `app/switch.rs` at 959. Phenomena mode's files are under 600 each. UI files after ui-kit:
-  `builder/ui.rs` 1,395 (was 1,684), `lesson/ui.rs` 1,158, `lib.rs` 1,294
-  (was 1,411), `app/switcher.rs` 84; `ui_kit/` 903 lines (`widgets.rs` 346,
-  `theme.rs` 199, `tests.rs` 157, `slider.rs` 85, `mod.rs` 71, `scroll.rs`
-  45), 1,692 in 9 files after cad-modify (wc -l after the review fixes;
-  was 908 at fe6995d4: `widgets.rs` 351, `tests.rs` 346, `form.rs` 278,
-  `theme.rs` 199, `palette.rs` 198, `pie.rs` 98, `mod.rs` 92, `slider.rs`
-  85, `scroll.rs`
-  45). The action modules are
-  under 710 lines each (`hardware/actions.rs` 709, `robot/actions.rs` 689,
-  `lesson/actions.rs` 670, `builder/actions.rs` 661, `app/actions.rs` 513,
-  `inspect.rs` 412, `builder/system_actions.rs` 395); `app/switch.rs` is
-  850, `chart.rs` 183, `app/tests.rs` 364, `app/route.rs` 75, `rest.rs` 140.
-  The hardware front end (wc -l, 2026-09-30): `robot/hardware/` 8,049 lines
-  in 21 files (`sync.rs` 765, `session.rs` 733 plus `session/sequences.rs`
-  381 and `session/buttons.rs` 147, `mirror.rs` 741, `actions.rs` 709,
-  `view.rs` 705, `panel.rs` 630, `handlers.rs` 524, `sync_panel.rs` 346,
-  `link.rs` 344, `panel_sections.rs` 291, `settings.rs` 285, `mod.rs` 222,
-  `motion_view.rs` 205, `mirror_panel.rs` 187, `dial.rs` 145; tests
-  `session/tests.rs` 267, `view/tests.rs` 156, `sync/tests.rs` 150,
-  `mirror/tests.rs` 116) and `sim-runtime/src/hardware_client/` 2,175 lines
-  (`tests.rs` 653, `calibration.rs` 613, `http.rs` 349, `mod.rs` 268,
-  `bench.rs` 186, `token.rs` 106).
+- **File size: closed and guarded** (split-large-files, 2026-10-01; see
+  [Split large files](#split-large-files-2026-10-01)). No non-test source
+  file in `crates/sim-spatial/src` is over 750 lines, and the lib test
+  `app::tests::source_files_stay_small` keeps it so (cap 750 non-test
+  lines, empty allowlist). Re-measured 2026-10-01 (non-test lines, the
+  guard's rule): the largest are `cad/ops/mod.rs` 708, `cad/panel.rs` 700,
+  `robot/hardware/session.rs` 698, `cad/ops/catalogue.rs` 698,
+  `robot/hardware/sync.rs` 679, `cad/actions.rs` 676, `physics_view.rs`
+  672, `builder/actions.rs` 661, `lesson/mod.rs` 657; every other file is
+  under 655. The former giants are now short roots: `robot/mod.rs` 201
+  (was `robot.rs` 2,532), `robot/run/mod.rs` 30 (was `robot_run.rs`
+  2,647), `builder.rs` 590 (was 2,453), `lesson/mod.rs` 657 (was 2,371),
+  `lib.rs` 64 (was 1,297), `app/switch/mod.rs` 536 (was `app/switch.rs`
+  959). Trees (wc -l, tests included): `robot/` 18,902 lines in 67 files
+  (`run/` 2,736 in 11, `hardware/` 9,139 in 30), `builder*` 11,364 in 33,
+  `lesson/` 7,193 in 23, `app/` 2,646 in 9, `inspect_view/` 1,280 in 5;
+  `src/` 68,672 lines in 228 files. Robot mode is one module tree under
+  `robot/`, as CAD mode is under `cad/`.
 - **What already works well, to keep:**
   - typed actions with one validated handler per action type
   - generation-stamped frames
@@ -355,37 +346,37 @@ result formats and state fields).
       (cancel on drop, `superseded += 1`). Feeds `system_state.schematic`
       (`laid_out`, `pending`, `stale`, `error`) and the panel status.
       Unchanged.
-    - Compile (feeds the schematic and the scene): start `builder.rs:341`
-      (Compute); apply `builder.rs:2386`. Changed only on a panic, which now
+    - Compile (feeds the schematic and the scene): start `builder/rebuild.rs:7`
+      (Compute); apply `rebuild_scene` `builder/rebuild.rs:89`. Changed only on a panic, which now
       sets `compile_error` and the status (it used to wait forever).
-    - Open system: start `builder/open.rs:164` (Compute, generation = open
-      seq); apply `finish_open` `open.rs:181` from the `open_system` system
-      `builder.rs:1779`. The previous builder is dropped by
-      `jobs::drop_off_thread` at `open.rs:264`, so its run thread and agent
+    - Open system: start `builder/open.rs:192` (Compute, generation = open
+      seq); apply `finish_open` `open.rs:209` from the `open_system` system
+      `builder/background.rs:6`. The previous builder is dropped by
+      `jobs::drop_off_thread` at `open.rs:292`, so its run thread and agent
       are joined off the UI thread. Feeds `system_state.open.last` and the
       status line. Unchanged.
-    - Live run start/pause/step/reset: `LiveRun::spawn` `builder.rs:156`
-      (RunThread "builder-run"), started from `start_run` `builder.rs:1063`.
-      Commands `builder.rs:1041` (Start), 1069 (Pause), 1334 (Step) and 1360
-      (Reset); the loop at `builder.rs:1447` is unchanged. Read by
-      `live_run_json` `builder.rs:1425` and `running()` from the shared
+    - Live run start/pause/step/reset: `LiveRun::spawn` `builder/live_run.rs:11`
+      (RunThread "builder-run"), started from `start_run` `builder/live_run.rs:55`.
+      Commands `builder/live_run.rs:161` (Start), 165 (Pause), 172 (Step) and 196
+      (Reset); the loop at `builder/live_run.rs:248` is unchanged. Read by
+      `live_run_json` `builder/live_run.rs:226` and `running()` from the shared
       snapshot. A replaced run drops its RunThread (bounded 200 ms join).
-    - Run replay: start `builder.rs:977` (Dedicated, `replay_with_cancel`
-      given the job's cancel flag); apply `poll_replay` `builder.rs:1002`
-      (called at `builder.rs:2584`); cancel `builder.rs:990`. Feeds
-      `system_state.replay` via `replay_json` `builder.rs:1026`. Unchanged.
-    - Study progress and cancel: start `builder.rs:1132` (Dedicated, steps
-      progress); apply `poll_study` `builder.rs:1161` (at `builder.rs:2583`);
-      progress `study_progress` `builder.rs:1157` into
+    - Run replay: start `builder/studies.rs:44` (Dedicated, `replay_with_cancel`
+      given the job's cancel flag); apply `poll_replay` `builder/studies.rs:69`
+      (called at `builder/live_run.rs:428`); cancel `builder/studies.rs:57`. Feeds
+      `system_state.replay` via `replay_json` `builder/studies.rs:93`. Unchanged.
+    - Study progress and cancel: start `builder/studies.rs:117` (Dedicated, steps
+      progress); apply `poll_study` `builder/studies.rs:146` (at `builder/live_run.rs:427`);
+      progress `study_progress` `builder/studies.rs:142` into
       `system_study_result.running` and `study_json`; Cancel
-      `builder.rs:2066` calls `Job::cancel` (fixed in 4b74edc6; it used the
+      `builder/actions.rs:299` calls `Job::cancel` (fixed in 4b74edc6; it used the
       removed flag and did not compile).
     - Actuators tab: start `builder/actuators.rs:178` (Io, generation = seq);
       apply `finish_actuators` `actuators.rs:194` (system at
-      `builder.rs:1788`). Measured evidence: start `builder/calibration.rs:350`
-      (Io); apply `finish_calibration` `calibration.rs:366`
-      (`builder.rs:1795`). Gait lab: start `builder/gait_lab.rs:146` (Io);
-      apply `finish_gait_reports` `gait_lab.rs:165` (`builder.rs:1802`).
+      `builder/background.rs:13`). Measured evidence: start `builder/calibration.rs:351`
+      (Io); apply `finish_calibration` `calibration.rs:367`
+      (`builder/background.rs:20`). Gait lab: start `builder/gait_lab.rs:147` (Io);
+      apply `finish_gait_reports` `gait_lab.rs:166` (`builder/background.rs:27`).
       They feed `system_state.actuators`, `calibration_review` and
       `gait_reports` (`last` = `(seq, result)`). Unchanged.
     - Source preview and agent context: `builder/reference.rs:31` (Io; a
@@ -395,67 +386,67 @@ result formats and state fields).
   - *Placement*
     - Drag validator: `builder/placement_worker.rs:15` (RunThread
       "placement-validator", join bound 0). Pointer moves `submit` at
-      `builder/placement.rs:533`; the result is taken at `placement.rs:536`.
+      `builder/placement.rs:535`; the result is taken at `placement.rs:538`.
       The worker drains the channel and validates only the newest position
       (the condvar became channel commands; latest-wins is kept, and a
       closed channel starts nothing). Changed in mechanism only.
-    - Commit on release: `placement.rs:593` (Io, `complete_on_drop`); apply
-      `poll_drop` `placement.rs:600` (at `placement.rs:503`). Unchanged.
+    - Commit on release: `placement.rs:595` (Io, `complete_on_drop`); apply
+      `poll_drop` `placement.rs:602` (at `placement.rs:505`). Unchanged.
   - *Robot*
-    - Preset open and preset switch: `RobotView::open_preset` `robot.rs:216`
-      starts the loader at `robot.rs:222` (Compute); apply `receive`
-      `robot.rs:1183` (`load.poll()` at `robot.rs:1201`). A switch
-      (`Request::RobotPreset`, `robot.rs:736`) replaces the whole view, so
+    - Preset open and preset switch: `RobotView::open_preset` `robot/state.rs:16`
+      starts the loader at `robot/state.rs:22` (Compute); apply `receive`
+      `robot/scene.rs:23` (`load.poll()` at `robot/scene.rs:41`). A switch
+      (`Request::RobotPreset`, now `RobotAction::OpenPreset` at `robot/actions/mod.rs:458`) replaces the whole view, so
       the old run, gait and playback RunThreads drop with a bounded join.
       Feeds `robot_state.status`, `preset` and `load_seconds`. Unchanged.
-    - Recording save: command `robot_run.rs:802`; the run thread snapshots
-      and hands the write to `robot_run.rs:1777` (Io, `complete_on_drop`,
+    - Recording save: command `save_recording` `robot/run/preset_ops.rs:142`; the run thread snapshots
+      and hands the write to `robot/run/worker.rs:143` (Io, `complete_on_drop`,
       publishes `Published.save`); apply `RunController::poll`
-      `robot_run.rs:1035`. Feeds `robot_state.recording.pending/last_saved`.
+      `robot/run/controller.rs:268`. Feeds `robot_state.recording.pending/last_saved`.
       Changed: a writer panic is now published as the save error (before
       and after the migration it was lost and `pending` never cleared).
-    - Recording list: `Latest` at `robot_run.rs:831` (Io; a newer list
-      supersedes); apply `robot_run.rs:1054`. Feeds `robot_state.recordings`.
+    - Recording list: `Latest` at `robot/run/preset_ops.rs:184` (Io; a newer list
+      supersedes); apply `robot/run/controller.rs:287`. Feeds `robot_state.recordings`.
       Unchanged.
     - Replay: runs on the robot-run RunThread (`Command::Replay`, loop from
-      `robot_run.rs:1789`), published as `Published.replay` and accepted in
+      `robot/run/worker.rs:155`), published as `Published.replay` and accepted in
       `poll` only for the current generation and seq. Unchanged.
-    - `--robot FILE` reload: `robot_source.rs:155` (Compute, sha256 and
-      parse); taken by `receive` via `SourceWatch::take` (`robot.rs:1209`); a
+    - `--robot FILE` reload: `robot/source.rs:163` (Compute, sha256 and
+      parse); taken by `receive` via `SourceWatch::take` (`robot/scene.rs:49`); a
       loaded reload replaces the run with generation + 1. Unchanged.
-    - Gait preview: RunThread "robot-gait" `robot_gait.rs:171`; apply `poll`
-      `robot_gait.rs:269` (the listing is `Shared.listing` with its seq).
+    - Gait preview: RunThread "robot-gait" `robot/gait.rs:171`; apply `poll`
+      `robot/gait.rs:269` (the listing is `Shared.listing` with its seq).
       Recorded seek and play: RunThread "robot-recorded"
-      `robot_playback.rs:166`; apply `poll` `robot_playback.rs:182` via
+      `robot/playback.rs:166`; apply `poll` `robot/playback.rs:182` via
       `RunThread::latest(generation)`. Feed `robot_state.gait_preview` and
       `recorded`. Unchanged loops.
-    - Stress results reader: `robot_stress.rs:108` (Io), polled at
-      `robot_stress.rs:115`. Unchanged.
+    - Stress results reader: `robot/stress.rs:108` (Io), polled at
+      `robot/stress.rs:115`. Unchanged.
     - `sim-viewer` children: `main.rs:241` and `main.rs:392` use
       `jobs::reap_child` (since fold-sim-app `jobs::spawn_detached`).
   - *Lessons*
-    - Figures: `lesson/practice.rs:26` (Compute); apply `poll_figures`
-      `practice.rs:56` (at `lesson/mod.rs:1325`). Unchanged.
-    - Model: `lesson/extras.rs:67` (Dedicated, streamed values); apply
-      `poll_model` `extras.rs:97` (at `lesson/mod.rs:1342`). Feeds
+    - Figures: `lesson/practice/mod.rs:34` (Compute); apply `poll_figures`
+      `practice/mod.rs:64` (at `lesson/watch.rs:93`). Unchanged.
+    - Model: `lesson/extras.rs:68` (Dedicated, streamed values); apply
+      `poll_model` `extras.rs:98` (at `lesson/watch.rs:110`). Feeds
       `lesson_state.model`. A panic now shows under `model.errors`.
-    - Comparisons: `lesson/mod.rs:1194` (Dedicated, steps progress); apply
-      `lesson/mod.rs:1331`; "Running n/m…" from `lesson/ui.rs:773`. Feeds
+    - Comparisons: `lesson/handler.rs:385` (Dedicated, steps progress); apply
+      `lesson/watch.rs:99`; "Running n/m…" from `lesson/ui/cards.rs:54`. Feeds
       `lesson_state.compares`. Unchanged.
-    - Scene recordings: `lesson/mod.rs:665` (first) and `mod.rs:722`
+    - Scene recordings: `lesson/opening.rs:140` (first) and `opening.rs:197`
       (re-record), both Dedicated and streaming `Stage`s; apply from
-      `lesson/mod.rs:1363`; progress `ActiveScene::progress` `mod.rs:303`
+      `lesson/watch.rs:131`; progress `ActiveScene::progress` `lesson/mod.rs:334`
       into `lesson_state.scene.recording` and the "Recording on the shared
-      runtime… n %" line (`lesson/ui.rs:1130`). Changed: a panic in the job
+      runtime… n %" line (`lesson/ui/scene_card.rs:304`). Changed: a panic in the job
       now ends the recording with its error instead of leaving the scene
       "recording".
-    - Narration progress (never run generation here): `lesson/narrate.rs:261`
+    - Narration progress (never run generation here): `lesson/narrate/mod.rs:268`
       (Dedicated; paid work is not cancelled mid-request); apply
-      `narrate.rs:379`; the line is `GenJob::progress` `narrate.rs:48`
+      `narrate/mod.rs:386`; the line is `GenJob::progress` `narrate/mod.rs:55`
       ("Starting…" until the first message) and `lesson_state.narration.job`
       (`lesson/actions.rs` `narration_state`). Unchanged text.
-    - Practice bench request: `lesson/extras.rs:207` (Dedicated), polled at
-      `extras.rs:141`. Unchanged.
+    - Practice bench request: `lesson/extras.rs:208` (Dedicated), polled at
+      `extras.rs:142`. Unchanged.
 - **What the build/test pass must run** (no screenshots):
   - `cargo build -p sim-spatial --lib --tests --bins` with no sim-spatial
     warnings (an unused `mpsc`/`Mutex`/`Arc`/`AtomicBool` import would show
@@ -467,7 +458,7 @@ result formats and state fields).
     `builder::replay_tests` (the run, step/reset, grab swap and realtime
     runs on `LiveRun::spawn`), `builder::open::tests`,
     `builder::calibration::tests`, `builder::schematic::tests` and
-    `robot_run::tests`.
+    `robot::run::tests`.
 - **Verification.** Verified at ae80a137: `cargo check --workspace
   --all-targets` with no errors, the sim-spatial bins built with no
   sim-spatial warnings, and `cargo test -p sim-spatial --lib` gave 75 passed,
@@ -490,7 +481,7 @@ Paths below are `crates/sim-spatial/src/`.
     `CorePlugin` (window, per-mode look, fonts, mesh picking, occlusion,
     scroll clamp, REST wake, the switcher) and `ModesPlugin` (states, sets,
     the switch; no window, so the test runs it).
-  - `app/switch.rs`: `ModeSwitch`, `Switcher`, `Documents`, the handler
+  - `app/switch/`: `ModeSwitch`, `Switcher`, `Documents`, the handler
     (`handle`, Actions), document loads (`finish_load`, JobResults),
     `arrive` (every mode's OnEnter) and the scopes' OnExit teardown.
   - `app/route.rs`: the one REST dispatch (`route`, `annotate`); since the
@@ -592,7 +583,7 @@ Paths below are `crates/sim-spatial/src/`.
     inspect mode only; `viewer_mode` and `mode:*` answer that there is no
     window to switch.
   - *Found by reading.* Robot mode never added `MeshPickingPlugin`, so a
-    click on a link in the 3D view could not select it (robot.rs
+    click on a link in the 3D view could not select it (robot/actions/keys.rs
     `pick_link`); the core now adds mesh picking for every mode. Inspect's
     captions and physics labels now use the interface fonts (the fonts are
     loaded once for every mode).
@@ -607,17 +598,17 @@ Paths below are `crates/sim-spatial/src/`.
   `StateTransition` schedule runs OnEnter(`ViewerMode`) (`apply_look`,
   `arrive`: nothing to install at launch) and then OnEnter(`ModeScope`):
   - Inspect: main.rs tail (`load_inspect`, flags, `set_compact`, link) →
-    OnEnter(Inspect scope) `setup_scene` + `setup_ui` (lib.rs:336).
+    OnEnter(Inspect scope) `setup_scene` + `setup_ui` (inspect_view/mod.rs:303).
   - Build: `build_mode` (main.rs:235: `Builder::open`,
     `builder::compiled_scene`, annotations, models, `enable_open`) →
-    OnEnter(Builder scope) `setup_scene` (lib.rs:337); the builder's chrome
+    OnEnter(Builder scope) `setup_scene` (inspect_view/mod.rs:304); the builder's chrome
     is built by `ui::rebuild_panel` in Build.
   - Lessons: `lessons_mode` (main.rs:173: `lesson::open_lessons`) →
     OnEnter(Lessons) `arrive` then `show_lessons` (a no-op: a new `Learn`
     is already shown) → OnEnter(Builder scope) `setup_scene`.
   - Robot: `robot_mode` / `robot_preset_mode` (main.rs:195/208:
     `RobotView::open` / `open_preset`, loading on their jobs as before) →
-    OnEnter(Robot scope) `robot::setup` (robot.rs:1021).
+    OnEnter(Robot scope) `robot::ui::setup` (robot/ui.rs:112).
   - Place: main.rs:303 `PlaceView::open` (read before the window opens, so
     a bad directory still fails the launch) → OnEnter(Place scope)
     `place_view::setup` (place_view.rs:135).
@@ -639,8 +630,8 @@ Paths below are `crates/sim-spatial/src/`.
     the jobs tests (`jobs::tests::*`, including
     `threads_are_started_only_in_jobs`), `builder::open::tests`,
     `builder::placement::tests`, `builder::placement_worker::tests`,
-    `builder::ui_api::tests`, `builder::replay_tests`, `robot_run::tests`,
-    `rest::tests` and the lib.rs `keyboard`/`pick_part` test;
+    `builder::ui_api::tests`, `builder::replay_tests`, `robot::run::tests`,
+    `rest::tests` and the `inspect_view/tests.rs` `keyboard`/`pick_part` test;
   - a reading check of the launch trace above against the built code.
 - **Verified at 7da1216e** (see "Where it is today"): built and tested as
   listed above. The switcher's placement over each mode's panels, the robot
@@ -675,7 +666,7 @@ Paths are `crates/sim-spatial/src/`.
     | Inspect (and the spatial view of Build, Lessons) | `inspect::InspectAction` | `inspect::apply` | `SpatialViewerPlugin` |
     | Build (and Lessons) | `builder::system_actions::SystemAction` (the `system_*` commands; `Ui(BuildAction)` for the chrome) | `builder::system_actions::apply` | `BuilderPlugin` |
     | Lessons (and Build over a lesson) | `lesson::actions::LessonCommand` (the `lesson_*` commands; `Ui(LessonAction)` for the page) | `lesson::actions::apply` | `LearnPlugin` |
-    | Robot | `robot::RobotAction` (`robot/actions.rs`) | `robot::actions::apply` | `RobotPlugin` |
+    | Robot | `robot::RobotAction` (`robot/actions/mod.rs`) | `robot::actions::apply` | `RobotPlugin` |
     | Place | `place_view::PlaceAction` | `place_view::apply` | `PlacePlugin` |
 
   - Input mappings (Input): `app::switcher::switcher_clicks`,
@@ -685,7 +676,7 @@ Paths are `crates/sim-spatial/src/`.
     keys}`, the lesson timebar, slider and narration bar (`lesson::seek`,
     `lesson::sliders`, `narrate::seek`), `robot::actions::{buttons,
     motion_keys, graph_key, overlay_keys, speed_keys}`, `place_view::keys`,
-    and the pick observers (`lib.rs` `pick_part`, `linked::pick_net`,
+    and the pick observers (`inspect_view/scene.rs` `pick_part`, `linked::pick_net`,
     `builder::pick_reference`, `robot::actions::pick_link`). The builder's
     `text_input` (SimSync) edits the draft and writes its Enter/Escape as
     `BuildAction::SubmitDraft`/`DropDraft`; `robot::watch` (SimSync) writes
@@ -752,7 +743,7 @@ Paths are `crates/sim-spatial/src/`.
     for the switch's answer (`switch::ask_switch` / `awaited_switch`;
     `lesson_open` opens its lesson only once the switch is accepted). It is
     refused on `Builder::switch_blockers` (drafts, drag, study, replay,
-    Codex answer, pending open; `switch.rs` `leaving_blockers`), or
+    Codex answer, pending open; `switch/prepare.rs` `leaving_blockers`), or
     `replace_blockers` when a new lessons folder replaces the builder. A
     live run is paused and kept (`Builder::pause_for_learn`, called from
     `show_lessons`; `sync_run` leaves the scene to the lesson meanwhile);
@@ -851,7 +842,7 @@ Paths are `crates/sim-spatial/src/`.
     warnings;
   - `cargo test -p sim-spatial --lib` (the tests above, `jobs::tests::*`
     including `threads_are_started_only_in_jobs`, `builder::*::tests`,
-    `robot_run::tests`, the lib.rs pick/button test);
+    `robot::run::tests`, the `inspect_view/tests.rs` pick/button test);
   - `cargo check -p sim-app` (dropped since fold-sim-app: the crate is retired);
   - a reading trace, per mode, of one REST command, one button and one key
     to the same handler: Inspect `display` / Explode button / key E →
@@ -1103,7 +1094,7 @@ definition) against the final code.
     Robot: connects with `--hardware`) and `leave` (OnExit Robot: calls
     `stop_immediate` and `LiveSync::stop_ours` directly, keeps the
     preferences, then drops the state off the UI thread), `stop_immediate`,
-    `connect`, the input systems `buttons`, `jog_buttons`, `keys` (Q/A
+    `connect`, the input systems (`actions/input.rs`) `buttons`, `jog_buttons`, `keys` (Q/A
     hold-to-move, Z/Escape), `window_loss` (`WindowFocused` false →
     `Loss { FocusLost }`, `WindowCloseRequested` → `Loss { Leaving }`) and
     `sliders`, then `apply` in `ViewerSet::Actions` and `poll_jobs` in
@@ -1125,8 +1116,10 @@ definition) against the final code.
     `Session::handle`, `render` (the page's render-time rules:
     `merge_warnings`, `leg_frame`, the leg gait's end, learning complete),
     `stop`, `stopped_locally`, `select_motor`, `update`, `begin`, `move_`,
-    `release`, `set_disabled`, `poll`, `next_deadline`, `run_due`,
-    `shutdown`, `stop_after_dropped`, `interrupted`, `time_of_day`.
+    `release`, `set_disabled`, `stop_after_dropped`, `interrupted`,
+    `time_of_day`.
+    - `session/periodic.rs`: `poll`, `next_deadline`, `run_due`,
+      `shutdown`.
     - `session/buttons.rs`: `target`, `capture`, `reset`, `flip`, `sweep`,
       `learn`, `raw_step`.
     - `session/sequences.rs`: `sweep_all`/`sweep_all_tick`, `tune`/
@@ -1137,7 +1130,7 @@ definition) against the final code.
     snapshot and the form: `render`, `render_gait`, `status_line`, `chips`,
     `angle`, `fraction`, `speed`, `outside_pose`, `stats_rows`,
     `gait_option_label`, `fixed` (JavaScript `toFixed`), `js_num`,
-    `PanelView::block`, and `status_json` (REST `hardware_status`).
+    `PanelView::block`, and `status_json` (`view/status.rs`; REST `hardware_status`).
   - `dial.rs` (`needle_end`, `rasterize`) and `motion_view.rs`
     (`comparison`, `update`): the dial and the command-vs-motion chart.
   - `panel.rs`: `spawn` (the dock: `FocusPolicy::Block`, the accessible
@@ -1146,16 +1139,17 @@ definition) against the final code.
     `panel_sections.rs`: `top_bar`, `body`, `section`, `chips`, `gaits`,
     `stats`, `runs`, `chart_labels`.
   - `mirror.rs` (`Mirror::prepare`, `update`, `follow_gait`, `poll`,
-    `alignment_angle`, `gait_bindings`, `record`, `worker_failed`, `apply`,
-    `SceneId`, `worker`) and `mirror_panel.rs` (`mirror_sync`, which drives
+    `alignment_angle`, `gait_bindings`, `record`, `worker_failed`,
+    `SceneId`; `apply` in `mirror/apply.rs`, `worker` in `mirror/thread.rs`) and `mirror_panel.rs` (`mirror_sync`, which drives
     begin/prepare, updates and gait sampling every frame; `mirror_panel`,
     `fill`): the suspended robot posed from the encoders through
     `sim_runtime::kinematic_mirror::KinematicMirror` on a jobs worker,
     written into `RobotView::mirror`.
   - `sync.rs` (`LiveSync::connect`, `start`, `stop`, `stop_ours`, `poll`,
-    `poll_status`, `on_frame`, `watch_run`; `live_input`, `sample_from`,
-    `source_text`, `legs`, `mapping`, `distinct`, `banner_text`,
-    `reading_lines`, `apply`, `drain`, `worker`) and `sync_panel.rs`
+    `poll_status`, `on_frame`, `watch_run`; in `sync/page.rs` `live_input`,
+    `sample_from`, `source_text`, `legs`, `mapping`, `distinct`,
+    `banner_text`, `reading_lines`; `apply` in `sync/apply.rs`; `drain` and
+    `worker` in `sync/thread.rs`) and `sync_panel.rs`
     (`sync_frames`, `sync_panel`, `row_title`, `rms_and_saturation`,
     `charts`, `chart_note_of`, `sync_overlay`, `sync_texts`): Real motor
     sync against `serve_motor_bench`.
@@ -1163,16 +1157,16 @@ definition) against the final code.
     `Settings::save` (an Io job), the preferences file.
 - Outside the folder: `app/actions.rs` (`Origin::SystemUi`,
   `Action::accepts`, `Call::remote`, the registry entry "hardware"),
-  `robot/actions.rs` (`apply`: `system_ui` passes `hardware:<name>` on,
+  `robot/actions/mod.rs` and `keys.rs` (`apply`: `system_ui` passes `hardware:<name>` on,
   refuses motion by name and a disabled control with "{id} is disabled:
   {why}", and lists the controls; `motion_keys`: A is given to the panel
-  while it is open; `check`: Run refused while mirroring), `robot.rs`
+  while it is open; `check`: Run refused while mirroring), `robot/ui.rs` and `robot/scene.rs`
   (`setup`: the header button; `highlight`: `RobotView::mirror` drawn
   instead of the run's frame, the blue `Materials::mirrored`; `scroll`: the
-  inspector ignores the wheel while the panel covers it), `robot_run.rs`
+  inspector ignores the wheel while the panel covers it), `robot/run/frames.rs`
   (`MotorTargets.done`, the frame's episode end), `chart.rs`
   (`rasterize_fixed`, fixed axes for the sync charts), `main.rs` (the four
-  flags), `app/switch.rs` (`Documents::hardware`).
+  flags), `app/switch/mod.rs` (`Documents::hardware`).
 
 ### Decisions
 
@@ -1426,13 +1420,13 @@ Shape.
     `LiveSync::stop_ours` (`handlers.rs` `loss`).
   - Clicks fell through the dock to the inspector: fixed,
     `FocusPolicy::Block` (`panel.rs` `spawn`); the inspector's wheel is
-    ignored while the panel covers it (`robot.rs` `scroll`).
+    ignored while the panel covers it (`robot/scene.rs` `scroll`).
   - `toFixed` ties rounded to even: fixed, `view.rs` `fixed`.
   - The gait's Stop for a leg gait waited behind the link: fixed, it goes
     through `stop_immediate` first (`handlers.rs` `handle`, `GaitStop`).
   - A `system_ui` activation of a disabled control read as success (its
     outcome is dropped): fixed, robot mode refuses it with "{id} is
-    disabled: {why}" (`robot/actions.rs` `apply`).
+    disabled: {why}" (`robot/actions/mod.rs` `apply`).
   - Window close relied on a detached job that may die with the process:
     fixed, STOP also written synchronously with `Client::send_only`
     (then `handlers.rs` `post_stop_on_leave`; since the verification pass
@@ -1574,7 +1568,7 @@ one is fixed:
    `Drop for Mirror`, `Drop for LiveSync`; MIR-16, MIR-30).
 8. Opening the panel while A was held left the simulated robot strafing:
    `HeldKeys` is re-sent without A when the panel opens
-   (`robot/actions.rs` `motion_keys`).
+   (`robot/actions/keys.rs` `motion_keys`).
 9. Quitting without a close request (Cmd+Q, `AppExit`) could skip every
    STOP: `actions::stop_on_exit` in `Last` and `Drop for Link`
    (`Link::post_stop_sync`, at most once per link, retried by a later exit
@@ -1607,7 +1601,7 @@ first); a failed synchronous exit STOP was not retried. Also found there,
 outside this diff: while live sync is engaged, REST and `system_ui` could
 still start, step, jog, drive or re-speed the run whose targets go to the
 motors. They are now refused while `LiveSync::engaged`
-(`robot/actions.rs` `moves_synced_motors`, `SYNC_REMOTE_REFUSAL`); Pause,
+(`robot/actions/mod.rs` `moves_synced_motors`, `SYNC_REMOTE_REFUSAL`); Pause,
 Reset and STOP stay available. Deliberate remaining difference: an intent
 change while a heartbeat is in flight is sent right after it, where the
 page's `heartbeatBusy` drops it until the next beat.
@@ -1700,7 +1694,7 @@ a4fe42d3 (see the journal's verification pass).* Paths are
     commands) and status bar, on the UI kit; refreshed only when
     `CadDocument.revision` changes.
 - Outside `cad/`: `app/mod.rs` (`ViewerMode::Cad`, `ModeScope::Cad`, the
-  Look, `Launch.cad`), `app/switch.rs` (`Document::Url`, `viewer_mode`'s
+  Look, `Launch.cad`), `app/switch/` (`Document::Url`, `viewer_mode`'s
   `url`, `Documents.cad`, the Cad arm of `prepare`, `leaving_blockers`,
   `leaving_note`, `leave_cad`, `mode:cad`), `app/actions.rs` (the "cad"
   feature, `fallback`), `launch.rs` (`LaunchKind::Cad` for `*.rcad`),
@@ -1829,7 +1823,7 @@ holds `push_selection` and `detail`), the 3D pick is `cad/pick.rs`
 - **Open.** `sim-spatial FILE.rcad`: `launch::classify` → `LaunchKind::Cad`
   (main.rs:342) → `cad_mode` (main.rs:205) → `CadDocument::new` →
   `app::run`. Or the switcher / `mode:cad` / `viewer_mode` →
-  `switch::handle` → `prepare`'s Cad arm (app/switch.rs:650) →
+  `switch::handle` → `prepare`'s Cad arm (app/switch/prepare.rs:191) →
   `Prepared::Now` → `arrive` inserts the document. OnEnter(ModeScope::Cad)
   `sync::enter` (cad/sync.rs:258) → `start` (:56): a Dedicated job runs
   `self_start` (:108: interpreter, free port, `ChildProcess::spawn` into
@@ -1854,8 +1848,8 @@ holds `push_selection` and `detail`), the 3D pick is `cad/pick.rs`
 - **Save.** Button / Cmd+S / `cad_save` → cad/actions.rs:187-193 → `POST
   /save` (RoboCAD writes its file) → as Patch; the poll sees `dirty`
   false and the header says Saved. Leaving: `leaving_blockers`
-  (app/switch.rs:485; CAD clause :511) → `CadDocument::switch_blockers`; `leave_cad`
-  (app/switch.rs:856) removes the document (the slot's child is stopped,
+  (app/switch/prepare.rs:26; CAD clause :52) → `CadDocument::switch_blockers`; `leave_cad`
+  (app/switch/leave.rs:71) removes the document (the slot's child is stopped,
   or detached if dirty) and `cad::clear`.
 
 ## Fold in sim-app (2026-09-30)
@@ -1904,10 +1898,10 @@ unless they name another crate.
     exhibit's number goes to `Documents::exhibit`, the gallery is dropped
     off the UI thread (its run thread joins within `JOIN_BOUND`, or is
     detached and ends at its next check), the pool and panels go.
-- **Planar v2 files in Robot mode** (`robot_planar.rs`): a v2 file
+- **Planar v2 files in Robot mode** (`robot/planar/`): a v2 file
   (`simrobot_version` < 3, the shared rule) is read as sim-phenomena's
-  `CadModel` from the bytes the source worker read (`robot.rs`
-  `load_file_bytes`; `robot_source::FileModel::{Physical, Planar}`) and run
+  `CadModel` from the bytes the source worker read (`robot/loader.rs`
+  `load_file_bytes`; `robot::source::FileModel::{Physical, Planar}`) and run
   by the "robot-run (planar v2)" `RunThread`, which builds through
   `sim_phenomena::scenarios::cad_robot::build_planar` (the one planar build;
   `AnyRobot::load` and `run_file` call it too) and paces with the CAD
@@ -1916,7 +1910,7 @@ unless they name another crate.
   `CadRobot::build`), and v3+ files report `physical v<N>`. Run, pause,
   step, reset, speed, joint select and target, tip contacts, outlines and
   COM dots, the watch and reload; everything without a v2 meaning is
-  refused by name (`robot_planar::UNAVAILABLE`, live motor sync included).
+  refused by name (`robot::planar::UNAVAILABLE`, live motor sync included).
   The reload worker tries the shared build once, so a file that cannot
   build (a closed joint loop, which the build now refuses by name instead
   of never finishing) keeps the last good model and its run; the selected
@@ -1991,9 +1985,9 @@ unless they name another crate.
 - Phenomena exhibits are rebuilt each time the mode is entered (the gallery
   is a mode resource); leaving during the build cannot cancel it, so it
   runs to the end on its detached thread.
-- `robot_planar.rs` (826 lines with tests) and `robot/actions.rs` (898) are
-  over the 800-line smell; `robot.rs` grew to 2,514. Splitting them is the
-  split-large-files epic.
+- `robot_planar.rs` (826 lines with tests) and `robot/actions.rs` (898) were
+  over the 800-line smell; `robot.rs` grew to 2,514. Split 2026-10-01 by the
+  split-large-files epic (see [Split large files](#split-large-files-2026-10-01)).
 - The workspace `bevy = "0.19.1"` entry stays though nothing uses it.
 
 ### Review findings (four pair-reviewers, then fixes)
@@ -2021,7 +2015,7 @@ Fixed:
   unsnapped floats exactly.
 - The hand-edited Cargo.lock would have failed every `--locked` job.
 - With a v2 file open the leg mirror waited forever; it refuses by name.
-- `lesson/mod.rs` `open_url` left a zombie per opened link.
+- `lesson/handler.rs` `open_url` left a zombie per opened link.
 
 Rejected or deferred, with reasons:
 - The process scan does not look for `.status()`: it matches unrelated
@@ -2045,7 +2039,7 @@ Rejected or deferred, with reasons:
   `app::tests::every_capability_parses_into_its_action_and_every_parsed_command_is_registered`,
   `app::tests::every_mode_control_resolves_to_a_switch`,
   `app::tests::rest_refuses_commands_of_another_mode_by_name`,
-  `robot_planar::tests::*`, `robot_source` tests, `robot::actions` tests,
+  `robot::planar::tests::*`, `robot::source` tests, `robot::actions` tests,
   `jobs::tests::processes_are_started_only_in_jobs`,
   `jobs::tests::threads_are_started_only_in_jobs`,
   `jobs::tests::spawn_detached_keeps_running_reaps_and_names_a_failure`.
@@ -2079,21 +2073,21 @@ Rejected or deferred, with reasons:
   → as above.
 - **v2 open.** `sim-spatial --robot F` (main.rs:384 for a positional file)
   → `robot_mode` (main.rs:291) → `RobotView::open` → `SourceWatch::open`
-  (`robot_source.rs:138`) → `check` (:85, a Compute job) →
-  `load_file_bytes` (`robot.rs:119`; v2 → `robot_planar::load_bytes`,
-  `robot_planar.rs:91`) → `watch` (`robot.rs:836`) / `receive` (:851) →
-  `FileModel::Planar` (:909) → `install_planar` (:1047) → `PlanarView::new`
-  (:1111) → `PlanarRun::spawn` (`robot_planar.rs:415`) → `Worker::run`
-  (:223) → `build` (:249) → `cad_robot::build_planar`
+  (`robot/source.rs:138`) → `check` (:85, a Compute job) →
+  `load_file_bytes` (`robot/loader.rs:61`; v2 → `robot::planar::load_bytes`,
+  `robot/planar/mod.rs:104`) → `watch` (`robot/scene.rs:8`) / `receive` (:23) →
+  `FileModel::Planar` (:81) → `install_planar` (:219) → `PlanarView::new`
+  (:283) → `PlanarRun::spawn` (`robot/planar/thread.rs:242`) → `Worker::run`
+  (:50) → `build` (:76) → `cad_robot::build_planar`
   (`sim-phenomena/src/scenarios/cad_robot.rs:506`), paused at t = 0.
-- **v2 run.** Run button, Space (`robot/actions.rs` `planar_keys`) or REST
-  `robot_run` → `robot/actions.rs:495` `apply` → `check_planar` (:110) →
-  `dispatch_planar` (:192) → `PlanarRun::act` (`robot_planar.rs:491`) →
-  `Worker::command` (:322, Start) → `tick` (:300: 0.05 s × speed, 0.02 s
-  grid, one step per tick) → `publish` (:369) → SimSync `planar_sync`
-  (`robot.rs:1146`) → `PlanarRun::poll` (`robot_planar.rs:442`, current
-  generation only) → Present `robot.rs:2439` `draw` →
-  `robot_planar::draw` (`robot_planar.rs:627`).
+- **v2 run.** Run button, Space (`robot/actions/keys.rs` `planar_keys`) or REST
+  `robot_run` → `robot/actions/mod.rs:497` `apply` → `check_planar` (:109) →
+  `dispatch_planar` (:191) → `PlanarRun::act` (`robot/planar/thread.rs:318`) →
+  `Worker::command` (:151, Start) → `tick` (:127: 0.05 s × speed, 0.02 s
+  grid, one step per tick) → `publish` (:196) → SimSync `planar_sync`
+  (`robot/scene.rs:319`) → `PlanarRun::poll` (`robot/planar/thread.rs:269`, current
+  generation only) → Present `robot/overlay_view.rs:202` `draw` →
+  `robot::planar::draw` (`robot/planar/view.rs:20`).
 
 ## CAD selection and transform (2026-10-01)
 
@@ -2763,6 +2757,144 @@ Function names, not line numbers (fixes may follow the review).
   (`clears_selection`, noted by `started`) once the edit succeeded and
   publishes it.
 
+## Split large files (2026-10-01)
+
+Batch split-large-files (structural; tasks T32.1–T32.4). Pure
+restructuring of `crates/sim-spatial/src`: code moved verbatim along its
+seams (only `use` lines, `mod` declarations, visibility qualifiers and path
+prefixes changed), whole files moved with `git mv`, and no REST name,
+capability text, action spec, key binding, system set, system ordering,
+run condition or UI changed. Every plugin's `build()` (`RobotPlugin`,
+`hardware::build`, `BuilderPlugin`, `LearnPlugin`, `SpatialViewerPlugin`,
+`app::switch::build`) is textually unchanged: moved systems are imported
+back into the module root under their old names. Written and reviewed by
+reading (four parallel reviews: run thread, robot tree and hardware,
+builder and lessons, lib/switch/guard/transport; no compile or ordering
+defect found); pending its verification pass. Commits 33ebd373 (doc
+truth), d39bd96b (robot moves), 19b4b86b (run thread), 1f6c5311 (robot
+view, actions, planar), c021ce87 (hardware), b2b5397e (builder), 2a883b20
+(lessons), eff1de77 (lib.rs, switch, guard), a62ece7b (transport), plus
+two doc-only commits.
+
+### Module map
+
+Paths are `crates/sim-spatial/src/`; non-test lines after the split.
+
+| Was | Now |
+|---|---|
+| `robot.rs` (2,532) | `robot/mod.rs` 201 (doc, imports, `RobotView`, `Status`, `Section`, mod list, re-exports, `RobotPlugin`); `loader.rs` 131 (`Loaded`, `load*`, `Opened`); `state.rs` 245 (`impl RobotView`: open, switch, `robot_state` JSON and its planar twin); `ui.rs` 235 (marker components, `Materials`, `setup`); `scene.rs` 499 (`watch`, `receive`, `install_planar`, `planar_sync`, `apply_frames`, orbit, viewport, highlight, scroll); `inspector.rs` 286 (`panels`, speed and overlay panels); `controls.rs` 475 (jog, motion, recorded and gait panels); `sections.rs` 232 (link, joints, drives, source texts); `overlay_view.rs` 250 (stress paint, graph dock, overlay gizmos); `tests.rs` |
+| `robot_run.rs` (2,647) | `robot/run/mod.rs` 30 (re-exports); `pacing.rs` 63; `jog.rs` 75; `protocol.rs` 155 (`Phase`, `Source`, `Status`, `Command`, `RunAction`); `frames.rs` 222 (`Frame`, overlays, `map_poses`, frame JSON); `replay.rs` 187; `sim.rs` 184 (`Sim`); `worker.rs` 387 (the run-thread loop); `controller.rs` 521 and `preset_ops.rs` 320 (`RunController`, two impl blocks); `tests.rs` |
+| `robot_{gait,graphs,motion,playback,preset,recording,source,stress}.rs` | `robot/<name>.rs`, unchanged |
+| `robot_planar.rs` (862) | `robot/planar/mod.rs` 272 (refusals, `PlanarView`); `thread.rs` 383 (the planar run thread); `view.rs` 129 (drawing, inspector text); `tests.rs` |
+| `robot/actions.rs` (911) | `robot/actions/mod.rs` 616 (`RobotAction`, check, dispatch, controls, apply, publish); `keys.rs` 140 (input systems); `commands.rs` 127 (the spec table and wire conversion, verbatim); `tests.rs` |
+| `robot/hardware/sync.rs` (905) | `sync.rs` 679; `sync/page.rs` 116 (the page's pure rules); `sync/apply.rs` 65; `sync/thread.rs` 72 (outbox, worker) |
+| `robot/hardware/session.rs` (821) | `session.rs` 698; `session/periodic.rs` 132 (a second `impl Session`: poll, deadlines, shutdown) |
+| `robot/hardware/mirror.rs` (766) | `mirror.rs` 654; `mirror/apply.rs` 53; `mirror/thread.rs` 71 |
+| `robot/hardware/actions.rs` (742), `view.rs` (711) | `actions.rs` 626 + `actions/input.rs` 126 (input systems); `view.rs` 640 + `view/status.rs` 82 (`hardware_status` JSON) |
+| `builder.rs` (2,453) | `builder.rs` 590 (types, `Builder::open`, accessors, `state_json`, `BuilderPlugin`); `builder/editing.rs` 395; `drafts.rs` 163; `live_run.rs` 531; `studies.rs` 210; `rebuild.rs` 249; `background.rs` 69; `test_support.rs` (`#[cfg(test)]` hooks); `replay_tests.rs` |
+| `builder/ui.rs` (1,395) | `ui.rs` 377; `ui/tabs.rs` 378; `ui/inspector_panel.rs` 510; `ui/notes_tab.rs` 148 |
+| `builder/discussion.rs` (897), `calibration.rs` (826), `placement.rs` (1,212) | `discussion.rs` 498 + `discussion/handlers.rs` 289 + `discussion/tests.rs`; `calibration.rs` 552 + `calibration/panel.rs` 170 + `calibration/tests.rs`; `placement.rs` 649 + `placement/tests.rs` |
+| `lesson/mod.rs` (2,371) | `lesson/mod.rs` 657 (types, `Learn::new`, catalogue, `LearnPlugin`); `opening.rs` 258; `editing.rs` 125; `handler.rs` 397; `watch.rs` 300; `scene_view.rs` 225; `controls.rs` 156; `tests.rs` |
+| `lesson/ui.rs` (1,158), `narrate.rs` (880), `practice.rs` (790) | `lesson/ui/{mod 426, outline 154, scene_card 345, cards 108, margin 145}.rs`; `lesson/narrate/{mod 528, bar 195, overlay 169}.rs`; `lesson/practice/{mod 362, cards 338, sketch 104}.rs` |
+| `lib.rs` (1,297) | `lib.rs` 64 (doc, mod list, re-exports, the imports glob users share, the `fixture` test helper); `inspect_view/mod.rs` 397 (`SpatialScene`, `SpatialViewerPlugin`, components); `scene.rs` 320; `camera.rs` 125; `ui.rs` 284; `tests.rs` |
+| `app/switch.rs` (959) | `app/switch/mod.rs` 536 (`handle`, `Switcher`, `build`); `prepare.rs` 220 (leaving blockers, `prepare`); `arrival.rs` 139 (`enter`, `finish_load`, `arrive`); `leave.rs` 109 (`leave_*` per mode) |
+
+### Decisions
+
+- **Cap 750 non-test lines, guarded.** `app::tests::source_files_stay_small`
+  walks `src/` and fails naming each file over the cap and its count. A
+  file's non-test lines are those before its first column-0 `#[cfg(test)]`
+  immediately followed by a column-0 `mod … {` line (an inline test
+  module); otherwise every line counts, so a `#[cfg(test)]` helper or
+  re-export mid-file does not end the count. Files named `tests.rs` or
+  `*_tests.rs` and everything under a `tests/` directory are skipped. The
+  aim when splitting was 700; 750 leaves room for cohesive files such as
+  `cad/ops/mod.rs` (708) and `cad/panel.rs` (700) without churn.
+  *Rejected:* a 700 cap (would force artificial splits of just-reviewed CAD
+  files); counting to the first `#[cfg(test)]` of any kind
+  (`cad/sync/mod.rs` has a test-only re-export at line 28). *Revisit if*
+  files settle at 740–750 and keep creeping.
+- **The allowlist is empty.** Every file the batch named is under 700; an
+  `ALLOWED` entry needs a reason, and an entry whose file is gone or back
+  under the cap fails the test, so the list cannot go stale.
+- **Re-exports keep every public path.** Each split root re-exports what
+  callers use with the item's own visibility (`pub use` for `pub`,
+  `pub(crate) use`, or a private `use` that children reach through
+  `use super::*`). `crate::robot::run::X`, `crate::robot::planar::X`,
+  `crate::SpatialScene`, `sim_spatial::load_inspect`,
+  `crate::builder::compiled_scene`, `lesson::open_lessons`,
+  `app::switch::{handle, arrive, finish_load}` and the rest resolve as
+  before. Only the robot module names changed (`crate::robot_run::X` →
+  `crate::robot::run::X`, `sim_spatial::robot_preset` →
+  `sim_spatial::robot::preset`), with every use site updated; no temporary
+  `robot_*` aliases remain in `lib.rs`.
+- **Visibility is the narrowest that keeps the old reach.** A private item
+  moved into a child became `pub(super)` (or `pub(in crate::<mode>)` one
+  level deeper), which is exactly the reach it had in the parent; nothing
+  was widened past its callers. Struct definitions stayed with the code
+  that touches their private fields where possible (`RobotView`,
+  `Builder`, `Learn` stay in their roots); `SpatialScene`'s fields became
+  `pub(crate)` because they were private at the crate root, which was
+  already crate-wide.
+- **Robot mode is one tree** (`robot/`, as CAD mode is `cad/`): the ten
+  `robot_*.rs` files moved under it first as pure `git mv` (d39bd96b), so
+  the parallel splits could not collide on use sites.
+- **Behaviour bugs noticed while splitting are left for a feature batch**
+  (this batch changes no behaviour): `gait_panel` and `motion_panel`
+  (`robot/controls.rs`) never clear a block once shown, so a REST
+  `robot_preset` reopen into a view without gait preview or motion can
+  leave stale buttons (`recorded_panel` despawns its children); a failed
+  preset load in `receive` (`robot/scene.rs`) despawns the old meshes before
+  it checks the result. Misplaced doc comments found the same way were
+  fixed (comments only).
+
+### The refusal test (hardware_client, T32.1)
+
+`hardware_client::tests::a_refusal_before_the_body_surfaces_the_servers_error`
+failed deterministically on macOS. Investigation (python3 reproduction on
+127.0.0.1 with a 3000-byte body and a server that reads the head in
+1024-byte pieces, answers 403 and closes with the body unread): an answer
+written in **one** write always reached the client whole before the reset
+(40 of 40 runs, whether the client read at once, after 0.2 s, or peeked
+first), so `exchange`'s read-ahead and `salvage` already work. An answer
+written **piecewise** (`write!` on a `TcpStream`, as the test server and
+both real servers do) lost every piece after the first: Nagle holds them
+until the first is acknowledged, and the reset sent by closing with unread
+data discards the server's unsent bytes (the client received 72 of 131
+bytes, the status line and part of the head, then ECONNRESET). No client
+change can read bytes that were never sent.
+
+*Decision:* the transport cannot recover them, so the client's error on
+that path names it truthfully. `loopback_http::exchange`'s closed-connection
+error now gives the status code when the status line arrived ("the server
+closed the connection after sending only part of an HTTP 403 answer") and
+appends `REFUSAL_LOST` ("a server that refuses a request without reading
+its body resets the connection, which can discard its answer") before the
+caller's hint; it never invents the server's reason. Requests, the
+loopback-only refusal and every timeout are unchanged. The test keeps its
+assertion off macOS; on macOS it accepts the server's error or `HTTP 403`
+plus `REFUSAL_LOST`; a new one-write case asserts the server's error on
+every platform. It is not ignored. *Rejected:* polling or peeking between
+body writes (the bytes are lost on the server side, not the client's);
+loosening the assertion everywhere. *Follow-up (server-side, out of this
+batch's scope):* `serve_actuator_calibration` (`reply`) and
+`serve_motor_bench` (`response`) in `crates/sim-runtime/examples/` should
+write each answer in one write and, before closing, shut down the write
+half and drain the unread body for a bounded time; then the macOS user sees
+"Session token required" instead of the partial-answer error. *Revisit
+when* those servers change.
+
+### Verification checklist
+
+- [ ] `cargo build -p sim-spatial --lib --tests --bins` with no warnings
+  (watch for unused imports in split roots whose names only children use
+  through `use super::*`, and for re-exports wider than their items).
+- [ ] `cargo test -p sim-spatial --lib --bins`: 253 passed (the 252 of
+  cad-modify plus `app::tests::source_files_stay_small`), 1 ignored; bins 4.
+- [ ] `cargo test -p sim-runtime --lib hardware_client` (the refusal test
+  and its one-write case pass on macOS).
+- [ ] `cargo check -p sim-web --target wasm32-unknown-unknown`.
+
 ## Target shape
 
 ### 1. One app, modes as states
@@ -3018,7 +3150,7 @@ hardware checklist.* The browser's calibration and hardware pages
   `hardware_export`, `hardware_gaits`, `hardware {action}`; `system_ui`
   `hardware:<name>`). A `system_ui` activation of a hardware control that
   is disabled now is refused with "{id} is disabled: {why}"
-  (`robot/actions.rs` `apply`). While live motor sync is engaged, REST and
+  (`robot/actions/mod.rs` `apply`). While live motor sync is engaged, REST and
   `system_ui` may not start, step, jog, drive or re-speed the robot run
   either, since its targets go to the motors (`moves_synced_motors`);
   Pause, Reset and STOP stay available.
@@ -3354,8 +3486,11 @@ The Director re-ranks with evidence, but this is the default:
     lib tests 172 passed, 1 ignored; workspace `--locked` check clean; see
     [Fold in sim-app](#fold-in-sim-app-2026-09-30)).*
 
-After that, feature work resumes on the target shape. Split large files while
-they're being touched.
+After that, feature work resumes on the target shape. The large-file debt
+was paid off by split-large-files (2026-10-01, see
+[Split large files](#split-large-files-2026-10-01)); the source-size guard
+(`app::tests::source_files_stay_small`, cap 750 non-test lines) keeps it
+paid, so split a file along a seam when a change would take it past the cap.
 
 ## Open questions
 

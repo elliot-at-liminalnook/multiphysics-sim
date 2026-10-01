@@ -1159,8 +1159,13 @@ class Service:
     def save_with_thumbnail(self, path: Optional[str]):
         """/save with the thumbnail the desktop's Save writes
         (`MainWindow.thumbnail`: the viewport scaled into 256x192). Headless
-        it is drawn by the snapshot renderer (`render`) at 256x192. A failed
-        thumbnail saves without one, as the desktop's does."""
+        it is drawn by the snapshot renderer (`render`) at 256x192 from each
+        node's own tessellation (tolerance 0: `mesh_of` reads it as the
+        node's `tessellation_tolerance`, the meshes the viewport and the
+        native viewer's `/mesh` fetches already cached), so a save adds no
+        new tessellation; its cost is the 256x192 painter's pass and the
+        edge sampling. A failed thumbnail saves without one, as the
+        desktop's does."""
         p = path or self.doc.path
         if not p:
             raise ApiError(400, "no path")
@@ -1168,7 +1173,7 @@ class Service:
             thumbnail = self.app.thumbnail()
         else:
             try:
-                thumbnail = self.render({"w": "256", "h": "192"})
+                thumbnail = self.render({"w": "256", "h": "192", "tolerance": "0"})
             except Exception:
                 thumbnail = b""
         self.doc.save(p, thumbnail=thumbnail or None)
@@ -1180,15 +1185,29 @@ class Service:
         """Write an empty document (`Document().save`) to a new `.rcad`. The
         desktop's New opens an empty window; a headless service serves one
         document, so a client creates the file here and opens it. The open
-        document is not touched; an existing file is never replaced."""
+        document is not touched; an existing file is never replaced: the
+        file is created exclusively first (no window between a check and
+        the write), then the empty document is saved over it, and removed
+        again if that fails."""
         if not isinstance(path, str) or not path.endswith(".rcad"):
             raise ApiError(400, "path must name a .rcad file")
-        if os.path.exists(path):
-            raise ApiError(409, f"{path} exists: choose a new file name")
         try:
-            Document().save(path)
+            with open(path, "xb"):
+                pass
+        except FileExistsError:
+            raise ApiError(409, f"{path} exists: choose a new file name")
         except OSError as e:
             raise ApiError(422, f"could not write {path}: {e}")
+        try:
+            Document().save(path)
+        except BaseException as e:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            if isinstance(e, OSError):
+                raise ApiError(422, f"could not write {path}: {e}")
+            raise
         return {"created": path}
 
     def mesh_units(self, path):

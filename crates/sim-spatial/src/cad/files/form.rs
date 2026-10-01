@@ -7,10 +7,18 @@
 //! - **Drafts are input editing** (native-viewer.md §3): typing, a choice
 //!   or a checkbox changes the form's texts only; OK (and Enter) writes the
 //!   one action REST takes (`CadFile`, `CadExport`, `CadRender`) with every
-//!   value, Cancel (and Escape) writes `CadFile {op: close}`, "Discard
-//!   changes" writes the same action as OK with `discard: true`, "Guess
-//!   unit" writes `CadFile {op: guess_unit}`. A refusal comes back into
-//!   `error` (`files::handle`).
+//!   value, Cancel (and Escape) writes `CadFile {op: close}`, "Guess unit"
+//!   writes `CadFile {op: guess_unit}`. A refusal comes back into `error`
+//!   (`files::handle`). New and open show `cad_open`'s rule as it stands
+//!   (`switch_blockers`: why OK will be refused; `leaving_note`: where an
+//!   attached RoboCAD's unsaved edits stay); there is no discard answer.
+//! - **Mesh units**: as RoboCAD's import opens its unit prompt with a guess
+//!   (`MainWindow.import_path`: `UnitsDialog(mesh_units_guess(extent))`),
+//!   the form asks RoboCAD's guess (`CadFile {op: guess_unit}`, a job) as
+//!   soon as its path names a mesh it has not asked for, and the guess
+//!   fills the unit unless one was chosen by hand for that path. Until a
+//!   guess landed or a unit was chosen, OK is disabled and says why: a
+//!   mesh is never imported in a unit nobody picked.
 //! - **Modal**: a dimmed backdrop takes every click, and the form holds
 //!   `CadInputFocus` while open (set after `panel::name_entry` resets it,
 //!   before every reader), ending the other fields' drafts.
@@ -59,6 +67,8 @@ pub(crate) struct FileForm {
     pub error: Option<String>,
     /// The import unit was chosen by hand (a guess no longer replaces it).
     pub unit_touched: bool,
+    /// The mesh path RoboCAD's unit guess was last asked for (`ask_guess`).
+    pub guess_asked: Option<String>,
     /// The listing last asked for (`listing_key`).
     pub listing_asked: Option<String>,
     /// The section tool's plane was there when the form opened.
@@ -126,7 +136,8 @@ impl FileForm {
             Kind::File(FileOp::SaveAs) => put("path", format!("{dir}{stem}.rcad")),
             Kind::File(FileOp::Import) => {
                 put("path", dir.to_string());
-                put("unit", "mm".into());
+                // None until RoboCAD's guess or the user's choice (`ask_guess`).
+                put("unit", String::new());
             }
             Kind::File(_) => put("path", dir.to_string()),
             Kind::Export => {
@@ -165,7 +176,7 @@ impl FileForm {
             }
         }
         // The path takes the keyboard, the cursor after its text (a dialog's file name field).
-        Ok(FileForm { kind, texts, focus: Some("path".into()), select_all: false, error: None, unit_touched: false, listing_asked: None, section_available: cx.section.is_some() })
+        Ok(FileForm { kind, texts, focus: Some("path".into()), select_all: false, error: None, unit_touched: false, guess_asked: None, listing_asked: None, section_available: cx.section.is_some() })
     }
 
     pub(crate) fn text(&self, name: &str) -> &str {
@@ -261,11 +272,42 @@ impl FileForm {
         self.error = None;
     }
 
+    /// The mesh file an import form names (absolute, `~/` expanded), as
+    /// the guess and the import are sent for it.
+    pub(crate) fn import_mesh(&self) -> Option<String> {
+        if self.kind != Kind::File(FileOp::Import) {
+            return None;
+        }
+        super::absolute(self.text("path"), "Import").ok().filter(|p| MESH_EXTENSIONS.contains(&extension(p).as_str()))
+    }
+
+    /// The mesh path to ask RoboCAD's unit guess for, once per path: the
+    /// unit starts over for it (None, not chosen), as RoboCAD's prompt
+    /// opens afresh for each import.
+    pub(crate) fn ask_guess(&mut self) -> Option<String> {
+        let mesh = self.import_mesh()?;
+        if self.guess_asked.as_deref() == Some(mesh.as_str()) {
+            return None;
+        }
+        self.guess_asked = Some(mesh.clone());
+        self.unit_touched = false;
+        self.texts.insert("unit".into(), String::new());
+        Some(mesh)
+    }
+
+    /// Why OK cannot import the mesh yet: no unit guessed or chosen.
+    pub(crate) fn unit_missing(&self) -> Option<String> {
+        let mesh = self.import_mesh()?;
+        (!IMPORT_UNITS.contains(&self.text("unit"))).then(|| {
+            let name = file_of(&mesh);
+            format!("Choose the units of {name} ({}), or wait for RoboCAD's guess: a mesh file has no units, and RoboCAD's import asks for them", IMPORT_UNITS.join(", "))
+        })
+    }
+
     /// RoboCAD's unit guess for `path` fills the unit, unless chosen by hand.
     pub(crate) fn guessed(&mut self, path: &str, answer: &Value) {
-        if self.kind == Kind::File(FileOp::Import)
+        if self.import_mesh().as_deref() == Some(path)
             && !self.unit_touched
-            && self.text("path").trim() == path
             && let Some(guess) = answer.get("guess").and_then(Value::as_str).filter(|g| IMPORT_UNITS.contains(g))
         {
             self.texts.insert("unit".into(), guess.into());
@@ -315,9 +357,9 @@ impl FileForm {
         self.set("path", format!("{}/{keep}", parent.trim_end_matches('/')));
     }
 
-    /// The action OK writes, with every value (`discard`: the Discard
-    /// changes button). Err: a field that does not evaluate, by name.
-    pub(crate) fn action(&self, discard: bool) -> Result<CadAction, String> {
+    /// The action OK writes, with every value. Err: a field that does not
+    /// evaluate, or a mesh's unit not yet guessed or chosen, by name.
+    pub(crate) fn action(&self) -> Result<CadAction, String> {
         let path = self.text("path").trim().to_string();
         if path.is_empty() || path.ends_with('/') {
             return Err("Type a file name (or pick one from the list)".into());
@@ -330,8 +372,11 @@ impl FileForm {
         let on = |name: &str| self.text(name) == "true";
         Ok(match self.kind {
             Kind::File(op) => {
+                if let Some(why) = self.unit_missing() {
+                    return Err(why);
+                }
                 let unit = (op == FileOp::Import && MESH_EXTENSIONS.contains(&extension(&path).as_str())).then(|| self.text("unit").to_string());
-                CadAction::CadFile(FileArgs { op, path: Some(path), unit, discard })
+                CadAction::CadFile(FileArgs { op, path: Some(path), unit })
             }
             Kind::Export => {
                 let fmt = self.format().ok_or_else(|| formats::unknown(self.text("format")))?;
@@ -365,10 +410,11 @@ impl FileForm {
         })
     }
 
-    /// Whether OK can be pressed: a file name and every number evaluating.
+    /// Whether OK can be pressed: a file name, a mesh's unit and every
+    /// number evaluating.
     fn ok_ready(&self) -> bool {
         let path = self.text("path").trim();
-        !path.is_empty() && !path.ends_with('/') && self.rows().iter().all(|r| !matches!(r.kind, FieldKind::Number { .. }) || evaluate(&r.kind, self.text(&r.name)).is_ok())
+        !path.is_empty() && !path.ends_with('/') && self.unit_missing().is_none() && self.rows().iter().all(|r| !matches!(r.kind, FieldKind::Number { .. }) || evaluate(&r.kind, self.text(&r.name)).is_ok())
     }
 
     /// As `cad_state.files.form` shows it.
@@ -379,7 +425,7 @@ impl FileForm {
             Kind::Export => "export".into(),
             Kind::Render => "render".into(),
         };
-        json!({"kind": kind, "title": self.title(), "fields": fields, "focus": self.focus, "error": self.error})
+        json!({"kind": kind, "title": self.title(), "fields": fields, "focus": self.focus, "error": self.error, "ok_ready": self.ok_ready(), "unit_missing": self.unit_missing()})
     }
 }
 
@@ -391,8 +437,6 @@ pub(super) struct FilePart(pub Hit);
 pub(super) enum Hit {
     /// A kit form part, by row.
     Form(FormHit),
-    /// "Discard changes and …" (new, open).
-    Discard,
     /// "Guess unit" (a mesh import).
     Guess,
     /// A listing entry, by index.
@@ -457,7 +501,7 @@ pub(super) fn input(
         }
     }
     let rows = form.rows();
-    let (mut submit, mut close, mut guess) = (None::<bool>, false, false);
+    let (mut submit, mut close, mut guess) = (false, false, false);
     for (interaction, part, enabled) in &parts {
         if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
             continue;
@@ -485,12 +529,13 @@ pub(super) fn input(
                     form.set(&row.name, (!on).to_string());
                 }
             }
-            Hit::Form(FormHit::Ok) => submit = Some(false),
+            Hit::Form(FormHit::Ok) => submit = true,
             Hit::Form(FormHit::Cancel) => close = true,
-            Hit::Discard => submit = Some(true),
             Hit::Guess => guess = true,
             Hit::Entry(i) => {
-                if let Some(listing) = &files.listed
+                // Only the listing drawn for this path (as the footer shows it):
+                // a newer path's older listing never fills the path.
+                if let Some(listing) = files.listed.as_ref().filter(|l| before.listing_key().is_some_and(|(key, ..)| key == l.key))
                     && let Some((entry, is_dir)) = listing.entries.get(i)
                 {
                     form.pick(&listing.dir, entry, *is_dir);
@@ -502,7 +547,7 @@ pub(super) fn input(
     let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
     let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
     for e in typed {
-        if submit.is_some() || close {
+        if submit || close {
             break;
         }
         match form.focus.clone() {
@@ -513,7 +558,7 @@ pub(super) fn input(
                         form.set(&field, draft.text);
                         form.select_all = draft.select_all;
                     }
-                    DraftKey::Enter => submit = Some(false),
+                    DraftKey::Enter => submit = true,
                     DraftKey::Escape => close = true,
                     DraftKey::Tab => {
                         form.focus = next_text(&rows, Some(field.as_str()));
@@ -523,7 +568,7 @@ pub(super) fn input(
                 }
             }
             None => match &e.logical_key {
-                Key::Enter => submit = Some(false),
+                Key::Enter => submit = true,
                 Key::Escape => close = true,
                 Key::Tab => {
                     form.focus = next_text(&rows, None);
@@ -537,13 +582,19 @@ pub(super) fn input(
         out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::Close, ..Default::default() })));
     } else if guess {
         out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::GuessUnit, path: Some(form.text("path").trim().to_string()), ..Default::default() })));
-    } else if let Some(discard) = submit {
-        match form.action(discard) {
+    } else if submit {
+        match form.action() {
             Ok(action) => {
                 out.write(Act::ui(action));
             }
             Err(e) => form.error = Some(e),
         }
+    }
+    // A path newly naming a mesh: RoboCAD's unit guess is asked (a job; it fills the unit).
+    if !close
+        && let Some(mesh) = form.ask_guess()
+    {
+        out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::GuessUnit, path: Some(mesh), ..Default::default() })));
     }
     // The directory listing follows the path (read on Pool::Io).
     if let Some((key, dir, exts)) = form.listing_key()
@@ -567,8 +618,9 @@ const SHOWN: usize = 12;
 /// document's saved state changes; despawned when it closes.
 pub(super) fn draw(mut commands: Commands, files: Option<Res<CadFiles>>, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<FileFormRoot>>, mut last: Local<Option<String>>) {
     let form = files.as_deref().and_then(|f| f.form.as_ref());
-    let unsaved = doc.as_deref().map(|d| (d.unsaved(), d.document_name()));
-    let key = form.map(|form| format!("{form:?}{:?}{:?}{unsaved:?}", files.as_deref().map(|f| &f.listed), files.as_deref().map(|f| &f.guess)));
+    let rule = form.zip(doc.as_deref()).and_then(|(f, d)| open_rule(f, d));
+    let guessing = files.as_deref().is_some_and(|f| f.jobs.iter().any(|j| j.kind == "guess_unit"));
+    let key = form.map(|form| format!("{form:?}{:?}{:?}{rule:?}{guessing}", files.as_deref().map(|f| &f.listed), files.as_deref().map(|f| &f.guess)));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;
@@ -599,33 +651,50 @@ pub(super) fn draw(mut commands: Commands, files: Option<Res<CadFiles>>, doc: Op
             DespawnOnExit(ModeScope::Cad),
         ))
         .with_children(|backdrop| {
-            k.form(backdrop, &title, &form_rows, form.ok_ready(), Some(460.0), |h| FilePart(Hit::Form(h)), |p| footer(p, &k, files, form, doc.as_deref()));
+            k.form(backdrop, &title, &form_rows, form.ok_ready(), Some(460.0), |h| FilePart(Hit::Form(h)), |p| footer(p, &k, files, form, rule.as_ref()));
         });
 }
 
-/// Under the buttons: the refusal, the unsaved-edit choice, the unit
-/// guess, whether the file exists, and the directory's files.
-fn footer(p: &mut ChildSpawnerCommands, k: &Kit, files: &CadFiles, form: &FileForm, doc: Option<&CadDocument>) {
+/// New and open under `cad_open`'s rule, as it stands: Err (why OK will
+/// be refused: an edit in flight, a self-started service's unsaved edits)
+/// or Ok (where an attached RoboCAD's unsaved edits stay). None: nothing
+/// to say, or another form.
+pub(super) fn open_rule(form: &FileForm, doc: &CadDocument) -> Option<Result<String, String>> {
+    if !matches!(form.kind, Kind::File(FileOp::New | FileOp::Open)) {
+        return None;
+    }
+    let blockers = doc.switch_blockers();
+    if !blockers.is_empty() {
+        return Some(Err(format!("Not now: {}", blockers.join("; "))));
+    }
+    doc.leaving_note().map(|note| Ok(format!("{note}; this window then shows the other file")))
+}
+
+/// Under the buttons: the refusal, `cad_open`'s rule for new and open,
+/// the unit guess, whether the file exists, and the directory's files.
+fn footer(p: &mut ChildSpawnerCommands, k: &Kit, files: &CadFiles, form: &FileForm, rule: Option<&Result<String, String>>) {
     if let Some(error) = &form.error {
         p.spawn(k.text(error.clone(), size::SMALL, DANGER, 0));
     }
     let path = form.text("path").trim();
-    if let (Kind::File(op @ (FileOp::New | FileOp::Open)), Some(doc)) = (form.kind, doc)
-        && doc.unsaved() != Some(false)
-    {
-        let why = if doc.unsaved() == Some(true) { "has unsaved edits" } else { "may have unsaved edits (not confirmed now)" };
-        p.spawn(k.text(format!("{} {why}: save it first (Save), or discard them. RoboCAD asks the same.", doc.document_name()), size::SMALL, WARN, 0));
-        let label = if op == FileOp::New { "Discard changes and create" } else { "Discard changes and open" };
-        p.spawn(k.button(label, FilePart(Hit::Discard), Look::Danger, form.ok_ready()));
+    if let Some(rule) = rule {
+        let (text, color) = match rule {
+            Err(why) => (why.clone(), DANGER),
+            Ok(note) => (note.clone(), WARN),
+        };
+        p.spawn(k.text(text, size::SMALL, color, 0));
     }
-    if form.kind == Kind::File(FileOp::Import) && MESH_EXTENSIONS.contains(&extension(path).as_str()) {
+    if let Some(mesh) = form.import_mesh() {
         let note = match &files.guess {
-            Some((g, Ok(v))) if g == path => format!("RoboCAD's guess: {} (largest extent {} in the file's units)", v.get("guess").and_then(Value::as_str).unwrap_or("?"), v.get("extent").and_then(Value::as_f64).map_or_else(|| "?".into(), |e| format!("{e:.4}"))),
-            Some((g, Err(e))) if g == path => e.clone(),
+            Some((g, Ok(v))) if *g == mesh => format!("RoboCAD's guess: {} (largest extent {} in the file's units)", v.get("guess").and_then(Value::as_str).unwrap_or("?"), v.get("extent").and_then(Value::as_f64).map_or_else(|| "?".into(), |e| format!("{e:.4}"))),
+            Some((g, Err(e))) if *g == mesh => format!("{e}: choose the units"),
             _ if files.jobs.iter().any(|j| j.kind == "guess_unit") => "Asking RoboCAD for its guess…".into(),
             _ => "A mesh has no units: RoboCAD asks for them, with a guess from its size.".into(),
         };
         p.spawn(k.text(note, size::SMALL, SUBTLE, 0));
+        if let Some(why) = form.unit_missing() {
+            p.spawn(k.text(why, size::SMALL, WARN, 0));
+        }
         p.spawn(k.button("Guess unit", FilePart(Hit::Guess), Look::Secondary, true));
     }
     let Some(listing) = files.listed.as_ref().filter(|l| form.listing_key().is_some_and(|(key, ..)| key == l.key)) else {

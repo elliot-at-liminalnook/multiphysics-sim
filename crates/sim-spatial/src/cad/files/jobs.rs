@@ -1,7 +1,8 @@
 //! The file jobs (export, render, new, the unit guess) and the form's
 //! directory listing: started from the handler, polled in JobResults,
 //! shown in the status line, `cad_state.files` and the progress strip; a
-//! REST caller waits on its job's sequence (`file_job` in its continuation).
+//! REST caller waits on its job's sequence (`file_job` in its continuation);
+//! a waited new's open runs in that wait, so its answer is the open's.
 //!
 //! Writes (export, render, new) are `complete_on_drop`: leaving CAD mode
 //! drops `CadFiles` (`cad::clear`) but they run to the end and log their
@@ -31,9 +32,9 @@ static SEQ: AtomicU64 = AtomicU64::new(0);
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Then {
     Nothing,
-    /// New: open the created file (with the same `discard`, so the
-    /// unsaved-edit rule is applied again as it stands then).
-    Open { path: String, discard: bool },
+    /// New: open the created file (`cad_open`'s rule applied again as it
+    /// stands then): by its REST caller's wait, else a UI `CadFile` open.
+    Open { path: String },
     /// The unit guess: fill the import form's unit for this path.
     Guess { path: String },
 }
@@ -109,13 +110,33 @@ pub(super) fn start(cx: &mut Cx, call: &mut Call, kind: &'static str, label: Str
     }
 }
 
-/// A REST caller's job: its outcome once it lands.
-pub(super) fn wait(files: Option<&mut CadFiles>, call: &mut Call, seq: u64) -> Outcome {
-    let Some(files) = files else {
+/// Finished jobs' answers kept for their REST callers: a waiter polls
+/// every frame, so only a caller that went away leaves one; the oldest go
+/// first past this many.
+pub(super) const KEPT_RESULTS: usize = 64;
+
+/// Keeps a finished job's answer for its REST caller; past
+/// [`KEPT_RESULTS`] the oldest (lowest sequence) goes, never by distance
+/// from the newest, so a caller still polling finds its answer.
+pub(super) fn keep_result(files: &mut CadFiles, seq: u64, entry: (Result<Value, String>, Then)) {
+    files.results.insert(seq, entry);
+    while files.results.len() > KEPT_RESULTS {
+        files.results.pop_first();
+    }
+}
+
+/// A REST caller's job: its outcome once it lands; a new's created file is
+/// opened here, so the answer is the open's outcome.
+pub(super) fn wait(cx: &mut Cx, call: &mut Call, seq: u64) -> Outcome {
+    let Some(files) = cx.files.as_deref_mut() else {
         return Outcome::Done(Err("CAD mode closed while this request waited; a sent export, render or new file runs to its end and its outcome is logged".into()));
     };
-    if let Some(result) = files.results.remove(&seq) {
-        return Outcome::Done(result);
+    if let Some((result, then)) = files.results.remove(&seq) {
+        return match (then, result) {
+            // Opened even if the caller cancelled meanwhile: the file exists and nothing else opens it.
+            (Then::Open { path }, Ok(_)) => open_created(cx, call, path),
+            (_, result) => Outcome::Done(result),
+        };
     }
     match files.jobs.iter_mut().find(|j| j.seq == seq) {
         Some(j) if call.cancelled => {
@@ -124,6 +145,20 @@ pub(super) fn wait(files: Option<&mut CadFiles>, call: &mut Call, seq: u64) -> O
         }
         Some(_) => Outcome::Pending,
         None => Outcome::Done(Err("the job ended without an answer for this request; see cad_state.files.last".into())),
+    }
+}
+
+/// New's REST caller: the created file's `cad_open` (synchronous: it
+/// replaces the document and starts connecting, or is refused by name).
+fn open_created(cx: &mut Cx, call: &mut Call, path: String) -> Outcome {
+    let open = CadAction::CadOpen { path: Some(path.clone().into()), url: None };
+    match crate::cad::actions::handle(&open, call, cx) {
+        Outcome::Done(Ok(v)) => {
+            let message = format!("Created {path}; {}", v.get("message").and_then(Value::as_str).unwrap_or("opening it"));
+            Outcome::Done(Ok(json!({"created": path, "opened": v.get("opened"), "generation": v.get("generation"), "message": message})))
+        }
+        Outcome::Done(Err(e)) => Outcome::Done(Err(format!("Created {path}, but did not open it: {e}"))),
+        Outcome::Pending => Outcome::Pending,
     }
 }
 
@@ -159,14 +194,13 @@ pub(super) fn receive(files: Option<ResMut<CadFiles>>, mut doc: Option<ResMut<Ca
     }
     for (job, result) in finished {
         if job.waited {
-            files.results.insert(job.seq, result.clone());
-            // Only recent answers are kept: a caller that went away is not collected.
-            let newest = job.seq;
-            files.results.retain(|s, _| *s + 32 > newest);
+            keep_result(&mut files, job.seq, (result.clone(), job.then.clone()));
         }
         match (&job.then, &result) {
-            (Then::Open { path, discard }, Ok(_)) => {
-                out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::Open, path: Some(path.clone()), unit: None, discard: *discard })));
+            // A waited new is opened by its caller (`wait`), which answers with the open's outcome.
+            (Then::Open { .. }, Ok(_)) if job.waited => {}
+            (Then::Open { path }, Ok(_)) => {
+                out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::Open, path: Some(path.clone()), unit: None })));
             }
             (Then::Guess { path }, _) => {
                 files.guess = Some((path.clone(), result.clone()));

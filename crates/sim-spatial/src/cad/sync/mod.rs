@@ -491,8 +491,9 @@ fn finish_edit(doc: &mut CadDocument) {
         doc.ops.plane_created = Some(id.to_string());
     }
     doc.status = Some(answer.as_ref().map(|(m, _)| m.clone()).map_err(Clone::clone));
-    // A Save As of a file this window opened: the window now shows (and
-    // reopens, `leave_cad`) the saved file. An attached service keeps its URL.
+    // A save to a path (Save As, `cad_save {path}`: `files::save` marks the
+    // edit it started) of a file this window opened: the window now shows
+    // (and reopens, `leave_cad`) the saved file. An attached service keeps its URL.
     if answer.is_ok()
         && let Some(path) = retarget
         && matches!(doc.target, super::document::CadTarget::File(_))

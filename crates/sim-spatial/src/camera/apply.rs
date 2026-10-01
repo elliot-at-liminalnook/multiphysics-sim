@@ -89,10 +89,22 @@ fn handle(action: &CameraAction, orbit: &mut Mut<Orbit>, rules: &OrbitRules, are
             orbit.interrupt();
             orbit.pan(Vec2::new(*dx, *dy), rules);
         }
-        CameraAction::Orbit { dx, dy } => {
+        CameraAction::Orbit { dx, dy, degrees } => {
             finite("dx and dy", &[*dx, *dy])?;
-            orbit.interrupt();
-            orbit.rotate(Vec2::new(*dx, *dy), rules);
+            match degrees {
+                Some([yaw, pitch]) => {
+                    if *dx != 0.0 || *dy != 0.0 {
+                        return Err("give dx, dy (window pixels) or degrees [yaw, pitch], not both".into());
+                    }
+                    finite("degrees", &[*yaw, *pitch])?;
+                    orbit.interrupt();
+                    orbit.rotate_by(yaw.to_radians(), pitch.to_radians(), rules);
+                }
+                None => {
+                    orbit.interrupt();
+                    orbit.rotate(Vec2::new(*dx, *dy), rules);
+                }
+            }
         }
         CameraAction::Zoom { factor, at } => {
             if !(factor.is_finite() && *factor > 0.0) {

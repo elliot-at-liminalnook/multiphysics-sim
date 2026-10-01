@@ -1,6 +1,7 @@
 //! Windowless checks of the display state: argument handling, RoboCAD's mode
-//! order, section planes, triangle clipping, stale exact sections, the view
-//! cube's camera actions and the REST form round trip.
+//! order, section planes, triangle clipping and picks on clipped copies,
+//! stale exact sections, the view cube's camera actions, the section offset
+//! entry and the controls' REST round trip.
 use super::section::{accept, clip, clip_polyline, overhangs, segments};
 use super::ui::{cube_action, facing};
 use super::*;
@@ -241,4 +242,109 @@ fn the_view_cube_writes_robocads_views() {
         assert_eq!(cube_action(view, Some(view.yaw_pitch()), limit), CameraAction::Opposite, "{view:?}");
     }
     assert_eq!(cube_action(ViewPreset::Iso, Some(ViewPreset::Iso.yaw_pitch()), limit), CameraAction::View { view: ViewPreset::Iso });
+}
+
+/// A pick on the section's clipped copy reads the copy's faces: the second
+/// halves of cut triangles (appended past RoboCAD's triangle count) name
+/// their face, and a copy cut from an older tessellation names none.
+#[test]
+fn picks_on_a_clipped_copy_name_the_copys_faces() {
+    use crate::cad::mesh::{CadMeshes, ShownCopy};
+    use std::sync::Arc;
+    let mut meshes = CadMeshes::default();
+    meshes.insert_drawn("b1", 3, cube());
+    let source = meshes.mesh_data("b1").unwrap().clone();
+    let cut = clip(&source, &SectionPlane::on_axis(SectionAxis::Z, 0.5));
+    assert!(cut.triangles.len() > 12);
+    // Without the copy recorded, an appended half has no face (the bug).
+    assert_eq!(meshes.face_at("b1", 12, 3), None);
+    let copy = ShownCopy { source: source.clone(), triangle_face: Arc::new(cut.triangle_face.clone()) };
+    assert!(!meshes.shows_copy("b1", Some(&copy)));
+    meshes.set_shown_copy("b1", Some(copy.clone()));
+    assert!(meshes.shows_copy("b1", Some(&copy)));
+    for t in 0..cut.triangles.len() {
+        assert_eq!(meshes.face_at("b1", t, 3), Some(cut.triangle_face[t]), "triangle {t}");
+    }
+    assert_eq!(meshes.face_at("b1", cut.triangles.len(), 3), None);
+    // A refetch draws a new tessellation while the old copy is still shown: no face.
+    meshes.insert_drawn("b1", 4, cube());
+    for t in 0..cut.triangles.len() {
+        assert_eq!(meshes.face_at("b1", t, 4), None, "triangle {t}");
+    }
+    // The body's own mesh again: RoboCAD's triangle_face.
+    meshes.set_shown_copy("b1", None);
+    assert!(meshes.shows_copy("b1", None));
+    assert_eq!(meshes.face_at("b1", 11, 4), Some(5));
+    assert_eq!(meshes.face_at("b1", 12, 4), None);
+}
+
+/// Every display and section control fits `cad:display:<setting>` or
+/// `cad:section:<setting>` (registered in `CadAction::controls`), and its
+/// REST form parses back to the action the toolbar's button writes.
+#[test]
+fn display_controls_fit_a_pattern_and_round_trip_through_rest() {
+    use crate::app::actions::{Action, control_matches};
+    use crate::cad::document::{CadDocument, CadTarget, Connection};
+    use serde_json::Value;
+    use sim_runtime::cad_client::SelectionItem;
+    let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
+    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
+    doc.connection = Connection::Connected;
+    doc.doc_key = Some((None, 4));
+    doc.selection = vec![SelectionItem("b1".into(), "body".into(), 0)];
+    // The section on XZ through the origin: RoboCAD's route names it (plane=xz), so exact is ready.
+    let d = CadDisplay { section: Section { enabled: true, plane: Some(SectionPlane::on_axis(SectionAxis::Y, 0.0)) }, ..CadDisplay::default() };
+    let cx = SectionContext { revision: 4, bounds: Some(([0.0, -2.0, 0.0], [4.0, 2.0, 6.0])), ..default() };
+    let controls = controls_of(&doc, Some(&d), &cx);
+    let ids: Vec<&str> = controls.iter().map(|c| c.0.as_str()).collect();
+    let mut want: Vec<String> = DisplayMode::ALL.iter().map(|m| format!("cad:display:mode_{}", m.name())).collect();
+    want.push("cad:display:next".into());
+    want.extend(DisplaySetting::ALL.iter().map(|s| format!("cad:display:{}", s.name())));
+    want.extend(["toggle", "x", "y", "z", "rotate", "exact"].map(|s| format!("cad:section:{s}")));
+    assert_eq!(ids, want.iter().map(String::as_str).collect::<Vec<_>>());
+    let patterns = <CadAction as Action>::controls();
+    for (id, _, action, ready) in &controls {
+        assert!(patterns.iter().any(|p| control_matches(p, id)), "{id} fits no registered pattern");
+        assert_eq!(ready, &Ok(()), "{id}");
+        let Value::Object(mut args) = crate::cad::rest_form::rest_form(action) else { panic!("{id}: not an object") };
+        let name = args.remove("command").and_then(|v| v.as_str().map(str::to_string)).expect("a command name");
+        let parsed = <CadAction as Action>::parse(&sim_api::Command { command: name.clone(), args: Value::Object(args) }).unwrap_or_else(|e| panic!("{id}: {name} does not parse: {e}"));
+        assert_eq!(&parsed, action, "{id}: REST form and click differ");
+    }
+    // The X button's plane goes through the bounds' centre in X.
+    let x = controls.iter().find(|c| c.0 == "cad:section:x").unwrap();
+    assert_eq!(x.2, CadAction::CadSection(SectionArgs { axis: Some(SectionAxis::X), offset: Some(2.0), ..default() }));
+    // Without a 3D view every control is refused by name.
+    assert!(controls_of(&doc, None, &cx).iter().all(|c| c.3.as_ref().is_err_and(|e| e.contains("3D view"))));
+}
+
+/// The toolbar's offset field (RoboCAD's Section tool Tab): a length
+/// expression in mm moves the plane along its normal; zero sends nothing;
+/// anything else is refused by name.
+#[test]
+fn the_offset_field_writes_cad_section_offsets() {
+    use super::entry::offset_action;
+    assert_eq!(offset_action("5").unwrap(), Some(CadAction::CadSection(SectionArgs { offset: Some(5.0), ..default() })));
+    assert_eq!(offset_action("-2.5").unwrap(), Some(CadAction::CadSection(SectionArgs { offset: Some(-2.5), ..default() })));
+    let Some(CadAction::CadSection(SectionArgs { offset: Some(cm), .. })) = offset_action("2 cm").unwrap() else { panic!("2 cm") };
+    assert!((cm - 20.0).abs() < 1e-9, "{cm}");
+    assert_eq!(offset_action("0").unwrap(), None);
+    assert!(offset_action("five").unwrap_err().starts_with("Offset"));
+    // What the field sends is what cad_section applies: the plane moved along its normal.
+    let mut d = CadDisplay::default();
+    let cx = SectionContext::default();
+    apply_section(&mut d, &SectionArgs { axis: Some(SectionAxis::Z), offset: Some(1.0), ..default() }, &cx).unwrap();
+    let Some(CadAction::CadSection(args)) = offset_action("4").unwrap() else { panic!("4") };
+    apply_section(&mut d, &args, &cx).unwrap();
+    assert_eq!(d.section.plane.unwrap().origin, [0.0, 0.0, 5.0]);
+}
+
+/// RoboCAD's `_draw_curve_item` colours: selected, the node's own, the default.
+#[test]
+fn curves_take_robocads_colours() {
+    use super::draw::curve_color;
+    assert_eq!(curve_color(None, false), Color::srgb(0.35, 0.8, 1.0));
+    assert_eq!(curve_color(Some(&[0.1, 0.2, 0.3][..]), false), Color::srgb(0.1, 0.2, 0.3));
+    assert_eq!(curve_color(Some(&[0.1, 0.2, 0.3][..]), true), Color::srgb(1.0, 0.65, 0.2));
+    assert_eq!(curve_color(Some(&[0.1][..]), false), Color::srgb(0.35, 0.8, 1.0));
 }

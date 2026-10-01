@@ -26,6 +26,15 @@
 //!   edges; dropped on a new revision, as the topology cache does. Drawn in
 //!   RoboCAD's 0.08, 0.08, 0.1 (black in high contrast) as one retained
 //!   gizmo under the Z-up root, cut by the section plane.
+//! - **Curve nodes** ([`edges_sync`], [`lines`]): RoboCAD's `_curve_item`
+//!   and `_draw_curve_item` draw a visible `curve` node as its sampled edges
+//!   (`sample_edges(count=32)`: `GET /nodes/{id}/edges?samples=32`, fetched
+//!   here on `Pool::Dedicated` in every display mode and dropped on a new
+//!   revision), 2 px wide, in the node's colour or RoboCAD's 0.35, 0.8, 1.0,
+//!   and in 1.0, 0.65, 0.2 while any item of the node is selected; cut by
+//!   the section plane (RoboCAD draws them under its clip plane). Display
+//!   only: curves are not picked here (RoboCAD's 8 px curve pick pass is
+//!   not ported).
 //! - **Grid, axes, outlines** ([`lines`]): retained gizmos rebuilt only when
 //!   their inputs change. **Build plate and section plane** ([`quads`]):
 //!   translucent unlit quads (RoboCAD's colours). **Lights and background**
@@ -62,6 +71,12 @@ const AXIS_Z: Color = Color::srgb(0.3, 0.45, 0.9);
 /// RoboCAD's section outline and plane colour; the exact section's.
 const SECTION: Color = Color::srgb(1.0, 0.4, 0.3);
 const EXACT: Color = Color::srgb(1.0, 0.85, 0.3);
+/// RoboCAD's curve colour (`_curve_item`'s default), its selected curve
+/// colour (`_draw_curve_item`), line width (px) and samples per edge.
+const CURVE: Color = Color::srgb(0.35, 0.8, 1.0);
+const CURVE_SELECTED: Color = Color::srgb(1.0, 0.65, 0.2);
+const CURVE_WIDTH: f32 = 2.0;
+pub const CURVE_SAMPLES: u32 = 32;
 /// RoboCAD's high-contrast viewport background.
 const BACKGROUND_CONTRAST: Color = Color::srgb(0.98, 0.98, 0.99);
 
@@ -153,11 +168,50 @@ pub struct DisplayEdges {
     key: Option<(u64, Option<String>, u64)>,
     own: HashMap<String, Result<Polylines, String>>,
     fetching: Vec<(String, Job<Vec<Vec<[f64; 3]>>>)>,
+    /// Curve nodes' sampled edges ([`CURVE_SAMPLES`] each), fetched in every mode.
+    curves: HashMap<String, Result<Polylines, String>>,
+    curve_fetching: Vec<(String, Job<Vec<Vec<[f64; 3]>>>)>,
     /// Bumped when an entry arrives or the cache is dropped.
     pub epoch: u64,
 }
 
-/// SimSync: fetch the drawn bodies' edges while the mode shows them.
+/// Take the finished fetches of `fetching` at `revision` into `into`; true
+/// when one landed.
+fn take_fetched(fetching: &mut Vec<(String, Job<Vec<Vec<[f64; 3]>>>)>, into: &mut HashMap<String, Result<Polylines, String>>, revision: u64) -> bool {
+    let mut landed = false;
+    let mut i = 0;
+    while i < fetching.len() {
+        let Some(result) = fetching[i].1.poll() else {
+            i += 1;
+            continue;
+        };
+        let (id, job) = fetching.swap_remove(i);
+        if job.generation() == revision {
+            into.insert(id, result.map(Arc::new));
+            landed = true;
+        }
+    }
+    landed
+}
+
+/// A sampled-edges fetch of `node` on `Pool::Dedicated`; its generation is
+/// the revision it reads, checked on arrival.
+fn fetch_edges(client: sim_runtime::cad_client::CadClient, node: String, samples: u32, revision: u64) -> Job<Vec<Vec<[f64; 3]>>> {
+    Job::spawn(Pool::Dedicated, revision, "cad-display-edges", move |_| match client.edges(&node, Some(samples)) {
+        Ok(list) => Ok(list.into_iter().map(|e| e.points).filter(|p| p.len() >= 2).collect()),
+        // RoboCAD: "<name> has no geometry" (a mesh node): no B-rep edges.
+        Err(err) if err.not_found() => Ok(Vec::new()),
+        Err(err) => Err(err.to_string()),
+    })
+}
+
+/// The visible curve nodes of the shown tree.
+fn curve_nodes(doc: &CadDocument) -> impl Iterator<Item = &sim_runtime::cad_client::NodeSummary> {
+    doc.doc.iter().flat_map(|d| d.nodes.iter()).filter(|n| n.effective_visible && n.kind == "curve")
+}
+
+/// SimSync: fetch the visible curve nodes' edges, and the drawn bodies'
+/// edges while the mode shows them.
 pub(super) fn edges_sync(
     doc: Option<Res<CadDocument>>,
     display: Option<Res<CadDisplay>>,
@@ -173,48 +227,56 @@ pub(super) fn edges_sync(
         e.key = Some(key.clone());
         e.own.clear();
         e.fetching.clear();
+        e.curves.clear();
+        e.curve_fetching.clear();
         e.epoch += 1;
     }
-    if !display.mode.edges() {
-        e.fetching.clear();
-        return;
+    if take_fetched(&mut e.curve_fetching, &mut e.curves, key.2) {
+        e.epoch += 1;
     }
-    let mut i = 0;
-    while i < e.fetching.len() {
-        let Some(result) = e.fetching[i].1.poll() else {
-            i += 1;
-            continue;
-        };
-        let (id, job) = e.fetching.swap_remove(i);
-        if job.generation() == key.2 {
-            e.own.insert(id, result.map(Arc::new));
-            e.epoch += 1;
+    let client = doc.client.clone().filter(|_| doc.connected() && doc.stale.is_none());
+    if let Some(client) = &client {
+        let mut curves: Vec<&str> = curve_nodes(&doc).map(|n| n.id.as_str()).collect();
+        curves.sort_unstable();
+        for id in curves {
+            if e.curve_fetching.len() >= MAX_FETCHES {
+                break;
+            }
+            if e.curves.contains_key(id) || e.curve_fetching.iter().any(|(f, _)| f == id) {
+                continue;
+            }
+            e.curve_fetching.push((id.to_string(), fetch_edges(client.clone(), id.to_string(), CURVE_SAMPLES, key.2)));
         }
     }
-    let Some(client) = doc.client.clone().filter(|_| doc.connected() && doc.stale.is_none()) else { return };
-    let Some(state) = &doc.doc else { return };
+    let curves_pending = !e.curve_fetching.is_empty();
+    if !display.mode.edges() {
+        e.fetching.clear();
+    } else {
+        if take_fetched(&mut e.fetching, &mut e.own, key.2) {
+            e.epoch += 1;
+        }
+        if let (Some(client), Some(state)) = (client, &doc.doc) {
+            start_body_edges(e, &meshes, topology.as_deref(), state, &client, key.2);
+        }
+    }
+    if let (true, Some(mut redraw)) = (curves_pending || !e.fetching.is_empty(), redraw) {
+        redraw.write(bevy::window::RequestRedraw);
+    }
+}
+
+/// Start edge fetches for the drawn bodies `CadTopology` does not hold.
+fn start_body_edges(e: &mut DisplayEdges, meshes: &CadMeshes, topology: Option<&CadTopology>, state: &sim_runtime::cad_client::DocState, client: &sim_runtime::cad_client::CadClient, revision: u64) {
     let mut ids: Vec<&str> = state.nodes.iter().filter(|n| n.effective_visible && BODY_KINDS.contains(&n.kind.as_str()) && meshes.shown(&n.id)).map(|n| n.id.as_str()).collect();
     ids.sort_unstable();
     for id in ids {
         if e.fetching.len() >= MAX_FETCHES {
             break;
         }
-        let held = topology.as_ref().is_some_and(|t| t.get(id).is_some() || t.pending(id));
+        let held = topology.is_some_and(|t| t.get(id).is_some() || t.pending(id));
         if held || e.own.contains_key(id) || e.fetching.iter().any(|(f, _)| f == id) {
             continue;
         }
-        let (client, node) = (client.clone(), id.to_string());
-        // The job's generation is the revision it reads, checked on arrival.
-        let job = Job::spawn(Pool::Dedicated, key.2, "cad-display-edges", move |_| match client.edges(&node, Some(EDGE_SAMPLES)) {
-            Ok(list) => Ok(list.into_iter().map(|e| e.points).filter(|p| p.len() >= 2).collect()),
-            // RoboCAD: "<name> has no geometry" (a mesh node): no B-rep edges.
-            Err(err) if err.not_found() => Ok(Vec::new()),
-            Err(err) => Err(err.to_string()),
-        });
-        e.fetching.push((id.to_string(), job));
-    }
-    if let (false, Some(mut redraw)) = (e.fetching.is_empty(), redraw) {
-        redraw.write(bevy::window::RequestRedraw);
+        e.fetching.push((id.to_string(), fetch_edges(client.clone(), id.to_string(), EDGE_SAMPLES, revision)));
     }
 }
 
@@ -226,6 +288,7 @@ pub(super) enum Layer {
     Axes,
     Outline,
     Exact,
+    Curves,
 }
 
 fn v(p: &[f64; 3]) -> Vec3 {
@@ -246,6 +309,16 @@ fn strips(asset: &mut GizmoAsset, points: Vec<Vec3>, cut: Option<&SectionPlane>,
         }
         None if points.len() >= 2 => asset.linestrip(points, color),
         None => {}
+    }
+}
+
+/// RoboCAD's `_draw_curve_item` colour: the selected curve colour, else
+/// the node's own colour, else RoboCAD's curve default.
+pub fn curve_color(color: Option<&[f64]>, selected: bool) -> Color {
+    match color {
+        _ if selected => CURVE_SELECTED,
+        Some(c) if c.len() >= 3 => Color::srgb(c[0] as f32, c[1] as f32, c[2] as f32),
+        _ => CURVE,
     }
 }
 
@@ -275,7 +348,8 @@ pub(super) fn lines(
     let cut = cut_plane(&display);
     let revision = doc.doc_key.as_ref().map_or(0, |k| k.1);
     let present: HashMap<Layer, (Entity, Handle<GizmoAsset>)> = existing.iter().map(|(e, l, g)| (*l, (e, g.handle.clone()))).collect();
-    for layer in [Layer::Edges, Layer::Grid, Layer::Axes, Layer::Outline, Layer::Exact] {
+    let selected = doc.selected_nodes();
+    for layer in [Layer::Edges, Layer::Grid, Layer::Axes, Layer::Outline, Layer::Exact, Layer::Curves] {
         let mut h = DefaultHasher::new();
         hash_plane(&mut h, cut);
         let active = match layer {
@@ -301,6 +375,15 @@ pub(super) fn lines(
                 let drawn = display.exact.drawn(&display.section, revision);
                 drawn.map(|s| Arc::as_ptr(s) as usize).hash(&mut h);
                 drawn.is_some()
+            }
+            Layer::Curves => {
+                (doc.generation, revision, edges.as_ref().map(|e| e.epoch)).hash(&mut h);
+                let mut any = false;
+                for n in curve_nodes(&doc) {
+                    any = true;
+                    (n.id.as_str(), n.color.as_ref().map(|c| c.iter().map(|x| x.to_bits()).collect::<Vec<_>>()), selected.contains(&n.id)).hash(&mut h);
+                }
+                any
             }
         };
         let stamp = h.finish();
@@ -352,6 +435,18 @@ pub(super) fn lines(
                     }
                 }
                 2.5
+            }
+            Layer::Curves => {
+                if let Some(edges) = edges.as_deref() {
+                    for n in curve_nodes(&doc) {
+                        let Some(Ok(lines)) = edges.curves.get(&n.id) else { continue };
+                        let color = curve_color(n.color.as_deref(), selected.contains(&n.id));
+                        for line in lines.iter() {
+                            strips(&mut asset, line.iter().map(v).collect(), cut, color);
+                        }
+                    }
+                }
+                CURVE_WIDTH
             }
         };
         let line_config = GizmoLineConfig { width, ..default() };

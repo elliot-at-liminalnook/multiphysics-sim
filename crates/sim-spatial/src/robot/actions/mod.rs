@@ -20,6 +20,11 @@ pub(crate) enum RobotAction {
     ShowSection { section: Section },
     /// Scroll the inspector by logical pixels (positive is down).
     ScrollInspector { delta: f32 },
+    /// Frame the robot's bounds at 3.2 × their extent from the current
+    /// heading (the trackball stays when it is on). Recorded difference
+    /// (intended, since the shared camera): Fit also moves the focus to the
+    /// bounds' centre, as RoboCAD's fit (`Camera.focus`) does; Robot's
+    /// former Fit only reset the distance and kept the focus.
     Fit,
     /// Run/Pause/Step/Reset on the run thread.
     Run { action: RunAction },
@@ -275,7 +280,8 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, action: RobotAction) -> Res
             view.scroll_to = Some(0.0);
         }
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
-        // The bounds at 3.2 × extent from the current heading (`camera::place`).
+        // The bounds at 3.2 × extent from the current heading, focus on their
+        // centre (`camera::place`; see the variant's doc).
         RobotAction::Fit => orbit.home = true,
         RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
         RobotAction::Speed { speed } => view.run.as_mut().ok_or("the robot has not loaded")?.speed(speed)?,

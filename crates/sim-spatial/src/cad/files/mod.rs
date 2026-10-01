@@ -1,7 +1,7 @@
 //! File workflows (cad-views-export): new, open, save as and import with
 //! units, export in every RoboCAD format and the drawing, and render, each
-//! a `CadAction` on a job with progress and a named refusal; RoboCAD's
-//! unsaved-edit rule before new or open.
+//! a `CadAction` on a job with progress and a named refusal; new and open
+//! never lose unsaved edits, as in RoboCAD.
 //!
 //! - **Paths, not dialogs.** A command without a path opens a modal path
 //!   form on the UI kit (`form`), pre-filled with the document's directory,
@@ -11,14 +11,26 @@
 //!   whose macOS dialogs must run on the main thread's event loop, which
 //!   cannot be verified without building and running; revisit in a
 //!   verification pass.
-//! - **Unsaved edits.** RoboCAD's New and Open open another window, and
-//!   closing a window with unsaved edits asks Save, Discard or Cancel
-//!   (`MainWindow.closeEvent`). CAD mode shows one document, so new and
-//!   open replace it: refused by name while RoboCAD reports unsaved edits
-//!   or they cannot be confirmed, unless the action carries `discard: true`
-//!   (the form's "Discard changes" button); `cad_open`'s own refusals
-//!   (`CadDocument::switch_blockers`: an edit in flight, a self-started
-//!   service's unsaved edits, which the viewer never discards) still apply.
+//! - **Unsaved edits.** RoboCAD's New and Open open another window, so
+//!   they never lose edits. CAD mode shows one document, so new and open
+//!   replace it under `cad_open`'s rule (`CadDocument::switch_blockers`,
+//!   the one check for the form, REST and `cad_open`): refused by name on
+//!   an edit in flight or a self-started service's unsaved (or
+//!   unconfirmable) edits, which the viewer never discards; an attached
+//!   RoboCAD keeps its edits, and the answer and status line say so
+//!   (`CadDocument::leaving_note`). There is no "discard" answer: RoboCAD's
+//!   Save / Discard / Cancel prompt is a rejected design here
+//!   (native-viewer.md, CAD mode). New checks the rule before RoboCAD
+//!   writes the file, so a refused open does not leave one behind, and a
+//!   REST caller's answer is the open's outcome (`jobs::wait`).
+//! - **Save and Save As** (`save`, also `cad_save`) send `POST
+//!   /save/thumbnail`, as RoboCAD's desktop Save and Save As both write the
+//!   thumbnail (`MainWindow.save`/`save_as`: `doc.save(…,
+//!   thumbnail=self.thumbnail())`; a plain `/save` would drop the file's
+//!   thumbnail). A save to a path makes it the document's file in RoboCAD
+//!   (`Document.save` sets `path`), so a self-started document's target
+//!   follows it once the save succeeds (`Edit::retarget`, set on the edit
+//!   this call started).
 //! - **Document edits** (open, import, save as) are one RoboCAD call each
 //!   through `actions::edit` / `cad_open`; **writes** that leave the
 //!   document as it is (export, render, new) run on `Pool::Dedicated` jobs
@@ -53,6 +65,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
 use sim_runtime::cad_client::{FILE_TIMEOUT, IMPORT_EXTENSIONS, IMPORT_UNITS, MESH_EXTENSIONS, RENDER_MODES, RENDER_VIEWS, RenderRequest, extension};
+use std::path::PathBuf;
 use std::collections::BTreeMap;
 
 pub(crate) use form::FileForm;
@@ -65,8 +78,9 @@ pub struct CadFiles {
     pub(crate) form: Option<FileForm>,
     /// Writes and reads in flight (export, render, new, unit guess).
     pub(crate) jobs: Vec<FileJob>,
-    /// Finished jobs' outcomes for their waiting REST callers, by sequence.
-    pub(crate) results: BTreeMap<u64, Result<Value, String>>,
+    /// Finished jobs' outcomes for their waiting REST callers, by sequence,
+    /// with what follows them (new's open runs in its caller's wait).
+    pub(crate) results: BTreeMap<u64, (Result<Value, String>, jobs::Then)>,
     /// The last finished job: its label and outcome (`cad_state.files.last`).
     pub(crate) last: Option<(String, Result<Value, String>)>,
     /// The last unit guess: the mesh path and RoboCAD's answer.
@@ -132,10 +146,6 @@ pub struct FileArgs {
     /// Import: a mesh's unit (mm | cm | m | in | ft).
     #[serde(default)]
     pub unit: Option<String>,
-    /// New and open: replace a document with unsaved edits (the native form
-    /// of RoboCAD's "Discard" answer).
-    #[serde(default)]
-    pub discard: bool,
 }
 
 /// `cad_export`'s arguments. Without `format` or `path`, the export form opens.
@@ -239,31 +249,11 @@ fn export_context(doc: &CadDocument, display: Option<&crate::cad::display::CadDi
     formats::Context { sketch, title, section }
 }
 
-// ---- The unsaved-edit rule ------------------------------------------------------
-
-/// RoboCAD's unsaved-edit prompt, natively: why `what` (new or open) may
-/// not replace the document now, unless `discard`. None when RoboCAD
-/// reports no unsaved edits.
-pub(in crate::cad) fn unsaved_refusal(doc: &CadDocument, what: &str, discard: bool) -> Option<String> {
-    if discard {
-        return None;
-    }
-    let name = doc.document_name();
-    match doc.unsaved() {
-        Some(false) => None,
-        Some(true) => Some(format!("Not {what}: {name} has unsaved edits (RoboCAD asks Save, Discard or Cancel here): save first (cad_save or Save), or repeat with discard: true (the form's Discard changes)")),
-        None => Some(format!(
-            "Not {what}: whether {name} has unsaved edits can't be confirmed now ({}): wait for RoboCAD's state, save first, or repeat with discard: true (the form's Discard changes)",
-            if doc.connected() { "an edit is in flight or just finished".to_string() } else { doc.connection_line().0 }
-        )),
-    }
-}
-
 // ---- The handler ------------------------------------------------------------------
 
 pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     if let Some(seq) = call.continuation.get("file_job").and_then(Value::as_u64) {
-        return jobs::wait(cx.files.as_deref_mut(), call, seq);
+        return jobs::wait(cx, call, seq);
     }
     let ui = matches!(call.origin, crate::app::actions::Origin::Ui);
     let outcome = match action {
@@ -300,13 +290,11 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     };
     match args.op {
         FileOp::Open => {
-            if let Some(why) = unsaved_refusal(cx.doc, &format!("opening {}", path.trim()), args.discard) {
-                return done(Err(why));
-            }
             let path = match absolute(path, what) {
                 Ok(p) => p,
                 Err(e) => return done(Err(e)),
             };
+            // cad_open's rule (`switch_blockers`) and note (`leaving_note`).
             let open = CadAction::CadOpen { path: Some(path.into()), url: None };
             let outcome = crate::cad::actions::handle(&open, call, cx);
             close_unless_refused(cx, outcome)
@@ -316,9 +304,6 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
                 Ok(p) => p,
                 Err(e) => return done(Err(e)),
             };
-            if let Some(why) = unsaved_refusal(cx.doc, &format!("creating {path}"), args.discard) {
-                return done(Err(why));
-            }
             // Refused now rather than after the file is written: opening it would be.
             let blockers = cx.doc.switch_blockers();
             if !blockers.is_empty() {
@@ -330,7 +315,7 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
             };
             let label = format!("Create {path}");
             let (p, l) = (path.clone(), label.clone());
-            let then = jobs::Then::Open { path: path.clone(), discard: args.discard };
+            let then = jobs::Then::Open { path: path.clone() };
             jobs::start(cx, call, "new", label, true, then, move |_| {
                 jobs::logged(&l, client.new_file(&p).map(|n| json!({"created": n.created, "message": format!("Created {}; opening it", n.created)})).map_err(|e| jobs::named(&l, &e)))
             })
@@ -342,17 +327,7 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
                 Ok(p) => format!("{p}.rcad"),
                 Err(e) => return done(Err(e)),
             };
-            let p = path.clone();
-            let outcome = crate::cad::actions::edit(cx.doc, call, format!("Save as {path}"), move |c| {
-                c.clone().with_timeout(FILE_TIMEOUT).save_with_thumbnail(Some(&p)).map(|s| EditDone {
-                    message: if s.thumbnail { format!("Saved {} with its thumbnail", s.saved) } else { format!("Saved {} (without a thumbnail: RoboCAD could not draw one)", s.saved) },
-                    result: value(&s),
-                })
-            });
-            // Once RoboCAD saved it, the window's document is the new file (`sync::finish_edit`).
-            if let Some(edit) = cx.doc.edit.as_mut().filter(|e| e.label == format!("Save as {path}")) {
-                edit.retarget = Some(std::path::PathBuf::from(&path));
-            }
+            let outcome = save(cx.doc, call, Some(path));
             close_unless_refused(cx, outcome)
         }
         FileOp::Import => {
@@ -386,6 +361,31 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
         }
         FileOp::Close => unreachable!("handled above"),
     }
+}
+
+/// Save (`path` None: RoboCAD's own path) and Save As, for `cad_save`
+/// and File > Save As…: `POST /save/thumbnail` on the edit path, as
+/// RoboCAD's desktop saves (with the thumbnail; see the module doc). The
+/// answer is `{saved, thumbnail}`, a superset of `POST /save`'s. A save to
+/// `path` (absolute: the caller checks) retargets a self-started document
+/// to it once RoboCAD saved (`sync::finish_edit`), marked on the edit this
+/// call started (`edit_seq` moved), never on another one.
+pub(in crate::cad) fn save(doc: &mut CadDocument, call: &mut Call, path: Option<String>) -> Outcome {
+    let label = path.as_ref().map_or_else(|| "Save".to_string(), |p| format!("Save as {p}"));
+    let sent = path.clone();
+    let before = doc.edit_seq;
+    let outcome = crate::cad::actions::edit(doc, call, label, move |c| {
+        c.clone().with_timeout(FILE_TIMEOUT).save_with_thumbnail(sent.as_deref()).map(|s| EditDone {
+            message: if s.thumbnail { format!("Saved {} with its thumbnail", s.saved) } else { format!("Saved {} (without a thumbnail: RoboCAD could not draw one)", s.saved) },
+            result: value(&s),
+        })
+    });
+    if doc.edit_seq != before
+        && let (Some(edit), Some(path)) = (doc.edit.as_mut(), path)
+    {
+        edit.retarget = Some(PathBuf::from(path));
+    }
+    outcome
 }
 
 /// Closes the path form once its action was accepted (a refusal keeps it
@@ -598,7 +598,7 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
         })
         .collect();
     vec![
-        spec("cad_file", CAD, json!({"op": "save_as", "path": "/tmp/turntable-copy.rcad"}), "CAD mode: RoboCAD's file commands. op new (an empty .rcad written at path by RoboCAD's POST /new, then opened), open (a .rcad, as cad_open), save_as (POST /save/thumbnail: RoboCAD saves to path with the desktop's thumbnail; .rcad is appended as RoboCAD's Save As does), import (POST /import; a mesh, .stl .obj .3mf .fbx .ply .glb .gltf, needs unit mm | cm | m | in | ft as RoboCAD's unit prompt asks; STEP, IGES, SVG and images take none), guess_unit (RoboCAD's unit guess for a mesh path, GET /import/units), close (the path form). Without path, new, open, save_as and import open the path form (pre-filled with the document's directory, listing its matching files). Paths are absolute (~/ is expanded). New and open replace the document: refused by name while RoboCAD reports unsaved edits or they can't be confirmed, unless discard is true (RoboCAD's Save / Discard / Cancel prompt); cad_open's own refusals still apply (an edit in flight; a self-started service's unsaved edits are never discarded). Open, save_as and import are one RoboCAD call each through the edit path (REST callers get RoboCAD's answer); new and guess_unit run on jobs and REST callers wait for them."),
+        spec("cad_file", CAD, json!({"op": "save_as", "path": "/tmp/turntable-copy.rcad"}), "CAD mode: RoboCAD's file commands. op new (an empty .rcad written at path by RoboCAD's POST /new, then opened), open (a .rcad, as cad_open), save_as (POST /save/thumbnail: RoboCAD saves to path with the desktop's thumbnail; .rcad is appended as RoboCAD's Save As does), import (POST /import; a mesh, .stl .obj .3mf .fbx .ply .glb .gltf, needs unit mm | cm | m | in | ft as RoboCAD's unit prompt asks, refused without one; STEP, IGES, SVG and images take none), guess_unit (RoboCAD's unit guess for a mesh path, GET /import/units; the form asks it as soon as its path names a mesh and fills the unit unless one was chosen), close (the path form). Without path, new, open, save_as and import open the path form (pre-filled with the document's directory, listing its matching files). Paths are absolute (~/ is expanded). New and open replace the document under cad_open's rule, so no edits are lost (RoboCAD opens another window instead): refused by name on an edit in flight or a self-started service's unsaved or unconfirmable edits (save first); an attached RoboCAD keeps its unsaved edits, and the answer's message says so. New checks that rule before RoboCAD writes the file. Open, save_as and import are one RoboCAD call each through the edit path (REST callers get RoboCAD's answer); new and guess_unit run on jobs and REST callers wait for them: new answers once the created file's open was accepted or refused ({created, opened, generation, message}; the connection then shows in cad_state, as after cad_open)."),
         spec(
             "cad_export",
             CAD,

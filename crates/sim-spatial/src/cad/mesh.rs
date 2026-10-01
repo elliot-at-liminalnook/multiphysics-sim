@@ -121,6 +121,19 @@ pub struct CadMeshes {
     /// The document has been framed: 1 on its first mesh, 2 once every
     /// first-revision mesh is in (the camera is framed at both).
     fitted: u8,
+    /// Bodies showing a derived copy instead of their own mesh (the
+    /// section's clipped copy, `display::section::preview`).
+    copies: HashMap<String, ShownCopy>,
+}
+
+/// A derived copy a body shows in place of its own mesh: the tessellation
+/// it was made from (by identity: its revision) and the copy's own
+/// `triangle_face`, in the copy's triangle order (Bevy's ray cast reports
+/// the copy's triangles, including ones appended past the original count).
+#[derive(Clone, Debug)]
+pub struct ShownCopy {
+    pub source: Arc<MeshData>,
+    pub triangle_face: Arc<Vec<i64>>,
 }
 
 impl CadMeshes {
@@ -168,15 +181,42 @@ impl CadMeshes {
     }
 
     /// The B-rep face of node `id`'s drawn triangle `triangle` (RoboCAD's
-    /// `triangle_face`), as Bevy's ray cast reports the triangle.
+    /// `triangle_face`), as Bevy's ray cast reports the triangle: read from
+    /// the mesh the body shows (its derived copy's faces while it shows one;
+    /// none while that copy was made from another tessellation than the
+    /// drawn one, whose triangles it no longer matches).
     pub fn face_of(&self, id: &str, triangle: usize) -> Option<i64> {
-        self.mesh_data(id)?.triangle_face.get(triangle).copied().filter(|f| *f >= 0)
+        let data = self.mesh_data(id)?;
+        let faces = match self.copies.get(id) {
+            Some(copy) if Arc::ptr_eq(&copy.source, data) => copy.triangle_face.as_slice(),
+            Some(_) => return None,
+            None => data.triangle_face.as_slice(),
+        };
+        faces.get(triangle).copied().filter(|f| *f >= 0)
     }
 
-    /// [`Self::face_of`], only while node `id`'s drawn mesh is from revision
-    /// `shown`: a lagging tessellation's triangles index older faces.
-    pub fn face_at(&self, id: &str, triangle: usize, shown: u64) -> Option<i64> {
-        (self.drawn_revision(id) == Some(shown)).then(|| self.face_of(id, triangle)).flatten()
+    /// Whether node `id` is recorded as showing `copy` (None: its own mesh).
+    pub fn shows_copy(&self, id: &str, copy: Option<&ShownCopy>) -> bool {
+        match (self.copies.get(id), copy) {
+            (None, None) => true,
+            (Some(a), Some(b)) => Arc::ptr_eq(&a.source, &b.source) && Arc::ptr_eq(&a.triangle_face, &b.triangle_face),
+            _ => false,
+        }
+    }
+
+    /// Record (Some) or clear (None) the derived copy node `id` shows now
+    /// (callers check [`Self::shows_copy`] first, so the resource is
+    /// written only on a change).
+    pub fn set_shown_copy(&mut self, id: &str, copy: Option<ShownCopy>) {
+        match copy {
+            Some(c) => self.copies.insert(id.to_string(), c),
+            None => self.copies.remove(id),
+        };
+    }
+
+    /// The nodes recorded as showing a derived copy.
+    pub fn copy_ids(&self) -> impl Iterator<Item = &str> {
+        self.copies.keys().map(String::as_str)
     }
 
     /// Every drawn body's bounds (mm, RoboCAD's frame): box select's test.

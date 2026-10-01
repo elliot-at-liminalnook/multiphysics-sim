@@ -13,9 +13,13 @@
 //!   body's `Mesh3d` shows the copy while the section is on. The copy keeps
 //!   RoboCAD's triangle order (a removed triangle collapses to a point, which
 //!   no ray hits; the second half of a cut triangle is appended after the
-//!   last), so a pick on the kept part still names the right face and a pick
-//!   never hits the removed part. While a newer copy builds, the previous one
-//!   stays shown (as `mesh` keeps a body's previous mesh during a refetch).
+//!   last) and its own `triangle_face`, recorded with the tessellation it was
+//!   cut from on `CadMeshes` (`set_shown_copy`) while the body shows it: a
+//!   pick reads the face from the copy (so an appended half names its face
+//!   too), never hits the removed part, and names no face while the shown
+//!   copy was cut from an older tessellation than the drawn one. While a
+//!   newer copy builds, the previous one stays shown (as `mesh` keeps a
+//!   body's previous mesh during a refetch).
 //!   The same job builds the build plate's overhang overlay (RoboCAD's
 //!   `printing.overhangs` at 45°, drawn in its 0.9, 0.35, 0.3).
 //! - **The exact section** ([`exact_jobs`], JobResults): `GET
@@ -26,7 +30,7 @@
 //!   request's plane, a new RoboCAD revision re-reads it.
 use super::{CadDisplay, ExactKey, SectionAxis, SectionPlane};
 use crate::cad::document::CadDocument;
-use crate::cad::mesh::{Built, CadBody, CadMeshes, CadRoot, build};
+use crate::cad::mesh::{Built, CadBody, CadMeshes, CadRoot, ShownCopy, build};
 use crate::jobs::{Ctx, Job, Latest, Pool};
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
@@ -265,6 +269,8 @@ pub fn clip_polyline(points: &[Vec3], plane: &SectionPlane) -> Vec<Vec<Vec3>> {
 /// What a preview job builds for one body.
 pub struct DerivedData {
     pub clipped: Option<Built>,
+    /// The clipped copy's `triangle_face` (its triangle order).
+    pub clipped_faces: Option<Vec<i64>>,
     pub overhang: Option<Built>,
     pub segments: Vec<[Vec3; 2]>,
 }
@@ -282,13 +288,14 @@ pub fn derive_preview(id: &str, data: &MeshData, plane: Option<SectionPlane>, ov
         Some(c) => Some(build(id, c)?),
         None => None,
     };
+    let clipped_faces = cut.as_ref().map(|c| c.triangle_face.clone());
     let overhang = if overhang {
         let sub = overhangs(source, OVERHANG_DEG);
         if sub.triangles.is_empty() { None } else { Some(build(id, &sub)?) }
     } else {
         None
     };
-    Ok(DerivedData { clipped, overhang, segments })
+    Ok(DerivedData { clipped, clipped_faces, overhang, segments })
 }
 
 fn to_mesh(built: Built) -> Mesh {
@@ -313,7 +320,8 @@ impl PartialEq for Key {
 }
 
 struct Shown {
-    clipped: Option<Handle<Mesh>>,
+    /// The clipped copy and its `triangle_face`.
+    clipped: Option<(Handle<Mesh>, Arc<Vec<i64>>)>,
     overhang: Option<Handle<Mesh>>,
     segments: Arc<Vec<[Vec3; 2]>>,
 }
@@ -356,7 +364,7 @@ struct OverhangOverlay;
 pub(super) fn preview(
     mut commands: Commands,
     display: Option<Res<CadDisplay>>,
-    meshes: Option<Res<CadMeshes>>,
+    meshes: Option<ResMut<CadMeshes>>,
     cache: Option<ResMut<Derived>>,
     mut assets: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -364,7 +372,7 @@ pub(super) fn preview(
     root: Option<Single<Entity, With<CadRoot>>>,
     redraw: Option<MessageWriter<bevy::window::RequestRedraw>>,
 ) {
-    let (Some(display), Some(meshes), Some(mut cache), Some(root)) = (display, meshes, cache, root) else { return };
+    let (Some(display), Some(mut meshes), Some(mut cache), Some(root)) = (display, meshes, cache, root) else { return };
     let cache = &mut *cache;
     let plane = if display.section.enabled { display.section.plane } else { None };
     let overhang = display.build_plate;
@@ -386,7 +394,8 @@ pub(super) fn preview(
             let (key, _) = entry.job.take().expect("polled");
             match result {
                 Ok(d) => {
-                    let shown = Shown { clipped: d.clipped.map(|b| assets.add(to_mesh(b))), overhang: d.overhang.map(|b| assets.add(to_mesh(b))), segments: Arc::new(d.segments) };
+                    let faces = Arc::new(d.clipped_faces.unwrap_or_default());
+                    let shown = Shown { clipped: d.clipped.map(|b| (assets.add(to_mesh(b)), faces)), overhang: d.overhang.map(|b| assets.add(to_mesh(b))), segments: Arc::new(d.segments) };
                     entry.shown = Some((key, shown));
                     entry.error = None;
                     cache.epoch += 1;
@@ -418,13 +427,14 @@ pub(super) fn preview(
         // A previous preview stays shown while the next builds, but never one
         // of the other kind (a clipped copy once the section is off).
         let like = |k: &Key| want.as_ref().is_some_and(|w| w.plane.is_some() == k.plane.is_some());
-        let clipped = entry.shown.as_ref().filter(|(k, _)| like(k)).and_then(|(_, s)| s.clipped.clone());
-        match clipped {
-            Some(h) => {
+        let clipped = entry.shown.as_ref().filter(|(k, _)| like(k)).and_then(|(k, s)| s.clipped.clone().map(|(h, faces)| (h, ShownCopy { source: k.data.clone(), triangle_face: faces })));
+        let copy = match clipped {
+            Some((h, copy)) => {
                 if mesh3d.0 != h {
                     mesh3d.0 = h.clone();
                 }
                 entry.applied = Some(h);
+                Some(copy)
             }
             None => {
                 if let (Some(_), Some(own)) = (entry.applied.take(), entry.original.clone()) {
@@ -432,7 +442,12 @@ pub(super) fn preview(
                         mesh3d.0 = own;
                     }
                 }
+                None
             }
+        };
+        // Picks read faces from what the body shows (`CadMeshes::face_of`).
+        if !meshes.shows_copy(&body.id, copy.as_ref()) {
+            meshes.set_shown_copy(&body.id, copy);
         }
         let overlay = entry.shown.as_ref().filter(|(k, _)| like(k) && k.overhang && overhang).and_then(|(_, s)| s.overhang.clone());
         match (overlay, entry.overlay.clone()) {
@@ -453,6 +468,11 @@ pub(super) fn preview(
             }
             (None, None) => {}
         }
+    }
+    // Bodies no longer drawn show no copy.
+    let stale: Vec<String> = meshes.copy_ids().filter(|id| !seen.contains(*id)).map(str::to_string).collect();
+    for id in stale {
+        meshes.set_shown_copy(&id, None);
     }
     // Bodies no longer drawn: their previews and overlays go.
     let gone: Vec<String> = cache.bodies.keys().filter(|id| !seen.contains(*id)).cloned().collect();

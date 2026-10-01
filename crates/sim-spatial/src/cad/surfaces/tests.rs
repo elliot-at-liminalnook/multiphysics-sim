@@ -370,7 +370,7 @@ fn system_ui_reaches_every_cad_sketch_command_as_a_click_does() {
     let control = all.iter().find(|c| c.id == "cad:op:tool.plane_xy").unwrap();
     assert_eq!(control.action, menu_entry.action, "activate and a click write the same action");
     assert_eq!(rest_form(&control.action), json!({"command": "cad_invoke", "id": "tool.plane_xy"}));
-    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false });
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
     let all = crate::cad::panel::controls(&doc);
     let ready = |id: &str| all.iter().find(|c| c.id == format!("cad:op:{id}")).unwrap().ready.clone();
     if crate::cad::ops::entry("tool.plane_xy").is_some_and(|e| matches!(e.flow, Flow::View(_))) {

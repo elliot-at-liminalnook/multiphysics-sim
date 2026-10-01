@@ -13,12 +13,15 @@
 //! - **Toolbar**: the six display modes as a segmented column, chips for
 //!   grid, build plate, section, high contrast and the view cube, and while
 //!   the section is on its X / Y / Z planes (through the drawn bodies'
-//!   centre) and Rotate. Each carries `panel::CadButton` with the
-//!   `CadDisplay` / `CadSection` action `panel::buttons` writes.
+//!   centre) and Rotate, and the offset field (`entry`: RoboCAD's Section
+//!   tool's Tab offset, mm along the plane's normal). Each button carries
+//!   `panel::CadButton` with the `CadDisplay` / `CadSection` action
+//!   `panel::buttons` writes.
 //!
 //! Placement: the selection strip holds the view's top left and the numeric
 //! bar its bottom; a pick tool's form opens at this same corner above
 //! everything (`GlobalZIndex`), covering the panel while it is open.
+use super::entry::{OffsetInput, OffsetTyping, SectionEntry};
 use super::{CadDisplay, DisplayArgs, DisplayMode, DisplaySetting, SectionArgs, SectionAxis};
 use crate::app::ModeScope;
 use crate::app::actions::Act;
@@ -28,7 +31,7 @@ use crate::cad::mesh::CadMeshes;
 use crate::cad::panel::CadButton;
 use crate::cad::surfaces::COMMAND_BAR;
 use crate::camera::{CameraAction, Orbit, OrbitRules, ViewPreset, display_to_robocad};
-use crate::ui_kit::{BAR, BORDER, Kit, RIGHT_WIDTH, TOPBAR, UiFonts, wrap};
+use crate::ui_kit::{BAR, BORDER, DANGER, Kit, RIGHT_WIDTH, TOPBAR, UiFonts, size, wrap};
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
@@ -115,6 +118,7 @@ struct Shown {
     cube: bool,
     facing: Option<ViewPreset>,
     centre: Option<[i64; 3]>,
+    offset: Option<OffsetTyping>,
 }
 
 /// Present: the panel (spawned once; its content rebuilt when what it
@@ -124,6 +128,7 @@ pub(super) fn toolbar(
     mut commands: Commands,
     display: Option<Res<CadDisplay>>,
     meshes: Option<Res<CadMeshes>>,
+    entry: Option<Res<SectionEntry>>,
     cameras: Query<&Orbit, With<Camera3d>>,
     fonts: Res<UiFonts>,
     roots: Query<Entity, With<DisplayPanel>>,
@@ -164,10 +169,11 @@ pub(super) fn toolbar(
     });
     let bounds = meshes.as_deref().and_then(super::section::model_bounds);
     let centre = bounds.map(|(lo, hi)| [0, 1, 2].map(|i| ((lo[i] + hi[i]) / 2.0 * 1000.0).round() as i64));
-    let shown = Shown { root, mode: display.mode, toggles: DisplaySetting::ALL.map(|s| s.get(&display)), section: display.section.enabled, cube: display.view_cube, facing, centre };
+    let shown = Shown { root, mode: display.mode, toggles: DisplaySetting::ALL.map(|s| s.get(&display)), section: display.section.enabled, cube: display.view_cube, facing, centre, offset: entry.as_ref().and_then(|e| e.typing.clone()) };
     if last.as_ref() == Some(&shown) {
         return;
     }
+    let offset = shown.offset.clone();
     *last = Some(shown);
     let k = Kit::new(&fonts);
     commands.entity(root).despawn_related::<Children>();
@@ -200,6 +206,13 @@ pub(super) fn toolbar(
                 }
                 r.spawn(k.chip("Rotate", CadButton(CadAction::CadSection(SectionArgs { rotate: true, ..default() })), false, true));
             });
+            // RoboCAD's Section tool's Tab field: Enter moves the plane this far along its normal.
+            p.spawn(k.caption("Move along normal (mm)"));
+            let typing = offset.as_ref();
+            p.spawn(k.input_selectable(typing.map_or("", |t| t.draft.text.as_str()), "offset, e.g. 5 or 2 cm", OffsetInput, typing.is_some(), typing.is_some_and(|t| t.draft.select_all)));
+            if let Some(e) = typing.and_then(|t| t.error.as_ref()) {
+                p.spawn(k.text(e.clone(), size::SMALL, DANGER, 0));
+            }
         }
     });
 }

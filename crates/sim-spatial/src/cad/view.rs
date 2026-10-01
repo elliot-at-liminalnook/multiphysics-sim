@@ -6,6 +6,7 @@
 //! and need no camera query of their own (the apply system and jobs get a
 //! copy). Display only: nothing here changes geometry.
 use super::mesh::CadRoot;
+use bevy::camera::{CameraProjection, SubCameraView};
 use bevy::math::Affine3A;
 use bevy::prelude::*;
 
@@ -105,13 +106,32 @@ pub fn ray_plane(origin: Vec3, direction: Vec3, point: Vec3, normal: Vec3) -> Op
     (t >= 0.0).then(|| origin + direction * t)
 }
 
-/// SimSync, after `CameraSet::Place` (the viewport and the camera's
-/// transform are this frame's): refresh the snapshot. The camera and the
-/// root are top-level entities, so their `Transform` is their world
+/// The clip-from-view matrix `projection` gives over a viewport of
+/// `size` logical pixels (and a card's sub-view), as Bevy's
+/// `camera_system` computes `Camera::clip_from_view`: `update` with the
+/// logical size, then the whole or sub-view matrix.
+pub(super) fn clip_from_view(projection: &Projection, size: Vec2, sub: Option<&SubCameraView>) -> Mat4 {
+    let mut projection = projection.clone();
+    projection.update(size.x, size.y);
+    match sub {
+        Some(sub) => projection.get_clip_from_view_for_sub(sub),
+        None => projection.get_clip_from_view(),
+    }
+}
+
+/// SimSync, after `CameraSet::Place` (the viewport, the camera's transform
+/// and its projection are this frame's): refresh the snapshot. The camera
+/// and the root are top-level entities, so their `Transform` is their world
 /// transform; it is read rather than `GlobalTransform`, which Bevy
 /// propagates only in PostUpdate and would be last frame's (overlays and
-/// picks would trail the drawn view by a frame while orbiting).
-pub(super) fn update(camera: Option<Single<(&Camera, &Transform), With<crate::camera::Orbit>>>, root: Option<Single<&Transform, With<CadRoot>>>, view: Option<ResMut<CadView>>) {
+/// picks would trail the drawn view by a frame while orbiting). Likewise
+/// the projection matrix is built from the `Projection` that `place` wrote
+/// this frame ([`clip_from_view`]), not `Camera::clip_from_view`, which
+/// Bevy recomputes only in PostUpdate: an ortho zoom, a field-of-view
+/// change or a projection toggle would otherwise pair this frame's
+/// transform with last frame's projection.
+#[allow(clippy::type_complexity)]
+pub(super) fn update(camera: Option<Single<(&Camera, &Transform, &Projection), With<crate::camera::Orbit>>>, root: Option<Single<&Transform, With<CadRoot>>>, view: Option<ResMut<CadView>>) {
     let Some(mut view) = view else { return };
     let (Some(camera), Some(root)) = (camera, root) else {
         if view.valid {
@@ -119,11 +139,11 @@ pub(super) fn update(camera: Option<Single<(&Camera, &Transform), With<crate::ca
         }
         return;
     };
-    let (camera, camera_transform) = *camera;
-    let Some(rect) = camera.logical_viewport_rect() else { return };
+    let (camera, camera_transform, projection) = *camera;
+    let (Some(rect), Some(size)) = (camera.logical_viewport_rect(), camera.logical_viewport_size()) else { return };
     let world_from_model = root.compute_affine();
     let world_from_view = camera_transform.compute_affine();
-    let clip_from_view = camera.clip_from_view();
+    let clip_from_view = if size.x > 0.0 && size.y > 0.0 { clip_from_view(projection, size, camera.sub_camera_view.as_ref()) } else { camera.clip_from_view() };
     let next = CadView {
         valid: rect.size().x > 0.0 && rect.size().y > 0.0,
         world_from_model,
@@ -183,5 +203,16 @@ mod tests {
         // Behind the camera (model −Y beyond 5 m is Bevy +Z past the eye).
         assert!(v.project(Vec3::new(0.0, -6000.0, 0.0)).is_none());
         assert!(v.mm_per_pixel(Vec3::ZERO).is_some_and(|m| m > 0.0));
+    }
+
+    #[test]
+    fn the_projection_matrix_is_built_from_this_frames_projection() {
+        // An orthographic view 2 m high over 200 × 100 px is 4 m wide: x = 2 m is its right edge.
+        let ortho = Projection::Orthographic(OrthographicProjection { scaling_mode: bevy::camera::ScalingMode::FixedVertical { viewport_height: 2.0 }, ..OrthographicProjection::default_3d() });
+        let edge = clip_from_view(&ortho, Vec2::new(200.0, 100.0), None) * Vec4::new(2.0, 1.0, -1.0, 1.0);
+        assert!((edge.x / edge.w - 1.0).abs() < 1e-5 && (edge.y / edge.w - 1.0).abs() < 1e-5, "{edge:?}");
+        // A perspective takes the viewport's aspect, as Bevy's camera_system gives it.
+        let expected = PerspectiveProjection { aspect_ratio: 2.0, ..default() }.get_clip_from_view();
+        assert_eq!(clip_from_view(&Projection::Perspective(PerspectiveProjection::default()), Vec2::new(200.0, 100.0), None), expected);
     }
 }

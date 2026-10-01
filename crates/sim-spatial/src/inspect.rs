@@ -305,7 +305,9 @@ fn publish_json(server: &mut sim_api::Server, scene: &SpatialScene, camera: &Orb
 }
 
 /// The headless server's poll (`--headless`: inspect mode, no window): the
-/// same dispatch and the same handler, answered synchronously.
+/// same dispatch and the same handler, answered synchronously. The
+/// dispatch refuses what needs a window (`viewer_mode`, the shared
+/// camera's `camera_*`), and `system_ui` controls list no `camera:*`.
 pub(crate) fn serve_headless(server: &mut sim_api::Server, scene: &mut SpatialScene, camera: &mut Orbit, task: &mut Option<sim_api::ImageTask>) {
     let mode = ViewerMode::Inspect;
     server.poll(|command, continuation, cancelled| {
@@ -318,12 +320,14 @@ pub(crate) fn serve_headless(server: &mut sim_api::Server, scene: &mut SpatialSc
                 }
                 Err(e) => Outcome::Done(Err(e)),
             },
-            Ok(_) => match <crate::app::switch::WindowAction as actions::Action>::parse(command) {
+            // `screenshot` and the switcher's `system_ui` (WindowAction).
+            Ok(feature) if feature.name == "window" || feature.name == "switcher" => match <crate::app::switch::WindowAction as actions::Action>::parse(command) {
                 Ok(action) => Outcome::Done(action.headless()),
                 Err(e) => Outcome::Done(Err(e)),
             },
+            Ok(feature) => Outcome::Done(Err(format!("`{}` ({} commands) is not served by the headless server (inspect mode only)", command.command, feature.name))),
         };
-        crate::app::route::annotate(mode, command, outcome)
+        crate::app::route::annotate_for(mode, false, command, outcome)
     });
     publish_json(server, scene, camera, None, None, mode);
 }
@@ -381,8 +385,9 @@ pub(crate) fn capture(scene: &SpatialScene, camera: &Orbit, options: &sim_render
             .filter_map(|n| Some(sim_render::Region { label: n.label.clone(), color: n.color, components: n.targets.resolve(&scene.description).ok()?.components }))
             .collect(),
         connections,
-        yaw: camera.yaw,
-        pitch: camera.pitch,
+        // The view's heading now (in the trackball its stored yaw/pitch are stale).
+        yaw: camera.turntable().0,
+        pitch: camera.turntable().1,
         metadata: json!({"annotations":scene.note_document(),"source_description_id":scene.description.id,"selection":scene.selection,"frame":scene.frame().map(|f|json!({"run_id":f.run_id,"generation":f.generation,"sequence":f.sequence,"step":f.step,"time":f.time})),"live_status":scene.live_status(),"geometry":"illustrative display primitives; not source CAD solids"}),
     })
 }

@@ -124,9 +124,11 @@ pub fn headless(
         scene.poll_live();
         notes::sync(&mut scene, &mut camera);
         if camera.home {
-            // The window's overview framing (no view, so aspect 1).
+            // `fit`, `panels` and the exploded toggle: the bounds from the
+            // current heading (as this server always framed them; the
+            // window's overview heading is for its home), aspect 1 (no view).
             (camera.centre, camera.extent) = scene.bounds();
-            camera.frame(&rules, 1.0, true);
+            camera.frame(&rules, 1.0, false);
         }
         crate::inspect::serve_headless(&mut server, &mut scene, &mut camera, &mut image_task);
         std::thread::sleep(std::time::Duration::from_millis(16));

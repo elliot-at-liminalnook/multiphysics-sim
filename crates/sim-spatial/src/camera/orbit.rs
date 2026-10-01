@@ -3,9 +3,11 @@
 //! turntable and trackball rotation, and the step that places the camera
 //! ([`place`]). Pure methods on [`Orbit`], so the headless inspect server
 //! and the tests use them without a window.
-use super::{Framing, Orbit, OrbitRules, RadiusLimits, ViewPreset};
+use super::viewport::area;
+use super::{Framing, Orbit, OrbitRules, RadiusLimits, ViewArea, ViewPreset};
 use bevy::camera::ScalingMode;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 
 /// A camera position around its focus.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -29,6 +31,10 @@ pub struct Glide {
 /// second), short enough not to feel like waiting.
 pub const GLIDE_S: f32 = 1.0;
 
+/// The bounds scale of [`Orbit::frame_bounds`] under a fixed framing
+/// (which has none of its own): the default rules' 3.2 × extent.
+const FIXED_FRAMING_SCALE: f32 = 3.2;
+
 fn ease(t: f32) -> f32 {
     let t = t.clamp(0., 1.);
     t * t * (3. - 2. * t)
@@ -50,7 +56,8 @@ impl Orbit {
         self.pitch = p.pitch;
     }
     /// Ease to `to` over `seconds`; 0 (or no previous pose) cuts. Clears a
-    /// pending home request and returns to the turntable.
+    /// pending home request and returns to the turntable (a move that keeps
+    /// the view's direction is [`Self::glide_frame`]).
     pub fn glide_to(&mut self, to: Pose, seconds: f32) {
         self.home = false;
         self.trackball = None;
@@ -63,10 +70,39 @@ impl Orbit {
         let to = Pose { yaw: self.yaw + wrap(to.yaw - self.yaw), ..to };
         self.glide = Some(Glide { from: self.pose(), to, t: 0., duration: seconds });
     }
+    /// Ease only the focus and distance to `focus`, `radius` over
+    /// `seconds` (0, or an unplaced view, cuts), keeping the view's
+    /// direction: the trackball's rotation when it is on (it stays on),
+    /// else the turntable heading being settled on. Clears a pending home
+    /// request. A fit, a node fit and a fly-to move this way.
+    pub fn glide_frame(&mut self, focus: Vec3, radius: f32, seconds: f32) {
+        let keep = self.trackball;
+        // In the trackball the turntable angles are not the view; leaving
+        // them as they are makes the glide's yaw/pitch interpolation a no-op.
+        let (yaw, pitch) = if keep.is_some() { (self.yaw, self.pitch) } else { self.heading() };
+        self.glide_to(Pose { focus, radius, yaw, pitch }, seconds);
+        self.trackball = keep;
+    }
     /// The direction the camera is settling on: a glide's destination, else
     /// where it is now. A zoom that starts during a glide keeps that heading.
+    /// The turntable's angles: in the trackball they are stale (see
+    /// [`Self::turntable`]).
     pub fn heading(&self) -> (f32, f32) {
         self.glide.map_or((self.yaw, self.pitch), |g| (g.to.yaw, g.to.pitch))
+    }
+    /// The turntable (yaw, pitch) of the view as it is now, without
+    /// changing anything: the stored angles, or in the trackball the
+    /// heading its rotation looks from (no pitch limit applied). For
+    /// readers that store or render a yaw and pitch (saved discussion
+    /// views, the scene render, `camera_state`'s RoboCAD angles).
+    pub fn turntable(&self) -> (f32, f32) {
+        match self.trackball {
+            None => (self.yaw, self.pitch),
+            Some(q) => {
+                let back = q * Vec3::Z;
+                (back.x.atan2(back.z), back.y.clamp(-1.0, 1.0).asin())
+            }
+        }
     }
     /// Advance any glide and spin by `dt` wall seconds.
     pub fn step(&mut self, dt: f32) {
@@ -141,34 +177,50 @@ impl Orbit {
         match rules.framing {
             Framing::Fixed(pose) if !keep_heading => pose,
             Framing::Fixed(pose) => Pose { yaw: self.heading().0, pitch: self.heading().1, ..pose },
-            Framing::Bounds { scale, aspect: by_aspect, view } => {
+            Framing::Bounds { view, .. } => {
                 let (yaw, pitch) = match view {
                     Some(v) if !keep_heading => v,
                     _ => self.heading(),
                 };
-                let mut radius = self.extent.max(1e-3) * scale;
-                if by_aspect {
-                    radius /= aspect.clamp(0.1, 1.0);
-                }
-                Pose { focus: self.centre, radius, yaw, pitch }
+                Pose { focus: self.centre, radius: bounds_radius(rules, self.extent, aspect), yaw, pitch }
             }
         }
     }
-    /// Frame the bounds: `home` uses the mode's framing (its fixed view),
-    /// else the current heading. Glides when the rules ask for it and the
-    /// view was placed before (and motion is not reduced).
+    /// Whether a home request (or a fit, `!home`) keeps the view's
+    /// direction: a fit always; a home unless the framing imposes a view
+    /// (`Framing::Bounds { view: Some(..) }` or `Framing::Fixed`).
+    pub fn keeps_heading(rules: &OrbitRules, home: bool) -> bool {
+        !home || matches!(rules.framing, Framing::Bounds { view: None, .. })
+    }
+    /// The glide time of a framing: [`GLIDE_S`] when the rules ask for a
+    /// glide, the view was placed before and motion is not reduced, else 0.
+    fn frame_seconds(&self, rules: &OrbitRules) -> f32 {
+        let placed = self.radius > 0. && self.focus != Vec3::ZERO;
+        if rules.glide_home && placed && !rules.reduced_motion { GLIDE_S } else { 0. }
+    }
+    /// Frame the bounds (`centre`, `extent`): `home` uses the mode's
+    /// framing (its fixed view, if any), else the current heading. Where
+    /// the heading is kept ([`Self::keeps_heading`]) so is the trackball
+    /// (only the focus and distance move, [`Self::glide_frame`]); a framing
+    /// that imposes a view returns to the turntable. Glides as
+    /// [`Self::frame_seconds`] says.
     pub fn frame(&mut self, rules: &OrbitRules, aspect: f32, home: bool) {
         let pose = self.framing(rules, aspect, !home);
-        let placed = self.radius > 0. && self.focus != Vec3::ZERO;
-        let seconds = if rules.glide_home && placed && !rules.reduced_motion { GLIDE_S } else { 0. };
-        // A fit keeps the view's direction: in the trackball that is its
-        // rotation (the turntable's yaw and pitch are stale there), so only
-        // the focus and distance move. Home returns to the turntable.
-        let keep = if home { None } else { self.trackball };
-        self.glide_to(pose, seconds);
-        if keep.is_some() {
-            self.trackball = keep;
+        let seconds = self.frame_seconds(rules);
+        if Self::keeps_heading(rules, home) {
+            self.glide_frame(pose.focus, pose.radius, seconds);
+        } else {
+            self.glide_to(pose, seconds);
         }
+    }
+    /// Frame other bounds than `centre`/`extent` (CAD's `cad_fit` of one
+    /// node) without replacing them (they stay the mode's whole content,
+    /// which the zoom limits and a later fit or home use): at the rules'
+    /// framing scale (a fixed framing's [`FIXED_FRAMING_SCALE`]), keeping
+    /// the heading and the trackball, gliding as a fit does.
+    pub fn frame_bounds(&mut self, centre: Vec3, extent: f32, rules: &OrbitRules, aspect: f32) {
+        let seconds = self.frame_seconds(rules);
+        self.glide_frame(centre, bounds_radius(rules, extent, aspect), seconds);
     }
 
     /// Pan by a drag of `delta` window pixels (right is +x, down is +y), at
@@ -177,20 +229,46 @@ impl Orbit {
         let r = self.rotation();
         self.focus += (r * Vec3::X * -delta.x + r * Vec3::Y * delta.y) * self.radius * rules.pan_rate;
     }
-    /// Orbit by a drag of `delta` window pixels: the turntable's yaw and
-    /// pitch (pitch within the limit), or the trackball's rotation about
-    /// the view's own up and right axes.
+    /// Orbit by a drag of `delta` window pixels at the rules' rate
+    /// (a drag to the right lowers the yaw, a drag down raises the pitch:
+    /// the view looks further down).
     pub fn rotate(&mut self, delta: Vec2, rules: &OrbitRules) {
+        self.rotate_by(-delta.x * rules.rate, delta.y * rules.rate, rules);
+    }
+    /// Orbit by angles (radians): the turntable's yaw and pitch (pitch
+    /// within the limit), or the trackball's rotation about the view's own
+    /// up (`yaw`) and right (`-pitch`) axes, as a drag turns it.
+    pub fn rotate_by(&mut self, yaw: f32, pitch: f32, rules: &OrbitRules) {
         match self.trackball {
             Some(q) => {
-                let q = q * Quat::from_rotation_y(-delta.x * rules.rate) * Quat::from_rotation_x(-delta.y * rules.rate);
+                let q = q * Quat::from_rotation_y(yaw) * Quat::from_rotation_x(-pitch);
                 self.trackball = Some(q.normalize());
             }
             None => {
-                self.yaw -= delta.x * rules.rate;
-                self.pitch = (self.pitch + delta.y * rules.rate).clamp(-rules.pitch_limit, rules.pitch_limit);
+                self.yaw += yaw;
+                self.pitch = (self.pitch + pitch).clamp(-rules.pitch_limit, rules.pitch_limit);
             }
         }
+    }
+    /// RoboCAD's `Camera.snap_orthographic` (Alt while right-drag
+    /// orbiting): the turntable at the nearest axis view, yaw to a
+    /// multiple of 90° (RoboCAD rounds its yaw, which is the display yaw
+    /// − 90°: the same multiples), pitch to ±89.5° beyond ±45°, else level
+    /// (within the mode's pitch limit).
+    pub fn snap_to_axis(&mut self, rules: &OrbitRules) {
+        self.sync_turntable(rules);
+        let quarter = std::f32::consts::FRAC_PI_2;
+        self.yaw = wrap((self.yaw / quarter).round() * quarter);
+        let eighth = std::f32::consts::FRAC_PI_4;
+        let pole = 89.5f32.to_radians();
+        let pitch = if self.pitch > eighth {
+            pole
+        } else if self.pitch < -eighth {
+            -pole
+        } else {
+            0.0
+        };
+        self.pitch = pitch.clamp(-rules.pitch_limit, rules.pitch_limit);
     }
     /// Zoom by `factor` (< 1 closer) within the limits; with `anchor` (a
     /// display-frame point), the focus moves toward it by the same ratio,
@@ -220,10 +298,13 @@ impl Orbit {
     }
     /// Leave the trackball for the turntable heading closest to it.
     fn sync_turntable(&mut self, rules: &OrbitRules) {
-        let Some(q) = self.trackball.take() else { return };
-        let back = q * Vec3::Z;
-        self.pitch = back.y.clamp(-1.0, 1.0).asin().clamp(-rules.pitch_limit, rules.pitch_limit);
-        self.yaw = back.x.atan2(back.z);
+        if self.trackball.is_none() {
+            return;
+        }
+        let (yaw, pitch) = self.turntable();
+        self.trackball = None;
+        self.yaw = yaw;
+        self.pitch = pitch.clamp(-rules.pitch_limit, rules.pitch_limit);
     }
 
     /// The display-frame point on the plane through the focus facing the
@@ -263,6 +344,18 @@ impl Orbit {
     }
 }
 
+/// A framing's distance for bounds of half-diagonal `extent`: the rules'
+/// scale × extent (divided by the aspect clamped to 0.1–1 where the
+/// framing asks for it); a fixed framing uses [`FIXED_FRAMING_SCALE`].
+fn bounds_radius(rules: &OrbitRules, extent: f32, aspect: f32) -> f32 {
+    let (scale, by_aspect) = match rules.framing {
+        Framing::Bounds { scale, aspect, .. } => (scale, aspect),
+        Framing::Fixed(_) => (FIXED_FRAMING_SCALE, false),
+    };
+    let radius = extent.max(1e-3) * scale;
+    if by_aspect { radius / aspect.clamp(0.1, 1.0) } else { radius }
+}
+
 /// The aspect ratio (width / height) a camera draws at: a lesson card's
 /// whole rectangle, else its viewport, else 1.
 pub(super) fn aspect(camera: &Camera) -> f32 {
@@ -273,13 +366,40 @@ pub(super) fn aspect(camera: &Camera) -> f32 {
     camera.logical_viewport_size().filter(|s| s.y > 0.0).map_or(1.0, |s| (s.x / s.y).max(0.1))
 }
 
+/// The aspect ratio a view area will draw at in `window` (logical pixels):
+/// a card's whole rectangle (its projection is the whole card's), else the
+/// gesture area (between the docks, or the window), else 1.
+pub(super) fn area_aspect(window: &Window, view: &ViewArea) -> f32 {
+    let size = match *view {
+        ViewArea::Card { full, .. } => full.size(),
+        _ => area(window, view).size(),
+    };
+    if size.x > 0.0 && size.y > 0.0 { (size.x / size.y).max(0.1) } else { 1.0 }
+}
+
+/// [`aspect`], also before the camera's first frame: Bevy computes the
+/// viewport's logical size (`camera_system`, PostUpdate) only after the
+/// first update, so until then (no logical size and no card sub-view) the
+/// aspect comes from the window and the view area, as the viewport will be.
+pub(crate) fn view_aspect(camera: &Camera, window: Option<&Window>, view: Option<&ViewArea>) -> f32 {
+    if camera.sub_camera_view.is_some() || camera.logical_viewport_size().is_some() {
+        return aspect(camera);
+    }
+    match (window, view) {
+        (Some(window), Some(view)) => area_aspect(window, view),
+        _ => 1.0,
+    }
+}
+
 /// SimSync (CameraSet::Place): a pending home request, reduced motion, the
 /// glide and spin step, then the transform and projection, each written
 /// only on a change (so `Changed<Transform>` means the view moved).
-pub(super) fn place(time: Res<Time>, mut cameras: Query<(&mut Orbit, &OrbitRules, &Camera, &mut Transform, &mut Projection)>) {
-    for (mut orbit, rules, camera, mut transform, mut projection) in &mut cameras {
+#[allow(clippy::type_complexity)]
+pub(super) fn place(time: Res<Time>, window: Option<Single<&Window, With<PrimaryWindow>>>, mut cameras: Query<(&mut Orbit, &OrbitRules, &Camera, Option<&ViewArea>, &mut Transform, &mut Projection)>) {
+    let window = window.as_deref().copied();
+    for (mut orbit, rules, camera, view, mut transform, mut projection) in &mut cameras {
         if orbit.home {
-            orbit.frame(rules, aspect(camera), true);
+            orbit.frame(rules, view_aspect(camera, window, view), true);
         }
         if rules.reduced_motion && (orbit.glide.is_some() || orbit.spin != 0.0) {
             orbit.finish_glide();

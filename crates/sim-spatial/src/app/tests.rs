@@ -524,3 +524,61 @@ fn build_phenomena_build_runs_the_gallery_and_remembers_the_exhibit() {
     assert_eq!(world.resource::<Documents>().exhibit.as_deref(), Some("3"), "phenomena mode reopens the exhibit it showed");
     std::fs::remove_dir_all(&dir).ok();
 }
+
+/// Every non-test source file of this crate stays within the size cap
+/// (native-viewer.md "Split large files"). CAP = 750 non-test lines. A
+/// file's non-test lines are the lines before its first column-0
+/// `#[cfg(test)]` line that is immediately followed by a column-0 line
+/// starting with `mod ` and ending with `{` (an inline test module); with no
+/// such pair, every line counts. Lines are counted as `str::lines` counts
+/// them (trailing whitespace is ignored when matching the two lines). Files
+/// named `tests.rs` or ending in `_tests.rs`, and every file under a
+/// directory named `tests`, are skipped. `ALLOWED` lists files (relative to
+/// `src`, `/` separators) allowed over the cap, each with its reason; an
+/// entry whose file no longer exists or is back within the cap fails too, so
+/// the list stays short and truthful.
+#[test]
+fn source_files_stay_small() {
+    const CAP: usize = 750;
+    const ALLOWED: &[(&str, &str)] = &[];
+    let src = std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/src"));
+    let mut sizes: Vec<(String, usize)> = Vec::new();
+    let mut dirs = vec![src.to_path_buf()];
+    while let Some(dir) = dirs.pop() {
+        for entry in std::fs::read_dir(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())) {
+            let path = entry.unwrap_or_else(|e| panic!("{}: {e}", dir.display())).path();
+            let name = path.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
+            if path.is_dir() {
+                if name != "tests" {
+                    dirs.push(path);
+                }
+                continue;
+            }
+            if !name.ends_with(".rs") || name == "tests.rs" || name.ends_with("_tests.rs") {
+                continue;
+            }
+            let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+            let lines: Vec<&str> = text.lines().collect();
+            let count = lines
+                .windows(2)
+                .position(|pair| pair[0].trim_end() == "#[cfg(test)]" && pair[1].starts_with("mod ") && pair[1].trim_end().ends_with('{'))
+                .unwrap_or(lines.len());
+            let relative = path.strip_prefix(src).unwrap_or(&path).to_string_lossy().replace('\\', "/");
+            sizes.push((relative, count));
+        }
+    }
+    let mut offenders: Vec<String> = sizes
+        .iter()
+        .filter(|(path, count)| *count > CAP && !ALLOWED.iter().any(|(allowed, _)| *allowed == path.as_str()))
+        .map(|(path, count)| format!("{path}: {count} non-test lines (cap {CAP})"))
+        .collect();
+    for (allowed, _) in ALLOWED {
+        match sizes.iter().find(|(path, _)| path.as_str() == *allowed) {
+            None => offenders.push(format!("{allowed}: allowlisted but no longer exists; remove it from ALLOWED")),
+            Some((_, count)) if *count <= CAP => offenders.push(format!("{allowed}: allowlisted but {count} non-test lines is within the cap ({CAP}); remove it from ALLOWED")),
+            Some(_) => {}
+        }
+    }
+    offenders.sort();
+    assert!(offenders.is_empty(), "source files over the size cap; split each along a seam (native-viewer.md \"Split large files\"):\n{}", offenders.join("\n"));
+}

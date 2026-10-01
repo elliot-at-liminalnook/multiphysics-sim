@@ -286,8 +286,8 @@ pub(super) fn numeric(cx: &mut Cx, call: &mut Call, values: &[String]) -> Outcom
     };
     // The bar's Enter: the revision the entry gained focus at (values typed against
     // that geometry); a REST caller's values are read against the shown revision now.
-    let began = doc.tool_state.numeric.began.take();
-    let revision = Some(if call.rest() { doc.shown_revision() } else { began.unwrap_or_else(|| doc.shown_revision()) });
+    // A REST commit leaves the bar's focus revision alone (the user's typed values keep their stale check).
+    let revision = Some(if call.rest() { doc.shown_revision() } else { doc.tool_state.numeric.began.take().unwrap_or_else(|| doc.shown_revision()) });
     let transform = |translation, axis, angle_deg, center, scale| CadAction::CadTransform { ids: None, translation, axis, angle_deg, center, scale, revision };
     let action = match doc.tool {
         CadTool::Move => transform(Some([v[0], v[1], v[2]]), None, None, None, None),

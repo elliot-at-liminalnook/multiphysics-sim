@@ -37,6 +37,24 @@
 //!   frame; it is held while both `Pressed` and `Interaction::Pressed` (`slider_held`)
 //! - `pointer_surface(label, block: bool)` with `surface_point(&RelativeCursorPosition) -> Option<Vec2>`
 //! - `chart_image(image, layout: Node, framed: bool)`, `chart_label(value, Corner)`
+//! - `pie(commands, at: Vec2, label, entries: Vec<(label, action, enabled)>, hover: Option<usize>) -> Entity`
+//!   (`pie.rs`, RoboCAD's `RadialMenu`): an absolutely placed pie root with one
+//!   kit button per entry (`Look::Primary` hovered, else `Secondary`), first
+//!   straight up then clockwise; the caller despawns and rebuilds it. Pure:
+//!   `pie::index_at(centre, cursor, n)` (None in the `DEAD` centre) and `pie::slot(i, n)`.
+//! - `palette(parent, query, rows: &[Ranked], entries: &[PaletteEntry], selected, field, row: Fn(usize) -> A)`
+//!   (`palette.rs`, RoboCAD's `CommandPalette`): the search field, then the
+//!   ranked rows (conflict warning in WARN, disabled rows FAINT). Pure:
+//!   `palette::rank(entries, query)` and `palette::conflicts(entries)`.
+//! - `form(parent, title, rows: &[FormRow], ok_enabled, hit: Fn(FormHit) -> A)`
+//!   (`form.rs`, RoboCAD's input dialogs and `ArrayDialog`): labelled fields
+//!   with their evaluation or error under them (as the CAD numeric bar),
+//!   choice segments, checkbox chips, OK and Cancel. Pure:
+//!   `form::evaluate(kind, text)` and `form::TextDraft::key(key, chord)`.
+//!
+//! The pie, palette and form hold no intent logic: the caller owns the
+//! open state, the drafts, the query and the selection, passes one action
+//! component per clickable part, and decides what each press means.
 //!
 //! Rules: widgets take their action as a component and never decide what
 //! a press means; buttons stay `bevy::ui::Button` + the action component +

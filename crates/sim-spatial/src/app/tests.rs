@@ -212,9 +212,14 @@ fn rest_refuses_commands_of_another_mode_by_name() {
     // Every capability names its modes; screenshot and viewer_mode apply to all.
     let caps = actions::capabilities();
     assert!(caps.iter().all(|c| c["modes"].as_array().is_some_and(|m| !m.is_empty())));
-    for name in ["screenshot", "viewer_mode", "state", "camera", "system_ui"] {
-        assert_eq!(actions::command_modes(name).map(|m| m.len()), Some(5), "{name}");
+    for name in ["screenshot", "viewer_mode", "state", "system_ui"] {
+        assert_eq!(actions::command_modes(name).map(|m| m.len()), Some(ViewerMode::ALL.len()), "{name}");
     }
+    // CAD mode has no camera command of its own (cad_fit frames its view).
+    assert_eq!(actions::command_modes("camera").map(|m| m.contains(&ViewerMode::Cad)), Some(false));
+    assert_eq!(route::route(ViewerMode::Cad, true, &command("cad_undo")).map(|f| f.name), Ok("cad"));
+    assert_eq!(route::route(ViewerMode::Cad, true, &command("system_ui")).map(|f| f.name), Ok("cad"));
+    assert!(refused(ViewerMode::Build, "cad_save").contains("cad mode"));
 }
 
 /// The REST surface cannot drift from the actions: every registered
@@ -263,7 +268,7 @@ fn every_mode_control_resolves_to_a_switch() {
     let patterns = <WindowAction as actions::Action>::controls();
     for active in ViewerMode::ALL {
         let controls = route::mode_controls(active);
-        assert_eq!(controls.len(), 5);
+        assert_eq!(controls.len(), ViewerMode::ALL.len());
         for control in controls {
             let id = control["id"].as_str().unwrap();
             assert!(patterns.iter().any(|p| actions::control_matches(p, id)), "{id}");
@@ -278,6 +283,73 @@ fn every_mode_control_resolves_to_a_switch() {
     let command = sim_api::Command { command: "system_ui".into(), args: json!({"action": {"operation": "activate", "id": "mode:robot", "ui_revision": 3}}) };
     assert_eq!(route::route(ViewerMode::Build, true, &command).map(|f| f.name), Ok("window"));
     assert!(matches!(<WindowAction as actions::Action>::parse(&command), Ok(WindowAction::SystemUi(_))));
+}
+
+/// Build → Cad → Build without a RoboCAD: CAD mode enters at once, says
+/// truthfully that it is not connected (nothing listens on port 1), and
+/// leaving removes the CAD document, its mesh cache and CAD-scoped entities
+/// while the builder, its scene and the shared resources stay.
+#[test]
+fn build_cad_build_tears_down_the_cad_document_and_keeps_shared_state() {
+    let dir = std::env::temp_dir().join(format!("mode-switch-cad-{}", std::process::id()));
+    let (board, builder, scene) = self::board(&dir);
+    let url = "http://127.0.0.1:1";
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_resource(builder)
+        .insert_resource(scene)
+        .insert_resource(crate::models::ModelLibrary::default())
+        .insert_resource(crate::rest::Rest(crate::rest::bind(0).unwrap(), None))
+        .add_plugins((ModesPlugin { initial: ViewerMode::Build }, crate::cad::CadCorePlugin));
+    app.update();
+    assert_eq!(mode(&app), ViewerMode::Build);
+
+    // Refused: url is a cad-only document; a cad path must be a .rcad file.
+    let seq = submit(&mut app, ViewerMode::Robot, Some(Document::Url(url.into())));
+    assert!(settle(&mut app, seq).unwrap_err().contains("cad mode only"));
+    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Path(board.clone())));
+    assert!(settle(&mut app, seq).unwrap_err().contains(".rcad"));
+    assert_eq!(mode(&app), ViewerMode::Build);
+
+    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Url(url.into())));
+    let entered = settle(&mut app, seq).unwrap();
+    assert_eq!(entered["mode"], "cad");
+    assert_eq!(mode(&app), ViewerMode::Cad);
+    assert_eq!(*app.world().resource::<State<ModeScope>>().get(), ModeScope::Cad);
+    assert!(app.world().contains_resource::<crate::cad::CadMeshes>());
+    assert!(app.world().contains_resource::<Builder>(), "the builder stays in the window");
+    assert!(!app.world().contains_resource::<SpatialScene>(), "the builder's scene is parked");
+    let body = app.world_mut().spawn(Transform::default()).id();
+    app.update();
+    assert_eq!(scoped(&mut app, body), Some(ModeScope::Cad));
+    // The connect job fails (connection refused); the error is shown, not hidden.
+    let mut lost = None;
+    for _ in 0..500 {
+        app.update();
+        if let crate::cad::Connection::Lost { error, .. } = &app.world().resource::<crate::cad::CadDocument>().connection {
+            lost = Some(error.clone());
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    let error = lost.expect("CAD mode reports the refused connection");
+    assert!(error.contains("127.0.0.1:1"), "{error}");
+    let doc = app.world().resource::<crate::cad::CadDocument>();
+    assert!(doc.connection_line().0.starts_with("Not connected"), "{}", doc.connection_line().0);
+    assert!(doc.child.pid().is_none(), "an attached service has no child process");
+
+    // Cad → Build: the CAD document and its resources go; shared state survives.
+    let seq = submit(&mut app, ViewerMode::Build, None);
+    settle(&mut app, seq).unwrap();
+    assert_eq!(mode(&app), ViewerMode::Build);
+    let world = app.world();
+    assert!(!world.contains_resource::<crate::cad::CadDocument>() && !world.contains_resource::<crate::cad::CadMeshes>());
+    assert!(app.world().get_entity(body).is_err(), "cad-scoped entities are despawned on exit");
+    let world = app.world();
+    assert_eq!(world.resource::<Builder>().path(), board.as_path());
+    assert!(world.contains_resource::<SpatialScene>() && world.contains_resource::<crate::models::ModelLibrary>() && world.contains_resource::<crate::rest::Rest>());
+    assert_eq!(world.resource::<Documents>().cad, Some(crate::cad::CadTarget::Service(url.into())), "cad mode reopens what it showed");
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 /// A REST poll's side of an action: parse and write it once (Pending, with

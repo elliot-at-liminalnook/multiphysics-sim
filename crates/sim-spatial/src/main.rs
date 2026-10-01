@@ -9,10 +9,12 @@ struct Args {
     /// Open FILE in the mode its type selects: a `*.system.json` file → build
     /// mode (--system), a `*.simrobot.json` file → robot mode (--robot), a
     /// directory holding `place.json` → place mode (--place), a directory with
-    /// `<slug>/lesson.md` entries → lessons mode (--lessons). Detected by name
-    /// or directory structure only; anything else is an error. Presets stay on
-    /// --robot-preset.
-    #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link"])]
+    /// `<slug>/lesson.md` entries → lessons mode (--lessons), a `*.rcad` file →
+    /// CAD mode (RoboCAD's headless service is started on it with
+    /// cad/.venv/bin/python and stopped when the document closes). Detected by
+    /// name or directory structure only; anything else is an error. Presets
+    /// stay on --robot-preset.
+    #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link", "cad_url"])]
     file: Option<PathBuf>,
     /// Shared discussion and saved-view sidecar.
     #[arg(long)]
@@ -112,6 +114,11 @@ struct Args {
     /// The motor bench's control token in a file (default: read from its page).
     #[arg(long, value_name = "FILE", requires = "motor_bench")]
     motor_bench_token_file: Option<PathBuf>,
+    /// CAD mode attached to a running RoboCAD service (its desktop GUI serves
+    /// http://127.0.0.1:8420; loopback only). Never stopped by this window;
+    /// unsaved edits stay in that service.
+    #[arg(long, value_name = "URL", conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link", "system", "lessons", "place", "headless", "schematic", "robot", "robot_preset"])]
+    cad_url: Option<String>,
     /// Lesson to open first (slug); default: the first in reading order.
     /// Requires lessons mode (--lessons DIR or a lessons FILE).
     #[arg(long)]
@@ -188,7 +195,34 @@ fn open_window(args: &Args, launch: impl FnOnce(sim_api::Server) -> sim_spatial:
 }
 
 fn launch(mode: sim_spatial::ViewerMode, api: sim_api::Server, documents: sim_spatial::app::switch::Documents, models: sim_spatial::models::ModelLibrary) -> sim_spatial::Launch {
-    sim_spatial::Launch { mode, api, documents, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None }
+    sim_spatial::Launch { mode, api, documents, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None, cad: None }
+}
+
+/// CAD mode: a `.rcad` file (RoboCAD's headless service is started on it
+/// once the window is open, off the UI thread) or a running RoboCAD's URL.
+/// `--validate-only` checks the file and the interpreter (or the URL) and
+/// starts nothing.
+fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<dyn std::error::Error>> {
+    use sim_spatial::cad::CadTarget;
+    if args.validate_only {
+        match &target {
+            CadTarget::File(path) => {
+                let cad_dir = sim_spatial::workspace::path("cad")?;
+                let python = sim_runtime::cad_client::service::interpreter(&cad_dir)?;
+                println!("Validated {}: CAD mode would start RoboCAD's headless service with {} -m robocad.api (in {}). No service was started.", path.display(), python.display(), cad_dir.display());
+            }
+            CadTarget::Service(url) => {
+                let client = sim_runtime::cad_client::CadClient::new(url).map_err(|e| e.to_string())?;
+                println!("Validated {}: CAD mode would attach to RoboCAD at {}. Nothing was requested.", url, client.url());
+            }
+        }
+        return Ok(());
+    }
+    let mut documents = documents(args);
+    documents.cad = Some(target.clone());
+    let models = model_library(args);
+    let cad = sim_spatial::cad::CadDocument::new(target);
+    open_window(args, |api| sim_spatial::Launch { cad: Some(cad), ..launch(sim_spatial::ViewerMode::Cad, api, documents, models) })
 }
 
 fn lessons_mode(args: &Args, dir: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
@@ -290,6 +324,7 @@ fn build_mode(args: &Args, path: &std::path::Path) -> Result<(), Box<dyn std::er
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = Args::parse();
+    let mut cad_file = None;
     // A positional FILE becomes the matching mode flag, so it takes exactly that flag's path.
     if let Some(file) = args.file.take() {
         use sim_spatial::launch::LaunchKind;
@@ -301,21 +336,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             LaunchKind::Robot => args.robot = Some(file),
             LaunchKind::Place => args.place = Some(file),
             LaunchKind::Lessons => args.lessons = Some(file),
+            LaunchKind::Cad if args.headless || args.schematic => {
+                return Err(format!("{}: CAD mode does not support --headless or --schematic", file.display()).into());
+            }
+            LaunchKind::Cad => cad_file = Some(file),
         }
     }
     if args.lesson.is_some() && args.lessons.is_none() {
         return Err("--lesson requires lessons mode (--lessons DIR or a lessons directory as FILE)".into());
     }
     // One workspace root for this launch, from --workspace/$SIM_WORKSPACE, the opened file or the current directory.
-    let opened = args
-        .system
+    let opened = cad_file
         .as_deref()
+        .or(args.system.as_deref())
         .or(args.robot.as_deref())
         .or(args.lessons.as_deref())
         .or(args.place.as_deref())
         .or(args.description.as_deref())
         .or(args.robot_presets.as_deref());
     sim_spatial::workspace::init(args.workspace.as_deref(), opened);
+    if let Some(path) = cad_file {
+        return cad_mode(&args, sim_spatial::cad::CadTarget::File(path));
+    }
+    if let Some(url) = args.cad_url.clone() {
+        return cad_mode(&args, sim_spatial::cad::CadTarget::Service(url));
+    }
     if let Some(dir) = args.place.clone() {
         if args.validate_only {
             println!("{}", sim_spatial::place_view::validate_place(&dir)?);

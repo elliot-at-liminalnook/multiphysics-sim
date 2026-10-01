@@ -6,7 +6,9 @@
 //! 3. a directory holding `place.json` → place mode (a `sim-place build`
 //!    directory, as `--place DIR`);
 //! 4. a directory with at least one `<slug>/lesson.md` child → lessons mode
-//!    (as `--lessons DIR`).
+//!    (as `--lessons DIR`);
+//! 5. a file named `*.rcad` → CAD mode (RoboCAD's headless service is
+//!    started on it; `--cad-url URL` attaches to a running one instead).
 //!
 //! Anything else, including a path that does not exist, is an error naming
 //! the path and these accepted types.
@@ -20,10 +22,11 @@ pub enum LaunchKind {
     Robot,
     Place,
     Lessons,
+    Cad,
 }
 
 /// The accepted types, as listed in errors and `--help`.
-pub const ACCEPTED: &str = "a *.system.json file (build mode), a *.simrobot.json file (robot mode), a directory holding place.json (place mode), or a directory with <slug>/lesson.md entries (lessons mode)";
+pub const ACCEPTED: &str = "a *.system.json file (build mode), a *.simrobot.json file (robot mode), a directory holding place.json (place mode), a directory with <slug>/lesson.md entries (lessons mode), or a *.rcad file (CAD mode)";
 
 /// Classify `path` by the rule in the module doc.
 pub fn classify(path: &Path) -> Result<LaunchKind, String> {
@@ -35,6 +38,9 @@ pub fn classify(path: &Path) -> Result<LaunchKind, String> {
         }
         if name.ends_with(".simrobot.json") {
             return Ok(LaunchKind::Robot);
+        }
+        if name.ends_with(".rcad") {
+            return Ok(LaunchKind::Cad);
         }
         return reject("not a recognised file type");
     }
@@ -64,14 +70,15 @@ mod tests {
         std::fs::create_dir_all(tmp.join("place")).unwrap();
         std::fs::create_dir_all(tmp.join("lessons/a")).unwrap();
         std::fs::create_dir_all(tmp.join("empty")).unwrap();
-        for f in ["x.system.json", "x.simrobot.json", "x.json", "place/place.json", "lessons/a/lesson.md"] {
+        for f in ["x.system.json", "x.simrobot.json", "x.rcad", "x.json", "place/place.json", "lessons/a/lesson.md"] {
             std::fs::write(tmp.join(f), "{}").unwrap();
         }
         assert_eq!(classify(&tmp.join("x.system.json")), Ok(LaunchKind::System));
         assert_eq!(classify(&tmp.join("x.simrobot.json")), Ok(LaunchKind::Robot));
+        assert_eq!(classify(&tmp.join("x.rcad")), Ok(LaunchKind::Cad));
         assert_eq!(classify(&tmp.join("place")), Ok(LaunchKind::Place));
         assert_eq!(classify(&tmp.join("lessons")), Ok(LaunchKind::Lessons));
-        for bad in ["x.json", "missing.system.json", "empty"] {
+        for bad in ["x.json", "missing.system.json", "missing.rcad", "empty"] {
             let e = classify(&tmp.join(bad)).unwrap_err();
             assert!(e.contains(&tmp.join(bad).display().to_string()), "{e}");
             assert!(e.contains(ACCEPTED), "{e}");

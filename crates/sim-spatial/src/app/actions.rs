@@ -27,7 +27,7 @@
 //!   registry; the lib tests cross-check it against what the action types
 //!   parse ([`variants`]).
 use super::ViewerMode;
-use crate::app::ViewerMode::{Build, Inspect, Lessons, Place, Robot};
+use crate::app::ViewerMode::{Build, Cad, Inspect, Lessons, Place, Robot};
 use bevy::ecs::message::Messages;
 use bevy::prelude::*;
 use serde::de::DeserializeOwned;
@@ -344,6 +344,7 @@ pub fn registry() -> &'static [Feature] {
             feature::<crate::robot::RobotAction>("robot", <crate::robot::RobotAction as Action>::commands),
             feature::<crate::robot::hardware::HardwareAction>("hardware", <crate::robot::hardware::HardwareAction as Action>::commands),
             feature::<crate::place_view::PlaceAction>("place", <crate::place_view::PlaceAction as Action>::commands),
+            feature::<crate::cad::CadAction>("cad", <crate::cad::CadAction as Action>::commands),
             // `system_ui` in inspect and place mode: the switcher's controls (listed last, as before).
             feature::<WindowAction>("switcher", WindowAction::switcher_commands),
         ]
@@ -413,6 +414,7 @@ pub fn fallback(mode: ViewerMode, name: &str) -> &'static Feature {
     match mode {
         Robot => named("robot"),
         Place => named("place"),
+        Cad => named("cad"),
         Build | Lessons if name.starts_with("lesson_") => named("lessons"),
         Build | Lessons if name.starts_with("system") => named("build"),
         _ => named("inspect"),

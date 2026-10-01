@@ -10,8 +10,8 @@
 //!
 //! Look: RoboCAD paints the hovered entry (90,150,255,230) and the others
 //! (40,42,48,220) as 92×44 ellipses; here they are kit buttons of that size,
-//! `Look::Primary` (ACCENT) for the hovered entry and `Look::Secondary`
-//! (RAISED) for the rest, so hover, disabled and label styling are the
+//! `Look::Primary` (ACCENT) for the hovered entry when it is enabled and
+//! `Look::Secondary` (RAISED) for the rest, so hover, disabled and label styling are the
 //! kit's (`repaint_buttons` keeps the look's 5 px corner radius, not an
 //! ellipse). RoboCAD's translucent white centre dot is a kit `dot(FAINT)`.
 use super::Kit;
@@ -71,7 +71,8 @@ impl Kit<'_> {
             ))
             .with_children(|pie| {
                 for (i, (text, action, enabled)) in entries.into_iter().enumerate() {
-                    let look = if hover == Some(i) { Look::Primary } else { Look::Secondary };
+                    // A disabled entry is never lit, even under the pointer.
+                    let look = if enabled && hover == Some(i) { Look::Primary } else { Look::Secondary };
                     let p = look.paint(enabled);
                     let centre = Vec2::splat(half) + slot(i, n);
                     let node = Node {

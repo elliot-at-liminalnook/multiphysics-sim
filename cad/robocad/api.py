@@ -151,6 +151,19 @@ def edge_json(e: EdgeRef) -> dict:
 # ------------------------------------------------------------- arguments
 
 
+_MISSING = object()
+
+
+def _is_number(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def _is_point_grid(v) -> bool:
+    """A list of rows, each a list of 3-number points (`list[list[Vec3]]`)."""
+    return (isinstance(v, list) and bool(v)
+            and all(isinstance(row, list) and row and all(isinstance(p, list) and len(p) == 3 and all(_is_number(x) for x in p) for p in row) for row in v))
+
+
 class ArgConverter:
     """Turns JSON into what `Ops` methods take, by parameter name and shape."""
 
@@ -240,6 +253,9 @@ class ArgConverter:
             return Transform.from_json(v) if isinstance(v, dict) else v
         if "Measurement" in ann or name == "m":
             return Measurement.from_json(v) if isinstance(v, dict) else v
+        if name == "points" and _is_point_grid(v):
+            # `set_control_points(points: list[list[Vec3]])`: rows of poles.
+            return [[tuple(float(x) for x in p) for p in row] for row in v]
         if "Vec3" in ann and isinstance(v, list):
             return tuple(float(x) for x in v)
         if "Sequence[Vec3]" in ann or name == "points":
@@ -697,12 +713,24 @@ class Service:
         from .commands import AddNodes
 
         before = set(self.doc.nodes)
+        # Every add/remove bumps `revision`, sets `dirty` and marks loaded
+        # results stale (`Document.touch`/`notify`); a failed paste restores
+        # all three so it leaves the document exactly as it found it.
+        revision, dirty = self.doc.revision, self.doc.dirty
+        results = self.doc.results
+        stale = results.get("stale", _MISSING) if isinstance(results, dict) else _MISSING
         try:
             nodes = self.doc.paste_nodes(clip, keep_placement=True)
         except Exception as e:
             # Leave no half-pasted nodes outside the undo stack.
             for nid in [i for i in self.doc.nodes if i not in before]:
                 self.doc.remove(nid)
+            self.doc.revision, self.doc.dirty = revision, dirty
+            if isinstance(results, dict) and results is self.doc.results:
+                if stale is _MISSING:
+                    results.pop("stale", None)
+                else:
+                    results["stale"] = stale
             raise ApiError(422 if isinstance(e, KernelError) else 400, f"Clipboard has no robocad content: {type(e).__name__}: {e}")
         # Make the paste undoable as one step.
         for n in nodes:

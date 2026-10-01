@@ -4,8 +4,8 @@
 //! RoboCAD ranks (`ui_kit::palette::rank`), the first 60 shown, each row
 //! "Category: Label  (note)    [keys]" with RoboCAD's "⚠ conflicts with …"
 //! where a key is bound to another command too. The note names what a
-//! command needs that this viewer lacks: the owning epic, "GUI-only" or
-//! "not ported"; such rows are disabled.
+//! command needs that this viewer lacks: the owning epic or "not ported";
+//! such rows are disabled.
 //!
 //! Keys and conflicts come from the registry (RoboCAD's keymap.json and
 //! inline keys, so its own Ctrl+Shift+M clash shows), or, when RoboCAD's

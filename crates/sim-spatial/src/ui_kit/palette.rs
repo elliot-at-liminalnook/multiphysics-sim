@@ -132,6 +132,7 @@ impl Kit<'_> {
     /// then one row per `rows` entry (its text, the conflict warning in the
     /// warning colour), `selected` highlighted. `field` is the search
     /// field's action component, `row(i)` row `i`'s.
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn palette<F: Component, A: Component>(&self, parent: &mut ChildSpawnerCommands, query: &str, rows: &[Ranked], entries: &[PaletteEntry], selected: usize, field: F, row: impl Fn(usize) -> A) {
         parent
             .spawn((
@@ -178,13 +179,20 @@ impl Kit<'_> {
                             BackgroundColor(if on { ACCENT_BG } else { Color::NONE }),
                         ))
                         .with_children(|line| {
-                            line.spawn(self.text(main, size::BODY, if enabled { TEXT } else { FAINT }, if on { 1 } else { 0 }));
+                            line.spawn(self.row_text(main, if enabled { TEXT } else { FAINT }, if on { 1 } else { 0 }));
                             if let Some(w) = &warn {
-                                line.spawn(self.text(w.as_str(), size::BODY, WARN, 0));
+                                line.spawn(self.row_text(w.as_str(), WARN, 0));
                             }
                         });
                     }
                 });
             });
+    }
+
+    /// A row's text: the kit's body text on one line (the row has a fixed
+    /// height and clips, so a long row is cut at the panel's edge, not wrapped).
+    fn row_text(&self, value: &str, color: Color, weight: u8) -> super::widgets::TextBundle {
+        let (text, font, tint, _) = self.text(value, size::BODY, color, weight);
+        (text, font, tint, TextLayout::no_wrap())
     }
 }

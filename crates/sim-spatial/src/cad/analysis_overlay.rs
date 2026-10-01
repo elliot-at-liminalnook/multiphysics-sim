@@ -168,12 +168,9 @@ pub(super) fn start(doc: &mut CadDocument, read: Read, revision: u64) -> Result<
     Ok(answer)
 }
 
-/// The overlays' systems (JobResults receive, Present draw).
+/// The overlays' drawing (Present); `receive` runs in `CadCorePlugin`, also without a window.
 pub(super) fn build(app: &mut App) {
-    app.add_systems(
-        Update,
-        (receive.in_set(ViewerSet::JobResults).after(super::sync::receive), draw.in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Cad)),
-    );
+    app.add_systems(Update, draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
 
 /// The analysis part of `cad_state`: the overlay shown (kind, node, face,
@@ -248,7 +245,7 @@ fn overlay(landed: Landed, read: &Read, revision: u64, generation: u64) -> Resul
 /// JobResults (after `sync::receive`, so the shown revision is this
 /// frame's): the read that came back, and the overlay dropped once the
 /// shown document moved on.
-fn receive(doc: Option<ResMut<CadDocument>>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>) {
+pub(super) fn receive(doc: Option<ResMut<CadDocument>>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>) {
     let Some(mut doc) = doc else { return };
     let outdated = doc.ops.analysis.shown.as_ref().is_some_and(|s| s.generation != doc.generation || s.revision != doc.shown_revision());
     let result = doc.ops.analysis.pending.as_ref().and_then(|p| p.job.poll());

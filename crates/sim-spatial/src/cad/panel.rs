@@ -30,6 +30,7 @@
 //!   the reason under the field (no request).
 use super::actions::CadAction;
 use super::document::{CadDocument, CadInputFocus, CadTool, Connection, SelectMode};
+use super::surfaces::SurfaceRoot;
 use crate::app::actions::Act;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
@@ -38,8 +39,8 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
-use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
+use bevy::ui::{ComputedNode, FocusPolicy, UiGlobalTransform};
 use bevy::window::PrimaryWindow;
 use serde_json::{Map, Value};
 
@@ -448,15 +449,16 @@ pub(super) fn name_entry(
     }
 }
 
-/// The wheel over a dock scrolls it (the tree on the left, the inspector on the right).
-fn scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<PrimaryWindow>>, mut tree: Query<&mut ScrollPosition, (With<TreeScroll>, Without<InspectorScroll>)>, mut inspector: Query<&mut ScrollPosition, (With<InspectorScroll>, Without<TreeScroll>)>) {
+/// The wheel over a dock scrolls it (the tree on the left, the inspector on
+/// the right), unless an open command popup over it takes the wheel.
+fn scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<PrimaryWindow>>, popups: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>, mut tree: Query<&mut ScrollPosition, (With<TreeScroll>, Without<InspectorScroll>)>, mut inspector: Query<&mut ScrollPosition, (With<InspectorScroll>, Without<TreeScroll>)>) {
     let delta = wheel_delta(&mut wheel, crate::ui_kit::WHEEL_LINE);
     if delta == 0.0 {
         return;
     }
     let Ok(window) = windows.single() else { return };
     let Some(p) = window.cursor_position() else { return };
-    if p.y <= TOPBAR || p.y >= window.height() - STATUSBAR {
+    if p.y <= TOPBAR || p.y >= window.height() - STATUSBAR || super::surfaces::over_popup(&popups, p) {
         return;
     }
     let areas = if p.x <= LEFT_WIDTH {

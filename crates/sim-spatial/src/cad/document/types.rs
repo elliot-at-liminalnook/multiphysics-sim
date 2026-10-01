@@ -58,6 +58,11 @@ pub struct Edit {
     pub label: String,
     pub job: Job<EditDone>,
     pub started: Instant,
+    /// The selection when an operation that clears it started
+    /// (`ops::started`): cleared once the edit succeeds, if it is still
+    /// this selection (RoboCAD clears after its Ops call returns, so a
+    /// failed edit keeps the user's picks). None for every other edit.
+    pub clear_selection: Option<Vec<SelectionItem>>,
 }
 
 /// What a finished edit hands back: the outcome text and whether the

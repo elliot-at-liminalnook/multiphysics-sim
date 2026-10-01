@@ -29,7 +29,7 @@ use bevy::window::PrimaryWindow;
 
 /// A pie entry (display only: the pointer's angle picks, `index_at`).
 #[derive(Component, Clone, Copy, Debug)]
-pub(super) struct RadialSlot(pub usize);
+pub(super) struct RadialSlot;
 
 /// The pie being read: which opening it is, and the buttons held when it opened.
 #[derive(Default)]
@@ -44,7 +44,7 @@ pub(super) fn spawn(commands: &mut Commands, k: &Kit, open: &Open, list: &[Entry
         Surface::ViewRadial { .. } => "View radial menu",
         _ => "Selection-mode radial menu",
     };
-    let slots: Vec<(String, RadialSlot, bool)> = list.iter().enumerate().map(|(i, e)| (e.label.clone(), RadialSlot(i), e.ready.is_ok())).collect();
+    let slots: Vec<(String, RadialSlot, bool)> = list.iter().map(|e| (e.label.clone(), RadialSlot, e.ready.is_ok())).collect();
     let root = k.pie(commands, Vec2::from(open.at), label, slots, open.highlight);
     commands.entity(root).insert((SurfaceRoot, DespawnOnExit(ModeScope::Cad)));
 }

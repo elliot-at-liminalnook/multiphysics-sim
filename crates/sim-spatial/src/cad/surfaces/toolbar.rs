@@ -17,7 +17,7 @@
 //! toolbar folds its overflow behind a "»" button instead).
 use super::menus::{self, MenuRow, Tabs};
 use super::registry::{self, Command, Resolved, TOOLBAR};
-use super::{rect_of, shortcut_keys};
+use super::{SurfaceRoot, over_popup, rect_of, shortcut_keys};
 use crate::app::ModeScope;
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
@@ -173,13 +173,16 @@ pub(super) fn hint(changed: Query<(), (Changed<Interaction>, With<Hint>)>, all: 
     }
 }
 
-/// Input: the wheel over the toolbar row scrolls it sideways.
-pub(super) fn scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<PrimaryWindow>>, mut rows: Query<(&mut ScrollPosition, &ComputedNode, &UiGlobalTransform), With<ToolRow>>) {
+/// Input: the wheel over the toolbar row scrolls it sideways (not under an open popup, whose wheel it is).
+pub(super) fn scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<PrimaryWindow>>, popups: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>, mut rows: Query<(&mut ScrollPosition, &ComputedNode, &UiGlobalTransform), With<ToolRow>>) {
     let delta = wheel_delta(&mut wheel, WHEEL_LINE);
     if delta == 0.0 {
         return;
     }
     let Some(cursor) = windows.single().ok().and_then(Window::cursor_position) else { return };
+    if over_popup(&popups, cursor) {
+        return;
+    }
     for (mut position, node, transform) in &mut rows {
         if rect_of(node, transform).contains(cursor) {
             position.0.x = (position.0.x - delta).max(0.0);

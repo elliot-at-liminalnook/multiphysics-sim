@@ -24,7 +24,9 @@
 //! Face and edge indices come only from the selection, which the pickers
 //! fill through `CadMeshes::face_at` and the topology at the shown
 //! revision; [`resolve::resolve`] refuses a selection first seen at an
-//! older revision.
+//! older revision, and REST items naming faces or edges are refused without
+//! the `revision` they were read at. Where RoboCAD's handler clears the
+//! selection, it is cleared once the edit succeeds (`sync::finish_edit`).
 mod args;
 mod catalogue;
 mod kinds;
@@ -239,7 +241,7 @@ pub(crate) fn param_value(param: &Param, input: &Value) -> Result<Value, String>
         Value::String(s) => s.clone(),
         Value::Number(n) => n.to_string(),
         Value::Bool(b) => b.to_string(),
-        Value::Array(a) if matches!(param.kind, FieldKind::Vector { .. }) => a.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "),
+        Value::Array(a) if matches!(param.kind, FieldKind::Vector { .. }) => a.iter().map(|x| x.as_str().map_or_else(|| x.to_string(), str::to_string)).collect::<Vec<_>>().join(", "),
         other if matches!(param.kind, FieldKind::Json) => other.to_string(),
         other => return Err(format!("{}: expected a value as its field takes it, got {other}", param.name)),
     };
@@ -255,36 +257,40 @@ pub(crate) fn param_value(param: &Param, input: &Value) -> Result<Value, String>
     })
 }
 
+/// Whether `p`'s `when` gate holds: the gating parameter's value, as its
+/// field reads it (`param_value`: the canonical option, so "Radial" reads
+/// as "radial"), is the gate's option. `input` gives a parameter's raw
+/// value. An unreadable gating value is its own error.
+fn gate(entry: &OpEntry, p: &Param, input: impl Fn(&Param) -> Value) -> Result<bool, String> {
+    let Some((on, want)) = p.when else { return Ok(true) };
+    let Some(q) = entry.params.iter().find(|q| q.name == on) else { return Ok(false) };
+    Ok(param_value(q, &input(q))?.as_str() == Some(want))
+}
+
 /// Every parameter's value: `given` (REST or the form) over the defaults.
-/// Unknown names are refused by name; a parameter whose `when` does not
-/// hold is left out, as is one with an empty default that was not given
-/// (an optional one, such as set pivot's `point`, which then comes from
-/// the cursor snap).
+/// Unknown names are refused by name, as is a given parameter whose `when`
+/// does not hold ("count applies only when kind is radial"); a parameter
+/// whose `when` does not hold is otherwise left out, as is one with an
+/// empty default that was not given (an optional one, such as set pivot's
+/// `point`, which then comes from the cursor snap).
 pub(crate) fn values(entry: &OpEntry, given: &Map<String, Value>) -> Result<Map<String, Value>, String> {
     if let Some(unknown) = given.keys().find(|k| !entry.params.iter().any(|p| p.name == k.as_str())) {
         let names: Vec<&str> = entry.params.iter().map(|p| p.name).collect();
         return Err(format!("{} takes no parameter {unknown} (its parameters: {})", entry.id, if names.is_empty() { "none".to_string() } else { names.join(", ") }));
     }
-    let text = |p: &Param| -> String {
-        match given.get(p.name) {
-            Some(Value::String(s)) => s.clone(),
-            Some(v) => v.to_string(),
-            None => p.default.to_string(),
-        }
-    };
+    let input = |q: &Param| given.get(q.name).cloned().unwrap_or_else(|| Value::String(q.default.to_string()));
     let mut out = Map::new();
     for p in entry.params {
-        if let Some((other, want)) = p.when {
-            let Some(q) = entry.params.iter().find(|q| q.name == other) else { continue };
-            if text(q) != want {
-                continue;
+        if !gate(entry, p, input)? {
+            if let (Some((on, want)), true) = (p.when, given.contains_key(p.name)) {
+                return Err(format!("{} applies only when {on} is {want}", p.name));
             }
+            continue;
         }
         if p.default.is_empty() && given.get(p.name).is_none_or(|v| v.as_str() == Some("")) {
             continue;
         }
-        let input = given.get(p.name).cloned().unwrap_or_else(|| Value::String(p.default.to_string()));
-        out.insert(p.name.to_string(), param_value(p, &input)?);
+        out.insert(p.name.to_string(), param_value(p, &input(p))?);
     }
     Ok(out)
 }
@@ -405,7 +411,7 @@ fn end_tool(call: &mut Call, cx: &mut Cx) {
 /// `CadRun`: refused by name with nothing sent, else one edit job (or a read).
 fn run(entry: &'static OpEntry, params: &Map<String, Value>, items: Option<&[SelectionItem]>, revision: Option<u64>, call: &mut Call, cx: &mut Cx) -> Outcome {
     match prepare(cx.doc, cx.topology.as_deref(), cx.view, entry, params, items, revision) {
-        Ok(built) => start(entry, built, call, cx.doc),
+        Ok(built) => start(entry, built, items.is_some(), call, cx.doc),
         Err(e) => Outcome::Done(Err(e)),
     }
 }
@@ -418,6 +424,15 @@ fn prepare(doc: &CadDocument, topology: Option<&CadTopology>, view: Option<&CadV
     if let Some(why) = doc.commit_refusal(revision) {
         return Err(why);
     }
+    // Explicit face and edge indices are RoboCAD's numbering at some
+    // revision: the caller names it, and `commit_refusal` checked it above.
+    if let Some(items) = items
+        && revision.is_none()
+        && resolve::reads_indices(entry.needs)
+        && items.iter().any(|i| i.1 == "face" || i.1 == "edge")
+    {
+        return Err("pass revision: the RoboCAD revision the face and edge indices in items were read at".into());
+    }
     let r = resolve::resolve(entry, doc, topology, view, items)?;
     let values = values(entry, params)?;
     args::build(entry, &r, &values, doc)
@@ -426,7 +441,8 @@ fn prepare(doc: &CadDocument, topology: Option<&CadTopology>, view: Option<&CadV
 /// Send what was built: the calls in order inside one edit job (RoboCAD's
 /// handler loop; each call its own RoboCAD undo step; the first error stops
 /// the rest and is reported verbatim with how many had run), a paste, or a read.
-fn start(entry: &'static OpEntry, built: Built, call: &mut Call, doc: &mut CadDocument) -> Outcome {
+/// `explicit`: the items were given (REST), not the selection.
+fn start(entry: &'static OpEntry, built: Built, explicit: bool, call: &mut Call, doc: &mut CadDocument) -> Outcome {
     let outcome = match built {
         Built::Edit { calls, label } => {
             let n = calls.len();
@@ -452,7 +468,10 @@ fn start(entry: &'static OpEntry, built: Built, call: &mut Call, doc: &mut CadDo
             c.paste(&clip).map(|p| EditDone { message: format!("Pasted {} item(s)", p.pasted.len()), result: value(&p) })
         }),
         Built::Read(read) => {
-            let revision = doc.shown_revision();
+            // The revision the picks were made at: the selection's (so
+            // `analysis_overlay::start` refuses picks from before an edit);
+            // explicit items were checked against `revision` by `prepare`.
+            let revision = if explicit { doc.shown_revision() } else { super::transform::selection_revision(doc) };
             return Outcome::Done(super::analysis_overlay::start(doc, read, revision));
         }
     };
@@ -462,13 +481,17 @@ fn start(entry: &'static OpEntry, built: Built, call: &mut Call, doc: &mut CadDo
     outcome
 }
 
-/// After an edit started: RoboCAD's handler clears the selection where it
-/// does; a form-flow operation's form closes (RoboCAD's dialog has
-/// returned); a pick or place tool keeps its form and stays active.
+/// After an edit started: where RoboCAD's handler clears the selection,
+/// the edit notes the selection now, and `sync::finish_edit` clears it once
+/// the edit succeeds (RoboCAD clears after its Ops call returns: a failed
+/// fillet keeps the picks); a form-flow operation's form closes (RoboCAD's
+/// dialog has returned); a pick or place tool keeps its form and stays active.
 fn started(doc: &mut CadDocument, entry: &OpEntry) {
     if entry.clears_selection && !doc.selection.is_empty() {
-        doc.selection.clear();
-        super::selection::publish(doc);
+        let selection = doc.selection.clone();
+        if let Some(edit) = doc.edit.as_mut() {
+            edit.clear_selection = Some(selection);
+        }
     }
     // A placed primitive is finished (RoboCAD's `commit` resets the stage).
     if matches!(entry.flow, Flow::Place(_)) {
@@ -494,7 +517,10 @@ fn submit(call: &mut Call, cx: &mut Cx) -> Outcome {
         cx.doc.ops.form = None;
         return Outcome::Done(Err(unknown(form.op)));
     };
-    let params: Map<String, Value> = entry.params.iter().zip(&form.texts).map(|(p, t)| (p.name.to_string(), Value::String(t.clone()))).collect();
+    // Only the shown fields are sent: a hidden one (its `when` does not
+    // hold) would be refused as not applying.
+    let text_of = |q: &Param| Value::String(entry.params.iter().position(|x| x.name == q.name).and_then(|i| form.texts.get(i)).cloned().unwrap_or_default());
+    let params: Map<String, Value> = entry.params.iter().zip(&form.texts).filter(|(p, _)| gate(entry, p, text_of).unwrap_or(true)).map(|(p, t)| (p.name.to_string(), Value::String(t.clone()))).collect();
     let revision = if entry.flow == Flow::Form { Some(form.began) } else { None };
     let outcome = run(entry, &params, None, revision, call, cx);
     if let Outcome::Done(Err(e)) = &outcome {
@@ -538,7 +564,7 @@ fn form_set(doc: &mut CadDocument, name: &str, value: &Value) -> Result<Value, S
         };
         let text = match value {
             Value::String(s) => s.clone(),
-            Value::Array(a) => a.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "),
+            Value::Array(a) => a.iter().map(|x| x.as_str().map_or_else(|| x.to_string(), str::to_string)).collect::<Vec<_>>().join(", "),
             other => other.to_string(),
         };
         form.texts.resize(entry.params.len(), String::new());
@@ -552,8 +578,9 @@ fn form_set(doc: &mut CadDocument, name: &str, value: &Value) -> Result<Value, S
     Ok(form_json(doc))
 }
 
-/// `CadFormCancel` (Cancel, Escape): close the form and end its interaction.
-fn form_cancel(doc: &mut CadDocument) -> Value {
+/// `CadFormCancel` (Cancel, Escape): close the form and end its
+/// interaction (also transform's `CadCancel` while a pick or place op is active).
+pub(in crate::cad) fn form_cancel(doc: &mut CadDocument) -> Value {
     let form = doc.ops.form.take().map(|f| f.op);
     let active = doc.ops.active.take();
     let place = doc.ops.place.take().is_some();
@@ -570,14 +597,15 @@ fn form_cancel(doc: &mut CadDocument) -> Value {
 fn form_json(doc: &CadDocument) -> Value {
     let Some(form) = &doc.ops.form else { return Value::Null };
     let Some(entry) = entry(form.op) else { return Value::Null };
-    let text_of = |name: &str| entry.params.iter().position(|p| p.name == name).and_then(|i| form.texts.get(i)).map(String::as_str);
+    let text_of = |q: &Param| Value::String(entry.params.iter().position(|x| x.name == q.name).and_then(|i| form.texts.get(i)).cloned().unwrap_or_default());
     let fields: Vec<Value> = entry
         .params
         .iter()
         .enumerate()
         .map(|(i, p)| {
             let text = form.texts.get(i).map_or("", String::as_str);
-            let shown = p.when.is_none_or(|(on, is)| text_of(on) == Some(is));
+            // Compared as the gating field reads (its canonical option).
+            let shown = gate(entry, p, text_of).unwrap_or(false);
             let evaluation = if !shown {
                 Value::Null
             } else if text.is_empty() && p.default.is_empty() {

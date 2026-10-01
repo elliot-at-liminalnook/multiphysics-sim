@@ -23,9 +23,11 @@
 //! - `NumericEntry`: RoboCAD's "Numeric entry (Tab)": the first field of the
 //!   open form, else of the numeric bar, takes the keyboard.
 //! - `Later(epic)`: owned by a later CAD epic; refused by name.
-//! - `GuiOnly`: runs only in RoboCAD's desktop window (`POST
-//!   /commands/{id}` when it serves the document); refused headless.
 //! - `Different(reason)`: deliberately not ported (the ledger's reason).
+//!
+//! No command is GUI-only: the ledger's only `POST /commands/{id}`-only
+//! commands (Blender live link, web share) belong to cad-views-export, and
+//! `api.address`, `help.guide` and `help.logs` are deliberately different.
 use super::Surface;
 use crate::app::actions::Call;
 use crate::cad::actions::{CadAction, Cx};
@@ -92,7 +94,6 @@ pub(crate) enum Native {
     Surface(Opens),
     NumericEntry,
     Later(&'static str),
-    GuiOnly,
     Different(&'static str),
 }
 
@@ -323,12 +324,12 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("sim.export_physical", "Simulation: export physical model (simrobot v4, with flexible links)…", "Simulation", &[], false, Native::Later("cad-physical-inspect")),
     c("sim.export", "Simulation: export robot model…", "Simulation", &[], false, Native::Later("cad-physical-inspect")),
     c("sim.link", "Simulation: live link (watch + run viewer)", "Simulation", &[], false, Native::Later("cad-physical-inspect")),
-    c("api.address", "REST API: show address", "Bridge", &[], false, Native::GuiOnly),
+    c("api.address", "REST API: show address", "Bridge", &[], false, Native::Different("the header always shows the service URL, so no dialog is needed")),
     c("group.set_active", "Set selected group as active", "Outliner", &[], false, Native::Later("cad-organize")),
     c("group.group", "Group selection", "Outliner", &[], false, Native::Later("cad-organize")),
     c("numeric.entry", "Numeric entry (Tab)", "General", &["Tab"], true, Native::NumericEntry),
-    c("help.guide", "User guide", "Help", &[], false, Native::GuiOnly),
-    c("help.logs", "Open diagnostics folder", "Help", &[], false, Native::GuiOnly),
+    c("help.guide", "User guide", "Help", &[], false, Native::Different("RoboCAD shows only a path; the viewer's docs live in the repository")),
+    c("help.logs", "Open diagnostics folder", "Help", &[], false, Native::Different("the viewer reports the log of the service it started; RoboCAD's own session logs stay in RoboCAD")),
 ];
 
 /// The command with RoboCAD id `id`.
@@ -344,7 +345,6 @@ pub(crate) enum Resolved {
     Surface(Opens),
     NumericEntry,
     Later(&'static str),
-    GuiOnly,
     Different(&'static str),
 }
 
@@ -360,7 +360,6 @@ pub(crate) fn resolve(cmd: &Command) -> Resolved {
         Native::Surface(o) => Resolved::Surface(o),
         Native::NumericEntry => Resolved::NumericEntry,
         Native::Later(epic) => Resolved::Later(epic),
-        Native::GuiOnly => Resolved::GuiOnly,
         Native::Different(why) => Resolved::Different(why),
     }
 }
@@ -370,22 +369,16 @@ pub(crate) fn later(cmd: &Command, epic: &str) -> String {
     format!("{} belongs to the {epic} epic; not in the native viewer yet", cmd.label)
 }
 
-/// A GUI-only command's refusal without RoboCAD's desktop window.
-pub(crate) fn gui_only(cmd: &Command) -> String {
-    format!("{} is GUI-only: it runs in RoboCAD's desktop window", cmd.label)
-}
-
 /// RoboCAD's desktop window serves the document (its `/commands` work).
 pub(crate) fn gui(doc: &CadDocument) -> bool {
     doc.health.as_ref().is_some_and(|h| h.gui)
 }
 
 /// The palette's note for a command that does not run natively: the owning
-/// epic, "GUI-only" or "not ported"; empty for a native one.
+/// epic or "not ported"; empty for a native one.
 pub(crate) fn note(cmd: &Command) -> String {
     match resolve(cmd) {
         Resolved::Later(epic) => epic.to_string(),
-        Resolved::GuiOnly => "GUI-only".to_string(),
         Resolved::Different(_) => "not ported".to_string(),
         _ => String::new(),
     }
@@ -428,16 +421,17 @@ pub(crate) fn readiness(entry: &OpEntry, doc: &CadDocument) -> Result<(), String
 
 /// Whether `cmd` can run now, else why not. `own` is the panel's own
 /// controls (`panel::own_controls`): an action command is ready exactly
-/// when its button is.
+/// when its button is. A catalogue operation first needs an edit to be
+/// sendable (`CadDocument::edit_refusal`, as `cad:delete`), then its
+/// selection ([`readiness`]).
 pub(crate) fn ready(cmd: &Command, doc: &CadDocument, own: &[Control]) -> Result<(), String> {
     match resolve(cmd) {
-        Resolved::Op(entry) => readiness(entry, doc),
+        // As every edit: nothing runs while one is in flight or unconnected.
+        Resolved::Op(entry) => doc.edit_refusal().map_or_else(|| readiness(entry, doc), Err),
         Resolved::Action(action) => own.iter().find(|c| c.action == action).map_or(Ok(()), |c| c.ready.clone()),
         Resolved::Surface(_) => Ok(()),
         Resolved::NumericEntry => numeric_entry_ready(doc),
         Resolved::Later(epic) => Err(later(cmd, epic)),
-        Resolved::GuiOnly if gui(doc) => doc.edit_refusal().map_or(Ok(()), Err),
-        Resolved::GuiOnly => Err(gui_only(cmd)),
         Resolved::Different(why) => Err(format!("{} is not ported: {why}", cmd.label)),
     }
 }
@@ -481,8 +475,6 @@ pub(in crate::cad) fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome 
         Resolved::Surface(o) => super::handle(&CadAction::CadSurface { surface: o.surface(None) }, call, cx),
         Resolved::NumericEntry => Outcome::Done(numeric_entry(cx.doc)),
         Resolved::Later(epic) => Outcome::Done(Err(later(cmd, epic))),
-        Resolved::GuiOnly if gui(cx.doc) => crate::cad::actions::handle(&CadAction::CadCommand { id: id.to_string() }, call, cx),
-        Resolved::GuiOnly => Outcome::Done(Err(gui_only(cmd))),
         Resolved::Different(why) => Outcome::Done(Err(format!("{} is not ported: {why}", cmd.label))),
     }
 }

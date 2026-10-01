@@ -5,6 +5,7 @@
 use super::args::{Built, build, edge_ref};
 use super::resolve::{Resolved, resolve};
 use super::*;
+use crate::cad::analysis_overlay::Read;
 use crate::cad::document::{CadTarget, Connection, Edit};
 use crate::cad::transform::face_ref;
 use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary};
@@ -298,7 +299,7 @@ fn runs_are_refused_in_flight_stale_or_with_unknown_parameters() {
     let items = [item("b1", "body", 0), item("b2", "body", 0)];
     let union = op("modify.union");
     assert!(prepare(&doc, None, None, union, &Map::new(), Some(&items), Some(4)).is_ok());
-    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now() });
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None });
     let err = prepare(&doc, None, None, union, &Map::new(), Some(&items), None).unwrap_err();
     assert!(err.contains("in flight") && err.contains("Patch Bracket"), "{err}");
     doc.edit = None;
@@ -306,11 +307,113 @@ fn runs_are_refused_in_flight_stale_or_with_unknown_parameters() {
     assert!(err.contains("revision 3") && err.contains("nothing was sent"), "{err}");
     let fillet = op("tool.fillet");
     let edges = [item("b1", "edge", 0)];
-    let err = prepare(&doc, None, None, fillet, &given(&[("bogus", json!(1))]), Some(&edges), None).unwrap_err();
+    let err = prepare(&doc, None, None, fillet, &given(&[("bogus", json!(1))]), Some(&edges), Some(4)).unwrap_err();
     assert!(err.contains("takes no parameter bogus"), "{err}");
     let err = prepare(&doc, None, None, op("edit.paste"), &Map::new(), None, None).unwrap_err();
     assert_eq!(err, op("edit.paste").refusal);
     // A required parameter with no default is named.
-    let r = prepare(&doc, None, None, op("ops.set_radius"), &Map::new(), Some(&[item("b1", "face", 1)]), None).unwrap_err();
+    let r = prepare(&doc, None, None, op("ops.set_radius"), &Map::new(), Some(&[item("b1", "face", 1)]), Some(4)).unwrap_err();
     assert!(r.contains("radius") && r.contains("required"), "{r}");
+}
+
+#[test]
+fn explicit_face_and_edge_items_need_their_revision() {
+    let doc = document();
+    let faces = [item("b1", "face", 2)];
+    let points = op("tool.control_points");
+    let err = prepare(&doc, None, None, points, &Map::new(), Some(&faces), None).unwrap_err();
+    assert_eq!(err, "pass revision: the RoboCAD revision the face and edge indices in items were read at");
+    assert_eq!(prepare(&doc, None, None, points, &Map::new(), Some(&faces), Some(4)), Ok(Built::Read(Read::ControlPoints { node: "b1".into(), face: 2 })));
+    let err = prepare(&doc, None, None, points, &Map::new(), Some(&faces), Some(3)).unwrap_err();
+    assert!(err.contains("revision 3") && err.contains("nothing was sent") && err.contains("the form"), "{err}");
+    let edges = [item("b1", "edge", 0)];
+    assert!(prepare(&doc, None, None, op("tool.fillet"), &Map::new(), Some(&edges), None).unwrap_err().starts_with("pass revision"));
+    // Body items name no indices; the selection carries its own revision.
+    assert!(prepare(&doc, None, None, op("modify.union"), &Map::new(), Some(&[item("b1", "body", 0), item("b2", "body", 0)]), None).is_ok());
+}
+
+#[test]
+fn when_gates_read_the_canonical_option_and_refuse_what_does_not_apply() {
+    let array = op("tool.array");
+    let v = values(array, &given(&[("kind", json!("Radial"))])).unwrap();
+    assert_eq!(v.get("kind"), Some(&json!("radial")));
+    assert_eq!(v.get("count"), Some(&json!(6)), "the radial rows hold for \"Radial\"");
+    assert!(!v.contains_key("count_x"));
+    let err = values(array, &given(&[("count", json!(4))])).unwrap_err();
+    assert_eq!(err, "count applies only when kind is radial");
+    let err = values(array, &given(&[("kind", json!("radial")), ("count_x", json!(2))])).unwrap_err();
+    assert_eq!(err, "count_x applies only when kind is rectangular");
+    // The form shows the radial rows for "Radial".
+    let mut doc = document();
+    open_form(&mut doc, array);
+    form_set(&mut doc, "kind", &json!("Radial")).unwrap();
+    let form = form_json(&doc);
+    let shown = |name: &str| form["fields"].as_array().unwrap().iter().find(|f| f["name"] == name).map(|f| f["shown"].clone());
+    assert_eq!(shown("count"), Some(json!(true)));
+    assert_eq!(shown("count_x"), Some(json!(false)));
+}
+
+#[test]
+fn form_set_joins_string_arrays_without_quotes() {
+    let mut doc = document();
+    open_form(&mut doc, op("tool.box"));
+    form_set(&mut doc, "corner", &json!(["1 mm", "2", 3])).unwrap();
+    let texts = &doc.ops.form.as_ref().unwrap().texts;
+    let i = op("tool.box").params.iter().position(|p| p.name == "corner").unwrap();
+    assert_eq!(texts[i], "1 mm, 2, 3");
+    assert_eq!(param_value(&op("tool.box").params[i], &json!(["1 mm", "2", 3])), Ok(json!([1.0, 2.0, 3.0])));
+}
+
+#[test]
+fn an_operation_that_needs_nothing_names_no_selected_node() {
+    let doc = document();
+    let r = Resolved { nodes: vec!["b1".into()], ..Default::default() };
+    let boxed = op("ops.box");
+    let c = calls(build(boxed, &r, &values(boxed, &Map::new()).unwrap(), &doc).unwrap());
+    assert!(!c[0].label.contains("Bracket"), "{}", c[0].label);
+    assert!(c[0].label.starts_with("Box"), "{}", c[0].label);
+}
+
+#[test]
+fn primitive_anchors_are_projected_onto_the_plane_and_come_last() {
+    let doc = document();
+    let r = Resolved::default();
+    let boxed = op("tool.box");
+    let c = calls(build(boxed, &r, &values(boxed, &given(&[("corner", json!([1, 2, 5]))])).unwrap(), &doc).unwrap());
+    assert_eq!(c[0].args, vec![json!([1.0, 2.0, 0.0]), json!([20.0, 20.0, 10.0])]);
+    let c = calls(build(boxed, &r, &values(boxed, &given(&[("corner", json!([1, 2, 5])), ("height", json!(-4))])).unwrap(), &doc).unwrap());
+    assert_eq!(c[0].args[0], json!([1.0, 2.0, -4.0]), "a negative height extrudes down from the plane");
+    let centre = op("tool.box_center");
+    let c = calls(build(centre, &r, &values(centre, &given(&[("center", json!([10, 10, 7]))])).unwrap(), &doc).unwrap());
+    assert_eq!(c[0].args[0], json!([0.0, 0.0, 0.0]));
+    let cylinder = op("tool.cylinder");
+    let c = calls(build(cylinder, &r, &values(cylinder, &given(&[("base", json!([1, 2, 5]))])).unwrap(), &doc).unwrap());
+    assert_eq!(c[0].args[0], json!([1.0, 2.0, 0.0]));
+    let sphere = op("tool.sphere");
+    let c = calls(build(sphere, &r, &values(sphere, &given(&[("center", json!([1, 2, 5]))])).unwrap(), &doc).unwrap());
+    assert_eq!(c[0].args[0], json!([1.0, 2.0, 5.0]), "the sphere keeps its centre");
+    // The sizes come first (RoboCAD's NumericField order), the anchor last.
+    for (id, first) in [("tool.box", "width"), ("tool.box_center", "width"), ("tool.cylinder", "diameter"), ("tool.sphere", "diameter")] {
+        let params = op(id).params;
+        assert_eq!(params.first().map(|p| p.name), Some(first), "{id}");
+        assert!(matches!(params.last().map(|p| p.name), Some("corner" | "center" | "base")), "{id}");
+    }
+}
+
+#[test]
+fn comb_and_continuity_read_the_last_node_with_a_body() {
+    let mut doc = document();
+    if let Some(d) = doc.doc.as_mut() {
+        d.nodes.push(node("k1", "sketch", "Sketch"));
+    }
+    let comb = op("inspect.curvature");
+    let r = Resolved { nodes: vec!["c1".into(), "k1".into()], ..Default::default() };
+    assert_eq!(build(comb, &r, &Map::new(), &doc), Ok(Built::Read(Read::CurvatureComb { node: "c1".into() })), "a sketch has no body: skipped");
+    let r = Resolved { nodes: vec!["k1".into()], ..Default::default() };
+    assert!(build(comb, &r, &Map::new(), &doc).unwrap_err().starts_with("Select a curve"));
+    let continuity = op("inspect.continuity");
+    let r = Resolved { nodes: vec!["b1".into(), "k1".into()], ..Default::default() };
+    assert_eq!(build(continuity, &r, &Map::new(), &doc), Ok(Built::Read(Read::Continuity { node: "b1".into() })));
+    let r = Resolved { nodes: vec!["k1".into()], ..Default::default() };
+    assert!(build(continuity, &r, &Map::new(), &doc).unwrap_err().starts_with("Select a body"));
 }

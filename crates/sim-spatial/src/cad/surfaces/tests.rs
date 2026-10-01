@@ -121,12 +121,12 @@ fn readiness_refuses_with_the_entrys_refusal() {
             assert_eq!(r, Err(e.refusal.to_string()), "{}", e.id);
         }
     }
-    // Later epics and GUI-only commands refuse by name.
+    // Later epics and deliberately different commands refuse by name.
     let own = own_controls(&doc);
     let front = registry::command("view.front").unwrap();
     assert_eq!(registry::ready(front, &doc, &own), Err("View front belongs to the cad-views-export epic; not in the native viewer yet".to_string()));
     let guide = registry::command("help.guide").unwrap();
-    assert_eq!(registry::ready(guide, &doc, &own), Err("User guide is GUI-only: it runs in RoboCAD's desktop window".to_string()));
+    assert_eq!(registry::ready(guide, &doc, &own), Err("User guide is not ported: RoboCAD shows only a path; the viewer's docs live in the repository".to_string()));
     // An action command is ready as its button: nothing to redo.
     assert!(registry::ready(registry::command("edit.redo").unwrap(), &doc, &own).is_err());
     assert!(registry::ready(registry::command("edit.undo").unwrap(), &doc, &own).is_ok());
@@ -170,7 +170,7 @@ fn the_palette_shows_robocads_key_conflict() {
     let motor = list.iter().position(|e| e.id == "robot.add_motor").unwrap();
     assert_eq!(conflicts(&list).get("ctrl+shift+m"), Some(&vec![same, motor]));
     assert_eq!(list[motor].note, "cad-physical-inspect");
-    assert_eq!(list.iter().find(|e| e.id == "help.guide").unwrap().note, "GUI-only");
+    assert_eq!(list.iter().find(|e| e.id == "help.guide").unwrap().note, "not ported");
 }
 
 #[test]

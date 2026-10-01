@@ -21,15 +21,13 @@ use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
 
-/// How a number is read: a length (bare numbers mm), an angle (degrees),
-/// a whole count, or a plain factor (RoboCAD's `NumericField(angle=)`
-/// and `QSpinBox`).
+/// How a number is read: a length (bare numbers mm), an angle (degrees)
+/// or a whole count (RoboCAD's `NumericField(angle=)` and `QSpinBox`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Unit {
     Length,
     Angle,
     Count,
-    Factor,
 }
 
 /// A field's kind, with RoboCAD's range where its dialog sets one.
@@ -64,7 +62,7 @@ pub(crate) fn evaluate(kind: &FieldKind, text: &str) -> Result<FieldValue, Strin
         FieldKind::Number { unit, min, max, .. } => {
             let v = number(unit, text)?;
             match (min, max) {
-                (Some(lo), Some(hi)) if v < lo || v > hi => Err(format!("{v} is outside {lo}\u{2026}{hi}")),
+                (Some(lo), Some(hi)) if !(lo..=hi).contains(&v) => Err(format!("{v} is outside {lo}\u{2026}{hi}")),
                 (Some(lo), None) if v < lo => Err(format!("{v} is below the minimum {lo}")),
                 (None, Some(hi)) if v > hi => Err(format!("{v} is above the maximum {hi}")),
                 _ => Ok(FieldValue::Number(v)),
@@ -102,7 +100,7 @@ fn number(unit: Unit, text: &str) -> Result<f64, String> {
     let v = match unit {
         Unit::Length => sim_runtime::units::evaluate(text, false, Some("mm")),
         Unit::Angle => sim_runtime::units::evaluate(text, true, None),
-        Unit::Count | Unit::Factor => sim_runtime::units::evaluate(text, false, None),
+        Unit::Count => sim_runtime::units::evaluate(text, false, None),
     }
     .map_err(|e| e.to_string())?;
     if unit == Unit::Count && v.fract() != 0.0 {
@@ -117,12 +115,6 @@ fn show(unit: Unit, v: f64) -> String {
         Unit::Length => sim_runtime::units::format_length(v, "mm", 3),
         Unit::Angle => sim_runtime::units::format_angle(v, 2),
         Unit::Count => format!("{v}"),
-        Unit::Factor => {
-            // At most six decimals, trailing zeros dropped.
-            let s = format!("{v:.6}");
-            let s = s.trim_end_matches('0').trim_end_matches('.');
-            if s.is_empty() || s == "-0" { "0".to_string() } else { s.to_string() }
-        }
     }
 }
 
@@ -167,9 +159,11 @@ pub(crate) struct TextDraft {
     pub select_all: bool,
 }
 impl TextDraft {
-    /// Apply one pressed key (`chord`: Control/Command held, so characters are not typed).
+    /// Apply one pressed key (`chord`: Control/Command held, so characters
+    /// are not typed). `Edited` when the text or the selection changed (typing
+    /// the selected text's own character over it still clears the selection).
     pub(crate) fn key(&mut self, key: &Key, chord: bool) -> DraftKey {
-        let before = self.text.clone();
+        let (text, select_all) = (self.text.clone(), self.select_all);
         match key {
             Key::Enter => return DraftKey::Enter,
             Key::Escape => return DraftKey::Escape,
@@ -186,7 +180,7 @@ impl TextDraft {
             Key::Character(c) if !chord && !c.chars().any(char::is_control) => self.type_text(c.as_str()),
             _ => {}
         }
-        if self.text != before { DraftKey::Edited } else { DraftKey::Ignored }
+        if self.text != text || self.select_all != select_all { DraftKey::Edited } else { DraftKey::Ignored }
     }
 
     /// Type `text` (replacing a selected text), as `cad::numeric`'s `type_text`.
@@ -249,7 +243,7 @@ impl Kit<'_> {
             FieldKind::Check => {
                 // RoboCAD's checkbox carries its own label ("As live instances").
                 cell.spawn(Node { flex_shrink: 0.0, ..default() }).with_children(|line| {
-                    line.spawn(self.chip(row.label, hit(FormHit::Check(i)), row.text == "true", true));
+                    line.spawn(self.chip(row.label, hit(FormHit::Check(i)), evaluate(&row.kind, row.text) == Ok(FieldValue::Check(true)), true));
                 });
             }
             FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json => {

@@ -42,7 +42,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument) -> Value {
         "clipboard".into(),
         ops.clipboard.as_ref().map_or(Value::Null, |(revision, clip)| json!({"revision": revision, "items": clip.get("items").and_then(Value::as_array).map_or(0, Vec::len)})),
     );
-    out.insert("analysis".into(), super::analysis_overlay::state_json(&ops.analysis));
+    out.insert("analysis".into(), crate::cad::analysis_overlay::state_json(&ops.analysis));
     out.insert("catalogue".into(), catalogue_json().clone());
     Value::Object(out)
 }

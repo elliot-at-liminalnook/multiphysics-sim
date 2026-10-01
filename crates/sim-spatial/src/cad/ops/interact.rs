@@ -14,3 +14,8 @@ pub struct Place {
     pub p1: [f64; 3],
     pub height: f64,
 }
+
+/// The interactions' systems.
+pub(in crate::cad) fn build(app: &mut bevy::prelude::App) {
+    let _ = app;
+}

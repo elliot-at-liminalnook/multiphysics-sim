@@ -59,3 +59,17 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     let _ = (action, call, cx);
     todo!("surfaces::handle")
 }
+
+/// `CadInvoke` of a RoboCAD command id that is not a catalogue operation
+/// (`registry`): its native CAD action (undo, fit, a selection mode, …),
+/// RoboCAD's `POST /commands/{id}` when its desktop window serves the
+/// document, or a refusal naming the epic that owns it or "GUI-only".
+pub(super) fn invoke_command(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome {
+    let _ = (id, call, cx);
+    todo!("surfaces::invoke_command")
+}
+
+/// CAD mode's surfaces' systems (Input keys, Present drawing).
+pub(super) fn build(app: &mut bevy::prelude::App) {
+    let _ = app;
+}

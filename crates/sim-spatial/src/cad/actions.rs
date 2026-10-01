@@ -285,6 +285,7 @@ impl actions::Action for CadAction {
         &[
             "cad:undo", "cad:redo", "cad:save", "cad:refresh", "cad:fit", "cad:physical", "cad:delete", "cad:node:<id>", "cad:visible:<id>", "cad:locked:<id>", "cad:disabled:<id>", "cad:material:<id>:<mat>", "cad:command:<id>",
             "cad:mode:<mode>", "cad:select_all", "cad:invert_selection", "cad:select_same_material", "cad:edges_to_faces", "cad:candidate:<n>", "cad:tool:<tool>", "cad:cancel",
+            "cad:op:<id>", "cad:surface:<kind>", "cad:menu:<category>", "cad:form:ok", "cad:form:cancel", "cad:form:set:<name>:<value>",
         ]
     }
 }

@@ -588,7 +588,7 @@ class Runner:
         before an epic is marked complete, the worker's next turn is a pass that
         builds everything, hunts bugs and fixes them; the orchestrator's own
         assignment waits until that pass is accepted."""
-        every = self.config.get("verify_every_commits", 20)
+        every = self.config.get("verify_every_commits", 0)  # off: verification is by reading
         if not every:
             return plan
         count = self.unverified_commits()
@@ -1043,7 +1043,7 @@ def initialize(args):
     config = {"repo": str(repo), "worktree": str(repo), "in_place": True, "source_head": head,
               "baseline": baseline, "baseline_ref": ref, "branch": None if branch == "HEAD" else branch,
               "claude": claude, "model": args.model, "audit_only": args.audit_only,
-              "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": False,
+              "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": False, "verify_every_commits": 0,
               "fast_roles": list(args.fast_roles if getattr(args, "fast_roles", None) is not None else ["worker"])}
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
         config[name] = getattr(args, name, None)

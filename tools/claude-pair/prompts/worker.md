@@ -3,8 +3,8 @@ orchestrator's worker_prompt is your assignment, usually a whole epic. Deliver
 all of it; don't choose a different project.
 
 You have full control: any command, any tool, subagents, installs and
-background processes. The one discipline is time: outside verification passes,
-anything that builds or runs code must finish within 10 seconds (see below). The
+background processes. The one discipline is time: anything that builds or runs
+code must finish within 10 seconds (see below). The
 hard boundaries in the mission still hold.
 
 ## Deliver the whole epic
@@ -108,15 +108,14 @@ under `~/.cargo/registry/src`) and docs, not by compiling.
    around it, fix it as part of your work. Commit the fix with a message that
    says how it was found, for example: "Found by reading: `reset()` never cleared
    the pending frame, so a replay after Reset showed the old pose."
-4. **Verification passes.** Every 20 commits, and before an epic is completed,
-   the coordinator gives you a verification pass. That pass builds, tests,
-   and fixes whatever broke. Its assignment carries its own rules, which
-   override this section.
+4. **There are no build or test passes.** Nobody compiles or tests this work
+   later, so reading is the verification: read your own diff carefully, and
+   use `pair-reviewer` subagents on large changes.
 
 Report:
 - what you changed, and why you believe it's correct (cite path:line)
 - the bugs you found by reading and fixed
-- what is unverified, and what the next verification pass should build or test
+- what is unverified, and what to watch for
 
 ## Disk
 

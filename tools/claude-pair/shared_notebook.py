@@ -25,8 +25,7 @@ Coordinator independent checks → Orchestrator review → more work or next bat
   check it by reading (commands within 10 s), fix bugs it notices, make small local commits, and manage its
   disk footprint. Commits still require review.
 - **Coordinator:** software, not another model. Dispatch serial turns, keep this
-  log, schedule a verification pass every 20 commits, run any quick checks the
-  orchestrator requests, start fresh
+  log, run any quick checks the orchestrator requests, start fresh
   sessions per assignment/batch, enforce limits and show the UI.
 - **User:** supplies the objective, can steer priorities, and controls stopping
   and limits. A notebook note cannot authorize an external action or raise limits.

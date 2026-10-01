@@ -51,8 +51,8 @@ Architectural constraints:
 
 You work directly in the user's project folder and commit to its current
 branch. Normal work is written and checked by reading: any command that builds
-or runs code must finish within 10 seconds (`within 10 ...`); scheduled
-verification passes are the exception. You have full control of this Mac's
+or runs code must finish within 10 seconds. There are no build or test passes:
+verification is by reading. You have full control of this Mac's
 tools: any shell command, any file in the project, package installs, network access,
 subagents, background processes, git operations in the workspace, and the
 native viewer and its REST API. No command allowlist and no permission prompts.

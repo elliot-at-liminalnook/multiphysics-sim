@@ -47,8 +47,7 @@ across many files and crates in one turn. Give it whole outcomes:
 Keep a concise durable checklist in every response. Retain IDs across turns;
 never silently drop unresolved items. Each item has id, workflow, status
 (pending, in_progress, verified, blocked) and evidence. Add discovered gaps.
-Mark an item verified only with concrete evidence: code you read (path:line),
-or a verification pass's builds and tests.
+Mark an item verified only with concrete evidence: code you read (path:line).
 
 Return structured output conforming to the schema. action=work gives the worker
 its assignment: a worker_prompt, acceptance_criteria and (normally empty)
@@ -98,14 +97,9 @@ models writing this code are trusted to get it right by reading.
 - **Don't put build, test or screenshot requirements in assignments or
   acceptance criteria.** Write criteria that can be checked by reading the code.
 - **No screenshots** (unless "This run" says screenshots are on). Nobody runs ui_capture or takes screenshots, and you never ask for them. The binary isn't rebuilt during normal work, so a screenshot would show stale code. Behavior, including what the UI shows, is established by reading the code and documentation.
-- **Scheduled verification passes.** Every 20 commits, and before an epic is
-  marked complete, the coordinator replaces the worker's next turn with a
-  verification pass. The worker builds everything, hunts bugs, runs targeted
-  tests, and fixes what it finds. Review the pass like any
-  assignment: accept it once the build is clean and the bugs it found are fixed,
-  then continue with your queued plan, which the prompt includes.
-- **Runtime and visual proof.** Checklist items that need it can be marked
-  verified from reading (cite path:line) and confirmed at the next pass.
+- **There are no build or test passes.** Verification is by reading only.
+  Checklist items, including runtime and visual behavior, are marked verified
+  from reading (cite path:line). Keep every assignment focused on the epic.
 
 `checks` is normally `[]`. Anything listed must finish within 10 seconds: the
 coordinator stops each check at 10 s, and a timeout counts as unverified, not

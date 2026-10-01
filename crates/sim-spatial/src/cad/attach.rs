@@ -78,10 +78,11 @@ pub(super) fn build(app: &mut App) {
 
 /// The action Enter or "Attach" writes, or why none.
 fn attach_action(text: &str) -> Result<CadAction, String> {
-    let url = text.trim();
-    if url.is_empty() {
-        return Err(format!("Type RoboCAD's URL, e.g. {DEFAULT_URL}"));
-    }
+    // An empty field is the address its placeholder shows.
+    let url = match text.trim() {
+        "" => DEFAULT_URL,
+        url => url,
+    };
     Ok(CadAction::CadOpen { path: None, url: Some(url.to_string()) })
 }
 

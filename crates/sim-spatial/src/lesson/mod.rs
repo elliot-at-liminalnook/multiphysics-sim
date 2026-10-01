@@ -16,8 +16,6 @@
 use crate::app::actions::Act;
 use crate::builder::Builder;
 use crate::{Orbit, SpatialScene};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use sim_annotate::{Comment, Thread, ThreadCommand, ThreadDocument};
 use sim_lesson::edit::{Edit, LessonStore};
@@ -639,6 +637,7 @@ impl Plugin for LearnPlugin {
     fn build(&self, app: &mut App) {
         let open = || in_state(crate::app::ModeScope::Builder).and_then(resource_exists::<Learn>);
         crate::app::actions::register::<actions::LessonCommand>(app);
+        actions::add_fields(app);
         // Keys, buttons, the timebars and slider releases write lesson actions;
         // the one handler applies them and REST's (in build and lessons:
         // without a lesson, REST is told so).
@@ -655,6 +654,8 @@ impl Plugin for LearnPlugin {
                 .run_if(open()),
         );
         app.add_systems(Update, (extras::live_equations, extras::track_blocks, apply_settings, frames::step).after(ui::rebuild).in_set(crate::app::ViewerSet::SimSync).run_if(open()));
+        // A lesson draft's kit field follows the draft (after this frame's actions opened or closed it).
+        app.add_systems(Update, actions::sync_field.in_set(crate::app::ViewerSet::SimSync).run_if(open()));
         // The page's pick follows the shared selection (Lessons only: in Build
         // the builder shows it).
         app.add_systems(Update, selection::follow.before(playback).in_set(crate::app::ViewerSet::SimSync).run_if(in_state(crate::app::ViewerMode::Lessons).and(resource_exists::<Learn>)));

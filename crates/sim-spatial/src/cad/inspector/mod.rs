@@ -40,10 +40,9 @@ mod rows;
 mod sections;
 
 pub use editors::EditDraft;
-/// The editors' typing system (for other Input systems' ordering).
-pub(super) use editors::entry as editor_entry;
-/// The physical rows' typing system (for other Input systems' ordering).
-pub(super) use entry::entry as physical_entry;
+pub(super) use editors::EDITOR;
+/// The editors' typing system.
+use editors::entry as editor_entry;
 pub(super) use node::{inspector, inspector_key, name, name_key};
 pub(crate) use physical_edit::{CoreParts, InspectorArgs, PhysicalEdit, py_g};
 pub(super) use physical_edit::{build_physical, handle_physical, physical_controls, physical_specs, physical_state_json};
@@ -57,16 +56,13 @@ use bevy::prelude::*;
 use serde_json::Value;
 use sim_runtime::cad_client::NodeSummary;
 
-/// The editors' typing (Input): after the name field (it resets
-/// `CadInputFocus` when it has no draft) and before the numeric bar and
-/// the CAD keys (they honour the focus the editors set).
+/// The editors' field and their typing (Input).
 pub(super) fn build(app: &mut App) {
-    app.add_systems(
+    use crate::ui_kit::text::TextFieldApp;
+    app.add_text_field(editors::EDITOR, editors::editor_field()).add_systems(
         Update,
         editor_entry
             .after(crate::app::actions::serve)
-            .after(super::panel::name_entry)
-            .before(super::numeric::entry)
             .before(super::keys::keys)
             .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),

@@ -64,7 +64,7 @@
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus, CadTool};
+use crate::cad::document::{CadDocument, CadTool};
 use crate::cad::ops::{Built, Env, Flow, OpEntry, Resolved, entry, history};
 use crate::cad::sketch::{CadActivePlane, CadSketches};
 use crate::cad::topology::CadTopology;
@@ -336,7 +336,7 @@ fn pointer(
     view: Option<Res<CadView>>,
     sketches: Option<Res<CadSketches>>,
     plane: Option<Res<CadActivePlane>>,
-    focus: Option<Res<CadInputFocus>>,
+    keyboard: crate::cad::keys::Held,
     windows: Query<&Window, With<PrimaryWindow>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
@@ -390,7 +390,8 @@ fn pointer(
     let shift = held(&[KeyCode::ShiftLeft, KeyCode::ShiftRight]);
     let ctrl = held(&[KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight]);
     let alt = held(&[KeyCode::AltLeft, KeyCode::AltRight]);
-    let focused = focus.is_some_and(|f| f.0);
+    // Not while a text field has the keyboard or a two-step key owns the frame.
+    let focused = keyboard.get();
     let window = windows.single().ok();
     let cursor = if view.valid { cursor_in_view(window, &view, hover.as_deref(), &nodes) } else { None };
     // A press while a command surface is open (or was, when the press came) only closes it.

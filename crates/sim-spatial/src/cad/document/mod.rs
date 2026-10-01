@@ -12,7 +12,7 @@
 mod state;
 mod types;
 
-pub use types::{CadInputFocus, CadTarget, CadTool, Candidates, ChildSlot, Connected, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
+pub use types::{CadTarget, CadTool, Candidates, ChildSlot, Connected, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 
 use crate::jobs::{Job, RunThread};
 use bevy::prelude::*;

@@ -293,17 +293,17 @@ pub(crate) fn apply(
 }
 
 /// Input: the toolbar, parts and connection buttons and the keys, as
-/// actions. The lesson screen has its own keys; a builder draft takes them.
-#[allow(clippy::too_many_arguments)]
+/// actions. The lesson screen has its own keys; a kit field with the
+/// keyboard (a builder draft, a document field) takes them.
 pub(crate) fn input(
     keys: Res<ButtonInput<KeyCode>>,
     buttons: Query<(&Interaction, &InspectAction), (Changed<Interaction>, With<Button>)>,
     scene: Res<SpatialScene>,
-    builder: Option<Res<builder::Builder>>,
+    typing: crate::ui_kit::text::Typing,
     mode: Option<Res<State<ViewerMode>>>,
     mut out: MessageWriter<Act<InspectAction>>,
 ) {
-    if builder.as_ref().is_some_and(|b| b.typing()) || mode.is_some_and(|m| *m.get() == ViewerMode::Lessons) {
+    if typing.get() || mode.is_some_and(|m| *m.get() == ViewerMode::Lessons) {
         return;
     }
     if keys.just_pressed(KeyCode::KeyF) {

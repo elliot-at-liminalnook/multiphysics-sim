@@ -79,7 +79,7 @@ use super::{BasePlane, CadActivePlane, CadSketches, Finish, Readout, SketchShape
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus};
+use crate::cad::document::CadDocument;
 use crate::cad::mesh::CadMeshes;
 use crate::cad::ops::{Env, Flow, entry};
 use crate::cad::snap::{self, Candidate};
@@ -281,7 +281,7 @@ pub(super) fn pointer(
     windows: Query<&Window, With<PrimaryWindow>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
-    focus: Option<Res<CadInputFocus>>,
+    keyboard: crate::cad::keys::Held,
     hover: Option<Res<HoverMap>>,
     nodes: Query<(), With<Node>>,
     mut out: MessageWriter<Act<CadAction>>,
@@ -322,13 +322,15 @@ pub(super) fn pointer(
         (Ok(f), Some(c)) => snap::snap_on(&view, c, candidates, alt, Some(f)).map(|s| s.exact),
         _ => None,
     };
-    // A text field keeping the keyboard after this frame's Input (a press in
-    // the view ends the form's typing first, so that press counts).
-    let typing = doc.ops.form.as_ref().is_some_and(|f| f.focus.is_some()) || doc.tool_state.numeric.focus.is_some() || doc.tool_state.inspector_edit.is_some();
+    // The form's, the numeric bar's or the inspector editor's field keeping
+    // the keyboard after this frame's Input (a press in the view ends their
+    // typing first, the kit's or the form's, so that press counts; the
+    // sticky name field never blocked a sketch click).
+    let typing = keyboard.field().is_some_and(|f| [crate::cad::surfaces::FORM, crate::cad::numeric::NUMERIC, crate::cad::inspector::EDITOR].contains(&f));
     let open = surface_was_open || doc.ops.surface.is_some();
     let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !open && !typing;
     let press_at = cursor.filter(|_| pressed);
-    let enter = keys.as_ref().is_some_and(|k| k.any_just_pressed([KeyCode::Enter, KeyCode::NumpadEnter])) && !focus.as_ref().is_some_and(|f| f.0) && !open;
+    let enter = keys.as_ref().is_some_and(|k| k.any_just_pressed([KeyCode::Enter, KeyCode::NumpadEnter])) && !keyboard.get() && !open;
     let now = Instant::now();
     let double = press_at.is_some_and(|c| state.last_press.is_some_and(|(p, t)| now.duration_since(t) <= DOUBLE_CLICK && p.distance(c) <= DOUBLE_DISTANCE));
     if let Some(c) = press_at {

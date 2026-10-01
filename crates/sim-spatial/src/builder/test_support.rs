@@ -7,6 +7,10 @@ impl Builder {
     pub(crate) fn test_open_draft(&mut self, text: &str) {
         self.start_input(Purpose::Filter, text.into());
     }
+    /// A text-field draft is open (kept across a refused switch).
+    pub(crate) fn test_draft_open(&self) -> bool {
+        self.input.is_some()
+    }
     pub(crate) fn test_drop_draft(&mut self) {
         self.input = None;
     }

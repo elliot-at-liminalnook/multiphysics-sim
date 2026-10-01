@@ -10,7 +10,7 @@
 //! `Interaction` as the hardware panel does).
 //!
 //! - **Actions only.** Every button carries a [`CadButton`] holding the
-//!   [`CadAction`] it writes; [`buttons`] (Input) writes it as
+//!   [`CadAction`] it writes; `name::buttons` (Input) writes it as
 //!   `Act::ui`, the same value a key, a 3D pick, `system_ui` or REST writes.
 //!   Nothing here talks to RoboCAD or changes [`CadDocument`].
 //! - **One source for controls.** [`controls`] lists every button and chip
@@ -23,21 +23,22 @@
 //!   generation, or the name draft) changed; each part's key is recomputed
 //!   then and only parts whose key changed are rebuilt. Scroll areas are
 //!   never rebuilt, so their offsets are kept.
-//! - **Name editing** is a small draft on the kit's `input` styling: a press
-//!   on the field starts it (with `CadInputFocus` true so CAD keys are
-//!   ignored), Enter writes `CadPatch {"name"}`, Escape cancels. An empty
-//!   name, or an Enter while edits cannot be sent, keeps the draft open with
-//!   the reason under the field (no request).
+//! - **Name editing** ([`name`]) is the kit's one text field (`cad.name`):
+//!   a press on the field gives it the keyboard, Enter writes `CadPatch
+//!   {"name"}`, Escape cancels. An empty name, or an Enter while edits
+//!   cannot be sent, keeps the field open with the reason under it (no
+//!   request).
+mod name;
+
+pub(super) use name::{NAME, NameDraft, NameField, name_entry};
+
 use super::actions::CadAction;
-use super::document::{CadDocument, CadInputFocus, CadTool, Connection, SelectMode};
+use super::document::{CadDocument, CadTool, Connection, SelectMode};
 use super::selection::{CadItems, CadSelection};
 use super::surfaces::SurfaceRoot;
-use crate::app::actions::Act;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
 use crate::ui_kit::{DANGER, Dock, FAINT, Kit, LEFT_WIDTH, Look, OK, RIGHT_WIDTH, STATUSBAR, SUBTLE, SWITCHER_STRIP, TEXT, TOPBAR, Tint, UiFonts, WARN, divider, size, wheel_delta};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
@@ -53,25 +54,6 @@ pub(super) struct CadButton(pub CadAction);
 /// A display-only kit chip (a provenance label): a press does nothing.
 #[derive(Component, Clone, Copy, Debug, Default)]
 pub(super) struct Inert;
-
-/// The inspector's name field: a press starts the draft with `name`.
-#[derive(Component, Clone, Debug)]
-pub(super) struct NameField {
-    pub id: String,
-    pub name: String,
-}
-
-/// The name being typed: (node id, text). Not a document edit until Enter.
-#[derive(Resource, Default, Debug)]
-pub(super) struct NameDraft {
-    pub editing: Option<(String, String)>,
-    /// Why the last Enter sent nothing (empty name, edits blocked); cleared
-    /// by typing or when the draft ends.
-    pub refusal: Option<String>,
-    /// A button press dropped the draft this frame (`buttons`): `name_entry`
-    /// keeps `CadInputFocus` true for it, as for an Enter or Escape end.
-    dropped: bool,
-}
 
 /// The panel parts, each rebuilt alone when its content changes.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -271,9 +253,13 @@ pub(crate) fn own_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Ve
 }
 
 pub(super) fn build(app: &mut App) {
+    use crate::ui_kit::text::TextFieldApp;
     app.init_resource::<NameDraft>()
+        .add_text_field(NAME, name::field())
+        .add_text_field(super::numeric::NUMERIC, super::numeric::field())
         .add_systems(OnEnter(ModeScope::Cad), spawn)
-        .add_systems(Update, (buttons, name_entry).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)))
+        // Before CAD's keys: a press that gives the name field the keyboard holds the frame's keys.
+        .add_systems(Update, (name::buttons, name_entry).chain().after(crate::app::actions::serve).before(super::keys::keys).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)))
         .add_systems(Update, (scroll, refresh).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
 
@@ -283,15 +269,9 @@ pub(super) fn column(gap: f32) -> Node {
 }
 
 /// OnEnter(Cad): the docks with empty parts; `refresh` fills them.
-fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraft>, focus: Option<ResMut<CadInputFocus>>) {
-    if draft.editing.is_some() {
-        draft.editing = None;
-    }
-    if let Some(mut focus) = focus
-        && focus.0
-    {
-        focus.0 = false;
-    }
+fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraft>) {
+    // The kit blurs every field on a mode switch; a draft from the last visit ends.
+    name::end(&mut draft);
     let k = Kit::new(&fonts);
     commands.spawn((
         k.dock(Dock::Top { height: TOPBAR }, Node { padding: UiRect::horizontal(Val::Px(14.0)), align_items: AlignItems::Center, column_gap: Val::Px(10.0), overflow: Overflow::clip(), ..default() }),
@@ -338,126 +318,6 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
         AccessibleLabel::new("CAD status"),
         CadList::new(Part::Status),
     ));
-}
-
-/// Input: a pressed, enabled CAD button writes its action (and ends a name draft).
-#[allow(clippy::type_complexity)]
-fn buttons(clicks: Query<(&Interaction, &CadButton, Option<&Enabled>), (Changed<Interaction>, With<Button>)>, mut draft: ResMut<NameDraft>, mut out: MessageWriter<Act<CadAction>>) {
-    for (interaction, button, enabled) in &clicks {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
-            continue;
-        }
-        if draft.editing.is_some() {
-            draft.editing = None;
-            draft.refusal = None;
-            draft.dropped = true;
-        }
-        out.write(Act::ui(button.0.clone()));
-    }
-}
-
-/// Input: the name draft. A press on the field starts it; typed text edits
-/// it; Enter writes `CadPatch {"name": text}` (nothing when unchanged; an
-/// empty name or a blocked edit keeps the draft open with the reason);
-/// Escape cancels; selecting another node or pressing a CAD button drops
-/// it. `CadInputFocus` is true while it is open and in the frame it ends
-/// (so the Enter or Escape that ends it is not also a CAD key, whatever the
-/// systems' order).
-#[allow(clippy::too_many_arguments)]
-pub(super) fn name_entry(
-    mut draft: ResMut<NameDraft>,
-    fields: Query<(&Interaction, &NameField), Changed<Interaction>>,
-    doc: Option<Res<CadDocument>>,
-    keys: Res<ButtonInput<KeyCode>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    mut out: MessageWriter<Act<CadAction>>,
-    selection: CadSelection,
-) {
-    let selected = doc.as_ref().and_then(|_| selection.items().first_node().map(str::to_string));
-    let mut ended = false;
-    // Read before writing: a `DerefMut` every frame would mark the draft
-    // changed and rebuild the panels each frame.
-    if draft.dropped {
-        draft.dropped = false;
-        ended = true;
-    }
-    if draft.editing.as_ref().is_some_and(|(id, _)| selected.as_deref() != Some(id.as_str())) {
-        draft.editing = None;
-        draft.refusal = None;
-        ended = true;
-    }
-    for (interaction, field) in &fields {
-        if *interaction == Interaction::Pressed && draft.editing.as_ref().is_none_or(|(id, _)| *id != field.id) {
-            draft.editing = Some((field.id.clone(), field.name.clone()));
-            draft.refusal = None;
-            // Keys typed before the field opened are not its text.
-            events.clear();
-        }
-    }
-    if draft.editing.is_none() {
-        events.clear();
-    } else {
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        // Shortcuts held with Command or Control are not text.
-        let chord = keys.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]);
-        for e in typed {
-            let Some((id, text)) = draft.editing.clone() else { break };
-            match &e.logical_key {
-                Key::Enter => {
-                    let unchanged = doc.as_deref().and_then(|d| d.doc.as_ref()).and_then(|d| d.nodes.iter().find(|n| n.id == id)).is_some_and(|n| n.name == text);
-                    // Refusals keep the draft (and its text) open, with the reason under the field.
-                    let refusal = if unchanged {
-                        None
-                    } else if text.trim().is_empty() {
-                        Some("A name cannot be empty: type one, or Escape to keep the current name.".to_string())
-                    } else {
-                        doc.as_deref().and_then(edit_blocked).map(|why| format!("Not renamed: {why}. Enter again once it clears, or Escape."))
-                    };
-                    if let Some(why) = refusal {
-                        if draft.refusal.as_ref() != Some(&why) {
-                            draft.refusal = Some(why);
-                        }
-                        continue;
-                    }
-                    draft.editing = None;
-                    draft.refusal = None;
-                    ended = true;
-                    if !unchanged {
-                        out.write(Act::ui(patch(&id, "name", Value::String(text))));
-                    }
-                    break;
-                }
-                Key::Escape => {
-                    draft.editing = None;
-                    draft.refusal = None;
-                    ended = true;
-                    break;
-                }
-                Key::Backspace => {
-                    let mut text = text;
-                    text.pop();
-                    draft.editing = Some((id, text));
-                    draft.refusal = None;
-                }
-                Key::Space if !chord => {
-                    draft.editing = Some((id, text + " "));
-                    draft.refusal = None;
-                }
-                Key::Character(c) if !chord && !c.chars().any(char::is_control) => {
-                    draft.editing = Some((id, text + c.as_str()));
-                    draft.refusal = None;
-                }
-                _ => {}
-            }
-        }
-    }
-    if let Some(mut focus) = focus {
-        let want = draft.editing.is_some() || ended;
-        if focus.0 != want {
-            focus.0 = want;
-        }
-    }
 }
 
 /// The wheel over a dock scrolls it (the tree on the left, the inspector on

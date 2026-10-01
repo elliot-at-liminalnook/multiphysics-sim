@@ -265,9 +265,10 @@ pub(super) fn build(app: &mut App) {
         .add_systems(
             Update,
             (
-                // After the name field (it may take the keyboard this frame) and before the CAD keys (they honour the focus this sets).
-                super::numeric::entry.after(crate::app::actions::serve).after(super::panel::name_entry).before(super::keys::keys),
-                keys.after(crate::app::actions::serve).after(super::numeric::entry),
+                // Before CAD's keys: a Tab or press that gives the bar the keyboard holds the frame's keys.
+                super::numeric::entry.after(crate::app::actions::serve).before(super::keys::keys),
+                // After the two-step key gate (`keys::free` reads it) and the numeric bar (its Tab may take the keyboard first).
+                keys.after(crate::app::actions::serve).after(super::keys::gate).after(super::numeric::entry).run_if(super::keys::free),
             )
                 .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),
@@ -452,6 +453,7 @@ fn cancel(cx: &mut Cx) -> Result<Value, String> {
     let doc = &mut *cx.doc;
     end_live(doc);
     doc.tool_state.dimension = None;
+    // The numeric bar's entry ends (`numeric::entry` then gives its field's keyboard back).
     doc.tool_state.numeric.focus = None;
     if cx.shared.items().is_empty() {
         return Ok(json!({"selection": "already empty"}));

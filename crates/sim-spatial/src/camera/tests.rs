@@ -770,10 +770,19 @@ fn camera_orbit_takes_degrees_as_robocads_arrow_keys() {
     assert_eq!(CameraAction::parse(&command("camera_orbit", json!({"dx": 30, "dy": 0}))), Ok(CameraAction::Orbit { dx: 30.0, dy: 0.0, degrees: None }));
 }
 
-/// The keys system's actions for keys held this frame.
+/// A kit text field for the keys tests to focus.
+const FIELD: crate::ui_kit::text::FieldId = crate::ui_kit::text::FieldId("camera.test");
+
+/// The keys system's actions for keys held this frame, gated on the shared
+/// typing condition as `CameraPlugin` registers it (with the kit's text
+/// entry and one field, so a test can give it the keyboard).
 fn keys_app(rules: OrbitRules) -> (App, Entity) {
+    use crate::ui_kit::text::{TextEntryPlugin, TextField, TextFieldApp, typing};
     let mut app = App::new();
-    app.add_plugins(MinimalPlugins).init_resource::<ButtonInput<KeyCode>>().add_systems(Update, keys);
+    app.add_plugins((MinimalPlugins, TextEntryPlugin))
+        .init_resource::<ButtonInput<KeyCode>>()
+        .add_systems(Update, keys.run_if(not(typing)))
+        .add_text_field(FIELD, TextField::new("Test"));
     crate::app::actions::register::<CameraAction>(&mut app);
     let cam = spawn_orbit(&mut app, Orbit::default(), rules, ViewArea::Window);
     (app, cam)
@@ -800,11 +809,16 @@ fn arrow_keys_only_where_the_rules_ask_and_no_text_field_types() {
     // Cmd is RoboCAD's Ctrl on a Mac (Qt maps it so).
     assert_eq!(press_keys(&mut app, &[KeyCode::SuperLeft, KeyCode::ArrowUp]), vec![arrow_action(KeyCode::ArrowUp, true, false).unwrap()]);
     assert!(press_keys(&mut app, &[KeyCode::Numpad1]).is_empty(), "CAD reads its own keymap");
-    // A text field has the keyboard: no camera key, arrow or numpad.
-    app.world_mut().get_mut::<OrbitRules>(cam).unwrap().typing = true;
+    // A kit text field has the keyboard: no camera key, arrow or numpad.
+    use bevy::ecs::system::RunSystemOnce;
+    use crate::ui_kit::text::TextFocus;
+    app.world_mut().run_system_once(|mut f: TextFocus| assert!(f.focus(FIELD, ""))).unwrap();
     assert!(press_keys(&mut app, &[KeyCode::ArrowRight]).is_empty());
     app.world_mut().get_mut::<OrbitRules>(cam).unwrap().keys = true;
     assert!(press_keys(&mut app, &[KeyCode::Numpad1]).is_empty());
+    // It gives the keyboard up: the keys are the camera's again.
+    app.world_mut().run_system_once(|mut f: TextFocus| f.blur(FIELD)).unwrap();
+    assert_eq!(press_keys(&mut app, &[KeyCode::Numpad1]), vec![CameraAction::View { view: ViewPreset::Front }]);
     // Other modes keep their keys: no arrows (Robot moves joints with them).
     let (mut app, _) = keys_app(OrbitRules::default());
     assert!(press_keys(&mut app, &[KeyCode::ArrowRight]).is_empty());

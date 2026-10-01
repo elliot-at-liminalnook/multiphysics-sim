@@ -10,32 +10,49 @@
 //!   form sits centred over a dimmed backdrop that takes every click (and
 //!   the switcher strip's), in a scroll area for short windows (the wheel
 //!   scrolls it, [`scroll_form`]).
-//! - **Typing** ([`input`]), the editors' pattern: a press on a field gives
-//!   it the keyboard (a form field's text selected); typing edits it
-//!   (`TextDraft`); in the search field each key filters at once, Enter or
-//!   Escape ends it; in the dialog Tab moves to the next field, Enter is
-//!   OK and Escape Cancel (also with no field focused: the dialog owns the
-//!   keyboard while open). A press elsewhere ends the typing. Opening a
-//!   field, or a dialog opening (`claimed`), ends the name field's, the
-//!   editors', the numeric bar's and the physical rows' drafts. `CadInputFocus` is set while a field has the
-//!   keyboard, while the dialog is open and in the frame typing ends.
+//! - **Typing** ([`input`]) on the kit's one text field (`ui_kit::text`):
+//!   the search field ([`SEARCH`]) and the dialog's fields ([`FORM`], one kit
+//!   field for every row; `MaterialsState::focus` is the row, mirrored
+//!   with the selection from the kit's focus and draft). A press on a field
+//!   gives it the keyboard (a dialog field's text selected); in the search
+//!   field each key filters at once, Enter or Escape ends it, a press
+//!   elsewhere too; in the dialog Tab moves to the next field, Enter is OK
+//!   and Escape Cancel. The dialog is modal and owns the keyboard while
+//!   open: its field is `sticky` (a press on the backdrop keeps it), a
+//!   dialog the handler opened takes the keyboard (`claimed`), and while it
+//!   is open and no field has the keyboard its field takes it again.
 use super::form::{self, FormKind};
 use super::{Focus, MaterialsArgs, MaterialsOp, controls_of, list, matches, row_label};
 use crate::app::ModeScope;
 use crate::app::actions::Act;
 use crate::builder::ui_api::Enabled;
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus};
-use crate::cad::panel::{CadButton, NameDraft};
-use crate::ui_kit::form::{DraftKey, FormHit, FormRow, TextDraft};
+use crate::cad::document::CadDocument;
+use crate::cad::panel::CadButton;
+use crate::ui_kit::form::{FormHit, FormRow};
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use crate::ui_kit::{ACCENT_BG, DANGER, Kit, Look, TEXT, Tint, UiFonts, WHEEL_LINE, size, wheel_delta, wrap};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use sim_runtime::cad_client::SelectionItem;
 use std::time::{Duration, Instant};
+
+/// "Search materials…".
+pub(in crate::cad) const SEARCH: FieldId = FieldId("cad.materials.search");
+/// The open dialog's fields (the row is `MaterialsState::focus`).
+pub(in crate::cad) const FORM: FieldId = FieldId("cad.materials.form");
+
+/// The search field: a press places the caret after the text.
+pub(super) fn search_field() -> TextField {
+    TextField::new("Search materials").placeholder("Search materials…")
+}
+
+/// The dialog's field: a focused row's text is selected; sticky (the modal
+/// dialog keeps the keyboard on a press on its backdrop).
+pub(super) fn form_field() -> TextField {
+    TextField::new("Material property").select_on_focus().sticky()
+}
 
 /// Qt's default double-click interval.
 const DOUBLE_CLICK: Duration = Duration::from_millis(400);
@@ -101,6 +118,8 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         p.spawn((
             Button,
             MaterialRow(m.id.clone()),
+            // A press on a row keeps the search typing, as before.
+            crate::ui_kit::text::KitInput,
             Tint::selectable(selected),
             AccessibleLabel::new(label),
             Node { border_radius: BorderRadius::all(Val::Px(4.0)), padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)), column_gap: Val::Px(8.0), align_items: AlignItems::Center, flex_shrink: 0.0, ..default() },
@@ -124,57 +143,139 @@ fn write(out: &mut MessageWriter<Act<CadAction>>, op: MaterialsOp, material: Opt
     out.write(Act::ui(MaterialsArgs::of(op, material)));
 }
 
-/// Input: the panel's and the dialog's clicks and keys (see the module doc).
+/// Dialog row `i`'s text.
+fn row_text(doc: &CadDocument, i: usize) -> String {
+    doc.materials.form.as_ref().and_then(|form| form.texts.get(i).cloned()).unwrap_or_default()
+}
+
+/// Give `f` the keyboard: the search text with the caret after it, or a
+/// dialog row's text selected. Returns the selection.
+fn focus(text: &mut TextFocus, doc: &CadDocument, f: Focus) -> bool {
+    match f {
+        Focus::Search => {
+            text.focus_draft(SEARCH, TextDraft::new(doc.materials.search.clone(), false));
+            false
+        }
+        Focus::Field(i) => {
+            text.focus_draft(FORM, TextDraft::new(row_text(doc, i), true));
+            true
+        }
+    }
+}
+
+/// Input: the panel's and the dialog's clicks and field messages (see the module doc).
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(in crate::cad) fn input(
     doc: Option<ResMut<CadDocument>>,
     fields: Query<(&Interaction, &MaterialsInput), Changed<Interaction>>,
     parts: Query<(&Interaction, &FormPart, Option<&Enabled>), Changed<Interaction>>,
     rows: Query<(&Interaction, &MaterialRow), Changed<Interaction>>,
-    keys: Option<Res<ButtonInput<KeyCode>>>,
-    mouse: Option<Res<ButtonInput<MouseButton>>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    name: Option<ResMut<NameDraft>>,
+    mut msgs: MessageReader<FieldMsg>,
+    mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
     mut last_row: Local<Option<(String, Instant)>>,
 ) {
     let Some(mut doc) = doc else {
-        events.clear();
+        msgs.clear();
         return;
     };
     let modal = doc.materials.form.is_some();
     let (before, before_all) = (doc.materials.focus, doc.materials.select_all);
-    let mut at = before.filter(|f| modal || *f == Focus::Search);
+    let mut at = before;
     let mut select_all = before_all;
-    let (mut started, mut ended, mut pressed, mut edited) = (false, false, false, false);
-    for (interaction, f) in &fields {
-        if *interaction != Interaction::Pressed {
-            continue;
+    // A Cancel this frame: the dialog closes when the handler runs, so it does not take the keyboard again.
+    let (mut edited, mut closing) = (false, false);
+    for m in msgs.read() {
+        let row = match at {
+            Some(Focus::Field(i)) => Some(i),
+            _ => None,
+        };
+        match (m.field, &m.event) {
+            (SEARCH, FieldEvent::Changed(d)) => {
+                if doc.materials.search != d.text {
+                    doc.materials.search = d.text.clone();
+                    edited = true;
+                }
+                select_all = d.select_all;
+            }
+            (SEARCH, FieldEvent::Submit(_)) => {
+                text.blur(SEARCH);
+                if at == Some(Focus::Search) {
+                    at = None;
+                }
+            }
+            (SEARCH, FieldEvent::Cancel) => {
+                if at == Some(Focus::Search) {
+                    at = None;
+                }
+            }
+            (SEARCH, FieldEvent::Blur) if !text.focused(SEARCH) && at == Some(Focus::Search) => at = None,
+            (FORM, FieldEvent::Changed(d)) => {
+                if let Some(i) = row
+                    && let Some(form) = doc.materials.form.as_mut()
+                    && let Some(slot) = form.texts.get_mut(i)
+                {
+                    *slot = d.text.clone();
+                    form.error = None;
+                    edited = true;
+                }
+                select_all = d.select_all;
+            }
+            (FORM, FieldEvent::Submit(typed)) => {
+                if let Some(i) = row
+                    && let Some(form) = doc.materials.form.as_mut()
+                    && let Some(slot) = form.texts.get_mut(i)
+                    && *slot != *typed
+                {
+                    *slot = typed.clone();
+                    edited = true;
+                }
+                // OK: a refusal stays in the form, the field keeps the keyboard.
+                if modal {
+                    write(&mut out, MaterialsOp::FormSubmit, None);
+                }
+            }
+            (FORM, FieldEvent::Cancel) => {
+                if modal {
+                    write(&mut out, MaterialsOp::FormCancel, None);
+                }
+                at = None;
+                closing = true;
+            }
+            (FORM, FieldEvent::Tab { .. }) => {
+                if let Some(i) = row {
+                    let n = doc.materials.form.as_ref().map_or(1, |form| form.fields.len().max(1));
+                    let next = Focus::Field((i + 1) % n);
+                    at = Some(next);
+                    select_all = focus(&mut text, &doc, next);
+                }
+            }
+            (FORM, FieldEvent::Blur) if !text.focused(FORM) && row.is_some() => at = None,
+            _ => {}
         }
-        pressed = true;
-        if at != Some(f.0) {
+    }
+    for (interaction, f) in &fields {
+        if *interaction == Interaction::Pressed && at != Some(f.0) {
             at = Some(f.0);
-            // A search press places the caret; a dialog field's text is selected.
-            select_all = matches!(f.0, Focus::Field(_));
-            started = true;
+            select_all = focus(&mut text, &doc, f.0);
         }
     }
     for (interaction, part, enabled) in &parts {
         if *interaction != Interaction::Pressed {
             continue;
         }
-        pressed = true;
         match part.0 {
             FormHit::Field(i) => {
                 if at != Some(Focus::Field(i)) {
                     at = Some(Focus::Field(i));
-                    select_all = true;
-                    started = true;
+                    select_all = focus(&mut text, &doc, Focus::Field(i));
                 }
             }
             FormHit::Ok if enabled.is_none_or(|e| e.0) => write(&mut out, MaterialsOp::FormSubmit, None),
-            FormHit::Cancel => write(&mut out, MaterialsOp::FormCancel, None),
+            FormHit::Cancel => {
+                write(&mut out, MaterialsOp::FormCancel, None);
+                closing = true;
+            }
             _ => {}
         }
     }
@@ -182,7 +283,11 @@ pub(in crate::cad) fn input(
         if *interaction != Interaction::Pressed {
             continue;
         }
-        pressed = true;
+        // Rows are kit inputs so a press keeps the search typing; any other
+        // non-sticky field's entry ends, as for a press elsewhere.
+        if !text.focused(SEARCH) {
+            text.release(false);
+        }
         let now = Instant::now();
         if last_row.as_ref().is_some_and(|(id, t)| *id == row.0 && now.duration_since(*t) <= DOUBLE_CLICK) {
             write(&mut out, MaterialsOp::Apply, Some(row.0.as_str()));
@@ -192,116 +297,43 @@ pub(in crate::cad) fn input(
             *last_row = Some((row.0.clone(), now));
         }
     }
-    if at.is_some() && !pressed && mouse.as_ref().is_some_and(|m| m.just_pressed(MouseButton::Left)) {
-        at = None;
-        ended = true;
-    }
-    if !started && at.is_some() && doc.tool_state.inspector_edit.is_some() {
-        // The editors (after this system) opened a draft since.
-        at = None;
-        ended = true;
-    }
-    // A dialog opened by the handler since (`open`) took the keyboard too.
-    let claimed = doc.materials.claimed;
-    if claimed {
+    // A dialog opened by the handler since (`open`) takes the keyboard.
+    if doc.materials.claimed {
         doc.materials.claimed = false;
-    }
-    if started || claimed {
-        // One field holds the keyboard.
-        if doc.tool_state.numeric.focus.is_some() {
-            doc.tool_state.numeric.focus = None;
-            doc.tool_state.numeric.began = None;
-        }
-        if doc.tool_state.inspector_edit.is_some() {
-            doc.tool_state.inspector_edit = None;
-        }
-        if doc.physical_edit.draft.is_some() {
-            doc.physical_edit.draft = None;
-            doc.touch();
-        }
-        if let Some(mut name) = name
-            && name.editing.is_some()
-        {
-            name.editing = None;
-            name.refusal = None;
-        }
-    }
-    if started || claimed || doc.ops.surface.is_some() {
-        // Keys pressed before the field took the keyboard are not its text;
-        // an open command surface has the keyboard meanwhile.
-        events.clear();
-    } else if let Some(f) = at {
-        let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        let mut f = f;
-        for e in typed {
-            let text = match f {
-                Focus::Search => doc.materials.search.clone(),
-                Focus::Field(i) => doc.materials.form.as_ref().and_then(|form| form.texts.get(i).cloned()).unwrap_or_default(),
+        if modal && !closing {
+            let row = match at {
+                Some(Focus::Field(i)) => i,
+                _ => 0,
             };
-            let mut d = TextDraft { text, select_all };
-            match d.key(&e.logical_key, chord) {
-                DraftKey::Edited => {
-                    select_all = d.select_all;
-                    match f {
-                        Focus::Search => doc.materials.search = d.text,
-                        Focus::Field(i) => {
-                            if let Some(form) = doc.materials.form.as_mut()
-                                && let Some(slot) = form.texts.get_mut(i)
-                            {
-                                *slot = d.text;
-                                form.error = None;
-                            }
-                        }
-                    }
-                    edited = true;
-                }
-                DraftKey::Enter => {
-                    if f == Focus::Search {
-                        ended = true;
-                        at = None;
-                    } else {
-                        write(&mut out, MaterialsOp::FormSubmit, None);
-                    }
-                    break;
-                }
-                DraftKey::Escape => {
-                    if f != Focus::Search {
-                        write(&mut out, MaterialsOp::FormCancel, None);
-                    }
-                    ended = true;
-                    at = None;
-                    break;
-                }
-                DraftKey::Tab => {
-                    if let Focus::Field(i) = f {
-                        let n = doc.materials.form.as_ref().map_or(1, |form| form.fields.len().max(1));
-                        f = Focus::Field((i + 1) % n);
-                        at = Some(f);
-                        select_all = true;
-                    }
-                }
-                DraftKey::Ignored => {}
-            }
+            at = Some(Focus::Field(row));
+            select_all = focus(&mut text, &doc, Focus::Field(row));
         }
-    } else if modal {
-        // RoboCAD's dialog has the keyboard: Enter is OK, Escape Cancel.
-        let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-        for e in typed {
-            match e.logical_key {
-                Key::Enter => {
-                    write(&mut out, MaterialsOp::FormSubmit, None);
-                    break;
-                }
-                Key::Escape => {
-                    write(&mut out, MaterialsOp::FormCancel, None);
-                    break;
-                }
-                _ => {}
-            }
-        }
-    } else {
-        events.clear();
+    }
+    // The kit's focus is the record (the handler's OK and Cancel close the
+    // dialog and clear `focus`): the mirror and the kit's focus agree.
+    if matches!(at, Some(Focus::Field(_))) && (!modal || !text.focused(FORM)) {
+        at = None;
+    }
+    if at == Some(Focus::Search) && !text.focused(SEARCH) {
+        at = None;
+    }
+    if !matches!(at, Some(Focus::Field(_))) {
+        text.blur(FORM);
+    }
+    if at != Some(Focus::Search) {
+        text.blur(SEARCH);
+    }
+    // The modal dialog owns the keyboard: with no field focused, its field takes it again.
+    if modal && !closing && !text.typing() {
+        let row = match before {
+            Some(Focus::Field(i)) => i,
+            _ => 0,
+        };
+        at = Some(Focus::Field(row));
+        select_all = focus(&mut text, &doc, Focus::Field(row));
+    }
+    if at.is_none() {
+        select_all = false;
     }
     if at != before || select_all != before_all {
         doc.materials.focus = at;
@@ -311,12 +343,6 @@ pub(in crate::cad) fn input(
     if edited {
         // The panels and the dialog refresh on the document's revision.
         doc.touch();
-    }
-    if let Some(mut focus) = focus
-        && (doc.materials.focus.is_some() || ended || modal)
-        && !focus.0
-    {
-        focus.0 = true;
     }
 }
 

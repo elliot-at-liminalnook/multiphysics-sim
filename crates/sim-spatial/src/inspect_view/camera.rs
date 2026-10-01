@@ -40,26 +40,20 @@ pub(super) fn view_area(scene: &SpatialScene) -> ViewArea {
 /// SimSync, before `CameraSet::Viewport`: the scene's data into the shared
 /// camera, each written only on a change. The bounds a home request frames,
 /// reduced motion (cuts, no spin), the wheel needing Ctrl/Cmd inside a
-/// lesson card (the page scrolls with it), the numpad keys off while a
-/// builder or lesson text field has the keyboard, and the view area.
-pub(crate) fn sync_camera(
-    scene: Res<SpatialScene>,
-    builder: Option<Res<crate::builder::Builder>>,
-    learn: Option<Res<crate::lesson::Learn>>,
-    camera: Single<(&mut Orbit, &mut OrbitRules, &mut ViewArea)>,
-) {
+/// lesson card (the page scrolls with it), and the view area. The numpad
+/// keys stay on (`spatial_rules`): while a kit text field has the keyboard
+/// the camera's key system does not run (`ui_kit::text::typing`).
+pub(crate) fn sync_camera(scene: Res<SpatialScene>, camera: Single<(&mut Orbit, &mut OrbitRules, &mut ViewArea)>) {
     let (mut orbit, mut rules, mut area) = camera.into_inner();
     let (centre, extent) = scene.bounds();
     if orbit.centre != centre || orbit.extent != extent {
         orbit.centre = centre;
         orbit.extent = extent;
     }
-    let typing = builder.is_some_and(|b| b.typing()) || learn.is_some_and(|l| l.active && l.input.is_some());
     let zoom_modifier = scene.learn_view.is_some();
-    if rules.reduced_motion != scene.reduced_motion || rules.zoom_modifier != zoom_modifier || rules.keys == typing {
+    if rules.reduced_motion != scene.reduced_motion || rules.zoom_modifier != zoom_modifier {
         rules.reduced_motion = scene.reduced_motion;
         rules.zoom_modifier = zoom_modifier;
-        rules.keys = !typing;
     }
     let want = view_area(&scene);
     if *area != want {

@@ -17,11 +17,12 @@
 //! is gated (`alt_left`: the Select tool with no catalogue interaction or
 //! command surface open, where a drag past the slop is the camera's and a
 //! click stays the Alt menu's), and the arrow keys stop while a text field
-//! has the keyboard (`typing`, from `CadInputFocus`). Differences from
+//! has the keyboard (the camera reads the kit's `typing` itself,
+//! `ui_kit::text`). Differences from
 //! CAD's former own orbit, on purpose: the pitch limit is RoboCAD's 89.5°
 //! (was 1.5 rad ≈ 85.9°), and the wheel zooms toward the cursor as
 //! RoboCAD's `Camera.zoom(factor, anchor)` (was toward the focus).
-use super::document::{CadDocument, CadInputFocus, CadTool};
+use super::document::{CadDocument, CadTool};
 use super::mesh::{CadMaterials, CadMeshes, CadRoot, root_transform};
 use crate::camera::{Framing, Orbit, OrbitRules, RadiusLimits, ViewArea};
 use bevy::window::PrimaryWindow;
@@ -93,14 +94,12 @@ fn centre_extent((lo, hi): (Vec3, Vec3)) -> (Vec3, f32) {
     ((lo + hi) / 2.0, ((hi - lo).length() / 2.0).max(0.005))
 }
 
-/// The input gate CAD writes into its rules: (`alt_left`, `typing`).
-/// Alt+left-drag is the camera's only while the Select tool has the left
-/// button to itself (no catalogue interaction such as a placement, a plane
-/// or sketch tool or a pick-then-form tool, and no command surface); the
-/// camera keys stop while a text field has the keyboard.
-pub(super) fn gate(doc: Option<&CadDocument>, focus: Option<&CadInputFocus>) -> (bool, bool) {
-    let alt_left = doc.is_some_and(|d| d.tool == CadTool::Select && d.ops.active.is_none() && d.ops.surface.is_none());
-    (alt_left, focus.is_some_and(|f| f.0))
+/// The input gate CAD writes into its rules (`alt_left`): Alt+left-drag
+/// is the camera's only while the Select tool has the left button to
+/// itself (no catalogue interaction such as a placement, a plane or sketch
+/// tool or a pick-then-form tool, and no command surface).
+pub(super) fn gate(doc: Option<&CadDocument>) -> bool {
+    doc.is_some_and(|d| d.tool == CadTool::Select && d.ops.active.is_none() && d.ops.surface.is_none())
 }
 
 /// SimSync, before `CameraSet::Place`: the camera's data from CAD's state.
@@ -117,17 +116,15 @@ pub(super) fn gate(doc: Option<&CadDocument>, focus: Option<&CadInputFocus>) -> 
 pub(super) fn fit(
     meshes: Option<ResMut<CadMeshes>>,
     doc: Option<Res<CadDocument>>,
-    focus: Option<Res<CadInputFocus>>,
     window: Option<Single<&Window, With<PrimaryWindow>>>,
     camera: Option<Single<(&mut Orbit, &mut OrbitRules, &Camera, &ViewArea)>>,
     mut seen: Local<Option<u64>>,
 ) {
     let Some(camera) = camera else { return };
     let (mut orbit, mut rules, camera, area) = camera.into_inner();
-    let (alt_left, typing) = gate(doc.as_deref(), focus.as_deref());
-    if rules.alt_left != alt_left || rules.typing != typing {
+    let alt_left = gate(doc.as_deref());
+    if rules.alt_left != alt_left {
         rules.alt_left = alt_left;
-        rules.typing = typing;
     }
     let Some(mut meshes) = meshes else {
         *seen = None;
@@ -209,16 +206,13 @@ mod tests {
     }
 
     #[test]
-    fn the_gate_follows_the_text_focus() {
+    fn the_gate_keeps_alt_left_drag_off_without_a_document() {
         let (mut app, camera) = app();
-        app.insert_resource(CadInputFocus(true));
+        app.world_mut().get_mut::<OrbitRules>(camera).unwrap().alt_left = true;
         app.update();
         let rules = app.world().get::<OrbitRules>(camera).unwrap().clone();
         // No document: no tool owns the left button for the camera to share.
-        assert!(rules.typing && !rules.alt_left && rules.robocad_gestures && !rules.keys);
-        app.insert_resource(CadInputFocus(false));
-        app.update();
-        assert!(!app.world().get::<OrbitRules>(camera).unwrap().typing);
-        assert_eq!(gate(None, None), (false, false));
+        assert!(!rules.alt_left && rules.robocad_gestures && !rules.keys);
+        assert!(!gate(None));
     }
 }

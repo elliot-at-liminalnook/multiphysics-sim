@@ -28,14 +28,9 @@ impl TextDraft {
     /// Apply one pressed key (`chord`: Control/Command held, so characters
     /// are not typed). `Edited` when the text or the selection changed (typing
     /// the selected text's own character over it still clears the selection).
-    pub(crate) fn key(&mut self, key: &Key, chord: bool) -> DraftKey {
-        self.key_filtered(key, chord, None)
-    }
-
-    /// [`TextDraft::key`] with a character filter: a typed text with any
-    /// character the filter refuses is not typed (`Ignored`), as Bevy's
-    /// `EditableTextFilter` refuses an insert.
-    pub(crate) fn key_filtered(&mut self, key: &Key, chord: bool, filter: Option<fn(char) -> bool>) -> DraftKey {
+    /// A typed text with any character `filter` refuses is not typed
+    /// (`Ignored`), as Bevy's `EditableTextFilter` refuses an insert.
+    pub(crate) fn key(&mut self, key: &Key, chord: bool, filter: Option<fn(char) -> bool>) -> DraftKey {
         let (text, select_all) = (self.text.clone(), self.select_all);
         let allowed = |s: &str| filter.is_none_or(|f| s.chars().all(f));
         match key {

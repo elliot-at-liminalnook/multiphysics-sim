@@ -27,9 +27,11 @@
 //! `tool.offset_face` Shift+D and `tool.measure` M (`transform::input::keys`),
 //! `numeric.entry` Tab (`numeric::entry`, and the open form's first field,
 //! `surfaces::form`). Keys are ignored while a text field has the keyboard
-//! (`CadInputFocus`: the name field, the inspector's editors, the numeric
-//! bar, the form, the palette, and the Saved Views panel's name, rename and
-//! field-of-view fields, `views::panel::input`), while a command surface is open (RoboCAD's popups take
+//! (the kit's `typing`, `ui_kit::text`: the name field, the inspector's
+//! editors, the numeric bar, the form, the palette, the Saved Views panel's
+//! fields and every other kit field; Command/Control chords the field leaves
+//! unused reach `ButtonInput` but are not CAD keys while it types, as
+//! before), while a command surface is open (RoboCAD's popups take
 //! the keyboard; the surfaces read their own keys) and while a modal
 //! parameter form is open (RoboCAD's dialogs are modal; a pick-then-form or
 //! place operation's form beside the view leaves the keys live, as
@@ -39,13 +41,14 @@
 //! "Shift+A, S" (sphere): Shift+A starts a [`Chord`], which the next
 //! non-modifier key completes (or, if no command has that second step,
 //! drops with a status line naming the pair); it lapses after 1.5 s. While
-//! it is pending, [`gate`] (registered by `surfaces::build` after the name
-//! field and the surfaces' own fields, before `numeric::entry` and so
-//! before transform's keys) sets `CadInputFocus` for the frame, so the
-//! second key is the chord's: S completes the sphere and does not also
-//! pick the Scale tool, C and B do not also run Sketch circle or Select
-//! bodies. [`keys`] knows the focus is the chord's own (`Chord::gated`). A
-//! text field already holding the keyboard drops the chord.
+//! it is pending, [`gate`] (registered by `surfaces::build`, last in its
+//! chain, before the numeric bar and every other CAD key reader) marks the
+//! frame the chord's (`Chord::gated`), and every other CAD
+//! key, pick and tool reader runs under [`free`] (no text field typing and
+//! no chord gating the frame), so the second key is the chord's: S
+//! completes the sphere and does not also pick the Scale tool, C and B do
+//! not also run Sketch circle or Select bodies. A text field holding the
+//! keyboard drops the chord.
 //!
 //! **Clashes** (grep of `KeyCode::` over crates/sim-spatial/src, 2026-10-01;
 //! `app/`, `ui_kit/`, the switcher and REST read no keys, so no key is
@@ -70,7 +73,7 @@
 //! | L, Shift+L | sketch line, sketch rectangle | exact modifiers |
 //! | C, Shift+C, Ctrl+C, Ctrl+Shift+C, Shift+A then C | sketch circle, sketch spline, copy, clearance offset (cad-print: needs selected faces, then its form), cylinder | exact modifiers; C after Shift+A is the chord's (see above), not the circle's |
 //! | X, Ctrl+Shift+X | extrude, section analysis (`cad_section` toggle) | exact modifiers |
-//! | T | sketch text | no other reader in CAD mode; while the Text tool's form has its text field focused (`CadInputFocus`), T is typed |
+//! | T | sketch text | no other reader in CAD mode; while the Text tool's form has its text field focused (the kit's `typing`), T is typed |
 //! | Ctrl+P | plane from face | exact modifiers (P select points, Shift+P sketch polygon; see the P row) |
 //! | Enter | the spline's finish (`sketch::Finish::EnterOrDouble`, read by the sketch interaction), the open form's submit (`surfaces::form::input`, `CadFormSubmit`, only when no field has the keyboard), the numeric bar's commit (`numeric::entry`, while it is focused) | bound to no command here (`simulation.experiment`'s Ctrl+Return is listed, never bound); a focused field's Enter is that field's; with the Spline tool active and no field focused, Enter is the spline's finish, so the form's Enter submit must stand aside while a `Flow::Sketch` interaction is active (that guard is `surfaces::form`'s) |
 //! | Ctrl+Z, Ctrl+Shift+Z, Z | undo, redo, next display mode (`cad_display` next) | exact modifiers |
@@ -92,10 +95,12 @@
 //! Commands of later epics keep their keys so a press says which epic owns
 //! them (status line), as their menu entries do.
 use super::actions::CadAction;
-use super::document::{CadDocument, CadInputFocus};
+use super::document::CadDocument;
 use super::selection::CadSelection;
 use super::surfaces::registry::{self, COMMANDS, Command, Resolved};
 use crate::app::actions::Act;
+use crate::ui_kit::text::Typing;
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use std::time::{Duration, Instant};
@@ -261,24 +266,27 @@ const CHORD_TIMEOUT: Duration = Duration::from_millis(1500);
 #[derive(Resource, Default, Debug)]
 pub(super) struct Chord {
     first: Option<(Combo, Instant)>,
-    /// `gate` set `CadInputFocus` this frame for the pending chord.
+    /// `gate` gave this frame's keys to the pending chord: only [`keys`]
+    /// reads them (the other readers run under [`free`]). Set and cleared
+    /// by `gate` alone, so it holds for the whole frame.
     gated: bool,
 }
+impl Chord {
+    /// This frame's keys are the pending chord's (`gate`).
+    pub(super) fn gated(&self) -> bool {
+        self.gated
+    }
+}
 
-/// Input (before `numeric::entry`, so before transform's keys): while a
-/// two-step key is pending, the keyboard is the chord's this frame.
-pub(super) fn gate(chord: Option<ResMut<Chord>>, focus: Option<ResMut<CadInputFocus>>) {
-    let (Some(mut chord), Some(mut focus)) = (chord, focus) else { return };
+/// Input, before every other CAD key reader: while a two-step key is
+/// pending, the keyboard is the chord's this frame; a text field holding
+/// the keyboard drops the chord.
+pub(super) fn gate(chord: Option<ResMut<Chord>>, typing: Typing) {
+    let Some(mut chord) = chord else { return };
     let first = chord.first;
     match first {
-        Some((_, at)) if at.elapsed() <= CHORD_TIMEOUT => {
-            // `panel::name_entry` resets the focus each frame, so a set flag
-            // here is a text field's (the name, a form field, the palette).
-            if focus.0 {
-                chord.first = None;
-                chord.gated = false;
-            } else {
-                focus.0 = true;
+        Some((_, at)) if at.elapsed() <= CHORD_TIMEOUT && !typing.get() => {
+            if !chord.gated {
                 chord.gated = true;
             }
         }
@@ -294,6 +302,36 @@ pub(super) fn gate(chord: Option<ResMut<Chord>>, focus: Option<ResMut<CadInputFo
     }
 }
 
+/// Whether CAD's keyboard is taken this frame: a kit text field has it
+/// (`ui_kit::text::Typing`), or a pending two-step key owns the frame
+/// (`Chord::gated`). CAD's key, pick and tool readers other than [`keys`]
+/// stand aside while it is (`get`, or the [`free`] run condition).
+#[derive(SystemParam)]
+pub(in crate::cad) struct Held<'w, 's> {
+    typing: Typing<'w, 's>,
+    chord: Option<Res<'w, Chord>>,
+}
+impl Held<'_, '_> {
+    /// A text field types or a two-step key owns the frame.
+    pub(in crate::cad) fn get(&self) -> bool {
+        self.typing() || self.chord.as_ref().is_some_and(|c| c.gated)
+    }
+    /// A kit text field has the keyboard.
+    pub(in crate::cad) fn typing(&self) -> bool {
+        self.typing.get()
+    }
+    /// The kit text field that has the keyboard.
+    pub(in crate::cad) fn field(&self) -> Option<crate::ui_kit::text::FieldId> {
+        self.typing.field()
+    }
+}
+
+/// The run condition of CAD's key readers other than [`keys`]: the
+/// keyboard is not [`Held`].
+pub(in crate::cad) fn free(held: Held) -> bool {
+    !held.get()
+}
+
 /// A modal parameter form is open: a `Flow::Form` op's dialog (a pick or
 /// place tool's form sits beside its interaction and leaves the keys on).
 fn modal_form(doc: &CadDocument) -> bool {
@@ -304,7 +342,7 @@ fn modal_form(doc: &CadDocument) -> bool {
 #[allow(clippy::too_many_arguments)]
 pub(super) fn keys(
     keys: Option<Res<ButtonInput<KeyCode>>>,
-    focus: Option<Res<CadInputFocus>>,
+    typing: Typing,
     chord: Option<ResMut<Chord>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     doc: Option<ResMut<CadDocument>>,
@@ -313,15 +351,17 @@ pub(super) fn keys(
 ) {
     let Some(keys) = keys else { return };
     let Some(mut chord) = chord else { return };
-    let gated = chord.gated;
-    if focus.is_some_and(|f| f.0) && !gated {
+    // Not while a text field has the keyboard, Command/Control chords
+    // included (the kit leaves the chords it does not use in `ButtonInput`;
+    // CAD's keys stay off while typing, as before the kit).
+    if typing.get() {
         return;
     }
     let Some(mut doc) = doc else { return };
     let pending = chord.first.filter(|(_, at)| at.elapsed() <= CHORD_TIMEOUT).map(|(c, _)| c);
     let Some(key) = keys.get_just_pressed().copied().find(|k| !is_modifier(*k)) else { return };
+    // `gated` stays as `gate` set it for the rest of the frame (see `Chord`).
     chord.first = None;
-    chord.gated = false;
     if doc.ops.surface.is_some() || modal_form(&doc) {
         return;
     }

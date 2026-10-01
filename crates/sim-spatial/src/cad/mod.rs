@@ -85,7 +85,7 @@ mod lifecycle_tests;
 mod tests;
 
 pub use actions::{CadAction, Dimension, MeasurePick};
-pub use document::{CadDocument, CadInputFocus, CadTarget, CadTool, Candidates, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
+pub use document::{CadDocument, CadTarget, CadTool, Candidates, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 pub use mesh::{BODY_KINDS, CadBody, CadMeshes, MeshCounts};
 pub use ops::{FormState, OpsState};
 pub use sketch::{ActivePlane, BasePlane, CadActivePlane, CadSketches};
@@ -108,8 +108,7 @@ pub struct CadCorePlugin;
 impl Plugin for CadCorePlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<CadAction>(app);
-        app.init_resource::<CadInputFocus>()
-            .init_resource::<CadActivePlane>()
+        app.init_resource::<CadActivePlane>()
             .add_systems(
                 OnEnter(ModeScope::Cad),
                 (sync::enter, |mut commands: Commands| {
@@ -155,8 +154,9 @@ impl Plugin for CadPlugin {
             .add_systems(
                 Update,
                 (
-                    // After the name field, so a key that opens or ends it this frame is its own (`CadInputFocus`).
-                    keys::keys.after(crate::app::actions::serve).after(panel::name_entry).in_set(ViewerSet::Input),
+                    // Not while a text field has the keyboard (`keys::keys` reads `Typing`); after
+                    // the two-step key gate, which gives a pending chord the frame's key.
+                    keys::keys.after(crate::app::actions::serve).after(keys::gate).in_set(ViewerSet::Input),
                     // The shared camera (`crate::camera`) navigates, sets the viewport and places
                     // the view in its sets: the bounds, a node fit and the gesture gates go in
                     // before the place step (`scene::fit`), and the snapshot is taken after it.
@@ -217,7 +217,4 @@ pub(crate) fn clear(world: &mut World) {
     world.remove_resource::<views::CadViews>();
     world.remove_resource::<files::CadFiles>();
     world.remove_resource::<mesh::CadMaterials>();
-    if let Some(mut focus) = world.get_resource_mut::<CadInputFocus>() {
-        focus.0 = false;
-    }
 }

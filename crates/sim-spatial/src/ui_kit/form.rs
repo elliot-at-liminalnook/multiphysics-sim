@@ -22,9 +22,6 @@ use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
 
-// Moved to `ui_kit::text` (one-text-entry); re-exported while callers move.
-pub(crate) use super::text::{DraftKey, TextDraft};
-
 /// How a number is read: a length (bare numbers mm), an angle (degrees),
 /// a whole count (RoboCAD's `NumericField(angle=)` and `QSpinBox`), or a
 /// plain number with no unit, fractions allowed (RoboCAD's

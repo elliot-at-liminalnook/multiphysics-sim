@@ -19,9 +19,9 @@
 //!   fills the unit unless one was chosen by hand for that path. Until a
 //!   guess landed or a unit was chosen, OK is disabled and says why: a
 //!   mesh is never imported in a unit nobody picked.
-//! - **Modal**: a dimmed backdrop takes every click, and the form holds
-//!   `CadInputFocus` while open (set after `panel::name_entry` resets it,
-//!   before every reader), ending the other fields' drafts.
+//! - **Modal**: a dimmed backdrop takes every click, and the form's kit
+//!   field ([`FILES`], editing the row `FileForm::focus` names) holds the
+//!   keyboard while open (taking it ends any other field's entry).
 //! - **Listing**: the kit path field's (`ui_kit::path_field`, the one way
 //!   to enter a path): the path's directory and the operation's extensions
 //!   are read on `Pool::Io` when they change (`path_field::request`), and
@@ -37,17 +37,21 @@ use crate::app::ModeScope;
 use crate::app::actions::Act;
 use crate::builder::ui_api::Enabled;
 use crate::cad::actions::CadAction;
-use crate::cad::document::{CadDocument, CadInputFocus};
-use crate::cad::panel::NameDraft;
-use crate::ui_kit::form::{DraftKey, FieldKind, FieldValue, FormHit, FormRow, TextDraft, Unit, evaluate};
+use crate::cad::document::CadDocument;
+use crate::ui_kit::form::{FieldKind, FieldValue, FormHit, FormRow, Unit, evaluate};
 use crate::ui_kit::path_field::{self, PathHit};
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextFocus};
 use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, UiFonts, WARN, size};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
+use bevy::ecs::system::ParamSet;
 use bevy::prelude::*;
 use serde_json::{Map, Value, json};
 use sim_runtime::cad_client::{IMPORT_EXTENSIONS, IMPORT_UNITS, MESH_EXTENSIONS, RENDER_MODES, RENDER_VIEWS, extension};
 use std::collections::BTreeMap;
+
+/// The path form's text field (`ui_kit::text`): the row it edits is
+/// `FileForm::focus`. Sticky: a press on the form's choices, checkboxes
+/// and listing keeps the typing, as before.
+pub(in crate::cad) const FILES: FieldId = FieldId("cad.files");
 
 /// What the form is for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -62,9 +66,10 @@ pub(crate) enum Kind {
 pub(crate) struct FileForm {
     pub kind: Kind,
     pub texts: BTreeMap<String, String>,
-    /// The text field with the keyboard.
+    /// The text row the form's kit field edits ([`FILES`]).
     pub focus: Option<String>,
-    /// The focused text is selected (the next key replaces it).
+    /// The focused text is selected (the next key replaces it; mirrored
+    /// from the kit field's draft).
     pub select_all: bool,
     /// Why OK sent nothing, or RoboCAD's refusal.
     pub error: Option<String>,
@@ -435,56 +440,53 @@ fn next_text(rows: &[Row], name: Option<&str>) -> Option<String> {
     next.map(|r| r.name.clone())
 }
 
-/// Input: the open form's clicks and keys (see the module doc).
+/// Input: the open form's clicks, its kit field's events and the keys it
+/// reads with no field typing (see the module doc).
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(super) fn input(
     files: Option<ResMut<CadFiles>>,
-    doc: Option<ResMut<CadDocument>>,
     parts: Query<(&Interaction, &FilePart, Option<&Enabled>), Changed<Interaction>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    name: Option<ResMut<NameDraft>>,
+    // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
+    mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
-    (section, views): (Option<ResMut<crate::cad::display::entry::SectionEntry>>, Option<ResMut<crate::cad::views::CadViews>>),
 ) {
-    let Some(mut files) = files else { return };
-    let Some(before) = files.form.clone() else { return };
+    let events: Vec<FieldEvent> = field.p0().read().filter(|m| m.field == FILES).map(|m| m.event.clone()).collect();
+    let mut text = field.p1();
+    let Some(mut files) = files else {
+        text.blur(FILES);
+        return;
+    };
+    let Some(before) = files.form.clone() else {
+        text.blur(FILES);
+        return;
+    };
     let mut form = before.clone();
-    // Modal: the form has the keyboard; the other fields' drafts end.
-    if let Some(mut focus) = focus
-        && !focus.0
-    {
-        focus.0 = true;
-    }
-    if let Some(mut name) = name
-        && name.editing.is_some()
-    {
-        name.editing = None;
-        name.refusal = None;
-    }
-    // The section offset and saved-view fields too (found by review: their keys reached both).
-    if let Some(mut section) = section.filter(|s| s.typing.is_some()) {
-        section.typing = None;
-    }
-    if let Some(mut views) = views.filter(|v| v.typing.is_some()) {
-        views.typing = None;
-    }
-    if let Some(mut doc) = doc {
-        if doc.tool_state.numeric.focus.is_some() {
-            doc.tool_state.numeric.focus = None;
-        }
-        if doc.tool_state.inspector_edit.is_some() {
-            doc.tool_state.inspector_edit = None;
-        }
-        if doc.ops.form.as_ref().is_some_and(|f| f.focus.is_some())
-            && let Some(f) = doc.ops.form.as_mut()
-        {
-            f.focus = None;
-        }
-    }
     let rows = form.rows();
     let (mut submit, mut close, mut guess) = (false, false, false);
+    for event in events {
+        match event {
+            FieldEvent::Changed(draft) => {
+                if let Some(name) = form.focus.clone() {
+                    form.set(&name, draft.text);
+                    form.select_all = draft.select_all;
+                }
+            }
+            FieldEvent::Submit(_) => submit = true,
+            // Escape closes the form (the kit has taken the keyboard away).
+            FieldEvent::Cancel => close = true,
+            FieldEvent::Tab { .. } => {
+                form.focus = next_text(&rows, form.focus.as_deref());
+                form.select_all = true;
+                if let Some(name) = form.focus.clone() {
+                    text.focus_draft(FILES, TextDraft::new(form.text(&name), true));
+                }
+            }
+            // Another field took the keyboard, or a mode switch.
+            FieldEvent::Blur => form.focus = None,
+            FieldEvent::Arrow { .. } => {}
+        }
+    }
     for (interaction, part, enabled) in &parts {
         if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
             continue;
@@ -494,8 +496,7 @@ pub(super) fn input(
                 if let Some(row) = rows.get(r) {
                     form.focus = Some(row.name.clone());
                     form.select_all = true;
-                    // Keys pressed before the field took the keyboard are not its text.
-                    events.clear();
+                    text.focus_draft(FILES, TextDraft::new(form.text(&row.name), true));
                 }
             }
             Hit::Form(FormHit::Option(r, k)) => {
@@ -528,38 +529,18 @@ pub(super) fn input(
             Hit::Path(PathHit::Field | PathHit::Submit) => {}
         }
     }
-    let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-    let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-    for e in typed {
-        if submit || close {
-            break;
-        }
-        match form.focus.clone() {
-            Some(field) => {
-                let mut draft = TextDraft { text: form.text(&field).to_string(), select_all: form.select_all };
-                match draft.key(&e.logical_key, chord) {
-                    DraftKey::Edited => {
-                        form.set(&field, draft.text);
-                        form.select_all = draft.select_all;
-                    }
-                    DraftKey::Enter => submit = true,
-                    DraftKey::Escape => close = true,
-                    DraftKey::Tab => {
-                        form.focus = next_text(&rows, Some(field.as_str()));
-                        form.select_all = true;
-                    }
-                    DraftKey::Ignored => {}
-                }
-            }
-            None => match &e.logical_key {
-                Key::Enter => submit = true,
-                Key::Escape => close = true,
-                Key::Tab => {
-                    form.focus = next_text(&rows, None);
-                    form.select_all = true;
-                }
-                _ => {}
-            },
+    // No row typing (the kit consumes a typing field's keys): the form's
+    // own Enter, Escape and Tab, as before.
+    if !text.typing() && !submit && !close
+        && let Some(keys) = keys.as_ref()
+    {
+        if keys.just_pressed(KeyCode::Enter) {
+            submit = true;
+        } else if keys.just_pressed(KeyCode::Escape) {
+            close = true;
+        } else if keys.just_pressed(KeyCode::Tab) {
+            form.focus = next_text(&rows, None);
+            form.select_all = true;
         }
     }
     if close {
@@ -573,6 +554,29 @@ pub(super) fn input(
             }
             Err(e) => form.error = Some(e),
         }
+    }
+    // The kit field follows the row: it takes the keyboard for the row the
+    // form opened on (or Tab chose), and shows the row's text when it
+    // changed from outside (a listing pick, "..", a new format's extension).
+    // Modal: with no other field typing the first text row takes the
+    // keyboard back, so CAD keys stay off under the form (as when it held
+    // the keyboard every frame it was open).
+    if form.focus.is_none() && !close && !text.typing()
+        && let Some(name) = next_text(&rows, None)
+    {
+        form.focus = Some(name);
+        form.select_all = true;
+    }
+    match form.focus.clone().filter(|_| !close) {
+        Some(name) => {
+            let want = TextDraft::new(form.text(&name), form.select_all);
+            if !text.focused(FILES) {
+                text.focus_draft(FILES, want);
+            } else if text.draft(FILES) != Some(&want) {
+                text.set(FILES, want);
+            }
+        }
+        None => text.blur(FILES),
     }
     // A path newly naming a mesh: RoboCAD's unit guess is asked (a job; it fills the unit).
     if !close

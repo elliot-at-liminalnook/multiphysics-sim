@@ -13,7 +13,9 @@
 //! [`keys`] (Input) maps the numpad views to [`CameraAction`]s for the modes
 //! whose rules ask for it (CAD binds its own keymap and sets `keys` false),
 //! and RoboCAD's arrow keys ([`arrow_action`]) where `robocad_gestures` is
-//! on; neither while the rules say a text field is `typing`.
+//! on; neither while a kit text field has the keyboard (`CameraPlugin`
+//! runs it under `not(ui_kit::text::typing)`). [`navigate`] reads only the
+//! modifier keys (Shift, Alt) for its gesture variants, typing or not.
 use super::viewport::area;
 use super::{CameraAction, Orbit, OrbitRules, ViewArea, ViewPreset};
 use crate::app::actions::Act;
@@ -238,11 +240,11 @@ pub(super) fn arrow_action(key: KeyCode, command: bool, shift: bool) -> Option<C
 /// view, 5 orthographic/perspective, 0 iso, `.` fit, Home the home view;
 /// and RoboCAD's arrow keys ([`arrow_action`]). Each set is read only
 /// while an enabled orbit camera's rules ask for it (`keys`,
-/// `robocad_gestures`) and no text field of its mode has the keyboard
-/// (`typing`).
+/// `robocad_gestures`); never while a kit text field has the keyboard
+/// (registered under `not(ui_kit::text::typing)`).
 pub(super) fn keys(keys: Option<Res<ButtonInput<KeyCode>>>, cameras: Query<&OrbitRules, With<Orbit>>, mut out: MessageWriter<Act<CameraAction>>) {
     let Some(keys) = keys else { return };
-    let ready = |rules: &&OrbitRules| rules.enabled && !rules.typing;
+    let ready = |rules: &&OrbitRules| rules.enabled;
     let numpad = cameras.iter().filter(ready).any(|rules| rules.keys);
     let arrows = cameras.iter().filter(ready).any(|rules| rules.robocad_gestures);
     if !(numpad || arrows) {

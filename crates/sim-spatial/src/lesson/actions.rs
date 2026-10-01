@@ -9,6 +9,7 @@ use crate::app::actions::{self, Act, Call, InFlight, Replies, Spec, spec};
 use crate::app::switch::{WindowAction, ask_switch, awaited_switch};
 use crate::annotations::{Committed, ThreadOp};
 use crate::app::ViewerMode;
+use crate::ui_kit::text::{EnterKey, FieldEvent, FieldId, FieldMsg, TabKey, TextDraft, TextField, TextFieldApp, TextFocus, Typing};
 use bevy::ecs::message::Messages;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -301,99 +302,144 @@ pub(super) fn buttons(actions: Query<(&Interaction, &LessonAction, Option<&crate
     }
 }
 
-/// Input: typing into drafts and block edits (the draft's text is edited
-/// here), and the page's keys as actions: Space plays or pauses, ←/→ step
-/// through the scene's events or nudge the focused slider, 1–9 pick an
-/// option of the next open question and Enter checks it, Escape clears the
-/// pick, Cmd/Ctrl+Z undoes (Shift redoes); in a draft Enter (Cmd/Ctrl+Enter
-/// in a block) submits and Escape cancels.
-pub(super) fn keys(mut events: MessageReader<KeyboardInput>, keys: Res<ButtonInput<KeyCode>>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<LessonCommand>>) {
+/// Input: the page's keys as actions, while no draft is open and no kit
+/// field has the keyboard: Space plays or pauses, ←/→ step through the
+/// scene's events or nudge the focused slider, 1–9 pick an option of the
+/// next open question and Enter checks it, Escape clears the pick,
+/// Cmd/Ctrl+Z undoes (Shift redoes). A draft is typed in its kit field
+/// ([`sync_field`]).
+pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, typing: Typing, learn: Res<Learn>, mut out: MessageWriter<Act<LessonCommand>>) {
     let mut send = |action: LessonAction| {
         out.write(Act::ui(LessonCommand::Ui(action)));
     };
-    if !learn.active {
-        events.clear();
+    // An open draft stops them too in the frame before its field has the keyboard.
+    if !learn.active || learn.input.is_some() || typing.get() {
         return;
     }
     let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
     let command = keys.pressed(KeyCode::SuperLeft) || keys.pressed(KeyCode::SuperRight) || keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
-    if learn.input.is_none() {
-        events.clear();
-        if keys.just_pressed(KeyCode::Space) {
-            let playing = learn.scene.as_ref().is_some_and(|a| a.playing);
-            send(if playing { LessonAction::Pause } else { LessonAction::Play });
-        }
-        // ←/→: the previous or next event in the live scene, or nudge the focused slider.
-        let step = if keys.just_pressed(KeyCode::ArrowRight) { 1 } else if keys.just_pressed(KeyCode::ArrowLeft) { -1 } else { 0 };
-        if step != 0 && learn.focus_slider.is_some() {
-            send(LessonAction::SliderStep(step, shift));
-            return;
-        }
-        // 1–9 pick an option of the next open question; Enter checks it.
-        let digit = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9].iter().position(|k| keys.just_pressed(*k));
-        if digit.is_some() || keys.just_pressed(KeyCode::Enter) {
-            if let Some(q) = learn.open_question() {
-                match digit {
-                    Some(i) => send(LessonAction::QuizPick(q, i)),
-                    None => send(LessonAction::QuizCheck(q)),
-                }
-                return;
-            }
-        }
-        if step != 0 {
-            send(LessonAction::EventStep(step));
-        }
-        if keys.just_pressed(KeyCode::Escape) {
-            send(LessonAction::ClearPick);
-        }
-        if command && keys.just_pressed(KeyCode::KeyZ) {
-            send(if shift { LessonAction::Redo } else { LessonAction::Undo });
-        }
+    if keys.just_pressed(KeyCode::Space) {
+        let playing = learn.scene.as_ref().is_some_and(|a| a.playing);
+        send(if playing { LessonAction::Pause } else { LessonAction::Play });
+    }
+    // ←/→: the previous or next event in the live scene, or nudge the focused slider.
+    let step = if keys.just_pressed(KeyCode::ArrowRight) { 1 } else if keys.just_pressed(KeyCode::ArrowLeft) { -1 } else { 0 };
+    if step != 0 && learn.focus_slider.is_some() {
+        send(LessonAction::SliderStep(step, shift));
         return;
     }
-    let block = matches!(learn.input.as_ref().map(|i| &i.purpose), Some(Purpose::Block(..) | Purpose::NewBlock(_) | Purpose::Reflection(_)));
-    for e in events.read() {
-        if e.state != ButtonState::Pressed {
-            continue;
+    // 1–9 pick an option of the next open question; Enter checks it.
+    let digit = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9].iter().position(|k| keys.just_pressed(*k));
+    if digit.is_some() || keys.just_pressed(KeyCode::Enter) {
+        if let Some(q) = learn.open_question() {
+            match digit {
+                Some(i) => send(LessonAction::QuizPick(q, i)),
+                None => send(LessonAction::QuizCheck(q)),
+            }
+            return;
         }
-        match &e.logical_key {
-            Key::Enter => {
-                // Blocks are multi-line: Cmd/Ctrl+Enter saves. Notes: Enter posts.
-                if (block && command) || (!block && !shift) {
-                    send(LessonAction::Submit);
-                    return;
-                }
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push('\n');
+    }
+    if step != 0 {
+        send(LessonAction::EventStep(step));
+    }
+    if keys.just_pressed(KeyCode::Escape) {
+        send(LessonAction::ClearPick);
+    }
+    if command && keys.just_pressed(KeyCode::KeyZ) {
+        send(if shift { LessonAction::Redo } else { LessonAction::Undo });
+    }
+}
+
+/// The lesson draft's kit fields. Notes, answers and predictions: Enter
+/// posts, Shift+Enter is a newline. Blocks, new blocks and reflections:
+/// Enter is a newline, Cmd/Ctrl+Enter saves. Tab types two spaces in both.
+/// Sticky: a draft ends on Enter, Escape or its Cancel button.
+pub(crate) const NOTE: FieldId = FieldId("lesson.note");
+pub(crate) const BLOCK: FieldId = FieldId("lesson.block");
+
+/// Spawn the lesson's two kit fields (`LearnPlugin`).
+pub(super) fn add_fields(app: &mut App) {
+    app.add_message::<FieldMsg>()
+        .add_text_field(NOTE, TextField::new("Lesson note").enter(EnterKey::ShiftNewline).tab(TabKey::Indent).sticky())
+        .add_text_field(BLOCK, TextField::new("Lesson block").enter(EnterKey::CommandSubmits).tab(TabKey::Indent).sticky());
+}
+
+/// Which kit field types draft `purpose`.
+fn field_for(purpose: &Purpose) -> FieldId {
+    if matches!(purpose, Purpose::Block(..) | Purpose::NewBlock(_) | Purpose::Reflection(_)) { BLOCK } else { NOTE }
+}
+
+/// The open draft (`Learn.input`, shared with REST) and its kit field
+/// (SimSync, after the lessons' handler applied this frame's actions):
+/// typing (`Changed`) is mirrored into the draft's buffer; Enter (`Submit`)
+/// is [`LessonAction::Submit`] and Escape (`Cancel`)
+/// [`LessonAction::CancelDraft`]. While the lesson page is shown, an open
+/// draft is given the keyboard when no field has it (a draft just opened,
+/// or one kept across a mode switch) and a buffer changed elsewhere (REST,
+/// the next blank step) is pushed into the field; a closed draft's field,
+/// or any lesson field while the builder is shown, is blurred.
+pub(super) fn sync_field(
+    // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
+    mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
+    mut learn: ResMut<Learn>,
+    mut out: MessageWriter<Act<LessonCommand>>,
+    mut submitted: Local<Option<(Purpose, String)>>,
+) {
+    let mut send = |action: LessonAction| {
+        out.write(Act::ui(LessonCommand::Ui(action)));
+    };
+    // Enter last frame (the draft then): the handler has applied it since
+    // (the next blank step may be open). This frame's typing is mirrored
+    // only into that same draft (a refusal keeps it); otherwise the field
+    // takes the buffer again below.
+    let after_submit = submitted.take();
+    let same_draft = after_submit.as_ref().is_none_or(|(purpose, buffer)| learn.input.as_ref().is_some_and(|i| i.purpose == *purpose && i.buffer == *buffer));
+    // Escape this frame: the draft is dropped by the handler next frame, so it is not refocused meanwhile.
+    let mut cancelled = false;
+    let msgs: Vec<FieldMsg> = field.p0().read().filter(|m| m.field == NOTE || m.field == BLOCK).cloned().collect();
+    for m in &msgs {
+        match &m.event {
+            FieldEvent::Changed(draft) => {
+                if same_draft && learn.input.as_ref().is_some_and(|i| field_for(&i.purpose) == m.field && i.buffer != draft.text) {
+                    // Mutably only here: an idle frame leaves `learn` unchanged (its change detection).
+                    let l = &mut *learn;
+                    if let Some(input) = l.input.as_mut() {
+                        input.buffer = draft.text.clone();
+                    }
+                    l.dirty = true;
                 }
             }
-            Key::Escape => {
-                send(LessonAction::CancelDraft);
-                return;
+            FieldEvent::Submit(_) if learn.input.is_some() => {
+                send(LessonAction::Submit);
+                *submitted = learn.input.as_ref().map(|i| (i.purpose.clone(), i.buffer.clone()));
             }
-            Key::Backspace => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.pop();
+            FieldEvent::Cancel => {
+                cancelled = true;
+                if learn.input.is_some() {
+                    send(LessonAction::CancelDraft);
                 }
             }
-            Key::Tab => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push_str("  ");
-                }
-            }
-            Key::Space => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push(' ');
-                }
-            }
-            Key::Character(c) if !command => {
-                if let Some(i) = learn.input.as_mut() {
-                    i.buffer.push_str(c.as_str());
-                }
-            }
-            _ => continue,
+            // A blur leaves the draft open (refocused below); Tab types an indent.
+            FieldEvent::Submit(_) | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } | FieldEvent::Blur => {}
         }
-        learn.dirty = true;
+    }
+    let mut text = field.p1();
+    let mine = [NOTE, BLOCK].into_iter().find(|f| text.focused(*f));
+    match learn.input.as_ref().filter(|_| learn.active).map(|i| (field_for(&i.purpose), i.buffer.clone())) {
+        Some((id, buffer)) if mine == Some(id) => {
+            if text.draft(id).is_some_and(|d| d.text != buffer) {
+                text.set(id, TextDraft::new(buffer, false));
+            }
+        }
+        Some((id, buffer)) if !cancelled && (mine.is_some() || !text.typing()) => {
+            text.focus_draft(id, TextDraft::new(buffer, false));
+        }
+        Some(_) => {}
+        None => {
+            if let Some(id) = mine {
+                text.blur(id);
+            }
+        }
     }
 }
 

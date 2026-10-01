@@ -39,7 +39,15 @@ pub(super) fn jog_buttons(mut jogs: Query<(&Interaction, &mut JogButton, Option<
 /// (a key repeat is not a press in Bevy). A Q/A release is `JogRelease`
 /// whether or not the panel is shown (the page's keyup); [`apply`](super::apply) ignores
 /// a release it did not accept a press for, and holds when both are held.
-pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, hw: Option<Res<Hardware>>, mut out: MessageWriter<Act<HardwareAction>>) {
+///
+/// A kit text field with the keyboard (`ui_kit::text::Typing`): a Q/A press
+/// is not a jog. STOP is not gated here, and a release never is (the kit
+/// releases held keys when a field takes the keyboard, so a held jog's
+/// release arrives here and stops it). A focused field does consume Z and
+/// Escape (as its text and its Cancel), which is why no field may hold the
+/// keyboard while the panel is shown: the gait path field refuses and gives
+/// it up, and the document picker closes, when the panel opens.
+pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, typing: crate::ui_kit::text::Typing, hw: Option<Res<Hardware>>, mut out: MessageWriter<Act<HardwareAction>>) {
     const JOG: [(KeyCode, Direction); 2] = [(KeyCode::KeyQ, Direction::Upper), (KeyCode::KeyA, Direction::Lower)];
     let Some(hw) = hw else { return };
     let modified = keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::AltLeft, KeyCode::AltRight]);
@@ -48,7 +56,7 @@ pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, hw: Option<Res<Hardware>>, m
             out.write(Act::ui(HardwareAction::Stop));
         }
         for (code, direction) in JOG {
-            if keys.just_pressed(code) {
+            if keys.just_pressed(code) && !typing.get() {
                 out.write(Act::ui(HardwareAction::JogPress { direction }));
             }
         }

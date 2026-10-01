@@ -99,6 +99,8 @@ fn mode_keys_are_silent_while_typing() {
     assert_eq!((seen.gated, seen.ungated), (1, 1), "no field: G is a mode key");
     focus(&mut app, A, "");
     assert!(is_typing(&mut app));
+    // A frame after the focus, so the release on focus is not what hides G.
+    app.update();
     press(&mut app, KeyCode::KeyG, Key::Character("g".into()));
     app.update();
     let seen = app.world().resource::<Seen>();
@@ -152,6 +154,7 @@ fn release_keeps_same_frame_releases() {
 fn enter_submits_and_escape_cancels() {
     let mut app = app();
     focus(&mut app, A, "");
+    app.update();
     press(&mut app, KeyCode::Digit1, Key::Character("1".into()));
     press(&mut app, KeyCode::Enter, Key::Enter);
     press(&mut app, KeyCode::Digit2, Key::Character("2".into()));
@@ -174,6 +177,20 @@ fn enter_submits_and_escape_cancels() {
     assert_eq!(got.last(), Some(&FieldMsg { field: B, event: FieldEvent::Submit("a\n".into()) }), "{got:?}");
 }
 
+/// ↑/↓ reach the owner as `Arrow` (the palette's highlight), after the
+/// edits typed before them, and are consumed.
+#[test]
+fn arrows_reach_the_owner() {
+    let mut app = app();
+    focus(&mut app, B, "");
+    app.update();
+    press(&mut app, KeyCode::KeyQ, Key::Character("q".into()));
+    press(&mut app, KeyCode::ArrowDown, Key::ArrowDown);
+    app.update();
+    assert_eq!(messages(&mut app), vec![FieldMsg { field: B, event: FieldEvent::Changed(TextDraft::new("q", false)) }, FieldMsg { field: B, event: FieldEvent::Arrow { up: false } }]);
+    assert!(!app.world().resource::<ButtonInput<KeyCode>>().just_pressed(KeyCode::ArrowDown));
+}
+
 /// A press elsewhere takes the keyboard from a field (`Blur`).
 #[test]
 fn a_press_elsewhere_blurs() {
@@ -185,26 +202,69 @@ fn a_press_elsewhere_blurs() {
     assert_eq!(messages(&mut app), vec![FieldMsg { field: A, event: FieldEvent::Blur }]);
 }
 
-/// Files that still read keyboard messages themselves, each moving to the
-/// kit field in this epic (one-text-entry); the list only shrinks.
-const NOT_YET_MOVED: &[&str] = &[
-    "app/picker/mod.rs",
-    "builder/drafts.rs",
-    "cad/attach.rs",
-    "cad/display/entry.rs",
-    "cad/files/form.rs",
-    "cad/inspector/editors.rs",
-    "cad/inspector/entry.rs",
-    "cad/materials/panel.rs",
-    "cad/numeric.rs",
-    "cad/panel.rs",
-    "cad/results/forms.rs",
-    "cad/surfaces/form.rs",
-    "cad/surfaces/palette.rs",
-    "cad/views/panel.rs",
-    "lesson/actions.rs",
-    "robot/panel_ui.rs",
-];
+/// A press on a kit input keeps the keyboard (its owner decides); a press
+/// elsewhere leaves a sticky field typing.
+#[test]
+fn kit_inputs_and_sticky_fields_keep_the_keyboard() {
+    const C: FieldId = FieldId("test.c");
+    let mut app = app();
+    app.add_text_field(C, TextField::new("C").sticky());
+    let left = MouseButtonInput { button: MouseButton::Left, state: ButtonState::Pressed, window: Entity::PLACEHOLDER };
+    focus(&mut app, A, "");
+    app.world_mut().spawn((KitInput, Interaction::Pressed));
+    app.world_mut().write_message(left);
+    app.update();
+    assert!(is_typing(&mut app), "a press on a kit input is not elsewhere");
+    focus(&mut app, C, "");
+    app.world_mut().write_message(MouseButtonInput { state: ButtonState::Released, ..left });
+    app.update();
+    app.world_mut().write_message(left);
+    app.update();
+    assert!(is_typing(&mut app), "a sticky field keeps the keyboard");
+}
+
+/// A mode switch takes the keyboard from the field that had it.
+#[test]
+fn a_mode_switch_blurs() {
+    use crate::app::ViewerMode;
+    let mut app = app();
+    app.world_mut().insert_resource(State::new(ViewerMode::Build));
+    app.update();
+    focus(&mut app, A, "");
+    app.update();
+    messages(&mut app);
+    app.world_mut().insert_resource(State::new(ViewerMode::Cad));
+    app.update();
+    assert!(!is_typing(&mut app));
+    assert_eq!(messages(&mut app), vec![FieldMsg { field: A, event: FieldEvent::Blur }]);
+}
+
+/// Tab is the owner's (`Tab`, the frame's later keys dropped); a filter
+/// refuses characters; a Command chord the field ignores reaches key maps.
+#[test]
+fn tab_filter_and_chords() {
+    const D: FieldId = FieldId("test.d");
+    let mut app = app();
+    app.add_text_field(D, TextField { filter: Some(|c| c.is_ascii_digit()), ..TextField::new("D") });
+    focus(&mut app, D, "");
+    app.update();
+    press(&mut app, KeyCode::KeyA, Key::Character("a".into()));
+    press(&mut app, KeyCode::Digit7, Key::Character("7".into()));
+    press(&mut app, KeyCode::Tab, Key::Tab);
+    press(&mut app, KeyCode::Digit8, Key::Character("8".into()));
+    app.update();
+    assert_eq!(messages(&mut app), vec![FieldMsg { field: D, event: FieldEvent::Changed(TextDraft::new("7", false)) }, FieldMsg { field: D, event: FieldEvent::Tab { back: false } }]);
+    hold(&mut app, KeyCode::SuperLeft, ButtonState::Pressed);
+    app.world_mut().write_message(KeyboardInput { key_code: KeyCode::KeyZ, logical_key: Key::Character("z".into()), state: ButtonState::Pressed, text: Some("z".into()), repeat: false, window: Entity::PLACEHOLDER });
+    app.update();
+    assert_eq!(draft(&mut app, D).text, "7", "a chord is not typed");
+    assert!(app.world().resource::<ButtonInput<KeyCode>>().just_pressed(KeyCode::KeyZ), "the chord passes through");
+}
+
+/// Files allowed to read keyboard messages outside `ui_kit/text/`, each
+/// with its reason. Empty since one-text-entry moved every site; an entry
+/// must name a reason that is not text entry.
+const ALLOWED: &[(&str, &str)] = &[];
 
 /// Nothing outside `ui_kit/text/` reads keyboard messages for text
 /// (`MessageReader`, `MessageCursor` or `Messages` of `KeyboardInput`, or a
@@ -228,7 +288,7 @@ fn keyboard_text_is_read_only_in_the_kit() {
                 let relative = path.strip_prefix(&src).unwrap().to_string_lossy().replace('\\', "/");
                 let text = std::fs::read_to_string(&path).unwrap();
                 let hits: Vec<String> = text.lines().enumerate().filter(|(_, l)| !l.trim_start().starts_with("//") && l.contains(needle.as_str())).map(|(i, l)| format!("{relative}:{}: {}", i + 1, l.trim())).collect();
-                if !hits.is_empty() && !NOT_YET_MOVED.contains(&relative.as_str()) {
+                if !hits.is_empty() && !ALLOWED.iter().any(|(path, _)| *path == relative.as_str()) {
                     offenders.extend(hits);
                 }
             }

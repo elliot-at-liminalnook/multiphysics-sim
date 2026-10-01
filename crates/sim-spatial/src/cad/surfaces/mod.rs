@@ -19,18 +19,17 @@
 //! - **Entries** ([`entries`]): one list per surface, with each entry's
 //!   command id, label, keys, readiness and action; the drawing, the clicks,
 //!   [`handle`]'s REST answer and `system_ui` read the same list.
-//! - **Input** (ViewerSet::Input, after `panel::name_entry`, before
-//!   `numeric::entry` and so before the CAD keys and transform's keys): the
-//!   form, then the palette, then [`input`] (entry clicks, presses outside,
-//!   Escape), the radials, the context menu's right-click, the two-step
-//!   key gate (`keys::gate`). A click on an entry writes its action, then
+//! - **Input** (ViewerSet::Input, before `numeric::entry`, the CAD keys
+//!   and transform's keys): the form, then the palette, then [`input`]
+//!   (entry clicks, presses outside, Escape), the radials, the context
+//!   menu's right-click, the two-step key gate (`keys::gate`). A click on an entry writes its action, then
 //!   `CadSurface { closed }` (unless the entry opens another surface), so the
 //!   action is applied before the surface closes.
-//! - **Escape order**: an Escape that ends another text field (the
-//!   inspector's name field or value editors, the numeric bar) is that
-//!   field's alone ([`escape_elsewhere`]); else an open surface closes; else
-//!   an open form or active interaction is cancelled (`CadFormCancel`); else
-//!   transform's keys take it (they skip Escape while either exists).
+//! - **Escape order**: a typing kit field's Escape is that field's alone
+//!   (the kit consumes it; the palette's closes the palette, the form's
+//!   cancels the form); else an open surface closes; else an open form or
+//!   active interaction is cancelled (`CadFormCancel`); else transform's
+//!   keys take it (they skip Escape while either exists).
 //! - **Wheel**: over a menu or context-menu popup it scrolls the popup's
 //!   rows ([`popup_scroll`]); the menus outgrow their 560 px.
 //! - **Present**: [`draw`] rebuilds the open popup (palette, menu, context
@@ -49,6 +48,7 @@ mod toolbar;
 mod tests;
 
 pub(crate) use toolbar::COMMAND_BAR;
+pub(super) use form::FORM;
 
 /// A command surface to open, or none (`CadSurface { surface }`).
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
@@ -108,8 +108,8 @@ pub struct Open {
 
 use self::registry::{CATEGORIES, Command, Resolved};
 use super::actions::{CadAction, Cx};
-use super::document::{CadDocument, CadInputFocus};
-use super::panel::{Control, NameDraft};
+use super::document::CadDocument;
+use super::panel::Control;
 use super::selection::CadSelection;
 use sim_runtime::cad_client::SelectionItem;
 use super::view::CadView;
@@ -226,12 +226,8 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         _ => centre,
     };
     let highlight = matches!(surface, Surface::Palette { .. }).then_some(0);
-    // An open surface has the keyboard: the numeric bar's entry ends (the
-    // palette ends the name field's draft, which `Cx` does not reach).
-    if doc.tool_state.numeric.focus.is_some() {
-        doc.tool_state.numeric.focus = None;
-        doc.tool_state.numeric.began = None;
-    }
+    // The palette's search field takes the keyboard when it opens
+    // (`palette::input`), which ends any other field's entry.
     doc.ops.surface = Some(Open { surface: surface.clone(), at, highlight });
     let own = super::panel::own_controls(doc, &selection);
     let list: Vec<Value> = entries(surface, doc, &selection, &own).iter().map(Entry::json).collect();
@@ -306,25 +302,6 @@ pub(crate) fn rect_of(node: &ComputedNode, transform: &UiGlobalTransform) -> Rec
     Rect::from_center_size(transform.translation * scale, node.size() * scale)
 }
 
-/// Whether the name field, an inspector value editor or the numeric bar
-/// has the keyboard (their Enter and Escape are theirs).
-pub(super) fn other_field_focused(doc: &CadDocument, draft: Option<&NameDraft>) -> bool {
-    doc.tool_state.numeric.focus.is_some() || doc.tool_state.inspector_edit.is_some() || draft.is_some_and(|d| d.editing.is_some())
-}
-
-/// Whether this frame's Escape belongs to a text field other than the
-/// open form's or palette's. The name field and the inspector's editors run
-/// first and clear their drafts on the Escape that ends them, but leave
-/// `CadInputFocus` set in that frame (`panel::name_entry` resets it each
-/// frame, so a set flag is this frame's); the open palette owns the keyboard.
-pub(super) fn escape_elsewhere(doc: &CadDocument, draft: Option<&NameDraft>, focus: bool) -> bool {
-    if matches!(doc.ops.surface.as_ref().map(|o| &o.surface), Some(Surface::Palette { .. })) {
-        return false;
-    }
-    let form_field = doc.ops.form.as_ref().and_then(|f| f.focus).is_some();
-    other_field_focused(doc, draft) || (focus && !form_field)
-}
-
 /// Whether `cursor` is over an open popup (its wheel is the popup's).
 pub(crate) fn over_popup<'a>(roots: impl IntoIterator<Item = (&'a ComputedNode, &'a UiGlobalTransform)>, cursor: Vec2) -> bool {
     roots.into_iter().any(|(node, t)| rect_of(node, t).contains(cursor))
@@ -334,19 +311,18 @@ pub(crate) fn over_popup<'a>(roots: impl IntoIterator<Item = (&'a ComputedNode, 
 
 /// CAD mode's surfaces' systems (Input keys, Present drawing).
 pub(super) fn build(app: &mut App) {
-    app.init_resource::<super::keys::Chord>()
+    use crate::ui_kit::text::{TextField, TextFieldApp};
+    app.add_text_field(form::FORM, TextField::new("Operation parameter").sticky())
+        .add_text_field(palette::PALETTE, TextField::new("Command palette search").sticky())
+        .init_resource::<super::keys::Chord>()
         .add_systems(OnEnter(ModeScope::Cad), toolbar::spawn)
         .add_systems(
             Update,
             (form::input, palette::input, input, radial::input, context_menu::input, popup_scroll, toolbar::scroll, super::keys::gate)
                 .chain()
                 .after(crate::app::actions::serve)
-                // The name field and the inspector's editors clear their
-                // drafts on the Escape that ends them and leave
-                // `CadInputFocus` set that frame, which `input` reads to
-                // leave that Escape to them (`escape_elsewhere`).
-                .after(super::panel::name_entry)
-                .after(super::inspector::editor_entry)
+                // The form's Tab focuses its first field before the numeric
+                // bar reads Tab (it stands aside while a field types).
                 .before(super::numeric::entry)
                 .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),
@@ -366,11 +342,20 @@ fn input(
     buttons: Option<Res<ButtonInput<MouseButton>>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     windows: Query<&Window, With<PrimaryWindow>>,
-    draft: Option<Res<NameDraft>>,
-    focus: Option<Res<CadInputFocus>>,
     mut out: MessageWriter<Act<CadAction>>,
+    (mut text, mut popup_was_open): (crate::ui_kit::text::TextFocus, Local<bool>),
 ) {
     let Some(mut doc) = doc else { return };
+    // A menu, context menu or radial opening holds the keyboard while open
+    // (as `CadDocument::ops.surface` did for every field): a non-sticky
+    // field's entry ends (`Blur`; the numeric bar's, the inspector's, the
+    // section offset's, a saved view's). The palette has its own field;
+    // the name field and the forms are sticky and keep theirs.
+    let popup = doc.ops.surface.as_ref().is_some_and(|o| !matches!(o.surface, Surface::Palette { .. }));
+    if popup && !std::mem::replace(&mut *popup_was_open, popup) {
+        text.release(false);
+    }
+    *popup_was_open = popup;
     let mut clicked = false;
     for (interaction, entry, enabled) in &clicks {
         if *interaction != Interaction::Pressed {
@@ -400,7 +385,9 @@ fn input(
             out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
         }
     }
-    if keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) && !escape_elsewhere(&doc, draft.as_deref(), focus.is_some_and(|f| f.0)) {
+    // A typing field's Escape is its own (the kit consumes it: the palette's
+    // and the form's fields close or cancel on their `Cancel`).
+    if keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) {
         if open.is_some() {
             out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
         } else if doc.ops.form.is_some() || doc.ops.active.is_some() {

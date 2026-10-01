@@ -435,6 +435,7 @@ pub(super) fn update(
     window: Single<&Window>,
     camera: Single<(&Camera, &GlobalTransform), With<Orbit>>,
     keys: Res<ButtonInput<KeyCode>>,
+    typing: crate::ui_kit::text::Typing,
     buttons: Res<ButtonInput<MouseButton>>,
     mut gizmos: Gizmos,
     mut selection: ResMut<Selection>,
@@ -522,7 +523,9 @@ pub(super) fn update(
         }
         return;
     }
-    if keys.just_pressed(KeyCode::Escape)
+    // A kit field with the keyboard has the drag's keys (Escape cancels the field, X/Y/Z are typed).
+    let typing = typing.get();
+    if (keys.just_pressed(KeyCode::Escape) && !typing)
         || drag.level != b.level
         || !drag.same_scene(&b.document)
     {
@@ -531,7 +534,7 @@ pub(super) fn update(
         return;
     }
     for (key, axis) in [(KeyCode::KeyX, 0), (KeyCode::KeyY, 1), (KeyCode::KeyZ, 2)] {
-        if keys.just_pressed(key) {
+        if keys.just_pressed(key) && !typing {
             drag.axis = Some(axis);
         }
     }

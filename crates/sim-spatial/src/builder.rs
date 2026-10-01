@@ -9,8 +9,6 @@
 use super::*;
 use bevy::asset::RenderAssetUsages;
 use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
-use bevy::input::keyboard::{Key, KeyboardInput};
-use bevy::input::ButtonState;
 use sim_core::BehaviorRegistry;
 use sim_runtime::run_history::Fidelity;
 use sim_runtime::system_builder;
@@ -422,10 +420,6 @@ impl Builder {
         serde_json::json!({"dir": self.parts.dir, "parts": self.parts.last})
     }
 
-    pub fn typing(&self) -> bool {
-        self.input.is_some()
-    }
-
     /// The system file this builder edits.
     pub fn path(&self) -> &std::path::Path {
         &self.store.path
@@ -464,8 +458,8 @@ impl Builder {
             self.run_pause();
         }
         // A drag begun after the switch was validated (the state changes a
-        // frame later) ends here, as it did before. A draft is kept: its keys
-        // stop (text_input runs in build mode only) until build mode returns.
+        // frame later) ends here, as it did before. A draft is kept: its kit
+        // field is refocused (`drafts::sync_field`, build mode only) when build mode returns.
         self.drag = None;
         self.connect_from = None;
         self.mode = Mode::Select;
@@ -532,13 +526,14 @@ impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         let building = in_state(ViewerMode::Build);
         crate::app::actions::register::<system_actions::SystemAction>(app);
+        drafts::add_fields(app);
         // Buttons and keys write the builder's actions (after REST's, as the old chain
         // applied them); its one handler applies them and REST's in Actions.
-        app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone())).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(ModeScope::Builder)))
+        app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(ModeScope::Builder)))
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, text_input.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
+            (frame_timing, watch, agent::tick, reference::tick, sync_field.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
                 // Docks and home requests reach the shared camera before it is placed.
                 .before(crate::inspect_view::sync_camera)
@@ -582,7 +577,7 @@ mod live_run;
 mod rebuild;
 mod studies;
 use background::{finish_actuators, finish_calibration, finish_gait_reports, frame_timing, open_system, watch};
-use drafts::{drops, text_input};
+use drafts::{drops, sync_field};
 use live_run::{grab_push, sync_run};
 pub use rebuild::compiled_scene;
 pub(super) use rebuild::click_part;

@@ -1,6 +1,7 @@
-//! Text drafts: opening and committing the one text field, typing into it,
-//! and files dropped on the window.
+//! Text drafts: opening and committing the one text field, its kit field
+//! (`builder.draft`/`builder.note`), and files dropped on the window.
 use super::*;
+use crate::ui_kit::text::{EnterKey, FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFieldApp, TextFocus};
 
 impl Builder {
     pub(super) fn start_input(&mut self, purpose: Purpose, initial: String) {
@@ -100,58 +101,105 @@ impl Builder {
     }
 }
 
-/// Typing into the open draft (input editing); Enter and Escape are the
-/// draft's submit and drop actions, applied by the builder's handler.
-/// Keys from the frame a draft opens are dropped: the key that opened it
-/// ("/" for the filter) was pressed before the draft existed.
-pub(super) fn text_input(mut events: MessageReader<KeyboardInput>, mut builder: ResMut<Builder>, keys: Res<ButtonInput<KeyCode>>, mode: Option<Res<State<ViewerMode>>>, mut was_open: Local<bool>, mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>) {
+/// The draft's kit field: a comment or thread title is a note (Enter posts,
+/// Shift+Enter is a newline); every other draft is one line (Enter commits).
+pub(crate) const DRAFT: FieldId = FieldId("builder.draft");
+pub(crate) const NOTE: FieldId = FieldId("builder.note");
+
+/// Spawn the builder's two kit fields (`BuilderPlugin`). Sticky: an open
+/// draft ends on Enter, Escape or its Cancel button, not on a press elsewhere.
+pub(super) fn add_fields(app: &mut App) {
+    app.add_message::<FieldMsg>()
+        .add_text_field(DRAFT, TextField::new("Builder draft").sticky())
+        .add_text_field(NOTE, TextField::new("Discussion draft").enter(EnterKey::ShiftNewline).sticky());
+}
+
+/// Which kit field types draft `purpose`.
+fn field_for(purpose: &Purpose) -> FieldId {
+    if matches!(purpose, Purpose::Comment | Purpose::ThreadTitle) { NOTE } else { DRAFT }
+}
+
+/// The open draft and its kit field (SimSync, Build only, after the
+/// builder's handler applied this frame's actions). The draft
+/// (`Builder.input`) is document state shared with `system_ui`; the field
+/// is how the keyboard types it:
+/// - typing (`Changed`) is mirrored into the draft's buffer;
+/// - Enter (`Submit`) is the draft's submit action and Escape (`Cancel`) its
+///   drop action, applied by the builder's handler; Escape also leaves
+///   Connect/Annotate, as build mode's Escape key does;
+/// - a draft that is open while no field has the keyboard is given it (a
+///   draft just opened, or one kept across a mode switch, which took the
+///   keyboard away), with its buffer; a buffer `system_ui` changed is pushed
+///   into the field; a closed draft's field is blurred.
+///
+/// The key that opened a draft ("/" for the filter) is not typed: the kit
+/// read that frame's keys before this system focused the field.
+pub(super) fn sync_field(
+    // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
+    mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
+    mut builder: ResMut<Builder>,
+    mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>,
+    mut submitted: Local<Option<(Purpose, String)>>,
+) {
     let mut send = |action: BuildAction| {
         out.write(crate::app::actions::Act::ui(system_actions::SystemAction::Ui(action)));
     };
-    let opened_now = builder.input.is_some() && !*was_open;
-    *was_open = builder.input.is_some();
-    if builder.input.is_none() || opened_now {
-        events.clear();
-        return;
-    }
-    for e in events.read() {
-        if e.state != ButtonState::Pressed {
-            continue;
-        }
-        match &e.logical_key {
-            Key::Enter => {
-                if builder.input.as_ref().is_some_and(|i|matches!(i.purpose,Purpose::Comment|Purpose::ThreadTitle)) && (keys.pressed(KeyCode::ShiftLeft)||keys.pressed(KeyCode::ShiftRight)) {
-                    builder.input.as_mut().unwrap().buffer.push('\n');builder.panel_dirty=true;continue;
+    // Escape this frame: the draft is dropped by the handler next frame, so it is not refocused meanwhile.
+    let mut cancelled = false;
+    // Enter last frame (the draft then): the handler has applied it since.
+    // This frame's typing (keys after the Enter) is mirrored only into that
+    // same draft (a refused commit restores it), not into a draft opened
+    // since; otherwise the field takes the buffer again below.
+    let after_submit = submitted.take();
+    let same_draft = after_submit.as_ref().is_none_or(|(purpose, buffer)| builder.input.as_ref().is_some_and(|i| i.purpose == *purpose && i.buffer == *buffer));
+    let msgs: Vec<FieldMsg> = field.p0().read().filter(|m| m.field == DRAFT || m.field == NOTE).cloned().collect();
+    for m in &msgs {
+        match &m.event {
+            FieldEvent::Changed(draft) => {
+                if same_draft && builder.input.as_ref().is_some_and(|i| field_for(&i.purpose) == m.field && i.buffer != draft.text) {
+                    // Mutably only here: an idle frame leaves `builder` unchanged (its change detection).
+                    let b = &mut *builder;
+                    if let Some(input) = b.input.as_mut() {
+                        input.buffer = draft.text.clone();
+                    }
+                    b.panel_dirty = true;
                 }
+            }
+            FieldEvent::Submit(_) if builder.input.is_some() => {
                 send(BuildAction::SubmitDraft);
-                return;
+                *submitted = builder.input.as_ref().map(|i| (i.purpose.clone(), i.buffer.clone()));
             }
-            Key::Escape => {
-                send(BuildAction::DropDraft);
-                // Escape also leaves Connect/Annotate, as build mode's Escape key does.
-                if builder.drag.is_none() && mode.is_some_and(|m| *m.get() == ViewerMode::Build) {
-                    send(BuildAction::SetMode(Mode::Select));
-                }
-                return;
-            }
-            Key::Backspace => {
-                if let Some(i) = builder.input.as_mut() {
-                    i.buffer.pop();
+            FieldEvent::Cancel => {
+                cancelled = true;
+                if builder.input.is_some() {
+                    send(BuildAction::DropDraft);
+                    // Escape also leaves Connect/Annotate (this runs in build mode only).
+                    if builder.drag.is_none() {
+                        send(BuildAction::SetMode(Mode::Select));
+                    }
                 }
             }
-            Key::Space => {
-                if let Some(i) = builder.input.as_mut() {
-                    i.buffer.push(' ');
-                }
-            }
-            Key::Character(c) => {
-                if let Some(i) = builder.input.as_mut() {
-                    i.buffer.push_str(c.as_str());
-                }
-            }
-            _ => {}
+            // A blur leaves the draft open (refocused below); Tab does nothing in a draft.
+            FieldEvent::Submit(_) | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } | FieldEvent::Blur => {}
         }
-        builder.panel_dirty = true;
+    }
+    let mut text = field.p1();
+    let mine = [DRAFT, NOTE].into_iter().find(|f| text.focused(*f));
+    match builder.input.as_ref().map(|i| (field_for(&i.purpose), i.buffer.clone())) {
+        Some((id, buffer)) if mine == Some(id) => {
+            if text.draft(id).is_some_and(|d| d.text != buffer) {
+                text.set(id, TextDraft::new(buffer, false));
+            }
+        }
+        Some((id, buffer)) if !cancelled && (mine.is_some() || !text.typing()) => {
+            text.focus_draft(id, TextDraft::new(buffer, false));
+        }
+        Some(_) => {}
+        None => {
+            if let Some(id) = mine {
+                text.blur(id);
+            }
+        }
     }
 }
 

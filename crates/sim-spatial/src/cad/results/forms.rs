@@ -14,25 +14,29 @@
 //!   Enter) writes the one action a caller sends with the path, Cancel (or
 //!   Escape) `form_cancel`. A refusal comes back into the form's `error`
 //!   ([`settled`]); an accepted request closes it.
-//! - **Modal**: a dimmed backdrop takes every click and the form holds
-//!   `CadInputFocus` while open, ending the other fields' drafts.
+//! - **Modal**: a dimmed backdrop takes every click and the form's kit
+//!   field ([`RESULTS`]) holds the keyboard while open (taking it ends any
+//!   other field's entry).
 use super::{ExportKind, ResultsArgs, ResultsOp, doc_path, model_path};
 use crate::app::ModeScope;
 use crate::app::actions::{Act, Call};
 use crate::app::{ViewerMode, ViewerSet};
 use crate::builder::ui_api::Enabled;
 use crate::cad::actions::{CadAction, Cx};
-use crate::cad::document::{CadDocument, CadInputFocus};
-use crate::cad::panel::NameDraft;
-use crate::ui_kit::form::{DraftKey, FieldKind, FormHit, FormRow, TextDraft};
+use crate::cad::document::CadDocument;
+use crate::ui_kit::form::{FieldKind, FormHit, FormRow};
 use crate::ui_kit::path_field::{self, PathHit};
+use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextFocus};
 use crate::ui_kit::{DANGER, Kit, SUBTLE, UiFonts, WARN, size};
-use bevy::input::ButtonState;
-use bevy::input::keyboard::{Key, KeyboardInput};
+use bevy::ecs::system::ParamSet;
 use bevy::prelude::*;
 use serde_json::{Value, json};
 use sim_api::Outcome;
 use std::path::Path;
+
+/// The form's path field (`ui_kit::text`). Sticky: the path row keeps the
+/// keyboard while the form is open (a press on its listing or buttons too).
+pub(in crate::cad) const RESULTS: FieldId = FieldId("cad.results");
 
 /// What the form is for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -89,7 +93,7 @@ impl FormKind {
 pub(crate) struct PathForm {
     pub kind: FormKind,
     pub draft: TextDraft,
-    /// The path row has the keyboard.
+    /// The path row has the keyboard (its kit field, [`RESULTS`], follows it).
     pub focused: bool,
     /// Why OK sent nothing, or RoboCAD's refusal.
     pub error: Option<String>,
@@ -147,15 +151,9 @@ impl PathForm {
     }
 }
 
-/// Opens the form of `kind` (ending the other fields' typing, and the file
-/// form: one modal at a time).
+/// Opens the form of `kind` (closing the file form: one modal at a time).
 pub(in crate::cad) fn open(cx: &mut Cx, kind: FormKind) -> Result<Value, String> {
-    cx.doc.tool_state.numeric.focus = None;
-    cx.doc.tool_state.numeric.began = None;
-    cx.doc.tool_state.inspector_edit = None;
-    if let Some(f) = cx.doc.ops.form.as_mut() {
-        f.focus = None;
-    }
+    // Its field takes the keyboard (`input`), which ends any other field's entry.
     if let Some(files) = cx.files.as_deref_mut() {
         files.form = None;
     }
@@ -223,55 +221,49 @@ pub(super) enum Part {
 #[derive(Component)]
 pub(super) struct ResultsFormRoot;
 
-/// Input: the open form's clicks and keys (see the module doc).
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
+/// Input: the open form's clicks, its path field's events and the keys it
+/// reads with no field typing (see the module doc).
+#[allow(clippy::type_complexity)]
 pub(super) fn input(
     doc: Option<ResMut<CadDocument>>,
     parts: Query<(&Interaction, &Part, Option<&Enabled>), Changed<Interaction>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
-    mut events: MessageReader<KeyboardInput>,
-    focus: Option<ResMut<CadInputFocus>>,
-    name: Option<ResMut<NameDraft>>,
+    // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
+    mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
-    (section, views, files): (Option<ResMut<crate::cad::display::entry::SectionEntry>>, Option<ResMut<crate::cad::views::CadViews>>, Option<Res<crate::cad::files::CadFiles>>),
+    files: Option<Res<crate::cad::files::CadFiles>>,
 ) {
-    let Some(mut doc) = doc else { return };
-    let Some(before) = doc.results.form.clone() else { return };
-    // The file form opened over this one has the keyboard.
+    let events: Vec<FieldEvent> = field.p0().read().filter(|m| m.field == RESULTS).map(|m| m.event.clone()).collect();
+    let mut text = field.p1();
+    let Some(mut doc) = doc else {
+        text.blur(RESULTS);
+        return;
+    };
+    let Some(before) = doc.results.form.clone() else {
+        text.blur(RESULTS);
+        return;
+    };
+    // The file form opened over this one has the keyboard (this one's row
+    // takes it back when that one closes).
     if files.is_some_and(|f| f.form.is_some()) {
         return;
     }
     let mut form = before.clone();
-    // Modal: the form has the keyboard; the other fields' drafts end.
-    if let Some(mut focus) = focus
-        && !focus.0
-    {
-        focus.0 = true;
-    }
-    if let Some(mut name) = name
-        && name.editing.is_some()
-    {
-        name.editing = None;
-        name.refusal = None;
-    }
-    if let Some(mut section) = section.filter(|s| s.typing.is_some()) {
-        section.typing = None;
-    }
-    if let Some(mut views) = views.filter(|v| v.typing.is_some()) {
-        views.typing = None;
-    }
-    if doc.tool_state.numeric.focus.is_some() {
-        doc.tool_state.numeric.focus = None;
-    }
-    if doc.tool_state.inspector_edit.is_some() {
-        doc.tool_state.inspector_edit = None;
-    }
-    if doc.ops.form.as_ref().is_some_and(|f| f.focus.is_some())
-        && let Some(f) = doc.ops.form.as_mut()
-    {
-        f.focus = None;
-    }
     let (mut submit, mut close) = (false, false);
+    for event in events {
+        match event {
+            FieldEvent::Changed(draft) => {
+                form.draft = draft;
+                form.error = None;
+            }
+            FieldEvent::Submit(_) => submit = true,
+            // Escape cancels the form (the kit has taken the keyboard away).
+            FieldEvent::Cancel => close = true,
+            FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } => {}
+            // Another field took the keyboard, or a mode switch.
+            FieldEvent::Blur => form.focused = false,
+        }
+    }
     for (interaction, part, enabled) in &parts {
         if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
             continue;
@@ -280,8 +272,7 @@ pub(super) fn input(
             Part::Form(FormHit::Field(_)) => {
                 form.focused = true;
                 form.draft.select_all = true;
-                // Keys pressed before the field took the keyboard are not its text.
-                events.clear();
+                text.focus_draft(RESULTS, form.draft.clone());
             }
             Part::Form(FormHit::Ok) => submit = true,
             Part::Form(FormHit::Cancel) => close = true,
@@ -302,34 +293,37 @@ pub(super) fn input(
             Part::Path(PathHit::Field | PathHit::Submit) => {}
         }
     }
-    let chord = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::ControlLeft, KeyCode::ControlRight]));
-    let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();
-    for e in typed {
-        if submit || close {
-            break;
+    // The row not typing (the kit consumes a typing field's keys): the
+    // form's own Enter, Escape and Tab, as before.
+    if !text.typing() && !submit && !close
+        && let Some(keys) = keys.as_ref()
+    {
+        if keys.just_pressed(KeyCode::Enter) {
+            submit = true;
+        } else if keys.just_pressed(KeyCode::Escape) {
+            close = true;
+        } else if keys.just_pressed(KeyCode::Tab) {
+            form.focused = true;
+            form.draft.select_all = true;
         }
-        if !form.focused {
-            match &e.logical_key {
-                Key::Enter => submit = true,
-                Key::Escape => close = true,
-                Key::Tab => {
-                    form.focused = true;
-                    form.draft.select_all = true;
-                }
-                _ => {}
-            }
-            continue;
+    }
+    // Modal: with no other field typing the row takes the keyboard back, so
+    // CAD keys stay off under the form (as when it held the keyboard every
+    // frame it was open).
+    if !form.focused && !close && !text.typing() {
+        form.focused = true;
+    }
+    // The kit field follows the row: it has the keyboard while the row is
+    // focused, and shows the path when it changed from outside (a listing
+    // pick, "..", `form_set`).
+    if form.focused && !close {
+        if !text.focused(RESULTS) {
+            text.focus_draft(RESULTS, form.draft.clone());
+        } else if text.draft(RESULTS) != Some(&form.draft) {
+            text.set(RESULTS, form.draft.clone());
         }
-        let mut draft = form.draft.clone();
-        match draft.key(&e.logical_key, chord) {
-            DraftKey::Edited => {
-                form.draft = draft;
-                form.error = None;
-            }
-            DraftKey::Enter => submit = true,
-            DraftKey::Escape => close = true,
-            DraftKey::Tab | DraftKey::Ignored => {}
-        }
+    } else {
+        text.blur(RESULTS);
     }
     if close {
         out.write(Act::ui(super::ResultsArgs::of(ResultsOp::FormCancel)));
@@ -406,19 +400,15 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, form: &PathForm, listed: Option
     k.path_listing(p, form.text(), listing, &Part::Path);
 }
 
-/// CadPlugin: the form's input (after the name field, which resets
-/// `CadInputFocus`, before every reader of it) and its drawing.
+/// CadPlugin: the form's text field, its input (before the CAD keys, so
+/// the frame's keys see its field typing) and its drawing.
 pub(super) fn build(app: &mut App) {
+    use crate::ui_kit::text::{TextField, TextFieldApp};
+    app.add_text_field(RESULTS, TextField::new("Results path").sticky());
     app.add_systems(
         Update,
         (
-            input
-                .after(crate::app::actions::serve)
-                .after(crate::cad::panel::name_entry)
-                .before(crate::cad::inspector::editor_entry)
-                .before(crate::cad::keys::gate)
-                .before(crate::cad::keys::keys)
-                .in_set(ViewerSet::Input),
+            input.after(crate::app::actions::serve).before(crate::cad::keys::gate).before(crate::cad::keys::keys).in_set(ViewerSet::Input),
             draw.in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

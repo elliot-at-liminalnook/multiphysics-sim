@@ -225,10 +225,12 @@ impl Kit<'_> {
             });
     }
 
-    /// Text-entry styling for the builder's draft fields. The draft itself
-    /// (keys, caret, commit, cancel) stays in the builder's `text_input`;
-    /// this shows `shown` (or the placeholder), with a caret while `focused`.
-    /// A press on it is `action` (typically "focus this field").
+    /// How a kit text field (`ui_kit::text::TextField`) is drawn. The draft
+    /// itself (keys, commit, cancel) is the kit field's, edited by the one
+    /// input system (`ui_kit::text::input::keys`); this shows `shown` (or
+    /// the placeholder), with a caret while `focused`. A press on it is
+    /// `action` (typically "focus this field"); the node is tagged
+    /// `KitInput`, so the press does not take the keyboard away.
     pub(crate) fn input<A: Component>(&self, shown: &str, placeholder: &str, action: A, focused: bool) -> impl Bundle + use<A> {
         self.input_selectable(shown, placeholder, action, focused, false)
     }

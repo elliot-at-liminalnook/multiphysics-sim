@@ -74,8 +74,10 @@ pub struct Request<'a> {
     pub headers: &'a [(&'a str, &'a str)],
     /// The body; `Content-Length` is added when `Some`.
     pub body: Option<&'a str>,
-    /// Appended verbatim to "… the server closed the connection without a
-    /// usable answer ({e})" (e.g. why the hardware server may have closed).
+    /// Appended verbatim to the closed-connection error, after its
+    /// [`REFUSAL_LOST`] note ("… the server closed the connection … ({e});
+    /// {REFUSAL_LOST}{closed_hint}"), e.g. why the hardware server may have
+    /// closed.
     pub closed_hint: &'a str,
 }
 

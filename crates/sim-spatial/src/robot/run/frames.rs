@@ -152,17 +152,17 @@ pub(super) fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u6
     Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new(), overlays: overlays(robot, flags), motor_targets: None }
 }
 
-/// Link poses by loaded-link index, their published velocities, and the pose
-/// names that match no loaded link (kept, never dropped silently). One mapping
-/// for live preset frames and recorded captures: `poses[]` of `{name,
-/// position_m, rotation}` (rotation row-major, the same link frames
-/// `PhysicalRobot::poses` gives), the shape `sim_runtime::embedded_capture` reads.
 /// A row-major 3×3 rotation (as frames and mirror poses publish it) as a unit quaternion.
 pub fn rotation_quat(m: &[[f64; 3]; 3]) -> DQuat {
     let cols = DMat3::from_cols([m[0][0], m[1][0], m[2][0]].into(), [m[0][1], m[1][1], m[2][1]].into(), [m[0][2], m[1][2], m[2][2]].into());
     DQuat::from_mat3(&cols).normalize()
 }
 type Mapped = (Vec<Option<([f64; 3], DQuat)>>, Vec<Option<([f64; 3], [f64; 3])>>, Vec<String>);
+/// Link poses by loaded-link index, their published velocities, and the pose
+/// names that match no loaded link (kept, never dropped silently). One mapping
+/// for live preset frames and recorded captures: `poses[]` of `{name,
+/// position_m, rotation}` (rotation row-major, the same link frames
+/// `PhysicalRobot::poses` gives), the shape `sim_runtime::embedded_capture` reads.
 pub fn map_poses(poses: &[CapturePose], links: &[String]) -> Mapped {
     let mut out = vec![None; links.len()];
     let mut velocities = vec![None; links.len()];

@@ -622,9 +622,20 @@ class Service:
         body = self._body(nid)
         return [face_json(f) for f in self.doc.kernel.faces(body)]
 
-    def edges(self, nid: str):
+    def edges(self, nid: str, samples=None):
+        """Each edge's `edge_json`; with `samples=N` (2..256) also its
+        `points`: the polyline the viewport draws and picks
+        (`kernel.sample_edges`: N points along curves, 2 for lines)."""
+        if samples is None:
+            body = self._body(nid)
+            return [edge_json(e) for e in self.doc.kernel.edges(body)]
+        text = str(samples)
+        if isinstance(samples, bool) or not (text.isascii() and text.isdigit() and len(text) <= 3) or not 2 <= int(text) <= 256:
+            raise ApiError(400, f"samples must be an integer from 2 to 256, got {samples!r}")
         body = self._body(nid)
-        return [edge_json(e) for e in self.doc.kernel.edges(body)]
+        # sample_edges walks the same edge list as kernel.edges (same order,
+        # same EdgeRef and index), so each entry is edge_json plus points.
+        return [dict(edge_json(e), points=[list(p) for p in pts]) for e, pts in self.doc.kernel.sample_edges(body, count=int(text))]
 
     def vertices(self, nid: str):
         body = self._body(nid)
@@ -1157,7 +1168,7 @@ def make_handler(service: Service):
                 if sub == "faces":
                     return self._send(200, run(lambda: s.faces(nid)))
                 if sub == "edges":
-                    return self._send(200, run(lambda: s.edges(nid)))
+                    return self._send(200, run(lambda: s.edges(nid, q.get("samples"))))
                 if sub == "vertices":
                     return self._send(200, run(lambda: s.vertices(nid)))
                 if sub == "mesh":

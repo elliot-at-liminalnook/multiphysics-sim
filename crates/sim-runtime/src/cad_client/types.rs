@@ -282,3 +282,80 @@ pub struct Exported {
     pub exported: String,
     pub warnings: Value,
 }
+
+/// One face of a node's body (`GET /nodes/{id}/faces`, `face_json`:
+/// `FaceRef.to_json` plus `index`). Lengths in mm, area in mm². A field
+/// Python wrote as `null` (or malformed) is `None`, never filled in.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct FaceInfo {
+    /// The face's index in the body's face list (the `index` of
+    /// `[node, "face", index]` and of `triangle_face`).
+    pub index: i64,
+    /// `SurfaceKind`: plane | cylinder | cone | sphere | torus | bspline | other …
+    pub kind: String,
+    #[serde(deserialize_with = "lenient")]
+    pub centroid: Option<[f64; 3]>,
+    #[serde(deserialize_with = "lenient")]
+    pub normal: Option<[f64; 3]>,
+    #[serde(deserialize_with = "lenient")]
+    pub area: Option<f64>,
+    /// Cylinders, cones, spheres and tori: the axis point and direction and the radius.
+    #[serde(deserialize_with = "lenient")]
+    pub axis_point: Option<[f64; 3]>,
+    #[serde(deserialize_with = "lenient")]
+    pub axis_dir: Option<[f64; 3]>,
+    #[serde(deserialize_with = "lenient")]
+    pub radius: Option<f64>,
+    /// The surface point where `normal` was evaluated.
+    #[serde(deserialize_with = "lenient")]
+    pub point: Option<[f64; 3]>,
+}
+
+/// One edge of a node's body (`GET /nodes/{id}/edges`, `edge_json`), with
+/// its sampled polyline when asked for (`?samples=N`: the points RoboCAD's
+/// viewport draws and picks, `kernel.sample_edges`). mm.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct EdgeInfo {
+    pub index: i64,
+    /// `CurveKind`: line | circle | ellipse | bspline | other …
+    pub kind: String,
+    #[serde(deserialize_with = "lenient")]
+    pub midpoint: Option<[f64; 3]>,
+    #[serde(deserialize_with = "lenient")]
+    pub length: Option<f64>,
+    #[serde(deserialize_with = "lenient")]
+    pub start: Option<[f64; 3]>,
+    #[serde(deserialize_with = "lenient")]
+    pub end: Option<[f64; 3]>,
+    /// Circles and arcs: the centre and radius.
+    #[serde(deserialize_with = "lenient")]
+    pub center: Option<[f64; 3]>,
+    #[serde(deserialize_with = "lenient")]
+    pub radius: Option<f64>,
+    /// The sampled polyline (empty unless `samples` was asked for; a
+    /// malformed point is dropped).
+    #[serde(deserialize_with = "lenient_items", skip_serializing_if = "Vec::is_empty")]
+    pub points: Vec<[f64; 3]>,
+}
+
+/// One vertex of a node's body (`GET /nodes/{id}/vertices`). mm.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct VertexInfo {
+    pub index: i64,
+    #[serde(deserialize_with = "lenient")]
+    pub point: Option<[f64; 3]>,
+}
+
+/// `GET /nodes/{id}/solids`: the solid inventory of a node's resolved body
+/// (`kernel.solid_inventory`, an open shape, kept as given).
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Solids {
+    pub node_id: String,
+    pub revision: u64,
+    pub units: String,
+    pub solids: Vec<Value>,
+}

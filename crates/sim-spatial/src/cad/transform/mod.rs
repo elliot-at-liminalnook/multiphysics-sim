@@ -111,6 +111,7 @@ pub(super) use geometry::{cursor_in_view, face_target, marker, preview_bodies, r
 pub use gizmo::Drag;
 pub(super) use input::{keys, restore_cursor, tool_cursor};
 pub use push_pull::{PushDrag, Target as PushTarget};
+pub(super) use push_pull::push_distance;
 pub(super) use preview::{previews, state_json};
 
 use super::actions::{CadAction, Cx};

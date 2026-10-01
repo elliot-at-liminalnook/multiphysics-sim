@@ -7,10 +7,13 @@
 //! ("union"), a chamfer spec `{"distance"[, "angle_deg"]}`, a transform
 //! `{"translation"}`, counts as integers. Labels are RoboCAD's history
 //! label (the Ops method's `_edit`/`_new`/`Composite` label) and the subject.
+//! A plane parameter's "active" is the active plane (`CadActivePlane`),
+//! sent by name or plane node id ([`Arg::Plane`]), or read as its frame
+//! (the radial array's origin and normal, a primitive's plane).
 use super::resolve::{Resolved, kind_of};
 use super::{Arg, Env, Fan, Needs, OpEntry, Param, Primitive, Shape};
-use crate::cad::sketch::{SketchTarget, ViewAct};
-use sim_runtime::cad_client::SketchCall;
+use crate::cad::sketch::{BasePlane, SketchTarget, ViewAct};
+use sim_runtime::cad_client::{PlaneFrame, SketchCall};
 use crate::cad::analysis_overlay::Read;
 use crate::cad::document::CadDocument;
 use crate::cad::mesh::BODY_KINDS;
@@ -211,22 +214,62 @@ fn plural(n: usize, one: &str) -> String {
     if n == 1 { format!("1 {one}") } else { format!("{n} {one}s") }
 }
 
-/// The parameters an entry's arguments use, each once, shown as "name value".
-fn param_details(entry: &OpEntry, values: &Map<String, Value>) -> Vec<String> {
-    let mut used: Vec<&str> = Vec::new();
+/// The parameters an entry's arguments use, each once, shown as "name
+/// value"; a plane parameter as the plane it sends ("plane xy", "plane Plane 2").
+fn param_details(entry: &OpEntry, values: &Map<String, Value>, doc: &CadDocument, env: &Env) -> Vec<String> {
+    let mut used: Vec<(&str, Option<BasePlane>)> = Vec::new();
     for a in entry.args.iter().chain(entry.kwargs.iter().map(|(_, a)| a)) {
-        if let Arg::Param(name) = a
-            && !used.contains(name)
-        {
-            used.push(*name);
+        let (name, fallback) = match a {
+            Arg::Param(name) => (*name, None),
+            Arg::Plane(name, fallback) => (*name, Some(*fallback)),
+            _ => continue,
+        };
+        if !used.iter().any(|(n, _)| *n == name) {
+            used.push((name, fallback));
         }
     }
     used.iter()
-        .filter_map(|name| {
+        .filter_map(|(name, fallback)| {
             let p = entry.params.iter().find(|p| p.name == *name)?;
-            values.get(*name).map(|v| format!("{} {}", p.name.replace('_', " "), shown(p, v)))
+            let v = values.get(*name)?;
+            let text = match (fallback, plane_arg(v, *fallback, env)) {
+                (Some(_), Some(Value::String(sent))) if doc.has_node(&sent) && doc.doc.is_some() => doc.node_name(&sent),
+                (Some(_), Some(Value::String(sent))) => sent,
+                _ => shown(p, v),
+            };
+            Some(format!("{} {text}", p.name.replace('_', " ")))
         })
         .collect()
+}
+
+/// What a plane parameter sends (`Arg::Plane`): "active" is the active
+/// plane's argument ("xy" or its plane node id), else `fallback` (RoboCAD's
+/// `active_plane or Plane.yz()`); "xy", "xz" or "yz" is sent as it is. None
+/// when the value is not text, or without a fallback.
+fn plane_arg(v: &Value, fallback: Option<BasePlane>, env: &Env) -> Option<Value> {
+    let fallback = fallback?;
+    Some(match v.as_str()? {
+        "active" => env.plane.map_or_else(|| Value::from(fallback.arg()), |p| p.arg_or(fallback)),
+        named => Value::from(named),
+    })
+}
+
+/// A plane parameter's frame: "active" is the active plane's (an error
+/// naming a plane node still being read), else XY's (RoboCAD's
+/// `active_plane or Plane.xy()`); "xy", "xz" or "yz" that plane's. With
+/// the plane's name as a label shows it.
+fn plane_frame(name: &str, value: &str, env: &Env, doc: &CadDocument) -> Result<(PlaneFrame, String), String> {
+    let named = |b: BasePlane| (b.frame(), b.arg().to_string());
+    match value {
+        "active" => match env.plane {
+            Some(p) if p.plane.is_some() => Ok((p.frame_or_xy()?, p.label(doc))),
+            _ => Ok(named(BasePlane::Xy)),
+        },
+        "xy" => Ok(named(BasePlane::Xy)),
+        "xz" => Ok(named(BasePlane::Xz)),
+        "yz" => Ok(named(BasePlane::Yz)),
+        other => Err(format!("{name} must be active, xy, xz or yz (got {other})")),
+    }
 }
 
 fn joined(head: String, parts: &[String]) -> String {
@@ -264,11 +307,7 @@ fn arg(entry: &OpEntry, a: &Arg, r: &Resolved, g: &Group, values: &Map<String, V
             m.insert((*key).to_string(), param(entry, values, name)?.clone());
             Value::Object(m)
         }
-        Arg::Plane(name, fallback) => match param(entry, values, name)?.as_str() {
-            Some("active") => env.plane.map_or_else(|| Value::from(fallback.arg()), |p| p.arg_or(*fallback)),
-            Some(named) => Value::from(named),
-            None => return Err(format!("{name} must be active, xy, xz or yz")),
-        },
+        Arg::Plane(name, fallback) => plane_arg(param(entry, values, name)?, Some(*fallback), env).ok_or_else(|| format!("{name} must be active, xy, xz or yz"))?,
         Arg::OtherNode => json!(r.other.as_ref().ok_or_else(missing)?),
         Arg::Param(name) => param(entry, values, name)?.clone(),
         Arg::Const(text) => serde_json::from_str::<Value>(text).map_err(|e| format!("{}: constant {text} is not JSON: {e}", entry.id))?,
@@ -306,7 +345,7 @@ fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
         }
         _ => None,
     };
-    let mut details = param_details(entry, values);
+    let mut details = param_details(entry, values, doc, env);
     if let Some((_, distance, angle)) = &spec {
         details.push(format!("distance {}", fl(*distance)));
         if (angle - 45.0).abs() > 1e-9 {
@@ -376,8 +415,10 @@ fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
 
 /// The Array dialog (ui/app.py:920-941): `array_rect(ids, count, spacing=|extent=, as_instances, merge)`
 /// or `array_radial(ids, count, axis_point, axis_dir, total_angle, as_instances, merge)`.
+/// The radial array's axis is the plane's normal through its origin: the
+/// active plane's ("active", RoboCAD's `active_plane or Plane.xy()`), or
+/// the named plane's (kernel/base.py:102-111).
 fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDocument, env: &Env) -> Result<Built, String> {
-    let _ = env; // P2: the radial array's plane defaults to the active plane.
     if r.nodes.is_empty() {
         return Err(entry.refusal.to_string());
     }
@@ -389,19 +430,14 @@ fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
     let call = if kind == "radial" {
         let n = count(entry, values, "count")?;
         let angle = number(entry, values, "angle")?;
-        let plane = param(entry, values, "plane")?.as_str().unwrap_or_default().to_string();
-        // The plane's origin and normal (kernel/base.py:102-111: Plane.xy, .xz, .yz at offset 0).
-        let normal = match plane.as_str() {
-            "xy" => [0.0, 0.0, 1.0],
-            "xz" => [0.0, -1.0, 0.0],
-            "yz" => [1.0, 0.0, 0.0],
-            other => return Err(format!("plane must be xy, xz or yz (got {other})")),
-        };
+        let value = param(entry, values, "plane")?.as_str().unwrap_or_default().to_string();
+        let (frame, plane) = plane_frame("plane", &value, env, doc)?;
+        let r3 = |v: [f64; 3]| v.map(round6);
         kwargs.insert("total_angle".into(), json!(angle));
         kwargs.insert("as_instances".into(), json!(as_instances));
         kwargs.insert("merge".into(), json!(merge));
         let label = format!("{} {who}: {n} over {} about the {plane} normal", history("array_radial"), fa(angle));
-        OpCall { name: "array_radial", args: vec![json!(r.nodes), json!(n), json!([0.0, 0.0, 0.0]), json!(normal)], kwargs, label }
+        OpCall { name: "array_radial", args: vec![json!(r.nodes), json!(n), json!(r3(frame.origin)), json!(r3(frame.normal))], kwargs, label }
     } else if kind == "rectangular" {
         let c = [count(entry, values, "count_x")?, count(entry, values, "count_y")?, count(entry, values, "count_z")?];
         let s = vec3(entry, values, "spacing")?;
@@ -420,35 +456,62 @@ fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
     Ok(Built::Edit { calls: vec![call], label })
 }
 
-/// RoboCAD's `PrimitiveTool` on the XY plane (ui/tools.py:491-532): the
-/// box as `_make_box` (width and depth at least 1e-3; a height within 1e-6
-/// of zero is 1; a negative height extrudes down), the centre box centred
-/// in the plane only, the cylinder as `_finish` (axis ± Z by the height's
-/// sign, radius at least 1e-3), the sphere with radius at least 1e-3.
-/// RoboCAD projects the anchor onto the plane (`plane.to_local(anchor)`,
-/// ui/tools.py:522-529): the box's and the cylinder's base lie on the XY
-/// plane (z = 0; the native viewer has no other plane until cad-sketch);
-/// the sphere keeps its centre.
+/// RoboCAD's `PrimitiveTool` on the active plane (ui/tools.py:491-532;
+/// `ctx.active_plane()`: the active plane, else XY). The anchor parameter
+/// is a model point, projected onto the plane (`plane.to_local(anchor)`,
+/// tools.py:522-529); the sphere keeps its centre. The box as `_make_box`
+/// (width and depth at least 1e-3; a height within 1e-6 of zero is 1; a
+/// negative height extrudes |h| along −normal), the centre box centred in
+/// the plane only, the cylinder as `_finish` (axis ± the normal by the
+/// height's sign, radius at least 1e-3), the sphere with radius at least 1e-3.
+///
+/// On XY the calls are `Ops.box(corner, size)` and `Ops.cylinder` with
+/// z = 0, as before cad-sketch. On another plane RoboCAD extrudes a sketch
+/// rectangle (`_make_box`), which no Ops route takes; the box is sent as
+/// `Ops.box_three_point(a, b, c, height)` (commands.py:426-435: x =
+/// unit(b − a), y the in-plane direction towards c, z = x × y) with a, b, c
+/// chosen so z is the plane's normal (h ≥ 0) or its reverse (h < 0): the
+/// same solid. Deliberately different: the history label is
+/// `box_three_point`'s "Box", as `_make_box`'s extrude names it "Box".
 fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>, env: &Env) -> Result<Built, String> {
-    let _ = env; // P2: placed on the active plane.
+    let frame = env.plane.map_or(Ok(PlaneFrame::XY), |p| p.frame_or_xy())?;
+    let on_xy = frame.same(&PlaneFrame::XY, 1e-9);
     let r3 = |v: [f64; 3]| [round6(v[0]), round6(v[1]), round6(v[2])];
     let call = match primitive {
         Primitive::BoxCorner | Primitive::BoxCentre => {
             let anchor = vec3(entry, values, if primitive == Primitive::BoxCorner { "corner" } else { "center" })?;
             let (w, d, h) = (number(entry, values, "width")?, number(entry, values, "depth")?, number(entry, values, "height")?);
-            let (x0, y0) = if primitive == Primitive::BoxCentre { (anchor[0] - w / 2.0, anchor[1] - d / 2.0) } else { (anchor[0], anchor[1]) };
+            let [u, v, _] = if on_xy { anchor } else { frame.to_local(anchor) };
+            let (x0, y0) = if primitive == Primitive::BoxCentre { (u - w / 2.0, v - d / 2.0) } else { (u, v) };
             let height = if h.abs() > 1e-6 { h.abs() } else { 1.0 };
-            let z0 = if h >= 0.0 { 0.0 } else { -height };
-            let size = r3([w.max(1e-3), d.max(1e-3), height]);
-            let corner = r3([x0, y0, z0]);
-            let label = format!("Box {} × {} × {} at {}", fl(size[0]), fl(size[1]), fl(size[2]), pt(corner));
-            OpCall { name: entry.route, args: vec![json!(corner), json!(size)], kwargs: Map::new(), label }
+            let (w, d) = (w.max(1e-3), d.max(1e-3));
+            if on_xy {
+                let z0 = if h >= 0.0 { 0.0 } else { -height };
+                let size = r3([w, d, height]);
+                let corner = r3([x0, y0, z0]);
+                let label = format!("Box {} × {} × {} at {}", fl(size[0]), fl(size[1]), fl(size[2]), pt(corner));
+                OpCall { name: entry.route, args: vec![json!(corner), json!(size)], kwargs: Map::new(), label }
+            } else {
+                // The base rectangle's corners: a → b along the plane's x, c across. For a
+                // negative height the rectangle is walked from its far v edge, so y = −plane y
+                // and z = x × y = −normal: `_make_box`'s extrusion along −normal.
+                let at = |uu: f64, vv: f64| r3(frame.to_world(uu, vv, 0.0));
+                let (a, b, c) = if h >= 0.0 { (at(x0, y0), at(x0 + w, y0), at(x0, y0 + d)) } else { (at(x0, y0 + d), at(x0 + w, y0 + d), at(x0, y0)) };
+                let label = format!("Box {} × {} × {} at {} on the plane", fl(round6(w)), fl(round6(d)), fl(round6(height)), pt(at(x0, y0)));
+                OpCall { name: "box_three_point", args: vec![json!(a), json!(b), json!(c), json!(round6(height))], kwargs: Map::new(), label }
+            }
         }
         Primitive::Cylinder => {
             let anchor = vec3(entry, values, "base")?;
-            let base = r3([anchor[0], anchor[1], 0.0]);
             let (dia, h) = (number(entry, values, "diameter")?, number(entry, values, "height")?);
-            let axis = if h > 0.0 { [0.0, 0.0, 1.0] } else { [0.0, 0.0, -1.0] };
+            let (base, normal) = if on_xy {
+                ([anchor[0], anchor[1], 0.0], [0.0, 0.0, 1.0])
+            } else {
+                let [u, v, _] = frame.to_local(anchor);
+                (frame.to_world(u, v, 0.0), frame.normal)
+            };
+            let base = r3(base);
+            let axis = if h > 0.0 { r3(normal) } else { r3(normal.map(|x| -x)) };
             let radius = round6((dia / 2.0).max(1e-3));
             let label = format!("Cylinder Ø{} × {} at {}", fl(2.0 * radius), fl(h.abs()), pt(base));
             OpCall { name: entry.route, args: vec![json!(base), json!(axis), json!(radius), json!(round6(h.abs()))], kwargs: Map::new(), label }

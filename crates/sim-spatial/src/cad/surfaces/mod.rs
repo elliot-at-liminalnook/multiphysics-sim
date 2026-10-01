@@ -6,7 +6,10 @@
 //! command palette (`palette`), the menus by category (`menus`) and the
 //! parameter form (`form`). Every entry carries the same `CadAction` REST and
 //! `system_ui` send (`CadInvoke`, the existing CAD actions); opening and
-//! closing a surface is `CadSurface`.
+//! closing a surface is `CadSurface`. The cad-sketch epic's commands
+//! (Create solids, Planes, Sketch) are catalogue operations too, so every
+//! surface reaches them as it reaches cad-modify's; the right-click menu
+//! adds a Sketch section (`context_menu`).
 //!
 //! - **State.** The open surface is `CadDocument::ops.surface` ([`Open`]),
 //!   set and cleared only by [`handle`] (`CadSurface`), except the
@@ -175,7 +178,8 @@ pub(crate) fn entries(surface: &Surface, doc: &CadDocument, own: &[Control]) -> 
         Surface::Palette { query } => palette::ranked(doc, own, query).into_iter().map(|(cmd, row)| Entry::of(cmd, &row, Vec::new(), doc, own)).collect(),
         Surface::Menu { category } => registry::COMMANDS.iter().filter(|c| registry::menu_of(c.category) == category).map(|cmd| Entry::of(cmd, cmd.label, shortcut_keys(cmd), doc, own)).collect(),
         Surface::Context { .. } => {
-            let mut out: Vec<Entry> = registry::CONTEXT.iter().filter_map(|id| by_id(id, None)).collect();
+            // RoboCAD's 14, then the native Sketch section (`context_menu`'s doc).
+            let mut out: Vec<Entry> = registry::CONTEXT.iter().chain(registry::SKETCH_CONTEXT.iter()).filter_map(|id| by_id(id, None)).collect();
             if context_menu::instance_selected(doc) {
                 let (id, label) = registry::MAKE_UNIQUE;
                 out.extend(by_id(id, Some(label)));
@@ -466,9 +470,13 @@ fn draw(
                 let r = rect_of(node, t);
                 Vec2::new(r.min.x, r.max.y + 2.0)
             });
-            popup_list(&mut commands, &k, &format!("{category} menu"), under.unwrap_or(at), window, &list);
+            popup_list(&mut commands, &k, &format!("{category} menu"), under.unwrap_or(at), window, &list, None);
         }
-        Surface::Context { .. } => popup_list(&mut commands, &k, "Viewport context menu", at + Vec2::splat(2.0), window, &list),
+        Surface::Context { .. } => {
+            // The Sketch section's heading above its first entry.
+            let sketch = list.iter().position(|e| registry::SKETCH_CONTEXT.contains(&e.id.as_str())).map(|i| (i, "Sketch"));
+            popup_list(&mut commands, &k, "Viewport context menu", at + Vec2::splat(2.0), window, &list, sketch);
+        }
         Surface::ViewRadial { .. } | Surface::SelectRadial { .. } => radial::spawn(&mut commands, &k, &open, &list),
     }
 }
@@ -499,8 +507,9 @@ fn popup_place(at: Vec2, window: Vec2) -> (f32, f32, f32, f32) {
 
 /// A menu-like popup at `at`, kept inside the `window`-sized window
 /// ([`popup_place`]): one ghost row per entry ("label    keys"), disabled
-/// ones greyed, each a [`SurfaceEntry`].
-fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, window: Vec2, list: &[Entry]) {
+/// ones greyed, each a [`SurfaceEntry`]; `heading` (index, text): a
+/// section heading above that entry, over a rule (display only).
+fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, window: Vec2, list: &[Entry], heading: Option<(usize, &str)>) {
     let (left, top, rows_max, max_width) = popup_place(at, window);
     commands
         .spawn((
@@ -534,7 +543,15 @@ fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, window: V
                 if list.is_empty() {
                     p.spawn(k.text("(no commands)", size::CAPTION, FAINT, 0));
                 }
-                for e in list {
+                for (i, e) in list.iter().enumerate() {
+                    if let Some((_, text)) = heading.filter(|(n, _)| *n == i) {
+                        p.spawn((
+                            k.text(text, size::CAPTION, FAINT, 0),
+                            Node { margin: UiRect::top(Val::Px(4.0)), padding: UiRect::new(Val::Px(8.0), Val::Px(8.0), Val::Px(4.0), Val::Px(2.0)), border: UiRect::top(Val::Px(1.0)), flex_shrink: 0.0, ..default() },
+                            BorderColor::all(BORDER),
+                            Pickable::IGNORE,
+                        ));
+                    }
                     // Left-aligned rows: the kit button's layout with its content at the start
                     // (`repaint_buttons` restores the look's padding, border and radius).
                     p.spawn(k.button(&e.text(), SurfaceEntry::of(e), Look::Ghost, e.ready.is_ok())).insert(Node { justify_content: JustifyContent::FlexStart, align_items: AlignItems::Center, flex_shrink: 0.0, ..default() });

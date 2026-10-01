@@ -10,13 +10,18 @@
 //! keys are live: `simulation.experiment` Ctrl+Return, `robot.add_motor`
 //! Ctrl+Shift+M and `robot.add_joint` Ctrl+Shift+J are listed but never
 //! bound (docs/cad-parity.md:1020). keymap.json's `sketch.arc` (A) names
-//! no command and is dropped, as RoboCAD drops it.
+//! no command and RoboCAD drops it; here A is bound to `sketch.arc_3pt`
+//! instead, deliberately (the ledger's cad-sketch row: bind A to the
+//! three-point arc, as RoboCAD's USER_GUIDE.md:181 documents "`A` arc"),
+//! so `sketch.arc_3pt` lists A and is bound where RoboCAD lists no key.
 //!
 //! Native mapping ([`Native`]), owners from docs/cad-parity.md:
-//! - `Op`: a cad-modify operation, run by the op catalogue
-//!   (`ops::CATALOGUE`) when it lists the id; label, category and keys
-//!   must agree with it (tests). Not (yet) in the catalogue, it reads as
-//!   owned by the cad-modify epic.
+//! - `Op`: an operation run by the op catalogue (`ops::CATALOGUE`) when
+//!   it lists the id: cad-modify's, and cad-sketch's Create solids
+//!   (extrude, revolve, sweep, pipe, loft, fill), Planes and Sketch
+//!   commands, which now run natively; label, category and keys must
+//!   agree with the catalogue (tests). Not (yet) in the catalogue, it
+//!   reads as owned by the cad-modify epic.
 //! - `Action`: an existing CAD action (undo, save, fit, a selection
 //!   command or mode, a tool).
 //! - `Surface`: opens the palette or a radial menu (`CadSurface`).
@@ -134,6 +139,15 @@ pub(crate) const TOOLBAR: [&str; 25] = [
 /// The viewport's right-click menu, in order (`_context_menu`, app.py:1103-1107).
 pub(crate) const CONTEXT: [&str; 14] = ["tool.annotate", "view.comments", "tool.push_pull", "tool.fillet", "tool.chamfer", "tool.shell", "modify.union", "modify.subtract", "tool.mirror", "tool.array", "tool.measure", "view.isolate", "view.hide", "edit.delete"];
 
+/// The right-click menu's Sketch section, after RoboCAD's [`CONTEXT`]: the
+/// 13 sketch tools in RoboCAD's registry order (app.py:377). A native
+/// addition (RoboCAD's `_context_menu` has no sketch tools), made for the
+/// cad-sketch epic's surfaces requirement: every sketch tool reachable from
+/// the 3D view's own menu.
+pub(crate) const SKETCH_CONTEXT: [&str; 13] = [
+    "sketch.line", "sketch.rectangle", "sketch.rectangle_center", "sketch.circle", "sketch.circle_2pt", "sketch.circle_3pt", "sketch.arc_3pt", "sketch.polygon", "sketch.slot", "sketch.spline", "sketch.ellipse", "sketch.spiral", "sketch.text",
+];
+
 /// The outliner's "Make unique (bake instance)" (widgets.py:431), added to
 /// the context menu when an instance is selected: Make instance unique of
 /// the selected instances.
@@ -219,12 +233,12 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("tool.box_center", "Box (centre)", "Create", &[], false, Native::Op),
     c("tool.cylinder", "Cylinder", "Create", &["Shift+A, C"], true, Native::Op),
     c("tool.sphere", "Sphere", "Create", &["Shift+A, S"], true, Native::Op),
-    c("tool.extrude", "Extrude", "Create", &["X"], true, Native::Later("cad-sketch")),
-    c("tool.revolve", "Revolve", "Create", &["Shift+R"], true, Native::Later("cad-sketch")),
-    c("tool.sweep", "Sweep (profile + path from selection)", "Create", &[], false, Native::Later("cad-sketch")),
-    c("tool.pipe", "Pipe along selected curve…", "Create", &[], false, Native::Later("cad-sketch")),
-    c("tool.loft", "Loft selected sketches", "Create", &[], false, Native::Later("cad-sketch")),
-    c("tool.fill", "Fill / patch selected curve", "Create", &[], false, Native::Later("cad-sketch")),
+    c("tool.extrude", "Extrude", "Create", &["X"], true, Native::Op),
+    c("tool.revolve", "Revolve", "Create", &["Shift+R"], true, Native::Op),
+    c("tool.sweep", "Sweep (profile + path from selection)", "Create", &[], false, Native::Op),
+    c("tool.pipe", "Pipe along selected curve…", "Create", &[], false, Native::Op),
+    c("tool.loft", "Loft selected sketches", "Create", &[], false, Native::Op),
+    c("tool.fill", "Fill / patch selected curve", "Create", &[], false, Native::Op),
     c("tool.fillet", "Fillet", "Modify", &["Ctrl+F"], true, Native::Op),
     c("tool.fillet_variable", "Variable fillet", "Modify", &[], false, Native::Op),
     c("tool.fillet_chordal", "Chordal fillet", "Modify", &[], false, Native::Op),
@@ -237,14 +251,14 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("tool.draft", "Draft faces…", "Modify", &[], false, Native::Op),
     c("tool.delete_face", "Delete faces (heal)", "Modify", &[], false, Native::Op),
     c("tool.measure", "Measure", "Inspect", &["M"], true, Native::Action(Do::Tool(CadTool::Measure))),
-    c("tool.plane", "Plane from face", "Planes", &["Ctrl+P"], true, Native::Later("cad-sketch")),
-    c("tool.plane_three", "Plane from three points", "Planes", &[], false, Native::Later("cad-sketch")),
-    c("tool.plane_camera", "Plane from two points (camera)", "Planes", &[], false, Native::Later("cad-sketch")),
-    c("tool.plane_mid", "Midplane between two faces", "Planes", &[], false, Native::Later("cad-sketch")),
-    c("tool.plane_xy", "Active plane: XY", "Planes", &[], false, Native::Later("cad-sketch")),
-    c("tool.plane_xz", "Active plane: XZ", "Planes", &[], false, Native::Later("cad-sketch")),
-    c("tool.plane_yz", "Active plane: YZ", "Planes", &[], false, Native::Later("cad-sketch")),
-    c("tool.plane_2d_snap", "Toggle 2D snapping to the active plane", "Planes", &[], false, Native::Later("cad-sketch")),
+    c("tool.plane", "Plane from face", "Planes", &["Ctrl+P"], true, Native::Op),
+    c("tool.plane_three", "Plane from three points", "Planes", &[], false, Native::Op),
+    c("tool.plane_camera", "Plane from two points (camera)", "Planes", &[], false, Native::Op),
+    c("tool.plane_mid", "Midplane between two faces", "Planes", &[], false, Native::Op),
+    c("tool.plane_xy", "Active plane: XY", "Planes", &[], false, Native::Op),
+    c("tool.plane_xz", "Active plane: XZ", "Planes", &[], false, Native::Op),
+    c("tool.plane_yz", "Active plane: YZ", "Planes", &[], false, Native::Op),
+    c("tool.plane_2d_snap", "Toggle 2D snapping to the active plane", "Planes", &[], false, Native::Op),
     c("tool.fastener", "Fastener hole…", "Print", &["Ctrl+H"], true, Native::Later("cad-print")),
     c("tool.clearance", "Clearance offset…", "Print", &["Ctrl+Shift+C"], true, Native::Later("cad-print")),
     c("tool.mirror", "Mirror (about active plane)", "Modify", &["Ctrl+M"], true, Native::Op),
@@ -264,22 +278,25 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("tool.rebuild_face", "Rebuild face…", "Advanced", &[], false, Native::Op),
     c("tool.dependent_offset", "Dependent offset (face to body)…", "Modify", &[], false, Native::Op),
     c("tool.set_pivot", "Set pivot at cursor snap", "Tools", &[], false, Native::Op),
-    c("sketch.line", "Sketch: Line", "Sketch", &["L"], true, Native::Later("cad-sketch")),
-    c("sketch.rectangle", "Sketch: Rectangle", "Sketch", &["Shift+L"], true, Native::Later("cad-sketch")),
-    c("sketch.rectangle_center", "Sketch: Rectangle (centre)", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.circle", "Sketch: Circle", "Sketch", &["C"], true, Native::Later("cad-sketch")),
-    c("sketch.circle_2pt", "Sketch: Circle (two points)", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.circle_3pt", "Sketch: Circle (three points)", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.arc_3pt", "Sketch: Arc (three points)", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.polygon", "Sketch: Polygon", "Sketch", &["Shift+P"], true, Native::Later("cad-sketch")),
-    c("sketch.slot", "Sketch: Slot", "Sketch", &["Shift+S"], true, Native::Later("cad-sketch")),
-    c("sketch.spline", "Sketch: Spline", "Sketch", &["Shift+C"], true, Native::Later("cad-sketch")),
-    c("sketch.ellipse", "Sketch: Ellipse", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.spiral", "Sketch: Spiral", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.text", "Sketch: Text", "Sketch", &["T"], true, Native::Later("cad-sketch")),
-    c("sketch.offset", "Sketch: offset selected curve…", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.fillet", "Sketch: fillet corner…", "Sketch", &[], false, Native::Later("cad-sketch")),
-    c("sketch.join", "Sketch: join curves", "Sketch", &[], false, Native::Later("cad-sketch")),
+    c("sketch.line", "Sketch: Line", "Sketch", &["L"], true, Native::Op),
+    c("sketch.rectangle", "Sketch: Rectangle", "Sketch", &["Shift+L"], true, Native::Op),
+    c("sketch.rectangle_center", "Sketch: Rectangle (centre)", "Sketch", &[], false, Native::Op),
+    c("sketch.circle", "Sketch: Circle", "Sketch", &["C"], true, Native::Op),
+    c("sketch.circle_2pt", "Sketch: Circle (two points)", "Sketch", &[], false, Native::Op),
+    c("sketch.circle_3pt", "Sketch: Circle (three points)", "Sketch", &[], false, Native::Op),
+    // A deliberate native binding: keymap.json's `sketch.arc` (A) names no
+    // command and RoboCAD drops it (app.py:462); A runs the three-point arc
+    // here, as USER_GUIDE.md's "`A` arc" says it should (see the module doc).
+    c("sketch.arc_3pt", "Sketch: Arc (three points)", "Sketch", &["A"], true, Native::Op),
+    c("sketch.polygon", "Sketch: Polygon", "Sketch", &["Shift+P"], true, Native::Op),
+    c("sketch.slot", "Sketch: Slot", "Sketch", &["Shift+S"], true, Native::Op),
+    c("sketch.spline", "Sketch: Spline", "Sketch", &["Shift+C"], true, Native::Op),
+    c("sketch.ellipse", "Sketch: Ellipse", "Sketch", &[], false, Native::Op),
+    c("sketch.spiral", "Sketch: Spiral", "Sketch", &[], false, Native::Op),
+    c("sketch.text", "Sketch: Text", "Sketch", &["T"], true, Native::Op),
+    c("sketch.offset", "Sketch: offset selected curve…", "Sketch", &[], false, Native::Op),
+    c("sketch.fillet", "Sketch: fillet corner…", "Sketch", &[], false, Native::Op),
+    c("sketch.join", "Sketch: join curves", "Sketch", &[], false, Native::Op),
     c("modify.union", "Union", "Modify", &["Ctrl+U"], true, Native::Op),
     c("modify.subtract", "Subtract", "Modify", &["Ctrl+Shift+U"], true, Native::Op),
     c("modify.intersect", "Intersect", "Modify", &["Ctrl+Alt+U"], true, Native::Op),

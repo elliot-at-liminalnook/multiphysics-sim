@@ -33,6 +33,8 @@ pub mod service;
 pub mod sketch;
 pub mod types;
 #[cfg(test)]
+mod sketch_tests;
+#[cfg(test)]
 mod tests;
 
 pub use sketch::{PlaneFrame, SKETCH_CALLS, SketchCall, SketchCurve, SketchGeometry, Uv, calls_body, check_calls, plane_of};

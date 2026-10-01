@@ -6,9 +6,11 @@
 //!
 //! - **Placing** ([`pointer`], SimSync; RoboCAD ui/tools.py:386-541) while
 //!   `CadDocument::ops.active` is a `Flow::Place` op and the pointer is
-//!   over the 3D view: a left press snaps (`snap::snap` over the drawn
-//!   bodies' topology, then the 10 mm grid, else the plane; Alt suppresses)
-//!   and begins the base (stage 1) with RoboCAD's revision at the press;
+//!   over the 3D view: a left press snaps on the active plane
+//!   (`snap::snap_on` with RoboCAD's `want_plane`: the drawn bodies' and
+//!   sketches' candidates projected onto the plane, then the 10 mm grid in
+//!   the plane, else the plane hit; Alt suppresses) and begins the base
+//!   (stage 1) with RoboCAD's revision at the press;
 //!   dragging moves its second corner; the release finishes a sphere at
 //!   once (RoboCAD's `release`), keeps a zero-size base waiting for a drag,
 //!   else starts stage 2, where the pointer drags the height along the
@@ -19,16 +21,21 @@
 //!   computes ([`finish_params`]); the op's handler builds the Ops call,
 //!   refuses it by name when the document changed since the press, and
 //!   sends it as one edit. Tab during a drag writes the base's first point
-//!   (projected onto the plane, z = 0, except a sphere's centre) into the
+//!   (projected onto the plane, except a sphere's centre) into the
 //!   form's anchor field, found by its name ("corner", "center" or
-//!   "base"), so OK places the typed sizes there (RoboCAD's `commit`
-//!   anchors at `p0`). Escape is the surfaces' key (`CadFormCancel` ends
+//!   "base"), as a model point "x, y, z", so OK places the typed sizes
+//!   there (RoboCAD's `commit` anchors at `p0`). Escape is the surfaces' key (`CadFormCancel` ends
 //!   the placement). While a command surface is open (or was when the
 //!   press came: the press that closes it is applied before this system
 //!   runs) a press only closes it, as `pick` does.
-//! - **The plane** is RoboCAD's default active plane, XY through the
-//!   origin (z = 0): the native viewer has no active plane until
-//!   cad-sketch.
+//! - **The plane** is RoboCAD's `ctx.active_plane()`: the active plane
+//!   (`CadActivePlane`), else XY. A placement keeps the plane it began on;
+//!   if the active plane changes during it, the placement ends with nothing
+//!   sent. A plane node whose frame is still being read refuses the press
+//!   by name. Base points are (u, v) in the plane (`to_local`), the height
+//!   runs along its normal, the preview is drawn on it, and the finished
+//!   anchors are model points ([`finish_params`]); `args::place` turns them
+//!   into the Ops call for that plane.
 //! - **Preview** ([`draw`], Present): the base rectangle or ring and the
 //!   top outline as overlay lines in RoboCAD's temporary-shape colour
 //!   (0.4, 0.9, 1.0); the readout ("20 mm × 20 mm × 10 mm", "Ø 10 mm ×
@@ -38,33 +45,39 @@
 //!   revision).
 //! - **Cursor snap** (`ops.cursor_snap`, display state only): the snap
 //!   under the pointer while it is over the 3D view, as RoboCAD's
-//!   `set_pivot` reads `viewport.snap` at the pointer (`snap::snap`): a
-//!   vertex, midpoint or centre of the drawn bodies within 12 px, else the
-//!   10 mm grid on z = 0, else the plane point (no surface hit, and so no
-//!   ray cast). Recomputed at most every 33 ms (RoboCAD's hover timer) and
-//!   only when the pointer, the view or the candidates changed; the
-//!   candidates are cached by the topology's and meshes' epochs, as the
-//!   measure tool's. It carries the shown revision it was snapped at and
-//!   is cleared when that revision moves on, when the pointer leaves the
-//!   window, or when the search under the pointer finds nothing.
+//!   `set_pivot` reads `viewport.snap` at the pointer (`snap::snap_on`): a
+//!   vertex, midpoint or centre of the drawn bodies or a sketch endpoint or
+//!   centre within 12 px (projected onto the active plane while 2D
+//!   snapping is on), else the 10 mm grid (on that plane, else z = 0), else
+//!   the plane point (no surface hit, and so no ray cast). Recomputed at
+//!   most every 33 ms (RoboCAD's hover timer) and only when the pointer,
+//!   the view, the candidates or the 2D snapping plane changed; the
+//!   candidates are cached by the topology's, meshes' and sketch cache's
+//!   epochs, as the measure tool's. It carries the shown revision it was
+//!   snapped at and is cleared when that revision moves on, when the
+//!   pointer leaves the window, or when the search under the pointer finds
+//!   nothing.
 use super::{Flow, Primitive, entry};
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::mesh::CadMeshes;
+use crate::cad::sketch::{CadActivePlane, CadSketches};
 use crate::cad::snap::{self, Candidate, GRID_STEP};
-use crate::cad::topology::{CadTopology, NodeTopology};
+use crate::cad::topology::CadTopology;
 use crate::cad::transform::{ToolGizmos, cursor_in_view, fl, num, round6, view_back};
 use crate::cad::view::{CadView, ray_plane};
 use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, RequestRedraw};
 use serde_json::{Map, Value};
+use sim_runtime::cad_client::PlaneFrame;
 use std::time::{Duration, Instant};
 
 /// A primitive being placed: the base's first and current points on the
-/// plane (mm, RoboCAD's frame), the stage, and the height being dragged.
+/// plane (mm, RoboCAD's frame), the stage, the height being dragged and
+/// the plane it is placed on.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Place {
     /// 1: dragging the base; 2: dragging the height.
@@ -72,6 +85,8 @@ pub struct Place {
     pub p0: [f64; 3],
     pub p1: [f64; 3],
     pub height: f64,
+    /// The active plane (or XY) when the placement began.
+    pub frame: PlaneFrame,
 }
 
 /// RoboCAD's temporary-shape colour for a primitive (tools.py:477-500).
@@ -96,8 +111,10 @@ pub(in crate::cad) fn build(app: &mut App) {
 /// The pointer's state across frames.
 #[derive(Default)]
 struct Pointer {
-    /// Snap candidates of the drawn bodies, keyed by the topology's and meshes' epochs.
-    cache: Option<((u64, u64), Vec<Candidate>)>,
+    /// Snap candidates of the drawn bodies and sketches, keyed by the topology's, meshes' and sketches' epochs.
+    cache: Option<((u64, u64, u64), Vec<Candidate>)>,
+    /// The cursor snap's plane (2D snapping): a change searches again.
+    snap_plane: Option<PlaneFrame>,
     /// RoboCAD's `PrimitiveTool.h`: the last dragged height, kept across placements.
     height: Option<f64>,
     /// RoboCAD's revision at the press that began the placement.
@@ -141,9 +158,10 @@ fn base_rect(kind: Primitive, a: [f64; 2], b: [f64; 2]) -> (f64, f64, f64, f64) 
     }
 }
 
-/// The plane coordinates (u, v) of a point on RoboCAD's XY plane (`to_local`).
-fn uv(p: [f64; 3]) -> [f64; 2] {
-    [p[0], p[1]]
+/// The plane coordinates (u, v) of a point (`plane.to_local`).
+fn uv(frame: &PlaneFrame, p: [f64; 3]) -> [f64; 2] {
+    let [u, v, _] = frame.to_local(p);
+    [u, v]
 }
 
 /// The height shown and finished with: RoboCAD's `self.h` in stage 2, 0 before.
@@ -152,15 +170,17 @@ fn shown_height(place: &Place) -> f64 {
 }
 
 /// RoboCAD's `_finish` as `CadRun` parameters (the catalogue's names; a
-/// point as the anchor field's "x, y, z" text, sizes in mm, rounded to
-/// 1e-6 as the tools send). Box (corner): the lower corner and the
-/// absolute sizes; box (centre): the first point and twice each
+/// point as the anchor field's model "x, y, z" text, sizes in mm, rounded
+/// to 1e-6 as the tools send). Box (corner): the corner at the lower u and
+/// v and the absolute sizes; box (centre): the first point and twice each
 /// half-size; both with the signed height (`_make_box` extrudes |h| along
 /// its sign, 1 mm when it is 0). Cylinder: the base on the plane, the
 /// diameter (radius at least 1e-3) and the signed height (the axis is
 /// flipped for a negative one). Sphere: the first point and its diameter.
+/// `args::place` reads the anchors back through the same plane.
 pub(crate) fn finish_params(kind: Primitive, place: &Place) -> Map<String, Value> {
-    let (a, b) = (uv(place.p0), uv(place.p1));
+    let f = &place.frame;
+    let (a, b) = (uv(f, place.p0), uv(f, place.p1));
     let h = shown_height(place);
     let point = |p: [f64; 3]| Value::String(p.map(num).join(", "));
     let size = |v: f64| Value::from(round6(v));
@@ -169,20 +189,20 @@ pub(crate) fn finish_params(kind: Primitive, place: &Place) -> Map<String, Value
     match kind {
         Primitive::BoxCorner => {
             let (w, d) = ((b[0] - a[0]).abs(), (b[1] - a[1]).abs());
-            m.insert("corner".into(), point([a[0].min(b[0]), a[1].min(b[1]), 0.0]));
+            m.insert("corner".into(), point(f.to_world(a[0].min(b[0]), a[1].min(b[1]), 0.0)));
             m.insert("width".into(), size(w));
             m.insert("depth".into(), size(d));
             m.insert("height".into(), size(h));
         }
         Primitive::BoxCentre => {
             let (_, _, w, d) = base_rect(kind, a, b);
-            m.insert("center".into(), point([a[0], a[1], 0.0]));
+            m.insert("center".into(), point(f.to_world(a[0], a[1], 0.0)));
             m.insert("width".into(), size(w));
             m.insert("depth".into(), size(d));
             m.insert("height".into(), size(h));
         }
         Primitive::Cylinder => {
-            m.insert("base".into(), point([a[0], a[1], 0.0]));
+            m.insert("base".into(), point(f.to_world(a[0], a[1], 0.0)));
             m.insert("diameter".into(), size(2.0 * radius));
             m.insert("height".into(), size(h));
         }
@@ -196,7 +216,7 @@ pub(crate) fn finish_params(kind: Primitive, place: &Place) -> Map<String, Value
 
 /// RoboCAD's readout while placing (`_preview`).
 fn readout(kind: Primitive, place: &Place) -> String {
-    let (a, b) = (uv(place.p0), uv(place.p1));
+    let (a, b) = (uv(&place.frame, place.p0), uv(&place.frame, place.p1));
     match kind {
         Primitive::BoxCorner | Primitive::BoxCentre => {
             let (_, _, w, d) = base_rect(kind, a, b);
@@ -211,11 +231,12 @@ fn readout(kind: Primitive, place: &Place) -> String {
 }
 
 /// The preview's line segments (mm, RoboCAD's frame), as `_preview`'s
-/// temporary shapes: the base and top rectangles with the four verticals,
-/// or the base ring (and a cylinder's top ring in stage 2).
+/// temporary shapes on the plane: the base and top rectangles with the
+/// four verticals, or the base ring (and a cylinder's top ring in stage 2).
 fn outline(kind: Primitive, place: &Place) -> Vec<(Vec3, Vec3)> {
-    let (a, b) = (uv(place.p0), uv(place.p1));
-    let at = |u: f64, v: f64, z: f64| Vec3::new(u as f32, v as f32, z as f32);
+    let f = &place.frame;
+    let (a, b) = (uv(f, place.p0), uv(f, place.p1));
+    let at = |u: f64, v: f64, w: f64| vec3(f.to_world(u, v, w));
     let mut out = Vec::new();
     match kind {
         Primitive::BoxCorner | Primitive::BoxCentre => {
@@ -244,11 +265,11 @@ fn outline(kind: Primitive, place: &Place) -> Vec<(Vec3, Vec3)> {
     out
 }
 
-/// RoboCAD's `hover` in stage 2: the height along the plane's normal (Z)
+/// RoboCAD's `hover` in stage 2: the height along the plane's normal `n`
 /// where the cursor ray meets the plane through `p1` that contains the
 /// normal and faces the camera; Ctrl snaps to the grid; never exactly 0.
-fn height_at(view: &CadView, cursor: Vec2, p1: Vec3, back: Vec3, snap_grid: bool) -> Option<f64> {
-    let n = Vec3::Z;
+fn height_at(view: &CadView, cursor: Vec2, p1: Vec3, n: Vec3, back: Vec3, snap_grid: bool) -> Option<f64> {
+    let n = n.try_normalize().unwrap_or(Vec3::Z);
     let side = n.cross(back.cross(n));
     let side = if side.length() < 1e-6 { back } else { side };
     let (o, d) = view.ray(cursor)?;
@@ -261,18 +282,19 @@ fn height_at(view: &CadView, cursor: Vec2, p1: Vec3, back: Vec3, snap_grid: bool
     Some(if h.abs() > 1e-6 { h } else { 0.001 })
 }
 
-/// The cursor snap at `cursor`: RoboCAD's `viewport.snap` (see the module doc).
-fn cursor_snap(view: &CadView, cursor: Vec2, candidates: &[Candidate]) -> Option<[f64; 3]> {
-    snap::snap(view, cursor, candidates, false).map(|s| arr(s.point))
+/// The cursor snap at `cursor`: RoboCAD's `viewport.snap` (see the module
+/// doc), on the active plane only while 2D snapping is on (`plane`).
+fn cursor_snap(view: &CadView, cursor: Vec2, candidates: &[Candidate], plane: Option<&PlaneFrame>) -> Option<[f64; 3]> {
+    snap::snap_on(view, cursor, candidates, false, plane).map(|s| arr(s.point))
 }
 
 /// The catalogue's name of a placement's anchor parameter.
 const ANCHORS: [&str; 3] = ["corner", "center", "base"];
 
-/// The anchor Tab writes: RoboCAD's `commit` anchors at `p0` on the plane
-/// (z = 0); a sphere's centre is the point itself.
-fn anchor_text(kind: Primitive, p0: [f64; 3]) -> String {
-    let p = if kind == Primitive::Sphere { p0 } else { [p0[0], p0[1], 0.0] };
+/// The anchor Tab writes: RoboCAD's `commit` anchors at `p0` projected
+/// onto the plane; a sphere's centre is the point itself.
+fn anchor_text(kind: Primitive, p0: [f64; 3], frame: &PlaneFrame) -> String {
+    let p = if kind == Primitive::Sphere { p0 } else { frame.project(p0) };
     p.map(num).join(", ")
 }
 
@@ -289,25 +311,26 @@ fn pointer(
     keys: Option<Res<ButtonInput<KeyCode>>>,
     hover: Option<Res<HoverMap>>,
     nodes: Query<(), With<Node>>,
+    (plane, sketches): (Option<Res<CadActivePlane>>, Option<Res<CadSketches>>),
     mut out: MessageWriter<Act<CadAction>>,
     mut redraw: MessageWriter<RequestRedraw>,
     mut state: Local<Pointer>,
 ) {
     let (Some(mut doc), Some(view)) = (doc, view) else { return };
     let state = &mut *state;
+    let plane = plane.as_deref();
     // The surface as this frame's Input saw it: an outside press closed it in Actions, before this system.
     let surface_was_open = std::mem::replace(&mut state.surface_open, doc.ops.surface.is_some());
-    // The candidates change only with the topology or the drawn bodies.
-    let key = (topology.as_ref().map_or(0, |t| t.epoch), meshes.as_ref().map_or(0, |m| m.epoch));
+    // The candidates change only with the topology, the drawn bodies or the sketches.
+    let key = snap::candidates_key(topology.as_deref(), meshes.as_deref(), sketches.as_deref());
     if state.cache.as_ref().is_none_or(|(k, _)| *k != key) {
-        let drawn: Vec<(&str, &NodeTopology)> = match (topology.as_deref(), meshes.as_deref()) {
-            (Some(t), Some(m)) => t.ready().filter(|(id, _)| m.shown(id)).map(|(id, t)| (id.as_str(), &**t)).collect(),
-            _ => Vec::new(),
-        };
-        state.cache = Some((key, snap::candidates(drawn)));
+        state.cache = Some((key, snap::drawn_candidates(&doc, topology.as_deref(), meshes.as_deref(), sketches.as_deref())));
         state.snap_stale = true;
     }
-    if view.is_changed() {
+    // The cursor snap's plane: the active plane while 2D snapping is on.
+    let on_plane = snap::snap_plane(plane);
+    if view.is_changed() || state.snap_plane != on_plane {
+        state.snap_plane = on_plane;
         state.snap_stale = true;
     }
     let candidates: &[Candidate] = match state.cache.as_ref() {
@@ -338,7 +361,7 @@ fn pointer(
             state.snap_at = Some((c, Instant::now()));
             state.snap_stale = false;
             // Nothing snapped here: the last point is not this cursor's.
-            let point = cursor_snap(&view, c, candidates).map(|p| (shown, p));
+            let point = cursor_snap(&view, c, candidates, on_plane.as_ref()).map(|p| (shown, p));
             if doc.ops.cursor_snap != point {
                 doc.ops.cursor_snap = point;
             }
@@ -356,6 +379,8 @@ fn pointer(
         }
         return;
     };
+    // RoboCAD's `ctx.active_plane()`: the active plane, else XY (a plane node still being read: refused).
+    let frame = plane.map_or(Ok(PlaneFrame::XY), CadActivePlane::frame_or_xy);
     let held = |codes: &[KeyCode]| keys.as_ref().is_some_and(|k| k.any_pressed(codes.iter().copied()));
     let alt = held(&[KeyCode::AltLeft, KeyCode::AltRight]);
     let ctrl = held(&[KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight]);
@@ -363,23 +388,37 @@ fn pointer(
     // A press while a command surface is open only closes it (as `pick`).
     let pressed = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !surface_was_open && doc.ops.surface.is_none();
     let down = buttons.as_ref().is_some_and(|b| b.pressed(MouseButton::Left));
-    let snapped = |c: Vec2| snap::snap(&view, c, candidates, alt).map(|s| arr(s.point));
+    // RoboCAD's `ctx.snap(pos, suppress, plane=active_plane)`: on the placement's plane.
+    let snapped = |c: Vec2, f: &PlaneFrame| snap::snap_on(&view, c, candidates, alt, Some(f)).map(|s| arr(s.point));
 
     let before = doc.ops.place.clone();
     let mut place = before.clone();
+    // The active plane changed during the placement: it ends with nothing sent.
+    if place.as_ref().is_some_and(|p| frame.as_ref().is_ok_and(|f| !f.same(&p.frame, 1e-9)) || frame.is_err()) {
+        place = None;
+        doc.show(Ok("The active plane changed: the placement ended (nothing was sent)".to_string()));
+    }
     let mut finish = false;
     match place.as_mut() {
         None => {
             // RoboCAD's `press` in stage 0: the base begins at the snap.
-            if pressed && let Some(p) = cursor.and_then(snapped) {
-                place = Some(Place { stage: 1, p0: p, p1: p, height: state.height.unwrap_or(START_HEIGHT) });
-                state.began = doc.shown_revision();
+            if pressed && cursor.is_some() {
+                match &frame {
+                    Ok(f) => {
+                        if let Some(p) = cursor.and_then(|c| snapped(c, f)) {
+                            place = Some(Place { stage: 1, p0: p, p1: p, height: state.height.unwrap_or(START_HEIGHT), frame: *f });
+                            state.began = doc.shown_revision();
+                        }
+                    }
+                    Err(e) => doc.show(Err(e.clone())),
+                }
             }
         }
         Some(p) if p.stage == 1 => {
             if down {
                 // RoboCAD's `drag`: the second corner follows the snap (kept while over a panel).
-                if let Some(q) = cursor.and_then(snapped) {
+                let f = p.frame;
+                if let Some(q) = cursor.and_then(|c| snapped(c, &f)) {
                     p.p1 = q;
                 }
             } else if kind == Primitive::Sphere {
@@ -394,14 +433,14 @@ fn pointer(
             if pressed && cursor.is_some() {
                 // RoboCAD's `press` in stage 2.
                 finish = true;
-            } else if let Some(h) = cursor.and_then(|c| height_at(&view, c, vec3(p.p1), view_back(&view), ctrl)) {
+            } else if let Some(h) = cursor.and_then(|c| height_at(&view, c, vec3(p.p1), vec3(p.frame.normal), view_back(&view), ctrl)) {
                 p.height = h;
                 state.height = Some(h);
             }
         }
     }
     // Tab during a drag: the form's anchor (by name) is the base's first point (RoboCAD's `commit` anchors at p0).
-    let anchor = place.as_ref().filter(|_| tab).map(|p| anchor_text(kind, p.p0));
+    let anchor = place.as_ref().filter(|_| tab).map(|p| anchor_text(kind, p.p0, &p.frame));
     let slot = entry(id).and_then(|e| e.params.iter().position(|p| ANCHORS.contains(&p.name)));
     if let (Some(text), Some(i)) = (anchor, slot)
         && doc.ops.form.as_ref().is_some_and(|f| f.op == id && f.texts.get(i).is_some_and(|t| *t != text))
@@ -450,7 +489,7 @@ mod tests {
     use super::*;
 
     fn place(stage: u8, p0: [f64; 3], p1: [f64; 3], height: f64) -> Place {
-        Place { stage, p0, p1, height }
+        Place { stage, p0, p1, height, frame: PlaneFrame::XY }
     }
 
     /// `_finish`'s sizes: the corner box from its lower corner with
@@ -494,11 +533,28 @@ mod tests {
         let p1 = Vec3::new(0.0, 0.0, 0.0);
         let back = view_back(&view);
         let over = view.project(Vec3::new(0.0, 0.0, 24.0)).unwrap();
-        let h = height_at(&view, over, p1, back, false).unwrap();
+        let h = height_at(&view, over, p1, Vec3::Z, back, false).unwrap();
         assert!((h - 24.0).abs() < 0.05, "{h}");
-        assert_eq!(height_at(&view, over, p1, back, true), Some(20.0));
+        assert_eq!(height_at(&view, over, p1, Vec3::Z, back, true), Some(20.0));
         let at_zero = view.project(Vec3::ZERO).unwrap();
-        assert_eq!(height_at(&view, at_zero, p1, back, true), Some(0.001));
+        assert_eq!(height_at(&view, at_zero, p1, Vec3::Z, back, true), Some(0.001));
+        // On the YZ plane the height runs along +X: a point 15 mm along X, seen from the front, is 15 up the normal.
+        let side = view.project(Vec3::new(15.0, 0.0, 0.0)).unwrap();
+        let h = height_at(&view, side, p1, Vec3::X, back, false).unwrap();
+        assert!((h - 15.0).abs() < 0.05, "{h}");
+    }
+
+    /// On the XZ plane (u = x, v = z, normal −Y) the base, the anchors and
+    /// the preview lie on the plane and the height runs along −Y.
+    #[test]
+    fn placing_on_another_plane_uses_its_coordinates() {
+        let p = Place { stage: 2, p0: [10.0, 0.0, 20.0], p1: [-10.0, 0.0, 25.0], height: 15.0, frame: PlaneFrame::XZ };
+        assert_eq!(Value::Object(finish_params(Primitive::BoxCorner, &p)), serde_json::json!({"corner": "-10, 0, 20", "width": 20.0, "depth": 5.0, "height": 15.0}));
+        assert_eq!(Value::Object(finish_params(Primitive::Cylinder, &p))["base"], "10, 0, 20");
+        let lines = outline(Primitive::BoxCorner, &p);
+        assert!(lines.contains(&(Vec3::new(10.0, 0.0, 20.0), Vec3::new(10.0, -15.0, 20.0))), "a vertical runs along the normal: {lines:?}");
+        assert_eq!(anchor_text(Primitive::BoxCorner, [1.0, 7.0, 2.0], &PlaneFrame::XZ), "1, 0, 2");
+        assert_eq!(anchor_text(Primitive::Sphere, [1.0, 7.0, 2.0], &PlaneFrame::XZ), "1, 7, 2");
     }
 
     fn front_view() -> CadView {

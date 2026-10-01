@@ -7,8 +7,9 @@ use super::resolve::{Resolved, resolve};
 use super::*;
 use crate::cad::analysis_overlay::Read;
 use crate::cad::document::{CadTarget, Connection, Edit};
+use crate::cad::sketch::{ActivePlane, BasePlane, CadActivePlane};
 use crate::cad::transform::face_ref;
-use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary};
+use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary, PlaneFrame};
 
 fn node(id: &str, kind: &str, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: kind.into(), name: name.into(), visible: true, effective_visible: true, ..Default::default() }
@@ -52,13 +53,13 @@ fn calls(built: Built) -> Vec<crate::cad::transform::OpCall> {
 }
 
 /// A selection that satisfies every need: bodies b1, b2 then the curve c1,
-/// two edges and a face of b1, b2 as the dependent offset's target, a view
-/// direction and a cursor snap.
+/// two edges and two faces of b1 (the midplane takes two), b2 as the
+/// dependent offset's target, a view direction and a cursor snap.
 fn everything() -> Resolved {
     Resolved {
         nodes: vec!["b1".into(), "b2".into(), "c1".into()],
         edges: vec![("b1".into(), 0), ("b1".into(), 1)],
-        faces: vec![("b1".into(), 2)],
+        faces: vec![("b1".into(), 2), ("b1".into(), 3)],
         other: Some("b2".into()),
         view_dir: Some([0.0, 0.0, -1.0]),
         snap: Some([1.0, 2.0, 3.0]),
@@ -93,6 +94,7 @@ fn catalogue_data_is_well_formed() {
         for a in e.args.iter().chain(e.kwargs.iter().map(|(_, a)| a)) {
             match a {
                 Arg::Param(name) => assert!(e.params.iter().any(|p| p.name == *name), "{}: argument names unknown parameter {name}", e.id),
+                Arg::Plane(name, _) => assert!(e.params.iter().any(|p| p.name == *name && p.kind == kinds::PLANES), "{}: plane argument names no PLANES parameter {name}", e.id),
                 Arg::Const(text) => {
                     serde_json::from_str::<Value>(text).unwrap_or_else(|err| panic!("{}: constant {text} is not JSON: {err}", e.id));
                 }
@@ -436,4 +438,136 @@ fn comb_and_continuity_read_the_last_node_with_a_body() {
     assert_eq!(build(continuity, &r, &Map::new(), &doc, &Env::default()), Ok(Built::Read(Read::Continuity { node: "b1".into() })));
     let r = Resolved { nodes: vec!["k1".into()], ..Default::default() };
     assert!(build(continuity, &r, &Map::new(), &doc, &Env::default()).unwrap_err().starts_with("Select a body"));
+}
+
+/// An active plane for a run's `Env`.
+fn active(plane: ActivePlane) -> CadActivePlane {
+    CadActivePlane { plane: Some(plane), ..Default::default() }
+}
+
+#[test]
+fn plane_entries_follow_robocads_registry() {
+    let ids: Vec<&str> = CATALOGUE.iter().filter(|e| e.category == "Planes").map(|e| e.id).collect();
+    assert_eq!(ids, ["tool.plane", "tool.plane_three", "tool.plane_camera", "tool.plane_mid", "tool.plane_xy", "tool.plane_xz", "tool.plane_yz", "tool.plane_2d_snap"]);
+    let at = |id: &str| CATALOGUE.iter().position(|e| e.id == id).unwrap();
+    assert!(at("tool.delete_face") < at("tool.plane") && at("tool.plane_2d_snap") < at("tool.mirror"), "between Modify's faces and mirror (ui/app.py:348-360)");
+    assert_eq!(op("tool.plane").keys, &["Ctrl+P"]);
+    for id in ["tool.plane", "tool.plane_three", "tool.plane_camera", "tool.plane_mid"] {
+        assert!(op(id).activates_plane && matches!(op(id).flow, Flow::PlanePick(_)) && !op(id).hint.is_empty(), "{id}");
+    }
+    let doc = document();
+    let r = Resolved { nodes: vec!["b1".into(), "b2".into()], faces: vec![("b1".into(), 2), ("b2".into(), 5)], view_dir: Some([0.0, 0.0, -1.0]), ..Default::default() };
+    let face = op("tool.plane");
+    let c = calls(build(face, &r, &values(face, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
+    assert_eq!((c[0].name, c[0].args.clone()), ("plane_from_face", vec![json!("b1"), face_ref("b1", 2)]));
+    let mid = op("tool.plane_mid");
+    let c = calls(build(mid, &r, &values(mid, &Map::new()).unwrap(), &doc, &Env::default()).unwrap());
+    assert_eq!((c[0].name, c[0].args.clone()), ("plane_midplane", vec![json!("b1"), face_ref("b1", 2), face_ref("b2", 5)]));
+    let one = Resolved { faces: vec![("b1".into(), 2)], ..r.clone() };
+    assert_eq!(build(mid, &one, &Map::new(), &doc, &Env::default()), Err(mid.refusal.to_string()));
+    let three = op("tool.plane_three");
+    let v = values(three, &given(&[("a", json!("0, 0, 0")), ("b", json!([10, 0, 0])), ("c", json!("0, 10, 0"))])).unwrap();
+    let c = calls(build(three, &Resolved::default(), &v, &doc, &Env::default()).unwrap());
+    assert_eq!((c[0].name, c[0].args.clone()), ("plane_three_points", vec![json!([0.0, 0.0, 0.0]), json!([10.0, 0.0, 0.0]), json!([0.0, 10.0, 0.0])]));
+    let err = build(three, &Resolved::default(), &values(three, &given(&[("a", json!("0, 0, 0"))])).unwrap(), &doc, &Env::default()).unwrap_err();
+    assert!(err.contains("(b) is required"), "{err}");
+    let camera = op("tool.plane_camera");
+    let v = values(camera, &given(&[("a", json!("0, 0, 0")), ("b", json!("10, 0, 0"))])).unwrap();
+    let c = calls(build(camera, &r, &v, &doc, &Env::default()).unwrap());
+    assert_eq!((c[0].name, c[0].args.clone()), ("plane_two_points_camera", vec![json!([0.0, 0.0, 0.0]), json!([10.0, 0.0, 0.0]), json!([0.0, 0.0, -1.0])]), "the view's direction");
+}
+
+#[test]
+fn active_plane_entries_are_viewer_state() {
+    let mut doc = document();
+    // Never refused for an edit in flight: nothing is sent.
+    doc.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false });
+    assert_eq!(prepare(&doc, &Env::default(), op("tool.plane_xz"), &Map::new(), None, None), Ok(Built::View(ViewAct::Plane(BasePlane::Xz))));
+    assert_eq!(prepare(&doc, &Env::default(), op("tool.plane_2d_snap"), &Map::new(), None, None), Ok(Built::View(ViewAct::Snap2d)));
+    let mut plane = CadActivePlane::default();
+    let answer = crate::cad::sketch::plane::view_act(&mut doc, &mut plane, ViewAct::Plane(BasePlane::Xz));
+    assert_eq!((plane.plane.clone(), doc.status.clone()), (Some(ActivePlane::Base(BasePlane::Xz)), Some(Ok("Active plane set".to_string()))));
+    assert_eq!(answer, json!({"plane": "XZ", "snap_2d": false}));
+    crate::cad::sketch::plane::view_act(&mut doc, &mut plane, ViewAct::Snap2d);
+    assert_eq!((plane.snap_2d, doc.status.clone()), (true, Some(Ok("2D snapping on".to_string()))));
+    crate::cad::sketch::plane::view_act(&mut doc, &mut plane, ViewAct::Snap2d);
+    assert_eq!(doc.status, Some(Ok("2D snapping off".to_string())));
+    let state = crate::cad::sketch::plane::state_json(&doc, &plane);
+    assert_eq!((state["plane"].clone(), state["arg"].clone(), state["frame"]["normal"].clone()), (json!("XZ"), json!("xz"), json!([0.0, -1.0, 0.0])));
+}
+
+#[test]
+fn plane_parameters_default_to_the_active_plane() {
+    let doc = document();
+    let r = Resolved { nodes: vec!["b1".into()], faces: vec![("b1".into(), 4)], ..Default::default() };
+    let sent = |id: &str, env: &Env, given_: &[(&str, Value)], at: usize| -> Value {
+        let e = op(id);
+        calls(build(e, &r, &values(e, &given(given_)).unwrap(), &doc, env).unwrap())[0].args[at].clone()
+    };
+    let xz = active(ActivePlane::Base(BasePlane::Xz));
+    let env = Env { plane: Some(&xz), ..Default::default() };
+    for (id, at) in [("tool.mirror", 1), ("tool.mirror_live", 1), ("tool.cut_plane", 1), ("tool.split_face", 1), ("tool.silhouette", 1), ("tool.draft", 4)] {
+        assert_eq!(sent(id, &env, &[], at), json!("xz"), "{id}");
+    }
+    // No active plane: RoboCAD's fallbacks (mirror YZ, the others XY), also with the resource present.
+    let none = CadActivePlane::default();
+    let env_none = Env { plane: Some(&none), ..Default::default() };
+    assert_eq!(sent("tool.mirror", &env_none, &[], 1), json!("yz"));
+    assert_eq!(sent("tool.cut_plane", &env_none, &[], 1), json!("xy"));
+    // A named plane is sent as named.
+    assert_eq!(sent("tool.mirror", &env, &[("plane", json!("xy"))], 1), json!("xy"));
+    // A plane node is sent by id (RoboCAD's ArgConverter.plane reads the node's plane), even while its frame is read.
+    let reading = active(ActivePlane::Node { id: "p1".into(), frame: None });
+    let env_node = Env { plane: Some(&reading), ..Default::default() };
+    assert_eq!(sent("tool.mirror", &env_node, &[], 1), json!("p1"));
+    // The radial array's axis: the active plane's normal through its origin.
+    let array = op("tool.array");
+    let radial = values(array, &given(&[("kind", json!("radial"))])).unwrap();
+    let c = calls(build(array, &r, &radial, &doc, &env).unwrap());
+    assert_eq!(c[0].args[2..], [json!([0.0, 0.0, 0.0]), json!([0.0, -1.0, 0.0])]);
+    let raised = active(ActivePlane::Node { id: "p1".into(), frame: Some(PlaneFrame { origin: [0.0, 0.0, 5.0], ..PlaneFrame::XY }) });
+    let c = calls(build(array, &r, &radial, &doc, &Env { plane: Some(&raised), ..Default::default() }).unwrap());
+    assert_eq!(c[0].args[2..], [json!([0.0, 0.0, 5.0]), json!([0.0, 0.0, 1.0])]);
+    let err = build(array, &r, &radial, &doc, &env_node).unwrap_err();
+    assert!(err.contains("p1") && err.contains("being read"), "{err}");
+    let c = calls(build(array, &r, &radial, &doc, &env_none).unwrap());
+    assert_eq!(c[0].args[3], json!([0.0, 0.0, 1.0]), "no active plane: XY's normal");
+}
+
+#[test]
+fn primitives_are_placed_on_the_active_plane() {
+    let doc = document();
+    let r = Resolved::default();
+    let xz = active(ActivePlane::Base(BasePlane::Xz));
+    let env = Env { plane: Some(&xz), ..Default::default() };
+    let run = |id: &str, given_: &[(&str, Value)], env: &Env| calls(build(op(id), &r, &values(op(id), &given(given_)).unwrap(), &doc, env).unwrap()).remove(0);
+    // XZ: u = x, v = z, normal −Y. The box is box_three_point with z = x × y the normal.
+    let c = run("tool.box", &[], &env);
+    assert_eq!((c.name, c.args), ("box_three_point", vec![json!([0.0, 0.0, 0.0]), json!([20.0, 0.0, 0.0]), json!([0.0, 0.0, 20.0]), json!(10.0)]));
+    // A negative height: walked from the far v edge, so z = −normal; |h| sent.
+    let c = run("tool.box", &[("height", json!(-5))], &env);
+    assert_eq!(c.args, vec![json!([0.0, 0.0, 20.0]), json!([20.0, 0.0, 20.0]), json!([0.0, 0.0, 0.0]), json!(5.0)]);
+    // The anchor is projected onto the plane (y dropped).
+    let c = run("tool.box", &[("corner", json!([5, 7, 3]))], &env);
+    assert_eq!(c.args[..3], [json!([5.0, 0.0, 3.0]), json!([25.0, 0.0, 3.0]), json!([5.0, 0.0, 23.0])]);
+    let c = run("tool.box_center", &[("center", json!([10, 0, 10]))], &env);
+    assert_eq!(c.args[0], json!([0.0, 0.0, 0.0]), "centred in the plane");
+    let c = run("tool.cylinder", &[], &env);
+    assert_eq!((c.name, c.args), ("cylinder", vec![json!([0.0, 0.0, 0.0]), json!([0.0, -1.0, 0.0]), json!(5.0), json!(10.0)]));
+    let c = run("tool.cylinder", &[("height", json!(-10)), ("base", json!([1, 9, 2]))], &env);
+    assert_eq!(c.args[..2], [json!([1.0, 0.0, 2.0]), json!([0.0, 1.0, 0.0])]);
+    let c = run("tool.sphere", &[("center", json!([1, 2, 3]))], &env);
+    assert_eq!(c.args, vec![json!([1.0, 2.0, 3.0]), json!(5.0)], "the sphere keeps its centre");
+    // XY active: exactly the calls with no active plane.
+    let xy = active(ActivePlane::Base(BasePlane::Xy));
+    let env_xy = Env { plane: Some(&xy), ..Default::default() };
+    let down: &[(&str, Value)] = &[("height", json!(-4))];
+    for id in ["tool.box", "tool.box_center", "tool.cylinder"] {
+        assert_eq!(run(id, down, &env_xy), run(id, down, &Env::default()), "{id}");
+    }
+    assert_eq!(run("tool.sphere", &[], &env_xy), run("tool.sphere", &[], &Env::default()));
+    // A plane node still being read refuses the primitive by name.
+    let reading = active(ActivePlane::Node { id: "p1".into(), frame: None });
+    let err = build(op("tool.box"), &r, &values(op("tool.box"), &Map::new()).unwrap(), &doc, &Env { plane: Some(&reading), ..Default::default() }).unwrap_err();
+    assert!(err.contains("p1"), "{err}");
 }

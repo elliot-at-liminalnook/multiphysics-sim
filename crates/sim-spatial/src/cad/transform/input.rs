@@ -11,9 +11,10 @@ use bevy::prelude::*;
 use bevy::window::{CursorIcon, PrimaryWindow, SystemCursorIcon};
 
 /// Whether a catalogue interaction that picks or places in the 3D view is
-/// active (`CadDocument::ops.active` is a pick-then-form or place op).
+/// active (`CadDocument::ops.active` is a pick-then-form, place, plane,
+/// sketch or extrude op: RoboCAD's tools other than Select).
 fn op_picks_in_view(doc: &CadDocument) -> bool {
-    doc.ops.active.and_then(entry).is_some_and(|e| matches!(e.flow, Flow::Place(_) | Flow::PickThenForm(_)))
+    doc.ops.active.and_then(entry).is_some_and(|e| matches!(e.flow, Flow::Place(_) | Flow::PickThenForm(_) | Flow::PlanePick(_) | Flow::Sketch(_) | Flow::Extrude { .. }))
 }
 
 /// RoboCAD's tool cursor (app.py:520-522: arrow for Select, size-all for

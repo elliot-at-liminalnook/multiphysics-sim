@@ -52,7 +52,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         route: "box",
         shape: Shape::Place(Primitive::BoxCorner),
         hint: HINT_CORNER,
-        source: "ui/app.py:328, ui/tools.py:391-536 (_finish :491, _make_box :517, commit :522; the anchor is the drag's first point or the plane origin); sent as Ops.box (commands.py:419) on the XY plane where RoboCAD extrudes a sketch rectangle",
+        source: "ui/app.py:328, ui/tools.py:391-536 (_finish :491, _make_box :517, commit :522; the anchor is the drag's first point or the plane origin) on the active plane (ui/tools.py:67-68: else XY); RoboCAD extrudes a sketch rectangle, sent as Ops.box (commands.py:419) on XY, else Ops.box_three_point (commands.py:426-435) spanning the same solid",
         ..BASE
     },
     OpEntry {
@@ -64,7 +64,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         route: "box",
         shape: Shape::Place(Primitive::BoxCentre),
         hint: HINT_CENTRE,
-        source: "ui/app.py:329, ui/tools.py:522-529 (centred in the plane only, base on the plane; not Ops.box_center, which also centres the height); sent as Ops.box (commands.py:419)",
+        source: "ui/app.py:329, ui/tools.py:522-529 (centred in the plane only, base on the active plane; not Ops.box_center, which also centres the height); sent as Ops.box (commands.py:419) on XY, else Ops.box_three_point (commands.py:426-435)",
         ..BASE
     },
     OpEntry {
@@ -77,7 +77,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         route: "cylinder",
         shape: Shape::Place(Primitive::Cylinder),
         hint: HINT_CORNER,
-        source: "ui/app.py:330, ui/tools.py:501-505 (_finish: axis ± the plane normal by the height's sign, radius at least 1e-3), commands.py:437",
+        source: "ui/app.py:330, ui/tools.py:501-505 (_finish: the base on the active plane, axis ± its normal by the height's sign, radius at least 1e-3), commands.py:437",
         ..BASE
     },
     OpEntry {
@@ -90,7 +90,7 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         route: "sphere",
         shape: Shape::Place(Primitive::Sphere),
         hint: HINT_CORNER,
-        source: "ui/app.py:331, ui/tools.py:506-508 and :531-532, commands.py:440",
+        source: "ui/app.py:331, ui/tools.py:506-508 and :531-532 (the centre is the snap on the active plane, or the anchor as given), commands.py:440",
         ..BASE
     },
 ];

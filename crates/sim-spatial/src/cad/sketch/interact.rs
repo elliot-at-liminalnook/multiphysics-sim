@@ -1,14 +1,307 @@
-//! P3: the one sketch interaction.
-use super::SketchShape;
-use crate::cad::document::CadDocument;
+//! The one sketch interaction: RoboCAD's `SketchTool` (ui/tools.py:638-817)
+//! for all 13 shapes, driven by each shape's row (`specs::spec`); no code
+//! per tool.
+//!
+//! - **Start** ([`begin`], from `ops::invoke` after the tool's form opened
+//!   beside the view): the shape's state (`CadDocument::ops.sketch`); the
+//!   polygon's `sides` draft is the remembered count (RoboCAD's field opens
+//!   with `Sketch.last_polygon_sides`); the text tool's first field, "Text
+//!   to sketch:", takes the keyboard (RoboCAD asks with its `getText`
+//!   dialog before the tool starts; here that dialog is the tool form's
+//!   first field, so the form and the clicks are one interaction).
+//! - **Pointer** ([`pointer`], SimSync, after the camera snapshot and the
+//!   mesh sync): while the active op is `Flow::Sketch(shape)` the cursor is
+//!   snapped as RoboCAD's sketch tools snap, always with the active plane
+//!   (`snap::snap_on` with its frame, else XY: RoboCAD's `activate` turns
+//!   `plane_snapping` on and `press`/`hover` pass `plane=active_plane()`;
+//!   Alt suppresses), over the drawn bodies' and the visible sketches'
+//!   candidates, and projected onto the plane; it is the preview's last
+//!   point (`SketchState::cursor`). A left press (over the 3D view, no
+//!   command surface open or just closed by it, no text field keeping the
+//!   keyboard) appends the point; the first records the shown revision
+//!   (`began`). When the shape has its `needed` points (`Finish::Points`)
+//!   its calls (`specs::from_points` on plane coordinates) go out as ONE
+//!   `CadSketch { node: None, plane, calls, revision: began }` (the action
+//!   picks the sketch, tools.py:675-686, and refuses by name when the
+//!   document changed since); the points reset, a line keeps its last
+//!   point (lines chain; the chained point's segment takes the revision of
+//!   its next press). The spline finishes on Enter (no text field focused)
+//!   or a double-click with at least two points. Escape is `CadCancel`
+//!   (`ops::form_cancel` drops the shape; nothing is sent).
+//! - **Double-click**: Qt delivers a double-click instead of the second
+//!   press (RoboCAD's `double`), so a second press within [`DOUBLE_CLICK`]
+//!   and [`DOUBLE_DISTANCE`] of the first is not a press for any tool; it
+//!   only finishes a spline. 400 ms and 5 px are Qt's defaults
+//!   (`QStyleHints::mouseDoubleClickInterval`, `mouseDoubleClickDistance`).
+//! - **Readout** (`tool_state.readout`, while points are clicked): RoboCAD's
+//!   `hover` text (tools.py:720-726): "length L  angle A" (line, spline),
+//!   "radius R" (circle, polygon), "W × H" (the rest), from the first point
+//!   to the cursor; cleared when the shape or the tool ends.
+//! - **Preview** (`preview::draw`, Present): display only.
+//!
+//! The polygon's Tab sides are remembered when its calls are sent
+//! (`specs::remember_polygon_sides`, called by `ops::send_sketch`, the one
+//! path every sketch call takes: `cad_sketch` and the form's OK alike).
+use super::specs::{self, local, spec};
+use super::{BasePlane, CadActivePlane, CadSketches, Finish, Readout, SketchShape, SketchSpec, SketchState};
+use crate::app::actions::Act;
+use crate::app::{ViewerMode, ViewerSet};
+use crate::cad::actions::CadAction;
+use crate::cad::document::{CadDocument, CadInputFocus};
+use crate::cad::mesh::CadMeshes;
+use crate::cad::ops::{Flow, entry};
+use crate::cad::snap::{self, Candidate};
+use crate::cad::topology::CadTopology;
+use crate::cad::transform::{cursor_in_view, fa, fl};
+use crate::cad::view::CadView;
+use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
+use serde_json::Value;
+use sim_runtime::cad_client::{PlaneFrame, SketchCall, Uv};
+use std::time::{Duration, Instant};
+
+/// Qt's default double-click interval.
+pub(crate) const DOUBLE_CLICK: Duration = Duration::from_millis(400);
+/// Qt's default double-click distance (logical px).
+pub(crate) const DOUBLE_DISTANCE: f32 = 5.0;
 
 pub(in crate::cad) fn build(app: &mut App) {
-    let _ = app;
+    app.add_systems(
+        Update,
+        // After the camera snapshot (this frame's view) and the mesh sync (the drawn bodies the snap reads).
+        pointer.after(crate::cad::view::update).after(crate::cad::mesh::sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+    )
+    .add_systems(Update, super::preview::draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
 
-/// `Flow::Sketch` starts: RoboCAD's `SketchTool.activate`.
+/// `Flow::Sketch` starts: RoboCAD's `SketchTool.activate` (and the text
+/// tool's dialog), after `ops::invoke` opened the tool's form.
 pub(in crate::cad) fn begin(doc: &mut CadDocument, shape: SketchShape) -> Result<(), String> {
-    doc.ops.sketch = Some(super::SketchState::new(shape));
+    doc.ops.sketch = Some(SketchState::new(shape));
+    let sides = doc.ops.polygon_sides.unwrap_or(6);
+    if let Some(form) = doc.ops.form.as_mut()
+        && let Some(e) = entry(form.op)
+        && e.flow == Flow::Sketch(shape)
+    {
+        let at = |name: &str| e.params.iter().position(|p| p.name == name);
+        if shape == SketchShape::Polygon
+            && let Some(i) = at("sides")
+            && let Some(t) = form.texts.get_mut(i)
+        {
+            *t = sides.to_string();
+        }
+        if spec(shape).text_form
+            && let Some(i) = at("text")
+        {
+            form.focus = Some(i);
+            form.select_all = true;
+        }
+    }
+    doc.touch();
     Ok(())
+}
+
+/// The sketch shape whose tool is active.
+fn sketching(doc: &CadDocument) -> Option<SketchShape> {
+    match entry(doc.ops.active?)?.flow {
+        Flow::Sketch(shape) => Some(shape),
+        _ => None,
+    }
+}
+
+/// RoboCAD's `hover` readout (tools.py:720-725) from `a` (the first point)
+/// to `b` (the cursor), plane coordinates.
+pub(crate) fn readout(kind: Readout, a: Uv, b: Uv) -> String {
+    let (du, dv) = (b[0] - a[0], b[1] - a[1]);
+    match kind {
+        Readout::LengthAngle => format!("length {}  angle {}", fl(du.hypot(dv)), fa(dv.atan2(du).to_degrees())),
+        Readout::Radius => format!("radius {}", fl(du.hypot(dv))),
+        Readout::Size => format!("{} × {}", fl(du.abs()), fl(dv.abs())),
+    }
+}
+
+/// The text tool's text: its form's "Text to sketch:" draft.
+fn form_text(doc: &CadDocument) -> String {
+    let Some(form) = &doc.ops.form else { return String::new() };
+    let Some(e) = entry(form.op) else { return String::new() };
+    e.params.iter().position(|p| p.name == "text").and_then(|i| form.texts.get(i)).cloned().unwrap_or_default()
+}
+
+/// What happened at a finish: the action to write, or the error to show.
+pub(crate) fn finish_action(shape: SketchShape, s: &SketchState, frame: &PlaneFrame, plane_arg: &Value) -> Result<Option<CadAction>, String> {
+    let uv: Vec<Uv> = s.points.iter().map(|p| local(frame, *p)).collect();
+    if spec(shape).text_form && s.text.is_empty() {
+        return Err("type the text to sketch first (the form's \"Text to sketch:\" field), then click where it starts".into());
+    }
+    let calls = specs::from_points(shape, &uv, &s.text)?;
+    if calls.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(CadAction::CadSketch { node: None, plane: plane_arg.as_str().map(str::to_string), calls: calls.iter().map(SketchCall::to_json).collect(), revision: Some(s.began) }))
+}
+
+/// RoboCAD's `_finish` (tools.py:768): the points reset; a line keeps its
+/// last point (lines chain). True when a point was kept.
+pub(crate) fn reset_after_finish(tool: &SketchSpec, s: &mut SketchState) -> bool {
+    let last = s.points.last().copied();
+    s.points.clear();
+    match last {
+        Some(p) if tool.chains => {
+            s.points.push(p);
+            true
+        }
+        _ => false,
+    }
+}
+
+/// The pointer's state across frames.
+#[derive(Default)]
+pub(super) struct Pointer {
+    /// Snap candidates (drawn bodies, visible sketches), keyed by their caches' epochs.
+    cache: Option<((u64, u64, u64), Vec<Candidate>)>,
+    /// The readout is this module's (cleared when the shape or the tool ends).
+    readout: bool,
+    /// A command surface was open at the end of the last frame's SimSync,
+    /// i.e. when this frame's Input saw the press.
+    surface_open: bool,
+    /// The last press that counted, for the double-click.
+    last_press: Option<(Vec2, Instant)>,
+    /// A line's chained point is in `points`: the next press records `began`.
+    rebase: bool,
+}
+
+/// SimSync: the sketch tool's snapped cursor, presses, finishes and readout
+/// (see the module doc).
+#[allow(clippy::too_many_arguments)]
+pub(super) fn pointer(
+    doc: Option<ResMut<CadDocument>>,
+    view: Option<Res<CadView>>,
+    plane: Option<Res<CadActivePlane>>,
+    topology: Option<Res<CadTopology>>,
+    meshes: Option<Res<CadMeshes>>,
+    sketches: Option<Res<CadSketches>>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    buttons: Option<Res<ButtonInput<MouseButton>>>,
+    keys: Option<Res<ButtonInput<KeyCode>>>,
+    focus: Option<Res<CadInputFocus>>,
+    hover: Option<Res<HoverMap>>,
+    nodes: Query<(), With<Node>>,
+    mut out: MessageWriter<Act<CadAction>>,
+    mut state: Local<Pointer>,
+) {
+    let (Some(mut doc), Some(view)) = (doc, view) else { return };
+    let state = &mut *state;
+    // The surface as this frame's Input saw it: an outside press closed it in Actions, before this system.
+    let surface_was_open = std::mem::replace(&mut state.surface_open, doc.ops.surface.is_some());
+    let Some(shape) = sketching(&doc) else {
+        // The tool ended elsewhere (cancelled, another op): its shape and readout go.
+        if doc.ops.sketch.is_some() {
+            doc.ops.sketch = None;
+        }
+        if std::mem::take(&mut state.readout) && doc.tool_state.readout.is_some() {
+            doc.tool_state.readout = None;
+        }
+        state.last_press = None;
+        state.rebase = false;
+        return;
+    };
+    let tool = spec(shape);
+    // RoboCAD's `self.ctx.active_plane()`: the active plane, else XY.
+    let frame = plane.as_deref().map_or(Ok(BasePlane::Xy.frame()), CadActivePlane::frame_or_xy);
+    let plane_arg = plane.as_deref().map_or_else(|| Value::from(BasePlane::Xy.arg()), |p| p.arg_or(BasePlane::Xy));
+    let key = snap::candidates_key(topology.as_deref(), meshes.as_deref(), sketches.as_deref());
+    if state.cache.as_ref().is_none_or(|(k, _)| *k != key) {
+        state.cache = Some((key, snap::drawn_candidates(&doc, topology.as_deref(), meshes.as_deref(), sketches.as_deref())));
+    }
+    let candidates: &[Candidate] = match state.cache.as_ref() {
+        Some((_, c)) => c,
+        None => &[],
+    };
+    let cursor = if view.valid { cursor_in_view(windows.single().ok(), &view, hover.as_deref(), &nodes) } else { None };
+    let alt = keys.as_ref().is_some_and(|k| k.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]));
+    let snapped: Option<[f64; 3]> = match (&frame, cursor) {
+        (Ok(f), Some(c)) => snap::snap_on(&view, c, candidates, alt, Some(f)).map(|s| f.project([f64::from(s.point.x), f64::from(s.point.y), f64::from(s.point.z)])),
+        _ => None,
+    };
+    // A text field keeping the keyboard after this frame's Input (a press in
+    // the view ends the form's typing first, so that press counts).
+    let typing = doc.ops.form.as_ref().is_some_and(|f| f.focus.is_some()) || doc.tool_state.numeric.focus.is_some() || doc.tool_state.inspector_edit.is_some();
+    let open = surface_was_open || doc.ops.surface.is_some();
+    let press = buttons.as_ref().is_some_and(|b| b.just_pressed(MouseButton::Left)) && !open && !typing;
+    let press_at = cursor.filter(|_| press);
+    let enter = keys.as_ref().is_some_and(|k| k.any_just_pressed([KeyCode::Enter, KeyCode::NumpadEnter])) && !focus.as_ref().is_some_and(|f| f.0) && !open;
+    let now = Instant::now();
+    let double = press_at.is_some_and(|c| state.last_press.is_some_and(|(p, t)| now.duration_since(t) <= DOUBLE_CLICK && p.distance(c) <= DOUBLE_DISTANCE));
+    if let Some(c) = press_at {
+        state.last_press = if double { None } else { Some((c, now)) };
+    }
+
+    let before = doc.ops.sketch.clone();
+    let mut s = before.clone().filter(|s| s.shape == shape).unwrap_or_else(|| SketchState::new(shape));
+    if tool.text_form {
+        s.text = form_text(&doc);
+    }
+    if snapped.is_some() {
+        s.cursor = snapped;
+    }
+    let mut finish = false;
+    let mut error: Option<String> = None;
+    if press_at.is_some() && !double {
+        match (&frame, snapped) {
+            (Ok(_), Some(p)) => {
+                if s.points.is_empty() || state.rebase {
+                    s.began = doc.shown_revision();
+                    state.rebase = false;
+                }
+                s.points.push(p);
+                if let Finish::Points(n) = tool.finish
+                    && s.points.len() >= n
+                {
+                    finish = true;
+                }
+            }
+            (Err(e), _) => error = Some(e.clone()),
+            _ => {}
+        }
+    }
+    // RoboCAD's `double` and `key` (Enter): a spline with at least two points.
+    if tool.finish == Finish::EnterOrDouble && (double || enter) && s.points.len() >= 2 {
+        finish = true;
+    }
+    if finish && let Ok(f) = &frame {
+        match finish_action(shape, &s, f, &plane_arg) {
+            Ok(Some(action)) => {
+                out.write(Act::ui(action));
+            }
+            Ok(None) => {}
+            Err(e) => error = Some(e),
+        }
+        if reset_after_finish(tool, &mut s) {
+            state.rebase = true;
+        }
+    }
+    let text = match (&frame, s.points.first(), s.cursor) {
+        (Ok(f), Some(a), Some(b)) => Some(readout(tool.readout, local(f, *a), local(f, b))),
+        _ => None,
+    };
+    if before.as_ref() != Some(&s) {
+        doc.ops.sketch = Some(s);
+    }
+    if let Some(e) = error {
+        doc.show(Err(e));
+    }
+    match text {
+        Some(r) => {
+            if doc.tool_state.readout.as_deref() != Some(r.as_str()) {
+                doc.tool_state.readout = Some(r);
+            }
+            state.readout = true;
+        }
+        None => {
+            if std::mem::take(&mut state.readout) && doc.tool_state.readout.is_some() {
+                doc.tool_state.readout = None;
+            }
+        }
+    }
 }

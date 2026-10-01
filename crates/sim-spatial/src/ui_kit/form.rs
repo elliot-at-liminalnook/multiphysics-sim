@@ -21,13 +21,16 @@ use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
 
-/// How a number is read: a length (bare numbers mm), an angle (degrees)
-/// or a whole count (RoboCAD's `NumericField(angle=)` and `QSpinBox`).
+/// How a number is read: a length (bare numbers mm), an angle (degrees),
+/// a whole count (RoboCAD's `NumericField(angle=)` and `QSpinBox`), or a
+/// plain number with no unit, fractions allowed (RoboCAD's
+/// `NumericField(…, unit="")`: the sketch spiral's turns).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Unit {
     Length,
     Angle,
     Count,
+    Plain,
 }
 
 /// A field's kind, with RoboCAD's range where its dialog sets one.
@@ -99,18 +102,19 @@ pub(crate) fn evaluate(kind: &FieldKind, text: &str) -> Result<FieldValue, Strin
 }
 
 /// One number as `unit` reads it (the numeric bar's mapping,
-/// `cad::transform::FieldKind::evaluate`); a count must be whole and has no
-/// unit (the evaluator would scale "2cm" to 20).
+/// `cad::transform::FieldKind::evaluate`); a count must be whole; a count
+/// and a plain number take no unit (the evaluator would scale "2cm" to 20).
 fn number(unit: Unit, text: &str) -> Result<f64, String> {
-    if unit == Unit::Count
+    if matches!(unit, Unit::Count | Unit::Plain)
         && let Some((token, at)) = unit_token(text)
     {
-        return Err(format!("'{token}' at {at}: a count takes no unit"));
+        let what = if unit == Unit::Count { "a count" } else { "this number" };
+        return Err(format!("'{token}' at {at}: {what} takes no unit"));
     }
     let v = match unit {
         Unit::Length => sim_runtime::units::evaluate(text, false, Some("mm")),
         Unit::Angle => sim_runtime::units::evaluate(text, true, None),
-        Unit::Count => sim_runtime::units::evaluate(text, false, None),
+        Unit::Count | Unit::Plain => sim_runtime::units::evaluate(text, false, None),
     }
     .map_err(|e| e.to_string())?;
     if unit == Unit::Count && v.fract() != 0.0 {
@@ -151,7 +155,7 @@ fn show(unit: Unit, v: f64) -> String {
     match unit {
         Unit::Length => sim_runtime::units::format_length(v, "mm", 3),
         Unit::Angle => sim_runtime::units::format_angle(v, 2),
-        Unit::Count => format!("{v}"),
+        Unit::Count | Unit::Plain => format!("{v}"),
     }
 }
 

@@ -2,6 +2,7 @@
 //! In RoboCAD's registry order (`ui/app.py` `_build_commands`); see `super`.
 use super::super::kinds::*;
 use super::super::*;
+use crate::cad::sketch::BasePlane;
 use crate::ui_kit::form::Unit;
 
 pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
@@ -136,10 +137,10 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         id: "tool.draft",
         label: "Draft faces…",
         needs: FACES,
-        params: &[p("angle", "Angle (degrees):", number(Unit::Angle, -45.0, 45.0, 2), "2.0"), p("neutral", "neutral plane", PLANES, "xy")],
+        params: &[p("angle", "Angle (degrees):", number(Unit::Angle, -45.0, 45.0, 2), "2.0"), p("neutral", "neutral plane", PLANES, "active")],
         flow: Flow::Form,
         route: "draft",
-        args: &[Arg::Node, Arg::Faces, Arg::Const("[0, 0, 1]"), Arg::Param("angle"), Arg::Param("neutral")],
+        args: &[Arg::Node, Arg::Faces, Arg::Const("[0, 0, 1]"), Arg::Param("angle"), Arg::Plane("neutral", BasePlane::Xy)],
         fan: Fan::PerNode,
         refusal: "Select faces to draft",
         source: "ui/app.py:347, ui/app.py:866-878 (pull (0, 0, 1); neutral the active plane or XY: the plane is a parameter here), commands.py:553",

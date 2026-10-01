@@ -66,6 +66,8 @@ pub const MESH_TOLERANCE: f64 = 0.1;
 
 /// Appended to the timeout of a request that may edit the document.
 const MAY_STILL_APPLY: &str = "RoboCAD may still apply it; refresh before retrying";
+/// Appended to an edit whose 2xx answer could not be decoded.
+const APPLIED_UNREAD: &str = "RoboCAD applied it, but its answer could not be read; refresh before retrying";
 
 /// Why a RoboCAD request failed.
 #[derive(Clone, Debug, PartialEq)]
@@ -92,6 +94,8 @@ impl CadError {
                 let sep = if m.ends_with("timed out") { ": " } else { " (timed out): " };
                 (None, format!("{m}{sep}{MAY_STILL_APPLY}"))
             }
+            // A 2xx answer that could not be decoded: RoboCAD applied the edit.
+            loopback_http::Error::Decode(m) if method != "GET" && (m.contains(": the answer is not JSON") || m.contains(": unexpected answer: ")) => (None, format!("{m}: {APPLIED_UNREAD}")),
             // The request may have reached RoboCAD: the connection closed
             // after it was written, or the answer could not be read.
             loopback_http::Error::Transport(m) | loopback_http::Error::Decode(m) if method != "GET" && may_have_arrived(method, &m) => (None, format!("{m}: {MAY_STILL_APPLY}")),
@@ -114,7 +118,7 @@ impl CadError {
 /// failed write or read, an answer that could not be decoded), not a
 /// refusal before sending, a failed connect or a failed socket setup.
 fn may_have_arrived(method: &str, message: &str) -> bool {
-    message.starts_with(&format!("{method} ")) && !message.contains(": connect: ") && !message.contains(": set timeout: ") || message.contains(": the answer is not JSON") || message.contains(": unexpected answer: ")
+    message.starts_with(&format!("{method} ")) && !message.contains(": connect: ") && !message.contains(": set timeout: ")
 }
 impl std::fmt::Display for CadError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -189,9 +193,15 @@ impl CadClient {
     }
     /// `GET /nodes` (every node) or `/nodes?kind=K`.
     pub fn nodes(&self, kind: Option<&str>) -> Result<Vec<NodeSummary>, CadError> {
-        match kind {
-            Some(kind) => self.get(&format!("/nodes?kind={}", encode_uri_component(kind))),
-            None => self.get("/nodes"),
+        // Lenient like `/doc`'s node list: one malformed node is dropped, not the answer.
+        let route = match kind {
+            Some(kind) => format!("/nodes?kind={}", encode_uri_component(kind)),
+            None => "/nodes".to_string(),
+        };
+        let value: Value = self.get(&route)?;
+        match value {
+            Value::Array(items) => Ok(items.into_iter().filter_map(|v| serde_json::from_value(v).ok()).collect()),
+            other => Err(CadError { method: "GET", route, status: None, message: format!("unexpected answer: expected a list of nodes, got {other}") }),
         }
     }
     /// `GET /nodes/{id}`: details including mass properties.

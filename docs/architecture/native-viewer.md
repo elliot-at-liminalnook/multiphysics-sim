@@ -1527,7 +1527,7 @@ Commands and results are in the batch's report; the last run:
 `cargo check -p sim-spatial --all-targets` clean (no warnings),
 `cargo check -p sim-web --target wasm32-unknown-unknown` clean,
 `cargo test -p sim-runtime --lib hardware_client` 18 passed,
-`cargo test -p sim-spatial --lib` 143 passed, 1 ignored before the combined review's last fixes (beat wait, shutdown epoch, exit-STOP retry, sync remote refusal), which `cargo check -p sim-spatial --all-targets` compiled clean; the rerun after them was still running when this was written.
+`cargo test -p sim-spatial --lib` 143 passed, 1 ignored (the rerun after the review's last fixes first failed `sync::tests::leave_stop_only_for_our_session`, which still asserted the old never-retry rule; the test now checks the retry).
 
 ## Target shape
 

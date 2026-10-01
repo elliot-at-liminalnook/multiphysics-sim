@@ -267,8 +267,10 @@ fn leave_stop_only_for_our_session() {
     s.post_stop_on_leave();
     assert!(!s.left.load(std::sync::atomic::Ordering::SeqCst), "not ours: nothing written");
     s.preparing = true;
-    // Port 1 refuses at once: the write fails fast and is logged; it is attempted once.
+    // Port 1 refuses at once: the write fails fast and is logged, and the
+    // once-only flag is cleared so a later exit path (the drop at
+    // teardown) tries again.
     s.post_stop_on_leave();
-    assert!(s.left.load(std::sync::atomic::Ordering::SeqCst));
+    assert!(!s.left.load(std::sync::atomic::Ordering::SeqCst), "a failed write is retried by a later exit path");
     s.preparing = false;
 }

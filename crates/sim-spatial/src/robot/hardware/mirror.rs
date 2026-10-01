@@ -18,21 +18,24 @@
 //!   on the encoders.
 //! - **Preferences**: the page's `calibration-mirror-v1` is
 //!   `settings::MirrorSettings`, saved on every change.
-use super::actions::{Align, GaitMode, HardwareAction};
+mod apply;
+mod thread;
+
+pub use apply::apply;
+
+use super::actions::{Align, GaitMode};
 use super::link::GaitRun;
 use super::settings::{MirrorBinding, MirrorSettings, sign};
-use super::Hardware;
 use super::view::fixed;
 use crate::robot::preset::{PresetRun, RecordedRun};
 use bevy::math::DQuat;
 use serde_json::{Value, json};
-use sim_runtime::gait_playback::{Gait, GovernedGait};
 use sim_runtime::hardware_client::calibration::{Axis, GaitBinding, Status};
-use sim_runtime::kinematic_mirror::KinematicMirror;
 use sim_runtime::session::Scene;
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Arc, Mutex, MutexGuard, Weak, mpsc};
+use std::sync::{Arc, Weak};
 use std::time::Instant;
+use thread::worker;
 
 /// Encoder counts per revolution (calibration-mirror.mjs:4).
 pub const COUNTS: f64 = 4096.0;
@@ -157,10 +160,6 @@ pub struct MirrorShared {
     pose: Option<(u64, Result<(Solved, Vec<String>), String>)>,
     gait: Option<(u64, Result<(), String>)>,
     sample: Option<(u64, Result<Vec<(String, f64)>, String>)>,
-}
-
-fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
-    m.lock().unwrap_or_else(|p| p.into_inner())
 }
 
 /// The page's `LegMirror` state.
@@ -649,117 +648,6 @@ impl Drop for Mirror {
 /// (128 counts = 11.25° shows "11.3").
 pub fn degrees_text(delta_rad: f64) -> String {
     fixed(delta_rad * 180.0 / std::f64::consts::PI, 1)
-}
-
-/// The mirror's actions (the section's controls): each saves the
-/// preferences, then begins again (or ends, for "off"), as :32-38.
-pub fn apply(hw: &mut Hardware, action: &HardwareAction) -> Result<(), String> {
-    let m = &mut hw.mirror;
-    match action {
-        HardwareAction::MirrorEnabled { on } => {
-            m.settings.enabled = *on;
-            if *on { m.begin() } else { m.end() }
-        }
-        HardwareAction::MirrorLeg { leg } => {
-            if !LEGS.contains(&leg.as_str()) {
-                return Err(format!("mirror leg `{leg}`: expected one of {}", LEGS.join(", ")));
-            }
-            m.settings.leg = leg.clone();
-            m.begin();
-        }
-        HardwareAction::MirrorJoint { id, joint } => {
-            if !JOINTS.iter().any(|(j, _)| j == joint) {
-                return Err(format!("mirror joint `{joint}`: expected one of {}", JOINTS.map(|(j, _)| j).join(", ")));
-            }
-            binding(m, *id)?.joint = joint.clone();
-            m.begin();
-        }
-        HardwareAction::MirrorPolarity { id, polarity } => {
-            if !matches!(polarity, 1 | -1) {
-                return Err(format!("mirror sign {polarity}: expected 1 or -1"));
-            }
-            binding(m, *id)?.polarity = *polarity;
-            m.begin();
-        }
-        HardwareAction::MirrorAlign { id, align } => {
-            binding(m, *id)?.align = *align;
-            m.begin();
-        }
-        other => return Err(format!("`{}` is not a mirror action", other.name())),
-    }
-    m.revision += 1;
-    hw.settings.mirror = hw.mirror.to_save();
-    hw.settings.save();
-    Ok(())
-}
-
-fn binding(m: &mut Mirror, id: u8) -> Result<&mut MirrorBinding, String> {
-    let listed = m.roles.is_some();
-    m.settings.bindings.get_mut(&id).ok_or_else(|| {
-        if listed { format!("motor ID {id} is not on the calibration server's list") } else { "the calibration server has not listed its motors yet; connect first".to_string() }
-    })
-}
-
-/// The worker (the page's module worker: `mirror_load`, `mirror_pose`,
-/// `gait_load`, `gait_sample`; web/worker.js:68-91).
-fn worker(rx: mpsc::Receiver<MirrorCommand>, out: Arc<Mutex<MirrorShared>>) {
-    let mut mirror: Option<KinematicMirror> = None;
-    let mut links: Vec<String> = Vec::new();
-    let mut gait: Option<(Gait, GovernedGait)> = None;
-    loop {
-        let Ok(first) = rx.recv() else { return };
-        let mut batch = vec![first];
-        batch.extend(rx.try_iter());
-        // Latest wins: only the newest pose request of the batch is solved.
-        let newest_pose = batch.iter().rposition(|c| matches!(c, MirrorCommand::Pose { .. }));
-        for (i, command) in batch.into_iter().enumerate() {
-            match command {
-                MirrorCommand::Load { scene, links: names } => {
-                    links = names;
-                    let result = KinematicMirror::new(scene.scene().clone(), LIFT_M).map(|m| {
-                        let c = m.coordinates().into_iter().map(|c| Coordinate { joint: c.joint, home: c.home, lower: c.lower, upper: c.upper }).collect();
-                        mirror = Some(m);
-                        c
-                    });
-                    lock(&out).coordinates = Some(result);
-                }
-                MirrorCommand::Pose { .. } if Some(i) != newest_pose => {}
-                MirrorCommand::Pose { seq, values } => {
-                    let result = match mirror.as_mut() {
-                        None => Err("load the kinematic mirror first".to_string()),
-                        Some(m) => m.pose(&values).map(|pose| {
-                            let (poses, _) = crate::robot::gait::map_poses(&pose.poses, &links);
-                            (Solved { poses }, pose.authored_limit_violations)
-                        }),
-                    };
-                    lock(&out).pose = Some((seq, result));
-                }
-                MirrorCommand::Gait { number, compiled, name } => {
-                    let result = Gait::from_compiled(&compiled, &name).map(|g| {
-                        gait = Some((g.clone(), GovernedGait::new(g)));
-                    });
-                    if result.is_err() {
-                        gait = None;
-                    }
-                    lock(&out).gait = Some((number, result));
-                }
-                MirrorCommand::Sample { seq, t, dt, scale, reset } => {
-                    let result = match gait.as_mut() {
-                        None => Err("load a gait first".to_string()),
-                        Some((g, governed)) => {
-                            if reset {
-                                *governed = GovernedGait::new(g.clone());
-                            }
-                            // Governed (as the simulation commands it) when the gait has a governor.
-                            let values = if g.info.governor.is_some() { governed.step(t, dt, scale).map(|v| v.into_iter().map(|(q, _)| q).collect()) } else { g.sample(t) };
-                            values.map(|v: Vec<f64>| g.info.joints.iter().cloned().zip(v).collect())
-                        }
-                    };
-                    lock(&out).sample = Some((seq, result));
-                }
-            }
-        }
-    }
 }
 
 #[cfg(test)]

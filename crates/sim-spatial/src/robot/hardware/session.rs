@@ -39,7 +39,7 @@
 //!   is pending, and its periodic failures are acted on here
 //!   ([`Session::beat_failure`]) only if their run and epoch still hold.
 use super::actions::Direction;
-use super::link::{HEARTBEAT, Inputs, Intent, LinkCommand, LinkSnapshot, POLL_ACTIVE, POLL_IDLE};
+use super::link::{Inputs, Intent, LinkCommand, LinkSnapshot};
 use serde_json::Value;
 use sim_runtime::hardware_client::calibration::{self, Axis, Input, Status, SweepSample};
 use sim_runtime::hardware_client::{Body, CONNECT_TIMEOUT, Client, STOP_TIMEOUT};
@@ -50,6 +50,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 mod beat;
 mod buttons;
+mod periodic;
 mod sequences;
 #[cfg(test)]
 mod tests;
@@ -686,130 +687,6 @@ impl Session {
             Err(e) => self.message(e),
         }
         self.render();
-    }
-
-    // ---- periodic work ----
-
-    /// The status poll :326, rescheduled after each answer.
-    fn poll(&mut self) {
-        let e = self.epoch_now();
-        match self.get_status() {
-            Ok(s) => {
-                if e == self.epoch_now() && !self.snap.busy && !self.snap.starting {
-                    let (sweep_run, sweep_running, holding) =
-                        s.sweep.as_ref().map_or((None, false, false), |w| (w.run_id, w.running, w.latest.as_ref().is_some_and(|l| l.holding)));
-                    let enabled = s.enabled_id;
-                    self.adopt(s);
-                    if enabled != self.snap.id && self.snap.run.is_none() {
-                        self.snap.ready = false;
-                    }
-                    if self.snap.run.is_some() && sweep_run == self.snap.run && self.snap.intent == Intent::Target && holding {
-                        self.snap.intent = Intent::Hold;
-                        self.update();
-                    }
-                    if self.snap.run.is_some() && sweep_run == self.snap.run && !sweep_running {
-                        self.snap.run = None;
-                        self.snap.ready = false;
-                        self.clear_input();
-                        self.snap.sweeping = false;
-                    }
-                    self.render();
-                }
-            }
-            Err(err) => {
-                if self.snap.ready {
-                    self.stop();
-                }
-                self.message(err);
-                self.render();
-            }
-        }
-        let active = self.snap.run.is_some() || self.leg_gait();
-        self.next_poll = Instant::now() + if active { POLL_ACTIVE } else { POLL_IDLE };
-    }
-    fn leg_gait(&self) -> bool {
-        self.snap.gait.as_ref().is_some_and(|g| g.leg)
-    }
-    fn sim_gait_playing(&self) -> bool {
-        self.snap.gait.as_ref().is_some_and(|g| !g.leg && g.playing)
-    }
-    /// The earliest periodic work due.
-    pub(super) fn next_deadline(&self) -> Instant {
-        let mut due = self.next_poll;
-        // The beat's failures are taken at least as often as it sends.
-        if self.plan.motion.is_some() {
-            due = due.min(Instant::now() + HEARTBEAT);
-        }
-        if let Some(run) = &self.sweep_all {
-            due = due.min(run.next);
-        }
-        if self.snap.tuning {
-            due = due.min(self.next_tune);
-        }
-        if self.snap.campaigning {
-            due = due.min(self.next_campaign);
-        }
-        if self.sim_gait_playing() {
-            due = due.min(self.next_frame);
-        }
-        due
-    }
-    /// Runs the periodic work due at `now`: a periodic heartbeat failure
-    /// the beat recorded, the status poll and the sequences' ticks. The
-    /// heartbeats themselves (`heartbeat()` :325, the gait lease :261) are
-    /// the beat's.
-    pub(super) fn run_due(&mut self, now: Instant) {
-        self.beat_failure();
-        if now >= self.next_poll {
-            self.poll();
-        }
-        if self.sweep_all.as_ref().is_some_and(|r| now >= r.next) {
-            self.sweep_all_tick();
-        }
-        if self.snap.tuning && now >= self.next_tune {
-            self.tune_tick();
-        }
-        if self.snap.campaigning && now >= self.next_campaign {
-            self.campaign_tick();
-        }
-        if self.sim_gait_playing() && now >= self.next_frame {
-            self.sim_frame();
-            self.publish();
-            self.next_frame = Instant::now() + GAIT_FRAME;
-        }
-        self.sync_beat();
-    }
-    /// [`super::link::drive_active`] on this session's state.
-    fn drive_active(&mut self) -> bool {
-        self.snap.sweep_all = self.sweep_all.is_some();
-        super::link::drive_active(&self.snap)
-    }
-    /// The channel closed (the link dropped): the page's `loss()` on
-    /// `pagehide`, widened ([`super::link::drive_active`]), with the short
-    /// STOP timeout so the thread ends promptly. Sent also while a STOP is
-    /// pending (the UI's STOP may not have reached the server). The beat is
-    /// dropped first: its channel closes and it sends nothing more.
-    fn shutdown(&mut self) {
-        // Silence the beat before it goes: a beat mid-`run_due` checks the
-        // epoch before each send, so no heartbeat can renew the lease
-        // ahead of the STOP below.
-        self.bump_epoch();
-        self.beat = None;
-        let active = self.drive_active();
-        if let Some(id) = self.snap.id
-            && active
-        {
-            let body = calibration::stop(Some(id), self.seq());
-            match self.client.clone().with_timeout(STOP_TIMEOUT).post(COMMAND, &body) {
-                Ok(v) => match serde_json::from_value::<Status>(v) {
-                    Ok(s) => self.adopt(s),
-                    Err(e) => self.message(format!("status: {e}")),
-                },
-                Err(e) => self.message(e.to_string()),
-            }
-        }
-        self.stopped_locally();
-        self.publish();
     }
 }
 

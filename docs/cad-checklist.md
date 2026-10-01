@@ -10,16 +10,19 @@ tools, the sketch tools and the solids made from sketches, Part E, section
 "CAD sketch (2026-10-01)") and the fifth (**cad-views-export**: the shared
 camera, display modes, grid, build plate, view cube, section, isolate and
 hide, saved views, the tessellation tolerance, and new, open, save as,
-import, export and render, Part F). cad-mode, cad-select-transform,
-cad-modify and cad-sketch (at cc7ac194) were built and tested in their
-verification passes; cad-views-export was written and checked only by
-reading: **Part F has not been through its verification pass yet**. Each
+import, export and render, Part F) and the sixth (**cad-physical-inspect**:
+materials, the inspector's physical rows, the Robot panel and its tools,
+results, the stress overlay, physical export and the live link, Part G,
+section "CAD physical properties (2026-10-01)"). cad-mode,
+cad-select-transform, cad-modify and cad-sketch (at cc7ac194) were built
+and tested in their verification passes; cad-views-export was verified at
+bcf0c56c; cad-physical-inspect was written and checked only by reading:
+**Part G has not been through its verification pass yet**. Each
 step is done once in the native viewer and once in RoboCAD's own window,
 so you can compare them. The feature-by-feature ledger is
 [cad-parity.md](cad-parity.md); its `done-by-reading` rows are the ones
-these steps show. Everything else in RoboCAD (physical inspection,
-printing, experiments, motion, comments, …) is a later CAD epic and stays
-in RoboCAD's window.
+these steps show. Everything else in RoboCAD (printing, experiments,
+motion, comments, …) is a later CAD epic and stays in RoboCAD's window.
 
 **RoboCAD stays the reference.** Nothing here changes it, its command layer
 or the `.rcad` format. The viewer never writes a `.rcad` file itself.
@@ -270,6 +273,54 @@ file commands take an absolute path (or `~/…`) typed into its path form.
 | CAD-129 RoboCAD's camera gestures | In CAD mode with the Select tool: Shift+middle-drag orbits (a plain middle-drag still pans); Alt+right-drag orbits and snaps to the nearest axis view at every step (pitch level or ±89.5°, yaw a multiple of 90°); Alt/Option+left-drag orbits once it moves more than about 6 px, while an Alt+click on overlapping parts still opens the candidates menu and an Alt drag never box-selects; the arrow keys orbit 10° (Ctrl/Cmd: 90°), Shift+arrows pan; with a text field focused (the numeric bar, the inspector, the offset field) the arrows leave the camera alone. `camera_orbit {"degrees":[10,0]}` | The same drags and keys in RoboCAD's viewport | The same turns, snaps and pans in both, at the same steps. RoboCAD's own Alt+left-drag does not orbit (its tool takes the press, ui/app.py:542; recorded in the ledger's notes), so compare the viewer's with right-drag |
 | CAD-130 Curve nodes | Select a body and run Modify ▸ Silhouette onto active plane (CAD-95): a "Silhouette" curve node appears in the tree. Toggle its visibility; select it in the tree; switch display modes (Z); turn the section on across it | The same silhouette in RoboCAD's window | The curve is drawn in both, 2 px, light blue (or the node's colour), orange while selected, in every display mode, cut by the section plane, gone while hidden. Clicking the curve in the viewer's 3D view does not select it (RoboCAD's 8 px curve pick is not ported; select it in the tree; recorded) |
 
+## Part G: materials, physical inspection, the Robot panel and simulation (cad-physical-inspect)
+
+Set up as in Part C and D, on a model with joints and motors: the viewer on
+one copy of `turntable.rcad`, RoboCAD's own window on a second copy, the
+same node selected in both. CAD-138 and CAD-149 read loaded results: do
+CAD-147 and CAD-150 before them. For the results steps, make a results file
+from RoboCAD's export first:
+
+```sh
+cp examples/camera-turntable/cad/turntable.rcad /tmp/cad-check/turntable-rc.rcad
+# after CAD-147 has written /tmp/cad-check/turntable.simrobot.json:
+cargo run --release -p sim-phenomena --bin sim-cad -- run /tmp/cad-check/turntable.simrobot.json
+```
+
+Menus are named as both menu bars show them (Robot, Simulation, Inspect,
+Print). In the viewer the Materials and Robot panels are sections of the
+right dock (RoboCAD: the Materials and Robot docks, tabbed on the right).
+`cad_state.materials`, `cad_state.robot`, `cad_state.inspector_physical` and
+`cad_state.results` show the viewer's state. Steps that edit are undone in
+both before the next step, unless the step says otherwise. Nothing in
+this part was compiled or run before it was written: **Part G has not been
+through its verification pass yet**.
+
+| Step | Native viewer | RoboCAD | Pass when |
+|---|---|---|---|
+| CAD-131 Materials list and search | The Materials section lists "■ name   density g/cm³", ■ in each material's colour; type `pla` into "Search materials…", then a tag (e.g. `metal`) | The Materials dock, the same search | The same rows, colours, densities and filtered rows in both (name or tag, any case) |
+| CAD-132 Apply a material | Select two bodies, click a material row, **Apply to selection**; undo; then double-click the row; with nothing selected, **Apply to selection** | The same: Apply to selection and double-click; then with nothing selected | One undo step "Material" sets both bodies in both windows (the inspector's material and mass follow); the viewer refuses an empty selection by name, where RoboCAD silently does nothing (recorded). Dragging a material onto a body is RoboCAD's only (recorded) |
+| CAD-133 New material | **New…**: Name `Check PLA`, Density (g/cm³) `1.25`, OK; then New… again with Density `abc` | **New…** with the same values | The new material appears in both lists with the same density; the density that is not a number is refused naming the field (OK is disabled). Undo removes it in both |
+| CAD-134 Engineering properties | Select a material row, **Material properties…** (or the inspector's **Material properties…** on a body): the dialog shows each property with its origin; change Yield strength only, OK | Properties panel ▸ *Material properties…* for the same material, the same change | Both store the same value (re-open the dialog in both); the viewer sends only the changed key (`cad_state` history shows one "Material properties of …" step); a default RoboCAD's `_ENG` table supplies shows "not reported" in the viewer (recorded) |
+| CAD-135 Colour | Inspector: type `0.9, 0.2, 0.2` in the colour field, Enter; then **Use material colour** | `curl -X PATCH http://127.0.0.1:<RoboCAD port>/nodes/<id> -d '{"color":[0.9,0.2,0.2]}'` (RoboCAD's window has no colour editor; the route is the reference), then `-d '{"color":null}'` | The body turns the same red in both windows and back to its material's colour; each is one undo step |
+| CAD-136 Joint editor | Select a joint; inspector **Edit joint…** (or double-click its row in the Robot panel, CAD-141): change the upper limit and the name, OK | Double-click the joint in the Robot panel ("Edit joint" dialog), the same change | The same limit and name in both (`GET /robot`); the rename is a second call only when the name changed, as RoboCAD's handler |
+| CAD-137 Joint physics overrides | Select a joint: the rows "Radial clearance (mm)", "Wobble (°)", "Drive backlash (°; …)", "Coulomb friction (mN·m)", "Viscous (mN·m·s)", "Radial stiffness (N/m)", "Flex patch radius (mm)" and the source line; type a Coulomb friction, Enter | Properties panel on the same joint, the same value | The same values and provenance in both, "*" on the overridden row in both after the edit; a value the physical model lacks is empty in the viewer, 0.0 in RoboCAD (recorded) |
+| CAD-138 Results line | After CAD-150 (results loaded), select a link body | The same body in RoboCAD's Properties panel | The same "Results: key value, …" line (same keys, 3 significant figures) in both |
+| CAD-139 Exact measurement | Select two bodies, **Calculate exact measurements**; then start it again and change the selection before it finishes; start it again and make an edit | Properties panel ▸ *Calculate exact measurements*, the same selection | The same size, volume, area, mass and centroid in both; the viewer's measurement is cancelled by the selection change and by the edit, each saying why, and the window never stalls; its preview has no "Display size ≈" line (recorded) |
+| CAD-140 Robot panel summary and tree | The Robot section: the summary line, the "Links", "Joints", "Motors", "Sensors & cables" headings with their rows, each with its detail line | The Robot dock | The same counts ("n bodies, n joints, n DoF, n motors, n sensors, n cables. Ground: …. Power: ….") and rows in both; the viewer omits "(n s run)" and adds "(stale: …)" when RoboCAD flags the results stale; no branch glyphs, and Detail and Margin are lines under the name (recorded) |
+| CAD-141 Robot panel click and double-click | Click a joint row, then a link row; double-click a joint row | The same clicks in RoboCAD's Robot dock | A click selects the node in both (the viewer's tree and 3D view follow it); the double-click opens "Edit joint" preset from that joint in both |
+| CAD-142 Validate and issues | Robot ▸ Robot: validate; read the Robot panel's issue list | Robot ▸ Robot: validate | The same verdict: "robot valid: …" in the status line, or the same issues; RoboCAD's warning box is the viewer's status line and issue list, "Error:"/"Warning:" in place of ⛔/⚠ (recorded) |
+| CAD-143 Motor library | Robot ▸ Robot: motor library… | Robot ▸ Robot: motor library… | The same motors and specs; the viewer shows a floating panel, RoboCAD a message box; the viewer lists them by id (recorded) |
+| CAD-144 Add motor from library | Robot ▸ Robot: add motor from library… (or the Robot panel's **Add motor…**): Motor, Rotation about shaft, Mount on, "Cut mounting holes and pilot into the mounted body", Name; click a body's face; Escape ends the tool and the dialog | Robot ▸ Robot: add motor from library…, the same values, click the same face | The same motor node at the same place (housing outside, shaft into the body) in both; the new motor becomes the selection in both; one undo step. The viewer's fields stay beside the view while you click (recorded) |
+| CAD-145 Add joint tool and joint from selection | Robot ▸ Robot: add joint (Ctrl+Shift+J): click the parent (Ctrl-click for the world), the child, an axis face; then select two bodies and Robot ▸ Robot: joint from the two selected bodies… (Type, Parent "(world)", Child, Pivot (mm), Axis, limits, Motor, Extra gear ratio, Damping, Name), OK | Robot ▸ Robot: add joint (the menu entry; Ctrl+Shift+J is not bound in RoboCAD), the same clicks; then the same dialog | The same joints (type, pivot, axis, limits) in both; the new joint becomes the selection; Ctrl+Shift+M still runs Select Same Material in both (recorded) |
+| CAD-146 The other robot tools and dialogs | In turn, undoing each: Robot ▸ infer joints from coaxial holes and pins; assign selected motor to a joint… (Motor, Joint, Extra gear ratio); fix selected bodies together; toggle ground on selected bodies; add sensor… (Kind, On body, Point (mm), Reads joint, Rate (Hz), Name); add cable between bodies… (From/To body and point, Length, Mass, Name); battery, control loop and uncertainty… (Battery cells, Chemistry, Capacity (Ah), Control period (s), Control latency (s), Target per joint (°) as `{"joint": deg}`, Dimension σ (mm), Friction σ) | The same Robot menu entries and dialogs with the same values | The same result in `GET /robot`, `/sensors`, `/cables`, `/battery`, `/control`, `/uncertainty` after each; Assign motor without motors or joints is refused before its dialog in both; a joint left out of the targets keeps its target in the viewer (recorded) |
+| CAD-147 Export physical model | Simulation ▸ Simulation: export physical model (simrobot v4, with flexible links)…: `/tmp/cad-check/turntable.simrobot.json`, OK; start it again and **Cancel export** while it runs | Simulation ▸ Simulation: export physical model… to `/tmp/cad-check/turntable-rc.simrobot.json` | Both files hold the same model (the same links, masses, joints and motors; simrobot version 4); the status line shows "exporting … n s"; the cancelled export writes nothing; the window never stalls |
+| CAD-148 Export robot model (planar) | Simulation ▸ Simulation: export robot model…: `/tmp/cad-check/turntable-planar.simrobot.json` | Simulation ▸ Simulation: export robot model… | Both files carry the same x–z planar hint |
+| CAD-149 Stress overlay | Inspect ▸ Toggle stress overlay (or Print ▸ Strength overlay on/off, or the Robot panel's **Stress overlay**) after CAD-150 | Inspect ▸ Toggle stress overlay | The same links are coloured, hot where RoboCAD's are; the viewer uses Robot mode's log scale (blue at 0.1 % of yield → red at yield), RoboCAD a linear one (recorded), so mid-range colours differ; the staleness label matches RoboCAD's stale flag |
+| CAD-150 Load results | Robot ▸ Robot: load simulation results…: the form starts at `<stem>.simresult.json` (`/tmp/cad-check/turntable.simresult.json`, written by `sim-cad run` above); OK | Robot ▸ Robot: load simulation results…, the same file | The Robot panel's margins (yield, bearing, screw, stall, Tg, mount Tg) match in both, and the stress overlay turns on in both |
+| CAD-151 Apply identification | Robot ▸ Robot: apply identified joint parameters…: a `sim-cad fit` output file if you have one, else a missing path | The same entry and file | The same stored joint parameters (the next export's joint physics) in both, or the same RoboCAD error verbatim |
+| CAD-152 Live link into Robot mode | Simulation ▸ Simulation: live link (watch + run viewer) on the saved document: the window switches to Robot mode on `turntable.simrobot.json`; go back to CAD, change a joint limit, Save (Ctrl/Cmd+S), then switch to Robot mode | Simulation ▸ live link in RoboCAD's window: it exports and starts `sim-spatial --robot` | The viewer opens Robot mode in the same window (no new process) on the exported model, and after the save Robot mode shows the new limit; with an export running, leaving CAD is refused naming it; an unsaved document refuses the link ("Save the document first: …") |
+
 ## Known differences (deliberate)
 
 - RoboCAD asks Save/Discard/Cancel when closing; the viewer never saves for
@@ -341,6 +392,22 @@ file commands take an absolute path (or `~/…`) typed into its path form.
   curve nodes are drawn but not picked in the 3D view; the section offset
   is the toolbar's field (no plane drag, R or Tab in the 3D view). No
   cad-views-export row is open.
+- cad-physical-inspect (each recorded in cad-parity.md with its reason):
+  the exact measurement runs one read per node on a job, and a cancel only
+  stops waiting; joint physics values the model lacks are empty, not 0.0;
+  the colour is an "r, g, b" field with "Use material colour"; no
+  drag-and-drop of a material onto a body; the properties dialog sends only
+  changed keys and shows "not reported" where RoboCAD would use its
+  built-in table; glyphs are sized at their own depth, dots are small
+  crosses; the stress overlay uses Robot mode's log colour scale; the motor
+  tool's dialog stays beside the view; the Robot panel has no branch
+  glyphs, puts Detail and Margin under the name, omits "(n s run)" and
+  writes "Error:"/"Warning:"; motors are listed by id; validation goes to
+  the status line and issue list; the motor library is a panel; the power
+  dialog's targets are one JSON field; exports are written by the viewer
+  on a job; the live link opens Robot mode in this window; Ctrl+Shift+J is
+  bound to the joint tool and Ctrl+Shift+M stays Select Same Material. No
+  cad-physical-inspect row is open.
 
 ## Sign-off
 

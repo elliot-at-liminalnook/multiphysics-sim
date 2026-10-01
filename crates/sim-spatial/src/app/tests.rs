@@ -283,6 +283,36 @@ fn every_mode_control_resolves_to_a_switch() {
     let command = sim_api::Command { command: "system_ui".into(), args: json!({"action": {"operation": "activate", "id": "mode:robot", "ui_revision": 3}}) };
     assert_eq!(route::route(ViewerMode::Build, true, &command).map(|f| f.name), Ok("window"));
     assert!(matches!(<WindowAction as actions::Action>::parse(&command), Ok(WindowAction::SystemUi(_))));
+
+    // The document picker's controls (listed while it is open) fit the
+    // window's patterns, go to the window in every mode, and are appended
+    // to every mode's controls list; each entry's action is the switch it asks for.
+    use super::picker::{Choice, Picker, Section, Sources};
+    let mut picker = Picker::default();
+    picker.open = Some(ViewerMode::Robot);
+    let choices = vec![Choice { label: "Measured".into(), detail: "p".into(), enabled: true, document: Document::Preset("p".into()) }, Choice { label: "x".into(), detail: String::new(), enabled: true, document: Document::Path("/abs/x.simrobot.json".into()) }];
+    picker.found = Some(Sources { sections: vec![Section { title: "Presets".into(), empty: String::new(), choices }], start_dir: None });
+    let controls = picker.controls();
+    assert_eq!(controls.len(), 4);
+    for (n, control) in controls.iter().enumerate() {
+        let id = control["id"].as_str().unwrap();
+        assert!(patterns.iter().any(|p| actions::control_matches(p, id)), "{id}");
+        let command = sim_api::Command { command: "system_ui".into(), args: json!({"action": {"operation": "activate", "id": id}}) };
+        for mode in ViewerMode::ALL {
+            assert_eq!(route::route(mode, true, &command).map(|f| f.name), Ok("window"), "{id} in {mode:?}");
+        }
+        if n < 2 {
+            let Value::Object(args) = control["action"]["viewer_mode"].clone() else { panic!("{control}") };
+            assert_eq!(Some(ModeSwitch::from_args(args).unwrap()), picker.choice(0, n), "{id}");
+        }
+    }
+    let listed = sim_api::Command { command: "system_ui".into(), args: json!({"action": {"operation": "controls"}}) };
+    for mode in ViewerMode::ALL {
+        let answer = sim_api::Outcome::Done(Ok(json!({"controls": []})));
+        let sim_api::Outcome::Done(Ok(value)) = route::annotate(mode, &controls, &listed, answer) else { panic!("annotate keeps the answer") };
+        let ids: Vec<&str> = value["controls"].as_array().unwrap().iter().filter_map(|c| c["id"].as_str()).collect();
+        assert!(ids.ends_with(&["picker:robot:0", "picker:robot:1", "picker:path", "picker:close"]), "{mode:?}: {ids:?}");
+    }
 }
 
 /// Build → Cad → Build without a RoboCAD: CAD mode enters at once, says

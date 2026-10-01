@@ -452,7 +452,7 @@ pub(crate) fn serve(world: &mut World) {
             // Already answered (the handler ran before the mode changed): the
             // answer stands, whatever mode the window is in now.
             if let Some(outcome) = waiting.and_then(|r| world.resource_mut::<Replies>().take(r)) {
-                return super::route::annotate(mode, command, outcome);
+                return super::route::annotate(mode, &super::picker::controls_in(world), command, outcome);
             }
             let outcome = match super::route::route(mode, true, command) {
                 // A command left waiting by another action type: the mode
@@ -481,7 +481,9 @@ pub(crate) fn serve(world: &mut World) {
                     None => Outcome::Done(Err(e)),
                 },
             };
-            super::route::annotate(mode, command, outcome)
+            // The document picker's controls as they are now (after a
+            // `picker:*` activation changed them, the new list).
+            super::route::annotate(mode, &super::picker::controls_in(world), command, outcome)
         });
         // Keep frames coming while a command waits; an idle background
         // window otherwise steps only on its slow low-power timer.

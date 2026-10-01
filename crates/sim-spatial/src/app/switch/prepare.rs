@@ -74,6 +74,55 @@ pub(super) enum Prepared {
     Load(String, Work),
 }
 
+/// What a mode opens, as a person names it.
+pub(super) fn wants(mode: ViewerMode) -> &'static str {
+    match mode {
+        ViewerMode::Build => "a system file (*.system.json)",
+        ViewerMode::Lessons => "a lessons folder (<slug>/lesson.md entries)",
+        ViewerMode::Robot => "a robot",
+        ViewerMode::Place => "a scanned place (a folder holding place.json)",
+        ViewerMode::Cad => "a RoboCAD document",
+        ViewerMode::Inspect => "an assembly",
+        ViewerMode::Phenomena => "no document",
+    }
+}
+
+/// What the document picker offers for `mode` (its sections and the path field).
+fn offers(mode: ViewerMode) -> &'static str {
+    match mode {
+        ViewerMode::Robot => "presets, recent and example files, or Open file…",
+        ViewerMode::Lessons => "recent and example lesson folders, or Open file…",
+        ViewerMode::Place => "recent and example places, or Open file…",
+        ViewerMode::Cad => "the RoboCAD service, recent and example documents, or Open file…",
+        _ => "recent and example files, or Open file…",
+    }
+}
+
+/// The refusal of a switch to `mode` with no document and nothing to
+/// reopen. Only a non-interactive request gets it (the window opens the
+/// document picker instead, `switch::start`), so it names the window's way.
+pub(super) fn needs(mode: ViewerMode) -> String {
+    format!("{} mode needs {} and this window has none open: press {} in the mode switcher and choose one in its picker ({})", mode.name(), wants(mode), mode.label(), offers(mode))
+}
+
+/// Why a switch to `target` with no document would be refused: the mode
+/// has no document in the window and nothing to reopen (Build: no builder;
+/// Lessons: no lesson open or remembered; Robot, Place, CAD: none
+/// remembered). None for Inspect (it falls back to the example assembly)
+/// and Phenomena (its exhibits are compiled in). Pure: reads the world only.
+pub(super) fn missing_document(world: &World, target: ViewerMode) -> Option<String> {
+    let docs = world.resource::<Documents>();
+    let missing = match target {
+        ViewerMode::Build => !world.contains_resource::<Builder>(),
+        ViewerMode::Lessons => !world.contains_resource::<Learn>() && docs.lessons.is_none(),
+        ViewerMode::Robot => docs.robot.is_none(),
+        ViewerMode::Place => docs.place.is_none(),
+        ViewerMode::Cad => docs.cad.is_none(),
+        ViewerMode::Inspect | ViewerMode::Phenomena => false,
+    };
+    missing.then(|| format!("{} mode needs {}; this window has none open yet.", target.label(), wants(target)))
+}
+
 /// The parts registry the launch uses (`$SIM_PARTS_DIR`, else the workspace's).
 fn registry() -> sim_core::BehaviorRegistry {
     sim_runtime::system_registry_in(crate::workspace::get().as_ref())
@@ -117,14 +166,14 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
                             return Err(format!("the builder shows a lesson's sandbox copy ({}); leave lessons before opening {}", b.path().display(), p.display()));
                         }
                         if b.can_open() {
-                            return Err(format!("this window's builder has {} open: switch to build mode, then open {} with system_open (the Systems tab), which keeps a live run", b.path().display(), p.display()));
+                            return Err(format!("this window's builder has {} open: switch to Build mode, then open {} from the Systems tab's Open, which keeps a live run", b.path().display(), p.display()));
                         }
                         // A lesson's sandbox builder (no Open) is replaced by the file below.
                     }
                     _ => return Ok(Prepared::Now(Box::new(Arrival { unpark_builder: !in_family, document: json!(b.path()), ..Default::default() }))),
                 }
             }
-            let path = path.ok_or("build mode needs a system file and this window has none open: give one, e.g. viewer_mode {\"mode\":\"build\",\"path\":\"….system.json\"}")?;
+            let path = path.ok_or_else(|| needs(ViewerMode::Build))?;
             if !path.is_file() {
                 return Err(format!("{}: no such file", path.display()));
             }
@@ -146,7 +195,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
             }
             let (dir, slug) = match path {
                 Some(p) => (p, None),
-                None => docs.lessons.clone().ok_or("lessons mode needs a lessons folder (<slug>/lesson.md entries) and this window has none open: give one, e.g. viewer_mode {\"mode\":\"lessons\",\"path\":\"lessons\"}")?,
+                None => docs.lessons.clone().ok_or_else(|| needs(ViewerMode::Lessons))?,
             };
             if crate::launch::classify(&dir) != Ok(crate::launch::LaunchKind::Lessons) {
                 return Err(format!("{}: not a lessons folder (no <slug>/lesson.md entries)", dir.display()));
@@ -160,7 +209,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
             Ok(Prepared::Load(what, Work::Job(job)))
         }
         ViewerMode::Robot => {
-            let document = request.document.clone().or_else(|| docs.robot.clone()).ok_or("robot mode needs a robot and this window has none open: give path (a *.simrobot.json) or preset (an id listed by robot_presets), e.g. viewer_mode {\"mode\":\"robot\",\"preset\":\"robot-measured-400hz\"}")?;
+            let document = request.document.clone().or_else(|| docs.robot.clone()).ok_or_else(|| needs(ViewerMode::Robot))?;
             let view = match &document {
                 Document::Path(p) => {
                     if !p.to_string_lossy().ends_with(".simrobot.json") {
@@ -180,7 +229,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
             Ok(Prepared::Load(document.describe(), Work::Robot(Box::new(view))))
         }
         ViewerMode::Place => {
-            let dir = path.or_else(|| docs.place.clone()).ok_or("place mode needs a scanned place (a sim-place build directory holding place.json) and this window has none open: give one, e.g. viewer_mode {\"mode\":\"place\",\"path\":\"…/place\"}")?;
+            let dir = path.or_else(|| docs.place.clone()).ok_or_else(|| needs(ViewerMode::Place))?;
             let what = dir.display().to_string();
             let job = Job::spawn(Pool::Compute, 0, format!("{what}: the place loader"), move |_| {
                 let place = PlaceView::open(dir.clone())?;
@@ -218,7 +267,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
         // opening `Documents::exhibit`.
         ViewerMode::Phenomena => match &request.document {
             None => Ok(Prepared::Now(Box::new(Arrival { document: json!({"exhibit": docs.exhibit}), ..Default::default() }))),
-            Some(d) => Err(format!("phenomena mode takes no document ({} given); it opens the built-in exhibits: switch with viewer_mode {{\"mode\":\"phenomena\"}}, then phenomena_select", d.describe())),
+            Some(d) => Err(format!("phenomena mode takes no document ({} given): it opens the built-in exhibits; choose an exhibit in its gallery", d.describe())),
         },
     }
 }

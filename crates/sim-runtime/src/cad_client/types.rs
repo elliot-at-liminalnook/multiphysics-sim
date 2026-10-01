@@ -359,3 +359,58 @@ pub struct Solids {
     pub units: String,
     pub solids: Vec<Value>,
 }
+
+/// `POST /clipboard/paste`: the pasted nodes' ids (in the clip's order),
+/// added as one RoboCAD undo step "Paste", and the revision afterwards.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Pasted {
+    pub pasted: Vec<String>,
+    pub revision: Option<u64>,
+    /// The undo/redo labels afterwards (the last undo is "Paste").
+    pub history: History,
+}
+
+/// `GET /nodes/{id}/control_points?face=i`: the face's B-spline poles
+/// (`kernel.control_points`), one row per u pole. mm.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct ControlPoints {
+    pub node: String,
+    pub face: i64,
+    pub rows: Vec<Vec<[f64; 3]>>,
+}
+
+/// `GET /nodes/{id}/curvature_comb`: the comb's teeth (`analysis.curvature_comb`:
+/// point → point + normal·curvature·scale). Empty for a sketch node (it holds
+/// no body; RoboCAD's GUI draws none either). mm.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct CurvatureComb {
+    pub node: String,
+    pub lines: Vec<[[f64; 3]; 2]>,
+}
+
+/// One edge of `GET /nodes/{id}/continuity`.
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct EdgeContinuity {
+    /// The edge's index (as in `/edges`).
+    pub index: i64,
+    /// `G0` | `G1` | `G2` | `boundary` (`kernel.continuity`).
+    pub continuity: String,
+    /// `kernel.sample_edge(e, body, 16)`: 16 points along a curve, a line's two ends. mm.
+    pub points: Vec<[f64; 3]>,
+}
+
+/// `GET /nodes/{id}/continuity`: every edge's continuity between its two
+/// faces (`analysis.continuity_report`) and the count per grade (`G0`,
+/// `G1`, `G2`, `boundary`; a `BTreeMap` keeps RoboCAD's order, which is
+/// also the byte order).
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Continuity {
+    pub node: String,
+    pub edges: Vec<EdgeContinuity>,
+    pub counts: std::collections::BTreeMap<String, u64>,
+}

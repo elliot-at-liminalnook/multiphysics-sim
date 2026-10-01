@@ -20,8 +20,8 @@
 //!   command ids (`view.fit`) pass unchanged.
 //! - **Bodies**: compact JSON written by serde_json, `Content-Type:
 //!   application/json`; no other headers (the API has no auth).
-//! - **Edits and timeouts**: a mutating request (patch, delete, op, undo,
-//!   redo, save, run_command, open, export) should go through a client with
+//! - **Edits and timeouts**: a mutating request (patch, delete, op, paste,
+//!   undo, redo, save, run_command, open, export) should go through a client with
 //!   [`EDIT_TIMEOUT`] (the caller sets it), which outlasts RoboCAD's 120 s
 //!   GUI wait; any non-`GET` request that times out after connecting says
 //!   RoboCAD may still apply it.
@@ -157,6 +157,18 @@ struct OpBody<'a> {
     kwargs: &'a Map<String, Value>,
 }
 
+/// `POST /clipboard/copy`'s body.
+#[derive(Serialize)]
+struct CopyBody<'a> {
+    ids: &'a [String],
+}
+
+/// `POST /clipboard/paste`'s body.
+#[derive(Serialize)]
+struct PasteBody<'a> {
+    clip: &'a Value,
+}
+
 /// `POST /save` and `/open`'s body (`{}` without a path).
 #[derive(Serialize)]
 struct PathBody<'a> {
@@ -256,6 +268,35 @@ impl CadClient {
     /// (an empty list for a node without geometry; 404 for an unknown id).
     pub fn solids(&self, id: &str) -> Result<Solids, CadError> {
         self.get(&format!("{}/solids", node_route(id)))
+    }
+    /// `POST /clipboard/copy` `{"ids": [...]}`: RoboCAD's "Copy with
+    /// Placement" (`Document.copy_nodes`): `{"robocad_clipboard": true,
+    /// "items": [{"node", "brep", "sketch"}, …]}`, kept as given for
+    /// [`CadClient::paste`]. Changes nothing (a read; an unknown id is a 404).
+    pub fn copy_nodes(&self, ids: &[String]) -> Result<Value, CadError> {
+        self.send("POST", "/clipboard/copy", Some(&CopyBody { ids }))
+    }
+    /// `POST /clipboard/paste` `{"clip": clip}`: RoboCAD's "Paste with
+    /// Placement", one undo step "Paste" (an edit: use [`EDIT_TIMEOUT`]).
+    /// A clip without `robocad_clipboard` is a 400 "Clipboard has no
+    /// robocad content".
+    pub fn paste(&self, clip: &Value) -> Result<Pasted, CadError> {
+        self.send("POST", "/clipboard/paste", Some(&PasteBody { clip }))
+    }
+    /// `GET /nodes/{id}/control_points?face=i`: the face's B-spline poles.
+    /// A face index out of range is a 400; a node without geometry a 404.
+    pub fn control_points(&self, id: &str, face: i64) -> Result<ControlPoints, CadError> {
+        self.get(&format!("{}/control_points?face={face}", node_route(id)))
+    }
+    /// `GET /nodes/{id}/curvature_comb` with RoboCAD's defaults (scale 5,
+    /// 48 samples per edge). A node that is not a curve or sketch is a 400.
+    pub fn curvature_comb(&self, id: &str) -> Result<CurvatureComb, CadError> {
+        self.get(&format!("{}/curvature_comb", node_route(id)))
+    }
+    /// `GET /nodes/{id}/continuity`: each edge's G0/G1/G2/boundary grade
+    /// with its polyline, and the counts. A node without geometry is a 404.
+    pub fn continuity(&self, id: &str) -> Result<Continuity, CadError> {
+        self.get(&format!("{}/continuity", node_route(id)))
     }
     /// `GET /ops`: each callable op's name and Python signature.
     pub fn ops(&self) -> Result<BTreeMap<String, String>, CadError> {

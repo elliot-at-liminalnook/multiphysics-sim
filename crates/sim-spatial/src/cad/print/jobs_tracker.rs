@@ -19,15 +19,23 @@
 //!   `_refresh_panels`); failed: "Kind: error" (RoboCAD's warning title
 //!   and text); cancelled: "kind cancelled". A poll error is shown once by
 //!   name and the poll tried again.
+//! - **Polls are stamped** (a counter moved as each poll starts) and each
+//!   watched job keeps the stamp current when it was adopted: a list from
+//!   a poll that started before the adoption may lack the job, so the job
+//!   counts as gone only when a poll started after its adoption lacks it.
 //! - **Cancel** (RoboCAD's "Cancel the running jobs?"): asking opens the
 //!   confirmation in the Print jobs section; Yes sends exactly one `DELETE
-//!   /print/jobs/{id}` per running job (or only the one named) on one
-//!   Dedicated job, then polls.
+//!   /print/jobs/{id}` per running job of the latest list (or only the one
+//!   named) on one Dedicated job, then polls. Before any list was read in
+//!   this generation it is refused by name and a poll started: nothing is
+//!   answered or sent from a list never read.
 //! - **Leaving CAD mode** is refused while a watched job runs and the
 //!   window is connected ([`PrintJobTracker::blockers`]): a self-started
 //!   RoboCAD stops when CAD mode closes, which would kill the job, and an
 //!   attached one would finish unseen. Not connected, nothing can be
-//!   confirmed, so nothing is held.
+//!   confirmed (no poll can see the job end, and a lost service took its
+//!   jobs with it), so nothing is held: holding would trap the user in CAD
+//!   mode with no way to clear the blocker.
 //!
 //! The tracker lives on the document, so it belongs to one document; a new
 //! connection generation (a restarted service) starts it over.
@@ -47,6 +55,17 @@ use std::time::{Duration, Instant};
 pub(super) const POLL_INTERVAL: Duration = Duration::from_millis(500);
 /// How many jobs RoboCAD's "Print jobs…" lists (the last eight).
 pub(super) const SHOWN: usize = 8;
+/// Cancel before any list was read in this generation.
+pub(super) const UNREAD: &str = "RoboCAD's print jobs have not been read yet; try again in a moment";
+
+/// A job this window started, with the poll stamp current at its adoption.
+#[derive(Clone, Debug)]
+pub(super) struct Watched {
+    pub(super) job: PrintJob,
+    /// `PrintJobTracker::polls` when it was adopted: only a list from a
+    /// later-started poll can say it is gone.
+    adopted: u64,
+}
 
 /// RoboCAD's print jobs as last polled, and the poll in flight.
 #[derive(Default)]
@@ -56,15 +75,20 @@ pub struct PrintJobTracker {
     /// Whether the window was connected at the last tick (blockers hold only then).
     connected: bool,
     /// The jobs this window started that have not ended, as last polled.
-    pub(super) watched: Vec<PrintJob>,
+    pub(super) watched: Vec<Watched>,
     /// `GET /print/jobs` as last polled, oldest first.
     pub(super) jobs: Vec<PrintJob>,
     /// A list has landed in this generation.
     pub(super) listed: bool,
-    /// The poll in flight (at most one).
-    poll: Option<Job<Vec<PrintJob>>>,
+    /// The poll in flight (at most one), with its stamp.
+    poll: Option<(u64, Job<Vec<PrintJob>>)>,
+    /// Polls started in this generation (the stamp of the latest).
+    polls: u64,
     /// When the last poll started; None: poll at the next tick.
     polled_at: Option<Instant>,
+    /// One poll is wanted even though the section is closed and nothing is
+    /// watched (a cancel before any list was read).
+    once: bool,
     /// The Print jobs section is shown.
     pub(super) open: bool,
     /// "Cancel the running jobs?" is being asked.
@@ -86,7 +110,7 @@ impl PrintJobTracker {
         if !self.connected {
             return Vec::new();
         }
-        self.watched.iter().filter(|j| j.running()).map(|j| format!("a print job is running in RoboCAD: {} ({} %); wait for it, or cancel it in the Print jobs section", j.kind, percent(j))).collect()
+        self.watched.iter().map(|w| &w.job).filter(|j| j.running()).map(|j| format!("a print job is running in RoboCAD: {} ({} %); wait for it, or cancel it in the Print jobs section", j.kind, percent(j))).collect()
     }
     /// Poll at the next tick.
     pub(super) fn request_poll(&mut self) {
@@ -100,7 +124,7 @@ impl PrintJobTracker {
     /// or only `job` when it is one of them.
     pub(super) fn running(&self, job: Option<&str>) -> Vec<String> {
         let mut ids: Vec<String> = Vec::new();
-        for j in self.jobs.iter().chain(&self.watched) {
+        for j in self.jobs.iter().chain(self.watched.iter().map(|w| &w.job)) {
             if j.running() && !ids.contains(&j.id) && job.is_none_or(|id| id == j.id) {
                 ids.push(j.id.clone());
             }
@@ -202,8 +226,10 @@ pub(super) fn edit_answered(doc: &mut CadDocument, seq: u64, result: Option<&Val
     if t.generation != generation {
         reset(t, generation);
     }
-    t.watched.retain(|w| w.id != job.id);
-    t.watched.push(job);
+    t.watched.retain(|w| w.job.id != job.id);
+    // A poll in flight now started before this adoption: its list may lack the job.
+    let adopted = t.polls;
+    t.watched.push(Watched { job, adopted });
     t.request_poll();
     doc.touch();
 }
@@ -215,14 +241,39 @@ fn reset(t: &mut PrintJobTracker, generation: u64) {
 }
 
 /// `cad_print {op: cancel}`: `confirm` None asks (the section shows the
-/// question), false closes the question, true sends one `DELETE
-/// /print/jobs/{id}` per running job (or only `job`) on one job, then polls.
+/// question), false closes the question (saying so when none was open),
+/// true sends one `DELETE /print/jobs/{id}` per running job of the latest
+/// list (or only `job`) on one job, then polls. Refused with [`UNREAD`],
+/// and a poll started, while no list was read in this generation.
 pub(super) fn cancel(doc: &mut CadDocument, _call: &mut Call, job: Option<&str>, confirm: Option<bool>) -> Outcome {
     let done = Outcome::Done;
     if confirm == Some(false) {
-        doc.print.jobs.confirming = false;
+        let t = &mut doc.print.jobs;
+        if !t.confirming {
+            return done(Ok(json!({"confirming": false, "message": "There was no cancel confirmation open; nothing changed."})));
+        }
+        t.confirming = false;
         doc.touch();
         return done(Ok(json!({"confirming": false, "message": "The running print jobs were left running."})));
+    }
+    // A new generation not ticked yet: its lists are gone (`tick` would
+    // reset them too, and with them the poll asked for below).
+    let generation = doc.generation;
+    if doc.print.jobs.generation != generation {
+        reset(&mut doc.print.jobs, generation);
+    }
+    // Never read in this generation: no answer or DELETE from a list never
+    // read; ask RoboCAD once (even with the section closed) and refuse.
+    // Otherwise the latest list (and the watched jobs) decide.
+    if !doc.print.jobs.listed {
+        if !doc.connected() {
+            return done(Err(format!("RoboCAD's print jobs have not been read yet and cannot be now: not connected to RoboCAD: {}", doc.connection_line().0)));
+        }
+        let t = &mut doc.print.jobs;
+        t.once = true;
+        t.request_poll();
+        doc.touch();
+        return done(Err(UNREAD.to_string()));
     }
     let ids = doc.print.jobs.running(job);
     if ids.is_empty() {
@@ -258,8 +309,9 @@ pub(super) fn cancel(doc: &mut CadDocument, _call: &mut Call, job: Option<&str>,
     done(Ok(json!({"cancelling": ids})))
 }
 
-/// The landed list: the watched jobs' progress or end on the status line.
-fn land(doc: &mut CadDocument, result: Result<Vec<PrintJob>, String>) {
+/// The landed list of poll `stamp`: the watched jobs' progress or end on
+/// the status line.
+fn land(doc: &mut CadDocument, stamp: u64, result: Result<Vec<PrintJob>, String>) {
     let list = match result {
         Ok(list) => list,
         Err(e) => {
@@ -279,14 +331,16 @@ fn land(doc: &mut CadDocument, result: Result<Vec<PrintJob>, String>) {
     let mut running_line = None;
     let mut ended: Vec<Result<PrintJob, PrintJob>> = Vec::new();
     for w in std::mem::take(&mut t.watched) {
-        match t.jobs.iter().find(|j| j.id == w.id) {
+        match t.jobs.iter().find(|j| j.id == w.job.id) {
             Some(j) if j.running() => {
                 running_line = Some(progress(j));
-                t.watched.push(j.clone());
+                t.watched.push(Watched { job: j.clone(), adopted: w.adopted });
             }
             Some(j) => ended.push(Ok(j.clone())),
+            // Polled before the adoption: this list cannot know the job yet.
+            None if stamp <= w.adopted => t.watched.push(w),
             // RoboCAD no longer lists it.
-            None => ended.push(Err(w)),
+            None => ended.push(Err(w.job)),
         }
     }
     if let Some(text) = running_line
@@ -322,7 +376,14 @@ fn finish(doc: &mut CadDocument, job: Result<PrintJob, PrintJob>) {
                 doc.print.jobs.opens.push(job);
             }
             if publishes(&j) {
-                crate::cad::sync::refresh(doc, false);
+                // A publish is an edit (one RoboCAD undo step): the saved
+                // state is unknown until the refetch answers, so
+                // `switch_blockers` never sees a stale "saved" in the frame
+                // this job's own blocker goes away.
+                crate::cad::sync::refresh(doc, true);
+                // The robot reads again: the stress paint is keyed by each
+                // node's results (`GET /results/nodes`), so a finished
+                // analyze recolours from the new read without an explicit clear.
                 doc.robot.data.invalidate();
             }
         }
@@ -364,23 +425,25 @@ pub(super) fn tick(doc: &mut CadDocument) {
             Err(e) => statuses.push(Err(e)),
         }
     }
-    let landed = t.poll.as_ref().and_then(|j| j.poll().map(|r| (j.generation(), r)));
+    let landed = t.poll.as_ref().and_then(|(stamp, j)| j.poll().map(|r| (*stamp, j.generation(), r)));
     for status in statuses {
         doc.show(status);
     }
-    if let Some((g, result)) = landed {
+    if let Some((stamp, g, result)) = landed {
         doc.print.jobs.poll = None;
         // `land` touches the document only when what it shows changed.
         if g == generation {
-            land(doc, result);
+            land(doc, stamp, result);
         }
     }
     let t = &doc.print.jobs;
-    let due = t.poll.is_none() && (t.open || !t.watched.is_empty()) && t.polled_at.is_none_or(|at| at.elapsed() >= POLL_INTERVAL);
+    let due = t.poll.is_none() && (t.open || t.once || !t.watched.is_empty()) && t.polled_at.is_none_or(|at| at.elapsed() >= POLL_INTERVAL);
     if due && let Some(client) = doc.client.clone().filter(|_| connected) {
         let job = Job::spawn(Pool::Dedicated, generation, "cad print jobs", move |_| client.print_jobs().map_err(|e| e.to_string()));
         let t = &mut doc.print.jobs;
-        t.poll = Some(job);
+        t.polls += 1;
+        t.poll = Some((t.polls, job));
+        t.once = false;
         t.polled_at = Some(Instant::now());
     }
     if touched {
@@ -393,7 +456,7 @@ pub(super) fn state_json(doc: &CadDocument) -> Value {
     let t = &doc.print.jobs;
     let job = |j: &PrintJob| json!({"id": j.id, "kind": j.kind, "state": j.state, "fraction": j.fraction, "message": j.message, "error": j.error, "out_dir": j.out_dir, "seconds": j.seconds, "line": line(j)});
     json!({
-        "watched": t.watched.iter().map(job).collect::<Vec<_>>(),
+        "watched": t.watched.iter().map(|w| job(&w.job)).collect::<Vec<_>>(),
         "jobs": t.jobs[t.jobs.len().saturating_sub(SHOWN)..].iter().map(job).collect::<Vec<_>>(),
         "polling": t.poll.is_some(),
         "interval_ms": POLL_INTERVAL.as_millis() as u64,

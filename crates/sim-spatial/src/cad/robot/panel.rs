@@ -186,11 +186,14 @@ fn selected(selection: &[SelectionItem], id: &str) -> bool {
 }
 
 /// A row press: the model tree's `CadSelect` (the node as a body item),
-/// stamped with the revision the description the row shows was read at
-/// (`picked_at`). `selection::select` stamps body items with no revision
-/// (they name a node, not an index), so the stamp records where the row
-/// came from without refusing a row of an older read; a node that has
-/// left the shown tree is refused by name there.
+/// with `picked_at` set to the revision the description the row was drawn
+/// from was read at (the cad-print batch has row presses carry it). It
+/// changes no selection behaviour: `selection::select` uses `picked_at`
+/// only for non-body items and for an Alt-menu choice (no `ids`), and a
+/// row's item is a body item named in `ids`, so it is selected exactly as
+/// an unstamped press would be. The stamp only records, on the action,
+/// which revision the row came from; nothing stores or checks it. A node
+/// that has left the shown tree is refused by name there (`validate`).
 fn select_action(doc: &CadDocument, id: &str) -> CadAction {
     CadAction::CadSelect { ids: vec![id.to_string()], items: Vec::new(), extend: false, toggle: false, picked_at: doc.robot.data.read_at() }
 }

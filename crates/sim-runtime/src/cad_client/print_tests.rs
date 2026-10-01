@@ -1,7 +1,7 @@
 //! The print client against the in-process fake RoboCAD of `tests.rs`:
 //! answers as `api.py` `Service.print_request`, `print_jobs.py` (`Job.public`,
 //! `split`'s summary) and the `/nodes/{id}/thin|validate` reads write them
-//! (json.dumps' separators, 202 for a started job), the exact request line
+//! (json.dumps' separators, 202 for a started job but a split job's 200), the exact request line
 //! and body of every call (serde's field order; `json!` objects are
 //! BTreeMaps, so their keys go out sorted), tolerant reads (registry order
 //! kept, malformed entries dropped) and RoboCAD's errors verbatim.
@@ -83,7 +83,8 @@ fn study_reads_the_study_parts_and_split_groups() {
 
 #[test]
 fn split_now_answers_the_summary_and_split_job_starts_a_job() {
-    let (c, server) = serve(vec![ok(SPLIT), Answer::Json(202, started("3f2a9c1b0d", "split"))]);
+    // The split job answers 200 like the synchronous split (api.py:1412).
+    let (c, server) = serve(vec![ok(SPLIT), ok(&started("3f2a9c1b0d", "split"))]);
     let port = c.endpoint.port;
     // `background` is the call's, not the request's.
     let done = c.print_split_now(&SplitRequest { background: true, ..split_request() }).unwrap();
@@ -98,6 +99,25 @@ fn split_now_answers_the_summary_and_split_job_starts_a_job() {
     let seen = server.join().unwrap();
     assert_request(&seen[0], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-p1s","joint":"pins","expected_revision":4,"max_screws":4,"screw":"M4"}"#));
     assert_request(&seen[1], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-p1s","joint":"pins","expected_revision":4,"background":true,"max_screws":4,"screw":"M4"}"#));
+}
+
+#[test]
+fn split_options_cannot_override_the_request_fields() {
+    let (c, server) = serve(vec![ok(SPLIT), ok(&started("3f2a9c1b0d", "split"))]);
+    let port = c.endpoint.port;
+    // Sent after the fields, each would win in Python's `json.loads`.
+    let mut request = split_request();
+    for (k, v) in [("background", json!(true)), ("node", json!("zz")), ("printer", json!("bambu-x1")), ("joint", json!("dovetail")), ("name", json!("Other")), ("expected_revision", json!(99))] {
+        request.options.insert(k.into(), v);
+    }
+    let done = c.print_split_now(&request).unwrap();
+    assert_eq!(done.group, "g1", "answered as the synchronous split, not a job");
+    let job = c.print_split_job(&SplitRequest { name: Some("Femur pieces".into()), ..request.clone() }).unwrap();
+    assert_eq!(job.state, "queued");
+    assert_eq!(request.options.len(), 8, "the caller's request is left as it was");
+    let seen = server.join().unwrap();
+    assert_request(&seen[0], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-p1s","joint":"pins","expected_revision":4,"max_screws":4,"screw":"M4"}"#));
+    assert_request(&seen[1], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-p1s","joint":"pins","name":"Femur pieces","expected_revision":4,"background":true,"max_screws":4,"screw":"M4"}"#));
 }
 
 #[test]
@@ -189,6 +209,11 @@ fn thin_walls_and_validation_read_tolerantly() {
     let regions = c.thin_walls("b1", 1.2).unwrap();
     assert_eq!(regions, [ThinRegion { point: [1.0, 2.0, 3.0], thickness: 0.8, face: 4 }, ThinRegion { point: [0.5, 0.0, -2.25], thickness: 1.1, face: 0 }], "the malformed region is dropped");
     assert!(c.thin_walls("b1", 0.5).unwrap().is_empty());
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let e = c.thin_walls("b1", bad).unwrap_err();
+        assert_eq!((e.method, e.route.as_str(), e.status), ("-", "/nodes/b1/thin", None), "refused unsent: {e:?}");
+        assert!(e.message.starts_with("the wall threshold must be a finite number of mm"), "{e:?}");
+    }
     let e = c.thin_walls("s1", 1.2).unwrap_err();
     assert_eq!((e.status, e.message.as_str(), e.route.as_str()), (Some(404), "Sketch has no geometry", "/nodes/s1/thin?threshold=1.2"));
     let v = c.validate_node("b1").unwrap();
@@ -208,7 +233,9 @@ fn print_ops_send_the_python_signature() {
     let (c, server) = serve(vec![
         op_answer(r#""b1""#, "Clearance"),
         op_answer(r#""b1""#, "M4 counterbore"),
-        op_answer(r#""g7""#, "Split"),
+        op_answer(r#""g7""#, "Split for printing"),
+        // An unknown option key is a TypeError `Service.op` does not map: the handler's 500.
+        Answer::Json(500, r#"{"error": "TypeError: SplitOptions.__init__() got an unexpected keyword argument 'colour'", "trace": "Traceback ..."}"#.into()),
         Answer::Json(400, r#"{"error": "face index 9 out of range (0..5)"}"#.into()),
         Answer::Json(422, r#"{"error": "set_cylinder_radius: radius must be positive"}"#.into()),
     ]);
@@ -221,7 +248,12 @@ fn print_ops_send_the_python_signature() {
     let mut options = Map::new();
     options.insert("printer".into(), json!("bambu-a1-mini"));
     options.insert("joint".into(), json!("dovetail"));
-    assert_eq!(c.print_split_op("b1", &options).unwrap().result, json!("g7"));
+    let split = c.print_split_op("b1", &options).unwrap();
+    assert_eq!((split.result, split.history.undo), (json!("g7"), vec!["Split for printing".to_string()]));
+    let mut unknown = Map::new();
+    unknown.insert("colour".into(), json!("red"));
+    let e = c.print_split_op("b1", &unknown).unwrap_err();
+    assert_eq!((e.status, e.message.as_str()), (Some(500), "TypeError: SplitOptions.__init__() got an unexpected keyword argument 'colour'"));
     let e = c.clearance("b1", &[9], 0.2).unwrap_err();
     assert_eq!((e.status, e.message.as_str()), (Some(400), "face index 9 out of range (0..5)"));
     let e = c.clearance("b1", &[3], -9.0).unwrap_err();
@@ -230,8 +262,9 @@ fn print_ops_send_the_python_signature() {
     assert_request(&seen[0], "POST /ops/clearance HTTP/1.1", port, Some(r#"{"args":["b1",[{"face":3,"node":"b1"},{"face":4,"node":"b1"}],0.2],"kwargs":{}}"#));
     assert_request(&seen[1], "POST /ops/fastener_hole HTTP/1.1", port, Some(r#"{"args":["b1",{"face":2,"node":"b1"},[5.0,6.0,10.0],{"depth":null,"extra_clearance":0.2,"kind":"counterbore","size":"M4"}],"kwargs":{}}"#));
     assert_request(&seen[2], "POST /ops/print_split HTTP/1.1", port, Some(r#"{"args":["b1"],"kwargs":{"joint":"dovetail","printer":"bambu-a1-mini"}}"#));
-    assert_request(&seen[3], "POST /ops/clearance HTTP/1.1", port, Some(r#"{"args":["b1",[{"face":9,"node":"b1"}],0.2],"kwargs":{}}"#));
-    assert_request(&seen[4], "POST /ops/clearance HTTP/1.1", port, Some(r#"{"args":["b1",[{"face":3,"node":"b1"}],-9.0],"kwargs":{}}"#));
+    assert_request(&seen[3], "POST /ops/print_split HTTP/1.1", port, Some(r#"{"args":["b1"],"kwargs":{"colour":"red"}}"#));
+    assert_request(&seen[4], "POST /ops/clearance HTTP/1.1", port, Some(r#"{"args":["b1",[{"face":9,"node":"b1"}],0.2],"kwargs":{}}"#));
+    assert_request(&seen[5], "POST /ops/clearance HTTP/1.1", port, Some(r#"{"args":["b1",[{"face":3,"node":"b1"}],-9.0],"kwargs":{}}"#));
 }
 
 #[test]
@@ -239,8 +272,13 @@ fn split_errors_carry_robocad_text_and_status() {
     let (c, server) = serve(vec![
         Answer::Json(409, r#"{"error": "Expected document revision 4; current revision is 6. Fetch the current document and rebuild the candidate before applying it."}"#.into()),
         Answer::Json(422, r#"{"error": "split: node b1 is not a body"}"#.into()),
-        // An unknown printer is a KeyError: 404, its repr as the text.
+        // An unknown printer is a KeyError: 404, its repr as the text
+        // (print_registry.py `printer`).
         Answer::Json(404, r#"{"error": "\"printer 'bambu-x1' is not in the print registry (have: bambu-h2c, bambu-p1s, bambu-a1-mini)\""}"#.into()),
+        // The split job checks nothing before starting: queued, 200 ...
+        ok(&started("7c1d2e3f4a", "split")),
+        // ... and the unknown printer fails the job, `str(e)` as its error.
+        ok(r#"{"id": "7c1d2e3f4a", "kind": "split", "state": "failed", "fraction": 0.0, "message": "", "error": "\"printer 'bambu-x1' is not in the print registry (have: bambu-h2c, bambu-p1s, bambu-a1-mini)\"", "result": null, "out_dir": null, "seconds": 0.01}"#),
         Answer::Json(409, r#"{"error": "Expected document revision 4; current revision is 6. Fetch the current document and rebuild the candidate before applying it."}"#.into()),
     ]);
     let port = c.endpoint.port;
@@ -248,15 +286,25 @@ fn split_errors_carry_robocad_text_and_status() {
     assert_eq!((e.status, e.message.as_str()), (Some(409), "Expected document revision 4; current revision is 6. Fetch the current document and rebuild the candidate before applying it."));
     let e = c.print_split_now(&SplitRequest { node: "b1".into(), ..SplitRequest::default() }).unwrap_err();
     assert_eq!((e.status, e.message.as_str(), e.route.as_str()), (Some(422), "split: node b1 is not a body", "/print/split"));
-    let e = c.print_split_job(&SplitRequest { node: "b1".into(), printer: Some("bambu-x1".into()), ..SplitRequest::default() }).unwrap_err();
-    assert_eq!((e.status, e.message.as_str()), (Some(404), "\"printer 'bambu-x1' is not in the print registry (have: bambu-h2c, bambu-p1s, bambu-a1-mini)\""));
+    let unknown_printer = "\"printer 'bambu-x1' is not in the print registry (have: bambu-h2c, bambu-p1s, bambu-a1-mini)\"";
+    let bad = SplitRequest { node: "b1".into(), printer: Some("bambu-x1".into()), ..SplitRequest::default() };
+    let e = c.print_split_now(&bad).unwrap_err();
+    assert_eq!((e.status, e.message.as_str()), (Some(404), unknown_printer));
+    let job = c.print_split_job(&bad).unwrap();
+    assert_eq!((job.state.as_str(), job.error.as_deref()), ("queued", None), "the start succeeds whatever the body");
+    let failed = c.print_job(&job.id).unwrap();
+    assert!(failed.ended() && !failed.running());
+    assert_eq!((failed.state.as_str(), failed.error.as_deref(), failed.result), ("failed", Some(unknown_printer), Value::Null));
+    // The job-start routes take their snapshot first: a stale revision is a synchronous 409.
     let e = c.print_start("analyze", &json!({"expected_revision": 4, "parts": []})).unwrap_err();
     assert!(e.no_gui() && e.message.starts_with("Expected document revision 4"), "{e:?}");
     let seen = server.join().unwrap();
     assert_request(&seen[0], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-p1s","joint":"pins","expected_revision":4,"max_screws":4,"screw":"M4"}"#));
     assert_request(&seen[1], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1"}"#));
-    assert_request(&seen[2], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-x1","background":true}"#));
-    assert_request(&seen[3], "POST /print/analyze HTTP/1.1", port, Some(r#"{"expected_revision":4,"parts":[]}"#));
+    assert_request(&seen[2], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-x1"}"#));
+    assert_request(&seen[3], "POST /print/split HTTP/1.1", port, Some(r#"{"node":"b1","printer":"bambu-x1","background":true}"#));
+    assert_request(&seen[4], "GET /print/jobs/7c1d2e3f4a HTTP/1.1", port, None);
+    assert_request(&seen[5], "POST /print/analyze HTTP/1.1", port, Some(r#"{"expected_revision":4,"parts":[]}"#));
 }
 
 #[test]

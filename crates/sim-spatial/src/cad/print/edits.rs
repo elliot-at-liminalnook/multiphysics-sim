@@ -14,8 +14,10 @@
 //!   faces grouped by node in selection order (RoboCAD's dict insertion
 //!   order), one `clearance(node, faces, amount)` per node in one edit job,
 //!   each its own RoboCAD undo step "Clearance"; the amount is remembered
-//!   once the run starts (RoboCAD's `ops.last_clearance`, 0.2 at first,
-//!   commands.py:271) and presets the next form as its 2-decimal spin box shows it.
+//!   once the run starts, as RoboCAD's `ops.last_clearance` is (0.2 at first,
+//!   commands.py:271), and presets the next form as its 2-decimal spin box
+//!   shows it. The memory is this window's: RoboCAD's own stays in the
+//!   service and is not served, so the state says so ([`LAST_CLEARANCE_NOTE`]).
 //!
 //! Each commit goes through `actions::edit_at`: refused by name with
 //! nothing sent while an edit is in flight, when not connected, when the
@@ -34,6 +36,10 @@ use sim_runtime::cad_client::{FastenerSpec, SelectionItem};
 
 /// RoboCAD's first `ops.last_clearance` (commands.py:271).
 pub(crate) const FIRST_CLEARANCE: f64 = 0.2;
+
+/// Whose remembered clearance `last_clearance` is: RoboCAD keeps its own
+/// `ops.last_clearance` in the service and does not serve it.
+pub(crate) const LAST_CLEARANCE_NOTE: &str = "the clearance this window last sent (0.2 at first); RoboCAD's own last clearance stays in the service and is not read, so a run from RoboCAD's desktop does not change it";
 
 /// The Fastener hole dialog's last values (RoboCAD's `last_fastener`,
 /// ui/app.py:87 and :893: depth 0 is "through").
@@ -67,7 +73,8 @@ pub(crate) struct FastenerClick {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct EditsState {
     pub last_fastener: LastFastener,
-    /// RoboCAD's `ops.last_clearance` as this window last sent it.
+    /// The clearance this window last sent: our own memory, not RoboCAD's
+    /// `ops.last_clearance` (kept in the service, not served).
     pub last_clearance: f64,
     /// The click the next pick is for (taken by the pick).
     pub click: Option<FastenerClick>,
@@ -109,7 +116,7 @@ pub(super) fn build(call: PrintCall, entry: &OpEntry, r: &Resolved, values: &Map
     let number = |name: &str| values.get(name).and_then(Value::as_f64).ok_or_else(|| format!("{}: {name} is missing", entry.id));
     match call {
         PrintCall::Fastener => {
-            // The clicked face (or REST's), and the point a click gives.
+            // The clicked face (or a scripted run's), and the point a click gives.
             let Some((node, face)) = r.faces.first().cloned() else { return Err(entry.refusal.to_string()) };
             let Some(point) = values.get("point").and_then(point3) else { return Err(entry.refusal.to_string()) };
             let text = |name: &str| values.get(name).and_then(Value::as_str).map(str::to_string).ok_or_else(|| format!("{}: {name} is missing", entry.id));
@@ -221,6 +228,7 @@ pub(super) fn state_json(doc: &CadDocument) -> Value {
         "fastener_active": super::fastener_tool::active_tool(doc).is_some(),
         "last_fastener": {"size": f.size, "kind": f.kind, "extra": f.extra, "depth": f.depth},
         "last_clearance": e.last_clearance,
+        "last_clearance_note": LAST_CLEARANCE_NOTE,
         "last_pick": e.last_pick.as_ref().map(|(item, revision)| json!({"item": item, "revision": revision})),
         "click_pending": e.click.as_ref().map(|c| json!({"item": c.item, "picked_at": c.picked_at})),
     })

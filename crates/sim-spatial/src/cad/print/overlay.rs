@@ -26,8 +26,12 @@
 //! `Document.touch` → `notify('changed')`; `revision` is not one of the
 //! restored state fields). So a result reads "current" while the shown
 //! revision is at most `cad_revision + 1`, and "stale (computed at
-//! revision N, now M)" after any later edit (an undo past it removes the
-//! block itself).
+//! revision N, now M)" after any later revision (an undo past it removes
+//! the block itself). The revision is the document's, not the part's: a
+//! later publish (another plan or strength check, a split, an exploded
+//! view) or an edit then its undo moves it without touching that part, so
+//! an earlier block can read "stale" while its part is unchanged. The
+//! label is conservative, and the rule says so ([`RULE`]).
 use crate::cad::document::CadDocument;
 use crate::cad::results::Inputs;
 use serde_json::{Value, json};
@@ -37,7 +41,7 @@ use sim_runtime::cad_client::NodeResult;
 /// The section RoboCAD's print blocks carry.
 pub(crate) const SECTION: &str = "print";
 /// How this window colours a print result (the panel and state say so).
-pub(crate) const RULE: &str = "print strength: each part in one colour, its governing failure index (1 / safety factor) on the stress scale, red at failure; RoboCAD's own window colours each voxel's failure index from its run folder";
+pub(crate) const RULE: &str = "print strength: each part in one colour, its governing failure index (1 / safety factor) on the stress scale, red at failure; RoboCAD's own window colours each voxel's failure index from its run folder. Stale means the document's revision moved on since the result was published, not that the part changed: another plan, strength check, split or exploded view, or an edit then undo, moves it too, so an earlier result can read stale while its part is unchanged";
 
 /// The overlay's inputs for a node's print block: a single cell at the
 /// origin with the failure index 1 / safety factor as its stress, yield 1,

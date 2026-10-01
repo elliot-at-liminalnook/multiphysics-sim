@@ -10,13 +10,14 @@
 //! (`EditsState::click`). Nothing else changes: the selection is not
 //! touched (RoboCAD's tool picks with `request_pick`).
 //!
-//! [`pick`] applies a pick, from a click or REST alike: the active fastener
+//! [`pick`] applies a pick, from a click or a scripted run alike: the active fastener
 //! tool, a face item of the shown tree, `picked_at` the shown revision
 //! (each refused by name otherwise). The point is the noted click's snap,
 //! else its hit (when the note is for this face and revision); else the
 //! form's typed point; else the face's own point at the shown revision
 //! (`FaceInfo::point`, else its centroid). Then one
-//! `CadRun tool.fastener` on the face with the form's values (RoboCAD's
+//! `CadRun tool.fastener` on the face with the form's values, or the
+//! remembered `last_fastener` ones when the form is closed (RoboCAD's
 //! `ops.fastener_hole(nid, face, point, self.spec)`). The tool stays
 //! active (Escape ends it); a refusal shows in its form too.
 use super::edits::FastenerClick;
@@ -26,7 +27,7 @@ use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::CadDocument;
 use crate::cad::mesh::{CadBody, CadMeshes};
-use crate::cad::ops::{self, Flow};
+use crate::cad::ops::{self, Env, Flow};
 use crate::cad::sketch::{CadActivePlane, CadSketches};
 use crate::cad::snap::{self, SnapKind};
 use crate::cad::topology::CadTopology;
@@ -106,10 +107,16 @@ pub(super) fn pick(args: &PrintArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
         Err(e) => return Outcome::Done(Err(e)),
     };
     let Some(entry) = ops::entry(id) else { return Outcome::Done(Err(format!("{id} is not in the catalogue"))) };
-    // The form's values as its OK sends them (`ops::form::submit`).
+    // The form's values as its OK sends them (`ops::form::submit`); without
+    // the form, the remembered dialog values (RoboCAD's `last_fastener`) as
+    // a newly opened form would show them, not the catalogue defaults.
     let texts: Vec<String> = match &cx.doc.ops.form {
         Some(f) if f.op == id && f.texts.len() == entry.params.len() => f.texts.clone(),
-        _ => entry.params.iter().map(|p| p.default.to_string()).collect(),
+        _ => {
+            let mut texts: Vec<String> = entry.params.iter().map(|p| p.default.to_string()).collect();
+            super::edits::seed(entry, cx.doc, &Env::default(), &mut texts);
+            texts
+        }
     };
     let typed = entry.params.iter().position(|p| p.name == "point").and_then(|i| texts.get(i)).cloned().unwrap_or_default();
     let click = take_click(cx.doc, &item, picked_at);

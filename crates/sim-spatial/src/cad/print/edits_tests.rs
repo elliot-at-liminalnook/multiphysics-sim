@@ -199,3 +199,28 @@ fn a_click_pick_is_one_fastener_run_refused_with_nothing_sent() {
     assert!(matches!(apply(&pick, &mut doc, &mut f), Outcome::Done(Err(e)) if e.starts_with("the faces are not available")));
     assert!(doc.edit.is_none());
 }
+
+/// A pick with the tool's form closed takes the remembered dialog values
+/// (RoboCAD's `last_fastener`), not the catalogue defaults: an unusable
+/// remembered size is what the run refuses.
+#[test]
+fn a_pick_without_the_form_uses_the_remembered_values() {
+    let mut doc = document();
+    let mut f = Fixture::at(4);
+    active(&mut doc);
+    doc.ops.form = None;
+    doc.print.edits.last_fastener = LastFastener { size: "M9".into(), ..LastFastener::default() };
+    doc.print.edits.click = Some(FastenerClick { item: face("b1", 2), picked_at: 4, point: [1.0, 2.0, 3.0], snap: None });
+    let pick = CadAction::CadPrint(pick_args(Some(face("b1", 2)), Some(4)));
+    assert!(matches!(apply(&pick, &mut doc, &mut f), Outcome::Done(Err(e)) if e.contains("\"M9\" is not one of")));
+    assert!(doc.edit.is_none());
+}
+
+/// The remembered clearance is said to be this window's.
+#[test]
+fn the_state_says_whose_clearance_is_remembered() {
+    let doc = document();
+    let state = edits::state_json(&doc);
+    assert_eq!(state["last_clearance"], json!(edits::FIRST_CLEARANCE));
+    assert_eq!(state["last_clearance_note"], json!(edits::LAST_CLEARANCE_NOTE));
+}

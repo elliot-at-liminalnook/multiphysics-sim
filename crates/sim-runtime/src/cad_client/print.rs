@@ -13,9 +13,10 @@
 //!   (nodes whose `robot.print_split` is set), at the document's revision.
 //! - `POST /print/split`: synchronous (seconds; the pieces are published as
 //!   one undo step and the summary answered), or with `background: true` a
-//!   job (RoboCAD's own menu uses the job, `split_job`).
+//!   job (RoboCAD's own menu uses the job, `split_job`), answered 200 like
+//!   the synchronous split (api.py:1412 answers 202 only for the others).
 //! - `POST /print/analyze|plan|assembly|coupons|strength_split`: each starts
-//!   a background job and answers it ([`PrintJob`], `Job.public`).
+//!   a background job and answers it, 202 ([`PrintJob`], `Job.public`).
 //! - `GET /print/jobs` (every job this RoboCAD started, oldest first),
 //!   `GET /print/jobs/{id}` and `DELETE /print/jobs/{id}` (cancel: the job
 //!   stops at its next check and ends `cancelled`). `GET /print/jobs/{id}`
@@ -27,13 +28,27 @@
 //! - The `Ops` methods `clearance`, `fastener_hole` and `print_split` with
 //!   `commands.py`'s parameter names, each one RoboCAD undo step.
 //!
-//! Errors are RoboCAD's text verbatim ([`CadError`]): an unknown job is a
-//! 404 whose text is the `KeyError`'s repr, quotes included (`'no print job
-//! x'`; an unknown printer on a split likewise, `"printer 'x' is not in the
-//! print registry (have: …)"`), a document changed since
-//! `expected_revision` a 409, a bad body or kernel error a 422 (a split's
-//! unknown option key is ignored, not refused). Reads are tolerant: unknown
-//! fields are ignored, missing ones take their defaults.
+//! Errors are RoboCAD's text verbatim ([`CadError`]), mapped by
+//! `print_request`'s `except` clauses (api.py:330-332):
+//! - An unknown job is a 404 whose text is the `KeyError`'s repr, quotes
+//!   included (`'no print job x'`).
+//! - The synchronous split (print_jobs.py `split`): an unknown printer is a
+//!   `KeyError`, so a 404 with its repr (`"printer 'x' is not in the print
+//!   registry (have: …)"`); a document changed since `expected_revision`
+//!   (or before publishing) a 409; a missing `node`, a node that is not a
+//!   body or a kernel error a 422. `split` reads only the `SplitOptions`
+//!   keys it names; any other key is ignored, not refused.
+//! - The split job (`background: true`, `split_job`) runs every one of those
+//!   checks inside the job: the start answers 200 with the queued job
+//!   whatever the body, and a failed check shows later as the job ending
+//!   `failed` with `error` = `str(e)` (a `KeyError`'s repr, quotes
+//!   included).
+//! - The job-start routes (`analyze|plan|assembly|coupons|strength_split`)
+//!   take their snapshot before starting, so a stale `expected_revision` is
+//!   a synchronous 409 there; their other checks fail the job.
+//!
+//! Reads are tolerant: unknown fields are ignored, missing ones take their
+//! defaults.
 use super::{CadClient, CadError, OpResult, node_route, null_non_finite};
 use crate::hardware_client::{encode_uri_component, lenient, lenient_items};
 use crate::loopback_http::{self, Request};
@@ -53,7 +68,10 @@ pub const FASTENER_KINDS: [&str; 5] = ["clearance", "tap", "counterbore", "count
 
 /// A JSON object's entries in document order; an entry whose value does
 /// not parse is dropped, anything but an object reads as empty. Written
-/// back as an object in the same order.
+/// back as an object in the same order. The order is kept only when decoded
+/// from text (`serde_json::from_str`, as `get_ordered` does): this crate's
+/// `serde_json::Value` objects are BTreeMaps, so `from_value` (or any path
+/// through a `Value`) hands the entries over sorted by key.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Ordered<T>(pub Vec<(String, T)>);
 impl<T: Serialize> Serialize for Ordered<T> {
@@ -247,9 +265,29 @@ pub struct SplitRequest {
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub background: bool,
     /// Other `SplitOptions` keys (screw, pin_diameter, wall, area_per_screw,
-    /// max_screws, extra_planes), as RoboCAD takes them.
+    /// max_screws, extra_planes), as RoboCAD takes them. A key naming one of
+    /// the fields above ([`SPLIT_FIELDS`]) is dropped before sending: the
+    /// fields win.
     #[serde(flatten)]
     pub options: Map<String, Value>,
+}
+
+/// The keys `SplitRequest`'s own fields send. Flattened `options` go out
+/// after them, so a duplicate would be sent twice and Python's `json.loads`
+/// keeps the last: `options["background"]` could turn a synchronous split
+/// into a job.
+pub const SPLIT_FIELDS: [&str; 6] = ["node", "printer", "joint", "name", "expected_revision", "background"];
+
+impl SplitRequest {
+    /// The body sent: this request with the call's `background` and
+    /// without the `options` that duplicate a field.
+    fn body(&self, background: bool) -> SplitRequest {
+        let mut body = SplitRequest { background, ..self.clone() };
+        for key in SPLIT_FIELDS {
+            body.options.remove(key);
+        }
+        body
+    }
 }
 
 /// One hardware line of a split (`SplitResult.hardware`).
@@ -362,15 +400,20 @@ impl CadClient {
         self.get("/print/study")
     }
     /// `POST /print/split` without `background`: the split, published as one
-    /// undo step ("Split {name} for printing"), answered when done.
+    /// undo step ("Split {name} for printing"), answered when done. Errors
+    /// as the module doc lists for the synchronous split (404 unknown
+    /// printer, 409 stale revision, 422 not a body).
     pub fn print_split_now(&self, request: &SplitRequest) -> Result<SplitDone, CadError> {
-        let request = SplitRequest { background: false, ..request.clone() };
-        self.send("POST", "/print/split", Some(&request))
+        self.send("POST", "/print/split", Some(&request.body(false)))
     }
-    /// `POST /print/split` with `background: true`: the split job.
+    /// `POST /print/split` with `background: true`: the split job, answered
+    /// 200 and queued whatever the body. RoboCAD checks nothing before
+    /// starting it: a missing node, an unknown printer, a stale
+    /// `expected_revision` or a node that is not a body each end the job
+    /// `failed` with `error` = Python's `str(e)` (an unknown printer's text
+    /// is the `KeyError`'s repr, quotes included), read with [`Self::print_job`].
     pub fn print_split_job(&self, request: &SplitRequest) -> Result<PrintJob, CadError> {
-        let request = SplitRequest { background: true, ..request.clone() };
-        self.send("POST", "/print/split", Some(&request))
+        self.send("POST", "/print/split", Some(&request.body(true)))
     }
     /// `POST /print/{kind}` for kind analyze, plan, assembly, coupons or
     /// strength_split with RoboCAD's body: the started job. Any other kind
@@ -398,8 +441,12 @@ impl CadClient {
         self.send::<Value, _>("DELETE", &format!("/print/jobs/{}", encode_uri_component(id)), None)
     }
     /// `GET /nodes/{id}/thin?threshold=`: sample points whose wall is
-    /// thinner than `threshold` mm.
+    /// thinner than `threshold` mm. A non-finite threshold is refused here,
+    /// with nothing sent.
     pub fn thin_walls(&self, id: &str, threshold: f64) -> Result<Vec<ThinRegion>, CadError> {
+        if !threshold.is_finite() {
+            return Err(CadError { method: "-", route: format!("{}/thin", node_route(id)), status: None, message: format!("the wall threshold must be a finite number of mm, got {threshold}") });
+        }
         let route = format!("{}/thin?threshold={}", node_route(id), encode_uri_component(&threshold.to_string()));
         match self.get::<Value>(&route)? {
             Value::Array(items) => Ok(items.into_iter().filter_map(|v| serde_json::from_value(v).ok()).collect()),
@@ -423,7 +470,18 @@ impl CadClient {
         self.op("fastener_hole", &[json!(node), face_ref(node, face), json!(point), json!(spec)], &Map::new())
     }
     /// `print_split(node_id, **options)` (the `Ops` method: no snapshot,
-    /// no job; `result` is the new group's id).
+    /// no job; `result` is the new group's id; undo step "Split for
+    /// printing", print_split.py `apply_split`).
+    ///
+    /// It runs synchronously on RoboCAD's GUI thread (`POST /ops/{name}`
+    /// goes through `run_on_main`) for seconds, freezing RoboCAD's window:
+    /// prefer [`Self::print_split_job`]. `options` go to `SplitOptions(**options)`
+    /// unfiltered, and `Service.op` maps only `RevisionConflict` (409) and
+    /// `KernelError` (422): an unknown option key (`TypeError`) or an unknown
+    /// printer (`KeyError`) falls through to the HTTP handler's 500, with the
+    /// text `"{type}: {message}"`, e.g. `TypeError: SplitOptions.__init__()
+    /// got an unexpected keyword argument 'x'` or `KeyError: "printer 'x' is
+    /// not in the print registry (have: …)"`.
     pub fn print_split_op(&self, node: &str, options: &Map<String, Value>) -> Result<OpResult, CadError> {
         self.op("print_split", &[json!(node)], options)
     }

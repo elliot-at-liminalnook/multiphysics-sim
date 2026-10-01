@@ -7,7 +7,7 @@
 //! and No, and Close. Every button writes a `CadAction::CadPrint`
 //! (`cad_print`), the same action REST and `system_ui` send. Opening it
 //! starts a poll ([`super::jobs_tracker`] polls while it is open).
-use super::jobs_tracker::PrintJobTracker;
+use super::jobs_tracker::{PrintJobTracker, UNREAD};
 use super::{PrintArgs, PrintOp};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
@@ -53,13 +53,14 @@ pub(super) fn state_json(doc: &CadDocument) -> Value {
 pub(super) fn controls(doc: &CadDocument) -> Vec<(String, String, CadAction, Result<(), String>)> {
     let t = &doc.print.jobs;
     let running = !t.running(None).is_empty();
-    let none = || Err("No print jobs are running".to_string());
+    // As `jobs_tracker::cancel` refuses: nothing before a list was read.
+    let none = || Err(if t.listed { "No print jobs are running" } else { UNREAD }.to_string());
     let mut out = vec![
         ("cad:print:jobs".to_string(), if t.open { "Hide print jobs" } else { "Show print jobs" }.to_string(), act(PrintOp::Jobs, Some(!t.open), None), Ok(())),
-        ("cad:print:cancel".to_string(), "Cancel running jobs…".to_string(), act(PrintOp::Cancel, None, None), if running { Ok(()) } else { none() }),
+        ("cad:print:cancel".to_string(), "Cancel running jobs…".to_string(), act(PrintOp::Cancel, None, None), if running && t.listed { Ok(()) } else { none() }),
     ];
     if t.confirming {
-        out.push(("cad:print:cancel_yes".to_string(), "Yes".to_string(), act(PrintOp::Cancel, None, Some(true)), if running { Ok(()) } else { none() }));
+        out.push(("cad:print:cancel_yes".to_string(), "Yes".to_string(), act(PrintOp::Cancel, None, Some(true)), if running && t.listed { Ok(()) } else { none() }));
         out.push(("cad:print:cancel_no".to_string(), "No".to_string(), act(PrintOp::Cancel, None, Some(false)), Ok(())));
     }
     out

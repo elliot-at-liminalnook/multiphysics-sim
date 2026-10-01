@@ -296,18 +296,22 @@ fn joint_texts(entry: &OpEntry, j: &RobotJoint, texts: &mut [String]) {
 }
 
 /// `ops.set_joint`'s parameters for a run (`ops::prepare`): `given` over
-/// the resolved joint's current values as the Edit joint form seeds them
-/// ([`joint_texts`]), so a REST `cad_run ops.set_joint` naming only
-/// `lower` changes only the lower limit instead of resetting the other
-/// fields to the dialog's defaults. The window form sends every field
-/// (all its drafts), so `given` is returned unchanged and its OK behaves
-/// as before. Unlike the form, a filled-in pick is not moved onto the
-/// combo box's first entry when the dialog would not list it: the field
-/// keeps the joint's own value. Refused by name, with nothing sent, when
-/// the description is not read at the shown revision ([`description`]),
-/// when the joint is not in it, and when `type` changes between prismatic
-/// and a rotary kind while a limit the joint has is left out (its value is
-/// in the old kind's unit: mm against degrees).
+/// the resolved joint's current values ([`joint_values`]: exact, as JSON
+/// numbers, not the form's rounded display text), so a REST `cad_run
+/// ops.set_joint` naming only `lower` changes only the lower limit and
+/// sends every other field as the description has it, instead of
+/// resetting it to the dialog's default or rounding it to the dialog's
+/// digits. The window form sends every field (all its drafts), so `given`
+/// is returned unchanged and its OK behaves as before. Unlike the form, a
+/// filled-in pick is not moved onto the combo box's first entry when the
+/// dialog would not list it: the field keeps the joint's own value.
+/// Refused by name, with nothing sent, when the description is not read at
+/// the shown revision ([`description`]), when the joint is not in it, when
+/// `type` changes between prismatic and a rotary kind while a limit the
+/// joint has is left out (its value is in the old kind's unit: mm against
+/// degrees), and when a filled-in value is one the dialog's field refuses
+/// (a gear ratio below 0.01, damping above 1000): the refusal says it is
+/// the joint's current value and to pass that parameter.
 pub(super) fn fill_from_joint(entry: &OpEntry, doc: &CadDocument, r: &Resolved, given: &Map<String, Value>) -> Result<Map<String, Value>, String> {
     let missing: Vec<&super::Param> = entry.params.iter().filter(|p| !given.contains_key(p.name)).collect();
     if missing.is_empty() {
@@ -326,15 +330,41 @@ pub(super) fn fill_from_joint(entry: &OpEntry, doc: &CadDocument, r: &Resolved, 
             return Err(format!("{}: {name} changes from {} to {kind}: pass {} (the current limits are in {}, the new type's in {})", entry.label, j.kind, left.join(" and "), if j.kind == "prismatic" { "mm" } else { "degrees" }, if kind == "prismatic" { "mm" } else { "degrees" }));
         }
     }
-    let mut texts: Vec<String> = entry.params.iter().map(|p| p.default.to_string()).collect();
-    joint_texts(entry, j, &mut texts);
+    let current = joint_values(j);
     let mut out = given.clone();
     for p in missing {
-        if let Some(i) = index(entry, p.name) {
-            out.insert(p.name.to_string(), Value::String(texts[i].clone()));
+        let Some(v) = current.get(p.name) else { continue };
+        // An empty text is a field left empty (no parent, no motor, no
+        // limit): `values` leaves it out and the call sends null, as the form does.
+        if v.as_str() != Some("") {
+            super::param_value(p, v).map_err(|e| format!("{}: {name}'s current {} ({v}) fills the parameter not given, and the dialog's field refuses it ({e}); pass {}", entry.label, p.name, p.name))?;
         }
+        out.insert(p.name.to_string(), v.clone());
     }
     Ok(out)
+}
+
+/// Joint `j`'s values as `ops.set_joint`'s parameters, exact (what
+/// [`fill_from_joint`] fills in): pivot and axis as three numbers, limits
+/// in degrees unless prismatic (the dialog's unit) or empty when unset,
+/// gear ratio and damping as stored, type, parent, child, motor and name
+/// as their keys and text (empty when unset).
+fn joint_values(j: &RobotJoint) -> Map<String, Value> {
+    let degrees = j.kind != "prismatic";
+    let limit = |v: Option<f64>| v.map_or_else(|| json!(""), |v| Value::from(if degrees { v.to_degrees() } else { v }));
+    let mut m = Map::new();
+    m.insert("type".into(), json!(j.kind));
+    m.insert("parent".into(), json!(j.parent.clone().unwrap_or_default()));
+    m.insert("child".into(), json!(j.child));
+    m.insert("pivot".into(), json!(j.pivot));
+    m.insert("axis".into(), json!(j.axis));
+    m.insert("lower".into(), limit(j.lower));
+    m.insert("upper".into(), limit(j.upper));
+    m.insert("motor".into(), json!(j.motor.clone().unwrap_or_default()));
+    m.insert("gear_ratio".into(), json!(j.gear_ratio));
+    m.insert("damping".into(), json!(j.damping));
+    m.insert("name".into(), json!(j.name));
+    m
 }
 
 /// PowerDialog's values (ui/widgets.py:1463-1505): the document's

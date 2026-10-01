@@ -14,7 +14,8 @@
 //!   kept with its error and read again after a reconnect or Refresh
 //!   (`CadDocument::mesh_retry` moves) or in a new generation. The forms'
 //!   "Printer:" and "Filament:" lists come from it ([`picks`]); the split
-//!   and coupon forms are refused by name until it is read ([`precheck`]).
+//!   and coupon forms (and `ops.print_split`'s) are refused by name until
+//!   it is read ([`precheck`]).
 //! - **The print study** (`GET /print/study`: `robot_settings
 //!   ["print_study"]` and the split groups) is read on one Dedicated job
 //!   per (generation, shown revision), the `robot::data` pattern: a job for
@@ -215,6 +216,11 @@ pub(super) fn build(call: PrintCall, entry: &OpEntry, r: &Resolved, values: &Map
             })
         }
         PrintCall::StrengthSplit => {
+            // RoboCAD's handler checks the selection first (nothing selected
+            // is its refusal, whatever the study read's state).
+            if r.nodes.is_empty() {
+                return Err(entry.refusal.to_string());
+            }
             let s = study_at(doc, revision)?;
             let parts = s.study["parts"].as_array().map_or(&[][..], Vec::as_slice);
             let part = parts.iter().find(|p| p["node"].as_str().is_some_and(|n| r.nodes.iter().any(|x| x == n))).ok_or_else(|| entry.refusal.to_string())?;
@@ -243,6 +249,9 @@ pub(super) fn build(call: PrintCall, entry: &OpEntry, r: &Resolved, values: &Map
             Ok(plan("assembly", Request::Start(json!({"group": group, "expected_revision": revision})), format!("Assembly guide for {name}"), format!("Started assembly for {name}")))
         }
         PrintCall::Coupons => {
+            // With a selection the study read is required: split membership
+            // comes only from GET /print/study, and sending group None for a
+            // selected split would silently make material-only coupons.
             let group = if r.nodes.is_empty() { None } else { split_groups(doc, &r.nodes, &study_at(doc, revision)?.splits).into_iter().next() };
             let printer = chosen(doc, values, "printer", "printer", entry.label)?;
             let material = chosen(doc, values, "material", "filament", entry.label)?;
@@ -288,10 +297,13 @@ pub(super) fn picks(source: &str, doc: &CadDocument) -> Vec<(String, String)> {
 /// `getItem(…, 0, False)`), which `robot_form::seed` normalises to.
 pub(super) fn seed(_entry: &OpEntry, _doc: &CadDocument, _env: &Env, _texts: &mut [String]) {}
 
-/// The split and coupon dialogs list the registry: refused by name while it
-/// is being read or could not be read (RoboCAD's `load()` would raise).
+/// The split and coupon dialogs (and `ops.print_split`'s form) list the
+/// registry: refused by name while it is being read or could not be read
+/// (RoboCAD's `load()` would raise). `ops.print_split`'s printer is a pick
+/// over "printer_ids": unread, that list is empty and the seed
+/// normalisation would blank its default "bambu-h2c".
 pub(super) fn precheck(entry: &OpEntry, doc: &CadDocument, _selection: &[SelectionItem]) -> Option<String> {
-    if !matches!(entry.id, "print.split" | "print.coupons") {
+    if !matches!(entry.id, "print.split" | "print.coupons" | "ops.print_split") {
         return None;
     }
     match registry(doc) {

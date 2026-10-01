@@ -1,10 +1,11 @@
 //! The print job poller without a window, against a fake RoboCAD on
 //! loopback (its accept loop runs on a `crate::jobs::Job`): a watched
 //! job's progress on the status line, its done text and the refresh, the
-//! blockers while it runs, and cancel sending exactly one `DELETE
-//! /print/jobs/{id}` for the one running job, only after the confirmation.
+//! blockers while it runs, a list polled before a job's adoption not
+//! ending it, and cancel sending exactly one `DELETE /print/jobs/{id}` for
+//! the one running job, only after the confirmation and a list read.
 use super::jobs_panel;
-use super::jobs_tracker::{self, capitalize, done_text, line, publishes};
+use super::jobs_tracker::{self, UNREAD, capitalize, done_text, line, publishes};
 use super::studies::Started;
 use crate::app::actions::{Call, Origin, Replies};
 use crate::cad::document::{CadDocument, CadTarget, Connection};
@@ -151,6 +152,7 @@ fn a_watched_job_shows_its_progress_then_robocads_done_text_and_refreshes() {
     doc.connection = Connection::Connected;
     // Done: RoboCAD's text, the document refetched and the robot reads taken again.
     doc.robot.data.key = Some((doc.generation, 4));
+    assert_eq!(doc.unsaved(), Some(false));
     let result = json!({"revision": 5, "parts": [
         {"node": "b2", "name": "Plate", "safety_factor": 3.0, "mode": "shear"},
         {"node": "b1", "name": "Bracket", "safety_factor": 1.5, "mode": "tension"},
@@ -160,6 +162,8 @@ fn a_watched_job_shows_its_progress_then_robocads_done_text_and_refreshes() {
     until(&mut doc, "the end", |d| d.print.jobs.watched.is_empty());
     assert_eq!(doc.status, Some(Ok("strength: least safety factor 1.50 on Bracket (tension); Print ▸ Strength overlay shows where".to_string())));
     assert!(doc.robot.data.key.is_none(), "the robot reads are taken again");
+    // A publish is an edit: the saved state is unknown until the refetch answers.
+    assert_eq!(doc.unsaved(), None);
     assert!(doc.print.jobs.blockers().is_empty());
     assert_eq!(fake.deletes(), Vec::<String>::new());
 }
@@ -180,9 +184,14 @@ fn cancel_asks_first_then_sends_exactly_one_delete_per_running_job() {
     let ids: Vec<String> = jobs_panel::controls(&doc).into_iter().map(|c| c.0).collect();
     assert!(ids.contains(&"cad:print:cancel_yes".to_string()) && ids.contains(&"cad:print:cancel_no".to_string()), "{ids:?}");
     assert!(fake.deletes().is_empty());
-    // No closes the question.
-    assert!(matches!(jobs_tracker::cancel(&mut doc, &mut call, None, Some(false)), Outcome::Done(Ok(_))));
+    // No closes the question; a second No says none was open.
+    let message = |o: Outcome| match o {
+        Outcome::Done(Ok(v)) => v["message"].as_str().unwrap_or_default().to_string(),
+        _ => panic!("expected an answer"),
+    };
+    assert_eq!(message(jobs_tracker::cancel(&mut doc, &mut call, None, Some(false))), "The running print jobs were left running.");
     assert!(!doc.print.jobs.confirming);
+    assert_eq!(message(jobs_tracker::cancel(&mut doc, &mut call, None, Some(false))), "There was no cancel confirmation open; nothing changed.");
     assert!(fake.deletes().is_empty());
     // Yes: one DELETE for the one running job, then a poll shows it cancelled.
     assert!(matches!(jobs_tracker::cancel(&mut doc, &mut call, None, Some(true)), Outcome::Done(Ok(_))));
@@ -215,4 +224,47 @@ fn robocads_texts_for_each_kind() {
     quiet.state = "running".into();
     quiet.fraction = 0.126;
     assert_eq!(line(&quiet), "analyze x: running 13 % ");
+}
+
+#[test]
+fn a_list_polled_before_a_jobs_adoption_does_not_end_it() {
+    let fake = Fake::start(json!([]));
+    let mut doc = document(&fake);
+    jobs_panel::show(&mut doc, Some(true)).unwrap();
+    // The section's poll starts (it lands only at a later tick).
+    jobs_tracker::tick(&mut doc);
+    assert!(doc.print.jobs.polling());
+    // The start's edit answers while that poll is in flight.
+    doc.edit_seq = 3;
+    doc.print.studies.started = Some(Started { seq: 3, generation: doc.generation, kind: "analyze" });
+    jobs_tracker::edit_answered(&mut doc, 3, Some(&json!({"id": "a9", "kind": "analyze", "state": "queued", "fraction": 0.0, "message": ""})));
+    // The earlier poll's list lacks the job: it stays watched, nothing said.
+    until(&mut doc, "the earlier poll's list", |d| d.print.jobs.listed);
+    assert_eq!(doc.print.jobs.watched.len(), 1);
+    assert!(!matches!(&doc.status, Some(Err(e)) if e.contains("no longer lists")), "{:?}", doc.status);
+    // A poll started after the adoption that lacks it ends it.
+    until(&mut doc, "a later poll", |d| d.print.jobs.watched.is_empty());
+    assert_eq!(doc.status, Some(Err("analyze a9: RoboCAD no longer lists this print job".to_string())));
+}
+
+#[test]
+fn cancel_before_any_list_was_read_refuses_and_polls_once() {
+    let fake = Fake::start(json!([running("a1", "plan", 0.1, "")]));
+    let mut doc = document(&fake);
+    let (mut continuation, mut replies) = (Value::Null, Replies::default());
+    let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
+    // The section is closed and nothing is watched: no list was read.
+    for confirm in [None, Some(true)] {
+        match jobs_tracker::cancel(&mut doc, &mut call, None, confirm) {
+            Outcome::Done(Err(e)) => assert_eq!(e, UNREAD),
+            _ => panic!("expected the refusal"),
+        }
+    }
+    assert!(!doc.print.jobs.open && !doc.print.jobs.confirming);
+    // The refusal asked RoboCAD once, though the section is closed.
+    until(&mut doc, "the list", |d| d.print.jobs.listed);
+    assert!(fake.deletes().is_empty());
+    assert!(matches!(jobs_tracker::cancel(&mut doc, &mut call, None, Some(true)), Outcome::Done(Ok(_))));
+    until(&mut doc, "the cancel", |d| jobs_tracker::state_json(d)["cancelling"] == false);
+    assert_eq!(fake.deletes(), vec!["/print/jobs/a1".to_string()]);
 }

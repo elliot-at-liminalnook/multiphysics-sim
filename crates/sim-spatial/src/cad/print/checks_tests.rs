@@ -1,6 +1,6 @@
 //! The wall check and validation without a window (cad-print): Python's
 //! float text in RoboCAD's status lines, `validate_for_export`'s messages,
-//! the refusals and node lists `build` makes, the read cache, the
+//! the refusals and node lists `build` makes (an empty one included), the read cache, the
 //! remembered threshold, the landing (older generations dropped), the
 //! stale points, and the overhang shading's coupling to the build plate.
 use super::PrintCall;
@@ -90,12 +90,18 @@ fn build_takes_the_selection_else_the_visible_bodies_and_refuses_nothing() {
     // Validation ignores the selection.
     let validate = entry("print.validate").unwrap();
     assert_eq!(checks::build(PrintCall::Validate, validate, &picked, &Map::new(), &doc, &Env::default()), Ok(CheckPlan::Validate { bodies: vec![("b1".into(), "Bracket".into()), ("s1".into(), "Skin".into())] }));
-    // Nothing visible: refused by name.
+    // Nothing selected or visible: RoboCAD's loop runs over an empty list
+    // (ui/app.py:1117-1126), so the plan is empty and lands at once with
+    // "No walls thinner than …".
     let mut hidden = document();
     for n in &mut hidden.doc.as_mut().unwrap().nodes {
         n.effective_visible = false;
     }
-    assert_eq!(checks::build(PrintCall::WallCheck, wall, &none, &defaults, &hidden, &Env::default()), Err("nothing to check: no visible bodies".to_string()));
+    assert_eq!(checks::build(PrintCall::WallCheck, wall, &none, &defaults, &hidden, &Env::default()), Ok(CheckPlan::Wall { threshold: 1.2, nodes: Vec::new() }));
+    let answer = checks::start_wall(&mut hidden, 1.2, Vec::new()).unwrap();
+    assert_eq!((answer["cached"].clone(), answer["sent"].clone()), (json!(0), json!(0)));
+    assert_eq!(hidden.status, Some(Ok("No walls thinner than 1.2 mm".to_string())));
+    assert!(hidden.print.checks.wall_job.is_none());
 }
 
 /// Cached reads are keyed by (generation, node, revision, threshold); a
@@ -204,6 +210,28 @@ fn results_land_for_this_generation_only() {
     assert_eq!(doc.status, Some(Err("Skin: invalid solid near (0.0, 0.0, 0.0)".to_string())));
     let state = checks::state_json(doc);
     assert_eq!((state["validation"]["ok"].clone(), state["validation"]["lines"].clone(), state["validation"]["bodies"].clone()), (json!(false), json!(["Skin: invalid solid near (0.0, 0.0, 0.0)"]), json!(2)));
+}
+
+/// A late result for an older revision keeps the newer cached reads and
+/// says its points are not drawn.
+#[test]
+fn a_late_result_for_an_older_revision_does_not_prune_or_claim_drawn() {
+    let mut doc = document();
+    let g = doc.generation;
+    doc.doc_key = Some((None, 5));
+    doc.print.checks.cache.insert(cache_key(g, "s1", 5, 1.2), None);
+    let meta = WallMeta { threshold: 1.2, revision: 4, generation: g, nodes: vec!["b1".into()], known: Vec::new() };
+    checks::land_wall(&mut doc, meta, Ok(vec![("b1".to_string(), Some(vec![region(1.0)]))]));
+    assert!(doc.print.checks.cache.contains_key(&cache_key(g, "s1", 5, 1.2)), "the newer read is kept");
+    assert!(doc.print.checks.cache.contains_key(&cache_key(g, "b1", 4, 1.2)));
+    assert!(checks::drawn(&doc).is_none());
+    let Some(Ok(status)) = doc.status.clone() else { panic!("a status") };
+    assert!(status.starts_with("1 thin region(s) under 1.2 mm (read at revision 4") && status.contains("not drawn"), "{status}");
+    // A current landing prunes the older revision's reads.
+    let meta = WallMeta { threshold: 1.2, revision: 5, generation: g, nodes: vec!["s1".into()], known: Vec::new() };
+    checks::land_wall(&mut doc, meta, Ok(vec![("s1".to_string(), None)]));
+    assert!(!doc.print.checks.cache.contains_key(&cache_key(g, "b1", 4, 1.2)));
+    assert_eq!(doc.status, Some(Ok("No walls thinner than 1.2 mm".to_string())));
 }
 
 /// "Toggle overhang shading" is a display toggle; the build plate sets it

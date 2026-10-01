@@ -19,8 +19,6 @@ use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use std::collections::BTreeMap;
 
-/// RoboCAD's placeholder (`palette.placeholder`, ui/strings.py).
-pub(crate) const PLACEHOLDER: &str = "Type a command… (Ctrl+Space)";
 /// How many rows the palette shows (RoboCAD's `scored[:60]`).
 pub(crate) const SHOWN: usize = 60;
 /// RoboCAD's `palette.conflict` (ui/strings.py:16).
@@ -128,12 +126,26 @@ pub(crate) fn rank(entries: &[PaletteEntry], query: &str) -> Vec<Ranked> {
 }
 
 impl Kit<'_> {
-    /// The palette: the search field showing `query` (or the placeholder),
-    /// then one row per `rows` entry (its text, the conflict warning in the
-    /// warning colour), `selected` highlighted. `field` is the search
-    /// field's action component, `row(i)` row `i`'s.
+    /// The palette: the search field showing `query` (or `placeholder`;
+    /// the field's accessible label is `search_label`), then one row per
+    /// `rows` entry (its text, the conflict warning in the warning colour),
+    /// `selected` highlighted. `field` is the search field's action
+    /// component, `row(i)` row `i`'s; `list` goes on the scrolling list
+    /// (the caller's wheel-scroll marker, or `()`).
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn palette<F: Component, A: Component>(&self, parent: &mut ChildSpawnerCommands, query: &str, rows: &[Ranked], entries: &[PaletteEntry], selected: usize, field: F, row: impl Fn(usize) -> A) {
+    pub(crate) fn palette<F: Component, A: Component, L: Bundle>(
+        &self,
+        parent: &mut ChildSpawnerCommands,
+        query: &str,
+        placeholder: &str,
+        search_label: &str,
+        rows: &[Ranked],
+        entries: &[PaletteEntry],
+        selected: usize,
+        field: F,
+        row: impl Fn(usize) -> A,
+        list: L,
+    ) {
         parent
             .spawn((
                 Node {
@@ -150,10 +162,10 @@ impl Kit<'_> {
             ))
             .with_children(|panel| {
                 // The kit input labels itself with its text; the search field is named instead.
-                panel.spawn(self.input(query, PLACEHOLDER, field, true)).insert(AccessibleLabel::new("Command palette search"));
+                panel.spawn(self.input(query, placeholder, field, true)).insert(AccessibleLabel::new(search_label));
                 // Scroll so the selected row is in view (rows have a fixed height).
                 let offset = (selected as f32 * (ROW + GAP) + ROW - LIST).max(0.0);
-                panel.spawn(self.scroll_area(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(GAP), max_height: Val::Px(LIST), ..default() }, offset)).with_children(|list| {
+                panel.spawn((self.scroll_area(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(GAP), max_height: Val::Px(LIST), ..default() }, offset), list)).with_children(|list| {
                     for (i, r) in rows.iter().enumerate() {
                         let enabled = entries.get(r.index).is_none_or(|e| e.enabled);
                         let on = i == selected;

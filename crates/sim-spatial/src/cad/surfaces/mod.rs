@@ -60,17 +60,18 @@ pub enum Surface {
     },
     /// The menu of one RoboCAD category ("Modify").
     Menu { category: String },
-    /// The viewport right-click menu at `at` (window logical px; the cursor when absent).
+    /// The viewport right-click menu at `at` (window logical px; the 3D
+    /// view's centre when absent: a right-click passes the cursor).
     Context {
         #[serde(default)]
         at: Option<[f32; 2]>,
     },
-    /// The Space view radial at `at`.
+    /// The Space view radial at `at` (the 3D view's centre when absent).
     ViewRadial {
         #[serde(default)]
         at: Option<[f32; 2]>,
     },
-    /// The Q selection-mode radial at `at`.
+    /// The Q selection-mode radial at `at` (the 3D view's centre when absent).
     SelectRadial {
         #[serde(default)]
         at: Option<[f32; 2]>,
@@ -217,6 +218,12 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         _ => centre,
     };
     let highlight = matches!(surface, Surface::Palette { .. }).then_some(0);
+    // An open surface has the keyboard: the numeric bar's entry ends (the
+    // palette ends the name field's draft, which `Cx` does not reach).
+    if doc.tool_state.numeric.focus.is_some() {
+        doc.tool_state.numeric.focus = None;
+        doc.tool_state.numeric.began = None;
+    }
     doc.ops.surface = Some(Open { surface: surface.clone(), at, highlight });
     let own = super::panel::own_controls(doc);
     let list: Vec<Value> = entries(surface, doc, &own).iter().map(Entry::json).collect();
@@ -408,14 +415,15 @@ fn popup_scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, Wi
     }
 }
 
-/// What the open popup shows, as a comparable text.
-fn popup_key(doc: &CadDocument, width: f32) -> Option<String> {
+/// What the open popup shows, as a comparable text (`window`: the window's
+/// logical size, which places and clamps it).
+fn popup_key(doc: &CadDocument, window: Vec2) -> Option<String> {
     let open = doc.ops.surface.as_ref()?;
     // What enables an entry beyond the document: the connection, an edit in
     // flight, RoboCAD's desktop window and its command list.
     let commands = doc.commands.as_ref().map(|c| c.as_ref().map(|list| list.len()).ok());
     let gate = (doc.connected(), doc.edit.is_some(), doc.health.as_ref().map(|h| h.gui), commands);
-    Some(format!("{:?}", (doc.generation, doc.revision, open, &doc.selection, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), gate, width.round())))
+    Some(format!("{:?}", (doc.generation, doc.revision, open, &doc.selection, doc.tool, doc.ops.active, doc.ops.form.as_ref().map(|f| f.op), gate, window.round())))
 }
 
 /// Present: the open popup (palette, menu, context menu or radial),
@@ -430,8 +438,9 @@ fn draw(
     tabs: Query<(&menus::MenuTab, &ComputedNode, &UiGlobalTransform)>,
     mut last: Local<Option<String>>,
 ) {
-    let width = windows.single().map_or(1280.0, Window::width);
-    let key = doc.as_deref().and_then(|d| popup_key(d, width));
+    let window = windows.single().map_or(Vec2::new(1280.0, 720.0), |w| Vec2::new(w.width(), w.height()));
+    let width = window.x;
+    let key = doc.as_deref().and_then(|d| popup_key(d, window));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;
@@ -450,28 +459,57 @@ fn draw(
         Surface::Closed => {}
         Surface::Palette { query } => palette::spawn(&mut commands, &k, doc, &own, query, open.highlight.unwrap_or(0), width),
         Surface::Menu { category } => {
-            // Under its tab in the menu bar (laid out by now), else where it opened.
-            let under = tabs.iter().find(|(tab, ..)| tab.0 == category.as_str()).map(|(_, node, t)| {
+            // Under its tab in the menu bar (laid out in an earlier frame: the
+            // tabs are spawned once and lit in place, `toolbar::refresh`),
+            // else where it opened.
+            let under = tabs.iter().find(|(tab, node, _)| tab.0 == category.as_str() && node.size() != Vec2::ZERO).map(|(_, node, t)| {
                 let r = rect_of(node, t);
                 Vec2::new(r.min.x, r.max.y + 2.0)
             });
-            popup_list(&mut commands, &k, &format!("{category} menu"), under.unwrap_or(at), &list);
+            popup_list(&mut commands, &k, &format!("{category} menu"), under.unwrap_or(at), window, &list);
         }
-        Surface::Context { .. } => popup_list(&mut commands, &k, "Viewport context menu", at + Vec2::splat(2.0), &list),
+        Surface::Context { .. } => popup_list(&mut commands, &k, "Viewport context menu", at + Vec2::splat(2.0), window, &list),
         Surface::ViewRadial { .. } | Surface::SelectRadial { .. } => radial::spawn(&mut commands, &k, &open, &list),
     }
 }
 
-/// A menu-like popup at `at`: one ghost row per entry ("label    keys"),
-/// disabled ones greyed, each a [`SurfaceEntry`].
-fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, list: &[Entry]) {
+/// Space kept between a popup and the window's edges (px).
+const EDGE: f32 = 8.0;
+/// A popup's padding and border, top and bottom together (px).
+const POPUP_CHROME: f32 = 10.0;
+/// The tallest a popup's rows get, and the least room they get before the
+/// popup moves up to make it (px).
+const ROWS_MAX: f32 = 550.0;
+const ROWS_MIN: f32 = 160.0;
+/// A popup's least width (px).
+const POPUP_WIDTH: f32 = 220.0;
+
+/// Where a popup asked for at `at` goes in a `window`-sized window, and
+/// how tall its rows may get: below and right of `at` when it fits; moved
+/// up when less than [`ROWS_MIN`] is left below, and left so its least
+/// width fits; its rows scroll past the room left above the bottom edge.
+/// Returns (left, top, rows' max height, max width).
+fn popup_place(at: Vec2, window: Vec2) -> (f32, f32, f32, f32) {
+    let left = at.x.min(window.x - EDGE - POPUP_WIDTH).max(EDGE);
+    let bottom = window.y - EDGE - POPUP_CHROME;
+    let top = (if bottom - at.y < ROWS_MIN { (bottom - ROWS_MIN).min(at.y) } else { at.y }).max(EDGE);
+    let rows = (bottom - top).clamp(0.0, ROWS_MAX);
+    (left, top, rows, (window.x - EDGE - left).max(POPUP_WIDTH))
+}
+
+/// A menu-like popup at `at`, kept inside the `window`-sized window
+/// ([`popup_place`]): one ghost row per entry ("label    keys"), disabled
+/// ones greyed, each a [`SurfaceEntry`].
+fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, window: Vec2, list: &[Entry]) {
+    let (left, top, rows_max, max_width) = popup_place(at, window);
     commands
         .spawn((
             Node {
                 position_type: PositionType::Absolute,
-                left: Val::Px(at.x),
-                top: Val::Px(at.y),
-                min_width: Val::Px(220.0),
+                left: Val::Px(left),
+                top: Val::Px(top),
+                min_width: Val::Px(POPUP_WIDTH),
+                max_width: Val::Px(max_width),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Stretch,
                 padding: UiRect::all(Val::Px(4.0)),
@@ -489,8 +527,9 @@ fn popup_list(commands: &mut Commands, k: &Kit, label: &str, at: Vec2, list: &[E
             DespawnOnExit(ModeScope::Cad),
         ))
         .with_children(|p| {
-            // 560 px tall at most with the padding and border; the wheel scrolls the rest.
-            let rows = Node { max_height: Val::Px(550.0), flex_direction: FlexDirection::Column, align_items: AlignItems::Stretch, row_gap: Val::Px(1.0), ..default() };
+            // 560 px tall at most with the padding and border, less where the
+            // window is shorter; the wheel scrolls the rest.
+            let rows = Node { max_height: Val::Px(rows_max), flex_direction: FlexDirection::Column, align_items: AlignItems::Stretch, row_gap: Val::Px(1.0), ..default() };
             p.spawn((k.scroll_area(rows, 0.0), PopupScroll)).with_children(|p| {
                 if list.is_empty() {
                     p.spawn(k.text("(no commands)", size::CAPTION, FAINT, 0));

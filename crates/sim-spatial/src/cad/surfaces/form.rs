@@ -40,7 +40,7 @@ use crate::cad::document::{CadDocument, CadInputFocus};
 use crate::cad::ops::{self, FormState, OpEntry};
 use crate::cad::panel::{Control, NameDraft};
 use crate::ui_kit::form::{DraftKey, FieldKind, FormHit, FormRow, TextDraft, evaluate};
-use crate::ui_kit::{BAR, BORDER, DANGER, Kit, RIGHT_WIDTH, SURFACE, TOPBAR, UiFonts, size};
+use crate::ui_kit::{BAR, DANGER, Kit, RIGHT_WIDTH, TOPBAR, UiFonts, size};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
@@ -328,7 +328,9 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
         .iter()
         .map(|i| {
             let p = &entry.params[*i];
-            FormRow { label: p.label, kind: p.kind, text: form.texts.get(*i).map_or(p.default, String::as_str), focused: form.focus == Some(*i) }
+            let focused = form.focus == Some(*i);
+            // An empty default is optional (`ok_ready` and `ops::values` leave it out empty).
+            FormRow { label: p.label, kind: p.kind, text: form.texts.get(*i).map_or(p.default, String::as_str), focused, optional: p.default.is_empty(), selected: focused && form.select_all }
         })
         .collect();
     let param = |r: usize| rows_at.get(r).copied().unwrap_or(usize::MAX);
@@ -342,15 +344,7 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
     };
     let ok = ok_ready(entry, form).is_ok();
     let modal = doc.ops.active.is_none();
-    let panel = Node {
-        width: Val::Px(WIDTH),
-        flex_direction: FlexDirection::Column,
-        row_gap: Val::Px(6.0),
-        padding: UiRect::all(Val::Px(12.0)),
-        border: UiRect::all(Val::Px(1.0)),
-        border_radius: BorderRadius::all(Val::Px(6.0)),
-        ..default()
-    };
+    // The kit's form panel is the frame; the root here only places it.
     if modal {
         // RoboCAD's dialogs are modal: the dimmed window takes every click.
         commands
@@ -363,15 +357,11 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
                 FormRoot,
                 DespawnOnExit(ModeScope::Cad),
             ))
-            .with_children(|backdrop| {
-                backdrop.spawn((panel, BackgroundColor(SURFACE), BorderColor::all(BORDER))).with_children(|p| body(p, &k, entry, &rows, ok, &hit, form.error.as_ref(), modal));
-            });
+            .with_children(|backdrop| body(backdrop, &k, entry, &rows, ok, &hit, form.error.as_ref(), modal));
     } else {
         commands
             .spawn((
-                Node { position_type: PositionType::Absolute, right: Val::Px(RIGHT_WIDTH + 8.0), top: Val::Px(TOPBAR + super::COMMAND_BAR + 8.0), ..panel },
-                BackgroundColor(SURFACE),
-                BorderColor::all(BORDER),
+                Node { position_type: PositionType::Absolute, right: Val::Px(RIGHT_WIDTH + 8.0), top: Val::Px(TOPBAR + super::COMMAND_BAR + 8.0), ..default() },
                 FocusPolicy::Block,
                 GlobalZIndex(POPUP_Z - 3),
                 AccessibleLabel::new(format!("{} values", entry.label)),
@@ -382,14 +372,16 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
     }
 }
 
-/// The form's content: the kit form, OK's last refusal, a tool's hint.
+/// The form's content: the kit form, with OK's last refusal and a tool's
+/// hint in its panel under the buttons.
 #[allow(clippy::too_many_arguments)]
 fn body(p: &mut ChildSpawnerCommands, k: &Kit, entry: &OpEntry, rows: &[FormRow], ok: bool, hit: &impl Fn(FormHit) -> FormPart, error: Option<&String>, modal: bool) {
-    k.form(p, entry.label, rows, ok, hit);
-    if let Some(error) = error {
-        p.spawn(k.text(error.clone(), size::SMALL, DANGER, 0));
-    }
-    if !modal && !entry.hint.is_empty() {
-        p.spawn(k.note(entry.hint));
-    }
+    k.form(p, entry.label, rows, ok, Some(WIDTH), hit, |p| {
+        if let Some(error) = error {
+            p.spawn(k.text(error.clone(), size::SMALL, DANGER, 0));
+        }
+        if !modal && !entry.hint.is_empty() {
+            p.spawn(k.note(entry.hint));
+        }
+    });
 }

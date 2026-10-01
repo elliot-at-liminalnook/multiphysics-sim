@@ -19,12 +19,12 @@
 //! the palette (a command that opens another surface replaces it); a
 //! disabled row shows why on the status line and the palette stays open.
 use super::registry::{self, COMMANDS, Command, Resolved};
-use super::{POPUP_Z, Surface, SurfaceEntry, SurfaceRoot};
+use super::{POPUP_Z, PopupScroll, Surface, SurfaceEntry, SurfaceRoot};
 use crate::app::ModeScope;
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadInputFocus};
-use crate::cad::panel::{Control, own_controls};
+use crate::cad::panel::{Control, NameDraft, own_controls};
 use crate::ui_kit::form::{DraftKey, TextDraft};
 use crate::ui_kit::palette::{PaletteEntry, rank};
 use crate::ui_kit::{Kit, LEFT_WIDTH, TOPBAR};
@@ -81,6 +81,16 @@ fn row_entry(cmd: &Command, doc: &CadDocument, own: &[Control]) -> SurfaceEntry 
     }
 }
 
+/// RoboCAD's placeholder (`palette.placeholder`, ui/strings.py: "Type a
+/// command… (Ctrl+Space)"), naming the palette's first key as listed now.
+fn placeholder(doc: &CadDocument) -> String {
+    let key = registry::command("command_palette").and_then(|cmd| keys_of(cmd, doc).into_iter().next());
+    match key {
+        Some(key) => format!("Type a command\u{2026} ({key})"),
+        None => "Type a command\u{2026}".to_string(),
+    }
+}
+
 /// The palette popup (`surfaces::draw`), centred near the window's top as
 /// RoboCAD opens it (`open_palette`: x = width / 2, y = 80).
 pub(super) fn spawn(commands: &mut Commands, k: &Kit, doc: &CadDocument, own: &[Control], query: &str, highlight: usize, width: f32) {
@@ -99,9 +109,9 @@ pub(super) fn spawn(commands: &mut Commands, k: &Kit, doc: &CadDocument, own: &[
             DespawnOnExit(ModeScope::Cad),
         ))
         .with_children(|p| {
-            k.palette(p, query, &rows, &entries, selected, PaletteField, |i| {
-                actions.get(i).cloned().unwrap_or(SurfaceEntry { action: CadAction::CadSurface { surface: Surface::Closed }, closes: false, refusal: None })
-            });
+            let row = |i: usize| actions.get(i).cloned().unwrap_or(SurfaceEntry { action: CadAction::CadSurface { surface: Surface::Closed }, closes: false, refusal: None });
+            // The list scrolls with the wheel as the menus do (`surfaces::popup_scroll`).
+            k.palette(p, query, &placeholder(doc), "Command palette search", &rows, &entries, selected, PaletteField, row, PopupScroll);
         });
 }
 
@@ -112,6 +122,7 @@ pub(super) fn input(
     keys: Option<Res<ButtonInput<KeyCode>>>,
     mut events: MessageReader<KeyboardInput>,
     focus: Option<ResMut<CadInputFocus>>,
+    draft: Option<ResMut<NameDraft>>,
     mut out: MessageWriter<Act<CadAction>>,
     mut was_open: Local<bool>,
 ) {
@@ -132,6 +143,14 @@ pub(super) fn input(
         // Keys pressed before it opened (its own Ctrl+Space or Shift+F) are not its text.
         *was_open = true;
         events.clear();
+        // The palette has the keyboard: the name field's draft ends, as the
+        // form's fields end it (`surfaces::handle` ends the numeric bar's entry).
+        if let Some(mut draft) = draft
+            && draft.editing.is_some()
+        {
+            draft.editing = None;
+            draft.refusal = None;
+        }
         return;
     }
     let typed: Vec<KeyboardInput> = events.read().filter(|e| e.state == ButtonState::Pressed).cloned().collect();

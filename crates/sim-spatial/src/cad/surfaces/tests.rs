@@ -220,3 +220,25 @@ fn every_surfaces_control_round_trips_through_rest() {
     // A surface's REST form keeps its shape.
     assert_eq!(rest_form(&CadAction::CadSurface { surface: Surface::Menu { category: "Modify".into() } }), json!({"command": "cad_surface", "surface": {"kind": "menu", "category": "Modify"}}));
 }
+
+/// A popup stays inside the window: placed at the point asked for when it
+/// fits, moved up and left near the edges, its rows capped to the room left.
+#[test]
+fn popups_are_kept_inside_the_window() {
+    use bevy::math::Vec2;
+    let window = Vec2::new(1280.0, 720.0);
+    // Room below: where asked, rows capped at 550 px.
+    assert_eq!(super::popup_place(Vec2::new(400.0, 100.0), window), (400.0, 100.0, 550.0, 872.0));
+    // Low in the window: rows fit what is left above the bottom edge.
+    let (_, top, rows, _) = super::popup_place(Vec2::new(400.0, 400.0), window);
+    assert_eq!((top, rows), (400.0, 302.0));
+    // Near the bottom: moved up so 160 px of rows fit.
+    let (_, top, rows, _) = super::popup_place(Vec2::new(400.0, 650.0), window);
+    assert_eq!((top, rows), (542.0, 160.0));
+    // Near the right edge: moved left so its least width fits.
+    let (left, _, _, max_width) = super::popup_place(Vec2::new(1250.0, 100.0), window);
+    assert_eq!((left, max_width), (1052.0, 220.0));
+    // A window shorter than the least rows: pinned at the top edge.
+    let (_, top, rows, _) = super::popup_place(Vec2::new(10.0, 50.0), Vec2::new(400.0, 120.0));
+    assert_eq!((top, rows), (8.0, 94.0));
+}

@@ -631,7 +631,8 @@ fn render_gait(s: &LinkSnapshot, form: &Form) -> GaitView {
 
 /// REST `hardware_status`: the link (connected, url, generation, stale and
 /// the age of the last read), the page's session state, the form, every
-/// rendered text and flag, and the server's last status.
+/// rendered text and flag, the mirror and live-sync state, and the
+/// server's last status.
 pub fn status_json(hw: &super::Hardware, now: Instant) -> Value {
     let s = &hw.snapshot;
     let view = super::panel::panel_view(hw, now);
@@ -662,6 +663,8 @@ pub fn status_json(hw: &super::Hardware, now: Instant) -> Value {
             "target_percent": f.target_percent, "tune_ok": f.tune_ok, "campaign_ok": f.campaign_ok, "gait_ok": f.gait_ok,
             "gait_index": f.gait_index, "gait_mode": f.gait_mode, "step": f.step, "open_sections": f.open,
         },
+        "mirror": hw.mirror.state_json(),
+        "sync": hw.sync.state_json(),
         "panel": serde_json::to_value(&view).unwrap_or(Value::Null),
         "server": if connected { server_json(&s.state) } else { Value::Null },
     })

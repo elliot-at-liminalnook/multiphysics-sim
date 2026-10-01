@@ -414,7 +414,7 @@ fn refresh(
     mut buttons: Query<(&ControlId, &mut Enabled, &mut Look, &mut HardwareAction, Option<&Children>, Has<FollowLabel>)>,
     mut labels: Query<&mut Text, (Without<PanelText>, Without<ControlId>)>,
     mut lists: Query<(Entity, &mut PanelList)>,
-    mut sliders: Query<(Entity, &PanelSlider, &mut SliderValue, Has<Pressed>, &Interaction, Has<InteractionDisabled>)>,
+    sliders: Query<(Entity, &PanelSlider, &SliderValue, Has<Pressed>, &Interaction, Has<InteractionDisabled>)>,
     mut fills: Query<(&SliderFill, &mut Node), (Without<Shown>, Without<PanelText>)>,
     pictures: Query<(&ImageNode, Has<DialImage>), Or<(With<DialImage>, With<MotionImage>)>>,
 ) {
@@ -440,14 +440,17 @@ fn refresh(
     let f = &hw.form;
     // Sliders follow the form (the target follows the server) unless held.
     let mut values = Vec::new();
-    for (entity, which, mut value, pressed, interaction, disabled) in &mut sliders {
+    for (entity, which, value, pressed, interaction, disabled) in &sliders {
+        // `SliderValue` is an immutable component: replace it, don't mutate it.
+        let mut shown = value.0;
         if !slider_held(pressed, interaction)
             && let Some(x) = slider_fraction(*which, f, &v)
-            && value.0 != x
+            && shown != x
         {
-            value.0 = x;
+            commands.entity(entity).insert(SliderValue(x));
+            shown = x;
         }
-        values.push((*which, value.0));
+        values.push((*which, shown));
         let off = match which {
             PanelSlider::Target => !v.target_enabled,
             PanelSlider::GaitEffort => !v.gait.effort_enabled,

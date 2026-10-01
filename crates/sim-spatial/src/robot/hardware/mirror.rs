@@ -270,9 +270,6 @@ impl Mirror {
     pub fn busy(&self) -> bool {
         self.pose_sent > self.pose_done
     }
-    pub fn coordinates(&self) -> Option<&[Coordinate]> {
-        self.coordinates.as_deref()
-    }
     /// Work in flight or a gait playing: the panel keeps frames coming until it lands.
     pub fn working(&self) -> bool {
         self.busy() || self.loading || self.sample_sent > self.sample_done || self.gait_number.is_some()

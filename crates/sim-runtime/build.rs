@@ -35,7 +35,7 @@ fn main() {
             continue;
         }
         // UI/application bindings do not define the underlying simulation model.
-        if matches!(entry.file_name().to_str(), Some("sim-app" | "sim-web")) {
+        if matches!(entry.file_name().to_str(), Some("sim-web")) {
             continue;
         }
         let cargo = entry.path().join("Cargo.toml");

@@ -68,7 +68,7 @@ jobs:
       - name: Generic runtime tests and phenomena acceptance
         # The gallery's separate one-second UI benchmark depends on the host.
         # The CAD job below enforces its own explicit performance budgets.
-        run: cargo test --release --workspace --exclude sim-app --locked -- --skip every_exhibit_runs_in_real_time
+        run: cargo test --release --workspace --locked -- --skip every_exhibit_runs_in_real_time
       - name: Systems viewer retained migration baseline
         run: |
           mkdir -p runs/systems-viewer

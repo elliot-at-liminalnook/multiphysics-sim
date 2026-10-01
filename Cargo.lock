@@ -8107,20 +8107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sim-app"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "clap",
- "nalgebra 0.34.2",
- "serde_json",
- "sim-core",
- "sim-domain-multibody",
- "sim-domain-robot",
- "sim-phenomena",
-]
-
-[[package]]
 name = "sim-compile"
 version = "0.1.0"
 dependencies = [

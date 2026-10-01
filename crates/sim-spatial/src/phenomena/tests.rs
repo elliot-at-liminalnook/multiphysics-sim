@@ -105,6 +105,7 @@ fn exhibit_refs_resolve_by_number_or_title_fragment() {
     // Case-insensitive; the first title containing the fragment.
     assert_eq!(ExhibitRef::Title("HAMMER".into()).resolve(&titles), Ok(1));
     assert_eq!(ExhibitRef::Title("pendulum".into()).resolve(&titles), Ok(0));
+    assert!(ExhibitRef::Title("  ".into()).resolve(&titles).unwrap_err().contains("empty"), "every title contains the empty string; it is refused, not exhibit 1");
     // Digits are a number, whichever way they came.
     assert_eq!(ExhibitRef::Title(" 3 ".into()).resolve(&titles), Ok(2));
     assert!(ExhibitRef::Title("9".into()).resolve(&titles).unwrap_err().contains("out of range"));
@@ -207,6 +208,8 @@ fn knob_and_speed_follow_sim_app() {
     assert_eq!(knob_target(&knob, Some(9.0), None), 2.0);
     let zero = Knob { step: 0.0, ..knob.clone() };
     assert_eq!(knob_target(&zero, Some(0.3), None), 0.3, "no step: no rounding (sim-app divided by zero)");
+    let off_grid = Knob { min: 0.05, max: 0.95, step: 0.1, ..knob.clone() };
+    assert!(knob_target(&off_grid, Some(9.0), None) <= 0.95, "rounding to the step never leaves [min, max]");
     assert_eq!(speed_target(1.0, None, Some(1)), 2.0);
     assert_eq!(speed_target(64.0, None, Some(1)), 64.0);
     assert_eq!(speed_target(1.0 / 64.0, None, Some(-1)), 1.0 / 64.0);

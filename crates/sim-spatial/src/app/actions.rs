@@ -274,6 +274,17 @@ impl<A> InFlight<A> {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+    /// Answer every REST call still carried here with `reason` and empty the
+    /// queue. A mode's OnExit calls this: its apply system does not run
+    /// outside the mode, so a carried call would otherwise hang, or be
+    /// answered against the next session's state on return.
+    pub fn abandon(&mut self, replies: &mut Replies, reason: &str) {
+        for (_, origin, _) in self.0.drain(..) {
+            if let Origin::Rest(r) = origin {
+                replies.answer(r, Outcome::Done(Err(reason.to_string())));
+            }
+        }
+    }
 }
 
 /// An action type's message and in-flight queue (each mode plugin registers its own).

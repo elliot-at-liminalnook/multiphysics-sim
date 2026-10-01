@@ -67,6 +67,10 @@ impl ExhibitRef {
             ExhibitRef::Number(n) => (Some(*n), n.to_string()),
             ExhibitRef::Title(t) => (t.trim().parse::<usize>().ok(), t.clone()),
         };
+        // Every title contains the empty string; an empty fragment is a mistake, not exhibit 1.
+        if text.trim().is_empty() {
+            return Err(format!("the exhibit is empty: name a number from 1 to {} or a title fragment", titles.len()));
+        }
         if let Some(index) = number.and_then(|n| n.checked_sub(1)).filter(|i| *i < titles.len()) {
             return Ok(index);
         }
@@ -141,6 +145,15 @@ fn receive(gallery: Option<ResMut<Gallery>>) {
 /// World's drop drops the gallery in place: `RunThread`'s drop waits at most
 /// `JOIN_BOUND`, then detaches the thread (jobs/run_thread.rs `Drop`).
 pub(crate) fn leave(world: &mut World) {
+    // A REST call waiting on the run thread is answered now: on return the
+    // new gallery's `seq` starts again at 0 and could not settle it.
+    if world.contains_resource::<crate::app::actions::Replies>() {
+        world.resource_scope(|world, mut replies: Mut<crate::app::actions::Replies>| {
+            if let Some(mut in_flight) = world.get_resource_mut::<crate::app::actions::InFlight<PhenomenaAction>>() {
+                in_flight.abandon(&mut replies, "left phenomena mode before the command was applied; it was sent to a run thread that has now stopped");
+            }
+        });
+    }
     if let Some(gallery) = world.remove_resource::<Gallery>() {
         if let Some(number) = gallery.shown_number() {
             world.resource_mut::<Documents>().exhibit = Some(number.to_string());

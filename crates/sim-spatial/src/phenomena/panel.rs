@@ -268,13 +268,16 @@ pub(super) fn slider(tracks: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::ui
             held = Some(knob_target(&knob, Some(knob.min + value.0.clamp(0.0, 1.0) as f64 * (knob.max - knob.min)), None));
         }
     }
+    let requested = gallery.requested;
     match (held, gallery.knob_drag) {
         (Some(v), previous) => {
-            if previous != Some(v) {
-                gallery.knob_drag = Some(v);
+            if previous != Some((v, requested)) {
+                gallery.knob_drag = Some((v, requested));
             }
         }
-        (None, Some(v)) => {
+        // Released after a switch (the slider went with the rebuilt panel): the value was for another exhibit.
+        (None, Some((_, at))) if at != requested => gallery.knob_drag = None,
+        (None, Some((v, _))) => {
             gallery.knob_drag = None;
             // A click that leaves the value where it is commits nothing: a knob change rebuilds the exhibit.
             // The exhibit reports its value back (possibly off the step grid or by an ulp), so compare snapped values with a tolerance.
@@ -468,7 +471,7 @@ pub(super) fn refresh(
         (None, None) => None,
     });
     let knob = frame.and_then(|f| f.knob.as_ref());
-    let knob_value = knob.map(|k| gallery.knob_drag.unwrap_or(k.value));
+    let knob_value = knob.map(|k| gallery.knob_drag.map_or(k.value, |(v, _)| v));
     for (entity, mark) in &marks {
         match *mark {
             Mark::Title => set_text(&mut texts, entity, &title),

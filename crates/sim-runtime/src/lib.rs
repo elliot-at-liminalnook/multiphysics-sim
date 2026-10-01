@@ -5,6 +5,9 @@ use sim_core::BehaviorRegistry;
 pub mod acquisition;
 pub mod actuator_registry;
 pub mod gait_playback;
+/// Loopback HTTP client of the hardware servers (native only: std::net).
+#[cfg(not(target_arch = "wasm32"))]
+pub mod hardware_client;
 pub mod contact_audit;
 pub mod contact_planning;
 pub mod contact_reference;

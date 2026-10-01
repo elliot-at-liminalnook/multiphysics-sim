@@ -8,9 +8,10 @@
 //!   trackball rotation, ortho and field of view), the bounds a fit frames
 //!   (`centre`, `extent`), a pending home request, an eased glide and a spin.
 //! - [`OrbitRules`]: the mode's feel (drag rate, pitch limit, zoom limits,
-//!   framing, zoom to the cursor) and its per-frame input gate (`enabled`,
-//!   `zoom_modifier`, `reduced_motion`, `keys`), which the mode updates as
-//!   data; the module holds no mode code.
+//!   framing, zoom to the cursor, RoboCAD's extra gestures) and its
+//!   per-frame input gate (`enabled`, `zoom_modifier`, `reduced_motion`,
+//!   `keys`, `alt_left`, `typing`), which the mode updates as data; the
+//!   module holds no mode code.
 //! - [`ViewArea`]: where the 3D view draws (the whole window, between the
 //!   mode's docks, or inside a lesson card); the module sets the camera's
 //!   viewport from it and starts gestures only inside it.
@@ -21,6 +22,27 @@
 //! (right-drag orbit, middle or Shift+right-drag pan, wheel zoom) are
 //! navigation and stay in SimSync ([`input::navigate`]), as §3 says; they
 //! call the same [`Orbit`] methods the actions do.
+//!
+//! RoboCAD's own gestures (`ui/viewport.py` `mouseMoveEvent`,
+//! `keyPressEvent`) are on where a mode's rules set `robocad_gestures`
+//! (CAD only; the other modes keep their feel): Shift+middle-drag orbits
+//! (instead of panning), Alt held while right-drag orbiting snaps to the
+//! nearest axis view (`Camera.snap_orthographic`, applied after every
+//! orbit step as RoboCAD does), Alt+left-drag orbits once the pointer has
+//! moved past [`ALT_DRAG_SLOP`] (a shorter Alt+click stays the
+//! mode's: CAD's candidates menu), and the arrow keys orbit 10° (Ctrl or
+//! Cmd 90°) and with Shift pan. The keys are `CameraAction`s like the
+//! numpad's, so REST can send them too (`camera_orbit {"degrees": …}`,
+//! `camera_pan`).
+//!
+//! Two gate fields keep these from fighting the mode's own tools, each a
+//! separate, single-purpose flag rather than `enabled` (which stops every
+//! gesture): `typing` (a text field has the keyboard: no camera key is
+//! read, numpad or arrow; the pointer gestures still work) and `alt_left`
+//! (the mode's left-button owner leaves Alt+left-drag to the camera; false
+//! while a tool owns the left button). CAD writes both every frame in
+//! SimSync from `CadInputFocus` and its active tool, so the keys (Input)
+//! read last frame's value: one frame behind a focus change.
 //!
 //! The display frame is Bevy's (Y up). RoboCAD's model frame is Z up: CAD
 //! and Robot mode hang their models from a root rotated −90° about X
@@ -38,7 +60,9 @@ mod viewport;
 mod tests;
 
 pub use apply::controls;
+pub use input::ALT_DRAG_SLOP;
 pub use orbit::{GLIDE_S, Glide, Pose};
+pub(crate) use orbit::view_aspect;
 
 use crate::app::actions::{self, Action, Spec, spec};
 use crate::app::{ViewerMode, ViewerSet};
@@ -152,6 +176,17 @@ pub struct OrbitRules {
     pub reduced_motion: bool,
     /// The shared numpad camera keys are read (CAD reads its own keymap).
     pub keys: bool,
+    /// RoboCAD's extra gestures and keys (see the module doc): Shift+middle
+    /// orbits, Alt+right snaps, Alt+left-drag orbits, the arrow keys
+    /// orbit and pan. CAD only; false keeps a mode's feel.
+    pub robocad_gestures: bool,
+    /// Alt+left-drag may orbit (with `robocad_gestures`): false while the
+    /// mode's tool owns the left button (CAD: any tool but Select, or a
+    /// catalogue interaction or command surface open).
+    pub alt_left: bool,
+    /// A text field of the mode has the keyboard: no camera key (numpad
+    /// or arrow) is read. Pointer gestures are not affected.
+    pub typing: bool,
 }
 
 impl Default for OrbitRules {
@@ -169,6 +204,9 @@ impl Default for OrbitRules {
             zoom_modifier: false,
             reduced_motion: false,
             keys: true,
+            robocad_gestures: false,
+            alt_left: true,
+            typing: false,
         }
     }
 }
@@ -325,9 +363,18 @@ pub enum CameraAction {
         at: Option<[f32; 2]>,
     },
     /// Orbit by a drag of `dx`, `dy` window pixels (as a right-drag; the
-    /// trackball when it is on).
+    /// trackball when it is on), or by `degrees` `[yaw, pitch]` (RoboCAD's
+    /// arrow keys: positive yaw turns the view as a drag to the left,
+    /// positive pitch looks further down). Absent fields are 0.
     #[serde(rename = "camera_orbit")]
-    Orbit { dx: f32, dy: f32 },
+    Orbit {
+        #[serde(default)]
+        dx: f32,
+        #[serde(default)]
+        dy: f32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        degrees: Option<[f32; 2]>,
+    },
     /// Turntable or trackball; absent toggles (RoboCAD's `view.orbit_mode`).
     #[serde(rename = "camera_orbit_mode")]
     OrbitMode {
@@ -353,11 +400,11 @@ impl Action for CameraAction {
             spec("camera_opposite", m, json!({}), "Every orbit mode: look from the opposite side (RoboCAD's opposite: yaw + 180°, pitch negated). Display only."),
             spec("camera_projection", m, json!({"orthographic": true}), "Every orbit mode: orthographic on (true) or off (false); without orthographic it toggles. The orthographic height is 2 × distance × tan(fov/2), as RoboCAD's. Display only."),
             spec("camera_fov", m, json!({"degrees": 40}), "Every orbit mode: the vertical field of view in degrees, 5–120 as RoboCAD's view.fov (refused outside). Display only."),
-            spec("camera_fit", m, json!({}), "Every orbit mode: frame the mode's content from the current heading (CAD: every drawn body; cad_fit frames one node). Display only."),
-            spec("camera_home", m, json!({}), "Every orbit mode: the mode's home framing (the spatial view's overview glides from its fixed direction; Phenomena returns to sim-app's camera). Display only."),
+            spec("camera_fit", m, json!({}), "Every orbit mode: frame the mode's content from the current heading, keeping the trackball when it is on (CAD: every drawn body, kept current as meshes arrive; cad_fit frames one node). Display only."),
+            spec("camera_home", m, json!({}), "Every orbit mode: the mode's home framing (the spatial view's overview glides from its fixed direction; Phenomena returns to sim-app's camera; CAD and Robot frame their content from the current heading, keeping the trackball). Display only."),
             spec("camera_pan", m, json!({"dx": 40, "dy": 0}), "Every orbit mode: pan as a middle-drag of dx, dy window pixels. Display only."),
             spec("camera_zoom", m, json!({"factor": 0.8, "at": [640, 360]}), "Every orbit mode: zoom by factor (< 1 closer; within the mode's limits), toward window pixel at when given (the point under it stays under it), else toward the focus. Display only."),
-            spec("camera_orbit", m, json!({"dx": 30, "dy": 0}), "Every orbit mode: orbit as a right-drag of dx, dy window pixels (turntable, or the trackball when it is on). Display only."),
+            spec("camera_orbit", m, json!({"dx": 30, "dy": 0}), "Every orbit mode: orbit as a right-drag of dx, dy window pixels (turntable, or the trackball when it is on), or by degrees [yaw, pitch] instead (RoboCAD's arrow keys: [10, 0] is the right arrow; not both). Display only."),
             spec("camera_orbit_mode", m, json!({"mode": "trackball"}), "Every orbit mode: turntable or trackball (RoboCAD's orbit modes); without mode it toggles. A named view returns to the turntable. Display only."),
             spec("camera_spin", m, json!({"rate": 0.2}), "Every orbit mode: circle about the focus at rate rad/s (0 stops); any drag or zoom stops it. Display only."),
             spec("camera_set", m, json!({"state": {"focus": [0, 0, 0], "radius": 0.5, "yaw": 0.7, "pitch": 0.45, "orthographic": false, "fov_deg": 40}}), "Every orbit mode: set the whole camera (display frame, Y up, metres and radians; fov_deg degrees; trackball [x, y, z, w] or absent; seconds to glide, absent to cut). CAD's saved views restore through this. Display only."),
@@ -385,7 +432,9 @@ pub fn is_camera_control(command: &sim_api::Command) -> bool {
 
 /// The camera as JSON (`camera_state`, and the modes' `state`).
 pub fn state_json(orbit: &Orbit, area: Option<&ViewArea>) -> Value {
-    let (ry, rp) = display_to_robocad(orbit.yaw, orbit.pitch);
+    // The heading the view has now (the trackball's, when it is on).
+    let (ty, tp) = orbit.turntable();
+    let (ry, rp) = display_to_robocad(ty, tp);
     let mut out = Map::new();
     out.insert("focus".into(), json!(orbit.focus.to_array()));
     out.insert("radius".into(), json!(orbit.radius));

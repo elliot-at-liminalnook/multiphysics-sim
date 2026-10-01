@@ -10,7 +10,8 @@
 //! - [`sync`]: the connect job (a self-started service is a
 //!   `jobs::ChildProcess`), the poll `RunThread` and every result (JobResults).
 //! - [`mesh`]: tessellations fetched and built on jobs, drawn and picked.
-//! - [`scene`]: cameras, light, the Z-up root, orbit and framing.
+//! - [`scene`]: cameras (on the shared `crate::camera`), light, the Z-up
+//!   root, the framed bounds and the camera's gesture gates.
 //! - [`actions`]: [`CadAction`] and its one handler (Actions), `system_ui`,
 //!   `cad_state` and the REST snapshot (Present).
 //! - [`keys`]: RoboCAD's shortcuts (Input).
@@ -138,8 +139,8 @@ impl Plugin for CadPlugin {
                     // After the name field, so a key that opens or ends it this frame is its own (`CadInputFocus`).
                     keys::keys.after(crate::app::actions::serve).after(panel::name_entry).in_set(ViewerSet::Input),
                     // The shared camera (`crate::camera`) navigates, sets the viewport and places
-                    // the view in its sets: a fit's home request goes in before the place step,
-                    // and the snapshot is taken after it.
+                    // the view in its sets: the bounds, a node fit and the gesture gates go in
+                    // before the place step (`scene::fit`), and the snapshot is taken after it.
                     (mesh::sync, mesh::highlight, scene::fit).chain().before(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
                     view::update.after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
                 )

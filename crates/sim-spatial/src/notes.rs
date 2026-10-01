@@ -101,8 +101,9 @@ pub(super) fn api(
                     physical: Some(notes::PhysicalView {
                         focus: camera.focus.to_array(),
                         radius: camera.radius,
-                        yaw: camera.yaw,
-                        pitch: camera.pitch,
+                        // The heading drawn (the trackball's, when it is on).
+                        yaw: camera.turntable().0,
+                        pitch: camera.turntable().1,
                         exploded: scene.state.exploded,
                         connections: scene.state.connections,
                         hidden: scene.state.hidden.clone(),

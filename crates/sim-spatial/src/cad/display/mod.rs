@@ -10,6 +10,8 @@
 //! - `draw`: display modes (materials), display edges, the grid, the build
 //!   plate, the section plane and outlines, render lights, high contrast.
 //! - `ui`: the display toolbar and the view cube (kit widgets).
+//! - `entry`: the toolbar's section offset field (the Section tool's Tab
+//!   offset), and why R, Tab and the plane drag are not bound natively.
 //!
 //! **Decisions** (native-viewer.md "CAD views and export"):
 //! - **Grid**: drawn as retained gizmo lines as RoboCAD's `_draw_grid` does
@@ -38,6 +40,7 @@ use sim_runtime::cad_client::{SectionCurves, SectionQuery};
 use std::sync::Arc;
 
 mod draw;
+pub(in crate::cad) mod entry;
 pub(in crate::cad) mod section;
 #[cfg(test)]
 mod tests;
@@ -490,17 +493,31 @@ pub(in crate::cad) fn build(app: &mut App) {
         commands.insert_resource(section::ExactJob::default());
         commands.insert_resource(draw::DisplayMaterials::default());
         commands.insert_resource(draw::DisplayEdges::default());
+        commands.insert_resource(entry::SectionEntry::default());
     })
     .add_systems(OnExit(ModeScope::Cad), |mut commands: Commands| {
         commands.remove_resource::<section::Derived>();
         commands.remove_resource::<section::ExactJob>();
         commands.remove_resource::<draw::DisplayMaterials>();
         commands.remove_resource::<draw::DisplayEdges>();
+        commands.remove_resource::<entry::SectionEntry>();
     })
     .add_systems(
         Update,
         (
             ui::cube_press.in_set(ViewerSet::Input),
+            // As the saved views panel's fields: after the name field and the
+            // inspector's editors (which reset `CadInputFocus`), before the
+            // numeric bar's Tab, the chord gate and every CAD key reader, which
+            // honour the focus set here.
+            entry::input
+                .after(crate::app::actions::serve)
+                .after(crate::cad::panel::name_entry)
+                .after(crate::cad::inspector::editor_entry)
+                .before(crate::cad::numeric::entry)
+                .before(crate::cad::keys::gate)
+                .before(crate::cad::keys::keys)
+                .in_set(ViewerSet::Input),
             section::exact_jobs.in_set(ViewerSet::JobResults),
             // After the bodies' meshes and materials are set for this frame (`mesh::sync`, `mesh::highlight`).
             (section::preview, draw::materials, draw::edges_sync).chain().after(crate::cad::mesh::highlight).in_set(ViewerSet::SimSync),
@@ -514,14 +531,20 @@ pub(in crate::cad) fn build(app: &mut App) {
 pub(in crate::cad) fn specs() -> Vec<Spec> {
     vec![
         spec("cad_display", CAD, json!({"mode": "wireframe"}), "CAD mode: the display state, display only (never a document edit; RoboCAD's own window is unchanged): mode (shaded | shaded_edges | wireframe | xray | matcap | render; RoboCAD's view.mode.*), next (RoboCAD's view.mode_next, Z: the next mode in that order, wrapping), grid (RoboCAD's 10 mm grid on XY, ±200 mm, view.grid), build_plate (RoboCAD's 220 × 220 mm plate with overhang shading, view.build_plate), high_contrast (the 3D view's light background, grid and edge colours, view.high_contrast), view_cube, comment_pins (true or false each), or toggle (grid | build_plate | high_contrast | view_cube | comment_pins: flip it). Settings given together apply together; mode with next, or toggle with the same setting, is refused. Answers the display state (also cad_state.display)."),
-        spec("cad_section", CAD, json!({"axis": "z", "offset": 5.0}), "CAD mode: the section tool, display only (never a document edit). Nothing given toggles it (RoboCAD's view.section, Ctrl+Shift+X; turned on without a plane it starts on XZ through the drawn bodies' centre, as RoboCAD's Section tool). plane {origin, normal, x_axis} (mm, RoboCAD's model frame; unit, perpendicular axes, as a saved view's) or axis x | y | z with offset mm (RoboCAD's {axis, offset}: Plane.yz, xz or xy at that offset) sets the plane; offset alone moves the current plane along its normal (the Section tool's Tab); rotate turns it 90° about Z (the tool's R); enabled true or false. The preview cuts the drawn triangles (clipped copies built off the UI thread; the side the normal points to is removed, as RoboCAD's clip plane) and draws their cut outline. exact: a node id whose exact B-rep section is read from RoboCAD's GET /nodes/{id}/section on a job, cached by (node, RoboCAD revision, plane) and drawn only while all three are current; RoboCAD's route takes plane=xy|xz|yz through the origin or a plane node id, so an exact section is refused, naming why, on any other plane. Answers the display state (cad_state.display.section)."),
+        spec("cad_section", CAD, json!({"axis": "z", "offset": 5.0}), "CAD mode: the section tool, display only (never a document edit). Nothing given toggles it (RoboCAD's view.section, Ctrl+Shift+X; turned on without a plane it starts on XZ through the drawn bodies' centre, as RoboCAD's Section tool). plane {origin, normal, x_axis} (mm, RoboCAD's model frame; unit, perpendicular axes, as a saved view's) or axis x | y | z with offset mm (RoboCAD's {axis, offset}: Plane.yz, xz or xy at that offset) sets the plane; offset alone moves the current plane along its normal (the Section tool's Tab; the display toolbar's offset field sends it); rotate turns it 90° about Z (the tool's R); enabled true or false. The preview cuts the drawn triangles (clipped copies built off the UI thread; the side the normal points to is removed, as RoboCAD's clip plane) and draws their cut outline. exact: a node id whose exact B-rep section is read from RoboCAD's GET /nodes/{id}/section on a job, cached by (node, RoboCAD revision, plane) and drawn only while all three are current; RoboCAD's route takes plane=xy|xz|yz through the origin or a plane node id, so an exact section is refused, naming why, on any other plane. Answers the display state (cad_state.display.section)."),
     ]
 }
 
 /// This part's `system_ui` controls: (id, label, action, ready).
 pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    let ready: Result<(), String> = if cx.display.is_some() { Ok(()) } else { Err("CAD mode's display state belongs to its 3D view, and this window has none".into()) };
-    let shown = cx.display.as_deref();
+    controls_of(cx.doc, cx.display.as_deref(), &context(cx))
+}
+
+/// The controls for `doc`, the display state (None: no 3D view) and what
+/// `cad_section` reads (`context`): the toolbar's buttons write the same
+/// actions.
+pub(in crate::cad) fn controls_of(doc: &crate::cad::document::CadDocument, shown: Option<&CadDisplay>, context: &SectionContext) -> Vec<(String, String, CadAction, Result<(), String>)> {
+    let ready: Result<(), String> = if shown.is_some() { Ok(()) } else { Err("CAD mode's display state belongs to its 3D view, and this window has none".into()) };
     let display = |args: DisplayArgs| CadAction::CadDisplay(args);
     let mut out = Vec::new();
     for m in DisplayMode::ALL {
@@ -535,7 +558,7 @@ pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Resul
     let section = |args: SectionArgs| CadAction::CadSection(args);
     let on = shown.is_some_and(|d| d.section.enabled);
     out.push(("cad:section:toggle".into(), format!("Section analysis ({})", if on { "on" } else { "off" }), section(SectionArgs::default()), ready.clone()));
-    let bounds = cx.meshes.as_deref().and_then(section::model_bounds);
+    let bounds = context.bounds;
     for axis in SectionAxis::ALL {
         // Through the drawn bodies' centre along the axis (0 with nothing drawn).
         let offset = bounds.map_or(0.0, |(lo, hi)| (lo[axis.index()] + hi[axis.index()]) / 2.0);
@@ -544,7 +567,7 @@ pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Resul
     let has_plane = shown.is_some_and(|d| d.section.plane.is_some());
     let need_plane = |r: &Result<(), String>| r.clone().and_then(|()| if has_plane { Ok(()) } else { Err("no section plane yet: turn the section on first".to_string()) });
     out.push(("cad:section:rotate".into(), "Rotate the section plane 90° about Z".into(), section(SectionArgs { rotate: true, ..default() }), need_plane(&ready)));
-    let first = cx.doc.selected_nodes().into_iter().next();
+    let first = doc.selected_nodes().into_iter().next();
     let exact_ready = need_plane(&ready).and_then(|()| {
         let d = shown.expect("ready implies a display");
         if !d.section.enabled {
@@ -553,15 +576,14 @@ pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Resul
         if first.is_none() {
             return Err("select the node to section".to_string());
         }
-        if !cx.doc.connected() {
+        if !doc.connected() {
             return Err("not connected to RoboCAD".to_string());
         }
-        let context = context(cx);
-        exact_query(&d.section.plane.expect("checked"), &context).map(|_| ())
+        exact_query(&d.section.plane.expect("checked"), context).map(|_| ())
     });
     let node = first.clone().unwrap_or_default();
     let label = match &first {
-        Some(id) => format!("Exact section of {}", cx.doc.node_name(id)),
+        Some(id) => format!("Exact section of {}", doc.node_name(id)),
         None => "Exact section of the selected node".into(),
     };
     out.push(("cad:section:exact".into(), label, section(SectionArgs { exact: Some(node), ..default() }), exact_ready));

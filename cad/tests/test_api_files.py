@@ -1,7 +1,8 @@
 """The file-workflow gap routes the native viewer's cad-views-export uses:
 POST /new (an empty .rcad written beside the open document, which is not
-touched), POST /save/thumbnail (/save with the desktop's thumbnail, drawn
-headless by the snapshot renderer) and GET /import/units (the mesh unit
+touched; created exclusively), POST /save/thumbnail (/save with the
+desktop's thumbnail, drawn headless by the snapshot renderer from each
+node's own tessellation) and GET /import/units (the mesh unit
 prompt's guess). Headless, over HTTP."""
 
 import zipfile
@@ -64,6 +65,18 @@ def test_new_refuses_an_existing_file_and_other_names(served, tmp_path):
     assert "could not write" in _error(lambda: client.post("/new", {"path": str(tmp_path / "missing" / "a.rcad")}), 422)
 
 
+def test_new_removes_its_file_when_the_save_fails(served, tmp_path, monkeypatch):
+    _, client, _ = served
+    target = tmp_path / "broken.rcad"
+
+    def fail(self, *args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(Document, "save", fail)
+    assert "could not write" in _error(lambda: client.post("/new", {"path": str(target)}), 422)
+    assert not target.exists()
+
+
 def test_save_thumbnail_headless_writes_a_png_thumbnail(served, tmp_path):
     doc, client, _ = served
     target = tmp_path / "with-thumb.rcad"
@@ -78,6 +91,13 @@ def test_save_thumbnail_headless_writes_a_png_thumbnail(served, tmp_path):
     assert health["path"] == str(target) and health["dirty"] is False
     # Without a path, the document's own path (the plain /save rule).
     assert client.post("/save/thumbnail", {})["saved"] == str(target)
+
+
+def test_save_thumbnail_headless_reuses_the_nodes_own_tessellation(served, tmp_path):
+    doc, client, box = served
+    client.post("/save/thumbnail", {"path": str(tmp_path / "cheap.rcad")})
+    tolerances = {tol for (nid, tol) in doc.mesh_cache if nid == box}
+    assert tolerances == {doc.nodes[box].tessellation_tolerance}, tolerances
 
 
 def test_save_thumbnail_needs_a_path_for_an_untitled_document(tmp_path):

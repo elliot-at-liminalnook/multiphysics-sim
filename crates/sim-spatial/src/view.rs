@@ -22,11 +22,12 @@ pub(crate) fn aspect(scene: &SpatialScene, window: &Window) -> f32 {
     }
 }
 
-/// Glide to frame one component (or instance path) from the current direction.
+/// Glide to frame one component (or instance path) from the current
+/// direction (the trackball's rotation stays when it is on).
 pub(crate) fn zoom_to(scene: &SpatialScene, orbit: &mut Orbit, window: &Window, focus: Option<&str>, zoom: f32, seconds: f32) {
     let (yaw, pitch) = orbit.heading();
     let pose = frame_pose(scene, focus, zoom, yaw, pitch, aspect(scene, window));
-    orbit.glide_to(pose, seconds);
+    orbit.glide_frame(pose.focus, pose.radius, seconds);
 }
 
 /// The second camera of the picture-in-picture close-up.
@@ -239,7 +240,10 @@ pub(crate) fn draw_ghost(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut label
 }
 
 /// Split: a copy of the assembly posed by the companion run, seen by a
-/// second camera in the right half of the view, on the same orbit.
+/// second camera in the right half of the view, on the same orbit and with
+/// the same projection (orthographic or perspective, field of view; copied
+/// when the main one changes or the split opens; Bevy then fits its aspect
+/// to the right half).
 #[allow(clippy::type_complexity)]
 pub(crate) fn split(
     mut commands: Commands,
@@ -247,14 +251,14 @@ pub(crate) fn split(
     window: Single<&Window>,
     originals: Query<(&Part, &Mesh3d, &MeshMaterial3d<StandardMaterial>), Without<CompanionPart>>,
     mut copies: Query<(Entity, &CompanionPart, &mut Transform), Without<SplitCamera>>,
-    main: Single<(&mut Camera, &Orbit, &Transform), (Without<SplitCamera>, Without<InsetCamera>, Without<CompanionPart>)>,
-    mut split: Single<(&mut Camera, &mut Transform), (With<SplitCamera>, Without<Orbit>, Without<CompanionPart>)>,
+    main: Single<(&mut Camera, &Orbit, &Transform, Ref<Projection>), (Without<SplitCamera>, Without<InsetCamera>, Without<CompanionPart>)>,
+    mut split: Single<(&mut Camera, &mut Transform, &mut Projection), (With<SplitCamera>, Without<Orbit>, Without<CompanionPart>)>,
     mut labels: Query<(&mut Node, &mut Visibility, &Children, &SplitLabel)>,
     mut texts: Query<&mut Text>,
 ) {
     let active = scene.companion.as_ref().filter(|c| !c.ghost);
-    let (mut main_camera, _orbit, main_transform) = main.into_inner();
-    let (camera, transform) = &mut *split;
+    let (mut main_camera, _orbit, main_transform, main_projection) = main.into_inner();
+    let (camera, transform, projection) = &mut *split;
     let Some(c) = active else {
         for (e, _, _) in &copies {
             commands.entity(e).despawn();
@@ -288,9 +292,14 @@ pub(crate) fn split(
         main_camera.viewport = Some(left.clone());
         main_camera.sub_camera_view = None;
     }
+    let opening = !camera.is_active;
     camera.is_active = true;
     camera.viewport = Some(right.clone());
     **transform = Transform::from_translation(main_transform.translation + offset).with_rotation(main_transform.rotation);
+    // `Projection` has no PartialEq: copied on a change rather than compared.
+    if opening || main_projection.is_changed() {
+        **projection = Projection::clone(&main_projection);
+    }
     let scale = window.scale_factor();
     for (mut node, mut vis, children, right_side) in &mut labels {
         *vis = Visibility::Inherited;

@@ -12,8 +12,8 @@
 //! degrees 5–120, one decimal) while it is open, also with the views hidden.
 //!
 //! Typing follows the inspector editors' pattern (`inspector::editors`): a
-//! press on a field gives it the keyboard (ending the name field's and the
-//! numeric bar's), Enter submits (a refusal stays under the field), Escape
+//! press on a field gives it the keyboard (ending the name field's, the
+//! numeric bar's and the display toolbar's section offset), Enter submits (a refusal stays under the field), Escape
 //! or a press elsewhere ends it; `CadInputFocus` is set while a field has
 //! the keyboard and in the frame it ends.
 use super::{CadViews, Typing, ViewField, ViewsArgs, ViewsOp, controls_of, convert};
@@ -103,6 +103,7 @@ pub(super) fn input(
     name: Option<ResMut<NameDraft>>,
     mut out: MessageWriter<Act<CadAction>>,
     mut camera_out: Option<ResMut<Messages<Act<CameraAction>>>>,
+    section_offset: Option<ResMut<crate::cad::display::entry::SectionEntry>>,
 ) {
     let (Some(mut views), Some(mut doc)) = (views, doc) else {
         events.clear();
@@ -139,6 +140,12 @@ pub(super) fn input(
             doc.tool_state.numeric.focus = None;
             doc.tool_state.numeric.began = None;
         }
+        // And the display toolbar's section offset field.
+        if let Some(mut offset) = section_offset
+            && offset.typing.is_some()
+        {
+            offset.typing = None;
+        }
     } else if typing.is_some() && !on_field && mouse.as_ref().is_some_and(|m| m.just_pressed(MouseButton::Left)) {
         typing = None;
         ended = true;
@@ -167,7 +174,7 @@ pub(super) fn input(
                                 }
                                 None => {}
                             }
-                            // The new view's name stays until the save is sent (`views::handle`).
+                            // The new view's name stays until RoboCAD answers the save, cleared only on success (`views::settle_save`).
                             typing = None;
                             ended = true;
                         }

@@ -1,14 +1,16 @@
 //! The file workflows without a window: RoboCAD's export formats and their
 //! settings pinned against io/exporters.py and ui/widgets.py's
 //! `ExportDialog`, one validation for the form and REST, the import, render
-//! and path rules, the unsaved-edit rule, the path form's drafts and the
-//! action it writes, the listing, and every control and command action
+//! and path rules, new and open under `cad_open`'s rule, the mesh unit
+//! guess gating OK, the path form's drafts and the action it writes, the
+//! listing, the kept REST answers, and every control and command action
 //! round-tripping through its REST form.
-use super::form::{FileForm, Kind};
+use super::form::{self, FileForm, Kind};
+use super::jobs;
 use super::formats::{self, Context, FORMAT_IDS, FORMATS};
 use super::*;
 use crate::app::actions::{self, Action};
-use crate::cad::document::Connection;
+use crate::cad::document::{Connection, Edit, EditDone};
 use crate::cad::rest_form::rest_form;
 use sim_runtime::cad_client::{CadClient, Health};
 
@@ -116,19 +118,40 @@ fn document(dirty: bool) -> CadDocument {
 }
 
 #[test]
-fn new_and_open_follow_robocads_unsaved_edit_prompt() {
-    let clean = document(false);
-    assert_eq!(unsaved_refusal(&clean, "opening /a.rcad", false), None);
-    let dirty = document(true);
-    let why = unsaved_refusal(&dirty, "opening /a.rcad", false).unwrap();
-    assert!(why.starts_with("Not opening /a.rcad: turntable.rcad has unsaved edits") && why.contains("discard: true"), "{why}");
-    assert_eq!(unsaved_refusal(&dirty, "opening /a.rcad", true), None);
-    // Unknown (not connected) is refused too, naming the connection.
-    let mut lost = document(false);
-    lost.connection = Connection::Lost { error: "RoboCAD GET /: connect: refused".into(), since: std::time::Instant::now() };
-    let why = unsaved_refusal(&lost, "creating /b.rcad", false).unwrap();
-    assert!(why.contains("can't be confirmed"), "{why}");
-    assert_eq!(start_dir(&clean), ("/work/".to_string(), "turntable".to_string()));
+fn new_and_open_use_cad_opens_rule_and_never_discard() {
+    let none = BTreeMap::new();
+    let open = FileForm::new(Kind::File(FileOp::Open), "/work/", "turntable", None, &Context::default(), &none).unwrap();
+    // A clean document: nothing to say.
+    assert_eq!(form::open_rule(&open, &document(false)), None);
+    // An attached RoboCAD with unsaved edits keeps them: a note, not a refusal.
+    let note = form::open_rule(&open, &document(true)).unwrap().unwrap();
+    assert!(note.contains("keeps the unsaved edits to turntable.rcad"), "{note}");
+    // An edit in flight: cad_open's refusal, shown before OK.
+    let mut busy = document(false);
+    busy.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
+    let why = form::open_rule(&open, &busy).unwrap().unwrap_err();
+    assert!(why.contains("a CAD edit is in flight: Patch Bracket: visible"), "{why}");
+    // Other forms say nothing; the REST form has no discard field.
+    let save = FileForm::new(Kind::File(FileOp::SaveAs), "/work/", "turntable", None, &Context::default(), &none).unwrap();
+    assert_eq!(form::open_rule(&save, &busy), None);
+    let e = <CadAction as Action>::parse(&sim_api::Command { command: "cad_file".into(), args: json!({"op": "open", "path": "/a.rcad", "discard": true}) }).unwrap_err();
+    assert!(e.contains("discard"), "{e}");
+    assert_eq!(start_dir(&document(false)), ("/work/".to_string(), "turntable".to_string()));
+}
+
+#[test]
+fn waited_answers_are_kept_by_count_not_by_distance() {
+    let mut files = CadFiles::default();
+    let open = jobs::Then::Open { path: "/a.rcad".into() };
+    jobs::keep_result(&mut files, 3, (Ok(json!({"created": "/a.rcad"})), open.clone()));
+    // Far newer jobs do not push out an answer whose caller still polls.
+    jobs::keep_result(&mut files, 1_000, (Ok(Value::Null), jobs::Then::Nothing));
+    assert_eq!(files.results.get(&3), Some(&(Ok(json!({"created": "/a.rcad"})), open)));
+    for seq in 2_000..2_000 + jobs::KEPT_RESULTS as u64 {
+        jobs::keep_result(&mut files, seq, (Ok(Value::Null), jobs::Then::Nothing));
+    }
+    assert_eq!(files.results.len(), jobs::KEPT_RESULTS);
+    assert!(!files.results.contains_key(&3) && !files.results.contains_key(&1_000), "the oldest go first");
 }
 
 #[test]
@@ -145,17 +168,17 @@ fn the_export_form_starts_from_the_document_and_writes_the_rest_action() {
     form.set("format", "step".into());
     assert_eq!(form.text("path"), "/work/turntable.step");
     assert_eq!((form.text("step.schema"), form.text("step.names")), ("AP242", "false"));
-    let CadAction::CadExport(args) = form.action(false).unwrap() else { panic!("not an export") };
+    let CadAction::CadExport(args) = form.action().unwrap() else { panic!("not an export") };
     assert_eq!(args, ExportArgs { format: Some("step".into()), path: Some("/work/turntable.step".into()), settings: json!({"schema": "AP242", "names": false, "colors": true}).as_object().unwrap().clone(), ids: None });
     // The drawing: four view checkboxes and the section (off while the tool is).
     form.set("format", "drawing".into());
     form.set("drawing.view.iso", "false".into());
-    let CadAction::CadExport(args) = form.action(false).unwrap() else { panic!("not an export") };
+    let CadAction::CadExport(args) = form.action().unwrap() else { panic!("not an export") };
     assert_eq!(Value::Object(args.settings), json!({"views": ["front", "top", "right"], "title": "turntable.rcad", "section": false}));
     // A bad number keeps the form open with the reason.
     form.set("format", "stl".into());
     form.set("stl.tolerance", "abc".into());
-    assert!(form.action(false).unwrap_err().starts_with("Chord tolerance (mm)"));
+    assert!(form.action().unwrap_err().starts_with("Chord tolerance (mm)"));
 }
 
 #[test]
@@ -164,15 +187,34 @@ fn the_file_forms_rows_units_guess_and_listing_picks() {
     let none = BTreeMap::new();
     let mut import = FileForm::new(Kind::File(FileOp::Import), "/data/", "turntable", None, &cx, &none).unwrap();
     assert_eq!(import.rows().len(), 1);
+    assert_eq!(import.ask_guess(), None, "a directory names no mesh");
     import.pick("/data", "scan.stl", false);
     assert_eq!(import.text("path"), "/data/scan.stl");
     assert_eq!(import.rows().iter().map(|r| r.name.as_str()).collect::<Vec<_>>(), ["path", "unit"]);
+    // A mesh path asks RoboCAD's guess once; until it lands OK is refused by name, never mm by default.
+    assert_eq!(import.ask_guess().as_deref(), Some("/data/scan.stl"));
+    assert_eq!(import.ask_guess(), None, "asked once per path");
+    assert!(import.action().unwrap_err().starts_with("Choose the units of scan.stl (mm, cm, m, in, ft)"));
+    assert!(!import.json()["ok_ready"].as_bool().unwrap());
+    import.guessed("/elsewhere/scan.stl", &json!({"guess": "m"}));
+    assert_eq!(import.text("unit"), "", "a guess for another path is ignored");
     import.guessed("/data/scan.stl", &json!({"guess": "in", "extent": 10.0}));
     assert_eq!(import.text("unit"), "in");
+    assert!(import.json()["ok_ready"].as_bool().unwrap());
     import.set("unit", "cm".into());
     import.guessed("/data/scan.stl", &json!({"guess": "m"}));
     assert_eq!(import.text("unit"), "cm", "a unit chosen by hand is kept");
-    assert_eq!(import.action(false).unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/scan.stl".into()), unit: Some("cm".into()), discard: false }));
+    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/scan.stl".into()), unit: Some("cm".into()) }));
+    // Another mesh starts over: its own guess, or a unit chosen for it.
+    import.set("path", "/data/part.obj".into());
+    assert_eq!(import.ask_guess().as_deref(), Some("/data/part.obj"));
+    assert!(import.action().is_err());
+    import.set("unit", "mm".into());
+    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/part.obj".into()), unit: Some("mm".into()) }));
+    // A STEP file takes no unit and needs no guess.
+    import.set("path", "/data/part.step".into());
+    assert_eq!(import.ask_guess(), None);
+    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/part.step".into()), unit: None }));
     let mut save = FileForm::new(Kind::File(FileOp::SaveAs), "/work/", "turntable", None, &cx, &none).unwrap();
     assert_eq!(save.text("path"), "/work/turntable.rcad");
     save.pick("/work", "old", true);
@@ -181,10 +223,10 @@ fn the_file_forms_rows_units_guess_and_listing_picks() {
     save.up();
     assert_eq!(save.text("path"), "/turntable.rcad");
     let open = FileForm::new(Kind::File(FileOp::Open), "/work/", "turntable", None, &cx, &none).unwrap();
-    assert!(open.action(false).unwrap_err().contains("file name"));
+    assert!(open.action().unwrap_err().contains("file name"));
     assert_eq!(open.listing_key().unwrap().1, "/work/");
     let render = FileForm::new(Kind::Render, "/work/", "turntable", None, &cx, &none).unwrap();
-    let CadAction::CadRender(r) = render.action(false).unwrap() else { panic!("not a render") };
+    let CadAction::CadRender(r) = render.action().unwrap() else { panic!("not a render") };
     assert_eq!((r.path.as_deref(), r.view.as_deref(), r.w, r.h, r.edges, r.labels), (Some("/work/turntable-iso.png"), Some("iso"), Some(1200), Some(900), Some(true), Some(false)));
 }
 
@@ -217,7 +259,7 @@ fn controls_and_command_actions_round_trip_through_rest() {
         actions_.push(command_action(id).unwrap_or_else(|| panic!("{id}")));
     }
     assert_eq!(command_action("file.quit"), None);
-    actions_.push(CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/a.stl".into()), unit: Some("in".into()), discard: true }));
+    actions_.push(CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/a.stl".into()), unit: Some("in".into()) }));
     actions_.push(CadAction::CadExport(ExportArgs { format: Some("stl".into()), path: Some("/a.stl".into()), settings: json!({"binary": false}).as_object().unwrap().clone(), ids: Some(vec!["n1".into()]) }));
     actions_.push(CadAction::CadRender(RenderArgs { path: Some("/a.png".into()), w: Some(640), tolerance: Some(0.1), labels: Some(true), ..Default::default() }));
     for action in actions_ {

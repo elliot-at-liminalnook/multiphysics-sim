@@ -5,15 +5,16 @@
 //! `selection::handle` applies.
 //!
 //! - **When**: CAD mode, the Select tool, the pointer over the 3D view and
-//!   not over a UI node (`HoverMap`, as the orbit's `over_ui`), no text
+//!   not over a UI node (`HoverMap`, `scene::over_ui`), no text
 //!   field focused (`CadInputFocus`). While the Alt menu is open a press in
 //!   the 3D view only closes it (as a Qt popup) and nothing is hovered.
 //! - **Click** (press and release within 6 px, RoboCAD's Manhattan
 //!   distance): body mode picks `[id, "body", 0]`; face and point modes
 //!   cast Bevy's `MeshRayCast` on the drawn bodies (`CadBody`) and map the
 //!   hit triangle to RoboCAD's face (`CadMeshes::face_at` at the shown
-//!   revision: Bevy's triangle index is RoboCAD's; nothing while the mesh
-//!   lags) as `[id, "face", f]` / `[id, "point", f]`; a mesh
+//!   revision, read from the mesh the body shows: Bevy's triangle index is
+//!   RoboCAD's, or the section's clipped copy's own; nothing while the mesh
+//!   or that copy lags) as `[id, "face", f]` / `[id, "point", f]`; a mesh
 //!   node is always a body item. Edge and vertex modes take the nearest
 //!   sampled edge polyline or vertex within 6 px on screen that is not
 //!   behind the first surface along the cursor ray. Shift extends, Ctrl
@@ -93,6 +94,10 @@ pub(super) struct PickState {
     press: Option<Vec2>,
     last: Vec2,
     dragging: bool,
+    /// The press held Alt: a drag past the slop is RoboCAD's Alt+left orbit
+    /// (`camera::input`, `OrbitRules::robocad_gestures`), never a box
+    /// select; an Alt click still opens the candidates menu.
+    alt_drag: bool,
     /// The rubber band's corners while box dragging (`overlay` draws it).
     pub(super) band: Option<(Vec2, Vec2)>,
     /// Where the Alt menu opens (the click's position).
@@ -388,6 +393,7 @@ fn pointer(
         } else {
             state.press = cursor;
             state.dragging = false;
+            state.alt_drag = alt;
         }
     }
     if let Some(start) = state.press {
@@ -395,7 +401,7 @@ fn pointer(
         if !state.dragging && (at - start).abs().element_sum() > CLICK_SLOP {
             state.dragging = true;
         }
-        if state.dragging && buttons.pressed(MouseButton::Left) && state.band != Some((start, at)) {
+        if state.dragging && !state.alt_drag && buttons.pressed(MouseButton::Left) && state.band != Some((start, at)) {
             state.band = Some((start, at));
         }
         if buttons.just_released(MouseButton::Left) || !buttons.pressed(MouseButton::Left) {
@@ -403,7 +409,7 @@ fn pointer(
             state.band = None;
             if std::mem::take(&mut state.dragging) {
                 // RoboCAD's pick-then-form tools pick on press only: no box select.
-                if pick_kind.is_none() {
+                if pick_kind.is_none() && !state.alt_drag {
                     let rect = [start.x.min(at.x), start.y.min(at.y), start.x.max(at.x), start.y.max(at.y)];
                     out.write(Act::ui(CadAction::CadBoxSelect { rect, extend: shift || ctrl }));
                 }

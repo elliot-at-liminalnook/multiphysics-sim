@@ -205,3 +205,41 @@ fn cad_views_example_parses_and_unknown_fields_are_refused() {
     let default = <CadAction as Action>::parse(&sim_api::Command { command: "cad_views".into(), args: serde_json::json!({}) }).unwrap();
     assert_eq!(default, CadAction::CadViews(ViewsArgs::default()), "op defaults to list");
 }
+
+/// A save keeps the typed name until RoboCAD answers: kept while the edit
+/// is in flight and after a refusal, cleared once it succeeded.
+#[test]
+fn the_typed_name_is_cleared_only_when_the_save_succeeds() {
+    use crate::cad::document::{Edit, EditDone};
+    let mut doc = document();
+    let mut views = CadViews { new_name: "Top detail".into(), ..CadViews::default() };
+    let in_flight = |doc: &mut CadDocument| {
+        doc.edit_seq += 1;
+        doc.edit = Some(Edit { label: "Save view Top detail".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
+        doc.edit_seq
+    };
+    let seq = in_flight(&mut doc);
+    views.saving = Some((doc.generation, seq, "Top detail".into()));
+    super::settle_save(&mut views, &doc);
+    assert_eq!((views.new_name.as_str(), views.saving.is_some()), ("Top detail", true), "in flight: kept");
+    // RoboCAD refused it (finish_edit set the status): the name stays for another try.
+    doc.edit = None;
+    doc.status = Some(Err("RoboCAD answered 422: name taken".into()));
+    super::settle_save(&mut views, &doc);
+    assert_eq!((views.new_name.as_str(), views.saving.is_none()), ("Top detail", true));
+    assert!(views.feedback.as_deref().is_some_and(|f| f.contains("422")));
+    // Saved: cleared.
+    let seq = in_flight(&mut doc);
+    views.saving = Some((doc.generation, seq, "Top detail".into()));
+    doc.edit = None;
+    doc.status = Some(Ok("Saved view Top detail".into()));
+    super::settle_save(&mut views, &doc);
+    assert!(views.new_name.is_empty() && views.saving.is_none());
+    // A name retyped meanwhile is the user's newer one and is kept.
+    views.new_name = "Side".into();
+    let seq = in_flight(&mut doc);
+    views.saving = Some((doc.generation, seq, "Top detail".into()));
+    doc.edit = None;
+    super::settle_save(&mut views, &doc);
+    assert_eq!(views.new_name, "Side");
+}

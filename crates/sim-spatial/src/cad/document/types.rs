@@ -67,9 +67,11 @@ pub struct Edit {
     /// the node RoboCAD answers becomes the active plane
     /// (`ops::OpsState::plane_created`; RoboCAD's `set_active_plane(pid)`).
     pub activates_plane: bool,
-    /// A Save As (cad-views-export, `files`): once it succeeds, a
+    /// A save to a path (File > Save As…, `cad_save {path}`; `files::save`
+    /// sets it on the edit it started, by `edit_seq`): once it succeeds, a
     /// self-started document's target becomes the saved file, so the mode
-    /// reopens it (RoboCAD's service now edits that file). None otherwise.
+    /// reopens it (RoboCAD's `Document.save` made it the service's file).
+    /// An attached service keeps its URL. None otherwise.
     pub retarget: Option<std::path::PathBuf>,
 }
 

@@ -182,7 +182,8 @@ pub enum CadAction {
     CadDelete { id: String },
     CadUndo,
     CadRedo,
-    /// `POST /save` (RoboCAD writes its own file; `path` saves as).
+    /// `POST /save/thumbnail` (RoboCAD writes its own file with the
+    /// desktop's thumbnail; `path`, absolute, saves as: `files::save`).
     CadSave {
         #[serde(default)]
         path: Option<String>,
@@ -271,8 +272,8 @@ pub enum CadAction {
     /// Saved views through RoboCAD's `/views` in its view-state schema
     /// (list, save, rename, replace, delete, restore onto the native camera).
     CadViews(super::views::ViewsArgs),
-    /// New, open, save as and import (with units), with RoboCAD's
-    /// unsaved-edit rule (`files`).
+    /// New, open, save as and import (with units); new and open under
+    /// `cad_open`'s rule, so no edits are lost (`files`).
     CadFile(super::files::FileArgs),
     /// `POST /export` in any RoboCAD format, and the drawing, on a job.
     CadExport(super::files::ExportArgs),
@@ -437,14 +438,13 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadRedo => edit(doc, call, "Redo".into(), |c| {
             c.redo().map(|r| EditDone { message: r.redone.as_ref().map_or_else(|| "Nothing to redo".to_string(), |l| format!("Redid {l}")), result: value(&r) })
         }),
-        CadAction::CadSave { path } => {
-            let label = match path {
-                Some(p) => format!("Save as {p}"),
-                None => "Save".to_string(),
-            };
-            let path = path.clone();
-            edit(doc, call, label, move |c| c.save(path.as_deref()).map(|s| EditDone { message: format!("Saved {}", s.saved), result: value(&s) }))
-        }
+        // POST /save/thumbnail, as RoboCAD's desktop saves (`files::save`).
+        // A path is absolute (~/ expanded): RoboCAD would resolve a relative
+        // one against its own working directory, and the document follows it.
+        CadAction::CadSave { path } => match path.as_deref().map(|p| super::files::absolute(p, "cad_save")).transpose() {
+            Ok(path) => super::files::save(doc, call, path),
+            Err(e) => done(Err(e)),
+        },
         CadAction::CadCommand { id } => {
             let id = id.clone();
             edit(doc, call, format!("Command {id}"), move |c| c.run_command(&id).map(|r| EditDone { message: format!("Ran RoboCAD command {}", r.ran), result: value(&r) }))

@@ -30,7 +30,7 @@ fn document() -> CadDocument {
 }
 
 fn in_flight() -> Edit {
-    Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: Instant::now(), clear_selection: None, activates_plane: false }
+    Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: Instant::now(), clear_selection: None, activates_plane: false, retarget: None }
 }
 
 fn move_by(x: f64, revision: Option<u64>) -> CadAction {

@@ -14,6 +14,8 @@
 //!   waits for RoboCAD's answer. Names are checked as RoboCAD checks them
 //!   (`_view_name`: 1–120 characters, stripped) and states as
 //!   `validate_state` does (`ViewState::check`), before anything is sent.
+//!   The panel's typed name is kept until RoboCAD answers a save and is
+//!   cleared only when it succeeded ([`settle_save`]).
 //! - **Save and replace** capture the native camera ([`snapshot`] copies
 //!   the CAD camera's `Orbit` after `CameraSet::Place`, since the handler
 //!   has no camera access) and the display state (`CadDisplay`), converted
@@ -93,6 +95,10 @@ pub struct CadViews {
     pub(crate) selected: Option<String>,
     /// RoboCAD's panel feedback line ("Showing: …").
     pub(crate) feedback: Option<String>,
+    /// The save sent and not yet answered: (document generation, edit
+    /// sequence number, name). The typed name stays until RoboCAD answers
+    /// and is cleared only when the save succeeded ([`settle_save`]).
+    pub(crate) saving: Option<(u64, u64, String)>,
 }
 
 /// What `cad_views` does.
@@ -294,9 +300,8 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
             let n = name.clone();
             let outcome = edit(doc, call, format!("Save view {name}"), move |c| c.save_view(&n, &state).map(|v| EditDone { message: format!("Saved view {}", v.name), result: value(&v) }));
             if !matches!(outcome, Outcome::Done(Err(_))) {
-                if views.new_name.trim() == name {
-                    views.new_name.clear();
-                }
+                // The typed name is kept until RoboCAD's answer lands (`settle_save`).
+                views.saving = Some((doc.generation, doc.edit_seq, name.clone()));
                 views.feedback = Some(format!("Saving: {name}"));
             }
             outcome
@@ -367,10 +372,44 @@ pub(in crate::cad) fn open_fov(cx: &mut Cx) -> Outcome {
     Outcome::Done(Ok(json!({"field_of_view": degrees, "message": "Type the field of view in degrees (5–120) and press Enter; camera_fov {\"degrees\": d} does the same from REST."})))
 }
 
+/// The save in flight, once its edit ended (`sync::finish_edit`, run by
+/// `sync::receive` just before [`sync`], set `doc.status` from RoboCAD's
+/// answer): on success the typed name is cleared (unless it was retyped
+/// meanwhile); on failure it stays for another try. A replaced document
+/// drops the save without touching the name.
+pub(crate) fn settle_save(views: &mut CadViews, doc: &CadDocument) {
+    let Some((generation, seq, name)) = views.saving.clone() else { return };
+    if generation != doc.generation {
+        views.saving = None;
+        return;
+    }
+    let running = doc.edit.is_some() && doc.edit_seq == seq;
+    if running {
+        return;
+    }
+    views.saving = None;
+    // Another edit numbered since: this one's answer is no longer the status.
+    let answer = (doc.edit_seq == seq).then_some(doc.status.as_ref()).flatten();
+    match answer {
+        Some(Ok(_)) => {
+            if views.new_name.trim() == name {
+                views.new_name.clear();
+            }
+            views.feedback = Some(format!("Saved: {name}"));
+        }
+        Some(Err(e)) => views.feedback = Some(format!("Not saved: {name}: {e}")),
+        None => views.feedback = None,
+    }
+}
+
 /// JobResults: the list at the current (generation, revision): started on
-/// a change, a job for an older key dropped, a result landed.
+/// a change, a job for an older key dropped, a result landed; a save's
+/// answer settled ([`settle_save`]).
 pub(super) fn sync(doc: Option<Res<CadDocument>>, views: Option<ResMut<CadViews>>) {
     let (Some(doc), Some(mut views)) = (doc, views) else { return };
+    if views.saving.is_some() {
+        settle_save(&mut views, &doc);
+    }
     let now = key(&doc);
     // A job for another key is superseded (dropping it cancels it).
     if views.job.as_ref().is_some_and(|(k, _)| *k != now) {

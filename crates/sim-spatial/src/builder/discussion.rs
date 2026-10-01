@@ -137,11 +137,14 @@ fn uid(prefix: &str) -> String {
     )
 }
 fn view(scene: &SpatialScene, o: &Orbit) -> sim_inspect::annotations::PhysicalView {
+    // The view's heading now: in the trackball the stored yaw/pitch are stale,
+    // and the saved view is a turntable pose (`restore` cuts to it).
+    let (yaw, pitch) = o.turntable();
     sim_inspect::annotations::PhysicalView {
         focus: o.focus.to_array(),
         radius: o.radius,
-        yaw: o.yaw,
-        pitch: o.pitch,
+        yaw,
+        pitch,
         exploded: scene.state.exploded,
         connections: scene.state.connections,
         hidden: scene.state.hidden.clone(),
@@ -470,9 +473,8 @@ impl Builder {
                 .map(|p| (Vec3::from_array(p.position) - center).length() + 0.04)
                 .fold(0.04, f32::max)
                 * 3.;
-            // A cut from the direction the view is settling on.
-            let (yaw, pitch) = o.heading();
-            o.glide_to(crate::camera::Pose { focus: center, radius, yaw, pitch }, 0.0);
+            // A cut from the direction the view is settling on (the trackball's, when it is on).
+            o.glide_frame(center, radius, 0.0);
         }
         if isolate {
             scene.state.hidden = scene

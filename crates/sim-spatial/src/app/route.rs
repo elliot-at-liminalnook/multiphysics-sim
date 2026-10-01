@@ -4,7 +4,10 @@
 //! command of another mode is refused naming the active mode; everything
 //! else goes, unchanged, to the action type the registry names for the
 //! active mode (`actions::feature_for`). [`annotate`] adds what every mode
-//! adds to its answer.
+//! adds to its answer. The headless server (`window` false) has no window
+//! to switch and no camera to move: `viewer_mode`, `mode:*` and every
+//! command of the shared camera are refused there, and its `system_ui`
+//! controls do not list `camera:*` ([`annotate_for`]).
 use super::actions::{self, Feature};
 use super::ViewerMode;
 use serde_json::{Value, json};
@@ -19,6 +22,9 @@ fn mode_list(modes: &[ViewerMode]) -> String {
     }
 }
 
+/// Why the headless server refuses the shared camera's commands.
+const NO_CAMERA: &str = "the headless server has no camera to move; it renders through inspect's camera/fit commands";
+
 /// `system_ui` activating a `mode:*` control: the switcher's, in every mode.
 fn mode_control(command: &sim_api::Command) -> bool {
     let action = &command.args["action"];
@@ -28,7 +34,9 @@ fn mode_control(command: &sim_api::Command) -> bool {
 /// The one REST dispatch: the action type that takes `command` in `mode`,
 /// or the refusal of a command of another mode, naming it, the modes it
 /// needs and the active mode. `window` is false for the headless server,
-/// which has no window to switch.
+/// which has no window to switch and no camera to move (`camera_*` and
+/// `system_ui` `camera:*` are refused there, naming inspect's `camera` and
+/// `fit`).
 pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) -> Result<&'static Feature, String> {
     let name = command.command.as_str();
     if name == "viewer_mode" || mode_control(command) {
@@ -36,7 +44,7 @@ pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) 
     }
     // `system_ui` `camera:*`: the shared camera's controls, in every orbit mode.
     if crate::camera::is_camera_control(command) && crate::camera::ORBIT_MODES.contains(&mode) {
-        return if window { Ok(actions::named("camera")) } else { Err(format!("{name}: this headless server has no camera to move")) };
+        return if window { Ok(actions::named("camera")) } else { Err(format!("{name}: {NO_CAMERA}")) };
     }
     match actions::command_modes(name) {
         Some(needs) if !needs.contains(&mode) => Err(format!(
@@ -49,14 +57,29 @@ pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) 
         // is answered as before (headless too).
         None if mode == ViewerMode::Inspect && name.starts_with("lesson_") => Err("no lessons are open in this window: switch with viewer_mode {\"mode\":\"lessons\",\"path\":\"DIR\"}".into()),
         None if mode == ViewerMode::Inspect && name.starts_with("system") => Err("start the viewer with --system FILE to edit systems".into()),
-        _ => Ok(actions::feature_for(mode, name).unwrap_or_else(|| actions::fallback(mode, name))),
+        _ => {
+            let feature = actions::feature_for(mode, name).unwrap_or_else(|| actions::fallback(mode, name));
+            // Any command the shared camera registers (`camera_*`).
+            if !window && feature.name == "camera" {
+                return Err(format!("`{name}`: {NO_CAMERA}"));
+            }
+            Ok(feature)
+        }
     }
+}
+
+/// What every mode adds to its handler's answer in the window
+/// ([`annotate_for`] with a window).
+pub(crate) fn annotate(mode: ViewerMode, command: &sim_api::Command, outcome: Outcome) -> Outcome {
+    annotate_for(mode, true, command, outcome)
 }
 
 /// What every mode adds to its handler's answer: the active mode on
 /// `state`, and the mode switcher's controls at the end of `system_ui`
-/// controls (in build, lessons and robot mode, after the mode's own).
-pub(crate) fn annotate(mode: ViewerMode, command: &sim_api::Command, mut outcome: Outcome) -> Outcome {
+/// controls (in build, lessons and robot mode, after the mode's own),
+/// after the shared camera's in every orbit mode when there is a window
+/// (`window` false is the headless server, which refuses them).
+pub(crate) fn annotate_for(mode: ViewerMode, window: bool, command: &sim_api::Command, mut outcome: Outcome) -> Outcome {
     if let Outcome::Done(Ok(value)) = &mut outcome {
         match command.command.as_str() {
             "state" if value.is_object() => value["viewer_mode"] = json!(mode.name()),
@@ -64,7 +87,7 @@ pub(crate) fn annotate(mode: ViewerMode, command: &sim_api::Command, mut outcome
                 if let Some(controls) = value.get_mut("controls").and_then(Value::as_array_mut) {
                     // The shared camera's controls in every orbit mode, then the switcher's
                     // (which the switcher-only modes' own list already ends with).
-                    if crate::camera::ORBIT_MODES.contains(&mode) {
+                    if window && crate::camera::ORBIT_MODES.contains(&mode) {
                         controls.extend(crate::camera::controls());
                     }
                     if !actions::SWITCHER_ONLY.contains(&mode) {

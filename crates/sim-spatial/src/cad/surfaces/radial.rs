@@ -2,9 +2,10 @@
 //! the kit's pie: Space (`view.radial`) opens the view radial at the
 //! pointer (Front, Top, Right, Iso, Ortho, Grid, Mode, Fit: `view.front`,
 //! `view.top`, `view.right`, `view.iso`, `view.ortho`, `view.grid`,
-//! `view.mode_next`, `view.fit`; all but Fit belong to cad-views-export and
-//! are disabled, saying so), Q (`select.mode_radial`) the selection-mode
-//! radial (Body, Face, Edge, Vertex, Point: `select.<mode>`).
+//! `view.mode_next`, `view.fit`; all run since cad-views-export: the views
+//! and Ortho are camera intents, Grid and Mode the display state, Fit
+//! `CadFit`, each through the registry), Q (`select.mode_radial`) the
+//! selection-mode radial (Body, Face, Edge, Vertex, Point: `select.<mode>`).
 //!
 //! As RoboCAD's: the entry under the pointer's angle is highlighted (the
 //! kit's `index_at`; none in the 18 px dead centre); a mouse press inside
@@ -14,6 +15,7 @@
 //! it (`surfaces::input`). A button already held when the pie opened (the
 //! click on a palette row that opened it) is ignored until released.
 //! Running an entry writes `CadInvoke { id }` (`view.fit` is `CadFit`,
+//! `view.front` a `camera_view`, `view.grid` a `cad_display` toggle,
 //! `select.*` `CadSelectMode` through the registry), then
 //! `CadSurface { closed }`; a disabled entry shows why on the status line.
 use super::{Entry, Open, Surface, SurfaceRoot, entries, registry};

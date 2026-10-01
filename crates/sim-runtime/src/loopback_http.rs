@@ -153,6 +153,15 @@ impl Endpoint {
 /// the head). A server avoids it by writing the whole answer at once, or
 /// by shutting down its write half and draining the body before closing.
 pub fn exchange(endpoint: &Endpoint, timeout: Duration, request: &Request) -> Result<String, Error> {
+    let body = exchange_bytes(endpoint, timeout, request)?;
+    String::from_utf8(body).map_err(|_| Error::Decode(format!("{} {}{}: response body is not UTF-8", request.method, endpoint.origin(), request.path)))
+}
+
+/// [`exchange`] for an answer that is not text (RoboCAD's `GET /render`
+/// PNG): the 2xx body's bytes as sent. Everything else is [`exchange`]'s:
+/// the same request, limits, salvage after a reset and error answers (an
+/// error body is read as JSON for its `error` field).
+pub fn exchange_bytes(endpoint: &Endpoint, timeout: Duration, request: &Request) -> Result<Vec<u8>, Error> {
     let Request { method, path, closed_hint, .. } = *request;
     let origin = endpoint.origin();
     let (mut stream, fail, written) = send(endpoint, timeout, request)?;
@@ -181,7 +190,7 @@ pub fn exchange(endpoint: &Endpoint, timeout: Duration, request: &Request) -> Re
     if (200..300).contains(&status) {
         return Ok(text);
     }
-    let error = serde_json::from_str::<Value>(&text)
+    let error = serde_json::from_slice::<Value>(&text)
         .ok()
         .and_then(|v| v.get("error").and_then(Value::as_str).map(str::to_string))
         .unwrap_or_else(|| format!("Request failed (HTTP {status})"));
@@ -313,7 +322,7 @@ fn is_closed(e: &std::io::Error) -> bool {
 /// complete head and its `Content-Length` body, or a complete head and
 /// whatever body arrived when that parses as JSON (a server error without a
 /// length). `None` when nothing usable arrived.
-fn salvage(data: &[u8]) -> Option<(u16, String)> {
+fn salvage(data: &[u8]) -> Option<(u16, Vec<u8>)> {
     let p = data.windows(4).position(|w| w == b"\r\n\r\n")?;
     let (status, length) = parse_head(std::str::from_utf8(&data[..p]).ok()?).ok()?;
     let body = &data[p + 4..];
@@ -322,13 +331,13 @@ fn salvage(data: &[u8]) -> Option<(u16, String)> {
         _ if serde_json::from_slice::<Value>(body).is_ok() => body,
         _ => return None,
     };
-    Some((status, String::from_utf8(body.to_vec()).ok()?))
+    Some((status, body.to_vec()))
 }
 
-/// Reads one response: the status code and the body as UTF-8. Stops at
-/// `Content-Length` when given (the servers send it), else at EOF; never
-/// past `deadline` or [`MAX_BODY`].
-fn read_response(stream: &mut TcpStream, deadline: Instant) -> Result<(u16, String), ReadError> {
+/// Reads one response: the status code and the body's bytes (`exchange`
+/// reads them as UTF-8). Stops at `Content-Length` when given (the servers
+/// send it), else at EOF; never past `deadline` or [`MAX_BODY`].
+fn read_response(stream: &mut TcpStream, deadline: Instant) -> Result<(u16, Vec<u8>), ReadError> {
     let malformed = |why: &str| ReadError::Malformed(why.to_string());
     let mut data: Vec<u8> = Vec::new();
     let mut head: Option<(usize, u16, Option<usize>)> = None;
@@ -385,8 +394,7 @@ fn read_response(stream: &mut TcpStream, deadline: Instant) -> Result<(u16, Stri
             return Err(malformed("response ended before its Content-Length"));
         }
     }
-    let text = String::from_utf8(data.split_off(start)).map_err(|_| malformed("response body is not UTF-8"))?;
-    Ok((status, text))
+    Ok((status, data.split_off(start)))
 }
 
 /// The status code and `Content-Length` of a response head.

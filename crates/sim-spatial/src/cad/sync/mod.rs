@@ -473,7 +473,7 @@ fn finish_edit(doc: &mut CadDocument) {
     let Some(edit) = &doc.edit else { return };
     let Some(result) = edit.job.poll() else { return };
     let generation = edit.job.generation();
-    let (clear_selection, activates_plane) = doc.edit.take().map_or((None, false), |e| (e.clear_selection, e.activates_plane));
+    let (clear_selection, activates_plane, retarget) = doc.edit.take().map_or((None, false, None), |e| (e.clear_selection, e.activates_plane, e.retarget));
     let seq = doc.edit_seq;
     if generation != doc.generation {
         crate::cad::sketch::specs::polygon_edit_done(doc, seq, false);
@@ -491,6 +491,14 @@ fn finish_edit(doc: &mut CadDocument) {
         doc.ops.plane_created = Some(id.to_string());
     }
     doc.status = Some(answer.as_ref().map(|(m, _)| m.clone()).map_err(Clone::clone));
+    // A Save As of a file this window opened: the window now shows (and
+    // reopens, `leave_cad`) the saved file. An attached service keeps its URL.
+    if answer.is_ok()
+        && let Some(path) = retarget
+        && matches!(doc.target, super::document::CadTarget::File(_))
+    {
+        doc.target = super::document::CadTarget::File(path);
+    }
     // RoboCAD's handler clears the selection after its Ops call returned
     // (`ops::started` noted which); a failed edit keeps the picks, and a
     // selection changed meanwhile is the user's newer one and is kept.
@@ -571,7 +579,7 @@ pub(crate) fn start_edit(doc: &mut CadDocument, label: String, waited: bool, wor
     doc.edit_seq += 1;
     doc.edit_waited = waited;
     let job = Job::spawn(Pool::Dedicated, doc.generation, format!("RoboCAD edit: {label}"), move |_| work(&client).map_err(|e| e.to_string()));
-    doc.edit = Some(super::document::Edit { label, job, started: Instant::now(), clear_selection: None, activates_plane: false });
+    doc.edit = Some(super::document::Edit { label, job, started: Instant::now(), clear_selection: None, activates_plane: false, retarget: None });
     doc.touch();
     Ok(doc.edit_seq)
 }

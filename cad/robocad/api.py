@@ -40,6 +40,9 @@ node ids from `/nodes`. Faces/edges are addressed by `{"node": id,
     POST /threads/{id}/comments     reply: {"body", "author"}
     GET/PATCH/DELETE /comments/{id}  read/edit/delete a message
     POST /save {"path"} | /open {"path"} | /export {"format", "path", "settings"} | /import {"path", "unit"}
+    POST /save/thumbnail {"path"?}  /save with the thumbnail the desktop's Save writes → {"saved", "thumbnail": bool}
+    POST /new {"path"}              write an empty .rcad at path (refused if it exists); the open document is untouched
+    GET  /import/units?path=…       a mesh file's unit-prompt guess → {"path", "extent", "guess", "units"} (read-only)
     GET/DELETE /loads/{load_id}    async open status / cancel (desktop)
     GET  /materials | POST /materials {"id","name","density","color"}
     GET  /robot                     joints, motors, DoF, ground, validation issues
@@ -1150,6 +1153,63 @@ class Service:
             self.app.setWindowTitle(self.app._title())
         return {"saved": p}
 
+    # File-workflow gaps (the native viewer's cad-views-export): each calls
+    # existing functions only; the .rcad format and the command layer are
+    # unchanged.
+    def save_with_thumbnail(self, path: Optional[str]):
+        """/save with the thumbnail the desktop's Save writes
+        (`MainWindow.thumbnail`: the viewport scaled into 256x192). Headless
+        it is drawn by the snapshot renderer (`render`) at 256x192. A failed
+        thumbnail saves without one, as the desktop's does."""
+        p = path or self.doc.path
+        if not p:
+            raise ApiError(400, "no path")
+        if self.app is not None:
+            thumbnail = self.app.thumbnail()
+        else:
+            try:
+                thumbnail = self.render({"w": "256", "h": "192"})
+            except Exception:
+                thumbnail = b""
+        self.doc.save(p, thumbnail=thumbnail or None)
+        if self.app:
+            self.app.setWindowTitle(self.app._title())
+        return {"saved": p, "thumbnail": bool(thumbnail)}
+
+    def new_file(self, path):
+        """Write an empty document (`Document().save`) to a new `.rcad`. The
+        desktop's New opens an empty window; a headless service serves one
+        document, so a client creates the file here and opens it. The open
+        document is not touched; an existing file is never replaced."""
+        if not isinstance(path, str) or not path.endswith(".rcad"):
+            raise ApiError(400, "path must name a .rcad file")
+        if os.path.exists(path):
+            raise ApiError(409, f"{path} exists: choose a new file name")
+        try:
+            Document().save(path)
+        except OSError as e:
+            raise ApiError(422, f"could not write {path}: {e}")
+        return {"created": path}
+
+    def mesh_units(self, path):
+        """The unit prompt's guess for a mesh file, as `MainWindow.import_path`
+        asks it (`importers.load_mesh_file` for the largest raw extent, then
+        `importers.mesh_units_guess`). Reads the file; changes nothing."""
+        from .io import importers
+
+        if not path:
+            raise ApiError(400, "path is required")
+        ext = os.path.splitext(path)[1].lower()
+        if ext not in (".stl", ".obj", ".3mf", ".fbx", ".ply", ".glb", ".gltf"):
+            raise ApiError(400, f"{path}: not a mesh file (.stl, .obj, .3mf, .fbx, .ply, .glb, .gltf); only meshes ask for units")
+        if not os.path.isfile(path):
+            raise ApiError(404, f"no such file {path}")
+        try:
+            _, extent = importers.load_mesh_file(path, "mm")
+        except Exception as e:
+            raise ApiError(422, f"Could not read mesh: {e}")
+        return {"path": path, "extent": extent, "guess": importers.mesh_units_guess(extent), "units": ["mm", "cm", "m", "in", "ft"]}
+
     def open(self, path: str):
         if self.app is not None:
             from .ui.app import MainWindow
@@ -1403,6 +1463,14 @@ def make_handler(service: Service):
                 return png(run(s.screenshot))
             if head == "capture" and method == "POST":
                 return png(run(lambda: s.capture(body)))
+            if parts == ["save", "thumbnail"] and method == "POST":
+                return self._send(200, run(lambda: s.save_with_thumbnail(body.get("path"))))
+            if head == "new" and len(parts) == 1 and method == "POST":
+                # Writes a new file only; the open document is not touched.
+                return self._send(201, s.new_file(body.get("path")))
+            if parts == ["import", "units"] and method == "GET":
+                # Reads the mesh file only: off the GUI thread and the document lock.
+                return self._send(200, s.mesh_units(q.get("path")))
             if head == "save":
                 return self._send(200, run(lambda: s.save(body.get("path"))))
             if head == "open":

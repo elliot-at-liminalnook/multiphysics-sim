@@ -27,16 +27,32 @@
 //! - `Surface`: opens the palette or a radial menu (`CadSurface`).
 //! - `NumericEntry`: RoboCAD's "Numeric entry (Tab)": the first field of the
 //!   open form, else of the numeric bar, takes the keyboard.
+//! - `Camera(cmd)` (cad-views-export): a camera intent, written as
+//!   `Act<CameraAction>` through `Cx::camera` (a named view, ortho, the
+//!   orbit mode), the field-of-view entry (`views::open_fov`, RoboCAD's
+//!   5–120° dialog) or Focus Selection (frames the selected nodes and their
+//!   descendants, RoboCAD's `focus_selection`; Fit All with nothing selected).
 //! - `Later(epic)`: owned by a later CAD epic; refused by name.
 //! - `Different(reason)`: deliberately not ported (the ledger's reason).
 //!
-//! No command is GUI-only: the ledger's only `POST /commands/{id}`-only
-//! commands (Blender live link, web share) belong to cad-views-export, and
-//! `api.address`, `help.guide` and `help.logs` are deliberately different.
+//! cad-views-export maps the View rows: presets, ortho, orbit mode, FOV and
+//! focus to `Camera`; grid, display modes (and `inspect.normals`, which
+//! RoboCAD makes xray), section, build plate and high contrast to
+//! `CadDisplay`/`CadSection` (`Do::Display`); Saved Views to its panel
+//! (`Do::SavedViews`); Isolate, Hide and Show All to catalogue operations
+//! (`ops::catalogue::view`). Left deliberately different: draft-angle
+//! shading, the Blender live link and web share (no headless route; the
+//! reasons below). The `file.*` rows (new, open, save as, import, export,
+//! export drawing) are `Do::File`, the files part's actions
+//! (`files::command_action`); `edit.preferences` is deliberately different
+//! (its autosave timer is RoboCAD's desktop one).
 use super::Surface;
 use crate::app::actions::Call;
 use crate::cad::actions::{CadAction, Cx};
+use crate::cad::display::{DisplayArgs, DisplayMode, DisplaySetting, SectionArgs};
 use crate::cad::document::{CadDocument, CadTool, SelectMode};
+use crate::cad::views::{ViewsArgs, ViewsOp};
+use crate::camera::{CameraAction, ViewPreset};
 use crate::cad::ops::{self, Flow, Needs, OpEntry};
 use crate::cad::panel::Control;
 use serde_json::json;
@@ -55,6 +71,14 @@ pub(crate) enum Do {
     EdgesToFaces,
     Mode(SelectMode),
     Tool(CadTool),
+    /// A display command (cad-views-export): `CadDisplay` or `CadSection`.
+    Display(DisplayCmd),
+    /// RoboCAD's Saved Views panel (shown or hidden).
+    SavedViews,
+    /// A file command (cad-views-export): `files::command_action(id)`
+    /// (new, open, save as, import, export, export drawing; the path form
+    /// opens without a path).
+    File(&'static str),
 }
 impl Do {
     pub(crate) fn action(self) -> CadAction {
@@ -69,9 +93,75 @@ impl Do {
             Do::EdgesToFaces => CadAction::CadEdgesToFaces,
             Do::Mode(mode) => CadAction::CadSelectMode { mode },
             Do::Tool(tool) => CadAction::CadTool { tool },
+            Do::Display(d) => d.action(),
+            Do::SavedViews => CadAction::CadViews(ViewsArgs { op: ViewsOp::Panel, ..ViewsArgs::default() }),
+            // Every `Do::File` id is one `files::command_action` maps (`surfaces::tests`).
+            Do::File(id) => crate::cad::files::command_action(id).unwrap_or_else(|| panic!("{id}: no file action")),
         }
     }
 }
+
+/// RoboCAD's display commands (`toggle_grid`, `next_display_mode`,
+/// `set_display_mode`, `toggle_section`, `toggle_build_plate`,
+/// `toggle_high_contrast`, app.py:1035-1086): display only.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum DisplayCmd {
+    Next,
+    Mode(DisplayMode),
+    Grid,
+    BuildPlate,
+    HighContrast,
+    /// The section tool on or off (`cad_section` with no arguments toggles).
+    Section,
+}
+impl DisplayCmd {
+    pub(crate) fn action(self) -> CadAction {
+        let toggle = |setting| CadAction::CadDisplay(DisplayArgs { toggle: Some(setting), ..DisplayArgs::default() });
+        match self {
+            DisplayCmd::Next => CadAction::CadDisplay(DisplayArgs { next: true, ..DisplayArgs::default() }),
+            DisplayCmd::Mode(mode) => CadAction::CadDisplay(DisplayArgs { mode: Some(mode), ..DisplayArgs::default() }),
+            DisplayCmd::Grid => toggle(DisplaySetting::Grid),
+            DisplayCmd::BuildPlate => toggle(DisplaySetting::BuildPlate),
+            DisplayCmd::HighContrast => toggle(DisplaySetting::HighContrast),
+            DisplayCmd::Section => CadAction::CadSection(SectionArgs::default()),
+        }
+    }
+}
+
+/// RoboCAD's camera commands (`Camera.set_view`, `toggle_ortho`,
+/// `toggle_orbit_mode`, `set_fov`, `focus_selection`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum CameraCmd {
+    /// A named view (`view.front` … `view.iso`).
+    Preset(ViewPreset),
+    Ortho,
+    OrbitMode,
+    /// Opens the field-of-view entry (degrees, 5–120).
+    Fov,
+    /// Frames the selected nodes (Fit All when nothing is selected).
+    Focus,
+}
+impl CameraCmd {
+    /// The camera intent it writes; None for the FOV entry and Focus, which
+    /// are not one camera action.
+    pub(crate) fn action(self) -> Option<CameraAction> {
+        match self {
+            CameraCmd::Preset(view) => Some(CameraAction::View { view }),
+            CameraCmd::Ortho => Some(CameraAction::Projection { orthographic: None }),
+            CameraCmd::OrbitMode => Some(CameraAction::OrbitMode { mode: None }),
+            CameraCmd::Fov | CameraCmd::Focus => None,
+        }
+    }
+}
+
+/// `inspect.draft`'s reason (docs/cad-parity.md:342).
+const DRAFT_SHADING: &str = "RoboCAD colours each selected body's triangles by draft against +Z through its overhang flags (ui/app.py:1304-1317, analysis.draft_angle_colors); no route serves those colours and the native meshes carry no per-triangle colours to draw them";
+/// `bridge.start` and `bridge.stop`'s reason (docs/cad-parity.md:667).
+const BLENDER_LINK: &str = "RoboCAD-GUI-only: the Blender live link is a websocket server inside RoboCAD's desktop window (POST /commands/bridge.start|stop, ui/app.py:1497-1509); a headless service has no route for it and the native viewer has no Blender bridge";
+/// `edit.preferences`' reason (ui/app.py:1486-1494).
+const PREFERENCES: &str = "RoboCAD's Preferences dialog sets its desktop autosave timer (a headless service has none: /autosave answers 409 and cad_state.autosave shows RoboCAD's own state) and its viewport grid step; the native grid is RoboCAD's default 10 mm step (cad_display)";
+/// `bridge.share`'s reason (docs/cad-parity.md:668).
+const WEB_SHARE: &str = "RoboCAD-GUI-only: web share writes one HTML viewer through a desktop save dialog (POST /commands/bridge.share, ui/app.py:1511-1517); no headless route serves it (export a mesh with File > Export instead)";
 
 /// A command surface a command opens.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -98,6 +188,7 @@ pub(crate) enum Native {
     Action(Do),
     Surface(Opens),
     NumericEntry,
+    Camera(CameraCmd),
     Later(&'static str),
     Different(&'static str),
 }
@@ -169,16 +260,16 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("robot.pose", "Preview joint motion", "Robot", &[], false, Native::Later("cad-experiments-motion")),
     c("tool.annotate", "Annotate", "Inspect", &["N"], true, Native::Later("cad-organize")),
     c("view.comments", "Comments panel", "View", &[], false, Native::Later("cad-organize")),
-    c("view.saved_views", "Saved Views", "View", &[], false, Native::Later("cad-views-export")),
+    c("view.saved_views", "Saved Views", "View", &[], false, Native::Action(Do::SavedViews)),
     c("view.comment_pins", "Toggle comment pins", "View", &[], false, Native::Later("cad-organize")),
     c("command_palette", "Command palette", "General", &["Ctrl+Space", "Shift+F"], true, Native::Surface(Opens::Palette)),
-    c("file.new", "New", "File", &["Ctrl+N"], true, Native::Later("cad-views-export")),
-    c("file.open", "Open…", "File", &["Ctrl+O"], true, Native::Later("cad-views-export")),
+    c("file.new", "New", "File", &["Ctrl+N"], true, Native::Action(Do::File("file.new"))),
+    c("file.open", "Open…", "File", &["Ctrl+O"], true, Native::Action(Do::File("file.open"))),
     c("file.save", "Save", "File", &["Ctrl+S"], true, Native::Action(Do::Save)),
-    c("file.save_as", "Save As…", "File", &["Ctrl+Shift+S"], true, Native::Later("cad-views-export")),
-    c("file.import", "Import…", "File", &["Ctrl+I"], true, Native::Later("cad-views-export")),
-    c("file.export", "Export…", "File", &["Ctrl+E"], true, Native::Later("cad-views-export")),
-    c("file.export_drawing", "Export drawing (SVG)…", "File", &["Ctrl+Shift+D"], true, Native::Later("cad-views-export")),
+    c("file.save_as", "Save As…", "File", &["Ctrl+Shift+S"], true, Native::Action(Do::File("file.save_as"))),
+    c("file.import", "Import…", "File", &["Ctrl+I"], true, Native::Action(Do::File("file.import"))),
+    c("file.export", "Export…", "File", &["Ctrl+E"], true, Native::Action(Do::File("file.export"))),
+    c("file.export_drawing", "Export drawing (SVG)…", "File", &["Ctrl+Shift+D"], true, Native::Action(Do::File("file.export_drawing"))),
     c("file.quit", "Quit", "File", &[], false, Native::Different("one native app with modes: leaving CAD mode is the app's mode switch, not a RoboCAD window close")),
     c("edit.undo", "Undo", "Edit", &["Ctrl+Z"], true, Native::Action(Do::Undo)),
     c("edit.redo", "Redo", "Edit", &["Ctrl+Shift+Z"], true, Native::Action(Do::Redo)),
@@ -189,33 +280,33 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("edit.invert", "Invert Selection", "Edit", &["Ctrl+Shift+I"], true, Native::Action(Do::Invert)),
     c("edit.select_same_material", "Select Same Material", "Edit", &["Ctrl+Shift+M"], true, Native::Action(Do::SameMaterial)),
     c("edit.convert_faces", "Selection: edges → bounding faces", "Edit", &[], false, Native::Action(Do::EdgesToFaces)),
-    c("edit.preferences", "Preferences…", "Edit", &[], false, Native::Later("cad-views-export")),
+    c("edit.preferences", "Preferences…", "Edit", &[], false, Native::Different(PREFERENCES)),
     c("view.fit", "Fit All", "View", &["Home"], true, Native::Action(Do::Fit)),
-    c("view.focus", "Focus Selection", "View", &["F"], true, Native::Later("cad-views-export")),
-    c("view.front", "View front", "View", &["1"], true, Native::Later("cad-views-export")),
-    c("view.back", "View back", "View", &["Ctrl+1"], true, Native::Later("cad-views-export")),
-    c("view.top", "View top", "View", &["7"], true, Native::Later("cad-views-export")),
-    c("view.bottom", "View bottom", "View", &["Ctrl+7"], true, Native::Later("cad-views-export")),
-    c("view.right", "View right", "View", &["3"], true, Native::Later("cad-views-export")),
-    c("view.left", "View left", "View", &["Ctrl+3"], true, Native::Later("cad-views-export")),
-    c("view.iso", "View iso", "View", &["0"], true, Native::Later("cad-views-export")),
-    c("view.ortho", "Orthographic", "View", &["5"], true, Native::Later("cad-views-export")),
-    c("view.grid", "Grid", "View", &["Ctrl+G"], true, Native::Later("cad-views-export")),
-    c("view.mode_next", "Next display mode", "View", &["Z"], true, Native::Later("cad-views-export")),
-    c("view.mode.shaded", "Display: shaded", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.mode.shaded_edges", "Display: shaded edges", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.mode.wireframe", "Display: wireframe", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.mode.xray", "Display: xray", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.mode.matcap", "Display: matcap", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.mode.render", "Display: render", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.orbit_mode", "Toggle orbit: turntable / trackball", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.fov", "Set field of view…", "View", &[], false, Native::Later("cad-views-export")),
-    c("view.isolate", "Isolate", "View", &["/"], true, Native::Later("cad-views-export")),
-    c("view.show_all", "Show All", "View", &["Alt+H"], true, Native::Later("cad-views-export")),
-    c("view.hide", "Hide", "View", &["H"], true, Native::Later("cad-views-export")),
-    c("view.section", "Section Analysis", "Inspect", &["Ctrl+Shift+X"], true, Native::Later("cad-views-export")),
-    c("view.build_plate", "Build Plate Preview", "Print", &["Ctrl+Shift+B"], true, Native::Later("cad-views-export")),
-    c("view.high_contrast", "High-Contrast Theme", "View", &[], false, Native::Later("cad-views-export")),
+    c("view.focus", "Focus Selection", "View", &["F"], true, Native::Camera(CameraCmd::Focus)),
+    c("view.front", "View front", "View", &["1"], true, Native::Camera(CameraCmd::Preset(ViewPreset::Front))),
+    c("view.back", "View back", "View", &["Ctrl+1"], true, Native::Camera(CameraCmd::Preset(ViewPreset::Back))),
+    c("view.top", "View top", "View", &["7"], true, Native::Camera(CameraCmd::Preset(ViewPreset::Top))),
+    c("view.bottom", "View bottom", "View", &["Ctrl+7"], true, Native::Camera(CameraCmd::Preset(ViewPreset::Bottom))),
+    c("view.right", "View right", "View", &["3"], true, Native::Camera(CameraCmd::Preset(ViewPreset::Right))),
+    c("view.left", "View left", "View", &["Ctrl+3"], true, Native::Camera(CameraCmd::Preset(ViewPreset::Left))),
+    c("view.iso", "View iso", "View", &["0"], true, Native::Camera(CameraCmd::Preset(ViewPreset::Iso))),
+    c("view.ortho", "Orthographic", "View", &["5"], true, Native::Camera(CameraCmd::Ortho)),
+    c("view.grid", "Grid", "View", &["Ctrl+G"], true, Native::Action(Do::Display(DisplayCmd::Grid))),
+    c("view.mode_next", "Next display mode", "View", &["Z"], true, Native::Action(Do::Display(DisplayCmd::Next))),
+    c("view.mode.shaded", "Display: shaded", "View", &[], false, Native::Action(Do::Display(DisplayCmd::Mode(DisplayMode::Shaded)))),
+    c("view.mode.shaded_edges", "Display: shaded edges", "View", &[], false, Native::Action(Do::Display(DisplayCmd::Mode(DisplayMode::ShadedEdges)))),
+    c("view.mode.wireframe", "Display: wireframe", "View", &[], false, Native::Action(Do::Display(DisplayCmd::Mode(DisplayMode::Wireframe)))),
+    c("view.mode.xray", "Display: xray", "View", &[], false, Native::Action(Do::Display(DisplayCmd::Mode(DisplayMode::Xray)))),
+    c("view.mode.matcap", "Display: matcap", "View", &[], false, Native::Action(Do::Display(DisplayCmd::Mode(DisplayMode::Matcap)))),
+    c("view.mode.render", "Display: render", "View", &[], false, Native::Action(Do::Display(DisplayCmd::Mode(DisplayMode::Render)))),
+    c("view.orbit_mode", "Toggle orbit: turntable / trackball", "View", &[], false, Native::Camera(CameraCmd::OrbitMode)),
+    c("view.fov", "Set field of view…", "View", &[], false, Native::Camera(CameraCmd::Fov)),
+    c("view.isolate", "Isolate", "View", &["/"], true, Native::Op),
+    c("view.show_all", "Show All", "View", &["Alt+H"], true, Native::Op),
+    c("view.hide", "Hide", "View", &["H"], true, Native::Op),
+    c("view.section", "Section Analysis", "Inspect", &["Ctrl+Shift+X"], true, Native::Action(Do::Display(DisplayCmd::Section))),
+    c("view.build_plate", "Build Plate Preview", "Print", &["Ctrl+Shift+B"], true, Native::Action(Do::Display(DisplayCmd::BuildPlate))),
+    c("view.high_contrast", "High-Contrast Theme", "View", &[], false, Native::Action(Do::Display(DisplayCmd::HighContrast))),
     c("view.radial", "View radial menu", "View", &["Space"], true, Native::Surface(Opens::ViewRadial)),
     c("select.body", "Select bodys", "Select", &["B"], true, Native::Action(Do::Mode(SelectMode::Body))),
     c("select.face", "Select faces", "Select", &["Shift+B"], true, Native::Action(Do::Mode(SelectMode::Face))),
@@ -318,11 +409,11 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("print.jobs", "Print jobs…", "Print", &[], false, Native::Later("cad-print")),
     c("inspect.curvature", "Curvature comb on selected curve", "Inspect", &[], false, Native::Op),
     c("inspect.continuity", "Continuity check (G0/G1/G2)", "Inspect", &[], false, Native::Op),
-    c("inspect.draft", "Draft-angle shading", "Inspect", &[], false, Native::Later("cad-views-export")),
-    c("inspect.normals", "Normal-direction shading", "Inspect", &[], false, Native::Later("cad-views-export")),
-    c("bridge.start", "Live link: start (Blender)", "Bridge", &[], false, Native::Later("cad-views-export")),
-    c("bridge.stop", "Live link: stop", "Bridge", &[], false, Native::Later("cad-views-export")),
-    c("bridge.share", "Web share: publish viewer…", "Bridge", &[], false, Native::Later("cad-views-export")),
+    c("inspect.draft", "Draft-angle shading", "Inspect", &[], false, Native::Different(DRAFT_SHADING)),
+    c("inspect.normals", "Normal-direction shading", "Inspect", &[], false, Native::Action(Do::Display(DisplayCmd::Mode(DisplayMode::Xray)))),
+    c("bridge.start", "Live link: start (Blender)", "Bridge", &[], false, Native::Different(BLENDER_LINK)),
+    c("bridge.stop", "Live link: stop", "Bridge", &[], false, Native::Different(BLENDER_LINK)),
+    c("bridge.share", "Web share: publish viewer…", "Bridge", &[], false, Native::Different(WEB_SHARE)),
     c("robot.add_motor", "Robot: add motor from library…", "Robot", &["Ctrl+Shift+M"], false, Native::Later("cad-physical-inspect")),
     c("robot.add_joint", "Robot: add joint (click parent, child, axis face)", "Robot", &["Ctrl+Shift+J"], false, Native::Later("cad-physical-inspect")),
     c("robot.joint_dialog", "Robot: joint from the two selected bodies…", "Robot", &[], false, Native::Later("cad-physical-inspect")),
@@ -361,6 +452,7 @@ pub(crate) enum Resolved {
     Action(CadAction),
     Surface(Opens),
     NumericEntry,
+    Camera(CameraCmd),
     Later(&'static str),
     Different(&'static str),
 }
@@ -376,6 +468,7 @@ pub(crate) fn resolve(cmd: &Command) -> Resolved {
         Native::Action(d) => Resolved::Action(d.action()),
         Native::Surface(o) => Resolved::Surface(o),
         Native::NumericEntry => Resolved::NumericEntry,
+        Native::Camera(c) => Resolved::Camera(c),
         Native::Later(epic) => Resolved::Later(epic),
         Native::Different(why) => Resolved::Different(why),
     }
@@ -452,6 +545,8 @@ pub(crate) fn ready(cmd: &Command, doc: &CadDocument, own: &[Control]) -> Result
         Resolved::Action(action) => own.iter().find(|c| c.action == action).map_or(Ok(()), |c| c.ready.clone()),
         Resolved::Surface(_) => Ok(()),
         Resolved::NumericEntry => numeric_entry_ready(doc),
+        // Display only: the camera applies it (or logs why not, without an orbit camera).
+        Resolved::Camera(_) => Ok(()),
         Resolved::Later(epic) => Err(later(cmd, epic)),
         Resolved::Different(why) => Err(format!("{} is not ported: {why}", cmd.label)),
     }
@@ -495,7 +590,50 @@ pub(in crate::cad) fn invoke(id: &str, call: &mut Call, cx: &mut Cx) -> Outcome 
         Resolved::Action(action) => crate::cad::actions::handle(&action, call, cx),
         Resolved::Surface(o) => super::handle(&CadAction::CadSurface { surface: o.surface(None) }, call, cx),
         Resolved::NumericEntry => Outcome::Done(numeric_entry(cx.doc)),
+        Resolved::Camera(c) => camera(c, call, cx),
         Resolved::Later(epic) => Outcome::Done(Err(later(cmd, epic))),
         Resolved::Different(why) => Outcome::Done(Err(format!("{} is not ported: {why}", cmd.label))),
+    }
+}
+
+/// A camera command: its camera intent (applied by the shared camera after
+/// the handler, `actions::apply`), the FOV entry, or Focus Selection.
+fn camera(c: CameraCmd, call: &mut Call, cx: &mut Cx) -> Outcome {
+    match (c, c.action()) {
+        (CameraCmd::Fov, _) => crate::cad::views::open_fov(cx),
+        (_, Some(action)) => {
+            cx.camera.push(action.clone());
+            Outcome::Done(Ok(json!({"camera": action, "note": "display only: RoboCAD's own camera is unchanged"})))
+        }
+        _ => focus(call, cx),
+    }
+}
+
+/// RoboCAD's `focus_selection` (ui/viewport.py:449-470): the selected nodes
+/// and everything under them framed; Fit All when nothing is selected.
+/// Display only.
+fn focus(call: &mut Call, cx: &mut Cx) -> Outcome {
+    let nodes = cx.doc.selected_nodes();
+    if nodes.is_empty() {
+        return crate::cad::actions::handle(&CadAction::CadFit { id: None }, call, cx);
+    }
+    let mut ids: std::collections::HashSet<String> = nodes.iter().cloned().collect();
+    if let Some(state) = &cx.doc.doc {
+        // Walk order lists parents before children.
+        for n in &state.nodes {
+            if n.parent.as_ref().is_some_and(|p| ids.contains(p)) {
+                ids.insert(n.id.clone());
+            }
+        }
+    }
+    let Some(meshes) = cx.meshes.as_deref_mut() else { return Outcome::Done(Err("CAD mode's 3D view is not available in this window".into())) };
+    let names: Vec<String> = nodes.iter().map(|n| cx.doc.node_name(n)).collect();
+    match meshes.bounds(Some(&ids)) {
+        Some(bounds) => {
+            meshes.frame(bounds);
+            Outcome::Done(Ok(json!({"framed": names, "note": "display only: RoboCAD's view and the geometry are unchanged"})))
+        }
+        // RoboCAD leaves the camera as it is then.
+        None => Outcome::Done(Err(format!("nothing to frame: no body of {} is drawn", names.join(", ")))),
     }
 }

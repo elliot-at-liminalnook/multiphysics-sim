@@ -49,6 +49,9 @@ pub(crate) fn edge_ref(node: &str, edge: i64) -> Value {
 pub(crate) fn history(route: &str) -> &'static str {
     match route {
         "delete" => "Delete",                                   // commands.py:331 RemoveNodes("Delete")
+        "isolate" => "Isolate",                                 // :413 (cad-views-export)
+        "show_all" => "Show all",                               // :416
+        "set_visible" => "Hide",                                // :337 (the catalogue sends visible=false only)
         "set_pivot" => "Pivot",                                 // :352
         "box" | "box_center" | "box_three_point" => "Box",      // :420 (box_center calls box), :435
         "cylinder" => "Cylinder",                               // :438

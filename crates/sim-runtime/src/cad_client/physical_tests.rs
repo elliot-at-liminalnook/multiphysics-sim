@@ -2,7 +2,7 @@
 //! fake RoboCAD of `tests.rs`: answers as `api.py` writes them (json.dumps'
 //! separators; `Material.to_json`, `results_margins`, the `/results/nodes`
 //! gap route), the exact request line and body of every write, tolerant
-//! reads (a `NaN` margin, a malformed entry) and errors verbatim.
+//! reads (a `NaN` margin, a malformed entry) and original errors alongside outcome-uncertainty hints.
 use super::tests::{Answer, assert_request, ok, serve};
 use super::*;
 use serde_json::{Map, json};
@@ -80,7 +80,10 @@ fn results_files_are_named_by_path_and_errors_pass_through() {
     assert_eq!(c.load_results("/tmp/r.simresult.json").unwrap()["links"]["thigh"]["yield_margin"], json!(8.0));
     assert_eq!(c.apply_identification("/tmp/fit.json").unwrap()["hip"]["backlash"], json!(0.01));
     let e = c.load_results("/nope.json").unwrap_err();
-    assert_eq!((e.status, e.message.as_str()), (Some(500), "FileNotFoundError: [Errno 2] No such file or directory: '/nope.json'"));
+    // A mutating 5xx preserves the server refusal and status while keeping
+    // the source outcome uncertain: the command may have committed first.
+    assert_eq!((e.method, e.route.as_str(), e.status), ("POST", "/results/load", Some(500)));
+    assert_eq!(e.message.strip_suffix(": RoboCAD may still apply it; refresh before retrying"), Some("FileNotFoundError: [Errno 2] No such file or directory: '/nope.json'"));
     let seen = server.join().unwrap();
     assert_request(&seen[0], "GET /results HTTP/1.1", port, None);
     assert_request(&seen[1], "POST /results/load HTTP/1.1", port, Some(r#"{"path":"/tmp/r.simresult.json"}"#));

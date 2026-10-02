@@ -4,7 +4,7 @@
 //! (json.dumps' separators, 202 for a started job but a split job's 200), the exact request line
 //! and body of every call (serde's field order; `json!` objects are
 //! BTreeMaps, so their keys go out sorted), tolerant reads (registry order
-//! kept, malformed entries dropped) and RoboCAD's errors verbatim.
+//! kept, malformed entries dropped) and RoboCAD's original errors alongside outcome-uncertainty hints.
 use super::tests::{Answer, assert_request, ok, serve};
 use super::*;
 use serde_json::{Map, Value, json};
@@ -253,7 +253,10 @@ fn print_ops_send_the_python_signature() {
     let mut unknown = Map::new();
     unknown.insert("colour".into(), json!("red"));
     let e = c.print_split_op("b1", &unknown).unwrap_err();
-    assert_eq!((e.status, e.message.as_str()), (Some(500), "TypeError: SplitOptions.__init__() got an unexpected keyword argument 'colour'"));
+    // A mutating 5xx preserves the server refusal and status while keeping
+    // the source outcome uncertain: the command may have committed first.
+    assert_eq!((e.method, e.route.as_str(), e.status), ("POST", "/ops/print_split", Some(500)));
+    assert_eq!(e.message.strip_suffix(": RoboCAD may still apply it; refresh before retrying"), Some("TypeError: SplitOptions.__init__() got an unexpected keyword argument 'colour'"));
     let e = c.clearance("b1", &[9], 0.2).unwrap_err();
     assert_eq!((e.status, e.message.as_str()), (Some(400), "face index 9 out of range (0..5)"));
     let e = c.clearance("b1", &[3], -9.0).unwrap_err();

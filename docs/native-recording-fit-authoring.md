@@ -5,7 +5,8 @@ in `sim-spatial`. Launch path remains `cargo run -p sim-spatial -- --system
 examples/systems-builder/motor-driver-board/board.system.json`, then open the
 Actuators dock and a measured archive or saved review. This command is documentation,
 not an executed check. No new viewer, mode, optimizer, physics or persistence owner.
-Implementation and fixtures are verified by reading only; compilation, fixture
+Call-0386 accepted this bounded batch by source review across `5dd26014`,
+`11b9ce82` and `3a7d321a`. Implementation and fixtures are verified by reading only; compilation, fixture
 execution, rendering, hit testing, publication and workflow parity remain unverified.
 
 ## Ownership before Bevy changes
@@ -257,3 +258,25 @@ potential embedding path through unvalidated provenance Values: models/experimen
 now project typed identities, and other setup/role metadata is normalized through
 its shared schema. Invalid unknown receipt trees remain only in recoverable source
 content, never new receipt projections.
+
+
+## T51 publication boundary
+
+Study save-new, report export and companions now share filesystem mechanics with
+viewer preferences beneath their existing owners. See the
+[publication contract](shared-evidence-publication.md) for the current source map.
+Companions still precede the immutable manifest/report, and all references must
+reopen with verified identity and length. Existing readable bytes alone do not
+confirm durability: companion reuse also requires the shared synchronization path.
+Missing/corrupt companions remain named errors. Valid orphan companions survive
+failed main publication and must not be deleted as cleanup.
+
+A manifest/report made visible before a directory-sync failure is retained evidence
+with an unconfirmed durability diagnostic. It does not acknowledge the captured
+study revision. Immutable retry to that same destination refuses replacement;
+inspect/reopen the visible artifact and choose a new destination to publish again.
+Pending captured snapshots and live Study content caches retain exact input bytes;
+cancellation and displacement still produce existing retained terminal receipts.
+Legacy inline evidence, schemas, CAD authority and accepted actuator models remain
+unchanged. The T51 fixtures are written but unexecuted; this extends accepted T50
+source behavior without claiming publication execution or GUI parity.

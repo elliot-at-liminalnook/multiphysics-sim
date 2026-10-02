@@ -30,7 +30,7 @@ fn migration_preserves_originals_unknowns_and_is_idempotent() {
     let loaded = jobs::load(&p).unwrap();
     assert!(loaded.migrated);
     let next = jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap();
-    jobs::publish(p.unified.as_ref().unwrap(), &next, 1).unwrap();
+    publication::publish_snapshot(p.unified.as_ref().unwrap(), &next, 1).unwrap();
     let again = jobs::load(&p).unwrap();
     assert!(!again.migrated);
     assert_eq!(again.hardware, loaded.hardware);
@@ -58,7 +58,7 @@ fn unified_precedence_and_override_identity_refusal() {
     let mut cad = loaded.cad;
     cad.clearance = 0.7;
     let next = jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &cad).unwrap();
-    jobs::publish(p.unified.as_ref().unwrap(), &next, 1).unwrap();
+    publication::publish_snapshot(p.unified.as_ref().unwrap(), &next, 1).unwrap();
     write(&p.hardware, json!({"version":1,"mirror":{"leg":"-Y"}}));
     assert_eq!(jobs::load(&p).unwrap().cad.clearance, 0.7);
     assert_eq!(jobs::load(&p).unwrap().hardware.mirror.leg, "+X");
@@ -136,7 +136,7 @@ fn publication_error_retains_dirty_revision_and_retry_requires_no_edit() {
     let p = paths("publication");
     let dir = p.unified.as_ref().unwrap();
     std::fs::create_dir(dir).unwrap();
-    assert!(jobs::publish(dir, &json!({}), 3).is_err());
+    assert!(publication::publish_snapshot(dir, &json!({}), 3).is_err());
 }
 #[test]
 fn newer_snapshot_suppresses_older_publication() {
@@ -374,7 +374,7 @@ fn removed_rows_stay_inactive_and_later_metadata_survives_existing_archive() {
         first["preferences"]["hardware"]["sync"]["bindings"][0]["vendor"],
         8
     );
-    jobs::publish(p.unified.as_ref().unwrap(), &first, 1).unwrap();
+    publication::publish_snapshot(p.unified.as_ref().unwrap(), &first, 1).unwrap();
     assert!(
         !jobs::load(&p)
             .unwrap()
@@ -410,7 +410,7 @@ fn removed_rows_stay_inactive_and_later_metadata_survives_existing_archive() {
     assert!(entries.iter().any(|e| e["collection"] == "sync"
         && e["identity"] == "coordinate:b"
         && e["value"]["later"] == 9));
-    jobs::publish(p.unified.as_ref().unwrap(), &out, 2).unwrap();
+    publication::publish_snapshot(p.unified.as_ref().unwrap(), &out, 2).unwrap();
     let loaded = jobs::load(&p).unwrap();
     assert!(loaded.hardware.mirror.bindings.is_empty());
     assert!(loaded.hardware.sync.bindings.is_empty());
@@ -511,7 +511,7 @@ fn duplicate_coordinates_consume_rows_once_and_archive_removed_later_metadata() 
                 && e["value"]["vendor"] == "second"
                 && e["value"]["new_vendor"] == 42)
     );
-    jobs::publish(p.unified.as_ref().unwrap(), &out, 2).unwrap();
+    publication::publish_snapshot(p.unified.as_ref().unwrap(), &out, 2).unwrap();
     let loaded = jobs::load(&p).unwrap();
     assert_eq!(loaded.hardware.sync.bindings.len(), 1);
     assert_eq!(

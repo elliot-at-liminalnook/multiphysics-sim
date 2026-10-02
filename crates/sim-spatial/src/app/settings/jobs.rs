@@ -2,15 +2,9 @@ use super::*;
 use crate::jobs::Pool;
 use bevy_settings::SettingsGroup;
 use std::{
-    io::Write,
     path::{Path, PathBuf},
 };
 pub(super) const SCHEMA: u32 = 1;
-#[derive(Default)]
-pub(super) struct Publication {
-    pub revision: u64,
-    pub expected: Option<Value>,
-}
 #[derive(Clone)]
 pub(super) struct Paths {
     pub unified: Option<PathBuf>,
@@ -40,7 +34,7 @@ pub(super) struct Loaded {
     pub migrated: bool,
     pub previous: Option<Value>,
 }
-fn read(path: &Path) -> Result<Option<Value>, String> {
+pub(super) fn read(path: &Path) -> Result<Option<Value>, String> {
     match std::fs::read(path) {
         Ok(bytes) => serde_json::from_slice(&bytes)
             .map(Some)
@@ -49,7 +43,7 @@ fn read(path: &Path) -> Result<Option<Value>, String> {
         Err(e) => Err(format!("{}: {e}; preserved, saves blocked", path.display())),
     }
 }
-fn version(v: &Value, key: &str, maximum: u32) -> Result<(), String> {
+pub(super) fn version(v: &Value, key: &str, maximum: u32) -> Result<(), String> {
     if let Some(n) = v.get(key) {
         let n = n
             .as_u64()
@@ -417,73 +411,4 @@ pub(super) fn save_job(
     })
     .complete_on_drop()
 }
-pub(super) fn publish_ordered(
-    paths: &Paths,
-    snapshot: &Value,
-    revision: u64,
-    gate: &Mutex<Publication>,
-) -> Result<u64, String> {
-    let mut published = gate
-        .lock()
-        .map_err(|_| "preference publication gate poisoned")?;
-    if published.revision > revision {
-        return Err(format!("Preference publication superseded: requested {revision}, published {}", published.revision));
-    }
-    let path = paths
-        .unified
-        .as_ref()
-        .ok_or("No viewer config directory; preferences session-only")?;
-    let current = read(path)?;
-    if let Some(current) = &current {
-        version(current, "schema", SCHEMA)?;
-    }
-    if current != published.expected {
-        return Err(format!(
-            "{}: changed since load/publication; preserving file, restart after reviewing it",
-            path.display()
-        ));
-    }
-    let result = publish(path, snapshot, revision);
-    // A directory-sync error can follow a successful rename. Retain dirty
-    // diagnostics, but recognize our bytes so the same revision can retry.
-    if result.is_ok() || read(path).ok().flatten().as_ref() == Some(snapshot) {
-        published.expected = Some(snapshot.clone());
-    }
-    result?;
-    published.revision = revision;
-    Ok(revision)
-}
-pub(super) fn publish(path: &Path, value: &Value, revision: u64) -> Result<(), String> {
-    let dir = path
-        .parent()
-        .filter(|d| !d.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    let tmp = dir.join(format!(
-        ".viewer-preferences.{}.{}.tmp",
-        std::process::id(),
-        revision
-    ));
-    let mut created = false;
-    let mut write = || -> Result<(), String> {
-        let mut f = std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&tmp)
-            .map_err(|e| format!("{}: {e}", tmp.display()))?;
-        created = true;
-        f.write_all(&serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())?;
-        f.sync_all().map_err(|e| e.to_string())?;
-        std::fs::rename(&tmp, path).map_err(|e| e.to_string())?;
-        std::fs::File::open(dir)
-            .and_then(|f| f.sync_all())
-            .map_err(|e| format!("snapshot renamed but directory durability unconfirmed: {e}"))?;
-        Ok(())
-    };
-    let answer = write();
-    if answer.is_err() && created {
-        let _ = std::fs::remove_file(&tmp);
-    }
-    answer.map_err(|e| format!("{}: {e}", path.display()))
-}
+pub(super) use super::publication::{publish_ordered, Publication};

@@ -1,6 +1,7 @@
 //! Exact source bytes owned by Study; receipts contain only bounded references.
 //! Capture, hydration and publication are worker/job operations, never frame work.
 use serde::{Deserialize, Serialize};
+use crate::publication::{self, Hooks, NoHooks, Outcome, Policy, Stage};
 use std::{collections::BTreeMap, path::{Path, PathBuf}, sync::Arc};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -80,24 +81,42 @@ impl Store {
     /// Publish content first, manifest last. Existing content is verified and never overwritten.
     /// A failed manifest publication leaves recoverable bytes in this owner and immutable artifacts intact.
     pub fn publish(&self, manifest: &Path) -> Result<(), String> {
+        self.publish_with(manifest, &NoHooks)
+    }
+    pub fn publish_with(&self, manifest: &Path, hooks: &dyn Hooks) -> Result<(), String> {
         self.validate()?;
         for (hash, reference) in &self.references {
             let path = Self::artifact_path(manifest, hash);
             let bytes = self.resolve(hash)?;
             Self::verify(reference, bytes, &path)?;
-            let parent = path.parent().ok_or("input_contents: artifact parent missing")?;
-            std::fs::create_dir_all(parent).map_err(|e| format!("input_contents.{hash}: {}: {e}", parent.display()))?;
-            match std::fs::read(&path) {
-                Ok(existing) => Self::verify(reference, &existing, &path)?,
+            let result = match std::fs::read(&path) {
+                Ok(existing) => {
+                    Self::verify(reference, &existing, &path)?;
+                    // Readable identity is insufficient: synchronize reused evidence too.
+                    publication::confirm_existing_with(&path, hooks)
+                }
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                    if let Err(error) = super::write_new(&path, bytes) {
-                        // A concurrent publication may have won the immutable link race.
-                        let existing = std::fs::read(&path).map_err(|_| format!("input_contents.{hash}: publication {}: {error}", path.display()))?;
-                        Self::verify(reference, &existing, &path)?;
+                    match publication::publish_with(&path, bytes, Policy::ImmutableNew, hooks) {
+                        Outcome::Unpublished(failure)
+                            if failure.stage == Stage::Publish
+                                && failure.kind == std::io::ErrorKind::AlreadyExists => {
+                            // Only the immutable destination race permits verified reuse.
+                            // Other failures, especially visible-unconfirmed ones, stay errors.
+                            if failure.cleanup_error.is_some() {
+                                return Outcome::Unpublished(failure).into_result().map_err(|e|
+                                    format!("input_contents.{hash}: publication {}: {e}", path.display()));
+                            }
+                            let existing = std::fs::read(&path).map_err(|e|
+                                format!("input_contents.{hash}: concurrent artifact {}: {e}", path.display()))?;
+                            Self::verify(reference, &existing, &path)?;
+                            publication::confirm_existing_with(&path, hooks)
+                        }
+                        outcome => outcome,
                     }
                 }
                 Err(error) => return Err(format!("input_contents.{hash}: unreadable artifact {}: {error}", path.display())),
-            }
+            };
+            result.into_result().map_err(|e| format!("input_contents.{hash}: publication {}: {e}", path.display()))?;
         }
         Ok(())
     }

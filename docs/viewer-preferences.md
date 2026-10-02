@@ -229,8 +229,12 @@ snapshot while holding the serialization gate. A changed, unreadable/corrupt or
 future-schema file is preserved and refused: restart after reviewing the input.
 This detects changes present at the prepublication check; it is not an OS lock
 against another process writing between comparison and rename. Run one viewer
-owner per config location. Post-rename directory-sync errors retain dirty state
-and recognize our bytes as the expected retry base without acknowledging success.
+owner per config location. Typed visible-but-unconfirmed outcomes retain dirty state and record only the
+known publication snapshot as the expected retry base, without acknowledging success.
+A separate visible revision floor prevents an older publication replacing that base.
+Retry checks the actual file against the expected snapshot before synchronization or
+replacement; an observed external edit is preserved and refused. Matching bytes
+alone are insufficient: the shared file and directory synchronization must succeed.
 Shutdown includes queued recent normalization plus current hardware/CAD defaults.
 Accepted recent intent advances the dirty revision before canonicalization and
 `settings_status` reports pending records separately from disk publication.
@@ -268,3 +272,26 @@ while both active collections omit the removed rows. Written bound/schema fixtur
 retain fail-closed publication; all execution remains unverified. These repairs
 retain T45.1–T45.3 and all four outcome IDs above, the one jobs owner, existing CAD
 validation/undo, recents and hardware STOP/release/explicit activation.
+
+
+## T51 shared filesystem contract
+
+[Shared publication](shared-evidence-publication.md) provides typed outcomes and one
+filesystem implementation beneath SettingsOwner. The serialized Publication gate
+still owns external snapshot validation and revision ordering; serialization runs
+in the existing jobs. A confirmed outcome advances the saved revision only through
+`land_save` for its captured identity. A visible but unconfirmed replacement raises
+the visible revision floor, retains its expected snapshot, and leaves the confirmed
+revision unchanged. Both timed and explicit retry retain current projections.
+
+Retry of a known visible snapshot confirms file and directory synchronization before
+acknowledgment. A newer revision can publish only after the external snapshot check;
+older work cannot overwrite its visible state. Read, schema or observed snapshot
+changes refuse retry, preserving external bytes. These checks are not cross-process
+compare-and-swap: another process can still write between comparison and publication.
+Run one owner per preference destination. Unsupported directory sync or ancestry
+sync failure remains a diagnostic and dirty state, including on platform fallback.
+Cleanup failure is also surfaced and fails acknowledgment despite otherwise confirmed
+publication. SettingsOwner Drop stays a best-effort complete-on-drop job; ordinary
+close relies on its current drain state instead. Failure-stage and lifecycle fixtures
+are written through the shared injection seam but have not been executed.

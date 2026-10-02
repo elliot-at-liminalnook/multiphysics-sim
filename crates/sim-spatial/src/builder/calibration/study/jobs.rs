@@ -190,17 +190,27 @@ pub fn start_publication_with_inputs(owner:&mut StudyOwner,stamp:StudyStamp,valu
         worker.validate().map_err(|e|format!("study.publish {}: {e}",output.display()))?;
         {
             let mut g=worker_gate.lock().unwrap_or_else(|p|p.into_inner());
-            if g.cancelled || ctx.cancelled() { return Err("Cancelled before immutable publication".into()); }
-            g.started=true;
+            authorize_publication(&mut g, ctx.cancelled())?;
         }
         // After this linearization point cancellation cannot promise rollback.
         ctx.message("Publishing new immutable evidence; cancellation can no longer revoke publication");
-        if export { worker.export_html_new(&output) } else { worker.save_new(&output) }
-            .map_err(|e|format!("study.publish {}: {e}",output.display()))?;
-        Ok(JobOutput::Published)
+        publish_artifact(&worker, &output, export, &sim_runtime::publication::NoHooks)
     }).complete_on_drop();
     owner.pending.push(PendingJob{id,kind:if export {JobKind::Export}else{JobKind::Save},stamp:Some(stamp),document,source:destination.display().to_string(),trial_ids:vec![],launch:serde_json::Value::Null,cancel_requested:false,job,selection_epoch:owner.selection_epoch,gate:Some(gate),captured:Some(captured)});
     Ok(id)
+}
+
+/// Existing cancellation authority, kept above all irreversible filesystem work.
+pub(super) fn authorize_publication(gate:&mut PublicationGate,cancelled:bool)->Result<(),String> {
+    if gate.cancelled || cancelled { return Err("Cancelled before immutable publication".into()); }
+    gate.started=true;
+    Ok(())
+}
+/// The same artifact/acknowledgment adapter used by the adopted job and source fixtures.
+pub(super) fn publish_artifact(study:&Study,path:&std::path::Path,export:bool,hooks:&dyn sim_runtime::publication::Hooks)->Result<JobOutput,String> {
+    if export { study.export_html_new_with(path,hooks) } else { study.save_new_with(path,hooks) }
+        .map_err(|e|format!("study.publish {}: {e}",path.display()))?;
+    Ok(JobOutput::Published)
 }
 
 pub fn poll(mut owner:ResMut<StudyOwner>,registry:Res<DocumentRegistry>) {

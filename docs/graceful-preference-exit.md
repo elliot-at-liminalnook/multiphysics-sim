@@ -109,3 +109,22 @@ c380210b. Its three repair findings were accepted; compilation, written fixtures
 interactive usability and executed export/parity remain unverified. Historical
 uncompiled-epic counts are snapshots, not evidence of later compilation. This
 batch does not retire Python, browser or sim-viewer compatibility paths.
+
+
+## T51 visible publication and close draining
+
+The [shared publication contract](shared-evidence-publication.md) changes filesystem
+mechanics beneath SettingsOwner, leaving CloseOwner as the sole ordinary close
+authority. A visible replacement with unconfirmed synchronization remains dirty and
+projects PublicationFailed. Read-back alone cannot authorize closure. Retry validates
+the expected snapshot, preserves any observed external edit, and confirms required
+synchronization before `land_save` may acknowledge the captured revision.
+
+The publication gate tracks a visible revision floor separately from its confirmed
+revision; an older unconfirmed replacement cannot displace newer visible work.
+Late acknowledgments remain tied to their captured revision and cannot authorize a
+newer settings state. Close authorization still rereads current `drain_stamp`, current
+settings readiness and StudyOwner/StudyUi blockers at Last on both authorization
+frames. Revision changes revoke armed closure and preference-loss acknowledgment.
+Complete-on-drop and abrupt-exit limitations above remain unchanged. Shared injected
+failure and drain-revision fixtures are source-written, uncompiled and unexecuted.

@@ -25,21 +25,20 @@ T49 ordinary activation and focus was accepted in call-0378 across
 ordering and actual-consumer focus repairs are accepted by source review only;
 compilation, fixtures, rendering and hit testing remain unexecuted.
 
-T50 recording authoring at `5dd26014` remains under source review after
-call-0382 identified missing captured fit traces, lost rejected additional-study
-inputs, and host-dependent additional-source quarantine. The bounded repairs
-extend the same study action/job/presentation owners: durable source-stamped
-fit/case review, jobs-owned immutable additional-input evidence, and shared
-two-source quarantine enforcement. See [T50 repair evidence](../native-recording-fit-authoring.md#call-0382-repairs).
-These repairs do not establish executed parity or retire any reference surface.
+T50 recording authoring was accepted by source review in call-0386 across
+`5dd26014`, `11b9ce82` and `3a7d321a`. The accepted repairs include captured
+fit traces, rejected additional-study input retention, shared two-source quarantine,
+and bounded receipt references backed by Study-owned immutable `.study-inputs/`
+companions. Save-new/reopen validates those companions; legacy inline evidence
+stays readable and is never silently stripped. See [T50 evidence](../native-recording-fit-authoring.md).
+This acceptance establishes no compilation, fixture execution, GUI parity,
+executed durability or reference retirement.
 
-Call-0384 reported the functional repair source traces at `11b9ce82` correct but found
-recursive raw additional-study inputs in receipts. T50 input content now extends
-the existing Study/publication owner: receipts contain bounded content references;
-Study owns deduplicated in-memory bytes and publishes immutable content-addressed
-companions in `.study-inputs/` beside the artifact. Save-new/reopen validates and
-preserves access to those companions. Legacy inline evidence stays readable and
-is never silently stripped. See [T50 storage repair](../native-recording-fit-authoring.md#call-0384-input-content-storage).
+T51 shares filesystem publication mechanics beneath the existing Study and
+SettingsOwner contracts. The [publication source map](../shared-evidence-publication.md)
+records immutable-new versus replacement policy, typed visibility/durability
+outcomes, synchronization/retry limits and retained recovery. Existing actions,
+public scheduling, jobs and document/lifecycle owners remain authoritative.
 
 Rust changes after the historical `aa34ef48` execution checkpoint remain
 uncompiled and unexecuted. The former opening ten-epic count was a stale dated
@@ -7187,7 +7186,28 @@ CAD remains physical source of truth. Predictions require explicit comparison
 limits. Candidate use remains explicit exploratory source-linked draft authoring,
 separate from review decisions and physical-source acceptance.
 
-T50 is implementation/source-review work with written unexecuted fixtures; no
+T50 was accepted in call-0386 by source review across `5dd26014`, `11b9ce82`
+and `3a7d321a`, with written unexecuted fixtures; no
 compilation, execution, publication or GUI parity receipt is claimed. §§8–9 remain
 unchanged: Python/OCCT, browser, FPGA/electrical/power, raw sweep and hardware
 acquisition reference requirements remain. No legacy retirement is authorized.
+
+
+## Shared evidence publication — T51 (2026-10-02)
+
+The [focused contract and source map](../shared-evidence-publication.md) realizes
+§§2–4 and §7 beneath the T45/T47/T50 owners. Shared filesystem stages do not own
+serialization, revision gates, cancellation permission, document state or close
+intent. Study retains immutable companion-first publication; SettingsOwner retains
+ordered replacement and exact revision acknowledgment; CloseOwner rechecks current
+settings and authored-work blockers before ordinary closure. A visible destination
+whose required synchronization fails is a recoverable failure, never a saved receipt.
+
+Decision: share publication mechanics, retaining consumer policy and ownership.
+This removes duplicate temporary/sync/link/rename implementations without creating
+a persistence service or simulation path. Specialized undo journals, annotations,
+recording streams and isolated CAD parity outputs retain their existing writers;
+their transaction, streaming or isolation contracts are outside this bounded migration.
+Revisit those writers only under a separately reviewed migration. Compilation,
+fixtures, filesystem behavior and GUI parity remain unverified; no execution is
+part of T51 source review.

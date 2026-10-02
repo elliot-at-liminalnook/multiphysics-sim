@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "id": "assembly",
+  "source": {
+    "path": "examples/components/parametric-quadruped/assembly.rcad",
+    "sha256": "aa1681a53f2c356d86c163482f82c01e086f47fe9e5e6bf27895bd2412180038"
+  },
+  "dependencies": [],
+  "model_schema": "robocad/1",
+  "document_id": "4039f4e33aa642bf84db44a70a6dee88",
+  "units": "mm",
+  "frame": "cad-world",
+  "provenance": "Repository-owned archive; embedded B-rep/definitions inspected without loading OCCT. Historical component provenance paths remain recorded, are not operational imports, and are never rewritten.",
+  "coverage": [
+    "component_lifecycle",
+    "derived_physics",
+    "edits",
+    "exports",
+    "frames",
+    "geometry",
+    "identity",
+    "joints",
+    "lifecycle",
+    "mass_inertia",
+    "parameters",
+    "provenance",
+    "tessellation",
+    "topology",
+    "uncertainty",
+    "units"
+  ],
+  "unavailable": [
+    "No executed evidence or numerical qualification",
+    "No recorded experiment-result bundle in the bounded corpus: linkage scenarios cover ephemeral CAD snapshots and missing-capture refusal only",
+    "Sketch/direct-tool UI, print strength/splitting, belts, calibration and independent derivations/kernels unrepresented",
+    "Tessellation beyond 4096 points is explicitly unsupported, never truncated",
+    "Measured provenance/uncertainty may be absent in original CAD; absence is retained rather than filled",
+    "External native registry/experiment executables are runtime dependencies, not model replacements"
+  ],
+  "scenarios": [
+    {
+      "id": "assembly-contracts",
+      "operations": [
+        {"id": "baseline","operation": {"kind": "observe"},"expected": "success"},
+        {"id": "rename","operation": {"kind": "rename","node": "23e7f08f325b","name": "Parity owned edit"},"expected": "success"},
+        {"id": "undo","operation": {"kind": "undo"},"expected": "success"},
+        {"id": "redo","operation": {"kind": "redo"},"expected": "success"},
+        {"id": "stale","operation": {"kind": "configure_robot","revision_offset": -1,"updates": {}},"expected": "rejected"},
+        {"id": "physical","operation": {"kind": "physical","flex": false,"planar": false},"expected": "success"}
+      ],
+      "comparisons": [
+        {"step_id": "baseline","path": "adapter.environment","family": "identity","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "identity.source_sha256","family": "identity","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "identity.document_id","family": "identity","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "model.units","family": "units","unit": "mm","frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "model.frame","family": "frames","unit": null,"frame": "cad-world","require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "provenance","family": "provenance","unit": null,"frame": null,"require_provenance": false,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "uncertainty","family": "uncertainty","unit": null,"frame": null,"require_provenance": false,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "joints","family": "joints","unit": "mixed:mm,rad","frame": "cad-world","require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "rename","path": "operation.outcome","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "rename","path": "lifecycle.nodes","family": "edits","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "rename","path": "lifecycle.revision","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "undo","path": "operation.outcome","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "undo","path": "lifecycle.nodes","family": "edits","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "undo","path": "lifecycle.revision","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "redo","path": "operation.outcome","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "redo","path": "lifecycle.nodes","family": "edits","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "redo","path": "lifecycle.revision","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "stale","path": "operation.outcome","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "stale","path": "lifecycle.nodes","family": "edits","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "stale","path": "lifecycle.revision","family": "lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "geometry.23e7f08f325b.volume","family": "mass_inertia","unit": "mm^3","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null},
+        {"step_id": "baseline","path": "geometry.23e7f08f325b.area","family": "mass_inertia","unit": "mm^2","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null},
+        {"step_id": "baseline","path": "geometry.23e7f08f325b.center","family": "mass_inertia","unit": "mm","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null},
+        {"step_id": "baseline","path": "geometry.23e7f08f325b.inertia","family": "mass_inertia","unit": "mm^5","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null},
+        {"step_id": "baseline","path": "geometry.23e7f08f325b.mass_kg","family": "mass_inertia","unit": "kg","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null},
+        {"step_id": "baseline","path": "geometry.23e7f08f325b.com_m","family": "mass_inertia","unit": "m","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null},
+        {"step_id": "baseline","path": "geometry.23e7f08f325b.inertia_kg_m2","family": "mass_inertia","unit": "kg*m^2","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null},
+        {"step_id": "baseline","path": "topology.23e7f08f325b","family": "topology","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "tessellation.23e7f08f325b.topology","family": "tessellation","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "baseline","path": "tessellation.23e7f08f325b.points","family": "geometry","unit": "mm","frame": "cad-world","require_provenance": true,"metric": {"kind": "point_set","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."},"max_points": 4096},"deliberate_difference": null},
+        {"step_id": "physical","path": "physical.schema","family": "exports","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "physical","path": "physical.links","family": "derived_physics","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "physical","path": "physical.joints","family": "derived_physics","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "physical","path": "physical.materials","family": "derived_physics","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "physical","path": "physical.uncertainty","family": "uncertainty","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "physical","path": "physical.source","family": "exports","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": "Isolated source.file and actual export timestamps differ by adapter. Raw source and physical_hash stay in receipts; this unresolved intentional difference blocks migration gates."}
+      ],
+      "required_coverage": ["derived_physics", "edits", "exports", "frames", "geometry", "identity", "joints", "lifecycle", "mass_inertia", "provenance", "tessellation", "topology", "uncertainty", "units"]
+    },
+    {
+      "id": "component-guards",
+      "operations": [
+        {"id": "start-stale","operation": {"kind": "component","operation": {"instance_id": "93e2252af0b4","overrides": {"length": 101.0},"placement": null,"operation": "overrides"},"revision_offset": -1,"cancel": false,"interfere": null},"expected": "rejected"},
+        {"id": "apply","operation": {"kind": "component","operation": {"instance_id": "93e2252af0b4","overrides": {"length": 101.0},"placement": null,"operation": "overrides"},"revision_offset": 0,"cancel": false,"interfere": null},"expected": "success"},
+        {"id": "undo","operation": {"kind": "undo"},"expected": "success"},
+        {"id": "redo","operation": {"kind": "redo"},"expected": "success"},
+        {"id": "commit-stale","operation": {"kind": "component","operation": {"instance_id": "93e2252af0b4","overrides": {"length": 101.0},"placement": null,"operation": "overrides"},"revision_offset": 0,"cancel": false,"interfere": "23e7f08f325b"},"expected": "rejected"},
+        {"id": "cancel","operation": {"kind": "component","operation": {"instance_id": "93e2252af0b4","overrides": {"length": 101.0},"placement": null,"operation": "overrides"},"revision_offset": 0,"cancel": true,"interfere": null},"expected": "cancelled"}
+      ],
+      "comparisons": [
+        {"step_id": "start-stale","path": "operation.outcome","family": "component_lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "apply","path": "operation.outcome","family": "component_lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "undo","path": "operation.outcome","family": "component_lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "redo","path": "operation.outcome","family": "component_lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "commit-stale","path": "operation.outcome","family": "component_lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "cancel","path": "operation.outcome","family": "component_lifecycle","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "apply","path": "components","family": "parameters","unit": null,"frame": null,"require_provenance": true,"metric": {"kind": "exact"},"deliberate_difference": null},
+        {"step_id": "apply","path": "geometry.aa897fe88172.volume","family": "mass_inertia","unit": "mm^3","frame": "cad-world","require_provenance": true,"metric": {"kind": "numeric","tolerance": {"absolute": 0.0,"relative": 0.0,"justification": "Same Python/OCCT implementation on identical archive bytes: require exact finite values. No measured accuracy, numerical replacement allowance or closure feasibility qualification is inferred; widen only after executed discrepancy evidence and explicit review."}},"deliberate_difference": null}
+      ],
+      "required_coverage": ["component_lifecycle", "parameters", "mass_inertia"]
+    }
+  ]
+}

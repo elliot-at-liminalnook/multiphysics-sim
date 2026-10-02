@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (cad-experiments-motion written and source-reviewed with T43 repair review pending, execution unverified; cad-components written, source-reviewed, execution unverified; public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
+## Where it is today (cad-experiments-motion accepted by source review at 4d2725f2/e6f6ed10, compilation and execution unverified; cad-components written, source-reviewed, execution unverified; public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
 
 **Rust changes since aa34ef48 have not been compiled or executed.** Historical
 Python executions remain recorded below (including the cad-organize gap route's
@@ -6335,7 +6335,7 @@ The Director re-ranks with evidence, but this is the default:
    cad-components.
    **cad-components**, **public-system-sets** and **cad-experiments-motion**
    are implemented by reading, pending verification and uncompiled.
-   The Director selects the next batch after the T43 repair review; no phase-1
+   T43 source review was accepted at 4d2725f2/e6f6ed10; T44 writes the phase-2 harness; no phase-1
    CAD family remains deferred in the source ledger. Exact parity remains unproven.
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
@@ -6350,7 +6350,7 @@ The Director re-ranks with evidence, but this is the default:
 "Bevy-practice gaps" in "Where it is today"). one-text-entry and
 cad-organize and **public-system-sets** are done (pending verification,
 uncompiled). T42 implements cad-components and T43 implements cad-experiments-motion
-by source review only; the Director selects subsequent work after repair review.
+by accepted source review at 4d2725f2/e6f6ed10; T44 is the current phase-2 harness batch.
 Interleave structural work with later CAD migration phases, keeping at least
 one epic in three structural:
 
@@ -6625,7 +6625,7 @@ rule (these are future checks, not receipts):
 - [x] Source size and whitespace inspection; no build, test, screenshot
       or hardware operation performed.
 
-Current order: cad-components (T42) and cad-experiments-motion (T43) are implemented by reading. The Director selects the next batch after T43 repair review; execution and exact parity remain unverified.
+Current order: cad-components (T42) and cad-experiments-motion (T43) are implemented by reading. T43 source review was accepted at 4d2725f2/e6f6ed10; T44 is the current phase-2 harness batch. Execution and exact parity remain unverified.
 
 
 ## CAD components ownership and integration (T42, 2026-10-01)
@@ -6813,7 +6813,7 @@ success, mismatched answers and cancellation without resurrecting intent.
 
 ## CAD experiments and motion (T43, 2026-10-01)
 
-Implemented and independently cross-reviewed by reading; uncompiled and unexecuted. The 63-row family now has individual owners in cad-parity.md; [T43 evidence](../cad-experiments-motion-evidence.md) records all eight batch IDs, actual rendered controls, source/service traces, ownership, public scheduling and lifecycle contracts. This realizes §§1–7 and §9 phase 1 only. Headless captured geometry and reference PoseModel sampling retain Python/OCCT authority; Qt reuses the shared service. Native experiment preflight feeds composition metadata. Resources retain drafts, rejected requests and durable cancellation/unknown receipts while transient kit widgets may close. Preview blocks source geometry edits centrally, with guarded annotation/program metadata as the only auxiliary exception. Native export uses bounded capture delivery and a serialized cancellation/publication gate. No physics, derivation port, executed parity or legacy retirement is claimed. Next work is selected by the Director after repair review.
+Implemented and independently cross-reviewed by reading; uncompiled and unexecuted. The 63-row family now has individual owners in cad-parity.md; [T43 evidence](../cad-experiments-motion-evidence.md) records all eight batch IDs, actual rendered controls, source/service traces, ownership, public scheduling and lifecycle contracts. This realizes §§1–7 and §9 phase 1 only. Headless captured geometry and reference PoseModel sampling retain Python/OCCT authority; Qt reuses the shared service. Native experiment preflight feeds composition metadata. Resources retain drafts, rejected requests and durable cancellation/unknown receipts while transient kit widgets may close. Preview blocks source geometry edits centrally, with guarded annotation/program metadata as the only auxiliary exception. Native export uses bounded capture delivery and a serialized cancellation/publication gate. No physics, derivation port, executed parity or legacy retirement is claimed. T43 was accepted by the orchestrator in call-0342 after source review of 4d2725f2 and e6f6ed10; compilation and execution remain unverified.
 
 ### T43 repair ownership and continuation contract
 
@@ -6841,3 +6841,20 @@ remote lifetime/cleanup and cross-consumer branch state. Revisit only if execute
 performance evidence warrants a bounded identity-scoped session service. No
 solver or physical definitions change. Written race and closed-loop fixtures
 remain unexecuted; no compilation, launch, capture/export or parity execution.
+
+
+### CAD parity harness — T44 (2026-10-01)
+
+§9 phase 2 now has a graphics-independent shared contract and paired headless
+runner in `sim_runtime::cad_parity`, with direct RoboCAD reference dispatch and
+a separate typed Rust CAD-client adapter. Both still use Python/OCCT; service
+agreement cannot qualify an independent derivation or kernel replacement.
+The [harness guide](../cad-parity-harness.md) records the module map, versioned
+wire contract, isolated hash-backed corpus, future launch path, source trace and
+fail-closed migration gates. This changes no CAD authority, UI, physics or
+measured values. Python/browser compatibility and unsigned checklists remain.
+
+T44 contracts, adapters, fixtures and reports are written and reviewed by
+reading only. No scenario, build, test, export, window or capture was executed.
+There is no executed passing migration evidence and no legacy retirement.
+Historical T43 accepted source review is distinct from compilation or parity.

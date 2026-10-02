@@ -1551,6 +1551,34 @@ def make_handler(service: Service):
             if not parts:
                 return self._send(200, run(s.health))
             head = parts[0]
+            if parts == ['parity', 'captured']:
+                if method != 'GET':
+                    raise ApiError(405, 'Parity captured observations are read-only')
+                from .parity_observations import captured_observation
+                def parity_captured():
+                    with s.doc._lock:
+                        from .parity_observations import source_identity
+                        source_identity(s.doc, q.get('source_sha256'))
+                        if getattr(s, '_parity_captured_document', None) != s.doc.document_id:
+                            s._parity_captured = {}
+                            s._parity_captured_document = s.doc.document_id
+                        return captured_observation(s.doc, s._parity_captured,
+                            q.get('capture', ''), q.get('action', 'geometry'))
+                try:
+                    return self._send(200, run(parity_captured))
+                except (KernelError, ValueError) as error:
+                    raise ApiError(422, str(error))
+            if parts == ['parity', 'observations']:
+                if method != 'GET':
+                    raise ApiError(405, 'Parity observations are read-only')
+                from .parity_observations import collect
+                def parity_observations():
+                    with s.doc._lock:
+                        return collect(s.doc, q.get('source_sha256'))
+                try:
+                    return self._send(200, run(parity_observations))
+                except (KernelError, ValueError) as error:
+                    raise ApiError(422, str(error))
             if head == 'system':
                 check_id = body.get('check_id') or q.get('check_id')
                 imported_check = s.checked_graph_imports(check_id) if check_id and method != 'GET' else None

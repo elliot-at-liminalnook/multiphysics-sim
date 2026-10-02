@@ -7841,9 +7841,11 @@ name = "sim-runtime"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "libc",
  "nalgebra 0.34.2",
  "serde",
  "serde_json",
+ "sha2",
  "serde_norway",
  "sim-agent",
  "sim-annotate",

@@ -1,13 +1,14 @@
 # Native viewer consolidation: workflow inventory and shell decision
 
-Status: inventory and decision, 2026-09-29 (task B0/T0.1). Documentation only;
-nothing here has been migrated yet. Pointers were checked against source at
+Status: initial inventory and decision, 2026-09-29 (task B0/T0.1), with dated
+updates below. Historical entries describe that snapshot; current architecture
+and the T43/T44 updates supersede stale migration requirements. Initial pointers were checked against source at
 commit `6368c7c4`. Items marked *unverified* were not confirmed in code or on
 screen.
 
 ## 1. Summary and decision
 
-**The shell is `sim-spatial` (Bevy 0.16, `crates/sim-spatial`).** Every other
+**The shell is `sim-spatial` (Bevy 0.19.1, `crates/sim-spatial`).** Every other
 workflow moves into it as a mode, tab or dock. No new viewer is created.
 
 Reasons, from source:
@@ -43,7 +44,7 @@ Rejected candidates and their disposition:
 | App | Why not the shell | Disposition |
 |---|---|---|
 | `sim-viewer` (eframe/egui schematic, `crates/sim-viewer/src/main.rs`) | Good 2D schematic and experiment review. Its REST covers only a subset of system edits (`system`, `system_state`, `system_level`, `system_select`, `system_undo`, `system_redo`, `system_grid`, `system_move`; no `system_run`, studies or `system_ui`). It has no 3D view. A second GUI toolkit in the same window as Bevy would need a bridge. | Keep as legacy until parity. Its reusable parts are already libraries: `sim-diagram` (schematic layout/projection, `TimeGraph` plot) and `sim_runtime::{experiment_study, controller_refinement::*}`. Port views into Bevy rather than embedding egui. |
-| `sim-app` (Bevy, `crates/sim-app/src/main.rs`) | No REST API and no system files. Both scenes step physics inside a Bevy `Update` system on the UI thread (`cad_app.rs:advance`, line 176; `phenomena_app.rs:advance`, line 180). This conflicts with the off-UI-thread rule. | Keep as legacy; not deleted. Its `--scene cad` window is now only the labelled fallback that RoboCAD's Simulate and `python -m robocad.simbridge` open when no sim-spatial binary is built (batch cad-simulate-native, §2b, §3). It is still the only viewer for planar v2 simrobot files (sim-spatial refuses them by name since batch cad-scene-parity); robot mode now has its own ×0.125–×8 speed scale. The phenomena gallery (`--scene phenomena`) is not migrated. Retire the cad scene after the remaining items in §3 are accepted. **Update 2026-09-30 (fold-sim-app):** retired and deleted (b7a97853). The phenomena gallery is sim-spatial's Phenomena mode (`--phenomena`), planar v2 files open in robot mode through `cad_robot::build_planar`, and simbridge has no fallback; ledger `docs/sim-app-parity.md` (§6). |
+| `sim-app` (retired) | Deleted and folded into sim-spatial by fold-sim-app (b7a97853). | Phenomena mode owns the gallery; Robot mode owns planar v2 and v3 files. simbridge has no legacy viewer fallback. See `docs/sim-app-parity.md`. |
 | Browser (`web/viewer`, `web/system-builder`, `sim-web` WASM) | The native-first direction supersedes it as the primary surface. | Preserved: it is the AGENTS.md realtime browser-walking surface. It is kept until native parity is shown and stays as a compatibility target afterwards. |
 | RoboCAD (Python/OCCT/Qt, `cad/robocad/ui/app.py`) | CAD kernel and authoring. Rewriting OCCT is out of scope. | Remains the CAD service behind REST (§3). |
 
@@ -2321,15 +2322,16 @@ deleted (b7a97853) and `simbridge.viewer_command` no longer falls back to it.
 Every former sim-app behaviour and where it now lives is in
 `docs/sim-app-parity.md`.
 
-Separate apps are still needed for the schematic and experiments
-(`sim-viewer`; the shell only reviews identification archives, §3), phenomena (`sim-spatial --phenomena` since fold-sim-app, 2026-09-30; sim-app is retired), CAD authoring beyond CAD mode's first epic
-(`cad/run.sh`; see `docs/cad-parity.md`), and scrubbing of live-run or
-replay history (recorded presets play back natively, §2h), observation panels beyond the two robot-mode charts, and realtime walking
-(browser, `web/README.md`; §2g lists what native preset runs lack).
-Calibration and hardware sync have the native panel above, with the browser
-pages kept until the hardware checklist is signed off. Gait evaluation and
-tuning stay in the `gait_lab` CLI; leg-driving gait playback is in the
-Leg calibration panel (and still in the browser calibration page).
+The shell includes a read-only schematic pane (`builder/schematic.rs`); the
+legacy sim-viewer remains available for additional schematic/analysis editing.
+The assigned CAD experiment authoring, captured review and kinematic motion
+workflows now have native source paths (T43, accepted by source review), and
+Phenomena/planar v2 workflows are folded into sim-spatial. This is not executed
+exact parity. Remaining external paths include the gait-lab CLI, browser
+compatibility and unsigned hardware/CAD checklist workflows; Python/OCCT and
+existing registry/experiment executables still support native CAD. No required
+Qt window is shown by source tracing for the assigned T43/T44 paths. Whole-ledger
+parity and legacy retirement remain unproven.
 
 After consolidation: a single `cargo run --release -p sim-spatial -- [FILE]`,
 where FILE may be a system, simrobot, lesson directory or gait-lab output, opened
@@ -2378,3 +2380,20 @@ requires Qt. This update supersedes historical experiment/pose external-window
 requirements for this family only, not unrelated hardware or derivation phases.
 No simulation, measured values or physics qualification changed. No build,
 fixture, window, screenshot, parity/capture/export execution occurred.
+
+## CAD parity harness inventory update — T44 (2026-10-01)
+
+Current entry: shared graphics-independent `sim_runtime::cad_parity` and its
+`cad_parity` headless binary, not another viewer. Native operations independently
+use the CAD typed client; direct reference operations use Ops/Document and shared
+headless services. Both use Python/OCCT; no UI-service agreement proves numerical
+replacement. Model owners remain existing .rcad archives; hash-declared isolated
+copies preserve source/units/frame/provenance.
+
+The [harness guide](cad-parity-harness.md) maps source owners, migration
+dependencies, corpus coverage and observable report/gate semantics. Written
+fixtures and source reading are not executed parity. Python/OCCT and optional
+registry/experiment executables remain dependencies; no Qt window is required
+by these headless paths. Positive captured-run corpus evidence and whole-ledger
+coverage remain missing. T43 was accepted by source review at 4d2725f2/e6f6ed10;
+no compilation, execution or user checklist completion is inferred.

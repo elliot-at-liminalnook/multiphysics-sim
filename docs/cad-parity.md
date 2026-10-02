@@ -1568,3 +1568,18 @@ semantics are unchanged. Fixture written and reviewed by reading, not executed.
 ## T43 cad-experiments-motion (2026-10-01)
 
 All 63 assigned rows have individual native source owners above: 46 source-reading paths and 17 deliberate native presentation/guard differences. This changes no row to executed `done`. See [batch evidence](cad-experiments-motion-evidence.md) for control-to-service traces, ownership, race fixes, retained reference requirements and all eight batch IDs. No fixture, build, launch, capture, export or parity harness ran. Captured geometry always comes from Experiments.captured_document or Candidates.document. Native pose sampling shares PoseModel with Qt. No simulation or derivation moved into Bevy.
+
+
+## T44 shared parity harness (2026-10-01)
+
+The reusable `sim_runtime::cad_parity` contract/comparators and paired headless
+runner implement §9 phase 2 tooling; see [cad-parity-harness.md](cad-parity-harness.md)
+for source traces, corpus coverage, future launch and explicit gate refusal.
+T44.1–T44.4 and all eight batch IDs are mapped there. Fixtures and adapters are
+written and source-reviewed, uncompiled and unexecuted. No ledger row becomes
+executed parity or signed acceptance. Deliberate differences stay unresolved
+in report gates; missing/unsupported/non-finite evidence never becomes success.
+Both current adapters depend on Python/OCCT; their agreement cannot qualify
+phases 3–4 numerical replacement or authorize phase 5 retirement. T43 source
+review was accepted at 4d2725f2/e6f6ed10 (call-0342); execution remains unverified.
+The user checklist remains unsigned and RoboCAD remains the reference.

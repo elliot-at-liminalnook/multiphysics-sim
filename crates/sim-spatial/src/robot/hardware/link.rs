@@ -126,8 +126,9 @@ pub enum LinkCommand {
     /// `ticket`: re-authorized against the `generation` the UI authorized it
     /// for, refused if a STOP was pressed after `epoch` (the shared epoch when
     /// it was queued), validated, run, and judged by what it achieved.
-    /// `inputs`: form values the command brings (a remote speed or PWM
-    /// ceiling), adopted only once it is authorized and validated, and put
+    /// `inputs`: form values the command brings (a remote speed, PWM
+    /// ceiling, hold-others or drive mode), adopted only once it is
+    /// authorized and validated, and put
     /// back if it fails. A `Release` (a move to hold) is exempt from the
     /// freshness and generation check, as a safety action.
     Checked { ticket: u64, epoch: u64, generation: u64, inputs: Option<Inputs>, command: Box<LinkCommand> },

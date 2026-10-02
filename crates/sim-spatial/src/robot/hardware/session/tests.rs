@@ -734,3 +734,165 @@ fn tune_start_failure_and_stop_keep_records_and_clear_terminal_stage_state() {
     assert_eq!(session.snap.state.campaign.as_ref().unwrap().completed, 2);
     assert_eq!(session.axis().tuning.unwrap().record, "retained-tune.json");
 }
+
+// Remote hold-others and drive mode go through the checked path; written and
+// source-inspected, not executed this turn.
+
+/// A bare form-input change takes the link's inputs only once authorized,
+/// and keeps them only with an Ok result (`Session::handle`'s restore).
+#[test]
+fn checked_input_change_is_kept_only_when_it_holds() {
+    use crate::robot::hardware::actions::DriveMode;
+    let identity = virtual_identity(SERVER_A);
+    let fake = Fake::start(Arc::new(|_, _| panic!("a form-input change must not reach HTTP")));
+    let mut session = pinned_session(&fake, identity);
+    session.snap.read_at = Some(Instant::now());
+    let before = session.inputs.clone();
+    let changed = Inputs { drive_mode: DriveMode::ServoPosition, hold_others: false, ..before.clone() };
+    let checked = |ticket, epoch, generation| LinkCommand::Checked { ticket, epoch, generation, inputs: Some(changed.clone()), command: Box::new(LinkCommand::Inputs(changed.clone())) };
+    // Authorized for another generation: refused, inputs untouched.
+    session.handle(checked(1, session.epoch_now(), 2));
+    assert!(session.snap.command_results[&1].is_err());
+    assert_eq!(session.inputs, before);
+    // A UI STOP pressed after it was queued: refused, inputs untouched.
+    let queued = session.epoch_now();
+    let stopped = session.epoch.fetch_add(1, SeqCst) + 1;
+    session.handle(checked(2, queued, 1));
+    assert_eq!(session.snap.command_results[&2], Err(STOP_PENDING.to_string()));
+    assert_eq!(session.inputs, before);
+    session.handle(LinkCommand::Stopped { epoch: stopped });
+    // Queued after the STOP: Ok, and the link sends with the new values.
+    session.snap.read_at = Some(Instant::now());
+    session.handle(checked(3, session.epoch_now(), 1));
+    assert_eq!(session.snap.command_results[&3], Ok(()));
+    assert_eq!(session.inputs, changed);
+    assert_eq!(session.input().drive_mode, "servo_position");
+    assert!(!session.input().hold_others);
+    // A revoked binding refuses the change back to the old values.
+    session.snap.authorization_revoked = true;
+    session.handle(LinkCommand::Checked { ticket: 4, epoch: session.epoch_now(), generation: 1, inputs: Some(before.clone()), command: Box::new(LinkCommand::Inputs(before.clone())) });
+    assert!(session.snap.command_results[&4].is_err());
+    assert_eq!(session.inputs, changed);
+    assert!(fake.commands().is_empty());
+}
+
+/// A `Hardware` with a real link pinned to a virtual execution on `fake`,
+/// once its first status is read (as `actual_remote_handler_waits_for_real_link_consumer_refusal`).
+fn remote_hardware(fake: &Fake) -> crate::robot::hardware::Hardware {
+    use crate::robot::hardware::{Hardware, HardwareConfig, settings, link::Link};
+    let mut hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
+    hw.generation = 1;
+    hw.link = Some(Link::spawn(fake.client().with_calibration_execution(virtual_identity(SERVER_A), 1), 1));
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while hw.link.as_ref().unwrap().snapshot().read_at.is_none() {
+        assert!(Instant::now() < deadline, "fresh status deadline");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    hw.snapshot = hw.link.as_ref().unwrap().snapshot();
+    hw
+}
+
+/// A fake that answers every request with the pinned virtual status.
+fn virtual_status_server() -> Fake {
+    let status = json!({"connected":true,"execution":virtual_identity(SERVER_A),"calibration":{"axes":{"1":{"role":"Knee"}}}});
+    Fake::start(Arc::new(move |_, _| Ok(status.clone())))
+}
+
+fn dispatch_as(hw: &mut crate::robot::hardware::Hardware, action: &crate::robot::hardware::actions::HardwareAction,
+    origin: crate::app::actions::Origin, continuation: &mut Value, replies: &mut crate::app::actions::Replies) -> crate::robot::hardware::handlers::Answer {
+    let mut call = crate::app::actions::Call { origin, continuation, cancelled: false, replies };
+    crate::robot::hardware::handlers::dispatch(hw, action, &mut call, Instant::now(), None, &mut |_| {})
+}
+
+/// Re-dispatches a pending remote call until its ticket resolves.
+fn settle_remote(hw: &mut crate::robot::hardware::Hardware, action: &crate::robot::hardware::actions::HardwareAction,
+    origin: crate::app::actions::Origin, continuation: &mut Value, replies: &mut crate::app::actions::Replies) -> Result<Option<Value>, String> {
+    use crate::robot::hardware::handlers::Answer;
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        match dispatch_as(hw, action, origin, continuation, replies) {
+            Answer::Pending => {
+                assert!(Instant::now() < deadline, "authoritative acknowledgement deadline");
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            Answer::Done(result) => return result,
+        }
+    }
+}
+
+/// (a) Refused by the link (a UI STOP pending when it is taken): the form
+/// and the remembered preference stay as they were.
+#[test]
+fn remote_hold_others_and_drive_mode_refused_by_the_link_leave_the_form() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::{actions::{DriveMode, HardwareAction}, handlers::Answer};
+    let fake = virtual_status_server();
+    let mut hw = remote_hardware(&fake);
+    // STOP pressed, its `Stopped` not sent: the UI's authorization does not
+    // look at the epoch, the link thread refuses whatever is queued under it.
+    hw.link.as_ref().unwrap().epoch.fetch_add(1, SeqCst);
+    let form = hw.form.inputs.clone();
+    let mut replies = Replies::default();
+    for action in [HardwareAction::HoldOthers { on: !form.hold_others }, HardwareAction::DriveMode { mode: DriveMode::ServoPosition }] {
+        let origin = Origin::Rest(replies.open());
+        let mut continuation = Value::Null;
+        assert!(matches!(dispatch_as(&mut hw, &action, origin, &mut continuation, &mut replies), Answer::Pending));
+        assert_eq!(hw.form.inputs, form, "queued, not yet the form's");
+        let result = settle_remote(&mut hw, &action, origin, &mut continuation, &mut replies);
+        assert_eq!(result, Err(STOP_PENDING.to_string()), "{action:?}");
+        assert_eq!(hw.form.inputs, form, "{action:?}");
+        assert_eq!((hw.settings.calibration.hold_others, hw.settings.calibration.drive_mode), (None, None));
+    }
+    assert!(fake.commands().is_empty(), "form inputs send no command");
+}
+
+/// (b) Ok: the form and the preference take the value at resolution.
+#[test]
+fn remote_hold_others_and_drive_mode_accepted_by_the_link_are_adopted() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::{actions::{DriveMode, HardwareAction}, handlers::Answer};
+    let fake = virtual_status_server();
+    let mut hw = remote_hardware(&fake);
+    let mut replies = Replies::default();
+    let hold = HardwareAction::HoldOthers { on: false };
+    assert!(hw.form.inputs.hold_others, "the page's default");
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &hold, origin, &mut continuation, &mut replies), Answer::Pending));
+    assert!(hw.form.inputs.hold_others, "unchanged until the link accepts it");
+    assert!(settle_remote(&mut hw, &hold, origin, &mut continuation, &mut replies).is_ok());
+    assert!(!hw.form.inputs.hold_others);
+    assert_eq!(hw.settings.calibration.hold_others, Some(false));
+    let drive = HardwareAction::DriveMode { mode: DriveMode::ServoSpeed };
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &drive, origin, &mut continuation, &mut replies), Answer::Pending));
+    assert_eq!(hw.form.inputs.drive_mode, DriveMode::Pwm);
+    assert!(settle_remote(&mut hw, &drive, origin, &mut continuation, &mut replies).is_ok());
+    assert_eq!(hw.form.inputs.drive_mode, DriveMode::ServoSpeed);
+    assert_eq!(hw.settings.calibration.drive_mode, Some(DriveMode::ServoSpeed));
+    assert!(!hw.form.inputs.hold_others, "the earlier adoption is kept");
+}
+
+/// (c) An operator edit made while the remote change was pending wins.
+#[test]
+fn an_operator_drive_mode_edit_while_pending_is_not_overwritten() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::{actions::{DriveMode, HardwareAction}, handlers::Answer};
+    let fake = virtual_status_server();
+    let mut hw = remote_hardware(&fake);
+    let mut replies = Replies::default();
+    let remote = HardwareAction::DriveMode { mode: DriveMode::ServoPosition };
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &remote, origin, &mut continuation, &mut replies), Answer::Pending));
+    // The operator's click: the local path changes the form at once.
+    let mut local = Value::Null;
+    let operator = HardwareAction::DriveMode { mode: DriveMode::ServoSpeed };
+    assert!(matches!(dispatch_as(&mut hw, &operator, Origin::Ui, &mut local, &mut replies), Answer::Done(Ok(_))));
+    assert_eq!(hw.form.inputs.drive_mode, DriveMode::ServoSpeed);
+    // The remote change still succeeds on the link, but the form keeps the newer edit.
+    assert!(settle_remote(&mut hw, &remote, origin, &mut continuation, &mut replies).is_ok());
+    assert_eq!(hw.form.inputs.drive_mode, DriveMode::ServoSpeed);
+    assert_eq!(hw.settings.calibration.drive_mode, Some(DriveMode::ServoSpeed));
+}

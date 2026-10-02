@@ -15,10 +15,10 @@ use std::time::Instant;
 #[derive(Debug)]
 pub(super) struct Seen {
     head: String,
-    body: String,
+    pub(super) body: String,
 }
 impl Seen {
-    fn request_line(&self) -> &str {
+    pub(super) fn request_line(&self) -> &str {
         self.head.lines().next().unwrap_or("")
     }
     /// The header lines after the request line, in order.

@@ -394,7 +394,7 @@ fn cad_select_and_a_selection_action_give_the_same_selection() {
     let mut plane = crate::cad::sketch::CadActivePlane::default();
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc: &mut doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, camera: Vec::new() };
+    let mut cx = Cx { doc: &mut doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), camera: Vec::new() };
     assert!(matches!(crate::cad::actions::handle(&action, &mut call, &mut cx), Outcome::Done(Ok(_))));
     // Through the shared action and its one apply system.
     let mut app = App::new();

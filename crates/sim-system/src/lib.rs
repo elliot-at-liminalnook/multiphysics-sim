@@ -10,6 +10,7 @@
 //! - [`assets`]: content-addressed reference images.
 pub mod assets;
 pub mod commands;
+pub mod composition;
 pub mod document;
 pub mod flatten;
 pub mod library;

@@ -547,8 +547,7 @@ fn the_print_rows_run_native_actions() {
 /// registry commands are catalogue operations with the command table's
 /// label, category and keys; the docks, Annotate, the pins toggle and Add
 /// reference images are native actions (`registry::organize_action`,
-/// which `Do::action` would panic without); the components rows wait for
-/// cad-components.
+/// which `Do::action` would panic without), including reusable assemblies.
 #[test]
 fn the_organize_rows_run_native_actions() {
     for c in COMMANDS.iter() {
@@ -568,6 +567,6 @@ fn the_organize_rows_run_native_actions() {
     let annotate = registry::command("tool.annotate").unwrap();
     assert!(annotate.bound && annotate.keys == ["N"], "Annotate keeps RoboCAD's N");
     for id in ["components.show", "components.make"] {
-        assert_eq!(registry::command(id).unwrap().native, Native::Later("cad-components"), "{id}");
+        assert!(matches!(registry::resolve(registry::command(id).unwrap()), Resolved::Action(CadAction::CadComponents(_))), "{id}: must reach the typed native component handler");
     }
 }

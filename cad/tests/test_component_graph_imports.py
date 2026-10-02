@@ -146,3 +146,17 @@ def test_metadata_worker_returns_run_generation_without_touching_draft(monkeypat
     started[0]()
     assert events == [(7, response)]
     assert draft == {'name': 'unsaved name', 'parameter': 'rejected expression'}
+
+
+def test_graph_mutation_refuses_replacement_document_even_at_same_revision():
+    doc = Document(); api = Service(doc)
+    source = deepcopy(doc.component_graph)
+    for method, parts, body, query in (
+        ('PUT', ['system'], {'expected_revision': doc.revision, 'document_id': 'replaced-doc', 'graph': source}, {}),
+        ('DELETE', ['system', 'components', 'missing'], {}, {'expected_revision': str(doc.revision), 'document_id': 'replaced-doc'}),
+    ):
+        with pytest.raises(ApiError) as refusal:
+            api.system_request(method, body, parts, query)
+        assert refusal.value.status == 409
+        assert doc.component_graph == source
+    assert api.system_request('GET', {}, ['system'])['document_id'] == doc.document_id

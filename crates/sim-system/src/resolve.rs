@@ -386,35 +386,5 @@ fn check_bounds(name: &str, parameter: &str, value: f64, decl: &sim_core::Parame
 
 /// Whether these terminal types may share one net.
 pub fn compatible(schemas: &[(&Terminal, PortSchema)]) -> Result<(), String> {
-    let physical: Vec<_> = schemas.iter().filter(|(_, s)| matches!(s, PortSchema::Acausal(_))).collect();
-    let signals: Vec<_> = schemas.iter().filter(|(_, s)| !matches!(s, PortSchema::Acausal(_))).collect();
-    if !physical.is_empty() && !signals.is_empty() {
-        return Err(format!("{} is physical but {} is a signal", physical[0].0, signals[0].0));
-    }
-    if let Some((first, PortSchema::Acausal(kind))) = physical.first().map(|(t, s)| (*t, s)) {
-        for (t, s) in &physical[1..] {
-            if let PortSchema::Acausal(other) = s {
-                if other != kind {
-                    return Err(format!("{first} is {} but {t} is {}", kind.name(), other.name()));
-                }
-            }
-        }
-    }
-    let outputs: Vec<_> = signals.iter().filter(|(_, s)| matches!(s, PortSchema::SignalOut(_))).collect();
-    if outputs.len() > 1 {
-        return Err(format!("signal net has two outputs: {} and {}", outputs[0].0, outputs[1].0));
-    }
-    let quantity = |s: &PortSchema| match s {
-        PortSchema::SignalIn(q) | PortSchema::SignalOut(q) => Some(q.clone()),
-        _ => None,
-    };
-    if let Some((first, s)) = signals.first() {
-        let q = quantity(s);
-        for (t, other) in &signals[1..] {
-            if quantity(other) != q {
-                return Err(format!("{first} carries {:?} but {t} carries {:?}", q.unwrap(), quantity(other).unwrap()));
-            }
-        }
-    }
-    Ok(())
+    crate::composition::validate_port_schemas(schemas)
 }

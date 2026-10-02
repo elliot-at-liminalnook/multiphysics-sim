@@ -71,6 +71,8 @@ pub(super) enum Part {
     /// as sections at the top of the right dock while shown.
     Comments,
     References,
+    Components,
+    Composition,
     Inspector,
     Physical,
     Attributes,
@@ -314,7 +316,7 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
         .with_children(|right| {
             right.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), InspectorScroll)).with_children(|area| {
                 area.spawn(Node { padding: UiRect::all(Val::Px(14.0)), ..column(4.0) }).with_children(|body| {
-                    for part in [Part::Comments, Part::References, Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
+                    for part in [Part::Components, Part::Composition, Part::Comments, Part::References, Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
                         body.spawn((column(4.0), CadList::new(part)));
                     }
                 });
@@ -386,6 +388,7 @@ fn refresh(
     mut eyes: Query<&mut Enabled, With<super::tree::EyeChip>>,
     plane: Option<Res<super::CadActivePlane>>,
     selection: CadSelection,
+    (components, composition): (Res<super::components::ComponentsState>, Res<super::composition::CadCompositionState>),
 ) {
     let root = roots.iter().next();
     let stamp = doc.as_ref().map(|d| (d.generation, d.revision));
@@ -393,7 +396,7 @@ fn refresh(
     let epoch = topology.as_ref().map(|t| t.epoch);
     // The header's active-plane line follows the plane (cad-sketch).
     let plane_changed = plane.as_ref().is_some_and(|p| p.is_changed());
-    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() && epoch == *seen_epoch && !plane_changed {
+    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() && epoch == *seen_epoch && !plane_changed && !components.is_changed() && !composition.is_changed() {
         return;
     }
     drawn.root = root;
@@ -409,7 +412,11 @@ fn refresh(
     let k = Kit::new(&fonts);
     for (entity, mut list) in &mut lists {
         let part = list.part;
-        let key = part_key(part, doc, &selection, topology, &draft, plane);
+        let key = match part {
+            Part::Components => format!("{}:{stamp:?}", super::components::key(&components)),
+            Part::Composition => format!("{}:{stamp:?}", super::composition::key(&composition)),
+            _ => part_key(part, doc, &selection, topology, &draft, plane),
+        };
         if list.key.as_ref() == Some(&key) {
             continue;
         }
@@ -429,6 +436,8 @@ fn refresh(
                 Part::TreeTools => super::tree::tools(p, &k, doc, &selection),
                 Part::Comments => super::threads::dock::draw(p, &k, doc, &selection),
                 Part::References => super::references::dock::draw(p, &k, doc, &selection),
+                Part::Components => super::components::draw(p, &k, doc, &components),
+                Part::Composition => super::composition::draw(p, &k, doc, &composition),
                 Part::Name => super::inspector::name(p, &k, doc, &selection, &draft),
                 Part::Inspector => super::inspector::inspector(p, &k, doc, &selection, topology),
                 Part::Physical => super::inspector::physical(p, &k, doc, &selection),
@@ -454,6 +463,7 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
         Part::TreeTools => super::tree::tools_key(doc, selection),
         Part::Comments => super::threads::dock::key(doc, selection),
         Part::References => super::references::dock::key(doc, selection),
+        Part::Components | Part::Composition => unreachable!("persistent feature keys are read by refresh"),
         Part::Name => super::inspector::name_key(doc, selection, draft),
         Part::Inspector => super::inspector::inspector_key(doc, selection, topology),
         Part::Physical => super::inspector::physical_key(doc, selection),

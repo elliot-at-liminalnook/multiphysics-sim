@@ -160,7 +160,7 @@ impl CadDocument {
     /// old; RoboCAD may hold edits made since), an edit in flight, or just
     /// after one until a successful `GET /` sent after it has been read.
     pub(crate) fn unsaved(&self) -> Option<bool> {
-        if self.dirty_known_at.is_some() || self.edit.is_some() || !self.connected() {
+        if self.dirty_known_at.is_some() || self.edit.is_some() || self.component_busy.is_some() || !self.connected() {
             return None;
         }
         self.health.as_ref().map(|h| h.dirty)
@@ -174,6 +174,9 @@ impl CadDocument {
 
     /// Why a mutating request cannot be sent now (refusals name it).
     pub(crate) fn edit_refusal(&self) -> Option<String> {
+        if let Some(label) = &self.component_busy {
+            return Some(format!("a component rebuild is in progress: {label}; wait or cancel it in Components"));
+        }
         if let Some(label) = self.edit_label() {
             return Some(format!("another CAD edit is in flight: {label}"));
         }
@@ -190,6 +193,9 @@ impl CadDocument {
     /// dropped with the document, nothing written).
     pub(crate) fn switch_blockers(&self) -> Vec<String> {
         let mut blockers = Vec::new();
+        if let Some(label) = &self.component_busy {
+            blockers.push(format!("a component rebuild is in progress: {label}; wait or cancel it in Components"));
+        }
         if let Some(label) = self.edit_label() {
             blockers.push(format!("a CAD edit is in flight: {label}"));
         }

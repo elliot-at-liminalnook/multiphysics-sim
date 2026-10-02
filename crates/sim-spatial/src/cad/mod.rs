@@ -58,6 +58,8 @@
 mod actions;
 mod analysis_overlay;
 mod attach;
+pub(crate) mod components;
+pub(crate) mod composition;
 mod display;
 mod document;
 mod files;
@@ -198,6 +200,7 @@ impl Plugin for CadCorePlugin {
             // cad-organize, windowless parts: the outliner's state, the threads' and
             // references' reads and the system link's status on jobs, Open in builder's switch.
             .add_plugins((tree::CoreParts, threads::CoreParts, references::CoreParts))
+            .add_plugins((components::CoreParts, composition::CoreParts))
             // At window close, a self-started service is stopped (or left running with unsaved edits).
             // After ExitSystems, which writes AppExit in Last: before it, the
             // message would be read only on a frame that never comes, and the
@@ -229,6 +232,8 @@ impl Plugin for CadPlugin {
                     .run_if(in_state(ViewerMode::Cad)),
             );
         panel::build(app);
+        components::build(app);
+        composition::build(app);
         // Sub-body selection (picking, hover, box select, the Alt menu, mode
         // buttons, overlays) and the tools (gizmo, push/pull, offset, measure,
         // numeric bar, snapping): each registers its own systems, all writing

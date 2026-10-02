@@ -103,7 +103,7 @@ pub(crate) enum Do {
 /// (`tree::command_action`), the threads' (`threads::command_action`) or
 /// the references' (`references::command_action`).
 pub(crate) fn organize_action(id: &str) -> Option<CadAction> {
-    crate::cad::tree::command_action(id).or_else(|| crate::cad::threads::command_action(id)).or_else(|| crate::cad::references::command_action(id))
+    crate::cad::tree::command_action(id).or_else(|| crate::cad::threads::command_action(id)).or_else(|| crate::cad::references::command_action(id)).or_else(|| crate::cad::components::command_action(id))
 }
 impl Do {
     pub(crate) fn action(self) -> CadAction {
@@ -386,8 +386,8 @@ pub(crate) static COMMANDS: &[Command] = &[
     c("tool.clearance", "Clearance offset…", "Print", &["Ctrl+Shift+C"], true, Native::Op),
     c("tool.mirror", "Mirror (about active plane)", "Modify", &["Ctrl+M"], true, Native::Op),
     c("tool.mirror_live", "Mirror as live instance", "Modify", &[], false, Native::Op),
-    c("components.show", "Components library", "Window", &[], false, Native::Later("cad-components")),
-    c("components.make", "Make linked component…", "Create", &[], false, Native::Later("cad-components")),
+    c("components.show", "Components library", "Window", &[], false, Native::Action(Do::Organize("components.show"))),
+    c("components.make", "Make linked component…", "Create", &[], false, Native::Action(Do::Organize("components.make"))),
     c("tool.instance", "Instance selected", "Modify", &[], false, Native::Op),
     c("tool.array", "Array…", "Modify", &["Ctrl+Shift+A"], true, Native::Op),
     c("tool.cut_plane", "Cut with active plane", "Modify", &[], false, Native::Op),

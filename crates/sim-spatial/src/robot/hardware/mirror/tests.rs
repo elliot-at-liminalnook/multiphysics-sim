@@ -57,6 +57,28 @@ fn update_follows_the_pages_lines_and_values() {
 }
 
 #[test]
+fn a_first_alignment_at_the_shown_pose_changes_the_line() {
+    let mut m = mirror();
+    m.shown = true;
+    m.worker = Some(crate::jobs::RunThread::spawn("hardware-mirror", MirrorShared::default(), worker));
+    // Not aligned: the hip is shown at CAD home (0.1).
+    let mut state = Status::default();
+    let mut doc = CalibrationDoc::default();
+    doc.axes.insert(1, Axis { role: "belt/hip".into(), ..Default::default() });
+    state.calibration = Some(doc.clone());
+    state.samples.insert(1, Telemetry { position_raw: 1200, ..Default::default() });
+    m.update(&state, false);
+    assert!(m.text.starts_with("belt/hip: not aligned — shown at cad home"), "{}", m.text);
+    let sent = m.pose_sent;
+    // Saved exactly there (reference = the reading, angle = CAD home): no value changes, the line does.
+    doc.axes.insert(1, Axis { role: "belt/hip".into(), reference: Some(1200), reference_joint_rad: Some(0.1), ..Default::default() });
+    state.calibration = Some(doc);
+    m.update(&state, false);
+    assert!(m.text.starts_with("belt/hip: 0.0° from its alignment pose"), "{}", m.text);
+    assert_eq!(m.pose_sent, sent + 1);
+}
+
+#[test]
 fn gait_bindings_skip_with_the_pages_reasons() {
     let m = mirror();
     let mut doc = CalibrationDoc::default();

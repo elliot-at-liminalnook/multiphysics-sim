@@ -1,6 +1,7 @@
 //! T50 written, UNEXECUTED native recording lifecycle fixtures.
 //! Finished adopted handles reach the production global poll/application owner;
-//! they start no threads, run no physics and publish no files.
+//! they start no threads and run no physics. Selected fixtures exercise temporary
+//! immutable publication only if execution is later authorized.
 use super::{actions::{self,StudyAction},jobs::{self,JobKind,JobOutput,PendingJob},state::{StudyOwner,DocumentCapture}};
 use crate::{app::ViewerMode,document::{DocumentRegistry,DocumentKind,Source},jobs::Job};
 use sim_runtime::{experiment_study::{Study,commands,refinement::{self,Command,Operation}},controller_refinement::recording::{Recording,Purpose},physics_context::RuntimeIdentity};
@@ -192,29 +193,35 @@ fn rejected_additional_bytes_reach_production_receipts_and_immutable_round_trip(
     let original=owner.active().unwrap().study.clone();
     let mut invalid=serde_json::to_value(&original).unwrap();
     invalid["version"]=json!(0);
+    invalid["baseline"]["old_receipt_tree"]=json!({"additional_input":{"raw":"do not recursively project me"}});
     // A parsed source can contain old receipts; the provenance projection never
     // embeds those receipt owners, while exact raw bytes remain reproducible.
     invalid["retained_fields"]=json!({"old_receipts":{"opaque":"preserved only as source bytes"}});
     let invalid=serde_json::to_vec(&invalid).unwrap();
     for (bytes,cancelled,diagnostic) in [(b"{malformed".to_vec(),false,".json"),(invalid,false,".validation"),(serde_json::to_vec(&original).unwrap(),true,"cancelled after read")] {
-        let raw=String::from_utf8(bytes.clone()).unwrap();
+        let expected_bytes=bytes.clone();
+        let mut captured=owner.active().unwrap().study.clone();
         let hash=refinement::recordings::input_identity(&bytes);
-        let (parsed,input,error)=super::recording_jobs::capture_additional("changing-source.study.json",Ok(bytes),cancelled);
+        let (parsed,input,error)=super::recording_jobs::capture_additional(&mut captured,"changing-source.study.json",Ok(bytes),cancelled);
         assert!(parsed.is_none());assert!(error.as_ref().unwrap().contains(diagnostic));
-        assert_eq!(input["content_blake3"],hash);
+        assert_eq!(input["content_ref"]["blake3"],hash);
+        assert!(input.get("raw").is_none());
         assert!(input["parsed_provenance"].get("retained_fields").is_none());
-        let output=super::recording_jobs::rejected_output(owner.active().unwrap().study.clone(),Operation::FitCombined{additional:None},error.unwrap(),cancelled,Some(input));
+        assert!(!serde_json::to_string(&input["parsed_provenance"]).unwrap().contains("do not recursively project me"));
+        let output=super::recording_jobs::rejected_output(captured,Operation::FitCombined{additional:None},error.unwrap(),cancelled,Some(input));
         finished(&mut owner,JobKind::Refinement,output);
         jobs::poll_owner(&mut owner,&registry);
-        let reopened:Study=serde_json::from_slice(&serde_json::to_vec(&owner.active().unwrap().study).unwrap()).unwrap();
+        let reopened=owner.active().unwrap().study.clone();
         reopened.validate().unwrap();
+        assert_eq!(reopened.input_contents.resolve(&hash).unwrap(),expected_bytes.as_slice());
         let receipt=reopened.refinement_evidence.receipts.last().unwrap();
-        assert_eq!(receipt.inputs["additional_input"]["raw"],raw);
-        assert_eq!(receipt.inputs["additional_input"]["content_blake3"],hash);
+        assert!(receipt.inputs["additional_input"].get("raw").is_none());
+        assert_eq!(receipt.inputs["additional_input"]["content_ref"]["blake3"],hash);
         assert_eq!(receipt.inputs["additional_input"]["execution_cancelled"],cancelled);
         assert!(receipt.failure.is_some());assert!(reopened.refinement.combined_fits.is_empty());
         let durable=reopened.retained_fields["native_offline_job_receipts"].as_array().unwrap().last().unwrap();
-        assert_eq!(durable["launch"]["additional_input"]["raw"],raw);
+        assert!(durable["launch"]["additional_input"].get("raw").is_none());
+        assert_eq!(durable["launch"]["additional_input"]["content_ref"]["blake3"],hash);
     }
     // Terminal rejection dirties the revision; an earlier publication cannot
     // acknowledge it. This invokes the existing immutable publication consumer.
@@ -227,11 +234,12 @@ fn rejected_additional_bytes_reach_production_receipts_and_immutable_round_trip(
 fn unreadable_and_non_utf8_additional_sources_keep_honest_input_diagnostics() {
     let (mut owner,registry)=owner();
     for (read,cancelled) in [(Err("permission denied (os error 13)".to_string()),false),(Ok(vec![0xff,0xfe]),false)] {
-        let (_,input,error)=super::recording_jobs::capture_additional("unreadable.study.json",read,cancelled);
+        let mut captured=owner.active().unwrap().study.clone();
+        let (_,input,error)=super::recording_jobs::capture_additional(&mut captured,"unreadable.study.json",read,cancelled);
         assert!(error.is_some());
-        if input.get("read_error").is_some(){assert!(input.get("raw").is_none());assert!(input.get("content_blake3").is_none());}
-        else {assert_eq!(input["invalid_utf8_bytes"],json!([255,254]));}
-        let output=super::recording_jobs::rejected_output(owner.active().unwrap().study.clone(),Operation::FitCombined{additional:None},error.unwrap(),false,Some(input.clone()));
+        if input.get("read_error").is_some(){assert!(input.get("raw").is_none());assert!(input.get("content_ref").is_none());}
+        else {let hash=input["content_ref"]["blake3"].as_str().unwrap();assert_eq!(captured.input_contents.resolve(hash).unwrap(),&[255,254]);}
+        let output=super::recording_jobs::rejected_output(captured,Operation::FitCombined{additional:None},error.unwrap(),false,Some(input.clone()));
         finished(&mut owner,JobKind::Refinement,output);jobs::poll_owner(&mut owner,&registry);
         assert_eq!(owner.receipts.last().unwrap().launch["additional_input"],input);
     }
@@ -250,4 +258,116 @@ fn cancellation_before_worker_start_retains_path_without_inventing_read_evidence
     assert!(receipt.launch.get("additional_input").is_none());
     assert!(receipt.launch["terminal"]["execution_cancelled"].is_null());
     assert!(receipt.cancelled);
+}
+
+#[test]
+fn referenced_rejected_input_survives_displacement_failed_publication_and_reopen() {
+    // Written only, UNEXECUTED. Exercises capture → terminal application → actual
+    // publication preparation/save-new/load consumers; no fixture is run this batch.
+    let (mut owner,mut registry)=owner();
+    let bytes=b"{malformed additional saved study".to_vec();
+    let mut captured=owner.active().unwrap().study.clone();
+    let (_,input,error)=super::recording_jobs::capture_additional(&mut captured,"changed.study.json",Ok(bytes.clone()),true);
+    let hash=input["content_ref"]["blake3"].as_str().unwrap().to_owned();
+    finished(&mut owner,JobKind::Refinement,super::recording_jobs::rejected_output(captured,Operation::FitCombined{additional:None},error.unwrap(),true,Some(input)));
+    owner.get_mut(1).unwrap().revision+=1;
+    registry.open(ViewerMode::Build,DocumentKind::System,Source::path("other.system.json"));
+    jobs::poll_owner(&mut owner,&registry);
+    assert!(owner.receipts.last().unwrap().displaced && owner.receipts.last().unwrap().stale);
+    assert_eq!(owner.get(1).unwrap().study.input_contents.resolve(&hash).unwrap(),bytes.as_slice());
+    // A failed publication terminal cannot release live recoverable bytes.
+    let id=finished(&mut owner,JobKind::Save,JobOutput::Published);
+    owner.pending.last_mut().unwrap().job=Job::finished(id,Err("study.publish: fixture immutable destination already exists".into()));
+    jobs::poll_owner(&mut owner,&registry);
+    assert_eq!(owner.get(1).unwrap().study.input_contents.resolve(&hash).unwrap(),bytes.as_slice());
+    let directory=std::env::temp_dir().join(format!("t50-content-fixture-{}-{}",std::process::id(),std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+    std::fs::create_dir_all(&directory).unwrap();
+    let destination=directory.join("saved.study.json");
+    let stamp=owner.get(1).unwrap().stamp();
+    let retained=owner.get(1).unwrap();
+    let prepared=jobs::prepare_publication_capture(&retained.study,stamp,&destination,false,&retained.source,retained.document.as_ref(),Some(json!({"unsubmitted":"retained"})));
+    prepared.save_new(&destination).unwrap();
+    let reopened=Study::load(&destination).unwrap();
+    assert_eq!(reopened.input_contents.resolve(&hash).unwrap(),bytes.as_slice());
+    assert!(prepared.save_new(&destination).is_err());
+    assert_eq!(prepared.input_contents.resolve(&hash).unwrap(),bytes.as_slice());
+    assert!(reopened.retained_fields.get("native_form_inputs").is_some());
+    // Fixture artifacts are intentionally retained, matching the data boundary.
+}
+
+#[test]
+fn duplicate_captures_store_content_once_and_both_receipt_owners_reference_it() {
+    let (mut owner,registry)=owner();
+    let bytes=b"{same malformed source".to_vec();
+    for _ in 0..3 {
+        let mut captured=owner.active().unwrap().study.clone();
+        let (_,input,error)=super::recording_jobs::capture_additional(&mut captured,"same.study.json",Ok(bytes.clone()),false);
+        finished(&mut owner,JobKind::Refinement,super::recording_jobs::rejected_output(captured,Operation::FitCombined{additional:None},error.unwrap(),false,Some(input)));
+        jobs::poll_owner(&mut owner,&registry);
+    }
+    let study=&owner.active().unwrap().study;
+    assert_eq!(study.input_contents.references.len(),1);
+    assert_eq!(study.input_contents.contents.len(),1);
+    for receipt in &study.refinement_evidence.receipts {
+        let input=&receipt.inputs["additional_input"];
+        assert!(input.get("raw").is_none());assert!(input.get("invalid_utf8_bytes").is_none());
+        assert_eq!(study.input_contents.resolve(input["content_ref"]["blake3"].as_str().unwrap()).unwrap(),bytes.as_slice());
+    }
+    let serialized=serde_json::to_value(study).unwrap();
+    assert!(serialized["input_contents"].get("contents").is_none());
+    assert!(!serde_json::to_string(&serialized).unwrap().contains("{same malformed source"));
+}
+
+#[test]
+fn repeated_saved_combined_sources_use_production_capture_and_publication_without_nested_receipts() {
+    // UNEXECUTED: each generation traces actual native consumers; preparation
+    // rejects ambiguous archive identities before any simulation or optimizer.
+    let (mut owner,registry)=owner();
+    let directory=std::env::temp_dir().join(format!("t50-generations-fixture-{}-{}",std::process::id(),std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+    std::fs::create_dir_all(&directory).unwrap();
+    let mut source=directory.join("generation-0.study.json");
+    owner.active().unwrap().study.save_new(&source).unwrap();
+    let mut captured_sources=Vec::new();
+    for generation in 1..=3 {
+        let bytes=std::fs::read(&source).unwrap();
+        let mut worker=owner.active().unwrap().study.clone();
+        let (additional,input,error)=super::recording_jobs::capture_additional(&mut worker,source.to_str().unwrap(),Ok(bytes.clone()),false);
+        assert!(error.is_none());
+        for (hash,bytes) in &additional.as_ref().unwrap().input_contents.contents {
+            assert!(std::sync::Arc::ptr_eq(bytes,&worker.input_contents.contents[hash]));
+        }
+        let hash=input["content_ref"]["blake3"].as_str().unwrap().to_owned();
+        captured_sources.push((hash.clone(),bytes.clone()));
+        let count=worker.input_contents.references.len();
+        // Capturing identical source again is a reference operation, not another
+        // immutable blob or another copy inside a receipt.
+        let (duplicate,duplicate_input,duplicate_error)=super::recording_jobs::capture_additional(&mut worker,source.to_str().unwrap(),Ok(bytes),false);
+        assert!(duplicate.is_some() && duplicate_error.is_none());
+        assert_eq!(duplicate_input["content_ref"],input["content_ref"]);
+        assert_eq!(worker.input_contents.references.len(),count);
+        let operation=Operation::FitCombined{additional:additional.map(Box::new)};
+        let error=refinement::prepare(&mut worker,operation.clone()).unwrap_err();
+        assert!(error.to_lowercase().contains("duplicate trial"),"{error}");
+        finished(&mut owner,JobKind::Refinement,super::recording_jobs::rejected_output(worker,operation,error,false,Some(input)));
+        jobs::poll_owner(&mut owner,&registry);
+        let destination=directory.join(format!("generation-{generation}.study.json"));
+        let retained=owner.active().unwrap();
+        let prepared=jobs::prepare_publication_capture(&retained.study,retained.stamp(),&destination,false,&retained.source,retained.document.as_ref(),None);
+        prepared.save_new(&destination).unwrap();
+        let reopened=Study::load(&destination).unwrap();
+        for (hash,bytes) in &captured_sources {assert_eq!(reopened.input_contents.resolve(hash).unwrap(),bytes.as_slice());}
+        for receipt in &reopened.refinement_evidence.receipts {
+            assert!(receipt.inputs["additional_input"].get("raw").is_none());
+            assert!(receipt.inputs["additional_input"].get("invalid_utf8_bytes").is_none());
+        }
+        for receipt in reopened.retained_fields["native_offline_job_receipts"].as_array().unwrap() {
+            assert!(receipt["launch"]["additional_input"].get("raw").is_none());
+        }
+        let manifest:serde_json::Value=serde_json::from_slice(&std::fs::read(&destination).unwrap()).unwrap();
+        assert!(manifest["input_contents"].get("contents").is_none());
+        assert_eq!(std::fs::read_dir(directory.join(".study-inputs")).unwrap().count(),reopened.input_contents.references.len());
+        owner.get_mut(1).unwrap().study=reopened;
+        source=destination;
+    }
+    // Generated immutable fixture artifacts are retained; no data is deleted.
 }

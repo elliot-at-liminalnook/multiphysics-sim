@@ -87,39 +87,61 @@ pub fn start_combined(owner:&mut StudyOwner,stamp:StudyStamp,additional_path:Opt
     if let Some(value)=&additional_path {jobs::path(value).map_err(|e|format!("study.combined.additional_path: {e}"))?;}
     start_operation(owner,stamp,refinement::Operation::FitCombined{additional:None},additional_path)
 }
+/// Job-only typed normalization discards unknown fields from provenance, while the
+/// untouched source bytes are retained by Study's immutable content owner.
+fn normalized<T:serde::de::DeserializeOwned+serde::Serialize>(value:&Value)->Value {
+    serde_json::from_value::<T>(value.clone()).ok()
+        .and_then(|typed|serde_json::to_value(typed).ok()).unwrap_or(Value::Null)
+}
 /// Worker-only capture. Raw bytes are immutable evidence, not a nested Study owner.
 /// Parsed provenance is deliberately whitelisted and excludes receipts/evaluations.
-pub(super) fn capture_additional(path:&str,read:Result<Vec<u8>,String>,cancelled:bool)->(Option<Study>,Value,Option<String>) {
+pub(super) fn capture_additional(worker:&mut Study,path:&str,read:Result<Vec<u8>,String>,cancelled:bool)->(Option<Study>,Value,Option<String>) {
     let mut input=json!({"path":path,"execution_cancelled":cancelled});
     let bytes=match read {
         Ok(bytes)=>bytes,
         Err(error)=>{let error=format!("study.combined.additional_path {path}: read failed: {error}");input["read_error"]=json!(error);return (None,input,Some(error));}
     };
-    input["byte_length"]=json!(bytes.len());
-    input["content_blake3"]=json!(recordings::input_identity(&bytes));
-    input["raw"]=json!(String::from_utf8_lossy(&bytes));
-    if std::str::from_utf8(&bytes).is_err(){input["invalid_utf8_bytes"]=json!(bytes);}
+    // The existing Study owns recoverable bytes once; both receipt owners carry
+    // only this bounded immutable reference, never a nested saved Study.
+    input["content_ref"]=json!(worker.input_contents.capture(bytes.clone()));
     if cancelled {
         let error="study.combined.additional_input: cancelled after read; immutable bytes retained unparsed and unapplied".to_string();
         input["rejection"]=json!(error);return (None,input,Some(error));
     }
     let result=(|| {
         let parsed:Value=serde_json::from_slice(&bytes).map_err(|e|format!("study.combined.additional_input.json {path}: {e}"))?;
+        // Normalize known types before projecting: rejected JSON must never smuggle
+        // opaque receipt trees into otherwise whitelisted provenance field names.
+        // Full rejected payloads remain recoverable only via the content reference.
         let mut provenance=serde_json::Map::new();
-        for key in ["version","baseline","draft","limits","validation_seen","validation_influenced"] {
-            if let Some(value)=parsed.get(key){provenance.insert(key.into(),value.clone());}
+        for key in ["baseline","draft"] {
+            let identity=serde_json::from_value::<sim_runtime::experiment_study::ModelSettings>(parsed[key].clone())
+                .ok().map(|model|model.fingerprint());
+            provenance.insert(format!("{key}_blake3"),json!(identity));
         }
+        provenance.insert("version".into(),json!(parsed["version"].as_u64()));
+        for key in ["validation_seen","validation_influenced"] {provenance.insert(key.into(),json!(parsed[key].as_bool()));}
+        provenance.insert("limits".into(),normalized::<sim_runtime::experiment_comparison::Limits>(&parsed["limits"]));
         let archive=&parsed["archive"];
-        provenance.insert("archive".into(),json!({"observation_blake3":archive["observation_blake3"],"model_blake3":archive["model_blake3"],"input_blake3":archive["input_blake3"],"trial_roles":archive["trials"].as_array().map(|rows|rows.iter().map(|t|json!({"id":t["id"],"split":t["split"]})).collect::<Vec<_>>())}));
+        provenance.insert("archive".into(),json!({"observation_blake3":archive["observation_blake3"].as_str(),"model_blake3":archive["model_blake3"].as_str(),"input_blake3":archive["input_blake3"].as_str(),"trial_roles":archive["trials"].as_array().map(|rows|rows.iter().map(|t|json!({"id":t["id"].as_str(),"split":t["split"].as_str(),"device":t["device"].as_u64()})).collect::<Vec<_>>())}));
         let refinement=&parsed["refinement"];
-        provenance.insert("recording_assignments".into(),refinement["recording_assignments"].clone());
-        provenance.insert("capture_contexts".into(),refinement["capture_contexts"].clone());
-        provenance.insert("recordings".into(),json!(refinement["recordings"].as_array().map(|rows|rows.iter().map(|r|json!({"version":r["version"],"experiment":r["experiment"],"runtime":r["runtime"],"source_hashes":r["source_hashes"],"timing_evidence":r["timing_evidence"]})).collect::<Vec<_>>())));
+        provenance.insert("recording_assignments".into(),normalized::<Vec<sim_runtime::controller_refinement::calibration_data::Assignment>>(&refinement["recording_assignments"]));
+        provenance.insert("capture_contexts".into(),normalized::<Vec<sim_runtime::controller_refinement::context::CaptureContext>>(&refinement["capture_contexts"]));
+        provenance.insert("recordings".into(),json!(refinement["recordings"].as_array().map(|rows|rows.iter().map(|r|json!({"version":r["version"].as_u64(),"experiment_blake3":serde_json::from_value::<sim_runtime::controller_refinement::control::Experiment>(r["experiment"].clone()).ok().map(|experiment|recordings::input_identity(&serde_json::to_vec(&experiment).expect("typed experiment serializes"))),"runtime":normalized::<sim_runtime::physics_context::RuntimeIdentity>(&r["runtime"]),"source_hashes":normalized::<std::collections::BTreeMap<String,String>>(&r["source_hashes"]),"timing_evidence":r["timing_evidence"].as_str()})).collect::<Vec<_>>())));
         let evidence=&parsed["refinement_evidence"];
-        for key in ["recording_held_out","recording_reservations","recording_exposure"] {provenance.insert(key.into(),evidence[key].clone());}
+        provenance.insert("recording_held_out".into(),normalized::<std::collections::BTreeSet<String>>(&evidence["recording_held_out"]));
+        provenance.insert("recording_reservations".into(),normalized::<std::collections::BTreeMap<String,sim_runtime::controller_refinement::calibration_data::Assignment>>(&evidence["recording_reservations"]));
+        provenance.insert("recording_exposure".into(),normalized::<std::collections::BTreeMap<String,bool>>(&evidence["recording_exposure"]));
         input["parsed_provenance"]=Value::Object(provenance);
-        let mut study:Study=serde_json::from_value(parsed).map_err(|e|format!("study.combined.additional_input.study {path}: {e}"))?;
-        study.validate().map_err(|e|format!("study.combined.additional_input.validation {path}: {e}"))?;
+        let mut study=Study::load_bytes(std::path::Path::new(path),&bytes)
+            .map_err(|e|format!("study.combined.additional_input.validation {path}: {e}"))?;
+        worker.input_contents.merge(&study.input_contents)
+            .map_err(|e|format!("study.combined.additional_input.content {path}: {e}"))?;
+        // Hydration can read content already held by the primary snapshot. Keep
+        // one retained allocation per identity across both captured sources.
+        for (hash,bytes) in &mut study.input_contents.contents {
+            if let Some(owned)=worker.input_contents.contents.get(hash) {*bytes=owned.clone();}
+        }
         recordings::cache_identities(&mut study);
         Ok(study)
     })();
@@ -163,7 +185,7 @@ pub fn start_operation(owner:&mut StudyOwner,stamp:StudyStamp,operation:refineme
         if let Some(path)=additional_path {
             ctx.message("Capturing additional saved-study bytes before parsing and validation");
             let read=std::fs::read(&path).map_err(|e|e.to_string());
-            let (additional,input,error)=capture_additional(&path,read,ctx.cancelled());
+            let (additional,input,error)=capture_additional(&mut worker,&path,read,ctx.cancelled());
             additional_input=Some(input);
             if let Some(error)=error {return Ok(rejected_output(worker,operation,error,ctx.cancelled(),additional_input));}
             operation=refinement::Operation::FitCombined{additional:additional.map(Box::new)};

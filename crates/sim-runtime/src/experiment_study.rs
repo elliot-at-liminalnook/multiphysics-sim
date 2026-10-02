@@ -1,6 +1,9 @@
 //! Retained measurements → shared physical runtime → immutable candidate evidence.
 //! No hardware IO and no CAD mutation. Hosts schedule work off the UI thread.
 pub mod commands;
+pub mod input_content;
+#[cfg(test)]
+mod input_content_fixtures;
 pub mod refinement;
 #[cfg(test)]
 mod compatibility;
@@ -372,6 +375,8 @@ pub struct ReviewView {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Study {
+    #[serde(default)]
+    pub input_contents: input_content::Store,
     pub version: u32,
     pub archive: Archive,
     pub baseline: ModelSettings,
@@ -395,6 +400,7 @@ impl Study {
         let (baseline, source) = baseline()?;
         Ok(Self {
             version: 1,
+            input_contents: Default::default(),
             archive,
             draft: baseline.clone(),
             baseline,
@@ -427,6 +433,23 @@ impl Study {
     pub fn validate(&self) -> Result<(), String> {
         if self.version != 1 {
             return Err("Unsupported comparison file version".into());
+        }
+        self.input_contents.validate()?;
+        for (i, receipt) in self.refinement_evidence.receipts.iter().enumerate() {
+            if let Some(envelope) = receipt.inputs.get("additional_input") {
+                self.input_contents.validate_envelope(envelope, &format!("refinement_evidence.receipts.{i}.inputs.additional_input"))?;
+            }
+        }
+        for (key, value) in &self.retained_fields {
+            if key == "native_offline_job_receipts" || key.starts_with("native_offline_job_receipts_retained_") {
+                if let Some(rows) = value.as_array() {
+                    for (i, row) in rows.iter().enumerate() {
+                        if let Some(envelope) = row.get("launch").and_then(|launch| launch.get("additional_input")) {
+                            self.input_contents.validate_envelope(envelope, &format!("{key}.{i}.launch.additional_input"))?;
+                        }
+                    }
+                }
+            }
         }
         self.baseline.validate()?;
         self.draft.validate()?;
@@ -496,15 +519,21 @@ impl Study {
     /// Each saved review is a new immutable file; existing evidence is never overwritten.
     pub fn save_new(&self, path: &Path) -> Result<(), String> {
         self.validate()?;
+        self.input_contents.publish(path)?;
         write_new(
             path,
             &serde_json::to_vec_pretty(self).map_err(|e| e.to_string())?,
         )
     }
     pub fn load(path: &Path) -> Result<Self, String> {
-        let bytes = std::fs::read(path).map_err(|e| e.to_string())?;
-        let study: Self = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
+        let bytes = std::fs::read(path).map_err(|e| format!("study.source {}: {e}", path.display()))?;
+        Self::load_bytes(path, &bytes)
+    }
+    /// Parse exact already-captured bytes; companion resolution uses their original source location.
+    pub fn load_bytes(path: &Path, bytes: &[u8]) -> Result<Self, String> {
+        let mut study: Self = serde_json::from_slice(bytes).map_err(|e| format!("study.source {}: {e}", path.display()))?;
         study.validate()?;
+        study.input_contents.hydrate(path)?;
         Ok(study)
     }
 }
@@ -588,9 +617,11 @@ fn escape(s: &str) -> String {
         .replace('"', "&quot;")
 }
 impl Study {
-    /// Standalone shareable report with all run settings, metrics and embedded SVG plots.
+    /// Shareable report with embedded plots. Exact input bytes require its sibling .study-inputs directory.
     pub fn export_html_new(&self, path: &Path) -> Result<(), String> {
-        write_new(path, self.render_html()?.as_bytes())
+        let html = self.render_html()?;
+        self.input_contents.publish(path)?;
+        write_new(path, html.as_bytes())
     }
     /// Actual report rendering without file publication; used by compatibility fixtures.
     pub fn render_html(&self) -> Result<String, String> {
@@ -598,6 +629,13 @@ impl Study {
         let mut html = String::from(
             "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><title>Experiment comparison</title><style>body{font:15px system-ui;max-width:1100px;margin:40px auto;color:#223}table{border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid #ddd;text-align:left}pre{white-space:pre-wrap}svg{width:100%;background:#f5f7fa}section{break-inside:avoid;margin:30px 0}.muted{color:#567}</style><h1>Measured response / model refinement</h1>",
         );
+        if !self.input_contents.references.is_empty() {
+            html += "<p>Exact captured source inputs are immutable companion artifacts. Keep the sibling .study-inputs directory with this report; missing or corrupt content is an evidence failure.</p><ul>";
+            for reference in self.input_contents.references.values() {
+                html += &format!("<li><a href=\".study-inputs/{}.bin\">{}</a> · {} bytes · BLAKE3</li>", reference.blake3, reference.blake3, reference.byte_length);
+            }
+            html += "</ul>";
+        }
         html += &format!(
             "<h2>{}</h2><p>{}</p><p>{}</p><p>{}</p><p>Observation hash: {}<br>Empirical model hash: {}</p>",
             escape(&self.archive.label),
@@ -611,7 +649,7 @@ impl Study {
         // part of the immutable report, not only ephemeral window state.
         let native: BTreeMap<_,_> = self.retained_fields.iter().filter(|(name,_)|name.starts_with("native_")).collect();
         html += &format!("<details><summary>Captured offline refinement actions, source links and lifecycle receipts</summary><pre>{}</pre></details>",
-            escape(&serde_json::to_string_pretty(&serde_json::json!({"refinement_evidence":self.refinement_evidence,"native_receipts":native})).map_err(|e|e.to_string())?));
+            escape(&serde_json::to_string_pretty(&serde_json::json!({"refinement_evidence":self.refinement_evidence,"native_receipts":native,"input_contents":self.input_contents})).map_err(|e|e.to_string())?));
         for issue in &self.archive.integrity_issues {
             html += &format!("<p>Source integrity issue: {}</p>", escape(issue));
         }

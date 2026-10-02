@@ -33,6 +33,14 @@ fit/case review, jobs-owned immutable additional-input evidence, and shared
 two-source quarantine enforcement. See [T50 repair evidence](../native-recording-fit-authoring.md#call-0382-repairs).
 These repairs do not establish executed parity or retire any reference surface.
 
+Call-0384 reported the functional repair source traces at `11b9ce82` correct but found
+recursive raw additional-study inputs in receipts. T50 input content now extends
+the existing Study/publication owner: receipts contain bounded content references;
+Study owns deduplicated in-memory bytes and publishes immutable content-addressed
+companions in `.study-inputs/` beside the artifact. Save-new/reopen validates and
+preserves access to those companions. Legacy inline evidence stays readable and
+is never silently stripped. See [T50 storage repair](../native-recording-fit-authoring.md#call-0384-input-content-storage).
+
 Rust changes after the historical `aa34ef48` execution checkpoint remain
 uncompiled and unexecuted. The former opening ten-epic count was a stale dated
 snapshot and is superseded by this statement. Historical Python results below

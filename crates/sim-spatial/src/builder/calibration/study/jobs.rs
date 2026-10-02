@@ -348,9 +348,10 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 if displaced {study.displaced=Some("Refinement completed for a displaced document; captured settings remain linked to the original study".into());}
                 receipt.message=if execution_cancelled || receipt.error.is_some() {"Refinement failed or cancelled; captured attempt retained and unscored"} else if stale||displaced {"Refinement retained on its original study as stale/displaced evidence"} else {"Refinement retained for review; candidate adoption requires an explicit action"}.into();
             } else {receipt.message="Original study identity is missing; refinement outcome retained in the displaced receipt".into();}
-            let mut retained_outcome=outcome;
-            retained_outcome.cancelled |= pending.cancel_requested;
-            receipt.refinement=Some(retained_outcome);
+            // The receipt preserves the worker's actual cancellation observation.
+            // A later request affects attachment above and is recorded separately
+            // in the receipt/terminal metadata; it cannot rewrite runtime history.
+            receipt.refinement=Some(outcome);
         }
         Ok(JobOutput::Published)=>{
             if matches!(pending.kind,JobKind::Save|JobKind::SavePortable) && !pending.cancel_requested {

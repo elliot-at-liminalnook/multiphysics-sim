@@ -150,10 +150,11 @@ mod activation_fixtures {
 
     fn fixture() -> App {
         let mut app = App::new();
+        crate::app::configure_sets(&mut app);
         app.add_plugins(crate::ui_kit::text::TextEntryPlugin)
             .add_message::<Act<HardwareAction>>()
             .add_systems(Startup, render)
-            .add_systems(Update, buttons.in_set(crate::app::ViewerSet::Input));
+            .add_systems(Update, buttons.in_set(crate::app::InputSet::Window));
         crate::ui_kit::activation::install(&mut app);
         app.update();
         // Run eligibility for the newly spawned real controls.
@@ -167,8 +168,8 @@ mod activation_fixtures {
     fn rendered_hardware_stop_activates_once_and_jog_is_explicitly_excluded() {
         let mut app = fixture();
         let world = app.world_mut();
-        let stop = world.query::<(Entity, &HardwareAction)>().iter(world)
-            .find_map(|(entity, action)| matches!(action, HardwareAction::Stop).then_some(entity)).unwrap();
+        let stop = world.query::<(Entity, &HardwareAction, &bevy::ui::prelude::AccessibleLabel)>().iter(world)
+            .find_map(|(entity, action, label)| (matches!(action, HardwareAction::Stop) && label.0 == "Z  Stop").then_some(entity)).unwrap();
         let jogs: Vec<Entity> = world.query_filtered::<Entity, With<JogButton>>().iter(world).collect();
         assert_eq!(jogs.len(), 2);
         for jog in &jogs {
@@ -208,8 +209,8 @@ mod activation_fixtures {
     fn rendered_disabled_hardware_control_refuses_activation() {
         let mut app = fixture();
         let world = app.world_mut();
-        let stop = world.query::<(Entity, &HardwareAction)>().iter(world)
-            .find_map(|(entity, action)| matches!(action, HardwareAction::Stop).then_some(entity)).unwrap();
+        let stop = world.query::<(Entity, &HardwareAction, &bevy::ui::prelude::AccessibleLabel)>().iter(world)
+            .find_map(|(entity, action, label)| (matches!(action, HardwareAction::Stop) && label.0 == "Z  Stop").then_some(entity)).unwrap();
         assert!(world.get::<Button>(stop).is_some());
         world.entity_mut(stop).insert(Enabled(false));
         world.trigger(bevy::ui_widgets::Activate { entity: stop });

@@ -768,7 +768,11 @@ mod suspension_tests {
         fx::cancel(&mut app, window);
         assert!(!app.world().get::<TextField>(field).unwrap().suspended);
         assert_ne!(app.world().resource::<CadFiles>().form.as_ref().unwrap().focus.as_deref(), Some("h"));
-        let current = app.world().get::<TextField>(field).unwrap().draft.text.clone();
-        assert_ne!(current, "700", "new source may focus its own initial field, never the suspended height");
+        // Cached draft text remains evidence; only focus/application authority
+        // must be refused after source replacement.
+        assert_ne!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));
+        fx::key(&mut app, window, KeyCode::Digit8, Key::Character("8".into()));
+        assert_eq!(app.world().resource::<CadFiles>().form.as_ref().unwrap().text("h"), "700");
+        assert!(app.world().resource::<Messages<Act<CadAction>>>().is_empty());
     }
 }

@@ -5,6 +5,7 @@ fn document() -> CadDocument {
     ));
     doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = crate::cad::Connection::Connected;
+    doc.doc_key = Some((Some("doc17".into()), 23));
     doc.doc = Some(sim_runtime::cad_client::DocState {
         revision: 23,
         document_id: Some("doc17".into()),
@@ -364,8 +365,12 @@ fn drawn_pending_buttons_keep_shared_actions_without_a_usable_snapshot() {
             2 => {
                 doc.doc.as_mut().unwrap().revision = 24;
                 doc.health.as_mut().unwrap().revision = 24;
+                doc.doc_key = Some((Some("doc17".into()), 24));
             }
-            3 => { doc.doc.as_mut().unwrap().document_id = Some("replacement".into()); }
+            3 => {
+                doc.doc.as_mut().unwrap().document_id = Some("replacement".into());
+                doc.doc_key = Some((Some("replacement".into()), 23));
+            }
             _ => {}
         }
         let pending = st.pending_port.clone();

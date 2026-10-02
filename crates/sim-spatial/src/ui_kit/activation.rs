@@ -119,7 +119,9 @@ fn eligibility(
 
 fn capture(event: On<bevy::ui_widgets::Activate>, gate: Res<PointerGate>, controls: Query<(), (With<Ordinary>, Or<(Without<HeldControl>, With<KeyboardOnly>)>, Without<InteractionDisabled>)>, nodes: Query<(Option<&Node>, Option<&Visibility>, Option<&Enabled>, Option<&ChildOf>)>, mut commands: Commands) {
     if !gate.0.contains(&event.entity) && controls.contains(event.entity) && eligible(event.entity, &nodes) {
-        commands.entity(event.entity).insert(Activated);
+        // Activation is transient: a rebuild may despawn the eligible target
+        // before deferred commands apply. That occurrence must then expire.
+        commands.entity(event.entity).try_insert(Activated);
     }
 }
 

@@ -32,6 +32,7 @@ const DESCRIPTION_FILES: [&str; 2] = ["cad/specs.rs", "robot/actions/commands.rs
 
 /// (file under src/, snippet of the literal, reason).
 const ALLOWLIST: &[(&str, &str, &str)] = &[
+    ("builder/system_actions.rs", "Legacy read-only archive review compatibility API.", "capability description constructed inside the local Spec helper; never rendered window copy"),
     ("rest.rs", "Answering REST commands", "macOS activity reason (NSProcessInfo): seen by the OS, never shown in the window"),
     ("main.rs", "Physical REST (", "eprintln of the REST address to the terminal at launch, not window text"),
     ("robot/hardware/actions.rs", "REST and system_ui may read status", "hardware safety rule refusing motion to REST callers; stays as written"),
@@ -48,8 +49,8 @@ const ALLOWLIST: &[(&str, &str, &str)] = &[
     ("cad/actions.rs", "it shows in cad_state.physical", "cad_physical's Ok message: a click's Ok outcome is dropped (actions::serve answers only REST with it)"),
     ("cad/actions.rs", "its outcome shows in cad_state.status", "wait_edit: only a REST caller waits on an edit (the edit continuation is set only when call.rest())"),
     ("cad/actions.rs", "see cad_state.status", "wait_edit: only a REST caller waits on an edit (the edit continuation is set only when call.rest())"),
-    ("cad/actions.rs", "system_ui activate needs an id", "answer to a system_ui caller"),
-    ("cad/actions.rs", "system_ui in CAD mode", "answer to a system_ui caller"),
+    ("cad/ui_api.rs", "system_ui activate needs an id", "answer to a system_ui caller"),
+    ("cad/ui_api.rs", "system_ui in CAD mode", "answer to a system_ui caller"),
     ("cad/files/jobs.rs", "its outcome shows in cad_state.files.last", "files::jobs::wait: a REST caller's job"),
     ("cad/files/jobs.rs", "see cad_state.files.last", "files::jobs::wait: a REST caller's job"),
     ("cad/ops/mod.rs", "see cad_state.ops", "unknown operation id: only a typed id (REST cad_run) can name one; the window's controls send catalogue ids"),
@@ -74,7 +75,7 @@ fn ident(c: char) -> bool {
 }
 
 /// The text before an inline `#[cfg(test)]` `mod … {` (all of it without one).
-fn strip_inline_tests(text: &str) -> String {
+pub(crate) fn strip_inline_tests(text: &str) -> String {
     let lines: Vec<&str> = text.lines().collect();
     for (i, line) in lines.iter().enumerate() {
         if line.trim() != "#[cfg(test)]" {
@@ -82,7 +83,7 @@ fn strip_inline_tests(text: &str) -> String {
         }
         let next = lines[i + 1..].iter().map(|l| l.trim()).find(|l| !l.is_empty());
         if let Some(next) = next
-            && (next.starts_with("mod ") || next.starts_with("pub mod ") || next.starts_with("pub(crate) mod "))
+            && (next.starts_with("mod ") || next.starts_with("pub mod ") || (next.starts_with("pub(") && next.contains(" mod ")))
             && next.ends_with('{')
         {
             return lines[..i].join("\n");

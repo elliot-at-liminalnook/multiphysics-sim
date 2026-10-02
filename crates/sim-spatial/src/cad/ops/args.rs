@@ -372,7 +372,8 @@ fn plain(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
         }
     }
     let uses = |want: fn(&Arg) -> bool| entry.args.iter().any(want);
-    let mut history_name = history(entry.route).to_string();
+    let known_history = history(entry.route);
+    let mut history_name = if known_history.is_empty() { entry.label } else { known_history }.to_string();
     let mut calls = Vec::with_capacity(groups.len());
     for g in &groups {
         let mut args = entry.args.iter().map(|a| arg(entry, a, r, g, values, env)).collect::<Result<Vec<Value>, String>>()?;

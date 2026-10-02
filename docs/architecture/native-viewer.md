@@ -1452,27 +1452,63 @@ definition) against the final code.
   answer to one command), or a separate `system_ui` feature for hardware (a
   second controls list beside robot mode's). *Revisit if* other modes start
   passing activations on.
-- **Refusal rule.** `HardwareAction::starts_motion` actions from
-  `Origin::Rest` or `Origin::SystemUi` are refused with "hardware `{name}`
-  starts, changes or arms motion and needs an operator at the window: REST
-  and system_ui may read status, list gaits, export, connect, turn the
-  mirror on or off and STOP only". Refused: select, set disabled
-  (enable/disable), sweep all, hold others, jog press/release, speed,
-  target and its commit, capture, reset poses, clear lower/upper, sweep,
-  learn, the tune/campaign/gait confirmations, tune, campaign, gait
-  select/mode/speed/effort/play, drive mode, PWM ceiling, flip, raw step
-  value, raw step, live sync's leg/motor/polarity/scale/start, and the
-  mirror's leg, joint, polarity and alignment bindings (they become the
-  Leg/Both `gait_start` bindings and the alignment reference that Save
-  sim alignment sends). Allowed: toggle/close panel, connect, sections,
-  status, STOP, loss (focus lost, panel closed; `leaving` is the window's
-  own close request and is refused from REST), export, load gaits, gait
-  stop, mirror on/off, sync connect and sync stop. Robot mode refuses them when a `hardware:<name>`
-  control is activated, and the hardware handler refuses them again.
-  *Why:* AGENTS.md: drive motors only with the operator present; the
-  confirmations and drive settings arm or shape motion, so automation may
-  not set them either. *Revisit if* an operator-presence signal other than
-  a local pointer or key exists.
+- **Refusal rule (superseded by LC1/LC2, 2026-10-02).** The original blanket
+  rule refused every `HardwareAction::starts_motion` action from
+  `Origin::Rest` or `Origin::SystemUi`. The rule now:
+  - *Remote motion* goes through one policy, `HardwareAction::authorize`
+    (`crates/sim-spatial/src/robot/hardware/actions.rs`, refusing with
+    `remote_refusal`): allowed only on a verified virtual calibration link
+    (server and bench identity plus the current connection generation,
+    fresh) and only for the in-scope calibration actions. Physical, unknown,
+    mismatched or replaced endpoints are refused, and flip, raw step, every
+    gait setting and play, live sync and the mirror's bindings are refused
+    remotely on every link. Robot mode refuses a disabled `hardware:<name>`
+    control itself, and the hardware handler checks again
+    (`handlers::remote_check` in `crates/sim-spatial/src/robot/hardware/handlers.rs`).
+  - *Only a lost binding revokes.* An identity mismatch, a stale or replaced
+    connection generation, or a lost virtual bench is answered HTTP 409 with
+    `calibration::BINDING_REFUSED` (`crates/sim-runtime/src/hardware_client/calibration.rs`);
+    the native link then revokes its pinned authorization until an explicit
+    reconnect (`calibration::binding_lost`, which also counts transport and
+    decode failures; `crates/sim-spatial/src/robot/hardware/session.rs`).
+    A status whose execution changes revokes the same way: to another
+    identity ("virtual execution identity changed") or to none, the server
+    having lost its virtual bench ("the virtual calibration bench was lost
+    (disconnected)"), both "reconnect required".
+  - *Everything else is an ordinary refusal.* Any other refusal, including
+    an out-of-scope command on a virtual bench (flip, raw step, a Leg or Both
+    gait: anything `calibration::virtual_command_allowed` rejects), is HTTP
+    400: it never runs, keeps the binding, and is shown as an ordinary
+    refusal (the REST answer, or the panel's notice for a one-way
+    `system_ui` activation; a one-way jog press the link refuses after
+    answering also reaches the notice, through `handlers::settle_presses`,
+    a late refusal of any other one-way command is not re-reported there).
+  - *STOP is never authorization-gated* (status, connect, sections, export
+    and loss other than `leaving` are always allowed too). *JogRelease is
+    never refused remotely while a link exists* (`authorize` passes it like
+    STOP, as refusing it would leave the motor moving), and the
+    `hardware:jog_upper` / `hardware:jog_lower` controls list `JogRelease`
+    while their direction is held (`panel::control_list` in
+    `crates/sim-spatial/src/robot/hardware/panel.rs`). A refused remote press
+    puts its direction's held flag back to what it was before the press, so
+    an operator already holding that direction keeps the hold and their
+    release still reaches the link.
+  - *On a virtual link* flip, raw step and the Leg and Both gait modes (and
+    play in them) are listed disabled with `panel::OUT_OF_VIRTUAL_SCOPE`, for
+    the operator too.
+  - *A virtual export is labelled simulated* (`handlers::write_export`): the
+    file carries `execution` and `"simulated": true` and is named
+    `leg-calibration-<unix_ms>-virtual.json`, also when the link has no
+    virtual pin but the server labelled the document itself; the panel's
+    export line starts `VIRTUAL (simulated)` and REST `hardware_export`
+    answers `{"path", "simulated"}`.
+
+  See "Virtual transport isolation (LC1)" and "Remote acknowledgement (LC2)"
+  below.
+  *Why:* AGENTS.md: drive motors only with the operator present; a simulated
+  bench has no motor to protect, and the binding stops a virtual
+  authorization from reaching a physical server. *Revisit if* an
+  operator-presence signal other than a local pointer or key exists.
 - **`Action::accepts`.** The registry reads an action type's accepted REST
   commands from `A::accepts()` (default: its own serde variants).
   `HardwareAction` names its REST form, `wire::Command`. *Why:* the
@@ -5989,10 +6025,20 @@ hardware checklist.* The browser's calibration and hardware pages
   its worker executes it. STOP bypasses this binding and remains independent.
   The legacy pseudo-terminal bench remains a reference compatibility surface,
   not an authorization mechanism for remote calibration.
-  Binding refusals (identity, generation, scope, lost virtual bench) answer
-  HTTP 409 with `calibration::BINDING_REFUSED`; ordinary refusals stay 400.
-  Native links revoke their pinned authorization only on transport/decode
-  failure or 409 (`calibration::binding_lost`), never on a business refusal.
+  Only binding refusals (an identity mismatch, a stale or replaced
+  connection generation, a lost virtual bench) answer HTTP 409 with
+  `calibration::BINDING_REFUSED`; every other refusal is 400. An
+  out-of-scope command (anything `virtual_command_allowed` rejects, such as
+  flip, raw step or a Leg/Both gait) with a valid binding is an ordinary 400
+  refusal and never runs, so an operator's click on such a control cannot
+  revoke the virtual session; the panel also lists those controls disabled
+  on a virtual link with `OUT_OF_VIRTUAL_SCOPE` (verification pass
+  2026-10-02). Native links revoke their pinned authorization only on a
+  409 or a transport/decode failure (`calibration::binding_lost`), or when a
+  status names another execution or none (the bench was lost), never on an
+  ordinary refusal; STOP is never gated by the binding. Exports from a
+  virtual bench are labelled simulated (`execution`, `"simulated": true`, a
+  `-virtual` file name, the panel line `VIRTUAL (simulated)`).
   STOP's reply is immediate (`stop_latched`, `enabled_id: null`); the
   server's worker torques off every configured axis whenever the safety epoch
   advances, and refuses jobs captured before that epoch or older than its

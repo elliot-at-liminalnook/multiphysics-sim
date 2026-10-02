@@ -896,3 +896,268 @@ fn an_operator_drive_mode_edit_while_pending_is_not_overwritten() {
     assert_eq!(hw.form.inputs.drive_mode, DriveMode::ServoSpeed);
     assert_eq!(hw.settings.calibration.drive_mode, Some(DriveMode::ServoSpeed));
 }
+
+// Virtual scope, jog toggle and refused-press fixtures.
+
+/// A virtual link lists the commands its bench does not simulate (flip, raw
+/// step, a gait on the leg) disabled with the scope reason; a physical or
+/// unknown one keeps their ordinary reasons.
+#[test]
+fn a_virtual_link_lists_flip_raw_step_and_leg_gaits_out_of_scope() {
+    use crate::robot::hardware::{Hardware, HardwareConfig, actions::GaitMode, panel::{OUT_OF_VIRTUAL_SCOPE, controls}, settings};
+    let mut hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
+    hw.form.gait_mode = GaitMode::Leg;
+    let reason = |hw: &Hardware, id: &str| controls(hw).into_iter().find(|(i, ..)| i == id).unwrap_or_else(|| panic!("{id} is not listed")).3;
+    let out_of_scope = ["hardware:flip", "hardware:raw_step", "hardware:gait_mode_leg", "hardware:gait_mode_both", "hardware:gait_play"];
+    for id in out_of_scope {
+        assert_ne!(reason(&hw, id), Err(OUT_OF_VIRTUAL_SCOPE.to_string()), "{id} without a virtual execution");
+    }
+    hw.snapshot.execution = Some(virtual_identity(SERVER_A));
+    for id in out_of_scope {
+        assert_eq!(reason(&hw, id), Err(OUT_OF_VIRTUAL_SCOPE.to_string()), "{id}");
+    }
+    // Sim-only playback and the form's own controls stay in scope.
+    assert_ne!(reason(&hw, "hardware:gait_mode_sim"), Err(OUT_OF_VIRTUAL_SCOPE.to_string()));
+    assert_eq!(reason(&hw, "hardware:raw_step_plus_1"), Ok(()));
+    hw.form.gait_mode = GaitMode::Sim;
+    assert_ne!(reason(&hw, "hardware:gait_play"), Err(OUT_OF_VIRTUAL_SCOPE.to_string()));
+}
+
+/// The server answers an out-of-scope command on a virtual bench with an
+/// ordinary 400: its text is the result and the pinned binding stays
+/// authorized (only 409, transport or decode revoke).
+#[test]
+fn an_out_of_scope_400_does_not_revoke_the_virtual_binding() {
+    let identity = virtual_identity(SERVER_A);
+    let status = virtual_document(&identity);
+    let fake = Fake::start(Arc::new(move |_: &str, body: &Value| -> Result<Value, String> {
+        if body["action"] == "flip" { Err("Out of virtual calibration scope: flip is refused on a virtual bench".into()) } else { Ok(status.clone()) }
+    }));
+    let mut session = pinned_session(&fake, identity);
+    session.flip();
+    assert!(actions(&fake.commands()).iter().any(|a| a == "flip"), "{:?}", fake.commands());
+    assert!(!session.snap.authorization_revoked && session.snap.connection_valid, "a 400 refusal must not revoke");
+    assert!(session.snap.state.message.as_deref().is_some_and(|m| m.contains("Out of virtual calibration scope: flip is refused on a virtual bench")), "{:?}", session.snap.state.message);
+}
+
+/// A fake virtual bench: motor 1 enabled; a jog start answers a session.
+fn jog_server() -> Fake {
+    let status = virtual_document(&virtual_identity(SERVER_A));
+    Fake::start(Arc::new(move |_: &str, body: &Value| -> Result<Value, String> {
+        let mut answer = status.clone();
+        if body["action"] == "motion_start" {
+            answer["sweep"] = json!({ "running": true, "run_id": 7, "motor_id": 1 });
+        }
+        Ok(answer)
+    }))
+}
+
+/// A remote `hardware` link with motor 1 selected and ready (through the
+/// checked path, as automation selects).
+fn ready_remote_hardware(fake: &Fake) -> crate::robot::hardware::Hardware {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::actions::HardwareAction;
+    let mut hw = remote_hardware(fake);
+    let mut replies = Replies::default();
+    let select = HardwareAction::Select { id: 1 };
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(settle_remote(&mut hw, &select, origin, &mut continuation, &mut replies).is_ok());
+    assert!(hw.snapshot.ready && !hw.snapshot.busy, "{:?}", hw.snapshot.state.message);
+    hw
+}
+
+/// The listed `hardware:jog_upper` control: (label, action, ready).
+fn jog_upper(hw: &crate::robot::hardware::Hardware) -> (String, crate::robot::hardware::actions::HardwareAction, Result<(), String>) {
+    let (_, label, action, ready) = crate::robot::hardware::panel::controls(hw).into_iter().find(|(id, ..)| id == "hardware:jog_upper").expect("jog_upper is listed");
+    (label, action, ready)
+}
+
+/// Activating `hardware:jog_upper` twice is a press, then its release: the
+/// listed action follows the form's held flag, as `hold_others` follows its value.
+#[test]
+fn activating_jog_upper_twice_presses_then_releases() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::actions::{Direction, HardwareAction};
+    let fake = jog_server();
+    let mut hw = ready_remote_hardware(&fake);
+    let mut replies = Replies::default();
+    let (label, press, ready) = jog_upper(&hw);
+    assert_eq!(label, "Q  Upper ↑");
+    assert_eq!(press, HardwareAction::JogPress { direction: Direction::Upper });
+    assert_eq!(ready, Ok::<(), String>(()));
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(settle_remote(&mut hw, &press, origin, &mut continuation, &mut replies).is_ok());
+    assert!(hw.form.held_upper && hw.pending_presses.is_empty());
+    assert!(actions(&fake.commands()).iter().any(|a| a == "motion_start"));
+    let (label, release, ready) = jog_upper(&hw);
+    assert_eq!(label, "Release ↑ (hold)");
+    assert_eq!(release, HardwareAction::JogRelease { direction: Direction::Upper });
+    assert_eq!(ready, Ok::<(), String>(()), "a held direction's release stays enabled");
+    // Listed as automation sees it (`robot::actions` Controls: `{"hardware": action}`).
+    assert_eq!(json!({ "hardware": release }), json!({ "hardware": { "jog_release": { "direction": "upper" } } }));
+    assert_eq!(release.authorize(&hw, Instant::now()), Ok(()));
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(settle_remote(&mut hw, &release, origin, &mut continuation, &mut replies).is_ok());
+    assert!(!hw.form.held_upper);
+    assert_eq!(hw.link.as_ref().unwrap().snapshot().intent, Intent::Hold);
+    assert_eq!(jog_upper(&hw).1, HardwareAction::JogPress { direction: Direction::Upper });
+}
+
+/// A remote press the link refuses (a STOP pending when it is taken) holds
+/// nothing: the held flag set when it was queued is cleared as it resolves,
+/// and the control offers the press again. A one-way press (nobody waits on
+/// it) is settled from the snapshot (`actions::poll_jobs`); a newer operator
+/// press of the same direction keeps the flag.
+#[test]
+fn a_refused_remote_jog_press_clears_its_held_flag() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::{actions::{Direction, HardwareAction}, handlers::{Answer, settle_presses}};
+    let fake = jog_server();
+    let mut hw = ready_remote_hardware(&fake);
+    // STOP pressed, its `Stopped` not sent: the link refuses what is queued under it.
+    hw.link.as_ref().unwrap().epoch.fetch_add(1, SeqCst);
+    let press = HardwareAction::JogPress { direction: Direction::Upper };
+    let mut replies = Replies::default();
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &press, origin, &mut continuation, &mut replies), Answer::Pending));
+    assert!(hw.form.held_upper, "held while queued");
+    assert_eq!(settle_remote(&mut hw, &press, origin, &mut continuation, &mut replies), Err(STOP_PENDING.to_string()));
+    assert!(!hw.form.held_upper && hw.pending_presses.is_empty());
+    assert_eq!(jog_upper(&hw).1, press);
+    // One-way: answered at once, settled when the link records its verdict
+    // (as `actions::poll_jobs` does each frame).
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let one_way = |hw: &mut crate::robot::hardware::Hardware, replies: &mut Replies| -> u64 {
+        let mut continuation = Value::Null;
+        assert!(matches!(dispatch_as(hw, &press, Origin::SystemUi, &mut continuation, replies), Answer::Done(Ok(_))));
+        assert!(hw.form.held_upper && hw.pending_presses.len() == 1, "held while queued");
+        let ticket = hw.pending_presses[0].ticket;
+        while !hw.link.as_ref().unwrap().snapshot().command_results.contains_key(&ticket) {
+            assert!(Instant::now() < deadline, "one-way press verdict deadline");
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        ticket
+    };
+    let ticket = one_way(&mut hw, &mut replies);
+    hw.snapshot = hw.link.as_ref().unwrap().snapshot();
+    let results = hw.snapshot.command_results.clone();
+    assert_eq!(results[&ticket], Err(STOP_PENDING.to_string()));
+    settle_presses(&mut hw, &results);
+    assert!(!hw.form.held_upper && hw.pending_presses.is_empty());
+    // The operator presses the same direction before the frame settles a
+    // refused one: the flag is the operator's now and stays. (Last: the
+    // operator's press reaches the link unchecked and changes its state.)
+    let ticket = one_way(&mut hw, &mut replies);
+    let mut local = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &press, Origin::Ui, &mut local, &mut replies), Answer::Done(Ok(_))));
+    let results = hw.link.as_ref().unwrap().snapshot().command_results;
+    assert!(results[&ticket].is_err());
+    settle_presses(&mut hw, &results);
+    assert!(hw.form.held_upper && hw.pending_presses.is_empty(), "the operator's newer press keeps its flag");
+}
+
+// Held-direction refusal, one-way notice, lost bench and pin-less export
+// labelling fixtures.
+
+/// A remote press of a direction the operator already holds, refused by the
+/// link, leaves the operator's hold in place (the flag goes back to what it
+/// was before the press, not to false): the control still lists the
+/// release, so the operator's release still reaches the link. A REST
+/// refusal is answered to its caller, not put in the panel's notice.
+#[test]
+fn a_refused_remote_press_of_a_held_direction_keeps_the_operators_hold() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::{actions::{Direction, HardwareAction}, handlers::Answer};
+    let fake = jog_server();
+    let mut hw = ready_remote_hardware(&fake);
+    let press = HardwareAction::JogPress { direction: Direction::Upper };
+    let mut replies = Replies::default();
+    // The operator holds Q.
+    let mut local = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &press, Origin::Ui, &mut local, &mut replies), Answer::Done(Ok(_))));
+    assert!(hw.form.held_upper && hw.jog_presses[0] == 1);
+    // STOP pressed, its `Stopped` not sent: the link refuses the remote press.
+    hw.link.as_ref().unwrap().epoch.fetch_add(1, SeqCst);
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &press, origin, &mut continuation, &mut replies), Answer::Pending));
+    assert_eq!(hw.pending_presses.len(), 1);
+    assert!(hw.pending_presses[0].before && !hw.pending_presses[0].one_way);
+    assert_eq!(settle_remote(&mut hw, &press, origin, &mut continuation, &mut replies), Err(STOP_PENDING.to_string()));
+    assert!(hw.form.held_upper && hw.pending_presses.is_empty(), "the operator's hold survives the refused remote press");
+    assert_eq!(jog_upper(&hw).1, HardwareAction::JogRelease { direction: Direction::Upper }, "the release is still offered");
+    assert_eq!(hw.notice, None, "a REST refusal goes to its caller");
+}
+
+/// A one-way (`Origin::SystemUi`) press is answered at once; when the link
+/// later refuses it, the refusal is shown in the panel's notice, and a
+/// press that never reached the link is not counted.
+#[test]
+fn a_refused_one_way_press_is_shown_in_the_notice() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::{actions::{Direction, HardwareAction}, handlers::{Answer, settle_presses}};
+    let fake = jog_server();
+    let mut hw = ready_remote_hardware(&fake);
+    hw.link.as_ref().unwrap().epoch.fetch_add(1, SeqCst);
+    let press = HardwareAction::JogPress { direction: Direction::Upper };
+    let mut replies = Replies::default();
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &press, Origin::SystemUi, &mut continuation, &mut replies), Answer::Done(Ok(_))));
+    assert!(hw.form.held_upper && hw.pending_presses.len() == 1 && hw.pending_presses[0].one_way);
+    assert_eq!(hw.jog_presses[0], 1);
+    let ticket = hw.pending_presses[0].ticket;
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while !hw.link.as_ref().unwrap().snapshot().command_results.contains_key(&ticket) {
+        assert!(Instant::now() < deadline, "one-way press verdict deadline");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    let results = hw.link.as_ref().unwrap().snapshot().command_results;
+    settle_presses(&mut hw, &results);
+    assert!(!hw.form.held_upper && hw.pending_presses.is_empty());
+    assert_eq!(hw.notice, Some(format!("jog upper press refused: {STOP_PENDING}")));
+}
+
+/// A status without an execution (the server lost its virtual bench)
+/// revokes as an identity change does, and says the bench was lost.
+#[test]
+fn a_lost_virtual_bench_revokes_and_says_so() {
+    let identity = virtual_identity(SERVER_A);
+    let response = virtual_document(&identity);
+    let fake = Fake::start(Arc::new(move |_, _| Ok(response.clone())));
+    let mut session = pinned_session(&fake, identity.clone());
+    let mut lost = virtual_document(&identity);
+    lost.as_object_mut().unwrap().remove("execution");
+    session.adopt(serde_json::from_value(lost).unwrap());
+    assert!(session.snap.authorization_revoked && !session.snap.connection_valid && !session.snap.ready);
+    let message = session.snap.state.message.clone().unwrap_or_default();
+    assert!(message.contains("virtual calibration bench was lost") && message.contains("reconnect required"), "{message}");
+    assert_eq!(session.axis().tuning.unwrap().record, "retained-tune.json", "accepted records stay");
+}
+
+/// A download over a link with no virtual pin is still labelled when the
+/// server labelled it (`"simulated": true`, or a `virtual_calibration`
+/// execution): its keys are kept, `"simulated": true` is set and the file
+/// name ends `-virtual`. An unlabelled one is written as before.
+#[test]
+fn a_pinless_download_the_server_labels_simulated_is_written_as_virtual() {
+    use crate::robot::hardware::handlers::{Exported, write_export};
+    let dir = std::env::temp_dir().join(format!("sim-spatial-hardware-pinless-export-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let out = dir.to_string_lossy().into_owned();
+    let exports = dir.join("viewer-exports");
+    let read = |path: &std::path::Path| serde_json::from_str::<Value>(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let identity = json!(virtual_identity(SERVER_A));
+    let written = write_export(json!({"a": 1, "simulated": true}), Value::Null, Some(&out), 1, None).unwrap();
+    assert_eq!(written, Exported { path: exports.join("leg-calibration-1-virtual.json"), simulated: true });
+    assert_eq!(read(&written.path), json!({"a": 1, "simulated": true}));
+    let written = write_export(json!({"a": 2, "execution": identity}), Value::Null, Some(&out), 2, None).unwrap();
+    assert_eq!(written, Exported { path: exports.join("leg-calibration-2-virtual.json"), simulated: true });
+    assert_eq!(read(&written.path), json!({"a": 2, "execution": identity, "simulated": true}));
+    let written = write_export(json!({"a": 3, "simulated": false}), Value::Null, Some(&out), 3, None).unwrap();
+    assert_eq!(written, Exported { path: exports.join("leg-calibration-3.json"), simulated: false });
+    let _ = std::fs::remove_dir_all(&dir);
+}

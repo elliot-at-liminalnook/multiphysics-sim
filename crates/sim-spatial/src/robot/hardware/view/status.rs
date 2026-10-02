@@ -44,6 +44,7 @@ pub fn status_json(hw: &Hardware, now: Instant) -> Value {
             "drive_mode": f.inputs.drive_mode, "gait_speed_percent": f.inputs.gait_speed_percent, "gait_effort_percent": f.inputs.gait_effort_percent,
             "target_percent": f.target_percent, "tune_ok": f.tune_ok, "campaign_ok": f.campaign_ok, "gait_ok": f.gait_ok,
             "gait_index": f.gait_index, "gait_mode": f.gait_mode, "step": f.step, "open_sections": f.open,
+            "held_upper": f.held_upper, "held_lower": f.held_lower,
         },
         "mirror": hw.mirror.state_json(),
         "sync": hw.sync.state_json(),

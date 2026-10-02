@@ -34,9 +34,23 @@ pub(super) fn remote_check(hw: &Hardware, action: &HardwareAction, call: &Call) 
         HardwareAction::Speed { .. } | HardwareAction::PwmCeiling { .. } => view.blocked.is_none(),
         // Releases are always allowed to request hold after an accepted press.
         HardwareAction::JogRelease { .. } => return Ok(()),
+        // While a press is held its control lists the release, so the
+        // press's own gate is checked here.
+        HardwareAction::JogPress { .. } => view.jog_enabled,
         _ => true,
     };
-    if !enabled { return Err(view.blocked.unwrap_or_else(|| "this calibration input is disabled in the current session".into())); }
+    if !enabled {
+        // A press refused for its own gate reads as its control's reason
+        // (`panel::control_list`), as before the gate moved here.
+        if let HardwareAction::JogPress { direction } = action {
+            let id = match direction {
+                Direction::Upper => "hardware:jog_upper",
+                Direction::Lower => "hardware:jog_lower",
+            };
+            return Err(format!("{id} is disabled: {}", view.blocked.unwrap_or_else(|| "no motor is ready: select one first".into())));
+        }
+        return Err(view.blocked.unwrap_or_else(|| "this calibration input is disabled in the current session".into()));
+    }
     match super::panel::controls(hw).into_iter().find(|(_, _, a, _)| a == action) {
         Some((id, _, _, Err(why))) => Err(format!("{id} is disabled: {why}")),
         _ => Ok(()),
@@ -130,8 +144,7 @@ fn loss(hw: &mut Hardware, reason: Loss, origin: Origin) {
         }
         return;
     }
-    hw.form.held_upper = false;
-    hw.form.held_lower = false;
+    release_holds(hw);
     if let Some(link) = hw.link.as_ref() {
         link.send(LinkCommand::Loss);
     }
@@ -160,6 +173,7 @@ pub(crate) fn dispatch(hw: &mut Hardware, action: &HardwareAction, call: &mut Ca
         // left to stop for it.
         if let Some(result) = s.command_results.get(&ticket).cloned() {
             apply_resolved(hw, action, &result, call.continuation);
+            settle_presses(hw, &s.command_results);
             // This frame's link state, not the frame's earlier copy: a
             // successful select answers ready, with its motor.
             hw.snapshot = s;
@@ -180,6 +194,8 @@ pub(crate) fn dispatch(hw: &mut Hardware, action: &HardwareAction, call: &mut Ca
         }
         if s.command_results.keys().next().is_some_and(|first| ticket < *first) {
             resync_unresolved_inputs(hw, action);
+            // A press whose verdict was evicted may be moving: STOP.
+            settle_presses(hw, &s.command_results);
             return Answer::Done(Err("hardware command acknowledgement expired".into()));
         }
         return Answer::Pending;
@@ -254,6 +270,100 @@ fn apply_resolved(hw: &mut Hardware, action: &HardwareAction, result: &Result<()
             }
         }
         _ => {}
+    }
+}
+
+/// Remote jog presses whose verdict the link recorded: a refused one (not
+/// applied, as [`apply_resolved`] counts it) puts its direction's held flag
+/// back to what it was before the press ([`super::PendingPress::before`]),
+/// unless a newer press of that direction (the operator's) took the flag
+/// since. Not simply cleared: an operator already holding that direction
+/// keeps the hold, so their release still reaches the link (a cleared flag
+/// would swallow it and leave the motor moving). Not left set either, else
+/// the button and Q/A would keep offering a release for a press that never
+/// moved, and the next press would be taken as both keys. A refused press
+/// whose `before` was a still-pending remote press of the same direction
+/// hands its own `before` on to it, so a chain of refused presses ends at
+/// the flag the first one found. A refused one-way press
+/// (`Origin::SystemUi`, nobody waits on it) is shown in the panel's notice.
+/// A press of an older link generation is dropped (the reconnect stopped
+/// and cleared it). One whose verdict was evicted unread (the link keeps 256)
+/// may be moving: if it still holds its direction, STOP on the immediate path.
+/// Called with each resolving REST call ([`dispatch`]) and each frame
+/// (`actions::poll_jobs`) for presses nobody waits on.
+pub(super) fn settle_presses(hw: &mut Hardware, results: &std::collections::BTreeMap<u64, Result<(), String>>) {
+    if hw.pending_presses.is_empty() {
+        return;
+    }
+    let first = results.keys().next().copied();
+    let mut unknown = false;
+    // Per direction: the last refused press settled here, as (its press
+    // number, its `before`), for the next pending press to inherit.
+    let mut refused: [Option<(u64, bool)>; 2] = [None, None];
+    for mut press in std::mem::take(&mut hw.pending_presses) {
+        if press.generation != hw.generation {
+            continue;
+        }
+        let index = direction_index(press.direction);
+        // Pending presses are kept in queue order, so an earlier refused
+        // press of this direction was settled just before (this call or an
+        // earlier one, which already handed its `before` on).
+        if let Some((number, before)) = refused[index] && number + 1 == press.press {
+            press.before = before;
+        }
+        let latest = hw.jog_presses[index] == press.press;
+        match results.get(&press.ticket) {
+            Some(result) => {
+                let applied = match result {
+                    Ok(()) => true,
+                    Err(e) => e.starts_with(super::session::APPLIED_THEN_STOPPED),
+                };
+                if !applied {
+                    refused[index] = Some((press.press, press.before));
+                    if latest {
+                        *held_flag(hw, press.direction) = press.before;
+                    }
+                    if press.one_way && let Err(e) = result {
+                        let name = match press.direction {
+                            Direction::Upper => "upper",
+                            Direction::Lower => "lower",
+                        };
+                        hw.notice = Some(format!("jog {name} press refused: {e}"));
+                    }
+                }
+            }
+            None if first.is_some_and(|first| press.ticket < first) => unknown |= latest && *held_flag(hw, press.direction),
+            None => hw.pending_presses.push(press),
+        }
+    }
+    if unknown {
+        stop_immediate(hw);
+    }
+}
+
+/// A STOP or loss ends every hold: both held flags clear, and so does what
+/// a pending remote press would put back if refused
+/// ([`super::PendingPress::before`]); else a press refused by that STOP
+/// would restore a hold the STOP ended.
+pub(super) fn release_holds(hw: &mut Hardware) {
+    hw.form.held_upper = false;
+    hw.form.held_lower = false;
+    for press in &mut hw.pending_presses {
+        press.before = false;
+    }
+}
+
+fn direction_index(direction: Direction) -> usize {
+    match direction {
+        Direction::Upper => 0,
+        Direction::Lower => 1,
+    }
+}
+
+fn held_flag(hw: &mut Hardware, direction: Direction) -> &mut bool {
+    match direction {
+        Direction::Upper => &mut hw.form.held_upper,
+        Direction::Lower => &mut hw.form.held_lower,
     }
 }
 
@@ -342,20 +452,35 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
             if !s.ready || s.busy {
                 return Answer::Done(Err("no motor is ready: select one first".into()));
             }
-            let (this, other) = match direction {
-                Direction::Upper => (&mut hw.form.held_upper, hw.form.held_lower),
-                Direction::Lower => (&mut hw.form.held_lower, hw.form.held_upper),
+            let other = match direction {
+                Direction::Upper => hw.form.held_lower,
+                Direction::Lower => hw.form.held_upper,
             };
-            *this = true;
+            let before = std::mem::replace(held_flag(hw, *direction), true);
             // Both Q and A held: hold (`keys.size > 1`).
-            send(hw, if other { LinkCommand::BothKeys } else { LinkCommand::Press { direction: *direction } })
+            let answer = send(hw, if other { LinkCommand::BothKeys } else { LinkCommand::Press { direction: *direction } });
+            if matches!(answer, Answer::Done(Err(_))) {
+                // Never queued: nothing moves for it, and it is not counted
+                // (an older refused press still counts as the latest).
+                *held_flag(hw, *direction) = before;
+                return answer;
+            }
+            let index = direction_index(*direction);
+            hw.jog_presses[index] += 1;
+            if hw.queued_ticket && let Some(ticket) = hw.active_ticket {
+                // A remote press: it holds only if the link accepts it ([`settle_presses`]).
+                let one_way = matches!(call.origin, Origin::SystemUi);
+                hw.pending_presses.push(super::PendingPress { ticket, generation: hw.generation, direction: *direction, press: hw.jog_presses[index], before, one_way });
+            }
+            answer
         }
         H::JogRelease { direction } => {
-            let held = match direction {
-                Direction::Upper => &mut hw.form.held_upper,
-                Direction::Lower => &mut hw.form.held_lower,
-            };
-            if !std::mem::take(held) {
+            // A press still awaiting its verdict must not restore the hold
+            // this release ends (`settle_presses` restores `before`).
+            for press in hw.pending_presses.iter_mut().filter(|p| p.direction == *direction) {
+                press.before = false;
+            }
+            if !std::mem::take(held_flag(hw, *direction)) {
                 return done();
             }
             // A release that cannot reach the link would leave the motor
@@ -551,11 +676,12 @@ fn gait_play(hw: &mut Hardware) -> Answer {
 
 /// Download calibration. A click starts the job (one at a time); REST
 /// `hardware_export` starts it (or joins the running one) and answers
-/// Pending until it has written its file, then `{"path": …}`.
+/// Pending until it has written its file, then `{"path": …, "simulated":
+/// bool}` ([`Exported`]).
 fn export(hw: &mut Hardware, call: &mut Call) -> Answer {
     if let Some(seq) = call.continuation.get("export").and_then(Value::as_u64) {
         return match &hw.export_done {
-            Some((done, result)) if *done == seq => Answer::Done(result.clone().map(|p| Some(json!({"path": p.display().to_string()})))),
+            Some((done, result)) if *done == seq => Answer::Done(result.clone().map(|e| Some(json!({"path": e.path.display().to_string(), "simulated": e.simulated})))),
             _ if hw.export.as_ref().is_some_and(|j| j.generation() == seq) => {
                 if call.cancelled {
                     Answer::Done(Err("hardware_export: cancelled (the file is still written)".into()))
@@ -582,19 +708,39 @@ fn export(hw: &mut Hardware, call: &mut Call) -> Answer {
     done()
 }
 
+/// The export line's label for a download from a virtual calibration bench.
+pub(super) const VIRTUAL_EXPORT: &str = "VIRTUAL (simulated)";
+
+/// A written calibration download ([`write_export`]).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Exported {
+    pub path: PathBuf,
+    /// The document is labelled simulated (`"simulated": true`, a
+    /// `-virtual` file name): from a pinned virtual link, or a server that
+    /// labels its own export as virtual.
+    pub simulated: bool,
+}
+
 fn start_export(hw: &mut Hardware) -> Result<u64, String> {
     let client = hw.link.as_ref().ok_or(NOT_CONNECTED)?.client.clone();
     // The mirror's binding as it is at the click (the page's `mirror?.record()`).
     let mirror = hw.mirror.record();
     let output = hw.snapshot.state.output.clone();
+    // A virtual bench's document is labelled with its execution: simulated
+    // results must never pass for physical measurements.
+    let execution = match hw.snapshot.execution.as_ref().filter(|i| i.is_virtual_calibration()) {
+        Some(identity) => Some(serde_json::to_value(identity).map_err(|e| format!("virtual execution identity: {e}"))?),
+        None => None,
+    };
     hw.export_seq += 1;
     let seq = hw.export_seq;
-    hw.export_line = Some("Downloading calibration…".into());
+    hw.export_virtual = execution.is_some();
+    hw.export_line = Some(if hw.export_virtual { format!("{VIRTUAL_EXPORT} Downloading calibration…") } else { "Downloading calibration…".into() });
     hw.export = Some(
         Job::spawn(Pool::Dedicated, seq, "calibration export", move |_| {
             let export = client.get("/calibration/export").map_err(|e| e.to_string())?;
             let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0);
-            write_export(export, mirror, output.as_deref(), stamp)
+            write_export(export, mirror, output.as_deref(), stamp, execution)
         })
         .complete_on_drop(),
     );
@@ -606,7 +752,17 @@ fn start_export(hw: &mut Hardware) -> Result<u64, String> {
 /// `<output>/viewer-exports/leg-calibration-<unix_ms>.json`, never
 /// overwriting. A relative `output` (the server's working directory) is
 /// taken from the workspace root, where the servers are started.
-pub(crate) fn write_export(export: Value, mirror: Value, output: Option<&str>, unix_ms: u128) -> Result<PathBuf, String> {
+///
+/// From a virtual calibration bench (`execution`: the link's pinned
+/// identity as JSON) the document also carries `"execution"` and
+/// `"simulated": true`, and the file is
+/// `leg-calibration-<unix_ms>-virtual.json`. A document that names another
+/// execution is refused rather than relabelled (the same one is fine).
+/// Without a pin, a document the server labelled itself (`"simulated":
+/// true`, or an `execution` of kind `virtual_calibration`) keeps its keys,
+/// gains `"simulated": true` and is written as `-virtual` too: a simulated
+/// result must never pass for a physical measurement.
+pub(crate) fn write_export(export: Value, mirror: Value, output: Option<&str>, unix_ms: u128, execution: Option<Value>) -> Result<Exported, String> {
     let mut doc = match export {
         Value::Object(m) => m,
         _ => serde_json::Map::new(),
@@ -614,17 +770,29 @@ pub(crate) fn write_export(export: Value, mirror: Value, output: Option<&str>, u
     if !mirror.is_null() {
         doc.insert("display_mirror".into(), mirror);
     }
+    let labelled_virtual = doc.get("simulated") == Some(&Value::Bool(true))
+        || doc.get("execution").and_then(|e| e.get("kind")).and_then(Value::as_str) == Some("virtual_calibration");
+    let simulated = execution.is_some() || labelled_virtual;
+    if let Some(execution) = execution {
+        if doc.get("execution").is_some_and(|own| !own.is_null() && *own != execution) {
+            return Err("the exported calibration names another execution than this virtual link; reconnect and download again".into());
+        }
+        doc.insert("execution".into(), execution);
+    }
+    if simulated {
+        doc.insert("simulated".into(), Value::Bool(true));
+    }
     let output = output.filter(|o| !o.is_empty()).ok_or("the calibration server has not reported its output directory")?;
     let base = Path::new(output);
     let base = if base.is_relative() { crate::workspace::path(base)? } else { base.to_path_buf() };
     let dir = base.join("viewer-exports");
     std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    let path = dir.join(format!("leg-calibration-{unix_ms}.json"));
+    let path = dir.join(format!("leg-calibration-{unix_ms}{}.json", if simulated { "-virtual" } else { "" }));
     let text = serde_json::to_string_pretty(&Value::Object(doc)).map_err(|e| e.to_string())?;
     use std::io::Write;
     let mut file = std::fs::OpenOptions::new().write(true).create_new(true).open(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     file.write_all(text.as_bytes()).map_err(|e| format!("{}: {e}", path.display()))?;
-    Ok(path)
+    Ok(Exported { path, simulated })
 }
 
 /// The gait list as REST `hardware_gaits` answers it.
@@ -683,18 +851,30 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("sim-spatial-hardware-export-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let out = dir.to_string_lossy().into_owned();
-        let path = write_export(json!({"fixture": "leg", "axes": {}}), json!({"leg": "+X"}), Some(&out), 1234).unwrap();
+        let Exported { path, simulated } = write_export(json!({"fixture": "leg", "axes": {}}), json!({"leg": "+X"}), Some(&out), 1234, None).unwrap();
         assert_eq!(path, dir.join("viewer-exports").join("leg-calibration-1234.json"));
+        assert!(!simulated);
         let text = std::fs::read_to_string(&path).unwrap();
         assert!(text.starts_with("{\n  \""), "2-space JSON: {text}");
         let written: Value = serde_json::from_str(&text).unwrap();
         assert_eq!(written, json!({"fixture": "leg", "axes": {}, "display_mirror": {"leg": "+X"}}));
         // Never overwritten.
-        assert!(write_export(json!({}), Value::Null, Some(&out), 1234).is_err());
+        assert!(write_export(json!({}), Value::Null, Some(&out), 1234, None).is_err());
         // No mirror: no key, as JSON.stringify drops undefined.
-        let path = write_export(json!({"a": 1}), Value::Null, Some(&out), 5678).unwrap();
+        let path = write_export(json!({"a": 1}), Value::Null, Some(&out), 5678, None).unwrap().path;
         assert_eq!(serde_json::from_str::<Value>(&std::fs::read_to_string(path).unwrap()).unwrap(), json!({"a": 1}));
-        assert!(write_export(json!({}), Value::Null, None, 1).is_err());
+        assert!(write_export(json!({}), Value::Null, None, 1, None).is_err());
+        // A virtual bench's export: labelled, with its own file name.
+        let identity = json!({"schema_version": 1, "kind": "virtual_calibration", "server_instance": "s", "bench_instance": "b"});
+        let written = write_export(json!({"a": 1}), Value::Null, Some(&out), 5678, Some(identity.clone())).unwrap();
+        assert_eq!(written, Exported { path: dir.join("viewer-exports").join("leg-calibration-5678-virtual.json"), simulated: true });
+        assert_eq!(serde_json::from_str::<Value>(&std::fs::read_to_string(written.path).unwrap()).unwrap(), json!({"a": 1, "execution": identity, "simulated": true}));
+        // The server's own label naming the same execution is no conflict.
+        let written = write_export(json!({"a": 2, "execution": identity, "simulated": true}), Value::Null, Some(&out), 6789, Some(identity.clone())).unwrap();
+        assert!(written.simulated);
+        assert_eq!(serde_json::from_str::<Value>(&std::fs::read_to_string(written.path).unwrap()).unwrap(), json!({"a": 2, "execution": identity, "simulated": true}));
+        // A document naming another execution is not relabelled.
+        assert!(write_export(json!({"execution": {"kind": "physical"}}), Value::Null, Some(&out), 9999, Some(identity)).is_err());
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
